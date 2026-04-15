@@ -1,28 +1,30 @@
-# CeFi Momentum
+# CeFi ML Directional
 
-> **Asset class:** CeFi **Strategy type:** Momentum **Strategy ID pattern:**
-> `CEFI_{ASSET}_MOM_{INDICATOR}_{MODE}_{TIMEFRAME}`
+> **Asset class:** CeFi **Strategy type:** ML Directional **Strategy ID pattern:**
+> `CEFI_{ASSET}_ML_DIR_{MODE}_{TIMEFRAME}`
 
 ## Overview
 
-ML-driven momentum strategy for CeFi crypto perpetual futures (BTC, ETH, SOL). Uses swing_high/swing_low ML predictions
-to generate directional signals, with MACD and RSI as supporting feature context. Supports both Same Candle Exit (SCE)
-and Hold Until Flip (HUF) execution modes.
+ML-driven directional strategy for CeFi crypto instruments (BTC, ETH, SOL) that extends the momentum approach with
+crypto-specific features: funding rates, orderbook imbalance, volume profile, and open interest. Uses the same
+swing_high/swing_low ML prediction framework as CeFi Momentum but enriches signals with deeper crypto microstructure
+data. Trades on Binance spot and Hyperliquid perpetuals.
 
 ## Token / Position Flow
 
 ```
 Start:  WALLET:USDT  (100% USDT margin)
 
-Step 1 - ML PREDICTION: Receive swing_high/swing_low predictions from ML pipeline
+Step 1 - ML PREDICTION: Receive swing_high/swing_low predictions from ML pipeline (model: cefi_{asset}_swing_v1)
 Step 2 - DIRECTION MAP: Map prediction to direction via BaseStrategy.process_ml_predictions()
          - swing_high_pred=1 (high_breakout) -> LONG
          - swing_low_pred=-1 (low_reversion) -> LONG
          - swing_high_pred=-1 (high_reversion) -> SHORT
          - swing_low_pred=1 (low_breakout) -> SHORT
 Step 3 - CONFIDENCE GATE: Only act when max(swing_high_conf, swing_low_conf) >= threshold (default 0.65)
-Step 4 - ENTRY: Open perpetual position in signal direction
-Step 5 - EXIT: SCE mode exits same candle; HUF mode holds until signal flips direction
+Step 4 - CRYPTO FEATURE ENRICHMENT: Attach funding_rate, orderbook_imbalance, volume_profile, open_interest to signal
+Step 5 - ENTRY: Open perpetual position in signal direction
+Step 6 - EXIT: SCE mode exits same candle; HUF mode holds until signal flips direction
 
 Wallet after deploy:
   - BINANCE-FUTURES:PERPETUAL:{ASSET}-USDT@LIN = 1x (long or short)
@@ -40,16 +42,22 @@ Wallet after deploy:
 
 ## Key Features Consumed
 
-| Feature           | Source Service     | SLA | Used For                        |
-| ----------------- | ------------------ | --- | ------------------------------- |
-| `swing_high_pred` | ml-service         | 5m  | Signal: direction determination |
-| `swing_high_conf` | ml-service         | 5m  | Signal: confidence gating       |
-| `swing_low_pred`  | ml-service         | 5m  | Signal: direction determination |
-| `swing_low_conf`  | ml-service         | 5m  | Signal: confidence gating       |
-| `macd`            | features-delta-one | 5m  | Context: signal metadata        |
-| `macd_signal`     | features-delta-one | 5m  | Context: signal metadata        |
-| `rsi`             | features-delta-one | 5m  | Context: signal metadata        |
-| `momentum`        | features-delta-one | 5m  | Context: signal metadata        |
+| Feature                 | Source Service     | SLA | Used For                               |
+| ----------------------- | ------------------ | --- | -------------------------------------- |
+| `swing_high_pred`       | ml-service         | 5m  | Signal: direction determination        |
+| `swing_high_conf`       | ml-service         | 5m  | Signal: confidence gating              |
+| `swing_low_pred`        | ml-service         | 5m  | Signal: direction determination        |
+| `swing_low_conf`        | ml-service         | 5m  | Signal: confidence gating              |
+| `funding_rate`          | features-delta-one | 10s | Context: crypto microstructure         |
+| `funding_rate_8h`       | features-delta-one | 8h  | Context: 8h settlement rate            |
+| `orderbook_imbalance`   | features-delta-one | 1s  | Context: buy/sell pressure             |
+| `orderbook_depth_ratio` | features-delta-one | 1s  | Context: depth asymmetry               |
+| `volume_profile_vwap`   | features-delta-one | 5m  | Context: volume-weighted average price |
+| `volume_profile_poc`    | features-delta-one | 5m  | Context: point of control              |
+| `volume_delta`          | features-delta-one | 5m  | Context: net buy/sell volume           |
+| `open_interest`         | features-delta-one | 5m  | Context: market participation          |
+| `open_interest_change`  | features-delta-one | 5m  | Context: OI delta                      |
+| `liquidation_volume`    | features-delta-one | 5m  | Context: liquidation cascade risk      |
 
 ## PnL Attribution
 
@@ -64,16 +72,19 @@ to match within 2% annualized tolerance.
 
 ## Risk Profile
 
-| Metric               | Target   | Notes                                  |
-| -------------------- | -------- | -------------------------------------- |
-| Target annual return | TBD      |                                        |
-| Target Sharpe ratio  | TBD      |                                        |
-| Max drawdown         | 10%      | `max_drawdown_pct` in risk_config      |
-| Max leverage         | 1x       | Single perpetual position              |
-| Max position (BTC)   | $100,000 | `max_position_size_usd`                |
-| Max position (SOL)   | $50,000  | Smaller due to higher volatility       |
-| Stop loss            | 2-2.5%   | BTC/ETH: 2%, SOL: 2.5% (wider for vol) |
-| Take profit          | 4-5%     | BTC/ETH: 4%, SOL: 5% (wider for vol)   |
+| Metric               | Target   | Notes                             |
+| -------------------- | -------- | --------------------------------- |
+| Target annual return | TBD      |                                   |
+| Target Sharpe ratio  | TBD      |                                   |
+| Max drawdown (BTC)   | 10%      | `max_drawdown_pct` in risk_config |
+| Max drawdown (ETH)   | 8%       | Tighter for ETH                   |
+| Max drawdown (SOL)   | 12%      | Wider for SOL volatility          |
+| Max leverage         | 1x       | Single perpetual position         |
+| Max position (BTC)   | $100,000 | `max_position_size_usd`           |
+| Max position (ETH)   | $100,000 | `max_position_size_usd`           |
+| Max position (SOL)   | $50,000  | Smaller due to higher volatility  |
+| Stop loss            | 2-2.5%   | BTC/ETH: 2%, SOL: 2.5%            |
+| Take profit          | 4-5%     | BTC/ETH: 4%, SOL: 5%              |
 
 ## Latency Profile
 
@@ -88,7 +99,7 @@ to match within 2% annualized tolerance.
 
 ## Execution Details
 
-- **Venues:** Binance Futures
+- **Venues:** Binance Futures, Hyperliquid
 - **Order types:** Market (SCE mode), Limit (HUF mode entry)
 - **Atomic execution required?** No -- single-leg position
 - **Rebalancing:** SCE: every candle (5m default). HUF: only on signal flip
@@ -114,9 +125,9 @@ to match within 2% annualized tolerance.
 
 ## Margin & Liquidation
 
-- **Margin model:** Isolated margin on Binance Futures
+- **Margin model:** Isolated margin on Binance Futures / Hyperliquid
 - **Health factor threshold:** N/A (CeFi margin maintenance ratio)
-- **Liquidation penalty:** Venue-dependent (Binance tiered)
+- **Liquidation penalty:** Venue-dependent
 - **Monitoring:** Per-candle via risk_config thresholds
 
 ## Authentication & Credentials
@@ -129,17 +140,18 @@ Links to SSOT -- do not duplicate:
 - **Venue capabilities:** See
   [capability_declarations/](../../../unified-api-contracts/unified_api_contracts/registry/capability_declarations/)
 
-| Venue           | Secret Name               | Testnet Available? | Notes           |
-| --------------- | ------------------------- | ------------------ | --------------- |
-| Binance Futures | `exec-{client}-binance-*` | Yes                | Futures testnet |
+| Venue           | Secret Name                   | Testnet Available? | Notes           |
+| --------------- | ----------------------------- | ------------------ | --------------- |
+| Binance Futures | `exec-{client}-binance-*`     | Yes                | Futures testnet |
+| Hyperliquid     | `exec-{client}-hyperliquid-*` | Yes                | Testnet         |
 
 ## Client Onboarding
 
 ### Adding a new client to this strategy
 
-1. **Execution accounts:** Binance Futures account with USDT margin
-2. **Secret Manager:** `exec-{client}-binance-futures-api-key`, `exec-{client}-binance-futures-api-secret`
-3. **Config:** New entry in strategy config YAML with client-specific params (asset, mode, thresholds)
+1. **Execution accounts:** Binance Futures and/or Hyperliquid account with USDT margin
+2. **Secret Manager:** `exec-{client}-{venue}-api-key`, `exec-{client}-{venue}-api-secret`
+3. **Config:** New entry with `strategy_id`, `asset_class=CRYPTO`, `ml_model_id`, feature flags
 4. **Position isolation:** One strategy instance per client per asset
 5. **Restart required?** No -- hot-reload via UCI config watcher
 
@@ -161,24 +173,25 @@ Links to SSOT -- do not duplicate:
 ### Strategy-specific views (extensions)
 
 - Swing prediction confidence overlay on price chart
+- Crypto feature heatmap (funding rate, OI change, orderbook imbalance)
+- Liquidation volume spike alerts
 - SCE vs HUF mode performance comparison
-- Signal count and hit rate dashboard
 
 ## Testing Stage Status
 
-| Stage        | Status  | Notes                                |
-| ------------ | ------- | ------------------------------------ |
-| MOCK         | Done    | Static seed data + paper execution   |
-| HISTORICAL   | Done    | Backtested on BTC/ETH/SOL 5m candles |
-| LIVE_MOCK    | Done    | Real market data + paper execution   |
-| LIVE_TESTNET | Pending | Binance Futures testnet              |
-| BATCH_REAL   | Done    | Config optimised per asset           |
-| STAGING      | Pending |                                      |
-| LIVE_REAL    | Pending |                                      |
+| Stage        | Status  | Notes                                         |
+| ------------ | ------- | --------------------------------------------- |
+| MOCK         | Done    | Static seed data + paper execution            |
+| HISTORICAL   | Done    | Backtested on BTC/ETH/SOL 5m candles          |
+| LIVE_MOCK    | Done    | Real market data + paper execution            |
+| LIVE_TESTNET | Pending | Binance Futures testnet + Hyperliquid testnet |
+| BATCH_REAL   | Done    | Config optimised per asset                    |
+| STAGING      | Pending |                                               |
+| LIVE_REAL    | Pending |                                               |
 
 ## References
 
-- **Strategy implementation:** `strategy-service/strategy_service/engine/strategies/cefi_momentum.py`
+- **Strategy implementation:** `strategy-service/strategy_service/engine/strategies/cefi_ml_directional.py`
 - **Base class:** `strategy-service/strategy_service/engine/strategies/base_strategy.py`
 - **Config schema:** `strategy-service/docs/CONFIG_SCHEMA.md`
 - **Strategy modes:** `strategy-service/docs/STRATEGY_MODES.md`

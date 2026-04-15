@@ -201,8 +201,49 @@ SSOT: `strategy-service/strategy_service/config.py` (TypedDicts)
 | Gas parameters           | Execution manages on-chain costs   | `priority_fee_gwei: 2.0`            |
 | Alpha measurement        | Execution tracks vs benchmark      | `benchmark_type: ARRIVAL`           |
 
-SSOT: `execution-service/execution_service/service_config.py` Algorithms:
-`execution-service/execution_service/algorithms/` (7 algos in registry)
+SSOT: `execution-service/execution_service/service_config.py`
+
+### Execution Algorithm Registry (13+ Algos)
+
+The `algo_library/` sub-package implements the following execution algorithms:
+
+| Algorithm         | File                        | Instruction Types | Description                                                                                      |
+| ----------------- | --------------------------- | ----------------- | ------------------------------------------------------------------------------------------------ |
+| TWAP              | `twap_calculator.py`        | TRADE             | Time-weighted average price. Splits parent order into equal time slices.                         |
+| VWAP              | `vwap_calculator.py`        | TRADE             | Volume-weighted average price. Distributes child orders proportional to expected volume profile. |
+| Iceberg           | `algorithms/`               | TRADE             | Hides large order size by showing only a small visible portion at a time.                        |
+| POV (% of Volume) | `pov_dynamic_calculator.py` | TRADE             | Dynamic participation rate. Adjusts child order size based on real-time market volume.           |
+| SOR-CeFi          | (via routing)               | TRADE             | Smart order router across CeFi venues. Selects best venue based on price/liquidity.              |
+| SOR-DEX           | `sor_dex.py`                | SWAP              | DEX venue selection. Compares Uniswap, Curve, Balancer pools for best execution.                 |
+| AdaptiveTWAP      | `adaptive_twap.py`          | TRADE             | TWAP with adaptive slice sizing based on market conditions (spread, volatility).                 |
+| Almgren-Chriss    | `almgren_chriss.py`         | TRADE             | Optimal execution minimizing market impact + risk cost. Solves the Almgren-Chriss trajectory.    |
+| PassiveAggressive | `passive_aggressive.py`     | TRADE             | Hybrid maker/taker. Posts limit orders (passive), escalates to market if deadline approaching.   |
+| SOR-TWAP          | `sor_twap.py`               | TRADE             | Combines smart order routing with TWAP execution across multiple venues.                         |
+| Swap-TWAP         | `swap_twap.py`              | SWAP              | TWAP-style execution for DeFi swaps. Splits large swaps into time-sliced smaller swaps.          |
+| Batch Auction     | `solver_auction.py`         | TRADE             | Solver-based batch auction. Groups orders and settles at uniform clearing price.                 |
+| Intent Engine     | `intent_engine.py`          | TRADE/SWAP        | Intent-based execution. Expresses trading intent and allows solvers to compete for fill.         |
+
+Additional components: `multicall_batcher.py` (batches multiple on-chain calls), `sor_cross_chain.py` (cross-chain SOR
+with bridge cost integration), `amm_math.py` (constant-product AMM math for Uniswap V2/V3 pools).
+
+SSOT: `execution-service/execution_service/algo_library/`
+
+### Matching Engine Types (5 Book Types)
+
+The `matching_engine/` sub-package provides 5 matcher types routed by `BookType`:
+
+| Matcher                  | BookType    | Domain            | Description                                                         |
+| ------------------------ | ----------- | ----------------- | ------------------------------------------------------------------- |
+| L0 (Top-of-Book)         | `L0_TOB`    | Sports/Prediction | Scraped bookmakers, odds aggregators. Single best price only.       |
+| L1 (Best Prices)         | `L1_MBP`    | TradFi/Sports API | Trades with aggressor side. API bookmakers, streaming feeds.        |
+| L2 (Order Book)          | `L2_MBP`    | CeFi              | Full order book depth. Via NautilusTrader.                          |
+| AMM (Constant Product)   | (swap)      | DeFi              | `UniswapV2Pool` x\*y=k math. Computes price impact, output amounts. |
+| Benchmark (Instant Fill) | (benchmark) | DeFi Lending      | LEND/STAKE/BORROW instant fill at benchmark price. No slippage.     |
+
+The matching engine routes via: `instrument_id -> category -> book_type -> matcher`. For sports, `BookmakerCategory`
+maps to `BookType`: EXCHANGE=L2, BOOKMAKER_API/STREAMING_API=L1, AGGREGATOR/SCRAPER=L0.
+
+SSOT: `execution-service/execution_service/matching_engine/engine.py`
 
 ### How Strategy Communicates Execution Preferences
 

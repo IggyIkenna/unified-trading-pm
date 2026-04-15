@@ -74,6 +74,52 @@ supply_rate = borrow_rate * U * (1 - reserve_factor)
 - Critical (P0) at >200 bps deviation -> PagerDuty + Telegram
 - Causes: other large trades, governance parameter changes
 
+## Dual-Mode Design
+
+The rate impact model is designed for two operational modes:
+
+### Mode 1: Batch (Current -- Implemented)
+
+Batch mode defines actual execution prices for backtesting and T+1 reconciliation. The `AaveRateImpactCalculator` in
+features-onchain-service computes projected rates from pool state at each candle close. Strategy-service reads these
+projections from GCS and uses them for position sizing decisions.
+
+```
+features-onchain-service computes projected rates from DefiLlama pool state
+  -> writes to GCS: projected_supply_apy, projected_borrow_apy per instrument per date
+  -> strategy-service reads projected rates
+    -> if projected_supply_apy < min_threshold: skip deployment
+  -> execution fills at projected rates (batch/backtest mode)
+  -> pnl-attribution adjusts daily P&L by projected_apy / raw_apy ratio
+```
+
+### Mode 2: Live Simulation (Planned)
+
+Live mode provides a rate impact preview using actual protocol math per chain/protocol -- analogous to slippage preview
+for swaps, but for lending/borrowing. The system simulates how our position size would shift the utilization curve and
+change rates for all participants.
+
+**Per-protocol math:**
+
+| Protocol        | Rate Model                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| Aave V3         | Two-slope kinked model (see parameters below). Well-defined `U_optimal`, `slope1`, `slope2`.   |
+| Compound        | Utilization-based: `borrow_rate = multiplier * utilization + base_rate`. Jump rate above kink. |
+| Morpho          | P2P matching layer on top of Aave/Compound. Rate = blend of p2p_rate and pool_rate.            |
+| Kamino (Solana) | Leverage vault model. Rate depends on vault utilization and underlying Solana lending rates.   |
+
+**Live preview flow (planned):**
+
+```
+1. User requests: "What happens if I lend $5M USDC to Aave V3 on Arbitrum?"
+2. Fetch current pool state: total_supply, total_borrows, reserve_factor
+3. Simulate: new_utilization = total_borrows / (total_supply + $5M)
+4. Compute: new_supply_apy = f(new_utilization, slope1, slope2)
+5. Return: {current_apy: 4.2%, projected_apy: 4.05%, impact: -15bps}
+```
+
+This is the lending equivalent of DEX slippage preview: "this trade will move the rate by X bps."
+
 ## Pipeline Flow
 
 ```

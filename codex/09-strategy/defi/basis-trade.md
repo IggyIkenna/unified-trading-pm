@@ -465,10 +465,127 @@ emission.
 See [cross-cutting/venue-collateral-and-wrapping.md](../cross-cutting/venue-collateral-and-wrapping.md) for the full
 collateral matrix.
 
+## Enhanced Basis Trade (Cross-Venue, Cross-Coin, LST Collateral, Bidirectional)
+
+> **Strategy IDs:** `DEFI_ENHANCED_BASIS_MULTI_VENUE_HUF_1H_V1` / `DEFI_ENHANCED_BASIS_MULTI_COIN_HUF_1H_V1`
+>
+> **Implementation:** `strategy-service/strategy_service/engine/strategies/enhanced_basis.py`
+>
+> The enhanced variant extends `BasisTradeStrategy` with four capabilities below.
+
+### Cross-Venue Basket
+
+For the same coin (e.g. ETH), the strategy distributes the perp short across multiple venues (Hyperliquid, Binance, OKX,
+Bybit, Aster) weighted by per-venue funding rate. Venues are additionally filtered by orderbook depth — any venue below
+`min_venue_depth_usd` (default $100K) is excluded.
+
+**Config:**
+
+| Parameter                    | Default            | Description                                      |
+| ---------------------------- | ------------------ | ------------------------------------------------ |
+| `perp_venues`                | 5 venues           | List of eligible perp venues                     |
+| `min_venue_depth_usd`        | 100000             | Minimum orderbook depth (USD) to include venue   |
+| `venue_depth_feature_prefix` | `orderbook_depth_` | Feature key prefix for depth data per coin/venue |
+
+Depth features are consumed as `orderbook_depth_{coin}_{venue}` from features-delta-one-service. When no depth data is
+available, all venues pass (graceful degradation).
+
+### Cross-Coin Basket
+
+The strategy ranks all coins in `basis_coins` by absolute funding rate magnitude, selects the top N (configured via
+`max_basket_size`), and allocates capital using the existing two-waterfall weighting system (Pillar 1: coin weights,
+Pillar 2: venue weights within each coin).
+
+**Config:**
+
+| Parameter                      | Default | Description                                           |
+| ------------------------------ | ------- | ----------------------------------------------------- |
+| `basis_coins`                  | 7 coins | Candidate coins: ETH, BTC, SOL, AVAX, DOGE, LINK, ADA |
+| `max_basket_size`              | 5       | Maximum number of coins in the basket                 |
+| `min_funding_threshold_annual` | 0.025   | Minimum annualized funding rate to include a coin     |
+
+### LST Collateral Decision Tree
+
+For each (coin, venue) pair, the strategy evaluates whether to:
+
+1. **Stake spot into LST, then post LST as collateral** (higher capital efficiency at some venues)
+2. **Post base asset directly as margin** (simpler, no staking gas cost)
+
+The decision mirrors execution-service's `LSTCollateralResolver.resolve_collateral_path()` logic: if
+`lst_collateral_factor > 1/leverage`, the LST path is more capital-efficient.
+
+**Decision flow:**
+
+```
+For each (coin, venue):
+  1. Look up LST acceptance at venue (e.g. Bybit accepts wstETH at 0.90 factor)
+  2. Compute direct margin efficiency = 1/leverage (e.g. 0.20 at 5x)
+  3. If LST factor > direct efficiency:
+     → Emit SWAP (coin → LST) + TRANSFER (LST as collateral)
+     → Instruction metadata: collateral_path=LST, lst_token, staking_apy
+  4. Else:
+     → Emit TRANSFER (USDC as margin)
+     → Instruction metadata: collateral_path=DIRECT
+```
+
+**Supported LST paths:**
+
+| Base Coin | LST Options                     | Best Venue Factor   |
+| --------- | ------------------------------- | ------------------- |
+| ETH       | wstETH (Lido), weETH (EtherFi)  | 0.95 (Hyperliquid)  |
+| SOL       | mSOL (Marinade), jitoSOL (Jito) | 0.85 (Drift/Kamino) |
+
+The strategy only makes the collateral _decision_ and annotates instruction metadata. Execution-service performs the
+actual staking via `LSTCollateralResolver`.
+
+**Config:**
+
+| Parameter                | Default | Description                                           |
+| ------------------------ | ------- | ----------------------------------------------------- |
+| `lst_collateral_enabled` | true    | Enable LST collateral path evaluation                 |
+| `lst_leverage`           | 5       | Leverage assumption for direct margin efficiency calc |
+
+### Bidirectional Funding
+
+When the funding rate is negative, the strategy inverts the trade: **short spot + long perp** (inverse basis). This
+captures the funding payment that flows from shorts to longs when perps trade at a discount to spot.
+
+**Direction logic:**
+
+| Funding Rate | Spot Leg   | Perp Leg   | Funding Flow               |
+| ------------ | ---------- | ---------- | -------------------------- |
+| Positive     | LONG spot  | SHORT perp | Longs pay shorts (collect) |
+| Negative     | SHORT spot | LONG perp  | Shorts pay longs (collect) |
+
+The direction is determined per-coin based on the sign of the best funding rate. Coins with positive funding use
+standard basis; coins with negative funding use inverse basis. Both can coexist in the same basket.
+
+**Config:**
+
+| Parameter                  | Default | Description                                      |
+| -------------------------- | ------- | ------------------------------------------------ |
+| `bidirectional_funding`    | true    | Enable inverse basis for negative funding        |
+| `inverse_min_funding_rate` | -0.0001 | Minimum negative rate (per 8h) for inverse entry |
+| `inverse_max_funding_rate` | -0.005  | Maximum negative rate cap (runaway protection)   |
+
+### Factory Functions
+
+| Factory                                     | Strategy Type                | Focus                        |
+| ------------------------------------------- | ---------------------------- | ---------------------------- |
+| `create_basis_trade_multi_venue_strategy()` | `ENHANCED_BASIS_MULTI_VENUE` | Single coin, venue diversity |
+| `create_basis_trade_multi_coin_strategy()`  | `ENHANCED_BASIS_MULTI_COIN`  | Multi-coin basket            |
+
+### Config Files
+
+- `configs/basis_trade_multi_venue.yaml` — cross-venue focus (single coin)
+- `configs/basis_trade_multi_coin.yaml` — cross-coin focus (up to 5 coins)
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_basis.py`
+- **Enhanced implementation:** `strategy-service/strategy_service/engine/strategies/enhanced_basis.py`
 - **Config schema:** `strategy-service/docs/STRATEGY_MODES.md` § DeFi Basis
 - **Execution adapter:** `execution-service/protocols/uniswap.py` + `hyperliquid.py`
+- **LST Collateral Resolver:** `execution-service/execution_service/services/lst_collateral_resolver.py`
 - **Settlement:** `strategy-service/strategy_service/engine/core/settlement_service.py`
 - **PnL calculator:** `strategy-service/strategy_service/engine/core/pnl_calculator.py`

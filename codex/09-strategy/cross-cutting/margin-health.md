@@ -479,6 +479,62 @@ Peg deviation for stablecoin positions (USDC, USDT, DAI). Applies to lending str
 | 1.0% - 5.0%      | CRITICAL  | Withdraw 50% of position. Monitor utilization for bank-run dynamics. |
 | > 5.0%           | EMERGENCY | Full withdrawal. Accept slippage to exit before utilization cap.     |
 
+## VaR Suite (risk-and-exposure-service)
+
+The `var_calculator.py` implements a pure-function VaR suite with no I/O dependencies. All functions operate on
+`list[float]` return series and produce negative floats representing loss thresholds.
+
+### VaR Methods
+
+| Method                    | Function                          | Min Observations | Description                                                                                                                                                                       |
+| ------------------------- | --------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Historical VaR            | `historical_var()`                | 10               | Empirical percentile. Sorts returns, picks the (1-confidence) quantile.                                                                                                           |
+| Parametric VaR            | `parametric_var()`                | 30               | Variance-covariance method assuming normal distribution. Uses sample mean + stdev + z-score.                                                                                      |
+| Cornish-Fisher VaR        | `parametric_var_cornish_fisher()` | 30               | Adjusts normal quantile for observed skewness and excess kurtosis. More accurate for fat-tailed crypto/equity distributions. Based on JP Morgan RiskMetrics / Basel III guidance. |
+| CVaR (Expected Shortfall) | `cvar()`                          | 10               | Expected loss given that loss exceeds VaR. Mean of returns in the (1-confidence) worst tail. Always >= VaR in absolute value.                                                     |
+| Stress VaR                | `stress_var()`                    | 10               | Historical VaR multiplied by crisis-period multiplier.                                                                                                                            |
+| Regime-Adjusted VaR       | `stressed_var()`                  | 30               | Cornish-Fisher VaR x scenario multiplier x regime multiplier.                                                                                                                     |
+
+### Stress Scenario Multipliers
+
+| Scenario                   | Multiplier | Basis                                     |
+| -------------------------- | ---------- | ----------------------------------------- |
+| GFC_2008                   | 3.5x       | S&P 500 peak-to-trough ~57% drawdown      |
+| COVID_2020                 | 2.5x       | March 2020 30-day ~34% drawdown           |
+| CRYPTO_BLACK_THURSDAY_2020 | 5.0x       | BTC/ETH single-day ~50% drop (2020-03-12) |
+
+**Regime multiplier:** `set_regime_multiplier(factor, set_by)` allows risk managers to amplify all VaR figures during
+known stress periods without redeployment. Factor must be >= 1.0 (never reduces VaR). Emits
+`REGIME_STRESS_FACTOR_CHANGED` event for audit trail.
+
+All VaR figures are scaled to the holding period via the square-root-of-time rule (Basel III):
+`var_n_day = var_1_day * sqrt(n)`.
+
+**SSOT:** `risk-and-exposure-service/risk_and_exposure_service/core/var_calculator.py`
+
+## Pre-Trade Check Engine
+
+The `PreTradeCheckEngine` is the last line of defense before order submission. All checks must pass for a trade to be
+approved. The engine runs 7 checks in parallel:
+
+| Check          | What It Validates                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Market Hours   | TradFi venues: rejects orders on weekends and outside RTH (13:30-20:00 UTC). CeFi/DeFi: 24/7, always passes.                                         |
+| Stale Price    | Rejects if any position's `last_updated` exceeds `stale_price_threshold_seconds`. Prevents executing against outdated mark prices.                   |
+| Position Limit | `abs(new_qty) <= max_position_size` AND `new_position_value <= max_position_value`.                                                                  |
+| Exposure Limit | Gross exposure, net exposure, single-instrument exposure, and venue exposure all within limits.                                                      |
+| Capital Limit  | `new_capital <= max_capital_deployed` AND remaining capacity >= `min_cash_reserve`. Fail-safe: rejects if `max_capital_deployed` is not configured.  |
+| Leverage Limit | Estimated leverage <= `max_leverage` AND margin ratio >= `min_margin_ratio`.                                                                         |
+| VaR Limit      | Estimated parametric VaR (notional x volatility x z-score) <= `max_var_loss_pct` of gross exposure. Emits `PRE_TRADE_VAR_BREACH` event on rejection. |
+
+Risk limits are loaded per-client from GCS via `RiskLimitsDomainClient`, falling back to service-level config defaults.
+
+**Circuit Breaker + Kill Switch:** The execution-service owns the 3-state circuit breaker (CLOSED / OPEN / HALF-OPEN).
+See [latency-profiles.md](latency-profiles.md) for circuit breaker thresholds per venue and DeFi-specific conditions
+(gas price, RPC latency, tx reverts, block reorgs).
+
+**SSOT:** `risk-and-exposure-service/risk_and_exposure_service/core/pre_trade_check_engine.py`
+
 ## Venue Collateral Matrix
 
 The UAC registry is the SSOT for venue collateral acceptance. Each venue accepts specific tokens as margin or

@@ -204,13 +204,28 @@ features-service (publishes: ml_signal, prediction_market_price)
 - Compare implied probabilities
 - Challenge: different settlement mechanisms, different liquidity, different fee structures
 
-### Existing: PredictionArbStrategy
+### PredictionArbStrategy (Full Strategy)
 
-Already implemented at `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`:
+`PredictionArbStrategy` is a full strategy implementation, not just a feature surface:
 
-- Cross-venue arbitrage detection (Polymarket, Kalshi, Betfair)
-- Scans for YES_a + NO_b < 1.0 opportunities
-- Uses CanonicalPredictionMarket for cross-platform matching
+**Strategy:** `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py` **Config:**
+`prediction_arb_btc.yaml` (example config for BTC prediction arbitrage)
+
+The strategy performs **outcome differential arbitrage** -- detecting when the same event is priced differently across
+prediction market venues. It scans for:
+
+- **Cross-venue arb:** YES_a + NO_b < 1.0 across Polymarket, Kalshi, and Betfair
+- **Neg-risk bucket arb:** Probability buckets that sum to < 1.0 within a single venue
+- **Prediction vs sportsbook arb:** Same event on Polymarket vs traditional bookmakers
+
+**Execution path:** PredictionArbStrategy emits `StrategyInstruction` -> execution-service -> `prediction_handler.py` ->
+Polymarket CLOB adapter (`polymarket_clob.py`) or Kalshi adapter (`kalshi.py`).
+
+The Polymarket CLOB adapter uses `py-clob-client` for order placement on the CLOB (Central Limit Order Book) -- not the
+legacy Gamma API. Kalshi adapter uses the Kalshi REST API with authenticated trading endpoints.
+
+**Cross-platform matching** uses `CanonicalPredictionMarket` from `prediction_mapping.py` to normalize event
+descriptions across venues into matchable canonical forms.
 
 ### Existing: UAC Internal Arb Schemas
 

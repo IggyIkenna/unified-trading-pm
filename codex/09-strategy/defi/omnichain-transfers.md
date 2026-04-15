@@ -121,10 +121,49 @@ averages serve as fallback when the API is unavailable. Parent strategies (lendi
 yield improvement on the target chain recovers the bridge cost within the expected holding period before requesting a
 transfer.
 
+## Implementation
+
+**Source:** `strategy-service/strategy_service/engine/strategies/omnichain_transfer.py`
+
+**Class:** `OmnichainTransferStrategy` extends `DeFiBaseStrategy`
+
+**Factory:** `create_omnichain_transfer_strategy(token="USDC", source_chain="ETHEREUM")`
+
+**Config:** `strategy-service/strategy_service/configs/omnichain_transfer.yaml`
+
+**Registered in:** `batch_utils.py` as `OMNICHAIN_TRANSFER` strategy type
+
+### Key Methods
+
+| Method                        | Purpose                                                        |
+| ----------------------------- | -------------------------------------------------------------- |
+| `generate_signal()`           | Batch mode: evaluates gas differentials across chains          |
+| `generate_defi_signal()`      | Emits TRANSFER instructions to rebalance chain allocation      |
+| `generate_transfer_signal()`  | Composable API: parent strategies call this to request bridges |
+| `create_bridge_instruction()` | Builds a single TRANSFER instruction with bridge metadata      |
+| `mark_transfer_complete()`    | Called on BRIDGE_COMPLETE event to update pending state        |
+
+### Composable Usage
+
+Parent strategies invoke `generate_transfer_signal()` directly:
+
+```python
+transfer_strategy = create_omnichain_transfer_strategy(token="USDT")
+signal = transfer_strategy.generate_transfer_signal(
+    timestamp=now,
+    token="USDT",
+    amount=Decimal("50000"),
+    from_chain="ETHEREUM",
+    to_chain="ARBITRUM",
+)
+# signal.instructions contains a single TRANSFER instruction
+# execution-service routes to BridgeConnector (Socket API)
+```
+
 ## References
 
 - **RPC URL templates:** `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py`
-- **Bridge adapters:** `execution-service/protocols/` (bridge handlers)
+- **Bridge connector:** `execution-service/execution_service/defi_execution/protocols/bridge.py`
 - **Position tracking:** `position-balance-monitor-service/` (cross-chain balances)
 - **Related strategies:** [multi-chain-lending-yield.md](multi-chain-lending-yield.md),
   [cross-chain-yield-arb.md](cross-chain-yield-arb.md), [l2-basis-trade.md](l2-basis-trade.md)

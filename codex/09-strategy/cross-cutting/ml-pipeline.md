@@ -79,6 +79,47 @@ GCS layout:
   gs://features/{feature_set}/{instrument_id}/{date}/features.parquet
 ```
 
+## Model Families
+
+The `model_trainer_factory.py` in ml-training-service supports 6 model families via `ModelType` enum and
+`get_trainer()`:
+
+| Model Family | Class             | Task Types                 | Key Characteristics                                                                    |
+| ------------ | ----------------- | -------------------------- | -------------------------------------------------------------------------------------- |
+| LightGBM     | `LightGBMTrainer` | Classification, Regression | Primary model. Multiclass (breakout/reversion/neither). Early stopping, class weights. |
+| XGBoost      | `XGBoostTrainer`  | Classification, Regression | Alternative GBM. XGBClassifier / XGBRegressor.                                         |
+| CatBoost     | `CatBoostTrainer` | Classification, Regression | Handles categorical features natively.                                                 |
+| Huber        | `SklearnTrainer`  | Regression                 | Robust regression (outlier-resistant).                                                 |
+| Ridge        | `SklearnTrainer`  | Regression                 | L2-regularized linear regression.                                                      |
+| Poisson GLM  | `SklearnTrainer`  | Regression                 | Count data / rate modeling (PoissonRegressor).                                         |
+
+**SSOT:** `ml-training-service/ml_training_service/app/training/model_trainer_factory.py` (`_TRAINER_MAP` dict)
+
+All trainers implement the same interface: `train(x_train, y_train, x_val, y_val, hyperparams) -> TrainResult` and
+`predict(model, x) -> np.ndarray`. The factory function `get_trainer(model_type, task_type)` returns the right trainer.
+
+LightGBM and sklearn trainers use lazy imports (`import lightgbm as lgb` inside methods) to prevent ImportError cascade
+in non-ML downstream repos.
+
+## Inference Modes
+
+The ml-inference-service implements 6 inference modes:
+
+| Mode        | Handler / Engine              | Description                                                                                                                                                                                                                                              |
+| ----------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| Batch       | `BatchInferenceHandler`       | Processes historical date ranges. Loads features from GCS, generates predictions in batch, writes results.                                                                                                                                               |
+| Live        | `LiveInferenceHandler`        | Subscribes to live feature updates via `FeatureSubscriber`, runs inference per instrument/timeframe, publishes predictions to pub/sub. Polls at timeframe-specific intervals.                                                                            |
+| Ensemble    | `EnsembleInferenceEngine`     | Runs multiple base models (LightGBM, XGBoost, CatBoost, sklearn) with weighted average combination. Supports optional meta-model for stacking.                                                                                                           |
+| Cascade     | `CascadeInferenceMode`        | Multi-timeframe alignment. Trigger TF (e.g. 1h) fires, collects context TFs (4h, 1d), computes cascade confidence via weighted combination. Only publishes `CascadePredictionEvent` when confidence > threshold AND all TFs agree on direction.          |
+| Meta-Signal | `MetaSignalInferenceEngine`   | Loads `SIGNAL_VECTOR_META` model from registry. Combines direction_signal (0.4), vol_signal (0.3), timing_signal (0.2), sizing_confidence (0.1) into single meta_signal [-1, 1]. Falls back to equal-weight combination when no trained model available. |
+| SHAP        | `InferenceTimeSHAPCalculator` | Computes per-prediction feature attributions using cached `shap.TreeExplainer`. Top-N features by                                                                                                                                                        | shap_value | returned per inference call. ~2-10ms per row (explainer cached per model_key). |
+
+**Cascade default profile** (`momentum_cascade`): trigger=1h, context=[4h, 1d], entry=[15m, 5m],
+confidence_threshold=0.6, require_context_alignment=True.
+
+**Meta-signal weight extraction:** For Logistic Regression models, weights come from `coef_` (normalized absolute
+coefficients). For LightGBM/GBM models, weights come from `feature_importances_`.
+
 ## Training Pipeline
 
 ### Training Workflow
@@ -133,14 +174,20 @@ hyperparameters:
 
 Target variables are computed by `ml-training-service` from historical price data:
 
-| Target Type      | Computation                                  | Use Case                   |
-| ---------------- | -------------------------------------------- | -------------------------- |
-| Forward return   | `(price[t+h] - price[t]) / price[t]`         | Momentum, mean reversion   |
-| Binary direction | `1 if price[t+h] > price[t] else 0`          | Directional classification |
-| Swing label      | Column-select + shift(-1) on swing detection | Regime identification      |
-| Spread change    | `spread[t+h] - spread[t]`                    | Basis / arb strategies     |
-| Volatility       | Realized vol over forward window             | Options strategies         |
-| Sports outcome   | Match result (1/X/2) or over/under           | Sports prediction          |
+| Target Type        | Computation                                         | Use Case                                                                           |
+| ------------------ | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Forward return     | `(price[t+h] - price[t]) / price[t]`                | Momentum, mean reversion                                                           |
+| Binary direction   | `1 if price[t+h] > price[t] else 0`                 | Directional classification                                                         |
+| Swing high         | `swing_high_outcome_N` column + shift(-1)           | Breakout/reversion after swing high (3-class: 1=breakout, -1=reversion, 0=neither) |
+| Swing low          | `swing_low_outcome_N` column + shift(-1)            | Breakout/reversion after swing low (3-class: 1=breakout, -1=reversion, 0=neither)  |
+| Cross-venue spread | `compute_cross_venue_spread_target(forward_bars=1)` | Binary (1=compress, 0=expand/flat). Fee-adjusted spread convergence.               |
+| Spread change      | `spread[t+h] - spread[t]`                           | Basis / arb strategies                                                             |
+| Volatility         | Realized vol over forward window                    | Options strategies                                                                 |
+| Sports outcome     | Match result (1/X/2) or over/under                  | Sports prediction                                                                  |
+
+**Swing targets:** Features-delta-one-service pre-computes `swing_high_outcome_N` / `swing_low_outcome_N` columns at
+horizons [2, 3, 5, 10, 20, 50]. `TargetGenerator` selects the column matching `swing_lookback_window` from config and
+applies shift(-1). Training is filtered to rows where swing events occurred (swing_high=1 or swing_low=1).
 
 **Rule:** Target generation uses `shift(-1)` on computed labels, NOT `shift(-lookback_window)`. The lookback window
 (`swing_lookback_window`) is for the label computation itself, not for the shift. This was a correctness fix applied

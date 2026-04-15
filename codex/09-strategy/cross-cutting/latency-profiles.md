@@ -251,6 +251,47 @@ Each segment is logged with the correlation_id, enabling latency attribution acr
 | feature_computation      | > 1 s          | > 5 s              | Scale features service       |
 | venue_api_latency        | > 3x baseline  | > 5x baseline      | Circuit breaker may trigger  |
 
+## Algo Benchmarking: AlgoComparisonRunner
+
+The `AlgoComparisonRunner` in `execution-service/execution_service/algo_library/algo_comparison.py` provides a pure
+simulation framework for comparing execution algorithms. It never submits live orders.
+
+**Use cases:**
+
+- **Pre-trade algo selection:** Pick the best algo for a given order profile before live execution
+- **Backtesting:** Compare TWAP vs VWAP vs POV vs Almgren-Chriss on historical data
+- **CI regression:** Assert that algorithm improvements are additive (no performance regression)
+
+**How it works:**
+
+```
+runner = AlgoComparisonRunner()
+runner.register("TWAP-10min", TWAPAlgorithm, TWAPConfig(...))
+runner.register("VWAP-10min", VWAPAlgorithm, VWAPConfig(...))
+runner.register("AlmgrenChriss", AlmgrenChrissAlgorithm, AlmgrenChrissConfig(...))
+report = runner.run()
+# report.recommended_algo = "AlmgrenChriss"
+# report.recommendation_reason = "highest slice count (60 orders, avg_interval=10s)"
+```
+
+Each registered algorithm's `get_child_orders()` method is called (NOT `execute()`). The runner compares:
+
+| Metric                     | Measured From                                 |
+| -------------------------- | --------------------------------------------- |
+| `num_child_orders`         | Total slices generated                        |
+| `total_quantity_scheduled` | Sum of all child order quantities             |
+| `avg_interval_seconds`     | Average time between consecutive child orders |
+| `estimated_slippage_bps`   | Estimated market impact (from cost metrics)   |
+| `participation_rate_pct`   | Order size relative to expected volume        |
+
+**Current recommendation heuristic:** Prefers the algo with the most child orders (finest granularity), as more slices
+generally means lower market impact for large orders. Future: replace with Almgren-Chriss cost minimisation model.
+
+The runner is fault-tolerant: errors from individual algo runs are captured in the result (`AlgoRunResult.error`) rather
+than propagating.
+
+**SSOT:** `execution-service/execution_service/algo_library/algo_comparison.py`
+
 ## SSOT References
 
 | Concept            | SSOT                     | Location                                                  |

@@ -96,23 +96,33 @@ From `09-strategy/README.md` and `cross-cutting/config-architecture.md`.
 ### 3.1 Aligned (named in Codex README ↔ implemented & exported in `__all__`)
 
 **36 strategy classes** are exported via `__all__` in `strategy_service/engine/strategies/__init__.py`. The README
-indexes **37 entries** (including variants like Unhedged Recursive, ETH Lending, and Omnichain Transfers).
+indexes **38+ entries** (including variants like Unhedged Recursive, ETH Lending, Omnichain Transfers, and Reward
+Lifecycle). With per-asset and per-config variants, the system supports **65+ strategy configurations** across 6 asset
+classes.
 
-All strategy classes listed in the README are now present in `__all__`. This includes the previously-missing quant
-strategies (StatArb, RelVol, CrossExchange, VolSurface) and the newly-added strategies (TradFiMLSwing, TradFiMomentum,
-CeFiMLDirectional, CeFiMarketMaking, BTC/SOL/multi-chain DeFi, OptionsMMStrategy).
+All strategy classes listed in the README are now present in `__all__`. This includes quant strategies (StatArb, RelVol,
+CrossExchange, VolSurface), CeFi strategies (CeFiMLDirectional, CeFiMarketMaking), all DeFi families
+(BTC/SOL/multi-chain), TradFi (TradFiMLSwing, TradFiMomentum, OptionsMMStrategy), Sports (HalftimeML, Kelly), and
+Prediction (PredictionArb).
 
-| Domain     | Classes exported | README entries | Notes                                                         |
-| ---------- | ---------------- | -------------- | ------------------------------------------------------------- |
-| DeFi EVM   | 8                | 8 + 1 MM       | AmmLPStrategy covers MM; Unhedged Recursive = config variant  |
-| DeFi SOL   | 4                | 4              | SolBasis, SolStakedBasis, Kamino, SolConcentratedLP           |
-| DeFi BTC   | 2                | 2              | BtcBasis, BtcLending                                          |
-| DeFi Multi | 4                | 5              | Omnichain Transfers = meta (no strategy class); rest exported |
-| CeFi       | 5                | 4 + 1 MM       | Momentum, MeanReversion, CrossExchange, StatArb, MM           |
-| TradFi     | 6                | 5 + 1 MM       | MLDirectional, MLSwing, Momentum, RelVol, VolSurface, OptsMM  |
-| Sports     | 6                | 5 + 1 MM       | Arb, Value, ML, HalftimeML, Kelly, MM                         |
-| Prediction | 1                | 1              | PredictionArbStrategy                                         |
-| **Total**  | **36**           | **37**         | One-off diff = Omnichain Transfers (no class)                 |
+| Domain     | Classes exported | README entries | Notes                                                                  |
+| ---------- | ---------------- | -------------- | ---------------------------------------------------------------------- |
+| DeFi EVM   | 8                | 9 + 1 MM       | AmmLPStrategy covers MM; Unhedged Recursive = config variant; +Rewards |
+| DeFi SOL   | 4                | 4              | SolBasis, SolStakedBasis, Kamino, SolConcentratedLP                    |
+| DeFi BTC   | 2                | 2              | BtcBasis, BtcLending                                                   |
+| DeFi Multi | 4                | 5              | Omnichain Transfers = meta (no strategy class); rest exported          |
+| CeFi       | 6                | 5 + 1 MM       | Momentum, MeanReversion, CrossExchange, StatArb, MLDirectional, MM     |
+| TradFi     | 6                | 5 + 1 MM       | MLDirectional, MLSwing, Momentum, RelVol, VolSurface, OptsMM           |
+| Sports     | 6                | 5 + 1 MM       | Arb, Value, ML, HalftimeML, Kelly, MM                                  |
+| Prediction | 1                | 1              | PredictionArbStrategy                                                  |
+| **Total**  | **37**           | **38+**        | Omnichain Transfers + Reward Lifecycle = no strategy class             |
+
+**Strategy families and sub-families:** CrossExchange, StatArb, RelVol, VolSurface, OptionsMM, PredictionArb,
+UnhedgedRecursive, EthenaBenchmark are all implemented and documented. Planned families not yet implemented:
+LendingProtocolArb, LiquidationCapture, ActiveDeFiMM, OmnichainTransfer, EventDrivenMacro, CommodityRegime.
+
+**Infrastructure scale:** 7 feature services (150+ calculators), 13+ execution algorithms, 5 matching engine types. See
+README.md for full lists.
 
 ### 3.2 system-topology.json coverage (32 entries vs 36 exported classes)
 
@@ -154,8 +164,8 @@ All three MM strategy classes are now exported. Previously flagged as missing; r
 ### 3.4 README sports index
 
 - **Sports:** The README table lists **five** non-MM strategies (arb, value, ML, halftime ML, Kelly) plus market making,
-  matching **`__all__`** exports. Halftime ML and Kelly do not yet have dedicated `09-strategy/sports/*.md` pages (table
-  links omitted until docs exist).
+  matching **`__all__`** exports. All six sports strategies now have dedicated `09-strategy/sports/*.md` documentation
+  pages: `arbitrage.md`, `value-betting.md`, `ml-sports.md`, `halftime-ml.md`, `kelly.md`, `market-making.md`.
 
 ### 3.5 Duplicate / legacy file
 
@@ -163,22 +173,22 @@ All three MM strategy classes are now exported. Previously flagged as missing; r
   in `__init__.py`. The root file exports `TradFiMLSwingStrategy`; the package exports `TradFiMLDirectionalStrategy`.
   These are distinct classes (swing vs directional), not duplicates.
 
-### 3.6 Missing codex documentation files
+### 3.6 Codex documentation file coverage
 
-The following strategies are in the README index (with links) but the target markdown files do **not** exist:
+All previously missing strategy documentation files have been created. Full coverage:
 
-| README link target              | Strategy class           | Status                 |
-| ------------------------------- | ------------------------ | ---------------------- |
-| `cefi/cross-exchange.md`        | `CrossExchangeStrategy`  | File missing           |
-| `cefi/stat-arb.md`              | `StatArbStrategy`        | File missing           |
-| `tradfi/tradfi-momentum.md`     | `TradFiMomentumStrategy` | File missing           |
-| `tradfi/relative-volatility.md` | `RelVolStrategy`         | File missing           |
-| `tradfi/volatility-surface.md`  | `VolSurfaceStrategy`     | File missing           |
-| `prediction/prediction-arb.md`  | `PredictionArbStrategy`  | File missing (dir too) |
-| `sports/halftime-ml.md`         | `HalftimeMLStrategy`     | File missing           |
-| `sports/kelly.md`               | `KellyCriterionStrategy` | File missing           |
+| Directory     | Doc files | Strategies documented                                                                                       |
+| ------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
+| `cefi/`       | 6         | momentum, mean-reversion, cross-exchange, stat-arb, ml-directional, market-making                           |
+| `defi/`       | 19        | All EVM, Solana, BTC, multi-chain strategies + reward-lifecycle                                             |
+| `tradfi/`     | 6         | ml-directional, options-ml, tradfi-momentum, relative-volatility, volatility-surface, market-making-options |
+| `sports/`     | 6         | arbitrage, value-betting, ml-sports, halftime-ml, kelly, market-making                                      |
+| `prediction/` | 1         | prediction-arb                                                                                              |
+| **Total**     | **38**    | All implemented strategies have codex documentation                                                         |
 
-8 strategy docs referenced in README do not exist on disk. All 8 strategies are implemented and exported.
+**Resolved:** All 8 previously missing docs (`cefi/cross-exchange.md`, `cefi/stat-arb.md`, `tradfi/tradfi-momentum.md`,
+`tradfi/relative-volatility.md`, `tradfi/volatility-surface.md`, `prediction/prediction-arb.md`,
+`sports/halftime-ml.md`, `sports/kelly.md`) now exist on disk with full template-compliant content.
 
 ---
 
@@ -201,7 +211,7 @@ The following strategies are in the README index (with links) but the target mar
 
 Use this as a backlog bridge between documentation and engineering.
 
-**Resolved (as of 2026-04-01):**
+**Resolved (as of 2026-04-15):**
 
 - ~~Catalog drift: cross_exchange / rel_vol / stat_arb / vol_surface not in README~~ — All four now in README and
   exported.
@@ -209,27 +219,29 @@ Use this as a backlog bridge between documentation and engineering.
   non-exported strategies remain.
 - ~~Market-making classes missing from exports~~ — AmmLPStrategy, CeFiMarketMakingStrategy, OptionsMMStrategy all
   exported.
+- ~~8 missing codex docs~~ — All 8 previously missing docs now exist: `cefi/cross-exchange.md`, `cefi/stat-arb.md`,
+  `tradfi/tradfi-momentum.md`, `tradfi/relative-volatility.md`, `tradfi/volatility-surface.md`,
+  `prediction/prediction-arb.md`, `sports/halftime-ml.md`, `sports/kelly.md`. Total: 38 strategy docs across 5
+  directories.
 
 **Still open:**
 
-1. **8 missing codex docs:** `cefi/cross-exchange.md`, `cefi/stat-arb.md`, `tradfi/tradfi-momentum.md`,
-   `tradfi/relative-volatility.md`, `tradfi/volatility-surface.md`, `prediction/prediction-arb.md` (+ prediction/
-   directory), `sports/halftime-ml.md`, `sports/kelly.md`. All 8 strategies are implemented and exported but lack
-   dedicated codex documentation files.
-2. **system-topology.json coverage:** 16 exported strategy classes have no entry in system-topology.json (see 3.2).
+1. **system-topology.json coverage:** 16 exported strategy classes have no entry in system-topology.json (see 3.2).
    These need topology entries with maturity tracking, config files, and instrument mappings.
-3. **Factory export gap:** `create_prediction_arb_btc_strategy` is in system-topology.json but not in `__all__`.
-4. **Trigger subscriptions:** Implement UIC model + config + engine filtering per `config-architecture.md` 3 (Codex
+2. **Factory export gap:** `create_prediction_arb_btc_strategy` is in system-topology.json but not in `__all__`.
+3. **Trigger subscriptions:** Implement UIC model + config + engine filtering per `config-architecture.md` 3 (Codex
    already specifies the gap).
-5. **Risk profile wiring:** Wire `StrategyRiskProfile` (UIC) to strategy config and validation; remove “implicit in
+4. **Risk profile wiring:** Wire `StrategyRiskProfile` (UIC) to strategy config and validation; remove “implicit in
    code” as the long-term state.
-6. **STRATEGY_MODES vs 09-strategy:** Schedule a **terminology pass** so `docs/STRATEGY_MODES.md` and
+5. **STRATEGY_MODES vs 09-strategy:** Schedule a **terminology pass** so `docs/STRATEGY_MODES.md` and
    `09-strategy/README.md` use one naming scheme for modes, delta tracking, and share classes.
-7. **Per-strategy doc completeness:** Run the template checklist against each `09-strategy/*/*.md` file and mark gaps
+6. **Per-strategy doc completeness:** Run the template checklist against each `09-strategy/*/*.md` file and mark gaps
    (many still have TBD capital targets and testing-stage placeholders).
-8. **API mock data alignment:** `unified-trading-api/mock_data/seed_strategies.py` uses different strategy IDs (e.g.
+7. **API mock data alignment:** `unified-trading-api/mock_data/seed_strategies.py` uses different strategy IDs (e.g.
    `DEFI_ETH_BASIS_SCE_1H`, `CEFI_BTC_ML_DIR_HUF_4H`) than system-topology.json (e.g. `DEFI_BASIS_ETH_1H`,
    `CEFI_MOMENTUM_BTC_5M`). The mock seed data should be regenerated from system-topology.json for consistency.
+8. **Planned strategy families:** LendingProtocolArb, LiquidationCapture, ActiveDeFiMM, OmnichainTransfer,
+   EventDrivenMacro, CommodityRegime are listed in README as planned but have no implementation or docs yet.
 
 ---
 

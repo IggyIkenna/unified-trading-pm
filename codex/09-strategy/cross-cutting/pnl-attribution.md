@@ -407,6 +407,36 @@ See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the 
 [codex/04-architecture/defi-risk-monitoring.md](../../04-architecture/defi-risk-monitoring.md) for monitoring
 thresholds.
 
+## Implementation: pnl-attribution-service `compute_pnl_breakdown()`
+
+The `breakdown.py` function `compute_pnl_breakdown()` is the core computation. It accepts all 12 canonical factors as
+parameters and produces a `PnLBreakdown` result:
+
+**Implemented factor parameters:**
+
+| Parameter                 | Maps to Factor | Notes                                                                                                                            |
+| ------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `realized_pnl`            | REALIZED       | Closed position P&L                                                                                                              |
+| `unrealized_pnl`          | UNREALIZED     | Open position mark-to-market                                                                                                     |
+| `delta_pnl`               | DELTA          | Directional price movement                                                                                                       |
+| `basis_pnl`               | BASIS          | Basis convergence/divergence                                                                                                     |
+| `funding_rate_pnl`        | FUNDING        | Perpetual funding rate payments                                                                                                  |
+| `interest_rate_pnl`       | INTEREST       | Lending/borrowing interest differential                                                                                          |
+| `greeks_exposure`         | GREEKS         | Options decomposition: delta/gamma/theta/vega computed from `GreeksExposure` (delta x price, 0.5 x gamma x price^2, theta, vega) |
+| `gas_cost_usd`            | GAS            | DeFi transaction gas costs (subtracted from attributed total)                                                                    |
+| `slippage_bps`            | SLIPPAGE       | Execution vs benchmark price difference                                                                                          |
+| `residual_pnl`            | RESIDUAL       | `mark_to_market - attributed` (computed automatically)                                                                           |
+| `share_class` + `fx_rate` | FX             | Share class conversion via `compute_share_class_pnl()`                                                                           |
+| (via rewards)             | LST_YIELD      | LST ratio appreciation (weETH/ETH, stETH/ETH)                                                                                    |
+
+**Share class conversion** (`compute_share_class_pnl()`): Converts USD P&L to share class base currency (ETH, BTC).
+Returns `(share_class_pnl, fx_pnl, lst_yield_factor)`. The FX attribution isolates P&L from base currency movement. The
+LST yield factor isolates P&L from LST ratio appreciation (e.g., weETH/ETH went from 1.050 to 1.055).
+
+**Aave liquidity index:** For DeFi lending positions, P&L accrues via the Aave liquidity index (which tracks cumulative
+interest). The `compute_share_class_pnl()` function handles the `lst_ratio` / `lst_ratio_start` parameters to attribute
+yield from LST ratio changes separately from price movement.
+
 ## Reward P&L Factors
 
 Four additional attribution factors for DeFi staking reward streams. These extend the canonical factor hierarchy for

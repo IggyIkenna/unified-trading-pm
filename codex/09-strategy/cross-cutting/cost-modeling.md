@@ -277,6 +277,65 @@ This ensures the yield improvement on the target chain recovers the total migrat
 | Destination chain gas      | $0.10-$25            | Same chain-dependent scaling                          |
 | Slippage (large transfers) | 0-0.10%              | Price impact for transfers > $500K                    |
 
+## Execution-Service Cost Models
+
+Three dedicated cost model classes in `execution-service/execution_service/services/` provide the backend for cost
+estimation and alpha measurement:
+
+### GasCostModel (`gas_cost_model.py`)
+
+Models gas costs for DeFi execution and backtesting. Maintains historical gas price data per chain and estimates gas
+units per operation type.
+
+**Default gas estimates (gas units):**
+
+| Operation | Gas Units | Operation          | Gas Units |
+| --------- | --------- | ------------------ | --------- |
+| LEND      | 200,000   | SWAP               | 200,000   |
+| WITHDRAW  | 250,000   | SWAP_MULTI_HOP     | 350,000   |
+| BORROW    | 300,000   | TRANSFER_ERC20     | 65,000    |
+| REPAY     | 200,000   | TRANSFER_ETH       | 21,000    |
+| STAKE     | 150,000   | FLASH_BORROW       | 100,000   |
+| UNSTAKE   | 200,000   | ATOMIC_BUNDLE_BASE | 50,000    |
+
+**Chain-specific gas multipliers** (relative to Ethereum mainnet = 1.0): L2 chains (Arbitrum, Base, Optimism) = 0.6x,
+Polygon/BSC/Avalanche = 0.8x, zkEVM chains (Linea, Polygon zkEVM) = 0.5x.
+
+`calculate_instruction_cost()` produces a typed `InstructionGasCost` (UAC internal) with chain-aware gas estimation.
+`calculate_atomic_bundle_cost()` sums gas across all operations in a flash loan sequence plus the bundle base cost.
+
+### BridgeCostModel (`bridge_cost_model.py`)
+
+Models cross-chain bridge costs with dual-mode pricing:
+
+- **Primary:** Real-time quotes from Across API (`/suggested-fees`) for exact costs (gas + LP fee + relayer fee)
+- **Fallback:** Static estimates from `BRIDGE_COSTS` dict (conservative, suitable for backtesting)
+
+Static cost data covers 30+ routes: Ethereum to/from Arbitrum, Base, Optimism, Polygon, Linea, Blast, BSC, Avalanche,
+and L2-to-L2 routes. Each route specifies `gas_usd`, `fee_bps`, `time_seconds`, and `protocol` (Across, Socket,
+Stargate).
+
+`get_cheapest_route()` finds the lowest-cost destination from a source chain. Used by `CrossChainSOR` to factor bridge
+overhead into cross-chain vs single-chain execution decisions.
+
+**P&L treatment:** Bridge cost is a ONE-TIME realized cost on execution day. Not amortized.
+
+### InstructionAlphaCalculator (`instruction_alpha_calculator.py`)
+
+Measures execution alpha (quality) for instruction-based strategies by comparing benchmark prices from strategy
+instructions against actual market prices or fill prices.
+
+**Alpha formula:**
+
+- BUY/LONG: `alpha_bps = (benchmark_price - market_price) / benchmark_price * 10000` (positive = better price)
+- SELL/SHORT: `alpha_bps = (market_price - benchmark_price) / benchmark_price * 10000` (positive = better price)
+
+**Price sanity checks** before alpha computation: non-positive benchmark rejection, inverted spread detection (bid >=
+ask), spread width limit (>50%), market price outlier detection (>10x or <0.1x benchmark).
+
+Results are grouped by instruction type (TRADE, SWAP, STAKE) and by atomic bundle (instruction_group). Volume-weighted
+average alpha is computed across all instructions.
+
 ## Slippage Estimation
 
 ### Order Book Slippage (CeFi / TradFi)
