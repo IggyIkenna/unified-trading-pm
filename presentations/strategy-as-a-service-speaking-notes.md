@@ -14,10 +14,10 @@ Odum Research. We're FCA authorised. We've built a unified trading system that c
 monitoring, and compliance across five asset classes — traditional finance, crypto, decentralised finance, sports, and
 prediction markets.
 
-We built this for ourselves first. We run seven and a half million of our own capital through it every day. It was good
-enough for our money, so we started making it available to teams who want the same infrastructure without the two-year
-build. We have clients for every service we offer — investment management, regulatory coverage, and now the trading
-platform itself. Nothing we deploy for you goes through without the same vetting we apply to our own capital.
+Our first platform client is already live at $125,000 in contract revenue, growing to $250,000-plus annually. Twelve
+thousand instruments normalised across 80-plus venues — breadth you would need years to replicate. The platform is
+modular: use data, research, or execution independently. Expanding is adding access, not migrating systems. And if you
+leave, bespoke strategy logic is yours — the switching cost is operational familiarity, not a contract.
 
 ---
 
@@ -51,10 +51,9 @@ The question is whether you want to spend your time building infrastructure or t
 
 Our platform is modular. You choose how deep you go.
 
-The same system that powers our investment management business — seven and a half million under management, over thirty
-percent annualised on our crypto strategy — is available to you. Not a stripped-down version. Not a demo. The actual
-production infrastructure we use for our own capital. We built it for ourselves, we trust it with our own money, and
-everything we build for you goes through the same vetting process.
+The platform runs 22 microservices with over 24,500 automated tests. It is production infrastructure — not a demo, not a
+prototype. Our first platform client is already using it for live decentralised finance strategies. You enter at any
+layer and expand over time.
 
 Five connected layers: instruments and data, research and modelling, decision and strategy, execution and control,
 governance and reporting. You can enter at any layer and expand over time.
@@ -89,7 +88,34 @@ ongoing retainer or performance share.
 
 ---
 
-## Slide 5 — Coverage Breadth
+## Slide 5 — How You Plug In
+
+**"How You Plug In"**
+
+There are three ways to connect to the platform, depending on where you are in your own build.
+
+First scenario: you already have signals. You have built your own research, you generate your own trading signals, and
+you just need execution. You send signals to us via API. We execute across 80-plus venues with advanced algorithms —
+time-weighted, volume-weighted, smart order routing, optimal execution. You get best execution reporting — slippage
+analysis, fill quality, venue breakdown. We charge alpha-based fees on execution outperformance. You never touch our
+research layer. Your intellectual property stays completely yours.
+
+Second scenario: you want to build strategies on our infrastructure. You use our data, our feature library, our
+backtesting environment to develop your own strategies. When you are ready, you promote to live — same code, same data,
+same risk controls. No rewrite. That backtest-to-live cohesion is the core value — it would take you eighteen months to
+build it yourself. You can use our frontend or build your own — the backend API is the same either way.
+
+Third scenario: you want us to build strategies for you. You tell us what you want — decentralised finance yield, crypto
+long/short, sports prediction, whatever fits your mandate. We build it, test it on our own capital first, then deploy it
+for you. Either of us can operate it — through our frontend or through the backend API. Bespoke commercial terms. Built
+by a team with decades of institutional trading experience. Nothing ships that we would not trust with our own money.
+
+Across all three: the frontend can be ours or yours. The platform is API-first. You can use the full web interface,
+connect via API with your own tools, or combine both. The backend infrastructure is the same regardless.
+
+---
+
+## Slide 6 — Coverage Breadth
 
 **"What the Platform Covers"**
 
@@ -123,13 +149,13 @@ Low-risk, high-capacity: decentralised finance lending and stablecoin yield. Thr
 Under one percent drawdown. Can absorb fifty to a hundred million-plus. Suitable for conservative mandates or as a base
 layer.
 
-Medium-risk, medium-capacity: basis trades, crypto momentum, traditional finance directional. Ten to thirty percent
+Medium-risk, medium-capacity: basis trades, crypto long/short, traditional finance directional. Ten to thirty percent
 returns. Five to twenty million capacity per strategy. The core of most multi-strategy portfolios.
 
 Higher-risk, capacity-constrained: leveraged decentralised finance yield, concentrated liquidity provision. Twenty to
 fifty percent returns. Five million per pool. Suitable for smaller, more aggressive allocations.
 
-Sports and prediction markets: machine learning prediction, cross-bookmaker arbitrage. Returns are market-dependent.
+Sports and prediction markets: machine learning prediction, cross-bookmaker arbitrage. Fifty percent-plus returns.
 Capacity is tighter — typically under a million. A specialist allocation.
 
 The infrastructure is the same across all of these. The configuration changes, not the platform.
@@ -254,9 +280,9 @@ We partition our business clearly. Internal strategies stay internal — proprie
 separate — built to your requirements, operated by you. We have enough strategy families across enough asset classes
 that there's no conflict.
 
-The trust is built on three things. We built this for ourselves first — it had to work. We have clients for every
-service we offer — it's proven. And nothing we deploy for you goes through without the same vetting we apply to our own
-capital. If we wouldn't trust it with our money, it doesn't ship.
+The trust is built on three things. First platform client already live and growing — this is operational, not
+theoretical. 22 microservices, 24,500-plus automated tests — institutional-grade reliability before your first trade.
+And modular access — you can use data, research, or execution independently without exposing your edge.
 
 The infrastructure is shared. The alpha is not. That's the design.
 
@@ -313,19 +339,17 @@ same. The first conversation is always about what you need and what scope makes 
 
 **"How to Start"**
 
-If this is interesting, the next step is straightforward.
+If this is interesting, the next step is a scoping call.
 
-We have a conversation about what you're trying to do — which asset classes, what kind of strategies, what your current
-setup looks like, and where the gaps are.
+We map your infrastructure gaps — which asset classes, what you have today, where the gaps are — and scope the
+engagement to exactly what you need.
 
-From there, we can scope an engagement — whether that's data access, research, the full platform, or a bespoke strategy
-build.
+From there, we set up a hands-on trial on the data and research layers. No commitment required. You evaluate the
+normalisation quality, coverage depth, and backtesting environment with your own use cases before expanding to anything
+broader.
 
-We can have you looking at live data on the platform within days, not months. The onboarding is fast because the
-infrastructure already exists.
-
-The best way to evaluate us is to use the system. We're happy to set up a trial period on the data and research layers
-so you can see the quality before committing to anything broader.
+Data access is live in days. Research environment in days. Execution integration in weeks. Full platform or bespoke
+build scoped per engagement.
 
 Contact: ikenna@odum-research.com Odum Research Ltd | FCA 975797 | odum-research.com
 

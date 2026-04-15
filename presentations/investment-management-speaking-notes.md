@@ -74,14 +74,14 @@ At one end: stable yield. Decentralised finance lending, stablecoin yield. Three
 percent drawdown. These can absorb fifty to a hundred million-plus. The pools are enormous. This is the conservative
 base layer.
 
-In the middle: basis trades, crypto momentum, traditional finance directional. Ten to thirty percent returns. Five to
+In the middle: basis trades, crypto long/short, traditional finance directional. Ten to thirty percent returns. Five to
 twenty million capacity. Moderate risk, moderate scale.
 
 At the top: leveraged decentralised finance yield, concentrated liquidity provision. Twenty to fifty percent. Five
 million per pool. Higher return but capacity-constrained.
 
-And then crypto trading — momentum, mean reversion, arbitrage. Market-dependent returns. This is where our live thirty
-percent annualised sits.
+And then crypto long/short — machine learning driven, mean reversion, arbitrage. Thirty percent-plus returns. This is
+where our live thirty percent annualised sits.
 
 Capacity matters more than most people realise. A strategy returning forty percent that can only absorb five million is
 a very different proposition from one returning eight percent that takes a hundred million. Our fee structure reflects
@@ -125,9 +125,10 @@ dollars.
 Can I bring my own investment thesis? Yes. We backtest, build, and deploy the strategy with managed execution, custom
 risk parameters, and allocation constraints. Your thesis, our engineering.
 
-Why should I trust you with my capital? We built this for ourselves first. Seven and a half million of our own capital
-runs through the same infrastructure. We have clients for every service we offer. Nothing ships that we would not trust
-with our own money. We will never front-run you or build strategies that overlap with yours.
+Why should I trust you with my capital? Our seven and a half million runs through the same strategies you would invest
+in — co-investment at identical terms. Zero management fee means we only earn on performance above the high watermark.
+Full transparency through the investor portal — 10-factor attribution, trade-level audit trail, monthly reporting. Every
+new strategy is validated on our own capital before reaching a client.
 
 ---
 
@@ -135,11 +136,14 @@ with our own money. We will never front-run you or build strategies that overlap
 
 **"Get Started"**
 
-Three steps. Conversation — we discuss your mandate, risk appetite, asset class preferences, and allocation size.
-Managed or bring-your-own-thesis. Suitability — professional client assessment, documentation, subscription agreement.
-Invest — capital deployed, portal access live, monthly reporting begins.
+Start with a mandate discussion. We walk through risk appetite, asset class preferences, and allocation size. We also
+share our reporting pack — returns attribution, drawdown analysis, and fee modelling — so you can evaluate the track
+record before committing capital.
 
-We co-invest at identical terms as company principals. Same system, same strategies, full transparency.
+Then suitability — professional client or eligible counterparty assessment, documentation, and subscription agreement.
+
+Then capital deployed. Allocation live through the same infrastructure as our own capital. Investor portal access from
+day one. Monthly reporting and full audit trail.
 
 ---
 
