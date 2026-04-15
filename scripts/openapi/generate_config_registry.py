@@ -64,18 +64,54 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ("ml-inference-service", "ml_inference_service.config", "InferenceConfig"),
     ("trading-agent-service", "trading_agent_service.config", "TradingAgentConfig"),
     # === Interfaces / Libraries ===
-    ("unified-config-interface", "unified_config_interface.cloud_config", "UnifiedCloudConfig"),
-    ("unified-config-interface", "unified_config_interface.base_config", "BaseConfig"),
-    ("unified-config-interface", "unified_config_interface.ml_config", "MLTrainingConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "InstrumentDomainConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "StrategyDomainConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "ClientDomainConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "VenueDomainConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "StrategyRiskSubscriptionConfig"),
-    ("unified-config-interface", "unified_config_interface.domain_configs", "CustomRiskScenarioConfig"),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.cloud_config",
+        "UnifiedCloudConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.base_config",
+        "BaseConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.ml_config",
+        "MLTrainingConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "InstrumentDomainConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "StrategyDomainConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "ClientDomainConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "VenueDomainConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "StrategyRiskSubscriptionConfig",
+    ),
+    (
+        "unified-trading-library (config_interface/)",
+        "unified_trading_library.config_interface.domain_configs",
+        "CustomRiskScenarioConfig",
+    ),
     ("unified-market-interface", "unified_market_interface.config", "MarketDataProviderConfig"),
-    ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "OrderInterfaceConfig"),
-    ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "ExecutionDataSourceConfig"),
+    ("execution-service", "execution_service.trade_execution.config", "OrderInterfaceConfig"),
+    ("execution-service", "execution_service.trade_execution.config", "ExecutionDataSourceConfig"),
     # === Strategy internals ===
     ("strategy-service", "strategy_service.engine.core.config_loader", "StrategyConfig"),
     ("strategy-service", "strategy_service.engine.core.config_loader", "MLSignalConfig"),
@@ -86,7 +122,7 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ("strategy-service", "strategy_service.engine.core.config_loader", "PositionConfig"),
 ]
 
-EXTRACT_TIMEOUT = 30
+EXTRACT_TIMEOUT = 90
 
 
 def _extract_config_script(module_path: str, class_name: str) -> str:

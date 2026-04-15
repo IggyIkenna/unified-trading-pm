@@ -1,0 +1,170 @@
+# Repo Readiness Checklist v3.0 - odum-research-website
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-16
+
+schema_version: "3.0"
+repo: "odum-research-website"
+repo_type: "ui"
+arch_tier: "ui"
+deployment_modes: null
+business_modes: null
+version: "0.1.0"
+status: "active"
+last_updated: "2026-03-16"
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR0"
+  readiness_note: "Newly integrated from datadodo/odum_website. Next.js 15 + Firebase Auth + Firestore + GCS proxy."
+
+  cr1_functionality:
+    status: "not_assessed"
+    criteria:
+      "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code; audit §2 passes"
+    evidence: ""
+    notes: "Migrated from external repo. Functional presentation portal with auth, admin, GCS proxy."
+
+  cr2_unit_tests:
+    status: "not_assessed"
+    criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
+    coverage_pct: null
+    coverage_floor_pct: 70
+    evidence: ""
+    notes: "No tests exist yet. Vitest setup needed."
+
+  cr3_integration_tests:
+    status: "not_assessed"
+    criteria: "PM dependency exercised."
+    manifest_dep_count: 1
+    manifest_deps_covered: []
+    manifest_deps_missing: ["unified-trading-pm"]
+    evidence: ""
+    notes: "PM dependency is for presentation content (static files), not runtime API."
+
+  cr4_quality_gate:
+    status: "not_assessed"
+    criteria: "bash scripts/quality-gates.sh Pass 1 fully green; 0 basedpyright errors; no bypass shortcuts"
+    last_run_date: null
+    basedpyright_errors: null
+    ruff_errors: null
+    evidence: ""
+    notes: ""
+
+  cr5_quickmerge:
+    status: "not_assessed"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-odum-research-website or main via cascade"
+    branch: null
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "DR0"
+  readiness_note:
+    "Website deployment via Firebase Hosting or Cloud Run. Not a Cloud Run microservice in the trading topology."
+
+  dr1_health:
+    status: "na"
+    na_reason: "Static website / SSR via Firebase App Hosting, not a Cloud Run microservice."
+    evidence: ""
+    notes: ""
+
+  dr2_circuit_breaker:
+    status: "na"
+    na_reason: "Website, not a trading microservice."
+    evidence: ""
+    notes: ""
+
+  dr3_backup:
+    status: "na"
+    na_reason: "Content in GCS + Firestore (managed backup). No custom backup needed."
+    evidence: ""
+    notes: ""
+
+  dr4_failover:
+    status: "na"
+    na_reason: "Firebase Hosting provides CDN + failover."
+    evidence: ""
+    notes: ""
+
+  dr5_observability:
+    status: "not_assessed"
+    criteria: "Firebase Analytics or equivalent observability."
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR0"
+  readiness_note: "Corporate website, not a revenue-generating trading service."
+
+  br1_acceptance:
+    status: "na"
+    na_reason: "Corporate website, not a trading service."
+    evidence: ""
+    notes: ""
+
+  br2_circuit_breaker:
+    status: "na"
+    na_reason: "Not applicable to corporate website."
+
+  br3_events:
+    status: "na"
+    na_reason: "No UEI events for corporate website."
+
+  br4_pnl_targets:
+    status: "na"
+    na_reason: "No PnL targets for corporate website."
+
+  br5_pnl_optimization:
+    status: "na"
+    na_reason: "No PnL optimization for corporate website."
+
+  br6_batch_live_parity:
+    status: "na"
+    na_reason: "Not applicable."
+
+  br7_staging_parity:
+    status: "na"
+    na_reason: "Not applicable."
+
+  br8_user_approved:
+    status: "na"
+    na_reason: "Not a trading service."
+
+# ==============================================================================
+# CODE AUDIT ITEMS
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-03: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "Firebase Auth handles authentication" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-03: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-02: { status: "not_assessed", verified_date: null, notes: "" }
+  ARCH-01: { status: "not_assessed", verified_date: null, notes: "" }
+  ARCH-02: { status: "not_assessed", verified_date: null, notes: "" }
+  ARCH-03: { status: "not_assessed", verified_date: null, notes: "" }
+  TEST-01: { status: "not_assessed", verified_date: null, notes: "" }
+  TEST-02: { status: "not_assessed", verified_date: null, notes: "" }
+  TEST-03: { status: "not_assessed", verified_date: null, notes: "" }
+  DEPLOY-01: { status: "na", verified_date: null, notes: "Firebase Hosting / Cloud Run" }
+  DEPLOY-02: { status: "na", verified_date: null, notes: "" }
+  DEPLOY-03: { status: "na", verified_date: null, notes: "" }
+  DEPLOY-04: { status: "na", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "na", verified_date: null, notes: "Corporate website, no regulatory requirements" }
+  REGULATORY-02: { status: "na", verified_date: null, notes: "" }
+  REGULATORY-03: { status: "na", verified_date: null, notes: "" }
+  REGULATORY-04: { status: "na", verified_date: null, notes: "" }

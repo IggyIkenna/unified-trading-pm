@@ -1,0 +1,99 @@
+# ==============================================================================
+# Service Template: Pipeline - Feature Engineering Group
+# ==============================================================================
+#
+# Applies to: features-delta-one-service, features-volatility-service,
+#             features-onchain-service, (future: features-sports-service)
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: FEAT-01 through FEAT-03
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Pipeline services - Feature Engineering group (Layer 4)"
+services:
+  - "features-delta-one-service"
+  - "features-volatility-service"
+  - "features-onchain-service"
+  - "features-sports-service"
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Feature Engineering Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: FEAT-01
+    area: "01-domain"
+    priority: P1-high
+    title: "Feature calculation engine"
+    description: |
+      Service implements domain-specific feature calculations.
+
+      Examples:
+        - delta-one: basis, spread, funding, yield
+        - volatility: IV surfaces, Greeks, term structure, skew
+        - onchain: TVL, liquidity depth, health factor
+        - sports: betting odds, player props, game outcomes
+
+      ✅ Pass: Feature calculation logic implemented, tested
+      ❌ Fail: No feature calculations OR hardcoded values
+    evidence: "Check feature calculation functions, unit tests"
+    codex_ref: "01-domain/README.md"
+
+  - id: FEAT-02
+    area: "02-data"
+    priority: P1-high
+    title: "Time-series window operations"
+    description: |
+      Service performs windowing, rolling calculations, or aggregations.
+      Uses pandas/polars for vectorized operations.
+
+      ✅ Pass: Time-series windowing, rolling calculations
+      ❌ Fail: No windowing OR inefficient row-by-row processing
+    evidence: "Check for rolling(), groupby(), window operations"
+    codex_ref: "06-coding-standards/PERFORMANCE_STANDARDS.md"
+
+  - id: FEAT-03
+    area: "02-data"
+    priority: P1-high
+    title: "Feature schema versioning"
+    description: |
+      Service defines output schema for features.
+      Schema includes version field for breaking changes.
+
+      ✅ Pass: Schema defined, version field present
+      ❌ Fail: No schema OR no versioning
+    evidence: "Check schemas/output_schemas.py, version field"
+    codex_ref: "02-data/schema-governance.md"
+
+  - id: FEAT-04
+    area: "01-domain"
+    priority: P1-high
+    title: "Sports feature horizons (if applicable)"
+    description: |
+      For features-sports-service: Compute features at multiple time horizons.
+      - T-24h: 24 hours before kickoff (opening odds)
+      - T-60m: 60 minutes before kickoff (common cutoff)
+      - T-0: At kickoff (closing odds)
+      - HT: Halftime features
+
+      Features grouped by category:
+      - Team features (form, goals, xG, shots, possession)
+      - Odds features (implied probs, market efficiency)
+      - H2H features (head-to-head history)
+      - League context, venue context, weather, etc.
+
+      Storage: gs://features-sports/{horizon}/{league}/{season}/{date}/
+
+      ✅ Pass: Multi-horizon support, 19 feature categories implemented
+      ❌ Fail: No horizon support OR <10 feature categories
+      ⚠️ N/A: Service is not features-sports-service
+    evidence: "Check --horizon flag, feature calculators, storage structure"
+    codex_ref: "01-domain/asset-classes.md#sports, 04-architecture/sports-feature-horizons.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 4 (group) = 22 items
+# ==============================================================================

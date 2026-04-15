@@ -29,7 +29,7 @@ todos:
   - [x] [AGENT] P0. Implement 3-tier system prompt selection based on EntitlementContext
   - [x] [AGENT] P0. Add SSE streaming response via StreamingResponse
   - [x] [AGENT] P0. Wire chat router into main.py create_app()
-  - [ ] [AGENT] P1. Add mock mode fallback (echo responses when no API key)
+  - [x] [AGENT] P1. Add mock mode fallback (echo responses when no API key)
   - [ ] [AGENT] P2. Add unit tests for chat router (tier gating, prompt selection)
 
 - title: "Phase 2: Frontend — Chat Widget in unified-trading-system-ui" items:
@@ -39,8 +39,8 @@ todos:
   - [x] [AGENT] P0. Create `/hooks/api/use-chat.ts` — API hook for SSE streaming
   - [x] [AGENT] P0. Wire into UnifiedShell (authenticated pages) with auth context
   - [x] [AGENT] P0. Wire into public layout with public tier
-  - [ ] [AGENT] P1. Add Cmd+? keyboard shortcut to toggle chat
-  - [ ] [AGENT] P2. Add conversation history persistence (localStorage)
+  - [x] [AGENT] P1. Add Cmd+? keyboard shortcut to toggle chat
+  - [x] [AGENT] P2. Add conversation history persistence (localStorage)
 
 - title: "Phase 3: Knowledge & Content" items:
   - [ ] [HUMAN] P1. Curate public-tier knowledge doc (service descriptions, glossary)

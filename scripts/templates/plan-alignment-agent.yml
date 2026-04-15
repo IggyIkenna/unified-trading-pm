@@ -18,7 +18,7 @@ env:
   GH_TOKEN: ${{ secrets.GH_PAT }}
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
   SERVICE_NAME: "{{SERVICE_NAME}}"
-  GH_ORG: IggyIkenna
+  GH_ORG: ${{ github.repository_owner }}
 
 jobs:
   plan-alignment:

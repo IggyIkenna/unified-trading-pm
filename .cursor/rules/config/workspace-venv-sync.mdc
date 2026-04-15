@@ -19,9 +19,20 @@ This ensures IDE health (Pylance, type checking) works across the workspace.
 
 ---
 
-## Execution Libraries (Renamed/New - Feb 2026)
+## Execution Libraries (Merged into Services - 2026-03-26)
 
-**Rename:** `unified-order-interface` → `unified-trade-execution-interface`
+**Merged repos** (no longer exist as separate packages):
+- `unified-trade-execution-interface` → `execution-service`
+- `unified-defi-execution-interface` → `execution-service`
+- `unified-sports-execution-interface` → `execution-service`
+- `unified-position-interface` → `position-balance-monitor-service`
+- `unified-reference-data-interface` → `instruments-service`
+- `unified-internal-contracts` → `unified-api-contracts` (internal/ subpackage)
+
+**Uninstall eliminated packages:**
+```bash
+uv pip uninstall unified-trade-execution-interface unified-defi-execution-interface unified-sports-execution-interface unified-position-interface unified-reference-data-interface unified-internal-contracts
+```
 
 **Install order** (dependency order for workspace venv IDE type hints):
 
@@ -32,21 +43,18 @@ source .venv-workspace/bin/activate
 # 1. matching-engine-library (no deps on other local libs)
 uv pip install -e matching-engine-library
 
-# 2. unified-trade-execution-interface (was unified-order-interface)
-#    If version constraints fail: pip install -e unified-trade-execution-interface --no-deps
-pip install -e unified-trade-execution-interface --no-deps
-
-# 3. unified-defi-execution-interface
-uv pip install -e unified-defi-execution-interface
-
-# 4. execution-algo-library
+# 2. execution-algo-library
 uv pip install -e execution-algo-library
 
-# 5. Re-install execution-service to pick up new deps
+# 3. execution-service (contains all execution adapters)
 pip install -e execution-service --no-deps
-```
 
-**Uninstall old:** `uv pip uninstall unified-order-interface` (no longer exists)
+# 4. instruments-service (contains reference data)
+pip install -e instruments-service --no-deps
+
+# 5. position-balance-monitor-service (contains position interface)
+pip install -e position-balance-monitor-service --no-deps
+```
 
 CODEX: 05-infrastructure/workspace-root-variable.md
 

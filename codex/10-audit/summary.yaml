@@ -1,0 +1,182 @@
+# Unified Trading System - Audit Summary
+# Aggregated view from per-service audits
+# audit_version: 2026-02-11
+# checklist expanded from 102 to 110 items
+
+audit_version: "2026-02-11"
+checklist_version: "110 items"
+previous_checklist_version: "102 items"
+
+services:
+  instruments-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 40.6
+    live_readiness_pct: 45.5
+
+  market-tick-data-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 30.9
+    live_readiness_pct: 31.6
+
+  market-data-processing-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 44.8
+    live_readiness_pct: 48.0
+
+  features-delta-one-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 42.3
+    live_readiness_pct: 42.5
+
+  ml-inference-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 51.6
+    live_readiness_pct: 42.4
+
+  strategy-service:
+    audit_date: "2026-02-11"
+    batch_readiness_pct: 58.2
+    live_readiness_pct: 44.9
+
+  # NOTE: corporate-actions is the corporate-actions domain within instruments-service, not a standalone service.
+  instruments-service (corporate-actions domain):
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 44.9
+    live_readiness_pct: 44.0
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+  features-calendar-service:
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 51.2
+    live_readiness_pct: 52.9
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+  features-volatility-service:
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 57.3
+    live_readiness_pct: 60.0
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+  features-onchain-service:
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 55.1
+    live_readiness_pct: 56.9
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+  ml-training-service:
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 45.6
+    live_readiness_pct: 51.6
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+  execution-service:
+    audit_date: "2026-02-10"
+    batch_readiness_pct: 55.4
+    live_readiness_pct: 44.6
+    note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
+
+overall:
+  batch_readiness_pct: 49.0
+  live_readiness_pct: 45.7
+  batch_gap_to_production: 36.0
+  live_gap_to_production: 44.3
+  batch_target: 85
+  live_target: 90
+
+top_systemic_issues:
+  - rank: 1
+    id: "SEC-05"
+    priority: "P0"
+    name: "Service account key file in repos"
+    frequency: "12/12 services (100%)"
+    description: "{project_id}-e35fb0ddafe2.json committed to ALL repos"
+  - rank: 2
+    id: "COD-20"
+    priority: "P0"
+    name: "Hardcoded project ID"
+    frequency: "12/12 services (100%)"
+    description: "{project_id} in Dockerfiles, CI, tests, docs"
+  - rank: 3
+    id: "OBS-05/OBS-07/OBS-08"
+    priority: "P1"
+    name: "Missing log_event() calls"
+    frequency: "market-tick-data-service, features-delta-one, ml-inference"
+    description: "Standardized event logging required; test files exist but source has no log_event()"
+  - rank: 4
+    id: "COD-05"
+    priority: "P1"
+    name: "Bare except clauses"
+    frequency: "Multiple services"
+    description: "Bare except: catches all exceptions; should catch specific exceptions"
+  - rank: 5
+    id: "COD-09"
+    priority: "P1"
+    name: "Imports inside functions"
+    frequency: "ml-training-service, market-data-processing, features-delta-one"
+    description: "Imports should be at module level for performance"
+  - rank: 6
+    id: "COD-08"
+    priority: "P1"
+    name: "print() statements"
+    frequency: "execution-service, market-tick-data-service, market-data-processing"
+    description: "Should use logger; print() produces noise alongside structured logging"
+  - rank: 7
+    id: "INF-03"
+    priority: "P1"
+    name: "Missing .env.example"
+    frequency: "features-delta-one, strategy-service"
+    description: "Required env vars not documented"
+  - rank: 8
+    id: "COD-24"
+    priority: "P2"
+    name: "Try-except import fallbacks"
+    frequency: "All re-audited services"
+    description: "Silent no-op when optional deps missing; anti-pattern"
+  - rank: 9
+    id: "COD-25"
+    priority: "P2"
+    name: "Files exceeding 1500-line guideline"
+    frequency: "Some services"
+    description: "Large files (500-5600+ lines) hinder maintainability"
+  - rank: 10
+    id: "WRK-*"
+    priority: "P1"
+    name: "Workflow items PLANNED"
+    frequency: "All services"
+    description: "Disaster recovery, reconciliation, client lifecycle workflows not implemented"
+
+readiness_by_area:
+  DOM: "Domain modeling - mixed; taxonomy and boundaries mostly pass; instrument lifecycle partial"
+  DAT: "Data - partial; UCS compliance good; DAT-19/DAT-20 (domain client normalization) partial/fail across services"
+  OBS:
+    "Observability - partial; setup_cloud_logging adopted; log_event missing in 3 services; print() and alerting gaps"
+  ARC: "Architecture - partial; sharding and DAG mostly not_assessed; ARC-11 (batch-live symmetry) new item"
+  INF: "Infrastructure - good; Dockerfile, CI, quickmerge present; .env.example gaps"
+  COD:
+    "Coding standards - mixed; config pattern good; COD-21..25 new items highlight TODO/FIXME, type hints, try-except
+    imports, file size"
+  SEC: "Security - fail; credential files P0; hardcoded project P0; IAM not verified"
+  WRK: "Workflows - fail; all items PLANNED; disaster recovery, reconciliation not implemented"
+  ANL: "Analysis - partial; backtest metrics present; live performance tracking PLANNED"
+
+gap_to_production:
+  batch:
+    current_readiness_pct: 49.0
+    target_minimum_pct: 85.0
+    gap_pct: 36.0
+    critical_blockers:
+      - "Remove credential files (SEC-05) from all repos"
+      - "Replace hardcoded project ID (COD-20) everywhere"
+      - "Add log_event() to market-tick-data-service, features-delta-one, ml-inference"
+      - "Add data catalogue (BATCH-03)"
+      - "Verify pipeline dependency chain end-to-end"
+  live:
+    current_readiness_pct: 45.7
+    target_minimum_pct: 90.0
+    gap_pct: 44.3
+    critical_blockers:
+      - "All batch blockers apply"
+      - "Position reconciliation (WRK-04)"
+      - "Client isolation (DOM-04, SEC-06)"
+      - "Alerting (OBS-14)"
+      - "Disaster recovery procedures (WRK-01, WRK-02)"

@@ -582,3 +582,139 @@ class TestMainWithRealManifest:
         assert data is not None
         rows, _ = MOD.generate_instrument_matrix(data["strategies"])
         assert len(rows) > 0, "Real manifest must produce non-empty instrument matrix"
+
+
+# ── Tests: main() with synthetic data ─────────────────────────────────────
+
+
+class TestMainFunction:
+    """Test the main() function end-to-end with synthetic manifest data."""
+
+    def test_main_with_valid_manifest(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 0 when manifest is fully valid."""
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [_make_strategy()]}))
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", Path("/nonexistent"))
+        result = MOD.main()
+        assert result == 0
+
+    def test_main_with_missing_manifest(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 1 when manifest file is missing."""
+        manifest = tmp_path / "nonexistent.json"
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        result = MOD.main()
+        assert result == 1
+
+    def test_main_with_invalid_json(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 1 when manifest contains invalid JSON."""
+        manifest = tmp_path / "bad.json"
+        manifest.write_text("{bad json,,}")
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        result = MOD.main()
+        assert result == 1
+
+    def test_main_with_duplicate_ids(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 1 when strategies have duplicate IDs."""
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "strategies": [
+                        _make_strategy(strategy_id="DUP"),
+                        _make_strategy(strategy_id="DUP"),
+                    ]
+                }
+            )
+        )
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", Path("/nonexistent"))
+        result = MOD.main()
+        assert result == 1
+
+    def test_main_with_missing_fields(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 1 when required fields are missing."""
+        strat = _make_strategy()
+        del strat["display_name"]
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [strat]}))
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", Path("/nonexistent"))
+        result = MOD.main()
+        assert result == 1
+
+    def test_main_reports_maturity_warnings(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() reports warnings for maturity inconsistencies but still returns 0."""
+        strat = _make_strategy(
+            maturity={
+                "code": {
+                    "status": "C0",
+                    "class_exists": True,  # inconsistent with C0
+                    "unit_tests": False,
+                    "qg_pass": False,
+                    "merged": False,
+                },
+                "deployment": {
+                    "status": "D0",
+                    "batch_analytics": False,
+                    "mock_smoke": False,
+                    "batch_live_recon": False,
+                },
+                "business": {
+                    "status": "B0",
+                    "backtest_profitable": False,
+                    "live_1d_match": False,
+                    "live_1w_match": False,
+                    "strategy_deck": False,
+                },
+            }
+        )
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [strat]}))
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", Path("/nonexistent"))
+        # Warnings don't cause failure
+        result = MOD.main()
+        assert result == 0
+
+    def test_main_with_class_path_errors(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """main() returns 1 when class_exists=true but file is missing."""
+        strat = _make_strategy(class_path="strategy_service.engine.strategies.nonexistent.NoStrategy")
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [strat]}))
+        monkeypatch.setattr(MOD, "MANIFEST_PATH", manifest)
+        monkeypatch.setattr(MOD, "STRATEGY_SERVICE_ROOT", tmp_path / "strategy-service")
+        (tmp_path / "strategy-service").mkdir()
+        monkeypatch.setattr(MOD, "WORKSPACE_ROOT", tmp_path)
+        result = MOD.main()
+        assert result == 1
+
+    def test_main_maturity_not_object(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Maturity as a non-dict triggers an error."""
+        strat = _make_strategy()
+        strat["maturity"] = "invalid"
+        errors = MOD.validate_required_fields([strat])
+        assert any("must be an object" in e for e in errors)
+
+    def test_main_maturity_sub_key_not_object(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Maturity sub-key as a non-dict triggers an error."""
+        strat = _make_strategy(
+            maturity={
+                "code": "not_a_dict",
+                "deployment": {
+                    "status": "D0",
+                    "batch_analytics": False,
+                    "mock_smoke": False,
+                    "batch_live_recon": False,
+                },
+                "business": {
+                    "status": "B0",
+                    "backtest_profitable": False,
+                    "live_1d_match": False,
+                    "live_1w_match": False,
+                    "strategy_deck": False,
+                },
+            }
+        )
+        errors = MOD.validate_required_fields([strat])
+        assert any("must be an object" in e for e in errors)

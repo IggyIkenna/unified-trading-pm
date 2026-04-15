@@ -12,17 +12,18 @@ tags:
 
 Before writing ANY new function, class, adapter, or connector, search these libraries:
   1. `unified-market-interface` — market data, venue adapters, canonical schemas
-  2. `unified-trade-execution-interface` — order management, execution adapters
-  3. `unified-position-interface` — position feeds (when built)
-  4. `unified-trading-services` — storage, secrets, pubsub, ConfigStore
-  5. `unified-config-interface` — config schema, BaseConfig
-  6. `unified-events-interface` — event logging
-  7. `unified-cloud-interface` — cloud primitives, storage client, Tier 0 abstractions
-  8. `unified-domain-client` — instruments, domain clients
-  9. `unified-api-contracts` — external API schemas, VCR mocks
-  10. `unified-features-interface` — feature definitions, feature store client
-  11. `unified-feature-orchestration-library` — feature pipeline orchestration
-  12. `unified-sports-reference-interface` — sports reference data adapters
+  2. `execution-service` — order management, CeFi/DeFi/sports execution adapters (formerly unified-trade-execution-interface, unified-defi-execution-interface, unified-sports-execution-interface)
+  3. `position-balance-monitor-service` — position feeds (formerly unified-position-interface)
+  4. `instruments-service` — reference data, instrument definitions (formerly unified-reference-data-interface)
+  5. `unified-trading-library` — storage, secrets, pubsub, ConfigStore (formerly unified-trading-services)
+  6. `unified-config-interface` — config schema, BaseConfig
+  7. `unified-events-interface` — event logging
+  8. `unified-cloud-interface` — cloud primitives, storage client, Tier 0 abstractions
+  9. `unified-domain-client` — instruments, domain clients
+  10. `unified-api-contracts` — external API schemas, VCR mocks
+  11. `unified-features-interface` — feature definitions, feature store client
+  12. `unified-feature-orchestration-library` — feature pipeline orchestration
+  13. `unified-sports-reference-interface` — sports reference data adapters
 
 If it EXISTS in a library: USE the library. Do NOT reimplement.
 If the library version is WRONG: FIX the library. Do NOT add a workaround in the service.

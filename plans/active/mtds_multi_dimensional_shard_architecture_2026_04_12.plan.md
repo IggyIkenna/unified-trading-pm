@@ -147,11 +147,10 @@ Phase 4 (Integration validation)
       "NASDAQ": {"trades": "2024-01-01", "ohlcv_1m": "2024-01-01", "tbbo": "2024-01-01"},
       "CBOE": {"ohlcv_15m": "2020-01-07"},  # VIX — Barchart CSV start
       "FX": {"ohlcv_24h": "2020-01-01"},
-      # DeFi — only swaps/liquidity per DEX, rate_indices etc per lending
-      "UNISWAPV3-ETHEREUM": {"swaps": "2021-05-05", "liquidity": "2021-05-05"},
-      "AAVEV3-ETHEREUM": {"rate_indices": "2023-01-27", "oracle_prices": "2023-01-27",
-                          "utilization": "2023-01-27", "rewards": "2023-01-27",
-                          "risk_params": "2023-01-27"},
+      # DeFi — normalized 10 data types (dex_swaps, dex_pools, lending_indices, etc.)
+      "UNISWAPV3-ETHEREUM": {"dex_swaps": "2021-05-05", "dex_pools": "2021-05-05"},
+      "AAVEV3-ETHEREUM": {"lending_indices": "2023-01-27", "oracle_prices": "2023-01-27",
+                          "rewards": "2023-01-27", "risk_params": "2023-01-27"},
       # Sports
       "ODDS_API": {"odds": "2024-01-01", "odds_snapshot": "2024-01-01",
                    "odds_movement": "2024-01-01", "arbitrage_opportunity": "2024-01-01"},
@@ -285,7 +284,7 @@ Phase 4 (Integration validation)
       "futures_chain": ["timestamp", "symbol"],
       "ohlcv_1m": ["timestamp", "open", "high", "low", "close"],
       "tbbo": ["timestamp", "bid_price", "ask_price"],
-      "swaps": ["timestamp", "price", "amount"],
+      "dex_swaps": ["timestamp", "price", "amount"],
       "odds": ["timestamp"],
       "prediction_trades": ["timestamp", "price", "amount"],
   }

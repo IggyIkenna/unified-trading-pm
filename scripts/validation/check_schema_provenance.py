@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Check schema provenance: local BaseModel/TypedDict/dataclass definitions should live in
-unified-api-contracts or unified-internal-contracts. Flags violations.
+unified-api-contracts (includes unified_api_contracts.internal, formerly unified-internal-contracts).
+Flags violations.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from pathlib import Path
 WORKSPACE_ROOT = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos")
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
-EXCLUDED_REPOS = {"unified-api-contracts", "unified-internal-contracts"}
+EXCLUDED_REPOS = {"unified-api-contracts"}
 
 # Patterns for schema definitions
 CLASS_BASEMODEL_RE = re.compile(r"class\s+(\w+)\s*\(\s*[^)]*BaseModel\s*[^)]*\)")
@@ -25,7 +26,7 @@ CLASS_DATACLASS_NO_PAREN_RE = re.compile(r"@\s*dataclass\s*\n\s*class\s+(\w+)\s*
 
 # Import from UAC/UIC
 IMPORT_UAC_UIC_RE = re.compile(
-    r"from\s+(unified_api_contracts|unified_internal_contracts)(?:\.\w+)?\s+import\s+([^;\n]+)",
+    r"from\s+(unified_api_contracts|unified_api_contracts.internal)(?:\.\w+)?\s+import\s+([^;\n]+)",
     re.MULTILINE,
 )
 
@@ -64,7 +65,7 @@ def find_schema_definitions(content: str) -> list[str]:
 
 
 def schema_imported_from_uac_uic(repo_path: Path, schema_name: str) -> bool:
-    """Check if schema_name is imported from unified_api_contracts or unified_internal_contracts anywhere in repo."""
+    """Check if schema_name is imported from UAC or UAC.internal anywhere in repo."""
     for py_file in repo_path.rglob("*.py"):
         rel = py_file.relative_to(repo_path)
         if should_exclude_file(str(rel)):

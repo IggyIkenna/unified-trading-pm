@@ -1,0 +1,112 @@
+# ==============================================================================
+# Service Template: Pipeline - Post-Trade Group
+# ==============================================================================
+#
+# Applies to: position-balance-monitor-service (includes reconciliation),
+#             pnl-attribution-service, risk-and-exposure-service (merged risk + exposure)
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: POST-01 through POST-05
+#
+# Architecture Changes (2026):
+#   - Removed standalone reconciliation-service (integrated into position-balance-monitor-service)
+#   - Merged risk-monitor-service + exposure-monitor-service → risk-and-exposure-service
+#   - position-balance-monitor-service is the "source of truth" for positions
+#
+# ==============================================================================
+
+template_version: "2.0"
+applies_to: "Pipeline services - Post-Trade group (Layer 7)"
+services:
+  - "position-balance-monitor-service" # Source of truth for positions + reconciliation
+  - "risk-and-exposure-service" # Consolidated risk monitoring + exposure tracking
+  - "pnl-attribution-service" # P&L attribution (unchanged)
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Post-Trade Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: POST-01
+    area: "01-domain"
+    priority: P0-critical
+    title: "Position tracking as source of truth (position-balance-monitor-service)"
+    description: |
+      position-balance-monitor-service is the SINGLE SOURCE OF TRUTH for positions.
+      Tracks positions from fills (from execution-service), queries account state via
+      unified-order-interface, reconciles with exchange APIs, provides position state API
+      for strategy queries. Supports multi-tenant (client-level isolation).
+
+      ✅ Pass: Core position tracking, account query integration, exchange reconciliation,
+               position state API, client-level isolation
+      ❌ Fail: No position tracking OR no reconciliation OR no API for queries
+    evidence: "Check position tracking logic, reconciliation, query API, client isolation"
+    codex_ref: "11-project-management/epics/post-trade-and-execution-epic.md#position-reconciliation"
+    applies_to: ["position-balance-monitor-service"]
+
+  - id: POST-02
+    area: "01-domain"
+    priority: P0-critical
+    title: "Pre-trade risk checks and real-time monitoring (risk-and-exposure-service)"
+    description: |
+      risk-and-exposure-service provides PRE-TRADE risk checks (reject instructions that
+      violate limits) and REAL-TIME risk monitoring (exposure aggregation, limit monitoring,
+      breach alerting). Consolidated service (merged risk + exposure).
+
+      ✅ Pass: Pre-trade risk checks, real-time risk monitoring, exposure aggregation,
+               limit monitoring, breach alerting
+      ❌ Fail: No pre-trade checks OR no real-time monitoring OR no alerting
+    evidence: "Check pre-trade risk logic, real-time monitoring, alerting triggers"
+    codex_ref: "11-project-management/epics/post-trade-and-execution-epic.md#risk-and-exposure"
+    applies_to: ["risk-and-exposure-service"]
+
+  - id: POST-03
+    area: "01-domain"
+    priority: P1-high
+    title: "P&L attribution (pnl-attribution-service)"
+    description: |
+      pnl-attribution-service attributes P&L to strategies, instruments, venues.
+      Supports multiple attribution methodologies.
+
+      ✅ Pass: P&L calculation, attribution logic, breakdown by strategy/instrument
+      ❌ Fail: No attribution OR single-level only
+    evidence: "Check P&L calculation, attribution breakdowns"
+    codex_ref: "01-domain/pnl-attribution.md"
+    applies_to: ["pnl-attribution-service"]
+
+  - id: POST-04
+    area: "04-architecture"
+    priority: P1-high
+    title: "Instruction handshake (strategy ↔ execution)"
+    description: |
+      strategy-service emits StrategyInstructions (TRADE, SWAP, LEND, etc.) which are
+      consumed by execution-service. execution-service confirms fills back to
+      strategy-service. position-balance-monitor-service tracks fills independently.
+      No standalone "trade reconciliation service" - this is a communication handshake.
+
+      ✅ Pass: Strategy emits instructions, execution confirms fills, position-monitor
+               tracks fills independently
+      ❌ Fail: No instruction tracking OR no fill confirmation OR tight coupling
+    evidence: "Check instruction schemas, fill confirmations, event flows"
+    codex_ref: "11-project-management/epics/post-trade-and-execution-epic.md#instruction-handshake"
+    applies_to: ["position-balance-monitor-service", "risk-and-exposure-service"]
+
+  - id: POST-05
+    area: "03-observability"
+    priority: P1-high
+    title: "Real-time monitoring & alerting"
+    description: |
+      Post-trade services provide real-time monitoring of positions, exposure, risk, P&L.
+      Alert on breaches of limits or anomalies. Support live dashboards.
+
+      ✅ Pass: Real-time data streams, alert triggers, live dashboards, lifecycle events
+      ❌ Fail: Batch-only OR no alerting OR no observability docs
+    evidence: "Check for real-time metrics, alerting logic, per-service observability docs"
+    codex_ref: "03-observability/lifecycle-events.md"
+    applies_to: ["position-balance-monitor-service", "risk-and-exposure-service", "pnl-attribution-service"]
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 5 (group) = 23 items
+# ==============================================================================

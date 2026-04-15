@@ -1,0 +1,101 @@
+# ==============================================================================
+# Epic Readiness Schema — Legend & Field Definitions
+# ==============================================================================
+#
+# SSOT: unified-trading-codex/11-project-management/epics/
+# Read by: unified-trading-pm/scripts/compute-epic-readiness.py
+# Displayed by: deployment-ui EpicReadinessView via deployment-api /api/epics
+#
+# An "epic" wraps a set of per-repo readiness checklists for a specific
+# asset-class vertical. When all required repos reach their min_stage and
+# the business invariant (PnL) is met, epic_pct = 100 and the epic is COMPLETE.
+#
+# MVP priority:
+#   1 = DeFi  — primary target; must reach 100%
+#   2 = CeFi  — structure defined; completion not enforced for DeFi MVP
+#   3 = TradFi — structure defined; not enforced
+#   4 = Sports — structure defined; not enforced
+#
+# ==============================================================================
+
+schema_version: "1.0"
+
+# ---------------------------------------------------------------------------
+# Field definitions for per-epic YAML files
+# ---------------------------------------------------------------------------
+
+fields:
+  epic_id:
+    type: string
+    values: [defi, cefi, tradfi, sports]
+    description: "Unique identifier matching the file name prefix."
+
+  display_name:
+    type: string
+    description: "Human-readable epic name shown in deployment UI."
+
+  mvp_priority:
+    type: integer
+    range: [1, 4]
+    description: "1 = primary MVP target. Higher = lower current priority."
+
+  business_requirement_minimum:
+    type: string
+    values: [br5_pnl_backtest]
+    description: |
+      Minimum business readiness stage required for epic completion.
+      br5_pnl_backtest: backtest confirms positive PnL contribution
+      (BR5 in REPO_READINESS_CHECKLIST.yaml).
+      Applies to all service repos in required_repos.
+      Libraries (arch_tier: library-*) are exempt from BR stages.
+
+  completion_criteria:
+    code:
+      values: [cr5_quickmerged_main]
+      description: "CR4 QG green + CR5 quickmerged to main."
+    deploy:
+      values: [dr3_smoke_green, na]
+      description: "Smoke health route returns 200 on Cloud Run feat/dev env."
+    business:
+      values: [br5_pnl_backtest, na]
+      description: "Backtest artifacts in gs://unified-backtests/{repo}/."
+
+  required_repos[].min_stage:
+    type: string
+    values: [cr1, cr2, cr3, cr4, cr5]
+    description: "Minimum code_readiness stage for this repo to count as complete."
+
+  required_repos[].min_br_stage:
+    type: string
+    values: [br1, br2, br3, br4, br5, na]
+    description: |
+      Minimum business_readiness stage. 'na' for libraries and non-revenue repos.
+      All service repos require br5 (PnL backtest) — the business invariant.
+
+  required_repos[].asset_class:
+    values: [core, defi, cefi, tradfi, sports]
+    description: |
+      "core" = required by all epics regardless of asset class.
+      Asset-class values = repo participates specifically in this vertical.
+
+# ---------------------------------------------------------------------------
+# Aggregation logic (implemented in compute-epic-readiness.py)
+# ---------------------------------------------------------------------------
+
+aggregation_logic:
+  repo_complete: |
+    A required repo counts as COMPLETE when ALL of:
+    1. code_readiness.current_stage ordinal >= min_stage ordinal
+    2. (if min_br_stage != na) business_readiness.current_stage ordinal >= min_br_stage ordinal
+    3. asset_class_readiness.{asset_class OR core}.branch_status.main.quickmerged = true
+
+  epic_pct: |
+    epic_pct = (count of complete required_repos / total required_repos) * 100
+    Rounded to nearest integer.
+
+  epic_complete: |
+    epic_pct = 100 AND all required repos complete.
+
+  stage_ordinals:
+    cr: { cr0: 0, cr1: 1, cr2: 2, cr3: 3, cr4: 4, cr5: 5 }
+    br: { br0: 0, br1: 1, br2: 2, br3: 3, br4: 4, br5: 5, br6: 6, br7: 7, br8: 8 }

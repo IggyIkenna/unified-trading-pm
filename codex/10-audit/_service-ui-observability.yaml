@@ -1,0 +1,173 @@
+# ==============================================================================
+# Service Template: UI - Observability
+# ==============================================================================
+#
+# Applies to: live-health-monitor-ui, batch-audit-ui, logs-dashboard-ui
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: UI-01 through UI-09 (web UI specifics)
+# Category additions: OBS-01 through OBS-02 (observability specifics)
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "UI services - Observability category (all web-based)"
+services:
+  - "live-health-monitor-ui"
+  - "batch-audit-ui"
+  - "logs-dashboard-ui"
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Web UI Group-Specific Items (UI-01 through UI-09)
+# ==============================================================================
+
+ui_group_items:
+  - id: UI-01
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "Web UI tech stack (React + TypeScript)"
+    description: |
+      UI uses standard web stack: React, TypeScript, modern build tooling (Vite/webpack).
+
+      ✅ Pass: React + TypeScript, package.json present, builds successfully
+      ❌ Fail: Non-standard stack OR build failures
+    evidence: "Check package.json, src/ structure, npm run build"
+    codex_ref: "05-infrastructure/ui-deployment.md"
+
+  - id: UI-02
+    area: "07-security"
+    priority: P0-critical
+    title: "Okta SSO authentication"
+    description: |
+      UI integrates with Okta SSO for authentication.
+      No hardcoded credentials, session management via Okta.
+
+      ✅ Pass: Okta SDK integrated, SSO login flow
+      ❌ Fail: No authentication OR local auth only
+    evidence: "Check Okta integration, login flow"
+    codex_ref: "07-security/okta-sso.md"
+
+  - id: UI-03
+    area: "07-security"
+    priority: P1-high
+    title: "Web security (CSP, CORS, HTTPS)"
+    description: |
+      UI enforces Content Security Policy, CORS, HTTPS-only.
+
+      ✅ Pass: CSP headers, CORS configured, HTTPS enforced
+      ❌ Fail: Missing security headers OR HTTP allowed
+    evidence: "Check security headers, server config"
+    codex_ref: "07-security/web-security.md"
+
+  - id: UI-04
+    area: "05-infrastructure"
+    priority: P2-medium
+    title: "Deployment type (Cloud Run vs. GCS static + CDN)"
+    description: |
+      UI deployed via Cloud Run (backend + frontend) OR GCS static + CDN (frontend only).
+
+      Deployment choice depends on:
+        - Cloud Run: Backend API needed, dynamic content, WebSocket
+        - GCS static + CDN: Static site, no backend, faster/cheaper
+
+      ✅ Pass: Deployment type chosen and configured
+      ❌ Fail: Unclear deployment OR not deployed
+    evidence: "Check cloudbuild.yaml, deployment config"
+    codex_ref: "05-infrastructure/ui-deployment.md"
+
+  - id: UI-05
+    area: "04-architecture"
+    priority: P1-high
+    title: "Backend API integration"
+    description: |
+      UI integrates with backend services via REST APIs or WebSocket.
+
+      ✅ Pass: API client, error handling, loading states
+      ❌ Fail: No backend integration OR hardcoded data
+    evidence: "Check API client code, fetch calls"
+    codex_ref: "04-architecture/README.md"
+
+  - id: UI-06
+    area: "03-observability"
+    priority: P2-medium
+    title: "Real-time data updates (WebSocket or polling)"
+    description: |
+      UI provides real-time or near-real-time data updates.
+
+      ✅ Pass: WebSocket OR polling for live data
+      ❌ Fail: Static data only OR manual refresh required
+    evidence: "Check for WebSocket client, polling logic"
+    codex_ref: "03-observability/README.md"
+
+  - id: UI-07
+    area: "06-coding-standards"
+    priority: P2-medium
+    title: "Responsive design (mobile/tablet/desktop)"
+    description: |
+      UI is responsive across devices.
+
+      ✅ Pass: Responsive CSS, mobile-friendly layout
+      ❌ Fail: Desktop-only OR broken on mobile
+    evidence: "Test on multiple screen sizes"
+    codex_ref: "06-coding-standards/ui-standards.md"
+
+  - id: UI-08
+    area: "06-coding-standards"
+    priority: P2-medium
+    title: "Error handling & user feedback"
+    description: |
+      UI provides clear error messages, loading states, success feedback.
+
+      ✅ Pass: Error handling, loading spinners, toast notifications
+      ❌ Fail: Silent failures OR unclear errors
+    evidence: "Check error handling, UI feedback"
+    codex_ref: "06-coding-standards/ui-standards.md"
+
+  - id: UI-09
+    area: "06-coding-standards"
+    priority: P3-low
+    title: "Accessibility (ARIA, keyboard navigation)"
+    description: |
+      UI follows accessibility best practices.
+
+      ✅ Pass: ARIA labels, keyboard navigation, semantic HTML
+      ❌ Fail: No accessibility considerations
+    evidence: "Check ARIA labels, keyboard navigation"
+    codex_ref: "06-coding-standards/ui-standards.md"
+
+# ==============================================================================
+# Observability Category-Specific Items (OBS-01 through OBS-02)
+# ==============================================================================
+
+category_items:
+  - id: OBS-01
+    area: "03-observability"
+    priority: P1-high
+    title: "Real-time dashboard (charts, tables, alerts)"
+    description: |
+      Observability UI displays real-time metrics, logs, alerts.
+      Charts for time-series data, tables for tabular data.
+
+      ✅ Pass: Dashboard with charts, tables, real-time updates
+      ❌ Fail: No dashboard OR static-only
+    evidence: "Check dashboard components, charting library"
+    codex_ref: "03-observability/README.md"
+
+  - id: OBS-02
+    area: "03-observability"
+    priority: P1-high
+    title: "Alerting & notification integration"
+    description: |
+      Observability UI integrates with alerting system.
+      Displays alerts, allows acknowledgment, shows alert history.
+
+      ✅ Pass: Alert display, acknowledgment, history
+      ❌ Fail: No alert integration
+    evidence: "Check alert components, backend API"
+    codex_ref: "03-observability/alerting.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 9 (UI) + 2 (category) = 29 items
+# ==============================================================================

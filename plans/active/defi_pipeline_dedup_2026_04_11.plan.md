@@ -182,16 +182,16 @@ Phase 2: MTDS        Phase 3: MDPS        [PARALLEL]
 
 ### Representative Venues
 
-| Protocol Class | Venue               | MTDS Operation                            | Data Types                             |
-| -------------- | ------------------- | ----------------------------------------- | -------------------------------------- |
-| Lending        | AAVEV3-ETHEREUM     | collect-evm-defi, collect-lending-indices | rate_indices, utilization, risk_params |
-| DEX            | UNISWAPV3-ETHEREUM  | collect-dex-swaps, collect-dex-pools      | swaps, dex_pools                       |
-| Yield          | LIDO-ETHEREUM       | collect-lst-rates, collect-oracle-prices  | lst_rates, oracle_prices               |
-| Perps          | HYPERLIQUID         | collect-perp-funding                      | perp_funding                           |
-| Solana         | DRIFT-SOLANA        | collect-solana-defi                       | solana_defi                            |
-| Gas            | (cross-chain)       | collect-gas-fees                          | gas_fees                               |
-| Liquidations   | AAVEV3-ETHEREUM     | collect-liquidations                      | liquidations                           |
-| Rewards        | EIGENLAYER-ETHEREUM | collect-eigenlayer-rewards                | rewards                                |
+| Protocol Class | Venue               | MTDS Operation                           | Data Types                   |
+| -------------- | ------------------- | ---------------------------------------- | ---------------------------- |
+| Lending        | AAVEV3-ETHEREUM     | collect-lending-indices                  | lending_indices, risk_params |
+| DEX            | UNISWAPV3-ETHEREUM  | collect-dex-swaps, collect-dex-pools     | swaps, dex_pools             |
+| Yield          | LIDO-ETHEREUM       | collect-lst-rates, collect-oracle-prices | lst_rates, oracle_prices     |
+| Perps          | HYPERLIQUID         | collect-perp-funding                     | perp_funding                 |
+| Solana         | DRIFT-SOLANA        | collect-perp-funding                     | perp_funding                 |
+| Gas            | (cross-chain)       | collect-gas-fees                         | gas_fees                     |
+| Liquidations   | AAVEV3-ETHEREUM     | collect-liquidations                     | liquidations                 |
+| Rewards        | EIGENLAYER-ETHEREUM | collect-eigenlayer-rewards               | rewards                      |
 
 ### Success Criteria
 

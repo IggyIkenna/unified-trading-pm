@@ -32,8 +32,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PM_ROOT="$(dirname "$SCRIPT_DIR")"
-TEMPLATES_DIR="$SCRIPT_DIR/templates"
+PM_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+TEMPLATES_DIR="$PM_ROOT/scripts/templates"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
 GH_ORG="${GH_ORG:-IggyIkenna}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(dirname "$PM_ROOT")}"
@@ -81,9 +81,9 @@ fi
 log_section "Reading workspace manifest"
 
 # Get service + api repos (the ones that get agent-audit.yml rolled out)
-TARGET_REPOS=$(python3 - <<'EOF'
+TARGET_REPOS=$(python3 - "$MANIFEST" <<'EOF'
 import json, sys
-with open("$MANIFEST".replace("$MANIFEST", sys.argv[1])) as f:
+with open(sys.argv[1]) as f:
     m = json.load(f)
 repos = m.get("repositories", {})
 # Roll out to service, api tiers (not libraries, pm, codex, devops)
@@ -95,7 +95,7 @@ for name, info in repos.items():
         if name not in ("unified-trading-pm", "unified-trading-codex"):
             print(name)
 EOF
-"$MANIFEST" 2>/dev/null || echo "")
+2>/dev/null || echo "")
 
 # Fallback to hardcoded list if python parse fails
 if [ -z "$TARGET_REPOS" ]; then

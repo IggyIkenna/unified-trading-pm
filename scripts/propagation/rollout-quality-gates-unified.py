@@ -46,7 +46,7 @@ def _jstr(val: object, default: str = "") -> str:
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = PM_ROOT.parent
-CODEX_ROOT = WORKSPACE_ROOT / "unified-trading-codex"
+CODEX_ROOT = PM_ROOT / "codex"
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
 # Template paths

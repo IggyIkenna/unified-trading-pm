@@ -13,12 +13,11 @@ set -euo pipefail
 REGION="${REGION:-asia-northeast1}"
 REPO_BASE="projects/$(gcloud config get-value project 2>/dev/null)/locations/${REGION}/connections/iggyikenna-github/repositories"
 
-REPOS="deployment-service deployment-api features-multi-timeframe-service ml-training-ui execution-service market-tick-data-service unified-reference-data-interface api-contracts unified-domain-services execution-algo-library unified-order-interface unified-market-interface unified-config-interface unified-events-interface deployment-dashboard unified-cloud-services features-calendar-service market-data-processing-service strategy-service features-volatility-service features-onchain-service features-delta-one-service ml-training-service ml-inference-service instruments-service"
+REPOS="deployment-service deployment-api features-multi-timeframe-service ml-training-ui execution-service market-tick-data-service unified-reference-data-interface unified-api-contracts unified-market-interface unified-config-interface unified-events-interface deployment-dashboard unified-cloud-interface features-calendar-service market-data-processing-service strategy-service features-volatility-service features-onchain-service features-delta-one-service ml-training-service ml-inference-service instruments-service position-balance-monitor-service unified-trading-library"
 
 for name in $REPOS; do
   repo="${REPO_BASE}/${name}"
   [ "$name" = "deployment-dashboard" ] && repo="${REPO_BASE}/unified-trading-deployment-v2"
-  [ "$name" = "execution-algo-library" ] && repo="${REPO_BASE}/IggyIkenna-execution-algo-library"
   trigger_name="${name}-feature-build"
   if gcloud builds triggers describe "$trigger_name" --region="$REGION" &>/dev/null; then
     echo "SKIP $trigger_name"

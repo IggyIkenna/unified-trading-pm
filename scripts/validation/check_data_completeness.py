@@ -35,11 +35,11 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import cast
 
-from unified_events_interface import DATA_COMPLETENESS_CHECK, log_event, setup_events
-from unified_internal_contracts.reference.data_freshness import (
+from unified_api_contracts.internal.reference.data_freshness import (
     ALL_FRESHNESS_CONTRACTS,
     DataFreshnessContract,
 )
+from unified_trading_library import DATA_COMPLETENESS_CHECK, log_event, setup_events
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@
 #   3. quality-gates.sh --no-fix — topological tier order, parallel within tier
 #
 # All repos:    bash scripts/quality-gates.sh --no-fix (Python and UI)
-# UI template:  unified-trading-codex/06-coding-standards/quality-gates-ui-template.sh
+# UI template:  unified-trading-pm/codex/06-coding-standards/quality-gates-ui-template.sh
 # Codex:        skip (docs-only, no QG)
 # SSOT:         workspace-manifest.json topologicalOrder
 #

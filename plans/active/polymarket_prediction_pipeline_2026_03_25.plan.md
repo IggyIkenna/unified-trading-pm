@@ -30,14 +30,14 @@ overview: |
 
   ## Scope: 10 repos touched
   - unified-api-contracts (UAC) — VENUE_CATEGORY_MAP, Polymarket mappings, canonical ID format
-  - unified-internal-contracts (UIC) — prediction domain TypedDicts (if needed)
+  - unified-api-contracts (internal) (UIC) — prediction domain TypedDicts (if needed)
   - unified-market-interface (UMI) — PolymarketGammaAdapter for tick data
   - unified-reference-data-interface (URDI) — PolymarketReferenceAdapter for market discovery
   - instruments-service — PREDICTION category hook
   - market-tick-data-service — PREDICTION category hook with POLYMARKET venue
   - unified-config-interface (UCI) — prediction domain config
   - unified-trading-pm — plan + scripts
-  - unified-trading-codex — prediction-schema-paths.md
+  - unified-trading-pm/codex — prediction-schema-paths.md
   - polymarket-correlation-research — borrow patterns (read-only, no modifications)
 
 type: code
@@ -53,7 +53,7 @@ repo_gates:
   - repo: unified-api-contracts
     code: C0
     notes: "VENUE_CATEGORY_MAP, Polymarket canonical mappings, soccer team/fixture cross-reference"
-  - repo: unified-internal-contracts
+  - repo: unified-api-contracts (internal)
     code: C0
     notes: "Prediction domain TypedDicts if needed"
   - repo: unified-market-interface
@@ -74,7 +74,7 @@ repo_gates:
   - repo: unified-trading-pm
     code: C0
     notes: "Plan file"
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm/codex
     code: C0
     notes: "prediction-schema-paths.md"
 
@@ -450,7 +450,7 @@ todos:
   - id: p5b-codex-prediction-schema-paths
     content: |
       - [ ] [AGENT] P2. Create prediction-schema-paths.md in codex.
-        File: unified-trading-codex/02-data/prediction-schema-paths.md
+        File: unified-trading-pm/codex/02-data/prediction-schema-paths.md
 
         Document:
         1. Canonical instrument ID format for all PREDICTION sub-categories
@@ -496,7 +496,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Run quality gates across all touched repos.
         cd unified-api-contracts && bash scripts/quality-gates.sh
-        cd unified-internal-contracts && bash scripts/quality-gates.sh
+        cd unified-api-contracts && bash scripts/quality-gates.sh  # includes internal contracts
         cd unified-reference-data-interface && bash scripts/quality-gates.sh
         cd unified-market-interface && bash scripts/quality-gates.sh
         cd instruments-service && bash scripts/quality-gates.sh
@@ -767,7 +767,7 @@ P7 (QG sweep) ────────────────── P7a: All re
 | `unified_market_interface/adapters/polymarket.py`                    | New: tick adapter                  | Create |
 | `instruments_service/engine/orchestrator.py`                         | Add PREDICTION → POLYMARKET        | Edit   |
 | `market_tick_data_service/engine/orchestrator.py`                    | Add PREDICTION → POLYMARKET        | Edit   |
-| `unified-trading-codex/02-data/prediction-schema-paths.md`           | New: PREDICTION paths doc          | Create |
+| `unified-trading-pm/codex/02-data/prediction-schema-paths.md`        | New: PREDICTION paths doc          | Create |
 
 ## Verification
 

@@ -70,10 +70,10 @@ todos:
   - id: t1d-utl-exports
     content:
       "TRACK 1d — repo: unified-trading-library. Check unified_trading_library/__init__.py for: DateValidator,
-      should_skip_date, TimestampAlignmentResult, validate_timestamp_date_alignment (all from unified-domain-client).
-      Add any missing re-exports so all are available as: from unified_trading_library import should_skip_date. Run: cd
-      unified-trading-library && bash scripts/quickmerge.sh 'chore: re-export UDC date/timestamp helpers from UTL'
-      --agent"
+      should_skip_date, TimestampAlignmentResult, validate_timestamp_date_alignment (all from unified-trading-library
+      (domain_client/)). Add any missing re-exports so all are available as: from unified_trading_library import
+      should_skip_date. Run: cd unified-trading-library && bash scripts/quickmerge.sh 'chore: re-export UDC
+      date/timestamp helpers from UTL' --agent"
     status: completed
   - id: t2a-split-ccxt-service
     content:
@@ -209,14 +209,14 @@ Understanding this hierarchy is essential before touching any code:
 
 - **UAC (`unified-api-contracts`)** — SSOT for venue names, canonical mappings, domain enums, ticker registries. Nothing
   venue-related gets defined outside UAC.
-- **UIC (`unified-internal-contracts`)** — owns `InstrumentRecord` schema, `INSTRUMENTS_SCHEMA` for parquet. The
+- **UIC (`unified-api-contracts, internal`)** — owns `InstrumentRecord` schema, `INSTRUMENTS_SCHEMA` for parquet. The
   canonical output type.
 - **UCI (`unified-cloud-interface`)** — cloud-agnostic storage/queue/secret clients, `ManifestWriter`/`ManifestReader`
   for data catalogue.
 - **URDI (`unified-reference-data-interface`)** — 28+ per-venue adapters that fetch raw data and return
   `InstrumentRecord[]` already in canonical format. URDI is the ONLY path for external API calls. It handles its own
   credentials via UTL's standard credential injection — instruments-service never sees API keys.
-- **UDC (`unified-domain-client`)** — `DataCompletionChecker`, `DateValidator`, `should_skip_date`,
+- **UDC (`unified-trading-library (domain_client/)`)** — `DataCompletionChecker`, `DateValidator`, `should_skip_date`,
   `TimestampAlignmentResult`, `DomainValidationService`. All data-availability and validation logic lives here.
 - **UTL (`unified-trading-library`)** — `ServiceBootstrap`, `ServiceCLI`, `BatchIO`, `ScheduledIO`, `BaseGCSWriter`,
   `ParquetSchemaEnforcer`, `FreshnessMonitor`, `DomainConfigReloader`. All cross-cutting service infrastructure.

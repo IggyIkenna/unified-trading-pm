@@ -1,0 +1,167 @@
+# ==============================================================================
+# DeFi Trading Epic — Readiness Definition
+# ==============================================================================
+#
+# MVP Priority: 1 (primary target — must reach 100%)
+# Business invariant: PnL confirmed via backtest (BR5) for all service repos.
+# Branch gate: all required repos at CR5 (quickmerged to main).
+#
+# DeFi strategies in scope (from mvp-universe.yaml):
+#   - staking
+#   - lending
+#   - recursive_staking_with_flash_loans
+#   - basis_trade_long_spot_short_perp
+#
+# DeFi venues in scope (MVP):
+#   - AAVEV3-ETHEREUM (start: 2023-01-27)
+#   - UNISWAPV2-ETHEREUM (start: 2020-05-18)
+#   - UNISWAPV3-ETHEREUM (start: 2021-05-05)
+#   - COMPOUND_V3_ETH (start: 2022-08-24)
+#
+# See: unified-trading-codex/11-project-management/mvp-universe.yaml for full
+# instrument and venue scope definitions.
+# ==============================================================================
+
+epic_id: defi
+display_name: "DeFi Trading Epic"
+mvp_priority: 1
+business_requirement_minimum: br5_pnl_backtest
+last_updated: "2026-03-11"
+
+completion_criteria:
+  code: cr5_quickmerged_main
+  deploy: dr3_smoke_green
+  business: br5_pnl_backtest
+  description: |
+    Epic = 100% when every required repo has:
+    - code_readiness.current_stage >= CR5 (quickmerged to main)
+    - asset_class_readiness.{defi|core}.branch_status.main.quickmerged = true
+    - business_readiness.current_stage >= BR5 for service repos (PnL backtest confirmed)
+
+required_repos:
+  # ── Core: required by all epics ──────────────────────────────────────────
+
+  - repo: unified-api-contracts
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "UAC schemas underpin all DeFi events and contracts."
+
+  - repo: unified-cloud-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "All services use UCI for cloud provider abstraction."
+
+  - repo: unified-events-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "UEI event bus required for all PubSub communication."
+
+  - repo: unified-config-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "UnifiedCloudConfig required by all services."
+
+  - repo: unified-trading-library
+    arch_tier: library-t1
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "UTL utilities (date validation, lookback constants, market categories)."
+
+  - repo: unified-domain-client
+    arch_tier: library-t3
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+    rationale: "UDC provides GCS/S3 data I/O used by all pipeline services."
+
+  - repo: instruments-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+    rationale: "DeFi instruments (AAVE pools, Uniswap pairs) loaded from instruments-service."
+
+  - repo: strategy-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+    rationale: "Strategy execution for DeFi (staking, lending, basis trade)."
+
+  - repo: execution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+    rationale: "Order execution for DeFi via unified-defi-execution-interface."
+
+  - repo: pnl-attribution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+    rationale: "PnL attribution is the minimum business requirement for epic sign-off."
+
+  - repo: risk-and-exposure-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br3
+    asset_class: core
+    rationale: "Risk monitoring required for live DeFi execution. BR3 sufficient (events verified)."
+
+  # ── DeFi-specific ────────────────────────────────────────────────────────
+
+  - repo: unified-defi-execution-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: defi
+    rationale: "UDEI provides SWAP/LEND/BORROW/STAKE execution contracts for DeFi protocols."
+
+  - repo: features-onchain-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: defi
+    rationale: "Onchain features (lending rates, TVL, utilization) are the DeFi signal inputs."
+
+optional_repos:
+  # Present in the workspace but NOT required for DeFi epic = 100%.
+
+  - repo: features-delta-one-service
+    asset_class: cefi
+    note: "Required for CeFi epic. Optional for DeFi — DeFi uses features-onchain-service."
+
+  - repo: features-volatility-service
+    asset_class: cefi
+    note: "Volatility features are CeFi/TradFi-specific for MVP."
+
+  - repo: ml-training-service
+    asset_class: cefi
+    note: "ML models not in scope for DeFi MVP (DeFi uses rule-based strategies)."
+
+  - repo: ml-inference-service
+    asset_class: cefi
+    note: "Same as above."
+
+  - repo: market-tick-data-service
+    asset_class: cefi
+    note: "Tick data pipeline is CeFi/TradFi-specific. DeFi uses onchain data."
+
+  - repo: features-sports-service
+    asset_class: sports
+
+  - repo: features-commodity-service
+    asset_class: tradfi
+
+  - repo: ibkr-gateway-infra
+    asset_class: tradfi

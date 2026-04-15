@@ -1,0 +1,551 @@
+service: "ml-training-service"
+mode: "live"
+audit_date: "2026-02-10"
+auditor: "automated-codex-scan"
+
+summary:
+  total_items: 102
+  pass: 33
+  fail: 5
+  partial: 14
+  not_assessed: 12
+  na: 38
+  readiness_pct: 51.6
+
+items:
+  # ===========================================================================
+  # 01-DOMAIN (DOM)
+  # ===========================================================================
+  - id: "DOM-01"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service, execution-service."
+
+  - id: "DOM-02"
+    status: "pass"
+    evidence: "config.py - cefi_instruments, tradfi_instruments"
+    notes: "Asset class taxonomy used."
+
+  - id: "DOM-03"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: instruments-service, strategy-service, execution-service."
+
+  - id: "DOM-04"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service, execution-service, ml-inference-service."
+
+  - id: "DOM-05"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service, execution-service. Not a live service."
+
+  - id: "DOM-06"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service."
+
+  - id: "DOM-07"
+    status: "partial"
+    evidence: "config.py - hardcoded venue strings"
+    notes: "No VenueMapping from UCS."
+
+  - id: "DOM-08"
+    status: "partial"
+    evidence: "config.py"
+    notes: "Dual config pattern. No shared domain objects."
+
+  # ===========================================================================
+  # 02-DATA (DAT)
+  # ===========================================================================
+  - id: "DAT-01"
+    status: "fail"
+    evidence: "No schemas/output_schemas.py"
+    notes: "No output schema definitions."
+
+  - id: "DAT-02"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-03"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-04"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-05"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-06"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-07"
+    status: "pass"
+    evidence: "gcs_feature_reader.py - get_storage_client()"
+    notes: "All I/O through UCS."
+
+  - id: "DAT-08"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-09"
+    status: "pass"
+    evidence: "config.py - bucket templates"
+    notes: "Bucket names from config."
+
+  - id: "DAT-10"
+    status: "partial"
+    evidence: "gcs_feature_reader.py"
+    notes: "No domain-level clients."
+
+  - id: "DAT-11"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-12"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-13"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-14"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-15"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-16"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-17"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "DAT-18"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  # ===========================================================================
+  # 03-OBSERVABILITY (OBS)
+  # ===========================================================================
+  - id: "OBS-01"
+    status: "pass"
+    evidence: "cli/main.py line 81"
+    notes: "Standardized logging."
+
+  - id: "OBS-02"
+    status: "partial"
+    evidence: "cli/main.py"
+    notes: "AWS logging not tested."
+
+  - id: "OBS-03"
+    status: "pass"
+    evidence: "cli/main.py line 84"
+    notes: "Resource monitoring enabled."
+
+  - id: "OBS-04"
+    status: "pass"
+    evidence: "cli/main.py line 89"
+    notes: "Graceful shutdown handler."
+
+  - id: "OBS-05"
+    status: "partial"
+    evidence: "cli/main.py"
+    notes: "Lifecycle events emitted but some are sequential stubs."
+
+  - id: "OBS-06"
+    status: "pass"
+    evidence: "tests/unit/test_event_logging.py"
+    notes: "Event logging test."
+
+  - id: "OBS-07"
+    status: "pass"
+    evidence: "cli/main.py line 24"
+    notes: "log_event() used exclusively."
+
+  - id: "OBS-08"
+    status: "partial"
+    evidence: "cli/main.py"
+    notes: "Domain events are stubbed."
+
+  - id: "OBS-09"
+    status: "partial"
+    evidence: "training code"
+    notes: "Some progress but not standardized."
+
+  - id: "OBS-10"
+    status: "pass"
+    evidence: "cli/main.py"
+    notes: "Strict exit codes."
+
+  - id: "OBS-11"
+    status: "pass"
+    evidence: "cli/main.py"
+    notes: "No spurious errors."
+
+  - id: "OBS-12"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "OBS-13"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "OBS-14"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: execution-service, strategy-service. Not a live service."
+
+  # ===========================================================================
+  # 04-ARCHITECTURE (ARC)
+  # ===========================================================================
+  - id: "ARC-01"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "ARC-02"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "ARC-03"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "ARC-04"
+    status: "pass"
+    evidence: "cli/parser.py"
+    notes: "Supports --dry-run, --log-level, --verbose."
+
+  - id: "ARC-05"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "ARC-06"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "ARC-07"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Requires runtime verification."
+
+  - id: "ARC-08"
+    status: "pass"
+    evidence: "gcs_feature_reader.py"
+    notes: "GCS communication."
+
+  - id: "ARC-09"
+    status: "pass"
+    evidence: "docs/ARCHITECTURE.md"
+    notes: "Documented."
+
+  - id: "ARC-10"
+    status: "pass"
+    evidence: "docs/DEPENDENCIES.md"
+    notes: "Documented."
+
+  # ===========================================================================
+  # 05-INFRASTRUCTURE (INF)
+  # ===========================================================================
+  - id: "INF-01"
+    status: "pass"
+    evidence: "ml-training-service/"
+    notes: "Repo exists."
+
+  - id: "INF-02"
+    status: "pass"
+    evidence: "pyproject.toml"
+    notes: "Deps pinned."
+
+  - id: "INF-03"
+    status: "pass"
+    evidence: ".env.example"
+    notes: "Exists with placeholders."
+
+  - id: "INF-04"
+    status: "pass"
+    evidence: "Dockerfile"
+    notes: "Multi-stage, non-root."
+
+  - id: "INF-05"
+    status: "partial"
+    evidence: "Uses UCS. Many function-level imports."
+    notes: ""
+
+  - id: "INF-06"
+    status: "pass"
+    evidence: "scripts/setup.sh"
+    notes: ""
+
+  - id: "INF-07"
+    status: "pass"
+    evidence: ".github/workflows/quality-gates.yml"
+    notes: ""
+
+  - id: "INF-08"
+    status: "pass"
+    evidence: "cloudbuild.yaml"
+    notes: ""
+
+  - id: "INF-09"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Not checked."
+
+  - id: "INF-10"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "INF-11"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "INF-12"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Not verified."
+
+  - id: "INF-13"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Not verified."
+
+  - id: "INF-14"
+    status: "pass"
+    evidence: "README.md"
+    notes: ""
+
+  - id: "INF-15"
+    status: "pass"
+    evidence: "scripts/quickmerge.sh"
+    notes: ""
+
+  # ===========================================================================
+  # 06-CODING-STANDARDS (COD)
+  # ===========================================================================
+  - id: "COD-01"
+    status: "pass"
+    evidence: "config.py line 11"
+    notes: "Extends UnifiedCloudConfig."
+
+  - id: "COD-02"
+    status: "partial"
+    evidence: "config.py"
+    notes: "Hardcoded instrument defaults."
+
+  - id: "COD-03"
+    status: "pass"
+    evidence: "docs/CONFIGURATION.md"
+    notes: ""
+
+  - id: "COD-04"
+    status: "partial"
+    evidence: "gcs_feature_reader.py only"
+    notes: "handle_storage_errors not used in CLI handlers/orchestrator."
+
+  - id: "COD-05"
+    status: "pass"
+    evidence: "0 bare except"
+    notes: ""
+
+  - id: "COD-06"
+    status: "pass"
+    evidence: "docs/ERROR_HANDLING.md"
+    notes: ""
+
+  - id: "COD-07"
+    status: "pass"
+    evidence: "No naive datetime"
+    notes: ""
+
+  - id: "COD-08"
+    status: "partial"
+    evidence: "2 print() in training_orchestrator.py"
+    notes: ""
+
+  - id: "COD-09"
+    status: "fail"
+    evidence: "47+ function-level imports"
+    notes: "Significantly more than other services."
+
+  - id: "COD-10"
+    status: "pass"
+    evidence: "tests/unit/"
+    notes: "Extensive tests."
+
+  - id: "COD-11"
+    status: "pass"
+    evidence: "tests/e2e/"
+    notes: ""
+
+  - id: "COD-12"
+    status: "na"
+    evidence: ""
+    notes: "mode=batch."
+
+  - id: "COD-13"
+    status: "pass"
+    evidence: "pyproject.toml dev deps"
+    notes: "Includes boto3, aiobotocore."
+
+  - id: "COD-14"
+    status: "pass"
+    evidence: "quality gates aligned"
+    notes: ""
+
+  - id: "COD-15"
+    status: "pass"
+    evidence: ".pre-commit-config.yaml"
+    notes: ""
+
+  - id: "COD-16"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Not run."
+
+  - id: "COD-17"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Not run."
+
+  - id: "COD-18"
+    status: "pass"
+    evidence: "pyproject.toml"
+    notes: ""
+
+  - id: "COD-19"
+    status: "fail"
+    evidence: "AUDIT_REPORT_2026-02-09.md, docs/FINAL_TASKS_TO_100_PERCENT.md, etc."
+    notes: "Multiple wasteful docs."
+
+  - id: "COD-20"
+    status: "fail"
+    evidence: "docs, README, .env, Dockerfile"
+    notes: "{project_id} hardcoded."
+
+  # ===========================================================================
+  # 07-SECURITY (SEC)
+  # ===========================================================================
+  - id: "SEC-01"
+    status: "partial"
+    evidence: "get_storage_client()"
+    notes: "No get_secret_client()."
+
+  - id: "SEC-02"
+    status: "pass"
+    evidence: ".env.example"
+    notes: "No actual secrets."
+
+  - id: "SEC-03"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+
+  - id: "SEC-04"
+    status: "pass"
+    evidence: "pyproject.toml"
+    notes: ""
+
+  - id: "SEC-05"
+    status: "fail"
+    evidence: "{project_id}-e35fb0ddafe2.json"
+    notes: "CRITICAL: Service account key committed."
+
+  - id: "SEC-06"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: execution-service, strategy-service."
+
+  - id: "SEC-07"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Planned."
+
+  # ===========================================================================
+  # 08-WORKFLOWS (WRK)
+  # ===========================================================================
+  - id: "WRK-01"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+
+  - id: "WRK-02"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Planned."
+
+  - id: "WRK-03"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Planned."
+
+  - id: "WRK-04"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: execution-service, strategy-service."
+
+  - id: "WRK-05"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: execution-service, strategy-service."
+
+  - id: "WRK-06"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: instruments-service, strategy-service, execution-service."
+
+  # ===========================================================================
+  # 09-ANALYSIS (ANL)
+  # ===========================================================================
+  - id: "ANL-01"
+    status: "partial"
+    evidence: "training code produces metrics"
+    notes: "Some training metrics but no standardized backtest framework."
+
+  - id: "ANL-02"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service, execution-service."
+
+  - id: "ANL-03"
+    status: "not_assessed"
+    evidence: ""
+    notes: "Planned."
+
+  - id: "ANL-04"
+    status: "na"
+    evidence: ""
+    notes: "applies_to: strategy-service, ml-inference-service."

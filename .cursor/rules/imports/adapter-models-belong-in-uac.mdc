@@ -51,6 +51,6 @@ CURRENT KNOWN VIOLATIONS (must migrate to UAC):
 RESOLVED VIOLATIONS:
   - unified-market-interface: _deribit_models.py → UAC deribit/schemas.py ✅
   - unified-market-interface: _defi_graph_models.py → UAC thegraph/schemas.py ✅
-  - unified-sports-execution-interface: _matchbook_models.py, _smarkets_models.py, _betdaq_models.py, _pinnacle_models.py, _odds_api_models.py, _onexbet_models.py → UAC sports venue schemas ✅
+  - execution-service (sports adapters, formerly unified-sports-execution-interface): _matchbook_models.py, _smarkets_models.py, _betdaq_models.py, _pinnacle_models.py, _odds_api_models.py, _onexbet_models.py → UAC sports venue schemas ✅
 
 MIGRATION TARGET: unified_api_contracts_external/<venue>/schemas.py

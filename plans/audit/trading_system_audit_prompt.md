@@ -8,10 +8,10 @@ integration test coverage, coverage regression prevention, cloud-agnostic compli
 performance, autonomous agent infrastructure, API domain coverage, configuration architecture, infrastructure pattern
 facilitation, and format string safety (Sections 1–32).
 
-**Scope:** 65+ repos (services, libraries, UIs, APIs, infrastructure). Usable by human auditors and AI agents.
+**Scope:** ~33 active repos (services, libraries, UIs, APIs, infrastructure). Usable by human auditors and AI agents.
 
 **SSOT:** `unified-trading-pm/plans/audit/trading_system_audit_prompt.md` Registered in
-`unified-trading-codex/00-SSOT-INDEX.md` and `unified-trading-pm/00-SSOT-INDEX.md`.
+`unified-trading-pm/codex/00-SSOT-INDEX.md` and `unified-trading-pm/00-SSOT-INDEX.md`.
 
 **DO NOT ARCHIVE — used for continuous re-audits and production-readiness gates.**
 
@@ -114,7 +114,7 @@ ls unified-trading-pm/cursor-rules/**/*.mdc 2>/dev/null | wc -l
 
 | Criterion          | Requirement                                                      |
 | ------------------ | ---------------------------------------------------------------- |
-| Repos registered   | All known repos present; count matches expected (currently 65+)  |
+| Repos registered   | All known repos present; count matches expected (currently ~33)  |
 | DAG validity       | No cycles; `validate-dag.py` exits 0                             |
 | `arch_tier`        | T0–T5 present on every repo entry                                |
 | `ci_status`        | Field present; value not blank                                   |
@@ -221,10 +221,10 @@ done
   [ "$hits" -eq 0 ] && echo "MISSING AUTH_FAILURE event: $svc"
 done
 
-# Check all auth logging goes through UEI (no custom auth loggers)
+# Check all auth logging goes through UTL events_interface (no custom auth loggers)
 rg 'logger\.(info|warning|error).*auth\|logging\..*auth' --type py \
   --glob '!.venv*' --glob '!**/tests/**' -i -n | \
-  grep -v 'log_event\|unified_events_interface' | head -20
+  grep -v 'log_event\|unified_events_interface\|unified_trading_library.*events_interface' | head -20
 
 # Check broad except Exception in production code
 rg 'except Exception' --type py \
@@ -235,32 +235,32 @@ rg 'except Exception' --type py \
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                                           |
-| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                                         |
-| HTTP verify              | No `verify=False` outside test code                                                                                           |
-| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                                     |
-| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                                              |
-| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                                               |
-| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted                   |
-| Auth events all services | ALL API services with auth middleware emit AUTH_FAILURE at minimum — not just execution-service                               |
-| Auth via UEI only        | All auth-related logging (login, session, permission, role) flows through `unified-events-interface` — no custom auth loggers |
-| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                                                |
-| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                                              |
+| Criterion                | Requirement                                                                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                                                           |
+| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                                                         |
+| HTTP verify              | No `verify=False` outside test code                                                                                                           |
+| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                                                     |
+| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                                                              |
+| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                                                               |
+| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted                                   |
+| Auth events all services | ALL API services with auth middleware emit AUTH_FAILURE at minimum — not just execution-service                                               |
+| Auth via UEI only        | All auth-related logging (login, session, permission, role) flows through `unified-trading-library.events_interface` — no custom auth loggers |
+| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                                                                |
+| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                                                              |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — minor documentation gap; OR ≤3 broad `except Exception` all documented
 in BYPASS_AUDIT.md. `FAIL` — any hardcoded secret; any 401 path missing `AUTH_FAILURE`; any `verify=False`; OR
 `get_secret_client` bypassed with env var fallback; OR any auth event missing from execution-service auth paths; OR any
-API service with auth middleware missing AUTH_FAILURE event; OR auth logging bypasses `unified-events-interface`; OR
-undocumented broad `except Exception` in production code.
+API service with auth middleware missing AUTH_FAILURE event; OR auth logging bypasses
+`unified-trading-library.events_interface`; OR undocumented broad `except Exception` in production code.
 
 ---
 
 ## Section 4 — Architecture
 
-**Goal:** Tier boundaries are respected. No cross-service Python imports. Cloud I/O is abstracted through UCI. All
-services use batch-live symmetry (same engine, mode-switched transport).
+**Goal:** Tier boundaries are respected. No cross-service Python imports. Cloud I/O is abstracted through UTL
+cloud_interface (formerly UCI). All services use batch-live symmetry (same engine, mode-switched transport).
 
 **Audit commands:**
 
@@ -269,30 +269,30 @@ services use batch-live symmetry (same engine, mode-switched transport).
 rg 'from (execution_service|strategy_service|risk_and_exposure_service|alerting_service|pnl_attribution_service)' \
   --type py --glob '!.venv*' --glob '!**/tests/**' -n
 
-# No direct cloud SDK imports outside UCI / deployment-service
+# No direct cloud SDK imports outside UTL cloud_interface / deployment-service
 rg 'from google\.cloud|import boto3|from boto3' \
   --type py --glob '!.venv*' \
-  --glob '!unified-cloud-interface/**' \
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' \
   --glob '!deployment-service/**' -n
 
-# No GCS bucket name construction outside UCI
+# No GCS bucket name construction outside UTL cloud_interface
 rg 'gcs_bucket|gs://' --type py --glob '!.venv*' \
-  --glob '!unified-cloud-interface/**' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 ```
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                      |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                    |
-| Cloud SDK confinement    | `google.cloud.*` and `boto3` only in `unified-cloud-interface/` and `deployment-service/backends/`               |
-| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere                                  |
-| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                  |
-| UCI PubSub               | Services use `get_pubsub_client()` from UCI, not `google-cloud-pubsub` directly                                  |
-| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                |
-| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries       |
-| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)     |
-| Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]` |
+| Criterion                | Requirement                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                                              |
+| Cloud SDK confinement    | `google.cloud.*` and `boto3` only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
+| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere (from UTL cloud_interface)                                 |
+| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                                            |
+| UCI PubSub               | Services use `get_pubsub_client()` from UTL cloud_interface, not `google-cloud-pubsub` directly                                            |
+| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                                          |
+| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries                                 |
+| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)                               |
+| Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]`                           |
 
 **Audit commands (separation of concerns):**
 
@@ -302,10 +302,10 @@ rg 'gcs_bucket|gs://' --type py --glob '!.venv*' \
 for svc in execution-service strategy-service alerting-service risk-and-exposure-service \
            pnl-attribution-service position-balance-monitor-service market-tick-data-service \
            market-data-processing-service instruments-service; do
-  # Custom cloud clients (should use UCI)
+  # Custom cloud clients (should use UTL cloud_interface)
   rg 'class.*Client.*Storage|class.*Client.*PubSub|class.*Client.*BigQuery' \
     "$svc/" --type py --glob '!**/tests/**' -n 2>/dev/null
-  # Custom event loggers (should use UEI)
+  # Custom event loggers (should use UTL events_interface)
   rg 'class.*EventLogger|class.*EventPublisher' \
     "$svc/" --type py --glob '!**/tests/**' -n 2>/dev/null
 done
@@ -347,24 +347,25 @@ for repo in m['repos']:
 - A failed shard (venue × date) MUST NOT kill other shards in the same batch
 - Check: `rg "raise RuntimeError" --type py --glob '!tests/' $SOURCE_DIR/` inside per-venue/per-shard processing loops
 - Pattern: catch all exceptions per-shard, log VENUE_PROCESSING_FAILED event with details, return empty result
-- SSOT: unified-trading-codex/04-architecture/shard-level-failure-isolation.md
+- SSOT: unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UCI/deployment;
-any service reimplements library functionality; any undeclared dependency import; any service using UMI for reference
-data instead of URDI; any unguarded raise inside per-venue/per-shard processing loops.
+**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UTL
+cloud_interface/deployment; any service reimplements library functionality; any undeclared dependency import; any
+service using UMI for reference data instead of URDI; any unguarded raise inside per-venue/per-shard processing loops.
 
 ---
 
 ## Section 5 — Schema Governance
 
-**Goal:** Clean separation between `unified-api-contracts` (external venue schemas) and `unified-internal-contracts`
-(internal schemas). No float for price/monetary fields. No duplicated schemas across AC and UIC.
+**Goal:** Clean separation between `unified-api-contracts` (external venue schemas) and `unified-api-contracts.internal`
+(internal schemas, formerly `unified-internal-contracts`). No float for price/monetary fields. No duplicated schemas
+across AC and UIC.
 
 **Audit commands:**
 
 ```bash
 # Check for float price fields in UIC/UAC schemas
-rg 'float' unified-internal-contracts/unified_internal_contracts/ \
+rg 'float' unified-api-contracts/unified_api_contracts/internal/ \
   unified-api-contracts/unified_api_contracts/ \
   --type py --glob '!.venv*' -n | \
   grep -v '# financial-ratio: float-ok\|# volatility-pct: float-ok\|# time-based: float-ok\|# pct: float-ok'
@@ -729,11 +730,13 @@ rg -l 'test_coverage_boost|test_.*_coverage\.py|test_boost_coverage' --glob '*.p
 # Check VCR cassettes in interface repos
 for repo in unified-market-interface unified-trade-execution-interface \
             unified-reference-data-interface unified-position-interface \
-            unified-sports-execution-interface unified-defi-execution-interface \
-            unified-cloud-interface; do
+            unified-sports-execution-interface unified-defi-execution-interface; do
   cassette_count=$(find $repo -name '*.yaml' -path '*/mocks/*' 2>/dev/null | wc -l)
   echo "$repo: $cassette_count cassettes"
 done
+# Note: unified-cloud-interface is now unified-trading-library/unified_trading_library/cloud_interface/
+cassette_count=$(find unified-trading-library -name '*.yaml' -path '*/cloud_interface/*/mocks/*' 2>/dev/null | wc -l)
+echo "unified-trading-library (cloud_interface): $cassette_count cassettes"
 ```
 
 **Required state:**
@@ -839,42 +842,42 @@ using default 70 threshold.
 
 ## Section 12 — Cloud-Agnostic API Compliance
 
-**Goal:** No cloud-provider-specific code outside `unified-cloud-interface` and `deployment-service/backends`. All repos
-use UCI abstractions for storage, secrets, PubSub, and config.
+**Goal:** No cloud-provider-specific code outside `unified-trading-library/unified_trading_library/cloud_interface/` and
+`deployment-service/backends`. All repos use UTL cloud_interface abstractions for storage, secrets, PubSub, and config.
 
 **Audit commands:**
 
 ```bash
-# GCS bucket references outside UCI
+# GCS bucket references outside UTL cloud_interface
 rg 'gcs_bucket|upload_to_gcs|download_from_gcs' --type py \
-  --glob '!unified-cloud-interface/**' --glob '!.venv*' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' --glob '!.venv*' -n
 
-# Google Cloud imports outside UCI
+# Google Cloud imports outside UTL cloud_interface
 rg 'from google\.cloud|import google\.cloud' --type py \
-  --glob '!unified-cloud-interface/**' \
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' \
   --glob '!deployment-service/**' \
   --glob '!.venv*' -n
 
 # boto3 imports outside deployment-service
 rg 'import boto3|from boto3' --type py \
-  --glob '!unified-cloud-interface/**' \
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' \
   --glob '!deployment-service/**' \
   --glob '!.venv*' -n
 
-# BigQuery references outside UCI
+# BigQuery references outside UTL cloud_interface
 rg 'bigquery_dataset|BigQueryClient' --type py \
-  --glob '!unified-cloud-interface/**' --glob '!.venv*' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' --glob '!.venv*' -n
 ```
 
 **Required state:**
 
-| Criterion                       | Requirement                                                           |
-| ------------------------------- | --------------------------------------------------------------------- |
-| `google.cloud.*` imports        | Only in `unified-cloud-interface/` and `deployment-service/backends/` |
-| `boto3` imports                 | Only in `unified-cloud-interface/` and `deployment-service/backends/` |
-| `gcs_bucket`/`gs://` references | Only in `unified-cloud-interface/`                                    |
-| `os.getenv` in cloud config     | Zero (use `UnifiedCloudConfig`); bootstrap exception only             |
-| `get_pubsub_client()`           | All services use UCI PubSub abstraction                               |
+| Criterion                       | Requirement                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `google.cloud.*` imports        | Only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
+| `boto3` imports                 | Only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
+| `gcs_bucket`/`gs://` references | Only in `unified-trading-library/unified_trading_library/cloud_interface/`                                    |
+| `os.getenv` in cloud config     | Zero (use `UnifiedCloudConfig`); bootstrap exception only                                                     |
+| `get_pubsub_client()`           | All services use UTL cloud_interface PubSub abstraction                                                       |
 
 ### §12.X Credential Placeholder Detection
 
@@ -882,8 +885,8 @@ rg 'bigquery_dataset|BigQueryClient' --type py \
 - Check: `rg "your-service-account" .env .env.example` — any match is a violation
 - ADC (Application Default Credentials) is the default for local dev; no key file references
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UCI/non-deployment source; any .env file
-containing placeholder credential paths.
+**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UTL-cloud_interface/non-deployment
+source; any .env file containing placeholder credential paths.
 
 ---
 
@@ -1220,7 +1223,7 @@ grep -l 'pre_1_0_0_override\|pre-1.0.0' \
 | Criterion                          | Requirement                                                            |
 | ---------------------------------- | ---------------------------------------------------------------------- |
 | `major-bump-approval-required.mdc` | Present with `alwaysApply: true`, `priority: 99`                       |
-| `major-bump-issue-handler.yml`     | Present in all 65 repos; validates approver write access               |
+| `major-bump-issue-handler.yml`     | Present in all ~33 repos; validates approver write access              |
 | `semver_rules_ref` field           | In manifest for all repos; points to `docs/per-repo-semver-rules.yaml` |
 | Pre-1.0.0 override                 | `feat!:` on 0.x.x bumps MINOR; never crosses to 1.0.0 automatically    |
 | Semver-agent triggers              | Only on `staging` branch; never on `main` directly                     |
@@ -1245,13 +1248,13 @@ python3 -c "
 import json, pathlib
 m = json.load(open('unified-trading-pm/workspace-manifest.json'))
 for r in m['repos']:
-    rpath = pathlib.Path('unified-trading-codex/10-audit/repos/' + r['name'] + '.yaml')
+    rpath = pathlib.Path('unified-trading-pm/codex/10-audit/repos/' + r['name'] + '.yaml')
     if not rpath.exists():
         print('MISSING readiness file:', r['name'])
 "
 
 # Check canonical schema SSOT exists
-ls unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+ls unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 
 # Run automated verifier
 python3 unified-trading-pm/scripts/check-repo-readiness.py --all
@@ -1259,16 +1262,16 @@ python3 unified-trading-pm/scripts/check-repo-readiness.py --all
 
 **Required state:**
 
-| Criterion                   | Requirement                                                           |
-| --------------------------- | --------------------------------------------------------------------- |
-| Readiness schema SSOT       | `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` v3.0   |
-| Per-repo readiness YAML     | `codex/10-audit/repos/{repo-name}.yaml` for all 65 repos              |
-| CR/DR/BR axes               | Each axis tracked independently; N/A items documented with reason     |
-| v1.0.0 gateway gates        | CR5 + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 all PASS before any 1.0.0 tag |
-| `deployment_modes` declared | `batch`, `live`, or `both` per repo in readiness YAML                 |
-| `.readiness-ref`            | Symlink in each repo pointing to codex canonical location             |
+| Criterion                   | Requirement                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| Readiness schema SSOT       | `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml` v3.0       |
+| Per-repo readiness YAML     | `unified-trading-pm/codex/10-audit/repos/{repo-name}.yaml` for all ~33 repos |
+| CR/DR/BR axes               | Each axis tracked independently; N/A items documented with reason            |
+| v1.0.0 gateway gates        | CR5 + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 all PASS before any 1.0.0 tag        |
+| `deployment_modes` declared | `batch`, `live`, or `both` per repo in readiness YAML                        |
+| `.readiness-ref`            | Symlink in each repo pointing to codex canonical location                    |
 
-**Scoring:** `PASS` — all 65 repos have YAML files; verifier exits 0. `WARN` — 1–5 repos missing YAML (tracked in
+**Scoring:** `PASS` — all ~33 repos have YAML files; verifier exits 0. `WARN` — 1–5 repos missing YAML (tracked in
 `repo_readiness_semver_hardening_2026_03_11.plan.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway
 gates; OR readiness schema SSOT absent.
 
@@ -1459,9 +1462,9 @@ for wf in conflict-resolution-agent.yml plan-health-agent.yml \
     "unified-trading-pm/.github/workflows/$wf" 2>/dev/null | wc -l)
   [ "$hits" -eq 0 ] && echo "MISSING rules injection: $wf"
 done
-# Also check codex-sync-agent in codex repo
+# Also check codex-sync-agent in PM repo (codex is now a sub-directory of PM)
 rg 'MANDATORY_RULES\|inject-mandatory-rules' \
-  unified-trading-codex/.github/workflows/codex-sync-agent.yml 2>/dev/null | wc -l
+  unified-trading-pm/.github/workflows/codex-sync-agent.yml 2>/dev/null | wc -l
 
 # Check SUB_AGENT_MANDATORY_RULES.md has system-first architecture §0
 rg 'System-First Architecture\|system-first' \
@@ -1474,7 +1477,7 @@ rg 'System-First Architecture\|system-first' \
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `semver-agent.yml`                 | Present in PM; triggers on staging push                                                                           |
 | `rules-alignment-agent.yml`        | Present in PM; verifies rules/AGENTS.md/CLAUDE.md consistency                                                     |
-| `codex-sync-agent.yml`             | Present in codex; triggers on manifest-updated dispatch                                                           |
+| `codex-sync-agent.yml`             | Present in PM (codex is now a sub-directory of PM); triggers on manifest-updated dispatch                         |
 | `plan-alignment-agent.yml`         | Present in PM; validates INDEX.md ↔ active plans ↔ SSOT-INDEX alignment                                         |
 | `overnight-agent-orchestrator.yml` | Present; cron 01:00 UTC; tier-ordered (T0→T4); 3x retry on failure                                                |
 | `AGENTS.md` in all repos           | Workspace-generic, not PM-specific; includes full rules + mandatory cleanup                                       |
@@ -1573,16 +1576,16 @@ rg 'assert_feature_fresh\|assert_market_data_fresh\|DataStalenessError' \
 
 **Required state:**
 
-| Criterion                          | Requirement                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| `DataFreshnessContract`            | Defined for all 30 data sources in `unified-internal-contracts/reference/data_freshness.py` |
-| `FreshnessMonitor`                 | Wired in all 9 data-producing services                                                      |
-| `DATA_STALE` event                 | Emitted when age > `warn_age_seconds`                                                       |
-| `FEED_UNHEALTHY` event             | Emitted when age > `max_age_seconds`; triggers PagerDuty + Telegram                         |
-| `DATA_AVAILABILITY_RESTORED` event | Emitted when feed recovers                                                                  |
-| Freshness gates in consumers       | `strategy-service` + `execution-service` raise `DataStalenessError`                         |
-| Daily completeness check           | `check-data-completeness.sh` scheduled via Cloud Scheduler 08:00 UTC                        |
-| SIT test                           | Injects artificial staleness; verifies `FEED_UNHEALTHY` emission                            |
+| Criterion                          | Requirement                                                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DataFreshnessContract`            | Defined for all 30 data sources in `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py` |
+| `FreshnessMonitor`                 | Wired in all 9 data-producing services                                                                                |
+| `DATA_STALE` event                 | Emitted when age > `warn_age_seconds`                                                                                 |
+| `FEED_UNHEALTHY` event             | Emitted when age > `max_age_seconds`; triggers PagerDuty + Telegram                                                   |
+| `DATA_AVAILABILITY_RESTORED` event | Emitted when feed recovers                                                                                            |
+| Freshness gates in consumers       | `strategy-service` + `execution-service` raise `DataStalenessError`                                                   |
+| Daily completeness check           | `check-data-completeness.sh` scheduled via Cloud Scheduler 08:00 UTC                                                  |
+| SIT test                           | Injects artificial staleness; verifies `FEED_UNHEALTHY` emission                                                      |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–2 data sources missing `DataFreshnessContract` (tracked in
 `data_availability_live_expectations_2026_03_10.plan.md`). `FAIL` — freshness gates absent from consuming services; OR
@@ -1599,7 +1602,7 @@ peak, sustained) are defined and automated. Regressions vs baseline trigger Tele
 
 ```bash
 # Check performance targets document
-ls unified-trading-codex/06-coding-standards/performance-targets.md 2>/dev/null
+ls unified-trading-pm/codex/06-coding-standards/performance-targets.md 2>/dev/null
 
 # Check SIT performance tests
 ls system-integration-tests/tests/performance/ 2>/dev/null | wc -l
@@ -1640,15 +1643,15 @@ baseline >20% regression detected but tracked. `FAIL` — no `performance-target
 
 ## Section 27 — Contract Completeness & Adoption Verification
 
-**Goal:** All public symbols in `unified-internal-contracts` (UIC) and `unified-api-contracts` (UAC) `__all__` are
-consumed by at least one downstream service. All symbols defined in source are in `__all__` or explicitly in
-`KNOWN_INTERNAL` allowlist.
+**Goal:** All public symbols in `unified-api-contracts.internal` (UIC, formerly `unified-internal-contracts`) and
+`unified-api-contracts` (UAC) `__all__` are consumed by at least one downstream service. All symbols defined in source
+are in `__all__` or explicitly in `KNOWN_INTERNAL` allowlist.
 
 **Audit commands:**
 
 ```bash
-# Run UIC completeness check
-python3 unified-internal-contracts/scripts/check_uic_completeness.py
+# Run UIC completeness check (UIC is now unified_api_contracts.internal)
+python3 unified-api-contracts/scripts/check_uic_completeness.py
 # Expected: 0 missing from __all__
 
 # Run UAC completeness check
@@ -1756,15 +1759,15 @@ queryable.
     "$api/" --type py --glob '!**/tests/**' -n 2>/dev/null | head -20
 done
 
-# Step 2 — Catalog all domain data types from contracts repos
+# Step 2 — Catalog all domain data types from contracts repos (UIC is now unified_api_contracts.internal)
 rg 'class \w+\(BaseModel\)' \
-  unified-internal-contracts/unified_internal_contracts/ --type py -n 2>/dev/null | \
+  unified-api-contracts/unified_api_contracts/internal/ --type py -n 2>/dev/null | \
   awk -F: '{print $1 ": " $3}'
 
 # Step 3 — Cross-reference: for each UIC domain schema, is it served by an API?
 python3 -c "
 import pathlib, re
-uic_dir = pathlib.Path('unified-internal-contracts/unified_internal_contracts')
+uic_dir = pathlib.Path('unified-api-contracts/unified_api_contracts/internal')
 domains = set()
 for py in uic_dir.rglob('*.py'):
     if '__pycache__' in str(py): continue
@@ -1844,8 +1847,8 @@ reason; OR config/events/alerts data not fully queryable.
 ## Section 30 — Configuration Architecture & ConfigStore Compliance
 
 **Goal:** All services follow the canonical configuration pattern. Service config extends `UnifiedCloudConfig`. Config
-schemas are Pydantic models in `config.py`. Runtime-mutable config uses `ConfigStore` (UCI cloud storage). Bootstrap
-config uses `os.environ` only in declared exception files. No ad-hoc config patterns.
+schemas are Pydantic models in `config.py`. Runtime-mutable config uses `ConfigStore` (UTL cloud_interface storage).
+Bootstrap config uses `os.environ` only in declared exception files. No ad-hoc config patterns.
 
 **Audit commands:**
 
@@ -1874,7 +1877,7 @@ rg 'ConfigStore|config_store|get_config_store' --type py \
 # Step 3 — Check for ad-hoc config patterns (json.load of config files, yaml.safe_load of config)
 rg 'json\.load.*config|yaml\.safe_load.*config' --type py \
   --glob '!.venv*' --glob '!**/tests/**' --glob '!**/scripts/**' -n | \
-  grep -v 'unified-config-interface\|deployment-service\|unified-trading-pm' | head -20
+  grep -v 'unified-trading-library/.*config_interface\|deployment-service\|unified-trading-pm' | head -20
 
 # Step 4 — Check config singleton patterns
 rg '@lru_cache|_config\s*=\s*\w+Config\(\)' --type py \
@@ -1900,13 +1903,13 @@ done
 | ConfigStore for mutable config    | Runtime-changeable config (feature flags, thresholds) read via `ConfigStore`, not env vars        |
 | No ad-hoc config loading          | No `json.load(open('config.json'))` or `yaml.safe_load(open('config.yaml'))` in service code      |
 | Singleton pattern consistent      | Config instantiated once per process (`@lru_cache(maxsize=1)` or module-level)                    |
-| Config documented in codex        | `unified-trading-codex/06-coding-standards/configuration-management.md` covers all patterns       |
+| Config documented in codex        | `unified-trading-pm/codex/06-coding-standards/configuration-management.md` covers all patterns    |
 
 ### §30.X ConfigStore Load Isolation
 
 - ConfigStore.load_config() MUST use \_env_file=None to prevent .env pollution when loading from cloud storage
 - Services loading domain config from cloud storage should not have local .env vars leak into the config model
-- Check: UCI persistence.py uses `config_class(_env_file=None, **data)` not `model_validate(data)`
+- Check: UTL cloud_interface persistence.py uses `config_class(_env_file=None, **data)` not `model_validate(data)`
 
 **Scoring:** `PASS` — all services extend UnifiedCloudConfig; zero ad-hoc config; ConfigStore used for mutable config;
 ConfigStore load uses \_env_file=None isolation. `WARN` — 1–2 services missing ConfigStore for optional config. `FAIL` —
@@ -1918,9 +1921,9 @@ file loading in service source; OR ConfigStore.load_config() allows .env polluti
 ## Section 31 — Runtime Topology ↔ Library Abstraction Parity
 
 **Goal:** Every infrastructure component declared in the runtime topology has a corresponding abstraction in the library
-layer (UCI/UTL). No service should need to access an infrastructure component for which no library abstraction exists.
-If the topology says "Redis for caching," UCI must provide a Redis client abstraction. If it says "PubSub for
-messaging," UCI must provide `get_pubsub_client()`.
+layer (UTL cloud_interface). No service should need to access an infrastructure component for which no library
+abstraction exists. If the topology says "Redis for caching," UTL cloud_interface must provide a Redis client
+abstraction. If it says "PubSub for messaging," UTL cloud_interface must provide `get_pubsub_client()`.
 
 **Audit commands:**
 
@@ -1939,38 +1942,38 @@ except Exception as e:
     print(f'Cannot parse topology: {e}')
 " 2>/dev/null
 
-# Step 2 — Check UCI factory methods cover all infra components
+# Step 2 — Check UTL cloud_interface factory methods cover all infra components
 rg 'def get_\w+_client|def get_\w+_sink|def get_\w+_bus' \
-  unified-cloud-interface/unified_cloud_interface/ --type py -n
+  unified-trading-library/unified_trading_library/cloud_interface/ --type py -n
 
-# Step 3 — Check for direct infra SDK imports in services (should go through UCI)
+# Step 3 — Check for direct infra SDK imports in services (should go through UTL cloud_interface)
 # Redis
 rg 'import redis|from redis' --type py --glob '!.venv*' \
-  --glob '!unified-cloud-interface/**' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 # Firestore
 rg 'from google.cloud import firestore|import firestore' --type py \
-  --glob '!.venv*' --glob '!unified-cloud-interface/**' -n
+  --glob '!.venv*' --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 # Memcached
 rg 'import memcache|import pymemcache' --type py --glob '!.venv*' \
-  --glob '!unified-cloud-interface/**' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 # Kafka (if in topology)
 rg 'import kafka|from kafka' --type py --glob '!.venv*' \
-  --glob '!unified-cloud-interface/**' -n
+  --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 # Direct PubSub (should use get_pubsub_client)
 rg 'from google.cloud import pubsub|google.cloud.pubsub' --type py \
-  --glob '!.venv*' --glob '!unified-cloud-interface/**' -n
+  --glob '!.venv*' --glob '!unified-trading-library/unified_trading_library/cloud_interface/**' -n
 
-# Step 4 — Cross-reference: infra declared in topology vs UCI abstractions available
+# Step 4 — Cross-reference: infra declared in topology vs UTL cloud_interface abstractions available
 python3 -c "
 import pathlib, re
-# Known UCI abstractions
-uci_dir = pathlib.Path('unified-cloud-interface/unified_cloud_interface')
+# Known UTL cloud_interface abstractions
+uci_dir = pathlib.Path('unified-trading-library/unified_trading_library/cloud_interface')
 abstractions = set()
 for py in uci_dir.rglob('*.py'):
     for line in py.read_text().splitlines():
         m = re.match(r'def (get_\w+)', line)
         if m: abstractions.add(m.group(1))
-print('UCI abstractions:', sorted(abstractions))
+print('UTL cloud_interface abstractions:', sorted(abstractions))
 
 # Expected coverage map (update as topology evolves)
 required = {
@@ -2002,21 +2005,22 @@ except Exception as e:
 
 **Required state:**
 
-| Criterion                                | Requirement                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Infra ↔ UCI parity                      | Every infrastructure component in runtime-topology.yaml has a corresponding UCI abstraction |
-| No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UCI                 |
-| Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                      |
-| Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                               |
-| Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                       |
-| Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                              |
-| Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent covers Redis/Memcached                                   |
-| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                        |
-| No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)              |
+| Criterion                                | Requirement                                                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Infra ↔ UTL parity                      | Every infrastructure component in runtime-topology.yaml has a corresponding UTL cloud_interface abstraction |
+| No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UTL cloud_interface                 |
+| Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                                      |
+| Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                                               |
+| Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                                       |
+| Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                                              |
+| Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent in UTL cloud_interface covers Redis/Memcached                            |
+| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                                        |
+| No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)                              |
 
-**Scoring:** `PASS` — full parity; every topology component has UCI abstraction; zero direct infra SDK imports. `WARN` —
-1 infra component lacking UCI abstraction but tracked in plan. `FAIL` — any service directly imports infra SDK that UCI
-should abstract; OR ≥2 topology components have no library abstraction; OR topology references non-existent repos.
+**Scoring:** `PASS` — full parity; every topology component has UTL cloud_interface abstraction; zero direct infra SDK
+imports. `WARN` — 1 infra component lacking UTL cloud_interface abstraction but tracked in plan. `FAIL` — any service
+directly imports infra SDK that UTL cloud_interface should abstract; OR ≥2 topology components have no library
+abstraction; OR topology references non-existent repos.
 
 ---
 
@@ -2061,15 +2065,15 @@ used as format string in production adapter/service code; OR malformed format sp
 - **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Coverage targets:** `unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc`
 - **Stub tracker:** `unified-trading-pm/plans/active/stub_completion_interfaces_and_infra.plan.md`
-- **Performance targets:** `unified-trading-codex/06-coding-standards/performance-targets.md`
+- **Performance targets:** `unified-trading-pm/codex/06-coding-standards/performance-targets.md`
 - **Semver rules:** `unified-trading-pm/plans/active/major_version_bump_approval_gate_2026_03_11.plan.md`
-- **Readiness checklist:** `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
-- **Data freshness contracts:** `unified-internal-contracts/reference/data_freshness.py`
-- **Batch-live symmetry:** `unified-trading-codex/batch-live-symmetry.md`
+- **Readiness checklist:** `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
+- **Data freshness contracts:** `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py`
+- **Batch-live symmetry:** `unified-trading-pm/codex/batch-live-symmetry.md`
 - **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.plan.md`
 - **Previous audit reports:** `system-integration-tests/reports/audit_<date>.json`
-- **Config architecture:** `unified-trading-codex/06-coding-standards/configuration-management.md`
+- **Config architecture:** `unified-trading-pm/codex/06-coding-standards/configuration-management.md`
 - **Runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml`
-- **UCI factory methods:** `unified-cloud-interface/unified_cloud_interface/factory.py`
-- **UIC domain schemas:** `unified-internal-contracts/unified_internal_contracts/`
+- **UCI factory methods:** `unified-trading-library/unified_trading_library/cloud_interface/factory.py`
+- **UIC domain schemas:** `unified-api-contracts/unified_api_contracts/internal/`
 - **API domain coverage:** Verify against this audit §29 domain checklist

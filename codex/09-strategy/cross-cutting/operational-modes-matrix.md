@@ -1,0 +1,112 @@
+# Operational Modes Matrix — Cross-Cutting Infrastructure
+
+**SSOT (machine-readable):** `unified-api-contracts/unified_api_contracts/internal/modes.py` (StrEnums) +
+`unified_api_contracts/internal/env_canon.py` (`EnvVars` — canonical env var **names**).
+
+**SSOT (runtime values):** `unified-config-interface` `UnifiedCloudConfig` / service-specific config subclasses (load
+env at startup; services must not scatter `os.getenv` — see `06-coding-standards/README.md` bootstrap table).
+
+**Venue endpoints (testnet vs mainnet URLs, chains, sandbox APIs):** `unified-api-contracts` registry /
+`provider_api_versions.yaml` + capability declarations — **not** duplicated per service.
+
+This document is the **human-readable matrix** for how mock, real, testnet, and local-cloud concepts compose.
+
+**Secrets + import order:** Config modules that fetch Secret Manager must not import `unified_cloud_interface` at module
+scope (avoids init cycles when cloud loads `UnifiedCloudConfig`). See `07-security/secrets-management.md` — section
+**Unified config ↔ unified cloud — package import order**.
+
+---
+
+## 1. Orthogonal axes (prefer one switch per concern)
+
+| Axis                   | Env var (`EnvVars`)  | Enum              | Default | What it controls                                     |
+| ---------------------- | -------------------- | ----------------- | ------- | ---------------------------------------------------- |
+| Deployment tier        | `ENVIRONMENT`        | `EnvironmentMode` | dev     | Config bucket, secret policy, dashboards             |
+| Data plane             | `DATA_MODE`          | `DataMode`        | real    | Mock generators vs real feeds/storage reads          |
+| Transport / job shape  | `RUNTIME_MODE`       | `RuntimeMode`     | live    | Streaming/event vs batch/historical jobs             |
+| Cloud stack            | `CLOUD_PROVIDER`     | `CloudProvider`   | gcp     | GCP vs AWS vs **local emulators**                    |
+| Venue environment      | `TESTNET_MODE`       | `TestnetMode`     | mainnet | **Which** endpoint/chain per venue (resolved in UAC) |
+| Data availability      | `PHASE_MODE`         | `PhaseMode`       | phase3  | Pipelines that may be absent in early phases         |
+| Strategy maturity      | (persisted / config) | `TestingStage`    | MOCK    | Lifecycle gates (MOCK → HISTORICAL → … → LIVE_REAL)  |
+| How the service trades | `OPERATIONAL_MODE`   | `OperationalMode` | live    | live vs manual vs backtest vs **paper**              |
+
+Axes are **intentionally independent**: e.g. `CLOUD_PROVIDER=local` with `DATA_MODE=real` can mean “real API calls but
+emulated GCS/PubSub” if that combination is supported for the service.
+
+---
+
+## 2. Colloquial terms mapped to axes
+
+| Informal term                                   | Typical combination                               | Notes                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Mock**                                        | `DATA_MODE=mock` (often + `CLOUD_PROVIDER=local`) | Synthetic data / stubs; may still use real HTTP to **sandbox** APIs if a test explicitly does so |
+| **Real**                                        | `DATA_MODE=real`                                  | Production-like data paths                                                                       |
+| **Testnet** (CeFi / DeFi / sports / prediction) | `TESTNET_MODE=testnet`                            | Concrete host, chain ID, or sandbox base URL comes from **UAC**                                  |
+| **Cloud local**                                 | `CLOUD_PROVIDER=local`                            | Emulator stack (Pub/Sub, GCS fakes, etc.) — **infrastructure**, not “fake market data” by itself |
+
+---
+
+## 3. Legacy and migration
+
+| Legacy                                    | Direction                                                                                                                                          |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUD_MOCK_MODE`                         | Prefer `DATA_MODE=mock` + `UnifiedCloudConfig.is_mock_mode()`; `EnvVars.CLOUD_MOCK_MODE` remains in `env_canon` for CI/scripts until fully drained |
+| `cloud_mock_mode` on `UnifiedCloudConfig` | Deprecated; same migration as above                                                                                                                |
+| `SERVICE_MODE`                            | Use `RUNTIME_MODE` (`EnvVars.SERVICE_MODE` marked legacy in `env_canon`)                                                                           |
+
+---
+
+## 4. TradFi (IBKR) and `TESTNET_MODE`
+
+IBKR **paper vs live** is **not** the same string as `TestnetMode`, but it is the same **class of concern** (execution
+environment). Today, paper/live often arrives as `trading_mode` inside the `ibkr-account-credentials` Secret Manager
+JSON (see `unified-config-interface` `ibkr_credentials.py`).
+
+**Target architecture (document now; implement incrementally):**
+
+- Platform-wide intent: `TESTNET_MODE=testnet` and/or `OperationalMode.PAPER` should **align** TradFi with other venues
+  (adapters read `UnifiedCloudConfig` and choose paper gateway / sandbox paths consistently).
+- Secret `trading_mode` remains valid as an **explicit override** for operators when it must differ from global mode.
+
+---
+
+## 5. CLI vs env injection
+
+- **Production / CI:** inject the same env vars listed in §1 (names from `EnvVars`).
+- **Local / ServiceCLI:** flags should **only** set those canonical names (or build a config overlay) — no per-service
+  synonym flags. SSOT for CLI standardisation: `unified-trading-library` `ServiceCLI` / `BaseModeHandler` tests describe
+  the intended axes.
+
+---
+
+## 6. Schemas and registry data (boundary reminder)
+
+| Concern                                            | Owner                                           |
+| -------------------------------------------------- | ----------------------------------------------- |
+| External API shapes, normalised outputs            | `unified-api-contracts`                         |
+| Internal messaging, cross-service DTOs             | `unified_api_contracts.internal`                |
+| Parquet `SchemaDefinition` / column enforcement    | Service repo                                    |
+| Secret **names** (e.g. `ibkr-account-credentials`) | `unified-cloud-interface` `CredentialsRegistry` |
+
+---
+
+## 7. SIT / Layer 3 E2E expectations
+
+`system-integration-tests` should treat **declared** mode combinations as part of staging smoke where relevant:
+
+- Smoke (3a): at minimum, document which default env matrix staging uses (`DATA_MODE`, `CLOUD_PROVIDER`, `TESTNET_MODE`)
+  and assert health/readiness under that matrix.
+- Full E2E (3b): when a venue supports testnet, add cases that **fail** if `TESTNET_MODE=testnet` still hits production
+  endpoints (assert via cassette, URL capture, or known sandbox response).
+
+New services: add a row to the service readiness YAML under data availability referencing this doc when
+`asset_class_readiness` includes mock / testnet / live dimensions.
+
+---
+
+## Related documents
+
+- `08-workflows/local-dev.md` — ports, `CLOUD_MOCK_MODE` in local tables (being aligned with `DATA_MODE`)
+- `09-strategy/cross-cutting/config-architecture.md` — strategy config vs execution boundaries
+- `06-coding-standards/integration-testing-layers.md` — Layer 3 scope
+- `04-architecture/manual-trade-booking.md` — `OperationalMode` usage

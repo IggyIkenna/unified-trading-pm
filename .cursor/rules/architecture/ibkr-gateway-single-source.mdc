@@ -9,7 +9,7 @@ tags:
 # IBKR Gateway — Single Source of Truth
 
 RULE: All IBKR connectivity routes through `ibkr-gateway-infra` (the long-lived IB Gateway Java process). Never reimplement IBKR auth or session management anywhere else in the workspace.
-WHY: IB Gateway allows limited simultaneous connections. Duplicating auth/connection setup across UMI, UTEI, UPI, URDI causes session conflicts and DRY violations.
+WHY: IB Gateway allows limited simultaneous connections. Duplicating auth/connection setup across UMI, execution-service, position-balance-monitor-service, instruments-service causes session conflicts and DRY violations.
 CODEX: 04-architecture/TIER-ARCHITECTURE.md
 
 DO:

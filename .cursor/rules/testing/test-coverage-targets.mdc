@@ -28,16 +28,10 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 |------|--------|-------------|
 | unified-events-interface | 100% | 99 |
 | matching-engine-library | 100% | 99 |
-| unified-internal-contracts | 99% | 98 |
 | unified-feature-calculator-library | 96% | 95 |
 | execution-algo-library | 96% | 95 |
 | unified-config-interface | 95% | 94 |
 | unified-ml-interface | 95% | 94 |
-| unified-reference-data-interface | 92% | 91 |
-| unified-trade-execution-interface | 89% | 88 |
-| unified-position-interface | 88% | 87 |
-| unified-defi-execution-interface | 87% | 86 |
-| unified-sports-execution-interface | 82% | 81 |
 | unified-cloud-interface | 82% | 81 |
 | unified-domain-client | 83% | 82 |
 | unified-api-contracts | 83% | 82 |

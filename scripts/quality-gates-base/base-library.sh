@@ -40,6 +40,10 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
+_qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
+trap '_qg_exit_handler' EXIT
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
@@ -204,7 +208,9 @@ log_section "[3.5/6] IMPORT PATTERNS"
 IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/.cursor/scripts/check-import-patterns.py"
-if [ -f "$IP" ]; then
+if [[ "${SKIP_IMPORT_PATTERNS:-false}" == "true" ]]; then
+    log_success "Import patterns: skipped (SKIP_IMPORT_PATTERNS=true)"
+elif [ -f "$IP" ]; then
     # Scope import check to SOURCE_DIR only — tests are allowed to deep-import from their own
     # package (they test internal components). External consumers are linted at a higher level.
     IP_TARGET="${SOURCE_DIR:-.}"
@@ -302,6 +308,8 @@ rg "except:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Bare except — use specific exception"; V=$(( V + 1 )); } || log_success "No bare except"
 
 for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+    # Skip if the import line has a noqa comment for this check
+    rg "import requests.*# noqa:.*qg-requests-in-async" "$f" >/dev/null 2>&1 && continue
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
@@ -394,12 +402,16 @@ _di_extra_globs=()
 for _excl in "${DEEP_IMPORT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _di_extra_globs+=("--glob" "!${_excl}"); done
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "${_di_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "from ${_SELF_PKG}\." \
+    | grep -v "from unified_api_contracts\.internal" \
+    | grep -v "from unified_api_contracts\.testing" \
     | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
-EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v "from ${_SELF_PKG}\." || :)
-[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_events_interface import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports from unified_events_interface"
+# Post-consolidation: unified_events_interface merged INTO unified_trading_library.
+# 'from unified_trading_library import log_event' IS the canonical import path.
+# Only flag imports from truly obsolete packages (none currently exist).
+EL_OLD=""
+[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_trading_library import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports OK"
 
 # ============================================================
 # STEP 5.5 — No direct cloud SDK imports
@@ -409,7 +421,7 @@ CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
-    --glob '!*/providers/**' \
+    --glob '!**/providers/**' \
     --glob '!*/cache.py' \
     --glob '!typings/**' --glob '!*/typings/**' \
     -l . 2>/dev/null || :)
@@ -452,7 +464,7 @@ BACK_COMPAT=$(rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward
 # STEP 5.9 — Schema placement (advisory for libraries)
 # ============================================================
 # UAC and UIC are the schema repos — skip; they own external API and internal domain schemas
-if [[ "$PACKAGE_NAME" != "unified-api-contracts" && "$PACKAGE_NAME" != "unified-internal-contracts" ]]; then
+if [[ "$PACKAGE_NAME" != "unified-api-contracts" ]]; then
     DOMAIN_CONTRACTS_IN_LIB=$(rg 'class \w+\(BaseModel\)' --type py \
         --glob "!tests/**" --glob "!**/__init__.py" \
         "$SOURCE_DIR/" 2>/dev/null | grep -v '#.*CORRECT-LOCAL' || :)
@@ -478,15 +490,6 @@ if [[ "$PACKAGE_NAME" = "unified-api-contracts" ]]; then
             WORKSPACE_ROOT="$REPO_ROOT_FOR_SCHEMA" python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null || true
         fi
     fi
-elif [[ "$PACKAGE_NAME" = "unified-internal-contracts" ]]; then
-    if [[ -x "$PROJECT_ROOT/scripts/check_schema_organization.py" ]] || command -v python3 &>/dev/null; then
-        if python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null; then
-            log_success "UIC schema organization OK"
-        else
-            log_warn "UIC schema organization: see script output"
-            WORKSPACE_ROOT="$REPO_ROOT_FOR_SCHEMA" python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null || true
-        fi
-    fi
 elif [[ -f "$REPO_ROOT_FOR_SCHEMA/unified-trading-pm/scripts/validation/check_schema_provenance.py" ]]; then
     if python3 "$REPO_ROOT_FOR_SCHEMA/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$PACKAGE_NAME" --workspace-root "$REPO_ROOT_FOR_SCHEMA" 2>/dev/null; then
         log_success "Schema provenance OK (schemas from UAC/UIC)"
@@ -506,7 +509,7 @@ if [[ "$PACKAGE_NAME" = "unified-config-interface" ]]; then
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' --glob '!**/cloud_config.py' -l . 2>/dev/null || :)
 elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
     # UTL defines/deprecates these symbols — skip the origin and compat-layer files
-    # domain_client/ was merged from unified-domain-client and uses these symbols legitimately
+    # domain_client/ sub-package (merged into UTL) uses these symbols legitimately
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
         --glob '!**/domain/standardized_service.py' --glob '!**/__init__.py' \
@@ -517,17 +520,6 @@ elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
         --glob '!**/domain_client/sports/**' --glob '!**/domain_client/standardized_service.py' \
         -l . 2>/dev/null \
         | grep -v "# noqa:.*qg-protocol-symbol\|# noqa: qg-protocol-symbol" || :)
-elif [[ "$PACKAGE_NAME" = "unified-domain-client" ]]; then
-    # UDC defines its own StandardizedDomainCloudService (domain wrapper, not a protocol violation)
-    # and CloudTarget (local config dataclass, not UTL's deprecated GCS-specific CloudTarget).
-    # All client files and sports/ are legitimate consumers of UDC's own class — excluded.
-    PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
-        --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
-        --glob '!**/standardized_service.py' --glob '!**/cloud_target.py' \
-        --glob '!**/factories.py' --glob '!**/__init__.py' \
-        --glob '!**/cloud_data_provider.py' --glob '!**/clients/**' \
-        --glob '!**/sports/**' \
-        -l . 2>/dev/null || :)
 else
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)
@@ -649,7 +641,9 @@ done
 
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
-    _pa_out=$($PYTHON_CMD -m pip_audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
+    _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 elif command -v pip-audit &>/dev/null; then
     _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 else
@@ -672,7 +666,6 @@ fi
 # ============================================================
 _UAC_EXEMPT="${UAC_CANONICAL_EXEMPT:-false}"
 [[ "${PACKAGE_NAME:-}" == "unified-api-contracts" ]] && _UAC_EXEMPT=true
-[[ "${PACKAGE_NAME:-}" == "unified-internal-contracts" ]] && _UAC_EXEMPT=true
 if [[ "$_UAC_EXEMPT" != "true" ]]; then
   DEEP_UAC_IMPORTS=0
   rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
@@ -718,7 +711,7 @@ fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
-VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
+VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
 [ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
 
 # ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────

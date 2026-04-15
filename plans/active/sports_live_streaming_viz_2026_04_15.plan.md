@@ -1,0 +1,630 @@
+---
+name: sports-live-streaming-viz
+overview:
+  Sports live streaming visualization + execution — live odds from MTDS (Odds API + Betfair), live stats from API
+  Football/SFI, WebSocket to UI, manual bet placement via execution-service
+type: code
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: B4
+
+repo_gates:
+  - repo: market-tick-data-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: instruments-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-trading-api
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-trading-system-ui
+    code: C0
+    deployment: none
+    business: none
+  - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: deployment-service
+    code: C0
+    deployment: none
+    business: none
+
+depends_on:
+  - unified-pipeline-scheduling-and-triggers
+
+todos:
+  # ── Phase 1A: Live Odds via MTDS (PARALLEL with 1B) ──
+  - id: p1a-mtds-live-odds-publish
+    content: |
+      - [x] [AGENT] P1. Wire MTDS live mode to publish per-fixture odds updates to PubSub. MTDS already has:
+        - `OddsApiAdapter` with `get_markets()`/`get_prices()` for live odds across 20+ bookmakers (market_interface/adapters/sports/odds_api_adapter.py)
+        - `BetfairAdapter` with `get_markets()`/`get_prices()` (market_interface/adapters/sports/betfair_adapter.py)
+        - `--mode live` via PubSubIO triggered by instruments DATA_READY
+        - `StreamingParquetWriter` for GCS writes with league partitioning
+        Changes needed:
+        1. After writing odds to GCS in live mode, publish each fixture's odds snapshot to PubSub topic `sports-live-odds`
+        2. Message shape: {fixture_id, league_id, odds: {market: {bookmaker: decimal_odds}}, timestamp, source: "odds_api"|"betfair"}
+        3. Use existing `publish_coordination_event` from UTL or direct PubSub publish
+        4. Keep existing GCS write path unchanged — PubSub is additive
+        Existing code: tick_data_handler.py cleanup() already publishes DATA_READY. Add per-fixture publish in the sports processing loop.
+    status: done
+    note: "MTDS already collects live odds — just need to publish per-fixture to PubSub instead of only writing to GCS"
+
+  # ── Phase 1B: Live Stats via instruments-service (PARALLEL with 1A) ──
+  - id: p1b-api-football-live-stats
+    content: |
+      - [x] [AGENT] P1. Add live fixture methods to ApiFootballAdapter in instruments-service. The API Football v3 API supports `GET /fixtures?live=all` but the adapter doesn't call it. Add:
+        1. `get_live_fixtures()` → `GET /fixtures?live=all` — returns all currently in-play fixtures with status, minute, score, events
+        2. `get_fixture_live_stats(fixture_id)` → reuse existing `get_fixture_statistics(fixture_id)` — it already works for in-play fixtures, just hasn't been called during play
+        UAC already declares `supports_live=True` for API_FOOTBALL.
+        Existing code: instruments_service/reference_data/adapters/sports/adapters/api_football.py — follow get_fixtures() pattern
+    status: done
+    note: "One new method + reuse existing stats method. API Football Ultra plan (75K/day) covers this."
+
+  - id: p1b-sfi-live-progressive
+    content: |
+      - [x] [AGENT] P2. Verify SFI progressive stats work for live (in-play) matches, not just completed. The `get_progressive_stats(match_id)` endpoint returns 30s-interval stats. Currently only called for completed matches (filter in get_match_ids_for_date skips in-progress). Test:
+        1. During a live match, call SFI `/matches/{id}/progressive` — does it return partial data?
+        2. If yes: remove the completed-only filter in live mode so in-progress matches are included
+        3. If no: API Football live stats from p1b-api-football-live-stats is sufficient alone
+        File: instruments_service/reference_data/adapters/sports/adapters/soccerfootball_info.py — get_match_ids_for_date() line filtering
+    status: done
+    note: "Best effort — API Football is the primary live stats source. SFI is a bonus if it works live."
+
+  - id: p1b-live-stats-publish
+    content: |
+      - [x] [AGENT] P1. Add live stats publishing loop to instruments-service --mode live handler. In live mode:
+        1. Every 60s: call ApiFootballAdapter.get_live_fixtures() for all in-play matches
+        2. For each live fixture: fetch stats via get_fixture_statistics() + events via get_fixture_events()
+        3. Publish to PubSub topic `sports-live-stats` with payload: {fixture_id, league_id, status, minute, score, stats: {home: {...}, away: {...}}, events: [...], timestamp}
+        4. For upcoming fixtures (kickoff within 6h from GCS fixture calendar): publish status-only updates every 300s
+        Existing code: instruments_handler.py cleanup() has publish_coordination_event pattern. Add a sports-specific publish in the live processing loop.
+        UAC schemas to use: LiveMatchState from unified_api_contracts.canonical.domain.sports.live
+    status: done
+    note:
+      "API Football rate limit: 75K/day on Ultra plan. 60s polling for ~20 concurrent live fixtures = ~1440 calls/day."
+
+  # ── Phase 1C: PubSub Topics ──
+  - id: p1c-pubsub-topics
+    content: |
+      - [x] [AGENT] P1. Add two PubSub topics to deployment-service/scripts/setup-pubsub.sh:
+        1. `sports-live-odds|3|sports-live-odds-api,sports-live-odds-features|3` — MTDS publishes, API + FSS consume
+        2. `sports-live-stats|3|sports-live-stats-api,sports-live-stats-features|3` — instruments-service publishes, API + FSS consume
+        Follow existing TOPIC_REGISTRY pattern (pipe-delimited, idempotent creation).
+    status: done
+    note: "Two topics instead of one — odds and stats are separate publishers (MTDS vs instruments-service)"
+
+  # ── Phase 2: API Gateway (depends on Phase 1C for topic names) ──
+  - id: p2-sports-live-channel
+    content: |
+      - [x] [AGENT] P1. Add `sports-live` WebSocket channel to unified-trading-api/routes/websocket.py. Channel multiplexing is name-agnostic — just add `if "sports-live" in channels` block.
+        Mock mode (CLOUD_MOCK_MODE=true):
+        - Generate synthetic fixture updates from SPORTS_INSTRUMENT_SPECS in UAC representative_sample.py
+        - Simulate live scores: increment minute every 60s, random goals/cards, odds drift with Brownian motion
+        - Emit one update per fixture every 5-10s (faster than real for demo)
+        - Shape: {type: "fixture-update", fixture_id, league_id, status, minute, score, odds, stats, events, timestamp}
+        Real mode:
+        - Subscribe to both PubSub topics: `sports-live-odds` and `sports-live-stats`
+        - Merge updates by fixture_id — odds from MTDS topic, stats from instruments topic
+        - Forward merged updates to all clients subscribed to `sports-live` channel
+        Existing code: websocket.py _mock_data_generator (see market-data channel pattern for mock), _subscriptions dict for channel management
+    status: done
+    note: "Mock mode is easy — follow market-data pattern. Real mode needs PubSub consumer (first one in the API)."
+
+  - id: p2-sports-rest-endpoints
+    content: |
+      - [x] [AGENT] P1. Add REST endpoints for initial page load (before WebSocket connects):
+        GET /api/sports/fixtures — list today's fixtures with current status, scores, odds
+        GET /api/sports/fixtures/{fixture_id} — single fixture detail with full stats, events, lineups
+        GET /api/sports/fixtures/{fixture_id}/odds — odds history for a fixture (time series from GCS)
+        GET /api/sports/leagues — list active leagues with fixture counts
+        Mock mode: return data from MOCK_FIXTURES / seed_tickers.py sports data
+        Real mode: read from GCS (instruments bucket for fixtures, tick data bucket for odds)
+        Existing code: unified_trading_api/routes/instruments.py (GCS read pattern), routes/market_data.py
+        Create new route file: unified_trading_api/routes/sports.py
+    status: done
+    note: "REST for initial load, WebSocket for live updates — standard pattern"
+
+  - id: p2-sports-bet-forwarding
+    content: |
+      - [x] [AGENT] P1. Wire POST /sports/bets to forward to execution-service in real mode. Currently mock-store CRUD only.
+        Real mode changes needed in unified_trading_api/routes/execution.py:
+        1. Import httpx (already used in routes/health.py and routes/reporting.py)
+        2. In place_sports_bet(): if not mock_mode, POST to execution-service `/manual/instruction` with:
+           - venue: bookmaker from request (BETFAIR, SMARKETS, etc.)
+           - operation_type: BET or SPORTS_EXCHANGE (from UAC OperationType)
+           - instrument_key: "{market_id}/{selection_id}" (Betfair format)
+           - side: BACK or LAY
+           - stake, price from request
+        3. Execution-service ManualOperationHandler (api/manual_instruction_api.py) → SportsHandler → BetfairAdapter.place_order()
+        4. Return execution-service response (fill confirmation, order ID)
+        5. Also wire cancel and amend to execution-service /manual/cancel and /manual/amend
+        Existing execution-service code: execution_service/api/manual_instruction_api.py (REST endpoints ready),
+        execution_service/sports_execution/adapters/exchanges/betfair.py (place_order implemented),
+        execution_service/sports_execution/routing.py (SportsExecutionRouter with lazy adapter creation)
+    status: done
+    note: "The gap is just httpx forwarding. Execution-service already has the full stack."
+
+  - id: p2-sports-handler-live-wiring
+    content: |
+      - [x] [AGENT] P1. Wire SportsHandler.execute() in execution-service to call live adapters instead of returning simulated fills.
+        Current state: SportsHandler returns simulated fills for all modes.
+        Change: In live mode, route through SportsExecutionRouter to the real adapter (BetfairAdapter.place_order(), SmarketsAdapter, etc.)
+        File: execution_service/engine/handlers/sports_handler.py
+        The router (sports_execution/routing.py) and adapters (sports_execution/adapters/exchanges/betfair.py) are fully implemented — just need SportsHandler to call them.
+    status: done
+    note: "Adapter + router exist. Handler just needs to call router.route(order) instead of simulating."
+
+  # ── Phase 3: UI (depends on Phase 2 for WS channel + REST) ──
+  - id: p3-sports-websocket-hook
+    content: |
+      - [x] [AGENT] P1. Create useSportsLiveUpdates() hook that subscribes to `sports-live` WebSocket channel.
+        1. On mount: send {action: "subscribe", channel: "sports-live"} (match existing subscribe pattern in websocket.py)
+        2. On message: parse fixture update, return via React state
+        3. On unmount: send {action: "unsubscribe", channel: "sports-live"}
+        Existing hook to wrap: hooks/use-websocket.ts (generic WebSocket with reconnect, subscribe/unsubscribe)
+        Place in: hooks/use-sports-live-updates.ts
+    status: done
+    note: "Thin wrapper around existing useWebSocket hook"
+
+  - id: p3-wire-sports-data-provider
+    content: |
+      - [x] [AGENT] P1. Wire SportsDataProvider to use real data in non-mock mode.
+        Current state: components/widgets/sports/sports-data-context.tsx hardcodes allFixtures = MOCK_FIXTURES (line ~101)
+        Changes:
+        1. Check useExecutionMode() — if mode !== "mock", fetch initial fixtures from GET /api/sports/fixtures
+        2. Subscribe to useSportsLiveUpdates() hook for live updates
+        3. Merge WebSocket updates into fixtures state (update matching fixture_id)
+        4. Keep mock path for VITE_MOCK_API=true (no changes to mock behavior)
+        The Fixture type at components/trading/sports/types.ts already matches the backend data shape.
+    status: done
+    note: "Key file: components/widgets/sports/sports-data-context.tsx"
+
+  - id: p3-live-scores-widget-enhance
+    content: |
+      - [x] [AGENT] P2. Enhance sports-live-scores-widget.tsx for real-time updates:
+        1. Pulse animation on score changes (goal scored) — currently has green pulse dot, add score flash
+        2. Odds movement indicators (arrow up/down with color)
+        3. Minute counter that ticks with WebSocket updates (not local timer)
+        4. Connection status indicator (connected/reconnecting/disconnected)
+        Widget already exists at components/widgets/sports/sports-live-scores-widget.tsx — enhance, don't rewrite.
+    status: done
+    note: ""
+
+  - id: p3-fixture-detail-live
+    content: |
+      - [x] [AGENT] P2. Wire fixtures-detail-panel.tsx for live progressive data:
+        1. Odds tab: odds movement chart updates live (LineChart already rendered, needs live data feed replacing replay slider)
+        2. Stats tab: MatchStatsPanel already renders stats — wire to live updates so possession/shots update mid-match
+        3. Events tab: new events (goals, cards) append to timeline in real-time
+        Existing code: components/trading/sports/fixtures-detail-panel.tsx (has Tabs for Stats, Odds timeline, Events).
+        The ReplayTab currently simulates playback via setInterval over pre-generated progressiveStats — replace with live feed for in-play fixtures, keep replay for completed.
+    status: done
+    note: ""
+
+  - id: p3-bet-placement-ui
+    content: |
+      - [x] [AGENT] P2. Wire bet placement UI to use real execution in non-mock mode:
+        1. The "Place Arb" button in arb-stream.tsx currently fires a toast — wire to POST /sports/bets
+        2. Fixture detail panel odds display should have "Back" / "Lay" buttons for exchange odds
+        3. Bet slip component (if missing, add minimal): bookmaker, market, outcome, stake, odds → POST /sports/bets
+        4. Show order status from execution-service response (placed/filled/rejected)
+        5. Mock mode: keep existing toast behavior
+        Existing: components/trading/sports/arb-stream.tsx (Place Arb button), POST /sports/bets endpoint exists
+    status: done
+    note: "Connects UI bet actions to the execution pipeline"
+
+  # ── Phase 4: Browser Integration Test (REQUIRES MCP BROWSER AGENT) ──
+  #
+  # These tests require a browser. Use an agent with MCP browser/screenshot
+  # capability. See "Browser Test Agent Prompt" section below for the full
+  # prompt to give the agent.
+  #
+  # Test order: 4A (mock mode) MUST pass before 4B (real mode).
+  # 4A uses dev-tiers.sh --tier 1 (mock, no credentials needed).
+  # 4B uses real API keys from Secret Manager.
+
+  - id: p4a-start-mock-stack
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Start the mock mode dev stack:
+        ```bash
+        cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-system-ui
+        bash scripts/dev-tiers.sh --stop  # clean slate
+        bash scripts/dev-tiers.sh --tier 1  # UI (port 3000) + 3 API gateways (ports 8004-8006)
+        ```
+        Wait for "ready" output. Verify http://localhost:3000 loads.
+    status: todo
+    note: "Tier 1 = UI + APIs in mock mode. No credentials needed."
+
+  - id: p4a-sports-page-loads
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Navigate to http://localhost:3000/services/trading/sports
+        Verify:
+        1. Page loads without errors (no blank screen, no console errors)
+        2. Fixture list renders with matches (from MOCK_FIXTURES)
+        3. League filter tabs are visible (EPL, La Liga, etc.)
+        4. Status filter works (All / Live / Upcoming / Completed)
+        5. At least some fixtures show as "live" (1H/2H/HT status with green pulse dot)
+        Take a screenshot of the sports page.
+    status: todo
+    note: ""
+
+  - id: p4a-websocket-connection
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Verify WebSocket sports-live channel:
+        1. Open browser DevTools → Network → WS tab
+        2. Find the /ws connection
+        3. Look for subscribe message: {"action":"subscribe","channel":"sports-live"}
+        4. Verify fixture-update messages arriving every 1-2 seconds
+        5. Check the live scores bar at the top — it should show a connection indicator (green dot + "LIVE" text)
+        6. Scores and minutes in the live scores bar should update as WebSocket messages arrive
+        Take screenshots of: DevTools WS messages, live scores bar with connection indicator.
+    status: todo
+    note: ""
+
+  - id: p4a-fixture-detail-panel
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Click on a live fixture in the list:
+        1. Detail panel opens on the right
+        2. Stats tab shows possession, shots, corners (even if mock data)
+        3. Odds tab shows odds chart
+        4. Events tab shows timeline (goals, cards, subs)
+        5. If the fixture is live, data should update as WebSocket messages arrive
+        Take a screenshot of the fixture detail panel with tabs visible.
+    status: todo
+    note: ""
+
+  - id: p4a-arb-stream
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Switch to the "Arb" tab in the sports workspace:
+        1. Arb stream shows cards with arb opportunities
+        2. Decay bars count down on each card
+        3. Click "Place Arb" button on any card — should show a toast notification (mock mode)
+        4. No errors in console
+        Take a screenshot of the arb stream with at least one card visible.
+    status: todo
+    note: ""
+
+  - id: p4a-sports-rest-endpoints
+    content: |
+      - [ ] [BROWSER-AGENT] P0. Verify REST endpoints work (open in browser or curl):
+        1. http://localhost:8004/api/sports/fixtures — returns JSON with fixture list
+        2. http://localhost:8004/api/sports/leagues — returns JSON with 5 leagues
+        3. http://localhost:8004/api/sports/fixtures/SF-1000 — returns single fixture detail
+        4. http://localhost:8004/api/sports/fixtures/SF-1000/odds — returns odds history
+        Verify all return 200 with valid JSON. Take screenshots or paste response summaries.
+    status: todo
+    note: "Port 8004 is the unified-trading-api gateway"
+
+  - id: p4a-multi-tab
+    content: |
+      - [ ] [BROWSER-AGENT] P1. Open sports page in 2 browser tabs:
+        1. Both tabs should show the same live data
+        2. Both should have active WebSocket connections
+        3. Score changes in one tab should appear in the other (same WS source)
+        Verify both tabs show consistent data.
+    status: todo
+    note: "Tests WebSocket multiplexing"
+
+  - id: p4b-start-real-api
+    content: |
+      - [ ] [BROWSER-AGENT] P1. Start API gateway in real mode with API Football data:
+        First, stop mock stack: `bash scripts/dev-tiers.sh --stop`
+        Then start with real API data:
+        ```bash
+        cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-api
+        CLOUD_MOCK_MODE=false python -m unified_trading_api --port 8004 &
+        cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-system-ui
+        VITE_MOCK_API=false npm run dev &
+        ```
+        Note: real mode API needs GCP credentials (ADC). If not available, skip to p4b-live-fixtures-script.
+    status: todo
+    note: "Only possible with GCP ADC. Skip if not available."
+
+  - id: p4b-live-fixtures-script
+    content: |
+      - [ ] [BROWSER-AGENT] P1. Verify live API Football data works (terminal test, no browser needed):
+        ```bash
+        cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+        source .venv-workspace/bin/activate
+        python3 -c "
+        import httpx
+        key = 'c820a4042174f6ae5be973ca1e0849a3'
+        headers = {'x-apisports-key': key}
+        with httpx.Client(timeout=30, headers=headers) as c:
+            r = c.get('https://v3.football.api-sports.io/fixtures', params={'live': 'all'})
+            data = r.json()
+        results = data.get('response', [])
+        print(f'{len(results)} live fixtures')
+        for f in results[:5]:
+            s = f['fixture']['status']
+            t = f['teams']
+            g = f['goals']
+            print(f'  [{s[\"short\"]} {s[\"elapsed\"]}m] {t[\"home\"][\"name\"]} {g[\"home\"]}-{g[\"away\"]} {t[\"away\"][\"name\"]}')
+        "
+        ```
+        Should return live fixtures if any matches are currently in play.
+        Best tested during European evening hours (18:00-22:00 UTC) or weekend afternoons.
+    status: todo
+    note: "Works anytime but most fixtures are live during European match hours"
+
+isProject: false
+---
+
+# Sports Live Streaming Visualization + Execution
+
+## Context
+
+The sports trading UI already has fixture display, arb detection, and detail panels — all running on mock data. The
+backend infrastructure is 90% there: MTDS already collects live odds from Odds API (20+ bookmakers) and Betfair,
+instruments-service has API Football and SFI adapters (just need live endpoints added), execution-service has full
+Betfair/Smarkets/Matchbook bet placement with a REST manual API.
+
+This plan wires everything together: MTDS publishes live odds to PubSub, instruments-service publishes live stats, API
+gateway merges and forwards via WebSocket, UI renders live and can place bets through the execution pipeline.
+
+## Architecture
+
+```
+market-tick-data-service (--mode live)        instruments-service (--mode live)
+  │ OddsApiAdapter.get_prices() every 60s       │ ApiFootball GET /fixtures?live=all
+  │ BetfairAdapter.get_prices()                 │ + get_fixture_statistics() per fixture
+  │ 20+ bookmakers including exchanges          │ SFI progressive stats (if live-capable)
+  ▼                                             ▼
+PubSub: sports-live-odds                  PubSub: sports-live-stats
+  │                                             │
+  └──────────────┬──────────────────────────────┘
+                 ▼
+         unified-trading-api (WebSocket + REST)
+           │ sports-live channel: merges odds + stats by fixture_id
+           │ REST: /api/sports/fixtures, /leagues (initial load from GCS)
+           │ POST /sports/bets → execution-service /manual/instruction
+           ▼
+         unified-trading-system-ui
+           │ SportsDataProvider: REST initial load + WebSocket live updates
+           ├── Live scores widget (pulse on goal, odds arrows)
+           ├── Fixture detail (live odds chart, live stats, live events)
+           ├── Arb stream (live arb detection)
+           └── Bet placement (Back/Lay buttons → POST /sports/bets)
+                                    │
+                                    ▼
+                          execution-service
+                            │ ManualOperationHandler → SportsHandler
+                            │ SportsExecutionRouter → BetfairAdapter.place_order()
+                            ▼
+                          Betfair / Smarkets / Matchbook (live exchanges)
+```
+
+## Existing Code (What's Already Built)
+
+### MTDS — Live Odds Collection (ALREADY WORKS)
+
+- OddsApiAdapter: `market_interface/adapters/sports/odds_api_adapter.py` — `get_markets()`, `get_prices()`, 20+
+  bookmakers
+- BetfairAdapter: `market_interface/adapters/sports/betfair_adapter.py` — `get_markets()`, `get_prices()`
+- Live mode: PubSubIO triggered by instruments DATA_READY
+- GCS writes:
+  `raw_tick_data/by_date/day={date}/category=SPORTS/venue=ODDS_API/instrument_type=odds/data_type=odds/league={league_id}/ticks.parquet`
+- `publish_coordination_event("DATA_READY")` in cleanup()
+
+### Instruments-Service — Sports Reference Data (BATCH WORKS, LIVE NEEDS 1 METHOD)
+
+- ApiFootballAdapter: `reference_data/adapters/sports/adapters/api_football.py` — 10 methods, all date/fixture-based
+- SFI: `soccerfootball_info.py` — `get_progressive_stats(match_id)` returns 30s-interval stats
+- UAC: `supports_live=True` for API_FOOTBALL
+- Gap: no `get_live_fixtures()` method calling `GET /fixtures?live=all`
+
+### Execution-Service — Sports Bet Placement (ADAPTERS DONE, HANDLER NEEDS WIRING)
+
+- BetfairAdapter: `sports_execution/adapters/exchanges/betfair.py` — `place_order()`, `cancel_order()`, `list_orders()`
+  via betfairlightweight
+- Also: SmarketsAdapter, BetdaqAdapter, MatchbookAdapter, PolymarketClobAdapter, KalshiAdapter
+- SportsExecutionRouter: `sports_execution/routing.py` — lazy adapter creation, SM credential loading
+- ManualOperationHandler: `api/manual_instruction_api.py` — REST at `/manual/instruction`, rate-limited
+- SportsHandler: `engine/handlers/sports_handler.py` — registered for BET + SPORTS_EXCHANGE operations
+- Gap: SportsHandler.execute() returns simulated fills, doesn't call live adapters
+
+### Betfair Live Streaming (VALIDATED IN E2E-TESTING)
+
+- `e2e-testing/scripts/sports/live_arb_scanner.py` — 1,980 updates/min, 40ms latency, 740+ markets
+- `e2e-testing/scripts/sports/betfair_live_feed.py` — standalone TLS stream to parquet
+- Credentials: SM secrets `betfair-app-key`, `betfair-session-token` + `e2e-testing/configs/sports/live.env`
+
+### API Gateway — WebSocket + Endpoints (MOCK WORKS, REAL NEEDS FORWARDING)
+
+- WebSocket: `routes/websocket.py` — channel multiplexing, sports instruments in market-data channel
+- POST /sports/bets: `routes/execution.py` — mock-store CRUD, no forwarding to execution-service
+- Mock data: comprehensive (tickers, candles, 9 strategies, positions, alerts)
+- Gap: no `sports-live` WS channel, no PubSub consumer, no httpx forwarding to execution-service
+
+### UI — Components + Types (FULL SHELL, MOCK DATA ONLY)
+
+- SportsDataProvider: `components/widgets/sports/sports-data-context.tsx` — hardcoded MOCK_FIXTURES
+- Fixture types: `components/trading/sports/types.ts` — backend-aligned (status, score, odds, stats, events)
+- Live scores: `components/widgets/sports/sports-live-scores-widget.tsx` — green pulse dot, static data
+- Arb stream: `components/trading/sports/arb-stream.tsx` — simulated 8s cycle with decay timer
+- Fixture detail: `components/trading/sports/fixtures-detail-panel.tsx` — replay slider over pre-generated snapshots
+- Generic WebSocket hook: `hooks/use-websocket.ts` — reconnect, subscribe/unsubscribe
+- Gap: no useSportsLiveUpdates hook, no real data fetching, no bet placement wiring
+
+## Data Shape (Fixture Update Message)
+
+```json
+{
+  "fixture_id": "1034567",
+  "league_id": "EPL",
+  "status": "1H",
+  "minute": 34,
+  "score": { "home": 1, "away": 0 },
+  "home_team": "Arsenal",
+  "away_team": "Chelsea",
+  "odds": {
+    "FT Result": {
+      "betfair_exchange": { "home": 1.85, "draw": 3.4, "away": 4.5 },
+      "pinnacle": { "home": 1.82, "draw": 3.35, "away": 4.6 }
+    }
+  },
+  "stats": {
+    "home": { "possession": 58, "shots": 7, "shots_on_target": 3, "corners": 4 },
+    "away": { "possession": 42, "shots": 4, "shots_on_target": 1, "corners": 2 }
+  },
+  "events": [{ "minute": 23, "type": "GOAL", "team": "home", "player": "Saka" }],
+  "timestamp": "2026-04-15T15:34:00Z"
+}
+```
+
+Aligns with existing `Fixture` type in `types.ts` and `LiveMatchState` in UAC.
+
+## Execution DAG
+
+```
+Phase 1A (MTDS live odds publish)  ──┐
+Phase 1B (instruments live stats)  ──┤── PARALLEL, no dependencies
+Phase 1C (PubSub topics)           ──┘
+         │
+Phase 2  (API: WS channel + REST + bet forwarding + SportsHandler wiring) ── depends on 1C for topic names
+         │
+Phase 3  (UI: WS hook + provider wiring + widget enhancements + bet UI) ── depends on Phase 2
+         │
+Phase 4  (Integration test: mock then real) ── depends on all above
+```
+
+## Success Criteria
+
+- **C5**: All 5 repos pass quality-gates.sh
+- **B4**: Mock mode: fixtures update live in browser, odds drift, scores change, bet placement works (toast). Real mode:
+  data matches API Football dashboard for 1 league over 1 matchday. Bet placed on Betfair via UI.
+
+## Browser Test Agent Prompt
+
+Copy the prompt below and give it to an agent with MCP browser/screenshot capability (e.g. Claude Code with Puppeteer
+MCP, or a Cursor agent with browser access). The agent should execute Phase 4 tests in order.
+
+---
+
+### PROMPT START
+
+You are testing the sports live streaming feature in the Unified Trading System UI. All code changes are already
+implemented — your job is to start the stack, open a browser, and verify everything works visually.
+
+**Workspace**: `/Users/ikennaigboaka/Code/unified-trading-system-repos`
+
+#### Step 1: Start Mock Stack
+
+```bash
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-system-ui
+bash scripts/dev-tiers.sh --stop        # clean slate
+bash scripts/dev-tiers.sh --tier 1      # UI (port 3000) + 3 API gateways (8004-8006)
+```
+
+Wait for startup to complete (look for "ready" or port-listening output).
+
+#### Step 2: Test Sports Page (Mock Mode)
+
+1. Navigate to `http://localhost:3000/services/trading/sports`
+2. **Screenshot the page** — verify:
+   - Fixture list renders with matches
+   - League filter tabs visible
+   - Status filter works (All / Live / Upcoming / Completed)
+   - Some fixtures show as "live" with green pulse dot
+3. Look at the **live scores bar** at the top of the page:
+   - Should show a connection indicator (green dot + "LIVE" or similar)
+   - Live fixtures should show scores and minute counts
+
+#### Step 3: Test WebSocket Connection
+
+1. Open browser DevTools (F12) → Network tab → filter by "WS"
+2. Find the `/ws` WebSocket connection
+3. **Screenshot the WS messages** — verify:
+   - Subscribe message sent: `{"action":"subscribe","channel":"sports-live"}`
+   - `fixture-update` messages arriving every 1-2 seconds with score/odds/stats data
+4. Watch the live scores bar — scores and minutes should update in real-time
+
+#### Step 4: Test Fixture Detail Panel
+
+1. Click on any **live fixture** in the fixture list
+2. A detail panel should open on the right side
+3. **Screenshot the detail panel** — verify tabs:
+   - Stats tab: possession, shots, corners
+   - Odds tab: odds chart/timeline
+   - Events tab: goals, cards, substitutions timeline
+
+#### Step 5: Test Arb Stream
+
+1. Click the **"Arb"** tab in the sports workspace
+2. **Screenshot** — verify:
+   - Arb cards visible with decay timers counting down
+   - "Place Arb" button exists on each card
+3. Click **"Place Arb"** on any card — should show a toast notification (mock mode = toast, no real bet)
+
+#### Step 6: Test REST Endpoints
+
+Open these URLs in the browser and screenshot the JSON responses:
+
+1. `http://localhost:8004/api/sports/fixtures` — fixture list with scores/odds
+2. `http://localhost:8004/api/sports/leagues` — 5 leagues with fixture counts
+3. `http://localhost:8004/api/sports/fixtures/SF-1000` — single fixture detail
+4. `http://localhost:8004/api/sports/fixtures/SF-1000/odds` — odds history time series
+
+All should return 200 with valid JSON.
+
+#### Step 7: Multi-Tab Test
+
+1. Open `http://localhost:3000/services/trading/sports` in a **second browser tab**
+2. Both tabs should show the same live data
+3. Both should have active WebSocket connections (check DevTools in each)
+
+#### Step 8: Live API Football Test (Terminal — No Browser)
+
+Run this in a terminal to verify real API Football data works:
+
+```bash
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+source .venv-workspace/bin/activate
+python3 -c "
+import httpx
+key = 'c820a4042174f6ae5be973ca1e0849a3'
+headers = {'x-apisports-key': key}
+with httpx.Client(timeout=30, headers=headers) as c:
+    r = c.get('https://v3.football.api-sports.io/fixtures', params={'live': 'all'})
+    data = r.json()
+results = data.get('response', [])
+print(f'{len(results)} live fixtures')
+for f in results[:5]:
+    s = f['fixture']['status']
+    t = f['teams']
+    g = f['goals']
+    print(f'  [{s[\"short\"]} {s[\"elapsed\"]}m] {t[\"home\"][\"name\"]} {g[\"home\"]}-{g[\"away\"]} {t[\"away\"][\"name\"]}')
+"
+```
+
+This returns real live fixtures. Most active during European evening hours (18:00-22:00 UTC).
+
+#### Step 9: Cleanup
+
+```bash
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-system-ui
+bash scripts/dev-tiers.sh --stop
+```
+
+#### What to Report
+
+For each step, report:
+
+- PASS / FAIL
+- Screenshot (if applicable)
+- Any errors seen in browser console or terminal
+- Any UI elements that didn't render as expected
+
+If any step fails, describe the error and stop — don't continue to later steps.
+
+### PROMPT END

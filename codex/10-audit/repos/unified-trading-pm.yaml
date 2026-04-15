@@ -1,0 +1,182 @@
+# Repo Readiness Checklist v3.0 - unified-trading-pm
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-11
+
+schema_version: "3.0"
+repo: "unified-trading-pm"
+repo_type: "infra"
+arch_tier: "devops"
+deployment_modes: null
+business_modes: null
+version: "1.2.0"
+status: "active"
+last_updated: "2026-03-11"
+
+# FORMAL WAIVER (2026-03-11):
+# PM is the workspace management tooling repo — not a deployed service.
+# CR5: done (v1.2.0 on main). DR1-DR6: N/A — no Cloud Run deployment, no Docker image.
+# BR2-BR7: N/A — no trading logic, no circuit breaker, no UEI events, no PnL targets.
+# BR8: PENDING — user approval required even for infra repos (consistent rule, no exceptions).
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR5"
+  readiness_note: |
+    PM is workspace management tooling. CR5 satisfied: v1.2.0 on main.
+    No Python source quality gates required (shell scripts, YAML configs, JSON manifest).
+    Python scripts (quality-gates.sh, quickmerge.sh, etc.) are tooling — not deployable services.
+
+  cr1_functionality:
+    status: "pass"
+    criteria: "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code"
+    evidence: "v1.2.0 on main — all scripts functional. No Python source NotImplementedError."
+    notes: "Infra tooling repo — shell scripts + YAML, not Python service code."
+
+  cr2_unit_tests:
+    status: "pass"
+    criteria: "QG passes; tests/unit/ exists for Python scripts"
+    coverage_pct: null
+    coverage_floor_pct: null
+    evidence: "Scripts are shell/YAML/JSON tooling. Python utils tested where applicable."
+    notes: "Waiver: no deployable Python source requiring coverage floor."
+
+  cr3_integration_tests:
+    status: "pass"
+    criteria: "Zero manifest dependencies — CR3 automatically satisfied."
+    manifest_dep_count: 0
+    manifest_deps_covered: []
+    manifest_deps_missing: []
+    evidence: "workspace-manifest.json confirms unified-trading-pm has no internal_dependencies."
+    notes: ""
+
+  cr4_quality_gate:
+    status: "pass"
+    criteria: "bash scripts/quality-gates.sh Pass 1 fully green"
+    last_run_date: "2026-03-11"
+    basedpyright_errors: 0
+    ruff_errors: 0
+    evidence: "v1.2.0 passed QG. Ruff + basedpyright green on Python utils."
+    notes: ""
+
+  cr5_quickmerge:
+    status: "pass"
+    criteria: "Merged to main at v1.2.0"
+    branch: "main"
+    ci_url: null
+    merged_to_main: true
+    evidence: "v1.2.0 released — all streams merged to main 2026-03-11."
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "na"
+  na_reason: |
+    unified-trading-pm is workspace management tooling — not a deployed service.
+    No Cloud Run container, no Docker image, no Pub/Sub subscriptions, no HTTP endpoints.
+    DR1-DR6 are permanently N/A for infra repos of this type.
+
+  batch: null
+  live: null
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR8-PENDING"
+
+  batch:
+    br1_acceptance_criteria:
+      status: "pass"
+      criteria: "Plan owning this repo has measurable acceptance criteria"
+      plan_ref: "plans/active/repo_readiness_semver_hardening_2026_03_11.plan.md"
+      evidence: "Plan #63 registered with completion_gates and repo_gates defined."
+      notes: ""
+    br2_circuit_breaker:
+      status: "na"
+      na_reason: "Infra tooling repo — no trading logic, no circuit breaker required."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br3_event_handling:
+      status: "na"
+      na_reason: "No UEI events produced or consumed by PM tooling."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br4_pnl_targets:
+      status: "na"
+      na_reason: "No PnL targets — PM is infrastructure, not a revenue-path service."
+      criteria: "N/A"
+      kpis_declared: []
+      evidence: ""
+      notes: ""
+    br5_pnl_optimization:
+      status: "na"
+      na_reason: "Not a revenue-path repo — no backtesting, no strategy logic."
+      criteria: "N/A"
+      backtest_artifact_uri: null
+      evidence: ""
+      notes: ""
+    br6_batch_vs_live:
+      status: "na"
+      na_reason: "No batch/live runtime — PM is tooling only."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br7_staging_parity:
+      status: "na"
+      na_reason: "No staging deployment — PM scripts run locally, not as Cloud Run services."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br8_user_approved:
+      status: "pending"
+      criteria: "Human sign-off that commercial objective is met. NO AGENT MAY SET THIS."
+      approved_date: null
+      approved_by: null
+      notes: "BR8 required even for infra repos — consistent rule. Awaiting user approval in session."
+  live: null
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-04: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-05: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-10: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-14: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-16: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-20: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-05: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-06: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-04: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-08: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-01: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-02: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-03: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-04: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-05: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-06: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-22: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  BASE-30: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-31: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-32: { status: "not_assessed", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }

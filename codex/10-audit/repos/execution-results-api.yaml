@@ -1,0 +1,220 @@
+# Repo Readiness Checklist v3.0 - execution-results-api
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-11
+
+schema_version: "3.0"
+repo: "execution-results-api"
+repo_type: "api"
+arch_tier: "api"
+deployment_modes: ["live"]
+business_modes: ["live"]
+version: "0.1.0"
+status: "active"
+last_updated: "2026-03-11"
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR0"
+  readiness_note: "Not yet assessed. Phase 3 blocked on upstream library readiness."
+
+  cr1_functionality:
+    status: "not_assessed"
+    criteria:
+      "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code; audit §2 passes"
+    evidence: ""
+    notes: ""
+
+  cr2_unit_tests:
+    status: "not_assessed"
+    criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
+    coverage_pct: null
+    coverage_floor_pct: 70
+    evidence: ""
+    notes: ""
+
+  cr3_integration_tests:
+    status: "not_assessed"
+    criteria: "4 manifest deps require tests in tests/integration/."
+    manifest_dep_count: 4
+    manifest_deps_covered:
+      # - unified-trading-library
+      # - unified-config-interface
+      # - unified-events-interface
+      # - unified-api-contracts
+    manifest_deps_missing:
+      - unified-trading-library
+      - unified-config-interface
+      - unified-events-interface
+      - unified-api-contracts
+    evidence: ""
+    notes: ""
+
+  cr4_quality_gate:
+    status: "not_assessed"
+    criteria:
+      "bash scripts/quality-gates.sh Pass 1 fully green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts"
+    last_run_date: null
+    basedpyright_errors: null
+    ruff_errors: null
+    evidence: ""
+    notes: ""
+
+  cr5_quickmerge:
+    status: "not_assessed"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-execution-results-api or main via cascade"
+    branch: null
+    ci_url: null
+    merged_to_main: false
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "DR0"
+  na_reason: null
+
+  batch: null # not a batch-mode service
+  live:
+    dr1_infra:
+      status: "not_assessed"
+      criteria: "Docker builds; cloudbuild.yaml correct; infra provisioned; setup-workspace.sh succeeds"
+      evidence: ""
+      notes: ""
+    dr2_ci_smoke:
+      status: "not_assessed"
+      criteria: "production_mock_e2e GHA suite green; emulators only; zero live calls"
+      gha_run_url: null
+      evidence: ""
+      notes: ""
+    dr3_feature_env:
+      status: "not_assessed"
+      criteria: "Deployed to feat/dev Cloud Run; GET /health 200; GET /readiness 200"
+      health_url: null
+      readiness_url: null
+      evidence: ""
+      notes: ""
+    dr4_sit_pass:
+      status: "not_assessed"
+      criteria: "system-integration-tests full suite green for this repo; no circuit breaker trips"
+      sit_run_url: null
+      evidence: ""
+      notes: ""
+    dr5_load_perf:
+      status: "not_assessed"
+      criteria: "P99 latency <= SLA; no memory leaks under 10-min sustained load; throughput >= target"
+      sla_p99_ms: null
+      throughput_target: null
+      evidence: ""
+      notes: ""
+    dr6_prod_ready:
+      status: "not_assessed"
+      criteria: "Zero CRITICAL CVEs; auth middleware verified; no DISABLE_AUTH in prod; runbook in docs/"
+      cve_scan_date: null
+      runbook_path: null
+      evidence: ""
+      notes: ""
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR0"
+
+  batch: null # no batch mode
+  live:
+    br1_acceptance_criteria:
+      status: "not_assessed"
+      criteria: "Plan owning this repo has measurable acceptance criteria"
+      plan_ref: null
+      evidence: ""
+      notes: ""
+    br2_circuit_breaker:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "CLOSED->OPEN->HALF_OPEN verified via FaultInjectionTransport; PubSub propagation tested"
+      evidence: ""
+      notes: ""
+    br3_event_handling:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "All UEI events fire correctly; schema matches UAC canonical; correlation_id propagated"
+      evidence: ""
+      notes: ""
+    br4_pnl_targets:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "Domain KPIs declared AND measured (not estimated)"
+      kpis_declared: []
+      evidence: ""
+      notes: ""
+    br5_pnl_optimization:
+      status: "na"
+      na_reason: "not revenue-path"
+      criteria: "Backtest confirms positive PnL contribution; artifacts in gs://unified-backtests/{repo}/"
+      backtest_artifact_uri: null
+      evidence: ""
+      notes: ""
+    br6_batch_vs_live:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "t+1 check: batch output matches live expectations within tolerance"
+      tolerance_pct: null
+      evidence: ""
+      notes: ""
+    br7_staging_parity:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "N-minute replay within tolerance"
+      replay_duration_min: null
+      evidence: ""
+      notes: ""
+    br8_user_approved:
+      status: "not_assessed"
+      criteria: "Human sign-off that commercial objective is met. NO AGENT MAY SET THIS."
+      approved_date: null
+      approved_by: null
+      notes: ""
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-04: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-05: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-10: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-14: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-16: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-20: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-05: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-06: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-04: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-08: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-01: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-02: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-03: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-04: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-05: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-06: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-22: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  BASE-30: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-31: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-32: { status: "not_assessed", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }

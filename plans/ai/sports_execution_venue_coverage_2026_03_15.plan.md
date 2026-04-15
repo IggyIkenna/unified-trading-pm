@@ -3,13 +3,13 @@
 ---
 
 name: sports-execution-venue-coverage overview: | Comprehensive sports execution coverage plan for all venues the Odds
-API covers. Adds venue execution profiles to UAC, browser automation infrastructure to USEI, and execution adapters for
-~70 bookmakers. Designed for world-class sports arbitrage. type: mixed epic: epic-code-completion status: draft
-completion_gates: code: C5 deployment: D3 business: B3 repo_gates:
+API covers. Adds venue execution profiles to UAC, browser automation infrastructure to execution-service
+sports_execution sub-package, and execution adapters for ~70 bookmakers. Designed for world-class sports arbitrage.
+type: mixed epic: epic-code-completion status: draft completion_gates: code: C5 deployment: D3 business: B3 repo_gates:
 
 - repo: unified-api-contracts code: C0 deployment: none business: none
-- repo: unified-internal-contracts code: C0 deployment: none business: none
-- repo: unified-sports-execution-interface code: C0 deployment: none business: none
+- repo: unified-api-contracts (internal/ sub-package) code: C0 deployment: none business: none
+- repo: execution-service (sports_execution/ sub-package) code: C0 deployment: none business: none
 - repo: unified-config-interface code: C0 deployment: none business: none depends_on:
 - uac-citadel-implementation-execution todos:
 - id: p0-venue-execution-schema content: | [AGENT] P0. Create VenueExecutionProfile Pydantic model in UAC
@@ -19,15 +19,15 @@ completion_gates: code: C5 deployment: D3 business: B3 repo_gates:
 - id: p0-venue-profiles-browser-tier content: | [AGENT] P1. Populate VenueExecutionProfile data for all Tier 2 (browser
   automation) venues. See section 4.2 for the full list (~65 venues). status: pending blocked_by:
   p0-venue-execution-schema
-- id: p1-browser-adapter-base content: | [AGENT] P0. Create BrowserAutomationAdapter base class in USEI with Playwright
-  integration, CAPTCHA handling hooks, session management, and anti-detection patterns. status: pending blocked_by:
-  p0-venue-execution-schema
-- id: p1-usei-router-expansion content: | [AGENT] P1. Expand SportsExecutionRouter to support browser-based venue
-  routing alongside existing API routing. Add venue capability resolution. status: pending blocked_by:
-  p1-browser-adapter-base
+- id: p1-browser-adapter-base content: | [AGENT] P0. Create BrowserAutomationAdapter base class in execution-service
+  sports_execution with Playwright integration, CAPTCHA handling hooks, session management, and anti-detection patterns.
+  status: pending blocked_by: p0-venue-execution-schema
+- id: p1-sports-execution-router-expansion content: | [AGENT] P1. Expand SportsExecutionRouter in execution-service
+  sports_execution to support browser-based venue routing alongside existing API routing. Add venue capability
+  resolution. status: pending blocked_by: p1-browser-adapter-base
 - id: p2-exchange-adapter-hardening content: | [AGENT] P0. Harden existing exchange adapters (Betfair, Smarkets,
   Matchbook, Betdaq) with full order lifecycle, position tracking, commission calc. Wire into router. status: pending
-  blocked_by: p1-usei-router-expansion
+  blocked_by: p1-sports-execution-router-expansion
 - id: p2-us-sportsbook-adapters content: | [HUMAN+AGENT] P1. Build browser adapters for US sportsbooks: DraftKings,
   FanDuel, BetMGM, Caesars, BetRivers. Requires live account testing. status: pending blocked_by:
   p1-browser-adapter-base
@@ -50,7 +50,7 @@ completion_gates: code: C5 deployment: D3 business: B3 repo_gates:
   p2-exchange-adapter-hardening, p2-us-sportsbook-adapters
 - id: p4-concurrent-execution-engine content: | [AGENT] P1. Build concurrent multi-venue execution engine for arbitrage.
   Must place orders on N venues within <2s window. Handles partial fills and rollback. status: pending blocked_by:
-  p2-exchange-adapter-hardening, p1-usei-router-expansion isProject: false
+  p2-exchange-adapter-hardening, p1-sports-execution-router-expansion isProject: false
 
 ---
 
@@ -137,21 +137,22 @@ VenueExecutionProfile fields (Pydantic model extending CanonicalBase):
 - Fees: commission_model, commission_rate, commission_notes, withdrawal_fee, withdrawal_fee_type
 - Operational: notes, known_issues, last_verified_date
 
-### 2.1 Separation of Concerns (UAC vs UIC vs USEI)
+### 2.1 Separation of Concerns (UAC vs UIC vs execution-service)
 
-| Layer | What It Owns                                           | Sports Execution Additions                                                             |
-| ----- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| UAC   | External API schemas, venue contracts, canonical types | VenueExecutionProfile schema, per-venue profile data, VENUE_EXECUTION_REGISTRY         |
-| UIC   | Internal service-to-service schemas                    | Sports execution events (order placed, filled, failed), health check schemas           |
-| USEI  | Execution adapters, routing, order lifecycle           | BrowserAutomationAdapter base, per-venue browser adapters, concurrent execution engine |
-| UCfgI | Config schemas, credentials                            | Sports venue credential config, Secret Manager field mappings                          |
+| Layer                                 | What It Owns                                           | Sports Execution Additions                                                             |
+| ------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| UAC                                   | External API schemas, venue contracts, canonical types | VenueExecutionProfile schema, per-venue profile data, VENUE_EXECUTION_REGISTRY         |
+| UIC                                   | Internal service-to-service schemas                    | Sports execution events (order placed, filled, failed), health check schemas           |
+| execution-service (sports_execution/) | Execution adapters, routing, order lifecycle           | BrowserAutomationAdapter base, per-venue browser adapters, concurrent execution engine |
+| UCfgI                                 | Config schemas, credentials                            | Sports venue credential config, Secret Manager field mappings                          |
 
 UAC does NOT contain execution logic, adapter code, or browser automation. It contains the contract -- what a venue
-looks like, what it requires, what its constraints are. USEI reads these contracts and implements the adapters.
+looks like, what it requires, what its constraints are. execution-service sports_execution reads these contracts and
+implements the adapters.
 
 ---
 
-## 3. Browser Automation Architecture (USEI Addition)
+## 3. Browser Automation Architecture (execution-service sports_execution Addition)
 
 ### 3.1 Adapter Hierarchy
 
@@ -485,23 +486,23 @@ Track per-account: max stake observed, restriction signals, lifetime PnL.
 ### 7.1 Data Flow
 
 Odds API (aggregated) + Exchange APIs (live) -> features-sports-service -> Arb Detection Engine -> strategy-service (arb
-signal) -> unified-sports-execution-interface -> API adapters (Betfair, Pinnacle) + Browser adapters (DraftKings,
+signal) -> execution-service sports_execution -> API adapters (Betfair, Pinnacle) + Browser adapters (DraftKings,
 Bet365) -> Venue A (back) + Venue B (lay/back)
 
 ### 7.2 What Goes Where
 
-| Component                    | Repo                                                    | Content                 |
-| ---------------------------- | ------------------------------------------------------- | ----------------------- |
-| VenueExecutionProfile schema | UAC canonical/domain/sports/                            | Schema definition       |
-| Per-venue profile data       | UAC canonical/domain/sports/venue_execution_registry.py | Static data             |
-| Odds API key mapping         | UAC canonical/domain/sports/odds_api_mapping.py         | Mapping data            |
-| Browser adapter base         | USEI adapters/browser/                                  | Execution logic         |
-| Per-venue adapters           | USEI adapters/browser/{region}/                         | Per-venue logic         |
-| Credential configs           | UCfgI                                                   | Secret Manager fields   |
-| Execution events             | UIC                                                     | Internal event schemas  |
-| Arb detection                | features-sports-service                                 | Feature calculation     |
-| Arb strategy                 | strategy-service                                        | Strategy logic          |
-| Order routing                | USEI routing.py                                         | Execution orchestration |
+| Component                    | Repo                                                          | Content                 |
+| ---------------------------- | ------------------------------------------------------------- | ----------------------- |
+| VenueExecutionProfile schema | UAC canonical/domain/sports/                                  | Schema definition       |
+| Per-venue profile data       | UAC canonical/domain/sports/venue_execution_registry.py       | Static data             |
+| Odds API key mapping         | UAC canonical/domain/sports/odds_api_mapping.py               | Mapping data            |
+| Browser adapter base         | execution-service sports_execution/adapters/browser/          | Execution logic         |
+| Per-venue adapters           | execution-service sports_execution/adapters/browser/{region}/ | Per-venue logic         |
+| Credential configs           | UCfgI                                                         | Secret Manager fields   |
+| Execution events             | UIC                                                           | Internal event schemas  |
+| Arb detection                | features-sports-service                                       | Feature calculation     |
+| Arb strategy                 | strategy-service                                              | Strategy logic          |
+| Order routing                | execution-service sports_execution/routing.py                 | Execution orchestration |
 
 ---
 

@@ -1,0 +1,313 @@
+# Availability Manifest & Data Status — SSOT
+
+> **This document is the single source of truth** for: what the availability manifest is, its schema, shard dimensions
+> per service, how the data status page works, how availability % is calculated, and the integrity principles that make
+> it trustworthy. All other docs, CLAUDE.md, cursor rules, and memory files cross-reference this document.
+
+## What Is the Availability Manifest?
+
+Every GCS data bucket has an `_index/availability_index.parquet` file. This parquet file is the **index of what data
+exists** in that bucket. Each row represents one shard — a unit of data written atomically.
+
+Services write to the manifest via `ManifestWriter` (UTL). The deployment-api reads it via `read_availability_index()`.
+The deployment-ui renders it as the data status page.
+
+### SSOT Locations
+
+| Component                                     | Location                                                                                              |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Schema definition                             | `unified-trading-library/unified_trading_library/manifest_writer.py` — `AvailabilityRecord` dataclass |
+| Writer                                        | `unified-trading-library/unified_trading_library/manifest_writer.py` — `ManifestWriter` class         |
+| Reader                                        | `unified-trading-library/unified_trading_library/manifest_writer.py` — `read_availability_index()`    |
+| Registry (start dates, expected venues, etc.) | `unified-api-contracts/unified_api_contracts/registry/`                                               |
+| API that serves data status                   | `deployment-api/deployment_api/services/data_status_service.py`                                       |
+| UI that renders data status                   | `deployment-ui/src/components/DataStatusTab.tsx`                                                      |
+
+## Schema v4
+
+```python
+MANIFEST_SCHEMA_VERSION = 4
+
+@dataclass
+class AvailabilityRecord:
+    # Universal (always populated)
+    date: str                       # YYYY-MM-DD — the date this shard covers
+    service_name: str               # "instruments-service", "market-tick-data-service", etc.
+    written_at: str                 # ISO timestamp — when this manifest entry was written
+    schema_version: int = 4
+    instrument_count: int = 0       # number of rows/instruments in the shard
+
+    # Market data dimensions (populated by instruments-service, MTDS, MDPS)
+    venue: str = ""                 # tradeable venue or protocol: BINANCE-SPOT, AAVE_V3, PINNACLE
+    chain: str = ""                 # DeFi only: ETHEREUM, ARBITRUM, BASE, SOLANA, etc.
+    data_type: str = ""             # trades, book_snapshot_5, odds, swaps, liquidity, etc.
+    instrument_type: str = ""       # spot, perpetuals, equity, pool, lending, prediction_market
+    league_id: str = ""             # SPORTS only: EPL, BUNDESLIGA, LA_LIGA, etc.
+
+    # Processing dimensions (populated by MDPS, feature services)
+    timeframe: str = ""             # MDPS: 15s, 1m, 5m, 15m, 1h, 4h, 24h, T-24h..T-0
+                                    # Features: 1m, 5m, 1h, T-24h..HT (sports horizons)
+
+    # Feature/ML dimensions
+    feature_group: str = ""         # Feature services: momentum, fixture_stats, macro_sentiment, etc.
+    model_family: str = ""          # ML: pregame_xg, CEFI_BTC_swing-high_LIGHTGBM_1h_V1, etc.
+    training_period: str = ""       # ML walk-forward: "2024-01" (month) or "2024" (season)
+
+    # Downstream dimensions
+    strategy_id: str = ""           # strategy, execution, PnL services
+    client_id: str = ""             # risk-and-exposure service
+    instruction_type: str = ""      # execution: TRADE, SWAP, LEND, BORROW, STAKE
+```
+
+### Column Rules
+
+- Services write ONLY the columns relevant to their shard dimensions. All others default to `""`.
+- **Never overload `venue`** with non-venue data. Use the proper column.
+- **`venue` for DeFi** = protocol name only (AAVE_V3, not AAVEV3-ETHEREUM). Chain goes in `chain` column.
+- **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
+- **No `data_source` column.** Track what the data IS (transfers, injuries, odds), not where it came from
+  (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
+
+### Backward Compatibility
+
+`read_availability_index()` handles v3 indexes transparently — missing v4 columns are backfilled with `""`. No migration
+needed for reads. Writes produce v4 entries that coexist with older v3 entries until re-scanned.
+
+## Per-Service Shard Dimension Matrix
+
+Each service writes a specific subset of columns. "—" means the column is always `""` for that service.
+
+### Layer 1: instruments-service (reference data)
+
+| Category   | venue                                                                                                          | chain                                                                                          | data_type | instrument_type                                               | league_id                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------- | --------------------------------- |
+| CEFI       | BINANCE-SPOT, BINANCE-FUTURES, BYBIT, OKX, DERIBIT, COINBASE, KRAKEN, ASTER, HYPERLIQUID, UPBIT                | —                                                                                              | —         | SPOT_PAIR, PERPETUAL, FUTURE, OPTION                          | —                                 |
+| TRADFI     | CME, NASDAQ, NYSE, ICE, CBOE, FX                                                                               | —                                                                                              | —         | EQUITY, FUTURE, OPTION, INDEX, COMMODITY, CURRENCY, BOND, ETF | —                                 |
+| DEFI       | AAVE_V3, UNISWAP_V3, UNISWAP_V4, CURVE, BALANCER, COMPOUND_V3, MORPHO, LIDO, DRIFT, KAMINO, ... (30 protocols) | ETHEREUM, ARBITRUM, BASE, OPTIMISM, POLYGON, BSC, AVALANCHE, LINEA, SOLANA, HYPERLIQUID, ASTER | —         | POOL, LENDING, LST, YIELD_BEARING, STAKING                    | —                                 |
+| SPORTS     | —                                                                                                              | —                                                                                              | —         | EXCHANGE_ODDS, FIXED_ODDS                                     | league_id (EPL, BUNDESLIGA, etc.) |
+| PREDICTION | POLYMARKET, KALSHI                                                                                             | —                                                                                              | —         | PREDICTION_MARKET                                             | —                                 |
+
+### Layer 2: market-tick-data-service (raw market data)
+
+| Category   | venue                                                                                           | chain                                 | data_type                                                                                                                | instrument_type                                | league_id |
+| ---------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | --------- |
+| CEFI       | BINANCE-SPOT, BYBIT, DERIBIT, OKX, COINBASE, ...                                                | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, options_chain, futures_chain                                   | spot, perpetuals, futures_chain, options_chain | —         |
+| TRADFI     | CME, NASDAQ, NYSE, ICE, CBOE                                                                    | —                                     | trades, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo                                                                             | equity, futures_chain, options_chain, index    | —         |
+| DEFI       | AAVE_V3, UNISWAP_V3, CURVE, DRIFT, ...                                                          | ETHEREUM, ARBITRUM, BASE, SOLANA, ... | swaps, liquidity, rate_indices, oracle_prices, utilization, rewards, risk_params, gas_fees, lst_rates, perp_funding, tvl | pool, lending, lst                             | —         |
+| SPORTS     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, ... (~23 bookmakers) | —                                     | odds                                                                                                                     | —                                              | league_id |
+| PREDICTION | POLYMARKET, KALSHI                                                                              | —                                     | prediction_trades, prediction_book_snapshot, prediction_market_metadata                                                  | prediction_market                              | —         |
+
+### Layer 2.5: market-data-processing-service (bucketed data)
+
+| Category | venue        | chain  | data_type                                                  | instrument_type                                | timeframe                                        | league_id |
+| -------- | ------------ | ------ | ---------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------ | --------- |
+| CEFI     | same as MTDS | —      | trades, ohlcv, book_snapshot_5                             | spot, perpetuals, futures_chain, options_chain | 15s, 1m, 5m, 15m, 1h, 4h, 24h                    | —         |
+| TRADFI   | same as MTDS | —      | trades, option_chain, futures_chain, rate_indices          | equity, futures_chain, options_chain           | 15s, 1m, 5m, 15m, 1h, 4h, 24h                    | —         |
+| DEFI     | protocols    | chains | swaps, liquidity, rate_indices, oracle_prices, utilization | pool, lending, lst                             | 15s, 1m, 5m, 15m, 1h, 4h, 24h                    | —         |
+| SPORTS   | bookmakers   | —      | odds_horizon_bucket                                        | —                                              | T-24h, T-12h, T-6h, T-4h, T-2h, T-1h, T-10m, T-0 | league_id |
+
+### Layer 3: Feature Services
+
+| Service                   | feature_group                                                                        | timeframe                           | chain                   | league_id |
+| ------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------- | ----------------------- | --------- |
+| features-delta-one        | technical_indicators, momentum, volatility_realized, microstructure, moving_averages | 1m, 5m, 1h                          | —                       | —         |
+| features-volatility       | options_iv, options_term_structure, futures_basis, futures_term_structure            | 1m                                  | —                       | —         |
+| features-onchain          | macro_sentiment, lending_rates, lst_yields, onchain_perps                            | timeframe                           | ETHEREUM, ARBITRUM, ... | —         |
+| features-sports           | fixture_stats, injuries, lineups, player_stats, standings, ... (14 groups)           | T-24h, T-12h, T-6h, T-1h, T-10m, HT | —                       | league_id |
+| features-calendar         | time_features, economic_events                                                       | —                                   | —                       | —         |
+| features-multi-timeframe  | per enabled group                                                                    | 1m, 5m, 1h, 4h, 1d                  | —                       | —         |
+| features-cross-instrument | regime_detection, cross_venue_spreads, realized_implied_vol, cross_asset_correlation | 1h                                  | —                       | —         |
+| features-commodity        | commodity names (WTI_CRUDE_OIL, etc.)                                                | —                                   | —                       | —         |
+
+**Sports feature horizons note:** Not all features are available at all horizons:
+
+- T-24h: historical stats, early odds, predictive lineup (based on prior fixtures + known injuries)
+- T-6h: odds velocity between T-24h and T-6h now known
+- T-1h: actual lineup confirmed (UEFA/FA announce 60-75 min before kickoff)
+- T-10m: sharp money peaks, final odds movement, late CLV
+- HT: first-half live stats, in-play odds, current score
+
+### Layer 4: ML Services
+
+| Service                        | model_family                                                    | training_period                                                              |
+| ------------------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| ml-training (CEFI/TRADFI/DEFI) | {CATEGORY}\_{SYMBOL}\_{target}\_{algo}\_{timeframe}\_V{version} | Walk-forward month: "2024-01", "2024-02", ...                                |
+| ml-training (SPORTS)           | pregame_xg, pregame_clv, ht_xg, ht_clv, meta (5 families)       | Walk-forward season: "2019", "2020", ..., "2024" (expanding window, 5 folds) |
+| ml-inference                   | Same model_family references                                    | — (daily predictions)                                                        |
+
+**Sports ML:** ONE global model per family (league is a categorical feature, NOT separate models per league). 7
+horizon-specific models across 5 families. Seasonal expanding window walk-forward. Quarterly retrain.
+
+### Layer 5-8: Downstream Services
+
+| Layer | Service                   | strategy_id | venue                                      | client_id | instruction_type                 |
+| ----- | ------------------------- | ----------- | ------------------------------------------ | --------- | -------------------------------- |
+| L5    | strategy-service          | strategy_id | —                                          | —         | —                                |
+| L6    | execution-service         | strategy_id | execution venue (BINANCE-FUTURES, BETFAIR) | —         | TRADE, SWAP, LEND, BORROW, STAKE |
+| L7    | risk-and-exposure-service | —           | —                                          | client_id | —                                |
+| L8    | pnl-attribution-service   | strategy_id | —                                          | —         | —                                |
+
+Position-balance-monitor is DB-backed (PostgreSQL), not GCS. It does not write to the manifest — it is monitored via
+health checks, not data status.
+
+## Data Status Page Tree Hierarchy
+
+The deployment-ui renders a hierarchical tree per service × category. The tree structure is determined by which manifest
+columns are populated.
+
+| Service + Category      | Tree                                                     |
+| ----------------------- | -------------------------------------------------------- |
+| instruments CEFI/TRADFI | venue → dates                                            |
+| instruments DEFI        | chain → protocol(venue) → dates                          |
+| instruments SPORTS      | league → dates (fixture count)                           |
+| instruments PREDICTION  | venue → dates                                            |
+| MTDS CEFI/TRADFI        | venue → instrument_type → data_type → dates              |
+| MTDS DEFI               | chain → protocol(venue) → data_type → dates              |
+| MTDS SPORTS             | league → bookmaker(venue) → dates                        |
+| MTDS PREDICTION         | venue → data_type → dates                                |
+| MDPS CEFI/TRADFI        | venue → instrument_type → data_type → timeframe → dates  |
+| MDPS DEFI               | chain → protocol(venue) → data_type → timeframe → dates  |
+| MDPS SPORTS             | league → timeframe(horizon) → dates                      |
+| Features (all)          | feature_group → [timeframe →] [chain →] [league →] dates |
+| ML training             | model_family → training_period → dates                   |
+| ML inference            | model_family → dates                                     |
+| Strategy                | strategy → dates                                         |
+| Execution               | strategy → venue → instruction_type → dates              |
+| Risk                    | client → dates                                           |
+| PnL                     | strategy → dates                                         |
+
+**DeFi grouping toggle:** The UI provides a dropdown to switch between chain→protocol and protocol→chain grouping.
+
+## Availability % Calculation
+
+```
+availability_pct = found_shards / expected_shards × 100
+```
+
+### Expected Shards (Denominator)
+
+The denominator comes from **UAC only**. Never hardcoded in services.
+
+| Dimension                 | UAC function                                                 | What it returns                                  |
+| ------------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
+| Venue start date          | `VenueMapping.get_venue_start_date(venue)`                   | When a venue's data begins                       |
+| Chain start date (DeFi)   | `get_venue_chain_start_date(venue, chain)`                   | When a protocol deployed on a chain              |
+| Data type start date      | `get_venue_data_type_start_date(venue, data_type)`           | When a specific data type became available       |
+| Expected trading dates    | `VenueMapping.get_expected_trading_dates(venue, start, end)` | Trading days only (excludes weekends for TradFi) |
+| Fixture calendar (SPORTS) | `get_league_fixture_calendar(league_id, start, end)`         | Dates with actual fixtures                       |
+| Expected data types       | `get_expected_data_types_for_venue(venue)`                   | Which data types a venue should produce          |
+| Expected instrument types | `get_expected_instrument_types_for_venue(venue)`             | Which instrument types a venue should produce    |
+| Expected bookmakers       | `get_expected_bookmakers()`                                  | Audited bookmakers with start dates              |
+| Expected feature groups   | `get_expected_feature_groups_for_service(service)`           | Feature groups per service                       |
+| Expected timeframes       | `get_expected_timeframes_for_service(service, category)`     | Timeframes per service+category                  |
+
+### Sparseness
+
+Not all shards are expected every day:
+
+- **Sports fixtures:** A day with no fixtures in a league is NOT a missing shard. Denominator = fixture calendar.
+- **TradFi weekends:** Saturday/Sunday are not trading days. Denominator = trading calendar.
+- **Transfer windows:** Transfer data arrives on seasonal cadence, not daily.
+- **Chain start dates:** AAVE_V3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
+- **New venues/bookmakers:** A bookmaker added in 2025-06 has no expected data before that date.
+
+### Data Freshness
+
+The `written_at` column records when each manifest entry was written. This enables:
+
+- **Point-in-time queries:** "What data existed as of 2026-04-10 08:00 UTC?" — filter by `written_at <= timestamp`.
+  Critical for reproducible backtests.
+- **Staleness detection:** Shard exists but `written_at` is old — may indicate stale data.
+- **Monitoring:** "What was written in the last 24h?" — freshness dashboard.
+
+The data status page supports an `as_of_timestamp` parameter for point-in-time views.
+
+## Integrity Principles
+
+### 1. Atomic Shard Failure
+
+If ANY item in a shard fails, the ENTIRE shard must fail. `ManifestWriter.add()` is only called after the complete shard
+write succeeds. No partial writes, ever.
+
+**Why:** A human looking at the data status page must trust that "shard present = shard complete". Partially written
+shards create false confidence.
+
+**Enforcement:** Services validate all items in a shard before writing any. If 1 of 100 instruments in a venue×date
+shard fails, write 0 and mark the shard as failed.
+
+### 2. Schema Validation Before Write
+
+`ParquetSchemaEnforcer` runs before every GCS write. Checks: no NaN values, correct column types, required columns
+present. Schema failure = shard failure = no write = shows as missing on data status page.
+
+**Why:** Millions of parquet files. No human can inspect them all. Schema validation + atomic shards = confidence
+without manual inspection.
+
+### 3. Single SSOT for Registry — UAC Only
+
+What venues exist, what chains exist, what data types exist, what feature groups exist, when each became available — ALL
+of this comes from UAC. No service has hardcoded lists. No service tries to get data before a venue's start date.
+
+**Why:** If 5 services have 5 different ideas of when AAVE_V3 on BASE became available, some will try to fetch data that
+doesn't exist, and the data status page will show false negatives.
+
+## DeFi Protocol × Chain Coverage
+
+30 protocols × 11 chains = 57 venue combos. Key coverage:
+
+| Chain       | Protocol Count | Examples                                                                                       |
+| ----------- | -------------- | ---------------------------------------------------------------------------------------------- |
+| ETHEREUM    | 16             | AAVE_V3, UNISWAP_V3, UNISWAP_V4, CURVE, BALANCER, COMPOUND_V3, MORPHO, LIDO, ETHERFI, ...      |
+| BASE        | 8              | AAVE_V3, UNISWAP_V3, BALANCER, AERODROME_V3, COMPOUND_V3, MORPHO, PANCAKESWAP_V3, SUSHISWAP_V3 |
+| ARBITRUM    | 7              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CAMELOT_V3, SUSHISWAP, GMX                         |
+| AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOE_V2, GMX                                     |
+| OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROME_V2                                |
+| SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                                   |
+| POLYGON     | 3              | AAVE_V3, UNISWAP_V3, BALANCER                                                                  |
+| BSC         | 2              | AAVE_V3, PANCAKESWAP_V3                                                                        |
+| LINEA       | 1              | AAVE_V3                                                                                        |
+| HYPERLIQUID | 1              | HYPERLIQUID                                                                                    |
+| ASTER       | 1              | ASTER                                                                                          |
+
+Top multi-chain protocols: AAVE_V3 (8 chains), BALANCER (6), UNISWAP_V3 (5).
+
+## Sports Bookmaker Venues (~23 Audited)
+
+These are the actual pricing venues for sports odds. "ODDS_API" is the data aggregator, NOT a venue.
+
+| Bookmaker    | Accuracy            | Execution?                        |
+| ------------ | ------------------- | --------------------------------- |
+| PINNACLE     | 99% exact           | No (API restricted)               |
+| BETFAIR_EX   | Exchange            | **Yes** (current execution venue) |
+| FANDUEL      | 100% exact          | No                                |
+| CORAL        | 100% exact          | No                                |
+| PADDYPOWER   | 100% exact          | No                                |
+| WILLIAMHILL  | Audited             | No                                |
+| LADBROKES    | Audited             | No                                |
+| DRAFTKINGS   | 86% exact           | No                                |
+| BETRIVERS    | 92% exact           | No                                |
+| BETONLINEAG  | Audited clean       | No                                |
+| CASUMO       | 96% exact           | No                                |
+| VIRGINBET    | 97% exact           | No                                |
+| BETVICTOR    | Audited             | No                                |
+| UNIBET       | 66% exact           | No                                |
+| SKYBET       | Audited             | No                                |
+| BET888SPORT  | Audited             | No                                |
+| LIVESCOREBET | Audited             | No                                |
+| MATCHBOOK    | Exchange, consensus | Yes (adapter exists)              |
+| SMARKETS     | Exchange, consensus | Yes (adapter exists)              |
+| BETFAIR_SB   | Sportsbook variant  | No                                |
+| UNIBET_UK    | Audited             | No                                |
+
+## Migration: v3 → v4
+
+- **No data re-downloads.** All data already exists in GCS. The manifest is just an index.
+- **GCS paths do NOT need to change.** The manifest is an abstraction layer over GCS paths. Old data stays at old
+  paths (e.g., `venue=ODDS_API/league=EPL/`). New manifest entries normalize to v4 columns (venue=PINNACLE,
+  league_id=EPL). The deployment-api reads the manifest, not GCS paths. GCS path changes are optional future
+  optimization, not a migration requirement.
+- **Backward compat in reader:** `read_availability_index()` backfills missing v4 columns with `""`.
+- **v4 writes coexist with v3 entries** until re-scanned.
+- **Re-scan existing data:** Run manifest rebuild scripts per service. Scans existing GCS paths, extracts new columns
+  from path structure (instrument_type from hive path, chain from folder names), writes v4 index.
+- **Dedup on write:** v4 entries supersede v3 entries for the same shard.

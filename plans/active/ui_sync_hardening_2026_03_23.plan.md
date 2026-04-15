@@ -70,8 +70,8 @@ todos:
   # Phase 4
   - id: p4-regenerate-manifest
     content: |
-      - [ ] [AGENT] P1. Regenerate UI_STRUCTURE_MANIFEST.json: scan all 93+ page files under app/, update states (STUB vs REAL based on line count > 30), fix investor-relations path, add all 44 untracked pages including (ops) services and commercial landing pages.
-    status: todo
+      - [x] [AGENT] P1. Regenerate UI_STRUCTURE_MANIFEST.json: scan all 93+ page files under app/, update states (STUB vs REAL based on line count > 30), fix investor-relations path, add all 44 untracked pages including (ops) services and commercial landing pages.
+    status: done
   - id: p4-update-structure-docs
     content: |
       - [x] [AGENT] P1. Update docs/STRUCTURE_HOOKS.md to add use-chat.ts, use-manage.ts, use-news.ts. Update docs/STRUCTURE_COMPONENTS.md to add chat/, research/, reports/, risk/ folders. Update docs/STRUCTURE_CONTEXT.md to add context/codex/. PARALLEL with manifest.
@@ -121,41 +121,41 @@ todos:
   # Phase 7
   - id: p7-entitlement-differentiation
     content: |
-      - [ ] [AGENT] P2. Differentiate Client (Full) vs Client (Premium) entitlement visibility — Full should have Data access, Premium should have Trading + Data. Currently both show nearly identical locked state.
-    status: todo
+      - [x] [AGENT] P2. Differentiate Client (Full) vs Client (Premium) entitlement visibility — Full should have Data access, Premium should have Trading + Data. Currently both show nearly identical locked state.
+    status: done
   - id: p7-strategy-detail-page
     content: |
-      - [ ] [AGENT] P2. Implement /strategies and /strategies/[id] routes — strategy list grid and detail page. Grid: filterable by asset class, sortable by Sharpe/returns/status. Detail: config, current state, PnL attribution, risk subscriptions, feature consumption, testing stage progression.
-    status: todo
+      - [x] [AGENT] P2. Implement /strategies and /strategies/[id] routes — strategy list grid and detail page. Grid: filterable by asset class, sortable by Sharpe/returns/status. Detail: config, current state, PnL attribution, risk subscriptions, feature consumption, testing stage progression.
+    status: done
   - id: p7-defi-per-strategy-hf
     content: |
-      - [ ] [AGENT] P2. Add per-strategy health factor / liquidation proximity display for recursive DeFi strategies. Show HF time series with threshold lines (1.5/1.2/1.0), collateral/debt breakdown, leverage.
-    status: todo
+      - [x] [AGENT] P2. Add per-strategy health factor / liquidation proximity display for recursive DeFi strategies. Show HF time series with threshold lines (1.5/1.2/1.0), collateral/debt breakdown, leverage.
+    status: done
   # Phase 7B — Codex Extended Audit Items (PARALLEL with Phase 7)
   - id: p7b-populate-exposure-risk-types
     content: |
-      - [ ] [AGENT] P1. Populate the Exposure tab's "0 of 23 Risk Types" with mock data. Each risk type needs: name, category (first_order/second_order/structural/operational/domain_specific), current_value, threshold, status, subscribed_strategies[]. Include: aave_liquidation, delta, funding, borrow_cost, bankroll_dd, adverse_selection, venue_protocol, regime, lst_depeg, suspension, flash_liquidity, model_confidence_decay, inventory_half_life. This is the single largest gap in the UI.
-    status: todo
+      - [x] [AGENT] P1. Populate the Exposure tab's "0 of 23 Risk Types" with mock data. Each risk type needs: name, category (first_order/second_order/structural/operational/domain_specific), current_value, threshold, status, subscribed_strategies[]. Include: aave_liquidation, delta, funding, borrow_cost, bankroll_dd, adverse_selection, venue_protocol, regime, lst_depeg, suspension, flash_liquidity, model_confidence_decay, inventory_half_life. This is the single largest gap in the UI.
+    status: done
   - id: p7b-fix-hf-chart-data
     content: |
-      - [ ] [AGENT] P1. Fix Health Factor chart on Risk Margin tab: (1) populate HF time series with 7 days of mock data points, (2) add HF 1.2 emergency exit threshold line alongside existing 1.0 and 1.5 lines, (3) populate Distance to Liquidation table with per-venue rows, (4) fix LTV vs HF conflation — display HF = 1/LTV correctly (0.72 LTV = ~1.39 HF).
-    status: todo
+      - [x] [AGENT] P1. Fix Health Factor chart on Risk Margin tab: (1) populate HF time series with 7 days of mock data points, (2) add HF 1.2 emergency exit threshold line alongside existing 1.0 and 1.5 lines, (3) populate Distance to Liquidation table with per-venue rows, (4) fix LTV vs HF conflation — display HF = 1/LTV correctly (0.72 LTV = ~1.39 HF).
+    status: done
   - id: p7b-add-instrument-canonical-id
     content: |
-      - [ ] [AGENT] P2. Add a "Canonical ID" tooltip or secondary column to the positions table showing VENUE:TYPE:ASSET compound key (e.g. HYPERLIQUID:PERPETUAL:ETH-USD, AAVE_V3:A_TOKEN:WEETH). Derive from instrument + venue + strategy archetype. This allows operators to filter by instrument type without relying on strategy name.
-    status: todo
+      - [x] [AGENT] P2. Add a "Canonical ID" tooltip or secondary column to the positions table showing VENUE:TYPE:ASSET compound key (e.g. HYPERLIQUID:PERPETUAL:ETH-USD, AAVE_V3:A_TOKEN:WEETH). Derive from instrument + venue + strategy archetype. This allows operators to filter by instrument type without relying on strategy name.
+    status: done
   - id: p7b-add-research-signals-route
     content: |
-      - [ ] [AGENT] P2. Implement /services/research/signals route (currently 404 despite being nav-linked). Show signal definitions, signal monitoring (last value, freshness vs SLA), and signal-to-strategy subscription linkage.
-    status: todo
+      - [x] [AGENT] P2. Implement /services/research/signals route (currently 404 despite being nav-linked). Show signal definitions, signal monitoring (last value, freshness vs SLA), and signal-to-strategy subscription linkage.
+    status: done
   - id: p7b-add-kalshi-venue
     content: |
-      - [ ] [AGENT] P2. Add Kalshi to venue registry (Venue Health, taxonomy.ts VENUES, mock data). Add at least one Kalshi position in mock handler. Add Kalshi as a model family reference in Research Hub.
-    status: todo
+      - [x] [AGENT] P2. Add Kalshi to venue registry (Venue Health, taxonomy.ts VENUES, mock data). Add at least one Kalshi position in mock handler. Add Kalshi as a model family reference in Research Hub.
+    status: done
   - id: p7b-add-latency-class-badge
     content: |
-      - [ ] [AGENT] P2. Add latency-class badge to strategy cards/detail: "Hourly" (basis, momentum), "Event-driven" (AMM LP, sports), "Sub-second" (CeFi MM, Options MM). Optionally add co-location indicator for sub-second strategies. Prevents operators from misinterpreting System Health SLA table.
-    status: todo
+      - [x] [AGENT] P2. Add latency-class badge to strategy cards/detail: "Hourly" (basis, momentum), "Event-driven" (AMM LP, sports), "Sub-second" (CeFi MM, Options MM). Optionally add co-location indicator for sub-second strategies. Prevents operators from misinterpreting System Health SLA table.
+    status: done
   # Phase 8 — CI Drift-Proofing
   - id: p8-fix-sync-workflow-paths
     content: |
@@ -163,8 +163,8 @@ todos:
     status: done
   - id: p8-add-ci-drift-check
     content: |
-      - [ ] [AGENT] P0. Add a "registry-drift" job to unified-trading-system-ui/.github/workflows/ci.yml that: (1) checks out UAC/UIC/UCI sibling repos, (2) runs generate_ui_reference_data.py to /tmp/fresh.json, (3) diffs /tmp/fresh.json against lib/registry/ui-reference-data.json, (4) fails with actionable error message if diff is non-empty. This ensures any UAC change that isn't synced to the UI blocks the PR. Same pattern for openapi.json: regenerate via generate-unified-openapi.sh, diff against lib/registry/openapi.json, fail if stale.
-    status: todo
+      - [x] [AGENT] P0. Add a "registry-drift" job to unified-trading-system-ui/.github/workflows/ci.yml that: (1) checks out UAC/UIC/UCI sibling repos, (2) runs generate_ui_reference_data.py to /tmp/fresh.json, (3) diffs /tmp/fresh.json against lib/registry/ui-reference-data.json, (4) fails with actionable error message if diff is non-empty. This ensures any UAC change that isn't synced to the UI blocks the PR. Same pattern for openapi.json: regenerate via generate-unified-openapi.sh, diff against lib/registry/openapi.json, fail if stale.
+    status: done
   - id: p8-update-ssot-doc
     content: |
       - [x] [AGENT] P1. Update unified-trading-pm/docs/ui-alignment-ssot.md: replaced "manual" CI note with documentation of corrected paths and sync workflow automation.
@@ -175,12 +175,12 @@ todos:
     status: todo
   - id: p9a-admin-cloud-services
     content: |
-      - [ ] [AGENT] P1. Add cloud service/subscription management to admin page (/admin): show connected cloud services (GCP, AWS, Office365) with status, subscription tier, usage metrics, API key rotation status. Wire to mock data. Admin-only visibility (entitlement gate already exists).
-    status: todo
+      - [x] [AGENT] P1. Add cloud service/subscription management to admin page (/admin): show connected cloud services (GCP, AWS, Office365) with status, subscription tier, usage metrics, API key rotation status. Wire to mock data. Admin-only visibility (entitlement gate already exists).
+    status: done
   - id: p9a-firebase-caching
     content: |
-      - [ ] [AGENT] P1. Verify Firebase caching is used for user management session state. The _reference/versa-onboarding pattern uses firebaseClient.ts + firebaseAdmin.ts. Ensure the unified UI auth flow (lib/stores/auth-store.ts, hooks/use-auth.ts) integrates with Firebase for session persistence. If not already using Firebase, add the integration.
-    status: todo
+      - [x] [AGENT] P1. Verify Firebase caching is used for user management session state. The _reference/versa-onboarding pattern uses firebaseClient.ts + firebaseAdmin.ts. Ensure the unified UI auth flow (lib/stores/auth-store.ts, hooks/use-auth.ts) integrates with Firebase for session persistence. If not already using Firebase, add the integration.
+    status: done
   # Phase 9B — Final QG
   - id: p9b-qg-validation
     content: |

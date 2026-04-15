@@ -1,0 +1,91 @@
+# Quality Gates & Coverage Audit Report
+
+**Generated:** 2026-03-04 (UTC) **Source:** Parallel agent run across all Python repos in workspace **Target:** 70%
+coverage minimum; quality-gates.sh --unit-only pass
+
+---
+
+## Audit Score Summary
+
+| Metric                            | Value  | Target |
+| --------------------------------- | ------ | ------ |
+| **Audit Score**                   | 21/100 | 100    |
+| Repos with coverage ≥70%          | 13/43  | 43     |
+| Quality gates pass                | 0/41   | 41     |
+| Coverage measurable (pytest runs) | 22/43  | 43     |
+
+**Score formula:** 40% coverage attainment + 40% QG pass + 20% measurable
+
+---
+
+## Coverage by Repo
+
+### Pass (≥70%)
+
+| Repo                              | Coverage | Status |
+| --------------------------------- | -------- | ------ |
+| features-sports-service           | 100.0%   | ok     |
+| unified-api-contracts (internal/) | 99.8%    | ok     |
+| unified-events-interface          | 97.1%    | ok     |
+| unified-ml-interface              | 93.4%    | ok     |
+| position-balance-monitor-service  | 88.6%    | ok     |
+| features-calendar-service         | 84.3%    | ok     |
+| features-cross-instrument-service | 81.5%    | ok     |
+| execution-service                 | 80.9%    | ok     |
+| execution-algo-library            | 72.1%    | ok     |
+| unified-trading-pm                | 72.5%    | ok     |
+| system-integration-tests          | 70.2%    | ok     |
+
+### Below 70%
+
+| Repo                               | Coverage | Gap    |
+| ---------------------------------- | -------- | ------ |
+| execution-service                  | 62.7%    | -7.3%  |
+| unified-cloud-interface            | 54.6%    | -15.4% |
+| features-onchain-service           | 54.0%    | -16.0% |
+| unified-domain-client              | 45.0%    | -25.0% |
+| pnl-attribution-service            | 37.2%    | -32.8% |
+| client-reporting-api               | 32.6%    | -37.4% |
+| unified-trading-library            | 26.2%    | -43.8% |
+| unified-feature-calculator-library | 0.0%     | -70.0% |
+
+### Error (pytest fails before coverage)
+
+alerting-service, deployment-api, deployment-service, execution-results-api, execution-service,
+features-delta-one-service, features-multi-timeframe-service, features-volatility-service, instruments-service,
+market-data-processing-service, market-tick-data-service, matching-engine-library, ml-inference-service,
+ml-training-service, position-balance-monitor-service, risk-and-exposure-service, strategy-service,
+unified-api-contracts, unified-config-interface, unified-market-interface, instruments-service, execution-service
+
+---
+
+## Quality Gates Status
+
+**All 41 Python repos with quality-gates.sh: FAIL**
+
+Common failure causes:
+
+- **G201:** Logging `.exception(...)` should be used instead of `.error(..., exc_info=True)`
+- **Ruff version:** Expected 0.15.0, found 0.15.4 (or downstream mismatch)
+- **Basedpyright:** Type errors, import errors
+- **Coverage:** Below 70% threshold
+- **Tests:** Failing unit tests
+- **Import errors:** Missing deps, conftest issues
+
+---
+
+## Next Steps
+
+1. Fix G201 logging rule across repos (ruff auto-fix or manual)
+2. Align ruff to 0.15.0 in all pyproject.toml / uv.lock
+3. Fix import errors (path deps, workspace venv)
+4. Add tests for repos below 70% coverage
+5. Re-run: `bash scripts/quality-gates.sh --unit-only --no-fix` per repo
+
+---
+
+## Report History
+
+| Date       | Audit Score | Coverage 70%+ | QG Pass |
+| ---------- | ----------- | ------------- | ------- |
+| 2026-03-04 | 21          | 13/43         | 0/41    |

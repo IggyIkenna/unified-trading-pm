@@ -10,6 +10,11 @@ parent_plan: citadel_service_remediation_2026_03_24.plan.md
 
 # Per-Service Remediation Details
 
+> **Conflict resolution**: This is the EXECUTION plan — agents work from this plan's per-service sections.
+> citadel_service_remediation is the STATUS TRACKER (parent). QG sweep lint/ruff fixes (full_qg_sweep plan) should run
+> BEFORE structural changes in this plan. structured_error_handling handler logic should run AFTER this plan's
+> structural refactoring per service.
+
 Parent plan: `citadel_service_remediation_2026_03_24.plan.md` Reference implementations: instruments-service,
 market-tick-data-service
 

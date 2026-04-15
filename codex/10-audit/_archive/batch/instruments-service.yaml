@@ -1,0 +1,693 @@
+service_name: instruments-service
+last_updated: "2026-02-21"
+classification:
+  type: pipeline
+  mode: batch_and_live
+  deployment_model: standalone
+  ui_type: none
+  sharding_dimensions:
+    - category
+    - venue
+    - date
+  is_library: false
+baseline_items:
+  BASE-01:
+    status: pending
+    validator: BASE-01
+    notes: ""
+    verified_date: null
+  BASE-02:
+    status: pending
+    validator: BASE-02
+    notes: ""
+    verified_date: null
+  BASE-03:
+    status: pending
+    validator: BASE-03
+    notes: ""
+    verified_date: null
+  OBS-01:
+    status: pending
+    validator: OBS-01
+    notes: ""
+    verified_date: null
+  OBS-02:
+    status: pending
+    validator: OBS-02
+    notes: ""
+    verified_date: null
+  OBS-03:
+    status: pending
+    validator: OBS-03
+    notes: ""
+    verified_date: null
+  OBS-04:
+    status: pending
+    validator: OBS-04
+    notes: ""
+    verified_date: null
+  OBS-05:
+    status: pending
+    validator: OBS-05
+    notes: ""
+    verified_date: null
+  OBS-06:
+    status: pending
+    validator: OBS-06
+    notes: ""
+    verified_date: null
+  OBS-07:
+    status: pending
+    validator: OBS-07
+    notes: ""
+    verified_date: null
+  OBS-08:
+    status: pending
+    validator: OBS-08
+    notes: ""
+    verified_date: null
+  OBS-09:
+    status: pending
+    validator: OBS-09
+    notes: ""
+    verified_date: null
+  OBS-10:
+    status: pending
+    validator: OBS-10
+    notes: ""
+    verified_date: null
+  OBS-11:
+    status: pending
+    validator: OBS-11
+    notes: ""
+    verified_date: null
+  OBS-12:
+    status: pending
+    validator: OBS-12
+    notes: ""
+    verified_date: null
+  OBS-13:
+    status: pending
+    validator: OBS-13
+    notes: ""
+    verified_date: null
+  DAT-01:
+    status: pending
+    validator: DAT-01
+    notes: ""
+    verified_date: null
+  DAT-02:
+    status: pending
+    validator: DAT-02
+    notes: ""
+    verified_date: null
+  DAT-03:
+    status: pending
+    validator: DAT-03
+    notes: ""
+    verified_date: null
+  DAT-04:
+    status: pending
+    validator: DAT-04
+    notes: ""
+    verified_date: null
+  DAT-05:
+    status: pending
+    validator: DAT-05
+    notes: ""
+    verified_date: null
+  DAT-06:
+    status: pending
+    validator: DAT-06
+    notes: ""
+    verified_date: null
+  DAT-07:
+    status: pending
+    validator: DAT-07
+    notes: ""
+    verified_date: null
+  DAT-08:
+    status: pending
+    validator: DAT-08
+    notes: ""
+    verified_date: null
+  DAT-09:
+    status: pending
+    validator: DAT-09
+    notes: ""
+    verified_date: null
+  DAT-10:
+    status: pending
+    validator: DAT-10
+    notes: ""
+    verified_date: null
+  DAT-13:
+    status: pending
+    validator: DAT-13
+    notes: ""
+    verified_date: null
+  DAT-16:
+    status: pending
+    validator: DAT-16
+    notes: ""
+    verified_date: null
+  DAT-18:
+    status: pending
+    validator: DAT-18
+    notes: ""
+    verified_date: null
+  DAT-19:
+    status: pending
+    validator: DAT-19
+    notes: ""
+    verified_date: null
+  DAT-20:
+    status: pending
+    validator: DAT-20
+    notes: ""
+    verified_date: null
+  DAT-21:
+    status: pending
+    validator: DAT-21
+    notes: ""
+    verified_date: null
+  DAT-23:
+    status: pending
+    validator: DAT-23
+    notes: ""
+    verified_date: null
+  BASE-20:
+    status: pending
+    validator: BASE-20
+    notes: ""
+    verified_date: null
+  BASE-21:
+    status: pending
+    validator: BASE-21
+    notes: ""
+    verified_date: null
+  BASE-22:
+    status: pending
+    validator: BASE-22
+    notes: ""
+    verified_date: null
+  ARC-01:
+    status: pending
+    validator: ARC-01
+    notes: ""
+    verified_date: null
+  ARC-02:
+    status: pending
+    validator: ARC-02
+    notes: ""
+    verified_date: null
+  ARC-03:
+    status: pending
+    validator: ARC-03
+    notes: ""
+    verified_date: null
+  ARC-04:
+    status: pending
+    validator: ARC-04
+    notes: ""
+    verified_date: null
+  ARC-08:
+    status: pending
+    validator: ARC-08
+    notes: ""
+    verified_date: null
+  ARC-11:
+    status: pending
+    validator: ARC-11
+    notes: ""
+    verified_date: null
+  BASE-28:
+    status: pending
+    validator: BASE-28
+    notes: ""
+    verified_date: null
+  BASE-29:
+    status: pending
+    validator: BASE-29
+    notes: ""
+    verified_date: null
+  INF-01:
+    status: pending
+    validator: INF-01
+    notes: ""
+    verified_date: null
+  INF-02:
+    status: pending
+    validator: INF-02
+    notes: ""
+    verified_date: null
+  INF-03:
+    status: pending
+    validator: INF-03
+    notes: ""
+    verified_date: null
+  INF-04:
+    status: pending
+    validator: INF-04
+    notes: ""
+    verified_date: null
+  INF-05:
+    status: pending
+    validator: INF-05
+    notes: ""
+    verified_date: null
+  INF-06:
+    status: pending
+    validator: INF-06
+    notes: ""
+    verified_date: null
+  INF-07:
+    status: pending
+    validator: INF-07
+    notes: ""
+    verified_date: null
+  INF-08:
+    status: pending
+    validator: INF-08
+    notes: ""
+    verified_date: null
+  INF-09:
+    status: pending
+    validator: INF-09
+    notes: ""
+    verified_date: null
+  INF-10:
+    status: pending
+    validator: INF-10
+    notes: ""
+    verified_date: null
+  INF-11:
+    status: pending
+    validator: INF-11
+    notes: ""
+    verified_date: null
+  INF-12:
+    status: pending
+    validator: INF-12
+    notes: ""
+    verified_date: null
+  INF-13:
+    status: pending
+    validator: INF-13
+    notes: ""
+    verified_date: null
+  INF-14:
+    status: pending
+    validator: INF-14
+    notes: ""
+    verified_date: null
+  INF-15:
+    status: pending
+    validator: INF-15
+    notes: ""
+    verified_date: null
+  COD-01:
+    status: pending
+    validator: COD-01
+    notes: ""
+    verified_date: null
+  COD-02:
+    status: pending
+    validator: COD-02
+    notes: ""
+    verified_date: null
+  COD-03:
+    status: pending
+    validator: COD-03
+    notes: ""
+    verified_date: null
+  COD-04:
+    status: pending
+    validator: COD-04
+    notes: ""
+    verified_date: null
+  COD-05:
+    status: pending
+    validator: COD-05
+    notes: ""
+    verified_date: null
+  COD-06:
+    status: pending
+    validator: COD-06
+    notes: ""
+    verified_date: null
+  COD-07:
+    status: pending
+    validator: COD-07
+    notes: ""
+    verified_date: null
+  COD-08:
+    status: pending
+    validator: COD-08
+    notes: ""
+    verified_date: null
+  COD-09:
+    status: pending
+    validator: COD-09
+    notes: ""
+    verified_date: null
+  COD-10:
+    status: pending
+    validator: COD-10
+    notes: ""
+    verified_date: null
+  COD-11:
+    status: pending
+    validator: COD-11
+    notes: ""
+    verified_date: null
+  COD-12:
+    status: pending
+    validator: COD-12
+    notes: ""
+    verified_date: null
+  COD-13:
+    status: pending
+    validator: COD-13
+    notes: ""
+    verified_date: null
+  COD-14:
+    status: pending
+    validator: COD-14
+    notes: ""
+    verified_date: null
+  COD-15:
+    status: pending
+    validator: COD-15
+    notes: ""
+    verified_date: null
+  COD-16:
+    status: pending
+    validator: COD-16
+    notes: ""
+    verified_date: null
+  COD-17:
+    status: pending
+    validator: COD-17
+    notes: ""
+    verified_date: null
+  COD-18:
+    status: pending
+    validator: COD-18
+    notes: ""
+    verified_date: null
+  COD-19:
+    status: pending
+    validator: COD-19
+    notes: ""
+    verified_date: null
+  COD-20:
+    status: pending
+    validator: COD-20
+    notes: ""
+    verified_date: null
+  COD-21:
+    status: pending
+    validator: COD-21
+    notes: ""
+    verified_date: null
+  COD-22:
+    status: pending
+    validator: COD-22
+    notes: ""
+    verified_date: null
+  COD-23:
+    status: pending
+    validator: COD-23
+    notes: ""
+    verified_date: null
+  COD-24:
+    status: pending
+    validator: COD-24
+    notes: ""
+    verified_date: null
+  COD-25:
+    status: pending
+    validator: COD-25
+    notes: ""
+    verified_date: null
+  SEC-01:
+    status: pending
+    validator: SEC-01
+    notes: ""
+    verified_date: null
+  SEC-02:
+    status: pending
+    validator: SEC-02
+    notes: ""
+    verified_date: null
+  SEC-03:
+    status: pending
+    validator: SEC-03
+    notes: ""
+    verified_date: null
+  SEC-04:
+    status: pending
+    validator: SEC-04
+    notes: ""
+    verified_date: null
+  SEC-05:
+    status: pending
+    validator: SEC-05
+    notes: ""
+    verified_date: null
+  SECURITY-03:
+    status: pending
+    validator: SECURITY-03
+    notes: ""
+    verified_date: null
+  SECURITY-04:
+    status: pending
+    validator: SECURITY-04
+    notes: ""
+    verified_date: null
+  SECURITY-05:
+    status: pending
+    validator: SECURITY-05
+    notes: ""
+    verified_date: null
+  BASE-13:
+    status: pending
+    validator: BASE-13
+    notes: ""
+    verified_date: null
+  BASE-14:
+    status: pending
+    validator: BASE-14
+    notes: ""
+    verified_date: null
+  BASE-15:
+    status: pending
+    validator: BASE-15
+    notes: ""
+    verified_date: null
+  BASE-32:
+    status: pending
+    validator: BASE-32
+    notes: ""
+    verified_date: null
+  HARDENING-01:
+    status: pending
+    validator: HARDENING-01
+    notes: ""
+    verified_date: null
+  HARDENING-02:
+    status: pending
+    validator: HARDENING-02
+    notes: ""
+    verified_date: null
+  HARDENING-03:
+    status: pending
+    validator: HARDENING-03
+    notes: ""
+    verified_date: null
+  HARDENING-04:
+    status: pending
+    validator: HARDENING-04
+    notes: ""
+    verified_date: null
+  HARDENING-05:
+    status: pending
+    validator: HARDENING-05
+    notes: ""
+    verified_date: null
+  HARDENING-06:
+    status: pending
+    validator: HARDENING-06
+    notes: ""
+    verified_date: null
+  BASE-30:
+    status: pending
+    validator: BASE-30
+    notes: ""
+    verified_date: null
+  BASE-31:
+    status: pending
+    validator: BASE-31
+    notes: ""
+    verified_date: null
+  BASE-24:
+    status: pending
+    validator: BASE-24
+    notes: ""
+    verified_date: null
+  BASE-25:
+    status: pending
+    validator: BASE-25
+    notes: ""
+    verified_date: null
+  BASE-26:
+    status: pending
+    validator: BASE-26
+    notes: ""
+    verified_date: null
+  REGULATORY-01:
+    status: pending
+    validator: REGULATORY-01
+    notes: ""
+    verified_date: null
+  REGULATORY-02:
+    status: pending
+    validator: REGULATORY-02
+    notes: ""
+    verified_date: null
+  REGULATORY-03:
+    status: pending
+    validator: REGULATORY-03
+    notes: ""
+    verified_date: null
+  REGULATORY-04:
+    status: pending
+    validator: REGULATORY-04
+    notes: ""
+    verified_date: null
+  DR-01:
+    status: pending
+    validator: DR-01
+    notes: ""
+    verified_date: null
+  DR-02:
+    status: pending
+    validator: DR-02
+    notes: ""
+    verified_date: null
+  DR-03:
+    status: pending
+    validator: DR-03
+    notes: ""
+    verified_date: null
+mvp_requirements:
+  instruments:
+    cefi:
+      - BTC (Bitcoin - native)
+      - ETH (Ethereum - native)
+      - wBTC (Wrapped Bitcoin - on Ethereum)
+    defi:
+      btc_variants:
+        - wBTC (Wrapped Bitcoin - primary BTC representation on Ethereum)
+      eth_variants:
+        - ETH (native Ethereum)
+        - WETH (Wrapped ETH - ERC-20 version)
+        - stETH (Lido Staked ETH - rebasing)
+        - wstETH (Wrapped Staked ETH - non-rebasing wrapper for stETH)
+        - cbETH (Coinbase Staked ETH)
+        - rETH (Rocket Pool Staked ETH)
+        - weETH (ether.fi Wrapped eETH)
+    tradfi:
+      sp500:
+        - ES (E-mini S&P 500 futures - macro contract, CME)
+        - MES (Micro E-mini S&P 500 futures - 1/10th size, CME)
+        - SPY (S&P 500 ETF - SPDR, NYSE)
+      btc:
+        - BTC futures (CME Bitcoin futures)
+        - IBIT (iShares Bitcoin Trust ETF)
+        - GBTC (Grayscale Bitcoin Trust)
+        - BITO (ProShares Bitcoin Strategy ETF)
+      volatility:
+        - VIX (CBOE Volatility Index)
+  venues:
+    cefi:
+      - BINANCE-SPOT
+      - BINANCE-FUTURES
+      - OKX
+      - UPBIT
+      - COINBASE
+      - HYPERLIQUID
+      - ASTER
+    defi:
+      - AAVEV3_ETHEREUM
+      - UNISWAPV2-ETHEREUM
+      - UNISWAPV3-ETHEREUM
+      - COMPOUND_V3_ETH
+    tradfi:
+      - CME
+      - CBOE
+      - NYSE
+  strategies:
+    defi_mvp:
+      - staking
+      - lending
+      - recursive_staking_with_flash_loans
+      - basis_trade_long_spot_short_perp
+    cefi_mvp:
+      description: ML prediction-based strategies
+      timeframes:
+        - 1m
+        - 5m
+        - 15m
+        - 4h
+        - 24h
+      predictions:
+        - swing_high_breakout
+        - swing_low_breakout
+        - swing_high_reversion
+        - swing_low_reversion
+      rationale: ML models predict swing high/low breakouts vs reversions across 5 timeframes
+      implementation_ref: Check ml-training-service, ml-inference-service for model specs
+    tradfi_mvp:
+      description: ML prediction-based strategies (same as CEFI)
+      timeframes:
+        - 1m
+        - 5m
+        - 15m
+        - 4h
+        - 24h
+      predictions:
+        - swing_high_breakout
+        - swing_low_breakout
+        - swing_high_reversion
+        - swing_low_reversion
+      rationale: ML models for futures/ETFs - same prediction framework as CEFI
+      implementation_ref: Check ml-training-service, ml-inference-service for model specs
+    rationale:
+      4 DeFi strategies (manual/rule-based). ML predictions for CEFI/TradFi (swing high/low breakout vs reversion across
+      5 timeframes). No ML in DeFi for MVP.
+validator_coverage:
+  total: 114
+  applicable: 52
+  passing: 0
+  failing: 0
+data_catalogue:
+  venues:
+    - BINANCE-SPOT
+    - BINANCE-FUTURES
+    - COINBASE
+    - AAVEV3_ETHEREUM
+    - UNISWAPV3-ETHEREUM
+  asset_classes:
+    - CRYPTO_CEFI
+    - DEFI
+  feature_groups: []
+  data_types: []
+expected_start_dates:
+  start_date: "2020-01-01"
+  end_date: null
+  per_venue_overrides: {}
+pubsub_topics:
+  subscriptions: []
+  publications: []

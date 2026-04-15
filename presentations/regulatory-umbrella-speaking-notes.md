@@ -31,12 +31,13 @@ getting it wrong are real.
 Getting directly authorised with the FCA takes 12 to 24 months, costs six figures in legal and compliance setup, and
 requires ongoing reporting infrastructure that most small teams do not have.
 
-We have already built all of that for ourselves. We run seven and a half million of our own capital through the same
-compliance infrastructure. We have the reporting tools, the money laundering reporting officer coverage, the transaction
-reporting, the best execution documentation. It is all production-grade because it has to be — our own capital depends
-on it.
+We have been FCA authorised since January 2023 with a dedicated money laundering reporting officer. One regulatory
+coverage client is already fully onboarded and operational. Three more are in active pipeline. The onboarding process is
+tested and repeatable — weeks from application to FCA notification, not months.
 
-Operating under our regulatory coverage gets you the same coverage without the multi-year build.
+The compliance infrastructure is live — automated transaction reporting, best execution monitoring, annual reviews. It
+is production-grade because our own seven and a half million depends on it. This is not a new setup — it is an existing
+operation you are joining.
 
 ---
 
@@ -110,9 +111,10 @@ with our oversight, or we handle everything for you. Your choice.
 What about fund structures? Two paths — crypto spot funds housed entirely by Odum, and derivatives plus traditional
 market fund vehicles with combined FCA and EU coverage.
 
-Why should I trust you? We built this for ourselves first. The same compliance infrastructure runs our own seven and a
-half million. We have clients for every service we offer. Nothing ships that we would not trust with our own money. And
-we will never front-run you or build strategies that overlap with yours.
+Why should I trust you? FCA authorised since January 2023 with a dedicated MLRO and live compliance operations. One
+regulatory coverage client already onboarded, three more in pipeline — the process is tested and repeatable. We carry
+the same regulatory obligations for our own seven and a half million under management, so the compliance infrastructure
+is not a side project.
 
 ---
 
@@ -120,12 +122,14 @@ we will never front-run you or build strategies that overlap with yours.
 
 **"Get Started"**
 
-Three steps. Apply — complete the online application and strategy questionnaire, upload documentation at your own pace.
-Review — due diligence, compliance sign-off, FCA notification. Operate — your clients get their own portal with
-portfolio performance, trade history, compliance reports, and settlement tracking.
+Start with an eligibility assessment. What regulated activities do you need coverage for? Regulatory coverage, advisory,
+or fund structure? We assess fit and scope the engagement before any commitment.
 
-The whole process is designed to be as simple as possible. Getting properly authorised does not have to be complicated
-or expensive.
+Then onboarding — due diligence review, compliance sign-off, FCA notification filed on your behalf. Compliance manual
+and staff training provided.
+
+Then operational — your clients receive dedicated portal access with compliance reporting, settlement tracking, best
+execution documentation. Ongoing MLRO services and annual regulatory review included.
 
 ---
 

@@ -17,7 +17,7 @@ CODEX: 06-coding-standards/integration-testing-layers.md (SSOT)
 
 | Layer | What | Where | In quickmerge? | Credentials |
 |-------|------|-------|----------------|-------------|
-| 0 | Contract alignment (AC↔UIC schema pairs) | unified-api-contracts + unified-internal-contracts tests/ | Yes | None |
+| 0 | Contract alignment (AC external↔internal schema pairs) | unified-api-contracts tests/ | Yes | None |
 | 1 | Schema robustness (fail-fast, corner cases) | Each repo: tests/unit/test_schema_robustness.py | Yes | None |
 | 1.5 | Per-component integration (adapter/event/config wiring with mocks) | Each repo: tests/integration/test_<component>_integration.py | Yes (blocking, last local gate) | None |
 | 2 | Infrastructure verify (buckets, topics, IAM) | deployment-service/scripts/verify_infra.py | No (post-deploy) | GCP |
@@ -26,14 +26,14 @@ CODEX: 06-coding-standards/integration-testing-layers.md (SSOT)
 
 ## When Writing Tests
 
-Layer 0: If you change a schema in AC or UIC, add or update a contract alignment test in that repo.
+Layer 0: If you change a schema in UAC (external or internal), add or update a contract alignment test in unified-api-contracts.
 Layer 1: If you add/change a Pydantic model any service consumes, add test_schema_robustness.py tests.
 Layer 1.5: If you add/change a service adapter, EventSink wiring, or config loading, add a component integration test with mocked dependencies.
 Layer 2: If you add a new GCS bucket or PubSub topic, add it to verify_infra.py resource list.
 Layer 3: If you add a new service-to-service data flow, add a smoke test in system-integration-tests.
 
 DO:
-  Layer 0 in AC/UIC; Layer 1 per-service; Layer 1.5 per-service (tests/integration/); Layer 2 in deployment-service; Layer 3 in system-integration-tests
+  Layer 0 in UAC (unified-api-contracts); Layer 1 per-service; Layer 1.5 per-service (tests/integration/); Layer 2 in deployment-service; Layer 3 in system-integration-tests
   Sequential: 3a passes before 3b runs
   system-integration-tests interacts via HTTP/GCS/PubSub only — zero Python imports from services
   Layer 1.5: mock all external dependencies (no live GCS, no live PubSub, no live Secret Manager)
@@ -66,13 +66,11 @@ def test_service_initialises_with_utl_deps(mock_cloud_clients):
 
 ## External Interface VCR Tests (Layer 1 — Required for Interface Repos)
 
-The six external-facing interface repos MUST have VCR-recorded integration tests:
+The active external-facing interface and service repos MUST have VCR-recorded integration tests:
 - unified-market-interface
-- unified-trade-execution-interface
-- unified-reference-data-interface
-- unified-position-interface
-- unified-sports-execution-interface
-- unified-defi-execution-interface
+- execution-service (contains CeFi/DeFi/sports execution — formerly unified-trade-execution-interface, unified-defi-execution-interface, unified-sports-execution-interface)
+- instruments-service (contains reference data — formerly unified-reference-data-interface)
+- position-balance-monitor-service (contains position interface — formerly unified-position-interface)
 
 VCR cassettes live in: `unified-api-contracts/unified_api_contracts/unified_api_contracts_external/<venue>/mocks/<endpoint>.yaml`
 

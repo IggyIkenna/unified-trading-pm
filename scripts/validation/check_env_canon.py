@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate env var usage: only canonical keys from unified_internal_contracts.EnvVars.
+"""Validate env var usage: only canonical keys from unified_api_contracts.internal.EnvVars.
 
 Greps for os.getenv(, os.environ[, os.environ.get( in SOURCE_DIR.
 Excludes tests/, conftest, scripts/, .github/.
@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 try:
-    from unified_internal_contracts import EnvVars
+    from unified_api_contracts.internal import EnvVars
 except ImportError:
     # Fallback if UIC not available (e.g. running outside workspace)
     EnvVars = None

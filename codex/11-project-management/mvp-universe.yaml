@@ -1,0 +1,470 @@
+mvp_version: "1.0"
+last_updated: "2026-03-04"
+reviewer: Ikenna
+instruments:
+  cefi:
+    description: Native and wrapped crypto instruments on centralized exchanges
+    included:
+      - BTC (Bitcoin - native)
+      - ETH (Ethereum - native)
+      - wBTC (Wrapped Bitcoin - on Ethereum)
+    rationale: Core crypto instruments traded on CEFI venues. wBTC included for cross-chain exposure.
+    examples:
+      - BINANCE-SPOT:BTC-USDT, BINANCE-FUTURES:BTC-USDT-PERP
+      - COINBASE:ETH-USD, HYPERLIQUID:ETH-USD-PERP
+  defi:
+    description: Native, wrapped, and staked crypto instruments on DeFi protocols
+    btc_variants:
+      - wBTC (Wrapped Bitcoin - primary BTC representation on Ethereum)
+    eth_variants:
+      - ETH (native Ethereum)
+      - WETH (Wrapped ETH - ERC-20 version)
+      - stETH (Lido Staked ETH - rebasing)
+      - wstETH (Wrapped Staked ETH - non-rebasing wrapper for stETH)
+      - cbETH (Coinbase Staked ETH)
+      - rETH (Rocket Pool Staked ETH)
+      - weETH (ether.fi Wrapped eETH)
+    rationale:
+      "All ETH variants represent ETH exposure with different staking/wrapping mechanisms. Code already handles these
+      (see instruments-service/app/core/instrument_processing_service.py lines 2286-2310). DeFi protocols (Uniswap,
+      Aave, Compound) support pools with these variants."
+    examples:
+      - UNISWAPV3-ETHEREUM:WETH-USDC (spot pair)
+      - UNISWAPV3-ETHEREUM:wstETH-WETH (staked ETH / wrapped ETH)
+      - AAVEV3_ETHEREUM:WETH (lending pool)
+      - COMPOUND_V3_ETH:WETH (lending market)
+  tradfi:
+    description: Traditional finance futures, ETFs, and derivatives
+    sp500_exposure:
+      - ES (E-mini S&P 500 futures - macro contract, CME)
+      - MES (Micro E-mini S&P 500 futures - 1/10th size, CME)
+      - SPY (S&P 500 ETF - SPDR, NYSE)
+    btc_exposure:
+      - BTC futures (CME Bitcoin futures)
+      - IBIT (iShares Bitcoin Trust ETF)
+      - GBTC (Grayscale Bitcoin Trust)
+      - BITO (ProShares Bitcoin Strategy ETF)
+    volatility:
+      - VIX (CBOE Volatility Index)
+    rationale:
+      "ES/MES futures provide S&P 500 exposure (24/7 trading), SPY ETF for equities, BTC futures/ETFs for crypto
+      exposure in TradFi accounts. VIX for volatility hedging."
+    priority: "P0-critical: ES/MES/SPY required for MVP TradFi strategies"
+    examples:
+      - CME:ES (E-mini S&P 500 futures)
+      - CME:MES (Micro E-mini S&P 500 futures)
+      - NYSE:SPY (S&P 500 ETF)
+      - CME:BTC (Bitcoin futures)
+  excluded:
+    - All other altcoins (SOL, AVAX, MATIC, etc.)
+    - Stablecoins (USDT, USDC, DAI - except as quote currencies)
+    - Memecoins (DOGE, SHIB, PEPE, etc.)
+    - Individual equities (AAPL, TSLA, NVDA, etc.)
+    - TradFi options (CME ES options, SPY options, etc.)
+  rationale:
+    Focus on BTC/ETH exposure across all three categories (CEFI, DEFI, TRADFI). Other instruments added
+    post-commercialization.
+venues:
+  cefi:
+    description: Centralized exchanges (Tardis API) and on-chain CLOBs
+    included:
+      - BINANCE-SPOT
+      - BINANCE-FUTURES
+      - OKX
+      - UPBIT
+      - COINBASE
+      - HYPERLIQUID
+      - ASTER
+    excluded:
+      - DERIBIT
+      - BYBIT
+    rationale:
+      6 CEFI venues covering major centralized exchanges plus 2 on-chain CLOBs. Excludes options-focused venues and
+      late-starting venues.
+    alignment_notes:
+      - All included venues exist in venues.yaml under categories.CEFI.venues
+      - ASTER confirmed present in venues.yaml (line 19) - RESOLVED
+  defi:
+    description: DeFi protocols on Ethereum mainnet (The Graph API)
+    included:
+      - AAVEV3_ETHEREUM
+      - UNISWAPV2-ETHEREUM
+      - UNISWAPV3-ETHEREUM
+      - COMPOUND_V3_ETH
+    excluded:
+      - CURVE
+      - BALANCER
+      - EULER
+      - FLUID
+      - PLASMA
+      - SUSHISWAP_ETH
+    rationale:
+      3 core DeFi protocols (2 lending, 1 DEX) for MVP strategies. User explicitly excluded 5 protocols (Curve,
+      Balancer, Euler, Fluid, Plasma).
+    alignment_notes:
+      - Excluded protocols ARE in venues.yaml (available data) but excluded from MVP scope
+      - This is expected and correct - venues.yaml tracks available data, MVP tracks minimum viable scope
+  tradfi:
+    description: Traditional finance exchanges (Databento API) and external providers
+    included:
+      - CME
+      - CBOE
+      - NYSE
+    excluded:
+      - NASDAQ
+      - ICE
+      - FX
+    rationale: CME ES futures (24/7 trading), VIX (volatility index), SPY (S&P 500 ETF). No options for MVP.
+    alignment_notes:
+      - CME ES includes both micro and macro futures (specified in user requirements)
+      - All included venues exist in venues.yaml under categories.TRADFI.venues
+      - "SERVICE CODE ADJUSTMENT NEEDED: Currently no CME S&P futures, no micro/macro futures inclusion in
+        instruments-service adapters. Code must be updated to support ES micro/macro futures for MVP."
+  sports:
+    description: Sports betting exchanges (odds, markets)
+    included:
+      - BETFAIR
+      - POLYMARKET
+    rationale: Arb strategy MVP. BETFAIR exchange, POLYMARKET prediction markets.
+    alignment_notes:
+      - See venue_data_types.yaml SPORTS section
+
+asset_classes:
+  included:
+    - CRYPTO_CEFI
+    - DEFI
+    - TRADFI_FUTURES
+    - TRADFI_ETFS
+    - SPORTS
+  excluded:
+    - TRADFI_OPTIONS
+    - TRADFI_EQUITIES
+  rationale:
+    Focus on crypto (CEFI + DeFi) and tradfi derivatives (futures, ETFs). No options, no individual equities. Sports arb
+    in scope for MVP (March 2026).
+data_types:
+  included:
+    - trades
+    - book_snapshot_5
+    - book_snapshot_10
+    - liquidations
+    - ohlcv_1m
+    - ohlcv_15m
+    - derivative_ticker
+    - tbbo
+  excluded:
+    - book_snapshot_25
+    - book_snapshot_100
+    - options_chain
+    - ohlcv_24h
+  rationale:
+    Core data types for trading. CEFI uses book_snapshot_5 (Tardis), TRADFI uses book_snapshot_10 and tbbo (Databento).
+    Liquidations critical for CEFI risk monitoring.
+  data_type_per_category:
+    CEFI:
+      - trades
+      - book_snapshot_5
+      - liquidations
+      - derivative_ticker
+    TRADFI:
+      - trades
+      - book_snapshot_10
+      - tbbo
+      - ohlcv_1m
+      - ohlcv_15m
+    DEFI:
+      - swaps
+      - rate_indices
+      - oracle_prices
+      - utilization
+      - liquidity
+      - risk_params
+    SPORTS:
+      - odds
+      - markets
+strategies:
+  defi_mvp:
+    - staking
+    - lending
+    - recursive_staking_with_flash_loans
+    - basis_trade_long_spot_short_perp
+  cefi_mvp:
+    description: ML prediction-based strategies
+    timeframes:
+      - 1m
+      - 5m
+      - 15m
+      - 4h
+      - 24h
+    predictions:
+      - swing_high_breakout
+      - swing_low_breakout
+      - swing_high_reversion
+      - swing_low_reversion
+    rationale: ML models predict swing high/low breakouts vs reversions across 5 timeframes
+    implementation_ref: Check ml-training-service, ml-inference-service for model specs
+  tradfi_mvp:
+    description: ML prediction-based strategies (same as CEFI)
+    timeframes:
+      - 1m
+      - 5m
+      - 15m
+      - 4h
+      - 24h
+    predictions:
+      - swing_high_breakout
+      - swing_low_breakout
+      - swing_high_reversion
+      - swing_low_reversion
+    rationale: ML models for futures/ETFs - same prediction framework as CEFI
+    implementation_ref: Check ml-training-service, ml-inference-service for model specs
+  sports_mvp:
+    - arb
+  rationale:
+    4 DeFi strategies (manual/rule-based). ML predictions for CEFI/TradFi (swing high/low breakout vs reversion across 5
+    timeframes). No ML in DeFi for MVP.
+services:
+  included:
+    - features-sports-service
+  excluded:
+    - sports-betting-services
+  rationale:
+    Position/risk services are engines that calculate domain data used by strategy-service. Must have sharding for
+    parallel processing. pnl-attribution-service may need review separately.
+  requires_sharding:
+    - position-balance-monitor-service
+    - risk-and-exposure-service
+  action_required:
+    - "Create sharding.position-balance-monitor-service.yaml (likely category\xD7venue\xD7\
+      date)"
+    - "Create sharding.risk-and-exposure-service.yaml (likely category\xD7venue\xD7\
+      date)"
+    - Create unified-trading-codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
+    - Create unified-trading-codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
+conflicts:
+  - venue: ASTER
+    category: CEFI
+    issue: Verify ASTER is in venues.yaml under categories.CEFI.venues (or if it has different name)
+    status: resolved
+    resolution: "✅ ASTER confirmed present in venues.yaml (line 19). No action needed."
+    resolved_date: "2026-02-21"
+  - protocols:
+      - CURVE
+      - BALANCER
+      - EULER
+      - FLUID
+      - PLASMA
+    category: DEFI
+    issue: These protocols ARE in venues.yaml (available data) but excluded from MVP
+    status: resolved
+    resolution: Correct behavior - venues.yaml tracks available data, MVP tracks minimum viable scope. No action needed.
+  - service: features-sports-service
+    issue: Previously excluded from MVP
+    status: resolved
+    resolution: Sports arb in scope for MVP (March 2026). features-sports-service now included.
+  - services:
+      - position-balance-monitor-service
+      - risk-and-exposure-service
+      - pnl-attribution-service
+    issue: Listed in service-registry.yaml but no sharding configs or operational checklists
+    status: pending_user_decision
+    resolution:
+      "User to decide: Are these services operational? If yes, create checklists. If no, mark as planned in registry."
+data_availability:
+  cefi_start_date: "2019-03-30"
+  defi_start_date: "2020-05-18"
+  tradfi_start_date: "2020-01-01"
+  venue_start_dates:
+    BINANCE-SPOT: "2019-03-30"
+    BINANCE-FUTURES: "2019-11-17"
+    OKX: "2019-03-30"
+    UPBIT: "2021-09-01"
+    COINBASE: "2019-03-30"
+    HYPERLIQUID: "2023-05-01"
+    ASTER: "2021-08-30"
+    AAVEV3_ETHEREUM: "2023-01-27" # Aave V3 Ethereum launch
+    UNISWAPV2-ETHEREUM: "2020-05-18"
+    UNISWAPV3-ETHEREUM: "2021-05-05"
+    COMPOUND_V3_ETH: "2022-08-24"
+    CME: "2020-01-01"
+    CBOE: "2020-01-01"
+    NYSE: "2020-01-01"
+  alignment_notes:
+    - All start dates sourced from expected_start_dates.yaml (SSOT for data availability)
+    - Services MUST check expected_start_dates before processing to avoid artificial failures
+    - "See: unified-trading-library/domain/date_validation.py for helper utilities"
+validation:
+  checklist_item: BASE-22
+  automated_checks:
+    - Service config supports all MVP instruments (BTC, ETH + variants per category)
+    - "CEFI: BTC, ETH, wBTC"
+    - "DEFI: wBTC, ETH, WETH, stETH, wstETH, cbETH, rETH, weETH"
+    - "TRADFI: ES, MES, SPY, CME BTC futures, BTC ETFs (IBIT, GBTC, BITO), VIX"
+    - Service config supports all MVP venues per category (including SPORTS: BETFAIR, POLYMARKET)
+    - Service respects expected_start_dates.yaml for date skipping
+    - Service has per-service observability docs documenting MVP coverage
+  manual_checks:
+    - Service functionality supports FULL scope (not just MVP) - e.g., options code exists even if not tested for MVP
+    - "Service testing covers MVP data extensively: BTC/ETH + all variants across all MVP venues"
+    - Service deployment uses MVP data for initial validation
+    - "instruments-service code already handles ETH variant mappings (WETH→ETH, stETH→ETH, etc.) - verify in adapters"
+  validator_script: scripts/validators/validate_mvp_coverage.py
+phasing:
+  mvp_phase:
+    description: Initial production launch with minimum viable data
+    scope:
+      BTC/ETH only, 6 CEFI venues, 3 DeFi protocols, 3 TradFi venues, 2 Sports venues (BETFAIR, POLYMARKET), 4 DeFi
+      strategies, Sports arb
+    timeline: Q1 2026 (current)
+    success_criteria:
+      - All 32 production services/libraries pass quality gates
+      - "Data pipeline delivers MVP data end-to-end (instruments \u2192 features \u2192\
+        \ signals \u2192 execution)"
+      - Live trading operational for BTC/ETH on MVP venues
+      - Batch backfill complete for MVP data (2019-present for CEFI, 2020-present for DeFi/TradFi)
+  expansion_phase:
+    description: Add non-MVP instruments, venues, strategies
+    scope:
+      Altcoins, stablecoins, additional CEFI venues (Deribit, Bybit), additional DeFi protocols (Curve, Balancer),
+      NASDAQ/ICE TradFi
+    timeline: Q2-Q3 2026
+    dependencies:
+      - MVP phase complete
+      - Post-trade services operational
+      - Regulatory compliance live
+  commercialization_phase:
+    description: Sports betting, options, advanced strategies
+    scope: Sports services, TradFi options, advanced CEFI/TradFi strategies, client onboarding
+    timeline: Q4 2026 - Q1 2027
+    dependencies:
+      - Expansion phase complete
+      - FCA compliance reporting operational
+      - DR/BCP tested
+maintenance:
+  review_cycle: "After each phase (MVP \u2192 Expansion \u2192 Commercialization)"
+  owner: Production Readiness Working Group
+  update_triggers:
+    - New venue added to venues.yaml (evaluate for MVP inclusion)
+    - New service added to service-registry.yaml (evaluate for MVP scope)
+    - MVP success criteria change (e.g., add instrument, venue, or strategy)
+    - Conflict reconciliation identifies new MVP scope issue
+  related_documents:
+    - deployment-service/configs/venues.yaml (available data)
+    - deployment-service/configs/expected_start_dates.yaml (data availability)
+    - unified-trading-codex/10-audit/ssot-reference-mapping.md (SSOT hierarchy)
+    - unified-trading-codex/11-project-management/service-registry.yaml (service metadata)
+    - unified-trading-codex/10-audit/alignment-resolution-decisions.yaml (conflict resolutions)
+architectural_changes:
+  expected_start_dates_migration:
+    current_location: deployment-service/configs/expected_start_dates.yaml
+    target_location: unified-domain-client/data/expected_start_dates.yaml
+    rationale: "All services (including UTD v2) should import this centralized data availability info.
+
+      Better separation of concerns - domain data belongs in unified-domain-client.
+
+      Services import at runtime to ensure validations align.
+
+      "
+    action_required:
+      - Move expected_start_dates.yaml to unified-domain-client package
+      - Add to unified-domain-client/data/ as package data
+      - "Export via unified-domain-client API: get_expected_start_dates()"
+      - Update all services to import from UDS instead of loading from UTD v2 configs
+    impact: All 32 services need import update, UTD v2 deployment scripts need update
+  post_trade_sharding:
+    services_needing_configs:
+      - position-balance-monitor-service
+      - risk-and-exposure-service
+    action_required:
+      - "Create sharding.position-balance-monitor-service.yaml (likely category\xD7\
+        venue\xD7date)"
+      - "Create sharding.risk-and-exposure-service.yaml (likely category\xD7venue\xD7\
+        date)"
+      - Create unified-trading-codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
+      - Create unified-trading-codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
+      - Create data-catalogue.position-balance-monitor-service.yaml
+      - Create data-catalogue.risk-and-exposure-service.yaml
+    rationale:
+      These services calculate positions and risk (domain data) used by strategy-service for execution decisions. Must
+      support sharded parallel processing.
+service_code_adjustments:
+  instruments_service_tradfi:
+    service: instruments-service
+    issue: Currently no CME S&P futures, no micro/macro ES futures inclusion in adapters
+    required_instruments:
+      - ES (E-mini S&P 500 futures) - macro contract
+      - MES (Micro E-mini S&P 500 futures) - micro contract
+    venue: CME
+    adapter_file: instruments-service/adapters/tradfi_databento_adapter.py
+    action_required: "Add ES and MES futures to CME adapter:
+
+      - Check Databento GLBX.MDP3 dataset for ES/MES availability
+
+      - Add to instruments list in adapter
+
+      - Verify data availability from 2020-01-01 (per expected_start_dates)
+
+      "
+    priority: P0-critical (required for MVP TradFi)
+  market_tick_data_handler_orderbook_by_category:
+    service: market-tick-data-service
+    issue: MVP uses different orderbook depths per category - book_snapshot_5 for CEFI, book_snapshot_10 for TRADFI
+    rationale: "CEFI (Tardis): book_snapshot_5 sufficient for centralized exchange orderbooks
+
+      TRADFI (Databento): book_snapshot_10 for deeper traditional market orderbooks
+
+      No book_snapshot_25/100 needed for MVP - top 5/10 levels adequate
+
+      "
+    action_required: "Verify correct orderbook depth per category:
+
+      - CEFI: book_snapshot_5 only (from Tardis)
+
+      - TRADFI: book_snapshot_10 + tbbo (from Databento)
+
+      - Remove any code excluding book_snapshot_10 for TRADFI
+
+      - Ensure no book_snapshot_25/100 processing for MVP (not needed)
+
+      - Update documentation to clarify orderbook depth by category
+
+      "
+    files_to_update:
+      - market-tick-data-service/adapters/databento_adapter.py
+      - market-tick-data-service/adapters/tardis_adapter.py
+      - market-data-processing-service/config.py (if it filters data types)
+      - unified-trading-codex/02-data/data-types.md (clarify per-category usage)
+    priority: P1-high (correct orderbook depth critical for execution quality)
+  defi_uniswap_v2:
+    service: instruments-service, features-*-service
+    issue: MVP includes UNISWAP_V2_ETH but may not be fully tested
+    action_required: "Verify UNISWAP_V2_ETH support across pipeline:
+
+      - instruments-service: Confirm V2 protocol adapter exists
+
+      - features services: Confirm V2 data processing works
+
+      - Test with V2 data (start date: 2020-05-18)
+
+      "
+    priority: P2-medium (V2 is established protocol)
+  cefi_liquidations:
+    services: market-tick-data-service, market-data-processing-service
+    issue: Liquidations previously marked as non-critical; now required for MVP
+    action_required: "Ensure liquidations data type is processed for CEFI venues:
+
+      - Verify Tardis API liquidations channel subscribed
+
+      - Verify downstream processing (features services) handle liquidations
+
+      - Add to MVP test data fixtures
+
+      "
+    priority: P1-high (critical for risk monitoring)
+runtime_imports:
+  expected_start_dates_import:
+    description: Services should import expected_start_dates at runtime (not hardcode)
+    current_pattern: Load from deployment-service/configs/expected_start_dates.yaml
+    target_pattern: "Import from unified-domain-client: from unified_domain_client import get_expected_start_dates"
+    rationale: Ensures all services use same data availability criteria; changes propagate automatically
+    migration_timeline: After expected_start_dates migrated to unified-domain-client

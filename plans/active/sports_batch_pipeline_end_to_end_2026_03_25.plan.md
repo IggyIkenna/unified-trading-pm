@@ -10,7 +10,7 @@ overview: |
   1-day then 1-week runs across 20+ prediction leagues and all bookmakers Odds API covers.
 
   ## Problem
-  Extensive sports schema infrastructure exists (UAC canonical types, USRI 8 adapters, league registry
+  Extensive sports schema infrastructure exists (UAC canonical types, instruments-service reference_data 8 adapters, league registry
   with 94 leagues, bookmaker registry with 22+ entries, 998 features in FSS) but the end-to-end batch
   pipeline has never been run. Key gaps:
   1. `odds_api` missing from UAC `DATA_SOURCE_TO_SECRET`
@@ -28,14 +28,14 @@ overview: |
 
   ## Scope: 9 repos touched
   - unified-api-contracts (UAC) — DATA_SOURCE_TO_SECRET + canonical ID docstrings
-  - unified-sports-reference-interface (USRI) — quota tracking on OddsApi adapter
-  - unified-reference-data-interface (URDI) — verify sports adapter routing
+  - instruments-service (reference_data/ sub-package) — quota tracking on OddsApi adapter
+  - instruments-service (reference_data/ sub-package) — verify sports adapter routing
   - instruments-service — verify SPORTS hook (likely no code changes)
   - market-tick-data-service — wire ODDS_API venue
   - unified-market-interface (UMI) — verify OddsApiAdapter returns canonical IDs
   - features-sports-service — verify batch end-to-end
   - unified-trading-pm — plan + GCS migration script
-  - unified-trading-codex — update sports-schema-paths.md
+  - unified-trading-pm/codex — update sports-schema-paths.md
 
   ## Archived repo reference (patterns only, no code copy)
   `archive/new-sports-batting-services` (branch: `week1-implementation`, 41 commits ahead of main)
@@ -57,10 +57,10 @@ repo_gates:
   - repo: unified-api-contracts
     code: C0
     notes: "DATA_SOURCE_TO_SECRET + canonical ID format docstrings"
-  - repo: unified-sports-reference-interface
+  - repo: instruments-service (reference_data/ sub-package)
     code: C0
     notes: "Quota tracking on OddsApi adapter"
-  - repo: unified-reference-data-interface
+  - repo: instruments-service (reference_data/ sub-package)
     code: C0
     notes: "Verify sports adapter routing"
   - repo: instruments-service
@@ -78,11 +78,13 @@ repo_gates:
   - repo: unified-trading-pm
     code: C0
     notes: "Plan + GCS migration script"
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm/codex
     code: C0
     notes: "Update sports-schema-paths.md"
 
 isProject: false
+
+> **Conflict resolution**: MTDS adapter work (p1d) is superseded by sports_e2e_validation (which rewrites OddsApiAdapter with per-fixture timestamps and `source=ODDS_API` path). Any remaining Phase 3 items checking `venue=ODDS_API` paths must be updated to use `source=ODDS_API`. Phase 2 (instruments-service hook) must complete before sports_data_migration Pass 2 runs.
 
 todos:
   # ============================================================================
@@ -128,14 +130,11 @@ todos:
 
   - id: p1d-mtds-sports-venue-routing
     content: |
-      - [ ] [AGENT] P0. Fix MTDS SPORTS venue routing.
-        File: market_tick_data_service/engine/orchestrator.py:59-62
-        Current: SPORTS -> ["BETFAIR", "API_FOOTBALL"]
-        Change to: SPORTS -> ["ODDS_API"]
-        Rationale: API_FOOTBALL is reference data (instruments-service). BETFAIR is one bookmaker
-        among 250+. ODDS_API is the aggregator that provides odds for all bookmakers.
-        Also update VenueMapping in UAC if ODDS_API is not in venue lists.
-    status: pending
+      - [x] [AGENT] P0. Fix MTDS SPORTS venue routing.
+        DONE (via sports_e2e_validation plan): OddsApiAdapter fully rewritten with
+        source=ODDS_API path, per-fixture timestamps, bm_time ground truth.
+        File: market_tick_data_service/engine/orchestrator.py
+    status: done
 
   # ============================================================================
   # PHASE 1 gate: cd unified-api-contracts && bash scripts/quality-gates.sh
@@ -149,7 +148,7 @@ todos:
       - [ ] [AGENT] P1. Verify instruments-service SPORTS hook works end-to-end.
         File: instruments_service/engine/orchestrator.py:188-191
         Current code: get_venues_for_categories("SPORTS") -> ["API_FOOTBALL"]
-        This calls URDI -> USRI api_football adapter -> InstrumentRecord[]
+        This calls instruments-service reference_data -> api_football adapter -> InstrumentRecord[]
         Test: cd instruments-service && python -m instruments_service.service \
           --operation fetch --category SPORTS --date 2026-03-22
         Verify: InstrumentRecord[] written to GCS in hive format.
@@ -159,9 +158,9 @@ todos:
 
   - id: p2b-urdi-capability-registry
     content: |
-      - [ ] [AGENT] P1. Fix URDI capability registry for sports.
+      - [ ] [AGENT] P1. Fix instruments-service reference_data capability registry for sports.
         AI plan noted: "venue=api_football not in capability registry" warning.
-        Check unified_reference_data_interface/ for preflight capability checks.
+        Check instruments_service/reference_data/ for preflight capability checks.
         Add api_football + odds_api if missing.
     status: pending
 
@@ -183,20 +182,16 @@ todos:
   # ============================================================================
   - id: p3a-umi-odds-adapter-verify
     content: |
-      - [ ] [AGENT] P1. Verify UMI OddsApiAdapter for batch historical odds.
-        File: unified-market-interface SPORTS_REGISTRY
-        Check: Does OddsApiAdapter implement download_batch(date, data_types)?
-        Check: Does it return DataFrame with canonical instrument IDs?
-        Format: {fixture_id}::{market_type}::{outcome}::{bookmaker_key}
-        If not, implement the batch download method using Odds API v4 historical endpoint:
-          https://api.the-odds-api.com/v4/historical/sports/{sport}/odds
-    status: pending
-    blocked_by: p1d-mtds-sports-venue-routing
+      - [x] [AGENT] P1. Verify UMI OddsApiAdapter for batch historical odds.
+        DONE (via sports_e2e_validation plan): OddsApiAdapter fully rewritten.
+        download_batch() returns DataFrame with canonical instrument IDs, per-fixture
+        timestamps, bm_time, BookmakerTier, fixture_id standalone columns.
+    status: done
 
   - id: p3b-usri-quota-tracking
     content: |
-      - [ ] [AGENT] P1. Add quota tracking to USRI OddsApi adapter.
-        File: unified_sports_reference_interface/adapters/odds_api.py
+      - [ ] [AGENT] P1. Add quota tracking to instruments-service reference_data OddsApi adapter.
+        File: instruments_service/reference_data/adapters/odds_api.py
         Pattern from archive: Track x-requests-remaining header on each response.
         Log remaining credits. Emit ADAPTER_QUOTA_WARNING event at <10% remaining.
         Raise on OUT_OF_USAGE_CREDITS instead of retrying.
@@ -327,8 +322,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Run quality gates across all touched repos.
         cd unified-api-contracts && bash scripts/quality-gates.sh
-        cd unified-sports-reference-interface && bash scripts/quality-gates.sh
-        cd unified-reference-data-interface && bash scripts/quality-gates.sh
+        cd instruments-service && bash scripts/quality-gates.sh  # includes reference_data/ sub-package
         cd instruments-service && bash scripts/quality-gates.sh
         cd market-tick-data-service && bash scripts/quality-gates.sh
         cd unified-market-interface && bash scripts/quality-gates.sh
@@ -370,7 +364,7 @@ Odds API), and features-sports-service (derived features from multiple providers
 
 ```
 instruments-service (SPORTS category)
-  └─ URDI → USRI api_football adapter → InstrumentRecord[] (fixtures/teams/leagues)
+  └─ reference_data → api_football adapter → InstrumentRecord[] (fixtures/teams/leagues)
        └─ Writes to: instruments-store-sports-{project}/by_date/day={date}/
 
 market-tick-data-service (SPORTS category)
@@ -379,7 +373,7 @@ market-tick-data-service (SPORTS category)
 
 features-sports-service (batch mode)
   └─ Reads instruments + odds from GCS
-  └─ Calls USRI adapters directly for: footystats, understat, soccer_football_info
+  └─ Calls instruments-service reference_data adapters for: footystats, understat, soccer_football_info
   └─ Computes 998+ features per fixture
        └─ Writes to: features-sports-{project}/by_date/day={date}/feature_group={group}/
 ```
@@ -393,18 +387,18 @@ The `archive/new-sports-batting-services` (branch `week1-implementation`) has pa
 3. **Connection pooling**: `HTTPAdapter(pool_connections=50)` for efficient batch fetching
 4. **Graceful credit exhaustion**: Stop fetching when `OUT_OF_USAGE_CREDITS`, don't retry
 
-These patterns go into USRI adapters (interface layer), NOT into services.
+These patterns go into instruments-service reference_data adapters, NOT into service orchestrators.
 
 ## Pre-Audit Manifest
 
 ### Symbols being ADDED
 
-| Symbol                       | Where                                   | Consumers            |
-| ---------------------------- | --------------------------------------- | -------------------- |
-| `"odds_api": "odds-api-key"` | UAC canonical_mappings.py               | MTDS, USRI           |
-| Canonical ID docstrings      | UAC canonical/domain/sports/**init**.py | All sports consumers |
-| ODDS_API venue routing       | MTDS orchestrator.py                    | MTDS                 |
-| Quota tracking               | USRI odds_api.py                        | FSS, MTDS            |
+| Symbol                       | Where                                          | Consumers                 |
+| ---------------------------- | ---------------------------------------------- | ------------------------- |
+| `"odds_api": "odds-api-key"` | UAC canonical_mappings.py                      | MTDS, instruments-service |
+| Canonical ID docstrings      | UAC canonical/domain/sports/**init**.py        | All sports consumers      |
+| ODDS_API venue routing       | MTDS orchestrator.py                           | MTDS                      |
+| Quota tracking               | instruments-service reference_data odds_api.py | FSS, MTDS                 |
 
 ### Files that need changes
 
@@ -413,9 +407,9 @@ These patterns go into USRI adapters (interface layer), NOT into services.
 | `unified_api_contracts/canonical/canonical_mappings.py`           | Add odds_api to DATA_SOURCE_TO_SECRET | Add entry               |
 | `unified_api_contracts/canonical/domain/sports/__init__.py`       | Add ID format docstrings              | Edit docstrings         |
 | `market_tick_data_service/engine/orchestrator.py`                 | Change SPORTS venues to ["ODDS_API"]  | Edit list               |
-| `unified_sports_reference_interface/adapters/odds_api.py`         | Add quota tracking                    | Extend \_get_with_retry |
+| `instruments_service/reference_data/adapters/odds_api.py`         | Add quota tracking                    | Extend \_get_with_retry |
 | `unified-trading-pm/scripts/sports/migrate_sports_gcs_to_hive.sh` | New migration script                  | Create                  |
-| `unified-trading-codex/02-data/sports-schema-paths.md`            | Add canonical ID format table         | Edit                    |
+| `unified-trading-pm/codex/02-data/sports-schema-paths.md`         | Add canonical ID format table         | Edit                    |
 
 ## Dependency DAG
 
@@ -428,7 +422,7 @@ P1 (UAC + SM keys) ──┬── P1a: SM audit
                        UAC QG gate
                                 │
 P2 (instruments) ────── P2a: Verify SPORTS hook ──── instruments QG gate
-  [SEQUENTIAL]          P2b: URDI capability            │
+  [SEQUENTIAL]          P2b: reference_data capability   │
                         P2c: SeasonDefinition           │
                                                         │
 P3 (MTDS + UMI) ─────── P3a: UMI adapter ──── MTDS QG gate

@@ -103,6 +103,8 @@ done < <(find "$WORKSPACE_ROOT" \
   -not \( -path "*/.git*" -prune \) \
   -not \( -path "*/node_modules*" -prune \) \
   -not \( -path "*/build*" -prune \) \
+  -not \( -path "*/archive*" -prune \) \
+  -not \( -path "*/_archived*" -prune \) \
   -type l -print0 2>/dev/null)
 
 if [ "${#BROKEN_SYMLINKS[@]}" -gt 0 ]; then
@@ -190,7 +192,9 @@ while IFS= read -r pkg_json; do
 done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "package.json" \
   -not \( -path "*/node_modules/*" -prune \) \
   -not \( -path "*/.venv*" -prune \) \
-  -not \( -path "*/unified-trading-pm/*" -prune \) 2>/dev/null)
+  -not \( -path "*/unified-trading-pm/*" -prune \) \
+  -not \( -path "*/archive/*" -prune \) \
+  -not \( -path "*/_archived*" -prune \) 2>/dev/null)
 
 if [ "${#UI_DRIFT[@]}" -gt 0 ]; then
   echo ""
@@ -257,7 +261,9 @@ while IFS= read -r lock_file; do
   fi
 done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "uv.lock" \
   -not \( -path "*/.venv*" -prune \) \
-  -not \( -path "*/unified-trading-pm/*" -prune \) 2>/dev/null)
+  -not \( -path "*/unified-trading-pm/*" -prune \) \
+  -not \( -path "*/archive/*" -prune \) \
+  -not \( -path "*/_archived*" -prune \) 2>/dev/null)
 
 if [ "${#LOCK_DRIFT[@]}" -gt 0 ]; then
   echo ""

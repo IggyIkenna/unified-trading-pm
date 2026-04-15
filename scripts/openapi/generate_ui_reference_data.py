@@ -204,7 +204,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
     enums: dict[str, list[str]] = {}
 
     try:
-        import unified_internal_contracts as uic
+        import unified_api_contracts.internal as uic
 
         for name in dir(uic):
             obj = getattr(uic, name, None)
@@ -227,7 +227,7 @@ def extract_config_schema_universe() -> dict[str, object]:
 
     # UCI UnifiedCloudConfig fields
     try:
-        from unified_config_interface import UnifiedCloudConfig
+        from unified_trading_library import UnifiedCloudConfig
 
         fields = {}
         for field_name, field_info in UnifiedCloudConfig.model_fields.items():
@@ -237,7 +237,7 @@ def extract_config_schema_universe() -> dict[str, object]:
                 "required": field_info.is_required(),
             }
         configs["UnifiedCloudConfig"] = {
-            "source": "unified-config-interface",
+            "source": "unified-trading-library (config_interface/)",
             "fields": fields,
         }
         logger.info("  UnifiedCloudConfig: %d fields", len(fields))
@@ -348,6 +348,151 @@ def extract_service_port_registry() -> dict[str, object]:
     return {}
 
 
+def extract_strategy_configs(workspace_root: Path) -> list[dict[str, object]]:
+    """Extract strategy configs from system-topology.json (sourced from strategy-manifest.json)."""
+    topo_path = workspace_root / "unified-trading-system-ui" / "lib" / "registry" / "system-topology.json"
+    if not topo_path.exists():
+        topo_path = workspace_root / "unified-api-contracts" / "openapi" / "system-topology.json"
+    if not topo_path.exists():
+        logger.warning("  system-topology.json not found")
+        return []
+
+    with open(topo_path) as f:
+        topo = json.load(f)
+
+    strategies = topo.get("strategies", [])
+    # Return a serialisable summary per strategy for the UI
+    configs: list[dict[str, object]] = []
+    for s in strategies:
+        configs.append(
+            {
+                "strategy_id": s.get("strategy_id", ""),
+                "display_name": s.get("display_name", ""),
+                "category": s.get("category", ""),
+                "subcategory": s.get("subcategory", ""),
+                "domain": s.get("domain", ""),
+                "asset_classes": s.get("asset_classes", []),
+                "venues": s.get("venues", []),
+                "instruments": s.get("instruments", []),
+                "batch_capable": s.get("batch_capable", False),
+                "live_capable": s.get("live_capable", False),
+                "testnet_capable": s.get("testnet_capable", False),
+            }
+        )
+
+    logger.info("  Extracted %d strategy configs", len(configs))
+    return configs
+
+
+def extract_execution_algos() -> dict[str, object]:
+    """Extract execution algorithm definitions from UAC trading_validation."""
+    algos: dict[str, object] = {}
+    try:
+        from unified_api_contracts import (
+            VALID_ALGORITHMS,
+            VALID_BOOK_TYPES,
+            VALID_INSTRUCTION_TYPES,
+        )
+
+        VALID_OMS_TYPES: list[str] = ["NETTING", "HEDGING"]
+
+        algos["algorithms"] = list(VALID_ALGORITHMS)
+        algos["book_types"] = list(VALID_BOOK_TYPES)
+        algos["instruction_types"] = list(VALID_INSTRUCTION_TYPES)
+        algos["oms_types"] = list(VALID_OMS_TYPES)
+        logger.info(
+            "  Extracted %d algos, %d book types, %d instruction types",
+            len(VALID_ALGORITHMS),
+            len(VALID_BOOK_TYPES),
+            len(VALID_INSTRUCTION_TYPES),
+        )
+    except Exception as e:
+        logger.warning("  Failed to extract execution algos: %s", e)
+
+    return algos
+
+
+def extract_sports_bookmaker_registry() -> dict[str, dict[str, object]]:
+    """Extract the full bookmaker registry from UAC."""
+    registry: dict[str, dict[str, object]] = {}
+    try:
+        from unified_api_contracts import BOOKMAKER_REGISTRY
+
+        for key, info in BOOKMAKER_REGISTRY.items():
+            registry[key] = {
+                "display_name": info.display_name,
+                "category": info.category.value if hasattr(info.category, "value") else str(info.category),
+                "currency": info.currency,
+                "supports_live_betting": info.supports_live_betting,
+                "supports_cash_out": info.supports_cash_out,
+                "min_bet_gbp": str(info.min_bet_gbp),
+            }
+            if hasattr(info, "max_bet_gbp") and info.max_bet_gbp is not None:
+                registry[key]["max_bet_gbp"] = str(info.max_bet_gbp)
+            if hasattr(info, "api_docs_url") and info.api_docs_url:
+                registry[key]["api_docs_url"] = info.api_docs_url
+
+        logger.info("  Extracted %d bookmakers", len(registry))
+    except Exception as e:
+        logger.warning("  Failed to extract bookmaker registry: %s", e)
+
+    return registry
+
+
+def extract_defi_protocol_capabilities() -> dict[str, object]:
+    """Extract DeFi protocol registry and venue-to-protocol mapping from UAC."""
+    capabilities: dict[str, object] = {}
+    try:
+        from unified_api_contracts.registry.defi_protocol_registry import (
+            DEFI_PROTOCOLS,
+            DEFI_VENUE_TO_PROTOCOL,
+        )
+
+        capabilities["protocols"] = [{"adapter_key": proto, "chain": chain} for proto, chain in DEFI_PROTOCOLS]
+        capabilities["venue_to_protocol"] = {
+            venue: {"adapter_key": proto, "chain": chain} for venue, (proto, chain) in DEFI_VENUE_TO_PROTOCOL.items()
+        }
+        logger.info(
+            "  Extracted %d DeFi protocols, %d venue mappings", len(DEFI_PROTOCOLS), len(DEFI_VENUE_TO_PROTOCOL)
+        )
+    except Exception as e:
+        logger.warning("  Failed to extract DeFi protocol capabilities: %s", e)
+
+    # Solana DeFi protocols
+    try:
+        from unified_api_contracts.registry.capability_declarations import SOLANA_DEFI_PROTOCOLS
+
+        capabilities["solana_protocols"] = {name: dict(info) for name, info in SOLANA_DEFI_PROTOCOLS.items()}
+        logger.info("  Extracted %d Solana DeFi protocols", len(SOLANA_DEFI_PROTOCOLS))
+    except Exception as e:
+        logger.warning("  Failed to extract Solana DeFi protocols: %s", e)
+
+    return capabilities
+
+
+def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
+    """Extract TradFi exchange session times from UAC session_times registry."""
+    calendars: dict[str, dict[str, object]] = {}
+    try:
+        from unified_api_contracts.registry.session_times import _EXCHANGE_SESSIONS
+
+        for exchange, session in _EXCHANGE_SESSIONS.items():
+            calendars[exchange] = {
+                "timezone": str(session.timezone),
+                "open_time": session.open_time.isoformat(),
+                "close_time": session.close_time.isoformat(),
+                "open_weekday": session.open_weekday,
+                "close_weekday": session.close_weekday,
+                "is_24_7": session.is_24_7,
+            }
+
+        logger.info("  Extracted %d exchange session calendars", len(calendars))
+    except Exception as e:
+        logger.warning("  Failed to extract exchange calendars: %s", e)
+
+    return calendars
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate UI reference data")
     parser.add_argument(
@@ -395,6 +540,21 @@ def main() -> None:
     logger.info("\n6. Extracting service/port registry...")
     reference["service_port_registry"] = extract_service_port_registry()
 
+    logger.info("\n7. Extracting strategy configs from system-topology...")
+    reference["strategy_configs"] = extract_strategy_configs(workspace_root)
+
+    logger.info("\n8. Extracting execution algo definitions...")
+    reference["execution_algos"] = extract_execution_algos()
+
+    logger.info("\n9. Extracting sports bookmaker registry...")
+    reference["sports_bookmaker_registry"] = extract_sports_bookmaker_registry()
+
+    logger.info("\n10. Extracting DeFi protocol capabilities...")
+    reference["defi_protocol_capabilities"] = extract_defi_protocol_capabilities()
+
+    logger.info("\n11. Extracting TradFi exchange calendars...")
+    reference["tradfi_exchange_calendars"] = extract_tradfi_exchange_calendars()
+
     # Write output
     output_path = output_dir / "ui-reference-data.json"
     with open(output_path, "w") as f:
@@ -414,6 +574,11 @@ def main() -> None:
     print(f"UIC enums:               {len(reference.get('uic_enums', {}))}")
     print(f"Config schemas:          {len(reference.get('config_schemas', {}))}")
     print(f"Service stacks:          {len(reference.get('service_port_registry', {}))}")
+    print(f"Strategy configs:        {len(reference.get('strategy_configs', []))}")
+    print(f"Execution algos:         {len(reference.get('execution_algos', {}).get('algorithms', []))}")
+    print(f"Bookmakers:              {len(reference.get('sports_bookmaker_registry', {}))}")
+    print(f"DeFi protocols:          {len(reference.get('defi_protocol_capabilities', {}).get('protocols', []))}")
+    print(f"Exchange calendars:      {len(reference.get('tradfi_exchange_calendars', {}))}")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 

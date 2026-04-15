@@ -30,6 +30,18 @@ services:
         description: Kalshi prediction market metadata
         required_for:
           - PREDICTION
+      - name: api_football_api
+        description: API-Football for fixtures, teams, injuries, standings
+        required_for:
+          - SPORTS
+      - name: footystats_api
+        description: FootyStats for advanced stats
+        required_for:
+          - SPORTS
+      - name: transfermarkt_api
+        description: Transfermarkt for transfers, player values
+        required_for:
+          - SPORTS
   # Upstream: required=true = must have; required=false = optional deployment flexibility (can_use).
   corporate-actions:
     description: Corporate actions for TradFi equities (dividends, splits, earnings)
@@ -93,6 +105,10 @@ services:
         description: Kalshi trade data
         required_for:
           - PREDICTION
+      - name: odds_api
+        description: Cross-bookmaker odds aggregation for sports
+        required_for:
+          - SPORTS
   market-data-processing-service:
     description: Process raw tick data into candles
     upstream:
@@ -244,9 +260,10 @@ services:
           path_template: raw_tick_data/by_date/day={date}/
     outputs:
       - name: onchain_features
-        bucket_template: features-onchain-{project_id}
+        bucket_template: features-onchain-{category_lower}-{project_id}
         path_template: by_date/day={date}/feature_group={feature_group}/features.parquet
         required_dimensions:
+          - category
           - feature_group
           - date
     external_dependencies: []
@@ -269,7 +286,7 @@ services:
         required: false
         description: Optional on-chain features (shared bucket, no category)
         check:
-          bucket_template: features-onchain-{project_id}
+          bucket_template: features-onchain-{category_lower}-{project_id}
           path_template: by_date/day={date}/
       - service: market-tick-data-service
         required: false
@@ -359,7 +376,7 @@ services:
         required: false
         description: Optional - deployment flexibility for on-chain features
         check:
-          bucket_template: features-onchain-{project_id}
+          bucket_template: features-onchain-{category_lower}-{project_id}
           path_template: by_date/day={date}/
     outputs:
       - name: predictions
@@ -368,6 +385,24 @@ services:
         required_dimensions:
           - mode
           - instrument
+          - date
+    external_dependencies: []
+  features-cross-instrument-service:
+    description: Cross-instrument features for prediction markets (correlation, relative value)
+    upstream:
+      - service: features-delta-one-service
+        required: true
+        description: Needs base features for cross-instrument analysis
+        check:
+          bucket_template: features-delta-one-{category_lower}-{project_id}
+          path_template: by_date/day={date}/
+    outputs:
+      - name: cross_instrument_features
+        bucket_template: features-cross-instrument-{category_lower}-{project_id}
+        path_template: by_date/day={date}/feature_group={feature_group}/features.parquet
+        required_dimensions:
+          - category
+          - feature_group
           - date
     external_dependencies: []
   strategy-service:
@@ -407,7 +442,7 @@ services:
         required: false
         description: Optional - deployment flexibility for on-chain features
         check:
-          bucket_template: features-onchain-{project_id}
+          bucket_template: features-onchain-{category_lower}-{project_id}
           path_template: by_date/day={date}/
       - service: market-tick-data-service
         required: false
@@ -425,7 +460,7 @@ services:
         required: false
         description: Optional - deployment flexibility for pre-trade risk checks (talks to strategy)
         check:
-          bucket_template: risk-store-{category_lower}-{project_id}
+          bucket_template: risk-store-{project_id}-{category_lower}
           path_template: risk/{venue}/{date}/
       - service: position-balance-monitor-service
         required: false
@@ -435,13 +470,13 @@ services:
           path_template: positions/{venue}/{date}/
     outputs:
       - name: strategy_instructions
-        bucket_template: strategy-store-{project_id}
+        bucket_template: strategy-store-{category_lower}-{project_id}
         path_template: strategy_instructions/strategy_id={strategy_id}/day={date}/instructions.parquet
         required_dimensions:
           - strategy_id
           - date
       - name: backtest_results
-        bucket_template: strategy-store-{project_id}
+        bucket_template: strategy-store-{category_lower}-{project_id}
         path_template: backtest_results/{strategy_id}/{run_id}/
     external_dependencies: []
   execution-service:
@@ -451,7 +486,7 @@ services:
         required: true
         description: Strategy instructions to execute
         check:
-          bucket_template: strategy-store-{project_id}
+          bucket_template: strategy-store-{category_lower}-{project_id}
           path_template: strategy_instructions/strategy_id={strategy_id}/day={date}/instructions.parquet
       - service: market-tick-data-service
         required: true
@@ -479,13 +514,13 @@ services:
           path_template: calendar/category=temporal/by_date/day={date}/
     inputs:
       - name: execution_config
-        bucket_template: execution-store-{project_id}
+        bucket_template: execution-store-{category_lower}-{project_id}
         path_template: configs/V{version}/{strategy_base}/{mode}/{timeframe}/{config_filename}.json
         required: true
         description: Execution config specifying strategy, instruments, and algorithms
     outputs:
       - name: execution_results
-        bucket_template: execution-store-{project_id}
+        bucket_template: execution-store-{category_lower}-{project_id}
         path_template: results/date={date}/strategy_id={strategy_id}/instruction_type={instruction_type}/run_id={run_id}/
         required_dimensions:
           - strategy_id
@@ -549,7 +584,7 @@ services:
         required: false
         description: Optional - deployment flexibility for P&L-based risk attribution
         check:
-          bucket_template: pnl-store-{category_lower}-{project_id}
+          bucket_template: pnl-store-{project_id}-{category_lower}
           path_template: pnl/{venue}/{date}/
     description:
       Calculate risk metrics and exposure limits from positions and market data. Does NOT execute orders - talks to
@@ -567,7 +602,7 @@ services:
         description: Market prices for mark-to-market risk calculations
     outputs:
       - name: risk_metrics
-        bucket_template: risk-store-{category_lower}-{project_id}
+        bucket_template: risk-store-{project_id}-{category_lower}
         path_template: risk/{venue}/{date}/risk_metrics_*.parquet
         required_dimensions:
           - category
@@ -598,7 +633,7 @@ services:
         description: Instrument metadata for P&L calculations
     outputs:
       - name: pnl_attribution
-        bucket_template: pnl-store-{category_lower}-{project_id}
+        bucket_template: pnl-store-{project_id}-{category_lower}
         path_template: pnl/{client_id}/{date}/pnl_attribution_*.parquet
         required_dimensions:
           - category
@@ -609,7 +644,23 @@ services:
     description: >-
       Pre-match ML features for sports (team form, H2H, referee, venue, weather, market odds). Post-commercialization
       service — not part of financial markets MVP.
-    upstream: []
+    upstream:
+      - service: instruments-service
+        required: true
+        description: Needs fixture calendar, team rosters, injuries, standings from GCS
+        check:
+          bucket_template: instruments-store-sports-{project_id}
+          path_template: sports_reference/by_date/day={date}/
+        categories:
+          - SPORTS
+      - service: market-tick-data-service
+        required: true
+        description: Needs odds data (Odds API) from GCS for odds-based features
+        check:
+          bucket_template: market-data-tick-sports-{project_id}
+          path_template: raw_tick_data/by_date/day={date}/
+        categories:
+          - SPORTS
     outputs:
       - name: sports_features
         bucket_template: features-sports-{project_id}
@@ -651,13 +702,19 @@ services:
           - date
     external_dependencies: []
 
-  reconciliation-service:
+  batch-live-reconciliation-service:
     description: >-
-      Trade reconciliation between execution fills and venue confirmations. Shared service — not per-category.
+      T+1 batch vs live reconciliation. Polls GCS for upstream data availability, compares batch and live outputs.
     upstream:
       - service: execution-service
         required: true
-        description: Needs fill data to reconcile
+        description: Needs execution results to reconcile
+      - service: strategy-service
+        required: true
+        description: Needs strategy outputs to compare batch vs live
+      - service: ml-inference-service
+        required: false
+        description: Optional — ML predictions for quality comparison
     outputs:
       - name: reconciliation_results
         bucket_template: reconciliation-store-{project_id}
@@ -665,10 +722,58 @@ services:
         required_dimensions:
           - date
     external_dependencies: []
+  features-multi-timeframe-service:
+    description: Multi-timeframe features (cross-timeframe momentum, divergence, regime detection)
+    upstream:
+      - service: market-data-processing-service
+        required: true
+        description: Needs processed candles at multiple timeframes
+        check:
+          bucket_template: market-data-tick-{category_lower}-{project_id}
+          path_template: processed_candles/by_date/day={date}/
+      - service: features-delta-one-service
+        required: false
+        description: Optional — base features for multi-timeframe aggregation
+        check:
+          bucket_template: features-delta-one-{category_lower}-{project_id}
+          path_template: by_date/day={date}/
+    outputs:
+      - name: multi_timeframe_features
+        bucket_template: features-multi-timeframe-{category_lower}-{project_id}
+        path_template: by_date/day={date}/feature_group={feature_group}/features.parquet
+        required_dimensions:
+          - category
+          - feature_group
+          - date
+    external_dependencies: []
+  features-commodity-service:
+    description: Commodity-specific features (term structure, roll yield, seasonality, weather impact)
+    upstream:
+      - service: market-data-processing-service
+        required: true
+        description: Needs processed candles for commodity instruments
+        check:
+          bucket_template: market-data-tick-{category_lower}-{project_id}
+          path_template: processed_candles/by_date/day={date}/
+      - service: features-calendar-service
+        required: false
+        description: Optional — calendar features for seasonality
+        check:
+          bucket_template: features-calendar-{project_id}
+          path_template: calendar/category=temporal/by_date/day={date}/
+    outputs:
+      - name: commodity_features
+        bucket_template: features-commodity-{category_lower}-{project_id}
+        path_template: by_date/day={date}/feature_group={feature_group}/features.parquet
+        required_dimensions:
+          - category
+          - feature_group
+          - date
+    external_dependencies: []
 
 execution_order:
   - instruments-service
-  - corporate-actions
+  # corporate-actions: repo not yet created
   - market-tick-data-service
   - market-data-processing-service
   - features-calendar-service
@@ -676,6 +781,9 @@ execution_order:
   - features-volatility-service
   - features-onchain-service
   - features-sports-service
+  - features-cross-instrument-service
+  - features-multi-timeframe-service
+  - features-commodity-service
   - ml-training-service
   - ml-inference-service
   - strategy-service
@@ -683,6 +791,7 @@ execution_order:
   - position-balance-monitor-service
   - pnl-attribution-service
   - risk-and-exposure-service
+  - batch-live-reconciliation-service
 category_domain_mapping:
   CEFI: cefi
   TRADFI: tradfi

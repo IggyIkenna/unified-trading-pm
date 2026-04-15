@@ -1728,5 +1728,17 @@
         "note": "Placeholder row for consolidated gateway; extend when route scan is wired"
       }
     ]
+  },
+  "market-data-api": {
+    "endpoints": [
+      {
+        "endpoint": "/health",
+        "method": "GET",
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "Placeholder; extend when route scan is wired"
+      }
+    ]
   }
 }

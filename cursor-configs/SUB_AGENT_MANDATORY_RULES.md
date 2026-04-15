@@ -17,23 +17,25 @@ first**. Do NOT build ad-hoc solutions, duplicate sources of truth, or create un
 
 1. **Events/logging?** → Use `unified-events-interface` (`setup_events`, `log_event`). Do NOT create custom loggers or
    event systems.
-2. **New schema/data model?** → Use `unified-internal-contracts` (internal) or `unified-api-contracts` (external APIs).
-   Do NOT define schemas inline in service code.
+2. **New schema/data model?** → Use `unified-api-contracts`: `unified_api_contracts.internal` for internal/cross-repo
+   schemas, or the external API surface for raw venue schemas. Do NOT define schemas inline in service code.
 3. **External API/SDK integration?** → Use `unified-api-contracts` for contract definitions. Do NOT scatter API clients
    across services.
 4. **Cloud infrastructure?** → Use `unified-cloud-interface` (`get_storage_client()`, `get_pubsub_client()`,
    `UnifiedCloudConfig`). Do NOT import cloud SDKs directly in services.
 5. **Market data / venue adapters?** → Use `unified-market-interface`. Do NOT build one-off venue connectors.
-6. **Trade execution?** → Use `unified-trade-execution-interface`. Do NOT build separate execution paths.
+6. **Trade execution?** → Use `execution-service` (contains all CeFi/DeFi/sports execution). Do NOT build separate
+   execution paths.
 7. **Configuration?** → Use `unified-config-interface` / `UnifiedCloudConfig`. Do NOT use `os.getenv()` or create config
    helpers.
 8. **Domain utilities?** → Check `unified-domain-client` and `unified-trading-library` first. Do NOT duplicate utilities
    that already exist there.
-9. **Reference data?** → Use `unified-reference-data-interface`. Do NOT hardcode instrument metadata.
+9. **Reference data?** → Use `instruments-service` (reference data merged in). Do NOT hardcode instrument metadata.
 10. **ML models/features?** → Use `unified-ml-interface` / `unified-feature-calculator-library`. Do NOT create ad-hoc
     feature pipelines.
-11. **Position/balance tracking?** → Use `unified-position-interface`. Do NOT build separate position stores.
-12. **DeFi execution?** → Use `unified-defi-execution-interface`. Do NOT build standalone DeFi adapters.
+11. **Position/balance tracking?** → Use `position-balance-monitor-service` (position interface merged in). Do NOT build
+    separate position stores.
+12. **DeFi execution?** → Use `execution-service` (DeFi execution merged in). Do NOT build standalone DeFi adapters.
 13. **UI needed?** → Check existing 13 UIs first. Can the feature go into an existing UI? Only create a new UI if no
     existing UI covers the domain.
 14. **New repo needed?** → Almost certainly NOT. The 67-repo system covers every domain. If you think you need a new
@@ -106,18 +108,19 @@ exceptions.
 ## 3. Code Quality & Refactoring
 
 - **Delete deprecated code** — no parallel code paths, no `# deprecated` comments, no `_old.py` copies
-- **Search unified libraries first** — unified-market-interface, unified-trade-execution-interface,
+- **Search unified libraries first** — unified-market-interface, execution-service, instruments-service,
   unified-config-interface, unified-cloud-interface, unified-events-interface, unified-domain-client,
   unified-api-contracts — USE if exists, FIX library if wrong, ADD to library if missing
 - **No backward compat shims** — fail fast, no try/except import fallbacks
 - **Strict quality gates** — no E722 global ignore, no empty fallbacks, no hardcoded project IDs, use specific
   exceptions
-- **URDI for reference data, UMI for market data** — services use URDI for instrument definitions, options chains,
-  expiry calendars. UMI is for trades, orderbooks, tickers only. Never import UMI adapters in a service that fetches
-  instrument definitions.
+- **instruments-service for reference data, UMI for market data** — services use instruments-service for instrument
+  definitions, options chains, expiry calendars. UMI is for trades, orderbooks, tickers only. Never import UMI adapters
+  in a service that fetches instrument definitions.
 - **Shard-level failure isolation** — a failed shard (venue x date) MUST NOT kill other shards. Catch all exceptions
   per-shard, log `VENUE_PROCESSING_FAILED` event with details, return empty result. No `raise` inside
-  per-venue/per-shard processing loops. SSOT: `unified-trading-codex/04-architecture/shard-level-failure-isolation.md`
+  per-venue/per-shard processing loops. SSOT:
+  `unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md`
 - **UAC error classification** — every adapter that makes external API calls MUST classify errors through UAC
   `classify_venue_error()` and emit `log_event("ADAPTER_FETCH_FAILED", details={...})` with error_code, action,
   retry_safe. The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key.
@@ -152,7 +155,7 @@ exceptions.
 - **NEVER put normalizers in interface adapters or services** — normalization lives in UAC, co-located with the external
   source it normalizes
 
-**Reference:** `unified-trading-codex/02-data/contracts-scope-and-layout.md`
+**Reference:** `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md`
 
 ---
 
@@ -391,7 +394,7 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
   | Stop + clean cache     | `bash unified-trading-pm/scripts/dev/dev-stop.sh --clean`            | Wipes `.local-dev-cache/`             |
   | Check running services | `bash unified-trading-pm/scripts/dev/dev-status.sh`                  | Shows all 5 mode axes                 |
 
-- **Full docs:** `unified-trading-codex/08-workflows/local-dev.md`
+- **Full docs:** `unified-trading-pm/codex/08-workflows/local-dev.md`
 
 ---
 
@@ -402,13 +405,13 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
 NEVER declare a repo has reached a readiness stage (CR1, CR2, DR3, BR3, etc.) unless ALL criteria for that stage are
 fully met. The criteria are defined in:
 
-- Template: `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
+- Template: `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
 - Per-repo: `cat {repo}/.readiness-ref` → gives path to `codex/10-audit/repos/{repo-name}.yaml`
 
 To check current declared state for a repo:
 
 ```bash
-cat $(cat {repo}/.readiness-ref 2>/dev/null || echo "unified-trading-codex/10-audit/repos/{repo}.yaml")
+cat $(cat {repo}/.readiness-ref 2>/dev/null || echo "unified-trading-pm/codex/10-audit/repos/{repo}.yaml")
 ```
 
 ### MANDATORY RULE: Three Axes — All Required
@@ -475,7 +478,7 @@ must always be in the loop for MAJOR version promotions.
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 
-**CODEX:** unified-trading-codex/06-coding-standards/README.md
+**CODEX:** unified-trading-pm/codex/06-coding-standards/README.md
 
 ---
 

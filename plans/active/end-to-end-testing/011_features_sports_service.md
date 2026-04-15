@@ -13,7 +13,8 @@ features.
 
 ## Upstream Dependencies
 
-- **instruments-service** — `sports_reference_data` (fixture definitions, league/team metadata via USRI)
+- **instruments-service** — `sports_reference_data` (fixture definitions, league/team metadata via instruments-service
+  reference_data)
 - **market-data-processing-service** — `sports_odds` (odds data from sportsbooks)
 
 ## Downstream Consumers
@@ -23,8 +24,8 @@ features.
 
 ## Uniqueness
 
-Sports-domain-specific. Uses USRI (unified-sports-reference-interface) for reference data. Event-driven: matches have
-discrete start/end times, not continuous like financial markets. Features change at match events (goals, cards,
+Sports-domain-specific. Uses instruments-service reference_data sub-package for reference data. Event-driven: matches
+have discrete start/end times, not continuous like financial markets. Features change at match events (goals, cards,
 substitutions, half-time), not on a continuous tick basis. Batch mode fetches from multiple providers (api_football,
 footystats, understat, odds_api). Live mode consumes a PubSub subscription (`sports-odds-ready`) and publishes features
 to a topic per feature group. Supports `--skip-fetch` to recompute features from already-fetched data.
@@ -168,7 +169,7 @@ Live mode subscribes to a PubSub subscription and publishes computed features.
 | K.4 | `--mode` is required (no default)    | Unlike features-commodity-service which defaults to `live`, this service requires explicit `--mode`. Inconsistency across feature services. |        |
 | K.5 | Future date validation only in batch | `validate_args()` rejects future dates for batch. Live mode has no date validation (correct -- live is real-time).                          |        |
 | K.6 | `load_dotenv` location               | Need to verify `load_dotenv(override=False)` is used (not visible in parser.py, check main.py).                                             |        |
-| K.7 | USRI dependency                      | Service depends on unified-sports-reference-interface for reference data. Verify it is installed in service `.venv`.                        |        |
+| K.7 | reference_data dependency            | Service depends on instruments-service reference_data sub-package for reference data. Verify it is installed in service `.venv`.            |        |
 | K.8 | PubSub subscription default          | `sports-odds-ready` subscription must exist in the project. Verify with `gcloud pubsub subscriptions list`.                                 |        |
 | K.9 | `--bucket` empty string default      | Default is empty string, resolved to `features-sports-{project_id}` at runtime. Verify resolution logic.                                    |        |
 

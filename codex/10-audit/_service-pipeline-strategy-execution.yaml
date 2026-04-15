@@ -1,0 +1,100 @@
+# ==============================================================================
+# Service Template: Pipeline - Strategy & Execution Group
+# ==============================================================================
+#
+# Applies to: strategy-service, execution-service
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: STRAT-01 through STRAT-04
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Pipeline services - Strategy & Execution group (Layer 6)"
+services: ["strategy-service", "execution-service"]
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Strategy & Execution Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: STRAT-01
+    area: "01-domain"
+    priority: P0-critical
+    title: "Signal generation (strategy-service)"
+    description: |
+      strategy-service generates trading signals based on features and ML predictions.
+      Signals are time-series events with direction, confidence, instrument.
+
+      ✅ Pass: Signal generation logic, signal schema, backtestable
+      ❌ Fail: No signal generation OR hardcoded signals
+    evidence: "Check signal generation, signal schema"
+    codex_ref: "01-domain/README.md#signal-based-strategies"
+    applies_to: ["strategy-service"]
+
+  - id: STRAT-02
+    area: "04-architecture"
+    priority: P0-critical
+    title: "Order execution (execution-service)"
+    description: |
+      execution-service sends orders to exchanges via exchange interfaces.
+      Supports multiple order types (market, limit, stop, etc.).
+
+      ✅ Pass: Order execution logic, exchange integration
+      ❌ Fail: No order execution OR single order type
+    evidence: "Check order execution, exchange interface usage"
+    codex_ref: "01-domain/README.md#execution-layer"
+    applies_to: ["execution-service"]
+
+  - id: STRAT-03
+    area: "04-architecture"
+    priority: P0-critical
+    title: "Risk checks (pre-trade)"
+    description: |
+      Services enforce pre-trade risk checks: position limits, exposure limits, capital limits.
+
+      ✅ Pass: Risk checks before order submission
+      ❌ Fail: No risk checks OR checks only post-trade
+    evidence: "Check for risk validation before orders"
+    codex_ref: "01-domain/risk-framework.md"
+
+  - id: STRAT-04
+    area: "03-observability"
+    priority: P1-high
+    title: "Trade logging (full order lifecycle)"
+    description: |
+      Services log full order lifecycle: signal → order → fill → position.
+
+      ✅ Pass: Order lifecycle logged, traceable from signal to fill
+      ❌ Fail: Incomplete logging OR no traceability
+    evidence: "Check log_event for order events"
+    codex_ref: "03-observability/lifecycle-events.md"
+
+  - id: STRAT-05
+    area: "01-domain"
+    priority: P1-high
+    title: "Sports strategy & execution support (if applicable)"
+    description: |
+      For strategy-service: Support SPORTS asset class.
+      - Arbitrage strategy (multi-bookmaker arbitrage detection)
+      - Value betting strategy (edge > threshold, Kelly sizing)
+      - Sports backtesting engine (stake sizing, P&L calc, commission)
+      - Bookmaker comparison (compare odds across 15+ bookmakers)
+
+      For execution-service:
+      - Betting API clients (Betfair, Pinnacle, Polymarket)
+      - Bet placement logic (different from crypto orderbook)
+      - Bet status tracking (pending, matched, settled)
+      - Commission handling (2-10% vig per bookmaker)
+
+      ✅ Pass: Sports strategies, betting APIs, bet tracking
+      ❌ Fail: No sports support, or ad-hoc sports logic
+      ⚠️ N/A: Service doesn't handle sports strategies/execution
+    evidence: "Check strategies/sports/, clients/betting/, backtest/sports_engine.py"
+    codex_ref: "01-domain/asset-classes.md#sports"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 5 (group) = 23 items
+# ==============================================================================

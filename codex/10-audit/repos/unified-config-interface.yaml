@@ -1,0 +1,178 @@
+# Repo Readiness Checklist v3.0 - unified-config-interface
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-11
+
+schema_version: "3.0"
+repo: "unified-config-interface"
+repo_type: "library-t1"
+arch_tier: "1"
+deployment_modes: null
+business_modes: null
+version: "0.1.17"
+status: "active"
+last_updated: "2026-03-11"
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR4"
+  readiness_note: "CR4 reached (608/608 tests). CR3: UCI->UEI dep integration pending."
+
+  cr1_functionality:
+    status: "not_assessed"
+    criteria:
+      "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code; audit §2 passes"
+    evidence: ""
+    notes: ""
+
+  cr2_unit_tests:
+    status: "not_assessed"
+    criteria: "QG unit stage green; coverage >= 80%; --cov-report=xml written"
+    coverage_pct: null
+    coverage_floor_pct: 80
+    evidence: ""
+    notes: ""
+
+  cr3_integration_tests:
+    status: "not_assessed"
+    criteria: "2 manifest deps require tests in tests/integration/."
+    manifest_dep_count: 2
+    manifest_deps_covered:
+      # - unified-events-interface
+      # - unified-cloud-interface
+    manifest_deps_missing:
+      - unified-events-interface
+      - unified-cloud-interface
+    evidence: ""
+    notes: ""
+
+  cr4_quality_gate:
+    status: "not_assessed"
+    criteria:
+      "bash scripts/quality-gates.sh Pass 1 fully green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts"
+    last_run_date: null
+    basedpyright_errors: null
+    ruff_errors: null
+    evidence: ""
+    notes: ""
+
+  cr5_quickmerge:
+    status: "not_assessed"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-config-interface or main via cascade"
+    branch: null
+    ci_url: null
+    merged_to_main: false
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "DR0"
+  na_reason: "library; wheel published to AR, not deployed as Cloud Run service"
+
+  batch: null # library - not deployed as Cloud Run service
+  live: null # library - not deployed as Cloud Run service
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR0"
+
+  batch:
+    br1_acceptance_criteria:
+      status: "not_assessed"
+      criteria: "Plan owning this repo has measurable acceptance criteria"
+      plan_ref: null
+      evidence: ""
+      notes: ""
+    br2_circuit_breaker:
+      status: "na"
+      na_reason: "library - no circuit breaker"
+      criteria: "CLOSED->OPEN->HALF_OPEN verified via FaultInjectionTransport; PubSub propagation tested"
+      evidence: ""
+      notes: ""
+    br3_event_handling:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "All UEI events fire correctly; schema matches UAC canonical; correlation_id propagated"
+      evidence: ""
+      notes: ""
+    br4_pnl_targets:
+      status: "not_assessed"
+      na_reason: null
+      criteria: "Domain KPIs declared AND measured (not estimated)"
+      kpis_declared: []
+      evidence: ""
+      notes: ""
+    br5_pnl_optimization:
+      status: "na"
+      na_reason: "not revenue-path"
+      criteria: "Backtest confirms positive PnL contribution; artifacts in gs://unified-backtests/{repo}/"
+      backtest_artifact_uri: null
+      evidence: ""
+      notes: ""
+    br6_batch_vs_live:
+      status: "na"
+      na_reason: "library - no runtime execution"
+      criteria: "t+1 check: batch output matches live expectations within tolerance"
+      tolerance_pct: null
+      evidence: ""
+      notes: ""
+    br7_staging_parity:
+      status: "na"
+      na_reason: "library - no staging deployment"
+      criteria: "N-minute replay within tolerance"
+      replay_duration_min: null
+      evidence: ""
+      notes: ""
+    br8_user_approved:
+      status: "not_assessed"
+      criteria: "Human sign-off that commercial objective is met. NO AGENT MAY SET THIS."
+      approved_date: null
+      approved_by: null
+      notes: ""
+  live: null # library - single entry in batch
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-04: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-05: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-10: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-14: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-16: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-20: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-05: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-06: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-04: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-08: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-01: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-02: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-03: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-04: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-05: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-06: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-22: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  BASE-30: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-31: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-32: { status: "not_assessed", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }

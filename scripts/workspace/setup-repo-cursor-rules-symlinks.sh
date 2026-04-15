@@ -18,7 +18,6 @@ TARGET_REL="../../unified-trading-pm/.cursor/rules"
 REPOS=(
   batch-audit-ui
   unified-api-contracts
-  unified-internal-contracts
   features-sports-service
   unified-trading-ui-auth
   deployment-api

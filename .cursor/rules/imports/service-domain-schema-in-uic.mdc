@@ -1,10 +1,10 @@
 ---
-description: "Service domain data schemas (BaseModel/TypedDict/dataclass contracts) belong in unified-internal-contracts domain/<service>/, not in service repos"
+description: "Service domain data schemas (BaseModel/TypedDict/dataclass contracts) belong in unified-api-contracts internal/domain/<service>/, not in service repos"
 alwaysApply: false
 globs:
   - "**/*.py"
 priority: 80
-tags: [schema, contracts, uic, domain]
+tags: [schema, contracts, uac, domain]
 ---
 
 # Service Domain Schema Placement
@@ -12,19 +12,19 @@ tags: [schema, contracts, uic, domain]
 ## RULE
 
 Every domain data schema (Pydantic BaseModel, TypedDict, @dataclass used as a data contract) that describes a
-service's primary output belongs in `unified-internal-contracts/unified_internal_contracts/domain/<service-name>/`.
+service's primary output belongs in `unified-api-contracts/unified_api_contracts/internal/domain/<service-name>/`.
 
-Services NEVER define domain schemas locally. Services import from UIC via unified-trading-library or
-unified-domain-client.
+Services NEVER define domain schemas locally. Services import from `unified_api_contracts.internal` via
+unified-trading-library or unified-domain-client.
 
 WHY: If schemas are defined in service repos, other services cannot discover them without importing the service
-(tier DAG violation). Centralizing in UIC makes all data shapes discoverable from one place with no
+(tier DAG violation). Centralizing in UAC `internal/` makes all data shapes discoverable from one place with no
 cross-service imports.
 
 CODEX: 02-data/contracts-scope-and-layout.md, 02-data/schema-governance.md
 AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
 
-## WHAT GOES IN UIC domain/<service-name>/
+## WHAT GOES IN UAC internal/domain/<service-name>/
 
 - The Pydantic/TypedDict/dataclass that represents the data rows a service writes or publishes
 - Feature records, position records, execution records, instrument definitions, etc.
@@ -36,24 +36,24 @@ AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
 - HTTP request/response models used only in that service's API layer (FastAPI DTOs)
 - Internal helper classes not shared across repos
 
-## WHAT GOES IN UIC ELSEWHERE (not domain/)
+## WHAT GOES IN UAC internal/ ELSEWHERE (not internal/domain/)
 
-- Event envelopes → UIC `events.py` / `pubsub.py`
-- Shared identifiers cross-imported by 2+ repos → UIC `reference/`
-- Canonical market data types → UIC `market_data/`
-- Error records → UIC `schemas/errors.py`
+- Event envelopes → UAC `internal/events.py` / `internal/pubsub.py`
+- Shared identifiers cross-imported by 2+ repos → UAC `internal/reference/`
+- Canonical market data types → UAC `internal/market_data/`
+- Error records → UAC `internal/schemas/errors.py`
 
 ## DO:
 
-  # 1. Define in UIC
-  # unified-internal-contracts/unified_internal_contracts/domain/my-service/output.py
+  # 1. Define in UAC internal/
+  # unified-api-contracts/unified_api_contracts/internal/domain/my-service/output.py
   class MyServiceRecord(BaseModel):
       timestamp: datetime
       instrument_key: str
       value: Decimal
 
   # 2. Import in service
-  from unified_internal_contracts.domain.my_service.output import MyServiceRecord
+  from unified_api_contracts.internal.domain.my_service.output import MyServiceRecord
 
   # 3. SchemaDefinition stays in service (infrastructure only)
   # schemas/output_schemas.py
@@ -73,16 +73,16 @@ AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
   from my_service.models import MyFeatureRecord
 
   # BAD: putting a cross-repo TypedDict in a service
-  class InstrumentRow(TypedDict):  # ← belongs in UIC reference/
+  class InstrumentRow(TypedDict):  # ← belongs in UAC internal/reference/
       instrument_key: str
       venue: str
 
 ## KNOWN VIOLATIONS (from 2026-03-05 audit)
 
 See plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b:
-- execution-service/sports/models.py → domain/execution-service/sports.py
-- strategy-service/models/domain_data.py + order.py → domain/strategy-service/
-- market-data-processing-service/models.py + base_adapter.py → domain/market-data-processing/
-- features-onchain-service/models.py → UIC features.py (OnchainFeatureRecord)
-- features-sports-service/schemas/output_schemas.py (column lists) → UIC sports.py (TypedDicts)
-- unified-domain-client/schemas/instrument_key.py → UIC reference/ (InstrumentKey)
+- execution-service/sports/models.py → internal/domain/execution-service/sports.py
+- strategy-service/models/domain_data.py + order.py → internal/domain/strategy-service/
+- market-data-processing-service/models.py + base_adapter.py → internal/domain/market-data-processing/
+- features-onchain-service/models.py → UAC internal features.py (OnchainFeatureRecord)
+- features-sports-service/schemas/output_schemas.py (column lists) → UAC internal sports.py (TypedDicts)
+- unified-domain-client/schemas/instrument_key.py → UAC internal/reference/ (InstrumentKey)

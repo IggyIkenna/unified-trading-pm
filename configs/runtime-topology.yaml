@@ -1,7 +1,7 @@
 # Runtime Topology SSOT
 # Defines runtime interaction behavior (messaging, API edges, storage flows).
 # This file is machine-readable and consumed by deployment + quality gates.
-# SVG visualization: unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
+# SVG visualization: unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
 #
 # Transport is parameterized by CLOUD_PROVIDER (gcp | aws | local).
 # At deployment time, the deployment system reads CLOUD_PROVIDER to select
@@ -12,8 +12,8 @@ ssot:
   purpose: Runtime interaction topology and deployment transport policy
   owner: unified-trading-pm
   paired_code_ssot: unified-trading-pm/workspace-manifest.json
-  svg_diagram: unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
-  decisions_doc: unified-trading-codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md
+  svg_diagram: unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
+  decisions_doc: unified-trading-pm/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md
 
 # ---------------------------------------------------------------------------
 # KEY DISTINCTION: Transport vs Persistence
@@ -931,13 +931,13 @@ ibkr_gateway_connectivity:
         adapter: unified_reference_data_interface.adapters.ibkr
         data: contract details, options chains, corporate actions (reqContractDetails)
       execution-service:
-        adapter: unified_trade_execution_interface.adapters.ibkr_tradfi
+        adapter: execution_service.adapters.ibkr_tradfi
         data: order routing, fill callbacks (placeOrder, reqOpenOrders)
       position-balance-monitor-service:
-        adapter: unified_position_interface.adapters.ibkr
+        adapter: position_balance_monitor_service.adapters.ibkr
         data: position and account updates (reqAccountUpdates, reqPositions)
   batch_mode:
-    source: matching-engine-library (MEL)
+    source: execution-service matching_engine/ (MEL)
     protocol: synthetic EWrapper callbacks (same interface as live)
     # note: see comment below
     # In batch mode, MEL replays historical events through the same adapter EWrapper callback
@@ -967,14 +967,14 @@ ibkr-gateway-infra:
   connects_to:
     [
       unified-market-interface,
-      unified-trade-execution-interface,
-      unified-position-interface,
+      execution-service,
+      position-balance-monitor-service,
       unified-reference-data-interface,
     ]
   status: planned
   notes: >
     IB Client Portal Gateway Docker container; inject-IB pattern. Single long-lived IB Gateway Java process for all IBKR
-    connectivity. All four adapters (UMI ibkr_adapter, UTEI ibkr_tradfi, UPI ibkr, URDI ibkr) accept an injected
+    connectivity. All four adapters (UMI ibkr_adapter, execution-service ibkr_tradfi, position-balance-monitor-service ibkr, URDI ibkr) accept an injected
     ib_insync.IB object — caller owns lifecycle. Credentials: ibkr-account-credentials in Secret Manager. Config keys:
     ibkr_gateway_host, ibkr_gateway_port, ibkr_client_id_base (all in UnifiedCloudConfig). Port 4001 = IB Gateway paper
     trading default; port 7497 = TWS paper trading. See ibkr_gateway_connectivity section above.
@@ -1309,14 +1309,14 @@ kill_switches:
       - network_connectivity_loss: restart execution stack, auto-reset when reconnected
     target_services: [execution-service, strategy-service]
     escalation: PubSub command -> Slack -> PagerDuty (if not ack in N min)
-    reset_policy: error-type-dependent per unified-internal-contracts schema
+    reset_policy: error-type-dependent per unified-api-contracts.internal schema
 
 # ===========================================================================
-# ERROR RETRY POLICY (reference — SSOT in unified-internal-contracts)
+# ERROR RETRY POLICY (reference — SSOT in unified-api-contracts.internal)
 # ===========================================================================
 
 error_retry_policy:
-  ssot: unified-internal-contracts/schemas/errors.py
+  ssot: unified-api-contracts/unified_api_contracts/internal/schemas/errors.py
   summary:
     RATE_LIMIT:
       { strategy: RETRY_WITH_BACKOFF, max_retries: 5, backoff: "exp 1s-60s + jitter", after_exhaustion: "ALERT + SKIP" }
@@ -1515,7 +1515,7 @@ data_retention_policy:
     strategy_audit: { cold_years: 3, note: "strategy decision audit trail" }
     market_data: { cold_years: 3, note: "market data for best execution proof" }
     default: { hot_days: 90, warm_days: 365, cold_years: 3 }
-  ssot: unified-internal-contracts/schemas/audit.py
+  ssot: unified-api-contracts/unified_api_contracts/internal/schemas/audit.py
 
 # ===========================================================================
 # HEALTH PROBES

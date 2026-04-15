@@ -19,9 +19,9 @@ from pathlib import Path
 
 # External packages that should only use top-level imports
 EXTERNAL_PACKAGES = {
-    "unified_config_interface",
+    "unified_trading_library.config_interface",
     "unified_config_service",
-    "unified_events_interface",
+    "unified_trading_library.events_interface",
     "unified_domain_client",
     "unified_trading_library",
     "unified_trading_services",
@@ -34,16 +34,28 @@ EXTERNAL_PACKAGES = {
 }
 
 # Patterns for detecting deep imports
-DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import")
+_sorted_pkgs = sorted(EXTERNAL_PACKAGES, key=len, reverse=True)
+DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(_sorted_pkgs) + r")\.(\w+(?:\.\w+)*)\s+import")
 
 # Pattern for from imports
-FROM_IMPORT_PATTERN = re.compile(r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$")
+FROM_IMPORT_PATTERN = re.compile(
+    r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)"
+    r"\s+import\s+(.+)$"
+)
 
 
 class ImportViolation:
     """Represents an import pattern violation."""
 
-    def __init__(self, file_path: str, line_no: int, original: str, package: str, module_path: str, imports: str):
+    def __init__(
+        self,
+        file_path: str,
+        line_no: int,
+        original: str,
+        package: str,
+        module_path: str,
+        imports: str,
+    ):
         self.file_path = file_path
         self.line_no = line_no
         self.original = original
@@ -109,7 +121,8 @@ class ImportChecker:
         """Recursively check all Python files in a directory."""
         for file_path in directory.rglob("*.py"):
             # Skip certain directories
-            if any(part in file_path.parts for part in [".venv", "venv", "__pycache__", ".git", "node_modules"]):
+            skip_dirs = {".venv", "venv", "__pycache__", ".git", "node_modules"}
+            if any(part in file_path.parts for part in skip_dirs):
                 continue
 
             self.files_checked += 1
@@ -194,10 +207,17 @@ class ImportChecker:
 
 def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Check and fix import patterns for external dependencies")
-    parser.add_argument("paths", nargs="*", default=["."], help="Paths to check (default: current directory)")
-    parser.add_argument("--fix", action="store_true", help="Automatically fix violations")
-    parser.add_argument("--verbose", action="store_true", help="Show detailed output")
+    parser = argparse.ArgumentParser(
+        description="Check and fix import patterns for external dependencies",
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        default=["."],
+        help="Paths to check (default: current directory)",
+    )
+    parser.add_argument("--fix", action="store_true", help="Fix violations")
+    parser.add_argument("--verbose", action="store_true", help="Detailed output")
     parser.add_argument("--quiet", action="store_true", help="Only show errors")
 
     args = parser.parse_args()
@@ -208,8 +228,12 @@ def main() -> None:
     paths: list[str] = list(getattr(args, "paths", ["."]))
 
     checker = ImportChecker(verbose=verbose)
+    _collect_violations(checker, paths)
+    _report_and_exit(checker, fix=fix, quiet=quiet, verbose=verbose)
 
-    # Check all specified paths
+
+def _collect_violations(checker: ImportChecker, paths: list[str]) -> None:
+    """Scan *paths* and accumulate violations on *checker*."""
     for path in paths:
         path_obj = Path(path).resolve()
         if path_obj.is_file():
@@ -224,31 +248,44 @@ def main() -> None:
         else:
             print(f"Warning: {path} is not a valid file or directory")
 
-    # Handle output based on mode
+
+def _report_and_exit(
+    checker: ImportChecker,
+    *,
+    fix: bool,
+    quiet: bool,
+    verbose: bool,
+) -> None:
+    """Print results or apply fixes, then exit."""
     if fix:
-        if checker.violations:
-            fixed_count = checker.fix_violations()
-            print(f"\n✅ Fixed {fixed_count} import violations")
-            sys.exit(0)
-        else:
-            if not quiet:
-                print("✅ No import pattern violations found")
-            sys.exit(0)
-    else:
-        if verbose:
-            checker.print_violations()
+        _apply_fixes_and_exit(checker, quiet=quiet)
 
-        if not quiet:
-            checker.print_summary()
+    if verbose:
+        checker.print_violations()
+    if not quiet:
+        checker.print_summary()
 
-        if checker.violations:
-            print("\n❌ Import pattern violations detected!")
-            print("To fix automatically, run: python check-import-patterns.py --fix")
-            sys.exit(1)
-        else:
-            if not quiet:
-                print("\n✅ No import pattern violations found")
-            sys.exit(0)
+    if checker.violations:
+        print("\nImport pattern violations detected!")
+        print("Run: python check-import-patterns.py --fix")
+        sys.exit(1)
+    if not quiet:
+        print("\nNo import pattern violations found")
+    sys.exit(0)
+
+
+def _apply_fixes_and_exit(
+    checker: ImportChecker,
+    *,
+    quiet: bool,
+) -> None:
+    """Apply fixes and exit."""
+    if checker.violations:
+        fixed_count = checker.fix_violations()
+        print(f"\nFixed {fixed_count} import violations")
+    elif not quiet:
+        print("No import pattern violations found")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

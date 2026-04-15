@@ -24,7 +24,7 @@ TYPED API RESPONSES (MANDATORY):
   3. Use model_validate() at the API boundary to parse raw dicts into typed models
   4. Access fields via typed attributes, never .get() chains on raw dicts
   5. For APIs with non-Pythonic keys, use Field(alias="PascalCase") with model_config = {"populate_by_name": True}
-  EXEMPLAR: unified-sports-execution-interface/adapters/exchanges/_matchbook_models.py
+  EXEMPLAR: execution-service/sports_execution/adapters/_matchbook_models.py (formerly unified-sports-execution-interface)
   CODEX: 06-coding-standards/README.md#type-hints
 
 NEVER:

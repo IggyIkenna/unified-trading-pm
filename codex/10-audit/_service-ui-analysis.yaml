@@ -1,0 +1,88 @@
+# ==============================================================================
+# Service Template: UI - Analysis
+# ==============================================================================
+#
+# Applies to: backtest-ui, trading-analytics-ui, settlement-ui,
+#             (future: client-reporting-ui)
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: UI-01 through UI-09 (web UI specifics)
+# Category additions: ANALY-01 through ANALY-03 (analysis specifics)
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "UI services - Analysis category (all web-based)"
+services:
+  - "backtest-ui"
+  - "trading-analytics-ui"
+  - "settlement-ui"
+  # Future: "client-reporting-ui"
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Web UI Group-Specific Items (UI-01 through UI-09)
+# Inherited from _service-ui-observability.yaml (same items)
+# ==============================================================================
+
+ui_group_items:
+  # (Same as observability UI: UI-01 through UI-09)
+  # See _service-ui-observability.yaml for details
+
+# ==============================================================================
+# Analysis Category-Specific Items (ANALY-01 through ANALY-03)
+# ==============================================================================
+
+category_items:
+  - id: ANALY-01
+    area: "01-domain"
+    priority: P1-high
+    title: "Backtesting workflow (for backtest-ui)"
+    description: |
+      backtest-ui allows users to configure, run, and analyze backtests.
+
+      Workflow:
+        1. Select strategy, instruments, date range
+        2. Configure parameters
+        3. Run backtest
+        4. View results (P&L, trades, metrics)
+
+      ✅ Pass: Full backtesting workflow, result visualization
+      ❌ Fail: Incomplete workflow OR no result display
+    evidence: "Check backtest configuration, result display"
+    codex_ref: "01-domain/backtesting.md"
+    applies_to: ["backtest-ui"]
+
+  - id: ANALY-02
+    area: "03-observability"
+    priority: P1-high
+    title: "Analytics & reporting (charts, metrics, exports)"
+    description: |
+      Analysis UIs provide rich analytics: charts, tables, metrics, PDF/CSV exports.
+
+      Examples:
+        - trading-analytics-ui: P&L charts, Sharpe ratio, win rate, trade history
+        - settlement-ui: Settlement reports, cash flows, fee breakdown
+        - client-reporting-ui: Client performance reports, portfolio analytics
+
+      ✅ Pass: Analytics components, export functionality
+      ❌ Fail: No analytics OR no export
+    evidence: "Check analytics components, export buttons"
+    codex_ref: "03-observability/reporting.md"
+
+  - id: ANALY-03
+    area: "02-data"
+    priority: P2-medium
+    title: "Data filtering & time range selection"
+    description: |
+      Analysis UIs allow users to filter data by time range, instrument, strategy, etc.
+
+      ✅ Pass: Filtering UI, time range picker, dynamic queries
+      ❌ Fail: No filtering OR hardcoded queries
+    evidence: "Check filter components, query logic"
+    codex_ref: "06-coding-standards/ui-standards.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 9 (UI) + 3 (category) = 30 items
+# ==============================================================================

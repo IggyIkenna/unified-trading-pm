@@ -1,0 +1,86 @@
+# ==============================================================================
+# Service Template: UI - Control
+# ==============================================================================
+#
+# Applies to: ml-deployment-ui, live-health-monitor-ui (trading control tab)
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: UI-01 through UI-09 (web UI specifics)
+# Category additions: CTRL-01 through CTRL-03 (control specifics)
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "UI services - Control category (all web-based)"
+services:
+  - "ml-deployment-ui"
+  - "live-health-monitor-ui" # Trading control tab
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Web UI Group-Specific Items (UI-01 through UI-09)
+# Inherited from _service-ui-observability.yaml (same items)
+# ==============================================================================
+
+ui_group_items:
+  # (Same as observability UI: UI-01 through UI-09)
+  # See _service-ui-observability.yaml for details
+
+# ==============================================================================
+# Control Category-Specific Items (CTRL-01 through CTRL-03)
+# ==============================================================================
+
+category_items:
+  - id: CTRL-01
+    area: "07-security"
+    priority: P0-critical
+    title: "Elevated authentication for control actions (Okta SSO + 2FA)"
+    description: |
+      Control UIs enforce elevated authentication for destructive actions.
+      Requires Okta SSO + 2FA + RBAC (role-based access control).
+
+      Examples of control actions:
+        - Deploy/rollback ML models
+        - Close positions
+        - Pause/resume strategies
+        - Override risk limits
+
+      ✅ Pass: Elevated auth for control actions, RBAC enforced
+      ❌ Fail: No elevated auth OR RBAC not enforced
+    evidence: "Check auth flow for control actions, RBAC config"
+    codex_ref: "07-security/okta-sso.md"
+
+  - id: CTRL-02
+    area: "03-observability"
+    priority: P1-high
+    title: "Audit trail for control actions"
+    description: |
+      All control actions are logged with: user, timestamp, action, parameters, result.
+      Audit trail is immutable and queryable.
+
+      ✅ Pass: Audit logging for all control actions
+      ❌ Fail: No audit trail OR incomplete logging
+    evidence: "Check log_event calls for control actions, audit queries"
+    codex_ref: "03-observability/lifecycle-events.md"
+
+  - id: CTRL-03
+    area: "04-architecture"
+    priority: P1-high
+    title: "Confirmation dialogs for destructive actions"
+    description: |
+      Control UI requires user confirmation for destructive actions.
+      Confirmation dialog shows action details, impact, and requires explicit confirmation.
+
+      Examples:
+        - "Are you sure you want to close position X?"
+        - "Confirm model deployment: version Y to production"
+
+      ✅ Pass: Confirmation dialogs for destructive actions
+      ❌ Fail: No confirmation OR unclear dialogs
+    evidence: "Check UI components for confirmation dialogs"
+    codex_ref: "06-coding-standards/ui-standards.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 9 (UI) + 3 (category) = 30 items
+# ==============================================================================

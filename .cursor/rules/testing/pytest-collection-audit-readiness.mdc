@@ -35,22 +35,23 @@ cd <workspace_root>
 source .venv-workspace/bin/activate
 
 # Core contracts (required for most services)
-uv pip install -e unified-internal-contracts -e unified-api-contracts
+uv pip install -e unified-api-contracts
 
-# Execution interfaces (as needed by repo)
-uv pip install -e unified-defi-execution-interface
+# Execution adapters now live in execution-service (not a standalone package)
+# Install execution-service if repo depends on execution adapters
+pip install -e execution-service --no-deps
 # Add other path deps per pyproject.toml / workspace-manifest.json (SSOT)
 ```
 
-If a repo's tests import `unified_internal_contracts`, `unified_api_contracts`, or execution interfaces, those must be installed in the venv used for pytest.
+If a repo's tests import `unified_api_contracts` (including `unified_api_contracts.internal`) or execution interfaces, those must be installed in the venv used for pytest.
 
 ## Import paths (audit alignment)
 
 | Old / wrong | Correct |
 |-------------|---------|
 | `from unified_api_contracts.sports import ...` | `from unified_api_contracts.unified_api_contracts_external.sports import ...` |
-| `InstrumentDefinition` from `unified_api_contracts` | `from unified_internal_contracts import InstrumentDefinition` |
-| Internal schemas from `unified_api_contracts.internal` | `from unified_internal_contracts import ...` |
+| `InstrumentDefinition` from `unified_api_contracts` | `from unified_api_contracts.internal import InstrumentDefinition` |
+| `from unified_internal_contracts import ...` | `from unified_api_contracts.internal import ...` |
 
 See: contracts-integration.mdc, unified-api-contracts-usage.mdc.
 
@@ -64,4 +65,4 @@ See: contracts-integration.mdc, unified-api-contracts-usage.mdc.
 
 - Claim "tests pass" without collection verification
 - Run pytest from workspace root without path deps installed
-- Use deprecated `unified_api_contracts.sports` or `unified_api_contracts.internal` imports
+- Use deprecated `unified_api_contracts.sports` imports or `unified_internal_contracts` (use `unified_api_contracts.internal`)

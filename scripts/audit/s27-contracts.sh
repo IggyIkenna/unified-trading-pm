@@ -55,10 +55,9 @@ done
 # VCR cassette counts per interface repo (§10 overlap)
 echo ""
 echo "  VCR cassette counts per interface repo:"
-for repo in unified-market-interface unified-trade-execution-interface \
-            unified-reference-data-interface unified-position-interface \
-            unified-sports-execution-interface unified-defi-execution-interface \
-            unified-cloud-interface; do
+for repo in unified-market-interface unified-reference-data-interface \
+            unified-cloud-interface execution-service \
+            position-balance-monitor-service; do
   count=$(find "$repo" -name '*.yaml' -path '*/mocks/*' 2>/dev/null | wc -l | tr -d ' ')
   if [ "$count" -eq 0 ]; then
     emit "§27" "VCR cassettes: $repo" "FAIL" "0 cassettes"

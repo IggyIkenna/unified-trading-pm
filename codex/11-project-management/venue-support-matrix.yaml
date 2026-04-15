@@ -1,0 +1,340 @@
+# ==============================================================================
+# Venue Support Matrix - Unified Trading System
+# ==============================================================================
+#
+# This matrix shows which services support which venues.
+#
+# Status codes:
+#   ✅ full - Fully supported (batch + live)
+#   🟡 batch-only - Batch mode only
+#   🟡 live-only - Live mode only
+#   ⚪ planned - Planned but not implemented
+#   ⛔ n/a - Not applicable (platform/UI services support ALL venues)
+#
+# ==============================================================================
+
+matrix_version: "1.0"
+last_updated: "2026-02-12"
+
+# ==============================================================================
+# Venues (Columns)
+# ==============================================================================
+
+venues:
+  crypto_cefi:
+    - BINANCE-SPOT
+    - BINANCE-FUTURES
+    - COINBASE
+    - BYBIT
+    - DERIBIT # Options
+    - OKX
+
+  defi:
+    - AAVEV3_ETHEREUM
+    - UNISWAPV3-ETHEREUM
+    - COMPOUND_V3_ETH
+    - CURVE-ETHEREUM
+    - BALANCER-ETH
+
+  tradfi:
+    - CME # Futures/Options
+    - NASDAQ # Equities
+    - NYSE # Equities
+
+  sports:
+    - POLYMARKET
+    - BETFAIR
+    - DRAFTKINGS
+
+# ==============================================================================
+# Service × Venue Matrix
+# ==============================================================================
+
+# Format:
+# service_name:
+#   VENUE_NAME: status  # ✅ full, 🟡 batch-only, 🟡 live-only, ⚪ planned, ⛔ n/a
+
+matrix:
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - Data I/O
+  # ---------------------------------------------------------------------------
+
+  instruments-service:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    NASDAQ: "⚪ planned"
+    NYSE: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+    BETFAIR: "⚪ planned"
+    DRAFTKINGS: "⚪ planned"
+
+  # NOTE: corporate-actions is the corporate-actions domain within instruments-service, not a standalone repo.
+  instruments-service (corporate-actions domain):
+    BINANCE-SPOT: "🟡 batch-only"
+    BINANCE-FUTURES: "🟡 batch-only"
+    COINBASE: "🟡 batch-only"
+    NASDAQ: "⚪ planned"
+    NYSE: "⚪ planned"
+    # Other venues: n/a (no corporate actions for DeFi/Sports)
+
+  features-calendar-service:
+    ALL_VENUES: "✅ full" # Cross-venue calendar
+
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - Market Data
+  # ---------------------------------------------------------------------------
+
+  market-tick-data-service:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    NASDAQ: "⚪ planned"
+    NYSE: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+    BETFAIR: "⚪ planned"
+    DRAFTKINGS: "⚪ planned"
+
+  market-data-processing-service:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    NASDAQ: "⚪ planned"
+    NYSE: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+    BETFAIR: "⚪ planned"
+    DRAFTKINGS: "⚪ planned"
+
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - Features
+  # ---------------------------------------------------------------------------
+
+  features-delta-one-service:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    BYBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    # Other venues: n/a (delta-one specific to CeFi spot)
+
+  features-volatility-service:
+    BINANCE-SPOT: "🟡 batch-only"
+    BINANCE-FUTURES: "🟡 batch-only"
+    DERIBIT: "🟡 batch-only"
+    CME: "⚪ planned"
+    # Other venues: n/a (volatility specific to options venues)
+
+  features-onchain-service:
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    # Other venues: n/a (onchain specific to DeFi)
+
+  features-sports-service:
+    POLYMARKET: "🟡 batch-only"
+    BETFAIR: "⚪ planned"
+    DRAFTKINGS: "⚪ planned"
+    # Other venues: n/a (sports specific)
+
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - ML
+  # ---------------------------------------------------------------------------
+
+  ml-training-service:
+    ALL_VENUES: "🟡 batch-only" # Trains on all venue data
+
+  ml-inference-service:
+    ALL_VENUES: "✅ full" # Inference on all venues
+
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - Strategy & Execution
+  # ---------------------------------------------------------------------------
+
+  strategy-service:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+
+  execution-service:
+    BINANCE-SPOT: "🟡 live-only"
+    BINANCE-FUTURES: "🟡 live-only"
+    COINBASE: "🟡 live-only"
+    AAVEV3_ETHEREUM: "🟡 live-only"
+    UNISWAPV3-ETHEREUM: "🟡 live-only"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+
+  # ---------------------------------------------------------------------------
+  # Pipeline Services - Post-Trade
+  # ---------------------------------------------------------------------------
+
+  reconciliation-service:
+    ALL_VENUES: "✅ full" # Reconciles all venue positions
+
+  pnl-attribution-service:
+    ALL_VENUES: "✅ full" # Attributes P&L across all venues
+
+  position-balance-monitor-service:
+    ALL_VENUES: "✅ full" # Monitors all venue positions
+
+  exposure-monitor-service:
+    ALL_VENUES: "✅ full" # Monitors exposure across all venues
+
+  risk-monitor-service:
+    ALL_VENUES: "✅ full" # Risk metrics for all venues
+
+  # ---------------------------------------------------------------------------
+  # Platform Services
+  # ---------------------------------------------------------------------------
+
+  unified-trading-library:
+    ALL_VENUES: "⛔ n/a" # Platform library
+
+  # unified-trading-deployment-v3: ARCHIVED. Split into deployment-service + deployment-api + deployment-ui + system-integration-tests.
+  deployment-service:
+    ALL_VENUES: "⛔ n/a" # Orchestration platform
+  deployment-api:
+    ALL_VENUES: "⛔ n/a" # Orchestration API
+  deployment-ui:
+    ALL_VENUES: "⛔ n/a" # Orchestration UI
+  system-integration-tests:
+    ALL_VENUES: "⛔ n/a" # Integration test suite
+
+  unified-trading-codex:
+    ALL_VENUES: "⛔ n/a" # Documentation
+
+  exchange-interface-library:
+    BINANCE-SPOT: "✅ full"
+    BINANCE-FUTURES: "✅ full"
+    COINBASE: "✅ full"
+    AAVEV3_ETHEREUM: "✅ full"
+    UNISWAPV3-ETHEREUM: "✅ full"
+    BYBIT: "⚪ planned"
+    DERIBIT: "⚪ planned"
+    OKX: "⚪ planned"
+    COMPOUND_V3_ETH: "⚪ planned"
+    CURVE-ETHEREUM: "⚪ planned"
+    BALANCER-ETH: "⚪ planned"
+    CME: "⚪ planned"
+    POLYMARKET: "⚪ planned"
+
+  alerting-service:
+    ALL_VENUES: "⛔ n/a" # Cross-venue alerting
+
+  # ---------------------------------------------------------------------------
+  # UI Services (All support ALL venues via backend APIs)
+  # ---------------------------------------------------------------------------
+
+  live-health-monitor-ui:
+    ALL_VENUES: "⛔ n/a" # Observability UI
+
+  batch-audit-ui:
+    ALL_VENUES: "⛔ n/a" # Observability UI
+
+  logs-dashboard-ui:
+    ALL_VENUES: "⛔ n/a" # Observability UI
+
+  ml-training-ui:
+    ALL_VENUES: "⛔ n/a" # Control UI
+
+  execution-analytics-ui:
+    ALL_VENUES: "⛔ n/a" # Analysis UI
+
+  trading-analytics-ui:
+    ALL_VENUES: "⛔ n/a" # Analysis UI
+
+  settlement-ui:
+    ALL_VENUES: "⛔ n/a" # Analysis UI
+
+  client-reporting-ui:
+    ALL_VENUES: "⛔ n/a" # Analysis UI
+
+  strategy-onboarding-ui:
+    ALL_VENUES: "⛔ n/a" # Analysis UI
+
+# ==============================================================================
+# Venue Expansion Priority
+# ==============================================================================
+
+# Venues to prioritize for expansion:
+expansion_roadmap:
+  wave_1_complete: # Already implemented
+    - BINANCE-SPOT
+    - BINANCE-FUTURES
+    - COINBASE
+    - AAVEV3_ETHEREUM
+    - UNISWAPV3-ETHEREUM
+
+  wave_2: # Next priority (CRYPTO_CEFI + DEFI)
+    - BYBIT
+    - OKX
+    - COMPOUND_V3_ETH
+    - CURVE-ETHEREUM
+
+  wave_3: # Options expansion
+    - DERIBIT
+    - CME
+
+  wave_4: # TradFi equities
+    - NASDAQ
+    - NYSE
+
+  wave_5: # Sports betting
+    - POLYMARKET
+    - BETFAIR
+    - DRAFTKINGS
+# ==============================================================================
+# Summary
+# ==============================================================================
+
+# Supported venues (Wave 1): 5 venues (BINANCE-SPOT, BINANCE-FUTURES, COINBASE, AAVEV3_ETHEREUM, UNISWAPV3-ETHEREUM)
+# Planned venues (Waves 2-5): 12
+# Total target venues: 17
+#
+# Services supporting all venues: 15 (post-trade + platform + all UIs)
+# Services with venue-specific support: 17 (pipeline services)

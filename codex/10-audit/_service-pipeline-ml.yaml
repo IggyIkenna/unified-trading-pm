@@ -1,0 +1,102 @@
+# ==============================================================================
+# Service Template: Pipeline - ML Group
+# ==============================================================================
+#
+# Applies to: ml-training-service, ml-inference-service
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: ML-01 through ML-04
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Pipeline services - ML group (Layer 5)"
+services: ["ml-training-service", "ml-inference-service"]
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# ML Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: ML-01
+    area: "01-domain"
+    priority: P1-high
+    title: "Model training pipeline (ml-training-service)"
+    description: |
+      ml-training-service has model training pipeline.
+      Supports hyperparameter tuning, cross-validation, model evaluation.
+
+      ✅ Pass: Training pipeline, hyperparameter optimization, evaluation metrics
+      ❌ Fail: No training logic OR hardcoded hyperparameters
+    evidence: "Check training scripts, hyperparameter configs"
+    codex_ref: "01-domain/README.md"
+    applies_to: ["ml-training-service"]
+
+  - id: ML-02
+    area: "02-data"
+    priority: P1-high
+    title: "Hyperparameter optimization"
+    description: |
+      ml-training-service uses systematic hyperparameter search.
+      Grid search, random search, or Bayesian optimization.
+
+      ✅ Pass: Hyperparameter optimization implemented
+      ❌ Fail: No optimization OR manual hyperparameter selection
+    evidence: "Check for optuna, hyperopt, or grid search logic"
+    codex_ref: "01-domain/README.md"
+    applies_to: ["ml-training-service"]
+
+  - id: ML-03
+    area: "02-data"
+    priority: P1-high
+    title: "Model versioning & registry"
+    description: |
+      Models are versioned and stored in model registry (GCS bucket).
+      Model metadata includes: training date, hyperparameters, metrics, version.
+
+      ✅ Pass: Model registry, versioning, metadata
+      ❌ Fail: No versioning OR models not tracked
+    evidence: "Check model save logic, GCS bucket structure, metadata"
+    codex_ref: "05-infrastructure/versioning-rollback.md"
+
+  - id: ML-04
+    area: "04-architecture"
+    priority: P1-high
+    title: "Inference endpoint (ml-inference-service)"
+    description: |
+      ml-inference-service loads models and serves predictions.
+      Supports multiple model versions, A/B testing, rollback.
+
+      ✅ Pass: Inference API, model loading, version selection
+      ❌ Fail: No inference logic OR single model only
+    evidence: "Check inference API, model loading logic"
+    codex_ref: "04-architecture/README.md"
+    applies_to: ["ml-inference-service"]
+
+  - id: ML-05
+    area: "01-domain"
+    priority: P1-high
+    title: "Sports ML support (if applicable)"
+    description: |
+      For ml-training-service: Support SPORTS asset class.
+      - Walk-forward validation (k-fold + standard modes)
+      - Sports-specific loss functions (Brier score, log loss, calibration)
+      - Sports-specific metrics (ROI, Kelly edge, CLV, sharpness)
+      - Model configs: configs/ml-training/sports/{model_name}.yaml
+
+      For ml-inference-service:
+      - Load sports models from gs://ml-models/SPORTS/{model_type}/{version}/
+      - Inference endpoint supports asset_class=SPORTS routing
+      - Batch prediction mode (predict on all upcoming fixtures)
+
+      ✅ Pass: Sports configs, loss functions, metrics, model loading
+      ❌ Fail: No sports support, or ad-hoc sports logic
+      ⚠️ N/A: Service doesn't handle sports models
+    evidence: "Check configs/sports/, losses/sports.py, metrics/sports.py, models/sports.py"
+    codex_ref: "01-domain/asset-classes.md#sports"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 5 (group) = 23 items
+# ==============================================================================
