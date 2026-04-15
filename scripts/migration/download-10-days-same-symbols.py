@@ -117,11 +117,11 @@ TASKS_10_DAYS = [
     ("TRADFI", "CME", "AUD-USD-260116@LIN", "ohlcv_1m", "2025-11-01", "2025-11-10"),
     ("TRADFI", "FX", "KRW-USD", "ohlcv_24h", "2025-11-01", "2025-11-10"),
     # DEFI
-    ("DEFI", "UNISWAPV2-ETHEREUM", "WETH-USDC", "swaps", "2025-11-01", "2025-11-10"),
-    ("DEFI", "UNISWAPV3-ETHEREUM", "WETH-USDC:500", "swaps", "2025-11-01", "2025-11-10"),
-    ("DEFI", "UNISWAPV4-ETHEREUM", "ETH-USDC:500", "swaps", "2025-11-01", "2025-11-10"),
-    ("DEFI", "CURVE-ETHEREUM", "3pool", "swaps", "2025-11-01", "2025-11-10"),
-    ("DEFI", "AAVEV3_ETHEREUM", "AWETH", "rate_indices", "2025-11-01", "2025-11-10"),
+    ("DEFI", "UNISWAPV2-ETHEREUM", "WETH-USDC", "dex_swaps", "2025-11-01", "2025-11-10"),
+    ("DEFI", "UNISWAPV3-ETHEREUM", "WETH-USDC:500", "dex_swaps", "2025-11-01", "2025-11-10"),
+    ("DEFI", "UNISWAPV4-ETHEREUM", "ETH-USDC:500", "dex_swaps", "2025-11-01", "2025-11-10"),
+    ("DEFI", "CURVE-ETHEREUM", "3pool", "dex_swaps", "2025-11-01", "2025-11-10"),
+    ("DEFI", "AAVEV3_ETHEREUM", "AWETH", "lending_indices", "2025-11-01", "2025-11-10"),
     ("DEFI", "LIDO-ETHEREUM", "STETH", "oracle_prices", "2025-11-01", "2025-11-10"),
 ]
 

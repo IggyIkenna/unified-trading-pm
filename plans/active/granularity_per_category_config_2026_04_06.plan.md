@@ -106,7 +106,7 @@ UAC (SSOT)                          MDPS (consumer)
 |   ohlcv_1m -> 1m               | |   (from UAC or class override)   |
 |   ohlcv_15m -> 15m             | |                                  |
 |   prediction_trades -> 15s     | | _process_all_timeframes:         |
-|   rate_indices -> 15m (ETH)    | |   skip tf < base_granularity     |
+|   lending_indices -> 15m (ETH) | |   skip tf < base_granularity     |
 |   oracle_prices -> 15m (ETH)   | |   compute base from ticks        |
 |   sports_odds -> horizon       | |   aggregate up for larger tfs    |
 +---------------------------------+ +----------------------------------+

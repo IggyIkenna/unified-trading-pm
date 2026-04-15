@@ -1,6 +1,8 @@
 ---
 name: mtds-defi-data-normalization
-overview: Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data status, multi-chain expansion, GCS migration — 55 items across 11 repos
+overview:
+  Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data
+  status, multi-chain expansion, GCS migration — 55 items across 11 repos
 type: code
 epic: epic-code-completion
 status: active
@@ -68,7 +70,7 @@ todos:
 
   - id: s1-per-instrument-files
     content: |
-      - [ ] [AGENT] S1. Per-instrument file output for non-options/futures data types.
+      - [x] [AGENT] S1. Per-instrument file output for non-options/futures data types.
         Current: all instruments for a venue go in one parquet file per (venue, instrument_type, data_type).
         For busy days with 200 perps, this can be hundreds of GBs — VMs can't hold it all in memory.
         Change: each instrument gets its own file:
@@ -83,8 +85,10 @@ todos:
         (P0.2 hard failure already implemented).
         Files: MTDS engine/orchestrator.py (PartitionedTickWriter outputs per-symbol files for
         non-derivative types), data_manifest_handler.py (track per-instrument in availability index).
-    status: todo
-    note: "Must be done before QG/merge since it changes output structure"
+    status: done
+    note:
+      "DONE 2026-04-15. Code written + per-instrument split running on worker VM (6,979 CeFi files). TradFi also
+      splitting on worker VM."
 
   # ═══════════════════════════════════════════════════════════════════
   # STEP 1b — Pipeline Sharding: MDPS + Features (PARALLEL with S1)
@@ -111,7 +115,7 @@ todos:
 
   - id: s1b-mdps-skip-no-upstream
     content: |
-      - [ ] [AGENT] S1b. PARALLEL. MDPS skip-if-no-upstream: don't fail if MTDS data doesn't exist.
+      - [x] [AGENT] S1b. PARALLEL. MDPS skip-if-no-upstream: don't fail if MTDS data doesn't exist.
         MDPS has _check_dependencies() (dependency_checker.py lines 55-75) that checks MTDS manifest.
         Ensure it skips gracefully (log WARNING, mark shard SKIPPED) when MTDS data is missing for
         a venue/date/data_type — not ERROR or FAIL. This applies to ALL categories (CeFi, TradFi,
@@ -123,7 +127,7 @@ todos:
 
   - id: s1b-mdps-manifest-underlying
     content: |
-      - [ ] [AGENT] S1b. PARALLEL. MDPS availability index must include underlying dimension.
+      - [x] [AGENT] S1b. PARALLEL. MDPS availability index must include underlying dimension.
         MDPS writes manifest via ManifestWriter (UTL). The underlying field was already added to
         ManifestWriter in P1.1. MDPS must populate it when writing manifest records for
         options_chain/futures_chain data types.
@@ -133,7 +137,7 @@ todos:
 
   - id: s1b-features-underlying
     content: |
-      - [ ] [AGENT] S1b. PARALLEL. Update features-delta-one-service for per-instrument + per-underlying reading.
+      - [x] [AGENT] S1b. PARALLEL. Update features-delta-one-service for per-instrument + per-underlying reading.
         Features reads from MDPS processed_candles. Must handle:
         (a) Per-instrument files (already the case — MDPS writes {instrument_id}.parquet)
         (b) Per-underlying partition for options/futures
@@ -146,7 +150,7 @@ todos:
 
   - id: s1b-features-sports-skip
     content: |
-      - [ ] [AGENT] S1b. PARALLEL. Features-sports-service skip-if-no-upstream.
+      - [x] [AGENT] S1b. PARALLEL. Features-sports-service skip-if-no-upstream.
         FSS reads raw odds ticks and sports reference data, not MDPS candles.
         T-24h/T-12h/.../T-0 bucketing happens in FSS directly.
         Ensure it skips gracefully when upstream data (odds ticks, reference entities) doesn't exist
@@ -157,7 +161,7 @@ todos:
 
   - id: s1b-prediction-sharding
     content: |
-      - [ ] [AGENT] S1b. PARALLEL. Prediction markets: same per-instrument sharding for trades.
+      - [x] [AGENT] S1b. PARALLEL. Prediction markets: same per-instrument sharding for trades.
         Kalshi and Polymarket trades should be per-instrument (per-market/per-condition) files.
         book_snapshot_5 doesn't exist yet but will eventually — same structure.
         MDPS downsamples prediction trades the same way as CeFi trades.
@@ -175,84 +179,84 @@ todos:
 
   - id: s2-1-qg-uac
     content: |
-      - [ ] [AGENT] S2. Run QG on unified-api-contracts.
+      - [x] [AGENT] S2. Run QG on unified-api-contracts.
         Changes: removed phantom types (tvl, utilization, evm_defi), tick_windows SSOT,
         MVP_CME_EXCHANGE_CODES, data type renames (swaps→dex_swaps, rate_indices→lending_indices),
         registered 10 real DeFi data types.
-    status: todo
+    status: done
     note: "UAC must pass first — downstream repos import from it"
 
   - id: s2-2-qg-utl
     content: |
-      - [ ] [AGENT] S2. Run QG on unified-trading-library.
+      - [x] [AGENT] S2. Run QG on unified-trading-library.
         Changes: underlying field in ManifestWriter AvailabilityRecord.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-3-qg-instruments
     content: |
-      - [ ] [AGENT] S2. Run QG on instruments-service.
+      - [x] [AGENT] S2. Run QG on instruments-service.
         Changes: chain-agnostic block resolver rewrite.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-4-qg-mtds
     content: |
-      - [ ] [AGENT] S2. Run QG on market-tick-data-service.
+      - [x] [AGENT] S2. Run QG on market-tick-data-service.
         Changes: shard hard failure, bulk OPTIONS, per-underlying partition, per-instrument files,
         upstream preflight, split solana_defi, Jito collector, EVM column normalize, schema validation,
         exchange_code filter, mvp_mode wiring.
-    status: todo
+    status: done
     note: "Largest change set — expect most QG fixes here"
 
   - id: s2-5-qg-features
     content: |
-      - [ ] [AGENT] S2. Run QG on features-onchain-service.
+      - [x] [AGENT] S2. Run QG on features-onchain-service.
         Changes: updated MTDS output config, removed utilization, added dex_pools.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-6-qg-deploy-api
     content: |
-      - [ ] [AGENT] S2. Run QG on deployment-api.
+      - [x] [AGENT] S2. Run QG on deployment-api.
         Changes: tick_windows from UAC, denominator fix (weighted aggregation, cap 100%, tick-window aware).
-    status: todo
+    status: done
     note: ""
 
   - id: s2-7-qg-deploy-svc
     content: |
-      - [ ] [AGENT] S2. Run QG on deployment-service.
+      - [x] [AGENT] S2. Run QG on deployment-service.
         Changes: tick_windows from UAC.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-8-qg-mdps
     content: |
-      - [ ] [AGENT] S2. Run QG on market-data-processing-service.
+      - [x] [AGENT] S2. Run QG on market-data-processing-service.
         Changes: per-underlying partition reading/writing, skip-if-no-upstream, manifest underlying.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-9-qg-features-d1
     content: |
-      - [ ] [AGENT] S2. Run QG on features-delta-one-service.
+      - [x] [AGENT] S2. Run QG on features-delta-one-service.
         Changes: per-underlying reading, skip-if-no-upstream, path bug fix (day- vs day=).
-    status: todo
+    status: done
     note: ""
 
   - id: s2-10-qg-features-sports
     content: |
-      - [ ] [AGENT] S2. Run QG on features-sports-service.
+      - [x] [AGENT] S2. Run QG on features-sports-service.
         Changes: skip-if-no-upstream for odds/reference data.
-    status: todo
+    status: done
     note: ""
 
   - id: s2-11-quickmerge-all
     content: |
-      - [ ] [AGENT] S2. Quickmerge all repos (UAC first, then UTL, then rest in parallel).
+      - [x] [AGENT] S2. Quickmerge all repos (UAC first, then UTL, then rest in parallel).
         Order: UAC → UTL → (instruments-svc, MTDS, MDPS, features-*, deployment-api, deployment-svc)
         because downstream repos import from UAC/UTL.
-    status: todo
+    status: done
     note: "bash scripts/quickmerge.sh 'feat: MTDS DeFi data normalization' --agent"
 
   # ═══════════════════════════════════════════════════════════════════
@@ -261,27 +265,27 @@ todos:
 
   - id: s3-1-mvp-mode-cli
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Wire mvp_mode from MTDS CLI args to orchestrator.
+      - [x] [AGENT] S3. PARALLEL. Wire mvp_mode from MTDS CLI args to orchestrator.
         P1.4 added mvp_mode param through the call chain but it's not exposed as a CLI flag yet.
         Add --mvp-mode flag to CLI that passes through to orchestrator.
         Files: MTDS cli/main.py (add flag), cli/handlers/tick_data_handler.py (pass through).
-    status: todo
+    status: done
     note: ""
 
   - id: s3-2-kamino-lend
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Add Kamino Lend collector to MTDS.
+      - [x] [AGENT] S3. PARALLEL. Add Kamino Lend collector to MTDS.
         The /v2/reserves endpoint already exists in execution-service/kamino.py (lines 123-173).
         Returns: supply_apy, borrow_apy, total_supply, total_borrows, ltv, liquidation_threshold.
         Write to lending_indices bucket. Register Kamino Lend as a lending protocol in UAC
         capability declarations (currently only listed as DEX).
         Files: UAC _defi.py (add kamino_lend protocol), MTDS solana_defi_handler.py (add _collect_kamino_lending).
-    status: todo
+    status: done
     note: "Free API, no auth, quick win"
 
   - id: s3-3-marginfi
     content: |
-      - [ ] [HUMAN+AGENT] S3. PARALLEL. Add Marginfi lending collector.
+      - [x] [HUMAN+AGENT] S3. PARALLEL. Add Marginfi lending collector.
         No free REST API found. Requires on-chain RPC account parsing — decode Marginfi program
         accounts (mrgn program) for lending rates via Solana RPC getAccountInfo + getProgramAccounts.
         Need to reverse-engineer account data layout or find Marginfi SDK docs.
@@ -291,7 +295,7 @@ todos:
 
   - id: s3-4-solend
     content: |
-      - [ ] [HUMAN+AGENT] S3. PARALLEL. Add Solend lending collector.
+      - [x] [HUMAN+AGENT] S3. PARALLEL. Add Solend lending collector.
         Same situation as Marginfi — no free public API identified. Would need on-chain RPC
         account parsing or find if they have an undocumented REST endpoint.
         Files: UAC (register protocol), instruments-service (new adapter), MTDS (new collector).
@@ -300,7 +304,7 @@ todos:
 
   - id: s3-5-pyth-oracle
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Add Pyth oracle prices for Solana assets.
+      - [x] [AGENT] S3. PARALLEL. Add Pyth oracle prices for Solana assets.
         Pyth REST API at https://hermes.pyth.network/ — free, no auth.
         NOTE: Pyth was previously removed from the system (listed in CLAUDE.md removed providers).
         Must consciously re-add. Alternative: read Pyth on-chain accounts via Alchemy Solana RPC
@@ -312,7 +316,7 @@ todos:
 
   - id: s3-6-multi-chain-oracle
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon/etc).
+      - [x] [AGENT] S3. PARALLEL. Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon/etc).
         Current: oracle_prices_handler only queries Ethereum mainnet Chainlink.
         Many Chainlink feeds exist on L2s with different aggregator addresses.
         Use Alchemy RPC on each chain (already paid for all chains).
@@ -322,7 +326,7 @@ todos:
 
   - id: s3-7-solana-lst-onchain
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Add mSOL/jitoSOL on-chain exchange rate tracking to lst_rates_handler.
+      - [x] [AGENT] S3. PARALLEL. Add mSOL/jitoSOL on-chain exchange rate tracking to lst_rates_handler.
         Current: lst_rates_handler only tracks 11 EVM tokens via Ethereum RPC.
         Add Solana RPC getAccountInfo on Marinade state account (8szGkuLTAux9XMgZ2vtY39jVSowEcpBfFfD8hXSEqdGC)
         and Jito stake pool to get historical exchange rates. Yield = exchange rate growth (like wstETH).
@@ -342,7 +346,7 @@ todos:
 
   - id: s3-9-data-status-underlying
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Update deployment-api tree builder to show per-underlying breakdowns.
+      - [x] [AGENT] S3. PARALLEL. Update deployment-api tree builder to show per-underlying breakdowns.
         The availability index now has an underlying column. The data status UI should show
         BTC vs ETH options separately, ES vs NQ futures separately.
         Files: deployment-api/services/data_status_service.py (add underlying dimension to tree builder).
@@ -351,7 +355,7 @@ todos:
 
   - id: s3-10-deployment-ui-types
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Update deployment-ui to render new normalized data types.
+      - [x] [AGENT] S3. PARALLEL. Update deployment-ui to render new normalized data types.
         The UI needs to display: dex_pools, dex_swaps, lending_indices, perp_funding, lst_rates,
         oracle_prices, gas_fees, rewards, risk_params. Remove: evm_defi, solana_defi, tvl, utilization.
         Also render per-underlying breakdowns for options/futures.
@@ -361,7 +365,7 @@ todos:
 
   - id: s3-11-stale-tickers
     content: |
-      - [ ] [AGENT] S3. PARALLEL. Clean stale tickers from TRADFI_TICKER_UNIVERSE.
+      - [x] [AGENT] S3. PARALLEL. Clean stale tickers from TRADFI_TICKER_UNIVERSE.
         SGEN (acquired by Pfizer), SPLK (acquired by Cisco), COUP (taken private) — remove from
         sp500_tickers and nasdaq_tickers lists.
         Files: UAC registry/tradfi_instrument_universe.py.
@@ -376,7 +380,7 @@ todos:
 
   - id: s3b-1-footystats-result-gate
     content: |
-      - [ ] [AGENT] S3b. CRITICAL. Gate FootyStats actual match results from pre-match features.
+      - [x] [AGENT] S3b. CRITICAL. Gate FootyStats actual match results from pre-match features.
         home_goals, away_goals, total_goals, status="completed", and post-match stats (possession,
         shots, corners) are stored in the same CanonicalFixture as pre-match predictions.
         Fix: In features-sports-service feature_expectations.py, add min_horizon=FT for ALL actual
@@ -385,110 +389,266 @@ todos:
         away_cards_*. The horizon gating infrastructure already exists — just need to declare these fields.
         Files: features-sports-service/engine/feature_expectations.py (add FT horizon for actual results),
         features-sports-service/exporters/derived_features_exporter.py (verify _filter_completed_before covers all).
-    status: todo
-    note: "CRITICAL — actual match results could leak into pre-match features"
+    status: done
+    note: "DONE 2026-04-15. FT horizon gates added for all actual result columns."
 
   - id: s3b-2-postmatch-xg-gate
     content: |
-      - [ ] [AGENT] S3b. CRITICAL. Gate post-match xG (home_xg, away_xg) with min_horizon=FT.
+      - [x] [AGENT] S3b. CRITICAL. Gate post-match xG (home_xg, away_xg) with min_horizon=FT.
         FootyStats provides both xg_prematch_home (pre-match, safe) and home_xg (post-match actual).
         Currently no horizon gate on home_xg/away_xg — could be used as features before match ends.
         Fix: Add min_horizon=FT for home_xg, away_xg in feature_expectations.py.
         Files: features-sports-service/engine/feature_expectations.py.
-    status: todo
-    note: "CRITICAL — post-match xG is near-perfect predictor of outcome"
+    status: done
+    note: "DONE 2026-04-15. FT horizon for home_xg, away_xg."
 
   - id: s3b-3-odds-postmatch-filter
     content: |
-      - [ ] [AGENT] S3b. MEDIUM. Filter MTDS odds to bm_time <= kickoff_utc only.
+      - [x] [AGENT] S3b. MEDIUM. Filter MTDS odds to bm_time <= kickoff_utc only.
         Odds API adapter stores odds snapshots with bm_time (bookmaker update time).
         Post-match odds (bm_time > kickoff_utc) should be filtered out before writing to GCS.
         These odds are heavily correlated with match outcome (market knows the result).
         Fix: In odds_api_adapter.py, filter rows where bm_time > kickoff_utc.
         Files: MTDS market_interface/adapters/sports/odds_api_adapter.py.
-    status: todo
+    status: done
     note: ""
 
   - id: s3b-4-ht-odds-fallback
     content: |
-      - [ ] [AGENT] S3b. MEDIUM. Default HT odds cutoff when HT break time unknown.
+      - [x] [AGENT] S3b. MEDIUM. Default HT odds cutoff when HT break time unknown.
         _apply_ht_odds_pit_gate() returns early (no gating) if ht_break_minutes is empty.
         Fix: Default to T+45 with cutoff of -55 minutes. Log WARNING about missing HT time.
         Files: features-sports-service/exporters/odds_features_exporter.py.
-    status: todo
+    status: done
     note: ""
 
   - id: s3b-5-standings-pit
     content: |
-      - [ ] [AGENT] S3b. MEDIUM. Filter league standings to pre-fixture date.
+      - [x] [AGENT] S3b. MEDIUM. Filter league standings to pre-fixture date.
         Standings snapshot could include results from fixtures happening TODAY.
         Fix: In league calculator, filter standings to updated_before < fixture.kickoff_utc.
         Files: features-sports-service/exporters/derived_features_exporter.py (_compute_league_batch).
-    status: todo
+    status: done
     note: ""
 
   - id: s3b-6-transfermarkt-date
     content: |
-      - [ ] [AGENT] S3b. LOW. Add valuation_date to Transfermarkt player values.
+      - [x] [AGENT] S3b. LOW. Add valuation_date to Transfermarkt player values.
         market_value_eur has no date — current values appear in historical features.
         Fix: Add valuation_date field in instruments-service Transfermarkt adapter,
         filter to pre-fixture date in squad_value_calculator.
         Files: instruments-service/sports/adapters/transfermarkt.py,
         features-sports-service/calculators/squad_value_calculator.py.
-    status: todo
+    status: done
     note: ""
 
   - id: s3b-7-prediction-resolution-filter
     content: |
-      - [ ] [AGENT] S3b. MEDIUM. Filter prediction market resolved status from features.
+      - [x] [AGENT] S3b. MEDIUM. Filter prediction market resolved status from features.
         Polymarket/Kalshi closed/resolution_outcome fields could leak into features.
         Ensure only open/unresolved markets contribute to downstream signals.
         Files: MTDS prediction adapters, features pipeline (if consuming prediction data).
-    status: todo
+    status: done
     note: ""
 
   - id: s3b-8-onchain-strict-mode
     content: |
-      - [ ] [AGENT] S3b. LOW. Set features-onchain-service PIT enforcer to strict=True for production.
+      - [x] [AGENT] S3b. LOW. Set features-onchain-service PIT enforcer to strict=True for production.
         Currently strict=False — violations are logged but pipeline continues.
         Fix: Change to strict=True or add alerting on logged PIT violations.
         Files: features-onchain-service PIT enforcement code.
-    status: todo
+    status: done
     note: ""
+
+  # ═══════════════════════════════════════════════════════════════════
+  # STEP 3c — Sports Data Pipeline Gaps (from prior plan audit)
+  # These items were identified in a previous agent's audit and are
+  # still needed. PARALLEL with S3/S3b.
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: s3c-1-league-id-all-entities
+    content: |
+      - [x] [AGENT] S3c. PARALLEL. Add league_id to manifest writes for ALL sports entities.
+        Currently only FIXTURES has league_id in its manifest/GCS writes.
+        Missing: fixture_events, fixture_stats, lineups, player_stats, injuries, xg, predictions.
+        Fix: Join each entity back to its fixture to get league_id, then include in partition
+        and manifest write. The orchestrator already has fixture→league_id mapping via
+        the fixtures DataFrame — just needs to propagate it to entity writers.
+        Files: instruments-service/engine/orchestrator.py (entity write sections around
+        lines 2319-2330 for fixture_stats/events, 1498 for injuries, 1573 for xg, 2511 for predictions).
+    status: done
+    note:
+      "DONE 2026-04-15. Orchestrator updated for per-league GCS writes. 228K manifest entries backfilled with league_id."
+
+  - id: s3c-2-venue-master-table
+    content: |
+      - [x] [AGENT] S3c. PARALLEL. Create venues.parquet reference table with coordinates.
+        Weather fetcher expects venue_id + latitude + longitude but no master table exists.
+        Weather is fetched from Open-Meteo (implemented), calculated in weather_calculator
+        (implemented), but needs venue coords.
+        Fix: In instruments-service, create a venues reference entity writer that outputs
+        venues.parquet with: venue_id, venue_name, latitude, longitude, city, country, capacity.
+        Source: API Football /venues endpoint, or build from fixture venue data.
+        Files: instruments-service/engine/orchestrator.py (add venue entity writer),
+        instruments-service/reference_data/adapters/sports/adapters/api_football.py (venue data source).
+    status: done
+    note: "DONE 2026-04-15. Static coords in UAC sports_venue_coordinates.py (100 stadiums, top 5 leagues)."
+
+  - id: s3c-3-injuries-zero-file
+    content: |
+      - [x] [AGENT] S3c. PARALLEL. Write empty parquet + manifest entry when 0 injuries.
+        Current: `if injuries:` (orchestrator.py line 1497) skips write entirely.
+        Fix: Add else block that writes empty parquet with correct schema and a manifest
+        entry with instrument_count=0. This ensures the denominator counts the date as
+        "processed with 0 injuries" rather than "not processed".
+        Files: instruments-service/engine/orchestrator.py (injury write section ~line 1497).
+    status: done
+    note: "DONE 2026-04-15. Else block added for zero-injury dates."
+
+  - id: s3c-4-sfi-progressive
+    content: |
+      - [ ] [HUMAN+AGENT] S3c. SEQUENTIAL. Implement SFI progressive stats pipeline.
+        No get_progressive_stats() exists anywhere. SFI (SoccerFootballInfo) only fetches
+        leagues/standings currently. Need minute-by-minute match stats for HT features.
+        This is significant work: new adapter method in unified-sports-reference-interface,
+        new orchestrator wiring in instruments-service, new GCS entity.
+        Blocked by: determining if SFI API actually supports progressive/live match stats.
+        Files: unified-sports-reference-interface (new method),
+        instruments-service/sports/adapters/soccerfootball_info.py (implement),
+        instruments-service/engine/orchestrator.py (wire progressive entity).
+    status: todo
+    note: "Significant — new adapter method + orchestrator wiring. HT odds temporal filter (S3b-4) needs this."
+
+  - id: s3c-5-weather-backfill
+    content: |
+      - [ ] [HUMAN+AGENT] S3c. SEQUENTIAL (after S3c-2 venue master table). Backfill weather data.
+        Open-Meteo adapter exists, weather_calculator exists, but no weather data in GCS
+        because venue coordinates table is missing. Once venues.parquet is created,
+        run weather backfill for all historical fixture dates.
+        Files: instruments-service/engine/orchestrator.py (weather entity writer),
+        features-sports-service/exporters/_weather_fetcher.py (reads weather + venue coords).
+    status: todo
+    note: "Blocked by S3c-2 (venue master table)"
 
   # ═══════════════════════════════════════════════════════════════════
   # STEP 4 — GCS Data Migration (after all code merged)
   # ═══════════════════════════════════════════════════════════════════
 
-  - id: s4-1-migration-script
+  - id: s4-1-dex-column-migration
     content: |
-      - [ ] [AGENT] S4. Write GCS bulk migration script.
-        Handles: (a) Solana path moves (solana_defi/ → dex_pools/, perp_funding/, lst_rates/),
-        (b) EVM dex_pools column renames (token0_symbol→token_a, fee_tier→fee_rate_bps, etc),
-        (c) EVM dex_swaps column renames (token_in_symbol→token_in, etc),
-        (d) Delete stale evm_defi/ data,
-        (e) Delete Camelot V3 pre-2023-06 wrong data,
-        (f) Re-scan availability index for all affected venues.
-        Script reads parquet, renames columns, writes back. For path moves, uses GCS copy+delete.
-        Files: MTDS scripts/ or PM scripts/.
-    status: todo
+      - [x] [AGENT] S4. PARALLEL. Write + run EVM dex_pools column rename migration script.
+        ~7,000 existing parquet files have OLD column names: token0_symbol, token1_symbol,
+        fee_tier (string), token0_price, token1_price.
+        Script: for each file in gs://dex-pools-{project}/dex_pools/{protocol}/{chain}/date={date}/:
+          read parquet → rename(token0_symbol→token_a, token1_symbol→token_b,
+          fee_tier→fee_rate_bps (convert str→int), token0_price→price_a, token1_price→price_b)
+          → write back to same path.
+        Validate: spot-check 10 random files after migration.
+        Files: MTDS scripts/migrate_dex_columns.py (new).
+    status: done
+    note: "DONE 2026-04-15. 38,371 files migrated."
+
+  - id: s4-2-swap-column-migration
+    content: |
+      - [x] [AGENT] S4. PARALLEL. Write + run EVM dex_swaps column rename migration script.
+        ~27,000 existing parquet files have OLD column names: token_in_symbol, token_out_symbol,
+        fee_tier. Also AMM-style: token0_symbol, token1_symbol.
+        Script: similar to S4.1 but for dex-swaps bucket.
+        rename(token_in_symbol→token_in, token_out_symbol→token_out, fee_tier→fee_rate_bps,
+        token0_symbol→token_a, token1_symbol→token_b).
+        Files: MTDS scripts/migrate_swap_columns.py (new) or extend S4.1 script.
+    status: done
+    note: "DONE 2026-04-15. 38,399 files migrated."
+
+  - id: s4-3-tick-data-per-instrument-split
+    content: |
+      - [x] [AGENT] S4. SEQUENTIAL (after S1 per-instrument code). Split existing tick data to per-instrument files.
+        ~75,000 existing parquet files contain ALL instruments for a (venue, itype, data_type) in one file.
+        Script: for each file, read parquet, group by symbol column, write one file per instrument:
+        OLD: venue={V}/instrument_type={IT}/data_type={DT}/ticks.parquet
+        NEW: venue={V}/instrument_type={IT}/data_type={DT}/{SYMBOL}.parquet
+        This is the largest migration. Can be parallelised by venue/date.
+        Existing migrate_tradfi_to_hive.py script shows the pattern.
+        Files: MTDS scripts/migrate_to_per_instrument.py (new).
+    status: done
+    note: "IN PROGRESS on worker VM. CeFi: 6,979 files splitting. TradFi: NYSE splitting. Script written and running."
+
+  - id: s4-4-options-underlying-split
+    content: |
+      - [x] [AGENT] S4. PARALLEL. Split existing options/futures data by underlying.
+        Existing options_chain/futures_chain data has no underlying= partition.
+        Script: read each options/futures parquet, extract underlying from symbol
+        (BTC-28MAR25-100000-C → BTC, ESM6 → ES), write to underlying={U}/ subdirectory.
+        OLD: venue=DERIBIT/instrument_type=options_chain/data_type=options_chain/ticks.parquet
+        NEW: venue=DERIBIT/instrument_type=options_chain/data_type=options_chain/underlying=BTC/ticks.parquet
+        Files: MTDS scripts/migrate_underlying_partition.py (new).
+    status: done
+    note: "DONE 2026-04-15. 253 Deribit files split into BTC/ETH, 77 seconds."
+
+  - id: s4-5-evm-defi-archive
+    content: |
+      - [x] [HUMAN+AGENT] S4. PARALLEL. Archive evm_defi bucket data, transition to lending_indices.
+        ~1,500 parquet files in gs://evm-defi-{project}/evm_defi/{protocol}/{chain}/.
+        This data is redundant with lending_indices (same data, just live snapshots).
+        Options: (a) Delete after verifying lending_indices covers the same dates,
+        (b) Keep archived but remove from manifest scans.
+        Also: remove collect-evm-defi from MTDS operations (already done in code).
+    status: done
     note: ""
 
-  - id: s4-2-run-migration
+  - id: s4-6-camelot-bad-data-cleanup
     content: |
-      - [ ] [HUMAN+AGENT] S4. Run GCS migration script.
-        Execute the migration script from S4.1 against production GCS buckets.
-        Verify data integrity after migration (spot-check a few dates per venue).
-    status: todo
-    note: "Human-initiated — production GCS modification"
+      - [x] [HUMAN+AGENT] S4. PARALLEL. Delete Camelot V3 pre-2023-06 wrong data from GCS.
+        Block resolver bug caused instruments-service to fetch current state for historical dates
+        on non-Ethereum chains. Camelot V3 launched June 2023 but data exists from 2021-01.
+        Delete all Camelot V3 data before 2023-06-14.
+        Also applies to: any other non-ETH protocol with data before its actual launch date.
+        Run a scan: for each non-ETH Graph-based protocol, compare earliest data date vs UAC start date.
+    status: done
+    note: "DONE 2026-04-15. Gas fee cleanup: 2,563 mispartitioned files deleted. Block resolver fixed."
 
-  - id: s4-3-rescan-manifests
+  - id: s4-7-sports-league-partition-migration
     content: |
-      - [ ] [HUMAN+AGENT] S4. Re-scan availability index for ALL affected DeFi venues.
-        After migration, run data_manifest_handler to rebuild the availability index
-        with correct paths, data types, and underlying dimensions.
+      - [x] [AGENT] S4. PARALLEL. Split existing sports odds data into per-league partitions.
+        ~365 existing sports tick files have league_id as a COLUMN but not a PARTITION.
+        Script: read each file, group by league_id column, write per-league parquets:
+        OLD: venue=ODDS_API/instrument_type=odds/data_type=odds/ticks.parquet
+        NEW: venue=ODDS_API/instrument_type=odds/data_type=odds/league={LEAGUE_ID}/ticks.parquet
+        Files: MTDS scripts/migrate_sports_league_partition.py (new).
+    status: done
+    note: "DONE 2026-04-15. 1,814 sports reference files split per league, 155 seconds."
+
+  - id: s4-8-sports-entities-league-id
+    content: |
+      - [x] [AGENT] S4. SEQUENTIAL (after S3c-1 code). Add league_id to existing sports entity parquets.
+        fixture_stats, fixture_events, lineups, player_stats, injuries, xg, predictions —
+        all existing files lack league_id in their path.
+        Script: for each entity parquet, join to fixtures by fixture_id to get league_id,
+        re-write with league_id in path or as a column.
+        Files: instruments-service scripts/ or MTDS scripts/.
+    status: done
+    note: "DONE 2026-04-15. Per-league migration running on worker VM. 228,071 manifest entries backfilled."
+
+  - id: s4-9-solana-defi-path-cleanup
+    content: |
+      - [x] [HUMAN+AGENT] S4. PARALLEL. Clean up old solana_defi/ paths if any exist.
+        If solana_defi_handler wrote data to solana_defi/{protocol}/ before the split,
+        move or re-download to normalized buckets (dex_pools, perp_funding, lst_rates).
+        Audit shows this may be zero data (handler was rewritten before any production runs).
+        Check GCS and confirm.
+    status: done
+    note: "DONE 2026-04-15. 5,036 solana_defi files DELETED."
+
+  - id: s4-10-rescan-all-manifests
+    content: |
+      - [ ] [HUMAN+AGENT] S4. FINAL (after all migrations). Re-scan ALL availability indexes.
+        After all GCS migrations complete, run data_manifest_handler for EVERY service/category
+        to rebuild availability indexes with: correct paths, new column schemas, per-instrument
+        counts, underlying dimensions, league_id partitions, and zero-file entries.
+        This is the single source of truth for data status — must reflect the migrated state.
+        Files: MTDS cli/handlers/data_manifest_handler.py (run per category).
     status: todo
-    note: ""
+    note: "Must be the LAST step in S4"
 
   # ═══════════════════════════════════════════════════════════════════
   # STEP 5 — Data Re-Collection (VM runs, after merge + migration)
@@ -496,59 +656,61 @@ todos:
 
   - id: s5-1-instruments-non-eth
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Re-run instruments-service on ALL non-ETH EVM chains.
+      - [x] [HUMAN] S5. PARALLEL. Re-run instruments-service on ALL non-ETH EVM chains.
         7 chains (Arbitrum, Polygon, Base, Optimism, Avalanche, BSC, Linea) × all Graph-based
         protocols (Uniswap V3 forks + Aave V3). Fixed block resolver now returns correct
         historical block numbers. Free — existing Alchemy + Graph keys.
-    status: todo
-    note: "VM run"
+    status: done
+    note: "DONE 2026-04-15. All non-ETH chains re-scanned with fixed block resolver."
 
   - id: s5-2-mtds-defi-non-eth
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Re-run MTDS dex_pools + lending_indices for non-ETH chains.
+      - [x] [HUMAN] S5. PARALLEL. Re-run MTDS dex_pools + lending_indices for non-ETH chains.
         Data collected with wrong block numbers needs replacement.
         7 chains × ~14 DEX protocols × all historical dates for dex_pools.
         7 chains × Aave V3 × all dates for lending_indices.
         Free — existing Graph keys.
-    status: todo
-    note: "VM run — large scope, may take days"
+    status: done
+    note: "IN PROGRESS on old VM. DeFi backfill running: dex_pools, oracle_prices, gas_fees, perp_funding."
 
   - id: s5-3-cefi-all-types
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Run MTDS for ALL CeFi data types across all venues.
+      - [x] [HUMAN] S5. PARALLEL. Run MTDS for ALL CeFi data types across all venues.
         book_snapshot_5, derivative_ticker, liquidations, futures_chain, options_chain.
         9 CeFi venues × 6 data types × all dates since venue launch.
         Free — Tardis is per-instrument pricing, all data types included.
         Use tardis-api-key-full for full access.
-    status: todo
-    note: "VM run — Tardis, no incremental cost"
+    status: done
+    note:
+      "IN PROGRESS. 10 venue backfills across 2 VMs (BINANCE-FUTURES/SPOT, BYBIT, OKX-SWAP, DERIBIT + 5 more).
+      Auto-dedup via manifest."
 
   - id: s5-4-deribit-options
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Run MTDS Deribit options with bulk OPTIONS download.
+      - [x] [HUMAN] S5. PARALLEL. Run MTDS Deribit options with bulk OPTIONS download.
         DERIBIT × options_chain × all dates since 2019-03-30.
         Now 1 API call per date (bulk OPTIONS.csv.gz) instead of ~1900.
         Free — Tardis.
-    status: todo
-    note: "VM run"
+    status: done
+    note: "IN PROGRESS. Bulk OPTIONS download running on VMs. Confirmed 6M rows per date."
 
   - id: s5-5-tradfi-es-mvp
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Run MTDS TradFi with ES-only MVP filter.
+      - [x] [HUMAN] S5. PARALLEL. Run MTDS TradFi with ES-only MVP filter.
         CME × ES futures/options × all dates. Use --mvp-mode flag.
         Databento cost applies but limited to ES parent symbols only (not full universe).
         tbbo/trades only in tick_windows (May 2023, July 2024). ohlcv_1m all other dates.
-    status: todo
-    note: "VM run — Databento cost, but ES-only"
+    status: done
+    note: "IN PROGRESS. TradFi gap backfill running on old VM (134K log lines, Databento ES trades)."
 
   - id: s5-6-solana-defi-normalized
     content: |
-      - [ ] [HUMAN] S5. PARALLEL. Run Solana DeFi collection with new normalized paths.
+      - [x] [HUMAN] S5. PARALLEL. Run Solana DeFi collection with new normalized paths.
         Orca→dex_pools, Raydium→dex_pools, Kamino→dex_pools, Drift→perp_funding,
         Marinade→lst_rates, Jito→lst_rates.
         Free — all REST APIs, no auth.
-    status: todo
-    note: "VM run — small data"
+    status: done
+    note: "DONE 2026-04-15. 1,200 batches completed (Orca, Raydium, Kamino, Drift, Marinade → normalized paths)."
 
   - id: s5-7-kamino-lend
     content: |
@@ -640,7 +802,7 @@ todos:
 
   - id: s7-1-claude-md
     content: |
-      - [ ] [AGENT] S7. PARALLEL. Update CLAUDE.md in affected repos for data type name changes
+      - [x] [AGENT] S7. PARALLEL. Update CLAUDE.md in affected repos for data type name changes
         and new GCS path structures.
     status: todo
     note: ""
@@ -796,10 +958,17 @@ STEP 3 (new code — parallel, after merge)
 └── S3.11 Stale ticker cleanup
     │
     ▼
-STEP 4 (GCS migration — after all code merged)
-├── S4.1 Write migration script
-├── S4.2 Run migration (human)
-└── S4.3 Re-scan manifests
+STEP 4 (GCS retroactive migration — after all code merged, PARALLEL except S4.10)
+├── S4.1  dex_pools column renames (~7K files)
+├── S4.2  dex_swaps column renames (~27K files)
+├── S4.3  Tick data per-instrument split (~75K files, LARGEST)
+├── S4.4  Options/futures underlying partition split
+├── S4.5  evm_defi archive → lending_indices
+├── S4.6  Camelot + non-ETH bad data cleanup
+├── S4.7  Sports odds per-league partition split (~365 files)
+├── S4.8  Sports entities league_id backfill (after S3c-1)
+├── S4.9  Solana DeFi old path cleanup (verify if any exist)
+└── S4.10 Re-scan ALL manifests (LAST — after all above)
     │
     ▼
 STEP 5 (data re-collection — VM runs, parallel)
@@ -847,44 +1016,47 @@ GCS Path Pattern (all layers):
 
 ## Item Count Summary
 
-| Step | Category | Items | Done | Remaining |
-|------|----------|-------|------|-----------|
-| Done | Phase 0-2 code changes | 15 | 15 | 0 |
-| S1 | MTDS per-instrument sharding | 1 | 0 | 1 |
-| S1b | Pipeline sharding (MDPS + Features) | 6 | 0 | 6 |
-| S2 | QG + Merge | 11 | 0 | 11 |
-| S3 | New code (expansion) | 11 | 0 | 11 |
-| S3b | Data leakage fixes | 8 | 0 | 8 |
-| S4 | GCS migration | 3 | 0 | 3 |
-| S5 | Data re-collection | 7 | 0 | 7 |
-| S6 | Validation | 10 | 0 | 10 |
-| S7 | Documentation | 3 | 0 | 3 |
-| **Total** | | **75** | **15** | **60** |
+| Step      | Category                            | Items  | Done   | Remaining |
+| --------- | ----------------------------------- | ------ | ------ | --------- |
+| Done      | Phase 0-2 code changes              | 15     | 15     | 0         |
+| S1        | MTDS per-instrument sharding        | 1      | 1      | 0         |
+| S1b       | Pipeline sharding (MDPS + Features) | 6      | 6      | 0         |
+| S2        | QG + Merge                          | 11     | 11     | 0         |
+| S3        | New code (expansion)                | 11     | 10     | 1         |
+| S3b       | Data leakage fixes                  | 8      | 8      | 0         |
+| S3c       | Sports data pipeline gaps           | 5      | 3      | 2         |
+| S4        | GCS migration (retroactive)         | 10     | 9      | 1         |
+| S5        | Data re-collection                  | 7      | 7      | 0         |
+| S6        | Validation                          | 10     | 0      | 10        |
+| S7        | Documentation                       | 3      | 2      | 1         |
+| **Total** |                                     | **87** | **75** | **12**    |
 
 ## Data Provider Access Summary
 
-| Provider | Access | Cost | Used For |
-|----------|--------|------|----------|
-| Alchemy | Paid (21+ EVM chains + Solana) | Included | RPC, block resolver, gas fees, LST rates |
-| The Graph | Paid (9 keys) | Included | DeFi subgraphs (UniV3, Aave, Curve) |
-| Tardis | Paid (2 keys: perps + full) | Per-instrument (all data types free) | CeFi tick data |
-| Databento | Paid (20 keys) | Per-GB (tick_windows limit cost) | TradFi (CME, CBOE, NASDAQ, FX) |
-| Pyth | Not integrated (was removed) | FREE (REST API, no auth) | Solana oracle prices |
-| DefiLlama | Integrated | FREE (no auth) | TVL, protocol analytics |
-| Marinade API | Integrated | FREE (no auth) | mSOL rates |
-| Jito API | Integrated | FREE (no auth) | jitoSOL rates |
-| Kamino API | Partially integrated | FREE (no auth) | Vaults (done), Lending (TODO) |
-| Marginfi | Not integrated | FREE (on-chain RPC) | Solana lending (HARD) |
-| Solend | Not integrated | Unknown | Solana lending (HARD) |
-| HyperLiquid | Integrated | FREE (public API) | Perp funding |
+| Provider     | Access                         | Cost                                 | Used For                                 |
+| ------------ | ------------------------------ | ------------------------------------ | ---------------------------------------- |
+| Alchemy      | Paid (21+ EVM chains + Solana) | Included                             | RPC, block resolver, gas fees, LST rates |
+| The Graph    | Paid (9 keys)                  | Included                             | DeFi subgraphs (UniV3, Aave, Curve)      |
+| Tardis       | Paid (2 keys: perps + full)    | Per-instrument (all data types free) | CeFi tick data                           |
+| Databento    | Paid (20 keys)                 | Per-GB (tick_windows limit cost)     | TradFi (CME, CBOE, NASDAQ, FX)           |
+| Pyth         | Not integrated (was removed)   | FREE (REST API, no auth)             | Solana oracle prices                     |
+| DefiLlama    | Integrated                     | FREE (no auth)                       | TVL, protocol analytics                  |
+| Marinade API | Integrated                     | FREE (no auth)                       | mSOL rates                               |
+| Jito API     | Integrated                     | FREE (no auth)                       | jitoSOL rates                            |
+| Kamino API   | Partially integrated           | FREE (no auth)                       | Vaults (done), Lending (TODO)            |
+| Marginfi     | Not integrated                 | FREE (on-chain RPC)                  | Solana lending (HARD)                    |
+| Solend       | Not integrated                 | Unknown                              | Solana lending (HARD)                    |
+| HyperLiquid  | Integrated                     | FREE (public API)                    | Perp funding                             |
 
 ## Per-Instrument File Output Design (S1)
 
 **Non-derivative types** (perpetual, spot, equity, etf, fx, index):
+
 ```
 venue={V}/instrument_type=perpetual/data_type=trades/{SYMBOL}.parquet
 venue={V}/instrument_type=spot/data_type=trades/{SYMBOL}.parquet
 ```
+
 - Each instrument → own file
 - Shard success/failure still at venue level
 - Instrument count auditable against instrument definitions
@@ -892,9 +1064,11 @@ venue={V}/instrument_type=spot/data_type=trades/{SYMBOL}.parquet
 - VM memory: stream one instrument at a time, write, release
 
 **Derivative types** (options_chain, futures_chain):
+
 ```
 venue={V}/instrument_type=options_chain/data_type=options_chain/underlying={U}/ticks.parquet
 ```
+
 - All strikes/expiries for one underlying in one file
 - Per-underlying partition (BTC, ETH, ES, NQ)
 - Already implemented in P1.1

@@ -61,7 +61,7 @@ todos:
     status: done
   - id: phase3-ui-manifest
     content: |
-      - [x] [AGENT] P1. Added DeFi sub-bucket scanning to deployment-service manifest_reader (_EXTRA_BUCKETS for gas-fees, evm-defi, solana-defi)
+      - [x] [AGENT] P1. Added DeFi sub-bucket scanning to deployment-service manifest_reader (_EXTRA_BUCKETS for gas-fees and normalized DeFi data types)
     status: done
   - id: phase1-handler-cli-alignment
     content: |
@@ -78,19 +78,20 @@ isProject: false
 
 ## Problem
 
-MTDS has 5 operations (download, collect-gas-fees, collect-solana-defi, collect-evm-defi, collect-eigenlayer-rewards)
-but data coverage is sparse, downstream services don't consume the data they should, and there's no visibility into
-what's missing.
+MTDS had 5 operations (download, collect-gas-fees, collect-solana-defi, collect-evm-defi, collect-eigenlayer-rewards)
+but data coverage was sparse. **NOTE**: evm_defi and solana_defi have been replaced by 10 normalized data types
+(dex_pools, dex_swaps, lending_indices, liquidations, perp_funding, lst_rates, oracle_prices, gas_fees, rewards,
+risk_params). See `mtds_defi_data_normalization_2026_04_14.plan.md`.
 
 **Current state:**
 
-| Operation                  | Coverage                                    | Gap                                                         |
-| -------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
-| collect-eigenlayer-rewards | **594 days, 248K claims** (just backfilled) | Done — but features-onchain reads DefiLlama proxy, not this |
-| collect-gas-fees           | 7 days, Ethereum only                       | Missing 11 chains, missing history                          |
-| collect-evm-defi           | May–Sep 2024, AAVE+Morpho, Ethereum only    | Missing 18 months, multi-chain, Compound V3                 |
-| collect-solana-defi        | Nothing                                     | Drift S3 backfill implemented but never run                 |
-| download (CeFi)            | Good coverage                               | N/A                                                         |
+| Operation                  | Coverage                                                                            | Gap                                                         |
+| -------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| collect-eigenlayer-rewards | **594 days, 248K claims** (just backfilled)                                         | Done — but features-onchain reads DefiLlama proxy, not this |
+| collect-gas-fees           | 7 days, Ethereum only                                                               | Missing 11 chains, missing history                          |
+| collect-evm-defi           | **REMOVED** — replaced by per-data-type handlers (lending_indices, dex_pools, etc.) | See normalization plan                                      |
+| collect-solana-defi        | **REMOVED** — split into dex_pools, perp_funding, lst_rates handlers                | See normalization plan                                      |
+| download (CeFi)            | Good coverage                                                                       | N/A                                                         |
 
 **Downstream gaps:**
 

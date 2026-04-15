@@ -44,7 +44,7 @@ concurrency:
 env:
   # Task 7: Configurable Cloud Build region with fallback
   CLOUD_BUILD_REGION: asia-northeast1
-  CLOUD_BUILD_FALLBACK_REGION: us-central1
+  CLOUD_BUILD_FALLBACK_REGION: asia-northeast1
 
   # Task 4: Trading-critical repos that require deployment safety checks.
   # These repos handle live order flow, risk calculations, or strategy execution.
