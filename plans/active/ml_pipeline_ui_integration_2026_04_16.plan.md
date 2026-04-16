@@ -74,12 +74,12 @@ todos:
 
   - id: p1-create-artifacts-bucket
     content: |
-      - [ ] [AGENT] P0. Create ml-training-artifacts bucket. The model store bucket exists (ml-models-store-{project_id}) but the artifacts bucket doesn't. Either:
+      - [x] [AGENT] P0. Create ml-training-artifacts bucket. The model store bucket exists (ml-models-store-{project_id}) but the artifacts bucket doesn't. Either:
         1. Add to deployment-service/scripts/setup-buckets.sh (or equivalent)
         2. Or create via terraform in deployment-service/terraform/
         The bucket stores: experiments/{id}/metrics.json, experiments/{id}/shap/*.png, stage artifacts (selected features, hyperparams)
-    status: todo
-    note: "Experiment metrics writing failed with 404 'bucket does not exist' during E2E."
+    status: done
+    note: "Created via gsutil mb. Added to terraform shared-infrastructure module, root gcp/main.tf, bucket_config.yaml."
 
   # ── Phase 2: ML Training Config Architecture ──
   - id: p2-training-config-from-gcs
