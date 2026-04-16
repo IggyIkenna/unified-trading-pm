@@ -1,5 +1,6 @@
 ---
 name: defi-instrument-pipeline-and-rewards
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview:
   "End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability"
 type: code

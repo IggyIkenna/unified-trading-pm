@@ -1,5 +1,6 @@
 ---
 name: cross-domain-alpha-execution-intelligence
+remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 overview:
   Cross-domain feature blending, microstructure features, DeFi alpha, execution cost prediction, unified SOR, feature
   freshness SLA, data quality scoring

@@ -1,5 +1,6 @@
 ---
 name: polymarket-prediction-pipeline
+remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |
@@ -217,46 +218,20 @@ todos:
         The fixture cross-reference uses: league + home/away team + date → API-Football fixture_id.
         This requires URDI/USRI api_football adapter at runtime (not static).
         The static part is team name normalization only.
-    status: pending
-    blocked_by: p1b-expand-polymarket-series-mappings
+    status: done
+    note: "POLYMARKET_TEAM_TO_CANONICAL + get_canonical_team_for_polymarket in sports_mappings.py"
 
   - id: p2b-polymarket-market-type-mapping
     content: |
-      - [ ] [AGENT] P1. Map Polymarket sportsMarketType to canonical market types.
-        File: unified_api_contracts/external/polymarket/sports_mappings.py
-
-        Polymarket sportsMarketType values observed:
-          "moneyline"  → MONEYLINE (match winner)
-          "spreads"    → SPREADS (handicap, has "line" field e.g. -1.5)
-          "totals"     → TOTALS (over/under goals, has threshold)
-          "btts"       → BTTS (both teams to score)
-          "draw"       → DRAW (via moneyline neg-risk group)
-
-        Map to canonical: CanonicalBetMarket.market_name or new PredictionMarketType enum.
-        Include the "line" value in canonical ID for spreads/totals:
-          SPREADS with line=-1.5 → "SPREADS::fixture_id::HOME_-1.5"
-          TOTALS with line=2.5 → "TOTALS::fixture_id::OVER_2.5"
-    status: pending
+      - [x] [AGENT] P1. POLYMARKET_MARKET_TYPE_MAP + POLYMARKET_MARKET_TO_CANONICAL implemented in sports_mappings.py / canonical_ids.py
+    status: done
+    note: "Market type mapping complete"
 
   - id: p2c-polymarket-gamma-market-schema-update
     content: |
-      - [ ] [AGENT] P1. Update PolymarketGammaMarket schema with sports-specific fields.
-        File: unified_api_contracts/external/polymarket/schemas.py
-
-        Add missing fields observed in Gamma API responses:
-          sports_market_type: str | None  (moneyline, spreads, totals, btts)
-          line: float | None              (spread/total value e.g. -1.5, 2.5)
-          game_start_time: str | None     (ISO datetime of fixture kickoff)
-          game_id: int | None             (Polymarket internal game ID)
-          group_item_title: str | None    (outcome label e.g. "Sydney FC (-1.5)")
-          series_slug: str | None         (league series e.g. "premier-league-2025")
-          event_slug: str | None          (event grouping slug)
-          neg_risk: bool = False          (neg-risk multi-outcome group)
-          neg_risk_market_id: str | None  (group ID for arb detection)
-          resolution_source: str | None   (official resolution URL)
-
-        Update PolymarketGammaMarket OR create PolymarketSportsGammaMarket subclass.
-    status: pending
+      - [x] [AGENT] P1. PolymarketGammaMarket updated with sports_market_type, line, game_start_time, game_id, group_item_title, series_slug, event_slug, neg_risk, neg_risk_market_id, resolution_source fields
+    status: done
+    note: "schemas.py lines ~339-349"
 
   # ============================================================================
   # PHASE 2 gate: cd unified-api-contracts && bash scripts/quality-gates.sh
@@ -297,8 +272,10 @@ todos:
           - rate limiting (0.02s between requests)
 
         Register in URDI factory.py: "POLYMARKET" → PolymarketReferenceAdapter
-    status: pending
-    blocked_by: p1d-canonical-instrument-id-format
+    status: done
+    note:
+      "SUPERSEDED — implemented as instruments_service/reference_data/adapters/prediction/polymarket.py
+      (PolymarketReferenceDataAdapter)"
 
   - id: p3b-umi-polymarket-adapter
     content: |
@@ -327,8 +304,8 @@ todos:
         (borrow from polymarket_correlation/features.py PolyFeatureBuilder)
 
         Register in UMI: "POLYMARKET" → PolymarketTickAdapter in PREDICTION registry.
-    status: pending
-    blocked_by: p1d-canonical-instrument-id-format
+    status: done
+    note: "SUPERSEDED — PolymarketAdapter in MTDS market_interface/adapters/prediction/"
 
   # ============================================================================
   # PHASE 3 gate: cd unified-reference-data-interface && bash scripts/quality-gates.sh
@@ -355,8 +332,8 @@ todos:
 
         Test: cd instruments-service && python -m instruments_service.service \
           --operation fetch --category PREDICTION --date 2026-03-25
-    status: pending
-    blocked_by: p3a-urdi-polymarket-reference-adapter
+    status: done
+    note: "get_venues_for_categories PREDICTION → POLYMARKET, KALSHI in orchestrator.py"
 
   - id: p4b-mtds-prediction-hook
     content: |
@@ -378,8 +355,8 @@ todos:
 
         Test: cd market-tick-data-service && python -m market_tick_data_service.service \
           --operation download --category PREDICTION --date 2026-03-25
-    status: pending
-    blocked_by: p3b-umi-polymarket-adapter
+    status: done
+    note: "get_venues_for_categories PREDICTION → POLYMARKET in mtds/orchestrator.py"
 
   # ============================================================================
   # PHASE 4 gate: cd instruments-service && bash scripts/quality-gates.sh
@@ -423,7 +400,8 @@ todos:
         4. Series-to-league mapping table
         5. Team name normalization rules
         6. Data freshness expectations (crypto: every 5m, soccer: per matchday)
-    status: pending
+    status: done
+    note: "prediction-schema-paths.md exists in codex/02-data/"
 
   # ============================================================================
   # PHASE 6 — Validation  [SEQUENTIAL after P4]

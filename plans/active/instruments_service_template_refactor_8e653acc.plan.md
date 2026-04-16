@@ -1,5 +1,6 @@
 ---
 name: Instruments Service Template Refactor
+remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
 overview:
   Refactor instruments-service from ~104 files/12,000+ lines to ~18-20 files/~1,800 lines by making URDI the sole
   external API path, removing all service-level infrastructure, canonicalization, aggregation, and validation logic, and

@@ -1,5 +1,6 @@
 ---
 name: ui-sync-hardening-2026-03-23
+remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 overview:
   Unified Trading System UI — full sync, schema unification, doc alignment, mock data fix, and agent-readiness hardening
 type: code

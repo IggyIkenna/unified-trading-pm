@@ -1,5 +1,6 @@
 ---
 name: multichain-defi-expansion
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview:
   Prune to 19 EVM chains, add WETH wrap/unwrap, WBTC/cbBTC instruments, generalize gas tracking for non-ETH chains,
   multi-chain instrument discovery

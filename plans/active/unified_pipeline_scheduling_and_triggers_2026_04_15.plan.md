@@ -1,5 +1,6 @@
 ---
 name: unified-pipeline-scheduling-and-triggers
+remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
 overview:
   End-to-end pipeline readiness — backfill, T+1, thermal, live — across all 6 clusters with sports trigger scheduling
 type: mixed
@@ -226,10 +227,8 @@ todos:
   - id: p4-sports-streaming-viz
     content: |
       - [ ] [HUMAN+AGENT] P2. Sports live streaming for visualization — 3-layer feature across instruments-service (backend, --mode live ScheduledIO already exists, polls API Football/SFI every few minutes), unified-trading-api (add sports-live WebSocket channel — mock mode: synthetic fixture ticks from MOCK_FIXTURES, real mode: subscribe to instruments-data-ready PubSub), unified-trading-system-ui (wire SportsDataProvider to WebSocket in real mode instead of MOCK_FIXTURES). UI already has sports-live-scores-widget, fixtures-detail-panel, arb-stream — all mock. Progressive odds/stats per fixture per league. Update frequency: every 1-5 min, not sub-second.
-    status: todo
-    note:
-      "Cross-cutting 3-repo feature — deserves own focused session. Backend (instruments --mode live) already works. API
-      WebSocket channel pattern exists (market-data channel). UI SportsDataProvider switches on VITE_MOCK_API."
+    status: done
+    note: "SUPERSEDED — covered by sports_live_streaming_viz_2026_04_15.plan.md which depends_on this plan"
 
   # ── Phase 5 ──
   - id: p5-backfill-vm-templates

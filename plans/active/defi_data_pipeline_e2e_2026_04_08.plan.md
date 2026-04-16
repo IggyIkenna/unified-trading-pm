@@ -1,5 +1,6 @@
 ---
 name: defi-data-pipeline-e2e
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview: End-to-end DeFi data pipeline — backfill all MTDS operations, wire downstream consumers, build data manifest
 type: mixed
 epic: epic-code-completion

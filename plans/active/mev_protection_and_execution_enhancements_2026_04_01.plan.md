@@ -1,5 +1,6 @@
 ---
 name: mev-protection-and-execution-enhancements
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview:
   "MEV protection framework (Flashbots pipes, private mempool), execution algo comparison, basis trade dynamic coin
   selection"

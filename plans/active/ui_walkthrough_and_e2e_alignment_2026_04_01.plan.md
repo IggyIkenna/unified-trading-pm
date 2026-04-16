@@ -1,5 +1,6 @@
 ---
 name: ui-walkthrough-and-e2e-alignment
+remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 overview:
   "UI full strategy walkthrough capability (all strategies manually executable in mock), E2E testing for all modes,
   batch=live alignment"

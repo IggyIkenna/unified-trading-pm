@@ -1,5 +1,6 @@
 ---
 name: remove-data-types-field
+remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
 overview:
   Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is the
   SSOT

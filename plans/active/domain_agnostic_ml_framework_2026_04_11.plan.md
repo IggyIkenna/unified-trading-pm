@@ -1,5 +1,6 @@
 ---
 name: domain-agnostic-ml-framework
+remaining_todos_consolidated_into: consolidated_ml_advanced_pipeline_2026_04_15
 overview:
   Extract domain-agnostic ML framework (targets, splits, signals, decisions) into UAC+UTL, with sports as category
   plugin
@@ -272,17 +273,8 @@ todos:
 
   - id: p4-sports-targets
     content: |
-      - [ ] [AGENT] P0. Extend sports target generators in ML training service
-
-      In app/core/sports_target_generator.py, add full target builders:
-        - PregameXGTargetBuilder: builds home_xg, away_xg, goal_diff, total_goals,
-          win/draw/loss flags from match results
-        - PregameCLVTargetBuilder: builds CLV targets from odds snapshot pairs
-        - HTTargetBuilder: builds 2H targets from HT + FT data
-        - MetaTargetBuilder: builds residual/quality targets from OOF predictions
-
-      Update target_generator_factory.py to route sports families.
-    status: todo
+      - [x] [AGENT] P0. Sports target generators implemented — sports_target_generator.py has XG/CLV/HT/Meta builders + test_sports_target_builders.py exists. target_generator_factory.py routes sports families.
+    status: done
 
   - id: p4-feature-adapter
     content: |

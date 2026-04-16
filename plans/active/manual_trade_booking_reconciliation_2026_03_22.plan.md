@@ -1,5 +1,6 @@
 ---
 name: manual-trade-booking-reconciliation
+remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
 overview:
   Citadel-grade manual trade booking across all instrument types (CeFi, DeFi, TradFi, Sports, Prediction) with two UI
   surfaces (back-office + in-context), record-only fills for OTC/missed trades, reconciliation accept/reject workflow,

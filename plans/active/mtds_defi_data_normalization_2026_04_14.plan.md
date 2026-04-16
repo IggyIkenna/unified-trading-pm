@@ -1,5 +1,6 @@
 ---
 name: mtds-defi-data-normalization
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview:
   Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data
   status, multi-chain expansion, GCS migration — 55 items across 11 repos
@@ -132,8 +133,8 @@ todos:
         ManifestWriter in P1.1. MDPS must populate it when writing manifest records for
         options_chain/futures_chain data types.
         Files: market-data-processing-service/app/core/orchestration_service.py (_write_manifest_records).
-    status: todo
-    note: ""
+    status: done
+    note: "Plan body [x] confirmed; S2 QG passed for MDPS"
 
   - id: s1b-features-underlying
     content: |
@@ -145,8 +146,8 @@ todos:
         ALSO FIX: path mismatch bug — code uses `day-{date}` (dashes) instead of `day={date}` (hive).
         Files: features-delta-one-service/app/core/data_loader.py (fix paths, add underlying support),
         features-delta-one-service availability/manifest (track per-instrument + underlying).
-    status: todo
-    note: "Path bug: day- vs day= must be fixed regardless"
+    status: done
+    note: "Plan body [x] confirmed; S2 QG passed for features-delta-one"
 
   - id: s1b-features-sports-skip
     content: |
@@ -156,8 +157,8 @@ todos:
         Ensure it skips gracefully when upstream data (odds ticks, reference entities) doesn't exist
         for a date/venue/league. Same pattern as MTDS upstream preflight.
         Files: features-sports-service/data/gcs_reader.py.
-    status: todo
-    note: "Sports has different time bucket structure but same skip-if-no-upstream principle"
+    status: done
+    note: "Plan body [x] confirmed; gcs_reader.py handles skip-if-no-upstream"
 
   - id: s1b-prediction-sharding
     content: |
@@ -169,8 +170,8 @@ todos:
         Files: MTDS market_interface/adapters/prediction/kalshi_adapter.py,
         MTDS market_interface/adapters/prediction/polymarket_adapter.py,
         MDPS prediction adapter (if exists).
-    status: todo
-    note: ""
+    status: done
+    note: "Plan body [x] confirmed; Polymarket/Kalshi adapters write per-instrument files"
 
   # ═══════════════════════════════════════════════════════════════════
   # STEP 2 — QG + Merge All Code Changes (SEQUENTIAL per repo)
@@ -369,8 +370,8 @@ todos:
         SGEN (acquired by Pfizer), SPLK (acquired by Cisco), COUP (taken private) — remove from
         sp500_tickers and nasdaq_tickers lists.
         Files: UAC registry/tradfi_instrument_universe.py.
-    status: todo
-    note: "Small cleanup"
+    status: done
+    note: "tradfi_ticker_universe.py confirmed: no SGEN, SPLK, COUP in SP500/NASDAQ lists"
 
   # ═══════════════════════════════════════════════════════════════════
   # STEP 3b — Data Leakage Fixes (PARALLEL with S3)

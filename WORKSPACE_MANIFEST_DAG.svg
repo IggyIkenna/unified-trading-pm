@@ -76,9 +76,9 @@
   <text x="95" y="462" text-anchor="middle" class="level-label">L2</text>
   <text x="150" y="462" class="desc">Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards. (4 repos)</text>
   <rect x="70" y="485" width="167" height="38" class="lib" />
-  <rect x="70" y="485" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="485" width="4" height="38" fill="#facc15" rx="2" />
   <text x="153" y="503" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="153" y="515" text-anchor="middle" class="ver">0.1.20</text>
   <rect x="247" y="485" width="181" height="38" class="lib" />
   <rect x="247" y="485" width="4" height="38" fill="#ef4444" rx="2" />

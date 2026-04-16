@@ -1,5 +1,6 @@
 ---
 name: client-config-and-defi-risk
+remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 overview:
   "Per-client strategy config overrides (venue restrictions, feature gating) + DeFi risk enhancements (sub-1H HF, depeg,
   rebalance costs)"

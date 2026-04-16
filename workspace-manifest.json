@@ -1717,7 +1717,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2545,7 +2545,8 @@
       "testing_level": "unit",
       "status": "active",
       "tier": "T3",
-      "role": "Deployment management UI"
+      "role": "Deployment management UI",
+      "tags": ["ui", "deployment", "infrastructure"]
     }
   },
   "topologicalOrder": {

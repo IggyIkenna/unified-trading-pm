@@ -1,5 +1,6 @@
 ---
 name: strategy-lifecycle-visibility-ui
+remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 overview:
   Strategy lifecycle enforcement, paper trading comparison, ML dashboard, feature lineage, composable strategies,
   auto-retuning, research shell, risk attribution UI

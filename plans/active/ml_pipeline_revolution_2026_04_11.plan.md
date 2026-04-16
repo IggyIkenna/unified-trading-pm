@@ -1,5 +1,6 @@
 ---
 name: ml-pipeline-revolution
+remaining_todos_consolidated_into: consolidated_ml_advanced_pipeline_2026_04_15
 overview:
   P&L-aware training, confidence calibration, incremental learning, transfer learning, neural nets, multi-task training,
   hierarchical models, feature importance feedback, Bayesian optimization

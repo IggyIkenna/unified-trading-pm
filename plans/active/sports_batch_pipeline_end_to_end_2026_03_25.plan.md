@@ -1,5 +1,6 @@
 ---
 name: sports-batch-pipeline-end-to-end
+remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |
@@ -100,18 +101,9 @@ todos:
 
   - id: p1b-uac-data-source-to-secret
     content: |
-      - [ ] [AGENT] P0. Add missing sports sources to UAC DATA_SOURCE_TO_SECRET.
-        File: unified_api_contracts/canonical/canonical_mappings.py
-        Add entries (verify key names from p1a):
-          "odds_api": "odds-api-key",
-          "footystats": "footystats-api-key" or None,
-          "understat": None,
-          "soccer_football_info": None,
-          "open_meteo": None,
-          "transfermarkt": None,
-        QG: cd unified-api-contracts && bash scripts/quality-gates.sh
-    status: pending
-    blocked_by: p1a-sm-keys-audit
+      - [x] [AGENT] P0. DATA_SOURCE_TO_SECRET already includes odds_api, footystats, polymarket, etc. in canonical_mappings.py ~451-482
+    status: done
+    note: "Verified in canonical_mappings.py"
 
   - id: p1c-canonical-id-docstrings
     content: |

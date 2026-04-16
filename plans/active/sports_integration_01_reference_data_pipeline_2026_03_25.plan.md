@@ -1,5 +1,6 @@
 ---
 name: sports-integration-01-reference-data-pipeline
+remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |

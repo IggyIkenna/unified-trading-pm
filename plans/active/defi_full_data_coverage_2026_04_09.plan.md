@@ -1,5 +1,6 @@
 ---
 name: defi-full-data-coverage
+remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview:
   Build all missing DeFi data handlers in MTDS — lending indices, DEX pools, LST rates, perp funding, liquidations,
   bridge flows
