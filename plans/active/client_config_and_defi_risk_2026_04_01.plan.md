@@ -55,33 +55,33 @@ depends_on:
 todos:
   - id: cc-1a-client-config
     content: |
-      - [x] [AGENT] P0. Define per-client strategy config override schema in UAC
-    status: todo
+      - [x] [AGENT] P0. Define per-client strategy config override schema in UAC — ClientStrategyOverride in client_config.py
+    status: done
     note: ""
   - id: cc-1b-venue-restrict
     content: |
-      - [x] [AGENT] P0. Implement venue restriction enforcement in strategy-service
-    status: todo
+      - [x] [AGENT] P0. Implement venue restriction enforcement in strategy-service — ClientConfigOverrideMixin in defi_basis.py
+    status: done
     note: "Patrick gets OKX/Bybit/Binance only for basis"
   - id: cc-1c-feature-gate
     content: |
-      - [x] [AGENT] P1. Implement feature gating (rotation/multi-coin for premium clients only)
-    status: todo
+      - [x] [AGENT] P1. Implement feature gating (rotation/multi-coin for premium clients only) — same mixin/override pattern
+    status: done
     note: ""
   - id: cc-2a-hf-monitoring
     content: |
-      - [x] [AGENT] P0. Implement sub-1H health factor monitoring for leveraged positions
-    status: todo
+      - [x] [AGENT] P0. Implement sub-1H health factor monitoring for leveraged positions — risk_metrics.py HF checks
+    status: done
     note: "1H is too slow for recursive staking at 2.5x leverage"
   - id: cc-2b-depeg-risk
     content: |
-      - [x] [AGENT] P0. Add oracle depeg, stablecoin depeg, and borrow rate spread monitoring
-    status: todo
+      - [x] [AGENT] P0. Add oracle depeg, stablecoin depeg, and borrow rate spread monitoring — implemented in risk checks
+    status: done
     note: ""
   - id: cc-2c-rebalance-costs
     content: |
-      - [x] [AGENT] P0. Add expected rebalancing + emergency close cost estimation
-    status: todo
+      - [x] [AGENT] P0. Add expected rebalancing + emergency close cost estimation — defi_enhancements.py
+    status: done
     note: "Good for UI display and strategy decisions"
   - id: cc-2d-withdrawal-delay
     content: |

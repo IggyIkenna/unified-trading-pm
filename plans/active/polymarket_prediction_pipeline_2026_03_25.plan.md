@@ -95,7 +95,8 @@ todos:
           }
         Also add POLYMARKET and KALSHI to the VENUE_CATEGORY_MAP reverse lookup.
         QG: cd unified-api-contracts && bash scripts/quality-gates.sh
-    status: pending
+    status: done
+    note: "VENUES_BY_CATEGORY['prediction'] + DATA_TYPES_BY_CATEGORY already present in market_data_categories.py"
 
   - id: p1b-expand-polymarket-series-mappings
     content: |
@@ -145,46 +146,9 @@ todos:
 
   - id: p1c-expand-crypto-macro-mappings
     content: |
-      - [ ] [AGENT] P0. Expand crypto/macro mappings in UAC crypto_macro_mappings.py.
-        File: unified_api_contracts/external/polymarket/crypto_macro_mappings.py
-        Current: BTC timeframes (5m,15m,1h,4h,1d), SPX timeframes (1d only).
-        Expand to match actual Polymarket series discovered:
-
-        POLYMARKET_BTC_TIMEFRAMES = ("5m", "15m", "1h", "4h", "1d", "1w", "1M")
-        POLYMARKET_ETH_TIMEFRAMES = ("5m", "15m", "1h", "4h", "1d", "1w", "1M")
-        POLYMARKET_SOL_TIMEFRAMES = ("5m", "15m", "1h", "4h", "1d")
-        POLYMARKET_XRP_TIMEFRAMES = ("5m", "15m", "1h", "4h", "1w")
-        POLYMARKET_DOGE_TIMEFRAMES = ("5m", "15m", "1d", "1M")
-        POLYMARKET_BNB_TIMEFRAMES = ("5m", "15m", "4h", "1d")
-        POLYMARKET_HYPE_TIMEFRAMES = ("5m", "15m", "1h", "4h", "1d")
-
-        POLYMARKET_SPX_TIMEFRAMES = ("1d", "1M")  # daily + monthly hit
-        POLYMARKET_NDX_TIMEFRAMES = ("1d", "1M")
-        POLYMARKET_DJIA_TIMEFRAMES = ("1d",)
-        POLYMARKET_DAX_TIMEFRAMES = ("1d",)
-        POLYMARKET_HANG_SENG_TIMEFRAMES = ("1d",)
-        POLYMARKET_RUSSELL_TIMEFRAMES = ("1d",)
-
-        Add commodity series:
-        POLYMARKET_CRUDE_OIL_TIMEFRAMES = ("1d",)
-        POLYMARKET_GOLD_TIMEFRAMES = ("1d",)
-        POLYMARKET_SILVER_TIMEFRAMES = ("1d",)
-
-        Add forex series:
-        POLYMARKET_GBPUSD_TIMEFRAMES = ("1d",)
-        POLYMARKET_EURUSD_TIMEFRAMES = ("1d",)
-        POLYMARKET_USDJPY_TIMEFRAMES = ("1d",)
-
-        Add slug pattern constants for runtime market discovery:
-        SLUG_PATTERNS = {
-            "BTC_5M": "btc-updown-5m-{ts}",
-            "BTC_HOURLY": "bitcoin-up-or-down-{month}-{day}-{time}-et",
-            "SPX_DAILY": "spx-daily-up-or-down",
-            ...
-        }
-
-        Expand get_polymarket_tags_for_underlying() with all new underlyings.
-    status: pending
+      - [x] [AGENT] P0. Expand crypto/macro mappings in UAC crypto_macro_mappings.py — POLYMARKET_TIMEFRAMES + slug patterns + get_polymarket_tags_for_underlying() expanded with all underlyings
+    status: done
+    note: "crypto_macro_mappings.py has POLYMARKET_TIMEFRAMES + slug patterns"
 
   - id: p1d-canonical-instrument-id-format
     content: |

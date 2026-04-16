@@ -13,15 +13,22 @@ locked_since: 2026-04-13
 
 Three conflated concerns need separating:
 
-1. **Mappings** (teams, leagues, canonical IDs): Accumulating reference files that grow at predictable trigger points (season start, transfer window close, promotion/relegation). Currently re-fetched identically every day — 180+ hours/year wasted on Transfermarkt alone.
+1. **Mappings** (teams, leagues, canonical IDs): Accumulating reference files that grow at predictable trigger points
+   (season start, transfer window close, promotion/relegation). Currently re-fetched identically every day — 180+
+   hours/year wasted on Transfermarkt alone.
 
-2. **Daily source data** (FootyStats predictions, Understat xG, injuries, fixture stats): Date-specific data that SHOULD run daily on fixture dates. Already mostly correct, but FootyStats predictions are rejected wholesale when a few rows have nulls — should write what we have and let downstream handle nulls.
+2. **Daily source data** (FootyStats predictions, Understat xG, injuries, fixture stats): Date-specific data that SHOULD
+   run daily on fixture dates. Already mostly correct, but FootyStats predictions are rejected wholesale when a few rows
+   have nulls — should write what we have and let downstream handle nulls.
 
-3. **Data status denominator** ("when SHOULD data exist?"): The availability manifest needs to understand trigger calendars to avoid false positives. Transfer data shouldn't show as "missing" outside windows. Fixture-dependent data shouldn't show as "missing" on non-fixture days.
+3. **Data status denominator** ("when SHOULD data exist?"): The availability manifest needs to understand trigger
+   calendars to avoid false positives. Transfer data shouldn't show as "missing" outside windows. Fixture-dependent data
+   shouldn't show as "missing" on non-fixture days.
 
 ## Current Anti-Patterns
 
 ### Mappings: Daily re-fetch of static data
+
 ```
 # 365 identical copies per year:
 sports_reference/by_date/day=2026-04-01/entity=teams/teams.parquet
@@ -29,12 +36,14 @@ sports_reference/by_date/day=2026-04-02/entity=teams/teams.parquet  # same
 ```
 
 ### Predictions: Whole-shard rejection for partial nulls
+
 ```
 # 15 fixtures, 5 missing o25_potential → ALL 15 predictions rejected
 ERROR FootyStats predictions shard 2026-04-01 REJECTED — null-rate violations
 ```
 
 ### Data status: False "missing" on non-trigger dates
+
 ```
 # Transfermarkt shows 2% availability because denominator = every calendar day
 # Reality: data only changes 5x/year per league
@@ -48,27 +57,26 @@ ERROR FootyStats predictions shard 2026-04-01 REJECTED — null-rate violations
 
 Triggers are **per-league** because seasons differ:
 
-| League type | Season span | Triggers |
-|-------------|------------|----------|
-| European (EPL, La Liga, etc.) | Aug-May | Season start (Aug), winter window close (Feb), summer window open (Jun), summer window close (Sep) |
-| MLS | Feb-Oct | Season start (Feb), primary close (May), secondary close (Aug) |
-| J-League | Jan-Dec | Season start (Feb), primary close (Apr), secondary close (Aug) |
-| Allsvenskan/Eliteserien | Mar-Nov | Season start (Mar), mid-season close (Aug), off-season close (Mar+1) |
-| Brasileirao | Apr-Dec | Season start (Apr), primary close (May), secondary close (Aug) |
+| League type                   | Season span | Triggers                                                                                           |
+| ----------------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
+| European (EPL, La Liga, etc.) | Aug-May     | Season start (Aug), winter window close (Feb), summer window open (Jun), summer window close (Sep) |
+| MLS                           | Feb-Oct     | Season start (Feb), primary close (May), secondary close (Aug)                                     |
+| J-League                      | Jan-Dec     | Season start (Feb), primary close (Apr), secondary close (Aug)                                     |
+| Allsvenskan/Eliteserien       | Mar-Nov     | Season start (Mar), mid-season close (Aug), off-season close (Mar+1)                               |
+| Brasileirao                   | Apr-Dec     | Season start (Apr), primary close (May), secondary close (Aug)                                     |
 
-Transfer window dates: **already in UAC** (`transfer_windows.py`).
-Season start dates: **need to add to UAC**.
+Transfer window dates: **already in UAC** (`transfer_windows.py`). Season start dates: **need to add to UAC**.
 
 ### A2. Entity Classification
 
-| Entity | Provider(s) | Type | Trigger |
-|--------|------------|------|---------|
-| Leagues | UAC SSOT (hardcoded) | Static | Never refresh — fixed universe choice |
-| Teams per league | API Football, Transfermarkt | Trigger | Season start + promotion/relegation |
-| Player values (squad market values) | Transfermarkt | Trigger | Window open + window close |
-| Team canonical mappings (API Football ID ↔ canonical ↔ Transfermarkt ID ↔ FootyStats ID) | All providers | Trigger | Same as teams (new teams need mapping) |
-| SFI leagues | SoccerFootball.info | Trigger | Season start only (slow-moving) |
-| SFI standings | SoccerFootball.info | Weekly | After each match round (not trigger-based, but NOT daily) |
+| Entity                                                                                      | Provider(s)                 | Type    | Trigger                                                   |
+| ------------------------------------------------------------------------------------------- | --------------------------- | ------- | --------------------------------------------------------- |
+| Leagues                                                                                     | UAC SSOT (hardcoded)        | Static  | Never refresh — fixed universe choice                     |
+| Teams per league                                                                            | API Football, Transfermarkt | Trigger | Season start + promotion/relegation                       |
+| Player values (squad market values)                                                         | Transfermarkt               | Trigger | Window open + window close                                |
+| Team canonical mappings (API Football ID ↔ canonical ↔ Transfermarkt ID ↔ FootyStats ID) | All providers               | Trigger | Same as teams (new teams need mapping)                    |
+| SFI leagues                                                                                 | SoccerFootball.info         | Trigger | Season start only (slow-moving)                           |
+| SFI standings                                                                               | SoccerFootball.info         | Weekly  | After each match round (not trigger-based, but NOT daily) |
 
 ### A3. GCS Target Shape
 
@@ -97,25 +105,28 @@ These entities are date-specific and SHOULD run daily on fixture dates. No refac
 
 ### B1. Stop rejecting prediction shards for partial nulls
 
-FootyStats predictions currently reject entire shards when some fixtures have null potentials. Lower-league matches legitimately lack some fields. Fix: warn, don't reject. Downstream feature calculators already handle nulls via defaults.
+FootyStats predictions currently reject entire shards when some fixtures have null potentials. Lower-league matches
+legitimately lack some fields. Fix: warn, don't reject. Downstream feature calculators already handle nulls via
+defaults.
 
 - [x] [CODE] P0. Change `_validate_predictions_null_rates` from reject to warn-and-write (instruments-service)
 
 ### B2. Daily entities (no change needed)
 
-| Entity | Provider | Cadence | Status |
-|--------|----------|---------|--------|
-| Injuries | API Football | Daily | Correct |
-| Fixture stats/events/lineups/player_stats | API Football | Per completed fixture | Correct |
-| FootyStats predictions | FootyStats | Daily on fixture dates | Correct (after B1 fix) |
-| FootyStats matches | FootyStats | Daily on fixture dates | Correct |
-| Understat xG | Understat | Daily on fixture dates (6 leagues) | Correct |
+| Entity                                    | Provider     | Cadence                            | Status                 |
+| ----------------------------------------- | ------------ | ---------------------------------- | ---------------------- |
+| Injuries                                  | API Football | Daily                              | Correct                |
+| Fixture stats/events/lineups/player_stats | API Football | Per completed fixture              | Correct                |
+| FootyStats predictions                    | FootyStats   | Daily on fixture dates             | Correct (after B1 fix) |
+| FootyStats matches                        | FootyStats   | Daily on fixture dates             | Correct                |
+| Understat xG                              | Understat    | Daily on fixture dates (6 leagues) | Correct                |
 
 ---
 
 ## Workstream C: Data Status Denominator ("When SHOULD Data Exist?")
 
 The availability manifest denominator must understand:
+
 - **Fixture-dependent data** (predictions, match stats): Expected only on fixture dates → use fixture calendar
 - **Transfer-window data** (player values, transfer records): Expected during/after windows → use window calendar
 - **Mapping data** (teams, leagues): Expected at trigger dates only → use trigger calendar
@@ -123,12 +134,12 @@ The availability manifest denominator must understand:
 
 ### C1. Denominator by entity type
 
-| Entity type | Denominator | Source |
-|-------------|------------|--------|
-| Match data (fixture stats, predictions, xG) | Fixture calendar dates | UAC `get_league_fixture_calendar()` |
-| Transfer/squad data (player_values) | Window + 30d grace | UAC `is_transfer_data_expected()` |
-| Mappings (teams, team_mapping) | Trigger dates only | UAC trigger calendar (Phase A) |
-| Injuries | All calendar days in season | Season start/end from UAC |
+| Entity type                                 | Denominator                 | Source                              |
+| ------------------------------------------- | --------------------------- | ----------------------------------- |
+| Match data (fixture stats, predictions, xG) | Fixture calendar dates      | UAC `get_league_fixture_calendar()` |
+| Transfer/squad data (player_values)         | Window + 30d grace          | UAC `is_transfer_data_expected()`   |
+| Mappings (teams, team_mapping)              | Trigger dates only          | UAC trigger calendar (Phase A)      |
+| Injuries                                    | All calendar days in season | Season start/end from UAC           |
 
 - [x] [CODE] P0. Wire `is_transfer_data_expected()` into deployment-api for Transfermarkt entities
 - [ ] [CODE] P1. Wire trigger-date denominator for mapping entities (after Phase A)

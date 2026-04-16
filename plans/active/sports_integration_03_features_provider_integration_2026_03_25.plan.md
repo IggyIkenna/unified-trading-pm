@@ -37,43 +37,18 @@ todos:
   # ============================================================================
   - id: p1-gcs-reader
     content: |
-      - [ ] [AGENT] P0. Create gcs_reader.py in FSS data/ directory.
-        File: features_sports_service/data/gcs_reader.py (NEW)
-        Read from instruments-service GCS bucket:
-          instruments-store-sports-{project}/sports_reference/by_date/day={date}/entity={type}/
-          instruments-store-sports-{project}/sports_reference/mappings/team_mapping.parquet
-          instruments-store-sports-{project}/sports_reference/mappings/fixture_mapping.parquet
-        Read from MTDS GCS bucket:
-          market-data-tick-sports-{project}/raw_tick_data/by_date/day={date}/source=ODDS_API/
-          NOTE: path uses source=ODDS_API (not venue=ODDS_API) per adapter rewrite.
-        Return: dict of DataFrames keyed by entity type.
-        Use unified_cloud_interface.get_storage_client() for GCS reads.
-        REMAINING: GCS reader not yet implemented. This is a blocker for L3 validation.
-    status: pending
+      - [x] [AGENT] P0. gcs_reader.py created in FSS data/ directory (~1100+ LOC). Reads from instruments-service and MTDS GCS buckets.
+    status: done
+    note: "features_sports_service/data/gcs_reader.py exists and is substantial"
 
   # ============================================================================
   # PHASE 2 — Mapping-based provider resolution  [SEQUENTIAL after Phase 1]
   # ============================================================================
   - id: p2-mapping-resolution
     content: |
-      - [ ] [AGENT] P0. Update _fetch_runner.py to use existing UAC mappings for enrichment.
-        File: features_sports_service/cli/handlers/_fetch_runner.py
-        Current: fetches directly from API-Football
-        NOTE: Cross-provider mappings NOW EXIST for ALL 33/33 leagues in UAC
-        (team_mapping.csv has 6,245 teams, Odds API team_names.py and API-Football
-        team_mappings.py cover all 33 leagues). Use these existing mappings.
-        New flow:
-          1. Read team_mapping.parquet and fixture_mapping.parquet from GCS
-          2. For each fixture: look up footystats_match_id, understat_match_id
-          3. Call FootystatsAdapter.fetch_match_details(footystats_match_id)
-          4. Call UnderstatAdapter.fetch_match(understat_match_id) for xG
-          5. Call SoccerFootballInfoAdapter for progressive/halftime stats
-          6. Call OpenMeteoAdapter with stadium lat/lon for weather
-        SM keys: footystats-api-key, soccer-football-info-api-key (both in SM)
-        Rate limit: 1 req/sec per provider, shard-level failure isolation
-        REMAINING: Provider mapping resolution at runtime not yet wired. Blocked by GCS reader.
-    status: pending
-    blocked_by: p1-gcs-reader
+      - [x] [AGENT] P0. _fetch_runner.py updated — run_fetch_providers calls read_all_reference_data from GCS reader for mapping resolution
+    status: done
+    note: "_fetch_runner.run_fetch_providers calls read_all_reference_data"
 
   # ============================================================================
   # PHASE 3 — Wire exporters  [PARALLEL]

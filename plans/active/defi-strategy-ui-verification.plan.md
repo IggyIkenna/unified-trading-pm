@@ -1,10 +1,12 @@
 # DeFi Strategy UI Verification Plan
 
-**Objective:** Automate the process of verifying that a DeFi strategy's UI widgets are fully functional with mocked data. For each strategy, verify that input changes propagate correctly to dependent output values.
+**Objective:** Automate the process of verifying that a DeFi strategy's UI widgets are fully functional with mocked
+data. For each strategy, verify that input changes propagate correctly to dependent output values.
 
 **Scope:** Any strategy in `/codex/09-strategy/defi/` folder
 
 **Reusable Process:**
+
 1. Read strategy specification
 2. Identify required UI components
 3. Check component existence and mock data setup
@@ -17,6 +19,7 @@
 ## Phase 1: Strategy Analysis
 
 ### Task 1.1: List Available Strategies
+
 - Location: `/codex/09-strategy/defi/*.md`
 - Current available:
   - aave-lending.md ✅ DONE
@@ -31,6 +34,7 @@
   - And 8 more variants (SOL, BTC, L2 versions)
 
 ### Task 1.2: Parse Strategy Spec
+
 - Read strategy from codex
 - Extract:
   - **Strategy ID** (e.g., `AAVE_LENDING`, `BASIS_TRADE`)
@@ -41,6 +45,7 @@
   - **Risk metrics** (health_factor, liquidation_threshold, margin)
 
 ### Task 1.3: Identify Required UI Components
+
 - Pattern: `components/widgets/defi/{strategy-slug}-widget.tsx`
 - Example: `aave-lending.md` → `defi-lending-widget.tsx`
 - Also check for:
@@ -53,12 +58,14 @@
 ## Phase 2: Component Verification
 
 ### Task 2.1: Check Widget Existence
+
 - [ ] UI component file exists
 - [ ] Component is exported and importable
 - [ ] Component accepts `WidgetComponentProps`
 - [ ] Component renders without errors
 
 ### Task 2.2: Check Mock Data Setup
+
 - [ ] Protocol mock data exists
 - [ ] Asset parameters defined (collateral factors, APY rates, prices)
 - [ ] Trade history fixture exists
@@ -66,6 +73,7 @@
 - [ ] Treasury snapshot fixture exists
 
 ### Task 2.3: Check Data Context
+
 - [ ] Data context provider exists
 - [ ] Mock data is properly injected into context
 - [ ] State hooks are available (setAmount, setAsset, executeTrade, etc.)
@@ -76,13 +84,16 @@
 ## Phase 3: Dynamic Value Testing
 
 ### Task 3.1: Test Form Inputs
+
 For each **input field**:
+
 - [ ] Input accepts numeric values
 - [ ] Input validates constraints (min/max, decimals)
 - [ ] Input clearing works
 - [ ] Input state persists across renders
 
 **Inputs to test:**
+
 - Amount
 - Asset selector
 - Operation type
@@ -90,9 +101,11 @@ For each **input field**:
 - Protocol selector
 
 ### Task 3.2: Test Dependent Outputs
+
 For each **output field**, verify it changes when **inputs change**:
 
 **Pattern: Amount → Expected Output**
+
 ```
 - Change amount: 10 → 20
 - Expected output should change: 9.95 → 19.90 (with 1% slippage)
@@ -100,6 +113,7 @@ For each **output field**, verify it changes when **inputs change**:
 ```
 
 **Pattern: Asset → APY Rates**
+
 ```
 - Change asset: ETH → USDC
 - APY display should update: "4.50% / 5.20%" → "3.20% / 4.10%"
@@ -107,6 +121,7 @@ For each **output field**, verify it changes when **inputs change**:
 ```
 
 **Pattern: Asset → Health Factor**
+
 ```
 - Operation: LEND
 - Asset 1 (ETH, 82% CF): 2.35 → 2.42
@@ -116,6 +131,7 @@ For each **output field**, verify it changes when **inputs change**:
 ```
 
 **Pattern: Operation → Expected Output Format**
+
 ```
 - LEND 13 ETH → "12.87 aETH" (aToken form)
 - BORROW 13 ETH → "12.87 ETH" (underlying)
@@ -125,6 +141,7 @@ For each **output field**, verify it changes when **inputs change**:
 ```
 
 **Pattern: Amount → Health Factor**
+
 ```
 - LEND: amount ↑ → HF ↑
 - BORROW: amount ↑ → HF ↓
@@ -134,6 +151,7 @@ For each **output field**, verify it changes when **inputs change**:
 ```
 
 ### Task 3.3: Test Trade Execution
+
 - [ ] Execute button is disabled when amount = 0
 - [ ] Execute button fires when amount > 0
 - [ ] New trade appears in trade history
@@ -143,6 +161,7 @@ For each **output field**, verify it changes when **inputs change**:
 - [ ] Running P&L updates correctly
 
 ### Task 3.4: Test Edge Cases
+
 - [ ] Amount = 0 (no change to outputs)
 - [ ] Amount = very large (outputs scale correctly)
 - [ ] Amount = decimal (e.g., 0.5 ETH)
@@ -155,7 +174,9 @@ For each **output field**, verify it changes when **inputs change**:
 ## Phase 4: Mock Data Verification
 
 ### Task 4.1: Protocol Parameters
+
 For each protocol in mock data:
+
 - [ ] All assets have collateral factors defined
 - [ ] Collateral factors are realistic (0.5 - 0.95 range)
 - [ ] APY rates are reasonable for asset class
@@ -163,6 +184,7 @@ For each protocol in mock data:
 - [ ] Asset prices are current (within 24h)
 
 ### Task 4.2: Trade History
+
 - [ ] Initial mock trade history loads
 - [ ] New trades append to history (not replace)
 - [ ] Running P&L calculates correctly
@@ -174,11 +196,12 @@ For each protocol in mock data:
 ## Phase 5: Reporting
 
 ### Task 5.1: Generate Readiness Report
+
 - **Strategy:** {STRATEGY_ID}
 - **Spec Location:** `codex/09-strategy/defi/{strategy}.md`
 - **Widget Location:** `components/widgets/defi/{widget}.tsx`
 - **Status:** READY / IN_PROGRESS / BLOCKED
-- **Test Results:** 
+- **Test Results:**
   - Input validation: ✅ PASS / ❌ FAIL / ⏭️ SKIP
   - Output propagation: ✅ PASS / ❌ FAIL / ⏭️ SKIP
   - Trade execution: ✅ PASS / ❌ FAIL / ⏭️ SKIP
@@ -187,7 +210,9 @@ For each protocol in mock data:
 - **Next Steps:** (what needs to be fixed)
 
 ### Task 5.2: Create Fixes (if needed)
+
 If any test fails:
+
 - [ ] Read the widget component
 - [ ] Identify why the output didn't change
 - [ ] Create/update mock data OR fix component logic
@@ -199,6 +224,7 @@ If any test fails:
 ## Execution
 
 ### Command Pattern
+
 ```
 Agent: "Verify DeFi strategy UI readiness for {STRATEGY_NAME}"
 
@@ -207,6 +233,7 @@ Output: readiness report + any fixes applied
 ```
 
 ### Example: Basis Trade
+
 ```
 Strategy: BASIS_TRADE
 Operations: SWAP, TRADE (long/short hedge)
@@ -266,6 +293,7 @@ Sign-off: {AGENT_NAME} | {TIMESTAMP}
 ## Success Criteria
 
 A strategy is **READY** when:
+
 1. ✅ All UI components exist and render
 2. ✅ All inputs properly bound to state
 3. ✅ All outputs update when inputs change

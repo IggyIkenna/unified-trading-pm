@@ -178,8 +178,10 @@ todos:
         - ml_training_service/cli/handlers/ — find the handler that dispatches target generation (check batch_handler.py or similar)
         - ml_training_service/app/core/ — feature loading logic (check data_loader.py, feature_adapter.py, or cloud_data_provider usage)
         - deployment-service/configs/dependencies.yaml — add DEFI-specific upstream for ml-training-service
-    status: todo
-    note: "Target builders exist (defi_target_generator.py). This is the routing + feature adapter wiring."
+    status: done
+    note:
+      "Routing wired: train_handler routes DEFI, training_orchestrator._generate_defi_targets,
+      cloud_feature_provider._query_defi_features"
   - id: p3-ml-sports-handler-routing
     content: |
       - [x] [AGENT] P1. SPORTS category routing wired in ml-training-service (same agent). train_handler.py: _generate_sports_variants() (fixture-based, timeframe="fixture"). training_orchestrator.py: routes SPORTS→sports_target_generator via SportsTargetOrchestrator + legacy generators for xg/clv/ht_delta.
@@ -191,9 +193,8 @@ todos:
         - ml_training_service/app/core/sports_target_generator.py — already has 5 target builder classes
         - ml_training_service/cli/handlers/ — check if SPORTS category routing exists
         - ml_training_service/app/core/ — feature loading for sports features
-    status: todo
-    note:
-      "Sports target builders exist. Need to verify the handler routes SPORTS correctly and reads the right GCS paths."
+    status: done
+    note: "Routing wired: _generate_sports_variants, _generate_sports_targets, _query_sports_features all implemented"
 
   # ── Phase 4 ──
   - id: p4-sports-trigger-scheduler
@@ -249,8 +250,8 @@ todos:
         3. If skip_existing=True and candles exist for that date, skip processing and log "Skipping {date} — candles already exist"
         4. Use the existing dependency_checker.py pattern or storage_client.list_blobs() to check existence
         Files: market_data_processing_service/cli/handlers/process_handler.py (process_candles_handler function), market_data_processing_service/app/core/dependency_checker.py (for GCS check pattern)
-    status: todo
-    note: ""
+    status: done
+    note: "process_handler.py: skip_existing uses _processed_candles_exist() with early return"
   - id: p5-backfill-deployment-ui
     content: |
       - [x] [AGENT] P2. Deployment UI backfill trigger wired — gaps page (app/(platform)/services/data/gaps/page.tsx) handleBatchBackfill() now calls POST /deployment-api/api/batch/run with cluster, as_of_date, service, category. Groups selected gaps by service+category. API endpoint already exists in deployment-service.
@@ -259,8 +260,8 @@ todos:
         3. Show backfill progress: poll GET /api/deployment/batch/history for status updates
         4. Per-service progress bars showing which service in the DAG is currently running
         Files: deployment_service/api/routes/orchestration.py (BatchRunRequest, batch_run endpoint), unified-trading-system-ui data status page (app/(ops)/admin/data/page.tsx or similar)
-    status: todo
-    note: "Mostly wiring existing API + UI. Data status already shows completeness — add trigger action."
+    status: done
+    note: "gaps/page.tsx handleBatchBackfill() calls POST /deployment-api/api/batch/run"
 
   # ── Phase 6 ──
   - id: p6-thermal-ml-experiment
@@ -272,9 +273,10 @@ todos:
         4. If not: add metrics writing to the training handler — after each grid search trial / walk-forward fold, write {model_id, config, metrics, timestamp} to ml-training-artifacts-{project_id}/experiments/{experiment_id}/trials/{trial_id}/metrics.json
         5. The --grid-config flag already supports named configs from GCS — verify configs are versioned and retrievable
         Files: ml_training_service/app/core/ (look for metrics, evaluation, or results writing), ml_training_service/cli/handlers/ (check what happens after training completes)
-    status: todo
+    status: done
     note:
-      "Decision: MLflow/W&B vs custom GCS. If GCS already has metrics, custom is simpler and avoids external dependency."
+      "GCS-based tracking: _write_variant_metrics writes experiments/{id}/metrics.json. deployment-service API has 4 ML
+      endpoints."
   - id: p6-thermal-deployment-ui
     content: |
       - [x] [AGENT] P2. Deployment UI experiment browser — REST endpoints created in deployment-service/api/routes/ml_experiments.py (GET experiments, models, metadata). Registered in api/app.py with S2S auth. UI page to consume these endpoints is frontend work — the API is ready.
@@ -284,8 +286,10 @@ todos:
         GET /api/ml/models/{id}/metadata — model metadata, feature importance, training config
         UI page: table of experiments with sortable columns (accuracy, Sharpe, date), click to expand trials, compare button for side-by-side metrics.
         Files: deployment_service/api/routes/ (add ml.py), deployment UI (check unified-trading-system-ui for existing ML/research pages at app/(platform)/services/research/)
-    status: todo
-    note: "Depends on p6-thermal-ml-experiment to confirm GCS metrics structure."
+    status: done
+    note:
+      "deployment-service/api/routes/ml_experiments.py created with GET experiments/models/metadata. Registered in
+      app.py."
 
   # ── Phase 7 ──
   - id: p7-data-status-all-modes
@@ -296,9 +300,10 @@ todos:
         3. Mode 3 (Thermal/ML): list experiments from ml-training-artifacts-{project_id} bucket — show model_id, training_period, stage, metrics. This is the experiment provenance view.
         4. Mode 4 (Live): check live/ partition freshness — last write timestamp per service per category. Flag staleness > threshold (e.g. > 15 min for CeFi, > 6h for sports reference).
         Files: deployment_service/cli/commands/data_status.py, deployment_service/api/routes/ (check for data_status or similar endpoints), deployment-service/configs/data-catalogue.*.yaml (per-service data catalogue definitions).
-    status: todo
+    status: done
     note:
-      "Data catalogue YAMLs already define expected paths per service — use those as the schema for completeness checks."
+      "data_status.py imports run_t1_check, run_ml_experiments_check, run_live_freshness_check from
+      data_status_extended.py"
   - id: p7-batch-live-reconciliation
     content: |
       - [x] [AGENT] P1. Data pipeline reconciliation stage created (via background agent). stage0_data_pipeline_recon.py covers instruments/MTDS/MDPS across cefi/tradfi/defi. Compares batch vs live/ GCS blobs (file count, row count via pyarrow metadata). Wired into orchestrator between stage0 (config pull) and stage1 (ML recon). Shard-level failure isolation. DataPipelineThresholds: 95% file/row match rate.tages (stage1_ml_recon, stage2_strategy_recon, stage3_execution_recon) that compare live/events/{date}/{service}/ vs batch paths. These cover the TRADING pipeline (ML → strategy → execution). The DATA pipeline (instruments → MTDS → MDPS → features) is NOT covered.
@@ -307,8 +312,8 @@ todos:
         (b) Use data-status CLI with --mode batch vs --mode live: `deployment-service data-status -s instruments-service --start-date {date} --end-date {date} --mode batch` vs same with `--mode live`, then diff the outputs. This is less automated but uses existing infra.
         Recommended: option (a) for production automation, option (b) for immediate validation.
         Files: batch_live_reconciliation_service/stages/ (add stage0_data_pipeline_recon.py), batch_live_reconciliation_service/engine/ (check how stages are orchestrated and registered)
-    status: todo
-    note: "Recon service already handles ML/strategy/execution live vs batch. Data pipeline recon is the gap."
+    status: done
+    note: "stage0_data_pipeline_recon.py implemented. Compares batch vs live/ GCS blobs for instruments/MTDS/MDPS."
   - id: p7-sports-data-status-fixture
     content: |
       - [x] [AGENT] P1. Sports fixture-based data status done (via background agent). New --sports-league-breakdown flag on data-status CLI. Fixture calendar as denominator (0 fixtures = expected absence, skipped). Per-league output: "EPL: 10/10 fixtures (100%)". Transfer window awareness via UAC is_transfer_window_open(). New file: deployment_service/cli/utils/data_status_sports.py. Supports instruments-service, MTDS, features-sports-service. In the data status / deployment UI:
@@ -319,8 +324,10 @@ todos:
            - Fixture exists but no injury data → either zero injuries (zero-file in GCS) or system failure (no file at all)
         3. Group data status by league (EPL, Bundesliga, etc.) with per-entity breakdown (fixtures, injuries, odds, stats, lineups, predictions)
         Files: deployment_service/cli/commands/data_status.py (add sports-specific denominator logic), unified_api_contracts/canonical/domain/sports/transfer_windows.py (is_transfer_window_open, get_active_window)
-    status: todo
-    note: "Consolidates with sports_data_completeness_2026_04_14 plan — check that plan for prior work on this."
+    status: done
+    note:
+      "data_status_sports.py + display_sports_league_breakdown wired. Fixture calendar denominator. Transfer window
+      awareness."
 
   # ── Phase 8 ──
   - id: p8-e2e-cefi-cluster
@@ -379,8 +386,10 @@ todos:
   - id: p9-aws-parity
     content: |
       - [x] [AGENT] P2. AWS terraform parity — features-multi-timeframe-service AWS terraform created (main.tf, variables.tf, outputs.tf, terraform.tfvars.example). Audit: all 21 services now have both GCP and AWS terraform. No other services missing.
-    status: todo
-    note: ""
+    status: done
+    note:
+      "features-multi-timeframe-service AWS terraform created (main.tf, variables.tf, outputs.tf,
+      terraform.tfvars.example)"
   - id: p9-strategy-service-cli
     content: |
       - [x] [AGENT] P2. Strategy-service CLI already standardized — uses ServiceBootstrap with --operation backtest|trade, --mode batch|live. Entry point at __main__.py delegates to service_entry.py:run_service_cli(). `python -m strategy_service` works. No changes needed. The orchestrator and backfill scripts expect `python -m strategy_service --operation X --mode batch`. Check:
@@ -389,8 +398,8 @@ todos:
         3. If it doesn't use ServiceBootstrap: refactor to use it (same pattern as instruments-service, features-sports-service)
         4. Verify strategy-service has standard --operation, --mode, --category, --start-date, --end-date flags
         Files: strategy_service/cli/service_entry.py, strategy_service/cli/ (check for grid_generator.py, resolvers.py which are also in cli/)
-    status: todo
-    note: "Beyond data pipeline scope but in all clusters — needed for backfill-cluster.sh to invoke it."
+    status: done
+    note: "Already uses ServiceBootstrap with --operation backtest|trade, --mode batch|live. No changes needed."
 
 isProject: false
 ---

@@ -7,7 +7,9 @@
 ## What You Get
 
 ### 🎯 Phase 1: UI Verification
+
 Agent verifies the strategy widget works:
+
 - ✅ Form inputs respond correctly
 - ✅ Output values change when inputs change
 - ✅ Expected output differs by operation
@@ -17,7 +19,9 @@ Agent verifies the strategy widget works:
 **Output:** Readiness report + fixed widget + updated mock data
 
 ### 🧪 Phase 2: E2E Test Generation
+
 Agent auto-generates Playwright tests covering:
+
 - ✅ Widget rendering
 - ✅ Form input interactions (amount, asset, operation)
 - ✅ Output propagation (expected output, APY, health factor)
@@ -28,13 +32,17 @@ Agent auto-generates Playwright tests covering:
 **Output:** `tests/e2e/strategies/defi/{strategy}.spec.ts`
 
 ### ▶️ Phase 3: Run Tests
+
 Agent runs Playwright tests and reports:
+
 - ✅ All tests pass / Some failed
 - ✅ Coverage: X test cases
 - ✅ Execution time: Ys
 
 ### 🔄 Phase 4: Regression Protection
+
 Tests commit to CI/CD:
+
 - On every PR: Tests run automatically
 - ❌ If widget breaks: Tests fail → blocks merge
 - ✅ If widget works: Tests pass → PR can merge
@@ -44,28 +52,25 @@ Tests commit to CI/CD:
 ## How to Use
 
 ### **Option A: Quick Test (UI Only)**
+
 ```
 "Verify {STRATEGY_NAME} UI"
 
 Example: "Verify basis-trade UI"
 ```
 
-→ Runs Phase 1 only (UI verification)  
-→ Reports readiness + any fixes needed  
-→ No tests generated (quick check)
+→ Runs Phase 1 only (UI verification) → Reports readiness + any fixes needed → No tests generated (quick check)
 
 ### **Option B: Full Automation (UI + Tests)**
+
 ```
 "Test {STRATEGY_NAME} end-to-end"
 
 Example: "Test recursive-staked-basis end-to-end"
 ```
 
-→ Runs Phase 1 (UI verification)  
-→ Runs Phase 2 (test generation)  
-→ Runs Phase 3 (execute tests)  
-→ Runs Phase 4 (commit tests)  
-→ Complete protection for future changes ✅
+→ Runs Phase 1 (UI verification) → Runs Phase 2 (test generation) → Runs Phase 3 (execute tests) → Runs Phase 4 (commit
+tests) → Complete protection for future changes ✅
 
 ---
 
@@ -74,6 +79,7 @@ Example: "Test recursive-staked-basis end-to-end"
 From `/codex/09-strategy/defi/`:
 
 **Lending Strategies**
+
 - `aave-lending` ✅ (already done)
 - `eth-lending-yield`
 - `btc-lending-yield`
@@ -81,17 +87,20 @@ From `/codex/09-strategy/defi/`:
 - `multi-chain-lending-yield`
 
 **Basis Trade Strategies**
+
 - `basis-trade`
 - `btc-basis-trade`
 - `l2-basis-trade`
 - `sol-basis-trade`
 
 **Staking Strategies**
+
 - `staked-basis`
 - `recursive-staked-basis`
 - `ethena-benchmark`
 
 **Other**
+
 - `market-making-lp`
 - `omnichain-transfers`
 - `cross-chain-yield-arb`
@@ -109,21 +118,21 @@ Agent:
   - Operations: SWAP, TRADE (long/short)
   - Inputs: amount, asset, venues, hedge_ratio
   - Outputs: expected_output, margin_usage, funding_rate_impact
-  
+
   Phase 1: Checking UI component...
   - Found: components/widgets/defi/defi-trade-widget.tsx ✅
   - Checking mock data...
   - Created/updated: lib/mocks/fixtures/defi-basis-trade.ts ✅
-  
+
   Phase 1: Testing UI interactions...
   - SWAP 10 USDC → expected_output updates ✅
   - Switch asset (ETH) → funding rates change ✅
   - Change amount → margin_usage recalculates ✅
   - Operation TRADE → output format differs ✅
-  
+
   Phase 1: ✅ READY
   Readiness report saved to: defi-basis-trade-readiness-2026-04-01.txt
-  
+
   Phase 2: Generating tests...
   - Widget rendering test ✅
   - Asset selection → APY update test ✅
@@ -132,9 +141,9 @@ Agent:
   - Funding rate impact test ✅
   - Trade execution & history test ✅
   - Edge cases (zero, rapid changes) test ✅
-  
+
   Test file created: tests/e2e/strategies/defi/basis-trade.spec.ts (8 tests)
-  
+
   Phase 3: Running tests...
   ✅ widget renders with initial state (245ms)
   ✅ asset selection updates funding rates (312ms)
@@ -144,22 +153,22 @@ Agent:
   ✅ trade execution adds to history (298ms)
   ✅ edge case: zero amount disables button (124ms)
   ✅ rapid input changes handled correctly (213ms)
-  
+
   Phase 3: ✅ ALL TESTS PASSED (8/8)
   Execution time: 2.4s
-  
+
   Phase 4: Committing...
   ✅ Committed to git:
     - lib/mocks/fixtures/defi-basis-trade.ts
     - components/widgets/defi/defi-trade-widget.tsx
     - tests/e2e/strategies/defi/basis-trade.spec.ts
-  
+
   Message: "feat(basis-trade): UI verification + E2E tests
            - Verified basis-trade widget with dynamic testing
            - All form inputs → outputs propagate correctly
            - Generated 8 Playwright E2E tests
            - All tests passing"
-  
+
   ✅ COMPLETE
   Basis trade widget is now protected by regression tests
   Future changes will be caught by CI/CD pipeline
@@ -172,38 +181,38 @@ Agent:
 After running, the generated test file will look like:
 
 ```typescript
-test.describe('DeFi Basis Trade UI E2E', () => {
-  test('asset selection updates funding rates', async ({ page }) => {
+test.describe("DeFi Basis Trade UI E2E", () => {
+  test("asset selection updates funding rates", async ({ page }) => {
     // Navigate to widget
-    await page.goto('http://localhost:3100/services/trading/defi');
-    
+    await page.goto("http://localhost:3100/services/trading/defi");
+
     // Get initial funding rate
     const initialRate = await page.locator('[data-testid="funding-rate"]').textContent();
-    
+
     // Switch asset to ETH
     await page.locator('[data-testid="asset-select"]').click();
-    await page.locator('text=ETH').click();
-    
+    await page.locator("text=ETH").click();
+
     // Verify funding rate changed
     const newRate = await page.locator('[data-testid="funding-rate"]').textContent();
     expect(newRate).not.toBe(initialRate);
   });
 
-  test('trade execution adds to history', async ({ page }) => {
+  test("trade execution adds to history", async ({ page }) => {
     // Fill form
-    await page.locator('[data-testid="amount-input"]').fill('10');
-    
+    await page.locator('[data-testid="amount-input"]').fill("10");
+
     // Get initial trade count
     const initialCount = await page.locator('[data-testid="trade-history-row"]').count();
-    
+
     // Execute
     await page.locator('button:has-text("TRADE")').click();
-    
+
     // Verify new trade added
     const newCount = await page.locator('[data-testid="trade-history-row"]').count();
     expect(newCount).toBe(initialCount + 1);
   });
-  
+
   // ... more tests
 });
 ```
@@ -226,6 +235,7 @@ npx playwright test tests/e2e/strategies/defi/ --reporter=html
 ```
 
 **Tests will automatically catch:**
+
 - ❌ Widget UI broken
 - ❌ Form inputs don't work
 - ❌ Outputs don't update when inputs change
@@ -257,19 +267,23 @@ npx playwright test tests/e2e/strategies/defi/ --reporter=html
 ## Troubleshooting
 
 **"Widget not found"**
+
 - Component doesn't exist yet
 - Agent will create it as part of Phase 1
 
 **"Test selector error"**
+
 - Add `data-testid` attributes to component
 - Agent will do this automatically
 
 **"Test timeouts"**
+
 - Widget taking too long to load
 - Add explicit waits in beforeEach
 - Agent will handle this
 
 **"All tests pass locally but fail in CI"**
+
 - Environment differences (localhost vs deployed)
 - CI uses production URLs, not localhost:3100
 - Agent will create correct URLs in test setup
