@@ -830,7 +830,7 @@
   "unified-admin-ui": {
     "api_base": "N/A",
     "requests": [],
-    "note": "No API client files found; likely a shared component library or admin shell"
+    "note": "ARCHIVED 2026-04-16 — features migrated to unified-trading-system-ui (event-audit, best-execution, data-completeness)"
   },
   "unified-trading-system-ui": {
     "api_base": "unified-trading-api (+ auth-api, deployment-api, client-reporting-api via env/proxy)",

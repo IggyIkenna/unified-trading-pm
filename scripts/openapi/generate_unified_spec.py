@@ -408,6 +408,60 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
     return orphans
 
 
+def _validate_service_coverage(workspace_root: Path, registered_services: set[str]) -> None:
+    """Warn about services on disk with API entrypoints not in SERVICE_REGISTRY.
+
+    Scans sibling directories of ``workspace_root`` for repos that contain a
+    FastAPI-style entrypoint (``{pkg}/api/main.py``, ``{pkg}/api/app.py``, or
+    ``{pkg}/main.py``) but are absent from ``SERVICE_REGISTRY``.
+
+    This is purely informational — it never fails the pipeline.
+    """
+    discovered: list[str] = []
+
+    for candidate in sorted(workspace_root.iterdir()):
+        if not candidate.is_dir():
+            continue
+        repo_name = candidate.name
+        if repo_name in registered_services:
+            continue
+        # Must have a pyproject.toml to be a Python repo
+        if not (candidate / "pyproject.toml").is_file():
+            continue
+
+        pkg_name = repo_name.replace("-", "_")
+        pkg_dir = candidate / pkg_name
+
+        if not pkg_dir.is_dir():
+            continue
+
+        # Check for FastAPI entrypoint patterns
+        entrypoint_candidates = [
+            pkg_dir / "api" / "main.py",
+            pkg_dir / "api" / "app.py",
+            pkg_dir / "main.py",
+        ]
+        for ep in entrypoint_candidates:
+            if ep.is_file():
+                discovered.append(repo_name)
+                break
+
+    if discovered:
+        logger.warning("")
+        logger.warning(
+            "Service coverage: %d repo(s) have API entrypoints but are NOT in SERVICE_REGISTRY:",
+            len(discovered),
+        )
+        for name in discovered:
+            logger.warning(
+                "  WARNING: Service '%s' has API entrypoint but is not in SERVICE_REGISTRY",
+                name,
+            )
+        logger.warning("")
+    else:
+        logger.info("Service coverage: all discovered API repos are in SERVICE_REGISTRY.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate unified OpenAPI spec")
     parser.add_argument(
@@ -477,6 +531,10 @@ def main() -> None:
     # === Step 4: Merge ===
     logger.info("\nMerging %d service specs...", len(service_specs))
     unified = merge_specs(service_specs)
+
+    # === Step 4b: Validate service coverage ===
+    registered_names = {name for name, _, _ in SERVICE_REGISTRY}
+    _validate_service_coverage(workspace_root, registered_names)
 
     # === Step 5: Validate $refs ===
     broken_refs = validate_refs(unified)

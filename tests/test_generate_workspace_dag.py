@@ -136,7 +136,7 @@ class TestLayoutRows:
 
     def test_single_repo(self) -> None:
         """Single repo should produce one row with one entry."""
-        repos = [RepoEntry("test-repo", "0.1.0", "lib")]
+        repos = [RepoEntry("test-repo", "0.1.0", "lib", "PASSING")]
         rows = layout_rows(repos)
         assert len(rows) == 1
         assert len(rows[0]) == 1
@@ -173,14 +173,14 @@ class TestBandHeight:
 
     def test_single_row(self) -> None:
         """Single row band height = header + padding + one row + padding."""
-        row: list[LayoutEntry] = [LayoutEntry("a", "0.1.0", "lib", 70, 130)]
+        row: list[LayoutEntry] = [LayoutEntry("a", "0.1.0", "lib", "PASSING", 70, 130)]
         result = band_height([row])
         # LVL_HDR_H(35) + LVL_PAD_T(12) + 1*ROW_H(48) + LVL_PAD_B(12) = 107
         assert result == 107
 
     def test_multiple_rows(self) -> None:
         """Multiple rows should increase height linearly."""
-        row: list[LayoutEntry] = [LayoutEntry("a", "0.1.0", "lib", 70, 130)]
+        row: list[LayoutEntry] = [LayoutEntry("a", "0.1.0", "lib", "PASSING", 70, 130)]
         h1 = band_height([row])
         h2 = band_height([row, row])
         assert h2 - h1 == 48  # ROW_H

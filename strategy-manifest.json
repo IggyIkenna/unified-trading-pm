@@ -1637,6 +1637,1128 @@
       "batch_capable": true,
       "live_capable": true,
       "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_BTC_BASIS_1H",
+      "display_name": "DeFi BTC Basis Trade (1H)",
+      "category": "DEFI",
+      "subcategory": "BTC_BASIS",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
+      "venues": ["WALLET", "HYPERLIQUID"],
+      "instruments": ["WALLET:SPOT_ASSET:WBTC", "HYPERLIQUID:PERPETUAL:BTC-USDC@LIN@HYPERLIQUID"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.btc_basis.BtcBasisTradeStrategy",
+      "factory_function": "create_btc_basis_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_BTC_LENDING_1H",
+      "display_name": "DeFi BTC Lending (1H)",
+      "category": "DEFI",
+      "subcategory": "BTC_LENDING",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["AAVEV3-ETHEREUM"],
+      "instruments": ["AAVEV3-ETHEREUM:A_TOKEN:AWBTC@ETHEREUM"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.btc_lending.BtcLendingStrategy",
+      "factory_function": "create_btc_lending_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_STAKED_BASIS_SOL_1H",
+      "display_name": "DeFi SOL Staked Basis (1H)",
+      "category": "DEFI",
+      "subcategory": "SOL_STAKED_BASIS",
+      "domain": "defi",
+      "asset_classes": ["LST", "PERPETUAL"],
+      "venues": ["MARINADE-SOLANA", "HYPERLIQUID"],
+      "instruments": ["MARINADE-SOLANA:LST:MSOL@SOLANA", "HYPERLIQUID:PERPETUAL:SOL-USDC@LIN@HYPERLIQUID"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.sol_staked_basis.SolStakedBasisStrategy",
+      "factory_function": "create_sol_staked_basis_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_SOL_BASIS_1H",
+      "display_name": "DeFi SOL Basis Trade (1H)",
+      "category": "DEFI",
+      "subcategory": "SOL_BASIS",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
+      "venues": ["WALLET", "HYPERLIQUID"],
+      "instruments": ["WALLET:SPOT_ASSET:SOL", "HYPERLIQUID:PERPETUAL:SOL-USDC@LIN@HYPERLIQUID"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.sol_basis.SolBasisTradeStrategy",
+      "factory_function": "create_sol_basis_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_SOL_LENDING_KAMINO_1H",
+      "display_name": "DeFi SOL Lending Kamino (1H)",
+      "category": "DEFI",
+      "subcategory": "SOL_LENDING",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["KAMINO-SOLANA"],
+      "instruments": ["KAMINO-SOLANA:A_TOKEN:KSOL@SOLANA"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.sol_lending.KaminoLendingStrategy",
+      "factory_function": "create_kamino_lending_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_SOL_CONCENTRATED_LP_1H",
+      "display_name": "DeFi SOL Concentrated LP (1H)",
+      "category": "DEFI",
+      "subcategory": "CONCENTRATED_LP",
+      "domain": "defi",
+      "asset_classes": ["LP_TOKEN"],
+      "venues": ["ORCA-SOLANA", "RAYDIUM-SOLANA"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.sol_concentrated_lp.SolConcentratedLPStrategy",
+      "factory_function": "create_sol_concentrated_lp_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_AMM_LP_ETH_USDC",
+      "display_name": "DeFi AMM LP ETH/USDC",
+      "category": "DEFI",
+      "subcategory": "AMM_LP",
+      "domain": "defi",
+      "asset_classes": ["LP_TOKEN"],
+      "venues": ["UNISWAPV3-ETHEREUM", "CURVE-ETHEREUM", "BALANCER-ETH"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.defi_amm_lp.AmmLPStrategy",
+      "factory_function": "create_amm_lp_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_ACTIVE_LP_ETH_USDC",
+      "display_name": "DeFi Active LP ETH/USDC",
+      "category": "DEFI",
+      "subcategory": "ACTIVE_LP",
+      "domain": "defi",
+      "asset_classes": ["LP_TOKEN"],
+      "venues": ["UNISWAPV3-ETHEREUM"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "active_lp_eth_usdc",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.active_defi_mm.ActiveDeFiMMStrategy",
+      "factory_function": "create_active_lp_eth_usdc_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_ENHANCED_BASIS_ETH_1H",
+      "display_name": "DeFi Enhanced Basis Trade ETH (1H)",
+      "category": "DEFI",
+      "subcategory": "ENHANCED_BASIS",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL", "LST"],
+      "venues": ["WALLET", "HYPERLIQUID", "UNISWAPV3-ETHEREUM", "CURVE-ETHEREUM"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.enhanced_basis.EnhancedBasisTradeStrategy",
+      "factory_function": "create_basis_trade_multi_venue_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_ETHENA_BENCHMARK_1H",
+      "display_name": "DeFi Ethena Benchmark (1H)",
+      "category": "DEFI",
+      "subcategory": "ETHENA_BENCHMARK",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET"],
+      "venues": ["ETHENA-ETHEREUM"],
+      "instruments": ["ETHENA-ETHEREUM:SPOT_ASSET:SUSDE@ETHEREUM"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.defi_ethena_benchmark.EthenaBenchmarkStrategy",
+      "factory_function": "create_ethena_benchmark_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_L2_BASIS_ARB_1H",
+      "display_name": "DeFi L2 Basis Arb (1H)",
+      "category": "DEFI",
+      "subcategory": "L2_BASIS",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
+      "venues": ["WALLET", "HYPERLIQUID"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.l2_basis.L2BasisTradeStrategy",
+      "factory_function": "create_l2_basis_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_LENDING_ARB_ETH_1H",
+      "display_name": "DeFi Lending Protocol Arb ETH (1H)",
+      "category": "DEFI",
+      "subcategory": "LENDING_ARB",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["AAVEV3-ETHEREUM", "COMPOUNDV3-ETHEREUM", "MORPHO-ETHEREUM"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.lending_protocol_arb.LendingProtocolArbStrategy",
+      "factory_function": "create_lending_arb_eth_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_MULTICHAIN_LENDING_1H",
+      "display_name": "DeFi Multi-Chain Lending (1H)",
+      "category": "DEFI",
+      "subcategory": "MULTI_CHAIN_LENDING",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["AAVEV3-ETHEREUM", "COMPOUNDV3-ETHEREUM", "KAMINO-SOLANA"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.multichain_lending.MultiChainLendingStrategy",
+      "factory_function": "create_multichain_lending_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_CROSS_CHAIN_SOR_1H",
+      "display_name": "DeFi Cross-Chain SOR (1H)",
+      "category": "DEFI",
+      "subcategory": "CROSS_CHAIN_SOR",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET"],
+      "venues": ["UNISWAPV3-ETHEREUM", "ORCA-SOLANA", "RAYDIUM-SOLANA"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.cross_chain_sor.CrossChainSORStrategy",
+      "factory_function": "create_cross_chain_sor_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_CROSS_CHAIN_YIELD_ARB_1H",
+      "display_name": "DeFi Cross-Chain Yield Arb (1H)",
+      "category": "DEFI",
+      "subcategory": "CROSS_CHAIN_YIELD_ARB",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["AAVEV3-ETHEREUM", "KAMINO-SOLANA"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.cross_chain_yield_arb.CrossChainYieldArbStrategy",
+      "factory_function": "create_cross_chain_yield_arb_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_OMNICHAIN_TRANSFER_1H",
+      "display_name": "DeFi Omnichain Transfer (1H)",
+      "category": "DEFI",
+      "subcategory": "OMNICHAIN_TRANSFER",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET"],
+      "venues": ["WALLET"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.omnichain_transfer.OmnichainTransferStrategy",
+      "factory_function": "create_omnichain_transfer_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "DEFI_LIQUIDATION_CAPTURE_ETH",
+      "display_name": "DeFi Liquidation Capture ETH",
+      "category": "DEFI",
+      "subcategory": "LIQUIDATION_CAPTURE",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
+      "venues": ["AAVEV3-ETHEREUM", "HYPERLIQUID"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.liquidation_capture.LiquidationCaptureStrategy",
+      "factory_function": "create_liquidation_capture_eth_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "CEFI_MARKET_MAKING_BTC",
+      "display_name": "CeFi BTC Market Making",
+      "category": "CEFI",
+      "subcategory": "MARKET_MAKING",
+      "domain": "cefi",
+      "asset_classes": ["SPOT_PAIR", "PERPETUAL"],
+      "venues": ["BINANCE", "BINANCE-FUTURES"],
+      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.cefi_market_making.CeFiMarketMakingStrategy",
+      "factory_function": "create_btc_market_making_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1h"
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "CEFI_ML_DIRECTIONAL_BTC",
+      "display_name": "CeFi ML Directional BTC",
+      "category": "CEFI",
+      "subcategory": "ML_DIRECTIONAL",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE-FUTURES", "BYBIT"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "ml_directional_btc",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.cefi_ml_directional.CeFiMLDirectionalStrategy",
+      "factory_function": "create_btc_ml_directional_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["DIRECTION"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "OPTIONS_MM_BTC_DERIBIT",
+      "display_name": "Options Market Making BTC Deribit",
+      "category": "OPTIONS",
+      "subcategory": "OPTIONS_MM",
+      "domain": "cefi",
+      "asset_classes": ["OPTION", "PERPETUAL"],
+      "venues": ["DERIBIT"],
+      "instruments": ["DERIBIT:OPTION:BTC-*"],
+      "data_sources": {
+        "features": ["features-volatility-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.options_market_making.options_mm_strategy.OptionsMMStrategy",
+      "factory_function": "create_btc_options_mm_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["vol_surface", "term_structure"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_COMMODITY_REGIME_OIL",
+      "display_name": "TradFi Commodity Regime Oil",
+      "category": "TRADFI",
+      "subcategory": "COMMODITY_REGIME",
+      "domain": "tradfi",
+      "asset_classes": ["COMMODITY"],
+      "venues": ["CME", "NYMEX"],
+      "instruments": ["NYMEX:FUTURES:CL"],
+      "data_sources": {
+        "features": ["features-delta-one-service", "features-calendar-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.commodity_regime.CommodityRegimeStrategy",
+      "factory_function": "create_commodity_regime_oil_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one", "calendar"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_EVENT_MACRO_CRYPTO",
+      "display_name": "TradFi Event-Driven Macro Crypto",
+      "category": "TRADFI",
+      "subcategory": "EVENT_MACRO",
+      "domain": "tradfi",
+      "asset_classes": ["PERPETUAL", "EQUITY"],
+      "venues": ["BINANCE-FUTURES", "NASDAQ"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-delta-one-service", "features-calendar-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
+      "class_path": "strategy_service.engine.strategies.event_driven_macro.EventDrivenMacroStrategy",
+      "factory_function": "create_event_macro_crypto_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one", "calendar", "macro"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     }
   ]
 }

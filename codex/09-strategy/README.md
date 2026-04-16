@@ -97,16 +97,20 @@ pipeline:
 | [Volatility Surface](tradfi/volatility-surface.md)       | `vol_surface_strategy.py`           | Code complete | TBD            |
 | [Options Market Making](tradfi/market-making-options.md) | TBD                                 | Documented    | TBD            |
 
-### Sports (5 strategies + 1 MM)
+### Sports (6 strategies + 1 MM)
 
-| Strategy                                 | File                        | Status        | Capital Target |
-| ---------------------------------------- | --------------------------- | ------------- | -------------- |
-| [Arbitrage](sports/arbitrage.md)         | `arbitrage_strategy.py`     | Code complete | TBD            |
-| [Value Betting](sports/value-betting.md) | `value_betting_strategy.py` | Code complete | TBD            |
-| [ML Sports](sports/ml-sports.md)         | `ml_sports_strategy.py`     | Code complete | TBD            |
-| Halftime ML                              | `halftime_ml.py`            | Code complete | TBD            |
-| Kelly criterion                          | `kelly.py`                  | Code complete | TBD            |
-| [Market Making](sports/market-making.md) | `market_making.py`          | Documented    | TBD            |
+| Strategy                                                 | File                    | Status        | Capital Target |
+| -------------------------------------------------------- | ----------------------- | ------------- | -------------- |
+| [Arbitrage](sports/arbitrage.md)                         | `arbitrage.py`          | Code complete | TBD            |
+| [Value Betting](sports/value-betting.md)                 | `value_betting.py`      | Code complete | TBD            |
+| [Pre-Game ML](sports/pre-game-ml.md)                     | `ml_sports_strategy.py` | Code complete | TBD            |
+| [Halftime ML](sports/halftime-ml.md)                     | `halftime_ml.py`        | Code complete | TBD            |
+| [Odds Drift / CLV Capture](sports/odds-drift.md)         | TBD                     | Documented    | TBD            |
+| [First-Half Prediction](sports/first-half-prediction.md) | TBD                     | Documented    | TBD            |
+| [Market Making](sports/market-making.md)                 | `market_making.py`      | Documented    | TBD            |
+
+**Cross-cutting:** [Staking Methods](sports/staking-methods.md) — Kelly (fractional, portfolio, venue-constrained),
+Fixed, Percentage, Adaptive Daily
 
 ### Prediction Markets (1 strategy)
 

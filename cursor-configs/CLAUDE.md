@@ -289,6 +289,31 @@ Full guide: `unified-trading-pm/codex/08-workflows/local-dev.md`
 Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`
 from workspace root — always run per-repo with timeout.
 
+## Batch = Live: Unified Pipeline Architecture (CRITICAL)
+
+Batch and live use the **SAME code path, same component interactions**. The ONLY difference is execution fills. This
+applies to ALL categories — sports, DeFi, CeFi, TradFi. There is NO such thing as a "live-only strategy" or a
+"batch-only strategy."
+
+**Strategy P&L backtest (strategy alpha):** Strategy-service interacts with position-balance-monitor,
+risk-and-exposure-service, execution-service — all co-located. Execution-service in "always fill" mode returns zero
+execution alpha (fills at requested price). This isolates strategy P&L from execution quality. Strategy still goes
+through ALL normal component interactions (position tracking, risk checks, etc.).
+
+**Execution alpha measurement:** Execution-service has a matching engine for historical data. Matching engine produces
+simulated fills using accurate assumptions (slippage, commission, latency, venue liquidity — NOT face-value odds).
+Execution alpha = live fills P&L - simulated fills P&L. Saved for execution optimisation separately.
+
+**NEVER:**
+
+- Build standalone backtest engines that settle inline (e.g., `returned = stake * odds if won else 0`)
+- Treat batch mode as "just replay data" — it must exercise the full service mesh
+- Distinguish "live strategies" from "batch strategies" — there is no such distinction
+- Build category-specific backtest engines that bypass the unified pipeline
+
+99% of the code path is identical between batch and live. The only seam that differs is the execution fill source
+(matching engine vs real venue).
+
 ## System-First Architecture (No Ad-Hoc Solutions)
 
 The 67-repo Unified Trading System already covers every domain. Before implementing anything — feature, fix, refactor,

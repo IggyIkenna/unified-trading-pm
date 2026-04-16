@@ -1073,3 +1073,174 @@ venue={V}/instrument_type=options_chain/data_type=options_chain/underlying={U}/t
 - All strikes/expiries for one underlying in one file
 - Per-underlying partition (BTC, ETH, ES, NQ)
 - Already implemented in P1.1
+
+  # ═══════════════════════════════════════════════════════════════════
+
+  # STEP 8 — Reference League Fixtures (NEW — added 2026-04-16)
+
+  # Fetch fixtures for cups + continental + lower divisions from API Football
+
+  # so features-sports-service can calculate accurate team fatigue/workload.
+
+  # ═══════════════════════════════════════════════════════════════════
+  - id: s8-1-reference-league-fixtures content: |
+    - [ ] [AGENT] S8. Expand instruments-service fixture fetch to include reference + features league AF IDs. Currently
+          only fetches prediction league (33) fixtures from API Football. Need to also fetch: reference leagues (40
+          cups/continental) + features leagues (22 lower divisions). UAC already defines these via
+          get_leagues_by_classification("Reference") and ("Features"). The orchestrator needs to pass ALL league AF IDs
+          to ApiFootballAdapter.get_fixtures(), not just prediction league IDs. Files:
+          instruments-service/instruments_service/engine/orchestrator.py status: todo note: "Adds ~62 leagues to fixture
+          fetch. API Football cost: included in Ultra plan."
+
+  - id: s8-2-weather-incremental-rerun content: |
+    - [ ] [HUMAN] S8. Re-run weather backfill after first pass completes. Weather VM running with 1097 venues (100%
+          prediction league coverage). After first pass: restart VM — incremental logic fills gaps for newly-added
+          venues. After reference league fixtures added: weather automatically covers those venues too. status: todo
+          note: "Weather VM already running. Restart after code changes."
+
+  - id: s8-3-validate-weather-coverage content: |
+    - [ ] [AGENT] S8. Validate weather data coverage: check match rate across all prediction leagues. For each
+          prediction league, count: fixtures with weather vs total fixtures. Target: 95%+ for top-5 leagues, 85%+
+          overall. status: todo note: "After weather backfill completes."
+
+  # ═══════════════════════════════════════════════════════════════════
+
+  # STEP 9 — Sports Enrichment Backfill + Data Quality (2026-04-16)
+
+  # ═══════════════════════════════════════════════════════════════════
+  - id: s9-1-standings-migration content: |
+    - [ ] [AGENT] S9. Migrate pre-2024 standings parquets: add league_id + season columns. Old schema: [rank, team,
+          points, goalsDiff, group, form, status, description] New schema: [league_id, season, rank, team, points,
+          goalsDiff, group, form] Migration script: read each standings parquet, add league_id from partition path, add
+          season from date, write back. status: todo note: "No API calls. GCS read/write only."
+
+  - id: s9-2-manifest-rescan-instruments content: |
+    - [ ] [AGENT] S9. Re-scan instruments-service manifest. Fixes 496 empty data_type entries (pre-v4 format). Discovers
+          XG data that exists in GCS but isn't in manifest (62 → 1000+ days). Also picks up weather data (307+ entries),
+          per-league partitions, etc. status: todo note: "No API calls. Reads GCS, writes manifest."
+
+  - id: s9-3-manifest-rescan-mtds-sports content: |
+    - [ ] [AGENT] S9. Re-scan MTDS sports manifest. Fixes 15,488 empty data_type entries for odds data (venue=ODDS_API,
+          no data_type). Should set data_type=odds for all existing entries. status: todo note: "No API calls."
+
+  - id: s9-4-test-enrichment-1day content: |
+    - [x] [AGENT] S9. Test each enrichment provider for 1-9 days locally. UNDERSTAT: ✓ 20 xG rows/date, short-circuit
+          works, no API Football calls. SFI: Testing... FOOTYSTATS: Testing... TRANSFERMARKT: Testing... status: todo
+          note: "Validates schemas, API connectivity, manifest writes before VM launch."
+
+  - id: s9-5-understat-backfill-vm content: |
+    - [ ] [HUMAN] S9. Launch Understat backfill VM (2019-01-01 to 2026-04-16). --sports-provider UNDERSTAT. No API key
+          needed. Understat covers 5 leagues (EPL, La Liga, Bundesliga, Serie A, Ligue 1). ~2,600 dates × ~15s each =
+          ~11 hours. status: todo note: "After test passes."
+
+  - id: s9-6-sfi-backfill-vm content: |
+    - [ ] [HUMAN] S9. Launch SFI backfill VM (2024-01-01 to 2026-04-16). --sports-provider SOCCER_FOOTBALL_INFO.
+          RapidAPI key needed. SFI data only from Jan 2024 (Previous Runs API start). 33 mapped leagues. Rate-limited by
+          RapidAPI. status: todo note: "After test passes."
+
+  - id: s9-7-footystats-backfill-vm content: |
+    - [ ] [HUMAN] S9. Launch FootyStats backfill VM (2019-01-01 to 2026-04-16). --sports-provider FOOTYSTATS. FootyStats
+          API key needed. Predictions + matches for all prediction leagues. Historical season IDs mapped in UAC (459
+          entries). status: todo note: "After test passes."
+
+  - id: s9-8-transfermarkt-backfill-vm content: |
+    - [ ] [HUMAN] S9. Launch Transfermarkt backfill VM (2019-01-01 to 2026-04-16). --sports-provider TRANSFERMARKT.
+          RapidAPI key needed. Leagues + teams + player values. Rate-limited (~90s per league). status: todo note:
+          "After test passes."
+
+  - id: s9-9-per-league-partitioning-gaps content: |
+    - [ ] [AGENT] S9. Add per-league partitioning for remaining flat entities. Currently flat: fixtures, injuries,
+          transfermarkt_leagues, understat_xg. Should be per-league like fixture_stats, standings, teams. Migration:
+          read flat parquet, split by league_id, write to league= subfolders. status: todo note: "Enables per-league
+          data status filtering."
+
+  - id: s9-10-footystats-season-automation content: |
+    - [ ] [AGENT] S9. Implement FootyStats season ID auto-refresh. Plan exists at
+          trigger_based_reference_data_2026_04_13.plan.md. Need: season_dates.py, get_reference_refresh_dates(),
+          auto-fetch new season IDs from FootyStats /league-list endpoint at season boundaries. status: todo note:
+          "Currently manual UAC update per season."
+
+  - id: s9-11-final-manifest-rescan content: |
+    - [ ] [HUMAN] S9. Final manifest rescan after all enrichment backfills complete. Captures all new data from
+          Understat, SFI, FootyStats, Transfermarkt backfills. Verifies data status page shows accurate sports
+          enrichment coverage. status: todo note: "After all VMs finish."
+
+  # ═══════════════════════════════════════════════════════════════════
+
+  # STEP 10 — SFI Ultra Data Integration (2026-04-16)
+
+  # Full integration of SoccerFootball.info Ultra ($75/mo) data.
+
+  # Currently only using league list. Ultra includes: progressive stats
+
+  # (30s intervals with live odds), xG (from 2024-03-15), dominance
+
+  # index, teams/players/managers/referees/stadiums, odds, websocket.
+
+  # ═══════════════════════════════════════════════════════════════════
+  - id: s10-1-sfi-schemas content: |
+    - [ ] [AGENT] S10. Add UAC schemas for SFI progressive data. New types: SFIProgressiveEntry (timer, teamA stats,
+          teamB stats, odds at 30s), SFIMatchOdds (pre-match 1X2/O-U/AH from bet365), SFIDominanceIndex. xG fields gated
+          by availability date (2024-03-15+) — schema validation must not flag missing xG pre-2024-03-15 as an error.
+          Register availability dates in UAC so manifest/data-status respect them. status: todo note: "Foundation for
+          all SFI data. Must be done first."
+
+  - id: s10-2-sfi-collector-expand content: |
+    - [ ] [AGENT] S10. Expand SFI adapter to collect ALL Ultra data. Currently collects: leagues, matches (basic),
+          progressive. Add: full match data (/matches/day/full/ — includes odds, dominance), teams (/teams/), players,
+          managers, referees, stadiums. Store progressive data with ALL fields: timer, goals, possession, attacks,
+          shoots, corners, fouls, dominance, xG, IN-PLAY ODDS. Use /matches/day/full/ instead of /matches/day/basic/ for
+          richer data. status: todo note: "SFI Ultra at 4 req/s. 1505 matches/day = ~6 min/day."
+
+  - id: s10-3-sfi-canonical-mappings content: |
+    - [ ] [AGENT] S10. Build SFI → canonical entity mappings. SFI has its own team IDs, player IDs, referee IDs, stadium
+          IDs. Need: SFI team ID → API Football team ID → canonical team ID. Approach: fuzzy match on team name +
+          country, then manual review. Store mappings in UAC (like SOCCER_FOOTBALL_INFO_IDS for leagues). Automated
+          refresh at season boundaries for new/promoted teams. status: todo note: "Critical for joining SFI data to
+          features pipeline."
+
+  - id: s10-4-sfi-progressive-schema content: |
+    - [ ] [AGENT] S10. Design GCS schema for progressive stats entity. Path:
+          sports_reference/by_date/day={date}/entity=sfi_progressive/ Columns per entry: timer, match_id, team_a_goals,
+          team_b_goals, team_a_xg, team_b_xg (from 2024-03-15), possession_a, possession_b, attacks_a, attacks_b,
+          shoots_on_a, shoots_on_b, corners_a, corners_b, fouls_a, fouls_b, dominance_a, dominance_b, odds_1x2_home,
+          odds_1x2_draw, odds_1x2_away, odds_ou_over, odds_ou_under, odds_ou_value, odds_ah_home, odds_ah_away,
+          odds_ah_value. ~195 rows per match × 1505 matches/day = ~293K rows/day. status: todo note: "This is the
+          in-play backtest goldmine."
+
+  - id: s10-5-sfi-in-play-odds content: |
+    - [ ] [AGENT] S10. Extract and store in-play odds time series from progressive data. Every 30 seconds: 1X2, O/U,
+          Asian Handicap odds from bet365. This enables in-play betting backtests: what happens if you always bet the
+          team that's behind? What's the CLV at minute 60 vs minute 75? Store as separate entity or as columns within
+          progressive stats. status: todo note: "Unique data — no other source provides 30s in-play odds."
+
+  - id: s10-6-sfi-xg-integration content: |
+    - [ ] [AGENT] S10. Add SFI xG as secondary xG source alongside Understat. SFI xG available from 2024-03-15 for ALL
+          SFI leagues (not just 5 like Understat). Store in progressive stats entity with availability date gate.
+          Features pipeline can use SFI xG when Understat doesn't cover the league, or cross-validate when both are
+          available. status: todo note: "Broader xG coverage than Understat."
+
+  - id: s10-7-sfi-availability-gates content: |
+    - [ ] [AGENT] S10. Implement per-field availability dates in UAC + validation. xG: available from 2024-03-15 only.
+          Progressive: available from SFI API version 1.50. Schema validation must NOT flag missing xG pre-2024-03-15 as
+          error. Deployment UI data status should show correct denominators per date range. Add
+          get_field_availability_date(entity, field) to UAC. status: todo note: "Prevents false positive alerts."
+
+  - id: s10-8-sfi-backfill-vm content: |
+    - [ ] [HUMAN] S10. Launch SFI backfill VM with --sports-provider SOCCER_FOOTBALL_INFO. Confirmed working: 1505
+          matches/day, 195 progressive entries/match. Date range: 2024-03-15 to 2026-04-16 (xG available). Earlier
+          dates: progressive without xG. Rate limit: 4 req/s, ~25 min/day for progressive data. status: todo note:
+          "After schemas and collector expansion."
+
+  - id: s10-9-sfi-live-hooks content: |
+    - [ ] [AGENT] S10. Wire SFI websocket for live data feed. SFI Ultra includes websocket for MAIN, STATS, ODDS in
+          real-time. Hook into unified-trading-api live feed pipeline. Enables: live progressive stats, live xG, live
+          odds updates. Compare latency vs API Football live endpoint. status: todo note: "Future — after batch backfill
+          is stable."
+
+  - id: s10-10-sfi-vs-api-football-audit content: |
+    - [ ] [AGENT] S10. Audit SFI vs API Football data for overlap/gaps. For each entity (teams, players, referees,
+          stadiums): - Compare coverage (which leagues, how many entities) - Compare timeliness (which updates faster
+          after transfers/events) - Compare data richness (which has more fields) - Identify what SFI provides that API
+          Football doesn't (and vice versa) Document findings for data source selection decisions. status: todo note:
+          "Informs which source to prefer per entity."

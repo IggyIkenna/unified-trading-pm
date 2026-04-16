@@ -149,53 +149,21 @@ def extract_uac_registries() -> dict[str, object]:
 
 
 def extract_uac_enums() -> dict[str, list[str]]:
-    """Extract all enum values from UAC."""
+    """Extract all enum values from UAC (auto-discovered)."""
     enums: dict[str, list[str]] = {}
+    try:
+        import unified_api_contracts as uac
 
-    enum_imports = [
-        ("OrderSide", "unified_api_contracts"),
-        ("OrderType", "unified_api_contracts"),
-        ("OrderStatus", "unified_api_contracts"),
-        ("TimeInForce", "unified_api_contracts"),
-        ("ExecutionStatus", "unified_api_contracts"),
-        ("OperationType", "unified_api_contracts"),
-        ("InstrumentType", "unified_api_contracts"),
-        ("InstructionType", "unified_api_contracts"),
-        ("MarketState", "unified_api_contracts"),
-        ("Sport", "unified_api_contracts"),
-        ("OddsFormat", "unified_api_contracts"),
-        ("OddsType", "unified_api_contracts"),
-        ("BetStatus", "unified_api_contracts"),
-        ("BetSide", "unified_api_contracts"),
-        ("OptionType", "unified_api_contracts"),
-        ("FeeType", "unified_api_contracts"),
-        ("CloudProvider", "unified_api_contracts"),
-        ("ComputeTarget", "unified_api_contracts"),
-        ("ScalingMode", "unified_api_contracts"),
-        ("VenueCategory", "unified_api_contracts"),
-        ("AlternativeDataType", "unified_api_contracts"),
-        ("RiskType", "unified_api_contracts"),
-        ("RiskCategory", "unified_api_contracts"),
-        ("SignalSource", "unified_api_contracts"),
-        ("BookmakerCategory", "unified_api_contracts"),
-        ("MatchPeriod", "unified_api_contracts"),
-        ("OutcomeType", "unified_api_contracts"),
-        ("MarketStatus", "unified_api_contracts"),
-        ("PredictionMarketCategory", "unified_api_contracts"),
-    ]
-
-    import importlib
-
-    for enum_name, module_path in enum_imports:
-        try:
-            mod = importlib.import_module(module_path)
-            cls = getattr(mod, enum_name, None)
-            if cls and isinstance(cls, type) and issubclass(cls, enum.Enum):
-                enums[enum_name] = extract_enum_values(cls)
-        except Exception as e:
-            logger.warning("  Failed to extract enum %s: %s", enum_name, e)
-
-    logger.info("  Extracted %d UAC enums", len(enums))
+        for name in sorted(dir(uac)):
+            obj = getattr(uac, name, None)
+            if obj and isinstance(obj, type) and issubclass(obj, enum.Enum) and obj is not enum.Enum:
+                try:
+                    enums[name] = extract_enum_values(obj)
+                except Exception:
+                    pass
+        logger.info("  Extracted %d UAC enums (auto-discovered)", len(enums))
+    except Exception as e:
+        logger.warning("  Failed to extract UAC enums: %s", e)
     return enums
 
 
@@ -493,6 +461,172 @@ def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
     return calendars
 
 
+def extract_venue_data_availability() -> dict[str, dict[str, object]]:
+    """Extract provider timing metadata (when data arrives post-T) from UAC."""
+    availability: dict[str, dict[str, object]] = {}
+    try:
+        from unified_api_contracts.registry import VENUE_DATA_AVAILABILITY
+
+        for venue_name, entry in VENUE_DATA_AVAILABILITY.items():
+            availability[venue_name] = {
+                "venue_name": entry.venue_name,
+                "category": str(entry.category),
+                "availability_lag_hours": entry.availability_lag_hours,
+                "available_after_utc_hour": entry.available_after_utc_hour,
+                "is_t_plus_one": entry.is_t_plus_one,
+                "notes": entry.notes,
+            }
+
+        logger.info("  Extracted %d venue data availability entries", len(availability))
+    except Exception as e:
+        logger.warning("  Failed to extract VENUE_DATA_AVAILABILITY: %s", e)
+
+    return availability
+
+
+def extract_venue_coordinates() -> dict[str, dict[str, float]]:
+    """Extract stadium geographic coordinates from UAC."""
+    coordinates: dict[str, dict[str, float]] = {}
+    try:
+        from unified_api_contracts.registry import VENUE_COORDINATES
+
+        for venue_id, coord in VENUE_COORDINATES.items():
+            coordinates[str(venue_id)] = {
+                "latitude": coord.latitude,
+                "longitude": coord.longitude,
+            }
+
+        logger.info("  Extracted %d venue coordinates", len(coordinates))
+    except Exception as e:
+        logger.warning("  Failed to extract VENUE_COORDINATES: %s", e)
+
+    return coordinates
+
+
+def extract_tradfi_tick_data_windows() -> list[dict[str, str]]:
+    """Extract date windows for expensive tick data collection from UAC."""
+    windows: list[dict[str, str]] = []
+    try:
+        from unified_api_contracts.registry import TRADFI_TICK_DATA_WINDOWS
+
+        windows = list(TRADFI_TICK_DATA_WINDOWS)
+        logger.info("  Extracted %d TradFi tick data windows", len(windows))
+    except Exception as e:
+        logger.warning("  Failed to extract TRADFI_TICK_DATA_WINDOWS: %s", e)
+
+    return windows
+
+
+def extract_mvp_cme_exchange_codes() -> list[str]:
+    """Extract MVP CME exchange codes from UAC."""
+    codes: list[str] = []
+    try:
+        from unified_api_contracts.registry import MVP_CME_EXCHANGE_CODES
+
+        codes = sorted(MVP_CME_EXCHANGE_CODES)
+        logger.info("  Extracted %d MVP CME exchange codes", len(codes))
+    except Exception as e:
+        logger.warning("  Failed to extract MVP_CME_EXCHANGE_CODES: %s", e)
+
+    return codes
+
+
+def extract_strategy_registry() -> dict[str, object]:
+    """Extract the full strategy registry from UAC (families, categories, archetypes, execution modes)."""
+    registry: dict[str, object] = {}
+    try:
+        from unified_api_contracts.strategy import STRATEGY_REGISTRY
+
+        registry = STRATEGY_REGISTRY.to_dict()
+        strategies = registry.get("strategies", registry)
+        count = len(strategies) if isinstance(strategies, (list, dict)) else 0
+        logger.info("  Extracted strategy registry: %d strategies", count)
+    except Exception as e:
+        logger.warning("  Failed to extract STRATEGY_REGISTRY: %s", e)
+
+    return registry
+
+
+def extract_client_registry() -> dict[str, object]:
+    """Extract the client registry from UAC (client allocations, strategy assignments)."""
+    registry: dict[str, object] = {}
+    try:
+        from unified_api_contracts.strategy import CLIENT_REGISTRY
+
+        registry = CLIENT_REGISTRY.to_dict()
+        clients = registry.get("clients", registry)
+        count = len(clients) if isinstance(clients, (list, dict)) else 0
+        logger.info("  Extracted client registry: %d clients", count)
+    except Exception as e:
+        logger.warning("  Failed to extract CLIENT_REGISTRY: %s", e)
+
+    return registry
+
+
+def validate_config_registry_coverage(workspace_root: Path) -> None:
+    """Check which service/api repos have config files vs config-registry.json coverage."""
+    manifest_path = workspace_root / "unified-trading-pm" / "workspace-manifest.json"
+    config_registry_path = workspace_root / "unified-api-contracts" / "openapi" / "config-registry.json"
+
+    if not manifest_path.exists():
+        logger.warning("  workspace-manifest.json not found at %s", manifest_path)
+        return
+
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    # Get repos of type "service" or "api"
+    repos = manifest.get("repos", manifest.get("folders", []))
+    service_repos: list[dict[str, str]] = []
+    for repo in repos:
+        repo_type = repo.get("type", "")
+        if repo_type in ("service", "api"):
+            service_repos.append(repo)
+
+    # Find which service repos have a config.py or service_config.py
+    repos_with_config: list[str] = []
+    for repo in service_repos:
+        repo_name = repo.get("name", repo.get("path", ""))
+        repo_path = workspace_root / repo_name
+        if not repo_path.exists():
+            continue
+        # Derive package name: repo-name -> repo_name
+        pkg_name = repo_name.replace("-", "_")
+        config_candidates = [
+            repo_path / pkg_name / "config.py",
+            repo_path / pkg_name / "service_config.py",
+        ]
+        for candidate in config_candidates:
+            if candidate.exists():
+                repos_with_config.append(repo_name)
+                break
+
+    # Load config-registry.json if it exists
+    registry_repos: set[str] = set()
+    if config_registry_path.exists():
+        with open(config_registry_path) as f:
+            config_registry = json.load(f)
+        for entry in config_registry if isinstance(config_registry, list) else config_registry.values():
+            source = entry.get("source", "") if isinstance(entry, dict) else str(entry)
+            # Extract repo name from source like "unified-trading-library (config_interface/)"
+            if isinstance(source, str) and source:
+                registry_repos.add(source.split(" ")[0].split("/")[0])
+        # Also check top-level keys which may be service names
+        if isinstance(config_registry, dict):
+            for key in config_registry:
+                registry_repos.add(key.replace("_", "-"))
+
+    # Report
+    missing = [r for r in repos_with_config if r not in registry_repos]
+    logger.info(
+        "  Services with config files: %d | In config-registry.json: %d",
+        len(repos_with_config),
+        len(repos_with_config) - len(missing),
+    )
+    for repo_name in sorted(missing):
+        logger.warning("  WARNING: %s has config.py but is NOT in config-registry.json", repo_name)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate UI reference data")
     parser.add_argument(
@@ -555,6 +689,27 @@ def main() -> None:
     logger.info("\n11. Extracting TradFi exchange calendars...")
     reference["tradfi_exchange_calendars"] = extract_tradfi_exchange_calendars()
 
+    logger.info("\n12. Extracting venue data availability...")
+    reference["venue_data_availability"] = extract_venue_data_availability()
+
+    logger.info("\n13. Extracting venue coordinates...")
+    reference["venue_coordinates"] = extract_venue_coordinates()
+
+    logger.info("\n14. Extracting TradFi tick data windows...")
+    reference["tradfi_tick_data_windows"] = extract_tradfi_tick_data_windows()
+
+    logger.info("\n15. Extracting MVP CME exchange codes...")
+    reference["mvp_cme_exchange_codes"] = extract_mvp_cme_exchange_codes()
+
+    logger.info("\n16. Extracting strategy registry...")
+    reference["strategy_registry"] = extract_strategy_registry()
+
+    logger.info("\n17. Extracting client registry...")
+    reference["client_registry"] = extract_client_registry()
+
+    logger.info("\n18. Validating config registry coverage...")
+    validate_config_registry_coverage(workspace_root)
+
     # Write output
     output_path = output_dir / "ui-reference-data.json"
     with open(output_path, "w") as f:
@@ -579,6 +734,18 @@ def main() -> None:
     print(f"Bookmakers:              {len(reference.get('sports_bookmaker_registry', {}))}")
     print(f"DeFi protocols:          {len(reference.get('defi_protocol_capabilities', {}).get('protocols', []))}")
     print(f"Exchange calendars:      {len(reference.get('tradfi_exchange_calendars', {}))}")
+    print(f"Venue data availability: {len(reference.get('venue_data_availability', {}))}")
+    print(f"Venue coordinates:       {len(reference.get('venue_coordinates', {}))}")
+    print(f"TradFi tick windows:     {len(reference.get('tradfi_tick_data_windows', []))}")
+    print(f"MVP CME exchange codes:  {len(reference.get('mvp_cme_exchange_codes', []))}")
+    sr = reference.get("strategy_registry", {})
+    sr_strategies = sr.get("strategies", sr) if isinstance(sr, dict) else sr
+    sr_count = len(sr_strategies) if isinstance(sr_strategies, (list, dict)) else 0
+    print(f"Strategy registry:       {sr_count} strategies")
+    cr = reference.get("client_registry", {})
+    cr_clients = cr.get("clients", cr) if isinstance(cr, dict) else cr
+    cr_count = len(cr_clients) if isinstance(cr_clients, (list, dict)) else 0
+    print(f"Client registry:         {cr_count} clients")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 

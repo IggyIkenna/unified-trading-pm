@@ -1,219 +1,224 @@
 # Alerting
 
-## TL;DR
+## Principle
 
-Alerts are categorized by severity and mapped to the three-tier event model. Currently, failure detection (OOM, startup
-timeout) is [IMPLEMENTED] with automatic VM termination. Notification channels (Slack for pipeline failures, PagerDuty
-for live critical) are [PLANNED]. Alert triggers are derived from lifecycle events, resource events, and domain events
-via the UTD v2 API.
+**Every autonomous recovery action MUST generate an alert.** Autonomous recovery is by definition unusual — the system
+is self-healing because something broke. Even if recovery succeeds, the operator must know it happened. Different
+severities route to different channels, but nothing is silent.
 
----
-
-## Alert Categories
-
-### Infrastructure Alerts (from Resource Events -- Tier 2)
-
-| Alert           | Trigger                           | Detection                  | Response                                      | Status        |
-| --------------- | --------------------------------- | -------------------------- | --------------------------------------------- | ------------- |
-| OOM Death Loop  | Serial log OOM pattern >= 5 times | UTD v2 auto-sync (30s)     | VM terminated, state set to `oom_death_loop`  | [IMPLEMENTED] |
-| Startup Timeout | No `SERVICE_STARTED` after 5 min  | UTD v2 auto-sync (30s)     | VM terminated, state set to `startup_timeout` | [IMPLEMENTED] |
-| Memory Critical | `memory_percent > 90%`            | `PerformanceMonitor` (30s) | Log at ERROR level, `resource_alert` JSON     | [IMPLEMENTED] |
-| Memory Warning  | `memory_percent > 85%`            | `PerformanceMonitor` (30s) | Log at WARNING level                          | [IMPLEMENTED] |
-| CPU High        | `cpu_percent > 90%`               | `PerformanceMonitor` (30s) | Log at WARNING level                          | [IMPLEMENTED] |
-| Disk High       | `disk_usage_percent > 90%`        | `PerformanceMonitor` (30s) | Log at WARNING level                          | [IMPLEMENTED] |
-
-### Pipeline Alerts (from Lifecycle Events -- Tier 1)
-
-| Alert             | Trigger                                 | Detection              | Response                           | Status                                               |
-| ----------------- | --------------------------------------- | ---------------------- | ---------------------------------- | ---------------------------------------------------- |
-| Service Failed    | `FAILED` event emitted                  | UTD v2 event parser    | Shard state `failed`, notification | [IMPLEMENTED] (detection) / [PLANNED] (notification) |
-| Stage Timeout     | No `STOPPED` within 30 min of `STARTED` | UTD v2 time comparison | Investigation alert                | [PLANNED]                                            |
-| Validation Failed | `VALIDATION_FAILED` event               | UTD v2 event parser    | Check upstream deps                | [IMPLEMENTED] (detection)                            |
-| Slow Stage        | Stage duration > threshold              | UTD v2 `stage_timings` | Performance investigation          | [PLANNED]                                            |
-
-### Data Quality Alerts (from Domain Events -- Tier 3)
-
-| Alert                    | Trigger                                 | Detection            | Response               | Status                                   |
-| ------------------------ | --------------------------------------- | -------------------- | ---------------------- | ---------------------------------------- |
-| Timestamp Mismatch       | `TIMESTAMP_VALIDATION_FAILED`           | Domain event in logs | Skip file, investigate | [IMPLEMENTED] (skip) / [PLANNED] (alert) |
-| Buffer Validation Failed | `BUFFER_VALIDATION_FAILED`              | Domain event in logs | Check upstream data    | [IMPLEMENTED] (skip) / [PLANNED] (alert) |
-| Dependency Check Failed  | `DEPENDENCY_CHECK_FAILED`               | Domain event in logs | Wait for upstream      | [IMPLEMENTED] (detection)                |
-| Download Failed          | `API_DOWNLOAD_FAILED` count > threshold | Domain event count   | Check API/credentials  | [PLANNED]                                |
-
-### Live Trading Alerts (from Domain Events -- Tier 3)
-
-| Alert              | Trigger                         | Detection                | Response               | Status    |
-| ------------------ | ------------------------------- | ------------------------ | ---------------------- | --------- |
-| Position Drift     | Live position != expected       | Strategy reconciliation  | Manual intervention    | [PLANNED] |
-| Prediction Latency | Inference time > SLA            | ml-inference timing      | Scale resources        | [PLANNED] |
-| Signal Anomaly     | Signal count deviates > 2 sigma | Strategy output analysis | Review strategy params | [PLANNED] |
-| Execution Failure  | Order rejected or failed        | Execution service events | Manual review          | [PLANNED] |
+Alert delivery channels: **Telegram** (primary, all alerts) and **PagerDuty** (critical trading events). Slack is
+deprecated.
 
 ---
 
-## Notification Channels [IMPLEMENTED]
+## Alert Severity Tiers
 
-### Slack Integration
-
-**Target:** Pipeline failures and batch observability alerts.
-
-```
-Channel: #pipeline-alerts
-  - OOM death loop detected
-  - Startup timeout detected
-  - Service FAILED events
-  - Stage timeout (>30 min)
-  - Data quality validation failures
-
-Channel: #pipeline-status
-  - Deployment completion summaries
-  - Daily pipeline health report
-```
-
-### PagerDuty Integration
-
-**Target:** Live trading critical failures only.
-
-```
-Severity: P1 (Critical)
-  - Position drift > threshold
-  - Live service FAILED with no recovery
-  - Execution order failures
-
-Severity: P2 (Warning)
-  - Prediction latency > SLA
-  - Signal anomaly detected
-```
+| Tier | Severity | Channel                                   | When                                                      |
+| ---- | -------- | ----------------------------------------- | --------------------------------------------------------- |
+| T1   | CRITICAL | PagerDuty P1 + Telegram                   | Human intervention may be required. Positions at risk.    |
+| T2   | HIGH     | PagerDuty P2 + Telegram                   | Autonomous recovery in progress on a significant issue.   |
+| T3   | WARNING  | Telegram only                             | Autonomous recovery succeeded or minor issue detected.    |
+| T4   | INFO     | Telegram only (suppressed at high volume) | Routine recovery actions (individual retries, throttles). |
 
 ---
 
-## Alert Flow Architecture [IMPLEMENTED]
+## Autonomous Recovery Alert Matrix
+
+Every autonomous recovery action the system takes, mapped to its alert tier:
+
+### Retry & Reconnection (T3-T4)
+
+| Event                               | Severity   | Alert                | Why                                    |
+| ----------------------------------- | ---------- | -------------------- | -------------------------------------- |
+| First retry on transient error      | T4 INFO    | Telegram             | Normal, but operator should see volume |
+| Retry exhausted (3 attempts failed) | T3 WARNING | Telegram             | Error persisted through retries        |
+| Reconnection attempt                | T3 WARNING | Telegram             | Connection was lost                    |
+| Reconnection succeeded              | T4 INFO    | Telegram             | Recovery confirmation                  |
+| Reconnection failed                 | T2 HIGH    | PagerDuty + Telegram | Venue unreachable                      |
+
+### Circuit Breaker (T2-T1)
+
+| Event                         | Severity    | Alert                       | Why                                         |
+| ----------------------------- | ----------- | --------------------------- | ------------------------------------------- |
+| DEGRADED (30% failure rate)   | T3 WARNING  | Telegram                    | Venue health declining, throttling orders   |
+| OPEN (60% failure rate)       | T1 CRITICAL | PagerDuty P1 + Telegram     | Venue blocked, orders queued                |
+| BACKOFF_ESCALATED (cycle > 1) | T2 HIGH     | PagerDuty P2 + Telegram     | Recovery failing repeatedly                 |
+| HALF_OPEN probe               | T4 INFO     | Telegram                    | Testing recovery                            |
+| CLOSED (recovery)             | T3 WARNING  | Telegram                    | Recovery confirmed — operator should review |
+| ORDER_THROTTLED               | T4 INFO     | Telegram (suppressed >10/s) | Individual order dropped                    |
+
+### Multi-Venue Cascade (T1)
+
+| Event                           | Severity    | Alert                   | Why                             |
+| ------------------------------- | ----------- | ----------------------- | ------------------------------- |
+| >50% venues OPEN for a strategy | T1 CRITICAL | PagerDuty P1 + Telegram | Auto STOP_NEW_ONLY activated    |
+| All venues OPEN                 | T1 CRITICAL | PagerDuty P1 + Telegram | Firm-wide kill switch activated |
+
+### Kill Switch (T1)
+
+| Event                        | Severity    | Alert                   | Why                                     |
+| ---------------------------- | ----------- | ----------------------- | --------------------------------------- |
+| KILL_SWITCH_ACTIVATED        | T1 CRITICAL | PagerDuty P1 + Telegram | All trading halted                      |
+| KILL_SWITCH_DEACTIVATED      | T3 WARNING  | Telegram                | Trading resumed                         |
+| KILL_SWITCH_AUTO_DEACTIVATED | T2 HIGH     | PagerDuty P2 + Telegram | Timer expired, trading auto-resumed     |
+| KILL_SWITCH_BLOCKED_STARTUP  | T1 CRITICAL | PagerDuty P1 + Telegram | Service started with active kill switch |
+
+### Multi-Leg Compensation (T1-T2)
+
+| Event                         | Severity    | Alert                   | Why                                               |
+| ----------------------------- | ----------- | ----------------------- | ------------------------------------------------- |
+| UNHEDGED_POSITION_ALERT       | T1 CRITICAL | PagerDuty P1 + Telegram | Partial fill, compensation attempting             |
+| Compensation trade succeeded  | T2 HIGH     | PagerDuty P2 + Telegram | Position unwound, but incident occurred           |
+| MULTI_LEG_COMPENSATION_FAILED | T1 CRITICAL | PagerDuty P1 + Telegram | Unhedged position exists, circuit breaker tripped |
+
+### Position Drift (T2-T1)
+
+| Event                              | Severity    | Alert                   | Why                           |
+| ---------------------------------- | ----------- | ----------------------- | ----------------------------- |
+| POSITION_DRIFT_DETECTED (WARNING)  | T3 WARNING  | Telegram                | Drift 2-5%, monitoring        |
+| POSITION_DRIFT_DETECTED (CRITICAL) | T1 CRITICAL | PagerDuty P1 + Telegram | Drift >5%, auto STOP_NEW_ONLY |
+
+### Health Factor / Margin (T2-T1)
+
+| Event                 | Severity    | Alert                   | Why                         |
+| --------------------- | ----------- | ----------------------- | --------------------------- |
+| HF 1.5-2.0 (ELEVATED) | T3 WARNING  | Telegram                | Strategy reducing exposure  |
+| HF 1.2-1.5 (WARNING)  | T2 HIGH     | PagerDuty P2 + Telegram | Strategy paused new entries |
+| HF 1.0-1.2 (CRITICAL) | T1 CRITICAL | PagerDuty P1 + Telegram | Auto-deleverage triggered   |
+| HF < 1.0 (EMERGENCY)  | T1 CRITICAL | PagerDuty P1 + Telegram | Emergency close all         |
+
+### Reconciliation (T2-T1)
+
+| Event                                | Severity    | Alert                   | Why                               |
+| ------------------------------------ | ----------- | ----------------------- | --------------------------------- |
+| Reconciliation break detected        | T3 WARNING  | Telegram                | Operator should investigate       |
+| RECON_DEGRADED close (closing blind) | T2 HIGH     | PagerDuty P2 + Telegram | Closing without verified state    |
+| DUAL_FAILURE_DETECTED                | T1 CRITICAL | PagerDuty P1 + Telegram | Can't reconcile AND can't execute |
+
+### Order Recovery (T2-T3)
+
+| Event                    | Severity    | Alert                   | Why                                  |
+| ------------------------ | ----------- | ----------------------- | ------------------------------------ |
+| ORDER_RECOVERY_INITIATED | T3 WARNING  | Telegram                | Startup scanning for orphaned orders |
+| ORDER_ORPHANED           | T2 HIGH     | PagerDuty P2 + Telegram | Found order not in our state         |
+| ORDER_RECOVERY_COMPLETED | T4 INFO     | Telegram                | Recovery finished                    |
+| ORDER_RECOVERY_FAILED    | T1 CRITICAL | PagerDuty P1 + Telegram | Could not resolve orphaned orders    |
+
+---
+
+## Alerting-Service Routing Rules
+
+The routing rules in `alerting-service/notifiers/router.py` must map events to channels. The canonical rules:
+
+```python
+# Default routing rules (config-driven, loaded from AlertingSystemConfig)
+ROUTING_RULES = [
+    # T1 CRITICAL — PagerDuty P1 + Telegram
+    {"event_pattern": "KILL_SWITCH_*",                "channels": ["pagerduty", "telegram"], "severity": "critical"},
+    {"event_pattern": "CIRCUIT_BREAKER_OPEN",         "channels": ["pagerduty", "telegram"], "severity": "critical"},
+    {"event_pattern": "MULTI_LEG_COMPENSATION_FAILED","channels": ["pagerduty", "telegram"], "severity": "critical"},
+    {"event_pattern": "UNHEDGED_POSITION_ALERT",      "channels": ["pagerduty", "telegram"], "severity": "critical"},
+    {"event_pattern": "DUAL_FAILURE_DETECTED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
+    {"event_pattern": "ORDER_RECOVERY_FAILED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
+
+    # T2 HIGH — PagerDuty P2 + Telegram
+    {"event_pattern": "CIRCUIT_BREAKER_BACKOFF_*",    "channels": ["pagerduty", "telegram"], "severity": "warning"},
+    {"event_pattern": "ORDER_ORPHANED",               "channels": ["pagerduty", "telegram"], "severity": "warning"},
+    {"event_pattern": "POSITION_DRIFT_DETECTED",      "channels": ["pagerduty", "telegram"], "severity": "warning"},
+    {"event_pattern": "RECON_DEGRADED_*",             "channels": ["pagerduty", "telegram"], "severity": "warning"},
+
+    # T3 WARNING — Telegram only
+    {"event_pattern": "CIRCUIT_BREAKER_DEGRADED",     "channels": ["telegram"]},
+    {"event_pattern": "CIRCUIT_BREAKER_CLOSED",       "channels": ["telegram"]},
+    {"event_pattern": "PREFLIGHT_FAILED",             "channels": ["telegram"]},
+    {"event_pattern": "SERVICE_DEGRADED",             "channels": ["telegram"]},
+    {"event_pattern": "POSITION_CORRECTION_*",        "channels": ["telegram"]},
+    {"event_pattern": "PORTFOLIO_REBALANCE_*",        "channels": ["telegram"]},
+    {"event_pattern": "ORDER_RECOVERY_*",             "channels": ["telegram"]},
+
+    # T4 INFO — Telegram (fallback for everything else)
+    {"event_pattern": "*",                            "channels": ["telegram"]},
+]
+```
+
+First match wins. The `*` fallback ensures nothing is silent.
+
+---
+
+## Infrastructure Alerts
+
+| Alert           | Trigger                        | Detection                | Response                  | Status      |
+| --------------- | ------------------------------ | ------------------------ | ------------------------- | ----------- |
+| OOM Death Loop  | Serial log OOM >= 5 times      | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
+| Startup Timeout | No SERVICE_STARTED after 5 min | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
+| Memory Critical | memory_percent > 90%           | PerformanceMonitor (30s) | Log ERROR, resource_alert | IMPLEMENTED |
+| Memory Warning  | memory_percent > 85%           | PerformanceMonitor (30s) | Log WARNING               | IMPLEMENTED |
+
+## Pipeline Alerts
+
+| Alert             | Trigger                  | Detection       | Response                     | Status      |
+| ----------------- | ------------------------ | --------------- | ---------------------------- | ----------- |
+| Service Failed    | FAILED event             | Event parser    | Shard state failed, Telegram | IMPLEMENTED |
+| Stage Timeout     | No STOPPED within 30 min | Time comparison | Investigation alert          | IMPLEMENTED |
+| Validation Failed | VALIDATION_FAILED event  | Event parser    | Check upstream deps          | IMPLEMENTED |
+
+## Live Trading Alerts
+
+| Alert                | Trigger                | Detection               | Response                | Status      |
+| -------------------- | ---------------------- | ----------------------- | ----------------------- | ----------- |
+| Position Drift       | Deviation > threshold  | PBMS background loop    | Telegram + PagerDuty    | IMPLEMENTED |
+| Circuit Breaker Trip | Failure rate > 60%     | Per-venue state machine | PagerDuty P1 + Telegram | IMPLEMENTED |
+| Kill Switch          | Manual or automatic    | Execution-service       | PagerDuty P1 + Telegram | IMPLEMENTED |
+| Unhedged Position    | Multi-leg partial fill | Compensation handler    | PagerDuty P1 + Telegram | IMPLEMENTED |
+| Dual Failure         | Recon + exec both down | PBMS health check       | PagerDuty P1 + Telegram | PLANNED     |
+| Margin Emergency     | HF < 1.0               | PBMS margin monitor     | PagerDuty P1 + Telegram | IMPLEMENTED |
+
+---
+
+## Alert Flow Architecture
 
 ```
-Event Sources
+Event Sources (execution-service, PBMS, strategy-service, etc.)
   |
-  |-- Tier 1 (Lifecycle) --> UTD v2 Event Parser
-  |-- Tier 2 (Resource)  --> PerformanceMonitor / Serial Console
-  |-- Tier 3 (Domain)    --> UTD v2 Event Parser
+  |-- log_event("EVENT_NAME", severity="...", details={...})
   |
   v
-UTD v2 API (auto-sync every 30s)
+Pub/Sub topic: lifecycle-events
   |
-  |-- Shard state updates (status, failure_category)
-  |-- [PLANNED] Alert evaluation engine
+  v
+alerting-service (subscriber)
+  |
+  |-- Deduplication (60s TTL, same event+details hash)
+  |-- Route: match event_pattern against routing rules (first match wins)
+  |-- Deliver to matched channels:
   |     |
-  |     |-- Match event against alert rules
-  |     |-- Deduplicate (no repeat alerts for same shard)
-  |     |-- Route to notification channel
-  |     |
-  |     v
-  |-- [IMPLEMENTED] Slack webhook  --> #pipeline-alerts  (alerting_service/notifiers/slack.py)
-  |-- [IMPLEMENTED] PagerDuty API  --> On-call rotation  (alerting_service/notifiers/pagerduty.py)
-  |-- [IMPLEMENTED] VM termination (OOM, startup timeout)
-```
-
----
-
-## Current Detection (What Works Today)
-
-### OOM Detection [IMPLEMENTED]
-
-```python
-# In UTD v2 auto-sync:
-# 1. Fetch serial console logs
-# 2. Count OOM-related patterns
-# 3. If count >= OOM_KILL_THRESHOLD (default 5):
-#    - Set failure_category = "oom_death_loop"
-#    - Terminate VM via fire-and-forget
-```
-
-### Startup Timeout [IMPLEMENTED]
-
-```python
-# In UTD v2 auto-sync:
-# 1. Check VM uptime
-# 2. If > VM_STARTUP_TIMEOUT_SECONDS (default 300):
-#    - Scan serial logs for "SERVICE_EVENT: STARTED"
-#    - If not found:
-#      - Set failure_category = "startup_timeout"
-#      - Terminate VM
-```
-
-### Event-Based State Updates [IMPLEMENTED]
-
-```python
-# In UTD v2 auto-sync:
-# 1. Parse SERVICE_EVENT: lines from serial logs
-# 2. Update shard state:
-#    - current_stage, stage_timings, progress
-# 3. On FAILED event:
-#    - Set status = "failed"
-#    - Set failure_category = "service_failed"
-```
-
----
-
-## Monitoring Queries for Alerting [PLANNED]
-
-### Missing STOPPED Event (Stage Timeout)
-
-```
-resource.type="gce_instance"
-textPayload=~"SERVICE_EVENT: STARTED"
-NOT textPayload=~"SERVICE_EVENT: STOPPED"
-timestamp < NOW() - 30m
-```
-
-### High Failure Rate
-
-```
-resource.type="gce_instance"
-textPayload=~"SERVICE_EVENT: FAILED"
-| group_by resource.labels.instance_id, count()
-| where count > 3
-```
-
-### Slow Processing Stages
-
-```
-resource.type="gce_instance"
-jsonPayload.stage_timings.processing > 300
+  |     +-- Telegram (HTML format, bot API)
+  |     +-- PagerDuty (Events API v2, severity mapped)
+  |
+  |-- Persist AlertDeliveryRecord to GCS (audit trail)
+  |
+  v
+Operator sees alert in Telegram / PagerDuty on-call
 ```
 
 ---
 
 ## Configuration
 
-| Parameter                    | Default         | Description                                                         |
-| ---------------------------- | --------------- | ------------------------------------------------------------------- |
-| `OOM_KILL_THRESHOLD`         | `5`             | Serial log OOM patterns before VM termination                       |
-| `VM_STARTUP_TIMEOUT_SECONDS` | `300`           | Seconds before startup timeout                                      |
-| `STATE_TTL_HOURS`            | `48`            | Shard state retention                                               |
-| Slack webhook URL            | --              | [IMPLEMENTED] via Secret Manager (`alerting-slack-webhook-url`)     |
-| PagerDuty service key        | --              | [IMPLEMENTED] via Secret Manager (`alerting-pagerduty-routing-key`) |
-| Stage timeout threshold      | `1800` (30 min) | [PLANNED]                                                           |
-| Download failure threshold   | `10`            | [PLANNED]                                                           |
+| Parameter             | Default        | Description                        |
+| --------------------- | -------------- | ---------------------------------- |
+| Telegram bot token    | Secret Manager | Primary alert channel              |
+| Telegram chat ID      | Secret Manager | Target chat for alerts             |
+| PagerDuty routing key | Secret Manager | For critical trading events        |
+| Alert dedup TTL       | 60s            | Suppress duplicate events          |
+| OOM kill threshold    | 5              | OOM patterns before VM termination |
+| Startup timeout       | 300s           | Seconds before startup timeout     |
 
 ---
 
-## Infrastructure Health (Machine-Readable SSOT)
+## Related
 
-**SSOT:** `runtime-topology.yaml` `health_probes` section.
-
-### Cloud Run Services
-
-API services expose `/health` (liveness) and `/readiness` endpoints. Cloud Run auto-restarts on health check failure.
-
-### VM Services
-
-deployment-service watchdog monitors: CPU, memory, disk, serial console OOM patterns. Thresholds: 85% memory warning,
-90% critical.
-
-### Pre-Crash State Dump
-
-`ResourceAwareShutdownHandler` persists state checkpoint to GCS at 85% memory threshold. If VM crashes before logging,
-Cloud Logging + serial console are the forensics source (infrastructure-level, not our code).
-
-### Post-Crash Recovery
-
-alerting-service subscribes to Cloud Logging error/crash entries for automated incident creation (Slack + PagerDuty).
+- `04-architecture/autonomous-recovery-matrix.md` — full decision tree for failure scenarios
+- `04-architecture/kill-switch-circuit-breaker.md` — kill switch and circuit breaker mechanics
+- `03-observability/lifecycle-events.md` — mandatory event sequences
+- `03-observability/coordination-events.md` — service-to-service event wiring

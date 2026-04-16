@@ -106,6 +106,15 @@ python "$SCRIPT_DIR/audit_dead_code.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# API/UI coverage audit (endpoints exposed vs consumed)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Running API/UI Coverage Audit ==="
+python "$SCRIPT_DIR/audit_api_ui_coverage.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Sync to UI repos (if present as sibling directories)
 # ---------------------------------------------------------------------------
 echo ""
