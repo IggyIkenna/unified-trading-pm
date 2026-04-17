@@ -222,6 +222,49 @@ The `written_at` column records when each manifest entry was written. This enabl
 
 The data status page supports an `as_of_timestamp` parameter for point-in-time views.
 
+### Expected-Empty vs Missing Shards (Phase 1.9)
+
+The v4 schema carries three columns that together encode the three distinct states a shard can be in on a given day:
+
+| State              | Manifest row? | `instrument_count` | `expected` | `available` | Meaning                                                                                                                                                                                                   |
+| ------------------ | ------------- | ------------------ | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**       | yes           | `> 0`              | `True`     | `True`      | Data present — counts toward numerator of availability %.                                                                                                                                                 |
+| **Expected-empty** | yes           | `= 0`              | `True`     | `False`     | Shard was expected on this day but the source had no data (e.g. a dated future that has not yet started trading, a lending market that saw no activity). Counts in the denominator but not the numerator. |
+| **Missing**        | no row        | —                  | —          | —           | Shard was never ingested — pipeline gap. Counts in the denominator; triggers alerts.                                                                                                                      |
+
+Before Phase 1.9 we could not distinguish the last two cases — any day without a manifest entry looked identical whether
+the source was silent or the pipeline had never run. `write_with_zero_fill` closes that gap.
+
+### Mechanism: `ManifestWriter.write_with_zero_fill`
+
+Location: `unified-trading-library/unified_trading_library/manifest_writer.py:329`.
+
+```python
+zero_filled = writer.write_with_zero_fill(
+    actual_records,                # list[AvailabilityRecord] — rows produced this run
+    expected_catalogue=catalogue,  # Iterable[InstrumentRecord] — from instruments-service
+    ref_date=date(2026, 4, 17),
+    category="cefi",
+    venue="BINANCE_FUTURES",
+    instrument_type="perpetual",
+    chain=None,
+    data_type="trades",
+)
+```
+
+Flow:
+
+1. Delegates to UAC `get_instruments_available_on(ref_date, catalogue, ...)` to compute which catalogue members were
+   in-window on `ref_date` under the given scope filters.
+2. Any expected instrument (matched by `InstrumentRecord.instrument_key` ↔ `AvailabilityRecord.instrument_id`) that is
+   NOT in `actual_records` gets a zero-fill row appended with `instrument_count=0`, `expected=True`, `available=False`.
+3. Actual records override — a real ingestion with `instrument_count==0` stays as the caller wrote it; no zero-fill is
+   appended for that id.
+
+The `instruments-service` catalogue (see `instruments-service/docs/instrument-catalogue.md`) is the canonical source for
+`expected_catalogue`. MTDS, features-\*, and ML services load it via UTL and feed it into their per-shard
+`write_with_zero_fill` call.
+
 ## Integrity Principles
 
 ### 1. Atomic Shard Failure
