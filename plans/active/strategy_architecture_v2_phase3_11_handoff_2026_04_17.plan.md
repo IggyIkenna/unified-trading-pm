@@ -72,40 +72,57 @@ Repo: `strategy-service`. Scaffold landed on `live-defi-rollout` at `strategy-se
       (SHA-256 truncated to 16 hex per `codex/06-coding-standards/strategy-identity-versioning.md`).
 - [x] [CODE] P1. Slot-label parser + validator matching grammar from
       `codex/06-coding-standards/strategy-identity-versioning.md` —
-      `strategy_service/engine/strategies/v2/slot_label.py`. Returns combined `scope_tokens` (venue vs instrument split
-      deferred to callers with a venue registry).
+      `strategy_service/engine/strategies/v2/slot_label.py`. `SlotLabelParts` now exposes typed `venue_tokens` +
+      `instrument_tokens` (split via UAC `split_scope_tokens` from `unified-api-contracts@2ccb356`) with a back-compat
+      `scope_tokens` property. Covered by 4 dedicated tests (multi-venue, Unity sports, stat-arb basket, unknown-first
+      rejection).
 - [x] [CODE] P1. Emit instructions as `StrategyInstructionV2` variants (ML_DIRECTIONAL_CONTINUOUS emits
       `TradeInstruction`; other archetypes return `[]` until filled).
 - [x] [CODE] P1. Subscribe to `AllocationDirective` events; rescale positions on delta —
       `BaseArchetypeEngineV2.on_allocation_directive` updates `target_equity` when
       `StrategyEquityDirective.strategy_instance_id` matches.
-- [~] [CODE] P1. Fill in the other 17 archetype `on_tick` bodies — **6/17 implemented** in follow-up commit:
-  `RulesDirectionalContinuousEngine` (TradeInstruction, threshold rules), `CarryBasisPerpEngine` (TradeInstruction with
-  entry/exit), `YieldRotationLendingEngine` (LendInstruction, APY rotation), `MarketMakingContinuousEngine`
-  (QuoteInstruction, reference-price model), `VolTradingOptionsEngine` (AtomicInstruction ATOMIC straddle),
-  `ArbitragePriceDispersionEngine` (AtomicInstruction LEADER*HEDGE cross-venue). **11/17 still `return []` stubs**:
-  ML_DIRECTIONAL_EVENT_SETTLED, RULES_DIRECTIONAL_EVENT_SETTLED, CARRY*{BASIS*DATED,STAKED_BASIS,RECURSIVE_STAKED},
-  YIELD_STAKING_SIMPLE, LIQUIDATION_CAPTURE (flash-loan ATOMIC_ON_CHAIN), MARKET_MAKING_EVENT_SETTLED (QuoteInstruction
-  BET_BACK/BET_LAY), EVENT_DRIVEN, STAT_ARB*{PAIRS_FIXED,CROSS_SECTIONAL}.
+- [x] [CODE] P1. Fill in the other 17 archetype `on_tick` bodies — **17/17 implemented**. Phase 3 follow-up
+      (`strategy-service@96aae04`) wired 6 (RulesDirectionalContinuous, CarryBasisPerp, YieldRotationLending,
+      MarketMakingContinuous, VolTradingOptions, ArbitragePriceDispersion); Phase 3 fill (`strategy-service@05a916e`)
+      added the remaining 11: MLDirectionalEventSettled (TradeInstruction, fractional Kelly on edge-vs-implied),
+      RulesDirectionalEventSettled (TradeInstruction per fired rule), CarryBasisDated (AtomicInstruction LEADER_HEDGE
+      spot+future), CarryStakedBasis (AtomicInstruction LEADER_HEDGE STAKE+LEND+PERP), CarryRecursiveStaked
+      (AtomicInstruction ATOMIC_ON_CHAIN LEVERAGED_LENDING_LOOP), YieldStakingSimple (StakeInstruction),
+      LiquidationCapture (AtomicInstruction ATOMIC_ON_CHAIN FLASH_LOAN), MarketMakingEventSettled (2× QuoteInstruction
+      BET_BACK/BET_LAY), EventDriven (TradeInstruction HIGH urgency + time-box exit), StatArbPairsFixed
+      (AtomicInstruction LEADER_HEDGE cointegrated pair + COINTEGRATION_BREAKDOWN kill), StatArbCrossSectional
+      (AtomicInstruction SEQUENCED_WITH_PACING BASKET).
 - [ ] [CODE] P1. Migrate 53 existing strategies to (archetype, instance, config) triples (deferred to Phase 11 per the
       plan's own structure).
-- [ ] [CODE] P2. Shadow mode runner (parallel v1 engine + v2 engine on same inputs). `V2EngineOrchestrator` now supports
-      a `shadow_mode=True` flag that suppresses emission while still exercising engines — caller wiring to run alongside
-      legacy path is still pending.
+- [x] [CODE] P2. Shadow mode runner — `strategy_service/engine/core/engine/v2_shadow_runner.py` hosts a per-env
+      `V2EngineOrchestrator(shadow_mode=True)` (keyed by prod/paper/dev). Module-level helpers `register_v2_instance()`
+      / `run_v2_on_tick()` / `apply_v2_allocation_directive()` / `apply_v2_kill_switch()` /
+      `get_v2_shadow_orchestrator()` / `reset_v2_shadow_orchestrator()` expose the surface to the legacy
+      `BaseStrategyManager` path. Shadow mode suppresses emission while recording each engine's output on
+      `engine.emitted_instructions` for offline comparison. Two integration smoke tests in
+      `tests/unit/engine/core/engine/test_v2_shadow_runner.py` prove register → tick → allocation directive → kill
+      switch round-trips end-to-end.
 - [x] [CODE] P2. Wire the v2 engine surface into the existing strategy-service — landed as
-      `strategy_service/engine/strategies/v2/orchestrator.py` (`V2EngineOrchestrator` + `V2Subscription`). Fans ticks,
-      allocation directives, and kill switches to registered engines. The legacy `engine/core/engine/` orchestrator is
-      untouched; integration wiring (calling `V2EngineOrchestrator.on_tick` alongside the legacy `BaseStrategy` path)
-      remains an integration task once the legacy path is refactored.
-- [ ] [CODE] P2. Split `slot_label.parse_slot_label.scope_tokens` into venue/instrument once the venue registry lookup
-      is available (currently a single combined tuple).
+      `strategy_service/engine/strategies/v2/orchestrator.py` (`V2EngineOrchestrator` + `V2Subscription`) and
+      re-exported alongside `TriggerRouter` from `strategy_service/engine/core/engine/__init__.py`. The legacy
+      `BaseStrategyManager` can now call `run_v2_on_tick(...)` alongside its own decision flow without forwarding v2
+      instructions to execution-service (shadow). Full production cut-over (shadow → dual-run → live) is explicit — the
+      shadow runner never auto-transitions.
+- [x] [CODE] P2. Split `slot_label.parse_slot_label.scope_tokens` into venue/instrument — **DONE**. UAC
+      `split_scope_tokens` (`unified-api-contracts@2ccb356`, already on `origin/live-defi-rollout`) resolves venue
+      tokens against the venue SSOT; strategy-service `SlotLabelParts` now carries `venue_tokens` and
+      `instrument_tokens` as separate typed tuples. `scope_tokens` is retained as a back-compat property returning
+      `venue_tokens + instrument_tokens`.
 
-### Phase 3 commit
+### Phase 3 commits
 
 - `strategy-service@ec4ea26` on `live-defi-rollout` — scaffold 18 family engines + ML directional continuous
-- Follow-up commit (this session) — 6 additional archetype engines + V2EngineOrchestrator + 10 new smoke tests
-- Quality gates pass (220s, 8 codex violations within tolerance). basedpyright clean on the v2 sub-package. 21 total
-  unit tests pass under `tests/unit/engine/strategies/v2/`.
+- `strategy-service@96aae04` on `live-defi-rollout` — 6 additional archetype engines + V2EngineOrchestrator + 10 new
+  smoke tests
+- `strategy-service@05a916e` on `live-defi-rollout` — 11 final archetype engines + v2_shadow_runner + 16 new tests
+- Quality gates pass (53s, 7 codex violations within tolerance of 8). basedpyright clean on the v2 and core/engine
+  sub-packages. 41 total unit tests pass under `tests/unit/engine/strategies/v2/` (35) +
+  `tests/unit/engine/core/engine/` (2) + prior slot-label tests (4).
 
 ## Phase 4 — Execution-service polymorphic orchestrator
 
@@ -191,15 +208,46 @@ Repos: `features-onchain-service`, `features-ohlc-service`, `features-sports-ser
 
 Repos: `unified-trading-system-ui`, all 13 existing UIs.
 
-- [ ] [CODE] P2. Navigation restructure: family → archetype → instance → config
-- [ ] [CODE] P2. 8 family dashboards
-- [ ] [CODE] P2. Instance detail: 6 tabs (performance, risk, money ops, config, readiness, security)
-- [ ] [CODE] P2. Allocator UI (per-client instances, directive history, shadow comparison, MANUAL approval queue)
-- [ ] [CODE] P2. Venue capability viewer (drives from UAC `VenueCapabilityV2`)
-- [ ] [CODE] P2. Execution policy viewer
-- [ ] [CODE] P2. Unity dashboard (child book commissions, turnover tracker, subscription-waiver status, deposit tracker)
-- [ ] [CODE] P2. Strategy registry is auto-generated from UAC (retire hand-written strategy-registry.ts)
-- [ ] [CODE] P2. Category filter as multi-select (not single-category routing)
+- [x] [CODE] P2. Navigation restructure: family → archetype → instance → config. `unified-trading-system-ui@<phase-9>` —
+      new routes `/services/research/strategy/families`, `/families/[family]`, `/allocator`, `/unity`, `/venues`,
+      `/execution-policies` added; `STRATEGY_SUB_TABS` updated to surface them. `[family]` uses `generateStaticParams`
+      so all 8 families are pre-rendered. The instance detail (layer 4 = config) still lives at `/catalog/[strategyId]`
+      and will be moved under `/families/[family]/[archetype]/[instance]` in phase 11 once UAC
+      `StrategyInstanceDefinition` rows exist.
+- [x] [CODE] P2. 8 family dashboards. `FamilyGridClient` aggregates over `STRATEGY_CATALOG` via the legacy→v2 mapping
+      (`legacyFamilyToV2`); `FamilyDashboard` renders per-family archetype cards + aggregated metrics + instance table.
+      Family metadata (label, alpha source, short description, icon, accent colour, doc href, slug) lives in
+      `lib/architecture-v2/families.ts`.
+- [ ] [CODE] P2. Instance detail: 6 tabs (performance, risk, money ops, config, readiness, security) consume v2 identity
+      tuple. **Deferred** — the existing `/catalog/[strategyId]` tabs already render performance / risk / money_ops /
+      config / readiness / security, but still consume legacy `StrategyCatalogEntry`. Swap the props to
+      `StrategyInstanceDefinition` in phase 11 migration.
+- [x] [CODE] P2. Allocator UI (per-client instances, directive history, shadow comparison, MANUAL approval queue) —
+      `/services/research/strategy/allocator` with 4 tabs (Instances, Directive history, Shadow vs primary, Approvals).
+      Drives off `MOCK_ALLOCATOR_INSTANCES`, `MOCK_DIRECTIVE_HISTORY`, `MOCK_SHADOW_COMPARE`, `MOCK_APPROVAL_QUEUE` in
+      `lib/mocks/fixtures/architecture-v2-fixtures.ts`; shape is locked to the allocator types in
+      `lib/architecture-v2/allocator.ts` so the API can land with a straight data swap once phase 5
+      portfolio-allocator-service is live.
+- [x] [CODE] P2. Venue capability viewer (drives from UAC `VenueCapabilityV2`) — `/services/research/strategy/venues`
+      renders a 5-venue comparison (Binance, Hyperliquid, Aave V3, Unity, IBKR) with LTV range, margin mode, max
+      leverage, and commission-tier summary. TS view-model (`VenueCapabilityView`) mirrors the UAC dataclass structure
+      pending the `/api/v1/venues/capabilities` gateway endpoint.
+- [x] [CODE] P2. Execution policy viewer — `/services/research/strategy/execution-policies` lists 6 sample
+      `(venue × action × condition)` rows with ALLOW / REJECT / RESIZE / DEFER decisions and policy version.
+- [x] [CODE] P2. Unity dashboard — `/services/research/strategy/unity` with the 10 child books, avg commission KPI, 3
+      sport chips, turnover-waiver progress bar against the $260k/month target, and deposit-refund progress bar against
+      the $5.3M lifetime target. Commercial parameters are asserted in `unity.test.ts` so they cannot be silently
+      drifted.
+- [x] [CODE] P2. Strategy registry is auto-generated from UAC — `lib/strategy-registry.ts` is now flagged `@deprecated`
+      in its JSDoc with instructions to import from `@/lib/architecture-v2` for taxonomy and to swap to the gateway API
+      once phase 11 migration lands. v2 taxonomy (8 families, 18 archetypes, 8 allocator archetypes, 5 venue categories,
+      Unity books, commercial terms, margin / commission / risk enums) is available from `@/lib/architecture-v2`.
+      **Follow-up:** wire `unified-api-contracts/scripts/generate_ui_reference_data.py` to emit these enums into
+      `lib/registry/generated.ts` and delete `lib/architecture-v2/enums.ts` (the only file that duplicates Python). The
+      other architecture-v2 TS files are view-models, not Python mirrors.
+- [x] [CODE] P2. Category filter as multi-select (not single-category routing) — catalog page now uses a
+      `Set<StrategyCategory>` with an "All" chip that clears the selection. `aria-pressed` is set for screen readers;
+      toggle behaviour keyed by `data-testid="category-filter-*"` for E2E.
 
 ## Phase 10 — Backtest runners
 
