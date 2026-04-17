@@ -28,7 +28,7 @@
 │                                                                                  │
 │  unified-api-contracts (AC + AC_INT)         unified-cloud-interface (UCLI)               │
 │  AC_INT = unified_api_contracts.internal   unified-config-interface (UCI)                │
-│  unified-events-interface (UEI)    execution-algo-library (EAL)                  │
+│  unified-trading-library (UEI)    execution-algo-library (EAL)                  │
 │  matching-engine-library (MEL)                                                    │
 │  NOTE: unified-reference-data-interface (URDI) merged into instruments-service   │
 └──────────────────────────────────────┬───────────────────────────────────────────┘
@@ -101,7 +101,7 @@ All three paths converge on T0 libs. Python loads each package once.
 | unified-api-contracts    | `unified_api_contracts`          | Pydantic v2 schemas, VCR cassettes, `unified_api_contracts.external`, `unified_api_contracts.canonical`, `unified_api_contracts.internal` | pydantic, aiohttp           |
 | _(internal subpackage)_  | `unified_api_contracts.internal` | `MessagingTopic`, `EventEnvelope`, PubSub topic names, req/resp/error envelopes (part of unified-api-contracts)                           | pydantic                    |
 | unified-config-interface | `unified_config_interface`       | `UnifiedCloudConfig`, `BaseConfig`, env loading, venue constants                                                                          | pydantic, pyyaml            |
-| unified-events-interface | `unified_trading_library.events` | `EventSink` Protocol, `setup_events`, `log_event`, `MockEventSink`                                                                        | pydantic                    |
+| unified-trading-library  | `unified_trading_library.events` | `EventSink` Protocol, `setup_events`, `log_event`, `MockEventSink`                                                                        | pydantic                    |
 | unified-cloud-interface  | `unified_cloud_interface`        | `StorageClient`, `SecretClient`, `QueueClient`; GCP/AWS/Local providers                                                                   | google-cloud-storage, boto3 |
 | execution-algo-library   | `execution_algo_library`         | TWAP, VWAP, Iceberg — pure compute, zero inter-lib deps                                                                                   | pydantic, python-dateutil   |
 | matching-engine-library  | `matching_engine_library`        | Pure order matching logic, zero inter-lib deps                                                                                            | pydantic                    |
@@ -159,7 +159,7 @@ future/scaffolded service.
 | **risk-and-exposure-service**        |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
 | **alerting-service**                 |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ○  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ○  |
 
-**Column key:** UTS=unified-trading-services, UCI=unified-config-interface, UEI=unified-events-interface,
+**Column key:** UTS=unified-trading-services, UCI=unified-config-interface, UEI=unified-trading-library,
 UCLI=unified-cloud-interface, AC=unified-api-contracts (incl. AC_INT=unified_api_contracts.internal subpackage),
 UIC=unified-internal-contracts (ELIMINATED — merged into UAC internal/), URDI=unified-reference-data-interface
 (ELIMINATED — merged into instruments-service), EAL=execution-algo-library, MEL=matching-engine-library,
@@ -177,7 +177,7 @@ position-balance-monitor-service), UDC=unified-domain-client
 | -------------------------------------------- | :------------: | -------------------------------------------------------------------------------------- |
 | **UTS** (unified-trading-services)           |       17       | All                                                                                    |
 | **UCI** (unified-config-interface)           |       17       | All                                                                                    |
-| **UEI** (unified-events-interface)           |       17       | All (via UTS re-export)                                                                |
+| **UEI** (unified-trading-library)            |       17       | All (via UTS re-export)                                                                |
 | **UDC** (unified-domain-client)              |       13       | instruments, MTDH, MDPS, FDS, FVS, FOS, FSS, MLTR, MLIN, STR, EXEC, PNL, PBM, RAE, SVS |
 | **UMI** (unified-market-interface)           |       5        | instruments, MTDH, MDPS, FDS, FVS, STR, EXEC                                           |
 | **UFC** (unified-feature-calculator-library) |       5        | FCS, FDS, FVS, FOS, FSS                                                                |

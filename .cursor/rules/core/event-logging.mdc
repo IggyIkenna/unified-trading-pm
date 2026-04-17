@@ -1,5 +1,5 @@
 ---
-description: "Use setup_events/log_event from unified-events-interface, 11 batch / 12 live lifecycle events"
+description: "Use setup_events/log_event from unified-trading-library, 11 batch / 12 live lifecycle events"
 alwaysApply: false
 globs:
   - "**/*.py"
@@ -9,7 +9,7 @@ tags: [observability, event-logging]
 
 # Event Logging
 
-RULE: Use `setup_events()` and `log_event()` from unified-events-interface. 11 lifecycle events required for batch / live mode. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
+RULE: Use `setup_events()` and `log_event()` from unified-trading-library. 11 lifecycle events required for batch / live mode. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
 WHY: UTD v2 parses events for real-time progress, debugging, and cost optimization.
 CODEX: 03-observability/lifecycle-events.md
 

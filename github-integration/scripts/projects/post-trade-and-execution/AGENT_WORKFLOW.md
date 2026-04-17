@@ -31,7 +31,7 @@ matching the batch automation workflow but running locally.
 **Split unified-trading-services into focused libraries:**
 
 1. **Phase 0 (Infra)**: Artifact Registry Python repo, IAM permissions, docs
-2. **Phase 1 (Events)**: PubSub abstraction + unified-events-interface
+2. **Phase 1 (Events)**: PubSub abstraction + unified-trading-library
 3. **Phase 2 (Config)**: unified-config-interface with hot-reload
 4. **Phase 3 (Market)**: unified-market-interface for market data feeds
 5. **Phase 4 (Order)**: unified-order-interface for order execution
@@ -49,7 +49,7 @@ matching the batch automation workflow but running locally.
 
 ```bash
 # Get issue number and repo from context
-REPO_NAME="[REPO_NAME]"  # e.g., "unified-events-interface"
+REPO_NAME="[REPO_NAME]"  # e.g., "unified-trading-library"
 ISSUE_NUMBER="[ISSUE_NUMBER]"  # e.g., "3"
 
 # Fetch issue details
@@ -91,7 +91,7 @@ cat unified-trading-codex/11-project-management/epic-breakdowns/epic-post-trade-
 
 **Check repo type:**
 
-- **New library repos**: unified-events-interface, unified-config-interface, unified-market-interface,
+- **New library repos**: unified-trading-library, unified-config-interface, unified-market-interface,
   unified-order-interface
   - Start from scratch (no existing code)
   - Create repo structure first (pyproject.toml, README.md, src/, tests/, scripts/)
@@ -571,12 +571,12 @@ gh issue close $ISSUE_NUMBER --repo "IggyIkenna/unified-trading-services"
 
 ```bash
 # Context
-REPO_NAME="unified-events-interface"
+REPO_NAME="unified-trading-library"
 ISSUE_NUMBER="3"
 
 # Step 1: Get issue
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-events-interface
-gh issue view 3 --repo "IggyIkenna/unified-events-interface"
+cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-trading-library
+gh issue view 3 --repo "IggyIkenna/unified-trading-library"
 
 # Read epic breakdown
 grep -A 50 "Subtask 1.2.1:" \
@@ -591,13 +591,13 @@ grep -A 50 "Subtask 1.2.1:" \
 mkdir -p unified_trading_library.events/ tests/unit tests/integration scripts
 cat > pyproject.toml <<'EOF'
 [project]
-name = "unified-events-interface"
+name = "unified-trading-library"
 version = "0.1.0"
 ...
 EOF
 
 cat > README.md <<'EOF'
-# unified-events-interface
+# unified-trading-library
 ...
 EOF
 
@@ -606,7 +606,7 @@ cp ../unified-trading-services/scripts/quickmerge.sh ./scripts/
 chmod +x scripts/*.sh
 
 cat > unified_trading_library.events/__init__.py <<'EOF'
-"""unified-events-interface - Observability + Coordination events."""
+"""unified-trading-library - Observability + Coordination events."""
 __version__ = "0.1.0"
 EOF
 
@@ -624,7 +624,7 @@ bash scripts/quality-gates.sh --no-fix
 
 # Step 5: Submit PR
 bash scripts/quickmerge.sh \
-    "Complete subtask #3: Create unified-events-interface repo structure
+    "Complete subtask #3: Create unified-trading-library repo structure
 
 - Added pyproject.toml with Python 3.13, ruff==0.15.0
 - Added README.md with usage docs

@@ -23,7 +23,7 @@ graph TB
     subgraph T0["🔵 TIER 0 — Pure Leaves (zero unified-* imports)"]
         AC["unified-api-contracts<br/>Pydantic schemas · VCR cassettes<br/>+ internal/ subpackage"]
         UIC_INT["unified_api_contracts.internal<br/>MessagingTopic · EventEnvelope<br/>(subpackage of AC)"]
-        UEI["unified-events-interface<br/>EventSink · log_event · MockEventSink"]
+        UEI["unified-trading-library<br/>EventSink · log_event · MockEventSink"]
         UCLI["unified-cloud-interface<br/>StorageClient · SecretClient · QueueClient"]
         URDI["instruments-service<br/>REST venue adapters · corp actions"]
         EAL["execution-algo-library<br/>TWAP · VWAP · pure compute"]
@@ -290,7 +290,7 @@ Every service gets these T0 libs transitively through UTS — no direct import n
 - `unified-cloud-interface` (UCLI) — via `UTS → UCLI`
 - `unified_api_contracts.internal` (AC_INT) — via `UTS → AC_INT` (part of unified-api-contracts)
 
-Services that use `log_event` or `setup_events` directly should import `unified-events-interface` (UEI) explicitly, even
+Services that use `log_event` or `setup_events` directly should import `unified-trading-library` (UEI) explicitly, even
 though it's also re-exported by UTS.
 
 ---

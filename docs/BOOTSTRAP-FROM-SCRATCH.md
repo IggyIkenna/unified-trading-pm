@@ -52,7 +52,7 @@ After bootstrap, your workspace root should look like this:
 ├── unified-trading-codex/                     # Standards + audit
 ├── unified-trading-library/                   # Core library (T1)
 ├── unified-config-interface/                  # Cloud config (T1)
-├── unified-events-interface/                  # Event bus (T0)
+├── unified-trading-library/                  # Event bus (T0)
 ├── execution-service/                         # Trade execution (Service)
 ├── ... (67 repos total)                       # All repos from workspace-manifest.json
 │
@@ -775,7 +775,7 @@ pyenv install 3.13.9 && pyenv global 3.13.9 && pyenv rehash
 ```bash
 # Re-install a specific library into workspace venv
 source .venv-workspace/bin/activate
-uv pip install -e unified-events-interface/
+uv pip install -e unified-trading-library/
 
 # Re-install all libraries in topological order
 bash unified-trading-pm/scripts/workspace/setup-dev-environment.sh

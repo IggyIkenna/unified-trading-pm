@@ -17,7 +17,7 @@ repo_gates:
     code: C1
     deployment: none
     business: none
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     code: C1
     deployment: none
     business: none

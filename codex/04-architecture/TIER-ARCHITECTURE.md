@@ -11,7 +11,7 @@ TIER 0 — Pure Leaves (no cloud I/O, no trading state, zero inter-lib deps)
                                               stdlib + pydantic ONLY — zero unified-* imports, not even in tests.
                                               SSOT for all external API schemas and canonical normalization outputs.
       unified-cloud-interface (UCLI)          StorageClient, SecretClient, QueueClient, GCP+AWS+Local providers
-      unified-events-interface (UEI)          EventSink Protocol, setup_events, log_event, MockEventSink
+      unified-trading-library (UEI)          EventSink Protocol, setup_events, log_event, MockEventSink
       execution-algo-library (EAL)            TWAP, VWAP, pure compute algorithms, zero inter-lib deps
       ibkr-gateway-infra                      Deploys and manages the IB Gateway Java process (long-lived). All IBKR
                                               connectivity routes through this — UMI, UTEI, UPI, URDI adapters use it for

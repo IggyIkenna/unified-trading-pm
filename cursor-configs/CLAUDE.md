@@ -321,7 +321,7 @@ new capability — **look at the existing system first**. Do NOT build ad-hoc so
 create unnecessary repos/files. If a library is missing a feature, ADD the feature to the library. If the library's
 approach is wrong, FIX it. Never work around it.
 
-Key repo mapping: events → `unified-events-interface`, schemas → `unified-api-contracts` (external + internal via
+Key repo mapping: events → `unified-trading-library`, schemas → `unified-api-contracts` (external + internal via
 `unified_api_contracts.internal`), cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data →
 `market-tick-data-service` (market_interface sub-package; UMI archived), execution (CeFi/DeFi/sports) →
 `execution-service`, position → `position-balance-monitor-service`, reference data → `instruments-service` (URDI still

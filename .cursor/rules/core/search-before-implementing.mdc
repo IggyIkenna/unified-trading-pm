@@ -17,7 +17,7 @@ Before writing ANY new function, class, adapter, or connector, search these libr
   4. `instruments-service` — reference data, instrument definitions (formerly unified-reference-data-interface)
   5. `unified-trading-library` — storage, secrets, pubsub, ConfigStore (formerly unified-trading-services)
   6. `unified-config-interface` — config schema, BaseConfig
-  7. `unified-events-interface` — event logging
+  7. `unified-trading-library` — event logging
   8. `unified-cloud-interface` — cloud primitives, storage client, Tier 0 abstractions
   9. `unified-domain-client` — instruments, domain clients
   10. `unified-api-contracts` — external API schemas, VCR mocks

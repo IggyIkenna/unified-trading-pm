@@ -64,20 +64,20 @@ IMPORTANT:
 
 ## Example Usage
 
-### Example 1: unified-events-interface #3 (Create repo structure)
+### Example 1: unified-trading-library #3 (Create repo structure)
 
 ```
-Complete subtask for Market Data Infrastructure issue #3 in unified-events-interface.
+Complete subtask for Market Data Infrastructure issue #3 in unified-trading-library.
 
 WORKFLOW:
-1. Pull issue #3 from IggyIkenna/unified-events-interface
+1. Pull issue #3 from IggyIkenna/unified-trading-library
 2. Read Subtask 1.2.1 from epic breakdown:
    - Create repo structure (src/, tests/, scripts/, pyproject.toml, README.md)
    - Set up Python 3.13, ruff==0.15.0 dev dependencies
    - Add quality-gates.sh and quickmerge.sh scripts
 3. Implement repo structure
 4. Run quality gates: bash scripts/quality-gates.sh --no-fix
-5. Submit PR: bash scripts/quickmerge.sh "Complete subtask #3: Create unified-events-interface repo structure" --files "[all new files]"
+5. Submit PR: bash scripts/quickmerge.sh "Complete subtask #3: Create unified-trading-library repo structure" --files "[all new files]"
 6. Verify PR passes GitHub Actions
 
 Follow the workflow in @AGENT_WORKFLOW.md for detailed steps.

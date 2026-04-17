@@ -11,7 +11,7 @@
 
 | Library                  | Tests       | Coverage | Status       | Notes                              |
 | ------------------------ | ----------- | -------- | ------------ | ---------------------------------- |
-| unified-events-interface | 36/36 ✅    | 77%      | PASS         | Service-ready                      |
+| unified-trading-library  | 36/36 ✅    | 77%      | PASS         | Service-ready                      |
 | unified-config-interface | 16/20 ⚠️    | 68%      | PARTIAL      | 4 hot-reload tests fail (expected) |
 | unified-market-interface | 30/30 ✅    | 80%      | PASS         | WebSocket already implemented!     |
 | unified-order-interface  | 22/22 ✅    | 58%      | PASS         | Futures queries need enhancement   |
@@ -37,8 +37,8 @@ See: [LIBRARY_TEST_RESULTS.md](../../LIBRARY_TEST_RESULTS.md)
 
 | Repo                     | PR         | Title                                    | State   |
 | ------------------------ | ---------- | ---------------------------------------- | ------- |
-| unified-events-interface | #6         | Add uv.lock and .env.example             | MERGED  |
-| unified-events-interface | #5         | Implement core functionality (Phase 1)   | OPEN    |
+| unified-trading-library  | #6         | Add uv.lock and .env.example             | MERGED  |
+| unified-trading-library  | #5         | Implement core functionality (Phase 1)   | OPEN    |
 | unified-config-interface | #3         | Add uv.lock                              | MERGED  |
 | unified-config-interface | #2         | Implement core functionality (Phase 2)   | OPEN    |
 | unified-market-interface | #3         | Add 5 venue adapters + factory           | MERGED  |
@@ -69,7 +69,7 @@ See: [PR_TRACKING_MATRIX.md](../../PR_TRACKING_MATRIX.md)
 
 **Core Implementation**: 100% complete
 
-- ✅ unified-events-interface: Event logging + coordination
+- ✅ unified-trading-library: Event logging + coordination
 - ✅ unified-config-interface: BaseConfig + load_config
 - ✅ unified-market-interface: 6 venue adapters + WebSocket
 - ✅ unified-order-interface: CCXT order execution + account queries (placeholders)

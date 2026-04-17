@@ -545,7 +545,7 @@ Full details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.p
 
 All inter-service communication uses the canonical event system:
 
-- Events defined in `unified-events-interface` (schemas.py)
+- Events defined in `unified-trading-library` (schemas.py)
 - Lifecycle events follow `LifecycleEventType` enum from UIC
 - Services emit events via `log_event()` — never direct PubSub calls
 - Multi-tuple architecture: (service, event_type, timestamp, correlation_id, details)

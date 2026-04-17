@@ -87,7 +87,7 @@ has zero internal deps. UCI is the only T0 interface calling log_event. Promotin
 ```
 1. Edit unified-trading-pm/workspace-manifest.json:
    - Change unified-config-interface "arch_tier" from "0" to "1"
-   - Add {"name": "unified-events-interface", "version": ">=0.2.0,<1.0.0", "required": true} to UCI dependencies
+   - Add {"name": "unified-trading-library", "version": ">=0.2.0,<1.0.0", "required": true} to UCI dependencies
 2. Update unified-trading-codex tier docs if they reference UCI as T0
 3. Update unified-trading-codex/04-architecture/ tier descriptions
 4. Run: cd unified-config-interface && run_timeout 120 basedpyright unified_config_interface/
@@ -223,7 +223,7 @@ Services: alerting-service, execution-service, features-delta-one-service,
 Repos (14): deployment-service, execution-service, unified-trading-api,
   features-delta-one-service, features-sports-service, features-volatility-service,
   market-data-processing-service, ml-training-service, position-balance-monitor-service,
-  risk-and-exposure-service, unified-domain-client, unified-events-interface,
+  risk-and-exposure-service, unified-domain-client, unified-trading-library,
   unified-internal-contracts, unified-market-interface
 ```
 

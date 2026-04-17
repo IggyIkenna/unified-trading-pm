@@ -154,7 +154,7 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 | Memory      | Pre-crash checkpoint at 85%      | PASS   | execution-service, strategy-service, risk, ml-inference                                                                           |
 | Compliance  | MiFID II ComplianceReporter      | PASS   | execution-service/compliance/compliance_reporter.py                                                                               |
 | Compliance  | FCA StrategyComplianceReporter   | PASS   | strategy-service/compliance/compliance_reporter.py                                                                                |
-| Tests       | test_event_logging.py present    | PASS   | unified-events-interface/tests/unit/test_event_logging.py                                                                         |
+| Tests       | test_event_logging.py present    | PASS   | unified-trading-library/tests/unit/test_event_logging.py                                                                          |
 
 **Score: PASS** — Significant improvement; /health was missing on 7/14 services in prior audit.
 

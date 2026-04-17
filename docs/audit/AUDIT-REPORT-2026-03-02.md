@@ -66,7 +66,7 @@ See: `unified-trading-pm/docs/audit/DEFERRED-ISSUES-DECISIONS.md` for full decis
 
 | Repo                             | Threshold | Coverage | Status                                     |
 | -------------------------------- | --------- | -------- | ------------------------------------------ |
-| unified-events-interface         | 70        | 91%      | PASS                                       |
+| unified-trading-library          | 70        | 91%      | PASS                                       |
 | unified-internal-contracts       | 70        | 99%      | PASS                                       |
 | risk-and-exposure-service        | 70        | 75%      | PASS                                       |
 | position-balance-monitor-service | 70        | 70%      | PASS (new tests written)                   |
@@ -249,11 +249,11 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 ## P1 — ARCHITECTURE (Fix This Sprint)
 
-### ISS-010: T0 unified-config-interface depends on T0 unified-events-interface — FIXED (UCI promoted to T1)
+### ISS-010: T0 unified-config-interface depends on T0 unified-trading-library — FIXED (UCI promoted to T1)
 
 - **Section:** S2 (Tier Architecture) | **Criterion:** 2.1
 - **Severity:** HIGH | **Time:** 2-4h | **Difficulty:** Medium
-- **Files:** `unified-config-interface/pyproject.toml` (dependency on `unified-events-interface`)
+- **Files:** `unified-config-interface/pyproject.toml` (dependency on `unified-trading-library`)
 - **Fix:** Either inline the UEI functionality UCI needs, or promote UCI to T1, or amend tier_rules to allow T0-to-T0
 
 ### ISS-011: unified-trading-api depends on unified-domain-client (T3) — FIXED (false positive: no actual dependency)
@@ -296,7 +296,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Section:** S7 (Codex Drift) | **Criterion:** 7.6
 - **Severity:** MEDIUM | **Time:** 1h | **Difficulty:** Low
 - **Files:** position-balance-monitor-service, risk-and-exposure-service, unified-cloud-interface,
-  unified-events-interface, unified-market-interface, unified-trade-execution-interface Dockerfiles
+  unified-trading-library, unified-market-interface, unified-trade-execution-interface Dockerfiles
 - **Fix:** Add `ARG PROJECT_ID` and use `${PROJECT_ID}` in FROM lines
 
 ### ISS-015: Lifecycle events diverged between codex and code — FIXED
@@ -304,7 +304,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Section:** S7 (Codex Drift) | **Criterion:** 7.3
 - **Severity:** HIGH | **Time:** 2h | **Difficulty:** Low
 - **Files:**
-  - `unified-events-interface/unified_trading_library.events/schemas.py:98-111`
+  - `unified-trading-library/unified_trading_library.events/schemas.py:98-111`
   - `unified-trading-codex/03-observability/lifecycle-events.md:25-41`
 - **Fix:**
   1. Synchronize `STANDARD_LIFECYCLE_EVENTS` in `schemas.py` to match codex
@@ -433,7 +433,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Severity:** MEDIUM | **Time:** 28-56h total | **Difficulty:** Medium-High
 - **Repos:** deployment-service, execution-service, unified-trading-api, features-delta-one-service,
   features-sports-service, features-volatility-service, market-data-processing-service, ml-training-service,
-  position-balance-monitor-service, risk-and-exposure-service, unified-domain-client, unified-events-interface,
+  position-balance-monitor-service, risk-and-exposure-service, unified-domain-client, unified-trading-library,
   unified-internal-contracts, unified-market-interface
 - **Fix:** Raise `fail_under` incrementally: 40 → 55 → 70, adding tests as needed
 

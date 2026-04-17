@@ -132,7 +132,7 @@ export PYTHONPATH="${LIBS}:${PYTHONPATH:-}"
 python3 unified-trading-pm/scripts/openapi/generate_unified_spec.py
 ```
 
-Note: `unified-config-interface`, `unified-cloud-interface`, and `unified-events-interface` are now consolidated into
+Note: `unified-config-interface`, `unified-cloud-interface`, and `unified-trading-library` are now consolidated into
 `unified-trading-library` as `config_interface`, `cloud_interface`, and `events_interface` sub-modules respectively.
 
 Default outputs: `unified-api-contracts/openapi/unified-trading-system.openapi.{json,yaml}`. Copy the JSON/YAML into

@@ -23,7 +23,7 @@ Phase 1/2/3 hardening
 | -------------------------------- | ------------- | ------------- | --------- | ---------------------------------- |
 | unified-api-contracts            | PASS          | PASS          | 0         | —                                  |
 | unified-internal-contracts       | PASS          | PASS          | 0         | —                                  |
-| unified-events-interface         | PASS          | PASS          | 0         | —                                  |
+| unified-trading-library          | PASS          | PASS          | 0         | —                                  |
 | unified-reference-data-interface | PASS          | PASS          | 0         | —                                  |
 | unified-cloud-interface          | PASS          | FAIL (50 err) | 11        | §2.4 os.environ, §2.3 basedpyright |
 | matching-engine-library          | PASS          | PASS          | 0         | Fixed amm.py, pyrightconfig        |

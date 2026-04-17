@@ -26,7 +26,7 @@ coverage minimum; quality-gates.sh --unit-only pass
 | --------------------------------- | -------- | ------ |
 | features-sports-service           | 100.0%   | ok     |
 | unified-api-contracts (internal/) | 99.8%    | ok     |
-| unified-events-interface          | 97.1%    | ok     |
+| unified-trading-library           | 97.1%    | ok     |
 | unified-ml-interface              | 93.4%    | ok     |
 | position-balance-monitor-service  | 88.6%    | ok     |
 | features-calendar-service         | 84.3%    | ok     |

@@ -34,7 +34,7 @@ cd /path/to/unified-trading-system-repos
 | Rule | SSOT |
 |------|------|
 | Config class | `UnifiedCloudConfig` from unified-config-interface |
-| Logging | `setup_events()`, `log_event()` from unified-events-interface |
+| Logging | `setup_events()`, `log_event()` from unified-trading-library |
 | Coverage | 70% min (quality gates), 80% audit goal |
 | File size | Service: 900/700; Library: 1500/1200 |
 | Formatting ref | `formatting-standards.md` (not FORMATTING_STANDARDS_MASTER) |

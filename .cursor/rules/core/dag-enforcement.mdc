@@ -16,8 +16,8 @@ Runtime interaction SSOT: unified-trading-pm/configs/runtime-topology.yaml (PM-c
 NOTE: `unified-trading-services` was renamed to `unified-trading-library` — use `unified-trading-library` in all imports and pyproject.toml dependencies. `unified_trading_services` import still works as backward-compat re-export but `unified_trading_library` is canonical.
 CODEX: 00-SSOT-INDEX.md, 04-architecture/TIER-ARCHITECTURE.md. AC cannot import UIC: 02-data/contracts-scope-and-layout.md.
 TIERS:
-  T0 (pure leaf): unified-api-contracts (includes internal/ subpackage, formerly unified-internal-contracts), unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library
-  T1: unified-config-interface, unified-trading-library (imports T0 only; unified-config-interface imports unified-events-interface for CONFIG_LOADED event)
+  T0 (pure leaf): unified-api-contracts (includes internal/ subpackage, formerly unified-internal-contracts), unified-trading-library, unified-cloud-interface, execution-algo-library, matching-engine-library
+  T1: unified-config-interface, unified-trading-library (imports T0 only; unified-config-interface imports unified-trading-library for CONFIG_LOADED event)
   T2: unified-market-interface, unified-ml-interface, unified-feature-calculator-library (imports T0+T1)
   T3: unified-domain-client (imports T0+T1)
   Service: imports from T0-T3 only (libraries). **Importing another service as a package (pyproject dep / import) is a VIOLATION.** Interaction is only via messaging/APIs/storage per topology DAG. Services run as separate images always; colocated = same VM with in_memory for fast path, else GCS / PubSub / Redis. NOTE: unified-trade-execution-interface, unified-defi-execution-interface, unified-sports-execution-interface, unified-position-interface, unified-reference-data-interface have been merged into their respective services (execution-service, position-balance-monitor-service, instruments-service). Do NOT import these old repos.

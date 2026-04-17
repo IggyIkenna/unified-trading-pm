@@ -36,7 +36,7 @@
 
 ### T0 Repos (8)
 
-unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface,
+unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-trading-library,
 unified-cloud-interface, unified-reference-data-interface, execution-algo-library, matching-engine-library
 
 ---

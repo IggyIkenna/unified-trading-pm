@@ -123,7 +123,7 @@ On success: emit `TRANSFER_CONFIRMED`. On failure after retry exhaustion: emit `
 
 ## Events
 
-All transfers emit lifecycle events via unified-events-interface. Failures trigger Telegram + PagerDuty alerts.
+All transfers emit lifecycle events via unified-trading-library. Failures trigger Telegram + PagerDuty alerts.
 
 | Event                             | When                                |
 | --------------------------------- | ----------------------------------- |

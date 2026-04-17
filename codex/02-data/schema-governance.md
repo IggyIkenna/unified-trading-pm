@@ -362,7 +362,7 @@ infrastructure). These are not shared; they stay local to the service.
 Schemas that apply to all services or define shared infrastructure contracts live in `unified-trading-services`:
 
 - **Event logging schema** -- `log_event()` format: `SERVICE_EVENT: {event_name} (details)` → **MIGRATING to
-  `unified-events-interface`**
+  `unified-trading-library`**
 - **Error response format** -- standardized error classification and retry semantics
 - **Config base class** -- `UnifiedCloudServicesConfig` (all services extend this) → **MIGRATING to
   `unified-config-interface`**
@@ -392,7 +392,7 @@ used only within the interface (internal helpers, venue-specific intermediaries)
 
 - **execution-algo-library**: AlgoConfig, AlgoExecution, ParentChildOrder — pure compute, no external API, no
   cross-service contract.
-- **unified-events-interface**: LifecycleEventType, EventSeverity — event sink protocol types, T0 leaf.
+- **unified-trading-library**: LifecycleEventType, EventSeverity — event sink protocol types, T0 leaf.
 - **unified-config-interface**: UnifiedCloudConfig, BaseConfig — config protocol types, T1.
 
 ### Contract schemas (inter-service agreements)

@@ -40,7 +40,7 @@ flowchart TB
         direction LR
         AC["unified-api-contracts v1.0\nPydantic schemas · VCR cassettes\nunified_api_contracts_external/\nunified_normalised_contracts/"]
         UIC_INT["unified-internal-contracts v1.0\nMessagingTopic · EventEnvelope\nPubSub topics · req/resp/error"]
-        UEI["unified-events-interface v1.0\nEventSink Protocol · log_event\nMockEventSink"]
+        UEI["unified-trading-library v1.0\nEventSink Protocol · log_event\nMockEventSink"]
         UCLI["unified-cloud-interface v1.0\nStorageClient · SecretProvider\nQueueClient · DataSink · DataSource · EventBus\nGCP + AWS + Local · factory functions"]
         URDI["unified-reference-data-interface v1.0\nREST venue adapters\nAPI key via UCLI.get_secret_client · IBKR corp actions"]
         EAL["execution-algo-library v1.0\nTWAP · VWAP · Iceberg\nzero inter-lib deps"]

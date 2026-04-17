@@ -55,7 +55,7 @@ unified-trading-codex/06-coding-standards/
 | unified-config-interface           | PASS             | PASS     | PASS                 |
 | unified-defi-execution-interface   | PASS             | PASS     | PASS                 |
 | unified-domain-client              | PASS             | PASS     | PASS                 |
-| unified-events-interface           | PASS             | PASS     | PASS                 |
+| unified-trading-library            | PASS             | PASS     | PASS                 |
 | unified-feature-calculator-library | PASS             | PASS     | PASS                 |
 | unified-internal-contracts         | PASS             | PASS     | PASS                 |
 | unified-market-interface           | PASS             | PASS     | PASS                 |

@@ -73,7 +73,7 @@ Is it a user interface?
 └─ No → Is it a service or library?
    ├─ Service → Orchestrator (ServiceCLI, thin adapters, delegates to libraries)
    └─ Library → What tier?
-      ├─ Tier 0: No dependencies (unified-api-contracts, unified-config-interface, unified-events-interface)
+      ├─ Tier 0: No dependencies (unified-api-contracts, unified-config-interface, unified-trading-library)
       ├─ Tier 1: Depends on Tier 0 only (unified-trading-services)
       └─ Tier 2: Depends on Tier 0 only (UMI, UTEI, UDC, etc.)
 ```

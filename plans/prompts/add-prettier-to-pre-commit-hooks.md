@@ -69,7 +69,7 @@ Place this block **after the ruff block and before the basic file checks block**
 | 20  | `unified-config-interface`          |
 | 21  | `unified-domain-client`             |
 | 22  | `unified-domain-services`           |
-| 23  | `unified-events-interface`          |
+| 23  | `unified-trading-library`           |
 | 24  | `unified-market-interface`          |
 | 25  | `unified-ml-interface`              |
 | 26  | `unified-order-interface`           |

@@ -330,8 +330,8 @@ see/experience differently.
   - **Circuit breaker commands** to services (PubSub): e.g., "halt all execution" if risk breach
   - **External notifications:** Slack webhooks, PagerDuty alerts, email
   - **Deployment commands:** Can trigger deployment-api to stop/restart services
-- **Architecture:** Uses unified-events-interface EventSink for consuming events. The event infrastructure (UEI)
-  provides the standardized event schema; alerting-service provides the rules engine and dispatch logic.
+- **Architecture:** Uses unified-trading-library EventSink for consuming events. The event infrastructure (UEI) provides
+  the standardized event schema; alerting-service provides the rules engine and dispatch logic.
 - **Disaster recovery:** Alerting-system is the trigger for DR workflows. It publishes circuit breaker events that
   services subscribe to and must honor (graceful shutdown, position flatten).
 - **Current implementation gap:** Stub. Slack webhook implemented, PagerDuty config only, no circuit breakers. Target:

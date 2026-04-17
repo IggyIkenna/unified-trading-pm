@@ -35,7 +35,7 @@ repo_gates:
     deployment: none
     business: none
     readiness_note: "LifecycleEventType expansion, CI/CD events, error hierarchy"
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     code: C0
     deployment: none
     business: none
@@ -669,7 +669,7 @@ todos:
   - id: p5-adhoc-events-canonicalize
     content: |
       - [ ] [AGENT] P1. Canonicalize 17 ad-hoc event strings across services:
-      **Add to STANDARD_LIFECYCLE_EVENTS in unified-events-interface/schemas.py:**
+      **Add to STANDARD_LIFECYCLE_EVENTS in unified-trading-library/schemas.py:**
       - SLACK_MESSAGE_SENT, ALERT_ROUTED, DATA_FRESHNESS_ALERT_ROUTED, DATA_FRESHNESS_ALERT_FAILED
       - MODE_INITIALIZED, STAGE_INITIALIZED, FEATURE_LOADING_STARTED, FEATURE_LOADING_COMPLETED
       - STAGE3_STARTED, STAGE3_COMPLETED, MODEL_SAVING_STARTED, MODEL_SAVING_COMPLETED
@@ -943,7 +943,7 @@ After all phases complete:
 4. `cd execution-service && bash scripts/quality-gates.sh` — passes with exhaustive instruction types
 5. `cd unified-api-contracts && bash scripts/quality-gates.sh` — passes with new schemas
 6. `cd unified-internal-contracts && bash scripts/quality-gates.sh` — passes with new event types
-7. `cd unified-events-interface && bash scripts/quality-gates.sh` — passes with canonicalized events
+7. `cd unified-trading-library && bash scripts/quality-gates.sh` — passes with canonicalized events
 8. `cd unified-config-interface && bash scripts/quality-gates.sh` — passes with audit trail + enums
 9. `cd unified-trading-library && bash scripts/quality-gates.sh` — passes with slice subscriptions
 10. `cd unified-market-interface && bash scripts/quality-gates.sh` — passes with Aster registration

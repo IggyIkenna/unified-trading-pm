@@ -27,7 +27,7 @@ just need import path updates.
 
 | Merge Target                         | Archived Source                       | Test Files | Current Coverage |
 | ------------------------------------ | ------------------------------------- | ---------- | ---------------- |
-| **UTL** (65%)                        | unified-events-interface              | 12         |                  |
+| **UTL** (65%)                        | unified-trading-library               | 12         |                  |
 |                                      | unified-cloud-interface               | 27         |                  |
 |                                      | unified-config-interface              | 26         |                  |
 |                                      | unified-features-interface            | 6          |                  |
@@ -144,7 +144,7 @@ Migrate archived tests first (update imports), then write new tests for gaps.
 - [ ] [AGENT] P1. **PM 48% → 70%** — write tests for validation scripts (check-import-patterns, check_schema_provenance,
       check_manifest_import_alignment, check-repo-readiness), checker scripts (triad_assertion_checker,
       fixture_drift_checker, flow_coverage_scorecard), and manifest utilities
-- [ ] [AGENT] P1. **UTL 65% → 70%** — migrate 127 test files from archive (unified-events-interface → events_interface/,
+- [ ] [AGENT] P1. **UTL 65% → 70%** — migrate 127 test files from archive (unified-trading-library → events_interface/,
       unified-cloud-interface → cloud_interface/, unified-config-interface → config_interface/,
       unified-features-interface → features_interface/, unified-feature-calculator-library → feature_calculator/,
       unified-ml-interface → ml/, unified-domain-client → domain_client/). Update imports:

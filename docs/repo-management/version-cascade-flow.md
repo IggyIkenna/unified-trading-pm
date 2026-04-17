@@ -109,7 +109,7 @@ Example: `execution-algo-library` (T2) bumps with `fix:`:
 - `market-tick-data-service` (which doesn't import execution-algo-library) is NOT touched
 - The cascade never reaches repos that don't import anything in the changed chain
 
-Example: `unified-events-interface` (T0) bumps with `feat!:`:
+Example: `unified-trading-library` (T0) bumps with `feat!:`:
 
 - Nearly every repo depends on T0 (UEI)
 - PM dispatches to all direct dependents of UEI

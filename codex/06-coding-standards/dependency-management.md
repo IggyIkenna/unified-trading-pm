@@ -112,7 +112,7 @@ dependencies = [
     "pandas>=2.0.0",
     # NOTE: Unified libraries installed separately via SSH/PAT:
     #   - unified-trading-services (cloud abstractions)
-    #   - unified-events-interface (event logging)
+    #   - unified-trading-library (event logging)
     #   - unified-config-interface (configuration)
     #   - unified-order-interface (order execution) [if needed]
 ]

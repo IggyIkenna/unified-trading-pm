@@ -1,6 +1,6 @@
 # Coordination Events -- Service-to-Service Wiring
 
-> Last updated: 2026-03-15. This document maps all coordination events defined in `unified-events-interface` and
+> Last updated: 2026-03-15. This document maps all coordination events defined in `unified-trading-library` and
 > documents which services publish and subscribe to each event, along with the PubSub topic convention and payload
 > contracts.
 
@@ -15,10 +15,10 @@ upstream work is complete and data is available for consumption.
 - Live mode only -- `publish_coordination_event()` raises `ValueError` in batch mode
 - Requires `setup_events()` to be called first with `mode="live"`
 - Transport: PubSub (GCP Cloud Pub/Sub or equivalent)
-- Schema: `CoordinationEvent` dataclass from `unified-events-interface`
+- Schema: `CoordinationEvent` dataclass from `unified-trading-library`
 - All event types must be UPPERCASE strings
 
-**Machine-readable SSOT:** `unified-events-interface/unified_trading_library.events/schemas.py` --
+**Machine-readable SSOT:** `unified-trading-library/unified_trading_library.events/schemas.py` --
 `STANDARD_COORDINATION_EVENTS` set.
 
 **Internal mirror:** `unified-api-contracts/unified_api_contracts/internal/events.py` -- `LifecycleEventType` enum
@@ -233,5 +233,5 @@ subscribe_coordination_events("DATA_READY", _on_data_ready)
 
 - Lifecycle events: `03-observability/lifecycle-events.md`
 - Data flow map: `04-architecture/data-flow-map.md`
-- Event schemas: `unified-events-interface/unified_trading_library.events/schemas.py`
+- Event schemas: `unified-trading-library/unified_trading_library.events/schemas.py`
 - UIC event types: `unified-api-contracts/unified_api_contracts/internal/events.py`

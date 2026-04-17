@@ -1108,7 +1108,7 @@ steps:
 
 ### Shared Libraries: Idempotent Package Publishing
 
-**For shared libraries** (`unified-trading-services`, `unified-events-interface`, etc.), Cloud Build must publish Python
+**For shared libraries** (`unified-trading-services`, `unified-trading-library`, etc.), Cloud Build must publish Python
 packages to Artifact Registry **idempotently** and **enforce version uniqueness**.
 
 **Problem:** Artifact Registry rejects duplicate package versions (400 Bad Request). Without proper handling:

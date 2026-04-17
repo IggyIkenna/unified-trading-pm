@@ -61,7 +61,7 @@ No renames needed for these; only ensure names are consistent and blocks match t
 
 **Topological order (simplified):**
 
-- **Level 0:** unified-config-interface, unified-events-interface, api-contracts
+- **Level 0:** unified-config-interface, unified-trading-library, api-contracts
 - **Level 1:** unified-trading-services
 - **Level 2:** unified-domain-client, matching-engine-library, execution-algo-library
 - **Level 3:** unified-market-interface, unified-ml-interface
@@ -95,7 +95,7 @@ and **infrastructure** so each workspace has the right deps for its theme.
 
 - Ensure: unified-domain-client is included (instruments-service depends on it per matrix). Script already has
   unified-market-interface.
-- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-events-interface, unified-config-interface,
+- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-trading-library, unified-config-interface,
   unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler,
   market-data-processing-service.
 - No `unified-order-interface`; if any reference exists, use `unified-trade-execution-interface`.
@@ -130,7 +130,7 @@ and **infrastructure** so each workspace has the right deps for its theme.
 
 - Replace `unified-order-interface` with `unified-trade-execution-interface`.
 - Add: unified-ml-interface, matching-engine-library, unified-defi-execution-interface, api-contracts.
-- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-events-interface, unified-config-interface,
+- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-trading-library, unified-config-interface,
   unified-trade-execution-interface, unified-market-interface, unified-ml-interface, unified-domain-client,
   execution-algo-library, matching-engine-library, unified-defi-execution-interface, api-contracts.
 - extraPaths: same list (for Python packages).
@@ -147,7 +147,7 @@ and **infrastructure** so each workspace has the right deps for its theme.
 
 - No change to repo names (no unified-order-interface).
 - Keep: codex, deployment-service, deployment-api, deployment-ui, unified-trading-library, unified-config-interface, and
-  all UI repos. Optional: unified-events-interface if UIs need it.
+  all UI repos. Optional: unified-trading-library if UIs need it.
 
 ### 3.9 workspace-infrastructure
 

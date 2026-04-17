@@ -201,7 +201,7 @@ deployment-api (self-contained read/write for deployment state)
 ## 11. Audit Trail & Logs Pipeline
 
 ```
-All services (via unified-events-interface)
+All services (via unified-trading-library)
   writes -> {P}-events/events/{service}/{date}/*.jsonl
 
 batch-audit-api

@@ -88,7 +88,7 @@ All steps completed:
 - features-volatility-service: `unified-domain-services` → `unified-domain-client`
 - features-volatility-service: `api-contracts` → `unified-api-contracts`
 - unified-cloud-interface: removed unused `unified-api-contracts` dep
-- unified-reference-data-interface: removed 2 unused deps, added missing `unified-events-interface`
+- unified-reference-data-interface: removed 2 unused deps, added missing `unified-trading-library`
 
 ### Phase 2d: Manifest and QG cleanup — DONE
 
@@ -202,12 +202,12 @@ All steps completed:
 
 ## Phase 5: Architectural Cleanup — MOSTLY COMPLETED
 
-| #   | Task                               | Status                                                                                                                                                                                                                                              |
-| --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5.1 | Address Tier 0 purity              | DONE — Reclassified `unified-reference-data-interface` from Tier 0 to Tier 1. Removed 2 unused deps (`unified-api-contracts`, `unified-config-interface`), added missing `unified-events-interface`. Updated manifest `arch_tier` and `tier_rules`. |
-| 5.2 | Document Tier 2→3 known violations | Acknowledged — `unified-market-interface` and `unified-ml-interface` → `unified-domain-client` (Tier 3). Already flagged as `known_violations` in manifest.                                                                                         |
-| 5.3 | UI QG approach                     | DONE — See Phase 5.3 details below                                                                                                                                                                                                                  |
-| 5.4 | Coverage tracking                  | PENDING — All repos show 0% coverage. Need to either record actual numbers or adjust threshold.                                                                                                                                                     |
+| #   | Task                               | Status                                                                                                                                                                                                                                             |
+| --- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5.1 | Address Tier 0 purity              | DONE — Reclassified `unified-reference-data-interface` from Tier 0 to Tier 1. Removed 2 unused deps (`unified-api-contracts`, `unified-config-interface`), added missing `unified-trading-library`. Updated manifest `arch_tier` and `tier_rules`. |
+| 5.2 | Document Tier 2→3 known violations | Acknowledged — `unified-market-interface` and `unified-ml-interface` → `unified-domain-client` (Tier 3). Already flagged as `known_violations` in manifest.                                                                                        |
+| 5.3 | UI QG approach                     | DONE — See Phase 5.3 details below                                                                                                                                                                                                                 |
+| 5.4 | Coverage tracking                  | PENDING — All repos show 0% coverage. Need to either record actual numbers or adjust threshold.                                                                                                                                                    |
 
 ### Phase 5.3: UI Quality Gates — COMPLETED
 

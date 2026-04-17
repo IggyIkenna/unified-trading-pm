@@ -184,7 +184,7 @@ Result: Full context + parallel execution + no conflicts!
 **Different repos = Zero conflict risk**:
 
 - Agent 1 edits `unified-config-interface/` only
-- Agent 2 edits `unified-events-interface/` only
+- Agent 2 edits `unified-trading-library/` only
 - Agent 3 edits `instruments-service/` only
 - Agent 4 edits `market-tick-data-handler/` only
 

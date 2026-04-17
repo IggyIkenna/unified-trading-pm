@@ -33,7 +33,7 @@ repo_gates:
     code: C1
     deployment: none
     business: none
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     code: C1
     deployment: none
     business: none
@@ -277,7 +277,7 @@ class UnwindStep(BaseModel):
     operation_type: str  # "market_order" | "swap" | "repay" | "withdraw" | "unstake" | "bridge"
 ```
 
-### 0.3 — Reconciliation alert event (unified-events-interface)
+### 0.3 — Reconciliation alert event (unified-trading-library)
 
 ```python
 # Event: POSITION_DRIFT_DETECTED
@@ -353,7 +353,7 @@ received: Y, Price impact: Z%" before you confirm a swap.
    - **Normal:** deviation < 2% equity, delta residual < configured threshold
    - **Warning:** deviation 2-5% equity or delta residual approaching limit
    - **Critical:** deviation > 5% equity or delta residual breaching limit
-3. On WARNING or CRITICAL: emits `POSITION_DRIFT_DETECTED` event via unified-events-interface
+3. On WARNING or CRITICAL: emits `POSITION_DRIFT_DETECTED` event via unified-trading-library
 4. Event flows to alert pipeline → shows as high-severity notification in Observe → Alerts
 
 **Thresholds configurable** via typed config reloader (per `config_reloaders.py` pattern).

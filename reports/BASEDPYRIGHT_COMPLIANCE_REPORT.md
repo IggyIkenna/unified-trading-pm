@@ -32,7 +32,7 @@
 | -------------------------------- | ---- | ----------------------- | ------------------------ | ----------- | ------------------------------------- |
 | unified-api-contracts            | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |
 | unified-config-interface         | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |
-| unified-events-interface         | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |
+| unified-trading-library          | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |
 | unified-internal-contracts       | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |
 | unified-cloud-interface          | T0   | strict, reportAny error | 50 errors, 295 warnings  | —           | FAIL (reportUnknown\*)                |
 | unified-reference-data-interface | T0   | strict, reportAny error | 0 errors                 | 0           | PASS                                  |

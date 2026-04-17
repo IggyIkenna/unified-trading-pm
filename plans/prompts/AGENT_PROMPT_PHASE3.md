@@ -136,7 +136,7 @@ PubSub topics, Secret Manager, Cloud Run service name).
 | ------------------------------------ | -------------------------------------- | ---- |
 | New error schema / typed exception   | `unified-api-contracts` (AC)           | T0   |
 | New internal event / domain contract | `unified-internal-contracts` (UIC_INT) | T0   |
-| New lifecycle event name             | `unified-events-interface` (UEI)       | T0   |
+| New lifecycle event name             | `unified-trading-library` (UEI)        | T0   |
 | New config field                     | `unified-config-interface` (UCI)       | T0   |
 | New cloud primitive                  | `unified-cloud-interface` (UCLI)       | T0   |
 | New market schema / adapter protocol | `unified-market-interface` (UMI)       | T2   |

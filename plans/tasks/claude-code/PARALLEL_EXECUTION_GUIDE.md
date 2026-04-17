@@ -28,7 +28,7 @@
 **No Conflicts**:
 
 - ✅ Agent 1 edits only `unified-config-interface/`
-- ✅ Agent 2 edits only `unified-events-interface/`
+- ✅ Agent 2 edits only `unified-trading-library/`
 - ✅ Agent 3 edits only `instruments-service/`
 - ✅ Agent 4 edits only `market-tick-data-handler/`
 
@@ -89,7 +89,7 @@ bash unified-trading-pm/scripts/agents/run-parallel-agents.sh <repo1> <repo2> <r
 ```bash
 bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
     unified-config-interface \
-    unified-events-interface \
+    unified-trading-library \
     instruments-service \
     market-tick-data-handler \
     "Fix all basedpyright errors"
@@ -106,7 +106,7 @@ bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
 ```bash
 bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
     unified-config-interface \
-    unified-events-interface \
+    unified-trading-library \
     instruments-service \
     market-tick-data-handler \
     "Fix all basedpyright errors. Apply: 1) No empty fallbacks, 2) No Type Any, 3) No decorators."
@@ -176,7 +176,7 @@ With `--model auto` (FREE tier):
 tail -f /tmp/agent-unified-config-interface.log
 
 # Terminal 2
-tail -f /tmp/agent-unified-events-interface.log
+tail -f /tmp/agent-unified-trading-library.log
 
 # Terminal 3
 tail -f /tmp/agent-instruments-service.log
@@ -190,7 +190,7 @@ tail -f /tmp/agent-market-tick-data-handler.log
 **Check all logs**:
 
 ```bash
-for repo in unified-config-interface unified-events-interface instruments-service market-tick-data-handler; do
+for repo in unified-config-interface unified-trading-library instruments-service market-tick-data-handler; do
     echo "=== $repo ==="
     tail -20 /tmp/agent-${repo}.log
     echo ""
@@ -206,7 +206,7 @@ done
 ```bash
 cd /path/to/unified-trading-system-repos  # workspace root (varies per machine)
 
-for repo in unified-config-interface unified-events-interface instruments-service market-tick-data-handler; do
+for repo in unified-config-interface unified-trading-library instruments-service market-tick-data-handler; do
     echo "=== $repo ==="
     cd $repo
     basedpyright --level warning 2>&1 | tail -1
@@ -221,7 +221,7 @@ done
 === unified-config-interface ===
 0 errors, 0 warnings, 0 notes
 
-=== unified-events-interface ===
+=== unified-trading-library ===
 0 errors, 0 warnings, 0 notes
 
 === instruments-service ===

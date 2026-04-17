@@ -24,7 +24,7 @@ publishing to Artifact Registry.
 ### Tier 0: No Dependencies
 
 **Examples:** unified-api-contracts (canonical/external surface + internal subpackage), unified-config-interface,
-unified-events-interface
+unified-trading-library
 
 **Allowed Dependencies:**
 
@@ -225,7 +225,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     # Tier 0 dependencies
     "unified-config-interface>=1.0.0,<2.0.0",
-    "unified-events-interface>=1.0.0,<2.0.0",
+    "unified-trading-library>=1.0.0,<2.0.0",
     "unified-api-contracts>=1.0.0,<2.0.0",
     # Third-party dependencies
     "pydantic>=2.10.5,<3.0.0",
@@ -259,7 +259,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     # Tier 0 dependencies
     "unified-config-interface>=1.0.0,<2.0.0",
-    "unified-events-interface>=1.0.0,<2.0.0",
+    "unified-trading-library>=1.0.0,<2.0.0",
     "unified-api-contracts>=1.0.0,<2.0.0",
     # Tier 1 dependencies (only UTS allowed)
     "unified-trading-services>=2.0.0,<3.0.0",

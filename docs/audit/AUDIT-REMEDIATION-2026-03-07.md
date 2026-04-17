@@ -254,7 +254,7 @@ terraform state files (those are gitignored/local). **Priority files:**
 - `features-volatility-service/docs/GCS_PATHS.md`, `CONFIGURATION.md`
 - `ml-inference-service/docs/GCS_PATHS.md`, `CONFIGURATION.md`, `README.md`
 - `ml-training-service/README.md`
-- `unified-events-interface/README.md`
+- `unified-trading-library/README.md`
 - `unified-trading-library/docs/CONFIGURATION.md`
 - `execution-analytics-ui/src/pages/RunBacktest.tsx:565` — `useState("{project_id}")` →
   `useState(import.meta.env.VITE_GCP_PROJECT_ID ?? "")`
@@ -328,7 +328,7 @@ E501 is globally ignored in 30+ repos. **Fix (three steps):**
 #### A4.4 — 8.17 FAIL: `bump-library-version` hook missing in `unified-cloud-interface` and `unified-ml-interface`
 
 **Fix:** Add `bump-library-version` hook to `.pre-commit-config.yaml` in both repos, matching the pattern used in
-`unified-events-interface`, `unified-config-interface`, `unified-trading-library`.
+`unified-trading-library`, `unified-config-interface`, `unified-trading-library`.
 
 ---
 

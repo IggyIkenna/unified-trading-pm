@@ -73,7 +73,7 @@ If any check fails: STOP. Complete Phase 1 first.
 | AC      | unified-api-contracts              | T0   |
 | UIC_INT | unified-internal-contracts         | T0   |
 | UCI     | unified-config-interface           | T0   |
-| UEI     | unified-events-interface           | T0   |
+| UEI     | unified-trading-library            | T0   |
 | UCLI    | unified-cloud-interface            | T0   |
 | URDI    | unified-reference-data-interface   | T0   |
 | EAL     | execution-algo-library             | T0   |
@@ -109,7 +109,7 @@ runtime-topology.yaml, cursor rules, codex docs.
 | ------------------------------------ | ----------------------------------------- | ---- |
 | New error schema / typed exception   | `unified-api-contracts` (AC)              | T0   |
 | New internal event / domain contract | `unified-internal-contracts` (UIC_INT)    | T0   |
-| New lifecycle event name             | `unified-events-interface` (UEI)          | T0   |
+| New lifecycle event name             | `unified-trading-library` (UEI)           | T0   |
 | New config field                     | `unified-config-interface` (UCI)          | T0   |
 | New cloud primitive                  | `unified-cloud-interface` (UCLI)          | T0   |
 | New reference data protocol          | `unified-reference-data-interface` (URDI) | T0   |

@@ -43,7 +43,7 @@ Use this after `bash 08-verify-completion.sh` shows 100% complete.
       --project=test-project
   ```
 
-  - Verify: unified-events-interface (>=1.0.0)
+  - Verify: unified-trading-library (>=1.0.0)
   - Verify: unified-config-interface (>=1.0.0)
   - Verify: unified-market-interface (>=1.0.0)
   - Verify: unified-order-interface (>=1.0.0)
@@ -142,26 +142,26 @@ mkdir -p 11-project-management/migration-guides
   - Code examples from pyproject.toml
 
 - [ ] **Update `03-observability/lifecycle-events.md`**
-  - Reference unified-events-interface as source of truth
+  - Reference unified-trading-library as source of truth
   - Update event schema links
   - Clarify observability vs coordination events
 
 - [ ] **Update `03-observability/batch/architecture.md`**
   - Clarify: Batch uses Cloud Logging only
   - Explain: No PubSub in batch (GCS is message bus)
-  - Update examples to use unified-events-interface
+  - Update examples to use unified-trading-library
 
 - [ ] **Update `03-observability/live/architecture.md`**
   - Add: PubSub for coordination events
   - Explain: Service-to-service workflow (features → ML → strategy → execution)
-  - Update examples to use unified-events-interface
+  - Update examples to use unified-trading-library
 
 - [ ] **Update `04-architecture/deployment-topology-diagrams.md`**
   - Update dependency diagrams to show 4 new libraries
   - Show data flow: Services → Libraries → unified-trading-services → Cloud
 
 - [ ] **Update `02-data/schema-governance.md`**
-  - Add: Event schemas owned by unified-events-interface
+  - Add: Event schemas owned by unified-trading-library
   - Add: Config schemas owned by unified-config-interface
   - Add: Market schemas owned by unified-market-interface
   - Add: Order schemas owned by unified-order-interface
@@ -266,7 +266,7 @@ For each of the 11 remaining services (not yet migrated):
     Completed: Feb 28, 2026
 
     Split unified-trading-services into 4 focused libraries:
-    - unified-events-interface
+    - unified-trading-library
     - unified-config-interface
     - unified-market-interface
     - unified-order-interface

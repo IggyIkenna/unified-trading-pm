@@ -4,28 +4,28 @@
 
 ## CI Venv Fix Rollout (2026-03-09)
 
-| Status                                        | Count | Notes                                                                                                                                                                                                  |
-| --------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Has venv fix** (`uv venv .venv` + PATH)     | 38    | alerting-service, deployment-api, execution-algo-library, features-\*, instruments-service, matching-engine-library, unified-config-interface, unified-events-interface, unified-trading-library, etc. |
-| **Still uses `--system`**                     | 3     | unified-cloud-interface, unified-internal-contracts, unified-reference-data-interface                                                                                                                  |
-| **Uses `python -m venv`** (different pattern) | 1     | unified-api-contracts                                                                                                                                                                                  |
+| Status                                        | Count | Notes                                                                                                                                                                                                 |
+| --------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Has venv fix** (`uv venv .venv` + PATH)     | 38    | alerting-service, deployment-api, execution-algo-library, features-\*, instruments-service, matching-engine-library, unified-config-interface, unified-trading-library, unified-trading-library, etc. |
+| **Still uses `--system`**                     | 3     | unified-cloud-interface, unified-internal-contracts, unified-reference-data-interface                                                                                                                 |
+| **Uses `python -m venv`** (different pattern) | 1     | unified-api-contracts                                                                                                                                                                                 |
 
 ---
 
 ## PR Status
 
-| Repo                         | PR                                                                    | State      | Notes                               |
-| ---------------------------- | --------------------------------------------------------------------- | ---------- | ----------------------------------- |
-| **unified-events-interface** | [#20](https://github.com/IggyIkenna/unified-events-interface/pull/20) | **MERGED** | CI venv fix; merged 2026-03-09      |
-| **matching-engine-library**  | [#11](https://github.com/IggyIkenna/matching-engine-library/pull/11)  | OPEN       | CI venv fix; waiting on CI          |
-| **execution-algo-library**   | [#14](https://github.com/IggyIkenna/execution-algo-library/pull/14)   | OPEN       | CI venv fix; waiting on CI          |
-| **unified-api-contracts**    | [#29](https://github.com/IggyIkenna/unified-api-contracts/pull/29)    | OPEN       | quality-gates script; waiting on CI |
+| Repo                        | PR                                                                   | State      | Notes                               |
+| --------------------------- | -------------------------------------------------------------------- | ---------- | ----------------------------------- |
+| **unified-trading-library** | [#20](https://github.com/IggyIkenna/unified-trading-library/pull/20) | **MERGED** | CI venv fix; merged 2026-03-09      |
+| **matching-engine-library** | [#11](https://github.com/IggyIkenna/matching-engine-library/pull/11) | OPEN       | CI venv fix; waiting on CI          |
+| **execution-algo-library**  | [#14](https://github.com/IggyIkenna/execution-algo-library/pull/14)  | OPEN       | CI venv fix; waiting on CI          |
+| **unified-api-contracts**   | [#29](https://github.com/IggyIkenna/unified-api-contracts/pull/29)   | OPEN       | quality-gates script; waiting on CI |
 
 ---
 
 ## Quality Gates & Quickmerge Status
 
-### unified-events-interface
+### unified-trading-library
 
 | Stage                 | Status  | Details                                     |
 | --------------------- | ------- | ------------------------------------------- |
@@ -200,7 +200,7 @@ unified-cloud-interface on feature branch.
 
 | Repo                               | Quality gates            | Quickmerge / PR status              |
 | ---------------------------------- | ------------------------ | ----------------------------------- |
-| unified-events-interface           | ✅ Pass                  | **MERGED** (PR #20)                 |
+| unified-trading-library            | ✅ Pass                  | **MERGED** (PR #20)                 |
 | matching-engine-library            | ✅ Pass                  | PR #11 open (waiting on CI)         |
 | execution-algo-library             | ✅ Pass                  | PR #14 open (waiting on CI)         |
 | unified-api-contracts              | ✅ Pass                  | PR #29 open (waiting on CI)         |

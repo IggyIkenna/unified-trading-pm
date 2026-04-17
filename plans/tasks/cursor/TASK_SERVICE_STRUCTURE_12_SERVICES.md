@@ -16,7 +16,7 @@ EXCEPT instruments-service and market-tick-data-handler → **12 services**.
 
 Do a quick sanity check; do not redo:
 
-- **Phase 0.1**: unified-events-interface has `ErrorWarningCounter`, `get_dataframe_memory_usage`, `log_memory_metrics`
+- **Phase 0.1**: unified-trading-library has `ErrorWarningCounter`, `get_dataframe_memory_usage`, `log_memory_metrics`
   in `observability/`.
 - **Phase 0.2**: unified-config-interface has ConfigStore / TimeSeriesConfigStore (see `persistence.py`,
   `CONFIG_STORE.md`).
@@ -67,7 +67,7 @@ For each assigned service:
   in engine**: no GCS, no API calls, no storage.
 - Extract I/O into **thin** adapters in `adapters/`: e.g. `data_source.py`, `data_sink.py` (or `storage_adapter.py`).
   Adapters must delegate to unified-trading-library (e.g. `get_storage_client`), unified-market-interface,
-  unified-config-interface, unified-events-interface. Each adapter file <100 lines; no business logic.
+  unified-config-interface, unified-trading-library. Each adapter file <100 lines; no business logic.
 - Ensure `engine/` has **zero** imports from `adapters/`. Dependencies point inward: adapters → engine.
 - Keep or add `cli/handlers/` for operation-specific handlers; each handler orchestrates engine + adapters. If the
   service has only one entry (e.g. one batch handler), one handler under `cli/handlers/` is fine (e.g.

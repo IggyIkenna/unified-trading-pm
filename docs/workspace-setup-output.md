@@ -32,7 +32,7 @@ exist on GitHub yet) [OK] onboarding-ui [OK] pnl-attribution-service [OK] positi
 risk-and-exposure-service [OK] settlement-ui [WARN] sports-betting-services-previous clone failed (may not exist on
 GitHub yet) [OK] strategy-service [OK] strategy-ui [OK] strategy-validation-service [OK] system-integration-tests [OK]
 trading-analytics-ui [OK] unified-api-contracts [OK] unified-cloud-interface [OK] unified-config-interface [OK]
-unified-defi-execution-interface [OK] unified-domain-client [OK] unified-events-interface [OK]
+unified-defi-execution-interface [OK] unified-domain-client [OK] unified-trading-library [OK]
 unified-feature-calculator-library [OK] unified-internal-contracts [OK] unified-market-interface [OK]
 unified-ml-interface [OK] unified-position-interface [OK] unified-reference-data-interface [OK]
 unified-sports-execution-interface [OK] unified-trade-execution-interface [OK] unified-trading-codex [OK]
@@ -81,11 +81,11 @@ Next steps: bash scripts/quality-gates.sh # Run quality gates bash scripts/quick
 
 [OK] unified-cloud-interface
 
-Setting up: unified-events-interface
+Setting up: unified-trading-library
 
-[7] Local path dependencies [SKIP] No dependencies for unified-events-interface in workspace-manifest.json
+[7] Local path dependencies [SKIP] No dependencies for unified-trading-library in workspace-manifest.json
 
-[8] Project dependencies [OK] unified-events-interface
+[8] Project dependencies [OK] unified-trading-library
 
 Setting up: unified-internal-contracts
 
@@ -101,7 +101,7 @@ Next steps: bash scripts/quality-gates.sh # Run quality gates bash scripts/quick
 
 Setting up: unified-config-interface
 
-[7] Local path dependencies [WARN] unified-events-interface install failed
+[7] Local path dependencies [WARN] unified-trading-library install failed
 
 [8] Project dependencies [OK] unified-config-interface
 
@@ -129,7 +129,7 @@ Next steps: bash scripts/quality-gates.sh # Run quality gates bash scripts/quick
 
 [OK] unified-domain-client
 
-Setting up: unified-market-interface [WARN] unified-events-interface install failed [WARN] unified-cloud-interface
+Setting up: unified-market-interface [WARN] unified-trading-library install failed [WARN] unified-cloud-interface
 install failed [WARN] unified-internal-contracts install failed
 
 [8] Project dependencies [OK] unified-market-interface
@@ -186,7 +186,7 @@ Setting up: features-calendar-service [WARN] Never place SA JSON files in the re
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ [OK] features-calendar-service
 
 Setting up: features-cross-instrument-service [WARN] unified-config-interface install failed [WARN]
-unified-events-interface install failed [WARN] unified-cloud-interface install failed
+unified-trading-library install failed [WARN] unified-cloud-interface install failed
 
 [8] Project dependencies [OK] features-cross-instrument-service
 
@@ -369,7 +369,7 @@ Setup OK: 55 | Skipped: 0 | Failed: 0
 ━━━ Phase 5: Import Smoke Test (all Python repos) ━━━ [FAIL] unified-trading-pm (import unified_trading_pm) [FAIL]
 unified-trading-codex (import unified_trading_codex) [FAIL] matching-engine-library (import matching_engine_library)
 [FAIL] unified-api-contracts (import unified_api_contracts) [FAIL] unified-cloud-interface (import
-unified_cloud_interface) [FAIL] unified-events-interface (import unified_trading_library.events) [FAIL]
+unified_cloud_interface) [FAIL] unified-trading-library (import unified_trading_library.events) [FAIL]
 unified-internal-contracts (import unified_internal_contracts) [FAIL] unified-reference-data-interface (import
 unified_reference_data_interface) [FAIL] unified-config-interface (import unified_config_interface) [FAIL]
 unified-trading-library (import unified_trading_library) [FAIL] execution-algo-library (import execution_algo_library)
@@ -403,7 +403,7 @@ Failed imports:
 - matching-engine-library: import matching_engine_library
 - unified-api-contracts: import unified_api_contracts
 - unified-cloud-interface: import unified_cloud_interface
-- unified-events-interface: import unified_trading_library.events
+- unified-trading-library: import unified_trading_library.events
 - unified-internal-contracts: import unified_internal_contracts
 - unified-reference-data-interface: import unified_reference_data_interface
 - unified-config-interface: import unified_config_interface

@@ -1,7 +1,7 @@
 ---
 name: fold-uei-into-utl
 overview:
-  Consolidate unified-events-interface into unified_trading_library.events (new sub-package name, aggregate of both
+  Consolidate unified-trading-library into unified_trading_library.events (new sub-package name, aggregate of both
   divergent packages), migrate all consumers off the old paths, archive the UEI repo.
 type: code
 epic: epic-code-completion
@@ -17,7 +17,7 @@ repo_gates:
     code: C5
     deployment: none
     business: none
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     code: C0
     deployment: none
     business: none
@@ -165,7 +165,7 @@ todos:
   - id: phase-1-port-tests
     content: |
       - [x] [AGENT] P0. **Phase 1 / SEQUENTIAL** — Port UEI tests into UTL under `tests/events/`. **DONE** (commit `4da72fc0`).
-        - Source: `unified-events-interface/tests/` (whatever exists).
+        - Source: `unified-trading-library/tests/` (whatever exists).
         - Merge with existing `unified-trading-library/tests/events_interface/` (preserve the reconciliation + freshness + cicd-agent-error tests).
         - Rename imports in ported tests from `unified_trading_library.events` → `unified_trading_library.events`.
         - Final location: `unified-trading-library/tests/events/`.
@@ -198,7 +198,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. **Phase 2 / PARALLEL with phase-2b…phase-2ad** — `execution-service`: replace `from unified_trading_library.events import` → `from unified_trading_library.events import` across 9 source files.
         - Files: [execution-service/execution_service/engine/pnl_monitor.py](execution-service/execution_service/engine/pnl_monitor.py), [engine/venue_failover.py](execution-service/execution_service/engine/venue_failover.py), [engine/order_priority.py](execution-service/execution_service/engine/order_priority.py), [engine/transfers/confirmation_poller.py](execution-service/execution_service/engine/transfers/confirmation_poller.py), [engine/orphan_monitor.py](execution-service/execution_service/engine/orphan_monitor.py), [engine/recon_gate.py](execution-service/execution_service/engine/recon_gate.py), [engine/venue_cascade_monitor.py](execution-service/execution_service/engine/venue_cascade_monitor.py), [engine/handlers/transfer_handler.py](execution-service/execution_service/engine/handlers/transfer_handler.py), [tests/conftest.py](execution-service/tests/conftest.py).
-        - Also remove `unified-events-interface` from `pyproject.toml` if pinned there.
+        - Also remove `unified-trading-library` from `pyproject.toml` if pinned there.
         - Replace `unified_trading_library.events_interface` → `unified_trading_library.events` across the 37 files that use the UTL mirror path.
         - Run `cd execution-service && bash scripts/quality-gates.sh`. Must pass.
     status: todo
@@ -209,7 +209,7 @@ todos:
       - [ ] [AGENT] P0. **Phase 2 / PARALLEL** — `position-balance-monitor-service`: replace `from unified_trading_library.events import` → `from unified_trading_library.events import` across 3 source files.
         - Files: [position_balance_monitor_service/core/position_drift_monitor.py](position-balance-monitor-service/position_balance_monitor_service/core/position_drift_monitor.py), [core/dual_failure_detector.py](position-balance-monitor-service/position_balance_monitor_service/core/dual_failure_detector.py), [core/treasury_monitor.py](position-balance-monitor-service/position_balance_monitor_service/core/treasury_monitor.py).
         - Also migrate `unified_trading_library.events_interface` → `unified_trading_library.events` in the 6 files that use mirror path.
-        - Remove `unified-events-interface` from `pyproject.toml` if pinned.
+        - Remove `unified-trading-library` from `pyproject.toml` if pinned.
         - QG pass.
     status: todo
     note: ""
@@ -248,7 +248,7 @@ todos:
         - `base-service.sh` if it hard-codes UEI checks.
         - Per-repo `scripts/quality-gates.sh` copies across 15 service repos (rollout via `bash unified-trading-pm/scripts/propagation/` or per-repo edit — pick whichever is SSOT).
         - Other shell scripts: [deployment-service/scripts/setup-cloud-build-triggers.sh](deployment-service/scripts/setup-cloud-build-triggers.sh), [deployment-service/scripts/run-all-quality-gates.sh](deployment-service/scripts/run-all-quality-gates.sh), [unified-trading-pm/scripts/workspace/setup-dev-environment.sh](unified-trading-pm/scripts/workspace/setup-dev-environment.sh), [unified-trading-pm/scripts/agents/run-parallel-agents.sh](unified-trading-pm/scripts/agents/run-parallel-agents.sh), [unified-trading-pm/plans/tasks/claude-code/orchestrator-*.sh](unified-trading-pm/plans/tasks/claude-code/).
-        - Action per script: remove any UEI-specific enforcement; replace path refs `unified_trading_library.events` → `unified_trading_library.events`; remove `unified-events-interface` from any repo allowlists.
+        - Action per script: remove any UEI-specific enforcement; replace path refs `unified_trading_library.events` → `unified_trading_library.events`; remove `unified-trading-library` from any repo allowlists.
     status: todo
     note: ""
 
@@ -257,7 +257,7 @@ todos:
       - [ ] [HUMAN+AGENT] P0. **Phase 4 / PARALLEL with phase-4a** — Update docs, rules, and codex for 256 markdown/mdc references.
         - [.claude/CLAUDE.md](.claude/CLAUDE.md): replace rule `from unified_trading_library.events import setup_events, log_event — no fallbacks` with `from unified_trading_library.events import setup_events, log_event — no fallbacks`.
         - [.cursorrules](.cursorrules) in workspace root + per-repo copies.
-        - `.cursor/rules/*.mdc` files — bulk rewrite `unified_trading_library.events` → `unified_trading_library.events`, `unified-events-interface` → `unified-trading-library` in narrative prose.
+        - `.cursor/rules/*.mdc` files — bulk rewrite `unified_trading_library.events` → `unified_trading_library.events`, `unified-trading-library` → `unified-trading-library` in narrative prose.
         - Codex docs under `unified-trading-pm/codex/` — same rewrite.
         - Prefer scripted rewrite (e.g., `rg --files-with-matches`, then batched `sed -i`) with a single review pass before committing.
     status: todo
@@ -266,10 +266,10 @@ todos:
   - id: phase-5-archive-uei-repo
     content: |
       - [ ] [HUMAN+AGENT] P0. **Phase 5 / SEQUENTIAL** — Archive UEI repo.
-        - `mv unified-events-interface/ archive/unified-events-interface/` (workspace root).
-        - Update [unified-trading-pm/workspace-manifest.json](unified-trading-pm/workspace-manifest.json) — remove all 9+ `unified-events-interface` entries (top-level repo map at line 90, cluster refs at lines 424/1320/1667/1870/1979/2130/2186, full repo def at line 1819).
+        - `mv unified-trading-library/ archive/unified-trading-library/` (workspace root).
+        - Update [unified-trading-pm/workspace-manifest.json](unified-trading-pm/workspace-manifest.json) — remove all 9+ `unified-trading-library` entries (top-level repo map at line 90, cluster refs at lines 424/1320/1667/1870/1979/2130/2186, full repo def at line 1819).
         - Update workspace code-workspace files (`.cursor/workspace-configs/*.code-workspace`) to drop the UEI folder entry.
-        - GitHub: archive the remote repo via `gh repo archive IggyIkenna/unified-events-interface` (HUMAN step — not run by agent).
+        - GitHub: archive the remote repo via `gh repo archive IggyIkenna/unified-trading-library` (HUMAN step — not run by agent).
     status: todo
     note: ""
 
@@ -277,7 +277,7 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. **Phase 5 / SEQUENTIAL after archive** — Workspace-wide verification that zero live refs remain.
         - `grep -r "unified_trading_library.events\b" . --include="*.py" --include="*.sh" --include="*.yaml" --include="*.yml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
-        - `grep -r "unified-events-interface" . --include="*.md" --include="*.mdc" --include="*.sh" --include="*.yaml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
+        - `grep -r "unified-trading-library" . --include="*.md" --include="*.mdc" --include="*.sh" --include="*.yaml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
         - `grep -r "unified_trading_library.events_interface" . --include="*.py" --exclude-dir=".venv*" --exclude-dir="archive"` returns empty.
     status: todo
     note: ""
@@ -310,7 +310,7 @@ isProject: false
 
 | Location                                                            | Files                                                            | Notes                                                                       |
 | ------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `unified-events-interface/unified_trading_library.events/`          | `__init__.py` (14.7KB), `schemas.py` (33.8KB), `sink.py` (1.6KB) | Has recent autonomous-recovery + transfer lifecycle + position drift events |
+| `unified-trading-library/unified_trading_library.events/`           | `__init__.py` (14.7KB), `schemas.py` (33.8KB), `sink.py` (1.6KB) | Has recent autonomous-recovery + transfer lifecycle + position drift events |
 | `unified-trading-library/unified_trading_library/events_interface/` | `__init__.py` (15.2KB), `schemas.py` (33.7KB), `sink.py` (1.6KB) | Has recent reconciliation + DeFi + bridge + fill events                     |
 
 **Event types ONLY in UEI (must be preserved in aggregate):** `AUTO_DELEVERAGE_TRIGGERED`,

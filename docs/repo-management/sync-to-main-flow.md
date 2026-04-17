@@ -56,7 +56,7 @@ bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh --repo execu
 Preserves dependency order among matches.
 
 **`--dep-branch NAME`** — Pass to quickmerge when path dependencies (unified-trading-library, unified-config-interface,
-unified-events-interface, etc.) have local changes that differ from origin/main. Quickmerge will cascade changes to that
+unified-trading-library, etc.) have local changes that differ from origin/main. Quickmerge will cascade changes to that
 branch in dependency order. Use when sync fails with `DEPENDENCY CONFLICT DETECTED`.
 
 ## Failure Modes

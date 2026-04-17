@@ -53,7 +53,7 @@ examples for testing any DeFi strategy
 
 ### Library Consolidation
 
-- fold_uei_into_utl_2026_04_17.plan.md — Fold unified-events-interface into `unified_trading_library.events` (aggregate
+- fold_uei_into_utl_2026_04_17.plan.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate
   of both), migrate 30+ consumers, archive UEI repo
 
 ---

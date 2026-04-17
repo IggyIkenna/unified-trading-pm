@@ -75,7 +75,7 @@
 
 ```python
 # 02-create-issues.py parses:
-### Subtask 1.2.1: Create unified-events-interface repo structure
+### Subtask 1.2.1: Create unified-trading-library repo structure
 - **Title:** [UnifiedLibraries][Events] Create repo structure
 - **Description:** ...
 - **Complexity:** LOW

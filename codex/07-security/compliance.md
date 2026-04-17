@@ -106,7 +106,7 @@ Position gate runs
 
 ### Shared Schema (Tier 0)
 
-- **Event types + payload schema**: `unified-events-interface/unified_trading_library.events/schemas.py`
+- **Event types + payload schema**: `unified-trading-library/unified_trading_library.events/schemas.py`
   - `TRADE_REPORTED_MIFID`, `ORDER_SUBMITTED_MIFID`, `BEST_EXECUTION_CHECKED`, `TRANSACTION_REPORTED_FCA`,
     `POSITION_LIMIT_CHECKED` constants
   - `ComplianceEventPayload` dataclass with `to_dict() -> JSONDict` for use as `log_event()` details

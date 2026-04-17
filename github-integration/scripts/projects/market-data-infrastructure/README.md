@@ -136,7 +136,7 @@ Project Number: 6
 
 1. Go to https://github.com/new
 2. Create each repo:
-   - Name: `unified-events-interface`
+   - Name: `unified-trading-library`
    - Private: ✅
    - Initialize with README: ✅
    - .gitignore: Python
@@ -146,7 +146,7 @@ Project Number: 6
 ### Option B: Automated (gh CLI)
 
 ```bash
-for repo in unified-events-interface unified-config-interface \
+for repo in unified-trading-library unified-config-interface \
             unified-market-interface unified-order-interface; do
     gh repo create "IggyIkenna/$repo" \
         --private \
@@ -202,7 +202,7 @@ python 02-create-issues.py \
    Found: 4 subtasks
 
    Distribution:
-     - unified-events-interface: 10 issues
+     - unified-trading-library: 10 issues
      - unified-config-interface: 10 issues
      - unified-market-interface: 12 issues
      - unified-order-interface: 12 issues
@@ -494,7 +494,7 @@ By Phase:
   Phase 4 (Order Interface): 6/8 (75.0%)
 
 By Repo:
-  unified-events-interface: 10/10 (100.0%)
+  unified-trading-library: 10/10 (100.0%)
   unified-config-interface: 8/10 (80.0%)
   unified-market-interface: 12/12 (100.0%)
   unified-order-interface: 10/12 (83.3%)
@@ -534,7 +534,7 @@ Phase 2 (Config Interface) - 1 task remaining:
 3. **Give agent the task:**
 
    ```
-   Complete subtask for Market Data Infrastructure issue #3 in unified-events-interface.
+   Complete subtask for Market Data Infrastructure issue #3 in unified-trading-library.
 
    Follow the workflow in @AGENT_WORKFLOW.md for detailed steps.
    ```
@@ -551,7 +551,7 @@ bash run-batch-fix.sh --model auto --max-parallel 3
 bash run-batch-fix.sh --model auto --phase 1 --max-parallel 5  # Phase 1 (events interface)
 
 # Filter by repo
-bash run-batch-fix.sh --model auto --repos unified-events-interface,unified-config-interface
+bash run-batch-fix.sh --model auto --repos unified-trading-library,unified-config-interface
 
 # Filter by priority
 bash run-batch-fix.sh --model auto --priority P0-critical --max-parallel 5

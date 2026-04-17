@@ -69,7 +69,7 @@ On `0.x.x` repos:
 This gate applies to ALL repos:
 
 - Service repos (execution-service, strategy-service, etc.)
-- Library repos (unified-trading-library, unified-events-interface, etc.)
+- Library repos (unified-trading-library, unified-trading-library, etc.)
 - Infrastructure repos (unified-trading-pm, unified-trading-codex, deployment-service)
 - API/UI repos
 

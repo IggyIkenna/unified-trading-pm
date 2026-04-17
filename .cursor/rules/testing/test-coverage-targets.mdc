@@ -26,7 +26,7 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 
 | Repo | Actual | MIN_COVERAGE |
 |------|--------|-------------|
-| unified-events-interface | 100% | 99 |
+| unified-trading-library | 100% | 99 |
 | matching-engine-library | 100% | 99 |
 | unified-feature-calculator-library | 96% | 95 |
 | execution-algo-library | 96% | 95 |

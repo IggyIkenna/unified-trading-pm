@@ -522,7 +522,7 @@ bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh 
 bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --repo unified-trading-pm
 
 # Multiple specific repos (comma-separated)
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --repos "unified-trading-pm,unified-events-interface"
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --repos "unified-trading-pm,unified-trading-library"
 
 # Switch to main after push (old behavior)
 bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --switch-to-main

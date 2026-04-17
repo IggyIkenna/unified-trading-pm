@@ -104,7 +104,7 @@ The GitHub Actions `version-bump.yml` CI detects breaking changes via TWO patter
 bash scripts/quickmerge.sh "feat!(unified-market-interface): remove normalize_trade() — use CanonicalAdapter instead"
 bash scripts/quickmerge.sh "fix!(unified-trading-services): remove ConfigStore — import from unified_config_interface"
 bash scripts/quickmerge.sh "feat!(unified-domain-client): rename InstrumentsDomainClient to InstrumentsClient"
-bash scripts/quickmerge.sh "feat!(unified-events-interface): rename UPLOAD_STARTED to DATA_BROADCAST in event schema"
+bash scripts/quickmerge.sh "feat!(unified-trading-library): rename UPLOAD_STARTED to DATA_BROADCAST in event schema"
 bash scripts/quickmerge.sh "feat!(unified-config-interface): remove GCP_PROJECT_ID env var — use GCP_PROJECT_ID only"
 ```
 
@@ -184,7 +184,7 @@ bash scripts/quickmerge.sh "feat!(unified-config-interface): rename GCP_PROJECT_
 bash scripts/quickmerge.sh "feat!(unified-domain-client): rename instrument_key column to instrument_id in output schema"
 
 # Major bump — breaking message bus schema
-bash scripts/quickmerge.sh "feat!(unified-events-interface): rename UPLOAD_STARTED event to DATA_BROADCAST"
+bash scripts/quickmerge.sh "feat!(unified-trading-library): rename UPLOAD_STARTED event to DATA_BROADCAST"
 
 # Major bump — use --to-staging (breaking change path): cascade through staging, SIT validates, then main
 bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API" --to-staging

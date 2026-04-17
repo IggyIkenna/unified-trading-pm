@@ -32,7 +32,7 @@ from partial transcripts + direct re-audit.
 | 2   | matching-engine-library            | T0   | B+    | A (0 errors)                      | A (88.9%, gate 88%)                 | FAILING — 3×E501 (amm.py:537, trade_matcher.py:120, test_amm.py:210)                                      |
 | 3   | instruments-service                | T1   | B+    | C (0 src / 58 test)               | A (91.4%, gate 87%)                 | FAILING — 4 violations (test >900 lines, 2× backward-compat shims)                                        |
 | 4   | unified-api-contracts              | T0   | B     | A (0 errors)                      | B (81%, gate 80%)                   | B — gate mismatch: script enforces 70%, pyproject says 80%                                                |
-| 5   | unified-events-interface           | T0   | B     | B (1 test error)                  | C (97%, gate 99%)                   | FAILING — coverage gap + REPO_ARCH_TIER wiring broken → tier checks skip in CI                            |
+| 5   | unified-trading-library            | T0   | B     | B (1 test error)                  | C (97%, gate 99%)                   | FAILING — coverage gap + REPO_ARCH_TIER wiring broken → tier checks skip in CI                            |
 | 6   | position-balance-monitor-service   | T2   | B     | A (0 src / 30 test)               | B (84%, gate 70%)                   | FAILING — hardcoded absolute path in VCR test, gate too low                                               |
 | 7   | unified-api-contracts (internal/)  | T0   | C+    | D (56 errors)                     | A (100%, gate 99%)                  | FAILING — type-check step fails on schema_definition.py                                                   |
 | 8   | unified-feature-calculator-library | T2   | C+    | D (23 errors, stale bypass audit) | A (92.6%, gate 93%)                 | FAILING — 1×E501 in base.py blocks step 1; steps 3–6 never run                                            |
@@ -132,7 +132,7 @@ E501/F-undefined in binance/market_schemas.py (5 undefined name errors currently
 
 ---
 
-#### unified-events-interface (T0) — B
+#### unified-trading-library (T0) — B
 
 | Dimension             | Grade | Finding                                                                                                                          |
 | --------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -464,9 +464,9 @@ Only T0 repos have clean pyright (MEL, UCI, UAC have 0 errors). T1-T2 accumulate
 
 ### Systemic Issue 6 — REPO_ARCH_TIER Not Wired
 
-unified-events-interface (T0) has REPO_ARCH_TIER defaulting to "library" in QG script — tier-0 violation checks never
-run in CI. This means upward-import checks that should enforce T0 isolation never execute. Affects UEI and potentially
-other T0 repos.
+unified-trading-library (T0) has REPO_ARCH_TIER defaulting to "library" in QG script — tier-0 violation checks never run
+in CI. This means upward-import checks that should enforce T0 isolation never execute. Affects UEI and potentially other
+T0 repos.
 
 ---
 
@@ -635,7 +635,7 @@ Separate 10-agent audit covering workspace governance, not per-repo code quality
 10. **Delete 14 test*coverage_boost*\* files in unified-market-interface**
 11. **Delete tests/test_coverage_boost.py in unified-trade-exec-interface** (483 lines)
 12. **Fix 60 lint errors in unified-trading-codex** to unblock SSOT-INDEX accuracy
-13. **Wire REPO_ARCH_TIER="0" in unified-events-interface QG script** — tier-0 violation checks currently skip
+13. **Wire REPO_ARCH_TIER="0" in unified-trading-library QG script** — tier-0 violation checks currently skip
 14. **Sync unified-api-contracts manifest version** from 0.1.20 to 0.1.52
 15. **Delete orphan `execution_service/` directory** from workspace root
 

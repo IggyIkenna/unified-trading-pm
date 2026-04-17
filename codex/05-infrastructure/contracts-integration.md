@@ -312,7 +312,7 @@ def get_databento_vcr() -> vcr.VCR:
 | Repo                               | Role                   | Owns                                                                                                                                                        |
 | ---------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **unified_api_contracts.internal** | Contract schemas only  | LifecycleEventType, EventEnvelope, EventSinkSpec, pubsub message bodies (FillEventMessage, etc.), features, ML, risk, errors. Pure Pydantic; no cloud SDKs. |
-| **unified-events-interface (UEI)** | Protocol + logging API | EventSink protocol, `log_event()`, `setup_events()`. No ownership of event type enums or payload shapes — those come from `unified_api_contracts.internal`. |
+| **unified-trading-library (UEI)**  | Protocol + logging API | EventSink protocol, `log_event()`, `setup_events()`. No ownership of event type enums or payload shapes — those come from `unified_api_contracts.internal`. |
 
 **Rule:** UEI defines _how_ to emit events (interface); `unified_api_contracts.internal` defines _what_ is emitted
 (payload types). Services import lifecycle types from `unified_api_contracts.internal` and pass them to UEI/UTS logging.

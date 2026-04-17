@@ -224,7 +224,7 @@ TradFi margin calls follow a formal timeline:
 | Margin call issued | T+0 close    | Must meet by T+1 open                    |
 | Forced liquidation | T+1 if unmet | Broker liquidates sufficient positions   |
 
-The system emits `MARGIN_CALL` events via unified-events-interface when TradFi margin drops below the house requirement.
+The system emits `MARGIN_CALL` events via unified-trading-library when TradFi margin drops below the house requirement.
 
 ## Position-Balance-Monitor Integration
 

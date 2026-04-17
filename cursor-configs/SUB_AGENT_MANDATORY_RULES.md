@@ -15,7 +15,7 @@ first**. Do NOT build ad-hoc solutions, duplicate sources of truth, or create un
 
 ### Decision Tree (follow in order):
 
-1. **Events/logging?** → Use `unified-events-interface` (`setup_events`, `log_event`). Do NOT create custom loggers or
+1. **Events/logging?** → Use `unified-trading-library` (`setup_events`, `log_event`). Do NOT create custom loggers or
    event systems.
 2. **New schema/data model?** → Use `unified-api-contracts`: `unified_api_contracts.internal` for internal/cross-repo
    schemas, or the external API surface for raw venue schemas. Do NOT define schemas inline in service code.
@@ -109,7 +109,7 @@ exceptions.
 
 - **Delete deprecated code** — no parallel code paths, no `# deprecated` comments, no `_old.py` copies
 - **Search unified libraries first** — unified-market-interface, execution-service, instruments-service,
-  unified-config-interface, unified-cloud-interface, unified-events-interface, unified-domain-client,
+  unified-config-interface, unified-cloud-interface, unified-trading-library, unified-domain-client,
   unified-api-contracts — USE if exists, FIX library if wrong, ADD to library if missing
 - **No backward compat shims** — fail fast, no try/except import fallbacks
 - **Strict quality gates** — no E722 global ignore, no empty fallbacks, no hardcoded project IDs, use specific

@@ -61,7 +61,7 @@ All 26 service repos are fully compliant with S5.1 requirements.
 | unified-config-interface           | P      | P            | P             | P       | P            |
 | unified-defi-execution-interface   | P      | P            | P             | P       | P            |
 | unified-domain-client              | P      | P            | P             | P       | P            |
-| unified-events-interface           | P      | P            | P             | P       | P            |
+| unified-trading-library            | P      | P            | P             | P       | P            |
 | unified-feature-calculator-library | P      | P            | P             | P       | P            |
 | unified-internal-contracts         | P      | P            | P             | P       | P            |
 | unified-market-interface           | P      | P            | P             | P       | P            |
