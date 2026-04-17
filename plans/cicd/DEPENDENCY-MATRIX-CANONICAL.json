@@ -7,7 +7,6 @@
   "versions": {
     "api-contracts": "1.0.0",
     "unified-config-interface": "0.3.0",
-    "unified-events-interface": "0.2.0",
     "unified-trading-services": "2.0.0",
     "unified-domain-client": "1.0.0",
     "unified-market-interface": "1.0.0",
@@ -25,10 +24,6 @@
     },
     "unified-config-interface": {
       "version": "0.3.0",
-      "dependencies": []
-    },
-    "unified-events-interface": {
-      "version": "0.2.0",
       "dependencies": []
     },
     "unified-trading-services": {
@@ -52,11 +47,6 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         }
       ]
@@ -82,11 +72,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         }
       ]
@@ -128,11 +113,6 @@
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
         }
       ]
     },
@@ -147,11 +127,6 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -199,11 +174,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
@@ -226,11 +196,6 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -274,11 +239,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-market-interface",
           "version": ">=1.0.0,<2.0.0",
           "required": true
@@ -314,11 +274,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
@@ -346,11 +301,6 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -392,11 +342,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
@@ -421,11 +366,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -456,11 +396,6 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -520,11 +455,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
@@ -547,11 +477,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -585,11 +510,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
@@ -607,11 +527,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -635,11 +550,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
@@ -657,11 +567,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -690,11 +595,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
@@ -715,11 +615,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-config-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
@@ -737,11 +632,6 @@
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -872,7 +762,7 @@
       {
         "level": 0,
         "description": "Foundation - no dependencies",
-        "repos": ["unified-config-interface", "unified-events-interface", "api-contracts"]
+        "repos": ["unified-config-interface", "api-contracts"]
       },
       {
         "level": 1,
@@ -949,7 +839,7 @@
     "steps": [
       {
         "step": 1,
-        "packages": ["api-contracts", "unified-config-interface", "unified-events-interface"],
+        "packages": ["api-contracts", "unified-config-interface"],
         "reason": "Foundation packages with no dependencies"
       },
       {

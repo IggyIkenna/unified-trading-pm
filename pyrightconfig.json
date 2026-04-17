@@ -33,7 +33,7 @@
     "scripts/generators/generate_strategy_manifest_dag.py",
     "scripts/generators/reverse-dependency-lookup.py"
   ],
-  "extraPaths": ["../unified-events-interface", "../unified-internal-contracts", "../unified-api-contracts"],
+  "extraPaths": ["../unified-internal-contracts", "../unified-api-contracts"],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.13"

@@ -64,24 +64,6 @@
       "skipped": true,
       "reason": "not a directory"
     },
-    "unified-events-interface": {
-      "internal_deps": {},
-      "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
-      },
-      "internal_count": 0,
-      "external_count": 11
-    },
     "unified-internal-contracts": {
       "skipped": true,
       "reason": "not a directory"
@@ -96,8 +78,7 @@
     },
     "unified-trading-library": {
       "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
-        "unified-events-interface": "unified-events-interface>=0.2.2,<1.0.0"
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
         "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
@@ -288,7 +269,6 @@
         "market-tick-data-service": "market-tick-data-service>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.11.6,<1.0.0",
-        "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -949,7 +929,6 @@
     "position-balance-monitor-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
-        "unified-events-interface": "unified-events-interface>=0.2.2,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
