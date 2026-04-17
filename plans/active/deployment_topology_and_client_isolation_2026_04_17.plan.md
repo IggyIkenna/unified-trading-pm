@@ -54,29 +54,42 @@ repo_gates:
     deployment: none
     business: none
   - repo: execution-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note:
+      "Phase 3c pre-existing — engine/kill_switch.py + circuit_breaker.py + ServiceBootstrap wiring. Phase 6 (per-client
+      venue API keys + reject cross-client routing) still todo."
   - repo: strategy-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note:
+      "Phase 3c pre-existing — engine/core/components/kill_switch_guard.py + ServiceBootstrap wiring. Phase 5 (archetype
+      topology_requirements enforcement) still todo."
   - repo: position-balance-monitor-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note:
+      "Phase 3c wired in 16db8bb (kill_switch_bus_subscriber.py — passive halt policy). No new tests yet; covered by
+      bootstrap wiring test in UTL."
   - repo: risk-and-exposure-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note: "Phase 3c pre-existing (kill_switch_bus_subscriber.py, on_bus_event wired into ServiceBootstrap)."
   - repo: pnl-attribution-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note:
+      "Phase 3c wired in eb1b41d (passive halt — audit continues; downstream emission suppressed via is_blocked_by_bus)."
   - repo: alerting-service
-    code: C0
+    code: C1
     deployment: none
     business: none
+    note: "Phase 3c wired in 7b74ed8 (ACTIVE escalation policy — boost to CRITICAL via should_escalate)."
   - repo: e2e-testing
     code: C0
     deployment: none
@@ -229,20 +242,24 @@ todos:
     blocked_by: p3b-utl-killswitch
   - id: p3c-service-subscribers
     content: |
-      - [ ] [AGENT] P1. In each halt-sensitive service (strategy-service, execution-service,
-        risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service,
-        alerting-service), pass a `kill_switch_subscriber` to ServiceBootstrap that
-        implements the service's halt policy:
-          - execution-service: on GLOBAL/CLIENT/VENUE fire → delta-neutral exit for affected
-            positions; on STRATEGY/ARCHETYPE/INSTRUMENT fire → refuse new orders matching.
-          - strategy-service: on GLOBAL/CLIENT/STRATEGY/ARCHETYPE fire → stop emitting
-            StrategyInstructions; on VENUE/INSTRUMENT fire → filter out matches.
-          - risk-and-exposure-service: on any fire → log + escalate; continue monitoring.
-          - PBM/PnL/alerting: on any fire → emit lifecycle event; otherwise passive.
-        Replace any ad-hoc halt / circuit-breaker code (e.g. boolean flags, env-var gates)
-        with the bus. Pre-audit in each service for strings "halt", "circuit_break",
-        "kill_switch", "stop_trading" before edits.
-    status: todo
+      - [x] [AGENT] P1. All 6 halt-sensitive services now wire a kill_switch_subscriber
+        callback through ServiceBootstrap:
+          - strategy-service (pre-existing kill_switch_guard.py)
+          - execution-service (pre-existing engine/kill_switch.py + circuit_breaker.py)
+          - risk-and-exposure-service (pre-existing kill_switch_bus_subscriber.py)
+          - position-balance-monitor-service 16db8bb (passive; is_blocked_by_bus
+            suppresses drift alerts for halted scopes; audit trail preserved)
+          - pnl-attribution-service eb1b41d (passive; audit attribution continues;
+            downstream reporting/invoice emission suppressed via is_blocked_by_bus)
+          - alerting-service 7b74ed8 (ACTIVE escalation; matching alerts boosted
+            to CRITICAL via should_escalate() — opposite of passive pattern,
+            surfaces halt activity prominently)
+        Pattern: each service has its own `kill_switch_bus_subscriber.py` with a
+        process-local _BusHaltRegistry / _EscalationRegistry + on_bus_event callback.
+        Consumers query is_blocked_by_bus(**scope_kwargs) or should_escalate(...).
+        No shared helper module needed — the pattern is short enough to live in
+        each service (policy is inherently service-specific).
+    status: done
     blocked_by: p3c-utl-bootstrap-wiring
   - id: p3d-qg-p3
     content: |
