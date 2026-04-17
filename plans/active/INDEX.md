@@ -61,8 +61,12 @@ examples for testing any DeFi strategy
 - deployment_topology_and_client_isolation_2026_04_17.plan.md — Per-service isolation policy (shared vs isolated), SLA
   tiers (basic/standard/premium) with cost passthrough, runtime profiles (backtest/paper/mock-live/staging/prod)
   collapsing 5 mode env vars, chaos + kill-switch primitives. runtime-topology.yaml v6→v7, UAC schemas, UTL readers,
-  deployment-service/api/ui materialisation, downstream service wiring. 13 repos. Phase 1 (PM+UAC+UTL+codex) SSOT
-  complete; Phases 2-8 scheduled.
+  deployment-service/api/ui materialisation, downstream service wiring. 13 repos. **Progress as of 2026-04-17
+  live-defi-rollout:** Phases 1 (SSOT), 2a/2b (deployment-service/api), 3a/3b/3c (UTL ChaosController + KillSwitchBus +
+  ServiceBootstrap wiring + strategy/exec/risk subscribers), 4a (deployment-api runtime_profile env var fanout), 5 (18
+  archetype topology_requirements frontmatter + strategy-service enforcement module), 6 (PBM/R&E/PnL/execution isolation
+  policy modules), 7 (8 e2e chaos scenarios) all committed locally. Phase 4b (deployment-ui /client-subscriptions,
+  /chaos pages, runtime_profile dropdown) deferred as follow-up. Phase 8 workspace QG sweep pending.
 
 ---
 
