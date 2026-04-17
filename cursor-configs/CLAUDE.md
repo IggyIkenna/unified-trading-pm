@@ -50,7 +50,7 @@ Read these before making ANY code changes:
 - **NEVER use `--dep-branch` in agent/Claude Code sessions** — it is a human-only flag. Quickmerge exits(1) if
   `--dep-branch` is combined with `--agent`. Branch is read automatically from `active_feature_branch` in
   `workspace-manifest.json` (currently: `live-defi-rollout`). Dep conflict? Commit dep repo first, then re-run.
-- `from unified_events_interface import setup_events, log_event` — no fallbacks
+- `from unified_trading_library.events import setup_events, log_event` — no fallbacks
 - `basedpyright` not `pyright` (and always with `run_timeout 120 basedpyright <source_dir>/`)
 - No `os.getenv()` — use `UnifiedCloudConfig`
 - No `# type: ignore` to hide architectural violations — fix the root cause

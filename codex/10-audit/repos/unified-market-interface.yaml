@@ -44,13 +44,13 @@ code_readiness:
       # - unified-config-interface
       # - unified-cloud-interface
       # - unified-api-contracts
-      # - unified-events-interface
+      # - unified-trading-library
     manifest_deps_missing:
       - unified-api-contracts
       - unified-config-interface
       - unified-cloud-interface
       - unified-api-contracts
-      - unified-events-interface
+      - unified-trading-library
     evidence: ""
     notes: ""
 

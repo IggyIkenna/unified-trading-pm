@@ -317,7 +317,7 @@ log_step 7 "Install repo dependencies (T0→T1→T2→T3 order)"
 T0_REPOS=(
     "unified-api-contracts"
     "unified-cloud-interface"
-    "unified-events-interface"
+    "unified-trading-library"
 )
 
 # L3: T1 services runtime
@@ -386,8 +386,8 @@ run_import_check() {
 }
 
 # Core T0 libraries
-run_import_check "unified_events_interface" \
-    "from unified_events_interface import setup_events, log_event"
+run_import_check "unified_trading_library.events" \
+    "from unified_trading_library.events import setup_events, log_event"
 
 run_import_check "unified_api_contracts" \
     "import unified_api_contracts"

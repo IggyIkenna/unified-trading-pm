@@ -965,19 +965,15 @@ ibkr-gateway-infra:
   port: 4001
   depends_on: [unified-trading-settings]
   connects_to:
-    [
-      unified-market-interface,
-      execution-service,
-      position-balance-monitor-service,
-      unified-reference-data-interface,
-    ]
+    [unified-market-interface, execution-service, position-balance-monitor-service, unified-reference-data-interface]
   status: planned
   notes: >
     IB Client Portal Gateway Docker container; inject-IB pattern. Single long-lived IB Gateway Java process for all IBKR
-    connectivity. All four adapters (UMI ibkr_adapter, execution-service ibkr_tradfi, position-balance-monitor-service ibkr, URDI ibkr) accept an injected
-    ib_insync.IB object — caller owns lifecycle. Credentials: ibkr-account-credentials in Secret Manager. Config keys:
-    ibkr_gateway_host, ibkr_gateway_port, ibkr_client_id_base (all in UnifiedCloudConfig). Port 4001 = IB Gateway paper
-    trading default; port 7497 = TWS paper trading. See ibkr_gateway_connectivity section above.
+    connectivity. All four adapters (UMI ibkr_adapter, execution-service ibkr_tradfi, position-balance-monitor-service
+    ibkr, URDI ibkr) accept an injected ib_insync.IB object — caller owns lifecycle. Credentials:
+    ibkr-account-credentials in Secret Manager. Config keys: ibkr_gateway_host, ibkr_gateway_port, ibkr_client_id_base
+    (all in UnifiedCloudConfig). Port 4001 = IB Gateway paper trading default; port 7497 = TWS paper trading. See
+    ibkr_gateway_connectivity section above.
 
 # ---------------------------------------------------------------------------
 # Alerting architecture (cross-cutting concern)
@@ -985,7 +981,7 @@ ibkr-gateway-infra:
 alerting:
   architecture: one-to-many
   consumes_from:
-    - all services via unified-events-interface lifecycle events (PubSub)
+    - all services via unified-trading-library lifecycle events (PubSub)
     - risk-and-exposure-service: risk breach triggers
     - position-balance-monitor-service: balance discrepancy alerts
     - execution-service: order rejection spike alerts
@@ -995,7 +991,7 @@ alerting:
     - deployment-api: service stop/restart triggers
     - external: Slack webhooks, PagerDuty alerts, email
   role: >
-    Disaster recovery trigger. Sits above the pipeline as a cross-cutting concern. Uses unified-events-interface
+    Disaster recovery trigger. Sits above the pipeline as a cross-cutting concern. Uses unified-trading-library
     EventSink protocol for event consumption. Circuit breaker commands are PubSub events that services MUST honor.
     Separate from normal business PubSub flows — this is operational control.
 
@@ -1671,9 +1667,7 @@ deployment_targets:
     services:
       unified-trading-api:
         port: 8030
-        reason: Consolidated domain gateway; scales with HTTP/SSE connection count
-        port: 8016
-        reason: Scales with HTTP/SSE connection count (see ui-api-mapping.json)
+        reason: Consolidated domain gateway; scales with HTTP/SSE connection count (see ui-api-mapping.json)
       deployment-api:
         port: 8004
         reason: Request-driven; SSE for health monitoring stream (see ui-api-mapping.json)

@@ -43,13 +43,13 @@ code_readiness:
       # - unified-trading-library
       # - unified-config-interface
       # - unified-domain-client
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-ml-interface
     manifest_deps_missing:
       - unified-trading-library
       - unified-config-interface
       - unified-domain-client
-      - unified-events-interface
+      - unified-trading-library
       - unified-ml-interface
     evidence: ""
     notes: ""

@@ -46,7 +46,7 @@ just need import path updates.
 
 Archive location: `/Users/ikennaigboaka/Code/unified-trading-system-repos/archive/`
 
-**Migration strategy:** Copy test folders → update imports (`unified_events_interface` →
+**Migration strategy:** Copy test folders → update imports (`unified_trading_library.events` →
 `unified_trading_library.events_interface`, etc.) → run tests → fix failures → measure coverage.
 
 ## Coverage Debt (ALL repos must reach 70%)
@@ -148,7 +148,7 @@ Migrate archived tests first (update imports), then write new tests for gaps.
       unified-cloud-interface → cloud_interface/, unified-config-interface → config_interface/,
       unified-features-interface → features_interface/, unified-feature-calculator-library → feature_calculator/,
       unified-ml-interface → ml/, unified-domain-client → domain_client/). Update imports:
-      `from unified_events_interface import X` → `from unified_trading_library.events_interface import X`, etc.
+      `from unified_trading_library.events import X` → `from unified_trading_library.events_interface import X`, etc.
 - [ ] [AGENT] P1. **UMI 68% → 70%** — write tests for recently added adapters (DeFi LST, sports, prediction, gas price)
 - [ ] [AGENT] P1. **IS 25% → 70%** — migrate 25 test files from archive/unified-reference-data-interface/tests/. Update
       imports: `from unified_reference_data_interface import X` → `from instruments_service.reference_data import X`

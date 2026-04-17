@@ -18,7 +18,7 @@ REPOS=(alerting-service archive batch-audit-ui client-reporting-api client-repor
   risk-and-exposure-service settlement-ui strategy-service strategy-ui
   system-integration-tests trading-analytics-ui unified-api-contracts unified-cloud-interface
   unified-config-interface unified-defi-execution-interface unified-domain-client
-  unified-events-interface unified-feature-calculator-library unified-internal-contracts
+  unified-trading-library unified-feature-calculator-library unified-internal-contracts
   unified-market-interface unified-ml-interface unified-position-interface
   unified-reference-data-interface unified-sports-execution-interface unified-trade-execution-interface
   unified-trading-codex unified-trading-library unified-trading-pm

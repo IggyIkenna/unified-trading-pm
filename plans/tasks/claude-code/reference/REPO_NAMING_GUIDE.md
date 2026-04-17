@@ -67,7 +67,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 
 - `unified-trading-library/` → package: `unified_trading_library/`
 - `unified-config-interface/` → package: `unified_config_interface/`
-- `unified-events-interface/` → package: `unified_events_interface/`
+- `unified-events-interface/` → package: `unified_trading_library.events/`
 - `unified-market-interface/` → package: `unified_market_interface/`
 - `unified-trade-execution-interface/` → package: `unified_trade_execution_interface/`
 - `unified-domain-client/` → package: `unified_domain_client/`

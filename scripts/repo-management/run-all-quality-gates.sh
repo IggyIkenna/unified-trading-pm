@@ -14,7 +14,7 @@
 # Usage:
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --repo unified-cloud-interface
-#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --repos "unified-cloud-interface unified-events-interface"
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --repos "unified-cloud-interface unified-trading-library"
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --sequential
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --dry-run

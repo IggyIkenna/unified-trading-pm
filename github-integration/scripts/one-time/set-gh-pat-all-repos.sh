@@ -37,7 +37,7 @@ REPOS=(
   strategy-service
   unified-trading-library
   unified-config-interface
-  unified-events-interface
+  unified-trading-library
   unified-market-interface
   unified-order-interface
   unified-trading-codex

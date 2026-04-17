@@ -41,12 +41,12 @@ code_readiness:
     manifest_dep_count: 4
     manifest_deps_covered:
       # - unified-trading-library
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-domain-client
       # - unified-api-contracts
     manifest_deps_missing:
       - unified-trading-library
-      - unified-events-interface
+      - unified-trading-library
       - unified-domain-client
       - unified-api-contracts
     evidence: ""

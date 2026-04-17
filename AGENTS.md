@@ -75,7 +75,7 @@ bad files. Safe workflow: (1) detect: `git ls-files --ignored --exclude-standard
 - No `# type: ignore` to hide architectural violations — fix root cause
 - No `Any` types — use specific types
 - No backwards-compat shims — delete deprecated code
-- `from unified_events_interface import setup_events, log_event` — no fallbacks
+- `from unified_trading_library.events import setup_events, log_event` — no fallbacks
 - Search unified libraries before implementing anything new
 
 Full standards: `unified-trading-codex/06-coding-standards/README.md`

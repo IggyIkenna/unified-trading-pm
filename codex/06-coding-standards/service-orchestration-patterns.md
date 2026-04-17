@@ -397,7 +397,7 @@ direct dependencies that cannot be routed through UTL:
   (`config/service_config.py`). This is the only approved `os.environ` path (via `UnifiedCloudConfig` internals).
 - **`unified_market_interface`** — Direct dep for market-data services. `get_market_adapter(venue)` is called from the
   service adapter layer. UMI is credentials-free so no Secret Manager wiring needed.
-- **`unified_events_interface`** — Direct dep for `config_reloaders.py` (hot-reload subscriptions). UTL re-exports
+- **`unified_trading_library.events`** — Direct dep for `config_reloaders.py` (hot-reload subscriptions). UTL re-exports
   `log_event` but reloader setup needs the full UEI surface.
 
 These MUST be declared in the workspace manifest with a `note` field explaining why each is a direct (not transitive)

@@ -127,7 +127,7 @@ mkdir -p 11-project-management/migration-guides
 
     ```python
     # Preferred (new)
-    from unified_events_interface import log_event
+    from unified_trading_library.events import log_event
     from unified_config_interface import get_config
 
     # Deprecated (still works until Aug 2026)

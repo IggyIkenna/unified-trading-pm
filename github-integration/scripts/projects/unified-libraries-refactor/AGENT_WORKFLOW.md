@@ -112,7 +112,7 @@ cat unified-trading-codex/11-project-management/epic-breakdowns/epic-unified-lib
 cd /path/to/$REPO_NAME
 
 # 1. Create directory structure
-mkdir -p ${REPO_NAME//-/_}/  # e.g., unified_events_interface/
+mkdir -p ${REPO_NAME//-/_}/  # e.g., unified_trading_library.events/
 mkdir -p tests/unit tests/integration tests/e2e tests/smoke
 mkdir -p scripts
 
@@ -588,7 +588,7 @@ grep -A 50 "Subtask 1.2.1:" \
 # → Priority: P0-critical
 
 # Step 3: Implement (create repo structure)
-mkdir -p unified_events_interface/ tests/unit tests/integration scripts
+mkdir -p unified_trading_library.events/ tests/unit tests/integration scripts
 cat > pyproject.toml <<'EOF'
 [project]
 name = "unified-events-interface"
@@ -605,13 +605,13 @@ cp ../unified-trading-services/scripts/quality-gates.sh ./scripts/
 cp ../unified-trading-services/scripts/quickmerge.sh ./scripts/
 chmod +x scripts/*.sh
 
-cat > unified_events_interface/__init__.py <<'EOF'
+cat > unified_trading_library.events/__init__.py <<'EOF'
 """unified-events-interface - Observability + Coordination events."""
 __version__ = "0.1.0"
 EOF
 
 cat > tests/unit/test_version.py <<'EOF'
-from unified_events_interface import __version__
+from unified_trading_library.events import __version__
 
 def test_version():
     assert __version__ == "0.1.0"
@@ -633,7 +633,7 @@ bash scripts/quickmerge.sh \
 - Created directory structure (src/, tests/, scripts/)
 
 Closes #3" \
-    --files "pyproject.toml README.md unified_events_interface/__init__.py tests/unit/test_version.py scripts/quality-gates.sh scripts/quickmerge.sh uv.lock"
+    --files "pyproject.toml README.md unified_trading_library.events/__init__.py tests/unit/test_version.py scripts/quality-gates.sh scripts/quickmerge.sh uv.lock"
 
 # Step 6: Monitor PR
 PR_NUM=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number')

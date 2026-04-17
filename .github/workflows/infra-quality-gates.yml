@@ -35,7 +35,7 @@ on:
         default: false
       sibling_deps:
         description:
-          "Space-separated sibling repos to clone for basedpyright (e.g. 'unified-events-interface
+          "Space-separated sibling repos to clone for basedpyright (e.g. 'unified-trading-library
           unified-internal-contracts')"
         required: false
         type: string

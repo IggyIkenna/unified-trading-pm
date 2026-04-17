@@ -13,7 +13,7 @@
 #   REPO_PATH    Path to the repo directory containing buildspec.aws.yaml
 #
 # Options:
-#   --canary           Run against canary repos (instruments-service, unified-cloud-interface, unified-events-interface)
+#   --canary           Run against canary repos (instruments-service, unified-cloud-interface, unified-trading-library)
 #   --workspace ROOT   Workspace root (default: parent of this script's PM repo)
 #   --strict           Treat warnings as errors
 #   --quiet            Suppress informational output
@@ -41,7 +41,7 @@ TOTAL_REPOS=0
 TOTAL_PASSED=0
 
 # Canary repos — representative of service, library, and event bus patterns
-CANARY_REPOS="instruments-service unified-cloud-interface unified-events-interface"
+CANARY_REPOS="instruments-service unified-cloud-interface unified-trading-library"
 
 # ── Parse arguments ──────────────────────────────────────────────────────────
 

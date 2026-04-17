@@ -8,7 +8,7 @@ set -e
 PRIVATE_PACKAGES=(
   "unified-trading-library"
   "unified-config-interface"
-  "unified-events-interface"
+  "unified-trading-library"
   "unified-domain-client"
   "unified-market-interface"
   "unified-trade-execution-interface"

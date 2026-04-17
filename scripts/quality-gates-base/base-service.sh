@@ -11,7 +11,7 @@
 #   MIN_COVERAGE      — e.g. 70
 #   RUN_INTEGRATION   — e.g. false
 #   PYTEST_WORKERS    — explicit worker count override; default is max(1, cpu_count // 4)
-#   LOCAL_DEPS        — e.g. ("unified-events-interface")
+#   LOCAL_DEPS        — e.g. ("unified-trading-library")
 #
 # Optional caller variables:
 #   MAX_DURATION      — duration limit in seconds (default: 300); set to 600 for PM/codex
@@ -554,7 +554,7 @@ elif [[ -f "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_pr
 fi
 
 # setup_events/setup_service uses sink= in production
-# Skip if this repo defines setup_events (e.g. unified-events-interface)
+# Skip if this repo defines setup_events (e.g. unified-trading-library)
 if rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/null; then
     log_success "setup_service() check skipped (repo defines setup_events/setup_service)"
 else
@@ -585,7 +585,7 @@ DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests
 
 # Old event logging pattern — flag obsolete cloud logging helpers only.
 # log_event/setup_events: from unified_trading_library import log_event is correct (UEI merged into UTL;
-#   check-import-patterns.py enforces top-level top-level import; from unified_events_interface also accepted).
+#   check-import-patterns.py enforces top-level top-level import; from unified_trading_library.events also accepted).
 # setup_cloud_logging/observability: old non-standard helpers — flag these.
 EL_OLD=$(rg "from unified_trading_library[. ].*(setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_trading_library import log_event'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports OK"

@@ -25,7 +25,7 @@ Strategies MUST:
 - Get ML signals from ml-inference-api (via pub/sub events)
 - Use `unified_internal_contracts` schemas for all data types
 - Access config through `unified_config_interface` (UnifiedCloudConfig)
-- Emit events through `unified_events_interface` (log_event)
+- Emit events through `unified_trading_library.events` (log_event)
 
 The strategy layer is a pure computation layer. It receives normalised data,
 computes signals, and emits instructions. It never reaches out to fetch data.

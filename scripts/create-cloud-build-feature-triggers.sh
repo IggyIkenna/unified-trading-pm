@@ -13,7 +13,7 @@ set -euo pipefail
 REGION="${REGION:-asia-northeast1}"
 REPO_BASE="projects/$(gcloud config get-value project 2>/dev/null)/locations/${REGION}/connections/iggyikenna-github/repositories"
 
-REPOS="deployment-service deployment-api features-multi-timeframe-service ml-training-ui execution-service market-tick-data-service unified-reference-data-interface unified-api-contracts unified-market-interface unified-config-interface unified-events-interface deployment-dashboard unified-cloud-interface features-calendar-service market-data-processing-service strategy-service features-volatility-service features-onchain-service features-delta-one-service ml-training-service ml-inference-service instruments-service position-balance-monitor-service unified-trading-library"
+REPOS="deployment-service deployment-api features-multi-timeframe-service ml-training-ui execution-service market-tick-data-service unified-reference-data-interface unified-api-contracts unified-market-interface unified-config-interface unified-trading-library deployment-dashboard unified-cloud-interface features-calendar-service market-data-processing-service strategy-service features-volatility-service features-onchain-service features-delta-one-service ml-training-service ml-inference-service instruments-service position-balance-monitor-service unified-trading-library"
 
 for name in $REPOS; do
   repo="${REPO_BASE}/${name}"

@@ -19,7 +19,7 @@ CODEX: 03-observability/lifecycle-events.md
 
 ```python
 from unified_trading_services import GCSEventSink, setup_service, log_event
-# OR from unified_events_interface import setup_events, log_event (legacy)
+# OR from unified_trading_library.events import setup_events, log_event (legacy)
 ```
 
 ## setup_service pattern (UTS v2.2.0+)

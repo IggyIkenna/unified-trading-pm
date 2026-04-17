@@ -166,7 +166,7 @@ validators:
         classification: "VALIDATE"
     validation_criteria:
       - "No try-except fallback imports"
-      - "Direct imports from unified-events-interface"
+      - "Direct imports from unified-trading-library"
       - "No unified_trading_library.observability fallbacks"
     unblocks: ["D4"]
 
@@ -247,7 +247,7 @@ validators:
         classification: "VALIDATE"
       - epic: "unified-libraries-refactor"
         task_id: "5.2"
-        service: "unified-events-interface"
+        service: "unified-trading-library"
         classification: "VALIDATE"
     validation_criteria:
       - "Package published to Artifact Registry"
@@ -350,7 +350,7 @@ metadata:
     - position-balance-monitor-service
     - risk-and-exposure-service
     - unified-trading-library
-    - unified-events-interface
+    - unified-trading-library
   blocker_types:
     D1: "Data Availability" # Unblocked by data_completeness, data_catalogue_sync, expected_start_dates
     D2: "Auth/Package Creation" # Unblocked by artifact_registry, safe_env_files

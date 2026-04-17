@@ -16,7 +16,7 @@ CLEAN_REPOS=(
   onboarding-ui pnl-attribution-service position-balance-monitor-service
   risk-and-exposure-service strategy-ui unified-api-contracts unified-cloud-interface
   unified-config-interface unified-defi-execution-interface unified-domain-client
-  unified-events-interface unified-feature-calculator-library unified-internal-contracts
+  unified-trading-library unified-feature-calculator-library unified-internal-contracts
   unified-market-interface unified-ml-interface unified-position-interface
   unified-reference-data-interface unified-trade-execution-interface unified-trading-codex
   unified-trading-ui-auth execution-analytics-ui

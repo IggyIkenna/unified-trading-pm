@@ -42,13 +42,13 @@ code_readiness:
     manifest_deps_covered:
       # - unified-api-contracts
       # - unified-config-interface
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-cloud-interface
       # - unified-trading-library
     manifest_deps_missing:
       - unified-api-contracts
       - unified-config-interface
-      - unified-events-interface
+      - unified-trading-library
       - unified-cloud-interface
       - unified-trading-library
     evidence: ""

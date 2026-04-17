@@ -35,7 +35,7 @@ REPOS=(
     "position-balance-monitor-service"
     "unified-trading-library"
     "unified-config-interface"
-    "unified-events-interface"
+    "unified-trading-library"
     "unified-market-interface"
     "unified-trade-execution-interface"
     "unified-domain-client"

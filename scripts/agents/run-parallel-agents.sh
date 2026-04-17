@@ -11,7 +11,7 @@
 #
 # Examples:
 #   bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
-#       unified-config-interface unified-events-interface \
+#       unified-config-interface unified-trading-library \
 #       instruments-service market-tick-data-handler \
 #       "Fix all basedpyright errors"
 #

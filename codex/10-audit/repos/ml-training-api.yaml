@@ -42,11 +42,11 @@ code_readiness:
     manifest_deps_covered:
       # - unified-trading-library
       # - unified-config-interface
-      # - unified-events-interface
+      # - unified-trading-library
     manifest_deps_missing:
       - unified-trading-library
       - unified-config-interface
-      - unified-events-interface
+      - unified-trading-library
     evidence: ""
     notes: ""
 

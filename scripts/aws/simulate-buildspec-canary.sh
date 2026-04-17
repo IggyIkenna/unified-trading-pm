@@ -3,7 +3,7 @@
 # Simulate buildspec.aws.yaml for 3 canary repos (codebuild-canary-run gate).
 # Runs the equivalent of AWS CodeBuild phases locally without AWS/CodeBuild.
 #
-# Canary repos: instruments-service, unified-cloud-interface, unified-events-interface
+# Canary repos: instruments-service, unified-cloud-interface, unified-trading-library
 # Gate: All 3 exit 0. Document result in aws_migration.plan.md.
 #
 # Usage:
@@ -100,19 +100,19 @@ main() {
     unified-cloud-interface)
       run_library_canary "unified-cloud-interface" "unified_cloud_interface" || failed=1
       ;;
-    unified-events-interface)
-      run_library_canary "unified-events-interface" "unified_events_interface" || failed=1
+    unified-trading-library)
+      run_library_canary "unified-trading-library" "unified_trading_library.events" || failed=1
       ;;
     instruments-service)
       run_service_canary || failed=1
       ;;
     all)
       run_library_canary "unified-cloud-interface" "unified_cloud_interface" || failed=1
-      run_library_canary "unified-events-interface" "unified_events_interface" || failed=1
+      run_library_canary "unified-trading-library" "unified_trading_library.events" || failed=1
       run_service_canary || failed=1
       ;;
     *)
-      echo "Usage: $0 [unified-cloud-interface|unified-events-interface|instruments-service|all]"
+      echo "Usage: $0 [unified-cloud-interface|unified-trading-library|instruments-service|all]"
       exit 1
       ;;
   esac

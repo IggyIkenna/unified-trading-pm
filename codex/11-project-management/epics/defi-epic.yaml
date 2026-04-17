@@ -55,7 +55,7 @@ required_repos:
     asset_class: core
     rationale: "All services use UCI for cloud provider abstraction."
 
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na

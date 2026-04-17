@@ -43,7 +43,7 @@ code_readiness:
       # - unified-api-contracts
       # - unified-trading-library
       # - unified-config-interface
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-domain-client
       # - unified-market-interface
       # - unified-cloud-interface
@@ -53,7 +53,7 @@ code_readiness:
       - unified-api-contracts
       - unified-trading-library
       - unified-config-interface
-      - unified-events-interface
+      - unified-trading-library
       - unified-domain-client
       - unified-market-interface
       - unified-cloud-interface

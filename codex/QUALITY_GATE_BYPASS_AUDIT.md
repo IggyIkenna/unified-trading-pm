@@ -13,12 +13,12 @@ None.
 ### 06-coding-standards/test-templates/test_event_logging.py (17 errors)
 
 **Justification:** This is a documentation template file (copy-paste starter), not a runnable module in this repo. It
-imports `pytest` and `unified_events_interface` which are only available inside individual service repos, not in the
-codex repo itself. The template is intentionally standalone and cannot resolve these imports from codex context.
+imports `pytest` and `unified_trading_library.events` which are only available inside individual service repos, not in
+the codex repo itself. The template is intentionally standalone and cannot resolve these imports from codex context.
 
 **Errors bypassed:**
 
-- `reportMissingImports`: `pytest`, `unified_events_interface` — not installed in codex (docs-only repo)
+- `reportMissingImports`: `pytest`, `unified_trading_library.events` — not installed in codex (docs-only repo)
 - `reportUnknownMemberType`, `reportUntypedFunctionDecorator`, `reportUnknownVariableType`, `reportUnknownArgumentType`
   — cascade from unresolvable pytest/UEI imports
 

@@ -6,8 +6,8 @@
 # To add a new check for all libraries, edit this file only.
 #
 # Required caller variables (set before sourcing this file):
-#   PACKAGE_NAME  — e.g. "unified-events-interface"
-#   SOURCE_DIR    — e.g. "unified_events_interface"  (underscore form)
+#   PACKAGE_NAME  — e.g. "unified-trading-library"
+#   SOURCE_DIR    — e.g. "unified_trading_library.events"  (underscore form)
 #   MIN_COVERAGE  — e.g. 99
 #
 # Optional caller variables:
@@ -407,7 +407,7 @@ DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests
     | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
-# Post-consolidation: unified_events_interface merged INTO unified_trading_library.
+# Post-consolidation: unified_trading_library.events merged INTO unified_trading_library.
 # 'from unified_trading_library import log_event' IS the canonical import path.
 # Only flag imports from truly obsolete packages (none currently exist).
 EL_OLD=""

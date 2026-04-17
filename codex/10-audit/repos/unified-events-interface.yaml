@@ -1,9 +1,9 @@
-# Repo Readiness Checklist v3.0 - unified-events-interface
+# Repo Readiness Checklist v3.0 - unified-trading-library
 # Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 # Generated: 2026-03-11
 
 schema_version: "3.0"
-repo: "unified-events-interface"
+repo: "unified-trading-library"
 repo_type: "library-t0"
 arch_tier: "0"
 deployment_modes: null
@@ -56,7 +56,7 @@ code_readiness:
 
   cr5_quickmerge:
     status: "not_assessed"
-    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-events-interface or main via cascade"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-trading-library or main via cascade"
     branch: null
     ci_url: null
     merged_to_main: false

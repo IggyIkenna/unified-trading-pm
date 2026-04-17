@@ -43,7 +43,7 @@ required_repos:
     min_br_stage: na
     asset_class: core
 
-  - repo: unified-events-interface
+  - repo: unified-trading-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na

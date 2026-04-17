@@ -11,7 +11,7 @@
 # Options:
 #   --model <model>        AI model to use (required)
 #   --max-parallel <n>     Max parallel workers (default: 3)
-#   --repos <list>         Comma-separated repo names to filter (e.g., "unified-events-interface,unified-config-interface")
+#   --repos <list>         Comma-separated repo names to filter (e.g., "unified-trading-library,unified-config-interface")
 #   --phase <0-4>          Filter by phase (0=infra, 1=events, 2=config, 3=market, 4=order)
 #   --priority <P0-P3>     Filter by priority (P0-critical, P1-high, P2-medium, P3-low)
 #   --issues "<list>"      Custom issues (overrides manifest)
@@ -25,14 +25,14 @@
 #   # Just Phase 1 (events interface)
 #   bash run-batch-fix.sh --model auto --phase 1 --max-parallel 5
 #
-#   # Just unified-events-interface repo
-#   bash run-batch-fix.sh --model auto --repos unified-events-interface
+#   # Just unified-trading-library repo
+#   bash run-batch-fix.sh --model auto --repos unified-trading-library
 #
 #   # P0-critical tasks only
 #   bash run-batch-fix.sh --model auto --priority P0-critical --max-parallel 5
 #
 #   # Custom issues
-#   bash run-batch-fix.sh --model auto --issues "unified-events-interface:1 unified-events-interface:2"
+#   bash run-batch-fix.sh --model auto --issues "unified-trading-library:1 unified-trading-library:2"
 #
 
 set -euo pipefail

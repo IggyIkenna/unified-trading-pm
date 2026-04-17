@@ -365,7 +365,7 @@ todos:
     status: done
   - id: p8c-qg-execution
     content: |
-      - [x] QG on execution-service: fixed circular import (onchain_execution_service lazy imports), removed dead unified_events_interface imports. 18/18 onchain tests pass. 54+58 pre-existing failures (socket-blocked, missing modules)
+      - [x] QG on execution-service: fixed circular import (onchain_execution_service lazy imports), removed dead unified_trading_library.events imports. 18/18 onchain tests pass. 54+58 pre-existing failures (socket-blocked, missing modules)
     status: done
   - id: p8d-qg-features
     content: |

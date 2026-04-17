@@ -43,7 +43,7 @@ code_readiness:
       # - unified-trading-library
       # - unified-domain-client
       # - unified-config-interface
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-cloud-interface
       # - unified-market-interface
       # - unified-feature-calculator
@@ -51,7 +51,7 @@ code_readiness:
       - unified-trading-library
       - unified-domain-client
       - unified-config-interface
-      - unified-events-interface
+      - unified-trading-library
       - unified-cloud-interface
       - unified-market-interface
       - unified-feature-calculator

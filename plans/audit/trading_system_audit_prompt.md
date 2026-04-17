@@ -224,7 +224,7 @@ done
 # Check all auth logging goes through UTL events_interface (no custom auth loggers)
 rg 'logger\.(info|warning|error).*auth\|logging\..*auth' --type py \
   --glob '!.venv*' --glob '!**/tests/**' -i -n | \
-  grep -v 'log_event\|unified_events_interface\|unified_trading_library.*events_interface' | head -20
+  grep -v 'log_event\|unified_trading_library.events\|unified_trading_library.*events_interface' | head -20
 
 # Check broad except Exception in production code
 rg 'except Exception' --type py \

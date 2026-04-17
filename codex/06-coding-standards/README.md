@@ -131,26 +131,26 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 
 ## Standards Summary
 
-| Standard                    | Rule                                                                                                                      | Enforcement                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **Python version**          | **`>=3.13,<3.14`** (hard requirement)                                                                                     | `pyproject.toml`, quality gates                                         |
-| Formatting                  | ruff format (same version everywhere)                                                                                     | Prek hooks, quality gates                                               |
-| Linting                     | ruff check (E, F, W, I rules)                                                                                             | Pre-commit hooks, quality gates                                         |
-| Config                      | Extend `UnifiedCloudConfig` from `unified_config_interface`                                                               | Checklist item 03b                                                      |
-| Error handling              | Use `@handle_api_errors`, `@handle_storage_errors`                                                                        | Checklist item 04b                                                      |
-| Logging                     | `setup_events()` or `setup_service()` + `log_event()` (unified_events_interface / unified_trading_services); no `print()` | Checklist item 04, event-logging.mdc                                    |
-| Event logging               | `log_event()` for lifecycle/domain events                                                                                 | `test_event_logging.py`                                                 |
-| Datetimes                   | UTC-aware everywhere                                                                                                      | Checklist item 04f                                                      |
-| Imports                     | All at top of file, grouped                                                                                               | `.cursorrules`                                                          |
-| Testing                     | `tests/unit/`, `tests/integration/`, `tests/e2e/`, `tests/smoke/`                                                         | Quality gates                                                           |
-| Git workflow                | Quickmerge with `--files`, no direct push                                                                                 | Branch protection                                                       |
-| Dependencies                | Pinned in `pyproject.toml`, dev deps separate                                                                             | Checklist item 02                                                       |
-| Exit codes                  | Non-zero on any failure                                                                                                   | Checklist item 04g                                                      |
-| Cloud-agnostic              | `get_storage_client()`, `get_secret_client()`, `get_compute_backend()`                                                    | Checklist item 06b                                                      |
-| Secrets                     | `get_secret_client()`, never hardcoded                                                                                    | Checklist item 05                                                       |
-| Schema validation           | `validate_timestamp_date_alignment()` before upload                                                                       | Checklist item 22c                                                      |
-| **unified-api-contracts**   | Use unified-api-contracts schemas for external API responses; no `dict[str, Any]`                                         | Codex 02-data/unified-unified-api-contracts-chain.md                    |
-| **Zero-baseline typecheck** | `.basedpyright-baseline.json` must be absent — all repos must have zero basedpyright errors without baseline suppression  | STEP 5.22 in `quality-gates-base/base-service.sh` and `base-library.sh` |
+| Standard                    | Rule                                                                                                                            | Enforcement                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Python version**          | **`>=3.13,<3.14`** (hard requirement)                                                                                           | `pyproject.toml`, quality gates                                         |
+| Formatting                  | ruff format (same version everywhere)                                                                                           | Prek hooks, quality gates                                               |
+| Linting                     | ruff check (E, F, W, I rules)                                                                                                   | Pre-commit hooks, quality gates                                         |
+| Config                      | Extend `UnifiedCloudConfig` from `unified_config_interface`                                                                     | Checklist item 03b                                                      |
+| Error handling              | Use `@handle_api_errors`, `@handle_storage_errors`                                                                              | Checklist item 04b                                                      |
+| Logging                     | `setup_events()` or `setup_service()` + `log_event()` (unified_trading_library.events / unified_trading_services); no `print()` | Checklist item 04, event-logging.mdc                                    |
+| Event logging               | `log_event()` for lifecycle/domain events                                                                                       | `test_event_logging.py`                                                 |
+| Datetimes                   | UTC-aware everywhere                                                                                                            | Checklist item 04f                                                      |
+| Imports                     | All at top of file, grouped                                                                                                     | `.cursorrules`                                                          |
+| Testing                     | `tests/unit/`, `tests/integration/`, `tests/e2e/`, `tests/smoke/`                                                               | Quality gates                                                           |
+| Git workflow                | Quickmerge with `--files`, no direct push                                                                                       | Branch protection                                                       |
+| Dependencies                | Pinned in `pyproject.toml`, dev deps separate                                                                                   | Checklist item 02                                                       |
+| Exit codes                  | Non-zero on any failure                                                                                                         | Checklist item 04g                                                      |
+| Cloud-agnostic              | `get_storage_client()`, `get_secret_client()`, `get_compute_backend()`                                                          | Checklist item 06b                                                      |
+| Secrets                     | `get_secret_client()`, never hardcoded                                                                                          | Checklist item 05                                                       |
+| Schema validation           | `validate_timestamp_date_alignment()` before upload                                                                             | Checklist item 22c                                                      |
+| **unified-api-contracts**   | Use unified-api-contracts schemas for external API responses; no `dict[str, Any]`                                               | Codex 02-data/unified-unified-api-contracts-chain.md                    |
+| **Zero-baseline typecheck** | `.basedpyright-baseline.json` must be absent — all repos must have zero basedpyright errors without baseline suppression        | STEP 5.22 in `quality-gates-base/base-service.sh` and `base-library.sh` |
 
 ---
 
@@ -365,7 +365,7 @@ MAX_RETRIES = 5  # Should be in config
 ## Logging Standards [IMPLEMENTED]
 
 ```python
-from unified_events_interface import setup_events, log_event
+from unified_trading_library.events import setup_events, log_event
 from unified_trading_services import GracefulShutdownHandler
 
 def main():
@@ -378,7 +378,7 @@ def main():
 
 Requirements:
 
-- Lifecycle events via `log_event()` from unified_events_interface (or UTL wrapper). See
+- Lifecycle events via `log_event()` from unified_trading_library.events (or UTL wrapper). See
   `.cursor/rules/event-logging.mdc`.
 - JSON format for Cloud Logging; third-party loggers suppressed to WARNING
 - SIGTERM/SIGINT handlers for graceful shutdown
@@ -417,7 +417,7 @@ import pandas as pd
 from pydantic import Field
 
 # 3. Local / project
-from unified_events_interface import setup_events, log_event
+from unified_trading_library.events import setup_events, log_event
 from my_service.config import get_service_config
 ```
 

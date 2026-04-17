@@ -83,7 +83,7 @@ mappings:
   - epic_task: "unified-libraries:2.3"
     service: "market-data-processing-service"
     classification: "REFACTOR"
-    description: "Migrate to unified-events-interface"
+    description: "Migrate to unified-trading-library"
     checklist_items:
       - item_04_standardized_logging
     audit_items:

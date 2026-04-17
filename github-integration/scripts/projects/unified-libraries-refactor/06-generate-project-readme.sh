@@ -92,7 +92,7 @@ cat <<EOF
 **Approach**: Option A (Full Separation) with phased delivery over 14 days.
 
 **Key Deliverables**:
-1. **Phase 1**: PubSub abstraction + unified-events-interface (coordination + observability)
+1. **Phase 1**: PubSub abstraction + unified-trading-library (coordination + observability)
 2. **Phase 2**: unified-config-interface (centralized config with hot-reload)
 3. **Phase 3**: unified-market-interface (market data feed normalization)
 4. **Phase 4**: unified-order-interface (order execution normalization)
@@ -109,7 +109,7 @@ cat <<EOF
 ### Repositories (5 total)
 
 **New Libraries (4):**
-- \`unified-events-interface\` - Observability (Cloud Logging) + Coordination (PubSub) events
+- \`unified-trading-library\` - Observability (Cloud Logging) + Coordination (PubSub) events
 - \`unified-config-interface\` - Centralized configuration with hot-reload
 - \`unified-market-interface\` - Public market data feed normalization
 - \`unified-order-interface\` - Private order execution normalization
@@ -127,7 +127,7 @@ cat <<EOF
 
 - **Phase 1 (Events Interface)**: ~13 issues
   - PubSub abstraction in unified-trading-library
-  - Create unified-events-interface repo
+  - Create unified-trading-library repo
   - Migrate event logging code
   - Add re-exports for backward compat
 
@@ -202,7 +202,7 @@ gh issue list --label UNIFIED-LIBRARIES-REFACTOR --state all
 gh issue list --label UNIFIED-LIBRARIES-REFACTOR,P0-critical --state open
 
 # By repo
-gh issue list --repo $ORG/unified-events-interface --label UNIFIED-LIBRARIES-REFACTOR
+gh issue list --repo $ORG/unified-trading-library --label UNIFIED-LIBRARIES-REFACTOR
 \`\`\`
 
 ### Check PRs
@@ -281,7 +281,7 @@ Closes #<ISSUE_NUMBER>
 from unified_trading_library import log_event  # ✅ Works
 
 # New imports also work (for early adopters)
-from unified_events_interface import log_event  # ✅ Also works
+from unified_trading_library.events import log_event  # ✅ Also works
 \`\`\`
 
 ### Python Package Distribution
@@ -342,7 +342,7 @@ gcloud artifacts print-settings python \\
     --location=asia-northeast1
 
 # Then install
-uv pip install unified-events-interface
+uv pip install unified-trading-library
 \`\`\`
 
 ---

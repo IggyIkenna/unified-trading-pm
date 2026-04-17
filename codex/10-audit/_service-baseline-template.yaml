@@ -505,7 +505,7 @@ items:
     priority: P1-high
     title: "Uses UCI, UCS, UEI correctly (no fallback imports, no reinvented wheels)"
     description: |
-      Service imports from unified-trading-library, unified-config-interface, unified-events-interface.
+      Service imports from unified-trading-library, unified-config-interface, unified-trading-library.
       No fallback try-except imports (Pattern B required post-Feb 2026).
       No duplicate implementations of library functionality.
 
@@ -621,12 +621,12 @@ items:
 
       ❌ FORBIDDEN:
         try:
-            from unified_events_interface import log_event
+            from unified_trading_library.events import log_event
         except ImportError:
             from unified_trading_library.observability import log_event
 
       ✅ REQUIRED:
-        from unified_events_interface import log_event
+        from unified_trading_library.events import log_event
 
       ✅ Pass: All imports are direct, no try-except patterns
       ❌ Fail: Fallback imports found
@@ -698,7 +698,7 @@ items:
       Service uses central libraries for their intended purpose:
       - unified-trading-library: storage_client, secret_client, error decorators
       - unified-config-interface: BaseConfig base class
-      - unified-events-interface: log_event, setup_events
+      - unified-trading-library: log_event, setup_events
       - unified-domain-interface: domain models (Instrument, Venue, Strategy, etc.)
 
       No duplicate implementations of library functionality.

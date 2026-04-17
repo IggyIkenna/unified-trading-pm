@@ -83,9 +83,10 @@ For each assigned service:
 
 ### 4. Observability (if missing)
 
-- Prefer `log_event` and lifecycle events from `unified_events_interface`.
-- If the service has a local error/warning counter, replace with `ErrorWarningCounter` from `unified_events_interface`;
-  use `get_dataframe_memory_usage` / `log_memory_metrics` from UEI for DataFrame memory.
+- Prefer `log_event` and lifecycle events from `unified_trading_library.events`.
+- If the service has a local error/warning counter, replace with `ErrorWarningCounter` from
+  `unified_trading_library.events`; use `get_dataframe_memory_usage` / `log_memory_metrics` from UEI for DataFrame
+  memory.
 
 ---
 

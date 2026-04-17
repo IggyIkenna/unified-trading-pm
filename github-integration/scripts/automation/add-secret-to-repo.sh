@@ -56,7 +56,7 @@ ALL_REPOS=(
   "unified-trading-library"
   "unified-config-interface"
   "unified-domain-client"
-  "unified-events-interface"
+  "unified-trading-library"
   "unified-market-interface"
   "unified-feature-calculator-library"
   "execution-algo-library"

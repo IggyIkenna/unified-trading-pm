@@ -167,7 +167,7 @@ todos:
       - [x] [AGENT] P0. **Phase 1 / SEQUENTIAL** — Port UEI tests into UTL under `tests/events/`. **DONE** (commit `4da72fc0`).
         - Source: `unified-events-interface/tests/` (whatever exists).
         - Merge with existing `unified-trading-library/tests/events_interface/` (preserve the reconciliation + freshness + cicd-agent-error tests).
-        - Rename imports in ported tests from `unified_events_interface` → `unified_trading_library.events`.
+        - Rename imports in ported tests from `unified_trading_library.events` → `unified_trading_library.events`.
         - Final location: `unified-trading-library/tests/events/`.
     status: done
     note: "tests/events/ ported with all imports rewritten to new path."
@@ -184,7 +184,7 @@ todos:
 
   - id: phase-1-fix-dependency-check
     content: |
-      - [x] [AGENT] P0. **Phase 1 / SEQUENTIAL** — Fix UTL `dependency_check.py` line 229: replace `from unified_events_interface import log_event` with `from unified_trading_library.events import log_event`. **DONE** (commit `4da72fc0`).
+      - [x] [AGENT] P0. **Phase 1 / SEQUENTIAL** — Fix UTL `dependency_check.py` line 229: replace `from unified_trading_library.events import log_event` with `from unified_trading_library.events import log_event`. **DONE** (commit `4da72fc0`).
     status: done
     note: "Line 229 updated."
 
@@ -196,7 +196,7 @@ todos:
 
   - id: phase-2a-migrate-execution-service
     content: |
-      - [ ] [AGENT] P0. **Phase 2 / PARALLEL with phase-2b…phase-2ad** — `execution-service`: replace `from unified_events_interface import` → `from unified_trading_library.events import` across 9 source files.
+      - [ ] [AGENT] P0. **Phase 2 / PARALLEL with phase-2b…phase-2ad** — `execution-service`: replace `from unified_trading_library.events import` → `from unified_trading_library.events import` across 9 source files.
         - Files: [execution-service/execution_service/engine/pnl_monitor.py](execution-service/execution_service/engine/pnl_monitor.py), [engine/venue_failover.py](execution-service/execution_service/engine/venue_failover.py), [engine/order_priority.py](execution-service/execution_service/engine/order_priority.py), [engine/transfers/confirmation_poller.py](execution-service/execution_service/engine/transfers/confirmation_poller.py), [engine/orphan_monitor.py](execution-service/execution_service/engine/orphan_monitor.py), [engine/recon_gate.py](execution-service/execution_service/engine/recon_gate.py), [engine/venue_cascade_monitor.py](execution-service/execution_service/engine/venue_cascade_monitor.py), [engine/handlers/transfer_handler.py](execution-service/execution_service/engine/handlers/transfer_handler.py), [tests/conftest.py](execution-service/tests/conftest.py).
         - Also remove `unified-events-interface` from `pyproject.toml` if pinned there.
         - Replace `unified_trading_library.events_interface` → `unified_trading_library.events` across the 37 files that use the UTL mirror path.
@@ -206,7 +206,7 @@ todos:
 
   - id: phase-2b-migrate-position-balance
     content: |
-      - [ ] [AGENT] P0. **Phase 2 / PARALLEL** — `position-balance-monitor-service`: replace `from unified_events_interface import` → `from unified_trading_library.events import` across 3 source files.
+      - [ ] [AGENT] P0. **Phase 2 / PARALLEL** — `position-balance-monitor-service`: replace `from unified_trading_library.events import` → `from unified_trading_library.events import` across 3 source files.
         - Files: [position_balance_monitor_service/core/position_drift_monitor.py](position-balance-monitor-service/position_balance_monitor_service/core/position_drift_monitor.py), [core/dual_failure_detector.py](position-balance-monitor-service/position_balance_monitor_service/core/dual_failure_detector.py), [core/treasury_monitor.py](position-balance-monitor-service/position_balance_monitor_service/core/treasury_monitor.py).
         - Also migrate `unified_trading_library.events_interface` → `unified_trading_library.events` in the 6 files that use mirror path.
         - Remove `unified-events-interface` from `pyproject.toml` if pinned.
@@ -220,7 +220,7 @@ todos:
         - Repos: alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing, features-calendar-service, features-commodity-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, risk-and-exposure-service, strategy-service, system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api, unified-trading-system-ui.
         - Tool: per-repo sed/ast rewrite OR parallel Agent tool sub-agents (one per repo).
         - Per-repo QG after rewrite; no repo proceeds until its QG passes.
-        - Quickmerge each repo with `bash scripts/quickmerge.sh "refactor: unified_events_interface → unified_trading_library.events" --agent`.
+        - Quickmerge each repo with `bash scripts/quickmerge.sh "refactor: unified_trading_library.events → unified_trading_library.events" --agent`.
     status: todo
     note: ""
 
@@ -234,8 +234,8 @@ todos:
 
   - id: phase-3-delete-uei-imports
     content: |
-      - [ ] [AGENT] P0. **Phase 3 / SEQUENTIAL** — Verify no `unified_events_interface` imports remain in workspace source.
-        - Command: `grep -r "unified_events_interface\b" --include="*.py" --exclude-dir=".venv*" --exclude-dir="archive"` must return zero hits.
+      - [ ] [AGENT] P0. **Phase 3 / SEQUENTIAL** — Verify no `unified_trading_library.events` imports remain in workspace source.
+        - Command: `grep -r "unified_trading_library.events\b" --include="*.py" --exclude-dir=".venv*" --exclude-dir="archive"` must return zero hits.
         - If any remain, fix them in the owning repo, re-QG, then proceed.
     status: todo
     note: ""
@@ -248,16 +248,16 @@ todos:
         - `base-service.sh` if it hard-codes UEI checks.
         - Per-repo `scripts/quality-gates.sh` copies across 15 service repos (rollout via `bash unified-trading-pm/scripts/propagation/` or per-repo edit — pick whichever is SSOT).
         - Other shell scripts: [deployment-service/scripts/setup-cloud-build-triggers.sh](deployment-service/scripts/setup-cloud-build-triggers.sh), [deployment-service/scripts/run-all-quality-gates.sh](deployment-service/scripts/run-all-quality-gates.sh), [unified-trading-pm/scripts/workspace/setup-dev-environment.sh](unified-trading-pm/scripts/workspace/setup-dev-environment.sh), [unified-trading-pm/scripts/agents/run-parallel-agents.sh](unified-trading-pm/scripts/agents/run-parallel-agents.sh), [unified-trading-pm/plans/tasks/claude-code/orchestrator-*.sh](unified-trading-pm/plans/tasks/claude-code/).
-        - Action per script: remove any UEI-specific enforcement; replace path refs `unified_events_interface` → `unified_trading_library.events`; remove `unified-events-interface` from any repo allowlists.
+        - Action per script: remove any UEI-specific enforcement; replace path refs `unified_trading_library.events` → `unified_trading_library.events`; remove `unified-events-interface` from any repo allowlists.
     status: todo
     note: ""
 
   - id: phase-4-update-docs-rules
     content: |
       - [ ] [HUMAN+AGENT] P0. **Phase 4 / PARALLEL with phase-4a** — Update docs, rules, and codex for 256 markdown/mdc references.
-        - [.claude/CLAUDE.md](.claude/CLAUDE.md): replace rule `from unified_events_interface import setup_events, log_event — no fallbacks` with `from unified_trading_library.events import setup_events, log_event — no fallbacks`.
+        - [.claude/CLAUDE.md](.claude/CLAUDE.md): replace rule `from unified_trading_library.events import setup_events, log_event — no fallbacks` with `from unified_trading_library.events import setup_events, log_event — no fallbacks`.
         - [.cursorrules](.cursorrules) in workspace root + per-repo copies.
-        - `.cursor/rules/*.mdc` files — bulk rewrite `unified_events_interface` → `unified_trading_library.events`, `unified-events-interface` → `unified-trading-library` in narrative prose.
+        - `.cursor/rules/*.mdc` files — bulk rewrite `unified_trading_library.events` → `unified_trading_library.events`, `unified-events-interface` → `unified-trading-library` in narrative prose.
         - Codex docs under `unified-trading-pm/codex/` — same rewrite.
         - Prefer scripted rewrite (e.g., `rg --files-with-matches`, then batched `sed -i`) with a single review pass before committing.
     status: todo
@@ -276,7 +276,7 @@ todos:
   - id: phase-5-verify-no-dangling-refs
     content: |
       - [ ] [SCRIPT] P0. **Phase 5 / SEQUENTIAL after archive** — Workspace-wide verification that zero live refs remain.
-        - `grep -r "unified_events_interface\b" . --include="*.py" --include="*.sh" --include="*.yaml" --include="*.yml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
+        - `grep -r "unified_trading_library.events\b" . --include="*.py" --include="*.sh" --include="*.yaml" --include="*.yml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
         - `grep -r "unified-events-interface" . --include="*.md" --include="*.mdc" --include="*.sh" --include="*.yaml" --include="*.toml" --include="*.json" --exclude-dir=".venv*" --exclude-dir="node_modules" --exclude-dir="archive"` returns empty.
         - `grep -r "unified_trading_library.events_interface" . --include="*.py" --exclude-dir=".venv*" --exclude-dir="archive"` returns empty.
     status: todo
@@ -310,7 +310,7 @@ isProject: false
 
 | Location                                                            | Files                                                            | Notes                                                                       |
 | ------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `unified-events-interface/unified_events_interface/`                | `__init__.py` (14.7KB), `schemas.py` (33.8KB), `sink.py` (1.6KB) | Has recent autonomous-recovery + transfer lifecycle + position drift events |
+| `unified-events-interface/unified_trading_library.events/`          | `__init__.py` (14.7KB), `schemas.py` (33.8KB), `sink.py` (1.6KB) | Has recent autonomous-recovery + transfer lifecycle + position drift events |
 | `unified-trading-library/unified_trading_library/events_interface/` | `__init__.py` (15.2KB), `schemas.py` (33.7KB), `sink.py` (1.6KB) | Has recent reconciliation + DeFi + bridge + fill events                     |
 
 **Event types ONLY in UEI (must be preserved in aggregate):** `AUTO_DELEVERAGE_TRIGGERED`,
@@ -325,7 +325,7 @@ isProject: false
 `RECONCILIATION_EVENT_TYPES`, `STRATEGY_POSITION_UPDATED`, `TRANSFER_EVENT_TYPES`, `TRANSFER_RECONCILIATION_MISMATCH`,
 `TRANSFER_SUBMITTED`
 
-**Consumer repos importing `unified_events_interface` directly (Python source only, excl. archive/tests/.venv):**
+**Consumer repos importing `unified_trading_library.events` directly (Python source only, excl. archive/tests/.venv):**
 
 | Repo                                                     | Files |
 | -------------------------------------------------------- | ----- |
@@ -364,7 +364,8 @@ unified-trading-system-ui (1).
 **Workspace manifest entries to remove:** 9+ occurrences in `unified-trading-pm/workspace-manifest.json` (version pin,
 repo def, cluster refs).
 
-**CLAUDE.md rule to update:** `from unified_events_interface import setup_events, log_event — no fallbacks` → new path.
+**CLAUDE.md rule to update:** `from unified_trading_library.events import setup_events, log_event — no fallbacks` → new
+path.
 
 ### Execution DAG
 
@@ -398,23 +399,23 @@ Phase 6: Workspace-wide QG (FINAL)
 ### Parallelisation strategy
 
 - Phase 2 is the only heavyweight parallel stage. 30 repos can be edited concurrently via Agent sub-agents (one agent
-  per repo). Each performs the same mechanical rewrite: `unified_events_interface` → `unified_trading_library.events`
-  and `unified_trading_library.events_interface` → `unified_trading_library.events`, then runs its local QG. Failed QG
-  blocks that repo only; others continue.
+  per repo). Each performs the same mechanical rewrite: `unified_trading_library.events` →
+  `unified_trading_library.events` and `unified_trading_library.events_interface` → `unified_trading_library.events`,
+  then runs its local QG. Failed QG blocks that repo only; others continue.
 - Phases 1, 3, 5, 6 are sequential by construction (UTL-single-repo, deletion after proof, archive after verification,
   final QG after everything).
 - Phase 4 (docs + QG templates) can be split across two agents working on disjoint files.
 
 ### Success criteria
 
-| Phase | Pass condition                                                                                                                                                                                    |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | UTL QG clean; aggregate schemas cover every event type from both originals; top-level `__init__.py` still re-exports everything it used to.                                                       |
-| 2     | Every one of the 30 consumer repos passes local QG after rewrite. No `unified_events_interface` or `unified_trading_library.events_interface` import remains anywhere in source (excl. archive/). |
-| 3     | UTL QG clean with old mirror deleted. Workspace-wide `grep` for old paths returns empty (outside archive/).                                                                                       |
-| 4     | CLAUDE.md, .cursorrules, 256 codex/rule files, 20 shell scripts all reference new path only.                                                                                                      |
-| 5     | UEI repo physically moved to `archive/`, removed from `workspace-manifest.json`, remote archived. Verification greps empty.                                                                       |
-| 6     | `quality-gates.sh` passes in all 32 repos. Every repo advances from C0 → C5 via quickmerge.                                                                                                       |
+| Phase | Pass condition                                                                                                                                                                                          |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | UTL QG clean; aggregate schemas cover every event type from both originals; top-level `__init__.py` still re-exports everything it used to.                                                             |
+| 2     | Every one of the 30 consumer repos passes local QG after rewrite. No `unified_trading_library.events` or `unified_trading_library.events_interface` import remains anywhere in source (excl. archive/). |
+| 3     | UTL QG clean with old mirror deleted. Workspace-wide `grep` for old paths returns empty (outside archive/).                                                                                             |
+| 4     | CLAUDE.md, .cursorrules, 256 codex/rule files, 20 shell scripts all reference new path only.                                                                                                            |
+| 5     | UEI repo physically moved to `archive/`, removed from `workspace-manifest.json`, remote archived. Verification greps empty.                                                                             |
+| 6     | `quality-gates.sh` passes in all 32 repos. Every repo advances from C0 → C5 via quickmerge.                                                                                                             |
 
 ### Risks & mitigations
 
@@ -433,7 +434,7 @@ Phase 6: Workspace-wide QG (FINAL)
 
 ### SSOT references
 
-- CLAUDE.md events rule: `from unified_events_interface import setup_events, log_event` — must be updated.
+- CLAUDE.md events rule: `from unified_trading_library.events import setup_events, log_event` — must be updated.
 - Pre-1.0.0 semver: adding new event types = `feat:` = MINOR bump on UTL (currently 0.3.167). Removing an import path =
   not a public API break pre-1.0.0 (all consumers updated in-plan). Semver-agent handles bumps automatically on merge.
 - Quickmerge: every repo change uses `bash scripts/quickmerge.sh "<msg>" --agent` per CLAUDE.md.

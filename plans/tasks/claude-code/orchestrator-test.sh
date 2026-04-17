@@ -20,7 +20,7 @@ PARSER="$WORKSPACE/.cursor/plans/tasks_claude_code/simple-parser.py"
 # Test with 2 small repos
 REPOS=(
     "unified-config-interface"
-    "unified-events-interface"
+    "unified-trading-library"
 )
 
 # Colors

@@ -40,10 +40,10 @@ code_readiness:
     criteria: "2 manifest deps require tests in tests/integration/."
     manifest_dep_count: 2
     manifest_deps_covered:
-      # - unified-events-interface
+      # - unified-trading-library
       # - unified-cloud-interface
     manifest_deps_missing:
-      - unified-events-interface
+      - unified-trading-library
       - unified-cloud-interface
     evidence: ""
     notes: ""
