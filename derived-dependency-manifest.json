@@ -96,7 +96,8 @@
     },
     "unified-trading-library": {
       "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0"
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-events-interface": "unified-events-interface>=0.2.2,<1.0.0"
       },
       "external_deps": {
         "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
@@ -154,7 +155,7 @@
         "starlette": ["starlette>=0.46.3,<1.0.0"],
         "web3": ["web3>=6.0.0,<7.0.0"]
       },
-      "internal_count": 1,
+      "internal_count": 2,
       "external_count": 54
     },
     "matching-engine-library": {
@@ -286,6 +287,7 @@
       "internal_deps": {
         "market-tick-data-service": "market-tick-data-service>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.6,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -347,7 +349,7 @@
         "vcrpy": ["vcrpy>=8.0.0,<9.0.0"],
         "websockets": ["websockets>=14.0,<15.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 5,
       "external_count": 56
     },
     "features-calendar-service": {
@@ -538,6 +540,7 @@
       "internal_deps": {
         "market-tick-data-service": "market-tick-data-service>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-market-interface": "unified-market-interface>=0.3.2,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -558,7 +561,7 @@
         "ruff": ["ruff==0.15.0"],
         "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"]
       },
-      "internal_count": 3,
+      "internal_count": 4,
       "external_count": 16
     },
     "features-volatility-service": {
@@ -946,6 +949,7 @@
     "position-balance-monitor-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-events-interface": "unified-events-interface>=0.2.2,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -981,7 +985,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 2,
+      "internal_count": 3,
       "external_count": 31
     },
     "risk-and-exposure-service": {
