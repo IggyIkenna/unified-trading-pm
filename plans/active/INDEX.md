@@ -51,6 +51,11 @@ examples for testing any DeFi strategy
 - citadel_per_service_remediation_2026_03_24.plan.md — Per-service fixes
 - instruments_service_reorganisation_2026_03_27.plan.md — Instruments service
 
+### Library Consolidation
+
+- fold_uei_into_utl_2026_04_17.plan.md — Fold unified-events-interface into `unified_trading_library.events` (aggregate
+  of both), migrate 30+ consumers, archive UEI repo
+
 ---
 
 ## How to Use This Index

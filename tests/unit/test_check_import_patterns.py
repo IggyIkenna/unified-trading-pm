@@ -63,11 +63,11 @@ class TestImportChecker:
     def test_detects_deep_import_events_interface(self, tmp_path: Path) -> None:
         mod = _load_module()
         f = tmp_path / "bad2.py"
-        f.write_text("from unified_trading_library.events_interface.models.event import Event\n")
+        f.write_text("from unified_trading_library.events.models.event import Event\n")
         checker = mod.ImportChecker(verbose=False)
         violations = checker.check_file(f)
         assert len(violations) == 1
-        assert violations[0].package == "unified_trading_library.events_interface"
+        assert violations[0].package == "unified_trading_library.events"
 
     def test_skips_venv_directories(self, tmp_path: Path) -> None:
         mod = _load_module()
@@ -122,7 +122,7 @@ class TestImportChecker:
         f = tmp_path / "multi.py"
         f.write_text(
             "from unified_trading_library.core import X\n"  # noqa: E501
-            "from unified_trading_library.events_interface.models import E\n"
+            "from unified_trading_library.events.models import E\n"
         )
         checker = mod.ImportChecker()
         checker.check_directory(tmp_path)

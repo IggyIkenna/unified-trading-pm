@@ -110,8 +110,8 @@ LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
         True,
     ),
     (
-        "unified_trading_library.events_interface (UEI)",
-        "from unified_trading_library.events_interface import setup_events, log_event",
+        "unified_trading_library.events (UEI)",
+        "from unified_trading_library.events import setup_events, log_event",
         True,
     ),
     ("unified_api_contracts (UAC)", "import unified_api_contracts", True),

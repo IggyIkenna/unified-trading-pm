@@ -26,7 +26,7 @@ INTERNAL_PACKAGES: dict[str, str] = {
     "unified_api_contracts": "unified-api-contracts",
     "unified_trading_library.cloud_interface": "unified-cloud-interface",
     "unified_trading_library.config_interface": "unified-config-interface",
-    "unified_trading_library.events_interface": "unified-events-interface",
+    "unified_trading_library.events": "unified-events-interface",
     "unified_market_interface": "unified-market-interface",
     "unified_reference_data_interface": "unified-reference-data-interface",
 }
@@ -38,7 +38,7 @@ BANNED_DIRECT_IMPORTS: frozenset[str] = frozenset(
     {
         "unified_trading_library.config_interface",
         "unified_trading_library.cloud_interface",
-        "unified_trading_library.events_interface",
+        "unified_trading_library.events",
     }
 )
 

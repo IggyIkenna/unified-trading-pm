@@ -56,7 +56,7 @@ class ImportAuditor(ast.NodeVisitor):
     """AST visitor to detect import patterns."""
 
     SPLIT_LIBRARIES = {
-        "unified_trading_library.events_interface",
+        "unified_trading_library.events",
         "unified_trading_library.config_interface",
         "unified_market_interface",
         "unified_order_interface",
