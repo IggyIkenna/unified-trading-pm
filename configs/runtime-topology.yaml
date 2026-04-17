@@ -7,13 +7,21 @@
 # At deployment time, the deployment system reads CLOUD_PROVIDER to select
 # the correct transport per edge. Services never see cloud-specific transports.
 
-version: 6
+version: 7
 ssot:
   purpose: Runtime interaction topology and deployment transport policy
   owner: unified-trading-pm
   paired_code_ssot: unified-trading-pm/workspace-manifest.json
   svg_diagram: unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
   decisions_doc: unified-trading-pm/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md
+  isolation_sla_doc: unified-trading-pm/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md
+  schema_changelog:
+    v6_to_v7:
+      - Added isolation_policies (per-service shared|isolated choice with allowed overrides).
+      - Added sla_tiers (premium|standard|basic with cost_multiplier and required isolation).
+      - Added runtime_profiles (backtest|paper|mock-live|staging|prod collapses 5 legacy env vars).
+      - Added chaos_hooks (enumerates injection points consumed by UTL ChaosController).
+      - All additions are non-breaking; v6 consumers ignore unknown keys.
 
 # ---------------------------------------------------------------------------
 # KEY DISTINCTION: Transport vs Persistence
@@ -178,6 +186,301 @@ clusters:
     note: >
       odum-research-website archived (2026-03) under workspace-root archive/. Public or research web surfaces are
       handled outside this runtime topology or via unified-trading-system-ui as applicable.
+
+# ---------------------------------------------------------------------------
+# Isolation policies — per-service shared|isolated choice
+# ---------------------------------------------------------------------------
+# Each service declares:
+#   default:  shared | isolated  — the policy applied when no client override
+#   allowed:  [shared, isolated] — which policies a client subscription may pick
+#   reason:   short explanation for why the default / allowed set is what it is
+#
+# Contract:
+#   shared   = one process instance multiplexes N clients (topic_template contains {client})
+#   isolated = one process instance per client (one pod/VM per client, topic_template fixed)
+#
+# L1-L4 (data pipeline, features, ML) default shared — market data and features are
+# inherently multi-tenant. No client-specific information flows through them.
+# L5 (strategy, execution) and L6 (position, risk, pnl, alerting) are where the
+# isolation choice actually matters.
+# ---------------------------------------------------------------------------
+isolation_policies:
+  # L1 — Data ingestion (always shared; market data is not per-client)
+  instruments-service:
+    default: shared
+    allowed: [shared]
+    reason: "Reference data is universal; no client dimension."
+  market-tick-data-service:
+    default: shared
+    allowed: [shared]
+    reason: "Tick ingestion is universal; sharding is by venue, not client."
+  # L2 — Processing (always shared)
+  market-data-processing-service:
+    default: shared
+    allowed: [shared]
+    reason: "Candle aggregation is universal."
+  # L3 — Features (always shared)
+  features-delta-one-service:
+    default: shared
+    allowed: [shared]
+    reason: "Features are universal inputs; sharded by instrument/timeframe, not client."
+  features-volatility-service:
+    default: shared
+    allowed: [shared]
+    reason: "Same as delta-one."
+  features-onchain-service:
+    default: shared
+    allowed: [shared]
+    reason: "On-chain features are universal."
+  features-calendar-service:
+    default: shared
+    allowed: [shared]
+    reason: "Calendar features are universal."
+  features-cross-instrument-service:
+    default: shared
+    allowed: [shared]
+    reason: "Cross-instrument features are universal."
+  features-multi-timeframe-service:
+    default: shared
+    allowed: [shared]
+    reason: "Multi-timeframe features are universal."
+  features-sports-service:
+    default: shared
+    allowed: [shared]
+    reason: "Sports features are universal (sharded by league/fixture, not client)."
+  # L4 — ML (always shared for training; inference shared, can be isolated per client if model is client-specific)
+  ml-training-service:
+    default: shared
+    allowed: [shared]
+    reason: "Training is universal; model artifacts may differ per client but training is pooled."
+  ml-inference-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: "Default shared; isolate for clients running proprietary models on dedicated hardware."
+  # L5 — Strategy + Execution (isolation choice matters)
+  strategy-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: >
+      Shared default — multi-tenant strategy runs are cheaper. Archetypes with strict latency budgets (MM, arb) or
+      proprietary logic (client-bespoke signals) demand isolated. Per-archetype requirements live in
+      codex/09-strategy/architecture-v2/families/*.md.
+  execution-service:
+    default: isolated
+    allowed: [isolated]
+    reason: >
+      Always isolated — per-client venue API keys, rate limits, entitlements, and order-flow confidentiality require a
+      dedicated process per client.
+  # L6 — Monitoring (default shared; premium clients can isolate)
+  position-balance-monitor-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: >
+      Shared default — one process tracking N clients is cheaper and enables cross-client reconciliation for free.
+      Premium clients may isolate for dedicated support and tighter SLAs.
+  risk-and-exposure-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: "Shared default; isolated available for premium clients with custom risk limits."
+  pnl-attribution-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: "Shared default; isolated for clients whose P&L attribution logic is bespoke."
+  alerting-service:
+    default: shared
+    allowed: [shared, isolated]
+    reason: "Shared default; isolated for clients with dedicated escalation contracts."
+  # API services — always shared (multi-tenant by design)
+  client-reporting-api:
+    default: shared
+    allowed: [shared]
+    reason: "Multi-tenant reporting API; per-client auth at request layer."
+  deployment-api:
+    default: shared
+    allowed: [shared]
+    reason: "Platform control plane."
+  unified-trading-api:
+    default: shared
+    allowed: [shared]
+    reason: "Multi-tenant API gateway."
+  auth-api:
+    default: shared
+    allowed: [shared]
+    reason: "Global authentication surface."
+
+# ---------------------------------------------------------------------------
+# SLA tiers — premium / standard / basic
+# ---------------------------------------------------------------------------
+# Defines:
+#   cost_multiplier           — how much this tier costs vs basic (for passthrough billing)
+#   allowed_isolations        — which isolation policies a client on this tier may request
+#   min_isolated_services     — services that MUST be isolated at this tier (overrides default)
+#   latency_budget_ms         — end-to-end order latency target (for routing decisions)
+#   support_response_sla_min  — first-response time for incidents
+#
+# Cost passthrough: when a client on `premium` pulls an additional isolated service,
+# deployment-service records the delta as line-item cost and client-reporting-api
+# includes it on the monthly invoice.
+# ---------------------------------------------------------------------------
+sla_tiers:
+  basic:
+    cost_multiplier: 1.0
+    allowed_isolations: [shared]
+    min_isolated_services: []
+    latency_budget_ms: 500
+    support_response_sla_min: 1440 # 24h
+    note: "Fully multi-tenant; best-effort latency; business-hours support."
+  standard:
+    cost_multiplier: 2.5
+    allowed_isolations: [shared, isolated]
+    min_isolated_services: [execution-service]
+    latency_budget_ms: 150
+    support_response_sla_min: 240 # 4h
+    note: "Isolated execution (required); optional isolation on monitoring; 4h support."
+  premium:
+    cost_multiplier: 6.0
+    allowed_isolations: [shared, isolated]
+    min_isolated_services:
+      - execution-service
+      - strategy-service
+      - position-balance-monitor-service
+      - risk-and-exposure-service
+    latency_budget_ms: 40
+    support_response_sla_min: 30 # 30 min
+    note: >
+      Dedicated execution+strategy+position+risk; co-located where archetype demands; 30-minute incident response;
+      custom limits.
+
+# ---------------------------------------------------------------------------
+# Runtime profiles — single axis collapsing the 5 legacy mode env vars
+# ---------------------------------------------------------------------------
+# Deployment-api accepts `runtime_profile` on /deployments and fans out to the
+# correct env var set at VM/pod boot. This is the single source of truth for
+# "what mode is this deployment running in". The UI surfaces one dropdown, not five.
+#
+# Fields consumed by deployment-api when materialising a deployment:
+#   cloud_mock_mode          — sets CLOUD_MOCK_MODE
+#   mock_state_mode          — sets MOCK_STATE_MODE
+#   auth_disabled            — sets DISABLE_AUTH
+#   vite_mock_api            — sets VITE_MOCK_API (UI)
+#   vite_skip_auth           — sets VITE_SKIP_AUTH (UI)
+#   chaos_allowed            — whether ChaosController is permitted to inject
+#   client_isolation_required — whether client_id must be provided and isolation enforced
+#   storage_namespace        — GCS/S3 prefix for this profile (prevents collision with live)
+#   allow_real_venue_calls   — whether execution-service may hit real venues
+# ---------------------------------------------------------------------------
+runtime_profiles:
+  backtest:
+    description: "Historical replay with simulated fills via matching engine; isolated storage."
+    cloud_mock_mode: false
+    mock_state_mode: deterministic
+    auth_disabled: true
+    vite_mock_api: false
+    vite_skip_auth: true
+    chaos_allowed: true
+    client_isolation_required: false
+    storage_namespace: "backtest/{run_id}/"
+    allow_real_venue_calls: false
+    note: >
+      Batch = live code path with execution-service in simulated-fill mode. Own GCS namespace so concurrent live runs
+      are untouched. Own Pub/Sub topic suffix.
+  paper:
+    description: "Live data, simulated fills (matching engine), real risk + position."
+    cloud_mock_mode: false
+    mock_state_mode: interactive
+    auth_disabled: false
+    vite_mock_api: false
+    vite_skip_auth: false
+    chaos_allowed: false
+    client_isolation_required: true
+    storage_namespace: "paper/{client_id}/"
+    allow_real_venue_calls: false
+    note: "Staging-equivalent for strategy validation without real fills."
+  mock-live:
+    description: "All services live-wired but CLOUD_MOCK_MODE=true; sample data, no real cloud."
+    cloud_mock_mode: true
+    mock_state_mode: interactive
+    auth_disabled: true
+    vite_mock_api: true
+    vite_skip_auth: true
+    chaos_allowed: true
+    client_isolation_required: false
+    storage_namespace: "mock/{run_id}/"
+    allow_real_venue_calls: false
+    note: "Local dev / UAT. Preferred profile for Tier-2 local fleet."
+  staging:
+    description: "Real cloud, real services, staging credentials, real (sandbox) venues."
+    cloud_mock_mode: false
+    mock_state_mode: interactive
+    auth_disabled: false
+    vite_mock_api: false
+    vite_skip_auth: false
+    chaos_allowed: true
+    client_isolation_required: true
+    storage_namespace: "staging/"
+    allow_real_venue_calls: true
+    note: "Chaos ALLOWED (prod is the only profile that forbids chaos)."
+  prod:
+    description: "Production. Chaos FORBIDDEN. Full auth. Real cloud. Real venues."
+    cloud_mock_mode: false
+    mock_state_mode: interactive
+    auth_disabled: false
+    vite_mock_api: false
+    vite_skip_auth: false
+    chaos_allowed: false
+    client_isolation_required: true
+    storage_namespace: "prod/"
+    allow_real_venue_calls: true
+    note: "The only profile where ChaosController must be no-op."
+
+# ---------------------------------------------------------------------------
+# Chaos hooks — enumerates injection points consumed by UTL ChaosController
+# ---------------------------------------------------------------------------
+# Every point listed here MUST have a corresponding hook in the implementing
+# library (UCI / UAC / execution-service / UTL) or be explicitly marked planned.
+# deployment-api validates ChaosInjectionSpec.point against this list.
+# ---------------------------------------------------------------------------
+chaos_hooks:
+  - point: VENUE_LATENCY
+    target_boundary: execution-service venue adapter
+    hook_location: execution_service.adapters.venue_adapter_base
+    parameters: [delay_ms, jitter_ms, venue]
+    status: planned
+  - point: RPC_TIMEOUT
+    target_boundary: UCI cloud SDK wrappers
+    hook_location: unified_cloud_interface.clients
+    parameters: [timeout_ms, failure_rate, sdk]
+    status: planned
+  - point: RECON_MISMATCH
+    target_boundary: position-balance-monitor-service reconciler
+    hook_location: position_balance_monitor_service.recon
+    parameters: [field, delta, probability]
+    status: planned
+  - point: PRICE_SHOCK
+    target_boundary: market-tick-data-service live feed
+    hook_location: market_tick_data_service.market_interface.feed
+    parameters: [instrument, pct_move, duration_s]
+    status: planned
+  - point: INSTRUMENT_DELIST
+    target_boundary: instruments-service publisher
+    hook_location: instruments_service.publisher
+    parameters: [symbol, at_ts]
+    status: planned
+  - point: CONFIG_FLIP
+    target_boundary: UCI config reloaders
+    hook_location: unified_trading_library.config_reloader
+    parameters: [key, value, at_ts]
+    status: planned
+  - point: KILL_SWITCH_FIRE
+    target_boundary: UTL KillSwitchBus
+    hook_location: unified_trading_library.kill_switch
+    parameters: [scope, client_id, venue, strategy_id]
+    status: planned
+  - point: COMPONENT_FAILURE
+    target_boundary: ServiceBootstrap lifecycle
+    hook_location: unified_trading_library.service_runtime
+    parameters: [service, duration_s, at_ts]
+    status: planned
 
 # ---------------------------------------------------------------------------
 # Complete service data flows (producer → consumer)

@@ -824,3 +824,32 @@ stack starts correctly regardless of launch order or startup time.
 
 **Implication:** The system is safe to start in any order. Downstream services wait indefinitely via PubSub subscription
 until upstream data arrives. No hardcoded sleep or startup timeout required.
+
+---
+
+## 23. Multi-Tenant Isolation, SLA Tiers, and Runtime Profiles (v7)
+
+runtime-topology.yaml v7 introduces four new top-level sections that control how clients share (or don't share)
+services, how SLAs map to costs, how deployments declare their runtime shape with one axis, and where chaos can be
+injected.
+
+**Per-service isolation policy** — each service declares `{default, allowed, reason}`. Clients on higher SLA tiers can
+override within `allowed`. Execution-service is `isolated` only (per-client venue keys). Position/risk/pnl/alerting
+default `shared` but allow `isolated` for premium. L1-L4 always shared.
+
+**SLA tiers** — basic (1.0×, shared only), standard (2.5×, mandates isolated execution), premium (6.0×, mandates
+isolated execution + strategy + PBM + risk). `min_isolated_services` forces isolation regardless of the service's
+default.
+
+**Runtime profiles** — one axis collapses 5 legacy env vars (`CLOUD_MOCK_MODE`, `MOCK_STATE_MODE`, `DISABLE_AUTH`,
+`VITE_MOCK_API`, `VITE_SKIP_AUTH`). Profiles: `backtest`, `paper`, `mock-live`, `staging`, `prod`. Only `prod` forbids
+chaos; every other profile permits it. Each profile has its own storage namespace so backtest writes never collide with
+live.
+
+**Chaos hooks** — 8 named injection points (venue_latency, rpc_timeout, recon_mismatch, price_shock, instrument_delist,
+config_flip, kill_switch_fire, component_failure) with explicit `hook_location` pointers to the implementing code. UTL
+`ChaosController` reads active injections and applies them at these boundaries (no-op in prod).
+
+**SSOT:** [client-isolation-sla-and-runtime-profiles.md](./client-isolation-sla-and-runtime-profiles.md). UAC schemas:
+`unified_api_contracts.internal.domain.deployment_service.isolation`. UTL readers:
+`unified_trading_library.topology.topology_reader.{get_isolation_policy, resolve_deployment, get_sla_tier_spec, get_runtime_profile_spec, list_chaos_hooks}`.

@@ -150,3 +150,29 @@ deploy-shards cluster status --cluster cefi
 | CLI commands                  | `deployment-service/deployment_service/cli/commands/cluster.py`      |
 | API routes                    | `deployment-service/deployment_service/api/routes/orchestration.py`  |
 | Runtime topology              | `deployment-service/configs/runtime-topology.yaml` (symlink from PM) |
+
+---
+
+## Runtime Profiles (v7) — single axis for deployment-api
+
+Tiers (T0-T6) describe **topology** — what processes are in the call graph. Runtime profiles describe **mode
+composition** — which env vars are set. They are orthogonal: any tier can run any profile.
+
+Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STATE_MODE`, `DISABLE_AUTH`,
+`VITE_MOCK_API`, `VITE_SKIP_AUTH`. v7 collapses them into one `runtime_profile` axis consumed by deployment-api.
+
+| Profile     | Use case                               | cloud_mock | auth_disabled | chaos_allowed | real venues   |
+| ----------- | -------------------------------------- | ---------- | ------------- | ------------- | ------------- |
+| `backtest`  | Historical replay with simulated fills | false      | true          | **yes**       | no            |
+| `paper`     | Live data + simulated fills            | false      | false         | no            | no            |
+| `mock-live` | Local dev / Tier-2 full fleet in mock  | **true**   | true          | yes           | no            |
+| `staging`   | Real cloud + sandbox venues            | false      | false         | yes           | yes (sandbox) |
+| `prod`      | Production                             | false      | false         | **no**        | yes           |
+
+**Key invariant:** `chaos_allowed=false` ONLY in `prod`. Every other profile can be chaos-tested.
+
+**Storage namespace** isolates profiles (`backtest/<run_id>/`, `paper/<client_id>/`, `mock/<run_id>/`, `staging/`,
+`prod/`) so backtest writes never collide with live.
+
+**SSOT:** `unified-trading-pm/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`. Schemas:
+`unified_api_contracts.internal.domain.deployment_service.RuntimeProfile` / `RuntimeProfileSpec`.

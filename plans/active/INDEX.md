@@ -56,6 +56,14 @@ examples for testing any DeFi strategy
 - fold_uei_into_utl_2026_04_17.plan.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate
   of both), migrate 30+ consumers, archive UEI repo
 
+### Deployment Topology & Client Isolation
+
+- deployment_topology_and_client_isolation_2026_04_17.plan.md — Per-service isolation policy (shared vs isolated), SLA
+  tiers (basic/standard/premium) with cost passthrough, runtime profiles (backtest/paper/mock-live/staging/prod)
+  collapsing 5 mode env vars, chaos + kill-switch primitives. runtime-topology.yaml v6→v7, UAC schemas, UTL readers,
+  deployment-service/api/ui materialisation, downstream service wiring. 13 repos. Phase 1 (PM+UAC+UTL+codex) SSOT
+  complete; Phases 2-8 scheduled.
+
 ---
 
 ## How to Use This Index
