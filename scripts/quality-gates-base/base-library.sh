@@ -161,10 +161,10 @@ if [ "$RUN_TESTS" = true ]; then
         _HAS_INTEGRATION=true
 
     if [ "$_HAS_INTEGRATION" = true ]; then
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
     else
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
     fi
     log_success "Tests PASSED"

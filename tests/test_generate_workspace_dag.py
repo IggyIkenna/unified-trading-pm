@@ -144,7 +144,7 @@ class TestLayoutRows:
 
     def test_entries_are_layout_entries(self) -> None:
         """Each entry should be a LayoutEntry with x and width set."""
-        repos = [RepoEntry("a", "0.1.0", "lib"), RepoEntry("b", "0.2.0", "svc")]
+        repos = [RepoEntry("a", "0.1.0", "lib", "PASSING"), RepoEntry("b", "0.2.0", "svc", "PASSING")]
         rows = layout_rows(repos)
         for row in rows:
             for entry in row:
@@ -154,7 +154,7 @@ class TestLayoutRows:
 
     def test_wraps_to_next_row(self) -> None:
         """Many repos should wrap to multiple rows."""
-        repos = [RepoEntry(f"repo-{i:03d}", "0.1.0", "lib") for i in range(30)]
+        repos = [RepoEntry(f"repo-{i:03d}", "0.1.0", "lib", "PASSING") for i in range(30)]
         rows = layout_rows(repos)
         assert len(rows) > 1
         total = sum(len(r) for r in rows)

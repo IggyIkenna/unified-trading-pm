@@ -15,7 +15,7 @@ repos:
   - deployment-service
   - deployment-api
   - unified-trading-pm
-code_readiness: C1
+code_readiness: C4
 deployment_readiness: D0
 business_readiness: B1
 ---
@@ -157,21 +157,44 @@ per-league, not all-league.
 **Success criteria:** Data status page shows accurate sports coverage. No false missing-data alerts. Denominators match
 actual data availability.
 
+### 4C: Data Status Page Fixes (from Phase 4B audit)
+
+- [ ] [AGENT] P1. Add provider-specific start dates to data status denominator — SFI xG only from 2024-03-15, don't show
+      pre-2024 dates as "missing". Use `get_venue_data_type_start_date()` pattern from CeFi for sports entities in
+      `deployment-api/deployment_api/services/data_status_service.py`
+- [ ] [AGENT] P2. Fix UI label: show "fixtures" not "dates" for sports entity counts. Add `unit` field to
+      `TurboLeagueStatus` type in `deployment-ui/src/api/client.ts`
+- [ ] [AGENT] P2. Add N/A indicator for uncovered leagues — when a league has FIXTURES but no coverage for a given
+      entity (e.g., J-League has no Understat xG), show "N/A" instead of omitting entirely
+
 ---
 
-## Phase 5: Point-in-Time Safety [SEQUENTIAL after Phase 1]
+## Phase 5: System-Wide Feature Timestamp PIT Validation [ALL CATEGORIES]
 
-- [ ] [AGENT] P0. FootyStats T-24h PIT gate: odds only available ~2-4h pre-match, NOT at T-24h. Features at T-24h must
-      exclude FootyStats odds. Implement in FSS using same pattern as `_apply_ht_odds_pit_gate()`
-- [ ] [AGENT] P0. Tag FootyStats odds with `available_from` timestamp (kickoff_utc minus ~4h buffer) in the parquet
-- [ ] [AGENT] P1. Validate each feature horizon uses only data available at that time:
-  - T-24h: Odds API only (has actual T-24h market snapshots)
-  - T-12h/T-6h: Odds API + partial FootyStats potentials (some posted early)
-  - T-0 (pre-match): FootyStats odds + potentials + Odds API closing
-  - HT (halftime): SFI progressive (in-play odds, xG, stats at HT whistle)
-  - Post-match: All providers (full match stats from everyone)
+This is NOT sports-specific — applies to CeFi, DeFi, TradFi, and Sports equally. Every feature must carry a source data
+timestamp. The feature pipeline must validate that no feature uses data that didn't exist at the feature's evaluation
+time.
 
-**Success criteria:** No future information leakage at any feature horizon. T-24h features contain zero FootyStats odds.
+- [ ] [AGENT] P0. Audit: verify all data sources carry `available_from` or equivalent timestamp in their parquets. For
+      sports: FootyStats has `kickoff_utc` (data published ~2-4h pre-match), SFI progressive has `timer` (30s
+      resolution), Odds API has per-snapshot timestamps. For CeFi/DeFi: candle close times. For TradFi: market close
+      times.
+- [ ] [AGENT] P0. UTL/FSS: implement system-wide PIT validation that rejects any feature row where
+      source_data_timestamp > feature_evaluation_timestamp. This should be a validation step in the feature pipeline
+      base class (UTL `feature_service_base/`), not per-provider logic.
+- [ ] [AGENT] P1. Add `data_available_at` column to FootyStats odds/predictions parquets — derived from `kickoff_utc`
+      minus publication lead time (~4h for major leagues, ~2h for minor)
+- [ ] [AGENT] P1. Add `data_available_at` to SFI progressive — each row already has timer-derived wall clock time
+- [ ] [AGENT] P1. Validate across all feature horizons for sports:
+  - T-24h: historical form, league position, H2H, Odds API T-24h snapshots
+  - T-6h/T-4h/T-2h: above + FootyStats potentials (if published)
+  - T-0 (pre-match): above + FootyStats odds + Odds API closing
+  - HT: above + SFI progressive at halftime
+  - Post-match: all providers
+- [ ] [AGENT] P2. Equivalent validation for CeFi features (candle features can't use future candles), DeFi (block
+      timestamps), TradFi (market hours)
+
+**Success criteria:** System-wide PIT validation in feature pipeline base. No lookahead bias possible in any category.
 
 ---
 

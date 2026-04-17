@@ -203,7 +203,7 @@ if [ "$RUN_TESTS" = true ]; then
     # 25% of logical CPUs, minimum 1. Works on Linux, macOS (Intel + Apple Silicon), ARM.
     # PYTEST_WORKERS env var overrides when set (e.g. CI throttling or debugging).
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
-    PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=60 -q -r a --tb=short --no-header"
+    PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
     # RUN_INTEGRATION=true: include tests/integration/ when the directory exists.
     # Repos without tests/integration/ run unit tests only — no failure, no skip.
     # Integration tests are library contract tests (no real GCS/network calls).
@@ -214,14 +214,14 @@ if [ "$RUN_TESTS" = true ]; then
         _HAS_INTEGRATION=true
 
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
         # Remind: when RUN_INTEGRATION=true but no integration tests exist yet, nudge author.
         if [ "$RUN_INTEGRATION" = "true" ] && [ "$_HAS_INTEGRATION" = false ] && [ "$QUICK_MODE" != true ]; then
             log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
         fi
     else
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
     fi
     log_ok "Tests PASSED"

@@ -24,12 +24,12 @@
       "api_module": "market_data_api"
     },
     "user-management": {
-      "api": "auth-api",
-      "api_port": 8200,
-      "api_module": "auth_api",
+      "api": null,
+      "api_port": null,
+      "api_module": null,
       "ui": "unified-trading-system-ui",
       "ui_port": 3000,
-      "$note": "User lifecycle management merged into auth-api (provisioning routes) and unified-trading-system-ui (admin pages). Standalone user-management-ui archived."
+      "$note": "ARCHIVED: auth-api removed. Auth is Firebase-based (VITE_SKIP_AUTH in mock, Firebase OAuth in real). User management routes in unified-trading-api."
     },
     "unified-trading": {
       "ui": "unified-trading-system-ui",
@@ -37,15 +37,15 @@
       "api": "unified-trading-api",
       "api_port": 8030,
       "api_module": "unified_trading_api",
-      "$note": "Canonical UI + consolidated domain API (three-API model with auth-api and deployment-api). Legacy split UIs, odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api, and related APIs moved to workspace-root archive/."
+      "$note": "Canonical UI + consolidated domain API (two-API model with deployment-api). Auth is Firebase, not a separate service. Legacy split UIs archived."
     },
     "auth": {
       "ui": null,
       "ui_port": null,
-      "api": "auth-api",
-      "api_port": 8200,
-      "api_module": "auth_api",
-      "$note": "Authentication service \u2014 JWT issuance, persona resolution, OAuth token exchange. No dedicated UI; auth flows handled by each UI's login page."
+      "api": null,
+      "api_port": null,
+      "api_module": null,
+      "$note": "ARCHIVED: auth-api removed. Authentication handled by Firebase. DISABLE_AUTH=true in mock mode, Firebase JWT validation in real mode."
     }
   },
   "service_workers": {
