@@ -234,9 +234,14 @@ Commit: `unified-api-contracts@4bc83bc` on `live-defi-rollout`.
 - [x] [CODE] P1. Emit v1 configs; retire legacy naming — same commit. `load_legacy_strategies_into_registries()`
       deterministically produces a populated `StrategyInstanceRegistry` + `ConfigRegistry` with content-hashed v1 slots.
       Determinism test proves two loads produce identical content hashes.
-- [ ] [CODE] P2. Build remaining strategy instances to fill target universe (~240-250 v1, ceiling ~300-350) — FORWARD
-      WORK, in progress. Target-universe catalog (separate from legacy migration) being assembled per archetype × venue
-      × instrument × timeframe × share-class matrix grounded in codex archetype docs + UAC `KNOWN_VENUE_TOKENS`.
+- [x] [CODE] P2. Build remaining strategy instances to fill target universe (~240-250 v1, ceiling ~300-350) —
+      `strategy-service@62721e7`. New `engine/strategies/v2/target_universe/` sub-package ships 240 `TargetInstanceSpec`
+      rows covering all 18 archetypes, disjoint from legacy migration by construction. Combined total = 298 (58 legacy +
+      240 target). `load_combined_instance_catalog()` is the single SSOT for "what strategies does the firm run?" Every
+      row anchored to its archetype's "Supported venues / instruments" table in
+      `codex/09-strategy/architecture-v2/archetypes/<archetype>.md`. 19 unit tests enforce slot-label parse fidelity,
+      intra-catalog uniqueness, legacy disjointness, archetype coverage, no-Kraken regression, and deterministic
+      content-hashing. QG green 59s.
 
 ## Success criteria
 
