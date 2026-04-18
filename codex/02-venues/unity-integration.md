@@ -60,20 +60,29 @@ Unity supplies a Java Feed Connector (binary) for protocol translation. Our arch
 
 ## Child books (10)
 
-| #   | Child book         | Commission | Commission type                 | Status                                                |
-| --- | ------------------ | ---------- | ------------------------------- | ----------------------------------------------------- |
-| 1   | PINNACLE_VIA_UNITY | 0.4%       | Flat                            | Confirmed                                             |
-| 2   | VX                 | 0.2%       | Flat                            | Confirmed — cheapest, preferred                       |
-| 3   | SHARPBET           | 0.2%       | Flat                            | Confirmed — cheapest, preferred                       |
-| 4   | BETFAIR_VIA_UNITY  | 0.5%       | Exchange commission on winnings | Confirmed                                             |
-| 5   | BROKER3            | TBD        | TBD                             | Confirmed existence; commission per commercial        |
-| 6   | BROKER4            | TBD        | TBD                             | Confirmed existence                                   |
-| 7   | BROKER5            | 3.0%       | Flat                            | Confirmed — avoid unless spread justifies             |
-| 8   | IBCBET             | 1.5%       | Flat                            | Confirmed                                             |
-| 9   | (TBD)              | ?          | ?                               | Pending from quant-portal.olesportsresearch.com/unity |
-| 10  | (TBD)              | ?          | ?                               | Pending                                               |
+Canonical registry: `unified_api_contracts.internal.UNITY_CHILD_BOOKS` (pulled
+from quant-portal.olesportsresearch.com/unity 2026-04-17). All books commissioned
+as **COMMISSION_ON_WIN** (charged on winning-bet payouts only). CROWN and SBO
+are commission-free per Unity pricing.
 
-**TBDs:** Pull final list from https://quant-portal.olesportsresearch.com/unity (user-assisted; see plan).
+| #   | Child book | Commission | Commission type   | Sports    | Notes                                |
+| --- | ---------- | ---------- | ----------------- | --------- | ------------------------------------ |
+| 1   | VX         | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first            |
+| 2   | SHARPBET   | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first            |
+| 3   | 3ET        | 0.5%       | COMMISSION_ON_WIN | SOC/TEN/BKT |                                      |
+| 4   | BETDEX     | 1.6%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Decentralized betting exchange       |
+| 5   | MATCHBOOK  | 2.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)                 |
+| 6   | IBC        | 2.5%       | COMMISSION_ON_WIN | SOC/BKT   | Asian — IBCBet handicap specialist   |
+| 7   | BETFAIR    | 2.8%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)                 |
+| 8   | BROKER5    | 3.0%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Avoid unless spread justifies        |
+| 9   | CROWN      | —          | Commission-free   | SOC/BKT   | Asian handicap specialist            |
+| 10  | SBO        | —          | Commission-free   | SOC/BKT   | Asian — SBOBet handicap specialist   |
+
+Sport legend: SOC = Soccer, TEN = Tennis, BKT = Basketball.
+
+Asian books (CROWN, SBO, IBC — marked `*` on the portal) are soccer/basketball
+only; they do not support tennis. Exchanges (BETDEX, MATCHBOOK, BETFAIR) charge
+commission on winning-bet payouts, consistent with exchange convention.
 
 ## Sports enabled (all 3)
 
@@ -90,17 +99,41 @@ internal accounts. Strategies routing via Unity default to `share_class: USD`.
 
 ## Commercial terms
 
-### Deposit
+Canonical registry: `unified_api_contracts.internal.UNITY_COMMERCIAL_TERMS`.
 
-- **$10,800 bond** at onboarding
-- **Refundable at $5.3M cumulative volume** — turnover-linked refund trigger
-- **1× rollover requirement** on deposits (must bet through the deposit once before withdrawal)
+### Connection fee + free integration
 
-### Subscription
+- One-off **connection fee** (non-refundable) buys demo account credentials +
+  support + free 2-month integration period:
+  - USD 550 · EUR 500 · GBP 450 · CNY 4,000
+- **2 months** of free API access from demo account creation, then monthly
+  subscription kicks in (unless turnover waiver is met).
+- If production cutover happens on or before the 15th of a month, 50% of the
+  month's subscription is charged AND the turnover waiver requirement is halved
+  for that month (prorated billing rule).
 
-- **$2,600/month** base fee
-- **Waived at $260,000/month turnover** — covers operational cost at volume
-- Tracked per calendar month; subscription status resets monthly
+### Deposit (production account)
+
+- **USD 10,800 bond** at production onboarding
+- **Refundable at USD 5,300,000 lifetime effective turnover**
+- **1× rollover** on deposits (must bet through the deposit once before withdrawal)
+
+### Monthly subscription + turnover waiver
+
+Billing currency is per-client; Unity supports four:
+
+| Currency | Subscription / mo | Turnover waiver / mo (effective) |
+| -------- | ----------------- | -------------------------------- |
+| USD      | 2,600             | 260,000                          |
+| EUR      | 2,500             | 250,000                          |
+| GBP      | 2,200             | 220,000                          |
+| CNY      | 20,000            | 2,000,000                        |
+
+**Effective turnover** = absolute win + absolute loss (not gross volume).
+Subscription state is reviewed around the 2nd of each calendar month — prior
+month's fee is refunded if waiver was met, retained toward the new month
+otherwise. If balance is insufficient to cover the fee, Unity notifies before
+debiting.
 
 ### Monitoring
 
