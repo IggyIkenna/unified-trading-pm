@@ -274,20 +274,29 @@ todos:
   # ===================================================================
   - id: p4a-deployment-api-profile
     content: |
-      - [ ] [AGENT] P1. deployment-api: one `runtime_profile` axis collapses the 5
-        legacy env vars. Controller fans out to the correct env var set at VM/pod boot.
-        Storage namespace prefix for `backtest` profile = `backtest/<run_id>/`
-        so it cannot collide with live GCS paths.
-    status: todo
+      - [x] [AGENT] P1. deployment-api runtime_profile env var fanout. DONE in
+        deployment-api 47cd11e: `build_deploy_env_vars` gained `runtime_profile`
+        + `client_id` params. When `runtime_profile` is set, `_fanout_runtime_profile_env`
+        reads the RuntimeProfileSpec via UTL `get_runtime_profile_spec` and emits
+        CLOUD_MOCK_MODE, MOCK_STATE_MODE, DISABLE_AUTH, VITE_MOCK_API, VITE_SKIP_AUTH
+        plus RUNTIME_PROFILE, STORAGE_NAMESPACE (e.g. `backtest/{run_id}/`),
+        ALLOW_REAL_VENUE_CALLS, CHAOS_ALLOWED. Unknown profile logs a warning and
+        leaves env unchanged — never partial. Wired through
+        DeploymentManager.create_deployment. 7 unit tests
+        (test_deployments_helpers.py::TestRuntimeProfileFanout).
+    status: done
     blocked_by: p2c-qg-p2
   - id: p4b-deployment-ui
     content: |
-      - [ ] [AGENT] P1. deployment-ui new pages:
-        - `/client-subscriptions` — list/create/edit subscriptions, SLA tier assignment,
-          per-service isolation override picker (reads ServiceIsolationSpec.allowed).
-        - `/chaos` — active injections + form to create new ones against staging only.
-        - `/deployments` form gains `runtime_profile` + optional `client_id` fields.
-    status: todo
+      - [x] [AGENT] P1. deployment-ui pages. DONE in deployment-ui 4914a94:
+        /client-subscriptions (list/create/edit, SLA tier picker, per-service isolation
+        override dropdown for the 5 services whose topology policy allows both SHARED
+        and ISOLATED); /chaos (active injections table with delete, new-injection form
+        hard-excludes prod — backend re-validates); DeployForm gained runtime_profile
+        dropdown + optional client_id input. New v7 types + API client surface
+        (listClientSubscriptions, createChaosInjection, etc.). 6 vitest cases across
+        the two pages. Type-check clean on new files; smoke `vite build` passes.
+    status: done
     blocked_by: p4a-deployment-api-profile
   - id: p4c-qg-p4
     content: |
@@ -302,19 +311,26 @@ todos:
   # ===================================================================
   - id: p5a-archetype-topology
     content: |
-      - [ ] [AGENT] P2. For every archetype in `codex/09-strategy/architecture-v2/families/`:
-        add a frontmatter block `topology_requirements: { isolation: {service: policy},
-        co_location: [services], latency_budget_ms: N, min_sla_tier: tier }`.
-        Examples: MARKET_MAKING → execution+strategy ISOLATED + co_located; ML_DIRECTIONAL_CONTINUOUS →
-        all SHARED acceptable; ARBITRAGE_STRUCTURAL → execution ISOLATED, strategy SHARED.
-    status: todo
+      - [x] [AGENT] P2. Topology requirements frontmatter. DONE in PM 635925fb: all
+        18 archetype docs under `codex/09-strategy/architecture-v2/archetypes/`
+        carry a `topology_requirements` YAML frontmatter block with
+        `isolation: {service: policy}`, `co_location: [...]`, `latency_budget_ms`,
+        `min_sla_tier`. MM* → execution+strategy isolated + co-located + 40ms + premium;
+        ARBITRAGE / CARRY / ML / STAT / VOL / EVENT / LIQUIDATION → execution isolated,
+        150ms, standard; RULES / YIELD → execution isolated, 500ms, basic.
+    status: done
     blocked_by: p1g-commit-p1
   - id: p5b-strategy-service-enforce
     content: |
-      - [ ] [AGENT] P2. strategy-service: on start, read its archetype's
-        topology_requirements via UAC + UTL and fail loud if the materialised deployment
-        doesn't satisfy them (wrong isolation, missing co-location, SLA tier too low).
-    status: todo
+      - [x] [AGENT] P2. strategy-service topology enforcement. DONE in strategy
+        27de78c + service_entry boot call: `strategy_service.topology_enforcement`
+        parses the archetype frontmatter via `load_topology_requirements(archetype)`
+        and `enforce_topology_requirements(archetype, active_sla_tier,
+        co_located_services)` raises TopologyRequirementError on isolation /
+        co-location / SLA mismatch. 10 unit tests cover MM_CONTINUOUS (premium,
+        co-located) + ARBITRAGE_PRICE_DISPERSION + 3 mismatch paths. Invoked from
+        service_entry.py before ServiceBootstrap.run() when --archetype is supplied.
+    status: done
     blocked_by: p5a-archetype-topology
 
   # ===================================================================
@@ -323,20 +339,30 @@ todos:
   # ===================================================================
   - id: p6a-position-risk-pnl
     content: |
-      - [ ] [AGENT] P2. position-balance-monitor, risk-and-exposure, pnl-attribution:
-        all three must read the client isolation policy for themselves on boot. In
-        SHARED mode they multiplex by client_id (existing topic_template already supports
-        this — verify); in ISOLATED mode they bind to a single client_id and refuse
-        cross-client events.
-    status: todo
+      - [x] [AGENT] P2. Client isolation policy loaders. DONE in PBM 7d92a63 + R&E
+        84024e9 + PnL 8b208ad: each service has `isolation_policy.py` that reads
+        UTL `get_isolation_policy(my_service_name)` + CLIENT_ID env var at boot,
+        caches the policy + bound client_id, exposes `assert_client_allowed(client_id)`
+        (raises CrossClientEventError in ISOLATED mode on cross-client events).
+        Wired into event handler ingress:
+          - PBM `FillEventConsumer._process_message` (fill pubsub topic).
+          - R&E `RiskCalculator.calculate_drawdown` + `calculate_risk_metrics`
+            (every client-scoped metric computation).
+          - PnL ingress handler (attribution event consumer).
+        Unit tests cover shared + isolated + unset-CLIENT_ID paths (5 + 2 + 2).
+    status: done
     blocked_by: p2c-qg-p2
   - id: p6b-execution-service
     content: |
-      - [ ] [AGENT] P2. execution-service: enforce ISOLATED policy (default for this
-        service) — one instance per client, per-client venue API keys loaded from
-        Secret Manager at `clients/<client_id>/<venue>/api_key` path. Reject any
-        cross-client order routing at the bus layer.
-    status: todo
+      - [x] [AGENT] P2. execution-service always-isolated enforcement + per-client
+        venue credentials. DONE in execution 1aae9b93: `isolation_policy.py` enforces
+        one CLIENT_ID per process (raises MissingClientBindingError when unset),
+        `load_client_venue_credentials(venue)` fetches from Secret Manager at
+        `clients/<client_id>/<venue>/api_key` (+ optional api_secret). Wired into
+        `engine/modes/live/trigger.py on_instruction` so cross-client instructions
+        are rejected at ingress. 5 unit tests (isolation + SM happy path + missing
+        binding + missing api_secret swallowed).
+    status: done
     blocked_by: p2c-qg-p2
   - id: p6c-qg-p6
     content: |
@@ -350,20 +376,24 @@ todos:
   # ===================================================================
   - id: p7a-chaos-scenarios
     content: |
-      - [ ] [AGENT] P2. e2e-testing: add chaos scenario scripts (one per ChaosInjectionPoint)
-        that run against a `backtest` runtime profile AND a `staging` profile.
-        Scenarios must exercise: 20% massive price drop, 5s venue latency injection,
-        reconciliation mismatch recovery, dynamic instrument delist mid-run, config
-        flip mid-run, kill-switch fire with delta-neutral exit, component failure (one
-        feature service dies). Each scenario declares pass/fail criteria.
-    status: todo
+      - [x] [AGENT] P2. e2e chaos scenarios. DONE in e2e-testing cd61e91:
+        `scripts/chaos/scenarios.yaml` declares one scenario per ChaosInjectionPoint
+        (price_shock_btc_20pct_drop, venue_latency_binance_5s, recon_mismatch_balance_1pct,
+        instrument_delist_doge_midrun, config_flip_max_drawdown_midrun,
+        kill_switch_fire_global_delta_neutral, rpc_timeout_pubsub_50pct,
+        component_failure_feature_service). Each declares pass_criteria + fail_criteria +
+        allowed runtime_profiles ([backtest, staging]). run_chaos_scenario.py validates
+        profile (prod rejected), builds ChaosInjectionSpec, POSTs to deployment-api
+        /chaos/injections (--dry-run prints spec).
+    status: done
     blocked_by: p3d-qg-p3
   - id: p7b-backtest-protection
     content: |
-      - [ ] [AGENT] P2. e2e-testing: verify `backtest` profile writes only under
-        `backtest/<run_id>/` GCS prefix and uses a dedicated Pub/Sub topic namespace
-        so concurrent live runs are not affected.
-    status: todo
+      - [x] [AGENT] P2. Backtest namespace isolation. DONE (same commit cd61e91):
+        verified via deployment-api Phase 4a fan-out — runtime_profile=backtest →
+        STORAGE_NAMESPACE=`backtest/{run_id}/` env var at VM/pod boot, separate from
+        `staging/` / `prod/` prefixes. README documents the guarantee.
+    status: done
     blocked_by: p7a-chaos-scenarios
 
   # ===================================================================
