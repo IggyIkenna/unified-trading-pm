@@ -85,8 +85,9 @@ Phase 3 — Migration scripts                                                   
 Phase 4 — Manifest reconciliation (rebuild, populate v4 shard dims)              [SEQ after 3]
    │
    ▼
-Phase 5 — Bucket retirement (market-data-candles-*)                              [PARALLEL with 6]
-Phase 6 — T+1 scheduler terraform apply (data layer)                             [PARALLEL with 5]
+Phase 5  — Bucket retirement (market-data-candles-* empty shells)                [PARALLEL with 6]
+Phase 5b — MDPS schemas + strict writer + full-history backfill                  [SEQ after 4]
+Phase 6  — T+1 scheduler terraform apply (data layer)                            [PARALLEL with 5]
 Phase 7 — Backfill completion (ODDS_API hole + gaps)                             [SEQ after 6]
    │
    ▼
@@ -309,6 +310,11 @@ Phase 13 — Regression prevention (CI smoke + --force symmetry test)           
 
 ## Phase 5 — Bucket retirement [PARALLEL with 6]
 
+> **Scope clarification 2026-04-18**: Phase 5 only retires the **empty separate** `market-data-candles-*` buckets.
+> The **actual MDPS writer + backfill + schemas** live in **Phase 5b** (see below) — MDPS itself is NOT retired; the
+> candles it produces are co-located inside the MTDS tick buckets under `processed_candles/` (or `processed/` for
+> sports). Do Phase 5 + 5b in parallel; 5a can run without waiting on 5b.
+
 ### 5.1 market-data-candles-\* retirement (5 prod + 5 test, all empty)
 
 - [x] [AGENT] P0. Verified: 10/10 candles buckets = 0 objects / 0 bytes (2026-04-18).
@@ -340,6 +346,130 @@ Phase 13 — Regression prevention (CI smoke + --force symmetry test)           
       to `venue=AAVE_V3/chain=ETHEREUM` canonical form; delete `_migrated_{ts}` backups after 7 days.
 - [ ] [AGENT] P1. Identify any TradFi `instrument_type=future/data_type=options_chain/` legacy mislabelled paths from
       the Phase-3.2 TradFi migration; confirm cleaned.
+
+---
+
+## Phase 5b — MDPS schemas + symmetric sharding + backfill [NEW 2026-04-18, SEQ after 4]
+
+### Context (2026-04-18 audit)
+
+MDPS writes to `processed_candles/` **co-located inside MTDS tick buckets** (confirmed for cefi/defi/tradfi/prediction;
+sports uses `processed/`). Current state is bad:
+
+- **UAC has only 2 candle contracts**: `tradfi/future/ohlcv_1m` + `tradfi/equity/ohlcv_1m` (pass-through from Databento's
+  native 1m bars — not computed). **Zero contracts** for CeFi/DeFi/Sports/Prediction candles or for non-1m TradFi
+  timeframes.
+- **Writer validation absent**: MDPS does not go through `StreamingParquetWriter(strict=True)`.
+- **Coverage gap**: CeFi = 1 day, DeFi = 2 days, TradFi = 2 days, Prediction = 361 days, Sports = 1835 days. CeFi/DeFi/
+  TradFi are essentially empty.
+- **Manifest coverage broken**: the `timeframe` shard column exists in the v4 manifest (alongside
+  venue/chain/data_type/instrument_type) but 99.94% of MTDS-bucket manifest rows have `timeframe=""`. Only 16 rows
+  have `timeframe` populated (4 timeframes × 4 shards for 1 day).
+
+### Principles (MDPS symmetry with MTDS)
+
+1. **Same shard dimensions** as MTDS: `(category, venue, chain, instrument_type, data_type, timeframe)` + `league_id`
+   for sports. MDPS output = MTDS shape + `timeframe` dimension.
+2. **SchemaContract keyed by** `(category, instrument_type, source_data_type, timeframe)` — different source
+   `data_type`s produce different candle shapes:
+   - `trades` → OHLCV + trade_count + volume_base/quote + vwap
+   - `book_snapshot_5` → OHLCV of mid + spread/depth/imbalance means (microstructure)
+   - `derivative_ticker` → OHLCV + funding_rate/mark_price/index_price means
+   - `liquidations` → count + notional aggregates (not pure OHLCV)
+   - `dex_pool_swaps` → OHLCV of price + swap_count + volume (DeFi-specific)
+   - `odds` → OHLCV of decimal odds + quote_count (sports-specific)
+3. **Pass-through for TradFi**: Databento delivers 1m OHLCV natively. MDPS writes it through as
+   `tradfi/*/ohlcv_1m`. Higher timeframes (5m/15m/1h/4h/1d) are re-aggregated from the 1m bars.
+4. **Timeframes**: 15s, 1m, 5m, 15m, 1h, 4h, 1d. Per-category timeframe subset decided by strategy need
+   (CeFi ticks → all; TradFi → 1m+ only since that's native granularity; DeFi → 15s+; sports → 1m+; prediction → 1m+).
+5. **Strict writer gate**: `StreamingParquetWriter(strict=True)` on every MDPS write. No ad-hoc `to_parquet`.
+6. **Manifest emission**: every MDPS write also emits `MigrationManifestUpdate` / `ManifestWriter.write_with_zero_fill`
+   with the full shard tuple including `timeframe`.
+
+### 5b.1 UAC MDPS SchemaContracts [PARALLEL with Phase 1]
+
+- [ ] [AGENT] P0. Add base column-spec builders for candles in
+      `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`:
+      ```
+      _CANDLE_OHLCV_BASE = [_INSTRUMENT_ID, _VENUE, _CHAIN, _TS_EVENT,
+                            ColumnSpec("open", float64), ColumnSpec("high", float64),
+                            ColumnSpec("low", float64), ColumnSpec("close", float64),
+                            ColumnSpec("volume", float64, nullable=True),
+                            ColumnSpec("trade_count", int64, nullable=True),
+                            ColumnSpec("timeframe", string)]
+      _CANDLE_BOOK_5_EXT = [... + spread_bps_mean, depth_bid_mean, depth_ask_mean,
+                            imbalance_ratio_mean, bid_vol_0_mean, ask_vol_0_mean,
+                            tob_depth_ratio_mean, mid_price_mean]
+      _CANDLE_DERIV_EXT   = [... + funding_rate_mean, mark_price_mean, index_price_mean]
+      _CANDLE_LIQ_EXT     = [ColumnSpec("liquidation_count", int64), ColumnSpec("liquidation_notional_usd", float64)]
+      _CANDLE_DEX_EXT     = [... + swap_count, volume_quote_usd]
+      _CANDLE_ODDS_EXT    = [... + quote_count, source_count]
+      ```
+- [ ] [AGENT] P0. Register MDPS contracts for every (category × instrument_type × source_data_type × timeframe):
+      - **CeFi**:
+        - `cefi/perpetual/{trades,book_snapshot_5,derivative_ticker,liquidations}/ohlcv_{15s,1m,5m,15m,1h,4h,1d}`
+        - `cefi/spot_pair/{trades,book_snapshot_5}/ohlcv_{15s,1m,5m,15m,1h,4h,1d}`
+        - `cefi/options_chain/{trades}/ohlcv_{1m,15m,1h,1d}` (book not typically aggregated for options)
+        - `cefi/futures_chain/{trades}/ohlcv_{1m,15m,1h,1d}`
+      - **TradFi** (pass-through 1m + re-aggregated higher):
+        - `tradfi/future/{trades,ohlcv_1m}/ohlcv_{1m,5m,15m,1h,4h,1d}` (1m is pass-through from source ohlcv_1m)
+        - `tradfi/equity/{trades,ohlcv_1m}/ohlcv_{1m,5m,15m,1h,4h,1d}`
+        - `tradfi/options_chain/{trades}/ohlcv_{1m,15m,1h,1d}`
+        - `tradfi/index/{trades}/ohlcv_{1m,5m,15m,1h,1d}`
+      - **DeFi**:
+        - `defi/pool/{dex_pool_swaps,dex_pool_state}/ohlcv_{15s,1m,5m,15m,1h,1d}` (pool price/liquidity candles)
+        - `defi/a_token/{lending_indices,rate_indices,oracle_prices}/ohlcv_{1m,15m,1h,1d}`
+        - `defi/lst/{lst_rates,oracle_prices}/ohlcv_{1m,15m,1h,1d}`
+      - **Sports**:
+        - `sports/odds/{trades}/ohlcv_{1m,15m,1h}` (bookmaker odds time series per fixture)
+      - **Prediction**:
+        - `prediction/prediction_market/{trades}/ohlcv_{1m,15m,1h}`
+- [ ] [AGENT] P0. Venue overrides where MDPS aggregates differ per venue (mirror Phase 3.3 DeFi pattern:
+      `VENUE_CONTRACT_OVERRIDES[("cefi","BINANCE-FUTURES","perpetual","book_snapshot_5")]` etc only when columns truly
+      diverge).
+- [ ] [AGENT] P0. Unit tests per contract shape.
+
+### 5b.2 MDPS writer — strict validation + ManifestWriter
+
+- [ ] [AGENT] P0. `market-data-processing-service/market_data_processing_service/` sinks wired through
+      `StreamingParquetWriter(strict=True)` with SchemaContract pre-write validation.
+- [ ] [AGENT] P0. Every write emits `MigrationManifestUpdate` / `ManifestWriter.write_with_zero_fill` with full
+      `(category, venue, chain, instrument_type, data_type, timeframe, league_id)` shard tuple.
+- [ ] [AGENT] P0. Fail-loud on missing `instrument_id` / wrong dtype / empty venue per pre-write hook.
+- [ ] [AGENT] P1. `--force` behaviour: re-compute + overwrite day partition atomically; same input ticks → same output
+      candles (verified by Phase 13 symmetry test).
+- [ ] [AGENT] P1. Skip behaviour: if target parquet exists AND row count > 0 AND schema_version matches, skip.
+      Otherwise re-run (don't trust partial writes).
+
+### 5b.3 MDPS backfill — per category × venue × timeframe
+
+- [ ] [SCRIPT] P0. Launch MDPS backfill VMs per category (e2-standard-8, asia-northeast1-c, 32 workers).
+      Reads from `market-data-tick-{category}-*/raw_tick_data/by_date/` (canonical after Phase 3 migrations),
+      writes to `market-data-tick-{category}-*/processed_candles/by_date/day=/timeframe=/data_type=/venue=/.parquet`.
+- [ ] [SCRIPT] P0. Full-history scope per category:
+      - CeFi: 2020-01-01 → 2026-04-18 (~2300 days × N venues × N instruments × 7 timeframes)
+      - TradFi: 2020-01-01 → 2026-04-18 (Databento ohlcv_1m is pass-through; re-aggregate higher timeframes)
+      - DeFi: 2020-01-01 → 2026-04-18 (DEX pool price candles; ~2300 days × N chains × N pools)
+      - Sports: 2019-01-01 → 2026-04-18 (bookmaker odds candles per fixture)
+      - Prediction: 2025-03-14 → 2026-04-18 (Polymarket only)
+- [ ] [SCRIPT] P0. Parallel launch (5 VMs, one per category). Each emits lifecycle events
+      (`DEPLOYMENT_STARTED/PROGRESS/COMPLETED/FAILED`) via deployment_heartbeat.py.
+- [ ] [SCRIPT] P0. Monitor via deployment-ui /deployments/active; gate on rc=0 + row_errors=0.
+
+### 5b.4 MDPS manifest reconciliation
+
+- [ ] [SCRIPT] P0. After 5b.3 completes per category, rebuild manifest via
+      `rebuild_manifest_from_canonical_paths` on each MTDS bucket including `processed_candles/` subtree.
+- [ ] [AGENT] P0. Verify manifest shows `timeframe`-populated rows for every expected (day, venue, instrument_type,
+      data_type, timeframe) combo. Zero-fill for expected-empty days (e.g. weekends for TradFi).
+- [ ] [AGENT] P1. Per-timeframe instrument count matches tick manifest for same day (sanity).
+
+### 5b.5 Integration
+
+- [ ] [AGENT] P1. features-* services' MDPS consumers verify they read canonical `timeframe=` partition (not legacy
+      flat `processed_candles/` heuristics). Update path template if needed.
+- [ ] [AGENT] P1. ml-training / ml-inference MDPS consumers same audit.
+- [ ] [HUMAN] P1. Data Status page shows per-timeframe coverage per category (sub-tab under each service).
 
 ---
 
