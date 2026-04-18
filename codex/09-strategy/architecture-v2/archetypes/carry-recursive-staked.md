@@ -110,6 +110,13 @@ CARRY_RECURSIVE_STAKED@jito-kamino-sol-prod            (SOL on Kamino)
 | `defi/recursive-staked-basis.md`  | Direct match                   |
 | Code: `recursive_staked_basis.py` | → `CarryRecursiveStakedEngine` |
 
+## Not in this archetype
+
+- **Simple LST hold** (no leverage) — `YIELD_STAKING_SIMPLE`
+- **Non-recursive staked basis** (one stake + one perp hedge, no loops) — `CARRY_STAKED_BASIS`
+- **Pure lending rotation** (no staking leg) — `YIELD_ROTATION_LENDING`
+- **Liquidation snipe during cascade** — `LIQUIDATION_CAPTURE`
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

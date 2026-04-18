@@ -9,8 +9,8 @@ monitor and reconciliation health check, they form the autonomous recovery stack
 **Related docs:**
 
 - `autonomous-recovery-matrix.md` — decision tree for every failure scenario
-- `09-strategy/cross-cutting/margin-health.md` — health factor thresholds trigger progressive responses
-- `09-strategy/cross-cutting/cost-modeling.md` — unwind cost estimation used by exit playbooks
+- `09-strategy/architecture-v2/cross-cutting/risk-gates.md` — health factor thresholds trigger progressive responses
+- `04-architecture/execution-policy.md` — unwind cost estimation used by exit playbooks
 - `03-observability/alerting.md` — alert routing (Telegram, PagerDuty) for safety events
 
 ---
@@ -280,8 +280,8 @@ before any action."
 ## Related
 
 - `autonomous-recovery-matrix.md` — full decision tree for every failure scenario
-- `09-strategy/cross-cutting/margin-health.md` — health factor thresholds and progressive responses
-- `09-strategy/cross-cutting/cost-modeling.md` — unwind cost estimation for exit playbooks
+- `09-strategy/architecture-v2/cross-cutting/risk-gates.md` — health factor thresholds and progressive responses
+- `04-architecture/execution-policy.md` — unwind cost estimation for exit playbooks
 - `05-infrastructure/disaster-recovery.md` — infrastructure-level DR (RTO/RPO, rollback procedures)
 - `03-observability/alerting.md` — alert routing rules (Telegram, PagerDuty)
 - `03-observability/lifecycle-events.md` — mandatory event sequences during failures

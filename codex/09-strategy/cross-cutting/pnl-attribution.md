@@ -441,7 +441,7 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 | Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                      |
 | Funding rate features  | features-delta-one-service | `features-delta-one-service/`                             |
 | Options greeks         | features-options-service   | `features-options-service/`                               |
-| Cost factors           | See cost-modeling.md       | `codex/09-strategy/cross-cutting/cost-modeling.md`        |
+| Cost factors           | See execution-policy       | `codex/04-architecture/execution-policy.md`               |
 | PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
 | Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                   |
 | BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                |

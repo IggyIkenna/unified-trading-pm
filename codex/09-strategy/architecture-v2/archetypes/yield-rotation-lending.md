@@ -116,6 +116,13 @@ YIELD_ROTATION_LENDING@aave-ethereum-steth-prod               (stETH supply)
 | `defi/cross-chain-yield-arb.md`                                                                         | If alpha is sustained rate spread (not transient dispersion) → this archetype |
 | Code: `aave_lending.py`, `multi_chain_lending_yield.py`, `sol_lending_yield.py`, `btc_lending_yield.py` | All → `YieldRotationLendingEngine`                                            |
 
+## Not in this archetype
+
+- **Staking-only yields** (LST hold, no lending) — `YIELD_STAKING_SIMPLE`
+- **LST collateral used as basis** (staked token + perp hedge) — `CARRY_STAKED_BASIS`
+- **Flash-loan recursion** (borrow to amplify staked basis) — `CARRY_RECURSIVE_STAKED`
+- **Cross-protocol lending-rate arbitrage** (long one protocol, short another) — `ARBITRAGE_PRICE_DISPERSION`
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

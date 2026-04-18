@@ -97,6 +97,13 @@ YIELD_STAKING_SIMPLE@marinade-sol-prod
 No dedicated legacy doc. Simple staking was implicit in staked-basis strategies (stake + use LST as collateral). v2
 extracts pure staking as a first-class archetype for clients who want just the yield without the basis complexity.
 
+## Not in this archetype
+
+- **Recursive leverage loops** (flash-loan amplified) — `CARRY_RECURSIVE_STAKED`
+- **Staking paired with perp hedge** — `CARRY_STAKED_BASIS`
+- **Protocol rotation across lending venues** — `YIELD_ROTATION_LENDING`
+- **LP market making / active range management** — `MARKET_MAKING_CONTINUOUS` (AMM LP variant)
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

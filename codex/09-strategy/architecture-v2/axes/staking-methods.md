@@ -152,4 +152,5 @@ rules), or Confidence-scaled. Martingale and Roll-up are explicitly not supporte
 
 - Edge method drives stake magnitude input: [edge-methods.md](edge-methods.md)
 - Risk gates cap output size: [../cross-cutting/risk-gates.md](../cross-cutting/risk-gates.md)
-- Legacy sports staking: `09-strategy/sports/staking-methods.md` (preserved for reference)
+- Legacy sports staking (Kelly, fractional Kelly, flat-stake, level-stake, percentage-of-bankroll) was previously
+  documented separately under `09-strategy/sports/` and has been folded into this axis doc.

@@ -348,6 +348,6 @@ See `03-observability/coordination-events.md` for detailed wiring map. Summary:
 
 ## Cross-References
 
-- Strategy-specific data flow: see `09-strategy/cross-cutting/config-architecture.md`
+- Strategy-specific data flow: see `06-coding-standards/strategy-identity-versioning.md`
 - Batch-live symmetry for strategies: see `04-architecture/batch-live-symmetry.md`
 - Strategy data access rule: see cursor rule `strategy-data-access.mdc`

@@ -282,15 +282,57 @@ Before any strategy is considered migrated, check:
 
 ## 15. Legacy Code Deletion Schedule
 
-After Phase 9 migration is complete and validated:
+### Docs (DONE — 2026-04-18)
 
-- Legacy strategy classes in `strategy-service/engine/strategies/{cefi,defi,sports,tradfi}/` → retire (but keep git
-  history)
-- Legacy YAML configs in `strategy_service/configs/` → retire in favor of UAC StrategyConfig records
-- Legacy e2e-testing strategy configs → retire or convert to archetype integration tests
-- Legacy strategy-registry.md → archive with pointer to UAC-backed registry
+43 legacy docs archived to `codex/09-strategy/_archived_pre_v2/` with pointers to their v2 placement. See
+[`../_archived_pre_v2/README.md`](../_archived_pre_v2/README.md). Top-level `README.md` rewritten to point at v2.
 
-Estimated timeline: 2 weeks post-cutover, after 10 days of shadow deploy validation.
+### Code (BLOCKED — factory cutover is the gate)
+
+Legacy strategy code in `strategy-service/strategy_service/engine/strategies/{cefi,defi,sports,tradfi,...}/` is still
+**load-bearing**. The batch-dispatch factory `strategy_service/cli/handlers/batch_utils.create_strategy_instance()` maps
+62 legacy strategy-type strings (e.g. `"BTC_MARKET_MAKING"`, `"BASIS_TRADE"`, `"SPORTS_VALUE_BETTING"`) directly to the
+legacy classes. That factory is the hot path for every Group B strategy backtest + every live batch run — deleting the
+classes now would break production.
+
+**Deletion prerequisites (in order):**
+
+1. **Flip the factory to v2 engines.** `create_strategy_instance()` currently imports the legacy class and constructs
+   it. Replace with `V2EngineOrchestrator` lookup by `archetype_id` derived from a new `STRATEGY_TYPE_TO_SLOT_LABEL`
+   mapping that reuses the slot labels produced by `LegacyStrategyMapping` / `TARGET_UNIVERSE`. Every legacy type-string
+   must resolve to an archetype engine.
+2. **Shadow-promote each archetype per `ShadowDeploymentPolicy`.** The 18 archetype engines need to clear their 14- or
+   21-day shadow observation window with `PROMOTE` decisions before prod reads from v2 (see
+   [`../../04-architecture/shadow-deployment-pattern.md`](../../04-architecture/shadow-deployment-pattern.md)).
+3. **Cut over the factory dispatch** to v2 in production. One commit, all archetypes at once — partial cutover is
+   disallowed by the "archetype-wide promotion" rule in the shadow-deployment doc.
+4. **Validate.** Group B backtest + live batch runs produce identical instructions for ≥ 99% of historical candles
+   (migration validation rule #2 in § 13 above) across every migrated strategy.
+5. **Delete.** Only then is it safe to remove `strategy-service/engine/strategies/*.py` (non-v2 files) + the 10 legacy
+   sub-packages (`cross_exchange/`, `mean_reversion/`, `options_ml/`, `options_market_making/`, `prediction/`,
+   `prediction_arb/`, `rel_vol/`, `sports/`, `stat_arb/`, `tradfi_ml/`, `volatility/`).
+
+### Known load-bearing dependency chains (cannot delete mid-sequence)
+
+- `defi_base.py` is the base class for `defi_basis.py`, `btc_basis.py`, `sol_basis.py`, `l2_basis.py`,
+  `defi_staked_basis.py`, `sol_staked_basis.py`, `defi_recursive_basis.py`, and `active_defi_mm.py`. Delete together or
+  not at all.
+- `defi_enhancements.py` is imported by `defi_basis.py` (and transitively everything above).
+- `defi_amm_lp.py` is imported by `active_defi_mm.py`.
+- `base_strategy.py` is imported by `cefi_market_making.py` + all sports strategies.
+
+### Legacy YAML configs + e2e-testing configs
+
+- `strategy_service/configs/` → retire in favor of UAC `StrategyInstanceDefinition` + content-hashed `ConfigRegistry`
+  slots; deletion gated on the same factory cutover above.
+- `e2e-testing/configs/` → convert to archetype integration tests (the in-process roundtrip test at
+  `e2e-testing/tests/integration/test_architecture_v2_roundtrip.py` is the target shape).
+
+### Legacy audit metadata kept on purpose
+
+`LegacyStrategyMapping.legacy_module: str` (dotted path) is kept as audit provenance — it's never imported via
+`importlib`, only inspected by operators. Safe to keep indefinitely; useful as a "who did this strategy use to be?"
+index.
 
 ## Reference — Full Legacy Inventory
 

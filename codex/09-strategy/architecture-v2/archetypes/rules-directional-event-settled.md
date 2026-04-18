@@ -175,6 +175,13 @@ RULES_DIRECTIONAL_EVENT_SETTLED@unity-champions-league-rules-usd-prod
 No legacy docs. This is a new archetype formalization of sports rules-based betting that previously existed only as
 ad-hoc code or wasn't yet implemented.
 
+## Not in this archetype
+
+- **ML-predicted sports edges** (value betting from model probability) — `ML_DIRECTIONAL_EVENT_SETTLED`
+- **Sports market making** (passive back+lay inventory) — `MARKET_MAKING_EVENT_SETTLED`
+- **Cross-book arb** — `ARBITRAGE_PRICE_DISPERSION`
+- **Continuous-instrument rules** (crypto perps, equities) — `RULES_DIRECTIONAL_CONTINUOUS`
+
 ## See also
 
 - Family: [rules-directional.md](../families/rules-directional.md)

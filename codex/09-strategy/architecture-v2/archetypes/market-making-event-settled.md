@@ -139,6 +139,14 @@ MARKET_MAKING_EVENT_SETTLED@polymarket-binary-mm-usdc-prod     (future — needs
 | `sports/market-making.md`       | Direct match                       |
 | Code: `sports/market_making.py` | → `MarketMakingEventSettledEngine` |
 
+## Not in this archetype
+
+- **Continuous-market quoting** (crypto CLOB, options CLOB) — `MARKET_MAKING_CONTINUOUS`
+- **Directional sports bets** (one-sided placement on value or rule) — `ML_DIRECTIONAL_EVENT_SETTLED` or
+  `RULES_DIRECTIONAL_EVENT_SETTLED`
+- **Cross-book arbitrage** — `ARBITRAGE_PRICE_DISPERSION`
+- **CLV capture via odds drift** — `RULES_DIRECTIONAL_EVENT_SETTLED`
+
 ## See also
 
 - Family: [market-making.md](../families/market-making.md)

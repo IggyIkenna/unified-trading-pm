@@ -149,6 +149,15 @@ TRADFI_ML_DIRECTIONAL@ibkr-eurusd-5m-usd-prod
 | Code: `options_ml_delta_btc_deribit.py`, `options_ml_delta_spy_cboe.py`                                                      | Delta-expression of ML directional (options as delta-1)                                            |
 | Code: `options_ml_strike_btc_deribit.py`                                                                                     | Depends: if strike-selection is about directional view → here; if vol-driven → VOL_TRADING_OPTIONS |
 
+## Not in this archetype
+
+- **Event-settled ML** (sports value betting, prediction markets) — `ML_DIRECTIONAL_EVENT_SETTLED`
+- **Rule-based signals** (z-score, mean reversion) — `RULES_DIRECTIONAL_CONTINUOUS`
+- **Pair / basket relative value** — `STAT_ARB_PAIRS_FIXED` or `STAT_ARB_CROSS_SECTIONAL`
+- **Calendar-driven directional bets** (FOMC / CPI reaction) — `EVENT_DRIVEN`
+- **Funding-rate capture with delta-neutral hedging** — `CARRY_BASIS_PERP`
+- **Options delta-1 expressions where the alpha is vol, not direction** — `VOL_TRADING_OPTIONS`
+
 ## See also
 
 - Family: [ml-directional.md](../families/ml-directional.md)

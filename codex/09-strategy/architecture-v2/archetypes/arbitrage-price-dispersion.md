@@ -162,6 +162,16 @@ Funding-rate dispersion:
 | `defi/cross-chain-yield-arb.md`                                                                                          | If transient dispersion → here; if sustained rate spread → YIELD_ROTATION_LENDING     |
 | Code: `cross_exchange_btc.py`, `lending_protocol_arb.py`, `prediction_arb_btc.py`, `vol_surface_btc.py` (if hard no-arb) | → `ArbitragePriceDispersionEngine`                                                    |
 
+## Not in this archetype
+
+- **Funding-rate arbitrage between perp venues** (bidirectional funding capture) — `CARRY_BASIS_PERP` (cross-venue mode)
+- **Liquidation snipe during cascades** — `LIQUIDATION_CAPTURE`
+- **Cross-strategy capital rebalancing** (move capital to a better strategy) — portfolio-allocator service, not a
+  strategy
+- **ML-predicted momentum divergence** (model says A will outperform B) — `ML_DIRECTIONAL_CONTINUOUS` on one leg, not
+  structural arb
+- **Cointegrated pair trades** (z-score reversion) — `STAT_ARB_PAIRS_FIXED`
+
 ## See also
 
 - Family: [arbitrage-structural.md](../families/arbitrage-structural.md)

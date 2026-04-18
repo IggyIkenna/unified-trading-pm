@@ -151,6 +151,14 @@ RULES_DIRECTIONAL_CONTINUOUS@hyperliquid-eth-1h-usdt-prod
 | `cefi/mean-reversion.md`                                        | TA-based mean-rev rules (if ML-based, use ML_DIRECTIONAL_CONTINUOUS)               |
 | Code: `momentum.py`, `mean_reversion.py`, `commodity_regime.py` | Collapse into `RulesDirectionalContinuousEngine` with different rule_registry_refs |
 
+## Not in this archetype
+
+- **ML-driven signals** (even if the rule wraps a model output) — `ML_DIRECTIONAL_CONTINUOUS`
+- **Event-settled rule triggers** (sports, prediction markets) — `RULES_DIRECTIONAL_EVENT_SETTLED`
+- **Cointegrated pair z-score trades** — `STAT_ARB_PAIRS_FIXED` (different archetype so pair-specific risk gates fire)
+- **Basis-carry with delta-neutral hedge** — `CARRY_BASIS_PERP`
+- **Calendar-event reaction rules** (FOMC surprise direction) — `EVENT_DRIVEN`
+
 ## See also
 
 - Family: [rules-directional.md](../families/rules-directional.md)

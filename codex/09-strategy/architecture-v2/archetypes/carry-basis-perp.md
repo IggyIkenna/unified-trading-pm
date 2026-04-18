@@ -127,6 +127,15 @@ Multi-coin rotation:
 | `defi/ethena-benchmark.md`                                                     | Ethena's USDe is conceptually a staked-basis product; reference benchmark |
 | Code: `basis_trade.py`, `btc_basis.py`, `sol_basis.py`, `l2_basis.py`          | All → `CarryBasisPerpEngine`                                              |
 
+## Not in this archetype
+
+- **Dated-contract basis** (expiry-based arbitrage) — `CARRY_BASIS_DATED`
+- **LST collateral on the spot leg** (yield-bearing token + perp hedge) — `CARRY_STAKED_BASIS`
+- **Flash-loan leveraged loops on top of staked basis** — `CARRY_RECURSIVE_STAKED`
+- **Directional futures / perp trades** (no paired spot) — `ML_DIRECTIONAL_CONTINUOUS` or `RULES_DIRECTIONAL_CONTINUOUS`
+- **Cross-venue perp spread arbitrage** (funding-rate differential between two perp venues for the same asset) —
+  `ARBITRAGE_PRICE_DISPERSION`
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

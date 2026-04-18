@@ -112,6 +112,14 @@ CARRY_BASIS_DATED@deribit-btc-quarterly-usdt-prod   (BTC spot vs Deribit quarter
 No dedicated legacy doc. Crypto dated basis is rare (perp variant more common — see `CARRY_BASIS_PERP`). TradFi dated
 basis is a new codified archetype under v2.
 
+## Not in this archetype
+
+- **Perpetual funding carry** (funding-rate capture on perps) — `CARRY_BASIS_PERP`
+- **LST staked basis** (yield-bearing staking token vs perp hedge) — `CARRY_STAKED_BASIS`
+- **Calendar vol trades** (front vs back month expiry on options) — `VOL_TRADING_OPTIONS` (calendar expression)
+- **Directional futures bets** (long front-month without cash leg) — `ML_DIRECTIONAL_CONTINUOUS` or
+  `RULES_DIRECTIONAL_CONTINUOUS`
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

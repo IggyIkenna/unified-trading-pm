@@ -328,6 +328,16 @@ Hedged LP:
 | Code: `cefi_market_making.py` | → `MarketMakingContinuousEngine` (CLOB path)   |
 | Code: `active_defi_mm.py`     | → `MarketMakingContinuousEngine` (AMM LP path) |
 
+## Not in this archetype
+
+- **Event-settled market making** (sports exchanges, prediction markets) — `MARKET_MAKING_EVENT_SETTLED`
+- **Directional quoting with strong skew on signal** (if inventory management serves alpha, not the other way) —
+  `ML_DIRECTIONAL_CONTINUOUS` with quote expression
+- **Spread arbitrage / cross-venue SOR** — `ARBITRAGE_PRICE_DISPERSION`
+- **Pair-z-score trades around a reference spread** — `STAT_ARB_PAIRS_FIXED`
+- **Passive LP without active range management** (set-and-forget Uniswap V2) — `YIELD_STAKING_SIMPLE` (closer to passive
+  yield than MM)
+
 ## See also
 
 - Family: [market-making.md](../families/market-making.md)

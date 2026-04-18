@@ -246,8 +246,8 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 ## Related
 
 - `kill-switch-circuit-breaker.md` — detailed kill switch and circuit breaker mechanics
-- `09-strategy/cross-cutting/margin-health.md` — health factor thresholds
-- `09-strategy/cross-cutting/cost-modeling.md` — unwind cost estimation
+- `09-strategy/architecture-v2/cross-cutting/risk-gates.md` — health factor thresholds
+- `04-architecture/execution-policy.md` — unwind cost estimation
 - `05-infrastructure/disaster-recovery.md` — infrastructure DR (RTO/RPO, rollback)
 - `03-observability/alerting.md` — alert routing rules
 - `reconciliation-resolution.md` — reconciliation break resolution workflow

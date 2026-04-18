@@ -206,5 +206,5 @@ handler. Business logic lives in the service engine, shared by both modes — on
 
 ## Cross-References
 
-- Strategy config architecture: see `09-strategy/cross-cutting/config-architecture.md`
+- Strategy config architecture: see `06-coding-standards/strategy-identity-versioning.md`
 - Data flow map: see `04-architecture/data-flow-map.md`

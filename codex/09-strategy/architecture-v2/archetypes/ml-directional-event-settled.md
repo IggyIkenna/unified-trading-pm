@@ -151,6 +151,14 @@ ML_DIRECTIONAL_EVENT_SETTLED@polymarket-binary-usdc-prod            (prediction 
 | `sports/value-betting.md`                                                                                        | Generic base; this archetype covers all value-betting on event-settled markets |
 | Code: `ml_sports_strategy.py`, `halftime_ml.py`, `first_half_prediction.py`, `odds_drift.py`, `value_betting.py` | All collapse into `MLDirectionalEventSettledEngine`                            |
 
+## Not in this archetype
+
+- **Continuous-bar ML** (candle-by-candle directional) — `ML_DIRECTIONAL_CONTINUOUS`
+- **Sports market making** (passive quoting around reference odds) — `MARKET_MAKING_EVENT_SETTLED`
+- **Cross-book arbitrage** (simultaneous back+lay across venues for structural edge) — `ARBITRAGE_PRICE_DISPERSION`
+- **Rule-based sports staking** (fixed-stake or threshold-crossing rules) — `RULES_DIRECTIONAL_EVENT_SETTLED`
+- **Odds-drift CLV capture** where the rule is "drift exceeded X bps" — `RULES_DIRECTIONAL_EVENT_SETTLED`
+
 ## See also
 
 - Family: [ml-directional.md](../families/ml-directional.md)

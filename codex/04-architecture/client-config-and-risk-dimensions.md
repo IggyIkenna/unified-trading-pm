@@ -153,4 +153,4 @@ For demo mode, the pre-seeded client is:
 
 - `codex/04-architecture/share-class-architecture.md` — Share class P&L isolation
 - `codex/04-architecture/defi-risk-monitoring.md` — DeFi-specific risk monitoring
-- `codex/09-strategy/defi/reward-lifecycle.md` — Reward token risk (EIGEN/ETHFI M2M)
+- `codex/09-strategy/cross-cutting/reward-lifecycle.md` — Reward token risk (EIGEN/ETHFI M2M)

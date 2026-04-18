@@ -107,6 +107,6 @@ New services: add a row to the service readiness YAML under data availability re
 ## Related documents
 
 - `08-workflows/local-dev.md` — ports, `CLOUD_MOCK_MODE` in local tables (being aligned with `DATA_MODE`)
-- `09-strategy/cross-cutting/config-architecture.md` — strategy config vs execution boundaries
+- `06-coding-standards/strategy-identity-versioning.md` — strategy config vs execution boundaries
 - `06-coding-standards/integration-testing-layers.md` — Layer 3 scope
 - `04-architecture/manual-trade-booking.md` — `OperationalMode` usage

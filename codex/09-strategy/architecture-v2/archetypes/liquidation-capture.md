@@ -128,6 +128,13 @@ LIQUIDATION_CAPTURE@kamino-solana-prod
 
 No dedicated legacy doc; v2 formalizes this as an archetype under Arbitrage / Structural Edge.
 
+## Not in this archetype
+
+- **Cross-venue price arbitrage** (no cascade, just venue spread) — `ARBITRAGE_PRICE_DISPERSION`
+- **Lending-rate arbitrage** (long one protocol, short another) — `ARBITRAGE_PRICE_DISPERSION`
+- **Directional mean-reversion after a dump** (buy the dip on a rule) — `RULES_DIRECTIONAL_CONTINUOUS`
+- **Front-running MEV / sandwich attacks** — explicitly out of scope; MEV policies block this
+
 ## See also
 
 - Family: [arbitrage-structural.md](../families/arbitrage-structural.md)

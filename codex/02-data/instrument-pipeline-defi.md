@@ -207,6 +207,6 @@ RewardScheduleEntry(
 
 ## Related Docs
 
-- `codex/09-strategy/defi/reward-lifecycle.md` — EIGEN/ETHFI reward claim/sell lifecycle
+- `codex/09-strategy/cross-cutting/reward-lifecycle.md` — EIGEN/ETHFI reward claim/sell lifecycle
 - `codex/02-data/partitioning.md` — Hive partition schema for GCS
 - `codex/02-data/hive-schema-compatibility.md` — BigQuery external table compatibility

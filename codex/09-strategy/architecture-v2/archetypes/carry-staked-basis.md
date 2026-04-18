@@ -122,6 +122,13 @@ CARRY_STAKED_BASIS@marinade-kamino-drift-sol-prod
 | `defi/sol-staked-basis.md`                     | SOL variant                            |
 | Code: `staked_basis.py`, `sol_staked_basis.py` | Collapse into `CarryStakedBasisEngine` |
 
+## Not in this archetype
+
+- **Single LST passive hold** (no perp hedge) — `YIELD_STAKING_SIMPLE`
+- **Flash-loan amplified staked basis** (recursive leverage loops) — `CARRY_RECURSIVE_STAKED`
+- **Perp funding capture without LST collateral** (spot = raw asset) — `CARRY_BASIS_PERP`
+- **Lending the LST for extra yield without the perp hedge** — `YIELD_ROTATION_LENDING`
+
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)

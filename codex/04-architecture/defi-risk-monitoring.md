@@ -130,7 +130,7 @@ delta in base asset = account_equity / fx_rate (NOT zero).
 
 Drift > 2% triggers WARNING, > 5% triggers CRITICAL.
 
-See `codex/09-strategy/cross-cutting/share-classes.md` for full share class architecture.
+See `codex/09-strategy/architecture-v2/axes/share-class.md` for full share class architecture.
 
 ## Margin Currency Mismatch
 
