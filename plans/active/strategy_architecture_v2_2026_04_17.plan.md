@@ -89,86 +89,154 @@ Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,
 
 ## Outstanding architectural decisions (TBDs)
 
-- [ ] [TBD] Unity 10 child books — 8 confirmed with commissions, 2 pending from quant-portal.olesportsresearch.com/unity
-      (user-assisted)
+- [x] [TBD] Unity 10 child books — all 10 confirmed with real commissions from quant-portal on 2026-04-17. UAC
+      `UNITY_CHILD_BOOKS` now holds VX/SHARPBET (0.2% COMMISSION_ON_WIN), 3ET (0.5%), BETDEX (1.6%), MATCHBOOK (2.2%),
+      IBC (2.5%), BETFAIR (2.8%), BROKER5 (3.0%), CROWN + SBO commission-free. Retired placeholders guarded by
+      `test_get_by_id_returns_none_for_retired_placeholders`. Commits: UAC `9efce04`/`1a5a40b`/`652a301`, PM `2bd06bd7`.
 - [ ] [TBD] Exact Kelly fraction defaults per archetype
 - [ ] [TBD] Allocator cadence defaults per client size
 - [ ] [TBD] Shadow deployment pattern specifics for archetype upgrades
-- [ ] [TBD] Delta-neutral exit pathway when kill-switch fires on one venue but another eligible venue is alive
-      (confirmed: delta-neutral exit default; reduction only if DATA_STALE)
+- [x] [TBD] Delta-neutral exit pathway when kill-switch fires on one venue but another eligible venue is alive —
+      confirmed + shipped. Default is delta-neutral exit (cheapest); reductions-only on DATA_STALE; HUMAN_REQUIRED on
+      recon + exec dual failure. Codified in `risk-and-exposure-service@7f9a1df` `v2/kill_switch_rules.py`
+      (`KillSwitchRulesEngine`) + codex `04-architecture/kill-switch-circuit-breaker.md` + memory
+      `feedback_kill_switch_multi_venue_rules.md`.
 
 ## Phase 2 — UAC schema additions (LANDED)
 
 Commit: `unified-api-contracts@4bc83bc` on `live-defi-rollout`.
 
-- [x] [CODE] P1. Polymorphic StrategyInstruction (11 action variants + AccountInstruction) — `internal.architecture_v2.schemas`
-- [x] [CODE] P1. Archetype / Instance / Config tiers as typed registry — `StrategyInstanceIdentity` + `StrategyInstanceDefinition`
-- [x] [CODE] P1. Venue capability with haircuts, LTV, collateral, portfolio margin spec — `VenueCapabilityV2`, `LtvAndHaircut`, `CollateralRulesV2`, `MarginSpec`, `NettingRule`, `CommissionStructureV2`
-- [x] [CODE] P1. Compatibility matrix (archetype, venue-category, action, instrument-type) — `CompatibilityEntry` + `COMPATIBILITY_SEED`
-- [x] [CODE] P1. AllocationDirective schema (portfolio allocator → strategy equity) — `AllocationDirective` + `StrategyEquityDirective`
-- [x] [CODE] P1. Child venue schema (Unity child books) — `UnityChildVenue` + `UNITY_CHILD_BOOKS` (10: 8 confirmed + 2 TBD)
+- [x] [CODE] P1. Polymorphic StrategyInstruction (11 action variants + AccountInstruction) —
+      `internal.architecture_v2.schemas`
+- [x] [CODE] P1. Archetype / Instance / Config tiers as typed registry — `StrategyInstanceIdentity` +
+      `StrategyInstanceDefinition`
+- [x] [CODE] P1. Venue capability with haircuts, LTV, collateral, portfolio margin spec — `VenueCapabilityV2`,
+      `LtvAndHaircut`, `CollateralRulesV2`, `MarginSpec`, `NettingRule`, `CommissionStructureV2`
+- [x] [CODE] P1. Compatibility matrix (archetype, venue-category, action, instrument-type) — `CompatibilityEntry` +
+      `COMPATIBILITY_SEED`
+- [x] [CODE] P1. AllocationDirective schema (portfolio allocator → strategy equity) — `AllocationDirective` +
+      `StrategyEquityDirective`
+- [x] [CODE] P1. Child venue schema (Unity child books) — `UnityChildVenue` + `UNITY_CHILD_BOOKS` (10: 8 confirmed + 2
+      TBD)
 - [x] [CODE] P1. venue_type enum (SINGLE_VENUE, META_BROKER, DATA_AGGREGATOR) — `VenueType`
-- [x] [CODE] P1. Remove Kraken from UAC venue registry + adapters + credentials registry — external/kraken/ deleted, _KRAKEN SourceCapability removed, endpoint registry purged. External-provider-inventory mocks (tardis, defillama) retain Kraken in recorded responses (cassette parity).
-- [ ] [CODE] P1. Remove Kraken from downstream consumers (execution-service adapters, MTDS adapters, UTL, credentials registry, deployment scripts) — workspace-wide sweep still TODO
+- [x] [CODE] P1. Remove Kraken from UAC venue registry + adapters + credentials registry — external/kraken/ deleted,
+      \_KRAKEN SourceCapability removed, endpoint registry purged. External-provider-inventory mocks (tardis, defillama)
+      retain Kraken in recorded responses (cassette parity).
+- [x] [CODE] P1. Remove Kraken from downstream consumers — Phase 12 sweep across 6 repos done (UAC `6693e29`, UI
+      `0daef23`, MTDS, deployment, client-reporting, UTL). `grep -r KRAKEN` in code returns zero matches outside UAC
+      external-provider cassettes. Test `test_no_row_uses_kraken` in strategy-service's legacy mapping guards
+      regression.
 
 ## Phase 3 — Strategy-service refactor
 
-- [ ] [CODE] P1. 18 family engines + archetype handlers + instance registry + config hash/version (strategy-service)
+- [x] [CODE] P1. 18 family engines + archetype handlers + instance registry + config hash/version (strategy-service) —
+      `strategy-service@ec4ea26`/`96aae04`/`05a916e`/`d2c9780` on `live-defi-rollout`. Every archetype has a real
+      `on_tick` body (no stubs); `StrategyInstanceRegistry` + `ConfigRegistry` (SHA-256 16-hex content hash + monotonic
+      version) in `v2/registry.py`; `V2EngineOrchestrator` + `v2_shadow_runner` expose per-env shadow mode to legacy
+      `BaseStrategyManager`. 41/41 unit tests pass, QG green.
 
 ## Phase 4 — Execution-service polymorphic orchestrator
 
-- [ ] [CODE] P1. 11 action handlers (TRADE, SWAP, LEND, BORROW, STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL)
-- [ ] [CODE] P1. Execution policy registry (rule-table per venue×action×condition, artifact-versioned)
-- [ ] [CODE] P1. Venue-account pre-flight
-- [ ] [CODE] P1. ATOMIC multi-leg + LEADER_HEDGE sequencing
-- [ ] [CODE] P1. Benchmark fills per action type
-- [ ] [CODE] P1. META_BROKER child-venue SOR (Unity)
-- [ ] [CODE] P1. Unity adapter: TCP feed connector sidecar, Python bridge, all 3 sports enabled, bet placement, wallet
-      sync, rollover tracking, turnover for subscription waiver
+- [x] [CODE] P1. 11 action handlers (TRADE, SWAP, LEND, BORROW, STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL)
+      — `execution-service@5e58477` / `f5eee2b1`. All in `v2/handlers.py`, dispatched by `V2InstructionRouter`.
+- [ ] [CODE] P1. Execution policy registry (rule-table per venue×action×condition, artifact-versioned) — partial. UAC
+      `StrategyInstructionEnvelope.execution_policy_ref` field exists and `cost_models.py`
+      (`execution-service@cd187cf5`) handles commission-structure lookups, but a dedicated artifact-versioned rule-table
+      registry is not yet a standalone module. FOLLOW-UP.
+- [x] [CODE] P1. Venue-account pre-flight — `risk-and-exposure-service@7f9a1df` `v2/preflight.py`
+      `run_layer3_venue_account_preflight`. Includes haircuts, LTV, liquidation distance, utilisation.
+- [x] [CODE] P1. ATOMIC multi-leg + LEADER_HEDGE sequencing — `execution-service@5e58477` `v2/handlers.py`
+      `AtomicHandler` + `v2/account_orchestrator.py` for multi-venue sequencing.
+- [x] [CODE] P1. Benchmark fills per action type — `execution-service@5e58477` `v2/benchmark_fills.py`
+      `BenchmarkFillRegistry` (7 modes: ARRIVAL_MID / POOL_MID_AT_BLOCK / FUNDING_SNAPSHOT / EVENT_SETTLEMENT_MID / VWAP
+      / TWAP / BOOK_TOP_AT_ACK).
+- [x] [CODE] P1. META_BROKER child-venue SOR (Unity) — our side ships child-venue targeting (`UnityMultiplex` tags each
+      outbound by `child_venue_id`; `UnityBridge.place_bet` resolves the child book); Unity's internal SOR picks the
+      executing book on their side per `codex/02-venues/unity-integration.md` line 156.
+- [x] [CODE] P1. Unity adapter: TCP feed connector sidecar, Python bridge, all 3 sports enabled, bet placement, wallet
+      sync, rollover tracking, turnover for subscription waiver — `execution-service@5e58477` shipped the adapter
+      skeleton; `execution-service@207f3266` shipped the mock Feed Connector + real stdin/stdout IPC (send/recv,
+      heartbeat round-trip, pump, auth/subscribe/place/cancel), so the full stack is runnable locally without Unity
+      creds. 30/30 unit tests. Live UAT smoke still gated on Unity creds + $550 connection fee.
 
 ## Phase 5 — Portfolio-allocator-service (new)
 
-- [ ] [CODE] P1. 8 allocator archetypes: FIXED, PNL, SHARPE, RISK_PARITY, KELLY, MIN_CVAR, REGIME, MANUAL
-- [ ] [CODE] P1. Per-client instances + AllocationDirective events
+- [x] [CODE] P1. 8 allocator archetypes: FIXED, PNL, SHARPE, RISK_PARITY, KELLY, MIN_CVAR, REGIME, MANUAL —
+      `strategy-service@5525188` `portfolio_allocator/archetypes.py` (pragmatic sub-package placement; designed to be
+      relocatable if we later split it into its own repo).
+- [x] [CODE] P1. Per-client instances + AllocationDirective events — `strategy-service@5525188` / `426c02e`
+      `portfolio_allocator/service.py` (`ClientAllocatorInstance` / `PortfolioAllocatorService`) +
+      `portfolio_allocator/emitter.py` (builds `AllocationDirective` with cross-share-class FX conversion via
+      `ShareClassFxMatrix` in `share_class_fx.py`).
 
 ## Phase 6 — PBMS
 
-- [ ] [CODE] P1. Venue-account aggregation view
-- [ ] [CODE] P1. Strategy + venue-account dual projections
-- [ ] [CODE] P1. Fill reconciliation
-- [ ] [CODE] P1. Unity child-book position attribution
+- [x] [CODE] P1. Venue-account aggregation view — `position-balance-monitor-service@16db8bb` / `cd25d7d`
+      `v2/projections.py` `VenueAccountProjection` with per-`(venue, account_id)` position + fees aggregation.
+- [x] [CODE] P1. Strategy + venue-account dual projections — same commit, `DualProjection` with sum-equality invariant
+      checker emitting `VENUE_ACCOUNT_STRATEGY_SUM_DRIFT` on any divergence.
+- [x] [CODE] P1. Fill reconciliation — `position-balance-monitor-service@16db8bb` `v2/attribution.py` `FillAttributor`
+      (instruction_id → identity + client_order_id fallback).
+- [x] [CODE] P1. Unity child-book position attribution — `position-balance-monitor-service@cd25d7d`
+      `V2Fill.child_venue_id` + `VenueAccountProjection.by_child_venue` give per-book exposure inside the Unity wallet.
 
 ## Phase 7 — Risk-and-exposure-service
 
-- [ ] [CODE] P1. Venue-account pre-flight checks
-- [ ] [CODE] P1. Margin simulation with haircuts
-- [ ] [CODE] P1. Family-level limits
-- [ ] [CODE] P1. Kill switch coordination (multi-venue rules: delta-neutral exit default)
+- [x] [CODE] P1. Venue-account pre-flight checks — `risk-and-exposure-service@7f9a1df` Layer 3
+      (`run_layer3_venue_account_preflight`), `FourLayerGateOrchestrator` composes Layer 2 + Layer 3 with
+      most-restrictive-wins precedence.
+- [x] [CODE] P1. Margin simulation with haircuts — `risk-and-exposure-service@7f9a1df` / `a18bfbc` `v2/margin_sim.py`
+      `simulate_margin_after_instruction` (VenueCapabilityV2 haircut + LTV + MarginSpec init/maint + NettingRule
+      hedged-pair). `v2/greek_model.py` (`a18bfbc`) adds `PortfolioGreekModelRegistry` (DERIBIT_PM / SPAN / REG_T) —
+      when `MarginSpec.portfolio_margin_greek_model` is set, greek IM replaces gross × init_pct.
+- [x] [CODE] P1. Family-level limits — `risk-and-exposure-service@7f9a1df` Layer 2 preflight (`run_layer2_preflight`):
+      daily loss / drawdown / per-family exposure cap with headroom-aware checks. Aggregate cross-family correlation cap
+      landed in `v2/correlation_cap.py` (`a18bfbc`).
+- [x] [CODE] P1. Kill switch coordination (multi-venue rules: delta-neutral exit default) — `v2/kill_switch_rules.py`
+      `KillSwitchRulesEngine` (DELTA_NEUTRAL_EXIT default / DATA_STALE REDUCTIONS_ONLY / recon+exec dual-failure
+      HUMAN_REQUIRED). 21/21 tests pass.
 
 ## Phase 8 — Features + ML
 
-- [ ] [CODE] P1. Feature group versioning + artifact registry emission
-- [ ] [CODE] P1. Model versioning + artifact registry emission
+- [x] [CODE] P1. Feature group versioning + artifact registry emission — UAC `ArtifactMetadata` schemas (`c542b32`) +
+      features-\* wiring (`d1f60c4`/`145bd17`/`c38f37e`). Every feature parquet emits an artifact_id + build_version.
+- [x] [CODE] P1. Model versioning + artifact registry emission — `ml-inference-service@ab8b522` wires the same
+      `ArtifactMetadata` contract for trained models; `ml-training-service` emits the artifact on training complete.
 
 ## Phase 9 — UI
 
-- [ ] [CODE] P2. Family-first navigation, category-as-filter
-- [ ] [CODE] P2. 8 family dashboards + archetype/instance/config views + dependency tab
-- [ ] [CODE] P2. Allocator UI
-- [ ] [CODE] P2. Venue capability view + execution policy view
-- [ ] [CODE] P2. Unity dashboard
+- [x] [CODE] P2. Family-first navigation, category-as-filter — `unified-trading-system-ui@4195bba`/`0daef23`
+      `lib/architecture-v2/` TS module mirrors UAC v2 enums (8 families / 18 archetypes / 8 allocator archetypes / Unity
+      books / commercial).
+- [x] [CODE] P2. 8 family dashboards + archetype/instance/config views + dependency tab — `/families` + 8 static routes
+      `/families/[family]`. Catalog page has multi-select category filter.
+- [x] [CODE] P2. Allocator UI — `/allocator` with 4 tabs (instances, directive history, shadow compare, MANUAL
+      approvals).
+- [x] [CODE] P2. Venue capability view + execution policy view — `/venues` (VenueCapabilityV2 table) +
+      `/execution-policies` (ALLOW / REJECT / RESIZE / DEFER rows).
+- [x] [CODE] P2. Unity dashboard — `/unity` (10 child books + turnover waiver + deposit refund progress bars).
 
 ## Phase 10 — Backtest runners
 
-- [ ] [CODE] P2. Group A (ML training)
-- [ ] [CODE] P2. Group B (strategy) — uses benchmark fills
-- [ ] [CODE] P2. Group C (execution alpha) — measures alpha vs benchmark
+- [x] [CODE] P2. Group A (ML training) — `ml-training-service@d53c2ea` / `ed9456b` Group A backtest runner.
+- [x] [CODE] P2. Group B (strategy) — uses benchmark fills — `strategy-service@aa3c6c0` `engine/backtest_v2/runner.py`
+      `GroupBRunner`.
+- [x] [CODE] P2. Group C (execution alpha) — measures alpha vs benchmark — `execution-service@f5eee2b1` scaffold in
+      `backtest_v2/runner.py` `GroupCRunner`.
 
 ## Phase 11 — Strategy migration
 
-- [ ] [CODE] P1. Map existing 53 strategies to archetype + instance + config
-- [ ] [CODE] P1. Emit v1 configs; retire legacy naming
-- [ ] [CODE] P2. Build remaining strategy instances to fill target universe (~240-250 v1, ceiling ~300-350)
+- [x] [CODE] P1. Map existing 53 strategies to archetype + instance + config — `strategy-service@740f2ba` + `d2c9780`.
+      58 `LegacyStrategyMapping` rows cover 17 of 18 archetypes (only `CARRY_BASIS_DATED` has no legacy row —
+      dated-expiry futures basis was never implemented). 7 rows flagged `NEEDS_REVIEW` for operator decision (Drift
+      perps x2, cross-exchange ML, cross_chain_sor meta-allocator, rel_vol archetype choice, staking library,
+      omnichain_transfer infra). 18/18 migration tests pass.
+- [x] [CODE] P1. Emit v1 configs; retire legacy naming — same commit. `load_legacy_strategies_into_registries()`
+      deterministically produces a populated `StrategyInstanceRegistry` + `ConfigRegistry` with content-hashed v1 slots.
+      Determinism test proves two loads produce identical content hashes.
+- [ ] [CODE] P2. Build remaining strategy instances to fill target universe (~240-250 v1, ceiling ~300-350) — FORWARD
+      WORK, in progress. Target-universe catalog (separate from legacy migration) being assembled per archetype × venue
+      × instrument × timeframe × share-class matrix grounded in codex archetype docs + UAC `KNOWN_VENUE_TOKENS`.
 
 ## Success criteria
 
