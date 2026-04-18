@@ -87,21 +87,34 @@ Phase 4 — Manifest reconciliation (rebuild, populate v4 shard dims)           
    ▼
 Phase 5  — Bucket retirement (market-data-candles-* empty shells)                [PARALLEL with 6]
 Phase 5b — MDPS schemas + strict writer + full-history backfill                  [SEQ after 4]
+Phase 5c — Features backfill per category (8 feature services)                   [SEQ after 5b]
+Phase 5d — ML training experiments per (model_type x category) minimum           [SEQ after 5c]
 Phase 6  — T+1 scheduler terraform apply (data layer)                            [PARALLEL with 5]
-Phase 7 — Backfill completion (ODDS_API hole + gaps)                             [SEQ after 6]
+Phase 7  — Backfill completion (ODDS_API hole + gaps)                            [SEQ after 6]
    │
    ▼
-Phase 8 — Event-log / deployment-registry integrity audit                        [SEQ after 7]
+Phase 8 — Event-log / deployment-registry integrity + Pub/Sub streaming          [SEQ after 7]
 Phase 9 — GCS Hive + partition audit                                             [SEQ after 4]
 Phase 10 — Features & ML pipeline symmetry (read paths)                          [SEQ after 4 + 9]
 Phase 11 — Cost-of-service monitoring                                            [SEQ after 5]
    │
    ▼
-Phase 12 — [HUMAN] Data Status page validation per service per category          [BLOCKING FINAL]
+Phase 12 — [HUMAN] Data Status checkpoint (per service per category)             [BLOCKING GATE per phase]
    │
    ▼
 Phase 13 — Regression prevention (CI smoke + --force symmetry test)              [POST-LAUNCH]
 ```
+
+**Checkpoint discipline**: Every phase that writes data (3, 4, 5b, 5c, 5d, 7) is gated by **Phase 12 Data Status
+visibility**. Completion is not "VM exited rc=0" — it is "deployment-ui data-status page for that (service, category)
+shows the delta reflected AND the deployment-ui /deployments page shows the run's full lifecycle
+(STARTED/PROGRESS/COMPLETED) with canonical error codes on any partial failure". Nothing advances to the next phase
+without this visibility confirmed.
+
+**Idempotency requirement**: No phase may re-fetch data from a paid upstream (Databento, Tardis, ODDS_API,
+Polymarket, FootyStats, The Graph) that has already been written to GCS. All migrations work on existing bucket
+contents; backfills only pull what's genuinely missing per the availability filter. `--force` rewrites from
+already-landed source data, never from upstream.
 
 ## Principles
 
@@ -473,6 +486,108 @@ sports uses `processed/`). Current state is bad:
 
 ---
 
+## Phase 5c — Features backfill per category [SEQ after 5b]
+
+### Context
+
+8 feature services (delta-one, volatility, onchain, sports, calendar, multi-timeframe, cross-instrument, commodity).
+Each produces per-feature-group parquet files. They must be backfilled against canonical MTDS + MDPS output so
+downstream ML has a clean dataset.
+
+### Principles
+
+1. **feature_group** is the primary manifest shard column per CLAUDE.md v4. Each service registers its groups.
+2. Writers go through `StreamingParquetWriter(strict=True)` + `ManifestWriter.write_with_zero_fill`.
+3. Idempotent — re-running the backfill with `--force` overwrites; without, it skips existing days.
+
+### 5c.1 Per-service UAC SchemaContracts
+
+- [ ] [AGENT] P0. For each of the 8 feature services, enumerate the feature groups emitted. Register each
+      `(category, instrument_type, feature_group)` SchemaContract in UAC.
+- [ ] [AGENT] P0. Per-group contract declares required columns, dtypes, and the `symbol_column` used for joining
+      back to instrument_id.
+- [ ] [AGENT] P0. Unit tests per group.
+
+### 5c.2 Features writer strict mode
+
+- [ ] [AGENT] P0. Per feature service, confirm writer uses `StreamingParquetWriter(strict=True)` +
+      `ManifestWriter.write_with_zero_fill`. Fix the ones that don't.
+- [ ] [AGENT] P0. Every write emits manifest row with
+      `(category, venue, chain, instrument_type, feature_group, timeframe)` shard tuple.
+
+### 5c.3 Full-history features backfill per category
+
+- [ ] [SCRIPT] P0. Launch backfill VMs per (feature_service × category) that has upstream MTDS+MDPS data. Grid
+      (worst case 8 × 5 = 40 runs; many will be no-op if category doesn't apply to the feature group, e.g.
+      features-onchain only runs against DeFi).
+- [ ] [SCRIPT] P0. Target date ranges: same as source categories (CeFi/DeFi/TradFi 2020-01→2026-04, Sports
+      2019-01→2026-04, Prediction 2025-03→2026-04).
+- [ ] [SCRIPT] P0. Each VM emits lifecycle events via `deployment_heartbeat.py` + `vm-exec-with-gcs-tee.sh`; no
+      orphans per Phase 8.
+- [ ] [AGENT] P0. Batch into 4 parallel waves max per deployment-service concurrency budget.
+
+### 5c.4 Manifest reconciliation for features
+
+- [ ] [SCRIPT] P0. Rebuild feature manifests post-backfill via
+      `rebuild_manifest_from_canonical_paths('gs://features-{group}-{category}-*')`.
+- [ ] [AGENT] P0. Verify feature_group column populated per row + zero empty venue.
+
+### 5c.5 Data Status checkpoint
+
+- [ ] [HUMAN] P0. Data Status page `/data-status/features-{group}` shows coverage per (day, category, timeframe,
+      instrument_type) matching expected denominators. No false-missing.
+
+---
+
+## Phase 5d — ML training experiments per (model_type x category) [SEQ after 5c]
+
+### Context
+
+Before calling the data pipeline "done", we must prove it is fit for downstream ML. The test is: for every viable
+(model_type × category) combination, ml-training-service runs a minimal training experiment end-to-end using real
+features from Phase 5c, emitting a model artifact and manifest row. We don't chase accuracy here — we prove the
+pipe works.
+
+### 5d.1 Catalogue viable (model_type × category) combinations
+
+- [ ] [AGENT] P0. Enumerate the model_type registry in ml-training-service. Document which model_types are viable
+      per category. Expected matrix:
+      | model_type             | CeFi | DeFi | TradFi | Sports | Prediction |
+      | ---                    | ---  | ---  | ---    | ---    | ---        |
+      | classification         | ✓    | ✓    | ✓      | ✓      | ✓          |
+      | regression             | ✓    | ✓    | ✓      | ✓      | ✓          |
+      | timeseries_forecasting | ✓    | ✓    | ✓      | ✓      | ✓          |
+      | ranking                | -    | -    | -      | ✓      | ✓          |
+      | anomaly_detection      | ✓    | ✓    | -      | -      | -          |
+      | reinforcement          | ✓    | ✓    | -      | -      | -          |
+- [ ] [AGENT] P0. Produce a concrete run-list: per-cell, pick 1 instrument subset + 1 timeframe + 1 training
+      window. E.g. `cefi/classification/BTC-PERP-binance-futures/1h/2023-01..2024-12 → 2025 test`.
+
+### 5d.2 Training experiments execution
+
+- [ ] [SCRIPT] P0. For each run-list entry, launch `ml-training-service` CLI with real features from Phase 5c.
+- [ ] [AGENT] P0. Each run writes:
+      - Model artifact to `gs://ml-models-{category}-*/models/{model_family}/{experiment_id}/`
+      - Training manifest row with `(category, model_family, training_period, strategy_id)` shard tuple
+      - Training metrics (loss curve, val accuracy, AUC) via UAC `ML_TRAINING_METRICS` events
+      - Lifecycle events (DEPLOYMENT_STARTED/PROGRESS/COMPLETED/FAILED)
+- [ ] [AGENT] P0. Register `(category, model_family, training_period, experiment_id)` SchemaContract in UAC for
+      training manifest rows.
+
+### 5d.3 Inference smoke per experiment
+
+- [ ] [SCRIPT] P0. For each trained model, run 1-day inference on 2026-04-14 data via ml-inference-service.
+      Assert output parquet lands + manifest row emitted.
+- [ ] [AGENT] P1. Model family-level symmetry test: rerun training with `--force` same config → bit-identical
+      model artifact (seed-pinned).
+
+### 5d.4 Data Status checkpoint
+
+- [ ] [HUMAN] P0. Data Status page `/data-status/ml-training` shows per-(category, model_family) experiment count
+      + last-run-timestamp + last rc. Data Status `/data-status/ml-inference` same.
+
+---
+
 ## Phase 6 — T+1 scheduler terraform apply [PARALLEL with 5]
 
 ### 6.1 Apply data-layer schedulers
@@ -526,6 +641,35 @@ sports uses `processed/`). Current state is bad:
       `DEPLOYMENT_ORPHANED` alert.
 - [ ] [AGENT] P1. `ServiceBootstrap` required on all services (CLAUDE.md SERVICE_INFRASTRUCTURE QG rule).
 
+### 8.2 Pub/Sub error streaming + debug mode
+
+- [ ] [AGENT] P0. Every VM / Cloud Run Job must `setup_events(service_name=..., mode="batch")` at start, then every
+      error path calls `log_event` with canonical error code from `unified_api_contracts.classify_venue_error()`.
+      Errors land in Pub/Sub topic `events-{env}` via `unified_trading_library.events` sink.
+- [ ] [AGENT] P0. Debug mode: `--debug` CLI flag + `DEBUG_EVENTS=1` env var emit verbose `DEBUG_SHARD_SCANNED` /
+      `DEBUG_ROW_CLASSIFIED` / `DEBUG_MANIFEST_ROW` at INFO severity every N rows. Default off (prod) so Pub/Sub
+      doesn't flood.
+- [ ] [AGENT] P0. deployment-ui `/events` page subscribes via SSE to `events-{env}` topic; displays last N events
+      with filter by event_type, service, severity, deployment_id. Live stream (not polled).
+- [ ] [AGENT] P0. VMs stream stdout/stderr to GCS via `vm-exec-with-gcs-tee.sh` AND emit key INFO events to
+      Pub/Sub. No "debug via SSH into VM" required.
+- [ ] [AGENT] P0. UTL `events/` + UAC `classify_venue_error` + deployment-service registry + deployment-ui
+      integration MUST be wired end-to-end for every batch VM launched. Gate: a test run of each migration script
+      produces (a) GCS log tee, (b) `DEPLOYMENT_STARTED/PROGRESS/COMPLETED` events visible in /deployments UI,
+      (c) any errors in /events UI with clickable drill-down to the offending shard, (d) deployments registry
+      entry pruned on exit.
+
+### 8.3 Production-event integrity (no double-fetch)
+
+- [ ] [AGENT] P0. Every upstream data adapter (Tardis, Databento, ODDS_API, Polymarket CLOB, FootyStats, The
+      Graph) emits `UPSTREAM_FETCH_STARTED` + `UPSTREAM_FETCH_COMPLETED` events with the date range + row count.
+      Migrations + backfills read these events via deployment-api to confirm a day is already landed before
+      launching a new upstream call.
+- [ ] [AGENT] P0. Idempotency guard in every migration/backfill script: check GCS day partition exists + passes
+      SchemaContract + manifest row emitted → skip. Only re-fetch on `--force` explicit flag.
+- [ ] [AGENT] P1. Cost alert: if an `UPSTREAM_FETCH_STARTED` is emitted for a date range already covered by a
+      prior `UPSTREAM_FETCH_COMPLETED`, emit `UPSTREAM_DOUBLE_FETCH` warning.
+
 ---
 
 ## Phase 9 — GCS Hive + partition audit [SEQ after 4]
@@ -565,18 +709,58 @@ sports uses `processed/`). Current state is bad:
 
 ---
 
-## Phase 12 — [HUMAN] Data Status page validation [BLOCKING FINAL]
+## Phase 12 — [HUMAN] Data Status checkpoints [BLOCKING per phase + FINAL]
 
-- [ ] [HUMAN] P0. Open `deployment-ui/data-status/instruments-service` — per-category counts match manifest truth for
-      CeFi, DeFi, TradFi, Sports, Prediction.
-- [ ] [HUMAN] P0. Open `deployment-ui/data-status/market-tick-data-service` — same check.
-- [ ] [HUMAN] P0. Open `deployment-ui/data-status/market-data-processing-service` — verify candles visible under MTDS
-      co-located path; no "empty bucket" warnings.
-- [ ] [HUMAN] P0. Open `deployment-ui/data-status/features-{group}` — per-feature-group per-category counts.
-- [ ] [HUMAN] P0. Open `deployment-ui/data-status/ml-{training,inference}` — per-model per-category counts.
-- [ ] [HUMAN] P0. Zero false-missing flags (every flag corresponds to a real gap, not a manifest drift).
-- [ ] [HUMAN] P0. Every category green for a 7-day rolling window.
-- [ ] [AGENT] P1. On any discrepancy: file bug against the specific phase + iterate.
+Phase 12 is not a single end-gate — it is a **per-phase visibility checkpoint**. Every data-writing phase (3, 4,
+5b, 5c, 5d, 7) is only "done" when the corresponding deployment-ui view shows the expected delta. The human
+confirms each checkpoint; no VM-rc=0 auto-advances.
+
+### 12.1 Phase 3 checkpoint — migrations
+
+- [ ] [HUMAN] P0. After MTDS DeFi migration: `/data-status/market-tick-data-service?category=DEFI` shows
+      2020-01→2026-04 green. Confirmed today.
+- [ ] [HUMAN] P0. After MTDS TradFi migration: same page filter `category=TRADFI`. Confirm green.
+- [ ] [HUMAN] P0. After MTDS Sports + Prediction migrations: same for each category.
+
+### 12.2 Phase 4 checkpoint — manifest reconciliation
+
+- [ ] [HUMAN] P0. For each category × service pair, confirm manifest shard dimensions populate non-empty in
+      deployment-ui data-status. No `venue=""`, no `"None"` literals, no `data_type=ODDS`-upper.
+
+### 12.3 Phase 5b checkpoint — MDPS candles
+
+- [ ] [HUMAN] P0. `/data-status/market-data-processing-service` shows per-timeframe coverage per category (CeFi,
+      DeFi, TradFi, Sports, Prediction). Green for full history date range.
+
+### 12.4 Phase 5c checkpoint — features
+
+- [ ] [HUMAN] P0. `/data-status/features-{group}` green per feature group × applicable category. 8 pages total
+      (one per feature service).
+
+### 12.5 Phase 5d checkpoint — ML training experiments
+
+- [ ] [HUMAN] P0. `/data-status/ml-training` shows per-(category, model_family) experiment count, last-run
+      timestamp, last rc. Grid from Phase 5d.1 matrix is fully exercised.
+- [ ] [HUMAN] P0. `/data-status/ml-inference` shows smoke-run output per experiment.
+
+### 12.6 Phase 7 checkpoint — ODDS_API backfill
+
+- [ ] [HUMAN] P0. `/data-status/market-tick-data-service?category=SPORTS` shows Feb 22→Apr 13 2026 hole closed.
+
+### 12.7 Event integrity checkpoint — /deployments + /events
+
+- [ ] [HUMAN] P0. `/deployments/active` empty (no runs outstanding past their ETA).
+- [ ] [HUMAN] P0. `/deployments/archive` last 7 days — every run has `STARTED` and `COMPLETED`/`FAILED`
+      bookends. No orphans.
+- [ ] [HUMAN] P0. `/events` shows Pub/Sub stream live; errors drill down to canonical error codes +
+      deployment_id.
+
+### 12.8 Final gate — 7-day green window
+
+- [ ] [HUMAN] P0. Every category green on every service page for a **7-day rolling window**. Zero false-missing
+      flags (every flag corresponds to a real gap, not a manifest drift).
+- [ ] [AGENT] P1. On any discrepancy at any checkpoint above: file bug against the specific phase + iterate before
+      advancing.
 
 ---
 
