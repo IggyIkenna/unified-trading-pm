@@ -132,13 +132,11 @@ services:
           - category
           - timeframe
           - date
-      - name: candles
-        bucket_template: market-data-candles-{category_lower}-{project_id}
-        path_template: by_date/day={date}/timeframe={timeframe}/{asset_class}/{instrument}.parquet
-        required_dimensions:
-          - category
-          - timeframe
-          - date
+      # NOTE: separate `candles` data-source block retired 2026-04-18.
+      # MDPS output is co-located under market-data-tick-{category}-* in the
+      # `processed_candles/` subprefix above. The standalone
+      # market-data-candles-* buckets were empty shells; see
+      # unified-trading-pm/plans/active/data_pipeline_completion_2026_04_18.plan.md Phase 5a.
     external_dependencies: []
   features-calendar-service:
     description: Generate calendar and temporal features (batch service)
