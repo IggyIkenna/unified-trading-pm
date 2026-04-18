@@ -82,10 +82,11 @@ Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,
 
 ## Apply consistently to all remaining docs
 
-- [ ] [RULE] Every family, archetype, axis, and cross-cutting doc MUST have a "Not in this X" section — makes grey areas
-      explicit and anchors understanding against the full surface. Feedback from user: "It's not that I think we should
-      have that in all of the docs; you put it in most of the families, so just put it in all the rest as well. Maybe
-      archetypes as well."
+- [x] [RULE] Every family, archetype, axis, and cross-cutting doc MUST have a "Not in this X" section — DONE. All 18
+      archetype docs in `codex/09-strategy/architecture-v2/archetypes/` now have a `## Not in this archetype` section
+      listing the common mis-classifications and where those cases actually live. All 8 family docs + all 11
+      cross-cutting docs already had "Not in this family/X" lines in the intro. Verified via
+      `find codex/09-strategy/architecture-v2/ -name "*.md" | xargs grep -Li "Not in this"` → zero missing.
 
 ## Outstanding architectural decisions (TBDs)
 
@@ -93,9 +94,26 @@ Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,
       `UNITY_CHILD_BOOKS` now holds VX/SHARPBET (0.2% COMMISSION_ON_WIN), 3ET (0.5%), BETDEX (1.6%), MATCHBOOK (2.2%),
       IBC (2.5%), BETFAIR (2.8%), BROKER5 (3.0%), CROWN + SBO commission-free. Retired placeholders guarded by
       `test_get_by_id_returns_none_for_retired_placeholders`. Commits: UAC `9efce04`/`1a5a40b`/`652a301`, PM `2bd06bd7`.
-- [ ] [TBD] Exact Kelly fraction defaults per archetype
-- [ ] [TBD] Allocator cadence defaults per client size
-- [ ] [TBD] Shadow deployment pattern specifics for archetype upgrades
+- [x] [TBD] Exact Kelly fraction defaults per archetype — `strategy-service@28167d7`
+      `engine/strategies/v2/archetype_defaults.py` `KELLY_FRACTION_BY_ARCHETYPE`. Five-tier bucketing by risk profile:
+      0.75 for passive yield (YIELD*ROTATION_LENDING, YIELD_STAKING_SIMPLE), 0.50 for stable structural (CARRY_BASIS*_,
+      ARBITRAGE*PRICE_DISPERSION, MARKET_MAKING_CONTINUOUS), 0.375 for mid-variance (CARRY_STAKED_BASIS,
+      MM_EVENT_SETTLED, STAT_ARB*_), 0.25 for directional with estimation error (ML*DIRECTIONAL*\*,
+      RULES_DIRECTIONAL_CONTINUOUS, VOL_TRADING_OPTIONS), 0.125 for high-variance / atomicity-risk
+      (RULES_DIRECTIONAL_EVENT_SETTLED, EVENT_DRIVEN, CARRY_RECURSIVE_STAKED, LIQUIDATION_CAPTURE). 8 tests enforce
+      every archetype is covered + tier assignments match the risk story. Per-strategy configs override via
+      `initial_config["kelly_fraction"]`.
+- [x] [TBD] Allocator cadence defaults per client size — `strategy-service@28167d7` `portfolio_allocator/cadence.py`
+      `build_default_allocator_cadence(total_client_equity_usd)`. Tiered by AUM: WEEKLY Monday 00:00 UTC below $500k,
+      DAILY 00:00 UTC for $500k-$5M, HOURLY every 4h for $5M-$50M, HOURLY every 2h at $50M+. 11 tests cover each
+      boundary + monotonic tightening. Per-client configs override by passing an explicit `AllocationCadence` to
+      `ClientAllocatorInstance` at registration.
+- [x] [TBD] Shadow deployment pattern specifics for archetype upgrades — codified. New codex doc
+      `codex/04-architecture/shadow-deployment-pattern.md` + `strategy-service@0b94e8c`
+      `engine/strategies/v2/shadow_deployment.py` with `ShadowDeploymentPolicy` (content-hashed, versioned per
+      archetype), `ShadowComparisonMetrics`, `ShadowDecision` (PROMOTE/EXTEND/REJECT/ROLLBACK),
+      `evaluate_shadow_deployment()` priority-ordered evaluator, tight-defaults for MM/vol/liquidation/recursive
+      archetypes. 16 unit tests.
 - [x] [TBD] Delta-neutral exit pathway when kill-switch fires on one venue but another eligible venue is alive —
       confirmed + shipped. Default is delta-neutral exit (cheapest); reductions-only on DATA_STALE; HUMAN_REQUIRED on
       recon + exec dual failure. Codified in `risk-and-exposure-service@7f9a1df` `v2/kill_switch_rules.py`
@@ -139,10 +157,13 @@ Commit: `unified-api-contracts@4bc83bc` on `live-defi-rollout`.
 
 - [x] [CODE] P1. 11 action handlers (TRADE, SWAP, LEND, BORROW, STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL)
       — `execution-service@5e58477` / `f5eee2b1`. All in `v2/handlers.py`, dispatched by `V2InstructionRouter`.
-- [ ] [CODE] P1. Execution policy registry (rule-table per venue×action×condition, artifact-versioned) — partial. UAC
-      `StrategyInstructionEnvelope.execution_policy_ref` field exists and `cost_models.py`
-      (`execution-service@cd187cf5`) handles commission-structure lookups, but a dedicated artifact-versioned rule-table
-      registry is not yet a standalone module. FOLLOW-UP.
+- [x] [CODE] P1. Execution policy registry (rule-table per venue × action × condition, artifact-versioned) —
+      `execution-service@76499fa8` `v2/execution_policies.py`. `AppliesTo` gate + `PolicyRule` +
+      `ExecutionPolicyArtifact` (content-hashed, versioned) + `ExecutionPolicyRegistry` (append-only, monotonic
+      version) + `resolve_algo()` document-order / first-match-wins / default-deny evaluator. Supports scalar operators
+      (`<`, `<=`, `>`, `>=`, `==`, `in`, `not_in`) + compound groups (`any_of` / `all_of`). Mirrors the codex contract
+      in `codex/04-architecture/execution-policy.md` exactly, including the canonical small/medium/large TWAP ramp
+      example. 23 unit tests.
 - [x] [CODE] P1. Venue-account pre-flight — `risk-and-exposure-service@7f9a1df` `v2/preflight.py`
       `run_layer3_venue_account_preflight`. Includes haircuts, LTV, liquidation distance, utilisation.
 - [x] [CODE] P1. ATOMIC multi-leg + LEADER_HEDGE sequencing — `execution-service@5e58477` `v2/handlers.py`
