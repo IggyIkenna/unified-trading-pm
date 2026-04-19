@@ -338,14 +338,13 @@ Operator approved all 7 proposals on 2026-04-19. Applied in strategy-service `33
 - [x] [REVIEW] P1. **`omnichain_transfer`** → DELETED from factory resolver + `batch_utils` + `LEGACY_STRATEGY_MAPPING`.
       Pure bridge infrastructure is owned by the transfer-rebalance service (Phase 6 capability gap).
 
-### Phase 7 remaining
+### Phase 7 closed
 
-- [ ] [REVIEW] P1. **`SPORTS_KELLY`** (resolver-side only) — `sports/kelly.py` is a staking-library wrapper analogous to
-      `sports_staking_fixed_dollar`. By symmetry the decision is likely "fold into `SPORTS_VALUE_BETTING` via
-      staking-method axis + delete the factory row", but operator has not explicitly approved that yet. Factory dispatch
-      currently routes `SPORTS_KELLY` through the legacy path only (shadow/prod modes skip with a NEEDS_REVIEW warning);
-      legacy instantiation via `create_kelly_criterion_strategy` still works. Post-Phase-7, this is the only
-      NEEDS_REVIEW row left in the resolver — tested invariant.
+- [x] [REVIEW] P1. **`SPORTS_KELLY`** — DELETED in strategy-service `a656f91` (2026-04-19) by symmetry with
+      `sports_staking_fixed_dollar`. Kelly is a staking-method axis, not its own archetype; it lives as a config knob
+      (`staking_method=FRACTIONAL_KELLY, kelly_fraction=...`) on existing sports archetypes (`SPORTS_VALUE_BETTING`).
+      Resolver count 63 → 62. New invariant `test_no_needs_review_rows_remain` locks the closed state. Phase 7 is fully
+      closed — every original NEEDS_REVIEW row resolved.
 
 ## Phase 9 — Coverage matrix SSOT + archetype-doc propagation + UAC gap memo (2026-04-19)
 
@@ -405,9 +404,24 @@ deleted (they're the "double-heading research" the user flagged).
 air" — they parameterize within the catalogue. Same underlying registry, different slices + permissions per consumer.
 This makes the SaaS-vs-IM split (Phase 10.5) a pure-metadata concern: same engine code, different catalogue visibility.
 
-**New routes (URL slug subject to confirmation):**
+### Decisions resolved 2026-04-19
 
-- `/services/strategy-catalogue/` — overview (lives alongside `/services/research/`, `/services/trading/`,
+The plan-restructure round-trip raised three open questions; the operator answers are:
+
+- **Q1 — SPORTS_KELLY** → DELETED (closed in Phase 7 — see closed section above). Implementer does not need to revisit.
+- **Q2 — URL slug for the new service** → `/services/strategy-catalogue/`. Final, no longer "subject to confirmation."
+  Matches the user's naming, distinct from any existing route, sibling to `research/` / `trading/` /
+  `investment-management/`.
+- **Q3 — IM catalogue location** → BOTH locations exist; they're for different audiences:
+  - `/services/investment-management/catalog/` — IM-DESK view (us managing client capital). `im_desk` role; full
+    universe minus pre-`CODE_AUDITED` placeholders; lock-state + maturity badges.
+  - Inside the existing client-reporting tool (location TBD by Phase 10.6 audit step) — IM-CLIENT view (the actual
+    investor's read-only catalogue). Audience filter `im_client`; "Allocated to me" + "Available to invest in" sections;
+    dev mode fills all combinatoric cells, prod mode filters to BACKTESTED+.
+
+### Routes
+
+- `/services/strategy-catalogue/` — overview (sibling to `/services/research/`, `/services/trading/`,
   `/services/investment-management/`)
 - `/services/strategy-catalogue/coverage` — master matrix
 - `/services/strategy-catalogue/coverage/by-combination` — combinatoric discovery (perp-to-perp arb, etc.)
@@ -415,18 +429,20 @@ This makes the SaaS-vs-IM split (Phase 10.5) a pure-metadata concern: same engin
 - `/services/strategy-catalogue/strategies/[archetype]/[slot]` — per-strategy detail page (see spec below)
 - `/services/strategy-catalogue/admin/lock-state` — admin toggle UI (Phase 10.5 surface moved here from `/admin/`)
 
-**Per-strategy detail page contents** (the "keys of the kingdom" view for the admin audience):
+### Per-strategy detail page contents — "keys of the kingdom" view for the admin / im_desk audience
 
 | Section            | Source                                                                                              |
 | ------------------ | --------------------------------------------------------------------------------------------------- |
 | Identity           | archetype + `legacy_strategy_id` + `slot_label` + venue/instrument coverage cell                    |
-| Maturity           | `ArchetypeBuild.status` (SHADOW / PROD / ARCHIVED / ROLLED_BACK) — Phase 2 `ArchetypeBuildRegistry` |
+| Build status       | `ArchetypeBuild.status` (SHADOW / PROD / ARCHIVED / ROLLED_BACK) — Phase 2 `ArchetypeBuildRegistry` |
+| **Slot maturity**  | `StrategyAvailabilityEntry.maturity` (8 states; see Phase 10.5) — _separate from build status_      |
+| **Lock state**     | `StrategyAvailabilityEntry.lock_state` (4 states; see Phase 10.5)                                   |
 | Promotion timeline | `PromotionDecisionLedger` rows (EXTEND / REJECT / PROMOTE / ROLLBACK) — Phase 2 ledger              |
-| Lock state         | `StrategyAvailabilityEntry` (PUBLIC / IM_RESERVED / CLIENT_EXCLUSIVE / RETIRED) — Phase 10.5        |
 | Live-vs-backtest   | `ShadowComparisonMetrics` (once Phase 3 shadow clock is running)                                    |
 | Codex doc link     | GitHub URL → PM repo's archetype doc + every referenced cross-cutting doc                           |
 | Config knobs       | UAC `StrategyConfig` + `ConfigRegistry` slot history — what users can change within the slot        |
-| Admin lock toggle  | Phase 10.5 `/admin/strategy-lock` UI embedded here, not a separate page                             |
+| Allocation status  | `AllocationDirective` history per client_id — who's getting capital and how much                    |
+| Admin toggles      | Lock state + maturity (incident-response demote) editable inline by `admin` role                    |
 
 **Tasks:**
 
@@ -459,65 +475,151 @@ businesses. Gates the lock-state overlays on every catalogue-aware surface (Phas
 [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 — sub-agents implementing this MUST have that doc pasted into their prompt.
 
-- [ ] [CODE] P1. **UAC registry.** Implement gap #12 from
-      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md):
-      `StrategyAvailabilityState` StrEnum, `StrategyAvailabilityEntry` Pydantic model, `STRATEGY_AVAILABILITY_REGISTRY`
-      tuple, `availability_for()`, `slots_visible_to()`, `validate_allocation_authorised()` helpers. Default every
-      existing slot to `PUBLIC`.
-- [ ] [CODE] P1. **Events.** Add `STRATEGY_AVAILABILITY_CHANGED` / `STRATEGY_LOCKED` / `STRATEGY_UNLOCKED` to UTL
-      `event_types.py`. `StrategyAvailabilityChangedEvent` Pydantic schema in UAC.
+**StrategyAvailabilityEntry carries TWO orthogonal dimensions** (per 2026-04-19 user direction):
+
+1. **`lock_state`** (4 values) — _who is allowed to see/use this slot at all_: `PUBLIC` /
+   `INVESTMENT_MANAGEMENT_RESERVED` / `CLIENT_EXCLUSIVE` / `RETIRED`. SaaS-vs-IM business model gate.
+2. **`maturity`** (8 values) — _how production-ready this slot is, regardless of lock state_. Drives the
+   internal-vs-external visibility threshold. See the dedicated table + advancement rules below.
+
+Both fields live on the same `StrategyAvailabilityEntry` row (one source of truth per slot). Filter helpers must gate on
+BOTH (e.g. `visible_to(audience="im_client", client_id=...)` → lock state PUBLIC | client's CLIENT_EXCLUSIVE ∧ maturity
+≥ `BACKTESTED`).
+
+#### Maturity taxonomy
+
+| State                     | Meaning                                                                         | Auto-advanced from                                                      | External visibility |
+| ------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| `CODE_NOT_WRITTEN`        | placeholder — coverage cell exists in matrix, no slot yet                       | (initial state for new combos)                                          | NO                  |
+| `CODE_WRITTEN`            | engine code committed                                                           | git push touching the slot                                              | NO                  |
+| `CODE_AUDITED`            | CI passed (basedpyright + tests + codex sync) on the slot's archetype build     | semver-agent / quality-gates.sh                                         | NO                  |
+| `BACKTESTED`              | at least one Group B backtest result exists in GCS for this slot                | strategy-service backtest run                                           | YES (threshold)     |
+| `PAPER_TRADING`           | live in `STRATEGY_DISPATCH_MODE=v2_shadow` accumulating ShadowComparisonMetrics | ops flips dispatch mode                                                 | YES                 |
+| `PAPER_TRADING_VALIDATED` | 14d of clean paper-trading data (Phase 2 `ShadowDeploymentPolicy` met)          | watchdog (see below)                                                    | YES                 |
+| `LIVE_TINY`               | first live fill recorded with real but de-minimis capital                       | execution-service first fill event                                      | YES                 |
+| `LIVE_ALLOCATED`          | allocated to ≥1 actual client at material size                                  | portfolio_allocator `AllocationDirective` emission with non-zero weight | YES                 |
+
+**External-visibility rule:** SaaS catalogue (research/trading/IM-client surfaces in PROD mode) shows only slots with
+`maturity ≥ BACKTESTED`. Internal catalogue (admin / IM desk / our trading) shows everything including placeholders.
+
+**Auto-advancement watchdog:** a strategy-service background task walks `PromotionDecisionLedger` rows + execution-
+service fill events daily and bumps maturity automatically when a gate's data conditions are met. The 14-day
+PAPER_TRADING → PAPER_TRADING_VALIDATED gate fires off `ShadowDeploymentPolicy.evaluate_shadow_deployment` returning
+PROMOTE — no human-in-the-loop required, because we already trust the live data. LIVE_TINY → LIVE_ALLOCATED fires on the
+first allocator directive that lands non-zero capital. Each transition emits a UTL `STRATEGY_MATURITY_ADVANCED` event
+for audit.
+
+#### Audience × visibility matrix
+
+| Audience                       | Lock filter                          | Maturity filter  | Mode behaviour                                                                             |
+| ------------------------------ | ------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------ |
+| Internal admin / firm          | (no filter)                          | (no filter)      | All combinatoric cells visible always; placeholders included.                              |
+| IM desk (`im_desk` role)       | (no filter)                          | `≥ CODE_AUDITED` | Full universe minus pre-audit placeholders. Lock-state badges everywhere.                  |
+| Trading-platform subscriber    | PUBLIC ∪ subscribed CLIENT_EXCLUSIVE | `≥ BACKTESTED`   | "Subscribed" + "available to subscribe" splits. IP-locked slots visible-but-not-tradeable. |
+| IM end-client (reporting tool) | PUBLIC ∪ allocated CLIENT_EXCLUSIVE  | `≥ BACKTESTED`   | "Allocated to me" with real details + "available to invest in" with aspirational details.  |
+
+#### Dev vs Prod mode
+
+- **Dev mode** (`VITE_MOCK_API=true`) — every catalogue surface fills the entire
+  `(archetype × category × instrument_type)` matrix with mock data, including `CODE_NOT_WRITTEN` placeholders. Demos the
+  full ~200-cell combinatoric range. Attractive for showcasing to prospective IM clients without revealing what's
+  actually live.
+- **Prod mode** (`VITE_MOCK_API=false`) — surfaces filter to real slots that pass each audience's
+  `(lock_state, maturity)` gate.
+
+The dev/prod split is a UI concern only. The registry itself is single-source — dev mode just substitutes a mock
+provider in `lib/architecture-v2/registry-source.ts` (or whatever the file is named after the implementer audits the
+existing UI structure).
+
+#### Tasks
+
+- [ ] [CODE] P1. **UAC registry — extended.** Implement gap #12 from
+      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md), with the
+      `StrategyAvailabilityEntry` Pydantic model carrying BOTH `lock_state: LockState` AND `maturity: StrategyMaturity`
+      (two orthogonal StrEnums). Add `STRATEGY_AVAILABILITY_REGISTRY` tuple + `availability_for()`,
+      `slots_visible_to(audience, client_id)`, `validate_allocation_authorised()` helpers. `slots_visible_to` consults
+      the audience × visibility table above. Default every existing slot to `(PUBLIC, BACKTESTED)` so behaviour is
+      unchanged for already-shipped slots.
+- [ ] [CODE] P1. **Events.** UTL `event_types.py` — `STRATEGY_AVAILABILITY_CHANGED`, `STRATEGY_LOCKED`,
+      `STRATEGY_UNLOCKED`, `STRATEGY_MATURITY_ADVANCED`, `STRATEGY_MATURITY_REGRESSED` (rare; e.g. data quality issue
+      forces back to PAPER_TRADING). Pydantic `StrategyAvailabilityChangedEvent` in UAC.
+- [ ] [CODE] P1. **Maturity-advancement watchdog** in strategy-service: daily background task that reads
+      `PromotionDecisionLedger` + execution fill events + GCS backtest-results paths and advances each slot's maturity
+      automatically. PAPER_TRADING → PAPER_TRADING_VALIDATED is the 14-day gate (no human required). LIVE_TINY →
+      LIVE_ALLOCATED on first non-zero `AllocationDirective`. Idempotent; safe to re-run.
 - [ ] [CODE] P1. **Allocator enforcement.** Wire `validate_allocation_authorised()` into portfolio-allocator
-      `AllocationDirective` reception. Raise `StrategyNotAvailableError` on violation; log via UTL.
+      `AllocationDirective` reception. Raise `StrategyNotAvailableError` on lock-state violation OR on
+      `maturity < LIVE_TINY` (allocator can't push capital into a slot that hasn't been live-traded). Log via UTL.
 - [ ] [CODE] P1. **Admin toggle UI** inside the Strategy Catalogue service at
-      `/services/strategy-catalogue/admin/lock-state/page.tsx` (moved from `/admin/strategy-lock/` per Phase 10
-      restructure — the lock state is authoritative in the catalogue). `admin` role only. Emits
-      `STRATEGY_AVAILABILITY_CHANGED`.
-- [ ] [CODE] P1. **Lock-state badges on all catalogue surfaces.** `<LockStateBadge>` reads from registry and overlays on
-      every catalogue page. Downstream consumers (research / trading / IM catalogue views) read the same registry.
-- [ ] [TEST] P1. Tests: `validate_allocation_authorised` cross-client rejection, role-based `slots_visible_to`
-      filtering, registry monotonic transitions, `STRATEGY_AVAILABILITY_CHANGED` event emission.
+      `/services/strategy-catalogue/admin/lock-state/page.tsx`. Now toggles BOTH lock_state and maturity (admin can
+      manually demote/promote maturity for incident response). `admin` role only.
+- [ ] [CODE] P1. **Lock-state + maturity badges on all catalogue surfaces.** New `<MaturityBadge>` reusable in
+      `components/architecture-v2/`, alongside `<LockStateBadge>`.
+- [ ] [TEST] P1. Tests: `validate_allocation_authorised` cross-client + maturity rejection, role-based
+      `slots_visible_to` filtering across all 4 audiences, watchdog idempotence, monotonic maturity advancement
+      (regression requires admin override), event emission on every state transition.
 
 ## Phase 10.6 — Service-split refactor: mine /research/strategy/families + /catalog, redistribute, delete
 
 **Goal:** close the double-heading shown in the user's 2026-04-19 screenshot by removing the legacy
 `/services/research/strategy/families` and `/services/research/strategy/catalog` pages. Their good content is mined and
-redistributed across the four consumer surfaces:
+redistributed across the FIVE consumer surfaces (note: IM has TWO surfaces — desk view + client-reporting view, with
+different audiences and different filters):
 
-| Content type                      | New home                                                                               |
-| --------------------------------- | -------------------------------------------------------------------------------------- |
-| Coverage matrix + family browser  | **Strategy Catalogue** (Phase 10)                                                      |
-| Strategy detail + maturity + docs | **Strategy Catalogue** per-strategy page                                               |
-| Admin lock toggle                 | **Strategy Catalogue** /admin/lock-state (Phase 10.5)                                  |
-| "Strategies I can iterate on"     | **Research** `/services/research/strategies` — registry-scoped by RBAC + lock state    |
-| "Strategies I've promoted live"   | **Trading** `/services/trading/strategies` — live-vs-backtest diff; client's own infra |
-| "Strategies offered / allocated"  | **Investment Management** `/services/investment-management/catalog` + client-reporting |
+| Content type                                         | New home                                                                                                                                | Audience filter (Phase 10.5) |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Coverage matrix + family browser                     | **Strategy Catalogue** (Phase 10)                                                                                                       | admin / im_desk              |
+| Strategy detail + maturity + docs                    | **Strategy Catalogue** per-strategy page                                                                                                | admin / im_desk              |
+| Admin lock + maturity toggle                         | **Strategy Catalogue** /admin/lock-state (Phase 10.5)                                                                                   | admin                        |
+| "Strategies I can iterate on"                        | **Research** `/services/research/strategies`                                                                                            | trading-platform-subscriber  |
+| "Strategies I've promoted live"                      | **Trading** `/services/trading/strategies`                                                                                              | trading-platform-subscriber  |
+| "Strategy desk view" (full universe + lock state)    | **IM Desk** `/services/investment-management/catalog`                                                                                   | im_desk                      |
+| "Strategy reporting view" (allocated + aspirational) | **IM Client Reporting** `/services/client-reporting/strategies` (or wherever the existing client-reporting tool lives — needs an audit) | im_client (per-client_id)    |
 
 Users never "create strategies out of thin air." They parameterize within the fixed universe. Research is the iteration
-surface; Trading is the promoted-to-live surface; IM is the offered-to-client surface. The catalogue is the control
-centre that decides what goes where.
+surface; Trading is the promoted-to-live surface; IM Desk is the our-side capital-routing surface; IM Client Reporting
+is the read-only catalogue + allocation view for end-investors. The catalogue service is the control centre that owns
+the registry every other surface reads.
 
-- [ ] [AUDIT] P1. Grep both legacy pages (`/services/research/strategy/families` +
+#### Workflow flows the audience split enables
+
+- **Internal workflow — promote a strategy to a client**: admin opens Strategy Catalogue → picks a slot → flips
+  lock_state to `CLIENT_EXCLUSIVE` for that client_id → IM desk + that specific IM-client view both pick it up on next
+  refresh; trading-platform subscribers see it as locked (visible-but-not-tradeable). Admin can also manually bump
+  maturity in the same UI for incident response.
+- **IM client workflow — see what's available**: client logs into reporting tool → catalogue tab → sees allocated slots
+  with full real details + aspirational catalogue of slots they could allocate to. In dev mode the latter is the full
+  ~200-cell combinatoric mock universe; in prod it's filtered to BACKTESTED+ slots where lock_state is PUBLIC or their
+  CLIENT_EXCLUSIVE.
+- **Trading platform subscriber workflow — pick + promote**: subscriber lands on research → sees their authorised
+  catalogue subset + backtest playground → tweaks configs → backtests → promotes selected slots to trading → sees them
+  on /services/trading/strategies with live-vs-backtest deltas (the system auto-allocates on their own infra).
+
+#### Tasks
+
+- [ ] [AUDIT] P1. **Pre-execution audit.** Grep both legacy pages (`/services/research/strategy/families` +
       `/services/research/strategy/catalog`) for every feature worth preserving — filters, sort orders, card components,
-      strategy-detail tabs, the backtest- config playground. Produce a migration manifest per feature: current location
-      → new home.
-- [ ] [CODE] P1. **Refactor `/services/research/strategies`** (note: the current route is plural `/strategies` vs
-      singular `/strategy/catalog` — the rename is part of the cleanup) to consume the catalogue registry. Scoped by
-      `slots_visible_to(actor="saas", client_id=user.client_id)` — SaaS clients see only their authorised slots, with
-      "Talk to IM" CTA for locked strategies. Backtest-config playground (within fixed universe) lives here, not in the
-      catalogue service.
+      strategy-detail tabs, the backtest-config playground. ALSO grep the existing client-reporting tool source to find
+      where the catalogue tab will live. Produce a migration manifest per feature: current location → new home →
+      audience filter applied.
+- [ ] [CODE] P1. **Refactor `/services/research/strategies`** to consume the catalogue registry. Scoped by
+      `slots_visible_to(audience="trading_platform_subscriber", client_id=user.client_id)`. Backtest-config playground
+      (within the fixed universe) lives here. "Talk to IM" CTA on locked-but-visible slots.
 - [ ] [CODE] P1. **Refactor `/services/trading/strategies`** to show the user's promoted-to-live subset. Per-slot view:
       live fills, PnL, live-vs-backtest delta (from Phase 3 `ShadowComparisonMetrics`). Client's own infrastructure
-      handles execution — the system handles it automatically; user sees the resulting state.
-- [ ] [CODE] P1. **Wire `/services/investment-management/catalog`** as a read-only IM desk view. Full universe visible
-      with lock-state overlays; `im_desk` role.
-- [ ] [CODE] P1. **Wire client-reporting catalogue section** — IM clients see the catalogue entries they're being
-      offered / currently allocated to. Aspirational view to entice investment; real details for allocated slots. Reads
-      `StrategyAvailabilityRegistry` (Phase 10.5) — no duplicate data store.
+      handles execution; system handles it automatically; user sees the resulting state.
+- [ ] [CODE] P1. **Wire `/services/investment-management/catalog`** as the IM-DESK view. Full universe minus
+      pre-`CODE_AUDITED` placeholders, with lock-state + maturity badges on every cell. `im_desk` role.
+- [ ] [CODE] P1. **Wire IM-CLIENT catalogue inside client-reporting tool** (location TBD by audit step above; likely
+      under `/services/client-reporting/strategies/` or embedded inside the existing reporting tabs). Audience filter:
+      `slots_visible_to(audience="im_client", client_id=client.id)`. Two sections: "Allocated to you" (real details,
+      live PnL) + "Available to invest in" (aspirational catalogue, dev-mode-fills-all-cells, prod-mode-filters).
 - [ ] [CODE] P1. **Delete** `/services/research/strategy/families/` and `/services/research/strategy/catalog/`
       directories and their routes. Update sidebar nav. Lands last in this phase so the migration is complete before the
       source pages are removed.
-- [ ] [TEST] P1. Vitest per refactored page. Playwright e2e for the happy path: user lands on research → picks a
-      strategy to iterate on → backtests → promotes → sees it in trading.
+- [ ] [TEST] P1. Vitest per refactored page. Playwright e2e for two happy paths: (a) trading-platform subscriber lands
+      on research → picks a strategy → backtests → promotes → sees it in trading, (b) IM-client opens reporting tool →
+      sees allocated slots with real PnL + aspirational catalogue with mock data.
 
 ## Phase 10.7 — Allocator-as-shared-service split
 
