@@ -194,29 +194,35 @@ module.
 **Goal:** give the `ShadowEvaluation` decision a place to live. Today the evaluator returns a decision and the caller
 throws it away. Nothing is audit-traceable.
 
-- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/archetype_build_registry.py` — new
-      `ArchetypeBuildRegistry` parallel to `ConfigRegistry` pattern: - Key: `(archetype_id, build_version)` - Fields:
-      `status: Literal["SHADOW", "PROD", "ARCHIVED", "ROLLED_BACK"]`, `policy_content_hash`, `evaluation_id`,
-      `promoted_at_utc`, `promoted_by`, `parent_build_version` (previous prod head for rollback) - Append-only history
-      per archetype; `current_prod(archetype)` returns the newest PROD row
-- [ ] [CODE] P1. GCS-backed decision ledger at
-      `gs://{project}-strategy-artifacts/promotion-decisions/{archetype_id}/{build_version}.jsonl`. JSONL rows — one per
-      `evaluate_shadow_deployment` call. Each row: evaluation_id (uuid), evaluated_at_utc, decision, reasons,
-      policy_content_hash, metrics_snapshot. Keep EXTEND/REJECT history, not just PROMOTE.
-- [ ] [CODE] P1. Extend `shadow_deployment.evaluate_shadow_deployment()` with an optional
-      `sink: Callable[[ShadowEvaluation], None] | None` parameter. When supplied, the sink writes to the ledger +
-      registry atomically. Backwards-compat default `None` keeps existing tests green.
-- [ ] [CODE] P1. 4 new UTL events in `unified-trading-library/unified_trading_library/events/event_types.py`: -
-      `ARCHETYPE_SHADOW_EVALUATED` (every evaluate call — has decision field) - `ARCHETYPE_PROMOTED_TO_PROD` -
-      `ARCHETYPE_ROLLED_BACK` - `ARCHETYPE_BUILD_ARCHIVED`
-- [ ] [DOC] P1. Add "Persistence" section to `codex/04-architecture/shadow-deployment-pattern.md` naming
-      `ArchetypeBuildRegistry` + the GCS ledger layout as SSOT.
-- [ ] [TEST] P1. Unit tests covering: (a) registry monotonic-version enforcement, (b) PROD head tracking across multiple
-      builds, (c) ROLLBACK restores the `parent_build_version`, (d) ledger JSONL append — read-modify-write is atomic
-      under concurrent evaluations.
+- [x] [CODE] P1. Landed in strategy-service `d51f54c`. `archetype_build_registry.py` ships `ArchetypeBuild` (frozen
+      dataclass), `ArchetypeBuildRegistry` (thread-safe append-only history with `current_prod`, `shadow_head`,
+      `history` reads + `register_shadow`, `promote_to_prod`, `rollback`, `archive_build` writes), strictly-monotonic
+      build-version enforcement, rollback that re-PRODs `parent_build_version` so consumers see a continuous head, event
+      emission via injected `event_logger` callable.
+- [x] [CODE] P1. `PromotionDecisionLedger` in the same module — GCS-backed JSONL at
+      `{LEDGER_BLOB_PREFIX}/<archetype>/<build_version>.jsonl`. Instance-level `threading.Lock` serialises
+      read-modify-write so parallel evaluate calls within one process don't lose rows. EXTEND/REJECT history retained.
+      `read_all()` convenience for tests + future /archetype-promotions UI.
+- [x] [CODE] P1. `shadow_deployment.evaluate_shadow_deployment(sink=None)` — new optional kwarg. When supplied the sink
+      is called AFTER the decision is computed; exceptions propagate (fail-loud); backwards-compat default keeps
+      existing tests green. `make_ledger_sink()` factory wires ledger + registry + optional event_logger into the
+      required `Callable[[ShadowEvaluation], None]` shape.
+- [x] [CODE] P1. Landed in UTL `1178301b`. 4 constants in `events/event_types.py`: `ARCHETYPE_SHADOW_EVALUATED` /
+      `ARCHETYPE_PROMOTED_TO_PROD` / `ARCHETYPE_ROLLED_BACK` / `ARCHETYPE_BUILD_ARCHIVED`. Registered in
+      `STANDARD_LIFECYCLE_EVENTS` side-effect set. Grouped `ARCHETYPE_PROMOTION_EVENT_TYPES` set follows existing
+      `DEPLOYMENT_EVENT_TYPES` / `AGENT_EVENT_TYPES` pattern. Re-exported from the events package.
+- [x] [DOC] P1. New "Persistence" section in `codex/04-architecture/shadow-deployment-pattern.md` — authoritative stores
+      table (registry + ledger), call graph, JSONL row schema, SHADOW → PROD → ARCHIVED → ROLLED_BACK state machine, UTL
+      events table, atomicity notes (within-process only; cross-process CAS flagged as follow-up), and explicit
+      non-goals ("does not derive decisions, does not retry, does not time-travel").
+- [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_archetype_build_registry.py` — 19 tests green. Covers monotonic
+      version enforcement, PROD head tracking across multiple builds, rollback parent-restoration, archive transition,
+      event emission on all 4 transitions, ledger append/accumulate/multi-build segregation, 20-thread concurrent-append
+      lock smoke, JSON schema validity, sink integration with `evaluate_shadow_deployment` for all 4 decision types, and
+      backwards-compat for sink-less callers. Full Phase-1+2 regression: 246 tests pass.
 - [ ] [CODE] P2. UI surface — `/archetype-promotions` page in `unified-trading-system-ui` (or `deployment-ui`). Lists
       all 18 archetypes with current PROD build, active SHADOW candidates, decision timeline for each. Reads the ledger
-      via a strategy-service API endpoint.
+      via a strategy-service API endpoint. Deferred — P2; can land after Phase 3 shadow clock is live.
 
 ## Phase 3 — Shadow Observation Period (calendar time, not engineering)
 
@@ -317,6 +323,158 @@ archetype promotion in Phase 3 can proceed cleanly.
       2, or a `VOL_TRADING_OPTIONS` variant? Affects which engine code path handles it.
 - [ ] [REVIEW] P1. **`omnichain_transfer`** — pure bridge infrastructure, not alpha. Decision: delete the row;
       functionality moves to the transfer-rebalance service (Phase 6 item).
+
+## Phase 9 — Coverage matrix SSOT + archetype-doc propagation + UAC gap memo (2026-04-19)
+
+**Goal:** document the `(archetype × category × instrument_type)` universe explicitly and propagate back-links from
+every archetype doc. Produce the UAC-gap backlog in a single memo so there is a concrete list of registry additions
+needed to make the matrix queryable at runtime.
+
+**Why now:** 67-repo combinatorics and the SaaS vs IM business model are difficult to explain without a master matrix.
+Without this SSOT there is no way to point at "what can't we build today and why" or "does X × Y arb exist?".
+
+- [x] [DOC] P1. Write
+      [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+      — master matrix for all 18 archetypes × 4 categories × 8 instrument types with ~130 fully-spelled representative
+      `slot_label` examples, 10 grouped block-list entries covering the 21 BLOCKED triples, 11 UAC registry
+      implications. Includes the dated-future rolling-underlying convention and slot-label grammar (`-dated-` vs
+      `-fixed-{contract}-`).
+- [x] [DOC] P1. Write
+      [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md)
+      — companion, 12 concrete UAC additions as Pydantic shapes with per-gap rationale, consumers, and unblocked cells.
+      Six-PR phasing (A → F). Gap #11 `RepresentativeFutureRegistry` (feeds Phase 11) and gap #12
+      `StrategyAvailabilityRegistry` (feeds Phase 10.5).
+- [x] [DOC] P1. Write
+      [`codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](../../codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
+      — technical spec for the `-dated-` rolling-future mechanism (representative-future-service, event contract,
+      `FUTURES_ROLL` ATOMIC instruction variant, combo auto-creation, synthetic-price guardrails, circuit breakers).
+- [x] [DOC] P1. Write
+      [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+      — SSOT for the SaaS-vs-IM lock-state principle: one combinatoric universe, four availability states (`PUBLIC` /
+      `INVESTMENT_MANAGEMENT_RESERVED` / `CLIENT_EXCLUSIVE` / `RETIRED`), RBAC enforcement, UI surface split. Paired
+      with UAC gap #12.
+- [x] [DOC] P1. Slim all 18 archetype docs with a new "Category × Instrument Coverage" section (after `## What it does`)
+      pointing back to the SSOT with archetype-specific slot_label examples and a "Rolling-future handling" subsection
+      for the 8 affected archetypes.
+- [x] [CODE] P1. Extend
+      [`unified-trading-system-ui/lib/architecture-v2/coverage.ts`](../../../unified-trading-system-ui/lib/architecture-v2/coverage.ts)
+      with types (`CoverageCell`, `ArchetypeCoverage`, `InstrumentTypeV2`, `SignalVariant`, `RollMode`,
+      `CoverageStatus`), `ARCHETYPE_COVERAGE` record mirroring the matrix, and helper functions (`allCoverageCells`,
+      `cellsForInstrumentPair`, `blockedCells`, `supportedCells`, `rollingFutureCells`). Exported via
+      `lib/architecture-v2/index.ts`.
+- [ ] [TEST] P1. Add `unified-trading-system-ui/tests/unit/lib/architecture-v2/coverage.test.ts` — markdown ↔ TS parity
+      test: parse `category-instrument-coverage.md` at test time and assert every matrix row matches a cell in
+      `ARCHETYPE_COVERAGE`. Detects drift early.
+
+## Phase 10 — UI enhancements: coverage matrix + catalog filters + combinatoric discovery
+
+**Goal:** render the matrix as a first-class UI surface so "show me all perp-to-perp arb" is one click, and the
+SaaS-vs-IM separation is visible via lock-state badges. All surfaces read from `lib/architecture-v2/coverage.ts`
+(Phase 9) + the availability registry (Phase 10.5).
+
+**Codex reference:**
+[`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+and
+[`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md).
+When a sub-agent edits UI routes, paste both docs into the prompt context so they see the full SaaS-vs-IM visibility
+model, not just the matrix.
+
+- [ ] [CODE] P1. **Master matrix page** `app/(platform)/coverage/page.tsx` — rows = archetypes grouped by family,
+      columns = `(category × instrument_type)`. Each cell heat-coloured by `CoverageStatus`, clickable → side panel with
+      signal variants, representative venues, slot_labels, block-list reason. Filter chips: category, instrument type,
+      roll mode, status, family. Admin-only (requires `admin` or `im_desk` role — Phase 10.5 gate).
+- [ ] [CODE] P1. **Combinatoric discovery page** `app/(platform)/coverage/by-combination/page.tsx` — two leg-pickers
+      (each = category + instrument_type). Selecting `(CEFI, perp) × (CEFI, perp)` lists every cell where both legs are
+      perps in pair-capable archetypes (`ARBITRAGE_PRICE_DISPERSION`, `CARRY_BASIS_PERP`, `STAT_ARB_PAIRS_FIXED`,
+      `CARRY_STAKED_BASIS`). Answers "perp-to-perp arb" directly. Uses `cellsForInstrumentPair()` helper.
+- [ ] [CODE] P1. **Block-list browser** `app/(platform)/coverage/blocked/page.tsx` — shows the 10 grouped block-list
+      entries with affected archetypes, blocking reason, and remediations. Feeds ops backlog.
+- [ ] [CODE] P1. **Reusable chip primitives** `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>` (Phase
+      10.5), `<RollModeBadge>`, `<CategoryChip>`, `<InstrumentTypeChip>`, `<SignalVariantBadge>`. Used on every
+      coverage-aware surface.
+- [ ] [CODE] P1. **Enhanced archetype detail.** Extend
+      `app/(platform)/services/research/strategy/families/[family]/page.tsx` with a "Coverage" tab per archetype,
+      filtered to that archetype's cells. `-dated-` tooltip linking to `futures-roll-and-combos.md` when applicable.
+- [ ] [CODE] P1. **Catalog filter enhancements.** Extend `app/(platform)/services/research/strategy/catalog/page.tsx`
+      with category, instrument_type, roll_mode, status, lock_state (Phase 10.5) filter chips. Existing family filter
+      stays.
+- [ ] [CODE] P2. **Family-landing mini-heatmap.** Extend `app/(platform)/services/research/strategy/families/page.tsx` —
+      each family card shows a 4-column × N-row sparkline of `(category × archetype)` coverage density.
+- [ ] [CODE] P2. **Slot-label component** `<SlotLabel label="ARCHETYPE@..." />` parses + renders with venue chip,
+      instrument chip, roll-mode badge.
+- [ ] [TEST] P1. Vitest tests per new page + helper, including snapshot of `cellsForInstrumentPair(perp, perp)` (primary
+      user-story assertion).
+
+## Phase 10.5 — Strategy availability + lock state registry + UI RBAC
+
+**Goal:** implement the SaaS-vs-IM separation via a metadata-only lock state so the same engine code powers both
+businesses. Gates the lock-state overlays in Phase 10 surfaces.
+
+**Codex reference:**
+[`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+— sub-agents implementing this MUST have that doc pasted into their prompt.
+
+- [ ] [CODE] P1. **UAC registry.** Implement gap #12 from
+      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md):
+      `StrategyAvailabilityState` StrEnum, `StrategyAvailabilityEntry` Pydantic model, `STRATEGY_AVAILABILITY_REGISTRY`
+      tuple, `availability_for()`, `slots_visible_to()`, `validate_allocation_authorised()` helpers. Default every
+      existing slot to `PUBLIC`.
+- [ ] [CODE] P1. **Events.** Add `STRATEGY_AVAILABILITY_CHANGED` / `STRATEGY_LOCKED` / `STRATEGY_UNLOCKED` to UTL
+      `event_types.py`. `StrategyAvailabilityChangedEvent` Pydantic schema in UAC.
+- [ ] [CODE] P1. **Allocator enforcement.** Wire `validate_allocation_authorised()` into portfolio-allocator
+      `AllocationDirective` reception. Raise `StrategyNotAvailableError` on violation; log via UTL.
+- [ ] [CODE] P1. **Admin toggle UI** `app/(platform)/admin/strategy-lock/page.tsx` — operator tool to transition slot
+      lock state. `admin` role only. Emits `STRATEGY_AVAILABILITY_CHANGED`.
+- [ ] [CODE] P1. **IM catalog landing** `app/(platform)/investment-management/catalog/page.tsx` — IM desk landing; full
+      universe with lock-state overlays; `im_desk` role.
+- [ ] [CODE] P1. **SaaS catalog filter.** Update existing `app/(platform)/services/research/strategy/catalog/page.tsx`
+      to call `slots_visible_to(actor="saas", client_id=user.client_id)` and show only authorised slots. Subtle "Talk to
+      IM" CTA for locked strategies.
+- [ ] [CODE] P1. **Lock-state badges on all surfaces.** `<LockStateBadge>` reads from registry and overlays on
+      `/coverage`, `/coverage/by-combination`, `/families/[family]`, `/catalog`.
+- [ ] [TEST] P1. Tests: `validate_allocation_authorised` cross-client rejection, role-based `slots_visible_to`
+      filtering, registry monotonic transitions, `STRATEGY_AVAILABILITY_CHANGED` event emission.
+
+## Phase 11 — Dated-future roll mechanism (representative-future-service + combo creation)
+
+**Goal:** implement block-list entry BL-10 from
+[`category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md). Unblocks
+every `-dated-` slot across ML_DIRECTIONAL_CONTINUOUS, RULES_DIRECTIONAL_CONTINUOUS, STAT_ARB_PAIRS_FIXED,
+STAT_ARB_CROSS_SECTIONAL, ARBITRAGE_PRICE_DISPERSION, EVENT_DRIVEN (macros), CARRY_BASIS_DATED (default).
+
+**Codex reference:**
+[`codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](../../codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
+— full service-level spec. Paste into sub-agent prompt when implementing.
+
+- [ ] [CODE] P1. **UAC registry + event contract.** Implement gap #11 from
+      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md): `UnderlyingDeclaration`,
+      `RollTriggerPolicy`, `REPRESENTATIVE_FUTURE_REGISTRY` tuple. `RepresentativeFutureChangedEvent` in UAC. Constants
+      in UTL `event_types.py`.
+- [ ] [CODE] P1. **`representative-future-service` scaffold.** New thin service (or sub-module of features-service —
+      discuss topology). Subscribes to liquidity feature group, applies `RollTriggerPolicy`, emits
+      `REPRESENTATIVE_FUTURE_CHANGED`. Publishes snapshot at
+      `gs://{project}-reference-artifacts/representative_future/{underlying_id}.json`. REST endpoint
+      `GET /representative/{underlying_id}?as_of={iso_ts}` for deterministic replay.
+- [ ] [CODE] P1. **Strategy-service subscriber.** On `-dated-` slot instances, subscribe to
+      `REPRESENTATIVE_FUTURE_CHANGED`, lookup net position in prior contract via PBMS, emit `FUTURES_ROLL` ATOMIC
+      instruction (new `CALENDAR_ROLL` mode — fourth ATOMIC mode alongside `LEADER_HEDGE`, `SYNCHRONIZED`,
+      `SEQUENTIAL`).
+- [ ] [CODE] P1. **Execution-service combo resolution.** Extend ATOMIC handler with `CALENDAR_ROLL` mode: (1) listed
+      combo ticker at venue → single-order execution; (2) synthetic combo via multi-leg order → if venue supports; (3)
+      LEADER_HEDGE fallback with hard slippage guard. All paths enforce `synthetic_fair_value_ref` guardrail bounded by
+      `max_roll_slippage_bps`.
+- [ ] [CODE] P1. **Circuit breakers + events.** Emit `FUTURES_ROLL_COMPLETED` / `FUTURES_ROLL_FAILED`. Hard-stop on
+      slippage breach; soft-freeze on feed-staleness; ops escalation on consecutive failures per underlying. Integrate
+      with R&E kill-switch rules engine.
+- [ ] [CODE] P1. **PBMS position-attribution rewrite.** On `FUTURES_ROLL_COMPLETED`, PBMS rewrites attribution from
+      `prior_contract` → `new_contract` so downstream PnL views stay continuous.
+- [ ] [TEST] P1. Backtest-parity test: replay a historical window crossing an actual roll boundary (e.g., 2026-03-13 CME
+      ES roll from H6 to M6), assert v2 roll path produces position + PnL continuity.
+- [ ] [TEST] P1. Cross-service integration test in e2e-testing: `REPRESENTATIVE_FUTURE_CHANGED` → `FUTURES_ROLL` →
+      execution → PBMS attribution rewrite, on a mock combo-listing venue.
+- [ ] [CODE] P2. **Slot-label migration script.** For target-universe / legacy-mapping rows using `-fixed-{contract}-`
+      because manual rotation was the only option, rewrite to `-dated-` once the roll mechanism is green.
+      Operator-gated.
 
 ## Phase 8 — Pre-existing test flakes (unrelated to v2 but blocks full-green QG)
 
