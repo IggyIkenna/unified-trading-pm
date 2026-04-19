@@ -98,13 +98,23 @@ v1 feedback `_source-v1-feedback.md`, plus linked to its impl-layer counterpart.
 
 - [ ] [AGENT] P0. `experience/marketing-journey.md` (pb1)
 - [ ] [AGENT] P0. `experience/briefings-hub.md` (pb2 hub)
-- [ ] [AGENT] P0. `experience/dart-briefing.md` (pb2b)
+- [ ] [AGENT] P0. `experience/dart-briefing.md` (pb2b) — **MUST INCLUDE** a dedicated **"Does DART fit you?" pre-demo
+      fit-check section** per rule 10. Four sub-sections: schema explainer (1 para, calm, non-technical) / "what we need
+      from you" (bullets — instrument+venue context, intended action, size or target exposure, timeframe/urgency, order
+      constraints, strategy id, lifecycle update behavior, essential risk+allocation constraints) / "what we do not need
+      from you" (bullets — regime classification, raw model logic, signal-generation methodology, broader upstream IP) /
+      "what you get with signals-only vs full DART" (2-column comparison). Tone per rule 02: let the prospect self-sort,
+      no interrogation.
 - [ ] [AGENT] P0. `experience/regulatory-umbrella-briefing.md` (pb2c)
 - [ ] [AGENT] P0. `experience/staging-demo-journey.md` (pb3 hub)
 - [ ] [AGENT] P0. `experience/regulatory-demo.md` (pb3a) — narrative overlay only; imports walkthrough from shared-core
 - [ ] [AGENT] P0. `experience/investment-management-demo.md` (pb3b) — narrative overlay only; imports walkthrough from
       shared-core
-- [ ] [AGENT] P0. `experience/dart-demo.md` (pb3c)
+- [ ] [AGENT] P0. `experience/dart-demo.md` (pb3c) — **MUST INCLUDE** a pre-qualification paragraph in the "Moment in
+      journey" section that references rule 10's fit-check. Demo assumes the prospect has already self-sorted via pb2b's
+      fit-check; demo flow either confirms signals-only vs full-DART by reading prospect's declared schema shape, or
+      uses the demo itself to surface that decision. "What not to show" section gates research/backtest/promote surfaces
+      unless full-DART resolved.
 - [ ] [AGENT] P1. Extend `experience/README.md` — add full index of 9 playbooks, role-based reader paths.
 
 ### Phase 2.2 — shared-core/ — product truths reused across layers
@@ -112,9 +122,14 @@ v1 feedback `_source-v1-feedback.md`, plus linked to its impl-layer counterpart.
 Files that Stage 2 creates AND Stage 3 consumes. Every file MUST cite `_ssot-rules/` by rule number.
 
 - [ ] [AGENT] P0. `shared-core/README.md`
-- [ ] [AGENT] P0. `shared-core/same-system-principle.md` — full version (rule 03 is the principle; this is the
-      implementation map: which UI surfaces are partitioned views of which internal Odum systems). Cites
-      `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`.
+- [ ] [AGENT] P0. `shared-core/same-system-principle.md` — full implementation map of rule 03's **5 sub-claims**
+      (expanded 2026-04-19): (a) DART/IM/Reg surfaces = partitioned views of one internal system; (b) research infra ≡
+      live infra — identical metric-generation components; (c) trading terminal = live/batch toggle over same component
+      tree; (d) strategy catalogue rows carry phase tags (research/paper/live), no UI fork per phase; (e) paper trading
+      same look+feel as live. Map which UI routes/components implement which claim, with pointers to the current code
+      locations. Cites `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` + rule 03 itself. Explicitly state: **phase
+      (research/paper/live) is orthogonal to maturity** — a LIVE_ALLOCATED strategy can still be viewed in research
+      phase when a researcher re-runs it over historical data.
 - [ ] [AGENT] P0. `shared-core/org-fund-client-entity-model.md` — the org → fund(Pooled/SMA) → clients → API-keys
       hierarchy. Transcludes from `codex/14-playbooks/cross-cutting/fund-org-hierarchy.md` + `sma-vs-pooled.md` but
       re-framed for experience layer.
@@ -126,6 +141,14 @@ Files that Stage 2 creates AND Stage 3 consumes. Every file MUST cite `_ssot-rul
 - [ ] [AGENT] P0. `shared-core/venue-chain-instrument-scope.md` — venue × chain × instrument_type dimensions as the
       building blocks of demo restriction + pricing. Cites `codex/02-venues/` and
       `09-strategy/architecture-v2/category-instrument-coverage.md`.
+- [ ] [AGENT] P0. `shared-core/instruction-schema-fit-and-package-boundaries.md` — **ADDED 2026-04-19**. Implementation
+      map for rule 10. Defines: (a) full required/optional field list that Odum execution accepts; (b) venue ×
+      instrument × execution-mode compatibility (which schema shapes work on which venues); (c) lifecycle behavior
+      (replace / cancel / amend semantics); (d) **what signals-only integration enables downstream** (execution,
+      reconciliation, positions, some P&L attribution, some analytics); (e) **what signals-only does NOT enable** (full
+      P&L attribution that requires upstream research lineage, promote-pipeline metrics, backtest-vs-live comparisons
+      that assume the research-layer ran); (f) package boundary — signals-only upgrade path to full DART. Cross-refs
+      rule 10 + rule 04 axes + Stage 3B `stage-3b-instruction-schema-contract.md`.
 - [ ] [AGENT] P0. `shared-core/data-licensing-boundaries.md` — full version of rule 07; enumerates "what DART sells" vs
       "what DART doesn't sell (raw data)". Internal pricing may use data-sensitive blocks.
 - [ ] [AGENT] P0. `shared-core/client-reporting-demo-walkthrough.md` — THE shared walkthrough used by pb3a and pb3b.

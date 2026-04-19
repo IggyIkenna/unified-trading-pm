@@ -36,18 +36,18 @@ Stage 3.
 
 ## Decisions locked with user (2026-04-19)
 
-| Decision                 | Chosen                                                                                                                                                                                                                                                                                                                                                   | Rationale                                                            |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Layer separation         | Experience layer sits alongside implementation layer under `codex/14-playbooks/` (nested, not parallel top-levels)                                                                                                                                                                                                                                       | Keeps codex numbered-dir convention; one SSOT dir per semantic layer |
-| Experience grammar       | 9 sections per doc: Audience / Moment in journey / What Odum must prove / Experience goal / Walkthrough / Key messages / What not to show / Desired next step / Internal handoff                                                                                                                                                                         | v1 agent feedback; enforced across all 9 experience playbooks        |
-| Tone / posture           | Calm, specific, credible, lightly guided, never desperate. Axis.to / podlabs.xyz as tone benchmarks (restraint, specificity, institutional posture)                                                                                                                                                                                                      | User directive 2026-04-19                                            |
-| Naming                   | Human titles in public-facing docs ("Investment Management Briefing"), internal pb1/pb2/pb3 labels retained for engineering cross-ref                                                                                                                                                                                                                    | Internal shorthand stays; external copy reads institutional          |
-| DART commercial model    | 2-axis: strategy origin (Odum-strategy vs client-strategy) × stack depth (reporting-only visibility / client-strategy+downstream / full-DART-pipeline)                                                                                                                                                                                                   | Cleaner than the earlier 3-path framing; adopt wholesale             |
-| Same-system principle    | DART / IM / Reg-Umbrella client surfaces are partitioned views of the same internal Odum operating system, not separate products                                                                                                                                                                                                                         | Codify as a named rule                                               |
-| Data licensing boundary  | DART is enriched platform services, NOT direct raw-data resale. Pricing can use data-sensitive building blocks internally; external framing is enriched services                                                                                                                                                                                         | Commercial/legal guardrail                                           |
-| Pricing tier model       | 2 external tiers: Tier A (cost-plus, low margin) + Tier B (fixed upfront + fixed monthly, premium). Internal cost column kept private (codex-only, not in client-facing copy). 12-month minimum commitment on both tiers                                                                                                                                 | User directive 2026-04-19                                            |
-| Reference template first | Write 1 experience playbook (IM Decision Journey) completely before replicating across the other 8                                                                                                                                                                                                                                                       | De-risks template quality; user can calibrate tone before scaling    |
-| Internal one-liners      | DART = "accelerator for strategy, research, execution, control — the same system Odum uses internally"; IM = "allocate capital to Odum-managed strategies; reporting built in (same stack as Odum uses itself)"; Reg Umbrella = "operate regulated activity under Odum's FCA permissions; onboarding, compliance, MLRO, supervision, reporting included" | User one-liners 2026-04-19, lightly polished                         |
+| Decision                                        | Chosen                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Rationale                                                                                           |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Layer separation                                | Experience layer sits alongside implementation layer under `codex/14-playbooks/` (nested, not parallel top-levels)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Keeps codex numbered-dir convention; one SSOT dir per semantic layer                                |
+| Experience grammar                              | 9 sections per doc: Audience / Moment in journey / What Odum must prove / Experience goal / Walkthrough / Key messages / What not to show / Desired next step / Internal handoff                                                                                                                                                                                                                                                                                                                                                                                                               | v1 agent feedback; enforced across all 9 experience playbooks                                       |
+| Tone / posture                                  | Calm, specific, credible, lightly guided, never desperate. Axis.to / podlabs.xyz as tone benchmarks (restraint, specificity, institutional posture)                                                                                                                                                                                                                                                                                                                                                                                                                                            | User directive 2026-04-19                                                                           |
+| Naming                                          | Human titles in public-facing docs ("Investment Management Briefing"), internal pb1/pb2/pb3 labels retained for engineering cross-ref                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Internal shorthand stays; external copy reads institutional                                         |
+| DART commercial model                           | 2-axis: strategy origin (Odum-strategy vs client-strategy) × stack depth (reporting-only visibility / client-strategy+downstream / full-DART-pipeline)                                                                                                                                                                                                                                                                                                                                                                                                                                         | Cleaner than the earlier 3-path framing; adopt wholesale                                            |
+| Same-system principle (**expanded 2026-04-19**) | Five sub-claims: (a) DART/IM/Reg-Umbrella client surfaces are partitioned views of the same internal Odum operating system; (b) research infrastructure ≡ live infrastructure — any metric generated in research is generated live via the same component; (c) trading terminal is a live/batch toggle over the same component tree; (d) strategy catalogue rows carry phase tags (research/paper/live) rather than forking the UI per phase; (e) paper trading has same look and feel as live. **Phase (research/paper/live) is orthogonal to maturity (CODE_NOT_WRITTEN → LIVE_ALLOCATED).** | Codify as named rule 03. Pre-drafted by master planner in this session for Stage 1 agent reference. |
+| Data licensing boundary                         | DART is enriched platform services, NOT direct raw-data resale. Pricing can use data-sensitive building blocks internally; external framing is enriched services                                                                                                                                                                                                                                                                                                                                                                                                                               | Commercial/legal guardrail                                                                          |
+| Pricing tier model                              | 2 external tiers: Tier A (cost-plus, low margin) + Tier B (fixed upfront + fixed monthly, premium). Internal cost column kept private (codex-only, not in client-facing copy). 12-month minimum commitment on both tiers                                                                                                                                                                                                                                                                                                                                                                       | User directive 2026-04-19                                                                           |
+| Reference template first                        | Write 1 experience playbook (IM Decision Journey) completely before replicating across the other 8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | De-risks template quality; user can calibrate tone before scaling                                   |
+| Internal one-liners                             | DART = "accelerator for strategy, research, execution, control — the same system Odum uses internally"; IM = "allocate capital to Odum-managed strategies; reporting built in (same stack as Odum uses itself)"; Reg Umbrella = "operate regulated activity under Odum's FCA permissions; onboarding, compliance, MLRO, supervision, reporting included"                                                                                                                                                                                                                                       | User one-liners 2026-04-19, lightly polished                                                        |
 
 ## Cross-references
 
@@ -112,12 +112,21 @@ parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../code
 
 ## Phase breakdown
 
-### Phase 1.0 — Save v1 feedback as stable citation
+### Phase 1.0 — Pre-drafted by master planner ✅
 
-- [ ] [AGENT] P0. Create `codex/14-playbooks/_ssot-rules/` dir.
-- [ ] [AGENT] P0. Save the v1 agent feedback doc (provided verbatim in the agent prompt below) to
-      `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`. This becomes the stable citation target for every rule
-      file.
+> **These 4 artefacts are pre-committed by the master planner in commit `<stage-1-prefill>` (2026-04-19) and MUST NOT be
+> overwritten by the Stage 1 agent:**
+>
+> - `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
+> - `codex/14-playbooks/_ssot-rules/03-same-system-principle.md` (includes the 5 sub-claims + phase/maturity
+>   orthogonality)
+> - `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (2-axis matrix + 3 paths + worked examples)
+> - `codex/14-playbooks/_ssot-rules/08-pricing-principles.md` (2-tier Tier A/B, 12mo min, internal private, per-block
+>   mixable)
+
+- [x] [MASTER] P0. Pre-draft `_ssot-rules/_source-v1-feedback.md` + rules 03, 04, 08 (done this session).
+- [ ] [AGENT] P0. Verify the 4 pre-drafted files exist and are well-formed. DO NOT overwrite; if you find inconsistency
+      with the 2026-04-19 decisions table above, flag in the report rather than editing.
 
 ### Phase 1.1 — Extract rule files from v1
 
@@ -130,11 +139,11 @@ cites the v1 source by line range.
 - [ ] [AGENT] P0. `_ssot-rules/02-tone-and-posture.md` — calm/specific/credible/non-desperate; Axis.to + podlabs.xyz
       benchmark notes (what to borrow, what not to borrow); anti-AI-tone guardrails; common phrasing to avoid (waitlist
       energy, conversion pressure, generic "revolutionary" language).
-- [ ] [AGENT] P0. `_ssot-rules/03-same-system-principle.md` — DART/IM/Reg-Umbrella client surfaces are partitioned views
-      of Odum's internal system. No diluted client version. Enforcement: every experience playbook must say so.
-- [ ] [AGENT] P0. `_ssot-rules/04-dart-commercial-axes.md` — strategy origin (Odum vs client) × stack depth
-      (reporting-only / client-strategy+downstream / full-pipeline). Include a 2-axis matrix diagram (ASCII or mermaid).
-      Clarify: if client wants Odum strategy exposure, they sit in the fuller path.
+- [x] [MASTER] P0. `_ssot-rules/03-same-system-principle.md` — **PRE-DRAFTED 2026-04-19**. 5 sub-claims: partitioned
+      views + research/live infra parity + terminal live/batch toggle + catalogue phase tags + paper-same-look-and-feel.
+      Phase orthogonal to maturity. Agent verifies; does not overwrite.
+- [x] [MASTER] P0. `_ssot-rules/04-dart-commercial-axes.md` — **PRE-DRAFTED 2026-04-19**. 2-axis matrix (strategy origin
+      × stack depth) + 3 practical paths + worked examples. Agent verifies; does not overwrite.
 - [ ] [AGENT] P0. `_ssot-rules/05-building-block-dimensions.md` — 13 building blocks (reporting core, regulatory
       umbrella reporting, IM allocator reporting, strategy-service entry, instructions integration, research/promote
       pipeline, execution layer, venue packs, chain packs, instrument-type packs, analytics packs,
@@ -146,13 +155,21 @@ cites the v1 source by line range.
 - [ ] [AGENT] P0. `_ssot-rules/07-data-licensing-boundaries.md` — DART is enriched services, not raw-data resale.
       Internal pricing may use data-sensitive blocks; external framing must be enriched services. Cite UAC licensing
       tier dimension.
-- [ ] [AGENT] P0. `_ssot-rules/08-pricing-principles.md` — 2-tier external model (Tier A cost-plus, Tier B fixed
-      upfront+monthly); 12-month minimum commitment; internal cost column is codex-private; clients can mix tiers per
-      block; exclusivity/custom premiums are Tier B only. **No numbers** — those come in Stage 2. Cross-reference: Stage
-      2 builds `commercial-model/pricing-building-blocks.md`.
+- [x] [MASTER] P0. `_ssot-rules/08-pricing-principles.md` — **PRE-DRAFTED 2026-04-19**. 2-tier external model (Tier A
+      cost-plus / Tier B fixed upfront+monthly), 12mo min, internal cost codex-private, per-block tier mixable,
+      exclusivity/custom premiums Tier B only. No numbers (Stage 2 populates). Agent verifies; does not overwrite.
 - [ ] [AGENT] P0. `_ssot-rules/09-internal-commercial-oneliners.md` — the 3 user-provided one-liners (DART / IM / Reg
       Umbrella) as internal sales shorthand. Every public-facing doc expands these into a calm paragraph; internal docs
       can use them directly.
+- [ ] [AGENT] P0. `_ssot-rules/10-strategy-instruction-schema-principles.md` — **ADDED 2026-04-19**. The fit-check layer
+      for the `(Client, downstream-integration)` DART path (rule 04). Defines: what Odum execution needs
+      (instrument+venue context, intended action, size/target exposure, timeframe/urgency, order constraints,
+      strategy/instruction id, lifecycle updates/replace/cancel behavior, essential risk+allocation constraints); what
+      Odum does NOT need (regime classification logic, raw model logic, signal-generation methodology, broader upstream
+      IP); package boundaries (signals-only gets downstream operating surfaces + some analytics; does NOT auto-get
+      research/backtest/promote); pre-demo fit-check discipline (pb2b must include this layer; prospect self-sorts
+      before demo). Enforcement: any DART-path commercial quote references this rule. Cross-refs rule 04 + rule 08
+      (instruction integration depth as pricing dimension).
 
 ### Phase 1.2 — Write IM Decision Journey reference template
 
@@ -271,17 +288,31 @@ Execute every checkbox in Phases 1.0 through 1.4 of this plan:
 3. `codex/09-strategy/architecture-v2/README.md` + `category-instrument-coverage.md`
 4. `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 5. `codex/02-venues/` (top-level index)
-6. The v1 agent feedback text — provided verbatim below as `SOURCE_V1` — save this as
-   `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` in Phase 1.0.
+6. **Pre-drafted artefacts** (already on `live-defi-rollout`, do not overwrite):
+   - `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
+   - `codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+   - `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`
+   - `codex/14-playbooks/_ssot-rules/08-pricing-principles.md` Read these first — rules 01, 02, 05, 06, 07, 09 must
+     match their style + cite the same v1 source.
 
 ### Deliverables
 
-**Create:**
+**Create (6 rule files + experience assets + README markers):**
 
-- `codex/14-playbooks/_ssot-rules/README.md` + 9 rule files (01-grammar through 09-internal-commercial-oneliners) +
-  `_source-v1-feedback.md`
+- `codex/14-playbooks/_ssot-rules/README.md`
+- `codex/14-playbooks/_ssot-rules/01-grammar.md`
+- `codex/14-playbooks/_ssot-rules/02-tone-and-posture.md`
+- `codex/14-playbooks/_ssot-rules/05-building-block-dimensions.md`
+- `codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md`
+- `codex/14-playbooks/_ssot-rules/07-data-licensing-boundaries.md`
+- `codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
+- `codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md` (**ADDED 2026-04-19**)
 - `codex/14-playbooks/experience/README.md` + `TEMPLATE.md` + `im-decision-journey.md`
 - `codex/14-playbooks/playbooks/README.md` (flag as impl layer)
+
+**Do NOT create (already pre-drafted by master planner):**
+
+- `_source-v1-feedback.md` / `03-same-system-principle.md` / `04-dart-commercial-axes.md` / `08-pricing-principles.md`
 
 **Modify:**
 
@@ -303,23 +334,27 @@ didn't create or modify.
 
 ### Success criteria (report back with each)
 
-1. ✅ All 11 files created in `_ssot-rules/` (README + 9 rules + v1 source).
-2. ✅ `im-decision-journey.md` follows the 9-section grammar (list all 9 sections in your report).
-3. ✅ Every rule file cites `_source-v1-feedback.md` with section/line refs.
+1. ✅ Pre-drafted 4 files (`_source-v1-feedback`, rules 03, 04, 08) verified untouched — paste SHA of file via
+   `git log -1 --format=%H -- <path>`.
+2. ✅ 6 new rule files created (01, 02, 05, 06, 07, 09) + README — all cite `_source-v1-feedback.md` by section.
+3. ✅ `experience/im-decision-journey.md` follows the 9-section grammar from rule 01 (list all 9 sections in your
+   report).
 4. ✅ Tone audit: paste the first 5 lines of `im-decision-journey.md` in your report — they should be commercial, calm,
-   institutional; NOT engineering-speak.
+   institutional; NOT engineering-speak. Benchmark against rules 02 + pre-drafted rule 03 tone.
 5. ✅ Commit SHA pushed to `origin/live-defi-rollout`.
 
 ### What NOT to do
 
+- Do NOT overwrite the 4 pre-drafted files (`_source-v1-feedback.md`, rules 03, 04, 08). If you find inconsistency with
+  the plan's decisions table, flag in the report instead of editing.
 - Do NOT rewrite any existing `codex/14-playbooks/playbooks/*.md` content (mark as impl-layer only).
 - Do NOT create `commercial-model/`, `demo-ops/`, `sales-ops/`, or `implementation-mapping/` dirs (Stage 2's job).
 - Do NOT populate pricing numbers anywhere. Rule 08 is principles-only.
 - Do NOT touch any file currently in WIP diff on `live-defi-rollout` that you didn't modify yourself (check `git status`
   before staging).
 - Do NOT use `--dep-branch` flag.
-- Do NOT generate generic AI-marketing prose. Tone benchmark: Axis.to + podlabs.xyz. Re-read rule 02 before every doc
-  you write.
+- Do NOT generate generic AI-marketing prose. Tone benchmark: Axis.to + podlabs.xyz + the pre-drafted rule 03 + 04 + 08
+  style. Re-read rule 02 before every doc you write.
 
 ### Report back
 
