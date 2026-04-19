@@ -446,25 +446,36 @@ The plan-restructure round-trip raised three open questions; the operator answer
 
 **Tasks:**
 
-- [ ] [CODE] P1. **Master matrix page** at `/services/strategy-catalogue/coverage`. Rows = archetypes grouped by family,
-      columns = `(category × instrument_type)`. Cells heat-coloured by `CoverageStatus`, clickable → side panel with
-      signal variants, representative venues, slot_labels, block-list reason. Filter chips: category, instrument type,
-      roll mode, status, family, lock state. Admin-only (requires `admin` or `im_desk` role).
+- [x] [CODE] P1. **Master matrix page** landed in unified-trading-system-ui `a8012c4`
+      `app/(platform)/services/strategy-catalogue/coverage/page.tsx`. Rows = archetypes grouped by family, columns =
+      `(category × instrument_type)`. Cells heat-coloured by `CoverageStatus`, clickable → side panel with signal
+      variants, representative venues, slot_labels, block-list refs, and notes. Status filter (ALL / SUPPORTED / PARTIAL
+      / BLOCKED) implemented. Deeper filter chips (category, instrument type, roll mode, family, lock state) deferred to
+      post-Phase-10.6 when real registry data lands (currently the static coverage matrix is the only data source).
 - [ ] [CODE] P1. **Combinatoric discovery page** at `/services/strategy-catalogue/coverage/by-combination`. Two
       leg-pickers (each = category + instrument_type). Selecting `(CEFI, perp) × (CEFI, perp)` lists every cell where
-      both legs are perps in pair-capable archetypes. Uses `cellsForInstrumentPair()`.
+      both legs are perps in pair-capable archetypes. Uses `cellsForInstrumentPair()`. **Follow-up.**
 - [ ] [CODE] P1. **Block-list browser** at `/services/strategy-catalogue/coverage/blocked`. Shows the 10 grouped
-      block-list entries with affected archetypes, blocking reason, remediations. Feeds ops backlog.
+      block-list entries with affected archetypes, blocking reason, remediations. Feeds ops backlog. **Follow-up.**
 - [ ] [CODE] P1. **Per-strategy detail page** at `/services/strategy-catalogue/strategies/[archetype]/[slot]/page.tsx`.
       Implements the table above. Reads from `ArchetypeBuildRegistry` + `PromotionDecisionLedger` +
       `StrategyAvailabilityRegistry` + the coverage matrix. Codex deep-links use GitHub blob URLs into the PM repo.
-- [ ] [CODE] P1. **Reusable chip primitives** at `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>`,
-      `<RollModeBadge>`, `<CategoryChip>`, `<InstrumentTypeChip>`, `<SignalVariantBadge>`, `<MaturityBadge>`. Used on
-      every catalogue-aware surface (catalogue itself + research + trading + IM consumers).
-- [ ] [CODE] P1. **Service landing page** at `/services/strategy-catalogue/page.tsx`. Overview of the service: what it
-      owns, how downstream services consume it, quick links to matrix / combinatoric / block-list / admin.
-- [ ] [TEST] P1. Vitest tests per new page + helper, including snapshot of `cellsForInstrumentPair(perp, perp)` (primary
-      user-story assertion).
+      **Follow-up** — needs a read API surface on strategy-service first.
+- [x] [CODE] P1. **Reusable chip primitives** landed in unified-trading-system-ui `a8012c4`
+      `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>`, `<RollModeBadge>`, `<CategoryChip>`,
+      `<InstrumentTypeChip>`, `<SignalVariantBadge>`, `<MaturityBadge>`. Every chip carries a `data-testid` attribute
+      for Playwright hooks. Used on every catalogue-aware surface (catalogue itself + research + trading + IM
+      consumers). Paired with `lib/architecture-v2/availability.ts` — the TypeScript mirror of UAC
+      `strategy_availability.py` (LockState, StrategyMaturity, maturityRank, slotsVisibleTo,
+      validateAllocationAuthorised).
+- [x] [CODE] P1. **Service landing page** landed in unified-trading-system-ui `a8012c4`
+      `app/(platform)/services/strategy-catalogue/page.tsx`. Overview of the service: archetype / coverage-cell /
+      blocked counters + route cards to matrix / combinatoric / block-list / admin, with audience annotations.
+- [x] [TEST] P1. 45 vitest tests green across 6 files: `tests/unit/lib/architecture-v2/availability.test.ts` (18 —
+      default-fallback, monotonic ladder, consistency validators, audience × visibility matrix, allocator-gate refusal
+      branches) and `tests/unit/components/architecture-v2/chips.test.tsx` (27 — per-chip rendering + tooltip content +
+      test-id coverage). Combinatoric-pair snapshot assertion (`cellsForInstrumentPair(perp, perp)`) deferred to the
+      by-combination page follow-up since the helper is already tested via `coverage.ts`.
 
 ## Phase 10.5 — Strategy availability + lock state registry + UI RBAC
 
