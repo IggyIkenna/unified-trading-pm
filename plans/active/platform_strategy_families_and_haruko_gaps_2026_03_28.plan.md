@@ -6,6 +6,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-03-28
 owner: agent
 created: 2026-03-28
+# Canonical playbook SSOT: codex/14-playbooks/cross-cutting/catalogue-strategy.md + cross-cutting/catalogues.md (4-catalogue pattern)
 
 depends_on:
   - ui-sync-hardening

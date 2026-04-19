@@ -8,6 +8,7 @@ epic: epic-code-completion
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-17
+# Canonical playbook SSOT: codex/14-playbooks/environments/ (runtime profiles mapped to local/staging/prod)
 
 completion_gates:
   code: C5

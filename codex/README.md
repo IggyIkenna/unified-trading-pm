@@ -18,24 +18,26 @@ extends it, per-service captures what is unique.
 
 ### Directory Map
 
-| Directory                | One-line description                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| `00-SSOT-INDEX.md`       | Master data source index — where every piece of information lives                        |
-| `01-domain/`             | Business domain: instruments, asset classes, signal-based strategies, client model       |
-| `02-data/`               | Data schemas, subscription/publishing model, partitioning, data quality                  |
-| `03-observability/`      | 3-tier event logging (lifecycle + resource + domain), alerting, monitoring               |
-| `04-architecture/`       | Batch-live symmetry, deployment topology, concurrency, pipeline DAG                      |
-| `05-infrastructure/`     | Cloud-agnostic abstractions, unified libraries, CI/CD, Terraform, Docker                 |
-| `06-coding-standards/`   | Quality gates, testing, contribution workflow, dependency management                     |
-| `07-security/`           | Secrets management, API keys, permissions, dependency scanning                           |
-| `07-services/`           | Per-service documentation and specifications                                             |
-| `08-workflows/`          | Disaster recovery, client lifecycle, incident response, reconciliation                   |
-| `09-analysis/`           | Backtest metrics, live performance, cost analysis                                        |
-| `10-audit/`              | Codex compliance checklists (canonical, 100+ items per service across 9 principle areas) |
-| `11-project-management/` | Issue tracking, roadmaps (batch/live production), priority matrix, milestones            |
-| `12-agent-workflow/`     | AI agent workflow guides, task templates, sub-agent patterns                             |
-| `13-presentations/`      | Pitch decks and external presentations                                                   |
-| `14-testing-guides/`     | Testing standards, smoke tests, UI testing guides                                        |
+| Directory                | One-line description                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `00-SSOT-INDEX.md`       | Master data source index — where every piece of information lives                                               |
+| `00-getting-started/`    | Workflow diagrams, bootstrapping, E2E workflow                                                                  |
+| `01-domain/`             | Business domain: instruments, asset classes, signal-based strategies, client model                              |
+| `02-data/`               | Data schemas, subscription/publishing model, partitioning, data quality                                         |
+| `02-venues/`             | Venue registry, prime brokers, integration specs                                                                |
+| `03-observability/`      | 3-tier event logging (lifecycle + resource + domain), alerting, monitoring                                      |
+| `03-services/`           | Per-service documentation and specifications                                                                    |
+| `04-architecture/`       | Batch-live symmetry, deployment topology, concurrency, pipeline DAG                                             |
+| `05-infrastructure/`     | Cloud-agnostic abstractions, unified libraries, CI/CD, Terraform, Docker                                        |
+| `06-coding-standards/`   | Quality gates, testing, contribution workflow, dependency management                                            |
+| `07-security/`           | Secrets management, API keys, permissions, dependency scanning                                                  |
+| `08-workflows/`          | Local dev, batch DAG, version cascade, config injection, service-pair flows                                     |
+| `09-strategy/`           | Strategy architecture v2 (families, archetypes, axes, cross-cutting)                                            |
+| `10-audit/`              | Codex compliance checklists (canonical, 100+ items per service across 9 principle areas)                        |
+| `11-project-management/` | Issue tracking, roadmaps (batch/live production), priority matrix, milestones                                   |
+| `12-agent-workflow/`     | AI agent workflow guides, task templates, sub-agent patterns                                                    |
+| `13-codex-governance/`   | SSOT boundary rules, section registry, governance README                                                        |
+| `14-playbooks/`          | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
 
 ### Start Here
 

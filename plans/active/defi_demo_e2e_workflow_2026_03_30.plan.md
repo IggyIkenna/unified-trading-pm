@@ -5,6 +5,7 @@ priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-30
 depends_on: [share-class-architecture, defi-phase3-infrastructure]
+# Canonical playbook SSOT: codex/14-playbooks/playbooks/03c-demo-dart.md (DART flavour demo)
 ---
 
 # DeFi Demo: E2E Manual Trading Workflow
