@@ -98,6 +98,20 @@ instruments-service:
       # FUTURE IMPLEMENTATION - NOT MVP (data source issues)
       # BALANCER-ETH: "2020-03-31"      # TODO: The Graph deprecated, RPC fallback needs work
 
+  # Sports reference data — FootyStats historical coverage begins 2019-01
+  # but the MVP-supported leagues (EPL, LaLiga, Bundesliga, Serie A, Ligue 1,
+  # Champions League + 2 more) all have reliable data from 2020-08-01 (UEFA
+  # Covid season restart). Earlier seasons are partially missing odds/xG.
+  SPORTS:
+    category_start: "2020-08-01"
+
+  # Prediction markets (Polymarket CLOB). Polymarket launched June 2020; we
+  # only began ingesting 2025-03-14. Using the ingestion start as the
+  # category anchor so coverage % reflects our own data, not Polymarket's
+  # full history.
+  PREDICTION:
+    category_start: "2025-03-14"
+
 # =============================================================================
 # CORPORATE ACTIONS
 # =============================================================================
