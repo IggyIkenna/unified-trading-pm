@@ -533,31 +533,49 @@ existing UI structure).
 
 #### Tasks
 
-- [ ] [CODE] P1. **UAC registry — extended.** Implement gap #12 from
-      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md), with the
-      `StrategyAvailabilityEntry` Pydantic model carrying BOTH `lock_state: LockState` AND `maturity: StrategyMaturity`
-      (two orthogonal StrEnums). Add `STRATEGY_AVAILABILITY_REGISTRY` tuple + `availability_for()`,
-      `slots_visible_to(audience, client_id)`, `validate_allocation_authorised()` helpers. `slots_visible_to` consults
-      the audience × visibility table above. Default every existing slot to `(PUBLIC, BACKTESTED)` so behaviour is
-      unchanged for already-shipped slots.
-- [ ] [CODE] P1. **Events.** UTL `event_types.py` — `STRATEGY_AVAILABILITY_CHANGED`, `STRATEGY_LOCKED`,
-      `STRATEGY_UNLOCKED`, `STRATEGY_MATURITY_ADVANCED`, `STRATEGY_MATURITY_REGRESSED` (rare; e.g. data quality issue
-      forces back to PAPER_TRADING). Pydantic `StrategyAvailabilityChangedEvent` in UAC.
-- [ ] [CODE] P1. **Maturity-advancement watchdog** in strategy-service: daily background task that reads
-      `PromotionDecisionLedger` + execution fill events + GCS backtest-results paths and advances each slot's maturity
-      automatically. PAPER_TRADING → PAPER_TRADING_VALIDATED is the 14-day gate (no human required). LIVE_TINY →
-      LIVE_ALLOCATED on first non-zero `AllocationDirective`. Idempotent; safe to re-run.
-- [ ] [CODE] P1. **Allocator enforcement.** Wire `validate_allocation_authorised()` into portfolio-allocator
-      `AllocationDirective` reception. Raise `StrategyNotAvailableError` on lock-state violation OR on
-      `maturity < LIVE_TINY` (allocator can't push capital into a slot that hasn't been live-traded). Log via UTL.
+- [x] [CODE] P1. **UAC registry — extended.** Landed in unified-api-contracts `c5b870c`
+      `unified_api_contracts/internal/architecture_v2/strategy_availability.py` (378 LOC). `StrategyAvailabilityEntry`
+      carries BOTH `lock_state: LockState` AND `maturity: StrategyMaturity` (two orthogonal StrEnums).
+      `STRATEGY_AVAILABILITY_REGISTRY` seed tuple (empty — callers supply runtime registry) + pure helpers
+      `availability_for(slot_label, registry)`, `slots_visible_to(audience, client_id, registry, known_slot_labels)`,
+      `validate_allocation_authorised(slot_label, client_id, business_unit, registry)`. Default for unregistered slots
+      is `(PUBLIC, LIVE_ALLOCATED)` so already-shipped slots continue to allocate; explicitly-registered low-maturity
+      slots gate correctly. Custom exceptions: `StrategyNotAvailableError` / `StrategyRetiredError`. Event schemas:
+      `StrategyAvailabilityChangedEvent` (umbrella) + `StrategyMaturityTransitionEvent` (advance/regress). 26 UAC unit
+      tests green.
+- [x] [CODE] P1. **Events.** Landed in unified-trading-library `c1ccf55c`
+      `unified_trading_library/events/event_types.py`. 5 constants + `STRATEGY_AVAILABILITY_EVENT_TYPES` set, all
+      registered in `STANDARD_LIFECYCLE_EVENTS`. Re-exported at the UTL top-level so consumers
+      `from unified_trading_library import ...` (Citadel import-surface rule). Drive-by: the existing 4 `ARCHETYPE_*`
+      event constants (Phase 2) also surfaced at top-level to fix a pre-existing import-pattern violation. 3 UTL tests
+      green.
+- [x] [CODE] P1. **Maturity-advancement watchdog.** Landed in strategy-service `7e0b6a4`
+      `strategy_service/availability/watchdog.py`. `MaturityAdvancementWatchdog.tick()` reads injected `LedgerReader` /
+      `FillEventReader` / `NonZeroAllocationReader` / optional `BacktestResultReader`, advances monotonically one step
+      per tick: CODE_AUDITED → BACKTESTED (backtest result), PAPER_TRADING → PAPER_TRADING_VALIDATED (PROMOTE),
+      PAPER_TRADING_VALIDATED → LIVE_TINY (first live fill), LIVE_TINY → LIVE_ALLOCATED (non-zero directive).
+      Idempotent; regressions are admin-only. Paired with `StrategyAvailabilityStore` (thread-safe mutable runtime
+      registry with admin `set_lock_state` / watchdog `set_maturity` writes, every transition emits UTL events). 19
+      watchdog + store tests green.
+- [x] [CODE] P1. **Allocator enforcement.** Landed in strategy-service `7e0b6a4` `portfolio_allocator/service.py`.
+      `StrategySlot` gained `slot_label` (registry identity distinct from `strategy_instance_id`).
+      `ClientAllocatorInstance` gained `business_unit: Literal["saas", "im_desk", "admin"]` + accepts
+      `availability_registry` iterable on `run()`. Fail-loud gate fires per-slot in `run()` BEFORE the engine weights —
+      `StrategyRetiredError` on RETIRED, `StrategyNotAvailableError` on IM-reserved mismatch / client-exclusive
+      cross-client / IM-desk observe-only-on-client-exclusive / maturity < LIVE_TINY. 8 enforcement tests green.
 - [ ] [CODE] P1. **Admin toggle UI** inside the Strategy Catalogue service at
       `/services/strategy-catalogue/admin/lock-state/page.tsx`. Now toggles BOTH lock_state and maturity (admin can
-      manually demote/promote maturity for incident response). `admin` role only.
+      manually demote/promote maturity for incident response). `admin` role only. **Pending — part of Phase 10 UI
+      scaffold.**
 - [ ] [CODE] P1. **Lock-state + maturity badges on all catalogue surfaces.** New `<MaturityBadge>` reusable in
-      `components/architecture-v2/`, alongside `<LockStateBadge>`.
-- [ ] [TEST] P1. Tests: `validate_allocation_authorised` cross-client + maturity rejection, role-based
-      `slots_visible_to` filtering across all 4 audiences, watchdog idempotence, monotonic maturity advancement
-      (regression requires admin override), event emission on every state transition.
+      `components/architecture-v2/`, alongside `<LockStateBadge>`. **Pending — part of Phase 10 UI scaffold.**
+- [x] [TEST] P1. 56 new unit tests across UAC (26), UTL (3), strategy-service (27) covering:
+      `validate_allocation_authorised` cross-client + maturity rejection + admin override, role-based `slots_visible_to`
+      filtering across all 4 audiences (admin/im_desk/im_client/trading_platform_subscriber), watchdog idempotence
+      (no-op re-ticks), monotonic maturity advancement one step per tick, event emission on every lock + maturity
+      transition (5 event types exercised), entry-consistency validators (CLIENT_EXCLUSIVE requires client_id,
+      IM_RESERVED requires business_unit, frozen model), store thread-safety via RLock, default fallback behaviour. Full
+      QG green across the three repos.
 
 ## Phase 10.6 — Service-split refactor: mine /research/strategy/families + /catalog, redistribute, delete
 
