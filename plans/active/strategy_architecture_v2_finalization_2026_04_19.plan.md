@@ -1,0 +1,369 @@
+---
+name: Strategy Architecture v2 — Finalization + Factory Cutover
+status: active
+owner: iggy
+started: 2026-04-19
+locked_by: live-defi-rollout
+locked_since: 2026-04-19
+supersedes:
+  plans/active/strategy_architecture_v2_2026_04_17.plan.md (85/85 complete; this plan carries the open residuals
+  forward)
+---
+
+# Strategy Architecture v2 — Finalization + Factory Cutover
+
+## Context
+
+`strategy_architecture_v2_2026_04_17.plan.md` closed at 85/85. Everything the codex defined is implemented. This plan is
+the **follow-on** that carries the open operational residuals — the things that are outside the codex plan but still
+need to happen before we can fully retire the pre-v2 code path.
+
+### What already shipped (reference, do not re-do)
+
+- 18 archetype engines (`strategy-service/strategy_service/engine/strategies/v2/`)
+- 8 portfolio-allocator archetypes + cadence + guard rails (`strategy-service/strategy_service/portfolio_allocator/`)
+- 4-layer risk gate orchestrator + Layer 2/3 preflights + kill-switch rules
+- PBMS dual projection + fill attributor + child-venue attribution
+- Polymorphic `V2InstructionRouter` + 11 action handlers + benchmark fills
+- Unity mock Feed Connector + stdin/stdout IPC + bridge pump (`execution-service@207f3266`)
+- Execution policy registry — artifact-versioned rule table (`execution-service@76499fa8` `v2/execution_policies.py`)
+- Shadow deployment policy — evaluator + registry + codex doc (`strategy-service@0b94e8c` +
+  `codex/04-architecture/shadow-deployment-pattern.md`)
+- Legacy migration loader — 58 rows across 17 archetypes (`strategy-service@740f2ba`)
+- Target universe — 240 forward-looking instances across all 18 archetypes (`strategy-service@62721e7`)
+- Kelly fraction + allocator cadence firm-wide defaults (`strategy-service@28167d7`)
+- Doc archive — 43 legacy docs → `codex/09-strategy/_archived_pre_v2/` (`unified-trading-pm@3db20362`)
+- Code archive — 30 legacy `.py` + 11 sub-packages →
+  `strategy-service/strategy_service/engine/strategies/_archived_pre_v2/` (`strategy-service@8f6e33c` + `@7399787`
+  post-archive QG cleanup)
+- v2 cross-service integration test (`e2e-testing@f32ce36`)
+
+### What's blocking final deletion of `_archived_pre_v2/`
+
+A capability-readiness audit found that v2 has **everything the codex defines** but **not the runtime contract the batch
+backtest path needs**. The gap:
+
+- `V2EngineOrchestrator` is intentionally stateless.
+- `batch_handler.py` is stateful — maintains `_position_state` across days, loads positions from GCS config, injects
+  simulated deposits, credits / debits positions post-instruction.
+- The 63-entry legacy factory (`batch_utils.create_strategy_instance`) uses generic strategy-type strings that are
+  **not** present in the 58-row `LegacyStrategyMapping` table — there's no resolver for `"BTC_MOMENTUM"` →
+  `(StrategyArchetypeV2.ML_DIRECTIONAL_CONTINUOUS, slot_label, …)`.
+- 18 archetype engines inherit a `react_to_equity_change()` stub that isn't implemented — rescaling on
+  allocation-directive is a no-op today.
+
+Plus there are shadow-promotion decisions with nowhere to go yet: the evaluator returns
+`ShadowEvaluation(decision=PROMOTE|EXTEND|REJECT|ROLLBACK)` and the caller discards it. No persistence, no event, no UI.
+
+## Phase 1 — Factory Cutover Tier 2 (BLOCKS legacy deletion)
+
+**Goal:** close the runtime-contract gap between stateless v2 and stateful batch_handler so the factory can dispatch to
+v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
+
+### 1a — String→archetype resolver
+
+- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/legacy_type_to_archetype.py` with
+      `LEGACY_TYPE_TO_SLOT: dict[str, tuple[StrategyArchetypeV2, str, ShareClass, Decimal]]` covering all 63 entries
+      from `cli/handlers/batch_utils.py` factory table. Values: `(archetype, slot_label, share_class, initial_equity)`.
+      Cross-reference against `LegacyStrategyMapping` + `TARGET_UNIVERSE` for the 58 known; hand-map the 5 unseen
+      generic strings (OIL_COMMODITY_REGIME, NG_COMMODITY_REGIME, BTC_OPTIONS_ML, SPY_OPTIONS_ML, ETH_OPTIONS_ML,
+      CROSS_EXCHANGE_BTC — verify exact gap).
+- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_legacy_type_to_archetype.py` — every factory string resolves to a
+      valid `StrategyInstanceIdentity`; no Kraken; no stale venue tokens; deterministic.
+
+### 1b — V2BatchHarness adapter
+
+- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/batch_harness.py` with class
+      `V2BatchHarness`: - wraps `V2EngineOrchestrator` - holds `_position_state: dict[str, Decimal]` parallel to
+      batch_handler's - `load_initial_positions_from_gcs(strategy_type: str)` — reads legacy GCS config, seeds position
+      state - `inject_simulated_deposits(date_str: str)` — reads deposits from GCS config, adds to state -
+      `on_tick(strategy_type: str, candle: dict, features: dict,       predictions: list, now_utc: datetime) -> list[dict]`
+      — resolves strategy_type → archetype, calls orchestrator.on_tick, converts `StrategyInstructionEnvelope` → dict
+      via `.model_dump()`, applies position delta per instruction (LEND/WITHDRAW/TRANSFER/BRIDGE) - exposes
+      `is_defi_archetype: bool` so batch_handler can drop the `isinstance(strategy_instance, DeFiBaseStrategy)` check
+- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_batch_harness.py` — position state carries forward; deposits
+      applied; LEND debits WALLET, credits PROTOCOL; TRANSFER between WALLET→venue works; duck-type parity with legacy
+      `generate_signal` return shape.
+
+### 1c — react_to_equity_change across 18 archetypes
+
+- [ ] [CODE] P1. Implement `react_to_equity_change(new_equity: Decimal) ->     list[StrategyInstructionEnvelope]` on
+      each archetype engine: - For stateless archetypes (MM, event-driven, vol, stat-arb), base stub is sufficient —
+      update `self.target_equity = new_equity`, return `[]` (next tick will size to new equity naturally). - For
+      stateful archetypes (carry/yield/basis/recursive/liquidation), override to emit a rebalancing instruction
+      proportional to the delta.
+- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_equity_rescaling.py` — each archetype receives an
+      AllocationDirective that halves equity; stateless returns []; stateful emits a proportional LEND/UNSTAKE.
+
+### 1d — Factory dispatch + feature flag
+
+- [ ] [CODE] P1. Rewrite `strategy-service/strategy_service/cli/handlers/batch_utils.py` `create_strategy_instance()`: -
+      Gate on env var `STRATEGY_DISPATCH_MODE` (default `legacy`, accepted values `legacy` / `v2_shadow` / `v2_prod`). -
+      `legacy`: current behaviour, imports from `_archived_pre_v2/`. - `v2_shadow`: constructs `V2BatchHarness` wrapper;
+      calls both legacy and v2 on every tick; logs divergence; still returns legacy result. - `v2_prod`: v2 only; legacy
+      imports bypassed entirely. - Default remains `legacy` until shadow clock finishes.
+- [ ] [CODE] P1. Update `strategy-service/strategy_service/cli/handlers/batch_handler.py`: - Remove direct
+      `from strategy_service.engine.strategies._archived_pre_v2.defi_base       import DeFiBaseStrategy`; replace
+      `isinstance(..., DeFiBaseStrategy)` with harness.is_defi_archetype when `STRATEGY_DISPATCH_MODE != "legacy"`. -
+      Keep legacy path reachable in mode=legacy.
+
+### 1e — Backtest parity integration test
+
+- [ ] [TEST] P1. `tests/integration/test_v2_batch_parity.py` — pick 3 representative archetypes: - `AAVE_LENDING` →
+      `YIELD_ROTATION_LENDING` - `BASIS_TRADE` → `CARRY_BASIS_PERP` - `RECURSIVE_STAKED_BASIS` →
+      `CARRY_RECURSIVE_STAKED` Run 5-day historical backtest on each via (a) legacy path, (b) v2_shadow path. Assert:
+      instruction count within ±2%, final position state NAV within ±1%, venue distribution matches exactly.
+
+## Phase 2 — Shadow Deployment Persistence + Promotion Infrastructure
+
+**Goal:** give the `ShadowEvaluation` decision a place to live. Today the evaluator returns a decision and the caller
+throws it away. Nothing is audit-traceable.
+
+- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/archetype_build_registry.py` — new
+      `ArchetypeBuildRegistry` parallel to `ConfigRegistry` pattern: - Key: `(archetype_id, build_version)` - Fields:
+      `status: Literal["SHADOW", "PROD", "ARCHIVED", "ROLLED_BACK"]`, `policy_content_hash`, `evaluation_id`,
+      `promoted_at_utc`, `promoted_by`, `parent_build_version` (previous prod head for rollback) - Append-only history
+      per archetype; `current_prod(archetype)` returns the newest PROD row
+- [ ] [CODE] P1. GCS-backed decision ledger at
+      `gs://{project}-strategy-artifacts/promotion-decisions/{archetype_id}/{build_version}.jsonl`. JSONL rows — one per
+      `evaluate_shadow_deployment` call. Each row: evaluation_id (uuid), evaluated_at_utc, decision, reasons,
+      policy_content_hash, metrics_snapshot. Keep EXTEND/REJECT history, not just PROMOTE.
+- [ ] [CODE] P1. Extend `shadow_deployment.evaluate_shadow_deployment()` with an optional
+      `sink: Callable[[ShadowEvaluation], None] | None` parameter. When supplied, the sink writes to the ledger +
+      registry atomically. Backwards-compat default `None` keeps existing tests green.
+- [ ] [CODE] P1. 4 new UTL events in `unified-trading-library/unified_trading_library/events/event_types.py`: -
+      `ARCHETYPE_SHADOW_EVALUATED` (every evaluate call — has decision field) - `ARCHETYPE_PROMOTED_TO_PROD` -
+      `ARCHETYPE_ROLLED_BACK` - `ARCHETYPE_BUILD_ARCHIVED`
+- [ ] [DOC] P1. Add "Persistence" section to `codex/04-architecture/shadow-deployment-pattern.md` naming
+      `ArchetypeBuildRegistry` + the GCS ledger layout as SSOT.
+- [ ] [TEST] P1. Unit tests covering: (a) registry monotonic-version enforcement, (b) PROD head tracking across multiple
+      builds, (c) ROLLBACK restores the `parent_build_version`, (d) ledger JSONL append — read-modify-write is atomic
+      under concurrent evaluations.
+- [ ] [CODE] P2. UI surface — `/archetype-promotions` page in `unified-trading-system-ui` (or `deployment-ui`). Lists
+      all 18 archetypes with current PROD build, active SHADOW candidates, decision timeline for each. Reads the ledger
+      via a strategy-service API endpoint.
+
+## Phase 3 — Shadow Observation Period (calendar time, not engineering)
+
+**Goal:** clear the 14-21 day shadow window for every archetype. Runs after Phase 1 cutover lands.
+
+- [ ] [OPS] P1. Start shadow clock for all 18 archetypes once `STRATEGY_DISPATCH_MODE=v2_shadow` goes live. This means
+      running v2 alongside legacy for every production-bound instance and accumulating `ShadowComparisonMetrics` via
+      `batch_harness` divergence logging.
+- [ ] [OPS] P1. Review EXTEND / REJECT decisions weekly via the ledger. Each REJECT blocks the archetype; iterate on the
+      engine, bump build_version, re-enter shadow.
+- [ ] [OPS] P1. Wait for `evaluate_shadow_deployment` to return PROMOTE on all 18 archetypes (tight archetypes 21 days +
+      500 trades; rest 14 days + 100 trades per `build_default_shadow_policy`).
+- [ ] [OPS] P1. When all 18 have PROMOTE, human triggers the registry `promote_to_prod()` call per archetype. Emits
+      `ARCHETYPE_PROMOTED_TO_PROD`.
+
+## Phase 4 — Factory Full Cutover + Legacy Code Deletion
+
+**Goal:** remove the `_archived_pre_v2/` fence. Runs only after Phase 3 is green on all 18 archetypes.
+
+- [ ] [CODE] P1. Change `STRATEGY_DISPATCH_MODE` default from `legacy` to `v2_prod`. Ship + observe for 1-2 days.
+- [ ] [CODE] P1. Delete feature-flag gate; v2 is the only path.
+- [ ] [CODE] P1. `git rm -rf strategy-service/strategy_service/engine/strategies/_archived_pre_v2/`
+- [ ] [CODE] P1. Rewrite `strategy_service/engine/strategies/__init__.py` — remove legacy re-exports; keep only `v2/`
+      namespace.
+- [ ] [CODE] P1. Delete `strategy-service/tests/unit/test_{ all 49 legacy test files }.py` or migrate residual value to
+      v2 tests. Full list in `strategy-service/tests/` after audit at cutover time.
+- [ ] [CODE] P1. Clear the `# noqa: E501` annotations added during archive (they're only needed because the archive path
+      is long; deletion makes them unnecessary).
+- [ ] [CODE] P1. Update `legacy_strategy_mapping.py` `legacy_module` strings to point at `ARCHIVED` sentinel value or
+      drop the field entirely — decision: keep the field for audit provenance; set values to e.g.
+      `"RETIRED:strategy_service.engine.strategies._archived_pre_v2.defi_basis"`.
+- [ ] [CODE] P1. Delete `codex/09-strategy/_archived_pre_v2/` + the archive README + the inbound-link repointings. At
+      this point v2 is the only surface the codex discusses.
+- [ ] [TEST] P1. Full QG green on strategy-service + e2e-testing + execution-service after deletion.
+
+## Phase 5 — Live Unity UAT
+
+**Goal:** first live-integration tick of the Unity commercial relationship. Gated on external commercial dependencies,
+not engineering.
+
+- [ ] [OPS] P1. Unity onboarding — pay $550 connection fee per `UNITY_COMMERCIAL_TERMS` (production_deposit_usd=10_800;
+      refund at 5_300_000 lifetime turnover).
+- [ ] [OPS] P1. Obtain Unity Java Feed Connector binary + sandbox credentials.
+- [ ] [CODE] P1. Swap `make_mock_launch_fn()` for `make_real_launch_fn(binary_path=...)` in execution-service Unity
+      adapter. No other code changes — the JSON-line protocol is identical.
+- [ ] [TEST] P1. End-to-end smoke test against Unity UAT — place a 0.01 GBP bet, verify fill + commission, verify
+      per-book attribution.
+- [ ] [OPS] P1. 48-hour observation period with the real binary before enabling live capital deployment.
+
+## Phase 6 — Capability Gap Close-Out (non-blocking, deferred)
+
+These are items the capability audit flagged as PARTIAL. None block the cutover above; all are extensions to shipped
+systems.
+
+- [ ] [CODE] P2. **Venue-selection SOR multi-venue logic** — v2 emits the eligible venue set; execution-service
+      currently picks the first eligible. Implement fee-adjusted SOR in `execution-service/execution_service/v2/` with
+      VenueCapabilityV2 fee_bps + latency + liquidity inputs.
+- [ ] [CODE] P2. **Parameterized hold-policy engine mixin** — today MAX_DURATION / EXPIRATION_GATE / PNL_TARGET /
+      LIQUIDATION_GATE are hardcoded per archetype. Pull into a shared mixin so configs can flip between them without
+      changing engine code.
+- [ ] [CODE] P2. **Transfer-rebalance service integration to V2EngineOrchestrator** — today only
+      `YIELD_ROTATION_LENDING` emits `BridgeInstructionV2`. Wire the transfer-rebalance service to fan TRANSFER
+      instructions to DeFi engines when cross-venue rebalancing is needed.
+- [ ] [CODE] P2. **Benchmark-fills on v2 instructions** — v2 doesn't emit benchmark prices; matching engine in
+      execution-service infers them. Add `benchmark_price_ref` to `StrategyInstructionEnvelope` + wire strategy-side
+      emission for alpha attribution clarity.
+- [ ] [CODE] P2. **Portfolio-allocator repo split** — currently a sub-package inside strategy-service. Relocate to its
+      own repo when team size warrants. Designed to be relocatable; no refactor needed.
+
+## Phase 7 — 7 NEEDS_REVIEW mapping rows (operator judgment)
+
+These are the rows in `LegacyStrategyMapping` flagged `status="NEEDS_REVIEW"`. Each needs a human decision before the
+archetype promotion in Phase 3 can proceed cleanly.
+
+- [ ] [REVIEW] P1. **`cross_exchange_spread_ml`** — currently `RULES_DIRECTIONAL_CONTINUOUS` but the spread is
+      ML-predicted. Decision: keep as RULES (threshold-crossing-based entry), OR re-map to `STAT_ARB_PAIRS_FIXED` if
+      cointegration-style analysis is the alpha.
+- [ ] [REVIEW] P1. **`sports_staking_fixed_dollar`** — legacy `betting_strategies.py` is a staking library (FixedDollar
+      / FixedPercentage / AdaptiveDaily), not a strategy. Decision: delete the row; the staking method is an axis on
+      other sports strategies, not an archetype instance.
+- [ ] [REVIEW] P1. **`defi_sol_basis`** — legacy uses Drift (Solana native perps). Decision: (a) add `drift` to
+      `KNOWN_VENUE_TOKENS` in UAC and keep the row, OR (b) accept the Hyperliquid substitute that the current slot label
+      uses.
+- [ ] [REVIEW] P1. **`defi_sol_staked_basis`** — same Drift question as above.
+- [ ] [REVIEW] P1. **`cross_chain_sor`** — legacy `cross_chain_sor.py` is a meta-allocator that rebalances between
+      strategies. Decision: (a) keep as `ARBITRAGE_PRICE_DISPERSION` archetype, OR (b) recognize it as a
+      portfolio-allocator instance and delete the strategy-side row.
+- [ ] [REVIEW] P1. **`rel_vol`** — 2-leg vol dispersion. Decision: is this `STAT_ARB_CROSS_SECTIONAL` with basket size
+      2, or a `VOL_TRADING_OPTIONS` variant? Affects which engine code path handles it.
+- [ ] [REVIEW] P1. **`omnichain_transfer`** — pure bridge infrastructure, not alpha. Decision: delete the row;
+      functionality moves to the transfer-rebalance service (Phase 6 item).
+
+## Phase 8 — Pre-existing test flakes (unrelated to v2 but blocks full-green QG)
+
+- [ ] [FIX] P2.
+      **`execution-service/tests/unit/test_live_trigger_isolation_gating.py::test_cross_client_instruction_rejected`** —
+      passes in isolation, fails during full-suite run. Test-ordering or state-pollution flake. Diagnose via
+      `pytest --forked` to find the polluting test.
+- [ ] [FIX] P2.
+      **`execution-service/tests/unit/engine/test_latency_recorder.py::TestLatencyRecorder::test_tick_to_order`** —
+      timing-sensitive; flakes during full-suite. Add a tolerance or determinize the clock.
+
+## Success criteria
+
+- Every Phase 1 item [x] and backtest parity integration test passes on the 3 representative archetypes.
+- `ArchetypeBuildRegistry` + GCS ledger shipped; every `evaluate_shadow_deployment` call is persisted; 4 new UTL events
+  defined.
+- All 18 archetypes have `ShadowDecision.PROMOTE` recorded in the registry with PROD status.
+- `STRATEGY_DISPATCH_MODE` default is `v2_prod`; legacy factory path deleted; `_archived_pre_v2/` removed from both code
+  and codex.
+- Live Unity UAT smoke test passes.
+- 7 NEEDS_REVIEW rows closed (re-mapped or deleted).
+- `test_live_trigger_isolation_gating` and `test_latency_recorder` pass deterministically across the full suite.
+- Full workspace QG green on strategy-service + execution-service + e2e-testing.
+
+## Dependency graph
+
+```
+Phase 1 (factory cutover Tier 2)
+   ├── 1a string→archetype resolver ──┐
+   ├── 1b V2BatchHarness ────────────┤
+   ├── 1c react_to_equity_change ────┤──▶ Phase 1d (factory dispatch flag)
+   └── ⇣                              │
+Phase 1e (backtest parity) ◀──────────┘
+        ⇣
+Phase 2 (shadow persistence) — can run in parallel with Phase 1 but has no
+  consumer until Phase 3 starts.
+        ⇣
+Phase 3 (shadow observation) — 14-21 calendar days minimum. Blocks on
+  Phase 1e passing (shadow mode has to work end-to-end) AND Phase 2
+  (decisions need a place to land).
+        ⇣
+Phase 4 (legacy deletion) — only safe after Phase 3 is green on ALL 18.
+        ⇣
+Phase 7 (NEEDS_REVIEW decisions) — blocker for Phase 4 because promotion
+  of the 7 ambiguous rows requires an operator call first. Can run in
+  parallel with Phase 3.
+
+Phase 5 (live Unity UAT) — independent of the above; gated on commercial.
+Phase 6 (capability gap close-out) — additive extensions; can run any time.
+Phase 8 (test flakes) — independent; low-priority debt.
+```
+
+## Related prior plans + memory
+
+- **Prior plan (closed):** `plans/active/strategy_architecture_v2_2026_04_17.plan.md` (85/85 complete; same locked_by
+  branch).
+- **Codex SSOT:** `codex/09-strategy/architecture-v2/` (README + MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting +
+  2 architecture docs).
+- **Migration audit:** `codex/09-strategy/architecture-v2/MIGRATION.md` — §8 legacy code mapping, §15 deletion schedule
+  (BLOCKED on factory cutover + shadow promotion).
+- **Shadow pattern:** `codex/04-architecture/shadow-deployment-pattern.md`.
+- **Archive READMEs:**
+  - `codex/09-strategy/_archived_pre_v2/README.md` (doc archive)
+  - `strategy-service/strategy_service/engine/strategies/_archived_pre_v2/README.md` (code archive)
+- **Memory files:**
+  - `memory/project_architecture_v2_all_13_phases_shipped_2026_04_18.md`
+  - `memory/project_phase11_loader_and_v2_integration_test_2026_04_18.md`
+  - `memory/project_unity_mock_feed_connector_2026_04_18.md`
+  - `memory/project_unity_final_data_and_phase_13_done_2026_04_18.md`
+  - `memory/feedback_pragmatic_commits_non_prod.md` (plain `git push` OK during non-prod period; quickmerge `--agent`
+    often blocks).
+
+## Handover prompt — paste into the next session
+
+```
+You are picking up the Strategy Architecture v2 finalization. All codex-defined
+work is complete; the remaining work is operational residuals + the factory
+cutover that unblocks deletion of the legacy code fence.
+
+Start by reading, in order:
+
+1. unified-trading-pm/plans/active/strategy_architecture_v2_finalization_2026_04_19.plan.md
+   (this plan — your full task list)
+2. unified-trading-pm/plans/active/strategy_architecture_v2_2026_04_17.plan.md
+   (prior plan, 85/85 complete — what already shipped)
+3. unified-trading-pm/codex/09-strategy/architecture-v2/MIGRATION.md § 15
+   ("Legacy Code Deletion Schedule") — the deletion-prereq chain
+4. unified-trading-pm/codex/04-architecture/shadow-deployment-pattern.md
+   — the ShadowDeploymentPolicy contract
+5. strategy-service/strategy_service/engine/strategies/_archived_pre_v2/README.md
+   — the code archive fence you're going to delete in Phase 4
+
+Active branch on every repo: `live-defi-rollout`. Plain `git push` is approved
+per `memory/feedback_pragmatic_commits_non_prod.md` — quickmerge pre-flight
+often blocks during this cross-repo period.
+
+Rules you must not violate:
+
+- No backwards-compat shims. Update callers.
+- No `# type: ignore` or `# noqa` to hide real violations. Fix the root cause.
+- QG via `bash scripts/quality-gates.sh` per repo; never `.venv-workspace` for
+  tests.
+- UAC imports via domain facades or `unified_api_contracts.internal` only —
+  never `canonical.*` or `normalize_utils.*`.
+- Kraken is permanently removed. Drift perps are not in KNOWN_VENUE_TOKENS;
+  the 2 Drift rows in Phase 7 are waiting on an operator decision.
+
+Priority order:
+
+1. **Phase 1** (factory cutover Tier 2) — this is the critical path. Once
+   1e backtest parity passes for the 3 archetypes, you can start the shadow
+   clock. ~790 LOC, 2-3 focused days. Use the `STRATEGY_DISPATCH_MODE` env
+   var pattern so `legacy` remains the default until Phase 3 completes.
+2. **Phase 2** (shadow persistence) — can run in parallel with Phase 1 but
+   has no live consumer until Phase 3 starts. Safe to build whenever.
+3. **Phase 7** (7 NEEDS_REVIEW rows) — cheap operator consultations; do these
+   any time, but before Phase 4 promotion.
+4. **Phase 3** (shadow observation) — calendar time, not engineering.
+   Start clock as soon as Phase 1+2 are live; wait 14-21 days per archetype.
+5. **Phase 4** (legacy deletion) — only after every archetype is PROMOTED.
+6. **Phase 5** (live Unity UAT) — independent track. Gated on $550 fee +
+   real Java Feed Connector binary + human approval before initiating. Ask
+   first.
+7. **Phase 6** (capability gaps) + **Phase 8** (test flakes) — low priority,
+   fill time between the above.
+
+When you finish each phase, flip its checkboxes in this plan doc + add a
+repo+SHA+module-path evidence pointer per the convention in the prior plan.
+Update MEMORY.md index. Commit the plan changes to PM.
+
+Don't start Phase 4 until Phase 3 is 18/18 PROMOTE. Don't start Phase 3 until
+Phase 1e passes (shadow mode actually has to work end-to-end, not just
+compile). Don't skip steps.
+```
