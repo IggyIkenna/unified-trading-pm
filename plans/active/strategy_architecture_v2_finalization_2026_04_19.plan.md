@@ -129,15 +129,27 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
 
 ### 1d — Factory dispatch + feature flag
 
-- [ ] [CODE] P1. Rewrite `strategy-service/strategy_service/cli/handlers/batch_utils.py` `create_strategy_instance()`: -
-      Gate on env var `STRATEGY_DISPATCH_MODE` (default `legacy`, accepted values `legacy` / `v2_shadow` / `v2_prod`). -
-      `legacy`: current behaviour, imports from `_archived_pre_v2/`. - `v2_shadow`: constructs `V2BatchHarness` wrapper;
-      calls both legacy and v2 on every tick; logs divergence; still returns legacy result. - `v2_prod`: v2 only; legacy
-      imports bypassed entirely. - Default remains `legacy` until shadow clock finishes.
-- [ ] [CODE] P1. Update `strategy-service/strategy_service/cli/handlers/batch_handler.py`: - Remove direct
-      `from strategy_service.engine.strategies._archived_pre_v2.defi_base       import DeFiBaseStrategy`; replace
-      `isinstance(..., DeFiBaseStrategy)` with harness.is_defi_archetype when `STRATEGY_DISPATCH_MODE != "legacy"`. -
-      Keep legacy path reachable in mode=legacy.
+- [x] [CODE] P1. Added `strategy_dispatch_mode: str` field to `StrategyServiceConfig`
+      (validation_alias=`STRATEGY_DISPATCH_MODE`, default `legacy`). New `StrategyDispatch` dataclass + sibling
+      `resolve_strategy_dispatch(strategy_type, mode=None)` in `cli/handlers/batch_utils.py` routes by mode: `legacy` →
+      legacy instance only; `v2_shadow` → both sides (v2 harness constructed with `shadow_mode=True` so orchestrator
+      suppresses returns but `shadow_emitted_instructions` records divergence); `v2_prod` → v2 harness only. Phase 7
+      NEEDS_REVIEW mappings are skipped from v2-side (warning + `v2_skipped_reason` populated) in shadow, refused
+      outright in prod. Invalid config values raise `ValueError` at read time. Evidence: strategy-service working tree,
+      ~120 LOC in batch_utils.py + 18 LOC config field.
+- [x] [CODE] P1. Refactored `batch_handler.py`: `_get_or_create_strategy` now returns `StrategyDispatch | None` and
+      caches the wrapper (preserves the GCS-config-driven legacy instance swap for strategies that have bespoke GCS
+      configs). Renamed the existing DeFi/generic signal iterator to `_generate_signals_from_candles_legacy` and added a
+      new `_generate_signals_from_candles_v2` that drives the v2 harness per candle. The public
+      `_generate_signals_from_candles` dispatches by `dispatch.mode` (shadow mode runs the legacy iterator for the
+      return value AND the v2 iterator in parallel so the harness accumulates divergence evidence). New
+      `_extract_identity_for_write(dispatch, strategy_type)` static helper reads the authoritative
+      `(strategy_id, client_id)` from legacy in legacy/shadow and from the v2 harness in prod. Legacy `DeFiBaseStrategy`
+      isinstance gate preserved on the legacy path only (will be removed once Phase 4 deletes `_archived_pre_v2/`).
+      Evidence: strategy-service working tree, ~160 LOC net in batch_handler.py.
+- [x] [TEST] P1. `tests/unit/cli/handlers/test_strategy_dispatch.py` — 16 tests green. Covers legacy/shadow/prod modes,
+      NEEDS_REVIEW skip in shadow vs refuse in prod, unknown-strategy handling, shadow-mode orchestrator flag, default
+      mode `legacy`, invalid-mode raise, `_extract_identity_for_write` routing. Full v2+cli regression: 196 tests pass.
 
 ### 1e — Backtest parity integration test
 
