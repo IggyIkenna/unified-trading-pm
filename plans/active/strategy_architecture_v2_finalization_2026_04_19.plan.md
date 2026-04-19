@@ -284,22 +284,36 @@ not engineering.
 ## Phase 6 — Capability Gap Close-Out (non-blocking, deferred)
 
 These are items the capability audit flagged as PARTIAL. None block the cutover above; all are extensions to shipped
-systems.
+systems. **Status 2026-04-19: all five items reviewed and deferred to post-Phase-3 promotion — they're P2 follow-ups,
+not blockers for the shadow clock or legacy deletion. Prerequisites / consumers noted per item so a later implementer
+can pick the right starting point.**
 
 - [ ] [CODE] P2. **Venue-selection SOR multi-venue logic** — v2 emits the eligible venue set; execution-service
       currently picks the first eligible. Implement fee-adjusted SOR in `execution-service/execution_service/v2/` with
-      VenueCapabilityV2 fee_bps + latency + liquidity inputs.
+      VenueCapabilityV2 fee_bps + latency + liquidity inputs. **Prerequisites:** VenueCapabilityV2 fee/latency/liquidity
+      fields populated for every venue in the registry (currently sparse for DeFi). **Consumer:** the combinatoric
+      discovery page in Phase 10 (multi-venue legs presuppose routing).
 - [ ] [CODE] P2. **Parameterized hold-policy engine mixin** — today MAX_DURATION / EXPIRATION_GATE / PNL_TARGET /
       LIQUIDATION_GATE are hardcoded per archetype. Pull into a shared mixin so configs can flip between them without
-      changing engine code.
+      changing engine code. **Prerequisites:** hold-policy enum must exist in UAC internal (already does via
+      `HoldPolicy` StrEnum); 18 archetype engines need a uniform call-site for the mixin hook. **Consumer:**
+      config-driven strategy onboarding (one less engine recompile per hold-policy tweak).
 - [ ] [CODE] P2. **Transfer-rebalance service integration to V2EngineOrchestrator** — today only
       `YIELD_ROTATION_LENDING` emits `BridgeInstructionV2`. Wire the transfer-rebalance service to fan TRANSFER
-      instructions to DeFi engines when cross-venue rebalancing is needed.
+      instructions to DeFi engines when cross-venue rebalancing is needed. **Prerequisites:** Phase 7 decision on
+      `omnichain_transfer` (proposal: delete the row; its functionality lands here). **Consumer:** any archetype that
+      holds positions across chains — currently limited but expands with CARRY_STAKED_BASIS + CARRY_RECURSIVE_STAKED at
+      scale.
 - [ ] [CODE] P2. **Benchmark-fills on v2 instructions** — v2 doesn't emit benchmark prices; matching engine in
       execution-service infers them. Add `benchmark_price_ref` to `StrategyInstructionEnvelope` + wire strategy-side
-      emission for alpha attribution clarity.
+      emission for alpha attribution clarity. **Prerequisites:** UAC schema extension + 18 engines updated.
+      **Consumer:** strategy-vs-execution alpha attribution (explicit benchmarks remove the current implicit-midpoint
+      assumption that skews attribution on wide-spread assets).
 - [ ] [CODE] P2. **Portfolio-allocator repo split** — currently a sub-package inside strategy-service. Relocate to its
-      own repo when team size warrants. Designed to be relocatable; no refactor needed.
+      own repo when team size warrants. Designed to be relocatable; no refactor needed. **Prerequisites:** team split
+      signal (not yet). **Consumer:** when allocator has its own owner, split unlocks independent release cadence.
+      **Note:** this is intentionally the last item — the sub-package is working cleanly in-place and a split today is
+      overhead without payoff.
 
 ## Phase 7 — 7 NEEDS_REVIEW mapping rows (operator judgment)
 
