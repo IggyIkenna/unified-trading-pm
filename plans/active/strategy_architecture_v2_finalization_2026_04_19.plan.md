@@ -83,38 +83,49 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
 
 ### 1a — String→archetype resolver
 
-- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/legacy_type_to_archetype.py` with
-      `LEGACY_TYPE_TO_SLOT: dict[str, tuple[StrategyArchetypeV2, str, ShareClass, Decimal]]` covering all 63 entries
-      from `cli/handlers/batch_utils.py` factory table. Values: `(archetype, slot_label, share_class, initial_equity)`.
-      Cross-reference against `LegacyStrategyMapping` + `TARGET_UNIVERSE` for the 58 known; hand-map the 5 unseen
-      generic strings (OIL_COMMODITY_REGIME, NG_COMMODITY_REGIME, BTC_OPTIONS_ML, SPY_OPTIONS_ML, ETH_OPTIONS_ML,
-      CROSS_EXCHANGE_BTC — verify exact gap).
-- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_legacy_type_to_archetype.py` — every factory string resolves to a
-      valid `StrategyInstanceIdentity`; no Kraken; no stale venue tokens; deterministic.
+- [x] [CODE] P1. Created `strategy-service/strategy_service/engine/strategies/v2/legacy_type_to_archetype.py` with
+      `LEGACY_TYPE_TO_SLOT: dict[str, LegacyTypeMapping]` covering all **65** entries from `cli/handlers/batch_utils.py`
+      (the plan's initial "~63" estimate was low — DeFi 27 + CeFi 20 + TradFi 12 + Sports 6 = 65). Values:
+      `(archetype, slot_label, share_class, initial_equity, initial_config, review_status,     review_notes)`. 6 rows
+      carry `review_status="NEEDS_REVIEW"` (SOL_BASIS, SOL_STAKED_BASIS, CROSS_CHAIN_SOR, OMNICHAIN_TRANSFER,
+      CROSS_EXCHANGE_BTC, REL_VOL_BTC_ETH, SPORTS_KELLY). Slot labels reserve `-v5-prod` to stay disjoint from
+      LEGACY_STRATEGY_MAPPING (v1-v3) and TARGET_UNIVERSE (v2-v4). Evidence: strategy-service working tree, new file 563
+      LOC.
+- [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_legacy_type_to_archetype.py` — 18 tests green. Covers grammar
+      parse, factory-key parity (no orphans in either direction), disjointness from LEGACY_STRATEGY_MAPPING +
+      TARGET_UNIVERSE, Kraken/Drift guardrails, frozen-contract immutability.
 
 ### 1b — V2BatchHarness adapter
 
-- [ ] [CODE] P1. Create `strategy-service/strategy_service/engine/strategies/v2/batch_harness.py` with class
-      `V2BatchHarness`: - wraps `V2EngineOrchestrator` - holds `_position_state: dict[str, Decimal]` parallel to
-      batch_handler's - `load_initial_positions_from_gcs(strategy_type: str)` — reads legacy GCS config, seeds position
-      state - `inject_simulated_deposits(date_str: str)` — reads deposits from GCS config, adds to state -
-      `on_tick(strategy_type: str, candle: dict, features: dict,       predictions: list, now_utc: datetime) -> list[dict]`
-      — resolves strategy_type → archetype, calls orchestrator.on_tick, converts `StrategyInstructionEnvelope` → dict
-      via `.model_dump()`, applies position delta per instruction (LEND/WITHDRAW/TRANSFER/BRIDGE) - exposes
-      `is_defi_archetype: bool` so batch_handler can drop the `isinstance(strategy_instance, DeFiBaseStrategy)` check
-- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_batch_harness.py` — position state carries forward; deposits
-      applied; LEND debits WALLET, credits PROTOCOL; TRANSFER between WALLET→venue works; duck-type parity with legacy
-      `generate_signal` return shape.
+- [x] [CODE] P1. Created `strategy-service/strategy_service/engine/strategies/v2/batch_harness.py` with class
+      `V2BatchHarness`: wraps `V2EngineOrchestrator`, holds `_position_state: dict[str, Decimal]`,
+      `load_initial_positions_from_gcs()` / `inject_simulated_deposits(date_str)` mirror batch_handler semantics,
+      `on_tick(candle, features, predictions, now_utc)` routes via orchestrator, converts envelopes via
+      `model_dump(mode="json")`, applies position delta per action (LEND / SWAP / TRANSFER / BRIDGE / BORROW / STAKE /
+      UNSTAKE; TRADE/QUOTE/CANCEL/ATOMIC are position-state no-ops). Exposes `is_defi_archetype` keyed on an
+      archetype-level membership table so batch_handler can drop the `isinstance(..., DeFiBaseStrategy)` check. Shadow
+      mode records emissions in `shadow_emitted_instructions` even when the orchestrator suppresses its return.
+      Evidence: strategy-service working tree, new file ~400 LOC.
+- [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_batch_harness.py` — 16 tests green. Covers lazy registration,
+      LEND position delta, TRADE no-op, shadow-mode recording, feature coercion (numeric strings + bools), duck-type
+      dict shape, deposit injection (including list-of-records schema from `strategy_config_loader`), multi-tick
+      idempotence.
 
 ### 1c — react_to_equity_change across 18 archetypes
 
-- [ ] [CODE] P1. Implement `react_to_equity_change(new_equity: Decimal) ->     list[StrategyInstructionEnvelope]` on
-      each archetype engine: - For stateless archetypes (MM, event-driven, vol, stat-arb), base stub is sufficient —
-      update `self.target_equity = new_equity`, return `[]` (next tick will size to new equity naturally). - For
-      stateful archetypes (carry/yield/basis/recursive/liquidation), override to emit a rebalancing instruction
-      proportional to the delta.
-- [ ] [TEST] P1. `tests/unit/engine/strategies/v2/test_equity_rescaling.py` — each archetype receives an
-      AllocationDirective that halves equity; stateless returns []; stateful emits a proportional LEND/UNSTAKE.
+- [x] [CODE] P1. Changed base signature to
+      `react_to_equity_change(new_equity: Decimal) -> list[StrategyInstructionEnvelope]`. Base default updates
+      `target_equity` and returns `[]`. `on_allocation_directive` now forwards its return up through
+      `V2EngineOrchestrator.on_allocation_directive` (shadow-mode suppresses). Added
+      `last_tick_{instrument,venue,mid_price,utc}` cursor fields + `_record_tick_context()` helper to base. 6 stateful
+      engines override: YIELD_ROTATION_LENDING → proportional LEND, CARRY_BASIS_PERP → proportional TRADE,
+      CARRY_BASIS_DATED → rescaling AtomicInstruction, CARRY_STAKED_BASIS → rescaling AtomicInstruction,
+      CARRY_RECURSIVE_STAKED → single TRADE notional delta, YIELD_STAKING_SIMPLE → STAKE/UNSTAKE depending on delta
+      sign. 11 stateless engines inherit base. Evidence: strategy-service working tree, 8 files modified.
+- [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_equity_rescaling.py` — 36 tests green. Parametrised
+      return-type-contract sweep across all 18 archetypes, stateless-empty sweep across the 11 stateless engines,
+      per-archetype rebalance emission for YIELD_ROTATION_LENDING / CARRY_BASIS_PERP / YIELD_STAKING_SIMPLE,
+      on_allocation_directive forwarding, orchestrator-level collection via V2BatchHarness + AllocationDirective.
 
 ### 1d — Factory dispatch + feature flag
 
@@ -138,8 +149,8 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
 ### 1f — Extract sports_feature_subscriber helpers out of the archive
 
 Memory's Commit C: `strategy_service/adapters/sports_feature_subscriber.py` is the only non-handler prod file still
-reaching into `_archived_pre_v2/sports/arbitrage.py`. It uses one or two small helper functions. Must be resolved
-before Phase 4 can delete the sports archive sub-package.
+reaching into `_archived_pre_v2/sports/arbitrage.py`. It uses one or two small helper functions. Must be resolved before
+Phase 4 can delete the sports archive sub-package.
 
 - [ ] [CODE] P1. Audit `sports_feature_subscriber.py` — identify the exact symbols pulled from
       `_archived_pre_v2.sports.arbitrage`.
@@ -200,18 +211,17 @@ throws it away. Nothing is audit-traceable.
 - [ ] [CODE] P1. `git rm -rf strategy-service/strategy_service/engine/strategies/_archived_pre_v2/`
 - [ ] [CODE] P1. Rewrite `strategy_service/engine/strategies/__init__.py` — remove legacy re-exports; keep only `v2/`
       namespace.
-- [ ] [CODE] P1. **Test migration — 3 buckets (per memory's Commit D):**
-      - **Bucket A — DELETE.** Legacy test for a strategy whose v2 archetype is PROMOTED and has equivalent coverage in
-        `tests/unit/engine/strategies/v2/test_archetype_engines_filled.py` + `test_archetype_secondary_actions.py`.
-        Delete the legacy test file outright.
-      - **Bucket B — `pytest.mark.xfail`.** Legacy test for a strategy whose row in `LEGACY_STRATEGY_MAPPING` is
-        `NEEDS_REVIEW`. Keep the file but mark with `@pytest.mark.xfail(reason="NEEDS_REVIEW row — pending operator
-        decision in Phase 7")` so CI doesn't block but the coverage isn't lost.
-      - **Bucket C — RETARGET.** Integration test under `tests/integration/*` that exercises a strategy end-to-end via
-        the legacy import. Rewrite to construct the v2 instance via `V2EngineOrchestrator.register_instance()` +
-        `on_tick()` instead. These are rare; most legacy tests are unit-level.
-      At cutover time, audit all ~49 legacy test files, bucket each, land the changes in the same commit as the archive
-      deletion so the repo is in a consistent state after the commit.
+- [ ] [CODE] P1. **Test migration — 3 buckets (per memory's Commit D):** - **Bucket A — DELETE.** Legacy test for a
+      strategy whose v2 archetype is PROMOTED and has equivalent coverage in
+      `tests/unit/engine/strategies/v2/test_archetype_engines_filled.py` + `test_archetype_secondary_actions.py`. Delete
+      the legacy test file outright. - **Bucket B — `pytest.mark.xfail`.** Legacy test for a strategy whose row in
+      `LEGACY_STRATEGY_MAPPING` is `NEEDS_REVIEW`. Keep the file but mark with
+      `@pytest.mark.xfail(reason="NEEDS_REVIEW row — pending operator       decision in Phase 7")` so CI doesn't block
+      but the coverage isn't lost. - **Bucket C — RETARGET.** Integration test under `tests/integration/*` that
+      exercises a strategy end-to-end via the legacy import. Rewrite to construct the v2 instance via
+      `V2EngineOrchestrator.register_instance()` + `on_tick()` instead. These are rare; most legacy tests are
+      unit-level. At cutover time, audit all ~49 legacy test files, bucket each, land the changes in the same commit as
+      the archive deletion so the repo is in a consistent state after the commit.
 - [ ] [CODE] P1. Clear the `# noqa: E501` annotations added during archive (they're only needed because the archive path
       is long; deletion makes them unnecessary).
 - [ ] [CODE] P1. Update `legacy_strategy_mapping.py` `legacy_module` strings to point at `ARCHIVED` sentinel value or
