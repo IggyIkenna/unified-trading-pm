@@ -317,26 +317,35 @@ can pick the right starting point.**
 
 ## Phase 7 — 7 NEEDS_REVIEW mapping rows (operator judgment)
 
-These are the rows in `LegacyStrategyMapping` flagged `status="NEEDS_REVIEW"`. Each needs a human decision before the
-archetype promotion in Phase 3 can proceed cleanly.
+Operator approved all 7 proposals on 2026-04-19. Applied in strategy-service `3326f9d` + UAC `1d2288e`.
 
-- [ ] [REVIEW] P1. **`cross_exchange_spread_ml`** — currently `RULES_DIRECTIONAL_CONTINUOUS` but the spread is
-      ML-predicted. Decision: keep as RULES (threshold-crossing-based entry), OR re-map to `STAT_ARB_PAIRS_FIXED` if
-      cointegration-style analysis is the alpha.
-- [ ] [REVIEW] P1. **`sports_staking_fixed_dollar`** — legacy `betting_strategies.py` is a staking library (FixedDollar
-      / FixedPercentage / AdaptiveDaily), not a strategy. Decision: delete the row; the staking method is an axis on
-      other sports strategies, not an archetype instance.
-- [ ] [REVIEW] P1. **`defi_sol_basis`** — legacy uses Drift (Solana native perps). Decision: (a) add `drift` to
-      `KNOWN_VENUE_TOKENS` in UAC and keep the row, OR (b) accept the Hyperliquid substitute that the current slot label
-      uses.
-- [ ] [REVIEW] P1. **`defi_sol_staked_basis`** — same Drift question as above.
-- [ ] [REVIEW] P1. **`cross_chain_sor`** — legacy `cross_chain_sor.py` is a meta-allocator that rebalances between
-      strategies. Decision: (a) keep as `ARBITRAGE_PRICE_DISPERSION` archetype, OR (b) recognize it as a
-      portfolio-allocator instance and delete the strategy-side row.
-- [ ] [REVIEW] P1. **`rel_vol`** — 2-leg vol dispersion. Decision: is this `STAT_ARB_CROSS_SECTIONAL` with basket size
-      2, or a `VOL_TRADING_OPTIONS` variant? Affects which engine code path handles it.
-- [ ] [REVIEW] P1. **`omnichain_transfer`** — pure bridge infrastructure, not alpha. Decision: delete the row;
-      functionality moves to the transfer-rebalance service (Phase 6 item).
+- [x] [REVIEW] P1. **`cross_exchange_spread_ml`** → KEEP as `RULES_DIRECTIONAL_CONTINUOUS`. Archetype is decided by the
+      entry/exit decision primitive (z-score threshold), not by whether the signal source is ML. NEEDS_REVIEW cleared on
+      both factory resolver (`CROSS_EXCHANGE_BTC`) and `LEGACY_STRATEGY_MAPPING`.
+- [x] [REVIEW] P1. **`sports_staking_fixed_dollar`** → DELETED from `LEGACY_STRATEGY_MAPPING`. Staking-method is an axis
+      (`axes/staking-methods.md`), not its own archetype instance. Fixed-dollar configs live on existing sports
+      strategies.
+- [x] [REVIEW] P1. **`defi_sol_basis`** → `drift` added to UAC `KNOWN_VENUE_TOKENS` (joins `dydx` + `gmx` in
+      `_DEFI_PERP_TOKENS`). Slot label re-points from hyperliquid to drift; hedge leg stays Solana-native. NEEDS_REVIEW
+      cleared.
+- [x] [REVIEW] P1. **`defi_sol_staked_basis`** → same resolution as `defi_sol_basis`. `drift` venue, NEEDS_REVIEW
+      cleared.
+- [x] [REVIEW] P1. **`cross_chain_sor`** → DELETED from factory resolver + `batch_utils.STRATEGY_CATEGORIES` + factories
+      dict + `LEGACY_STRATEGY_MAPPING`. Meta-allocator is owned by `portfolio_allocator/` sub-package.
+- [x] [REVIEW] P1. **`rel_vol`** → re-mapped from `STAT_ARB_CROSS_SECTIONAL` to `STAT_ARB_PAIRS_FIXED` with
+      `signal_source=realized_vol_ratio`. Note: `STAT_ARB_CROSS_SECTIONAL` now has no legacy representative — added to
+      `test_archetype_coverage_matches_expectation` permitted-gap set alongside `CARRY_BASIS_DATED`.
+- [x] [REVIEW] P1. **`omnichain_transfer`** → DELETED from factory resolver + `batch_utils` + `LEGACY_STRATEGY_MAPPING`.
+      Pure bridge infrastructure is owned by the transfer-rebalance service (Phase 6 capability gap).
+
+### Phase 7 remaining
+
+- [ ] [REVIEW] P1. **`SPORTS_KELLY`** (resolver-side only) — `sports/kelly.py` is a staking-library wrapper analogous to
+      `sports_staking_fixed_dollar`. By symmetry the decision is likely "fold into `SPORTS_VALUE_BETTING` via
+      staking-method axis + delete the factory row", but operator has not explicitly approved that yet. Factory dispatch
+      currently routes `SPORTS_KELLY` through the legacy path only (shadow/prod modes skip with a NEEDS_REVIEW warning);
+      legacy instantiation via `create_kelly_criterion_strategy` still works. Post-Phase-7, this is the only
+      NEEDS_REVIEW row left in the resolver — tested invariant.
 
 ## Phase 9 — Coverage matrix SSOT + archetype-doc propagation + UAC gap memo (2026-04-19)
 
@@ -380,49 +389,71 @@ Without this SSOT there is no way to point at "what can't we build today and why
       test: parse `category-instrument-coverage.md` at test time and assert every matrix row matches a cell in
       `ARCHETYPE_COVERAGE`. Detects drift early.
 
-## Phase 10 — UI enhancements: coverage matrix + catalog filters + combinatoric discovery
+## Phase 10 — Strategy Catalogue as a first-class service (REVISED 2026-04-19)
 
-**Goal:** render the matrix as a first-class UI surface so "show me all perp-to-perp arb" is one click, and the
-SaaS-vs-IM separation is visible via lock-state badges. All surfaces read from `lib/architecture-v2/coverage.ts`
-(Phase 9) + the availability registry (Phase 10.5).
+**Revised after user architectural review (2026-04-19).** Original scope was "add `/coverage/*` pages under
+`/services/research/strategy/`." That's wrong — coverage is the control centre for the firm's fixed universe of
+strategies, not a research sub-tab. The service-boundary fix:
 
-**Codex reference:**
-[`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
-and
-[`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md).
-When a sub-agent edits UI routes, paste both docs into the prompt context so they see the full SaaS-vs-IM visibility
-model, not just the matrix.
+**New shape — Strategy Catalogue is a top-level service**, sibling to Research / Trading / Investment Management. It
+owns the fixed universe, the maturity, the lock state, the promotion-decision ledger, the config-knob surface, and the
+codex deep-links. Downstream services (research / trading / IM) consume its registry, scoped by RBAC + lock state. The
+current `/services/research/strategy/families` + `/services/research/strategy/catalog` pages get mined for content and
+deleted (they're the "double-heading research" the user flagged).
 
-- [ ] [CODE] P1. **Master matrix page** `app/(platform)/coverage/page.tsx` — rows = archetypes grouped by family,
-      columns = `(category × instrument_type)`. Each cell heat-coloured by `CoverageStatus`, clickable → side panel with
+**Why this matters architecturally:** the fixed universe is the firm's IP. Users never "create strategies out of thin
+air" — they parameterize within the catalogue. Same underlying registry, different slices + permissions per consumer.
+This makes the SaaS-vs-IM split (Phase 10.5) a pure-metadata concern: same engine code, different catalogue visibility.
+
+**New routes (URL slug subject to confirmation):**
+
+- `/services/strategy-catalogue/` — overview (lives alongside `/services/research/`, `/services/trading/`,
+  `/services/investment-management/`)
+- `/services/strategy-catalogue/coverage` — master matrix
+- `/services/strategy-catalogue/coverage/by-combination` — combinatoric discovery (perp-to-perp arb, etc.)
+- `/services/strategy-catalogue/coverage/blocked` — block-list browser
+- `/services/strategy-catalogue/strategies/[archetype]/[slot]` — per-strategy detail page (see spec below)
+- `/services/strategy-catalogue/admin/lock-state` — admin toggle UI (Phase 10.5 surface moved here from `/admin/`)
+
+**Per-strategy detail page contents** (the "keys of the kingdom" view for the admin audience):
+
+| Section            | Source                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| Identity           | archetype + `legacy_strategy_id` + `slot_label` + venue/instrument coverage cell                    |
+| Maturity           | `ArchetypeBuild.status` (SHADOW / PROD / ARCHIVED / ROLLED_BACK) — Phase 2 `ArchetypeBuildRegistry` |
+| Promotion timeline | `PromotionDecisionLedger` rows (EXTEND / REJECT / PROMOTE / ROLLBACK) — Phase 2 ledger              |
+| Lock state         | `StrategyAvailabilityEntry` (PUBLIC / IM_RESERVED / CLIENT_EXCLUSIVE / RETIRED) — Phase 10.5        |
+| Live-vs-backtest   | `ShadowComparisonMetrics` (once Phase 3 shadow clock is running)                                    |
+| Codex doc link     | GitHub URL → PM repo's archetype doc + every referenced cross-cutting doc                           |
+| Config knobs       | UAC `StrategyConfig` + `ConfigRegistry` slot history — what users can change within the slot        |
+| Admin lock toggle  | Phase 10.5 `/admin/strategy-lock` UI embedded here, not a separate page                             |
+
+**Tasks:**
+
+- [ ] [CODE] P1. **Master matrix page** at `/services/strategy-catalogue/coverage`. Rows = archetypes grouped by family,
+      columns = `(category × instrument_type)`. Cells heat-coloured by `CoverageStatus`, clickable → side panel with
       signal variants, representative venues, slot_labels, block-list reason. Filter chips: category, instrument type,
-      roll mode, status, family. Admin-only (requires `admin` or `im_desk` role — Phase 10.5 gate).
-- [ ] [CODE] P1. **Combinatoric discovery page** `app/(platform)/coverage/by-combination/page.tsx` — two leg-pickers
-      (each = category + instrument_type). Selecting `(CEFI, perp) × (CEFI, perp)` lists every cell where both legs are
-      perps in pair-capable archetypes (`ARBITRAGE_PRICE_DISPERSION`, `CARRY_BASIS_PERP`, `STAT_ARB_PAIRS_FIXED`,
-      `CARRY_STAKED_BASIS`). Answers "perp-to-perp arb" directly. Uses `cellsForInstrumentPair()` helper.
-- [ ] [CODE] P1. **Block-list browser** `app/(platform)/coverage/blocked/page.tsx` — shows the 10 grouped block-list
-      entries with affected archetypes, blocking reason, and remediations. Feeds ops backlog.
-- [ ] [CODE] P1. **Reusable chip primitives** `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>` (Phase
-      10.5), `<RollModeBadge>`, `<CategoryChip>`, `<InstrumentTypeChip>`, `<SignalVariantBadge>`. Used on every
-      coverage-aware surface.
-- [ ] [CODE] P1. **Enhanced archetype detail.** Extend
-      `app/(platform)/services/research/strategy/families/[family]/page.tsx` with a "Coverage" tab per archetype,
-      filtered to that archetype's cells. `-dated-` tooltip linking to `futures-roll-and-combos.md` when applicable.
-- [ ] [CODE] P1. **Catalog filter enhancements.** Extend `app/(platform)/services/research/strategy/catalog/page.tsx`
-      with category, instrument_type, roll_mode, status, lock_state (Phase 10.5) filter chips. Existing family filter
-      stays.
-- [ ] [CODE] P2. **Family-landing mini-heatmap.** Extend `app/(platform)/services/research/strategy/families/page.tsx` —
-      each family card shows a 4-column × N-row sparkline of `(category × archetype)` coverage density.
-- [ ] [CODE] P2. **Slot-label component** `<SlotLabel label="ARCHETYPE@..." />` parses + renders with venue chip,
-      instrument chip, roll-mode badge.
+      roll mode, status, family, lock state. Admin-only (requires `admin` or `im_desk` role).
+- [ ] [CODE] P1. **Combinatoric discovery page** at `/services/strategy-catalogue/coverage/by-combination`. Two
+      leg-pickers (each = category + instrument_type). Selecting `(CEFI, perp) × (CEFI, perp)` lists every cell where
+      both legs are perps in pair-capable archetypes. Uses `cellsForInstrumentPair()`.
+- [ ] [CODE] P1. **Block-list browser** at `/services/strategy-catalogue/coverage/blocked`. Shows the 10 grouped
+      block-list entries with affected archetypes, blocking reason, remediations. Feeds ops backlog.
+- [ ] [CODE] P1. **Per-strategy detail page** at `/services/strategy-catalogue/strategies/[archetype]/[slot]/page.tsx`.
+      Implements the table above. Reads from `ArchetypeBuildRegistry` + `PromotionDecisionLedger` +
+      `StrategyAvailabilityRegistry` + the coverage matrix. Codex deep-links use GitHub blob URLs into the PM repo.
+- [ ] [CODE] P1. **Reusable chip primitives** at `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>`,
+      `<RollModeBadge>`, `<CategoryChip>`, `<InstrumentTypeChip>`, `<SignalVariantBadge>`, `<MaturityBadge>`. Used on
+      every catalogue-aware surface (catalogue itself + research + trading + IM consumers).
+- [ ] [CODE] P1. **Service landing page** at `/services/strategy-catalogue/page.tsx`. Overview of the service: what it
+      owns, how downstream services consume it, quick links to matrix / combinatoric / block-list / admin.
 - [ ] [TEST] P1. Vitest tests per new page + helper, including snapshot of `cellsForInstrumentPair(perp, perp)` (primary
       user-story assertion).
 
 ## Phase 10.5 — Strategy availability + lock state registry + UI RBAC
 
 **Goal:** implement the SaaS-vs-IM separation via a metadata-only lock state so the same engine code powers both
-businesses. Gates the lock-state overlays in Phase 10 surfaces.
+businesses. Gates the lock-state overlays on every catalogue-aware surface (Phase 10, Phase 10.6).
 
 **Codex reference:**
 [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
@@ -437,17 +468,81 @@ businesses. Gates the lock-state overlays in Phase 10 surfaces.
       `event_types.py`. `StrategyAvailabilityChangedEvent` Pydantic schema in UAC.
 - [ ] [CODE] P1. **Allocator enforcement.** Wire `validate_allocation_authorised()` into portfolio-allocator
       `AllocationDirective` reception. Raise `StrategyNotAvailableError` on violation; log via UTL.
-- [ ] [CODE] P1. **Admin toggle UI** `app/(platform)/admin/strategy-lock/page.tsx` — operator tool to transition slot
-      lock state. `admin` role only. Emits `STRATEGY_AVAILABILITY_CHANGED`.
-- [ ] [CODE] P1. **IM catalog landing** `app/(platform)/investment-management/catalog/page.tsx` — IM desk landing; full
-      universe with lock-state overlays; `im_desk` role.
-- [ ] [CODE] P1. **SaaS catalog filter.** Update existing `app/(platform)/services/research/strategy/catalog/page.tsx`
-      to call `slots_visible_to(actor="saas", client_id=user.client_id)` and show only authorised slots. Subtle "Talk to
-      IM" CTA for locked strategies.
-- [ ] [CODE] P1. **Lock-state badges on all surfaces.** `<LockStateBadge>` reads from registry and overlays on
-      `/coverage`, `/coverage/by-combination`, `/families/[family]`, `/catalog`.
+- [ ] [CODE] P1. **Admin toggle UI** inside the Strategy Catalogue service at
+      `/services/strategy-catalogue/admin/lock-state/page.tsx` (moved from `/admin/strategy-lock/` per Phase 10
+      restructure — the lock state is authoritative in the catalogue). `admin` role only. Emits
+      `STRATEGY_AVAILABILITY_CHANGED`.
+- [ ] [CODE] P1. **Lock-state badges on all catalogue surfaces.** `<LockStateBadge>` reads from registry and overlays on
+      every catalogue page. Downstream consumers (research / trading / IM catalogue views) read the same registry.
 - [ ] [TEST] P1. Tests: `validate_allocation_authorised` cross-client rejection, role-based `slots_visible_to`
       filtering, registry monotonic transitions, `STRATEGY_AVAILABILITY_CHANGED` event emission.
+
+## Phase 10.6 — Service-split refactor: mine /research/strategy/families + /catalog, redistribute, delete
+
+**Goal:** close the double-heading shown in the user's 2026-04-19 screenshot by removing the legacy
+`/services/research/strategy/families` and `/services/research/strategy/catalog` pages. Their good content is mined and
+redistributed across the four consumer surfaces:
+
+| Content type                      | New home                                                                               |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| Coverage matrix + family browser  | **Strategy Catalogue** (Phase 10)                                                      |
+| Strategy detail + maturity + docs | **Strategy Catalogue** per-strategy page                                               |
+| Admin lock toggle                 | **Strategy Catalogue** /admin/lock-state (Phase 10.5)                                  |
+| "Strategies I can iterate on"     | **Research** `/services/research/strategies` — registry-scoped by RBAC + lock state    |
+| "Strategies I've promoted live"   | **Trading** `/services/trading/strategies` — live-vs-backtest diff; client's own infra |
+| "Strategies offered / allocated"  | **Investment Management** `/services/investment-management/catalog` + client-reporting |
+
+Users never "create strategies out of thin air." They parameterize within the fixed universe. Research is the iteration
+surface; Trading is the promoted-to-live surface; IM is the offered-to-client surface. The catalogue is the control
+centre that decides what goes where.
+
+- [ ] [AUDIT] P1. Grep both legacy pages (`/services/research/strategy/families` +
+      `/services/research/strategy/catalog`) for every feature worth preserving — filters, sort orders, card components,
+      strategy-detail tabs, the backtest- config playground. Produce a migration manifest per feature: current location
+      → new home.
+- [ ] [CODE] P1. **Refactor `/services/research/strategies`** (note: the current route is plural `/strategies` vs
+      singular `/strategy/catalog` — the rename is part of the cleanup) to consume the catalogue registry. Scoped by
+      `slots_visible_to(actor="saas", client_id=user.client_id)` — SaaS clients see only their authorised slots, with
+      "Talk to IM" CTA for locked strategies. Backtest-config playground (within fixed universe) lives here, not in the
+      catalogue service.
+- [ ] [CODE] P1. **Refactor `/services/trading/strategies`** to show the user's promoted-to-live subset. Per-slot view:
+      live fills, PnL, live-vs-backtest delta (from Phase 3 `ShadowComparisonMetrics`). Client's own infrastructure
+      handles execution — the system handles it automatically; user sees the resulting state.
+- [ ] [CODE] P1. **Wire `/services/investment-management/catalog`** as a read-only IM desk view. Full universe visible
+      with lock-state overlays; `im_desk` role.
+- [ ] [CODE] P1. **Wire client-reporting catalogue section** — IM clients see the catalogue entries they're being
+      offered / currently allocated to. Aspirational view to entice investment; real details for allocated slots. Reads
+      `StrategyAvailabilityRegistry` (Phase 10.5) — no duplicate data store.
+- [ ] [CODE] P1. **Delete** `/services/research/strategy/families/` and `/services/research/strategy/catalog/`
+      directories and their routes. Update sidebar nav. Lands last in this phase so the migration is complete before the
+      source pages are removed.
+- [ ] [TEST] P1. Vitest per refactored page. Playwright e2e for the happy path: user lands on research → picks a
+      strategy to iterate on → backtests → promotes → sees it in trading.
+
+## Phase 10.7 — Allocator-as-shared-service split
+
+**Goal:** the current `/services/research/strategy/allocator` page is a portfolio-allocator surface that both
+**Investment Management** and the **Trading Platform** need. Replicate it into both consumer services with the right
+permission / automation model per audience.
+
+**User's 2026-04-19 note:** "both need some sort of allocator — weights, allocation across strategies. For IM we need to
+be careful about how we do things. For the trading platform the client gets his own infrastructure via the trading
+terminal — it happens automatically since our system handles it."
+
+- [ ] [CODE] P1. **IM-side allocator** inside the Investment Management service. Careful-mode UI: human-approved weight
+      changes, multi-sign workflows (to be detailed), full audit trail via UTL events (`ALLOCATION_DIRECTIVE_EMITTED`,
+      `ALLOCATION_APPROVED`, etc. — need to audit the UTL event table for existing constants before adding new ones).
+      Reads `StrategyAvailabilityRegistry` (Phase 10.5) to show only slots the client is allocated to.
+- [ ] [CODE] P1. **Trading-platform-side allocator** inside the Trading service. Auto-mode: client selects a target
+      weight vector, the system applies directives automatically via the existing portfolio-allocator instance on the
+      client's own infrastructure. Live-vs-backtest comparison surface attached.
+- [ ] [CODE] P1. **Shared allocator core** lives in the existing `strategy_service/portfolio_allocator/` sub-package.
+      Both UIs are thin shells over the same `AllocationDirective` emission path. No duplicate logic.
+- [ ] [CODE] P1. **Delete `/services/research/strategy/allocator`** — research is the iteration surface, not the
+      capital-commitment surface. Allocator doesn't belong under research. Mine any unique features, redistribute to the
+      IM + trading variants.
+- [ ] [TEST] P1. Vitest + integration: IM approval workflow rejects un-approved allocation changes; trading auto- apply
+      triggers a real allocator tick.
 
 ## Phase 11 — Dated-future roll mechanism (representative-future-service + combo creation)
 
