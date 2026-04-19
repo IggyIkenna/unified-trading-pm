@@ -165,16 +165,29 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
 
 ### 1f — Extract sports_feature_subscriber helpers out of the archive
 
-Memory's Commit C: `strategy_service/adapters/sports_feature_subscriber.py` is the only non-handler prod file still
-reaching into `_archived_pre_v2/sports/arbitrage.py`. It uses one or two small helper functions. Must be resolved before
-Phase 4 can delete the sports archive sub-package.
+Memory's Commit C: `strategy_service/adapters/sports_feature_subscriber.py` was the only non-handler prod file still
+reaching into `_archived_pre_v2/sports/arbitrage.py`. Resolved — subscriber now depends on a fresh non-archived adapter
+module.
 
-- [ ] [CODE] P1. Audit `sports_feature_subscriber.py` — identify the exact symbols pulled from
-      `_archived_pre_v2.sports.arbitrage`.
-- [ ] [CODE] P1. Move them to `unified-trading-library/unified_trading_library/sports/` (new sub-module) if they are
-      cross-service helpers, OR inline them in `sports_feature_subscriber.py` if they are tiny (< 30 LOC).
-- [ ] [CODE] P1. Update `sports_feature_subscriber.py` import to the new location.
-- [ ] [TEST] P1. QG green on both strategy-service and (if touched) UTL.
+- [x] [AUDIT] P1. The subscriber consumed `ArbitrageStrategy` + `create_arbitrage_strategy`, both from the 778-LOC
+      legacy class hierarchy (SportsBaseStrategy → BaseStrategy). Only the 3-way cross-book arb path
+      (`generate_sports_signal`) was used — not back/lay, not the rest of the class surface. Neither "inline < 30 LOC"
+      (wrong size) nor "move to UTL" (wrong layering — strategy-service-local) matched the memo's options.
+- [x] [CODE] P1. Created `strategy_service/adapters/sports/arbitrage_detector.py` — standalone
+      `detect_sports_arbitrage(market, config)` function implementing the same best-odds-per-outcome + independent-leg +
+      expected-commission + signal-number-counter logic as the legacy class, but with no BaseStrategy dependency.
+      Accepts a frozen `SportsArbitrageConfig`. Process-wide default detector shares a signal counter so `signal_number`
+      metadata monotonically increases across calls. New `strategy_service/adapters/sports/__init__.py` re-exports the
+      public surface.
+- [x] [CODE] P1. Rewrote `strategy_service/adapters/sports_feature_subscriber.py`: swapped the
+      `arb_strategy: ArbitrageStrategy` constructor arg for `arb_config: SportsArbitrageConfig`; call site now invokes
+      `detect_sports_arbitrage(market, config=self._arb_config)` instead of
+      `self._strategy.generate_sports_signal(market)`. Zero remaining `_archived_pre_v2/` imports in the subscriber.
+- [x] [TEST] P1. `tests/unit/adapters/test_sports_arbitrage_detector.py` — 11 tests green. Covers 3-way arb emission,
+      no-arb-when-sum-implied-high, metadata schema, below-min-margin rejection, max_bookmakers cap, empty /
+      single-outcome edges, independent-operator guard (via monkeypatch of `arb_legs_are_independent`), monotonic
+      signal_number across calls, frozen-config immutability, and a subscriber-regression guard that greps the
+      subscriber source for `_archived_pre_v2` and fails if re-introduced. Full Phase 1 regression: 227 tests pass.
 
 ## Phase 2 — Shadow Deployment Persistence + Promotion Infrastructure
 
