@@ -55,6 +55,27 @@ backtest path needs**. The gap:
 Plus there are shadow-promotion decisions with nowhere to go yet: the evaluator returns
 `ShadowEvaluation(decision=PROMOTE|EXTEND|REJECT|ROLLBACK)` and the caller discards it. No persistence, no event, no UI.
 
+### Reconciliation with earlier memory
+
+`memory/project_legacy_strategies_cleanup_audit_2026_04_18.md` proposed a more aggressive 4-commit direct-swap (A route
+batch_handler DeFi, B rewrite batch_utils, C move sports helper to UTL, D+ bulk delete). This plan **supersedes** that
+memo. Corrections the memo had wrong (it predates the capability audit):
+
+1. **`LEGACY_STRATEGY_MAPPING` keys are NOT the factory's strategy-type strings.** The mapping is keyed by
+   `legacy_strategy_id` (deployment-specific: `"DEFI_ETH_YLD_AAVE_SCE_1H"`). The factory dispatches by generic strings
+   (`"AAVE_LENDING"`, `"BTC_MOMENTUM"`). Different key spaces. Phase 1a builds the bridge the memo didn't realise was
+   missing.
+2. **V2 engines are NOT a drop-in replacement.** `V2EngineOrchestrator` is stateless; `batch_handler.py` is stateful
+   (`_position_state`, GCS positions, simulated deposits, per-instruction debit/credit). Phase 1b's `V2BatchHarness`
+   adapter is the bridge the memo's direct-swap would have broken on day 1.
+3. **Direct-swap → feature-flag + shadow observation.** The memo predates the shipped `ShadowDeploymentPolicy`
+   (2026-04-18) and the `STRATEGY_DISPATCH_MODE` pattern here — at the time shadow persistence didn't exist, so direct
+   cutover was the only option. Now we have a proper 14-21 day shadow window + rollback decision, and Phase 3 uses it.
+4. **Commit C (sports_feature_subscriber helper extraction)** from the memo is correct and is absorbed into Phase 1f
+   below — still needed.
+5. **Test migration in 3 buckets** (delete / xfail NEEDS_REVIEW / retarget integration) from the memo is correct and is
+   absorbed into Phase 4 below.
+
 ## Phase 1 — Factory Cutover Tier 2 (BLOCKS legacy deletion)
 
 **Goal:** close the runtime-contract gap between stateless v2 and stateful batch_handler so the factory can dispatch to
@@ -114,6 +135,19 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
       `CARRY_RECURSIVE_STAKED` Run 5-day historical backtest on each via (a) legacy path, (b) v2_shadow path. Assert:
       instruction count within ±2%, final position state NAV within ±1%, venue distribution matches exactly.
 
+### 1f — Extract sports_feature_subscriber helpers out of the archive
+
+Memory's Commit C: `strategy_service/adapters/sports_feature_subscriber.py` is the only non-handler prod file still
+reaching into `_archived_pre_v2/sports/arbitrage.py`. It uses one or two small helper functions. Must be resolved
+before Phase 4 can delete the sports archive sub-package.
+
+- [ ] [CODE] P1. Audit `sports_feature_subscriber.py` — identify the exact symbols pulled from
+      `_archived_pre_v2.sports.arbitrage`.
+- [ ] [CODE] P1. Move them to `unified-trading-library/unified_trading_library/sports/` (new sub-module) if they are
+      cross-service helpers, OR inline them in `sports_feature_subscriber.py` if they are tiny (< 30 LOC).
+- [ ] [CODE] P1. Update `sports_feature_subscriber.py` import to the new location.
+- [ ] [TEST] P1. QG green on both strategy-service and (if touched) UTL.
+
 ## Phase 2 — Shadow Deployment Persistence + Promotion Infrastructure
 
 **Goal:** give the `ShadowEvaluation` decision a place to live. Today the evaluator returns a decision and the caller
@@ -166,8 +200,18 @@ throws it away. Nothing is audit-traceable.
 - [ ] [CODE] P1. `git rm -rf strategy-service/strategy_service/engine/strategies/_archived_pre_v2/`
 - [ ] [CODE] P1. Rewrite `strategy_service/engine/strategies/__init__.py` — remove legacy re-exports; keep only `v2/`
       namespace.
-- [ ] [CODE] P1. Delete `strategy-service/tests/unit/test_{ all 49 legacy test files }.py` or migrate residual value to
-      v2 tests. Full list in `strategy-service/tests/` after audit at cutover time.
+- [ ] [CODE] P1. **Test migration — 3 buckets (per memory's Commit D):**
+      - **Bucket A — DELETE.** Legacy test for a strategy whose v2 archetype is PROMOTED and has equivalent coverage in
+        `tests/unit/engine/strategies/v2/test_archetype_engines_filled.py` + `test_archetype_secondary_actions.py`.
+        Delete the legacy test file outright.
+      - **Bucket B — `pytest.mark.xfail`.** Legacy test for a strategy whose row in `LEGACY_STRATEGY_MAPPING` is
+        `NEEDS_REVIEW`. Keep the file but mark with `@pytest.mark.xfail(reason="NEEDS_REVIEW row — pending operator
+        decision in Phase 7")` so CI doesn't block but the coverage isn't lost.
+      - **Bucket C — RETARGET.** Integration test under `tests/integration/*` that exercises a strategy end-to-end via
+        the legacy import. Rewrite to construct the v2 instance via `V2EngineOrchestrator.register_instance()` +
+        `on_tick()` instead. These are rare; most legacy tests are unit-level.
+      At cutover time, audit all ~49 legacy test files, bucket each, land the changes in the same commit as the archive
+      deletion so the repo is in a consistent state after the commit.
 - [ ] [CODE] P1. Clear the `# noqa: E501` annotations added during archive (they're only needed because the archive path
       is long; deletion makes them unnecessary).
 - [ ] [CODE] P1. Update `legacy_strategy_mapping.py` `legacy_module` strings to point at `ARCHIVED` sentinel value or
