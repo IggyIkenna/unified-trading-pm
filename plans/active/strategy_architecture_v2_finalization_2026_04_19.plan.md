@@ -452,15 +452,21 @@ The plan-restructure round-trip raised three open questions; the operator answer
       variants, representative venues, slot_labels, block-list refs, and notes. Status filter (ALL / SUPPORTED / PARTIAL
       / BLOCKED) implemented. Deeper filter chips (category, instrument type, roll mode, family, lock state) deferred to
       post-Phase-10.6 when real registry data lands (currently the static coverage matrix is the only data source).
-- [ ] [CODE] P1. **Combinatoric discovery page** at `/services/strategy-catalogue/coverage/by-combination`. Two
-      leg-pickers (each = category + instrument_type). Selecting `(CEFI, perp) × (CEFI, perp)` lists every cell where
-      both legs are perps in pair-capable archetypes. Uses `cellsForInstrumentPair()`. **Follow-up.**
-- [ ] [CODE] P1. **Block-list browser** at `/services/strategy-catalogue/coverage/blocked`. Shows the 10 grouped
-      block-list entries with affected archetypes, blocking reason, remediations. Feeds ops backlog. **Follow-up.**
-- [ ] [CODE] P1. **Per-strategy detail page** at `/services/strategy-catalogue/strategies/[archetype]/[slot]/page.tsx`.
-      Implements the table above. Reads from `ArchetypeBuildRegistry` + `PromotionDecisionLedger` +
-      `StrategyAvailabilityRegistry` + the coverage matrix. Codex deep-links use GitHub blob URLs into the PM repo.
-      **Follow-up** — needs a read API surface on strategy-service first.
+- [x] [CODE] P1. **Combinatoric discovery page** landed in unified-trading-system-ui `490ff54`
+      `app/(platform)/services/strategy-catalogue/coverage/by-combination/page.tsx`. Two leg pickers (category +
+      instrument type each) drive `cellsForInstrumentPair()`. Matching archetypes render as cards with per-leg
+      category/instrument/status/roll-mode chips + representative venues; leg A representative slot_label links through
+      to the per-strategy detail page. Handles "no match" empty state.
+- [x] [CODE] P1. **Block-list browser** landed in unified-trading-system-ui `490ff54`
+      `app/(platform)/services/strategy-catalogue/coverage/blocked/page.tsx`. Renders all 10 BL-\* entries with summary,
+      affected-archetype chips, explanation paragraphs, remediation box, affected-cells list, and deep-links to UAC gap
+      references. Paired with `lib/architecture-v2/block-list.ts` (metadata SSOT mirroring codex § BL-1..BL-10).
+- [x] [CODE] P1. **Per-strategy detail page** landed in unified-trading-system-ui `490ff54`
+      `app/(platform)/services/strategy-catalogue/strategies/[archetype]/[slot]/page.tsx`. Reads live availability from
+      the `AvailabilityStoreProvider` via `useAvailabilityEntry(slotLabel)`. Stubs three panels with MOCK-badged data
+      (build registry, promotion ledger, live-vs-backtest delta) until the strategy-service read API lands — only the
+      mock helpers swap. Links to the codex archetype doc on GitHub. Cross-links to every other representative slot for
+      the same cell and the admin toggle page.
 - [x] [CODE] P1. **Reusable chip primitives** landed in unified-trading-system-ui `a8012c4`
       `components/architecture-v2/`: `<StatusBadge>`, `<LockStateBadge>`, `<RollModeBadge>`, `<CategoryChip>`,
       `<InstrumentTypeChip>`, `<SignalVariantBadge>`, `<MaturityBadge>`. Every chip carries a `data-testid` attribute
@@ -574,12 +580,16 @@ existing UI structure).
       `availability_registry` iterable on `run()`. Fail-loud gate fires per-slot in `run()` BEFORE the engine weights —
       `StrategyRetiredError` on RETIRED, `StrategyNotAvailableError` on IM-reserved mismatch / client-exclusive
       cross-client / IM-desk observe-only-on-client-exclusive / maturity < LIVE_TINY. 8 enforcement tests green.
-- [ ] [CODE] P1. **Admin toggle UI** inside the Strategy Catalogue service at
-      `/services/strategy-catalogue/admin/lock-state/page.tsx`. Now toggles BOTH lock_state and maturity (admin can
-      manually demote/promote maturity for incident response). `admin` role only. **Pending — part of Phase 10 UI
-      scaffold.**
-- [ ] [CODE] P1. **Lock-state + maturity badges on all catalogue surfaces.** New `<MaturityBadge>` reusable in
-      `components/architecture-v2/`, alongside `<LockStateBadge>`. **Pending — part of Phase 10 UI scaffold.**
+- [x] [CODE] P1. **Admin toggle UI** landed in unified-trading-system-ui `490ff54`
+      `app/(platform)/services/strategy-catalogue/admin/lock-state/page.tsx`. Toggles BOTH lock_state and maturity
+      (admin can manually demote/promote maturity for incident response). `actor_id` + `reason` required. Writes land in
+      the client-side `AvailabilityStoreProvider` (mock mode; persists to localStorage), emit synthetic UTL events that
+      appear in the session audit panel. When the strategy-service mutation API lands, only the provider swaps — the
+      form + event rendering is stable.
+- [x] [CODE] P1. **Lock-state + maturity badges on all catalogue surfaces.** `<MaturityBadge>` + `<LockStateBadge>`
+      shipped in unified-trading-system-ui `a8012c4` `components/architecture-v2/`. Used on the per-strategy detail
+      page, the admin toggle preview pane, and the detail-page `PageHeader`. Ready for adoption on
+      `/services/research/strategies` and `/services/trading/strategies` during Phase 10.6.
 - [x] [TEST] P1. 56 new unit tests across UAC (26), UTL (3), strategy-service (27) covering:
       `validate_allocation_authorised` cross-client + maturity rejection + admin override, role-based `slots_visible_to`
       filtering across all 4 audiences (admin/im_desk/im_client/trading_platform_subscriber), watchdog idempotence
