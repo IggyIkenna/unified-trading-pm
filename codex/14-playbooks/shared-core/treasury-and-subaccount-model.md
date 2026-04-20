@@ -107,28 +107,58 @@ Client portal ledger updated
 - **Both UI and API drive the same underlying fund-administration-service bridge to POD** — one source of truth for
   subscription / redemption state.
 
-## Contract surface (to be built — Pooled scope only)
+## Contract surface (shipped 2026-04-20 — Pooled scope only)
 
-The Pooled subscription / redemption mechanic needs the following UAC contracts. As of 2026-04-20 these are NOT yet in
-UAC. Implementation plan lives in `plans/active/` (see follow-ups).
+Phase 0–4 landed on `live-defi-rollout`; Phase 5 docs + Phase 6 staging deploy pending per
+[fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md).
 
-- **Domain types** (`unified_api_contracts.fund_administration`):
-  - `ShareClass` — share_class_id, fund_id, isin, currency, mgmt_fee, perf_fee, current_nav
-  - `AllocatorSubscription` — subscription_id, client_id, share_class_id, amount, currency, state, requested_at,
-    settled_at
-  - `AllocatorRedemption` — redemption_id, client_id, share_class_id, units_or_notional, destination, state,
-    requested_at, settled_at
-  - `NavSnapshot` — fund_id, share_class_id, as_of, nav_per_unit, aum
-- **Events** (in UTL `STANDARD_LIFECYCLE_EVENTS`):
-  - `SUBSCRIPTION_REQUESTED`
-  - `SUBSCRIPTION_APPROVED` / `SUBSCRIPTION_REJECTED`
-  - `SUBSCRIPTION_SETTLED`
-  - `REDEMPTION_REQUESTED`
-  - `REDEMPTION_APPROVED` / `REDEMPTION_REJECTED`
-  - `REDEMPTION_PROCESSED` / `REDEMPTION_SETTLED`
-- **Service**: `fund-administration-service` (new, in the SaaS tier). Acts as the integration boundary between the Odum
-  portal and POD's fund-administration systems. Owns subscription / redemption state machine from the client's
-  perspective; delegates AML / KYC / custody orchestration to POD.
+- **Domain types** — `from unified_api_contracts.fund_administration import ...` (public facade; also re-exported
+  top-level from `unified_api_contracts`). Internal canonical definitions live under
+  `unified_api_contracts/internal/domain/fund_administration/`.
+  - `AllocatorSubscription` — subscription_id, fund_id, allocator_id, share_class, requested_amount_usd,
+    requested_timestamp, status (SubscriptionStatus), nav_strike_snapshot_id, units_issued, approval_timestamp,
+    rejection_reason.
+  - `AllocatorRedemption` — redemption_id, fund_id, allocator_id, share_class, units_to_redeem, destination,
+    requested_timestamp, status (RedemptionStatus), grace_period_days, redemption_nav_snapshot_id, cash_amount_due_usd,
+    settlement_timestamp, settlement_reference, rejection_reason.
+  - `FundAllocation` — allocation_id, fund_id, share_class, strategy_id, target_amount_usd, allocation_timestamp,
+    execution_status (AllocationExecutionStatus), executed_amount_usd, executed_timestamp.
+  - `AllocatorCashAccountView` + `CashAccountMovement` — derived reporting projection consumed by client-reporting-api +
+    platform UI history page.
+  - Enums: `SubscriptionStatus` (PENDING / APPROVED / REJECTED / SETTLED), `RedemptionStatus` (PENDING / APPROVED /
+    REJECTED / PROCESSED / SETTLED), `AllocationExecutionStatus` (PENDING / IN_PROGRESS / COMPLETED / FAILED).
+  - FastAPI request bodies (also in UAC so request-body schemas stay single-source): `SubscribeRequest`,
+    `RedeemRequest`, `ApproveSubscriptionRequest`, `ProcessRedemptionRequest`, `RejectRequest`, `RebalanceRequest`.
+  - NAV snapshots reuse existing `unified_api_contracts.internal.domain.client_reporting.FundNAVSnapshot`.
+- **Events** — registered in `unified_trading_library.events.STANDARD_LIFECYCLE_EVENTS` (grouping set
+  `FUND_ADMINISTRATION_EVENT_TYPES`, payload-type map `FUND_ADMINISTRATION_EVENT_PAYLOAD_TYPES`):
+  - `SUBSCRIPTION_REQUESTED` / `SUBSCRIPTION_APPROVED` / `SUBSCRIPTION_REJECTED` / `SUBSCRIPTION_SETTLED`
+  - `REDEMPTION_REQUESTED` / `REDEMPTION_APPROVED` / `REDEMPTION_REJECTED` / `REDEMPTION_PROCESSED` /
+    `REDEMPTION_SETTLED`
+  - `FUND_ALLOCATION_REBALANCED`
+- **Service**: `fund-administration-service` (SaaS tier, tier 3, registered in `workspace-manifest.json`). REST routes:
+  `POST /subscriptions`, `GET /subscriptions/{id}`, `POST /subscriptions/{id}/approve|reject|settle`,
+  `POST /redemptions`, `GET /redemptions/{id}`, `POST /redemptions/{id}/approve|reject|process|settle`,
+  `GET /funds/{fund_id}/allocations`, `POST /funds/{fund_id}/allocations/rebalance`, `GET /funds/{fund_id}/nav/history`.
+  Subscription + redemption state machines are pure functions; `CapitalRouter` drives TransferAdapter transfers tagged
+  with `FundTransferContext(fund_id, share_class, allocation_id)`. Background tasks handle grace-period expiry +
+  NAV-strike scheduling. In-memory persistence store is the local-dev default; SQL / Firestore swap-in is a follow-up.
+  Service emits the 10 lifecycle events above via `emit_fund_admin_event` helper wrapping UTL `log_event`.
+- **Platform UI** — `unified-trading-system-ui` routes under `app/(platform)/services/im/funds/`: `/` (overview),
+  `/subscriptions`, `/redemptions`, `/allocations` (treasury-health dashboard + rebalance for ops), `/history`
+  (per-allocator cash-account ledger). Mock mode (`NEXT_PUBLIC_MOCK_API=true`) drives an in-memory fixture store for
+  local dev. Typed REST client at `lib/api/fund-administration.ts`.
+- **Client-reporting API** — `client-reporting-api` routes: `GET /allocators/{client_id}/subscriptions`,
+  `GET /allocators/{client_id}/redemptions`, `GET /allocators/{client_id}/cash-account`. Entitlement enforced via
+  `_enforce_entitlement(auth, client_id)` — external callers must match `auth.org_id`, internal callers bypass.
+- **TransferAdapter routing** — `execution-service` `TransferAdapter.execute_internal_transfer` / `execute_withdrawal` /
+  `execute_onchain_transfer` accept optional `fund_context: FundTransferContext | None`. `FundTransferContext` is
+  currently a local dataclass in execution-service
+  - a structural mirror in fund-administration-service (follow-up: promote to UAC `fund_administration` facade to
+    eliminate the mirror).
+- **TreasuryMonitor** — `position-balance-monitor-service` `TreasuryConfig` has optional `target_allocations`,
+  `share_class`, `fund_id` fields. `TreasurySnapshot` now surfaces `allocation_deltas` per strategy when targets are
+  set; `TREASURY_LOW` / `TREASURY_HIGH` events carry fund_id context.
 
 ## Public-copy rules (Pooled mechanic)
 
@@ -150,8 +180,25 @@ UAC. Implementation plan lives in `plans/active/` (see follow-ups).
 
 - [ ] Name the specific qualified custodians per asset class with compliance review. Copper (crypto) is the reference;
       TradFi and on-chain custodians to be confirmed.
-- [ ] Write the implementation plan `plans/active/pooled-fund-subscription-redemption-service_2026_04_20.plan.md`
-      covering: UAC contracts, `fund-administration-service` scaffolding, platform UI subscription / redemption pages,
-      POD integration boundary, event / webhook surface.
-- [ ] Platform UI: scaffold `app/(platform)/services/im/funds/` with subscription, redemption, and ledger pages using
+- [x] Write the implementation plan — shipped as
+      [fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md).
+- [x] Platform UI: scaffold `app/(platform)/services/im/funds/` with subscription, redemption, and ledger pages using
       mock data until `fund-administration-service` is available.
+- [ ] **Promote `FundTransferContext` to UAC** — currently a local dataclass in
+      `execution-service/execution_service/engine/transfers/adapter.py` + a structural mirror tagged
+      `SCHEMA_PROVENANCE_EXEMPT` in
+      `fund-administration-service/fund_administration_service/allocation/transfer_protocol.py`. Move to
+      `unified_api_contracts/fund_administration.py` so both services share one definition. Small, blast-radius ~2
+      repos.
+- [ ] **Existing reporting-api entitlement gap** — `client-reporting-api` routes (`reporting/settlements.py`,
+      `reporting/trades.py`, etc.) trust the `client_id` query param blindly. Only the new allocator routes
+      (`allocators.py`) enforce `_enforce_entitlement(auth, client_id)`. Backfill the entitlement check on the existing
+      reporting routes.
+- [ ] **Persistence swap-in** — `fund-administration-service` currently uses an in-memory `PersistenceStore` for local
+      dev. Ship SQL / Firestore impl as a follow-up, with migration story from the in-memory default.
+- [ ] **Real POD integration** — subscription approval AML/KYC gate + NAV strike resolution currently stub through mock
+      providers. Wire the real POD fund-administration API once POD's endpoints are confirmed.
+- [ ] **fund-administration-service GitHub repo creation + staging deploy** — local-only until Phase 6.
+      `gh repo     create IggyIkenna/fund-administration-service --private --source ./fund-administration-service`, push
+      `live-defi-rollout`, propagate PM workflow templates via
+      `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`, then deploy to staging Cloud Run.
