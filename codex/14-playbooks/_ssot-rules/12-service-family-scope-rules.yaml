@@ -1,0 +1,76 @@
+# Rule 12 — Service-family scope rules (G1.11 of stage-3e-refactor-plan).
+#
+# Machine-readable scope table enforced by `check_service_family_scope` in
+# `unified_api_contracts.internal.architecture_v2.service_family_scope`.
+# Wired into `access_control()` as a pre-check — scope denial
+# short-circuits the full gate.
+#
+# Rule 11 was already taken by `11-codex-scope-registry.md` (G1.9); this
+# rule takes slot 12. See `12-service-family-scope-rules.md` for the prose
+# explanation + cross-refs to rule 04 / rule 03 / TIER_ZERO doc.
+rule_id: 12
+rule_name: service-family-scope-rules
+
+service_families:
+  IM:
+    description: >-
+      Odum Investment Management clients. Odum runs strategies; client sees reporting + capital statements. No
+      observability (that's Odum-side) and no research/promote (predetermined strategies).
+    surfaces: [reporting, client_portal]
+    excludes: [observe, research, promote, strategy_catalogue_admin]
+    route_allowlist:
+      - "/services/investment-management/**"
+      - "/services/reports/**"
+      - "/services/investor-relations/**"
+
+  RegUmbrella:
+    description: >-
+      Regulatory Umbrella client — emerging manager running own strategies under Odum's FCA permissions. Sees reporting
+      + compliance overlay. No strategy research surfaces (compliance wrapper, not research-led).
+    surfaces: [reporting, compliance_overlay]
+    excludes: [observe, research, promote, strategy_catalogue_admin]
+    route_allowlist:
+      - "/services/regulatory-umbrella/**"
+      - "/services/reports/**"
+
+  DART:
+    description: >-
+      Full-DART subscriber — Data + Analytics + Research + Trading. Runs the complete Research→Promote→Trading→Observe
+      lifecycle with reporting. No strategy-catalogue admin (Odum-internal operation).
+    surfaces: [reporting, observe, research, promote, trading, data]
+    excludes: [strategy_catalogue_admin]
+    route_allowlist:
+      - "/services/data/**"
+      - "/services/research/**"
+      - "/services/promote/**"
+      - "/services/trading/**"
+      - "/services/observe/**"
+      - "/services/reports/**"
+
+  DART_reporting_only:
+    description: >-
+      DART-reporting-only sub-family — client reporting surface shared with IM. Reporting routes only. (Distinct from
+      full-DART because research/promote/trading/observe require block-6 entitlement.)
+    surfaces: [reporting]
+    excludes: [observe, research, promote, strategy_catalogue_admin, data]
+    route_allowlist:
+      - "/services/reports/**"
+
+  admin:
+    description: >-
+      Odum internal admin. Every surface allowed, including the strategy-catalogue admin toggle UI.
+    surfaces: [everything, strategy_catalogue_admin]
+    excludes: []
+    route_allowlist:
+      - "/**"
+
+  IM_desk:
+    description: >-
+      IM desk operator — locks / unlocks strategies for IM clients via the strategy-catalogue admin toggle. Also sees
+      reporting for cross-client observation.
+    surfaces: [strategy_catalogue_admin, reporting]
+    excludes: []
+    route_allowlist:
+      - "/services/strategy-catalogue/admin/**"
+      - "/services/reports/**"
+      - "/services/investor-relations/**"

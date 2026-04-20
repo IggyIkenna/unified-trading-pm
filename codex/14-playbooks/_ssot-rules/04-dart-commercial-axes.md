@@ -185,6 +185,17 @@ cell.
 5. **One demo, one resolved cell.** A single demo session assumes one resolved path. Prospects exploring multiple paths
    get multiple demos.
 
+## Service-family scope — see rule 12
+
+The commercial axes above generate a closed set of service families (`IM`, `RegUmbrella`, `DART`, `DART_reporting_only`,
+`admin`, `IM_desk`). The mechanical scope constraints — which tiles / routes each family can reach — live in rule 12
+([`12-service-family-scope-rules.md`](./12-service-family-scope-rules.md)) with a matching machine-readable YAML at
+[`12-service-family-scope-rules.yaml`](./12-service-family-scope-rules.yaml). Enforcement is a pre-check inside G1.6's
+`access_control()` formula at `unified-api-contracts/.../internal/architecture_v2/service_family_scope.py`.
+
+Do NOT duplicate the scope table here; rule 04 is the vocabulary + the commercial rationale, rule 12 is the enforcement
+contract.
+
 ## Cross-references
 
 - [`_source-v1-feedback.md`](_source-v1-feedback.md) §"On DART commercial model (rule 04)"
@@ -194,6 +205,8 @@ cell.
 - [`10-strategy-instruction-schema-principles.md`](10-strategy-instruction-schema-principles.md) — the fit-check layer
   for the `(Client, downstream)` path
 - [`03-same-system-principle.md`](03-same-system-principle.md) — all paths use the same underlying system
+- [`12-service-family-scope-rules.md`](12-service-family-scope-rules.md) — machine-readable scope enforcement per
+  service family (paired with `12-service-family-scope-rules.yaml`)
 - [Stage 2 `commercial-model/dart-entry-points.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
   — applies this rule to write the client-facing commercial doc
 - [Stage 3 Phase 3C `derivation-engine.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) —
