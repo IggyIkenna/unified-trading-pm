@@ -109,21 +109,51 @@ Per the locked rule-04 matrix + Signal Leasing 4th-path:
 - Pricing numbers on public pages (rule 08 — remain codex-private)
 - UI component library refactor (use existing components)
 
-## Execution DAG
+## Progress snapshot — 2026-04-20
+
+User (and agents) have already shipped significant portions of Phases 2 + 3 between the plan draft and this
+snapshot. Re-ordering the remaining work accordingly. Everything below the "already built" list is what remains.
+
+### Already built (Phases 2 + 3 substantially complete)
+
+- **5-path public routes live** in `app/(public)/`:
+  - `platform/` (DART umbrella) + `platform/signals-in/` + `platform/full/`
+  - `investment-management/`
+  - `regulatory/`
+  - `firm/`
+  - `signals/` (Signals Service — already shipped via Path-to-$100M Phase 5)
+- **Services sub-routes** under `/services/`: `backtesting`, `data`, `engagement`, `execution`, `investment`,
+  `platform`, `regulatory`.
+- **Briefings light-auth layer**:
+  - `briefings/page.tsx` hub + `briefings/[slug]/page.tsx` detail
+  - `components/briefings/briefing-access-gate.tsx`
+  - 6 briefing pillars in `lib/briefings/content.ts`: `investment-management`, `regulatory`, `platform`,
+    `dart-signals-in`, `dart-full`, `signals-out` — all include frame + sections + keyMessages + CTA.
+- **Direction-arrow naming adopted**: "DART Signals-In — your signals, our execution" / "Signals Service
+  (Signals-Out) — Odum → counterparty" live on the public pages.
+- **Marketing-static-shadow components** (`components/marketing/marketing-static-shadow.tsx` + dynamic variant)
+  for the HTML → React migration path.
+- **site-header.tsx** updated with new nav structure.
+
+### What still remains
+
+Re-phased below. The old "Phase 2 (restructure)" + "Phase 3 (briefings gate)" are now consolidated into a single
+**Phase 2A "audit + content-depth polish"** because the scaffolding is done; what's left is copy audit + content
+depth + visual assets.
+
+## Execution DAG (revised)
 
 ```
-Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
-                                        ↓
-                                Phase 2 (4-path restructure — public pages)
-                                        ↓
-                                Phase 3 (light-auth research gate + schemas)
-                                        ↓
-                                Phase 4 (visuals: fund/SMA, strategy family)
-                                        ↓
-                                Phase 5 (docs alignment — codex + memory)
-                                        ↓
-                                Phase 6 (verification + QG + commit)
+Phase 1 (audit already-shipped surface) ──▶ Phase 2A (copy + content-depth polish on the 5-path + briefings)
+                                                          ↓
+                                                  Phase 4 (visuals: fund/SMA + strategy-family catalogue)
+                                                          ↓
+                                                  Phase 5 (docs alignment — codex + memory)
+                                                          ↓
+                                                  Phase 6 (verification + QG + commit)
 ```
+
+Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the whole.
 
 ## Phases
 
@@ -142,34 +172,41 @@ Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
       flagged for commercial review.
 - [x] [AGENT] P0. **Phase 1 gate: audit manifest committed; every inaccuracy catalogued.** Done 2026-04-20.
 
-### Phase 2 — Public-page restructure
+### Phase 2 — Public-page restructure [MOSTLY SHIPPED]
 
-- [ ] [AGENT] P0. `/platform` — split into umbrella + 2 click-through sub-pages: `/platform/signals-in` and
-      `/platform/full`. Keep `/platform` as DART service-landing with 2 clear cards linking to sub-pages.
-- [ ] [AGENT] P0. `/signals` — already shipped; refine to emphasise backend-first + light-UI framing.
-- [ ] [AGENT] P0. `/strategies` (IM) — add fund/SMA hierarchy visual + read-only-key mechanic + client-slice visibility
-      framing (rule-03 same-system; pb3b narrative overlay).
-- [ ] [AGENT] P0. `/regulatory` — add multi-fund/SMA client setup visual + read-only-key mechanic.
-- [ ] [AGENT] P0. `/homepage` — refresh top-level frame to reflect 4 DART-adjacent paths + IM + Reg cleanly.
-- [ ] [AGENT] P0. Cross-linking: every page links to siblings where relevant. No orphan pages.
-- [ ] [AGENT] P0. **Phase 2 gate: all 5 paths (DART-in, DART-full, Signals-out, IM, Reg) addressable from homepage in 1
-      click.**
+- [x] [AGENT] P0. `/platform` umbrella + click-through sub-pages `/platform/signals-in` and `/platform/full` all live.
+- [x] [AGENT] P0. `/signals` shipped with backend-first + light-UI framing + direction-arrow naming.
+- [x] [AGENT] P0. Dedicated public routes: `/investment-management`, `/regulatory`, `/firm`.
+- [x] [AGENT] P0. Services sub-routes under `/services/`: `backtesting`, `data`, `engagement`, `execution`,
+      `investment`, `platform`, `regulatory`.
+- [x] [AGENT] P0. Homepage (`app/(public)/page.tsx` + `public/homepage.html`) + `site-header.tsx` updated with new
+      5-path nav.
+- [ ] [AGENT] P0. **Content-depth polish remaining** on `/investment-management` + `/regulatory` — read-only-key
+      mechanic copy + client-slice visibility framing (pb3b narrative) + rule-03 same-system claim surfaced.
+- [ ] [AGENT] P0. **Cross-linking sweep** — every page links to siblings; no orphan pages; nav consistency check
+      across HTML + React routes.
+- [x] [AGENT] P0. **Phase 2 gate reached**: all 5 paths reachable in 1 click from homepage.
 
-### Phase 3 — Light-auth research gate + schema content
+### Phase 3 — Light-auth research gate + schema content [MOSTLY SHIPPED]
 
-- [ ] [AGENT] P0. Introduce `/briefings/` route family (already exists per
-      `components/briefings/briefing-access-gate.tsx`). Provision briefing codes per path (DART-in code, DART-out code,
-      Full-DART code, IM code, Reg code).
-- [ ] [AGENT] P0. `/briefings/dart-signals-in` — rule-10 8-field instruction schema full spec + venue compatibility
-      matrix + lifecycle semantics.
-- [ ] [AGENT] P0. `/briefings/signals-out` — signal payload schema full spec + delivery + light-UI mockup.
-- [ ] [AGENT] P0. `/briefings/full-dart` — research surface walkthrough + promote pipeline + backtest metering detail.
-- [ ] [AGENT] P0. `/briefings/im` — fund/SMA mechanics + perf-fee mechanics (no specific numbers — those are still
-      codex-private per rule 08).
-- [ ] [AGENT] P0. `/briefings/regulatory` — regulatory scope + onboarding workstreams + supervisory artifacts.
-- [ ] [AGENT] P0. Per-path briefing code in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_*` env vars + dev-default fallback.
-- [ ] [AGENT] P0. **Phase 3 gate: all 5 briefing paths behind light-auth; content renders; codes rotate per prospect per
-      `light-auth-briefings.md`.**
+- [x] [AGENT] P0. `/briefings/` hub + `/briefings/[slug]/` detail + `BriefingAccessGate` component live.
+- [x] [AGENT] P0. 6 briefing pillars defined in `lib/briefings/content.ts`: `investment-management`, `regulatory`,
+      `platform`, `dart-signals-in`, `dart-full`, `signals-out` — all with frame + sections + keyMessages + CTA.
+- [ ] [AGENT] P0. **Content-depth remaining on briefings**:
+      - `dart-signals-in`: rule-10 8-field instruction schema FULL spec + venue compatibility matrix +
+        lifecycle supersede/add/cancel semantics (already partially covered; audit against
+        `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`).
+      - `signals-out`: signal payload schema FULL spec + delivery mechanics + light-observability-UI mockup.
+      - `dart-full`: research surface walkthrough + promote pipeline + backtest metering detail + strategy family
+        catalogue depth.
+      - `investment-management`: fund/SMA mechanics + perf-fee band + platform-fee client-choice mechanic (no
+        specific numbers — still codex-private per rule 08).
+      - `regulatory`: regulatory scope + onboarding workstreams + supervisory artifacts list.
+      - `platform`: umbrella summary linking to signals-in + full.
+- [ ] [AGENT] P1. **Per-path briefing codes** in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_*` env vars if M4-tiered gate
+      model needs per-path codes (default shared code remains fallback).
+- [ ] [AGENT] P0. **Phase 3 gate**: all 6 briefing paths' content-depth polished against the codex SSOT cited in
+      `lib/briefings/content.ts` header; copy audit passes rules 02/06/07/08/09.
 
 ### Phase 4 — Visuals
 

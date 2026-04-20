@@ -178,15 +178,17 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 - [ ] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties; smoke test delivery
       confirmed.
 
-### Phase 5 — frontend (marketing + admin + counterparty observability UI)
+### Phase 5 — frontend (admin + counterparty observability UI)
 
-- [x] [AGENT] P0. `public/signals.html` — marketing landing page for external-facing Signals service. **Shipped
-      2026-04-20.**
-- [x] [AGENT] P0. `app/(public)/signals/page.tsx` — Next.js route using `MarketingStaticFromFile`. **Shipped
-      2026-04-20.**
-- [x] [AGENT] P0. Add "Signals" to public nav. **Shipped 2026-04-20 across all 7 marketing HTML pages.**
-- [x] [AGENT] P0. `public/platform.html` — fix "Built for different entry points" 3-card section with rule-04-faithful
-      framing + cross-link to `/signals`. **Shipped 2026-04-20.**
+**Scope boundary (clarified 2026-04-20):** the **public marketing surface** for the Signals Service (`/signals`
+page, nav entry, `/briefings/signals-out` pillar, direction-arrow wording, cross-links to `/platform/signals-in`)
+is owned by the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.plan.md) plan
+and is substantially **already shipped**. This plan now owns only the backend-adjacent Phase 5 components:
+counterparty observability UI + admin surface + counterparty-persona integration. Previously-listed marketing
+stubs are consolidated into a single "shipped under sister plan" entry below.
+
+- [x] [AGENT] P0. Public marketing surface (signals.html / signals/page.tsx / nav entry / platform 3-card fix /
+      `/briefings/signals-out` pillar) — **shipped under marketing_site_restructure**. No further work here.
 - [ ] [AGENT] P0. **Counterparty observability UI** — light dashboard under a tenant-scoped route (e.g.
       `/signals/dashboard` or under a per-counterparty subdomain). Components: - `<SignalHistoryTable>` — last N
       emissions scoped to entitled slots; filter by slot / date / status - `<BacktestComparisonPanel>` — Odum-held
