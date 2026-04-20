@@ -280,29 +280,88 @@ todos:
   # ─── Phase 5 — codex playbook + CI integration ──────────────────────────
   - id: phase-5-codex-playbook
     content: |
-      - [ ] [DOC] P0. codex/14-playbooks/smoke-testing-playbook.md (NEW): operational
+      - [x] [DOC] P0. codex/14-playbooks/smoke-testing-playbook.md (NEW): operational
         runbook for the smoke matrix. Covers: when to run (daily, pre-release,
         post-incident), how to read the per-cell summary, common failure modes
         (TEST bucket not provisioned, IS_TEST_RUN not propagated, dep order broken,
         api-football missing), how to retry a single cell, how to cleanup TEST data.
-    status: todo
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. New file
+      `unified-trading-pm/codex/14-playbooks/smoke-testing-playbook.md`
+      covers: 10 sections (when to run, how to read stdout + summary.json,
+      PASS/FAIL/SKIP semantics with `empty_confirmed`=PASS, 6 failure-mode
+      recipes — TEST bucket missing, IS_TEST_RUN not propagated, dep cascade
+      broken, api-football missing with remediation CLI verbatim, rate
+      limits, VM-only path differences — single-cell retry, `--cleanup` vs
+      7-day lifecycle, nightly-failure runbook, production-deploy gate
+      via `workflow_call.smoke_green`, floor-YAML ratchet rules, related
+      documents, change log). Registered in `codex/00-SSOT-INDEX.md`
+      immediately after the `sports-adapter-dependency-order` row. Commit
+      SHA appended by quickmerge Pass 2.
 
   - id: phase-5-gha-workflow
     content: |
-      - [ ] [AGENT] P1. GHA workflow `.github/workflows/nightly-smoke-matrix.yml`
+      - [x] [AGENT] P1. GHA workflow `.github/workflows/nightly-smoke-matrix.yml`
         in PM. Runs `bash deployment-service/scripts/run-smoke-matrix.sh --all` at
         02:00 UTC daily. Posts result summary to Slack #data-platform-ops. Gates
         production deployment workflows: a deployment to main can only proceed if
         the most recent smoke matrix is green.
-    status: todo
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. New workflow
+      `unified-trading-pm/.github/workflows/nightly-smoke-matrix.yml` runs
+      at `0 2 * * *` UTC with `workflow_dispatch` (service / category /
+      fail_fast / include_ml inputs) + `workflow_call` output
+      `smoke_green` for downstream promotion gating. Flow: checkout PM +
+      deployment-service + every Tier 0/1/2 service + 8 Tier-3 features-*
+      services at `live-defi-rollout`, install gcloud SDK for gsutil,
+      authenticate via workload-identity (`GCP_WORKLOAD_IDENTITY_PROVIDER`
+      + `GCP_NIGHTLY_SMOKE_SA` secrets), uv-install deployment-service,
+      `--dry-run` first (plan validation), then live run with per-service
+      JSON + summary.json uploaded as 30-day retention artifact, then
+      floor enforcement via `enforce-smoke-coverage-floor.py`. Telegram
+      notification reuses `notify-telegram.yml` (workspace has no Slack
+      secret; Telegram is the SSOT — see cold-storage-cleanup.yml
+      pattern). Gate step fails job when any cell FAILs or floor
+      regresses; downstream workflows consume the `smoke_green` output.
+      Header points at the playbook for troubleshooting. Commit SHA
+      appended by quickmerge Pass 2 (PM doc-only fast-path — merges to
+      `main` directly per fast-path rules but workflow file goes to
+      `staging` for SIT; expected quickmerge behaviour). Note: workflow
+      file goes through staging per workflow routing rule (see CLAUDE.md §
+      PM/Codex Doc-Only Fast-Path — `.github/workflows/` → staging).
 
   - id: phase-5-coverage-floor
     content: |
-      - [ ] [SCRIPT] P2. Add per-(service × category) smoke coverage floor in
+      - [x] [SCRIPT] P2. Add per-(service × category) smoke coverage floor in
         `deployment-service/configs/smoke-coverage-floor.yaml`. Blocks merges that
         would lower the count of green smoke cells below the historical baseline.
         Pattern: same as coverage_ratchet_policy_2026_04_19 plan.
-    status: todo
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. 3 files in
+      deployment-service: `configs/smoke-coverage-floor.yaml` (zero-baseline
+      per (service, category) pair; `null` for architecturally unsupported;
+      13 services × 5 categories declared), `scripts/enforce-smoke-coverage-floor.py`
+      (reads floor YAML + summary.json + per-service reports, counts green
+      cells by category, reports ALL regressions not just first — shard-
+      level failure isolation; `--strict-missing` flag for unknown-service
+      promotion to fail; dry-run summary.json accepted; exit 0 OK / 1
+      regression / 2 CLI misuse), and 12 unit tests at
+      `tests/unit/test_enforce_smoke_coverage_floor.py` covering:
+      zero-baseline pass, floor-met pass, regression surfaces rc=1 with
+      actionable error, `null` skipped not enforced, malformed YAML rc=2,
+      missing `cells` key rc=2, negative int rejected rc=2, dry-run
+      accepted rc=0, missing-service warn by default, `--strict-missing`
+      fails, multi-regression all reported (shard isolation), summary-is-
+      directory accepted, missing-summary rc=2. Baseline is 0 for every
+      cell — the first green nightly run ratchets up via a follow-up PR
+      with `chore(smoke): ratchet smoke-coverage floor to <run-id>`
+      commit prefix (documented in playbook § 8). The nightly GHA
+      workflow invokes the enforcer as a step; the gate fails the job
+      (and the `smoke_green` output) on any regression. Commit:
+      deployment-service@c292993.
 
   # ─── Phase 6 — verification + handover ──────────────────────────────────
   - id: phase-6-end-to-end-validation
