@@ -71,7 +71,14 @@ def main() -> int:
         cached = _read_cache()
         if cached is not None:
             if not quiet:
-                print("OK: Workspace constraints resolve (cached).", file=sys.stderr)
+                if cached == 0:
+                    print("OK: Workspace constraints resolve (cached).", file=sys.stderr)
+                else:
+                    print(
+                        "FAIL: Workspace constraints did not resolve (cached failure). "
+                        "Re-run with --no-cache to print the full uv pip compile error.",
+                        file=sys.stderr,
+                    )
             return cached
 
     with open(CONSTRAINTS_PATH, "rb") as f:
@@ -103,8 +110,11 @@ def main() -> int:
             text=True,
         )
         if r.returncode != 0:
-            if not quiet and r.stderr:
-                print(r.stderr, file=sys.stderr)
+            if not quiet:
+                if r.stdout:
+                    print(r.stdout, file=sys.stderr, end="" if r.stdout.endswith("\n") else "\n")
+                if r.stderr:
+                    print(r.stderr, file=sys.stderr, end="" if r.stderr.endswith("\n") else "\n")
             _write_cache(1)
             return 1
     _write_cache(0)

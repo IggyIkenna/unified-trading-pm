@@ -23,7 +23,7 @@
   <text x="300" y="96" text-anchor="middle" class="ver">aiofiles&gt;=24.1.0,&lt;25.0.0</text>
   <rect x="388" y="70" width="148" height="32" class="pkg-box" />
   <text x="462" y="84" text-anchor="middle" class="label">aiohttp</text>
-  <text x="462" y="96" text-anchor="middle" class="ver">aiohttp&gt;=3.13.2,&lt;4.0.0</text>
+  <text x="462" y="96" text-anchor="middle" class="ver">aiohttp&gt;=3.13.4,&lt;4.0.0</text>
   <rect x="544" y="70" width="172" height="32" class="pkg-box" />
   <text x="630" y="84" text-anchor="middle" class="label">aioresponses</text>
   <text x="630" y="96" text-anchor="middle" class="ver">aioresponses&gt;=0.7.6,&lt;1.0.0</text>
@@ -227,7 +227,7 @@
   <text x="657" y="602" text-anchor="middle" class="ver">pyright&gt;=1.1.390,&lt;2.0.0</text>
   <rect x="742" y="576" width="142" height="32" class="pkg-box" />
   <text x="813" y="590" text-anchor="middle" class="label">pytest</text>
-  <text x="813" y="602" text-anchor="middle" class="ver">pytest&gt;=9.0.1,&lt;10.0.0</text>
+  <text x="813" y="602" text-anchor="middle" class="ver">pytest&gt;=9.0.3,&lt;10.0.0</text>
   <rect x="892" y="576" width="190" height="32" class="pkg-box" />
   <text x="987" y="590" text-anchor="middle" class="label">pytest_asyncio</text>
   <text x="987" y="602" text-anchor="middle" class="ver">pytest-asyncio&gt;=0.25.0,&lt;2...</text>
@@ -252,18 +252,18 @@
   <rect x="238" y="668" width="178" height="32" class="pkg-box" />
   <text x="327" y="682" text-anchor="middle" class="label">python_dotenv</text>
   <text x="327" y="694" text-anchor="middle" class="ver">python-dotenv&gt;=1.0.0,&lt;2.0.0</text>
-  <rect x="424" y="668" width="196" height="32" class="pkg-box" />
-  <text x="522" y="682" text-anchor="middle" class="label">python_multipart</text>
-  <text x="522" y="694" text-anchor="middle" class="ver">python-multipart&gt;=0.0.9,&lt;...</text>
-  <rect x="628" y="668" width="136" height="32" class="pkg-box" />
-  <text x="696" y="682" text-anchor="middle" class="label">pytz</text>
-  <text x="696" y="694" text-anchor="middle" class="ver">pytz&gt;=2024.1,&lt;2026.0</text>
-  <rect x="772" y="668" width="136" height="32" class="pkg-box" />
-  <text x="840" y="682" text-anchor="middle" class="label">pyyaml</text>
-  <text x="840" y="694" text-anchor="middle" class="ver">pyyaml&gt;=6.0.1,&lt;7.0.0</text>
-  <rect x="916" y="668" width="154" height="32" class="pkg-box" />
-  <text x="993" y="682" text-anchor="middle" class="label">requests</text>
-  <text x="993" y="694" text-anchor="middle" class="ver">requests&gt;=2.32.5,&lt;3.0.0</text>
+  <rect x="424" y="668" width="202" height="32" class="pkg-box" />
+  <text x="525" y="682" text-anchor="middle" class="label">python_multipart</text>
+  <text x="525" y="694" text-anchor="middle" class="ver">python-multipart&gt;=0.0.26,...</text>
+  <rect x="634" y="668" width="136" height="32" class="pkg-box" />
+  <text x="702" y="682" text-anchor="middle" class="label">pytz</text>
+  <text x="702" y="694" text-anchor="middle" class="ver">pytz&gt;=2024.1,&lt;2026.0</text>
+  <rect x="778" y="668" width="136" height="32" class="pkg-box" />
+  <text x="846" y="682" text-anchor="middle" class="label">pyyaml</text>
+  <text x="846" y="694" text-anchor="middle" class="ver">pyyaml&gt;=6.0.1,&lt;7.0.0</text>
+  <rect x="922" y="668" width="154" height="32" class="pkg-box" />
+  <text x="999" y="682" text-anchor="middle" class="label">requests</text>
+  <text x="999" y="694" text-anchor="middle" class="ver">requests&gt;=2.33.0,&lt;3.0.0</text>
   <rect x="40" y="714" width="160" height="32" class="pkg-box" />
   <text x="120" y="728" text-anchor="middle" class="label">responses</text>
   <text x="120" y="740" text-anchor="middle" class="ver">responses&gt;=0.24.1,&lt;1.0.0</text>

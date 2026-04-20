@@ -86,7 +86,7 @@ TYPE_DEVOPS = "devops"
 LIBRARY_COVERAGE_FLOOR = 80
 SERVICE_COVERAGE_FLOOR = 70
 
-SKIP_STATUSES = frozenset({"deprecated", "archived", "deleted"})
+SKIP_STATUSES = frozenset({"deprecated", "deleted"})
 # PM and Codex have their own quality-gates; do not overwrite with templates
 ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
 

@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-28T09:44:47.910062+00:00",
+  "generatedAt": "2026-04-20T20:45:19.177464+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "aiohttp",
-      "versionRange": "aiohttp>=3.13.2,<4.0.0"
+      "versionRange": "aiohttp>=3.13.4,<4.0.0"
     },
     {
       "name": "aioresponses",
@@ -286,7 +286,7 @@
     },
     {
       "name": "pytest",
-      "versionRange": "pytest>=9.0.1,<10.0.0"
+      "versionRange": "pytest>=9.0.3,<10.0.0"
     },
     {
       "name": "pytest_asyncio",
@@ -322,7 +322,7 @@
     },
     {
       "name": "python_multipart",
-      "versionRange": "python-multipart>=0.0.9,<1.0.0"
+      "versionRange": "python-multipart>=0.0.26,<1.0.0"
     },
     {
       "name": "pytz",
@@ -334,7 +334,7 @@
     },
     {
       "name": "requests",
-      "versionRange": "requests>=2.32.5,<3.0.0"
+      "versionRange": "requests>=2.33.0,<3.0.0"
     },
     {
       "name": "responses",

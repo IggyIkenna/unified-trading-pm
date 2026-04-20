@@ -564,8 +564,12 @@ fi
 echo "[4/5] Validating constraints..."
 
 
-if ! "$PYTHON" scripts/manifest/validate-dependency-conflicts.py 2>/dev/null; then
-  echo "  Constraints have conflicts. Run: $PYTHON scripts/manifest/validate-dependency-conflicts.py --regenerate"
+if ! "$PYTHON" scripts/manifest/validate-dependency-conflicts.py; then
+  echo ""
+  echo "  Constraints did not resolve (see uv output above). To refresh constraints then re-check:"
+  echo "    cd \"$PM_ROOT\" && $PYTHON scripts/manifest/validate-dependency-conflicts.py --regenerate"
+  echo "  From workspace root (copy-paste):"
+  echo "    $PYTHON \"$PM_ROOT/scripts/manifest/validate-dependency-conflicts.py\" --regenerate"
   exit 1
 fi
 

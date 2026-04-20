@@ -63,8 +63,10 @@ def main() -> int:
     )
     if r.returncode != 0:
         print("ERROR: Workspace constraints do not resolve. Dependency conflict detected.", file=sys.stderr)
+        if r.stdout:
+            print(r.stdout, file=sys.stderr, end="" if r.stdout.endswith("\n") else "\n")
         if r.stderr:
-            print(r.stderr, file=sys.stderr)
+            print(r.stderr, file=sys.stderr, end="" if r.stderr.endswith("\n") else "\n")
         return 1
 
     if not quiet:

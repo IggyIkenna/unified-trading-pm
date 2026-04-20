@@ -183,9 +183,8 @@ Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the w
       mechanic copy + client-slice visibility framing (pb3b narrative) + rule-03 same-system claim surfaced. Done
       2026-04-20 (UI `a93a9ff` — full React pages with Phase 2A pb3a/pb3b content on both routes).
 - [x] [AGENT] P0. **Cross-linking sweep** — every page links to siblings; no orphan pages; nav consistency check across
-      HTML + React routes. Done 2026-04-20 (UI `372af63` — Related sections added to IM, Reg, signals-in, full,
-      signals, firm; `/platform` uses "Adjacent services" panel; homepage + site-header already reach all 5 paths in 1
-      click).
+      HTML + React routes. Done 2026-04-20 (UI `372af63` — Related sections added to IM, Reg, signals-in, full, signals,
+      firm; `/platform` uses "Adjacent services" panel; homepage + site-header already reach all 5 paths in 1 click).
 - [x] [AGENT] P0. **Phase 2 gate reached**: all 5 paths reachable in 1 click from homepage.
 
 ### Phase 3 — Light-auth research gate + schema content [MOSTLY SHIPPED]
