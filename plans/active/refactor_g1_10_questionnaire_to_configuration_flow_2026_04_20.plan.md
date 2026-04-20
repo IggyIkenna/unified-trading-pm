@@ -108,7 +108,7 @@ in `_apply_questionnaire_override` now tightens tile states per the service_fami
 | unified-api-contracts     | `e4a9e72` | `QuestionnaireResponse` 6-axis schema + 5 Literal types + real `_apply_questionnaire_override` overlay + 9 new tests |
 | strategy-service          | `429ff53` | `POST /internal/restriction-profile/{persona_id}/resolve` with questionnaire body + 3 new tests                      |
 | unified-trading-system-ui | `ce53f4d` | Public `/questionnaire` route + 6-axis form + localStorage/Firestore submit helper + Playwright spec                 |
-| user-management-ui        | `06bf2e2` | Admin `/questionnaires` playback page reading from Firestore + `firebaseDb` export                                   |
+| user-management-ui        | `93f7a76` | Admin `/questionnaires` playback page reading from Firestore + `firebaseDb` export (Wave E closure 2026-04-20)       |
 
 **Deviations from micro-plan (all documented):**
 
