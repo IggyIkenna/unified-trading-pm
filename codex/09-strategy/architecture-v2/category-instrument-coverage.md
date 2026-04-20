@@ -38,6 +38,25 @@ This universe is a single combinatoric matrix. Some slots are `PUBLIC` (DIY-clie
 on the slot**, not a code-path axis — same engines, same wires, different visibility and RBAC. Full principle + UI
 surfaces: [`cross-cutting/strategy-availability-and-locking.md`](cross-cutting/strategy-availability-and-locking.md).
 
+### Lock State (2026-04-20 snapshot)
+
+Every cell in the coverage matrix below carries a `lock_state` metadata axis (orthogonal to `status`). Per the
+2026-04-20 snapshot, only `STAT_ARB_PAIRS_FIXED × CEFI × spot|perp` cells are `PUBLIC`. All other cells default to
+`INVESTMENT_MANAGEMENT_RESERVED`. See
+[`cross-cutting/strategy-availability-and-locking.md`](cross-cutting/strategy-availability-and-locking.md) §Current Lock
+State Snapshot for the full matrix + rationale.
+
+IM_RESERVED cells currently running for own IM (live or with firm go-live date):
+
+- `ML_DIRECTIONAL_CONTINUOUS × CEFI × spot` — Binance, Coinbase, Hyperliquid (BTC ML — Jun 2026 go-live, 10 IM clients)
+- `ML_DIRECTIONAL_CONTINUOUS × CEFI × perp` — Binance-perp, Hyperliquid (BTC ML perp companion — Jun 2026 go-live)
+- `ML_DIRECTIONAL_CONTINUOUS × TRADFI × dated_future` — CME (S&P futures — Sept 2026 go-live, CME co-invest)
+- `VOL_TRADING_OPTIONS × TRADFI × option` — NSE (India options — Oct 2026 go-live, delta trading)
+- `ML_DIRECTIONAL_EVENT_SETTLED × SPORTS × event_settled` — Betfair, Betradar (Sports ML — Jun 2026 go-live,
+  capacity-bound)
+
+Canonical source: [`../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md).
+
 Features / data are **not** part of the category axis. A strategy's execution category is defined by where its
 `StrategyInstruction` actions actually land; feature groups and ML models can draw from any category's data without
 changing the strategy's execution category.

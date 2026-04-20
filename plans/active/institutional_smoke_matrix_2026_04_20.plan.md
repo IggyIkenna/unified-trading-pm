@@ -77,19 +77,34 @@ todos:
     content: |
       - [ ] [AGENT] P1. instruments-service: `scripts/smoke_matrix.py`. Iterates
         every (category × venue × data_type) cell defined in UAC capability
-        declarations. For each cell: invokes the service CLI with `--max-results 1`
-        + `IS_TEST_RUN=true`. Asserts each cell wrote a manifest row with
-        `capture_status=captured` OR `empty_confirmed`. Sub-CLI:
+        declarations. For each cell, the **3-step assertion contract** (applies
+        to EVERY phase-2 service smoke):
+          1. **Run** the service CLI with `--max-results 1` + `IS_TEST_RUN=true`
+          2. **Verify GCS write**: list the expected output path under the
+             `-test-` bucket (e.g. `gs://instruments-store-cefi-test-{project_id}/
+             instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet`)
+             → assert ≥1 parquet file exists AND ≥1 row in that file
+          3. **Verify TEST manifest write**: read the TEST bucket's own
+             `_index/availability_index.parquet` → assert there's a row with the
+             shard tuple `(date, category, venue, instrument_type, data_type)`
+             AND `capture_status` ∈ {`captured`, `empty_confirmed`}. Each TEST
+             bucket has its OWN manifest file (same schema, separate file).
+        Sub-CLI:
         `python -m instruments_service.smoke [--category X] [--venue Y] [--data-type Z]`.
-        Returns rc=0 with per-cell pass/fail summary.
+        Returns rc=0 with per-cell pass/fail/skip summary. Empty cells (no data
+        for date) → `empty_confirmed` is a PASS not a SKIP.
     status: todo
 
   - id: phase-2-mtds-smoke
     content: |
       - [ ] [AGENT] P1. market-tick-data-service: `scripts/smoke_matrix.py`. Same
-        pattern as instruments. The existing `smoke_canonical_writes.sh` is a
-        starting template (already uses IS_TEST_RUN=true) — extend to cover all
-        categories + all data_types + cap to 1 instrument per venue.
+        3-step assertion contract as phase-2-instruments-smoke. The existing
+        `smoke_canonical_writes.sh` is a starting template (already uses
+        IS_TEST_RUN=true + GCS verification via `gsutil ls -r` grep) — extend to
+        cover all categories + all data_types + cap to 1 instrument per venue.
+        Per-cell coverage matrix mirrors the SYMBOLS_BINANCE_FUTURES /
+        SYMBOLS_DERIBIT etc. arrays in launch-cefi-sharded-backfill.sh — pick
+        ONE symbol per venue (the first one) for the smoke.
     status: todo
 
   - id: phase-2-mdps-smoke
@@ -97,8 +112,11 @@ todos:
       - [ ] [AGENT] P1. market-data-processing-service: `scripts/smoke_matrix.py`.
         Iterates every (category × data_type × timeframe) cell. Already supports
         `--max-results 1` (in cli/parser.py). Pre-flight: consume the smoke artefacts
-        from MTDS + instruments-service smokes (test buckets). Asserts each cell
-        produces a manifest row.
+        from MTDS + instruments-service smokes (test buckets via UPSTREAM_DEPS_TEST
+        which auto-fires when IS_TEST_RUN=true after Phase 1). Same 3-step
+        assertion contract: run + verify GCS write at
+        `gs://market-data-tick-{cat}-test-{project_id}/processed_candles/by_date/.../`
+        + verify TEST manifest row with capture_status.
     status: todo
 
   - id: phase-2-features-smokes

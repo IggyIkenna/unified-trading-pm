@@ -286,9 +286,51 @@ finalisation plan (Phase 10.5, see `strategy_architecture_v2_finalization_2026_0
 4. No behavioural change at launch — all slots stay PUBLIC.
 5. Operator manually transitions slots as client / fund contracts land.
 
+## Current Lock State Snapshot (2026-04-20)
+
+As of 2026-04-20, only `STAT_ARB_PAIRS_FIXED` × crypto cells are `PUBLIC`. All other archetype × instrument × venue
+combinations in [`../category-instrument-coverage.md`](../category-instrument-coverage.md) default to
+`INVESTMENT_MANAGEMENT_RESERVED` per Odum's forward plan. This snapshot is the runtime state the catalogue registry
+reads.
+
+### IM_RESERVED cells — currently running for own IM
+
+| Archetype                    | Category | Instrument    | Venues                              | Status            | Notes                                                              |
+| ---------------------------- | -------- | ------------- | ----------------------------------- | ----------------- | ------------------------------------------------------------------ |
+| ML_DIRECTIONAL_CONTINUOUS    | CEFI     | spot          | Binance, Coinbase, Hyperliquid      | Jun 2026 go-live  | BTC ML for 10 IM clients × $500k                                   |
+| ML_DIRECTIONAL_CONTINUOUS    | CEFI     | perp          | Binance-perp, Hyperliquid           | Jun 2026 go-live  | BTC ML perp companion                                              |
+| ML_DIRECTIONAL_CONTINUOUS    | TRADFI   | dated_future  | CME (S&P futures)                   | Sept 2026 go-live | CME co-invest ($500k → $5M ramping)                                |
+| VOL_TRADING_OPTIONS          | TRADFI   | option        | NSE (India options)                 | Oct 2026 go-live  | India Options delta trading for convex payouts ($5-10M allocation) |
+| ML_DIRECTIONAL_EVENT_SETTLED | SPORTS   | event_settled | Betfair, Betradar, specific leagues | Jun 2026 go-live  | Sports ML for 2 clients × $50-100k (capacity-bound)                |
+
+### External wrappers and per-client overrides
+
+**BTC Fund of Funds** is an **external wrapper** — Odum allocates a BTC mandate to an external fund-of-funds and does
+not operate the strategy on Odum infrastructure. It is **NOT in the strategy catalogue** at all (no cell, no
+`lock_state`); it surfaces only in `client-reporting` for that specific wrapper mandate.
+
+**Per-client overrides** (Elysium, Desmond) leave catalogue cells at their default `INVESTMENT_MANAGEMENT_RESERVED` and
+grant operational access via per-client entitlement. Elysium runs `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`,
+`YIELD_ROTATION_LENDING` (plus upsell `CARRY_RECURSIVE_STAKED`) on our infrastructure — cells remain IM_RESERVED for
+catalogue defaults; Elysium's entitlement grants them operational access only. Desmond uses the same mechanic for
+`ARBITRAGE_PRICE_DISPERSION` on CEFI perps.
+
+### Canonical source + enforcement
+
+Canonical source-of-truth matrix:
+[`../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md).
+Enforcement points:
+
+- UI mirror — `unified-trading-system-ui/lib/architecture-v2/availability.ts`
+- strategy-service runtime registry — `strategy_service/availability/`
+- UAC combo registry —
+  `unified_api_contracts/internal/architecture_v2/strategy_availability.py` (`StrategyAvailabilityRegistry`, gap #12)
+
 ## See also
 
 - [`../category-instrument-coverage.md`](../category-instrument-coverage.md) — the universe we lock over.
 - [`../uac-registry-gaps.md`](../uac-registry-gaps.md) — registry shape for `StrategyAvailabilityRegistry` (gap #12).
 - [`capital-client-isolation.md`](capital-client-isolation.md) — per-client capital isolation (related but distinct).
 - [`portfolio-allocator.md`](portfolio-allocator.md) — where allocation authorisation check lives.
+- [`../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md)
+  — canonical current-state snapshot.
