@@ -91,21 +91,41 @@ Demo flows MUST behave identically in dev and staging:
 Only difference: persona identity source. Profile computation + YAML definitions + overlay logic are identical. Any
 divergence is a rule-03 violation.
 
+## Wave D execution summary (2026-04-20)
+
+All Phase 7A-7E shipped in 5 commits. Option X carry-through (UAC host, not strategy-service). Plus the strategy-service
+HTTP endpoint that was flagged as "defer" in the micro-plan — operator signed off on shipping it too.
+
+| Repo                      | SHA        | Summary                                                                        |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| unified-trading-pm        | `6ab71bf7` | 6 YAML profiles + `validate_profiles.py`                                       |
+| unified-api-contracts     | `38324af`  | `restriction_profiles.py` engine + `RestrictionProfile.tiles` field + 29 tests |
+| unified-trading-pm        | `49c0117f` | `sync-restriction-profiles-to-ui.sh` (YAML → TS mirror)                        |
+| strategy-service          | `5b08b4f`  | `api/restriction_profile_router.py` (/internal/restriction-profile) + 5 tests  |
+| unified-trading-system-ui | `da1cd43`  | TS mirror + `useTileLockState` real resolver + QG hook + Playwright spec       |
+
+**Deviations from micro-plan:**
+
+- Vocabulary translation at the sync-script boundary: YAML+UAC use `padlocked`; UI uses `padlocked-visible` (G1.3 enum).
+  The sync script maps at the boundary so neither side has to shift vocabulary. Cleaner than bulk-renaming either side.
+- Upstream fix: `unified_api_contracts.internal.__init__` imported a non-existent `ScopedKillSwitchSpec` which broke
+  every UAC test import. Surgical removal (two dangling references) landed with the G1.7 UAC commit.
+
 ## Phase breakdown
 
 ### Phase 7A — Design profile YAML schema + registry
 
-- [ ] [AGENT] P0. Define profile YAML schema — each file under
+- [x] [AGENT] P0. Define profile YAML schema — each file under
       `codex/14-playbooks/demo-ops/profiles/<persona-slug>.yaml` has: `persona_id`, `base_audience`,
       `tiles: { [tile_id]: "unlocked"|"padlocked"|"hidden" }`, `overrides: { [flavour_id]: { ... }}`.
-- [ ] [AGENT] P0. Draft at least 6 profile files: `admin.yaml` (unlocks everything), `client-full.yaml`,
+- [x] [AGENT] P0. Draft at least 6 profile files: `admin.yaml` (unlocks everything), `client-full.yaml`,
       `prospect-im.yaml`, `prospect-dart.yaml`, `prospect-regulatory.yaml`, `anon.yaml`.
-- [ ] [AGENT] P0. Schema validation tool at `codex/14-playbooks/demo-ops/_tools/validate_profiles.py` — fails loud on
+- [x] [AGENT] P0. Schema validation tool at `codex/14-playbooks/demo-ops/_tools/validate_profiles.py` — fails loud on
       malformed YAML, unknown tile_id, unknown state value.
 
 ### Phase 7B — Implement restriction-profile engine
 
-- [ ] [AGENT] P0. Create `strategy-service/strategy_service/availability/restriction_profiles.py`:
+- [x] [AGENT] P0. Create `strategy-service/strategy_service/availability/restriction_profiles.py`:
 
   ```python
   class RestrictionProfile(TypedDict):
@@ -116,36 +136,67 @@ divergence is a rule-03 violation.
   def resolve_profile(persona: Persona, flavour: DemoFlavour | None, env: Env, questionnaire: QuestionnaireResponse | None = None) -> RestrictionProfile: ...
   ```
 
-- [ ] [AGENT] P0. Loader reads YAML at boot; applies overlays in defined order:
+- [x] [AGENT] P0. Loader reads YAML at boot; applies overlays in defined order:
       `base → persona_overlay → questionnaire_override → env_override`.
-- [ ] [AGENT] P0. Integration with G1.6: `demo_universe()` + `prod_restrictions()` now call `resolve_profile` when
+- [x] [AGENT] P0. Integration with G1.6: `demo_universe()` + `prod_restrictions()` now call `resolve_profile` when
       caller provides a profile ID.
-- [ ] [AGENT] P0. Thread-safe; reads YAML once at module load.
+- [x] [AGENT] P0. Thread-safe; reads YAML once at module load.
 
 ### Phase 7C — Wire UI consumer + replace stub
 
-- [ ] [AGENT] P0. Update `unified-trading-system-ui/lib/visibility/use-tile-lock-state.ts` (the stub landed by G1.3) to
+- [x] [AGENT] P0. Update `unified-trading-system-ui/lib/visibility/use-tile-lock-state.ts` (the stub landed by G1.3) to
       query a profile-resolution endpoint (server-side) OR hydrate the profile from a server-rendered JSON blob.
       Recommended: hydrate at page load via Next.js RSC + `getPropsForPersona()` helper.
-- [ ] [AGENT] P0. Expose profile resolution as internal API: `execution-service` (or a strategy-service internal API)
+- [x] [AGENT] P0. Expose profile resolution as internal API: `execution-service` (or a strategy-service internal API)
       serves `/internal/restriction-profile/<persona_id>` returning the resolved RestrictionProfile. UI consumes this
       via server-side fetch.
-- [ ] [AGENT] P0. For dev (`VITE_MOCK_API=true`), lib/auth/demo-provider.ts reads the same YAML files (bundled at build)
+- [x] [AGENT] P0. For dev (`VITE_MOCK_API=true`), lib/auth/demo-provider.ts reads the same YAML files (bundled at build)
       and resolves locally without a network call.
 
 ### Phase 7D — Unit tests + parity tests
 
-- [ ] [AGENT] P0. `strategy-service/tests/availability/test_restriction_profiles.py` — ≥ 20 cases (base profile per
+- [x] [AGENT] P0. `strategy-service/tests/availability/test_restriction_profiles.py` — ≥ 20 cases (base profile per
       persona, overlay application, env override, invalid inputs).
-- [ ] [AGENT] P0. Dev/staging parity test: given the same persona + flavour + questionnaire, assert `resolve_profile`
+- [x] [AGENT] P0. Dev/staging parity test: given the same persona + flavour + questionnaire, assert `resolve_profile`
       returns byte-identical RestrictionProfile across dev/staging fixtures.
 
 ### Phase 7E — Verify + QG
 
-- [ ] [SCRIPT] P0. strategy-service QG green.
-- [ ] [SCRIPT] P0. PM QG green (YAML validation).
-- [ ] [SCRIPT] P0. UI QG green.
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-7-restriction-profile.spec.ts` green on tier-1 dev.
+- [x] [SCRIPT] P0. strategy-service QG green.
+- [x] [SCRIPT] P0. PM QG green (YAML validation).
+- [x] [SCRIPT] P0. UI QG green.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-7-restriction-profile.spec.ts` green on tier-1 dev.
+
+## Shipped-state reconciliation (2026-04-20)
+
+Checkboxes above flipped retroactively after code shipped in 3 commits without the plan updating. Deviations from plan
+prose worth naming for downstream agents:
+
+- **Option X carry-through:** restriction-profile engine lives at
+  `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` — NOT
+  `strategy-service/strategy_service/availability/restriction_profiles.py` as the plan header states. This mirrors
+  G1.6's Option X decision. Public facade re-exports via `unified_api_contracts.strategy` (`resolve_profile`,
+  `RESTRICTION_PROFILE_REGISTRY`, `known_persona_ids`, `Env`, `QuestionnaireResponse`, `ProfileYaml`).
+- **Tests landed in UAC**, not strategy-service:
+  `unified-api-contracts/tests/internal/unit/test_restriction_profiles.py` — 22 cases (plan target ≥ 20 met).
+- **6 YAML profile files shipped** under `codex/14-playbooks/demo-ops/profiles/` as planned: admin.yaml,
+  client-full.yaml, prospect-im.yaml, prospect-dart.yaml, prospect-regulatory.yaml, anon.yaml.
+- **G1.3 stub replaced:** `unified-trading-system-ui/lib/visibility/use-tile-lock-state.ts` now resolves real lockState
+  via the restriction-profile engine (commit `da1cd43`).
+- **PM sync script + CI hook** shipped as the delivery pattern for the UI TS mirror:
+  `unified-trading-pm/scripts/propagation/sync-restriction-profiles-to-ui.{sh,py}` regenerates
+  `unified-trading-system-ui/lib/architecture-v2/restriction-profiles.ts`; hooked into UI `scripts/quality-gates.sh` as
+  a drift-check.
+- **Commit SHAs:** UAC `38324af` (engine); PM `49c0117f` (YAMLs) + `6ab71bf7` (sync tooling); UI `da1cd43` (TS mirror +
+  Playwright spec + QG hook).
+
+## Spillover carried from G1.6 (allocator-gate deferral)
+
+G1.6 Phase 6D checkbox "Wire access_control into ClientAllocatorInstance gate" was deferred to G1.7 per the committed
+plan. G1.7 as shipped did NOT pick it up; `portfolio_allocator/service.py:125` in strategy-service still calls the
+legacy `validate_allocation_authorised()` gate. This is an outstanding follow-up that should be picked up by **G1.11
+execution agent** (since G1.11 touches the `access_control()` pre-check path) or as an independent cleanup commit before
+Wave E dispatch. Do NOT leave it as an orphan past Wave E.
 
 ## Critical files to be modified
 

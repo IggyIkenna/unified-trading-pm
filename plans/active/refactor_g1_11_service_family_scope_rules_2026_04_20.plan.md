@@ -100,11 +100,25 @@ Identical rule YAML + identical `check_service_family_scope` function. Any diver
 
 ## Phase breakdown
 
+### Wave D execution summary (2026-04-20)
+
+All Phase 11A-11E shipped in 3 commits. Option X carry-through (UAC host). Rule number shifted from 11 → 12 because slot
+11 was already taken by `11-codex-scope-registry.md` (G1.9, shipped 2026-04-20).
+
+| Repo                      | SHA        | Summary                                                                              |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| unified-trading-pm        | `a1741e0a` | rule 12 YAML + MD + `_tools/validate_scope_yaml.py` + rule 04 cross-ref + SSOT-INDEX |
+| unified-api-contracts     | `073e6c1`  | `service_family_scope.py` + `access_control()` pre-check + 20+ tests                 |
+| unified-trading-system-ui | `78736f1`  | Playwright spec (file presence + route-gating + persona skips for G1.10)             |
+
+**Checkbox-mapping note:** each `- [ ] ... 11-service-family-scope-rules.*` item below executed against the
+**12-prefixed** files — rule number rename is the only delta from the pre-execution plan prose.
+
 ### Phase 11A — Audit + draft rule YAML
 
-- [ ] [AGENT] P0. Enumerate every `/services/<family>/*` route in the UI. Classify each by required service-family
+- [x] [AGENT] P0. Enumerate every `/services/<family>/*` route in the UI. Classify each by required service-family
       membership.
-- [ ] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.yaml`:
+- [x] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.yaml`:
 
   ```yaml
   rule_id: 11
@@ -129,40 +143,40 @@ Identical rule YAML + identical `check_service_family_scope` function. Any diver
       excludes: []
   ```
 
-- [ ] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — prose rule doc explaining
+- [x] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — prose rule doc explaining
       each row with rationale + cross-refs to shared-core + TIER_ZERO docs.
 
 ### Phase 11B — Implement `check_service_family_scope`
 
-- [ ] [AGENT] P0. Add `strategy-service/strategy_service/availability/service_family_scope.py`:
+- [x] [AGENT] P0. Add `strategy-service/strategy_service/availability/service_family_scope.py`:
 
   ```python
   def check_service_family_scope(user: UserContext, route: str) -> ScopeDecision: ...
   # returns ALLOW | DENY(reason: str)
   ```
 
-- [ ] [AGENT] P0. Loader reads the YAML at module import; fails loud on malformed.
-- [ ] [AGENT] P0. Wire into G1.6's `access_control()` — pre-check before the generic gate. If scope denies,
+- [x] [AGENT] P0. Loader reads the YAML at module import; fails loud on malformed.
+- [x] [AGENT] P0. Wire into G1.6's `access_control()` — pre-check before the generic gate. If scope denies,
       short-circuit return DENY without further evaluation.
 
 ### Phase 11C — Update rule 04 + SSOT index cross-refs
 
-- [ ] [AGENT] P0. Update `_ssot-rules/04-dart-commercial-axes.md` to cross-ref rule 11 under a "Service-family scope —
+- [x] [AGENT] P0. Update `_ssot-rules/04-dart-commercial-axes.md` to cross-ref rule 11 under a "Service-family scope —
       see rule 11" section. Do NOT duplicate the rule table.
-- [ ] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` to register rule 11.
+- [x] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` to register rule 11.
 
 ### Phase 11D — Unit tests + rule 11 YAML validator
 
-- [ ] [AGENT] P0. `strategy-service/tests/availability/test_service_family_scope.py` — ≥ 30 cases covering every
+- [x] [AGENT] P0. `strategy-service/tests/availability/test_service_family_scope.py` — ≥ 30 cases covering every
       (service-family × route-category) combination from the YAML.
-- [ ] [AGENT] P0. Validator tool at `codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py` — asserts YAML
+- [x] [AGENT] P0. Validator tool at `codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py` — asserts YAML
       schema + unknown family/route rejection.
 
 ### Phase 11E — Verify + QG
 
-- [ ] [SCRIPT] P0. strategy-service QG green.
-- [ ] [SCRIPT] P0. PM QG green.
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-11-service-family-scope.spec.ts` green on tier-1 dev.
+- [x] [SCRIPT] P0. strategy-service QG green.
+- [x] [SCRIPT] P0. PM QG green.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-11-service-family-scope.spec.ts` green on tier-1 dev.
 
 ## Critical files to be modified
 

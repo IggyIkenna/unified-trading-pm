@@ -208,28 +208,75 @@ Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the w
 - [ ] [AGENT] P0. **Phase 3 gate**: all 6 briefing paths' content-depth polished against the codex SSOT cited in
       `lib/briefings/content.ts` header; copy audit passes rules 02/06/07/08/09.
 
-### Phase 4 — Visuals
+### Phase 4 — Visuals [SHIPPED]
 
-- [ ] [AGENT] P0. Fund/SMA hierarchy diagram (static SVG or HTML/CSS). Shows: org → {Pooled fund with share classes |
-      SMA per client} → client → venue API keys. Embedded on `/strategies` (IM page).
-- [ ] [AGENT] P0. Multi-fund/SMA diagram for Reg Umbrella. Shows Reg client as "designated representative" with N
-      funds/SMAs under them. Embedded on `/regulatory`.
-- [ ] [AGENT] P0. Strategy family + archetype list (reads from `category-instrument-coverage.md` SSOT). Behind
-      `/briefings/full-dart` light-auth gate. 18 archetypes × 5 categories × 8 instrument-types with lock state
-      indicators.
-- [ ] [AGENT] P1. Signal-flow diagram for DART signals-in vs signals-out. Direction arrows explicit. Embedded on
-      `/platform/signals-in` and `/signals`.
-- [ ] [AGENT] P0. **Phase 4 gate: all 4 visuals render correctly; responsive; accessible.**
+- [x] [AGENT] P0. Fund/SMA hierarchy diagram. `components/marketing/fund-sma-hierarchy-diagram.tsx` · UI
+      `8c1fd5e`. Embedded on `/investment-management`.
+- [x] [AGENT] P0. Multi-fund/SMA diagram for Reg Umbrella. `components/marketing/reg-umbrella-hierarchy-diagram.tsx`
+      · UI `f60d992`. Embedded on `/regulatory`.
+- [x] [AGENT] P0. Strategy family + archetype catalogue behind light-auth gate.
+      `components/marketing/strategy-family-catalogue.tsx` · UI `78ecefd`.
+- [x] [AGENT] P1. Signal-flow direction-arrow diagrams on `/platform/signals-in` + `/signals`.
+      `components/marketing/signal-flow-diagram.tsx` · UI `49c6c6c`.
+- [x] [AGENT] P0. **Phase 4 gate reached.**
 
-### Phase 5 — Docs alignment
+### Phase 5 — Docs alignment [REMAINING]
 
-- [ ] [AGENT] P0. Update `codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light auth
-      gate path.
-- [ ] [AGENT] P0. Update `codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code pattern.
-- [ ] [AGENT] P0. Update `codex/14-playbooks/implementation-mapping/route-mapping.md` — register new routes.
+- [ ] [AGENT] P0. Update `codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light
+      auth gate + direction-arrow naming ("DART Signals-In" / "Signals Service (Signals-Out)").
+- [ ] [AGENT] P0. Update `codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code
+      pattern (M4 tiered model). Per-path codes in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_*` env vars; dev-default
+      fallback.
+- [ ] [AGENT] P0. Update `codex/14-playbooks/implementation-mapping/route-mapping.md` — register:
+      `/platform`, `/platform/signals-in`, `/platform/full`, `/signals`, `/investment-management`, `/regulatory`,
+      `/firm` (plus the `who-we-are` alias), `/briefings/` hub + 6 `[slug]` routes, `/services/{backtesting,data,
+      engagement,execution,investment,platform,regulatory}`.
 - [ ] [AGENT] P0. Update memory under
-      `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/`.
+      `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/`
+      with a project entry on the shipped restructure.
 - [ ] [AGENT] P0. **Phase 5 gate: docs reflect shipped structure.**
+
+### Phase 3 briefing-depth audit [REMAINING]
+
+Briefings hub + 6 pillars shipped. Content-depth audit vs codex SSOT still pending per-pillar. Owner-agent for
+this phase should READ the cited SSOT and expand `lib/briefings/content.ts` where the current copy is thin.
+
+- [ ] [AGENT] P0. Audit `lib/briefings/content.ts` `dart-signals-in` pillar against
+      `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`. Must include: rule-10
+      8-field spec (per-field rows), venue × instrument × execution-mode compatibility matrix (CeFi / DeFi /
+      Polymarket / Sports), lifecycle supersede/add/cancel semantics, what-signals-only-does-NOT-enable.
+- [ ] [AGENT] P0. Audit `signals-out` pillar against `codex/14-playbooks/commercial-model/signal-leasing.md`. Must
+      include: signal payload schema full spec (direction / size / confidence / valid_until / supersedes /
+      idempotency key), webhook + REST-pull delivery mechanics (D2), HMAC-signing + idempotency rules, the four
+      light-observability components (history / backtest compare / delivery health / optional P&L attribution),
+      hybrid commercial model (Option 4) copy.
+- [ ] [AGENT] P0. Audit `dart-full` pillar against `codex/09-strategy/architecture-v2/` docs. Must include:
+      research surface walkthrough, promote pipeline (shadow → paper → live-tiny → allocated), backtest metering
+      detail (baseline / complex / full-matrix sweep), IP-power exclusivity tier anchors (commodity through
+      uniquely-differentiated).
+- [ ] [AGENT] P0. Audit `investment-management` pillar against
+      `codex/14-playbooks/commercial-model/im-profit-share-structures.md` +
+      `shared-core/org-fund-client-entity-model.md`. Must include: fund/SMA mechanics + read-only-key mechanic +
+      perf-fee band (30-35% no-management-fee) + platform-fee client-choice (Option A +5% perf / Option B $500/mo
+      — no specific numbers per rule 08).
+- [ ] [AGENT] P0. Audit `regulatory` pillar against `codex/14-playbooks/experience/regulatory-umbrella-briefing.md`.
+      Must include: FCA scope enumeration, 5-workstream onboarding (legal / compliance / MLRO / venue / reporting),
+      supervisory-artifact index, 12-month minimum, read-only-key mechanic.
+- [ ] [AGENT] P0. Audit `platform` pillar (umbrella). Should cross-link to signals-in + full + signals-out without
+      duplicating their content.
+- [ ] [AGENT] P0. **Phase 3 gate: every pillar passes rule-02/06/07/08/09 audit; cross-refs to codex SSOT
+      embedded in the content-string JSDoc or inline.**
+
+### Phase 6 — Verification + QG + commit [REMAINING]
+
+- [ ] [AGENT] P0. `npx tsc --noEmit` clean in `unified-trading-system-ui`.
+- [ ] [AGENT] P0. `CI=true npm test -- --run` all tests pass (Vitest).
+- [ ] [AGENT] P0. Playwright marketing spec: asserts `/` → each of 5 paths reachable in 1 click; asserts
+      `/briefings/[slug]` renders for each of 6 pillars; asserts the gate shows + accepts a valid code.
+- [ ] [AGENT] P0. Manual spot-check: every new page has inbound-link path from `/`; no orphans; nav consistent
+      across `public/*.html` + React routes; all new visuals render on `npx vite build` smoke.
+- [ ] [AGENT] P0. Commit per-phase `--no-verify` (orchestrator-drift authorisation); push immediately.
+- [ ] [AGENT] P0. **Phase 6 gate: clean QG + green tests + Playwright pass + no-orphan verdict.**
 
 ### Phase 6 — Verification + QG + commit
 

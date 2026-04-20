@@ -151,32 +151,56 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 - [x] [AGENT] P0. **Phase 2 success gate**: UAC contracts shipped, UTL events registered, importable from consumer
       repos.
 
-### Phase 3 — strategy-service signal-broadcast sub-package
+### Phase 3 — strategy-service signal-broadcast sub-package [PARTIAL — 6/7 files present]
 
-- [ ] [AGENT] P0. Create `strategy_service/signal_broadcast/` sub-package: - `emitter.py`: consumes strategy-service's
-      internal `STRATEGY_SIGNAL_GENERATED` events, builds the payload per counterparty's entitled slots, signs with
-      HMAC, dispatches. - `router.py`: maps (slot_label, counterparty_id) → entitled emission + schema depth. -
-      `transport.py`: webhook HTTP POST with at-least-once retry + idempotency; REST pull endpoint for
-      counterparty-initiated reconciliation (D2 hybrid). - `audit.py`: emits `STRATEGY_SIGNAL_EMITTED_EXTERNAL` event +
-      logs to BQ billing table. - `credentials.py`: uses `ApiKeyReloader` pattern to hot-reload counterparty HMAC
-      secrets. - `failure_isolation.py`: wraps per-counterparty delivery in try/except that classifies errors through
-      `classify_venue_error()` and emits `ADAPTER_FETCH_FAILED` pattern. Never raises to the generator.
-- [ ] [AGENT] P0. Config reloader for signal-broadcast per service-infra rules (typed config).
-- [ ] [AGENT] P0. ServiceBootstrap + Health API endpoints registered per rule.
-- [ ] [AGENT] P0. Unit tests: 90%+ coverage of emitter.py + router.py + audit.py.
+**Status audit 2026-04-20**: sub-package directory exists at `strategy-service/strategy_service/signal_broadcast/`
+with 7 files (`__init__.py`, `audit.py`, `config.py`, `credentials.py`, `failure_isolation.py`, `router.py`,
+`transport.py`). **`emitter.py` is missing** — this is the load-bearing orchestration module that consumes the
+internal `STRATEGY_SIGNAL_GENERATED` event, pulls entitled slots via `router.py`, signs via `credentials.py`,
+dispatches via `transport.py`, and emits audit events via `audit.py`. Without it the rest is unwired.
+
+- [x] [AGENT] P0. `router.py` — maps (slot_label, counterparty_id) → entitled emission + schema depth.
+- [x] [AGENT] P0. `transport.py` — webhook HTTP POST + idempotency retry; REST pull endpoint for counterparty-
+      initiated reconciliation (D2 hybrid).
+- [x] [AGENT] P0. `audit.py` — emits `STRATEGY_SIGNAL_EMITTED_EXTERNAL` event + BQ billing log.
+- [x] [AGENT] P0. `credentials.py` — `ApiKeyReloader` pattern for counterparty HMAC secrets.
+- [x] [AGENT] P0. `failure_isolation.py` — per-counterparty try/except with `classify_venue_error()` +
+      `ADAPTER_FETCH_FAILED` emit; never raises to generator.
+- [x] [AGENT] P0. `config.py` — typed config (verified).
+- [ ] [AGENT] P0. **`emitter.py`** — CRITICAL MISSING. Orchestrator that wires the 6 above: subscribes to internal
+      `STRATEGY_SIGNAL_GENERATED`, resolves entitled counterparties per slot via `router`, builds payload per
+      negotiated schema depth, signs via `credentials` HMAC, dispatches via `transport`, logs via `audit`,
+      isolates failures via `failure_isolation`. Must follow service-infra rules (ServiceBootstrap, Health API).
+- [ ] [AGENT] P0. ServiceBootstrap integration — emitter registers in service source (STEP 5.61 QG rule).
+- [ ] [AGENT] P0. Health API endpoint — `make_health_router` exposes signal-broadcast freshness (STEP 5.62).
+- [ ] [AGENT] P0. Typed config reloaders for signal-broadcast (STEP 5.34).
+- [ ] [AGENT] P0. Unit tests: 90%+ coverage of `emitter.py` + `router.py` + `audit.py` (verify existing coverage
+      first; bump `MIN_COVERAGE` floor in `scripts/quality-gates.sh` per coverage-ratchet rule).
 - [ ] [AGENT] P0. Integration tests with mocked counterparty endpoints + idempotency retry scenarios.
-- [ ] [AGENT] P0. **Phase 3 success gate**: strategy-service QG clean; signal broadcast runs end-to-end against mock
-      counterparty.
+- [ ] [AGENT] P0. **Phase 3 success gate**: strategy-service QG clean; signal broadcast runs end-to-end against
+      mock counterparty.
 
-### Phase 4 — deployment-service wiring
+### Phase 4 — deployment-service wiring [REMAINING]
 
-- [ ] [AGENT] P0. Secret-manager entries for per-counterparty HMAC secrets + auth keys, per credential convention.
-- [ ] [AGENT] P0. Cloud Run deployment of signal-broadcast worker if separate — or confirm strategy-service's existing
-      Cloud Run service absorbs the emitter.
-- [ ] [AGENT] P0. Per-counterparty Pub/Sub topic or direct webhook target configuration.
-- [ ] [AGENT] P0. Rate-limiting + retry configuration per counterparty (D7 per-strategy).
-- [ ] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties; smoke test delivery
-      confirmed.
+**Clarification 2026-04-20**: this phase wires **deployment-service directly** (the Python service that owns
+Cloud Run manifests + Secret Manager scripts + VM tarballs). `deployment-api` is the thin observability facade
+over deployment-service — NOT the direct wiring target. Touch `deployment-api` only if we want ops to see
+counterparty-endpoint state via its API (that's Phase 5 admin-surface territory, not infra).
+
+- [ ] [AGENT] P0. Secret Manager entries for per-counterparty HMAC secrets + auth keys in
+      `deployment-service/scripts/` (per `interface-credential-convention.md`).
+- [ ] [AGENT] P0. Cloud Run deployment — decide: (a) extend strategy-service's existing Cloud Run service to host
+      the signal-broadcast sub-package, OR (b) separate Cloud Run worker. Default to (a) — strategy-service
+      already owns signal emission; no need for a 67th service. Update `deployment-service/cloud-run/` manifest
+      accordingly.
+- [ ] [AGENT] P0. Per-counterparty webhook target config in `deployment-service/config/` (env var allowlist)
+      and/or Pub/Sub topic provisioning. Per D4 — entitlements source from UAC `CounterpartyEntitlement`.
+- [ ] [AGENT] P0. Rate-limiting + retry configuration per D7 (per-counterparty-per-strategy). Config lives in
+      strategy-service signal_broadcast `config.py` + deployment-service env injection.
+- [ ] [AGENT] P0. VM tarball refresh per `deployment-service/scripts/vm/create-code-tarballs.sh` if VMs consume
+      strategy-service — `bash ... --include strategy-service` if signal_broadcast sub-package affects tarball.
+- [ ] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties (staging secrets
+      + Cloud Run manifest + webhook config); smoke test delivery confirmed end-to-end on staging.
 
 ### Phase 5 — frontend (admin + counterparty observability UI)
 
@@ -189,17 +213,24 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
 
 - [x] [AGENT] P0. Public marketing surface (signals.html / signals/page.tsx / nav entry / platform 3-card fix /
       `/briefings/signals-out` pillar) — **shipped under marketing_site_restructure**. No further work here.
-- [ ] [AGENT] P0. **Counterparty observability UI** — light dashboard under a tenant-scoped route (e.g.
-      `/signals/dashboard` or under a per-counterparty subdomain). Components: - `<SignalHistoryTable>` — last N
-      emissions scoped to entitled slots; filter by slot / date / status - `<BacktestComparisonPanel>` — Odum-held
-      backtest performance numbers vs live signal aggregate; read-only - `<DeliveryHealthPanel>` — webhook success rate,
-      retry counts, avg latency, last-delivery timestamp per slot - `<PnlAttributionPanel>` — OPTIONAL, only renders if
-      counterparty reports P&L back - No catalogue, no execution, no research, no reporting beyond signal-delivery audit
-- [ ] [AGENT] P0. Admin surface at `app/(platform)/services/signals/counterparties/page.tsx` — list counterparties, show
-      emission state, toggle entitlements, view per-counterparty delivery health.
-- [ ] [AGENT] P0. Counterparty persona (new domain entity per D9) integration — tenant-scoped auth for the observability
-      UI. Per rule-03 same-system principle, the UI components reuse existing dashboards; scoped by entitlement to the
-      counterparty-observability slice only.
+- [ ] [AGENT] P0. **Counterparty observability UI** — light dashboard at
+      `app/(platform)/services/signals/dashboard/page.tsx`. Components:
+      - `<SignalHistoryTable>` — last N emissions scoped to entitled slots; filter by slot / date / status
+      - `<BacktestComparisonPanel>` — Odum-held backtest numbers vs live signal aggregate (read-only)
+      - `<DeliveryHealthPanel>` — webhook success rate, retry counts, avg latency, last-delivery timestamp
+      - `<PnlAttributionPanel>` — OPTIONAL, renders only if counterparty reports P&L back
+      - NO catalogue / NO execution / NO research / NO reporting beyond signal-delivery audit.
+      - **No-orphan-page discipline**: wire inbound link from public `/signals` page CTA ("Existing
+        counterparty? View your dashboard →", gated by login) AND from counterparty-login post-auth redirect.
+- [ ] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list
+      counterparties, show emission state, toggle entitlements, view per-counterparty delivery health.
+      **No-orphan discipline**: inbound link from admin platform-shell nav + admin landing page service-tile.
+- [ ] [AGENT] P0. **Counterparty persona** (new domain entity per D9) — NOT a UI persona in `personas.ts`,
+      NOT a DART client variant. Distinct domain entity with its own auth provider integration (tenant-scoped).
+      Define in UAC under `signal_broadcast/Counterparty` (already shipped) — wire UI auth gate to recognise
+      counterparty-type users and route them to `/services/signals/dashboard` on login.
+- [ ] [AGENT] P0. **Route-audit gate**: before Phase 5 marks done, `rg "href=\"/services/signals" --type ts`
+      must show inbound-link paths for both `/dashboard` and `/counterparties` routes. No-orphan rule enforced.
 - [ ] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate (shipped);
       counterparty observability UI renders with mocked data on staging; admin counterparty surface operational;
       `npm test` + `tsc --noEmit` clean.
