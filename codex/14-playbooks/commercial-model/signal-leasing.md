@@ -114,18 +114,40 @@ regulatory coverage. Consistent with that framing:
 - End 2027: signal leasing expanded.
 - End 2028: signal leasing revenue stream established.
 
-## Target pricing anchors for 2026 planning
+## 2026 concrete anchor (locked 2026-04-20)
 
-Based on deck aspirations + pricing options:
+**Go-live: September 2026. Two counterparties interested, ~$5k/month combined (≈£4k/mo).** Revised down from the
+initial £12-24k/mo modelling — reflects commercial reality of the first two deals being narrow-scope prove-out
+rather than full-catalogue bundles.
+
+| | September 2026 onwards |
+|---|---|
+| # counterparties live | 2 |
+| Combined monthly revenue | ~$5k (≈£4k) |
+| Per-counterparty average | ~$2.5k / ≈£2k |
+
+**Scope at launch** is narrow per counterparty — likely single-signal-family or minimal-schema. The pricing
+scales up with:
+
+- Bundle expansion (adding more signal families) → $15-25k/mo/counterparty per the pricing anchors below
+- Schema depth increase (minimal → standard → rich)
+- Additional counterparties (the plan-presentation deck frames 2026 as "2 counterparties in active conversations";
+  this anchor reflects that commitment converting to paying engagements)
+
+**Pricing anchors for future deals (post-launch bundle expansion):**
 
 | | Conservative | Target | Upside |
 |---|---|---|---|
-| # counterparties live end-2026 | 1 | 2 | 3 |
-| £/month per counterparty (hybrid model) | 10 | 15 | 25 |
-| **Signal leasing end-2026 monthly** | **10** | **30** | **75** |
+| £/month per counterparty (hybrid model, expanded scope) | 10 | 15 | 25 |
+| **Bundle-expansion revenue potential end-2027** | **20/mo** | **45/mo** | **100/mo** |
 
-Within the 2026 monthly revenue projection, signal leasing is modelled at **£12-24k/mo by end-Q4** (2 counterparties
-at target pricing).
+**Within the 2026 monthly revenue projection**, signal leasing now modelled at **£4k/mo from Sept 2026** (flat for
+Sept-Dec). This ties to the ~£35k year-end cash-projection revision per
+[`revenue-projection-2026-monthly.md`](revenue-projection-2026-monthly.md).
+
+**Backend enablement**: external broadcast mechanism requires the cross-repo refactor tracked in
+[`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
+The $5k/mo revenue is gated on that refactor landing before Sept 2026.
 
 ## Operational mechanics
 

@@ -92,14 +92,17 @@ Monthly BTC ML revenue through 2026:
 |---|---|
 | 35 upfront + 22 monthly = 57 | 22 |
 
-### Signal leasing (2 counterparties Q3-Q4)
+### Signal leasing (2 counterparties, narrow prove-out scope — revised 2026-04-20)
 
-- 1st counterparty live: September at £12k/mo
-- 2nd counterparty live: November at +£12k/mo
+**Revised anchor**: 2 counterparties combined targeting **~$5k/mo (≈£4k/mo) from September 2026**. Both live
+simultaneously; narrow initial scope per counterparty. Expansion-driven growth modelled in 2027.
+
+Backend enablement dependency: external-broadcast refactor per
+[`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
 
 | Sep | Oct | Nov | Dec |
 |---|---|---|---|
-| 12 | 12 | 24 | 24 |
+| 4 | 4 | 4 | 4 |
 
 ## Full monthly revenue table
 
@@ -115,11 +118,16 @@ Sums (£k):
 | Jun | 8 | 28 | 1 | 2.8 | 0.4 | 0 | 0 | 22 | 0 | **62** |
 | Jul | 8 | 20 | 1 | 5.6 | 0.4 | 0 | 0 | 22 | 0 | **57** |
 | Aug | 8 | 0 | 1 | 8.4 | 0.4 | 0 | 0 | 22 | 0 | **40** |
-| Sep | 8 | 25 | 1 | 11.2 | 0.4 | 3 | 0 | 22 | 12 | **83** |
-| Oct | 8 | 0 | 7 | 14 | 0.4 | 5.8 | 79 | 22 | 12 | **148** |
-| Nov | 8 | 25 | 7 | 14 | 0.4 | 8.3 | 0 | 22 | 24 | **109** |
-| Dec | 8 | 10 | 7 | 14 | 0.4 | 11 | 0 | 22 | 24 | **96** |
-| **2026 total** | **96** | **108** | **25** | **84** | **3** | **28** | **79** | **233** | **72** | **~£692k** |
+| Sep | 8 | 25 | 1 | 11.2 | 0.4 | 3 | 0 | 22 | 4 | **75** |
+| Oct | 8 | 0 | 7 | 14 | 0.4 | 5.8 | 79 | 22 | 4 | **140** |
+| Nov | 8 | 25 | 7 | 14 | 0.4 | 8.3 | 0 | 22 | 4 | **89** |
+| Dec | 8 | 10 | 7 | 14 | 0.4 | 11 | 0 | 22 | 4 | **76** |
+| **2026 total** | **96** | **108** | **25** | **84** | **3** | **28** | **79** | **233** | **16** | **~£636k** |
+
+**Revision note (2026-04-20)**: Signal leasing revised from £12-24k/mo ramp (previous modelling) to £4k/mo flat
+Sept-Dec (~$5k combined from 2 narrow-scope counterparties). Annual impact: **-£56k** (from £692k to ~£636k).
+Year-end cash projection moves from ~£464k to **~£408k** — still well above £150k reserve floor; no funding
+implication.
 
 ## Monthly cost decomposition (£k/month)
 
