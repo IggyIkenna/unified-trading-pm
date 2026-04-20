@@ -54,9 +54,10 @@ On event settlement:
 
 ## Venue patterns
 
-- **Primary: Unity** (meta-broker with 10 child books, single wallet, best-odds routing per outcome)
-- **Direct books**: Betfair, Smarkets, Matchbook, Betdaq (for books not in Unity or when direct access preferred)
-- **Polymarket** for binary prediction markets (Polygon chain CLOB)
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 2. ML_DIRECTIONAL_EVENT_SETTLED`](../category-instrument-coverage.md#2-ml_directional_event_settled)
+for the authoritative venue table (Unity meta-broker with 10 child books; direct access to Betfair, Smarkets, Matchbook,
+Betdaq; Polymarket for binary prediction markets).
 
 ## Expression options
 

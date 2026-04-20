@@ -68,8 +68,7 @@ follow-up plans that Stage 3E enumerates.
   [plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md](playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
   — soft dep. Stage 3C derivation engine reads `commercial-model/pricing-building-blocks.md` structure; Stage 3D
   presentation references experience playbooks. 3A and 3B can run before Stage 2 completes.
-- **Parent SSOT work**:
-  [plans/archive/we-need-a-documented-foamy-mango.md](../archive/we-need-a-documented-foamy-mango.md) — static audit
+- **Parent SSOT work**: [plans/archive/00-MASTER-CICD-PLAN.md](../archive/00-MASTER-CICD-PLAN.md) — static audit lineage
   outputs (177 pages, broken hrefs, duplicate clusters) are Stage 3A's starting material.
 - **Existing active plans that will become sub-plans of Stage 3E refactor**:
   - [user_management_merge_2026_03_23.plan.md](user_management_merge_2026_03_23.plan.md) — fund/client/API-key

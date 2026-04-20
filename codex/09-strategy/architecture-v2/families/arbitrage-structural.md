@@ -175,8 +175,8 @@ execution_policy_ref version bump propagates new behavior (with consumer opt-in)
   - Flash loan revert mid-cycle (DEX arb)
   - Gas-auction loss (liquidation — someone else wins the priority fee race)
   - Protocol exploit / bug (liquidation edge cases, reentrancy)
-- **Sharpe**: typically high when opportunities are found (3+), but opportunity frequency is finite — net annualised
-  returns depend on capital allocation efficiency
+- **Sharpe (per opportunity)**: 3+. Opportunity frequency is finite; net annualised returns depend on capital-
+  allocation efficiency and how often the scanner fires.
 - **Kill switches**: abnormal dispersion (may indicate broken feed rather than arb), multiple consecutive losses
   (execution quality degraded), venue outage
 

@@ -39,13 +39,9 @@ APY differentials. Single-sided supply (no leverage) — just the best place for
 
 ## Supported venues / instruments
 
-| Protocol    | Chains                                                 | Assets supported                  |
-| ----------- | ------------------------------------------------------ | --------------------------------- |
-| Aave V3     | Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Base | USDC, USDT, DAI, ETH, stETH, wBTC |
-| Compound V3 | Ethereum                                               | USDC, ETH                         |
-| Euler       | Ethereum                                               | Wider asset set                   |
-| Morpho      | Ethereum                                               | Wider asset set                   |
-| Kamino      | Solana                                                 | USDC, SOL, JitoSOL, bonk          |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 9. YIELD_ROTATION_LENDING`](../category-instrument-coverage.md#9-yield_rotation_lending)
+for the authoritative protocol × chain × asset matrix (Aave V3 on six chains, Compound V3, Euler, Morpho, Kamino).
 
 ## Config schema
 

@@ -215,8 +215,9 @@ How restriction profiles are configured, and how sales context flows into provis
 
 - [ ] [AGENT] P0. `codex/14-playbooks/playbooks/README.md` — already created in Stage 1; verify it marks the dir as
       `[IMPL LAYER]` and points to `../experience/` for narrative.
-- [ ] [AGENT] P1. Add a one-line `> **Layer:** Implementation. Narrative lives in [experience/](../experience/).` header
-      to each of the 9 impl-layer playbooks (02a/b/c, 03a/b/c, 01, 02, 03).
+- [ ] [AGENT] P1. Add a one-line
+      `> **Layer:** Implementation. Narrative lives in [codex/14-playbooks/experience/](../../codex/14-playbooks/experience/).`
+      header to each of the 9 impl-layer playbooks (02a/b/c, 03a/b/c, 01, 02, 03).
 - [ ] [AGENT] P1. Similar header added to `cross-cutting/`, `authentication/`, `environments/` READMEs (if present;
       create if not).
 

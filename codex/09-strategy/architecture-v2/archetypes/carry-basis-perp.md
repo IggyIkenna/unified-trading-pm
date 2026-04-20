@@ -44,13 +44,14 @@ staying delta-neutral. Position rebalanced when funding rate drops below thresho
 
 ## Supported venues / instruments
 
-Any (spot, perp) pair:
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 6. CARRY_BASIS_PERP`](../category-instrument-coverage.md#6-carry_basis_perp) for
+the authoritative list of representative slot labels, venue pairs, and licensing constraints. Archetype-specific notes:
 
-- **Single-venue netted (best capital efficiency)**: Binance spot + Binance perp, OKX spot + OKX perp, Bybit spot +
-  Bybit perp
-- **Cross-venue**: Uniswap/Coinbase spot + Hyperliquid/Deribit/Binance perp; L2 spot (Uniswap Arbitrum) + CEX perp
-- **Crypto primary**: BTC, ETH, SOL; occasionally top-10 alts
-- **Multi-coin rotation**: config to rotate across eligible assets based on funding-rate ranking
+- Single-venue netted (Binance, OKX, Bybit) delivers the best capital efficiency.
+- Cross-venue pairings (CEX spot + CEX perp, DEX spot + CEX perp, L2 spot + CEX perp) carry higher collateral + latency
+  cost.
+- Multi-coin rotation selects across eligible assets by funding-rate ranking (config-driven).
 
 ## Expression options
 

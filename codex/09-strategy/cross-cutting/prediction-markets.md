@@ -100,11 +100,8 @@ Every prediction market should be classified along three dimensions:
 | "Man Utd wins vs Arsenal" (Polymarket)   | Betfair back price for Man Utd           | YES — direct arb            |
 | "Will it rain in NYC tomorrow?" (Kalshi) | No traditional equivalent                | NO — feature only           |
 
-> **TODO — CODIFY:** This three-tier classification needs to be machine-readable: (a) Add `PredictionMarketUseCase` enum
-> to UIC: `FEATURE`, `TRADABLE`, `ARB_SURFACE`, `BOTH` (b) Add `equivalent_instrument_type` field to
-> `CanonicalPredictionMarket`: maps to traditional instrument if arb is possible (e.g., `SPX_BINARY_CALL`,
-> `FED_FUNDS_FUTURE`, `BETFAIR_BACK`) (c) Add `domain_mapping` field linking to strategy domains (d) Cross-platform
-> matching rules: normalise event descriptions to canonical form for matching
+Codification gap:
+[`prediction-markets-codification-gaps.md § G1 — Use-case classification`](prediction-markets-codification-gaps.md#g1--use-case-classification).
 
 ## Instrument ID Convention
 
@@ -121,9 +118,8 @@ Examples:
   POLYMARKET:CATEGORICAL:US_PRESIDENT_2028@HARRIS
 ```
 
-> **TODO — CODIFY:** This convention doesn't exist. Need to add to `unified-config-interface` instrument ID rules. The
-> `CanonicalPredictionMarket` in prediction_mapping.py generates deterministic IDs but they're not in the standard
-> instrument key format.
+Codification gap:
+[`prediction-markets-codification-gaps.md § G2 — Instrument ID convention`](prediction-markets-codification-gaps.md#g2--instrument-id-convention).
 
 ## Polymarket as a Feature Source
 
@@ -150,9 +146,8 @@ Examples:
 "Bitcoin above $95k on March 20" and "BTC price exceeds 95000 by end of March 20" are the SAME thing. Need NLP-based or
 rule-based matching to group equivalent markets for stronger signals.
 
-> **TODO — CODIFY:** Market semantic matching: (a) Rule-based normalisation: strip dates, amounts, standardise asset
-> names (b) Group markets by (asset, direction, threshold, expiry_bucket) (c) Aggregate implied probabilities across
-> grouped markets for stronger signal (d) Track historical accuracy per market group (calibration curve)
+Codification gap:
+[`prediction-markets-codification-gaps.md § G3 — Semantic market matching`](prediction-markets-codification-gaps.md#g3--semantic-market-matching).
 
 ## Polymarket/Kalshi as Execution Venues
 
@@ -273,9 +268,8 @@ For each market, determine:
 5. **Historical depth** (how long has this market/series existed?)
 6. **Liquidity** (volume, open interest, bid-ask spread)
 
-> **TODO — CODIFY:** Build a `prediction_market_classifier.py` in features-cross-instrument-service that periodically
-> pulls all markets from Polymarket + Kalshi, classifies them, identifies cross-platform matches, and publishes a
-> classified market registry to GCS. This becomes the SSOT for which prediction markets are useful and how.
+Codification gap:
+[`prediction-markets-codification-gaps.md § G4 — Automated market classifier`](prediction-markets-codification-gaps.md#g4--automated-market-classifier).
 
 ## Key Academic Research
 
@@ -296,25 +290,11 @@ For each market, determine:
 | `Dome API` (domeapi.io)                | Unified cross-platform API (YC-backed)    |
 | EventArb, ArbBets                      | Cross-platform arb detection              |
 
-## Integration Gaps & TODOs
+## Integration gaps
 
-> **TODO — CODIFY:** Wire Polymarket and Kalshi into main `VENUE_REGISTRY` (currently in `PLANNED_VENUES`). Add
-> capability declarations. Without this, `get_adapter()` can't instantiate.
-
-> **TODO — CODIFY:** Add prediction market instrument ID convention to instrument taxonomy.
-
-> **TODO — CODIFY:** Add `PredictionMarketUseCase` enum and `equivalent_instrument_type` mapping.
-
-> **TODO — CODIFY:** Build `prediction_market_classifier.py` for automated market classification.
-
-> **TODO — CODIFY:** Add semantic matching / NLP-based market grouping for equivalent-market detection.
-
-> **TODO — CODIFY:** Add Kalshi `demo-api.kalshi.com` as testnet equivalent in testnet registry. Kalshi has a demo
-> environment that doesn't require real money.
-
-> **TODO — CODIFY:** Historical data pipeline: Polymarket prices-history API has 12h+ granularity for resolved markets.
-> For fine-grained historical data, need to build our own recorder from WebSocket feed. Kalshi has proper historical
-> endpoints with 1-min candlesticks.
+Full gap register: [`prediction-markets-codification-gaps.md`](prediction-markets-codification-gaps.md). G1–G7 cover
+use-case enum (G1), instrument ID convention (G2), semantic market matching (G3), automated classifier (G4), venue
+registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
 
 ## References
 

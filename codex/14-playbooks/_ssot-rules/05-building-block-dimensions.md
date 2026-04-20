@@ -7,7 +7,25 @@ scope: [engineer, admin, sales]
 > Thirteen building blocks. Every commercial engagement, demo restriction profile, and production entitlement composes
 > from these blocks. Adding a block is a deliberate act; blocks do not multiply.
 
-**Source:** [`_source-v1-feedback.md`](_source-v1-feedback.md) §"On building-block dimensions (rule 05)".
+## Block legend (at a glance)
+
+| #   | Block                                               | Pricing detail SSOT                                                                                                        |
+| --- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Reporting core                                      | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 1                   |
+| 2   | Regulatory umbrella reporting                       | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 2                   |
+| 3   | IM allocator reporting                              | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 3                   |
+| 4   | Strategy-service entry                              | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 4                   |
+| 5   | Instructions integration                            | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 5 (depth sub-table) |
+| 6   | Research / promote pipeline                         | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 6                   |
+| 7   | Execution layer                                     | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 7                   |
+| 8   | Venue packs                                         | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 8                   |
+| 9   | Chain packs                                         | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 9                   |
+| 10  | Instrument-type packs                               | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 10                  |
+| 11  | Analytics packs                                     | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 11                  |
+| 12  | Exclusivity / non-compete premium (Tier-B modifier) | [`../commercial-model/exclusivity-and-noncompete.md`](../commercial-model/exclusivity-and-noncompete.md)                   |
+| 13  | Custom solution premium (Tier-B modifier)           | [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) row 13                  |
+
+Rule 05 defines the blocks. Pricing numbers live in the cited files only. No block lives elsewhere.
 
 ## The thirteen blocks
 
@@ -72,14 +90,14 @@ Eleven standalone blocks (1–11) and two premium modifiers (12–13).
 
 From rule 04 axis resolution, each commercial path selects a subset of blocks:
 
-- **`(Odum, reporting-only)` → routes to IM.** Typical blocks: reporting core + IM allocator reporting + (optionally)
-  analytics packs.
-- **`(Client, downstream)` → signals-only DART.** Typical blocks: reporting core + strategy-service entry + instructions
-  integration + execution layer + venue packs + chain packs + instrument-type packs. No research/promote pipeline.
-- **`(Client, full-pipeline)` → full DART.** Adds research/promote pipeline to the signals-only set, optionally
-  analytics packs.
-- **Reg Umbrella engagement.** Typical: reporting core + regulatory umbrella reporting + execution layer + venue packs +
-  instrument-type packs.
+- **`(Odum, reporting-only)` → IM.** Default blocks: 1 (reporting core) + 3 (IM allocator reporting); optional 11
+  (analytics packs).
+- **`(Client, downstream)` → signals-only DART.** Default blocks: 1 (reporting core) + 4 (strategy-service entry) + 5
+  (instructions integration) + 7 (execution layer) + 8 (venue packs) + 9 (chain packs, where applicable) + 10
+  (instrument-type packs). Block 6 (research / promote pipeline) is excluded.
+- **`(Client, full-pipeline)` → full DART.** The signals-only set plus block 6; block 11 optional.
+- **Reg Umbrella engagement.** Default blocks: 1 (reporting core) + 2 (regulatory umbrella reporting) + 7 (execution
+  layer) + 8 (venue packs) + 10 (instrument-type packs).
 
 ### Blocks are atomic to pricing
 
@@ -151,13 +169,11 @@ single registry read — the "one registry, four derivations" pattern.
 
 ## Cross-references
 
-- [`_source-v1-feedback.md`](_source-v1-feedback.md) §"On building-block dimensions (rule 05)"
 - [`04-dart-commercial-axes.md`](04-dart-commercial-axes.md) — axis resolution selects which blocks are in scope per
   cell
 - [`08-pricing-principles.md`](08-pricing-principles.md) — per-block tier structure applied to these thirteen
 - [`10-strategy-instruction-schema-principles.md`](10-strategy-instruction-schema-principles.md) — block 5 (instructions
   integration) depth dimension
-- [Stage 2 `commercial-model/pricing-building-blocks.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
-  — numbers populate here
-- [Stage 3B UAC combo registry](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) — these
-  thirteen become the entitlement dimension
+- [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md) — anchor ranges per
+  block
+- Stage 3B UAC combo registry declares these thirteen as the entitlement dimension

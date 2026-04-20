@@ -54,15 +54,15 @@ Deep-briefing content covering:
 
 ## Content source
 
-- Currently: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts) (regulatory pillar)
+- Current: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts) (regulatory pillar)
 
 ## Visibility slicing
 
-pb2c is within the briefings gate. No further slicing.
+pb2c sits inside the briefings gate. No further slicing.
 
 ## Related codex references
 
-The regulatory briefing should transclude or reference (not duplicate):
+The regulatory briefing transcludes or references (never duplicates):
 
 - [../../07-security/compliance.md](../../07-security/compliance.md) — MiFID II / FCA / MLRO / ARM
 - [../../04-architecture/capital-structure-and-regulatory.md](../../04-architecture/capital-structure-and-regulatory.md)
@@ -72,8 +72,8 @@ The regulatory briefing should transclude or reference (not duplicate):
 
 ## IR presentations surfaced here
 
-The `/investor-relations/regulatory-presentation` page is a **promote** candidate for pb2c.
-`/investor-relations/disaster-recovery` may also promote here (regulatory prospects care about business continuity).
+`/investor-relations/regulatory-presentation` promotes into pb2c. `/investor-relations/disaster-recovery` also surfaces
+here — regulatory prospects care about business continuity.
 
 ## Test coverage
 

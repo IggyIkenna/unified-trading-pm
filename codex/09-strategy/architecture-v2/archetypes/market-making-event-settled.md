@@ -54,12 +54,10 @@ each market settles discretely on event resolution.
 
 ## Supported venues
 
-- **Betfair Exchange** (direct): primary sports exchange; deep liquidity on major football/horse racing markets
-- **Betfair via Unity**: single wallet with Unity, routing to Betfair child API
-- **Smarkets** (direct): secondary; lower liquidity but 2% commission vs Betfair's 5% direct
-- **Matchbook** (direct or via Unity): 2.2% commission via Unity
-- **Betdaq** (direct): minor exchange
-- **Polymarket** (binary prediction markets): CLOB on Polygon
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 14. MARKET_MAKING_EVENT_SETTLED`](../category-instrument-coverage.md#14-market_making_event_settled)
+for the authoritative sports + prediction-market venue table (Betfair direct + Unity, Smarkets, Matchbook, Betdaq,
+Polymarket) with commission and liquidity notes.
 
 ## Expression options
 

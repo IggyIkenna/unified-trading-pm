@@ -111,10 +111,10 @@ shows the delta reflected AND the deployment-ui /deployments page shows the run'
 (STARTED/PROGRESS/COMPLETED) with canonical error codes on any partial failure". Nothing advances to the next phase
 without this visibility confirmed.
 
-**Idempotency requirement**: No phase may re-fetch data from a paid upstream (Databento, Tardis, ODDS_API,
-Polymarket, FootyStats, The Graph) that has already been written to GCS. All migrations work on existing bucket
-contents; backfills only pull what's genuinely missing per the availability filter. `--force` rewrites from
-already-landed source data, never from upstream.
+**Idempotency requirement**: No phase may re-fetch data from a paid upstream (Databento, Tardis, ODDS_API, Polymarket,
+FootyStats, The Graph) that has already been written to GCS. All migrations work on existing bucket contents; backfills
+only pull what's genuinely missing per the availability filter. `--force` rewrites from already-landed source data,
+never from upstream.
 
 ## Principles
 
@@ -323,10 +323,10 @@ already-landed source data, never from upstream.
 
 ## Phase 5 — Bucket retirement [PARALLEL with 6]
 
-> **Scope clarification 2026-04-18**: Phase 5 only retires the **empty separate** `market-data-candles-*` buckets.
-> The **actual MDPS writer + backfill + schemas** live in **Phase 5b** (see below) — MDPS itself is NOT retired; the
-> candles it produces are co-located inside the MTDS tick buckets under `processed_candles/` (or `processed/` for
-> sports). Do Phase 5 + 5b in parallel; 5a can run without waiting on 5b.
+> **Scope clarification 2026-04-18**: Phase 5 only retires the **empty separate** `market-data-candles-*` buckets. The
+> **actual MDPS writer + backfill + schemas** live in **Phase 5b** (see below) — MDPS itself is NOT retired; the candles
+> it produces are co-located inside the MTDS tick buckets under `processed_candles/` (or `processed/` for sports). Do
+> Phase 5 + 5b in parallel; 5a can run without waiting on 5b.
 
 ### 5.1 market-data-candles-\* retirement (5 prod + 5 test, all empty)
 
@@ -369,15 +369,15 @@ already-landed source data, never from upstream.
 MDPS writes to `processed_candles/` **co-located inside MTDS tick buckets** (confirmed for cefi/defi/tradfi/prediction;
 sports uses `processed/`). Current state is bad:
 
-- **UAC has only 2 candle contracts**: `tradfi/future/ohlcv_1m` + `tradfi/equity/ohlcv_1m` (pass-through from Databento's
-  native 1m bars — not computed). **Zero contracts** for CeFi/DeFi/Sports/Prediction candles or for non-1m TradFi
-  timeframes.
+- **UAC has only 2 candle contracts**: `tradfi/future/ohlcv_1m` + `tradfi/equity/ohlcv_1m` (pass-through from
+  Databento's native 1m bars — not computed). **Zero contracts** for CeFi/DeFi/Sports/Prediction candles or for non-1m
+  TradFi timeframes.
 - **Writer validation absent**: MDPS does not go through `StreamingParquetWriter(strict=True)`.
 - **Coverage gap**: CeFi = 1 day, DeFi = 2 days, TradFi = 2 days, Prediction = 361 days, Sports = 1835 days. CeFi/DeFi/
   TradFi are essentially empty.
 - **Manifest coverage broken**: the `timeframe` shard column exists in the v4 manifest (alongside
-  venue/chain/data_type/instrument_type) but 99.94% of MTDS-bucket manifest rows have `timeframe=""`. Only 16 rows
-  have `timeframe` populated (4 timeframes × 4 shards for 1 day).
+  venue/chain/data_type/instrument_type) but 99.94% of MTDS-bucket manifest rows have `timeframe=""`. Only 16 rows have
+  `timeframe` populated (4 timeframes × 4 shards for 1 day).
 
 ### Principles (MDPS symmetry with MTDS)
 
@@ -391,10 +391,10 @@ sports uses `processed/`). Current state is bad:
    - `liquidations` → count + notional aggregates (not pure OHLCV)
    - `dex_pool_swaps` → OHLCV of price + swap_count + volume (DeFi-specific)
    - `odds` → OHLCV of decimal odds + quote_count (sports-specific)
-3. **Pass-through for TradFi**: Databento delivers 1m OHLCV natively. MDPS writes it through as
-   `tradfi/*/ohlcv_1m`. Higher timeframes (5m/15m/1h/4h/1d) are re-aggregated from the 1m bars.
-4. **Timeframes**: 15s, 1m, 5m, 15m, 1h, 4h, 1d. Per-category timeframe subset decided by strategy need
-   (CeFi ticks → all; TradFi → 1m+ only since that's native granularity; DeFi → 15s+; sports → 1m+; prediction → 1m+).
+3. **Pass-through for TradFi**: Databento delivers 1m OHLCV natively. MDPS writes it through as `tradfi/*/ohlcv_1m`.
+   Higher timeframes (5m/15m/1h/4h/1d) are re-aggregated from the 1m bars.
+4. **Timeframes**: 15s, 1m, 5m, 15m, 1h, 4h, 1d. Per-category timeframe subset decided by strategy need (CeFi ticks →
+   all; TradFi → 1m+ only since that's native granularity; DeFi → 15s+; sports → 1m+; prediction → 1m+).
 5. **Strict writer gate**: `StreamingParquetWriter(strict=True)` on every MDPS write. No ad-hoc `to_parquet`.
 6. **Manifest emission**: every MDPS write also emits `MigrationManifestUpdate` / `ManifestWriter.write_with_zero_fill`
    with the full shard tuple including `timeframe`.
@@ -403,40 +403,10 @@ sports uses `processed/`). Current state is bad:
 
 - [ ] [AGENT] P0. Add base column-spec builders for candles in
       `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`:
-      ```
-      _CANDLE_OHLCV_BASE = [_INSTRUMENT_ID, _VENUE, _CHAIN, _TS_EVENT,
-                            ColumnSpec("open", float64), ColumnSpec("high", float64),
-                            ColumnSpec("low", float64), ColumnSpec("close", float64),
-                            ColumnSpec("volume", float64, nullable=True),
-                            ColumnSpec("trade_count", int64, nullable=True),
-                            ColumnSpec("timeframe", string)]
-      _CANDLE_BOOK_5_EXT = [... + spread_bps_mean, depth_bid_mean, depth_ask_mean,
-                            imbalance_ratio_mean, bid_vol_0_mean, ask_vol_0_mean,
-                            tob_depth_ratio_mean, mid_price_mean]
-      _CANDLE_DERIV_EXT   = [... + funding_rate_mean, mark_price_mean, index_price_mean]
-      _CANDLE_LIQ_EXT     = [ColumnSpec("liquidation_count", int64), ColumnSpec("liquidation_notional_usd", float64)]
-      _CANDLE_DEX_EXT     = [... + swap_count, volume_quote_usd]
-      _CANDLE_ODDS_EXT    = [... + quote_count, source_count]
-      ```
-- [ ] [AGENT] P0. Register MDPS contracts for every (category × instrument_type × source_data_type × timeframe):
-      - **CeFi**:
-        - `cefi/perpetual/{trades,book_snapshot_5,derivative_ticker,liquidations}/ohlcv_{15s,1m,5m,15m,1h,4h,1d}`
-        - `cefi/spot_pair/{trades,book_snapshot_5}/ohlcv_{15s,1m,5m,15m,1h,4h,1d}`
-        - `cefi/options_chain/{trades}/ohlcv_{1m,15m,1h,1d}` (book not typically aggregated for options)
-        - `cefi/futures_chain/{trades}/ohlcv_{1m,15m,1h,1d}`
-      - **TradFi** (pass-through 1m + re-aggregated higher):
-        - `tradfi/future/{trades,ohlcv_1m}/ohlcv_{1m,5m,15m,1h,4h,1d}` (1m is pass-through from source ohlcv_1m)
-        - `tradfi/equity/{trades,ohlcv_1m}/ohlcv_{1m,5m,15m,1h,4h,1d}`
-        - `tradfi/options_chain/{trades}/ohlcv_{1m,15m,1h,1d}`
-        - `tradfi/index/{trades}/ohlcv_{1m,5m,15m,1h,1d}`
-      - **DeFi**:
-        - `defi/pool/{dex_pool_swaps,dex_pool_state}/ohlcv_{15s,1m,5m,15m,1h,1d}` (pool price/liquidity candles)
-        - `defi/a_token/{lending_indices,rate_indices,oracle_prices}/ohlcv_{1m,15m,1h,1d}`
-        - `defi/lst/{lst_rates,oracle_prices}/ohlcv_{1m,15m,1h,1d}`
-      - **Sports**:
-        - `sports/odds/{trades}/ohlcv_{1m,15m,1h}` (bookmaker odds time series per fixture)
-      - **Prediction**:
-        - `prediction/prediction_market/{trades}/ohlcv_{1m,15m,1h}`
+      `     _CANDLE_OHLCV_BASE = [_INSTRUMENT_ID, _VENUE, _CHAIN, _TS_EVENT,                           ColumnSpec("open", float64), ColumnSpec("high", float64),                           ColumnSpec("low", float64), ColumnSpec("close", float64),                           ColumnSpec("volume", float64, nullable=True),                           ColumnSpec("trade_count", int64, nullable=True),                           ColumnSpec("timeframe", string)]     _CANDLE_BOOK_5_EXT = [... + spread_bps_mean, depth_bid_mean, depth_ask_mean,                           imbalance_ratio_mean, bid_vol_0_mean, ask_vol_0_mean,                           tob_depth_ratio_mean, mid_price_mean]     _CANDLE_DERIV_EXT   = [... + funding_rate_mean, mark_price_mean, index_price_mean]     _CANDLE_LIQ_EXT     = [ColumnSpec("liquidation_count", int64), ColumnSpec("liquidation_notional_usd", float64)]     _CANDLE_DEX_EXT     = [... + swap_count, volume_quote_usd]     _CANDLE_ODDS_EXT    = [... + quote_count, source_count]     `
+- [ ] [AGENT] P0. Register MDPS contracts for every (category × instrument*type × source_data_type × timeframe): -
+      **CeFi**: -
+      `cefi/perpetual/{trades,book_snapshot_5,derivative_ticker,liquidations}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}`      -`cefi/spot*pair/{trades,book_snapshot_5}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}`      -`cefi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}`(book not typically aggregated for options)       -`cefi/futures*chain/{trades}/ohlcv*{1m,15m,1h,1d}`    - **TradFi** (pass-through 1m + re-aggregated higher):       -`tradfi/future/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}`(1m is pass-through from source ohlcv_1m)       -`tradfi/equity/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}`      -`tradfi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}`      -`tradfi/index/{trades}/ohlcv*{1m,5m,15m,1h,1d}`    - **DeFi**:       -`defi/pool/{dex_pool_swaps,dex_pool_state}/ohlcv*{15s,1m,5m,15m,1h,1d}`(pool price/liquidity candles)       -`defi/a*token/{lending_indices,rate_indices,oracle_prices}/ohlcv*{1m,15m,1h,1d}`      -`defi/lst/{lst*rates,oracle_prices}/ohlcv*{1m,15m,1h,1d}`    - **Sports**:       -`sports/odds/{trades}/ohlcv*{1m,15m,1h}`(bookmaker odds time series per fixture)     - **Prediction**:       -`prediction/prediction_market/{trades}/ohlcv*{1m,15m,1h}`
 - [ ] [AGENT] P0. Venue overrides where MDPS aggregates differ per venue (mirror Phase 3.3 DeFi pattern:
       `VENUE_CONTRACT_OVERRIDES[("cefi","BINANCE-FUTURES","perpetual","book_snapshot_5")]` etc only when columns truly
       diverge).
@@ -451,35 +421,34 @@ sports uses `processed/`). Current state is bad:
 - [ ] [AGENT] P0. Fail-loud on missing `instrument_id` / wrong dtype / empty venue per pre-write hook.
 - [ ] [AGENT] P1. `--force` behaviour: re-compute + overwrite day partition atomically; same input ticks → same output
       candles (verified by Phase 13 symmetry test).
-- [ ] [AGENT] P1. Skip behaviour: if target parquet exists AND row count > 0 AND schema_version matches, skip.
-      Otherwise re-run (don't trust partial writes).
+- [ ] [AGENT] P1. Skip behaviour: if target parquet exists AND row count > 0 AND schema_version matches, skip. Otherwise
+      re-run (don't trust partial writes).
 
 ### 5b.3 MDPS backfill — per category × venue × timeframe
 
-- [ ] [SCRIPT] P0. Launch MDPS backfill VMs per category (e2-standard-8, asia-northeast1-c, 32 workers).
-      Reads from `market-data-tick-{category}-*/raw_tick_data/by_date/` (canonical after Phase 3 migrations),
-      writes to `market-data-tick-{category}-*/processed_candles/by_date/day=/timeframe=/data_type=/venue=/.parquet`.
-- [ ] [SCRIPT] P0. Full-history scope per category:
-      - CeFi: 2020-01-01 → 2026-04-18 (~2300 days × N venues × N instruments × 7 timeframes)
-      - TradFi: 2020-01-01 → 2026-04-18 (Databento ohlcv_1m is pass-through; re-aggregate higher timeframes)
-      - DeFi: 2020-01-01 → 2026-04-18 (DEX pool price candles; ~2300 days × N chains × N pools)
-      - Sports: 2019-01-01 → 2026-04-18 (bookmaker odds candles per fixture)
-      - Prediction: 2025-03-14 → 2026-04-18 (Polymarket only)
+- [ ] [SCRIPT] P0. Launch MDPS backfill VMs per category (e2-standard-8, asia-northeast1-c, 32 workers). Reads from
+      `market-data-tick-{category}-*/raw_tick_data/by_date/` (canonical after Phase 3 migrations), writes to
+      `market-data-tick-{category}-*/processed_candles/by_date/day=/timeframe=/data_type=/venue=/.parquet`.
+- [ ] [SCRIPT] P0. Full-history scope per category: - CeFi: 2020-01-01 → 2026-04-18 (~2300 days × N venues × N
+      instruments × 7 timeframes) - TradFi: 2020-01-01 → 2026-04-18 (Databento ohlcv_1m is pass-through; re-aggregate
+      higher timeframes) - DeFi: 2020-01-01 → 2026-04-18 (DEX pool price candles; ~2300 days × N chains × N pools) -
+      Sports: 2019-01-01 → 2026-04-18 (bookmaker odds candles per fixture) - Prediction: 2025-03-14 → 2026-04-18
+      (Polymarket only)
 - [ ] [SCRIPT] P0. Parallel launch (5 VMs, one per category). Each emits lifecycle events
       (`DEPLOYMENT_STARTED/PROGRESS/COMPLETED/FAILED`) via deployment_heartbeat.py.
 - [ ] [SCRIPT] P0. Monitor via deployment-ui /deployments/active; gate on rc=0 + row_errors=0.
 
 ### 5b.4 MDPS manifest reconciliation
 
-- [ ] [SCRIPT] P0. After 5b.3 completes per category, rebuild manifest via
-      `rebuild_manifest_from_canonical_paths` on each MTDS bucket including `processed_candles/` subtree.
+- [ ] [SCRIPT] P0. After 5b.3 completes per category, rebuild manifest via `rebuild_manifest_from_canonical_paths` on
+      each MTDS bucket including `processed_candles/` subtree.
 - [ ] [AGENT] P0. Verify manifest shows `timeframe`-populated rows for every expected (day, venue, instrument_type,
       data_type, timeframe) combo. Zero-fill for expected-empty days (e.g. weekends for TradFi).
 - [ ] [AGENT] P1. Per-timeframe instrument count matches tick manifest for same day (sanity).
 
 ### 5b.5 Integration
 
-- [ ] [AGENT] P1. features-* services' MDPS consumers verify they read canonical `timeframe=` partition (not legacy
+- [ ] [AGENT] P1. features-\* services' MDPS consumers verify they read canonical `timeframe=` partition (not legacy
       flat `processed_candles/` heuristics). Update path template if needed.
 - [ ] [AGENT] P1. ml-training / ml-inference MDPS consumers same audit.
 - [ ] [HUMAN] P1. Data Status page shows per-timeframe coverage per category (sub-tab under each service).
@@ -504,8 +473,8 @@ downstream ML has a clean dataset.
 
 - [ ] [AGENT] P0. For each of the 8 feature services, enumerate the feature groups emitted. Register each
       `(category, instrument_type, feature_group)` SchemaContract in UAC.
-- [ ] [AGENT] P0. Per-group contract declares required columns, dtypes, and the `symbol_column` used for joining
-      back to instrument_id.
+- [ ] [AGENT] P0. Per-group contract declares required columns, dtypes, and the `symbol_column` used for joining back to
+      instrument_id.
 - [ ] [AGENT] P0. Unit tests per group.
 
 ### 5c.2 Features writer strict mode
@@ -517,13 +486,13 @@ downstream ML has a clean dataset.
 
 ### 5c.3 Full-history features backfill per category
 
-- [ ] [SCRIPT] P0. Launch backfill VMs per (feature_service × category) that has upstream MTDS+MDPS data. Grid
-      (worst case 8 × 5 = 40 runs; many will be no-op if category doesn't apply to the feature group, e.g.
-      features-onchain only runs against DeFi).
+- [ ] [SCRIPT] P0. Launch backfill VMs per (feature_service × category) that has upstream MTDS+MDPS data. Grid (worst
+      case 8 × 5 = 40 runs; many will be no-op if category doesn't apply to the feature group, e.g. features-onchain
+      only runs against DeFi).
 - [ ] [SCRIPT] P0. Target date ranges: same as source categories (CeFi/DeFi/TradFi 2020-01→2026-04, Sports
       2019-01→2026-04, Prediction 2025-03→2026-04).
-- [ ] [SCRIPT] P0. Each VM emits lifecycle events via `deployment_heartbeat.py` + `vm-exec-with-gcs-tee.sh`; no
-      orphans per Phase 8.
+- [ ] [SCRIPT] P0. Each VM emits lifecycle events via `deployment_heartbeat.py` + `vm-exec-with-gcs-tee.sh`; no orphans
+      per Phase 8.
 - [ ] [AGENT] P0. Batch into 4 parallel waves max per deployment-service concurrency budget.
 
 ### 5c.4 Manifest reconciliation for features
@@ -545,46 +514,40 @@ downstream ML has a clean dataset.
 
 Before calling the data pipeline "done", we must prove it is fit for downstream ML. The test is: for every viable
 (model_type × category) combination, ml-training-service runs a minimal training experiment end-to-end using real
-features from Phase 5c, emitting a model artifact and manifest row. We don't chase accuracy here — we prove the
-pipe works.
+features from Phase 5c, emitting a model artifact and manifest row. We don't chase accuracy here — we prove the pipe
+works.
 
 ### 5d.1 Catalogue viable (model_type × category) combinations
 
-- [ ] [AGENT] P0. Enumerate the model_type registry in ml-training-service. Document which model_types are viable
-      per category. Expected matrix:
-      | model_type             | CeFi | DeFi | TradFi | Sports | Prediction |
-      | ---                    | ---  | ---  | ---    | ---    | ---        |
-      | classification         | ✓    | ✓    | ✓      | ✓      | ✓          |
-      | regression             | ✓    | ✓    | ✓      | ✓      | ✓          |
-      | timeseries_forecasting | ✓    | ✓    | ✓      | ✓      | ✓          |
-      | ranking                | -    | -    | -      | ✓      | ✓          |
-      | anomaly_detection      | ✓    | ✓    | -      | -      | -          |
-      | reinforcement          | ✓    | ✓    | -      | -      | -          |
-- [ ] [AGENT] P0. Produce a concrete run-list: per-cell, pick 1 instrument subset + 1 timeframe + 1 training
-      window. E.g. `cefi/classification/BTC-PERP-binance-futures/1h/2023-01..2024-12 → 2025 test`.
+- [ ] [AGENT] P0. Enumerate the model_type registry in ml-training-service. Document which model_types are viable per
+      category. Expected matrix: | model_type | CeFi | DeFi | TradFi | Sports | Prediction | | --- | --- | --- | --- |
+      --- | --- | | classification | ✓ | ✓ | ✓ | ✓ | ✓ | | regression | ✓ | ✓ | ✓ | ✓ | ✓ | | timeseries_forecasting | ✓
+      | ✓ | ✓ | ✓ | ✓ | | ranking | - | - | - | ✓ | ✓ | | anomaly_detection | ✓ | ✓ | - | - | - | | reinforcement | ✓ |
+      ✓ | - | - | - |
+- [ ] [AGENT] P0. Produce a concrete run-list: per-cell, pick 1 instrument subset + 1 timeframe + 1 training window.
+      E.g. `cefi/classification/BTC-PERP-binance-futures/1h/2023-01..2024-12 → 2025 test`.
 
 ### 5d.2 Training experiments execution
 
 - [ ] [SCRIPT] P0. For each run-list entry, launch `ml-training-service` CLI with real features from Phase 5c.
-- [ ] [AGENT] P0. Each run writes:
-      - Model artifact to `gs://ml-models-{category}-*/models/{model_family}/{experiment_id}/`
-      - Training manifest row with `(category, model_family, training_period, strategy_id)` shard tuple
-      - Training metrics (loss curve, val accuracy, AUC) via UAC `ML_TRAINING_METRICS` events
-      - Lifecycle events (DEPLOYMENT_STARTED/PROGRESS/COMPLETED/FAILED)
-- [ ] [AGENT] P0. Register `(category, model_family, training_period, experiment_id)` SchemaContract in UAC for
-      training manifest rows.
+- [ ] [AGENT] P0. Each run writes: - Model artifact to
+      `gs://ml-models-{category}-*/models/{model_family}/{experiment_id}/` - Training manifest row with
+      `(category, model_family, training_period, strategy_id)` shard tuple - Training metrics (loss curve, val accuracy,
+      AUC) via UAC `ML_TRAINING_METRICS` events - Lifecycle events (DEPLOYMENT_STARTED/PROGRESS/COMPLETED/FAILED)
+- [ ] [AGENT] P0. Register `(category, model_family, training_period, experiment_id)` SchemaContract in UAC for training
+      manifest rows.
 
 ### 5d.3 Inference smoke per experiment
 
-- [ ] [SCRIPT] P0. For each trained model, run 1-day inference on 2026-04-14 data via ml-inference-service.
-      Assert output parquet lands + manifest row emitted.
-- [ ] [AGENT] P1. Model family-level symmetry test: rerun training with `--force` same config → bit-identical
-      model artifact (seed-pinned).
+- [ ] [SCRIPT] P0. For each trained model, run 1-day inference on 2026-04-14 data via ml-inference-service. Assert
+      output parquet lands + manifest row emitted.
+- [ ] [AGENT] P1. Model family-level symmetry test: rerun training with `--force` same config → bit-identical model
+      artifact (seed-pinned).
 
 ### 5d.4 Data Status checkpoint
 
-- [ ] [HUMAN] P0. Data Status page `/data-status/ml-training` shows per-(category, model_family) experiment count
-      + last-run-timestamp + last rc. Data Status `/data-status/ml-inference` same.
+- [ ] [HUMAN] P0. Data Status page `/data-status/ml-training` shows per-(category, model_family) experiment count +
+      last-run-timestamp + last rc. Data Status `/data-status/ml-inference` same.
 
 ---
 
@@ -644,31 +607,30 @@ pipe works.
 ### 8.2 Pub/Sub error streaming + debug mode
 
 - [ ] [AGENT] P0. Every VM / Cloud Run Job must `setup_events(service_name=..., mode="batch")` at start, then every
-      error path calls `log_event` with canonical error code from `unified_api_contracts.classify_venue_error()`.
-      Errors land in Pub/Sub topic `events-{env}` via `unified_trading_library.events` sink.
+      error path calls `log_event` with canonical error code from `unified_api_contracts.classify_venue_error()`. Errors
+      land in Pub/Sub topic `events-{env}` via `unified_trading_library.events` sink.
 - [ ] [AGENT] P0. Debug mode: `--debug` CLI flag + `DEBUG_EVENTS=1` env var emit verbose `DEBUG_SHARD_SCANNED` /
-      `DEBUG_ROW_CLASSIFIED` / `DEBUG_MANIFEST_ROW` at INFO severity every N rows. Default off (prod) so Pub/Sub
-      doesn't flood.
-- [ ] [AGENT] P0. deployment-ui `/events` page subscribes via SSE to `events-{env}` topic; displays last N events
-      with filter by event_type, service, severity, deployment_id. Live stream (not polled).
-- [ ] [AGENT] P0. VMs stream stdout/stderr to GCS via `vm-exec-with-gcs-tee.sh` AND emit key INFO events to
-      Pub/Sub. No "debug via SSH into VM" required.
-- [ ] [AGENT] P0. UTL `events/` + UAC `classify_venue_error` + deployment-service registry + deployment-ui
-      integration MUST be wired end-to-end for every batch VM launched. Gate: a test run of each migration script
-      produces (a) GCS log tee, (b) `DEPLOYMENT_STARTED/PROGRESS/COMPLETED` events visible in /deployments UI,
-      (c) any errors in /events UI with clickable drill-down to the offending shard, (d) deployments registry
-      entry pruned on exit.
+      `DEBUG_ROW_CLASSIFIED` / `DEBUG_MANIFEST_ROW` at INFO severity every N rows. Default off (prod) so Pub/Sub doesn't
+      flood.
+- [ ] [AGENT] P0. deployment-ui `/events` page subscribes via SSE to `events-{env}` topic; displays last N events with
+      filter by event_type, service, severity, deployment_id. Live stream (not polled).
+- [ ] [AGENT] P0. VMs stream stdout/stderr to GCS via `vm-exec-with-gcs-tee.sh` AND emit key INFO events to Pub/Sub. No
+      "debug via SSH into VM" required.
+- [ ] [AGENT] P0. UTL `events/` + UAC `classify_venue_error` + deployment-service registry + deployment-ui integration
+      MUST be wired end-to-end for every batch VM launched. Gate: a test run of each migration script produces (a) GCS
+      log tee, (b) `DEPLOYMENT_STARTED/PROGRESS/COMPLETED` events visible in /deployments UI, (c) any errors in /events
+      UI with clickable drill-down to the offending shard, (d) deployments registry entry pruned on exit.
 
 ### 8.3 Production-event integrity (no double-fetch)
 
-- [ ] [AGENT] P0. Every upstream data adapter (Tardis, Databento, ODDS_API, Polymarket CLOB, FootyStats, The
-      Graph) emits `UPSTREAM_FETCH_STARTED` + `UPSTREAM_FETCH_COMPLETED` events with the date range + row count.
-      Migrations + backfills read these events via deployment-api to confirm a day is already landed before
-      launching a new upstream call.
+- [ ] [AGENT] P0. Every upstream data adapter (Tardis, Databento, ODDS_API, Polymarket CLOB, FootyStats, The Graph)
+      emits `UPSTREAM_FETCH_STARTED` + `UPSTREAM_FETCH_COMPLETED` events with the date range + row count. Migrations +
+      backfills read these events via deployment-api to confirm a day is already landed before launching a new upstream
+      call.
 - [ ] [AGENT] P0. Idempotency guard in every migration/backfill script: check GCS day partition exists + passes
       SchemaContract + manifest row emitted → skip. Only re-fetch on `--force` explicit flag.
-- [ ] [AGENT] P1. Cost alert: if an `UPSTREAM_FETCH_STARTED` is emitted for a date range already covered by a
-      prior `UPSTREAM_FETCH_COMPLETED`, emit `UPSTREAM_DOUBLE_FETCH` warning.
+- [ ] [AGENT] P1. Cost alert: if an `UPSTREAM_FETCH_STARTED` is emitted for a date range already covered by a prior
+      `UPSTREAM_FETCH_COMPLETED`, emit `UPSTREAM_DOUBLE_FETCH` warning.
 
 ---
 
@@ -711,14 +673,14 @@ pipe works.
 
 ## Phase 12 — [HUMAN] Data Status checkpoints [BLOCKING per phase + FINAL]
 
-Phase 12 is not a single end-gate — it is a **per-phase visibility checkpoint**. Every data-writing phase (3, 4,
-5b, 5c, 5d, 7) is only "done" when the corresponding deployment-ui view shows the expected delta. The human
-confirms each checkpoint; no VM-rc=0 auto-advances.
+Phase 12 is not a single end-gate — it is a **per-phase visibility checkpoint**. Every data-writing phase (3, 4, 5b, 5c,
+5d, 7) is only "done" when the corresponding deployment-ui view shows the expected delta. The human confirms each
+checkpoint; no VM-rc=0 auto-advances.
 
 ### 12.1 Phase 3 checkpoint — migrations
 
-- [ ] [HUMAN] P0. After MTDS DeFi migration: `/data-status/market-tick-data-service?category=DEFI` shows
-      2020-01→2026-04 green. Confirmed today.
+- [ ] [HUMAN] P0. After MTDS DeFi migration: `/data-status/market-tick-data-service?category=DEFI` shows 2020-01→2026-04
+      green. Confirmed today.
 - [ ] [HUMAN] P0. After MTDS TradFi migration: same page filter `category=TRADFI`. Confirm green.
 - [ ] [HUMAN] P0. After MTDS Sports + Prediction migrations: same for each category.
 
@@ -729,18 +691,18 @@ confirms each checkpoint; no VM-rc=0 auto-advances.
 
 ### 12.3 Phase 5b checkpoint — MDPS candles
 
-- [ ] [HUMAN] P0. `/data-status/market-data-processing-service` shows per-timeframe coverage per category (CeFi,
-      DeFi, TradFi, Sports, Prediction). Green for full history date range.
+- [ ] [HUMAN] P0. `/data-status/market-data-processing-service` shows per-timeframe coverage per category (CeFi, DeFi,
+      TradFi, Sports, Prediction). Green for full history date range.
 
 ### 12.4 Phase 5c checkpoint — features
 
-- [ ] [HUMAN] P0. `/data-status/features-{group}` green per feature group × applicable category. 8 pages total
-      (one per feature service).
+- [ ] [HUMAN] P0. `/data-status/features-{group}` green per feature group × applicable category. 8 pages total (one per
+      feature service).
 
 ### 12.5 Phase 5d checkpoint — ML training experiments
 
-- [ ] [HUMAN] P0. `/data-status/ml-training` shows per-(category, model_family) experiment count, last-run
-      timestamp, last rc. Grid from Phase 5d.1 matrix is fully exercised.
+- [ ] [HUMAN] P0. `/data-status/ml-training` shows per-(category, model_family) experiment count, last-run timestamp,
+      last rc. Grid from Phase 5d.1 matrix is fully exercised.
 - [ ] [HUMAN] P0. `/data-status/ml-inference` shows smoke-run output per experiment.
 
 ### 12.6 Phase 7 checkpoint — ODDS_API backfill
@@ -750,15 +712,14 @@ confirms each checkpoint; no VM-rc=0 auto-advances.
 ### 12.7 Event integrity checkpoint — /deployments + /events
 
 - [ ] [HUMAN] P0. `/deployments/active` empty (no runs outstanding past their ETA).
-- [ ] [HUMAN] P0. `/deployments/archive` last 7 days — every run has `STARTED` and `COMPLETED`/`FAILED`
-      bookends. No orphans.
-- [ ] [HUMAN] P0. `/events` shows Pub/Sub stream live; errors drill down to canonical error codes +
-      deployment_id.
+- [ ] [HUMAN] P0. `/deployments/archive` last 7 days — every run has `STARTED` and `COMPLETED`/`FAILED` bookends. No
+      orphans.
+- [ ] [HUMAN] P0. `/events` shows Pub/Sub stream live; errors drill down to canonical error codes + deployment_id.
 
 ### 12.8 Final gate — 7-day green window
 
-- [ ] [HUMAN] P0. Every category green on every service page for a **7-day rolling window**. Zero false-missing
-      flags (every flag corresponds to a real gap, not a manifest drift).
+- [ ] [HUMAN] P0. Every category green on every service page for a **7-day rolling window**. Zero false-missing flags
+      (every flag corresponds to a real gap, not a manifest drift).
 - [ ] [AGENT] P1. On any discrepancy at any checkpoint above: file bug against the specific phase + iterate before
       advancing.
 

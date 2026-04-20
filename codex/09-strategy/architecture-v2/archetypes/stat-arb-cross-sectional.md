@@ -48,14 +48,10 @@ reasoning over the whole universe (this is what distinguishes it from running N 
 
 ## Supported universes
 
-| Universe                                 | Venues                       | Rebalance cadence |
-| ---------------------------------------- | ---------------------------- | ----------------- |
-| Russell 1000                             | IBKR                         | Daily             |
-| S&P 500                                  | IBKR                         | Daily             |
-| Nasdaq 100                               | IBKR                         | Daily             |
-| Crypto top-50 by market cap              | Binance, OKX, Bybit          | Hourly or daily   |
-| Crypto top-20 perps                      | Hyperliquid, Binance Futures | Hourly            |
-| Sector constituents (XLE, XLF, XLK etc.) | IBKR                         | Daily             |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 18. STAT_ARB_CROSS_SECTIONAL`](../category-instrument-coverage.md#18-stat_arb_cross_sectional)
+for the authoritative universe × venue × rebalance-cadence matrix (Russell 1000, S&P 500, Nasdaq 100, crypto top-50,
+crypto top-20 perps, sector constituents).
 
 ## Config schema
 

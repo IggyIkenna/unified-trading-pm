@@ -79,19 +79,18 @@ entitlements: [
 ]
 ```
 
-The locked services should render as **tiles with a padlock icon + "Contact Odum to enable this service" CTA**, NOT
-hidden. This preserves the "full catalogue of Odum capabilities" framing for the demo.
+Locked services render as **tiles with a padlock icon + "Contact Odum to enable this service" CTA** — never hidden. This
+preserves the "full catalogue of Odum capabilities" framing for the demo.
 
-**Gap**: the current [lib/config/auth.ts](unified-trading-system-ui/lib/config/auth.ts) +
-[components/shell/lifecycle-nav.tsx](unified-trading-system-ui/components/shell/lifecycle-nav.tsx) entitlement-gate
-HIDES unentitled services. Pb3a needs a LOCKED-but-VISIBLE mode. Tracked in
-[../roadmap/next-waves.md](../roadmap/next-waves.md) → visibility-slicing implementation.
+**Implementation gap**: current [lib/config/auth.ts](unified-trading-system-ui/lib/config/auth.ts) +
+[components/shell/lifecycle-nav.tsx](unified-trading-system-ui/components/shell/lifecycle-nav.tsx) hide unentitled
+services. Pb3a requires LOCKED-VISIBLE mode. Tracked in [../roadmap/next-waves.md](../roadmap/next-waves.md) →
+visibility-slicing implementation.
 
 ## Same UI path as pb3b
 
-This playbook is structurally identical to pb3b (IM demo). The ONLY difference is the narrative frame the Odum sales
-contact uses during the demo call. The screens, entitlements, and flow are the same. See
-[03b-demo-im.md](03b-demo-im.md).
+Structurally identical to pb3b (IM demo). The only difference is the narrative frame the Odum sales contact uses on the
+call. Screens, entitlements, and flow are identical. See [03b-demo-im.md](03b-demo-im.md).
 
 ## Cross-cutting content
 

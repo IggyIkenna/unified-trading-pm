@@ -191,26 +191,9 @@ Key realities:
 
 ## Supported venues / instruments (both sub-modes)
 
-**CLOB:**
-
-- Binance (spot, perp, options futures)
-- OKX (spot, perp)
-- Bybit (spot, perp)
-- Hyperliquid (spot, perp)
-- Deribit (perp, options)
-- Betfair direct, Unity child books, Smarkets, Matchbook (sports — see EVENT_SETTLED variant)
-
-**AMM LP:**
-
-- Uniswap V2 (Ethereum) — passive
-- Uniswap V3 (Ethereum, Arbitrum, Optimism, Polygon, Base, Avalanche) — active
-- Uniswap V4 (Ethereum + L2s as deployed) — active + hooks
-- Orca Whirlpools (Solana) — active
-- Raydium CLMM (Solana) — active
-- Aerodrome (Base) — V2 stable + V3 concentrated
-- Joe V2 (Avalanche) — bin-based
-- Balancer (Ethereum, Arbitrum) — weighted pools
-- Curve (Ethereum, Arbitrum, Optimism, Polygon) — stable pairs
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 13. MARKET_MAKING_CONTINUOUS`](../category-instrument-coverage.md#13-market_making_continuous)
+for the authoritative CLOB × AMM-LP venue table across CeFi, DeFi, and Sports categories.
 
 ## Expression options
 

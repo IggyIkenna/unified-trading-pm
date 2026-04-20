@@ -36,15 +36,17 @@ Rules are citable, stable, and orthogonal. Each rule has its own file. Experienc
 
 First-time reader:
 
-1. `_source-v1-feedback.md` — the structural summary that every rule cites.
-2. `01-grammar.md`, `02-tone-and-posture.md` — how experience docs are written.
-3. `03-same-system-principle.md` — the product architecture claim that underpins audience framing.
-4. `04-dart-commercial-axes.md` → `10-strategy-instruction-schema-principles.md` — DART commercial logic end-to-end.
-5. `05-building-block-dimensions.md` + `08-pricing-principles.md` — atomic unit + pricing structure.
-6. `06-show-dont-show-discipline.md` + `07-data-licensing-boundaries.md` — what to leave off the page.
-7. `09-internal-commercial-oneliners.md` — the internal shorthand that every external expansion derives from.
+1. `01-grammar.md`, `02-tone-and-posture.md` — how experience docs are written.
+2. `03-same-system-principle.md` — the product architecture claim that underpins audience framing.
+3. `04-dart-commercial-axes.md` → `10-strategy-instruction-schema-principles.md` — DART commercial logic end-to-end.
+4. `05-building-block-dimensions.md` + `08-pricing-principles.md` — atomic unit + pricing structure.
+5. `06-show-dont-show-discipline.md` + `07-data-licensing-boundaries.md` — what to leave off the page.
+6. `09-internal-commercial-oneliners.md` — the internal shorthand that every external expansion derives from.
 
 Reviewing an experience doc: skim `01`, `02`, `06`, then check it cites whichever of `03`–`10` its content depends on.
+
+`_source-v1-feedback.md` is a frozen **archive** of the original v1 synthesis. Rules 01–11 now carry every load-bearing
+claim. Cite the numbered rule files, never the archive.
 
 ## How to cite a rule
 
@@ -75,15 +77,14 @@ from both sides.
 
 ## Pre-drafted files (do not overwrite)
 
-Four files in this dir are pre-committed by the master planner (commit `bd958e50`, 2026-04-19):
+Three rule files were pre-committed by the master planner (commit `bd958e50`, 2026-04-19):
 
-- `_source-v1-feedback.md` — stable citation target for the v1 structural summary.
 - `03-same-system-principle.md`
 - `04-dart-commercial-axes.md`
 - `08-pricing-principles.md`
 
-Future edits to these files require the same master-planner discipline. Inconsistencies between pre-drafted content and
-newer rules surface as review comments rather than silent edits.
+Future edits require the same master-planner discipline. Inconsistencies surface as review comments, not silent edits.
+`_source-v1-feedback.md` is an archive (see Reading order above) — no edits beyond archive-marker hygiene.
 
 ## Stage boundaries
 

@@ -4,15 +4,15 @@ scope: [engineer, admin]
 
 # Family: Vol Trading
 
-> **Alpha source:** Volatility-metric dislocation. The alpha is a view on _vol itself_ (IV vs RV, skew, term structure,
-> cross-asset vol) — not a directional view on the underlying. Positions are typically delta-hedged so that P&L comes
-> from vega, gamma, and theta, not delta.
+> **Alpha source:** Volatility-metric dislocation. Alpha is a view on _vol itself_ (IV vs RV, skew, term structure,
+> cross-asset vol) — not a directional view on the underlying. Baseline positions are delta-hedged; P&L comes from vega,
+> gamma, and theta. Variants may carry intentional delta, flagged in the strategy config.
 >
 > **Primary edge method:** Vol-metric dislocation vs fair (IV too rich/cheap vs realized; skew extreme vs historical;
 > term structure bowed beyond no-arb bounds).
 >
-> **Typical hold policies:** CONTINUOUS (dynamic gamma scalping + vega exposure management) or HOLD_UNTIL_FLIP
-> (event-bounded vol trades).
+> **Hold policies:** CONTINUOUS (dynamic gamma scalping + vega exposure management) or HOLD_UNTIL_FLIP (event-bounded
+> vol trades).
 >
 > **Archetype count:** 1 — `VOL_TRADING_OPTIONS`.
 

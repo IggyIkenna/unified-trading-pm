@@ -39,12 +39,9 @@ leg, no leverage, no directional view. Just held-to-earn-yield.
 
 ## Supported venues / instruments
 
-| Staking protocol | Chain    | LST     | APY typical | Unbonding                         |
-| ---------------- | -------- | ------- | ----------- | --------------------------------- |
-| Lido             | Ethereum | stETH   | ~3.5%       | 1-5 days (queue)                  |
-| Rocket Pool      | Ethereum | rETH    | ~3.3%       | Via Rocket withdrawal             |
-| Jito             | Solana   | JitoSOL | ~7-8%       | Epoch-based (~2-3 days)           |
-| Marinade         | Solana   | mSOL    | ~6-7%       | Instant with fee, or free delayed |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 10. YIELD_STAKING_SIMPLE`](../category-instrument-coverage.md#10-yield_staking_simple)
+for the authoritative protocol × chain × LST table with APY anchors and unbonding times.
 
 ## Config schema
 

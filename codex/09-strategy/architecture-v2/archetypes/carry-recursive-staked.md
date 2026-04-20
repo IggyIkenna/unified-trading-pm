@@ -47,11 +47,9 @@ Unwinding:
 
 ## Supported venues / instruments
 
-| Stake           | Lending              | Share class |
-| --------------- | -------------------- | ----------- |
-| Lido (Ethereum) | Aave V3 Ethereum     | ETH         |
-| Lido (Ethereum) | Compound V3 Ethereum | ETH         |
-| Jito (Solana)   | Kamino               | SOL         |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 8. CARRY_RECURSIVE_STAKED`](../category-instrument-coverage.md#8-carry_recursive_staked)
+for the authoritative staking × lending × share-class combinations.
 
 ## Config schema
 

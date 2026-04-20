@@ -156,6 +156,7 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
 
 ## Cross-references
 
+- Sports adapter dependency order (api-football T0 + T1 enrichment): `codex/02-data/sports-adapter-dependency-order.md`
 - Manifest schema SSOT: `codex/02-data/availability-manifest-and-data-status.md`
 - MDPS dep-checker implementation:
   `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`

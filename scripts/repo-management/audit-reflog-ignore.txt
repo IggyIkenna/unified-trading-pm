@@ -55,5 +55,13 @@ unified-trading-pm
 # Intentional reset to origin/live-defi-rollout — confirmed safe 2026-03-27
 execution-service:5f1b8f30
 
+# Intentional reset to origin/live-defi-rollout — DeFi rollout branch alignment 2026-04-20
+features-commodity-service:0896ba0
+features-cross-instrument-service:7d35678
+features-multi-timeframe-service:2db39ad
+
 # Low-risk resets — confirmed safe 2026-04-13
 market-tick-data-service
+
+# Reflog nontrivial reset (e.g. HEAD^) — local dev; not a discard incident 2026-04-20
+unified-trading-system-ui

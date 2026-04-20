@@ -1,16 +1,33 @@
 ---
 scope: [engineer, admin, sales]
+status: archive
+supersedes: null
+superseded_by:
+  [
+    01-grammar.md,
+    02-tone-and-posture.md,
+    03-same-system-principle.md,
+    04-dart-commercial-axes.md,
+    05-building-block-dimensions.md,
+    06-show-dont-show-discipline.md,
+    07-data-licensing-boundaries.md,
+    08-pricing-principles.md,
+    09-internal-commercial-oneliners.md,
+    10-strategy-instruction-schema-principles.md,
+    11-codex-scope-registry.md,
+  ]
 ---
 
-# Source: v1 agent feedback on the playbook SSOT (2026-04-19)
+# ARCHIVE — v1 synthesis feedback (2026-04-19)
 
-This file captures the structural decisions from the "Client Experience Playbooks — Polished v1" feedback session, with
-additions from the 2026-04-19 research↔live unification directive. It is the stable citation target for every
-`_ssot-rules/*.md` file.
+> **This file is a frozen archive.** All load-bearing decisions here are now carried by rules 01–11 in this directory.
+> Cite the numbered rule files, not this archive.
+>
+> Retained for historical context: the raw synthesis that produced the rules. Do not add new content here; do not cite
+> this file as policy. If a claim here does not appear in a numbered rule, it is not policy.
 
-The full prose version of v1 (tone commentary, per-playbook narrative drafts, Axis/POD benchmarks, and the agent's
-structural critique) was provided in the 2026-04-19 conversation. The Stage 1 agent executing
-`plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md` Phase 1.0 should append the full verbatim text below the
+Captures the structural decisions from the "Client Experience Playbooks — Polished v1" feedback session plus the
+2026-04-19 research↔live unification directive. Stage 1 agents appended the full verbatim prose below the
 **`## Full v1 prose (appendix)`** marker at the end of this file.
 
 ## Key structural claims (authoritative summary)

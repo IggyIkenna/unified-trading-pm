@@ -15,12 +15,11 @@ used by Stage 3:** `lifecycle_phase`, `maturity`, `component tree`, `access_cont
 
 Rule 03 declares five sub-claims: (a) partitioned-view audiences, (b) research ≡ live infrastructure, (c) trading
 terminal as live/batch toggle over one component tree, (d) strategy catalogue rows carry phase tags, (e) paper trading
-shares look-and-feel with live. Every claim is checkable — against UI routes, service code, and the catalogue data
-model. This doc pins each sub-claim to the concrete implementation surface so drift is findable by audit rather than by
-review-time vigilance.
+shares look-and-feel with live. Every claim is checkable against UI routes, service code, and the catalogue data model.
+This doc pins each sub-claim to the concrete implementation surface. Drift surfaces through the grep patterns in
+§Anti-patterns, not through review-time vigilance.
 
-It also serves as the definition other playbooks cite when they say "same system, partitioned view." Rather than
-re-explain the mechanism in every experience doc, we link here.
+This is the SSOT for "same system, partitioned view." Experience docs cite this file; they do not restate the mechanism.
 
 ## The five sub-claims, pinned
 
@@ -100,7 +99,8 @@ phase-aware `/services/*` routes.
 
 ## Phase and maturity are orthogonal
 
-Two independent axes on every strategy slot. The distinction is frequently blurred; rule 03 requires it to hold.
+Two independent axes on every strategy slot. Rule 03 requires both to hold — the distinction is load-bearing, not
+rhetorical.
 
 | Dimension    | Values                                                                                                                             | Set by                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -129,8 +129,9 @@ Regular audit patterns. Any hit is a rule-03 drift signal.
 - `im-reporting-*`, `dart-reporting-*`, `reg-reporting-*` — audience-name-prefixed routes or repos.
 - `/research/backtests`, `/paper-trading/`, `/backtest/` — phase-prefixed top-level routes.
 - Duplicate metric-computation modules: `research_attribution.py` + `live_attribution.py`, etc.
-- UI components named `*BacktestTable`, `*PaperPositions`, `*ResearchChart` — should be `<PositionsTable phase={...}>`.
-- Route files with names ending `-research.tsx` or `-backtest.tsx` — consolidate.
+- UI components named `*BacktestTable`, `*PaperPositions`, `*ResearchChart`. Canonical form:
+  `<PositionsTable phase={...}>`.
+- Route files ending `-research.tsx` or `-backtest.tsx`. Consolidate to the phase-aware route.
 
 ## Relationship to rule 06
 

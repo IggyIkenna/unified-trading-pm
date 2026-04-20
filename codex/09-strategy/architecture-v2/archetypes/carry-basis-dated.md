@@ -40,9 +40,9 @@ converges to zero at expiry.
 
 ## Supported venues / instruments
 
-- **TradFi commodities**: CL (crude) spot + CL future on CME; GC (gold) spot + GC future
-- **TradFi equity index**: SPX cash vs ES future
-- **Crypto dated**: Deribit BTC dated + Binance/Coinbase BTC spot; Deribit ETH dated + spot
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 5. CARRY_BASIS_DATED`](../category-instrument-coverage.md#5-carry_basis_dated)
+for the authoritative spot × dated-future pairings across TradFi commodities, equity index, and crypto dated.
 
 ## Expression options
 

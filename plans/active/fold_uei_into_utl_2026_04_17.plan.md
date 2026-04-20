@@ -255,8 +255,8 @@ todos:
   - id: phase-4-update-docs-rules
     content: |
       - [ ] [HUMAN+AGENT] P0. **Phase 4 / PARALLEL with phase-4a** — Update docs, rules, and codex for 256 markdown/mdc references.
-        - [.claude/CLAUDE.md](.claude/CLAUDE.md): replace rule `from unified_trading_library.events import setup_events, log_event — no fallbacks` with `from unified_trading_library.events import setup_events, log_event — no fallbacks`.
-        - [.cursorrules](.cursorrules) in workspace root + per-repo copies.
+        - [.claude/CLAUDE.md](../../../.claude/CLAUDE.md): replace rule `from unified_trading_library.events import setup_events, log_event — no fallbacks` with `from unified_trading_library.events import setup_events, log_event — no fallbacks`.
+        - [.cursorrules](../../.cursorrules): workspace + per-repo copies (`unified-trading-pm` canonical).
         - `.cursor/rules/*.mdc` files — bulk rewrite `unified_trading_library.events` → `unified_trading_library.events`, `unified-trading-library` → `unified-trading-library` in narrative prose.
         - Codex docs under `unified-trading-pm/codex/` — same rewrite.
         - Prefer scripted rewrite (e.g., `rg --files-with-matches`, then batched `sed -i`) with a single review pass before committing.

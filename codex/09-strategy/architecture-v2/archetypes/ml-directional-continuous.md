@@ -40,15 +40,10 @@ Position held until signal reverses (HOLD_UNTIL_FLIP) or time-box expires (SAME_
 
 ## Supported venues + instrument types
 
-- **CeFi perps**: Binance, OKX, Bybit, Hyperliquid, Deribit
-- **CeFi spot**: Binance, OKX, Bybit, Coinbase-via-CCXT (pricing), Hyperliquid
-- **TradFi equities**: IBKR (NYSE/NASDAQ/LSE routing)
-- **TradFi futures**: CME (ES, NQ, CL, GC, 6E, 6B), ICE (Brent, gas oil)
-- **TradFi FX**: IBKR FX spot / FX futures via CME
-- **DEFI perps**: GMX V2 (Arbitrum/Avalanche), Drift (Solana)
-- **CeFi options** (via expression = ATM_CALL, 25d_CALL, synthetic): Deribit, CBOE (via IBKR)
-
-Multi-venue SOR supported when instrument is fungible across venues (e.g., cross-CEX perp).
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 1. ML_DIRECTIONAL_CONTINUOUS`](../category-instrument-coverage.md#1-ml_directional_continuous)
+for the authoritative table (venues × instrument types × status × go-live dates). Multi-venue SOR enabled where the
+instrument is fungible across venues (cross-CEX perp).
 
 ## Expression options
 

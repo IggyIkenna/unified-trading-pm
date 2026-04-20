@@ -163,8 +163,8 @@ management, reconciliation, reporting, analytics.
 
 **Commercial mechanic:** Profit-share **replaces** block pricing post go-live. Onboarding is a fixed $125k (partially
 paid; remaining $35k as of April 2026). Once live, Odum takes **30% of Elysium's fees/returns** from the strategy they
-operate via our stack. See [`im-profit-share-structures.md`](im-profit-share-structures.md) §Elysium framing — rationale:
-client preferred upside-aligned mechanics over flat Tier B monthly.
+operate via our stack. See [`im-profit-share-structures.md`](im-profit-share-structures.md) §Elysium framing —
+rationale: client preferred upside-aligned mechanics over flat Tier B monthly.
 
 **Capital phases:**
 
@@ -187,8 +187,7 @@ example — Elysium Phase A). Actual commercial = profit-share replaces this.
 **2026 revenue target:**
 
 - **Conservative**: $125k total 2026 (onboarding + baseline profit-share).
-- **Aspirational**: $200-230k total 2026 with MEV + Solana L1 expansion + recursive-staking upsells added through
-  Q3/Q4.
+- **Aspirational**: $200-230k total 2026 with MEV + Solana L1 expansion + recursive-staking upsells added through Q3/Q4.
 
 **Does NOT include:** research / promote pipeline (block 6). Rule 04 boundary preserved even though the commercial
 mechanic is profit-share-shaped.
@@ -198,9 +197,8 @@ mechanic is profit-share-shaped.
 **Matrix cell:** Two cells: `(Client, downstream)` signals-only DART + Reg Umbrella engagement. Composed per Example D
 above but with a named prospect profile.
 
-**Strategy scope:** Perp-funding arbitrage on CeFi perps — Binance-perp, Hyperliquid, possibly Bybit + OKX
-depending on exchange onboarding outcomes. Strategy-family commodity-archetype (perp-funding arb). Client keeps strategy
-IP upstream.
+**Strategy scope:** Perp-funding arbitrage on CeFi perps — Binance-perp, Hyperliquid, possibly Bybit + OKX depending on
+exchange onboarding outcomes. Strategy-family commodity-archetype (perp-funding arb). Client keeps strategy IP upstream.
 
 **Commercial mechanic:** Two-engagement bundle with shared infrastructure.
 
@@ -209,8 +207,8 @@ IP upstream.
 - **Signals-only DART side**: reporting core (shared) + strategy-service entry × 1 + instructions integration (standard
   depth) + scoped execution analytics. ~£10k/mo Tier B.
 - **Combined Tier B monthly**: **~£22k/mo** (Reg Umbrella £12k + signals-only DART £10k).
-- **Upfront fee**: **£25-50k range** — £25k worst-case / £50k best-case. Covers two-engagement onboarding,
-  per-venue provisioning, Reg Umbrella compliance setup, signals-integration build.
+- **Upfront fee**: **£25-50k range** — £25k worst-case / £50k best-case. Covers two-engagement onboarding, per-venue
+  provisioning, Reg Umbrella compliance setup, signals-integration build.
 
 **Start date:** **May 2026 earliest** (calendar constraint on client side).
 
@@ -233,8 +231,8 @@ integration (NSE options adapter + clearing + margin), and the execution. Client
 **Commercial mechanic:** IM-framework, not DART Tier A/B blocks.
 
 - **$100k upfront onboarding** (covers NSE options integration + options-specific infrastructure; amortised over 3
-  months; commercially framed as block 13 custom premium per
-  [`pricing-building-blocks.md`](pricing-building-blocks.md) §India Options special structure).
+  months; commercially framed as block 13 custom premium per [`pricing-building-blocks.md`](pricing-building-blocks.md)
+  §India Options special structure).
 - **Ongoing**: standard **30-35% performance-share** + platform-fee client choice (Option A +5% perf uplift OR Option B
   $500/mo flat).
 - **Allocation target**: $5-10M year-1 expected (gated on S&P ML signal proving out first).
@@ -272,8 +270,8 @@ Rule-04 enforcement keeps these boundaries clean:
 - [exclusivity-and-noncompete.md](exclusivity-and-noncompete.md) — Tier B modifiers
 - [../experience/dart-briefing.md](../experience/dart-briefing.md) — pb2b briefing
 - [../experience/dart-demo.md](../experience/dart-demo.md) — pb3c demo
-- [im-profit-share-structures.md](im-profit-share-structures.md) — IM mechanics (India Options, CME asymmetric,
-  standard perf-share + platform-fee choice)
+- [im-profit-share-structures.md](im-profit-share-structures.md) — IM mechanics (India Options, CME asymmetric, standard
+  perf-share + platform-fee choice)
 - [signal-leasing.md](signal-leasing.md) — fourth commercial path
-- [../shared-core/dart-pricing-axes.md](../shared-core/dart-pricing-axes.md) — signals-only vs full-DART anchor
-  tables, Elysium worked example
+- [../shared-core/dart-pricing-axes.md](../shared-core/dart-pricing-axes.md) — signals-only vs full-DART anchor tables,
+  Elysium worked example

@@ -155,6 +155,12 @@ CLOUD_SDK_EXCLUDE_GLOBS=(
     "!**/migrate_sports_gcs_to_hive.py"
     "!**/sync-to-mock.py"
 )
+# PM is infrastructure (scripts); ServiceBootstrap + FastAPI health checks apply to deployable services only.
+export SKIP_SERVICE_LIFECYCLE_STEPS=true
+EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
+    "!**/generate-cicd-diagram.py"
+    "!**/invalidate-ci-status.py"
+)
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
 # ── Pre-commit gate: validate workspace-manifest.json (add-manifest-json-validation) ──

@@ -712,7 +712,16 @@ fi
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
-[ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
+if [ -f "$VSCRIPT" ]; then
+    if ! "$VSCRIPT" --category all --failed-only; then
+        log_fail "Production readiness validators FAILED — fix workspace-manifest.json / plans (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
+        exit 1
+    fi
+    log_ok "Production readiness validators PASSED"
+else
+    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
+    exit 1
+fi
 
 # ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────
 if [ "$ACT_MODE" = true ]; then

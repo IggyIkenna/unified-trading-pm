@@ -51,14 +51,18 @@ strategies, with real capacity, and they can see them.
 
 The second is **structure** — SMA versus Pooled. A single page laying out the operational differences: SMAs have their
 own fund, their own venues, their own API keys; Pooled holds multiple clients as share classes on one set of positions.
-The reader leaves with an inclination — most allocators default to SMA for isolation, some to Pooled for operational
-simplicity — and an understanding that the decision has real cost consequences, explored at the next call.
+Fund structure is administered by POD, a regulated affiliate — Odum-the-trading-entity is never the custodian in either
+structure. See [shared-core/fund-administration-and-custody.md](../shared-core/fund-administration-and-custody.md) for
+the POD mechanic, the execute+read API-key pattern, and the public-copy phrasing rule (POD is internal-only; public
+surfaces say "regulated affiliate"). The reader leaves with an inclination — most allocators default to SMA for
+isolation, some to Pooled for operational simplicity — and an understanding that the decision has real cost
+consequences, explored at the next call.
 
 The third is **reporting**. The briefing shows the reporting surface — positions, exposures, P&L attribution,
-reconciliation, audit trail. It names the fact explicitly: this is the same surface Odum uses to monitor its own
-operation. Allocator-side views are filtered from the same component tree
-([rule 03](../_ssot-rules/03-same-system-principle.md)). The reader understands that their reporting is not a
-purpose-built investor view assembled after the fact; it is a partition of an operational surface.
+reconciliation, audit trail — as an allocator-side partition of the operational surface Odum runs internally. See
+[`../shared-core/same-system-principle.md`](../shared-core/same-system-principle.md) and
+[`../commercial-model/im-vs-reg-reporting-logic.md`](../commercial-model/im-vs-reg-reporting-logic.md) for the
+mechanism. IM-specific view: an allocator sees only their share of pooled positions and their selected strategy set.
 
 The fourth is **regulatory and commitment**. Odum operates under FCA permissions; MLRO, compliance, and supervisory
 reporting are run internally. The commitment floor is twelve months, and the briefing explains why — provisioning, legal
@@ -73,8 +77,8 @@ guaranteed floor. See
 [`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) for the
 mechanic in full.
 
-Footnote on catalogue scope for the narrative context when the allocator asks "what strategies are on offer today":
-the BTC Fund of Funds wrapper is an **external** fund-of-funds mandate, not an Odum-system strategy. It appears in
+Footnote on catalogue scope for the narrative context when the allocator asks "what strategies are on offer today": the
+BTC Fund of Funds wrapper is an **external** fund-of-funds mandate, not an Odum-system strategy. It appears in
 client-reporting separately for the specific wrapper mandate and is not in the IM strategy catalogue.
 
 The briefing closes with the second-call hook: a forty-five-minute session with the IM desk to walk the specific
@@ -82,15 +86,13 @@ strategies the allocator's mandate shape fits, the fund-structure choice, and th
 
 ## Key messages
 
-1. Investment Management is allocation to Odum-run strategies on Odum infrastructure under Odum's FCA permissions — not
-   a third-party reporting wrapper.
-2. Reporting is the same surface Odum uses internally, filtered for allocator-side views. Same data, same components,
-   different entitlements.
-3. SMA and Pooled are the two real structural options. The choice has operational consequences; Odum will walk through
-   both with you at the next call.
-4. Regulatory cover, compliance, and MLRO are operated inside Odum — not outsourced, not optional.
-5. Twelve-month minimum commitment reflects onboarding reality: legal, venue, per-client key issuance, reconciliation
-   setup. Shorter is not a standard option.
+1. Investment Management is allocation to Odum-run strategies on Odum infrastructure under Odum's FCA permissions.
+2. Reporting: allocator-side partition of Odum's internal surface (see
+   [`../commercial-model/im-vs-reg-reporting-logic.md`](../commercial-model/im-vs-reg-reporting-logic.md)). Pooled
+   allocators see only their share plus their selected strategy set.
+3. SMA and Pooled are the two structural options. Decision walked at the next call.
+4. Regulatory cover, compliance, and MLRO are operated inside Odum — not outsourced.
+5. Twelve-month minimum commitment; onboarding carries fixed legal, venue, and key-issuance costs.
 
 ## What not to show
 

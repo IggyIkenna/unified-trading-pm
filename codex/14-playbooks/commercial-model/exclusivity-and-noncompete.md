@@ -88,8 +88,8 @@ Examples from the 2026 catalogue:
 
 - **Hyperliquid market-making** — market-making is a widely-known archetype, but Hyperliquid's venue mechanics (on-chain
   perp DEX with discrete auction matching, rebate structure, latency-sensitive MM) require specialised integration.
-- **Drift carry-basis** — carry-basis is a known archetype, but Drift's Solana-L1 specifics + the staked-basis collateral
-  overlay (Elysium's scope) are specialised enough to warrant tier-2 exclusivity pricing.
+- **Drift carry-basis** — carry-basis is a known archetype, but Drift's Solana-L1 specifics + the staked-basis
+  collateral overlay (Elysium's scope) are specialised enough to warrant tier-2 exclusivity pricing.
 
 ### Tier 3 — Scarce venue access (80-120% uplift)
 

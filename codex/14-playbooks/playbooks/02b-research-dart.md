@@ -57,16 +57,16 @@ Deep-briefing content covering:
 
 ## Content source
 
-- Currently: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts) (platform pillar)
-- Long-term: transclude structured codex from 09-strategy/architecture-v2/
+- Current: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts) (platform pillar)
+- Target: transclude structured codex from 09-strategy/architecture-v2/.
 
 ## Visibility slicing
 
-pb2b is within the briefings gate. No further slicing.
+pb2b sits inside the briefings gate. No further slicing.
 
 ## Related codex references
 
-The DART briefing should transclude or reference (not duplicate):
+The DART briefing transcludes or references (never duplicates):
 
 - [../../09-strategy/architecture-v2/README.md](../../09-strategy/architecture-v2/README.md) — strategy taxonomy
 - [../../09-strategy/architecture-v2/category-instrument-coverage.md](../../09-strategy/architecture-v2/category-instrument-coverage.md)
@@ -81,7 +81,7 @@ The DART briefing should transclude or reference (not duplicate):
 
 ## IR presentations surfaced here
 
-The `/investor-relations/platform-presentation` page is a **promote** candidate for pb2b. Decision in
+`/investor-relations/platform-presentation` promotes into pb2b. See
 [../page-triage/triage-matrix.md](../page-triage/triage-matrix.md).
 
 ## Test coverage

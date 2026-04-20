@@ -4,13 +4,13 @@ scope: [engineer, admin, sales]
 
 # Visibility slicing — the core model
 
-This is **THE** cross-cutting mechanism that ties authentication × entitlements × catalogue lock-state × catalogue
-maturity into ONE filter function applied uniformly across the UI.
+> **SSOT.** This file carries the visibility-slicing model. Rule 06 (show / don't-show discipline) and demo-ops docs
+> cite this file; they do not restate the mechanism. The filter function `visible(user, item)` below is the canonical
+> definition.
 
-> User quote: "We should always have the ability to see everything in the admin login, right? Sliced it down for what we
-> want to show them in the demo; what we want them to use, obviously, in Prod, we'll slice it down based on what they've
-> actually paid for, right? So that's the same for all of those dimensions, right? Which actual service types you see
-> and also what you see within things."
+This is the cross-cutting mechanism that ties authentication × entitlements × catalogue lock-state × catalogue maturity
+into one filter function applied uniformly across the UI. Admin sees everything. Demo personas see a sliced subset. Prod
+users see the subset their entitlements unlock.
 
 ## The rule
 

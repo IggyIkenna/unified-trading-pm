@@ -36,8 +36,8 @@ service_families:
   DART:
     description: >-
       Full-DART subscriber — Data + Analytics + Research + Trading. Runs the complete Research→Promote→Trading→Observe
-      lifecycle with reporting. No strategy-catalogue admin (Odum-internal operation).
-    surfaces: [reporting, observe, research, promote, trading, data]
+      lifecycle with reporting. Sees the strategy catalogue (read-only) but NOT the admin toggle.
+    surfaces: [reporting, observe, research, promote, trading, data, strategy_catalogue]
     excludes: [strategy_catalogue_admin]
     route_allowlist:
       - "/services/data/**"
@@ -46,6 +46,8 @@ service_families:
       - "/services/trading/**"
       - "/services/observe/**"
       - "/services/reports/**"
+      - "/services/strategy-catalogue/**"
+      - "!/services/strategy-catalogue/admin/**"
 
   DART_reporting_only:
     description: >-
@@ -67,10 +69,12 @@ service_families:
   IM_desk:
     description: >-
       IM desk operator — locks / unlocks strategies for IM clients via the strategy-catalogue admin toggle. Also sees
-      reporting for cross-client observation.
-    surfaces: [strategy_catalogue_admin, reporting]
+      reporting + research (for pre-promotion strategy review) + promote (approval queue).
+    surfaces: [strategy_catalogue_admin, reporting, research, promote]
     excludes: []
     route_allowlist:
-      - "/services/strategy-catalogue/admin/**"
+      - "/services/strategy-catalogue/**"
+      - "/services/research/**"
+      - "/services/promote/**"
       - "/services/reports/**"
       - "/services/investor-relations/**"

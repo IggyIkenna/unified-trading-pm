@@ -108,7 +108,15 @@ for repo in "${REPOS[@]}"; do
     [[ $unsolved -eq 1 ]] && high_risk+=("$repo")
   elif echo "$reflog" | grep -q "reset: moving to origin"; then
     medium_risk+=("$repo")
-  elif echo "$reflog" | grep -v "reset: moving to HEAD" | grep -qi "reset"; then
+  elif
+    # LOW: real reflog *reset* operations only (verb "reset:" after HEAD@{n}:).
+    # Do not match the substring "reset" in commit subjects (e.g. reset_index).
+    # Exclude index-only unstage: "reset: moving to HEAD" (no discarded commits).
+    reflog_reset_ops=$(echo "$reflog" | grep -E '^[0-9a-f]+ HEAD@\{[0-9]+\}: reset:' || true)
+    [[ -z "$reflog_reset_ops" ]] && continue
+    nontrivial_resets=$(echo "$reflog_reset_ops" | grep -vE 'reset: moving to HEAD$' || true)
+    [[ -n "$nontrivial_resets" ]]
+  then
     low_risk+=("$repo")
   fi
 done

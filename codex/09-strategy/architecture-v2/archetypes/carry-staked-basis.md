@@ -47,12 +47,9 @@ capital.
 
 ## Supported venues / instruments
 
-| Staking                       | Lending          | Perp                                    | Share class |
-| ----------------------------- | ---------------- | --------------------------------------- | ----------- |
-| Lido (Ethereum) → stETH       | Aave V3 Ethereum | Hyperliquid / Binance / Bybit / Deribit | ETH         |
-| Rocket Pool (Ethereum) → rETH | Aave V3 Ethereum | Hyperliquid / Binance / Bybit           | ETH         |
-| Jito (Solana) → JitoSOL       | Kamino (Solana)  | Drift Protocol                          | SOL         |
-| Marinade (Solana) → mSOL      | Kamino           | Drift                                   | SOL         |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 7. CARRY_STAKED_BASIS`](../category-instrument-coverage.md#7-carry_staked_basis)
+for the authoritative staking × lending × perp combinations and share-class mapping.
 
 ## Config schema
 

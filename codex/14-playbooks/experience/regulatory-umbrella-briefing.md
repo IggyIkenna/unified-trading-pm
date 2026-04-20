@@ -43,11 +43,11 @@ activity against Odum's permissions.
 
 ## Walkthrough
 
-The briefing opens with the Reg Umbrella rule-09 expansion. Firms running regulated activity that want operational cover
-without seeking direct FCA authorisation operate under Odum's permissions. Onboarding handles regulatory scope,
-compliance setup, MLRO coverage, and supervisory reporting. Reporting surfaces use the same component tree as IM and
-DART reporting, filtered to the firm's regulated-activity view. The claim is that Odum is a live regulated operator, not
-a regulatory broker.
+The briefing opens with the Reg Umbrella rule-09 expansion: firms running regulated activity operate under Odum's
+permissions, with Odum handling regulatory scope, compliance, MLRO, and supervisory reporting. Reporting surfaces are
+filtered views of Odum's internal operating system — see
+[`../commercial-model/im-vs-reg-reporting-logic.md`](../commercial-model/im-vs-reg-reporting-logic.md). Odum is a live
+regulated operator, not a regulatory broker.
 
 The second section is regulatory scope. The briefing enumerates the permissions Odum holds and the activities they cover
 — not a legal document, but specific enough that the prospect can check whether their planned activity fits. Activities
@@ -61,10 +61,10 @@ mental model of what onboarding feels like and what they are responsible for.
 
 The fourth section is the operating model once live. The Umbrella firm operates as the designated representative (or
 equivalent structure) under Odum's permissions. Odum runs compliance monitoring, supervisory checks, transaction
-reporting, and best-execution evidence on the firm's activity. The firm retains strategic and commercial control of its
-business; regulatory operations run through Odum. Reporting surfaces — MIFID, transaction reporting, supervisory
-artifacts — are the same components IM and DART clients use, entitlement-filtered to the firm's regulated-activity view
-(see [rule 03](../_ssot-rules/03-same-system-principle.md)).
+reporting, and best-execution evidence on the firm's activity. The firm retains strategic and commercial control; the
+regulatory operations layer runs through Odum. Reg-specific view: Pooled vs SMA is an accounting/setup choice for the
+firm's structure — see [`../cross-cutting/sma-vs-pooled.md`](../cross-cutting/sma-vs-pooled.md). MIFID surfaces,
+transaction reporting, and supervisory artifacts render from the shared component tree.
 
 The fifth section is commitment. The engagement is twelve months minimum. The rationale is identical across services:
 legal, compliance, MLRO, venue, and reporting setup are fixed-cost provisioning that the twelve-month floor recovers.
@@ -81,8 +81,9 @@ prospect's activity against Odum's permissions, confirm scope fit, and map the o
 2. Regulatory Umbrella clients run their activity under Odum's permissions, as designated representatives or an
    equivalent structure. Odum carries the regulatory obligations that follow.
 3. Onboarding has five workstreams — legal, compliance, MLRO, venue, reporting — each with a stated Odum owner.
-4. Reporting surfaces are the same ones IM and DART clients use, filtered to the regulated-activity view. One system,
-   partitioned views.
+4. Reporting surfaces filter from the shared component tree (see
+   [`../commercial-model/im-vs-reg-reporting-logic.md`](../commercial-model/im-vs-reg-reporting-logic.md)).
+   Reg-specific: Pooled vs SMA is an accounting/setup choice, not a product choice.
 5. Twelve-month minimum engagement. Onboarding costs are real and the floor recovers them.
 
 ## What not to show

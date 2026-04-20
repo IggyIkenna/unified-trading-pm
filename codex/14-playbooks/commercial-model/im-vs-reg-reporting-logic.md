@@ -4,8 +4,11 @@ scope: [sales, admin]
 
 # IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings
 
+> **SSOT.** This file carries the IM vs Reg Umbrella distinction. Experience docs, playbooks 03a/03b, and briefings cite
+> this file; they do not restate the comparison.
+>
 > The reporting surface IM allocators and Reg Umbrella firms use is the same UI (rule 03 same-system principle). The
-> commercial framing differs, the block composition differs, and the pricing differs. This doc maps the differences.
+> commercial framing, block composition, and pricing differ. This doc maps those differences.
 
 **Rule sources:** [rule 03](../_ssot-rules/03-same-system-principle.md),
 [rule 05](../_ssot-rules/05-building-block-dimensions.md) blocks 1, 2, 3,
@@ -99,10 +102,10 @@ structures.
   liquid perps), 35% for specialised / harder-to-replicate (sports ML where capacity is bound, India Options delta
   trading where venue access is hard).
 - **Platform-fee client-choice at mandate signing** — client picks one of the following at contracting (NOT both):
-  - **Option A**: +5% performance-share uplift (base 30% → 35%, or base 35% → 40%). Zero fixed monthly. Pure
-    alignment. Attractive for clients who want skin-aligned pricing.
-  - **Option B**: Base performance-share + **$500 monthly flat platform-access fee**. Small fixed floor. Attractive
-    for clients who want a partial guarantee regardless of strategy year.
+  - **Option A**: +5% performance-share uplift (base 30% → 35%, or base 35% → 40%). Zero fixed monthly. Pure alignment.
+    Attractive for clients who want skin-aligned pricing.
+  - **Option B**: Base performance-share + **$500 monthly flat platform-access fee**. Small fixed floor. Attractive for
+    clients who want a partial guarantee regardless of strategy year.
 
 The platform-fee choice is recorded at mandate signing and sticks for the mandate term. Either option gives Odum a
 partial revenue floor: Option A = more upside when the strategy performs; Option B = a small guarantee that runs

@@ -42,6 +42,10 @@ reverts.
    - max_hold_bars → force close
 ```
 
+**Venue × instrument coverage:** See
+[`../category-instrument-coverage.md § 17. STAT_ARB_PAIRS_FIXED`](../category-instrument-coverage.md#17-stat_arb_pairs_fixed).
+The pair-type table below is orthogonal to venue coverage.
+
 ## Supported pair types
 
 | Type               | Examples                                              |

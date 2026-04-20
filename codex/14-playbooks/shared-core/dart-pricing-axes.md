@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # DART Pricing Axes — Signals-Only vs Full DART
 
 > Implementation map for the pricing dimensional model that distinguishes signals-only DART from full-pipeline DART.

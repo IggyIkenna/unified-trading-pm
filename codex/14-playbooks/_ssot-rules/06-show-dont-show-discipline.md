@@ -7,8 +7,8 @@ scope: [engineer, admin, sales]
 > What you leave off the page matters as much as what you put on it. Every experience playbook has an explicit
 > what-not-to-show list. An empty list is a drafting failure.
 
-**Source:** [`_source-v1-feedback.md`](_source-v1-feedback.md) §"On demo mode vs commercial path vs production
-restriction" and rule-07 / rule-08 guardrails.
+**Mechanism SSOT:** [`../cross-cutting/visibility-slicing.md`](../cross-cutting/visibility-slicing.md) carries the
+`visible(user, item)` filter function that enforces this rule at runtime.
 
 ## The show / don't-show contract
 

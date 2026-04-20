@@ -109,9 +109,10 @@ All event-settled markets available on configured venues:
 
 ## Venue patterns
 
-- Primary: **Unity** (best-odds routing across 10 child books via single wallet)
-- Direct: Betfair, Smarkets, Matchbook (for books not in Unity)
-- Prediction: Polymarket
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 4. RULES_DIRECTIONAL_EVENT_SETTLED`](../category-instrument-coverage.md#4-rules_directional_event_settled)
+for the authoritative venue table (Unity meta-broker primary; direct access to Betfair, Smarkets, Matchbook; Polymarket
+for binary prediction markets).
 
 ## Hold policies
 

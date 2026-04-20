@@ -44,29 +44,29 @@ reconciliation adapters, venue-specific TCA.
 ### Current venue scope (2026)
 
 Snapshot of the actual venue scope Odum operates on in 2026, matching the concrete mandates in
-[`strategy-allocation-lock-matrix.md`](strategy-allocation-lock-matrix.md). Authoritative long-form list still lives
-in [`../../02-venues/`](../../02-venues/); this table is the commercial-scope view.
+[`strategy-allocation-lock-matrix.md`](strategy-allocation-lock-matrix.md). Authoritative long-form list still lives in
+[`../../02-venues/`](../../02-venues/); this table is the commercial-scope view.
 
 **CEFI venues**
 
-| Venue          | Status               | Notes                                                                        |
-| -------------- | -------------------- | ---------------------------------------------------------------------------- |
-| Binance-spot   | Live                 | STAT_ARB_PAIRS_FIXED (PUBLIC) + BTC ML directional (IM_RESERVED, Jun 2026).  |
-| Binance-perp   | Live                 | BTC ML perp companion (IM_RESERVED) + Desmond perp-arb scope.                |
-| Coinbase       | Live                 | Mean-rev + BTC ML spot.                                                      |
-| Kraken         | Live                 | Mean-rev (PUBLIC).                                                           |
-| Hyperliquid    | Live                 | BTC perp + Desmond perp-arb scope.                                           |
-| CME-futures    | Sept 2026 go-live    | S&P futures for ML directional (IM_RESERVED co-invest mandate).              |
-| NSE-options    | Oct 2026 go-live     | India Options delta trading (IM_RESERVED, gated on S&P signal).              |
+| Venue        | Status            | Notes                                                                       |
+| ------------ | ----------------- | --------------------------------------------------------------------------- |
+| Binance-spot | Live              | STAT_ARB_PAIRS_FIXED (PUBLIC) + BTC ML directional (IM_RESERVED, Jun 2026). |
+| Binance-perp | Live              | BTC ML perp companion (IM_RESERVED) + Desmond perp-arb scope.               |
+| Coinbase     | Live              | Mean-rev + BTC ML spot.                                                     |
+| Kraken       | Live              | Mean-rev (PUBLIC).                                                          |
+| Hyperliquid  | Live              | BTC perp + Desmond perp-arb scope.                                          |
+| CME-futures  | Sept 2026 go-live | S&P futures for ML directional (IM_RESERVED co-invest mandate).             |
+| NSE-options  | Oct 2026 go-live  | India Options delta trading (IM_RESERVED, gated on S&P signal).             |
 
 **DeFi chains**
 
-| Chain       | Status             | Notes                                                  |
-| ----------- | ------------------ | ------------------------------------------------------ |
-| Ethereum L1 | Live               | Elysium CARRY_BASIS_PERP + CARRY_STAKED_BASIS scope.   |
-| Arbitrum    | Live               | Elysium + DeFi yield rotation scope.                   |
-| Base        | Live               | Elysium + DeFi yield rotation scope.                   |
-| Solana      | Sept 2026 upsell   | Elysium CARRY_RECURSIVE_STAKED upsell go-live window.  |
+| Chain       | Status           | Notes                                                 |
+| ----------- | ---------------- | ----------------------------------------------------- |
+| Ethereum L1 | Live             | Elysium CARRY_BASIS_PERP + CARRY_STAKED_BASIS scope.  |
+| Arbitrum    | Live             | Elysium + DeFi yield rotation scope.                  |
+| Base        | Live             | Elysium + DeFi yield rotation scope.                  |
+| Solana      | Sept 2026 upsell | Elysium CARRY_RECURSIVE_STAKED upsell go-live window. |
 
 **Sports venues**
 
@@ -76,21 +76,22 @@ Capacity-bound (2 IM clients from June 2026). Feed/adapter stack:
 - Betradar — data feeds for the specific league set.
 - API-Football — supplemental fixture metadata + league coverage.
 
-League scope is deliberately narrow (specific leagues only) because capacity is strategy-bound, not infrastructure-bound.
+League scope is deliberately narrow (specific leagues only) because capacity is strategy-bound, not
+infrastructure-bound.
 
 **Prediction markets**
 
-| Venue      | Status                                   |
-| ---------- | ---------------------------------------- |
-| Polymarket | Live.                                    |
+| Venue      | Status |
+| ---------- | ------ |
+| Polymarket | Live.  |
 
 **Adjacent but blocked / conditional:**
 
 - **Bybit, OKX** — potential Q2-Q3 2026 CEFI addition if Desmond's perp-funding-arb strategy requires them for
   best-execution routing. Treated as venue-pack expansion inside his existing Tier B scope, not a separate venue
   onboarding project.
-- **Kalshi** — BLOCKED per strategy-architecture-v2 block list (no Kalshi adapter integrated today). Re-opens if /
-  when the Kalshi adapter is built.
+- **Kalshi** — BLOCKED per strategy-architecture-v2 block list (no Kalshi adapter integrated today). Re-opens if / when
+  the Kalshi adapter is built.
 
 **Out-of-scope venues for experience demos:** any venue not declared in the prospect's scope. The demo data surfaces
 their declared venues; other venues do not appear.

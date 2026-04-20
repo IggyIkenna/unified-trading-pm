@@ -232,7 +232,7 @@ isProject: false
 
 ## Context
 
-The [features_improvements.md](../../features-sports-service/docs/specs/features_improvements.md) spec defines ~150
+The [features_improvements.md](../../../features-sports-service/docs/specs/features_improvements.md) spec defines ~150
 precise feature columns across 12 categories with exact formulas, source tables, dependencies, model usage, and validity
 rules. Audit shows **82.4% are MISSING** from the current features-sports-service (15 of 85 checked features found).
 This plan implements every column from the spec and expands the same confidence/validity channel architecture to DeFi

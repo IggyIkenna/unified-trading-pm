@@ -45,6 +45,10 @@ T + vol_normalize:
   exit at time-box regardless
 ```
 
+**Venue × instrument coverage:** See
+[`../category-instrument-coverage.md § 15. EVENT_DRIVEN`](../category-instrument-coverage.md#15-event_driven). The table
+below enumerates eligible events — orthogonal to venue coverage.
+
 ## Supported events
 
 | Event category  | Specific events                                                              | Instruments affected                               |

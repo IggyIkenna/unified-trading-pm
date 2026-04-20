@@ -110,14 +110,14 @@ with no system compute cost.
 External wrappers are modelled against this hierarchy as follows:
 
 - **NOT in the strategy catalogue.** There is no `(archetype, instrument, venue)` cell for the wrapper. No strategy
-  lock-state applies. No strategy-service tenant slot is consumed. Catalogue filters do not surface the wrapper to
-  any audience.
+  lock-state applies. No strategy-service tenant slot is consumed. Catalogue filters do not surface the wrapper to any
+  audience.
 - **Surfaced ONLY in `client-reporting`** for the specific wrapper mandate. The allocator's client view shows the
-  mandate as a standalone reporting line — external fund name, allocation, periodic return, Odum share booked — with
-  no linkage to the strategy catalogue.
+  mandate as a standalone reporting line — external fund name, allocation, periodic return, Odum share booked — with no
+  linkage to the strategy catalogue.
 - **Entitlement attaches at the client level** via a `wrapper_mandate` flag on the API-key set (rule 05 block
-  entitlements still live at the API-key-set level — see table above). The flag turns on the wrapper reporting line
-  and nothing else.
+  entitlements still live at the API-key-set level — see table above). The flag turns on the wrapper reporting line and
+  nothing else.
 - **No data-licensing exposure.** Because no Odum strategy IP is involved, rule 07 data-licensing boundaries do not
   apply to the wrapper's pricing or exposure.
 
@@ -125,8 +125,8 @@ Net effect: wrapper mandates are low-surface-area legacy-style engagements that 
 polluting the strategy catalogue or the lock-state machinery. See
 [`strategy-allocation-lock-matrix.md`](strategy-allocation-lock-matrix.md) §BTC Fund of Funds for the canonical
 lock-matrix treatment and
-[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md)
-§BTC Fund of Funds wrapper for the commercial mechanic.
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) §BTC Fund of
+Funds wrapper for the commercial mechanic.
 
 ## Provisioning flow
 

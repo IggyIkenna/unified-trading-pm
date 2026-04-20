@@ -434,7 +434,8 @@ Each item below has:
 
 ### 3.1 Pricing-engine service
 
-- **Current state.** `commercial-model/pricing-building-blocks.md` exists (Stage 2) with TBD number columns. No runtime
+- **Current state.** `commercial-model/pricing-building-blocks.md` (Stage 2) declares the 13-row × 3-column structure;
+  sales anchor ranges are locked. Cost numbers remain codex-private pending finance population (§ 3.2). No runtime
   service; quotes built by hand. Billing service does not reconcile against a programmatic `cost(combo, tier)` source.
 - **Target state.** `pricing-engine-service` (new) OR `strategy-service/availability/pricing/` (extension per §5 of
   [`stage-3c-derivation-engine.md`](stage-3c-derivation-engine.md)). Reads populated numbers from
@@ -450,8 +451,9 @@ Each item below has:
 
 ### 3.2 Pricing-numbers populated from Odum finance
 
-- **Current state.** `commercial-model/pricing-building-blocks.md` (Stage 2) has TBD placeholders for internal cost /
-  Tier A / Tier B upfront + monthly per block. Numbers sit only in Odum finance dashboards + leadership decks.
+- **Current state.** `commercial-model/pricing-building-blocks.md` (Stage 2) publishes sales anchor ranges; internal
+  cost / Tier A / Tier B point values sit only in Odum finance dashboards and leadership decks. The structure is locked;
+  the numbers land via finance workflow.
 - **Target state.** Finance populates numbers via a non-codex workflow (finance Google Sheet → export → commit). Update
   frequency: quarterly. Internal-column leakage guard per rule 08 ensures only finance-authorised commits land on
   `codex/14-playbooks/commercial-model/pricing-building-blocks.md`.

@@ -45,10 +45,10 @@ paragraph confirming the demo context — the prospect's firm name, the path the
 platform / turbo / deep-dive per [`../demo-ops/dart-demo-modes.md`](../demo-ops/dart-demo-modes.md)), and the sales
 person present. This context is not decorative; it confirms that the session is scoped, not a generic tour.
 
-The middle of the hub presents three navigational blocks, each pointing at a specific demo flavour. The prospect's
-restriction profile — set by the resolved commercial path — determines which blocks are unlocked and which are
-LOCKED-VISIBLE with an upgrade-path message. IM demos land on pb3b; Reg Umbrella demos land on pb3a; DART demos land on
-pb3c. A prospect with a combined engagement has two blocks unlocked; the third is LOCKED-VISIBLE.
+The middle of the hub presents three navigational blocks, one per flavour. The prospect's restriction profile (see
+[`../demo-ops/demo-restriction-profiles.md`](../demo-ops/demo-restriction-profiles.md)) determines which blocks unlock
+and which show LOCKED-VISIBLE with an upgrade-path message. IM → pb3b; Reg Umbrella → pb3a; DART → pb3c. Combined
+engagements unlock two; the third stays LOCKED-VISIBLE.
 
 The bottom of the hub names the demo length — typically forty-five to sixty minutes — and the agenda structure for the
 session. The agenda is not the click-path itself; it is the list of what the session will cover. The sales person runs

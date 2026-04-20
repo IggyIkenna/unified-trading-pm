@@ -85,21 +85,21 @@ class MyServiceConfig(UnifiedCloudConfig):
 
 ## Bucket-resolver helper inventory (per-service)
 
-| Service                           | Bucket helper                                              | Where it lives                                                     |
-| --------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ |
-| instruments-service               | UTL `get_bucket_name("instruments", category)`             | `engine/orchestrator.py` (uses cfg.is_test_run separately)         |
-| market-tick-data-service          | `get_tick_data_bucket(config, category)`                   | `engine/orchestrator.py:1313`                                      |
-| market-data-processing-service    | `_resolve_upstream_bucket()` + `OUTPUT_BUCKETS_TEST` map   | `app/core/dependency_checker.py:349`                               |
-| features-sports-service           | UTL `get_bucket_name("features_sports")`                   | (no shared category) — call `get_write_bucket_name()` at write     |
-| features-calendar-service         | `cfg.source_bucket_template` (shared)                      | `config.py:40` — wrap with `cfg.is_test_run` swap                  |
-| features-onchain-service          | `cfg.output_bucket_template`                               | `config.py:69` — wrap with `cfg.is_test_run` swap                  |
-| features-delta-one-service        | `cfg.output_bucket_template`                               | `config.py:147` — wrap with `cfg.is_test_run` swap                 |
-| features-volatility-service       | `cfg.output_bucket_template`                               | `config.py:40` — wrap with `cfg.is_test_run` swap                  |
-| features-cross-instrument-service | `cfg.output_bucket_template`                               | `config.py:129` — wrap with `cfg.is_test_run` swap                 |
-| features-multi-timeframe-service  | `cfg.output_bucket_template`                               | `config.py:165` — wrap with `cfg.is_test_run` swap                 |
-| features-commodity-service        | `cfg.commodity_profiles_bucket`                            | `config.py:64` — wrap with `cfg.is_test_run` swap                  |
-| ml-training-service               | `cfg.features_*_bucket_template` + `ml-models-store-*`     | `config.py:54+` — wrap with `cfg.is_test_run` swap                 |
-| ml-inference-service              | `cfg.features_*_bucket_template` + `ml-predictions-store-*` | per-bucket — wrap with `cfg.is_test_run` swap                      |
+| Service                           | Bucket helper                                               | Where it lives                                                 |
+| --------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| instruments-service               | UTL `get_bucket_name("instruments", category)`              | `engine/orchestrator.py` (uses cfg.is_test_run separately)     |
+| market-tick-data-service          | `get_tick_data_bucket(config, category)`                    | `engine/orchestrator.py:1313`                                  |
+| market-data-processing-service    | `_resolve_upstream_bucket()` + `OUTPUT_BUCKETS_TEST` map    | `app/core/dependency_checker.py:349`                           |
+| features-sports-service           | UTL `get_bucket_name("features_sports")`                    | (no shared category) — call `get_write_bucket_name()` at write |
+| features-calendar-service         | `cfg.source_bucket_template` (shared)                       | `config.py:40` — wrap with `cfg.is_test_run` swap              |
+| features-onchain-service          | `cfg.output_bucket_template`                                | `config.py:69` — wrap with `cfg.is_test_run` swap              |
+| features-delta-one-service        | `cfg.output_bucket_template`                                | `config.py:147` — wrap with `cfg.is_test_run` swap             |
+| features-volatility-service       | `cfg.output_bucket_template`                                | `config.py:40` — wrap with `cfg.is_test_run` swap              |
+| features-cross-instrument-service | `cfg.output_bucket_template`                                | `config.py:129` — wrap with `cfg.is_test_run` swap             |
+| features-multi-timeframe-service  | `cfg.output_bucket_template`                                | `config.py:165` — wrap with `cfg.is_test_run` swap             |
+| features-commodity-service        | `cfg.commodity_profiles_bucket`                             | `config.py:64` — wrap with `cfg.is_test_run` swap              |
+| ml-training-service               | `cfg.features_*_bucket_template` + `ml-models-store-*`      | `config.py:54+` — wrap with `cfg.is_test_run` swap             |
+| ml-inference-service              | `cfg.features_*_bucket_template` + `ml-predictions-store-*` | per-bucket — wrap with `cfg.is_test_run` swap                  |
 
 **Phase-1 scope**: every service has the `is_test_run` field landed. Phase-2 will run smoke matrices that set
 `IS_TEST_RUN=true`, exercise each service's write paths, and confirm shards land in `-test-` buckets. If a write path is

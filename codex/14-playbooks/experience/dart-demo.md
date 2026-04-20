@@ -18,29 +18,23 @@ signals-only `(Client, downstream)` or full pipeline `(Client, full-pipeline)`.
 
 ## Moment in journey
 
-Warm-prospect demo. This demo assumes the prospect has already self-sorted through the rule-10 fit-check in the pb2b
-briefing. Before the demo is scheduled, either the fit-check is resolved — signals-only or full DART — or the demo
-itself is designed to surface the resolution by reading the prospect's declared schema shape against Odum's required
-fields. The demo does not interrogate the prospect about their upstream; it either works against a resolved path or uses
-the surfaces under scope to make the path obvious to the prospect. Under no circumstances are research, backtest, or
-promote surfaces shown to an unresolved or signals-only prospect — those surfaces stay LOCKED-VISIBLE with the
-"available in full DART" message until full-DART is resolved. See
-[rule 10](../_ssot-rules/10-strategy-instruction-schema-principles.md) for the underlying discipline.
+Warm-prospect demo. The rule-10 fit-check is resolved (signals-only or full DART) before scheduling, or the demo reads
+the prospect's declared schema shape against Odum's required fields to force resolution. The demo does not interrogate
+the prospect's upstream. Research, backtest, and promote surfaces stay LOCKED-VISIBLE for unresolved or signals-only
+prospects per [`../demo-ops/demo-restriction-profiles.md`](../demo-ops/demo-restriction-profiles.md).
 
-The prospect is logged into staging with a demo user scoped to the resolved DART restriction profile.
+The prospect is logged into staging with a demo user scoped to the resolved restriction profile.
 
 ## What Odum must prove
 
-- The staging environment is the production UI. Same catalogue, same terminal, same reporting, same execution surfaces —
-  with the prospect's restriction profile applied ([rule 03](../_ssot-rules/03-same-system-principle.md)).
-- For signals-only prospects: the downstream stack (strategy-service entry, instructions integration, execution layer,
-  reporting) is a coherent operating surface, and the research / promote pipeline is visible but locked with the upgrade
-  path named.
-- For full-pipeline prospects: research, promote, paper, and live operate on the same catalogue and the same components
-  — the phase tag on a slot is the only thing that changes across views.
-- Execution quality, reconciliation, and reporting render with demo data that mirrors the prospect's declared flow —
-  venues, chains, instrument types — not generic equities.
-- Entitlement slicing is real: the prospect does not see other clients' data or their CLIENT_EXCLUSIVE slots.
+- Staging is the production UI with the prospect's restriction profile applied (see
+  [`../shared-core/same-system-principle.md`](../shared-core/same-system-principle.md)).
+- Signals-only path delivers a coherent downstream operating surface; research / promote remain LOCKED-VISIBLE with the
+  upgrade path named.
+- Full-pipeline path: research, promote, paper, live all operate on one catalogue and one component tree — phase tag is
+  the only axis that changes per view.
+- Demo data mirrors the prospect's declared venues, chains, and instrument types — not generic equities.
+- Entitlement slicing is real: no visibility into other clients' data or `CLIENT_EXCLUSIVE` slots.
 
 ## Experience goal
 
@@ -50,69 +44,44 @@ question to close before onboarding. Exploratory "let's see more" outcomes are a
 
 ## Walkthrough
 
-DART sales opens the session by confirming the demo context — prospect firm name, resolved path (signals-only vs full
-pipeline), the restriction profile applied, the demo mode (broader platform for first-look; turbo or deep-dive if the
-prospect wants depth on a specific surface), and the session agenda. The agenda differs by path.
+DART sales opens by confirming the demo context: prospect firm name, resolved path, restriction profile applied, demo
+mode (broader / turbo / deep-dive), agenda. The agenda differs by path.
 
-### Signals-only walkthrough
+### Signals-only walkthrough — 4 surfaces
 
-Four surfaces, in order.
+1. **Strategy catalogue** — filtered to slots the prospect's instructions will touch; maturity ≥ BACKTESTED per rule 06;
+   research / promote columns LOCKED-VISIBLE.
+2. **Strategy-service entry** — the runtime that hosts the prospect's instruction flow as one tenant.
+3. **Execution + reconciliation** — end-to-end walk of a rule-10 instruction: algo selection → venue routing → fills →
+   TCA → reconciliation breaks + resolutions.
+4. **Reporting surface** — positions, P&L attribution, exposure, audit; scoped to the prospect's synthetic flow.
 
-The first is the strategy catalogue, filtered to the slots the prospect's declared instruction flow will touch. Each row
-shows maturity (BACKTESTED and later only, per [rule 06](../_ssot-rules/06-show-dont-show-discipline.md)), phase (live),
-and scope. The research and promote columns on the catalogue are LOCKED-VISIBLE with the "available in full DART"
-message.
+### Full-pipeline walkthrough — 6 surfaces
 
-The second is strategy-service entry. The prospect sees the runtime surface that will host their per-instruction
-execution, risk, and allocation wiring. The narrative names the fact that this is the same runtime Odum uses for its own
-strategies, with the prospect's flow as one tenant — same system, partitioned view per
-[rule 03](../_ssot-rules/03-same-system-principle.md).
+The signals-only 4 surfaces plus three that are only unlocked for full DART:
 
-The third is execution and reconciliation. The demo walks an end-to-end flow: an incoming instruction with all eight
-required fields (see [rule 10](../_ssot-rules/10-strategy-instruction-schema-principles.md)), execution algo selection,
-venue routing, fills, reconciliation. The prospect sees TCA, execution-quality metrics, reconciliation breaks and
-resolutions. The narrative emphasises that the instruction schema is fixed and published; what the prospect sends in is
-operated on here.
+- **Research** — historical backtest of a strategy matching the prospect's mandate shape; phase tag flips to `research`;
+  tables, charts, attribution identical to live view.
+- **Promote** — promotion-decision ledger for a slot (shadow → paper → live-tiny → live-allocated); prospect sees the
+  ladder, criteria, current state. Same artifact Odum operates internally.
+- **Paper** — live-data paper-trading view; same UI as live, different phase tag, different data-source binding.
 
-The fourth is the reporting surface. Positions, P&L attribution, exposure analytics, audit trail — scoped to the
-prospect's synthetic flow. The reporting surface is the same one IM and Reg Umbrella clients use
-([rule 03](../_ssot-rules/03-same-system-principle.md)).
-
-### Full-pipeline walkthrough
-
-Six surfaces, in order. First three are research, promote, and paper — the signals-only gating is lifted. The fourth
-through sixth are strategy-service entry, execution, and reporting, identical to the signals-only walkthrough but
-presented on top of a research-originated flow rather than an incoming-instruction flow.
-
-The research surface shows a historical-window backtest of a strategy the prospect's mandate shape fits. Phase tag on
-the catalogue row flips to `research` while the rest of the UI — tables, charts, attribution — is identical to the live
-view ([rule 03](../_ssot-rules/03-same-system-principle.md) sub-claim b and c).
-
-The promote surface shows the promotion-decision ledger for a slot — shadow-evaluated → paper → live-tiny →
-live-allocated. The prospect sees the ladder, the criteria, and the current state. The narrative names the fact that the
-ladder is the same one Odum operates internally; the prospect is looking at the actual operating artifact.
-
-The paper surface shows a live-data paper-trading view. Same UI as live; different phase tag; different data-source
-binding ([rule 03](../_ssot-rules/03-same-system-principle.md) sub-claim e).
-
-Strategy-service entry, execution, reconciliation, and reporting mirror the signals-only walkthrough. The last three
-surfaces are identical across the two paths; that is the point.
+The last three surfaces (strategy-service entry, execution, reporting) are identical across both paths — that identity
+is the point. See [`../shared-core/same-system-principle.md`](../shared-core/same-system-principle.md).
 
 ### Session close
 
-DART sales closes with the resolved next commitment. Signals-only prospects: onboarding kickoff or commercial follow-up.
-Full-pipeline prospects: the same, with research-surface onboarding included. If the prospect surfaces a reservation, it
-is captured verbatim and routed to the demo-decision-matrix review.
+DART sales closes on the next commitment — onboarding kickoff or commercial close meeting. Reservations are captured
+verbatim and routed to demo-decision-matrix review.
 
 ## Key messages
 
-1. Staging is the production UI. What you see is the system, filtered to your resolved path.
-2. For signals-only: the downstream stack is what you buy. Research and promote are locked with the upgrade-path message
-   — not hidden, not fudged.
-3. For full pipeline: research, paper, and live are phase tags on one catalogue. Same components, different data
-   bindings.
-4. Your instruction flow (or strategy flow) runs on the same components Odum uses for its own strategies. One system,
-   partitioned view.
+1. Staging is the production UI, filtered to your resolved path.
+2. Signals-only: the downstream stack is what you buy. Research and promote are locked with the upgrade-path message —
+   not hidden.
+3. Full pipeline: research, paper, live are phase tags on one catalogue; same components, different data bindings.
+4. Your flow runs on the same components Odum uses internally (see
+   [`../shared-core/same-system-principle.md`](../shared-core/same-system-principle.md)).
 5. The next step is onboarding kickoff or a specific commercial close. We do not demo twice.
 
 ## What not to show
@@ -137,6 +106,7 @@ is captured verbatim and routed to the demo-decision-matrix review.
 
   Cross-ref the matrix so the list stays maintainable — the matrix is the SSOT; this bullet mirrors its current
   snapshot.
+
 - Other clients' positions, instructions, or reporting data —
   [rule 06](../_ssot-rules/06-show-dont-show-discipline.md) + [rule 07](../_ssot-rules/07-data-licensing-boundaries.md),
   HIDDEN-ENTIRELY. Entitlement slicing enforces this.

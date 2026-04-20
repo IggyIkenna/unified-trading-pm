@@ -113,14 +113,16 @@ Each archetype has distinct position structure — see individual archetype docs
 
 ## Risk profile
 
-- **Drawdowns**: typically lower than directional strategies (basis is delta-neutral; yield is directionally neutral)
+- **Drawdowns**: lower than directional strategies in normal regimes (basis is delta-neutral; yield is directionally
+  neutral). Tail-risk drawdowns — funding flip, LST depeg, cascading liquidation — are severe and warrant kill switches.
 - **Tail risks**:
   - Funding rate reversal (basis)
   - LST depeg (staked basis)
   - Cascading liquidation (recursive staked)
   - Smart-contract risk (all DeFi variants)
   - Chain halt / bridge delay (multi-chain)
-- **Sharpe**: typically high (1.5-3.5) for well-run basis + yield strategies because of low vol
+- **Sharpe (well-run basis + yield, normal regime)**: 1.5–3.5. Sharpe collapses on tail events; kill switches enforce
+  the ceiling loss.
 - **Kill switches**: LST depeg > threshold, health factor breach, funding reversal, rapid APY change indicating
   disruption
 

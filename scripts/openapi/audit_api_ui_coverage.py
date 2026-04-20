@@ -78,7 +78,8 @@ def _extract_api_endpoints(spec_path: Path) -> dict[str, list[str]]:
     with open(spec_path) as f:
         spec = json.load(f)
 
-    paths = spec.get("paths", {})
+    paths_raw = spec.get("paths")
+    paths: dict[str, object] = paths_raw if isinstance(paths_raw, dict) else {}
     service_paths: dict[str, list[str]] = {}
 
     for path in sorted(paths.keys()):

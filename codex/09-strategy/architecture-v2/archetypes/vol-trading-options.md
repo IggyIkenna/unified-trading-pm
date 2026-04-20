@@ -55,12 +55,10 @@ delta-hedged options position. P&L comes from vega, gamma, and theta — not del
 
 ## Supported venues / instruments
 
-| Venue           | Underlying                                  | Strikes / expiries                                     |
-| --------------- | ------------------------------------------- | ------------------------------------------------------ |
-| Deribit         | BTC, ETH                                    | All listed strikes × weekly/monthly/quarterly expiries |
-| CBOE (via IBKR) | SPY, SPX, QQQ                               | All US equity options chains                           |
-| CME             | Options on futures (ES options, CL options) | Dated options on futures                               |
-| OKX options     | BTC, ETH                                    | Smaller universe, alternative venue                    |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 16. VOL_TRADING_OPTIONS`](../category-instrument-coverage.md#16-vol_trading_options)
+for the authoritative venue × underlying × expiry-chain coverage (Deribit BTC/ETH, CBOE via IBKR, CME options-on-
+futures, OKX alternate, NSE India — Oct 2026 go-live).
 
 ## Expression options
 

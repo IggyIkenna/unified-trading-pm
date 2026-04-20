@@ -1,6 +1,6 @@
 {
   "$schema_version": "1.0.0",
-  "$description": "Strategy manifest \u2014 SSOT for all strategy implementations, maturity tracking, and deployment readiness.",
+  "$description": "Strategy manifest — SSOT for all strategy implementations, maturity tracking, and deployment readiness.",
   "strategies": [
     {
       "strategy_id": "CEFI_MOMENTUM_BTC_5M",
@@ -24,7 +24,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -75,7 +75,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -126,7 +126,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -177,7 +177,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -228,7 +228,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -279,7 +279,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -330,7 +330,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -385,7 +385,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -436,7 +436,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -487,7 +487,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -538,7 +538,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -589,7 +589,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -640,7 +640,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -691,7 +691,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -742,7 +742,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -793,7 +793,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -844,7 +844,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -895,7 +895,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -946,7 +946,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -997,7 +997,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1048,7 +1048,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1099,7 +1099,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1150,7 +1150,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1201,7 +1201,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1252,7 +1252,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1303,7 +1303,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1354,7 +1354,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1405,7 +1405,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1456,7 +1456,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1507,7 +1507,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1558,7 +1558,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1609,7 +1609,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1660,7 +1660,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1711,7 +1711,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1762,7 +1762,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1813,7 +1813,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1864,7 +1864,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1915,7 +1915,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -1966,7 +1966,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2017,7 +2017,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2068,7 +2068,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2119,7 +2119,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2170,7 +2170,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2221,7 +2221,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2272,7 +2272,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2323,7 +2323,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2374,7 +2374,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2425,7 +2425,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2476,7 +2476,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2527,7 +2527,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2578,7 +2578,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2629,7 +2629,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2680,7 +2680,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false
@@ -2731,7 +2731,7 @@
       "maturity": {
         "code": {
           "status": "C4",
-          "class_exists": true,
+          "class_exists": false,
           "unit_tests": true,
           "qg_pass": true,
           "merged": false

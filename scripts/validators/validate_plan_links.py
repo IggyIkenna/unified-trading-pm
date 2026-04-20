@@ -13,6 +13,9 @@ import sys
 from pathlib import Path
 from typing import cast
 
+# Prose examples use literal `./...` / `../...` after `[...]` — not real filesystem paths.
+_PLACEHOLDER_TAIL = frozenset({"...", "./...", "../..."})
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -34,6 +37,8 @@ def main() -> int:
         for m in re.finditer(r"\]\(([^)]+)\)", content):
             link = m.group(1).strip()
             if link.startswith("http") or link.startswith("#") or " " in link:
+                continue
+            if link in _PLACEHOLDER_TAIL:
                 continue
             target: Path
             if link.startswith(".cursor/") or link.startswith("deployment-service/"):

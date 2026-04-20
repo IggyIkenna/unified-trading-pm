@@ -61,6 +61,9 @@ Read these before making ANY code changes:
 - Every adapter MUST classify errors through UAC `classify_venue_error()` and emit `ADAPTER_FETCH_FAILED` events
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)` — the message is not a format string
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
+- **Bandit B108 / temp paths** — Never hardcode `"/tmp"` in Python. Use `tempfile.gettempdir()` (POSIX `TMPDIR`, macOS
+  temp under `/var/folders/...`). For disk-usage probes, default to root + `gettempdir()` + `Path.home()` and skip
+  missing paths. SSOT: `unified-trading-pm/codex/06-coding-standards/quality-gates.md` (Bandit B108 section).
 - Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
   `codex/06-coding-standards/cli-convention.md`.
 - **Availability manifest v5 (honest-coverage)** — `ManifestWriter` writes proper shard columns (venue, chain,

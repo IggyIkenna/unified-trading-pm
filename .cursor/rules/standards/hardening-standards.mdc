@@ -17,3 +17,9 @@ RULE: All repos must use `typeCheckingMode: "strict"` in pyrightconfig.json with
 NEVER: `typeCheckingMode: "basic"`; setting real-error rules to `"none"`; `--level warning` in basedpyright invocations
 DO: `run_timeout 120 basedpyright "$SOURCE_DIR/"` — no `--level warning`; let pyrightconfig.json control severity
 CODEX: 06-coding-standards/quality-gates.md#type-checking-standards
+
+RULE: Python must not hardcode `"/tmp"` (Bandit B108). Use `tempfile.gettempdir()` for the OS temp root; use
+`tempfile.mkstemp` / `NamedTemporaryFile` / `TemporaryDirectory` for files. For `shutil.disk_usage` defaults, use
+`( "/", tempfile.gettempdir(), str(Path.home()) )` and skip missing paths — see
+`unified_trading_library.lifecycle.resource_profiler._default_disk_paths`.
+CODEX: 06-coding-standards/quality-gates.md (Bandit B108 section)

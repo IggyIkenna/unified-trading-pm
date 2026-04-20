@@ -1274,7 +1274,8 @@ Timeout: 8-15 minutes for full sequential run. Use timeout >= 30 minutes for CI/
 
 ## Security Gates [IMPLEMENTED — BLOCKING in all repos]
 
-Two security checks run in every `scripts/quality-gates.sh`, both increment `CODEX_VIOLATIONS` on failure.
+pip-audit and internal advisories run in every `scripts/quality-gates.sh`; failures increment `CODEX_VIOLATIONS`. Bandit
+(library repos such as `unified-trading-library`) is documented below.
 
 ### 1. pip-audit — OSS vulnerability scan (BLOCKING)
 
@@ -1316,6 +1317,24 @@ does not fail the build.
 **Env vars:** `GCP_PROJECT_ID`, `SBOM_BUCKET` (default: `uts-sbom-audit`), `SERVICE_NAME`
 
 **Full security docs:** `07-security/dependency-scanning.md`
+
+### 4. Bandit B108 — hardcoded temp paths (Python)
+
+`bandit` runs in library quality gates (see `unified-trading-library`). **B108** flags literals like `"/tmp"` because
+predictable temp paths are a common source of insecure temporary-file patterns.
+
+**Rules:**
+
+- **Never** embed `"/tmp"` (or other fixed temp paths) in Python source for defaults or disk probes.
+- **Do** use `tempfile.gettempdir()` for the OS temp directory root — respects `TMPDIR` on Linux and other Unix, and
+  yields the correct layout on macOS (typically under `/var/folders/...`, not `/tmp`).
+- **Disk usage sampling** (`shutil.disk_usage`): default to root + temp + user home, e.g.
+  `( "/", tempfile.gettempdir(), str(Path.home()) )`, dedupe, then skip paths that do not exist. Do **not** hardcode
+  `"/home"` (Linux-only).
+- **Creating temp files**: use `tempfile.mkstemp`, `tempfile.NamedTemporaryFile`, or `tempfile.TemporaryDirectory` — not
+  string paths under `/tmp`.
+
+**Reference implementation:** `unified_trading_library.lifecycle.resource_profiler._default_disk_paths`.
 
 ---
 

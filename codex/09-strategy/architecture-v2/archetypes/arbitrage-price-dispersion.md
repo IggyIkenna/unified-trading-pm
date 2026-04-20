@@ -56,6 +56,11 @@ in the spread net of costs. Covers:
 5. POST-EXIT STATE: capital returns to idle (typically net-zero exposure + cash profit)
 ```
 
+**Venue × instrument coverage:** See
+[`../category-instrument-coverage.md § 11. ARBITRAGE_PRICE_DISPERSION`](../category-instrument-coverage.md#11-arbitrage_price_dispersion).
+The table below enumerates the execution-mode patterns by scenario — a complement to the coverage matrix, not a
+duplicate.
+
 ## Supported scenarios + execution modes
 
 | Scenario                                                     | Execution mode                          | Notes                                                                  |

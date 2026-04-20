@@ -4,30 +4,32 @@ scope: [sales, admin]
 
 # Pricing Building Blocks — 13-Row Anchor Ranges
 
-> Three columns × thirteen rows, populated with **anchor ranges** aligned to the signals-only pricing table in
-> [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md). Ranges, not point values — these are
-> sales anchors, not finance-signed-off specifics.
+> **Three columns × thirteen rows** of sales anchor ranges, aligned to
+> [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md). Ranges are locked as sales anchors.
+> Point values resolve per engagement.
 >
-> **Internal-cost column: codex-private per
-> [rule 08](../_ssot-rules/08-pricing-principles.md) §Internal cost column is codex-private. Numbers TBD pending Odum
-> finance review.** Cost-column entries stay empty in this doc and never appear in any client-facing quote or demo.
+> **Internal-cost column is codex-private** per [rule 08](../_ssot-rules/08-pricing-principles.md) §Internal cost column
+> is codex-private. Finance populates cost numbers before Q3 2026; cost-column entries remain empty in this doc and
+> never appear in any client-facing quote or demo. The public-facing structure (Tier A / Tier B / modifier blocks) is
+> locked.
 
 **Rule source:** [rule 08 — pricing principles](../_ssot-rules/08-pricing-principles.md)
 
 ## Discipline reminders (rule 08)
 
-Before any number is committed in a quote, the following are non-negotiable:
+Non-negotiable before any number commits to a quote:
 
-- **Internal cost column is codex-private.** Never appears in client-facing docs, quote lines, demo surfaces, or the
-  website. Stays in this codex dir only. Rule 08 enforcement rule 1.
-- **Twelve-month minimum commitment** applies to Tier A and Tier B. Rule 08 enforcement rule 2.
-- **Per-block tier mixability.** A client can be Tier B on some blocks and Tier A on others. Rule 08 enforcement rule 4.
-- **Exclusivity premium (block 12) and custom solution premium (block 13) are Tier-B-only modifiers.** They do not
-  appear without a Tier B base. Rule 08 enforcement rule 3.
-- **No raw data on any tier.** Raw-data-framed line items are rule-07 + rule-08 violations.
-- **Numbers live in one place.** This doc (for DART blocks) plus
-  [`im-profit-share-structures.md`](im-profit-share-structures.md) (for IM mechanics). No shadow pricing sheets.
-  Rule 08 enforcement rule 6.
+- **Internal cost column stays codex-private.** Never in client-facing docs, quote lines, demo surfaces, or the website.
+  Lives in this codex dir only. Rule 08 enforcement rule 1.
+- **Twelve-month minimum commitment** on both Tier A and Tier B. Rule 08 enforcement rule 2.
+- **Per-block tier mixability.** A client runs Tier B on some blocks and Tier A on others within the same contract. Rule
+  08 enforcement rule 4.
+- **Block 12 (exclusivity premium) and block 13 (custom solution premium) are Tier-B-only modifiers.** They never appear
+  without a Tier B base. Rule 08 enforcement rule 3.
+- **No raw data on any tier.** Raw-data-framed line items violate rules 07 and 08.
+- **Numbers live in one place.** This doc (DART blocks) plus
+  [`im-profit-share-structures.md`](im-profit-share-structures.md) (IM mechanics). No shadow pricing sheets. Rule 08
+  enforcement rule 6.
 
 ## The pricing table
 
@@ -35,21 +37,21 @@ Three columns, thirteen rows. Internal column stays codex-private; Tier A is cos
 upfront + fixed monthly. Ranges mirror the signals-only anchor table in
 [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md).
 
-| #   | Block                                  | Internal monthly cost   | Tier A (cost-plus, variable)    | Tier B fixed monthly      | Tier B upfront         |
-| --- | -------------------------------------- | ----------------------- | ------------------------------- | ------------------------- | ---------------------- |
-| 1   | Reporting core                         | codex-private (TBD)     | cost-plus monthly               | £3-5k/mo                  | £10-20k                |
-| 2   | Regulatory umbrella reporting          | codex-private (TBD)     | cost-plus monthly               | £8-15k/mo                 | £20-40k                |
-| 3   | IM allocator reporting                 | codex-private (TBD)     | cost-plus monthly               | £3-6k/mo                  | £10-20k                |
-| 4   | Strategy-service entry                 | codex-private (TBD)     | cost-plus per-tenant-slot       | £0.4-0.8k per strategy/mo | £5-10k                 |
-| 5   | Instructions integration (see depth)   | codex-private (TBD)     | cost-plus per-depth             | £2-20k/mo (by depth)      | £5-15k                 |
-| 6   | Research / promote pipeline            | codex-private (TBD)     | not available on Tier A         | £5-15k/mo bundled credits | £15-30k                |
-| 7   | Execution layer                        | codex-private (TBD)     | cost-plus usage-variable        | £3-6k/mo                  | £10-20k                |
-| 8   | Venue packs (per venue)                | codex-private (TBD)     | cost-plus per venue             | £1-2k per primary / £0.5-1k per marginal | £3-8k per venue |
-| 9   | Chain packs (per chain)                | codex-private (TBD)     | cost-plus per chain             | £0.5-1.5k per chain/mo    | £2-5k per chain        |
-| 10  | Instrument-type packs (per type)       | codex-private (TBD)     | cost-plus per type              | £1-3k per type/mo         | £3-6k per type         |
-| 11  | Analytics packs (per family)           | codex-private (TBD)     | cost-plus per pack              | £0.5-3k per pack/mo       | £2-5k per pack         |
-| 12  | Exclusivity / non-compete premium      | n/a (modifier)          | Not available on Tier A         | 20-200% uplift on Tier B monthly (by IP-power tier) | — |
-| 13  | Custom solution premium                | n/a (modifier)          | Not available on Tier A         | 10-25% of build fee annualised | engineering-hours × loaded cost × 1.5-2× margin |
+| #   | Block                                | Internal monthly cost | Tier A (cost-plus, variable) | Tier B fixed monthly                                | Tier B upfront                                  |
+| --- | ------------------------------------ | --------------------- | ---------------------------- | --------------------------------------------------- | ----------------------------------------------- |
+| 1   | Reporting core                       | codex-private (TBD)   | cost-plus monthly            | £3-5k/mo                                            | £10-20k                                         |
+| 2   | Regulatory umbrella reporting        | codex-private (TBD)   | cost-plus monthly            | £8-15k/mo                                           | £20-40k                                         |
+| 3   | IM allocator reporting               | codex-private (TBD)   | cost-plus monthly            | £3-6k/mo                                            | £10-20k                                         |
+| 4   | Strategy-service entry               | codex-private (TBD)   | cost-plus per-tenant-slot    | £0.4-0.8k per strategy/mo                           | £5-10k                                          |
+| 5   | Instructions integration (see depth) | codex-private (TBD)   | cost-plus per-depth          | £2-20k/mo (by depth)                                | £5-15k                                          |
+| 6   | Research / promote pipeline          | codex-private (TBD)   | not available on Tier A      | £5-15k/mo bundled credits                           | £15-30k                                         |
+| 7   | Execution layer                      | codex-private (TBD)   | cost-plus usage-variable     | £3-6k/mo                                            | £10-20k                                         |
+| 8   | Venue packs (per venue)              | codex-private (TBD)   | cost-plus per venue          | £1-2k per primary / £0.5-1k per marginal            | £3-8k per venue                                 |
+| 9   | Chain packs (per chain)              | codex-private (TBD)   | cost-plus per chain          | £0.5-1.5k per chain/mo                              | £2-5k per chain                                 |
+| 10  | Instrument-type packs (per type)     | codex-private (TBD)   | cost-plus per type           | £1-3k per type/mo                                   | £3-6k per type                                  |
+| 11  | Analytics packs (per family)         | codex-private (TBD)   | cost-plus per pack           | £0.5-3k per pack/mo                                 | £2-5k per pack                                  |
+| 12  | Exclusivity / non-compete premium    | n/a (modifier)        | Not available on Tier A      | 20-200% uplift on Tier B monthly (by IP-power tier) | —                                               |
+| 13  | Custom solution premium              | n/a (modifier)        | Not available on Tier A      | 10-25% of build fee annualised                      | engineering-hours × loaded cost × 1.5-2× margin |
 
 ### Licensing-constraint notes per block
 
@@ -72,17 +74,16 @@ Per [rule 10 §Schema depth as a pricing dimension](../_ssot-rules/10-strategy-i
 05 block 5 description, instruction-schema depth (minimal / standard / rich) shapes the block 5 price. Three sub-lines
 per tier:
 
-| Block 5 depth | Internal            | Tier A                   | Tier B monthly        | Tier B upfront                                            |
-| ------------- | ------------------- | ------------------------ | --------------------- | --------------------------------------------------------- |
-| Minimal       | codex-private (TBD) | cost-plus                | £2-4k/mo              | £5-10k                                                    |
-| Standard      | codex-private (TBD) | cost-plus                | £4-8k/mo              | £8-15k                                                    |
-| Rich          | codex-private (TBD) | cost-plus                | £8-20k/mo             | £10-15k (often with block 13 custom premium layered over) |
+| Block 5 depth | Internal            | Tier A    | Tier B monthly | Tier B upfront                                            |
+| ------------- | ------------------- | --------- | -------------- | --------------------------------------------------------- |
+| Minimal       | codex-private (TBD) | cost-plus | £2-4k/mo       | £5-10k                                                    |
+| Standard      | codex-private (TBD) | cost-plus | £4-8k/mo       | £8-15k                                                    |
+| Rich          | codex-private (TBD) | cost-plus | £8-20k/mo      | £10-15k (often with block 13 custom premium layered over) |
 
 ### Block 12 — exclusivity uplift by IP-power tier
 
-Scaled by strategy scarcity. See
-[`exclusivity-and-noncompete.md`](exclusivity-and-noncompete.md) §IP-power tier anchors for full definitions and worked
-examples.
+Scaled by strategy scarcity. See [`exclusivity-and-noncompete.md`](exclusivity-and-noncompete.md) §IP-power tier anchors
+for full definitions and worked examples.
 
 | IP-power tier                              | Example strategy                                            | Uplift on Tier B monthly |
 | ------------------------------------------ | ----------------------------------------------------------- | ------------------------ |
@@ -103,11 +104,11 @@ concept.
 
 **Recommended pricing model: hybrid (Option 4 in [`signal-leasing.md`](signal-leasing.md)).**
 
-| Component                  | Tier B range                                                     |
-| -------------------------- | ---------------------------------------------------------------- |
-| Floor monthly licence      | £10-20k/mo per counterparty                                      |
-| Per-signal uplift          | £25-100 per signal (high-freq) / £200-500 per signal (sparse)    |
-| Optional P&L share upsell  | 5% of counterparty's signal-attributable P&L (with audit rights) |
+| Component                 | Tier B range                                                     |
+| ------------------------- | ---------------------------------------------------------------- |
+| Floor monthly licence     | £10-20k/mo per counterparty                                      |
+| Per-signal uplift         | £25-100 per signal (high-freq) / £200-500 per signal (sparse)    |
+| Optional P&L share upsell | 5% of counterparty's signal-attributable P&L (with audit rights) |
 
 Alternative models — flat monthly licence, per-signal-only metering, pure rev-share — are documented in
 [`signal-leasing.md`](signal-leasing.md) but the hybrid is recommended as the default commercial offering.
@@ -119,8 +120,7 @@ pointers to the canonical mechanic doc.
 
 ### IM engagement (Odum IM on own strategies) — NOT a block quote
 
-IM is a `(Odum, *)` rule-04 cell; mechanics live in
-[`im-profit-share-structures.md`](im-profit-share-structures.md).
+IM is a `(Odum, *)` rule-04 cell; mechanics live in [`im-profit-share-structures.md`](im-profit-share-structures.md).
 
 - **No management fee** on allocated capital.
 - **30-35% performance-share band** (30% commoditised, 35% specialised).
@@ -138,8 +138,8 @@ Unique mechanic — not covered by any Tier A/B row. Applies to the CME S&P ML m
 - **70% of profits / 10% of losses** to Odum. Rationale: Odum brings the strategy IP; client brings most of the capital.
 - Skin-scaling (flat $50k vs pro-rata) confirmed as **flat $50k year-1** default; see
   [`im-profit-share-structures.md`](im-profit-share-structures.md) §Scaling the skin-in-the-game.
-- Fallback if client rejects the 70/10 asymmetry in negotiation: flat 10%-pari-passu (Odum share drops 70→10%).
-  Document in contracting notes.
+- Fallback if client rejects the 70/10 asymmetry in negotiation: flat 10%-pari-passu (Odum share drops 70→10%). Document
+  in contracting notes.
 
 ### India Options special structure ($100k onboarding + standard perf-share)
 

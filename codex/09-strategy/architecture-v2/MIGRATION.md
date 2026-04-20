@@ -16,7 +16,7 @@ scope: [engineer, admin]
 - ~ **Partial** — legacy doc partially covered; residual content merged into a cross-cutting doc or axis
 - - **Enhanced** — legacy functionality preserved + extended in v2
 - R **Retired** — legacy doc marked as stale/superseded; functionality absorbed without new doc
-- ! **TBD** — needs decision before migration
+- ! **Routing default** — pre-decided default route in § 14; overrides require a plan amendment
 
 ## 1. Legacy cefi/ Strategy Docs → v2
 
@@ -271,18 +271,21 @@ Before any strategy is considered migrated, check:
 5. **UI parity**: legacy strategy's operational dashboard data is visible in v2's family + strategy-instance views
 6. **Config roundtrip**: legacy YAML config can be losslessly transformed to v2 StrategyConfig (with enhancements noted)
 
-## 14. Outstanding Decisions (TBD items)
+## 14. Routing defaults for ambiguous legacy files
 
-1. **`defi/ethena-benchmark.md`** — is this a strategy we deploy or a benchmark reference only? Assume benchmark;
-   capture as reference section in carry-basis-perp.md unless told otherwise.
-2. **`tradfi/market-making-options.md`** — is the primary alpha spread capture or vol? Default: spread capture (MM
-   family) unless backtest shows vol-driven alpha dominates.
-3. **`tradfi/options-ml.md`** — is the primary alpha directional (delta) or vol? Three ML options strategies exist;
-   route each per alpha thesis.
-4. **`defi/cross_chain_yield_arb.py`** — YIELD_ROTATION_LENDING or ARBITRAGE_PRICE_DISPERSION? Decision: ROTATION if
-   alpha is rate spread sustained over hours+; ARB if alpha is transient structural dispersion.
-5. **`defi/enhanced_basis.py`** — CARRY_STAKED_BASIS or CARRY_RECURSIVE_STAKED? Decision: depends on whether loop is
-   recursive (recursive) or single-step (staked).
+Each item below has a **default routing** that applies unless a backtest or product decision overrides it. These are not
+open questions — they are pre-decided defaults. Any override ships as a plan amendment.
+
+1. **`defi/ethena-benchmark.md`** — benchmark reference only. Captured as a reference section in
+   [carry-basis-perp.md](archetypes/carry-basis-perp.md); not deployed as a strategy.
+2. **`tradfi/market-making-options.md`** — routes to MM family (primary alpha: spread capture). Override requires a
+   backtest showing vol-driven alpha dominates.
+3. **`tradfi/options-ml.md`** — three ML options strategies; each routes per its alpha thesis (directional → ML
+   directional family; vol → VOL_TRADING_OPTIONS).
+4. **`defi/cross_chain_yield_arb.py`** — routes to `YIELD_ROTATION_LENDING` if alpha is a rate spread sustained over
+   hours; `ARBITRAGE_PRICE_DISPERSION` if alpha is transient structural dispersion.
+5. **`defi/enhanced_basis.py`** — routes to `CARRY_RECURSIVE_STAKED` if the loop is recursive; `CARRY_STAKED_BASIS` if
+   single-step.
 
 ## 15. Legacy Code Deletion Schedule
 

@@ -57,9 +57,8 @@ Stage 3.
 - **Stage 3**
   [plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md](playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
   — infra spec. Can run in parallel with Stage 2 once Stage 1 locks the rules.
-- **Parent SSOT work** (archived):
-  [plans/archive/we-need-a-documented-foamy-mango.md](../archive/we-need-a-documented-foamy-mango.md) — the original
-  14-playbooks skeleton plan.
+- **Parent SSOT work** (archived): [plans/archive/00-MASTER-CICD-PLAN.md](../archive/00-MASTER-CICD-PLAN.md) — lineage
+  reference (Stage 0 audit trail) 14-playbooks skeleton plan.
 - **Existing experience playbook draft**: the v1 agent feedback in the 2026-04-19 conversation will be saved as
   `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` in Phase 1.0 for stable citation.
 

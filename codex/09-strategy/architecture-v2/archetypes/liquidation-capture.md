@@ -51,13 +51,10 @@ by the lending protocol for cleaning up unhealthy positions.
 
 ## Supported protocols
 
-| Protocol    | Chains                                                 | Liquidation bonus (typical) | Notes                           |
-| ----------- | ------------------------------------------------------ | --------------------------- | ------------------------------- |
-| Aave V3     | Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Base | 5-10% per asset             | Primary target                  |
-| Compound V3 | Ethereum                                               | 5-8%                        |                                 |
-| Euler       | Ethereum                                               | Similar                     | Focus on risk-segmented markets |
-| Morpho      | Ethereum                                               | Similar                     |                                 |
-| Kamino      | Solana                                                 | 5-10%                       | Solana-native                   |
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 12. LIQUIDATION_CAPTURE`](../category-instrument-coverage.md#12-liquidation_capture)
+for the authoritative protocol × chain × liquidation-bonus table (Aave V3 on six chains, Compound V3, Euler, Morpho,
+Kamino).
 
 ## Config schema
 

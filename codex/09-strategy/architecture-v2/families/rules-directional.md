@@ -118,14 +118,15 @@ The Rules Directional family engine provides:
 - **Continuous**: spot, perp, dated future, options (directional expression)
 - **Event-settled**: bet on outcome
 
-Rules strategies often use simpler expressions than ML (spot / perp) but the framework supports all expressions
-available to the archetype.
+Rules strategies default to simpler expressions (spot / perp); the framework supports every expression available to the
+archetype.
 
 ## Risk profile
 
-- **Drawdowns**: comparable to ML Directional but often more interpretable (when rule stops working, you can see which
-  rule is failing and retire it)
-- **Sharpe**: lower than best ML strategies (0.5-1.5 typical) but often more stable
+- **Drawdowns**: comparable to ML Directional; interpretability is the structural advantage — when a rule stops working
+  the failing rule is identifiable and retirable
+- **Sharpe**: 0.5–1.5. Lower ceiling than best ML strategies; stability is higher because rule-level hit-rate monitoring
+  auto-retires stale rules
 - **Kill switches**: same as ML Directional (rapid price move, venue outage)
 - **Concentration**: managed via per-rule max-position + per-family gross exposure
 

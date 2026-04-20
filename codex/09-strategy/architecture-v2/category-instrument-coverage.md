@@ -118,14 +118,14 @@ paths; they are only distinguished by venue.
 - `vN` — optional slot version suffix for material dependency changes (model family swap, venue swap).
 - `env` — `prod`, `uat`, `paper`, `shadow`.
 
-All examples below use `prod` — in practice we launch to `shadow` → `uat` → `paper` → `prod`.
+All examples below use `prod`. Launch sequence for every strategy: `shadow` → `uat` → `paper` → `prod`.
 
 ### Dated-future rolls and representative futures
 
 Most strategies that touch `dated_future` instruments (ML directional on CME ES, stat-arb on calendar spreads, basis
-trades on Deribit BTC-dated) want to trade the **continuous underlying**, not a specific expiry contract. The strategy
-should roll from ESZ5 to ESH6 automatically once ESH6 becomes the more liquid contract, not hold ESZ5 to expiry. This is
-a cross-cutting capability, not something each archetype re-implements.
+trades on Deribit BTC-dated) trade the **continuous underlying**, not a specific expiry contract. The strategy rolls
+from ESZ5 to ESH6 automatically once ESH6 becomes the more liquid contract — it does not hold ESZ5 to expiry. This is a
+cross-cutting capability; archetypes do not re-implement it.
 
 #### Continuous-underlying concept
 
@@ -203,7 +203,7 @@ depth, declared in a named feature group with a stable contract).
   anchored on a specific expiry week).
 
 Absence of both `-dated-` and `-fixed-` in an existing short-form label (e.g. `cme-es-nq-zscore`) implies rolling
-continuous semantics by default — but new labels should be explicit.
+continuous semantics by default. New labels must be explicit.
 
 #### Affected archetypes
 
@@ -407,7 +407,7 @@ ML_DIRECTIONAL_EVENT_SETTLED@unity-epl-first-half-1x2-usd-prod
 > `strategy_service/engine/strategies/v2/rules_directional/continuous.py`.
 
 Explicit if-else rules on features (TA indicators, thresholds, z-scores) producing fire / no-fire signals. No ML model
-dependency. Useful when interpretability trumps predictive power (regulatory, research sandbox, fast iteration).
+dependency. Used where interpretability outranks predictive power (regulatory, research sandbox, fast iteration).
 
 #### Coverage
 

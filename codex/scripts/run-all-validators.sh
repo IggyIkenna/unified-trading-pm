@@ -19,10 +19,33 @@ run_pm_validators() {
 }
 
 main() {
-    local category="${1:-all}"
+    # base-service.sh / base-library.sh call:
+    #   run-all-validators.sh --category all --failed-only
+    # Historically also:  run-all-validators.sh all
+    local category="all"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --category)
+                category="${2:-all}"
+                shift 2
+                ;;
+            --failed-only)
+                # informational flag for parity with historical CI wiring
+                shift
+                ;;
+            all | checklist | manifest)
+                category="$1"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
     case "$category" in
         all) run_pm_validators all ;;
-        *) run_pm_validators "$category" ;;
+        checklist | manifest) run_pm_validators "$category" ;;
+        *) run_pm_validators all ;;
     esac
 }
 

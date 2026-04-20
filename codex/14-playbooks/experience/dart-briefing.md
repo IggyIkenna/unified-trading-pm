@@ -26,13 +26,13 @@ to let the prospect self-sort along that axis; the second is to show what each p
 
 ## What Odum must prove
 
-- DART is the same set of services Odum uses internally, not a commercial wrapper built on top.
-- The two axes (strategy origin × stack depth) resolve to three practical paths, and the prospect's situation lands
-  cleanly on one of them.
-- Signals-only integration has a fixed, published schema. The prospect's upstream either fits it or does not — that
-  decision is theirs to make, before a demo.
+- DART runs on the same services Odum operates internally (see
+  [same-system-principle.md](../shared-core/same-system-principle.md)).
+- The prospect's situation lands on one of three practical paths
+  ([strategy-origin-vs-stack-depth.md](../shared-core/strategy-origin-vs-stack-depth.md)).
+- Signals-only integration has a fixed, published schema. The prospect's upstream either fits it or does not.
 - Research, promote, paper, and live are phase views of one system, not separate products.
-- Pricing and demo scope follow from the resolved path; the prospect is not pricing ambiguity.
+- Pricing and demo scope follow from the resolved path.
 
 ## Experience goal
 
@@ -42,36 +42,27 @@ use, not to re-explore the shape.
 
 ## Walkthrough
 
-The briefing opens with the DART rule-09 expansion. DART is the set of services Odum uses to build, research, promote,
-execute, and monitor its own systematic strategies, packaged for client use. Clients who operate their own strategies
-plug their signals into Odum's execution and reporting stack; clients who want the deeper pipeline use the research and
-promote layer on the same components. The briefing's frame is that the underlying system is one, and the commercial path
-picks which surfaces the client touches.
+The briefing opens with the DART rule-09 expansion. Full expansion and path definitions live in
+[`../commercial-model/dart-entry-points.md`](../commercial-model/dart-entry-points.md). Inline summary: DART is Odum's
+internal operating system for strategy, execution, and monitoring, packaged for client use — signals-only clients plug
+upstream signals into the downstream stack; full-pipeline clients use research and promote on the same components.
 
-The second section is the fit-check. See "Does DART fit you?" below — four sub-sections that let the prospect decide
-whether they are a signals-only candidate, a full-pipeline candidate, or neither, before a demo is scheduled.
+The second section is the fit-check. See "Does DART fit you?" below — four sub-sections that let the prospect self-sort
+before a demo is scheduled.
 
-The third section is the strategy catalogue. The briefing shows the catalogue surface — one row per slot, with maturity,
-phase, and venue metadata. See [rule 03](../_ssot-rules/03-same-system-principle.md): research, paper, and live are
-phase toggles over the same catalogue, not separate catalogues. Maturity (CODE_AUDITED → BACKTESTED → PAPER → LIVE_TINY
-→ LIVE_ALLOCATED) is orthogonal to phase. The reader understands that a LIVE_ALLOCATED slot can be pulled into research
-phase when a researcher re-runs it over a new regime window; they also understand that pre-BACKTESTED slots are not
-visible externally.
+The third section is the strategy catalogue. One row per slot, with maturity, phase, and venue metadata. Research,
+paper, and live are phase toggles over one catalogue (see
+[`../shared-core/same-system-principle.md`](../shared-core/same-system-principle.md)). Pre-BACKTESTED maturity is hidden
+externally.
 
-The fourth section is the research, promote, and execution loop. Full-pipeline clients use research to interrogate
-historical data, promote candidates through paper to live, and trade on the execution layer. Signals-only clients do not
-receive the research and promote pipeline ([rule 04](../_ssot-rules/04-dart-commercial-axes.md) enforcement); they send
-instructions in and use execution, reporting, and reconciliation. The briefing names both paths and shows where they
-diverge.
+The fourth section is the research, promote, and execution loop. Full-pipeline clients use all three. Signals-only
+clients use execution, reporting, and reconciliation only — block 6 (research / promote) is excluded per rule 04.
 
-The fifth section is commitment and structure. Minimum engagement is twelve months. Venue packs, chain packs, and
-instrument-type packs scope per client; a signals-only client buying three venues, two chains, and two instrument types
-is a normal engagement shape. Pricing is per block, mixable across tiers. Numbers live in the second call.
+The fifth section is commitment and structure. Twelve-month minimum engagement. Venue, chain, and instrument-type packs
+scope per client. Pricing per block, tier-mixable. Numbers land on the second call.
 
-The briefing closes with the second-call hook: a forty-five-minute session with DART sales. If the fit-check resolved
-signals-only, the session walks the instruction-schema contract against the prospect's upstream and covers execution,
-reconciliation, and reporting scope. If the fit-check resolved full-pipeline, the session walks the research surface
-against one of the prospect's strategy candidates and covers promotion through to live.
+The briefing closes with the second-call hook: a forty-five-minute session with DART sales, agenda set by the resolved
+path.
 
 ### Does DART fit you?
 
@@ -119,25 +110,20 @@ The client's strategic edge stays on the client's side of the fence. Signals-onl
 
 #### Signals-only versus full DART
 
-| Dimension                                  | Signals-only `(Client, downstream)`                | Full DART `(Client, full-pipeline)`                                       |
-| ------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------- |
-| Who generates signals                      | Client upstream                                    | Client builds on DART research                                            |
-| Research / backtest surface                | Not included (rule 04 enforcement; block 6 out)    | Included, metered or bundled-credits packaging                            |
-| Promote pipeline (backtest → paper → live) | Not included                                       | Included                                                                  |
-| Execution layer                            | Included                                           | Included                                                                  |
-| Venue / chain / instrument packs           | Scoped to client's flow                            | Scoped to client's flow                                                   |
-| Reconciliation + reporting                 | Included                                           | Included                                                                  |
-| Analytics packs on client's own flow       | Optional                                           | Optional                                                                  |
-| Cross-strategy research analytics          | Not included                                       | Included                                                                  |
-| Pricing model                              | Scope-fixed Tier B (block-based, no metering)      | Fixed-access layer + per-backtest metering + IP-power exclusivity tiers   |
-| Research access                            | Not included (block 6 excluded per rule 04)        | Included, metered or bundled-credits packaging                            |
-| Exclusivity                                | Limited / none typical                             | Available per IP-power tier uplift (commodity → uniquely-differentiated)  |
+The full signals-only-vs-full-DART comparison matrix lives in
+[`../shared-core/strategy-origin-vs-stack-depth.md § Three practical paths`](../shared-core/strategy-origin-vs-stack-depth.md#three-practical-paths).
+Headline differences:
 
-See [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md) for the full dimensional pricing model
-and worked examples on both paths.
+- **Research / promote pipeline (block 6):** full DART only. Signals-only is excluded per rule 04.
+- **Execution, reporting, reconciliation:** both paths.
+- **Pricing model:** signals-only is scope-fixed Tier B, block-based. Full DART adds per-backtest metering and IP-power
+  exclusivity tiers.
+- **Cross-strategy research analytics:** full DART only.
 
-The upgrade path from signals-only to full DART is a formal commercial event (rule 04), not a bolt-on. A prospect who
-expects to need research and promote within the engagement should resolve to full DART now.
+Pricing detail: [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md).
+
+The upgrade from signals-only to full DART is a commercial event (rule 04), not a bolt-on. Prospects expecting research
+access should resolve to full DART now.
 
 ## Key messages
 

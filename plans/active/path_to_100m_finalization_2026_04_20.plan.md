@@ -336,7 +336,8 @@ commits larger than ~15 files.
 
 1. **File count per dir check**: `ls codex/14-playbooks/commercial-model/*.md` = 9, `shared-core/` = 10, `experience/` =
    11, `demo-ops/` = 10.
-2. **Link resolution**: every `[...](./...)` or `[...](../...)` link resolves to existing file.
+2. **Link resolution**: every Markdown link with a `./` or `../` relative target resolves to an existing file (no broken
+   relative links).
 3. **Rule 01 grammar preserved**: every `experience/*.md` still has all 9 rule-01 sections.
 4. **Rule 06 / IM_RESERVED consistency**: the 5 cell identifiers appear identically in all four canonical locations
    (codex playbook, codex strategy-v2, UI availability.ts, UI mock fixtures).

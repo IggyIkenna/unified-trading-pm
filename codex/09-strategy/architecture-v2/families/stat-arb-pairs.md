@@ -119,7 +119,8 @@ etc.).
   - Cointegration structural break (rare but severe; e.g., M&A on one of the pair members)
   - Liquidity asymmetry (one leg can't be closed without large slippage)
   - Factor reversal (in cross-sectional, factor regime change)
-- **Sharpe**: typically 1.0-2.5 for well-run stat arb
+- **Sharpe (well-run stat arb)**: 1.0–2.5. Structural-break events (cointegration failure) produce the tail and warrant
+  p-value kill switches.
 - **Kill switches**: cointegration p-value breach (relationship broken), one-leg liquidity collapse, extreme z-score
   without reversion after hold period
 

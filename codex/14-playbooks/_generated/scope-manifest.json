@@ -666,10 +666,7 @@
     "codex/README.md",
     "codex/validators/QUICK_REFERENCE.md"
   ],
-  "investor": [
-    "codex/14-playbooks/glossary.md",
-    "codex/14-playbooks/presentations/target-experience-post-refactor.md"
-  ],
+  "investor": ["codex/14-playbooks/glossary.md", "codex/14-playbooks/presentations/target-experience-post-refactor.md"],
   "prospect": [
     "codex/14-playbooks/experience/README.md",
     "codex/14-playbooks/experience/TEMPLATE.md",

@@ -115,7 +115,8 @@ This family covers:
   - Informed flow burst (adverse selection spike)
   - Venue outage mid-inventory (can't exit / hedge)
   - Competitor tighter spread (our fills drop to zero; no alpha until we adjust)
-- **Sharpe**: typically very high (2-5) in normal regimes; occasionally negative in blow-up regimes
+- **Sharpe (normal regime)**: 2–5. Sharpe turns negative in blow-up regimes; kill switches are what keep the tail from
+  dominating the distribution.
 - **Kill switches**: price move > N × recent ATR (e.g., 5× 1h ATR), spread blow-out (exchange book goes wide
   unexpectedly), inventory breach, latency spike, venue outage
 

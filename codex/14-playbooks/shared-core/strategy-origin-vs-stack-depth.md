@@ -40,14 +40,14 @@ Client strategy origin  │ [Rare]              │ [DART signals-only]        �
 
 ## Cell-by-cell resolution
 
-| Cell                       | Practical path                           | Commercial home                                                                                      |
-| -------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `(Odum, reporting-only)`   | Route to IM or Reg Umbrella              | [pb2a](../experience/im-decision-journey.md) / [pb2c](../experience/regulatory-umbrella-briefing.md) |
-| `(Odum, downstream-only)`  | Rare; usually collapses to full-pipeline | Escalate to leadership; default to `(Odum, full)`                                                    |
-| `(Odum, full-pipeline)`    | DART client with Odum strategy exposure  | Full DART pricing + Odum strategy premium                                                            |
-| `(Client, reporting-only)` | Rare; usually Reg Umbrella               | Route to Reg Umbrella                                                                                |
-| `(Client, downstream)`     | Signals-only DART                        | [pb2b](../experience/dart-briefing.md) signals-only path; rule 10 fit-check                          |
-| `(Client, full-pipeline)`  | Full DART build-and-run                  | [pb2b](../experience/dart-briefing.md) full path                                                     |
+| Cell                       | Practical path                          | Commercial home                                                                                      |
+| -------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `(Odum, reporting-only)`   | Route to IM or Reg Umbrella             | [pb2a](../experience/im-decision-journey.md) / [pb2c](../experience/regulatory-umbrella-briefing.md) |
+| `(Odum, downstream-only)`  | Rare; collapses to full-pipeline        | Escalate to leadership; default route `(Odum, full)`                                                 |
+| `(Odum, full-pipeline)`    | DART client with Odum strategy exposure | Full DART pricing + Odum strategy premium                                                            |
+| `(Client, reporting-only)` | Rare; routes to Reg Umbrella            | Route to Reg Umbrella                                                                                |
+| `(Client, downstream)`     | Signals-only DART                       | [pb2b](../experience/dart-briefing.md) signals-only path; rule 10 fit-check                          |
+| `(Client, full-pipeline)`  | Full DART build-and-run                 | [pb2b](../experience/dart-briefing.md) full path                                                     |
 
 ## Three practical paths that sell
 
@@ -118,64 +118,66 @@ the Odum-strategy exposure priced on top.
 
 ## Worked examples — 2026 concrete client mix
 
-These are the five actual 2026 engagements the commercial stack is built around. Each example names the cell,
-commercial home, and cross-references the pricing mechanic for that engagement.
+These are the five actual 2026 engagements the commercial stack is built around. Each example names the cell, commercial
+home, and cross-references the pricing mechanic for that engagement.
 
 ### Example — CME S&P (Sept 2026, `(Odum, full-pipeline)`, IM co-invest)
 
 **Situation:** Odum trades its own S&P ML directional strategy on CME dated futures. The client allocates $500k and
-ramps toward $5M over year-1. Odum commits $50k skin-in-the-game alongside the client's capital. Because Odum brings
-the strategy IP on an asymmetric basis, the commercial split is **70% of profits / 10% of losses** to Odum.
+ramps toward $5M over year-1. Odum commits $50k skin-in-the-game alongside the client's capital. Because Odum brings the
+strategy IP on an asymmetric basis, the commercial split is **70% of profits / 10% of losses** to Odum.
 
 **Axis resolution:** Strategy origin = Odum; stack depth = full-pipeline. IM engagement, NOT DART.
 
 **Cell:** `(Odum, full-pipeline)` → IM co-invest (asymmetric).
 
-**Commercial home:** [`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md)
-§CME co-investment structure (asymmetric). Skin scaling TBD (S1 flat / S2 pro-rata / S3 reduced) at contracting.
+**Commercial home:**
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) §CME
+co-investment structure (asymmetric). Skin scaling resolves per engagement: S1 flat / S2 pro-rata / S3 reduced,
+confirmed at contracting.
 
 ### Example — India Options (Oct 2026, `(Odum, full-pipeline)`)
 
 **Situation:** Odum trades NSE options for deltas (not vol) for convex payouts. $100k upfront onboarding covers the
 new-venue integration (NSE options adapter, clearing, margin). Ongoing is standard 30-35% performance-share +
-platform-fee client-choice, same framework as BTC ML. Allocation $5-10M expected year-1. **Gated** on the S&P ML
-signal shipping first — India engagement does not unlock without the preceding signal proving out.
+platform-fee client-choice, same framework as BTC ML. Allocation $5-10M expected year-1. **Gated** on the S&P ML signal
+shipping first — India engagement does not unlock without the preceding signal proving out.
 
 **Axis resolution:** Strategy origin = Odum; stack depth = full-pipeline. IM engagement, NOT DART.
 
 **Cell:** `(Odum, full-pipeline)` → standard IM pricing + $100k onboarding.
 
-**Commercial home:** [`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md)
-§India Options.
+**Commercial home:**
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) §India Options.
 
 ### Example — Elysium Phase A (Jun 2026, `(Client, downstream)` signals-only DART)
 
 **Situation:** Elysium runs a DeFi staked-basis yield strategy on their own $500k allocation. They bring the signals;
-Odum runs the downstream stack (execution, terminal, monitoring, reconciliation, scoped analytics). Phase A is paid
-as a conservative fixed-total onboarding package of ~$125k covering signals-only DART block composition.
+Odum runs the downstream stack (execution, terminal, monitoring, reconciliation, scoped analytics). Phase A is paid as a
+conservative fixed-total onboarding package of ~$125k covering signals-only DART block composition.
 
 **Axis resolution:** Strategy origin = client; stack depth = downstream integration.
 
 **Cell:** `(Client, downstream)` → signals-only DART.
 
-**Phase B upsell:** once their own $5-10M client allocation is wired in, ongoing scales to ~$90k/yr recurring on
-their Tier B block usage.
+**Phase B upsell:** once their own $5-10M client allocation is wired in, ongoing scales to ~$90k/yr recurring on their
+Tier B block usage.
 
 **Commercial home:** [`../commercial-model/dart-entry-points.md`](../commercial-model/dart-entry-points.md) +
 [`../commercial-model/pricing-building-blocks.md`](../commercial-model/pricing-building-blocks.md).
 
 ### Example — Desmond (May 2026 earliest, `(Client, downstream)` + Reg Umbrella hybrid)
 
-**Situation:** Desmond runs a perp-funding-arb strategy with his own signals (commodity alpha, no exclusivity
-premium). Combined engagement: Reg Umbrella cover for his regulated activity **AND** DART signals-only for
-execution, reconciliation, and reporting on the same underlying Odum infrastructure. Two commercial shapes, shared
-blocks. Commercials: **£25-50k upfront** (worst / best case) + **~£22k/mo** ongoing (Reg Umbrella ~£12k/mo + DART
-signals-only ~£10k/mo).
+**Situation:** Desmond runs a perp-funding-arb strategy with his own signals (commodity alpha, no exclusivity premium).
+Combined engagement: Reg Umbrella cover for his regulated activity **AND** DART signals-only for execution,
+reconciliation, and reporting on the same underlying Odum infrastructure. Two commercial shapes, shared blocks.
+Commercials: **£25-50k upfront** (worst / best case) + **~£22k/mo** ongoing (Reg Umbrella ~£12k/mo + DART signals-only
+~£10k/mo).
 
 **Axis resolution:** Strategy origin = client; stack depth = downstream integration. Paired with Reg Umbrella cover.
 
-**Cell:** `(Client, downstream)` + Reg Umbrella composition (two-engagement hybrid per the edge-case rule at the top
-of this doc).
+**Cell:** `(Client, downstream)` + Reg Umbrella composition (two-engagement hybrid per the edge-case rule at the top of
+this doc).
 
 **Commercial home:** [`../commercial-model/dart-entry-points.md`](../commercial-model/dart-entry-points.md) +
 [`../experience/regulatory-umbrella-briefing.md`](../experience/regulatory-umbrella-briefing.md).
@@ -190,8 +192,9 @@ operate. Odum acts as allocator, not strategy operator. Revenue: 20% × 5% annua
 
 **Cell:** None. Surfaced only in `client-reporting` for the specific wrapper mandate.
 
-**Commercial home:** [`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md)
-§BTC Fund of Funds wrapper. Rule 07 data-licensing does **not** apply (no Odum strategy IP involved).
+**Commercial home:**
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) §BTC Fund of
+Funds wrapper. Rule 07 data-licensing does **not** apply (no Odum strategy IP involved).
 
 ## Mapping to demo restriction profiles
 

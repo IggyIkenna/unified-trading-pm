@@ -71,11 +71,9 @@ rules:
 
 ## Supported venues + instrument types
 
-- TradFi equities (IBKR → NYSE/NASDAQ)
-- TradFi futures (CME ES, NQ, CL, GC, 6E)
-- TradFi FX (IBKR FX spot)
-- CeFi crypto (Binance, OKX, Bybit, Hyperliquid)
-- DeFi perps (GMX, Drift)
+**Coverage matrix:** See
+[`../category-instrument-coverage.md § 3. RULES_DIRECTIONAL_CONTINUOUS`](../category-instrument-coverage.md#3-rules_directional_continuous)
+for the authoritative TradFi / CeFi / DeFi venue × instrument coverage.
 
 ## Expression options
 

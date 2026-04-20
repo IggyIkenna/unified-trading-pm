@@ -49,16 +49,17 @@ Deep-briefing content covering:
 
 ## Content source
 
-- Currently: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts)
-- Long-term: consider moving to structured codex with transclusion from [02a-research-im.md] itself → CMS pattern
+- Current: [lib/briefings/content.ts](unified-trading-system-ui/lib/briefings/content.ts)
+- Target: structured codex with transclusion from this doc. CMS pattern tracked in
+  [../roadmap/next-waves.md](../roadmap/next-waves.md).
 
 ## Visibility slicing
 
-pb2a is within the briefings gate. No further slicing — once through the gate, prospect sees full IM briefing.
+pb2a sits inside the briefings gate. No further slicing — once through the gate, the prospect sees the full IM briefing.
 
 ## Related codex references
 
-The IM briefing should transclude or reference (not duplicate):
+The IM briefing transcludes or references (never duplicates):
 
 - [../../09-strategy/architecture-v2/README.md](../../09-strategy/architecture-v2/README.md) — strategy taxonomy
 - [../../04-architecture/share-class-architecture.md](../../04-architecture/share-class-architecture.md) — share class /
@@ -71,9 +72,8 @@ The IM briefing should transclude or reference (not duplicate):
 
 ## IR presentations surfaced here
 
-The `/investor-relations/investment-presentation` page (currently orphan) is a natural **promote** candidate for pb2a —
-lift those slides into the briefings section or link out. Decision in
-[../page-triage/triage-matrix.md](../page-triage/triage-matrix.md).
+`/investor-relations/investment-presentation` promotes into pb2a: slides lift into the briefings section or link out.
+See [../page-triage/triage-matrix.md](../page-triage/triage-matrix.md).
 
 ## Test coverage
 

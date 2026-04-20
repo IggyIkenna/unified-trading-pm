@@ -57,10 +57,10 @@ The third surface is the supervisory-artifact index. Quarterly compliance report
 attestations — the prospect sees the shape of what they will receive as part of the operating relationship with Odum,
 not the internal workbooks that produce them (those are rule-06 HIDDEN-ENTIRELY).
 
-The fourth is the shared reporting walkthrough. Positions, exposures, P&L, reconciliation — the same components IM and
-DART clients use, on the Umbrella firm's view. The walkthrough detail is in
-[`../shared-core/client-reporting-demo-walkthrough.md`](../shared-core/client-reporting-demo-walkthrough.md); the pb3a
-overlay names that this is the core reporting surface and emphasises the entitlement-filtered same-system framing.
+The fourth is the shared reporting walkthrough — positions, exposures, P&L, reconciliation — per
+[`../shared-core/client-reporting-demo-walkthrough.md`](../shared-core/client-reporting-demo-walkthrough.md).
+Reg-specific frame: the Umbrella firm's Pooled/SMA structural choice drives accounting and reporting setup, not which
+features exist.
 
 The session closes with the onboarding-path recap. Five workstreams (legal, compliance, MLRO, venue, reporting) and
 their Odum owners. The next commitment is the onboarding kickoff date, not another demo.

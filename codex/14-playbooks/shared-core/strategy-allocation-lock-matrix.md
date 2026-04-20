@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Strategy Allocation Lock Matrix — Current Snapshot
 
 > Concrete snapshot (dated 2026-04-20) of which strategy cells are IM_RESERVED (hidden from DART prospects) vs PUBLIC

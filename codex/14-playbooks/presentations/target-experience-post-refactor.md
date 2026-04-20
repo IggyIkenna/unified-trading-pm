@@ -1,9 +1,26 @@
 ---
 scope: [engineer, admin, investor]
+doc_kind: presentation
+status: derivative
+ssot_for: none
+reads_from: [_ssot-rules, experience, shared-core, commercial-model, demo-ops, infra-spec]
 ---
 
 # Target-experience presentation — post-refactor view
 
+> **This doc is a presentation, not a SSOT.** Every claim here is sourced from a numbered rule file, an experience
+> playbook, a shared-core implementation map, a commercial-model doc, a demo-ops doc, or an infra-spec output. Edits to
+> policy belong in the source file, not here — this deck regenerates from those sources.
+>
+> Doc shape: 23 slides, grouped by role:
+>
+> - **Slides 1–9**: doctrine (rules 01–11, commercial axes, building blocks, same-system principle). Source:
+>   `_ssot-rules/`, `shared-core/`, `commercial-model/`.
+> - **Slide 10**: page-triage state. Source: `page-triage/triage-matrix.md`.
+> - **Slides 11–14**: walkthrough screenshots. Source: `experience/` + staging Playwright runs.
+> - **Slide 15**: rule 09 one-liner expansions. Source: `_ssot-rules/09-internal-commercial-oneliners.md`.
+> - **Slides 16–23**: Stage 3E roadmap + G1 amendment details. Source: `infra-spec/stage-3e-refactor-plan.md`.
+>
 > **Version:** v2 — 2026-04-20, post 14-item G1 amendment.
 >
 > 23-slide deck generated from Stage 3 infra spec (16 original slides + 7 new slides for G1.10 / G1.11 / G1.12 / G1.13 /
@@ -643,7 +660,7 @@ Rule 02 voice throughout: present tense, specific over evocative, no adverbs, no
 
 ---
 
-## Slide 16 — Next steps: which Stage 3E item unlocks which playbook
+## Slide 16 — Stage 3E unlock dependencies per playbook
 
 Every experience playbook depends on a subset of Stage 3E refactor items. Shipping the G1 **fourteen** unlocks
 operational truth for every pb1 / pb2 / pb3 playbook.

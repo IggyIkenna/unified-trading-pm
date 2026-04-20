@@ -213,16 +213,26 @@ if [ "$RUN_TESTS" = true ]; then
         [ "$(find tests/integration -name 'test_*.py' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ] && \
         _HAS_INTEGRATION=true
 
+    # Stream pytest output to a temp file instead of capturing it into a bash
+    # variable. Large stderr (failing hypothesis traces, leaked blobs) can blow
+    # bash's allocator (xrealloc: cannot allocate … bytes) when stuffed into RAM.
+    _pytest_log="$(mktemp "${TMPDIR:-/tmp}/qg-pytest-out.XXXXXX")" || exit 1
+    trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
+
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
-            || { echo "$_pytest_out"; exit 1; }
+        if ! $PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+            cat "$_pytest_log"
+            exit 1
+        fi
         # Remind: when RUN_INTEGRATION=true but no integration tests exist yet, nudge author.
         if [ "$RUN_INTEGRATION" = "true" ] && [ "$_HAS_INTEGRATION" = false ] && [ "$QUICK_MODE" != true ]; then
             log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
         fi
     else
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
-            || { echo "$_pytest_out"; exit 1; }
+        if ! $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+            cat "$_pytest_log"
+            exit 1
+        fi
     fi
     log_ok "Tests PASSED"
 
@@ -238,8 +248,10 @@ if [ "$RUN_TESTS" = true ]; then
 
 
     # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed
-    _TESTS_RAN=$(echo "$_pytest_out" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -1 || echo "0")
-    _SKIPPED=$(echo "$_pytest_out" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' | head -1 || echo "0")
+    _TESTS_RAN=$(grep -oE '[0-9]+ passed' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
+    _SKIPPED=$(grep -oE '[0-9]+ skipped' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
+    rm -f "$_pytest_log"
+    trap - EXIT INT HUP TERM
     if [ "${_TESTS_RAN:-0}" -eq 0 ]; then
         log_fail "ZERO TESTS RAN — QG cannot pass with no test execution (zero-test-silent-pass guard)"
         exit 1
@@ -1204,31 +1216,47 @@ fi
 
 # ── [5.6] SERVICE INFRASTRUCTURE CHECKS ──────────────────────────────────────
 
-# 5.6.1 — ServiceBootstrap usage (replaces lifecycle event grep)
-# STARTED/STOPPED/FAILED lifecycle events are emitted by UTL ServiceBootstrap.run().
-# Services MUST use ServiceBootstrap — we check for it instead of grepping for individual events.
-_HAS_BOOTSTRAP=$(rg 'ServiceBootstrap\(' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
-if [ "$_HAS_BOOTSTRAP" = "yes" ]; then
-    log_success "STEP 5.61: ServiceBootstrap used (lifecycle events handled by UTL)"
+# unified-trading-pm (scripts-only) and similar repos set SKIP_SERVICE_LIFECYCLE_STEPS=true — not HTTP services.
+if [ "${SKIP_SERVICE_LIFECYCLE_STEPS:-false}" = "true" ]; then
+    log_success "STEP 5.61: skipped (SKIP_SERVICE_LIFECYCLE_STEPS — not a deployable service)"
+    log_success "STEP 5.62: skipped (SKIP_SERVICE_LIFECYCLE_STEPS — not a deployable service)"
 else
-    log_fail "STEP 5.61: ServiceBootstrap not found — services MUST use ServiceBootstrap from UTL for lifecycle events"
-    V=$(( V + 1 ))
-fi
+    # 5.6.1 — ServiceBootstrap usage (replaces lifecycle event grep)
+    # STARTED/STOPPED/FAILED lifecycle events are emitted by UTL ServiceBootstrap.run().
+    # Services MUST use ServiceBootstrap — we check for it instead of grepping for individual events.
+    _HAS_BOOTSTRAP=$(rg 'ServiceBootstrap\(' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
+    if [ "$_HAS_BOOTSTRAP" = "yes" ]; then
+        log_success "STEP 5.61: ServiceBootstrap used (lifecycle events handled by UTL)"
+    else
+        log_fail "STEP 5.61: ServiceBootstrap not found — services MUST use ServiceBootstrap from UTL for lifecycle events"
+        V=$(( V + 1 ))
+    fi
 
-# 5.6.2 — Health API (FastAPI make_health_router with data_freshness)
-# Every service must expose /health and /readiness via UTL make_health_router.
-_HAS_HEALTH=$(rg 'make_health_router' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
-if [ "$_HAS_HEALTH" = "yes" ]; then
-    log_success "STEP 5.62: Health API present (make_health_router)"
-else
-    log_fail "STEP 5.62: No health API — add api/main.py with make_health_router (see market-tick-data-service/api/main.py)"
-    V=$(( V + 1 ))
+    # 5.6.2 — Health API (FastAPI make_health_router with data_freshness)
+    # Every service must expose /health and /readiness via UTL make_health_router.
+    _HAS_HEALTH=$(rg 'make_health_router' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
+    if [ "$_HAS_HEALTH" = "yes" ]; then
+        log_success "STEP 5.62: Health API present (make_health_router)"
+    else
+        log_fail "STEP 5.62: No health API — add api/main.py with make_health_router (see market-tick-data-service/api/main.py)"
+        V=$(( V + 1 ))
+    fi
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
-VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
-[ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
+# SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
+VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
+if [ -f "$VSCRIPT" ]; then
+    if ! "$VSCRIPT" --category all --failed-only; then
+        log_fail "Production readiness validators FAILED — fix unified-trading-pm/workspace-manifest.json and plans/active/*.plan.md (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
+        exit 1
+    fi
+    log_ok "Production readiness validators PASSED"
+else
+    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
+    exit 1
+fi
 
 # ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────
 if [ "$ACT_MODE" = true ]; then

@@ -1,14 +1,57 @@
 ---
 name: institutional-smoke-matrix
 overview:
-  Build a daily-runnable smoke matrix for every (service × category × data_type × venue) cell using TEST buckets +
-  --max-results 1, in service-dependency order.
+  Build a smoke matrix for every (service × category × data_type × venue) cell using TEST buckets, in service-dependency
+  order. **PIVOTED 2026-04-20**: initial design used a daily cron + `--max-results 1` (bogus flag) + workspace orchestrator;
+  that architecture was wrong. Canonical gate is `system-integration-tests/tests/smoke/` wired into `staging-to-main.yml`
+  via `sit-gate.yml`. Per-service `scripts/smoke_matrix.py` remain as dev-local debugging helpers only. Phase 4/5/6
+  scheduler artifacts deleted (2026-04-20 afternoon).
 type: mixed
 epic: epic-data-platform-honest-coverage
 status: active
 
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+
+# ── 2026-04-20 pivot note (read before editing) ─────────────────────────────
+#
+# Original Phase 4/5/6 shipped a daily-cron nightly-smoke-matrix.yml workflow +
+# workspace orchestrator (deployment-service/scripts/run-smoke-matrix.sh) +
+# coverage-floor gate. User flagged it as architecturally wrong: the system
+# already has `system-integration-tests/` with `tests/smoke/` (<5 min,
+# `@pytest.mark.smoke`) and `tests/e2e/` (15-30 min, `@pytest.mark.full_e2e`)
+# that run at staging→main promotion via `sit-gate.yml`. Daily cron creates a
+# "nobody owns it" problem and duplicates existing infrastructure. Worse, the
+# per-service smoke_matrix.py scripts were passing `--max-results 1` — a flag
+# that does not exist on any service CLI — so every cell would have failed
+# rc=1 before touching GCS. The canary run confirmed this.
+#
+# Pivot shipped:
+#   - Deleted: `.github/workflows/nightly-smoke-matrix.yml` (PM),
+#     `deployment-service/scripts/run-smoke-matrix.sh`,
+#     `deployment-service/configs/smoke-coverage-floor.yaml`,
+#     `deployment-service/scripts/enforce-smoke-coverage-floor.py`,
+#     `deployment-service/tests/unit/test_run_smoke_matrix.py`,
+#     `deployment-service/tests/unit/test_enforce_smoke_coverage_floor.py`.
+#   - Fixed: `--max-results 1` dropped from features-calendar, features-delta-one,
+#     and MDPS smoke_matrix.py (3 files). Docstrings updated to reflect that
+#     scope is narrowed via single-date/single-venue/single-category args.
+#   - Rewritten: `codex/14-playbooks/smoke-testing-playbook.md` now reflects
+#     SIT=gate / per-service=dev-local, 3-step assertion still canonical.
+#   - SSOT index row (00-SSOT-INDEX.md L15) rewritten.
+#
+# Kept (still correct under the new architecture):
+#   - `scripts/smoke_matrix.py` in 11 services — useful dev-local helpers.
+#   - Per-category bucket layouts SSOT (`codex/02-data/per-category-bucket-layouts.md`).
+#   - Sports T0/T1 adapter dependency order (`codex/02-data/sports-adapter-dependency-order.md`).
+#   - TEST bucket provisioning + 7-day lifecycle (`deployment-service/scripts/provision-test-buckets.sh`).
+#   - MDPS 3-bug chain fix (safe_iterate_blobs + empty-bucket defence + pre-flight tolerance).
+#   - Manifest v5 record_empty/record_failed split.
+#
+# Open follow-up (not in this plan): extend `system-integration-tests/tests/smoke/`
+# with parametrised per-(service × category × venue × data_type) cases that
+# reuse the bucket layouts SSOT + 3-step assertion. That work belongs in the
+# SIT repo's own plan, not here.
 
 completion_gates:
   code: C5
