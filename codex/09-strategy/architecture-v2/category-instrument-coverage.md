@@ -55,7 +55,8 @@ IM_RESERVED cells currently running for own IM (live or with firm go-live date):
 - `ML_DIRECTIONAL_EVENT_SETTLED × SPORTS × event_settled` — Betfair, Betradar (Sports ML — Jun 2026 go-live,
   capacity-bound)
 
-Canonical source: [`../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md).
+Canonical source:
+[`../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md).
 
 Features / data are **not** part of the category axis. A strategy's execution category is defined by where its
 `StrategyInstruction` actions actually land; feature groups and ML models can draw from any category's data without

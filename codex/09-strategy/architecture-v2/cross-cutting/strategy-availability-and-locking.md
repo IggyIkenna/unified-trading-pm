@@ -323,8 +323,8 @@ Enforcement points:
 
 - UI mirror — `unified-trading-system-ui/lib/architecture-v2/availability.ts`
 - strategy-service runtime registry — `strategy_service/availability/`
-- UAC combo registry —
-  `unified_api_contracts/internal/architecture_v2/strategy_availability.py` (`StrategyAvailabilityRegistry`, gap #12)
+- UAC combo registry — `unified_api_contracts/internal/architecture_v2/strategy_availability.py`
+  (`StrategyAvailabilityRegistry`, gap #12)
 
 ## See also
 
