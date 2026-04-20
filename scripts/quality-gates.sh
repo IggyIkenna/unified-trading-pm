@@ -196,6 +196,22 @@ if [ -n "$DELETED_PLANS" ]; then
     done
 fi
 
+# ── Post-gates: codex scope-registry coverage (rule 11, G1.9) ─────────────
+# SSOT: codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md
+# Fails loud if any codex/**/*.md lacks `scope:` frontmatter or declares an
+# invalid scope value.
+SCOPE_CHECKER="${REPO_ROOT}/codex/14-playbooks/_tools/check-scope-coverage.sh"
+if [ -f "$SCOPE_CHECKER" ]; then
+    echo "Running codex scope-registry coverage (rule 11)..."
+    if bash "$SCOPE_CHECKER"; then
+        log_success "Codex scope coverage check passed"
+    else
+        echo "❌ codex scope coverage check failed — every codex/**/*.md must declare scope: [...] frontmatter" >&2
+        echo "   See codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md for the rule." >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then
