@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Flash Loan Receiver Contract
 
 ## What It Is

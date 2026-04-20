@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # N-Tier Protocol Injection Contract
 
 **Last Updated:** 2026-03-06 **SSOT for:** How libraries know which cloud protocol to use at runtime. **Related:**

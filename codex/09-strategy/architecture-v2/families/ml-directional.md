@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: ML Directional
 
 > **Alpha source:** Machine-learning model prediction of outcome probability vs. market-implied probability. When model

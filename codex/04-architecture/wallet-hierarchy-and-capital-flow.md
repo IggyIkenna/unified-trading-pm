@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Wallet Hierarchy & Capital Flow Architecture
 
 ## Overview

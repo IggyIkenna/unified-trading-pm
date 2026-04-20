@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Trade Expression
 
 > **What it is:** The per-instruction mechanics of translating a directional/vol/carry view into a specific set of

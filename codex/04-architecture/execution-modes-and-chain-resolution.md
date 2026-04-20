@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Execution Modes & Chain Resolution
 
 ## Overview

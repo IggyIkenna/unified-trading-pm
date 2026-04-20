@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Strategy Architecture v2 — Family / Archetype / Axes / Cross-Cutting
 
 > **Status:** Canonical architecture as of 2026-04-17. Supersedes the category-based organization in

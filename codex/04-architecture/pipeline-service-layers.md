@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Pipeline Service Layers
 
 Canonical 7-layer service execution order for the unified trading system. This is the machine-readable source of truth —

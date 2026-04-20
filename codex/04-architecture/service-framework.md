@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Unified Service Framework
 
 ## Overview

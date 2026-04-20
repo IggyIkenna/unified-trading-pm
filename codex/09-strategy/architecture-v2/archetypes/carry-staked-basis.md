@@ -1,4 +1,5 @@
 ---
+scope: [engineer, admin]
 topology_requirements:
   isolation:
     execution-service: isolated

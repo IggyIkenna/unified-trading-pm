@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Service Control Surface
 
 Every service in the Unified Trading System is driven by exactly **three input channels**. Everything else is derived.

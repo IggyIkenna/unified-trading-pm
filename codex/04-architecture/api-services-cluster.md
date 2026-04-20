@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # API Services Cluster
 
 **Last updated:** 2026-02-28  

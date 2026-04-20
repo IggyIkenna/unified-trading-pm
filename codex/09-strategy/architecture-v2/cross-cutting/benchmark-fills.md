@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Benchmark Fills Contract
 
 > **What it is:** The contract that lets batch mode and live mode share the same code path. Every execution algo exposes

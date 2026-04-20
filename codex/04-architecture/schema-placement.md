@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Schema Placement Rules
 
 ## Principle

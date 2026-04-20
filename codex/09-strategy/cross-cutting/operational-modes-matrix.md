@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Operational Modes Matrix — Cross-Cutting Infrastructure
 
 **SSOT (machine-readable):** `unified-api-contracts/unified_api_contracts/internal/modes.py` (StrEnums) +

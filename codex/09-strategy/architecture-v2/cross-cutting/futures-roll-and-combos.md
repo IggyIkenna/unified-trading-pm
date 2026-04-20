@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Futures Rolls and Combo Creation (Cross-Cutting)
 
 > **Status:** Spec as of 2026-04-19. Paired with

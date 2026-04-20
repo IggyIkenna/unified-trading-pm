@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Share Class Architecture
 
 ## Definition

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Schema Versioning
 
 > **What it is:** How UAC (`unified-api-contracts`) versions its schemas; how consumers pin to major versions; how

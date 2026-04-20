@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Chain Environment Resolution
 
 ## Overview

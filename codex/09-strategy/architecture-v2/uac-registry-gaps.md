@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # UAC Registry Gaps — Additions for the Category × Instrument Coverage Matrix
 
 > **Status:** Proposal as of 2026-04-19. Companion to

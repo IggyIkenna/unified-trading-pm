@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Account Instructions
 
 > **What it is:** The parallel envelope to `StrategyInstruction` for **operator-driven** account operations.

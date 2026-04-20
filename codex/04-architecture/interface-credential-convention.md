@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Interface Credential Convention
 
 ## Principle

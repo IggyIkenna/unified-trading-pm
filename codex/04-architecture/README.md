@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 04 - Architecture Principles
 
 ## TL;DR

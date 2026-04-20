@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Runtime Topology — Architectural Decisions
 
 **Legacy node names below:** Split UIs and APIs such as `live-health-monitor-ui`, `logs-dashboard-ui`, `batch-audit-ui`,

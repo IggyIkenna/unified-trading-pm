@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Hold Policy
 
 > **What it is:** How long a position lives, and what triggers its exit. This axis is orthogonal to edge method, signal

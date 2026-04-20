@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Capital Structure, Custody, and Regulatory Context
 
 > **Scope:** How capital is custodied per venue category, what the regulatory structure is for each mode, and what

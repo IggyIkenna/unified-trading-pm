@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 09 — Strategy Documentation
 
 > **SSOT:** [`architecture-v2/`](architecture-v2/README.md) is the canonical organisation for every trading strategy in

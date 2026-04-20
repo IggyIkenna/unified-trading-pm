@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Batch = Live: Unified Pipeline Architecture
 
 This document describes the unified pipeline architecture where batch (backtest) and live execution share the same code

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Tier Architecture
 
 ## 5-Tier Dependency Model

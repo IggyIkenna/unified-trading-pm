@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # OpenTelemetry Tracing
 
 ## When to Use Tracing

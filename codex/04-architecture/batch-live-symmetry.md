@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Batch vs Live Symmetry
 
 This document defines the architectural distinction between batch mode and live mode across the unified trading

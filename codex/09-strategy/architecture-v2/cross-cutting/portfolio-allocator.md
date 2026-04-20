@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Portfolio Allocator
 
 > **What it is:** The strategy-level capital allocation primitive. Portfolio Allocator decides how much equity each

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Separation of Concerns: Three-Layer Architecture
 
 ## Layer Model

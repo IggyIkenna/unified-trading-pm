@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Client Configuration and Risk Dimensions
 
 ## Overview

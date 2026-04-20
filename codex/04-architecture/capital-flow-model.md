@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Capital Flow Model
 
 > **What it is:** Capital moves at three scopes — venue, strategy, client — and all three use the SAME event-driven

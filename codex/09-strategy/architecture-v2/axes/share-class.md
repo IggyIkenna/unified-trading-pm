@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Share Class
 
 > **What it is:** The _accounting currency_ for a strategy instance. All P&L, NAV, equity, allocations, and performance

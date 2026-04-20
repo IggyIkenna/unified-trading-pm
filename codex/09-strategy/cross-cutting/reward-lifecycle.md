@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Staking Reward Lifecycle -- Cross-Cutting Concern
 
 ## Overview

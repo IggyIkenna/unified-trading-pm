@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Risk Gates (4-Layer Model)
 
 > **What it is:** The risk enforcement layers between a strategy's emitted instruction and the actual venue order. Four

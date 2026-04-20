@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Strategy ↔ Execution Protocol
 
 > **What it is:** The runtime contract between strategy-service and execution-service. Five protocol rules, eleven

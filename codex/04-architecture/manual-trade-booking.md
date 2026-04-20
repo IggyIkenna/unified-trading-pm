@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Manual Trade Booking Architecture
 
 ## Overview

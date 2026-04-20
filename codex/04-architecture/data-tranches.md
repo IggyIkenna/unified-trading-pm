@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Three-Tranche Data Wiring
 
 **SSOT:** This document describes the three-tranche model for client credential and data routing in the Unified Trading

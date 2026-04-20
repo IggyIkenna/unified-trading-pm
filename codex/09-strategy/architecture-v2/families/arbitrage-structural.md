@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Arbitrage / Structural Edge
 
 > **Alpha source:** Price dispersion between markets OR structural payment from protocol mechanics. Either way, the edge

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Carry & Yield
 
 > **Alpha source:** Rate / yield differential capture. Whether the rate is funding on a perp, lending APY on a protocol,

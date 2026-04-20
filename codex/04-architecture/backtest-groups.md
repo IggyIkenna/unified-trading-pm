@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Backtest Groups (A / B / C)
 
 > **What it is:** Three distinct backtest concerns, each with its own owner, its own fixed/dynamic split, and its own

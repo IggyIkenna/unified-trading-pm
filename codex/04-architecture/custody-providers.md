@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Custody Providers
 
 ## Overview

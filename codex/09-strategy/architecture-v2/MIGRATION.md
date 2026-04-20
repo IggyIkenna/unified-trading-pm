@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # v2 Migration Audit — Legacy → Architecture-v2 Mapping
 
 > **Purpose:** Every existing strategy doc, code module, and config must map to a placement in architecture-v2. This

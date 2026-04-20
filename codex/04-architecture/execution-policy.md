@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Execution Policy (Architecture View)
 
 > **What it is:** The artifact format + registry + runtime lookup for execution policies. Companion to

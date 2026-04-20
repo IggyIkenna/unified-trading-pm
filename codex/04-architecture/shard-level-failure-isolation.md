@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Shard-Level Failure Isolation (SSOT)
 
 ## Rule

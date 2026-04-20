@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # System Topology DAG
 
 > **MOVED.** Canonical location: `unified-trading-pm/TOPOLOGY-DAG.md`

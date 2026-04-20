@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Retention Policies
 
 ## Overview

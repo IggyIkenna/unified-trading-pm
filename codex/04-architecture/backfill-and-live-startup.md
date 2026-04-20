@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Backfill & Live Startup Architecture
 
 ## Problem

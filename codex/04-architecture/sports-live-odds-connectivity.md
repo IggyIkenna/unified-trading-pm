@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Sports Live Odds Connectivity
 
 How we connect to bookmakers in **live** mode: no batch files, real-time (or near real-time) odds. This doc is the SSOT

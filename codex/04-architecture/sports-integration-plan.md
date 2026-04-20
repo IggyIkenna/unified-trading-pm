@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Sports Integration Plan
 
 ## Overview

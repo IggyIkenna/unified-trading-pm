@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Vol Trading
 
 > **Alpha source:** Volatility-metric dislocation. The alpha is a view on _vol itself_ (IV vs RV, skew, term structure,

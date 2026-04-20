@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Venue-Account Coordination
 
 > **What it is:** The primitives for multiple strategies sharing a single venue account. When two or more strategies

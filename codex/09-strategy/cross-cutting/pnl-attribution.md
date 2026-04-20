@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # P&L Attribution — Cross-Cutting Concern
 
 ## Hard Rules

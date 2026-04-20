@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # MEV Protection
 
 ## What Is MEV?

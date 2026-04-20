@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Signal Sources
 
 > **What it is:** The mechanism that produces the raw decision trigger — ML model output, rule firing, rate differential

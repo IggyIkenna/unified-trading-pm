@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Category × Instrument Coverage Matrix (SSOT)
 
 > **Status:** Canonical as of 2026-04-19. Supersedes the ad-hoc "Supported scenarios" / "Supported venues + instrument

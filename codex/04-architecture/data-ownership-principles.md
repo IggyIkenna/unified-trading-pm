@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Ownership Principles
 
 > SSOT: This document. Referenced from `00-SSOT-INDEX.md`. Scope: All asset classes (TradFi, CeFi, DeFi, Sports,

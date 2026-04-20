@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Strategy Availability and Locking (Cross-Cutting)
 
 > **Status:** Canonical as of 2026-04-19. SSOT for how the single combinatoric strategy universe powers **both** the

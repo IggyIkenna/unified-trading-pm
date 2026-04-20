@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Instrument Filtering — DeFi Pool & Market Discovery
 
 ## Overview

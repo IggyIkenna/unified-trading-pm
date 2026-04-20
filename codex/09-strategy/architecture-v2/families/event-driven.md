@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Event-Driven
 
 > **Alpha source:** Scheduled external events with measurable surprise. When an event releases (FOMC, CPI, NFP,

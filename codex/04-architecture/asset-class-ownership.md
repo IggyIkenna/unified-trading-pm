@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Asset Class Ownership Map
 
 > SSOT: This document. Referenced from `00-SSOT-INDEX.md`. Companion: `data-ownership-principles.md` (the generic

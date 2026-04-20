@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Transfer / Rebalance
 
 > **What it is:** The venue-level capital movement primitive. When a strategy's eligible-venue allocations drift from

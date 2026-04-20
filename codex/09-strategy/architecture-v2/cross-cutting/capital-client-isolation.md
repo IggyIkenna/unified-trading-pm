@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Capital / Client Isolation
 
 > **What it is:** The guarantees that one client's capital, credentials, risk, and audit state are fully isolated from

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Deployment Topology Diagrams
 
 Visual reference for batch vs live deployment models, service aggregation patterns, and messaging structure.

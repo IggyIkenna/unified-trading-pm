@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Capital Efficiency Patterns
 
 > **What it is:** The recurring patterns that unlock capital efficiency when multiple strategies share a venue account

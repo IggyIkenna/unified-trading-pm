@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Execution Policies
 
 > **What it is:** A versioned, artifact-registered **rule table** that maps (venue × action × condition) → (algorithm +

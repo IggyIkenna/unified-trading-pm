@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Stat Arb / Pairs
 
 > **Alpha source:** Statistical spread between two or more underlyings that mean-reverts (or trends) against a

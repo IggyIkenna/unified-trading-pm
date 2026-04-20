@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Per-Client Strategy Config Overrides
 
 ## Overview

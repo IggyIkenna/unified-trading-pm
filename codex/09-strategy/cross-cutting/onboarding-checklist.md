@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Onboarding Checklist — Cross-Cutting Concern
 
 ## Overview

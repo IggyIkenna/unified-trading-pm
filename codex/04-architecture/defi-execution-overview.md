@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Execution Overview
 
 ## Live Execution Flow

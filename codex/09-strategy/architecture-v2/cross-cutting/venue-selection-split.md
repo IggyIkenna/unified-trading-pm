@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: Venue Selection (Slow-Path Eligibility + Fast-Path SOR)
 
 > **What it is:** Venue routing is split in two. _Eligibility_ is a slow-moving strategy-config concern. _Selection_ at

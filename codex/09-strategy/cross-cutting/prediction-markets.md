@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Prediction Markets — Cross-Cutting Concern
 
 Polymarket and Kalshi serve THREE distinct roles in the unified trading system. They are not just "another venue" — they

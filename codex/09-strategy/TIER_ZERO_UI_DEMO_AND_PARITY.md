@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Tier 0 UI demo — strategy parity and documentation map
 
 **Audience:** Engineers and PM aligning **Codex strategy prose**, **UI mock fixtures**, and **future API tiers**.

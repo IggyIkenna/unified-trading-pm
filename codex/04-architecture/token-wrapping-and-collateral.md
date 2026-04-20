@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Token Wrapping and Venue Collateral
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Market Making
 
 > **Alpha source:** Bid-ask spread capture via two-sided quoting around a theoretical fair price. We provide liquidity;

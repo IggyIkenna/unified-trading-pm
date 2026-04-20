@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Phase 3 Infrastructure
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Edge Methods
 
 > **What it is:** The way a strategy converts a raw signal into a bet decision — the rule for "when should this fire?"

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Shadow Deployment Pattern — Archetype Upgrades
 
 > **What it is:** How we promote a new version of an archetype engine from shadow mode to production.

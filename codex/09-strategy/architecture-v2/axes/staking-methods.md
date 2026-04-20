@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Staking Methods (Position Sizing)
 
 > **What it is:** How a strategy decides how much to bet / trade given the edge method has said "yes, bet."

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Venue Eligibility
 
 > **What it is:** The set of venues a strategy is allowed to execute on, plus per-venue constraints. This is the

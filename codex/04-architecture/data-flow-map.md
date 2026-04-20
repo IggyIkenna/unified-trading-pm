@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Flow Map -- Batch/Live Storage Topology
 
 > Generated 2026-03-14 by codebase analysis. This document maps GCS/S3 write and read paths across the Unified Trading

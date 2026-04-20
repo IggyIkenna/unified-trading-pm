@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Kill Switch & Circuit Breaker
 
 ## Overview

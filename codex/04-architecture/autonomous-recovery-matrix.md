@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Autonomous Recovery Matrix
 
 ## Principle

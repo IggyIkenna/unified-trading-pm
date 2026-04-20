@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Cutting: MEV Protection
 
 > **What it is:** The DeFi-specific execution policy for routing transactions to avoid miner/validator extractable value

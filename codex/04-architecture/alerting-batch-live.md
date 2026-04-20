@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Alerting Service: Batch/Live Alignment
 
 ## Principle

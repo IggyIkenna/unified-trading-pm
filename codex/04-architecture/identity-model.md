@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Identity Model — Client, Account, Strategy
 
 ## Composite Keys

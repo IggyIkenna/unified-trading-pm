@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Client Isolation, SLA Tiers, and Runtime Profiles — SSOT
 
 **Status:** Active **Paired machine SSOT:** `unified-trading-pm/configs/runtime-topology.yaml` (v7) **Paired UAC

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Copper Custody Integration
 
 ## Overview

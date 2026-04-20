@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Family: Rules Directional
 
 > **Alpha source:** Hard-coded if-else rules on features that produce discrete fire/no-fire signals. Each rule encodes a

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Lending/Borrowing Rate Impact Model
 
 ## Overview

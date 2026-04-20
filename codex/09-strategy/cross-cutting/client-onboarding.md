@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Client Onboarding — Cross-Cutting Concern
 
 ## Core Rule: One Strategy Instance Per Client

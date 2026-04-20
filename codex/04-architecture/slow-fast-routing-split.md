@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Slow-Fast Routing Split (Architecture View)
 
 > **What it is:** The architectural justification and contract for splitting venue routing into two services —

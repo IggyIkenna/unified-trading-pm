@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Axis: Expression
 
 > **What it is:** How the strategy's view is _translated into instruments_ that actually get traded. A single

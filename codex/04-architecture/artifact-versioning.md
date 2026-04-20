@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Artifact Versioning
 
 > **What it is:** The 3-axis versioning model the system uses to track code, artifacts, and schemas independently. All

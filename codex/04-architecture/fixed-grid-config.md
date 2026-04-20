@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Fixed vs Grid Config — Mass Backtesting Architecture
 
 **SSOT for backtest configuration structure across ML training, strategy, and execution services.**
