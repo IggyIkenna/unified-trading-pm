@@ -64,49 +64,68 @@ todos:
   # ─── Phase 2 — per-service smoke matrix scripts ─────────────────────────
   - id: phase-2-instruments-smoke
     content: |
-      - [ ] [AGENT] P1. instruments-service: `scripts/smoke_matrix.py`. Iterates
-        every (category × venue × data_type) cell defined in UAC capability
-        declarations. For each cell, the **3-step assertion contract** (applies
-        to EVERY phase-2 service smoke):
-          1. **Run** the service CLI with `--max-results 1` + `IS_TEST_RUN=true`
-          2. **Verify GCS write**: list the expected output path under the
-             `-test-` bucket (e.g. `gs://instruments-store-cefi-test-{project_id}/
-             instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet`)
-             → assert ≥1 parquet file exists AND ≥1 row in that file
+      - [x] [AGENT] P1. instruments-service: `scripts/smoke_matrix.py` shipped
+        at `5e2e141` on live-defi-rollout. Iterates every (category x venue x
+        data_type) cell from UAC `DATA_TYPES_BY_CATEGORY` x `VENUES_BY_CATEGORY`.
+        SPORTS handled via provider axis (`--sports-provider`) with api-football
+        T0 emitted FIRST. The **3-step assertion contract** (applies to EVERY
+        phase-2 service smoke):
+          1. **Run** the service CLI with `IS_TEST_RUN=true` (default dry-run;
+             `--execute` flag actually invokes the CLI)
+          2. **Verify GCS write**: ≥1 parquet under
+             `gs://instruments-store-{cat}-test-{project_id}/
+             instrument_availability/by_date/day={date}/venue={venue}/...` for
+             CEFI/TRADFI/DEFI/PREDICTION, or `sports_reference/by_date/day=.../`
+             for SPORTS (per `per-category-bucket-layouts.md`)
           3. **Verify TEST manifest write**: read the TEST bucket's own
-             `_index/availability_index.parquet` → assert there's a row with the
-             shard tuple `(date, category, venue, instrument_type, data_type)`
-             AND `capture_status` ∈ {`captured`, `empty_confirmed`}. Each TEST
-             bucket has its OWN manifest file (same schema, separate file).
-        Sub-CLI:
-        `python -m instruments_service.smoke [--category X] [--venue Y] [--data-type Z]`.
-        Returns rc=0 with per-cell pass/fail/skip summary. Empty cells (no data
-        for date) → `empty_confirmed` is a PASS not a SKIP.
-    status: todo
+             `_index/availability_index.parquet` and assert a row with the shard
+             tuple AND `capture_status` in {captured, empty_confirmed}.
+             `empty_confirmed` is a PASS not a SKIP.
+        Sub-CLI: `python scripts/smoke_matrix.py [--category X] [--venue Y]
+        [--data-type Z] [--execute] [--report path.json]`. Returns rc=0 on
+        all-pass, rc=1 on any-fail, 0 on dry-run. Enumerates 510 cells total.
+        Phase 3 DependencyError for T1-without-T0 surfaces as `status=skipped
+        reason=api_football_missing`. Shard-level isolation: one failed cell
+        does NOT abort the rest. 15 unit tests green (tests/unit/test_smoke_matrix.py).
+    status: done
+    note: "instruments-service@5e2e141 — 510 cells, 15 tests, full QG green (128s)"
 
   - id: phase-2-mtds-smoke
     content: |
-      - [ ] [AGENT] P1. market-tick-data-service: `scripts/smoke_matrix.py`. Same
-        3-step assertion contract as phase-2-instruments-smoke. The existing
-        `smoke_canonical_writes.sh` is a starting template (already uses
-        IS_TEST_RUN=true + GCS verification via `gsutil ls -r` grep) — extend to
-        cover all categories + all data_types + cap to 1 instrument per venue.
-        Per-cell coverage matrix mirrors the SYMBOLS_BINANCE_FUTURES /
-        SYMBOLS_DERIBIT etc. arrays in launch-cefi-sharded-backfill.sh — pick
-        ONE symbol per venue (the first one) for the smoke.
-    status: todo
+      - [x] [AGENT] P1. market-tick-data-service: `scripts/smoke_matrix.py`
+        shipped at `f9efaf7` on live-defi-rollout. Same 3-step assertion
+        contract as phase-2-instruments-smoke, keyed on
+        (category x venue x data_type) with optional instrument_type.
+        `smoke_canonical_writes.sh` superseded — new matrix covers every UAC
+        category at once, uses `--max-instruments 1` for bounded smoke, injects
+        the representative symbol per venue (first element of SYMBOLS_* arrays
+        in `launch-cefi-sharded-backfill.sh`). Category-specific path layouts
+        respected: PREDICTION has no category/venue level, DEFI keeps
+        `category=defi` only (chain= is deeper), CEFI/TRADFI/SPORTS have full
+        venue-level partitioning. 510 cells enumerated; 14 unit tests green
+        (tests/unit/test_smoke_matrix.py).
+    status: done
+    note:
+      "market-tick-data-service@f9efaf7 — 510 cells, 14 tests, smoke scoped to scripts/ (out of basedpyright include
+      path — same convention as validate_manifest_coverage.py)"
 
   - id: phase-2-mdps-smoke
     content: |
-      - [ ] [AGENT] P1. market-data-processing-service: `scripts/smoke_matrix.py`.
-        Iterates every (category × data_type × timeframe) cell. Already supports
-        `--max-results 1` (in cli/parser.py). Pre-flight: consume the smoke artefacts
-        from MTDS + instruments-service smokes (test buckets via UPSTREAM_DEPS_TEST
-        which auto-fires when IS_TEST_RUN=true after Phase 1). Same 3-step
-        assertion contract: run + verify GCS write at
-        `gs://market-data-tick-{cat}-test-{project_id}/processed_candles/by_date/.../`
-        + verify TEST manifest row with capture_status.
-    status: todo
+      - [x] [AGENT] P1. market-data-processing-service: `scripts/smoke_matrix.py`
+        shipped at `aae7c4d` on live-defi-rollout. Iterates every
+        (category x data_type x timeframe) cell from UAC SSOT via
+        `get_valid_timeframes_for_data_type()` and `needs_candle_processing()`.
+        Uses `--max-results 1` via existing CLI (cli/parser.py). Pre-flight
+        handled by MDPS DependencyChecker(test_mode=True) which auto-triggers
+        from IS_TEST_RUN=true (Phase 1.5, `9e7cfa8`). Upstream-missing surfaces
+        as status=skipped, reason=upstream_missing. Same 3-step assertion
+        contract: (1) run CLI (2) verify GCS parquet at
+        `gs://market-data-tick-{cat}-test-{project_id}/processed_candles/by_date/...`
+        for non-SPORTS or `processed/by_date/...` for SPORTS (per path-layouts
+        SSOT) (3) verify TEST manifest row with capture_status.
+        109 cells enumerated; 14 unit tests green (tests/unit/test_smoke_matrix.py).
+    status: done
+    note: "market-data-processing-service@aae7c4d — 109 cells, 14 tests"
 
   - id: phase-2-features-smokes
     content: |
