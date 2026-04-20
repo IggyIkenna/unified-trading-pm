@@ -1,0 +1,62 @@
+# G1.13 — Upsell-overlay tempt-logic hierarchy (demo environment only).
+#
+# When a prospect's questionnaire response is vague on a given axis, the
+# demo restriction-profile widens by one step up the hierarchy to surface
+# adjacent capability the prospect might upsell into. In prod
+# (DEMO_MODE=false), ``apply_tempt_logic`` is a no-op — tight picks stay
+# tight.
+#
+# Schema per axis:
+#   hierarchy:      ordered list of widening steps (explicit → ...  → everything)
+#   vague_triggers: signals that fire the widening for that axis
+#
+# Axes NOT listed (service_family, fund_structure) never widen — these
+# are commercial / structural decisions, not discovery signals.
+#
+# SSOT context:
+#   codex/14-playbooks/demo-ops/upsell-overlays.md
+#   codex/14-playbooks/demo-ops/demo-restriction-profiles.md
+#   _ssot-rules/06-show-dont-show-discipline.md (LOCKED-VISIBLE surface)
+
+rule_id: 13
+rule_name: upsell-overlay-hierarchy
+
+axes:
+  categories:
+    hierarchy:
+      - explicit_picks
+      - adjacent_by_family
+      - all_in_class
+      - everything
+    vague_triggers:
+      - empty_array
+      - all_selected
+
+  instrument_types:
+    hierarchy:
+      - explicit_picks
+      - adjacent_by_asset_class
+      - all_in_category
+      - everything
+    vague_triggers:
+      - empty_array
+
+  venue_scope:
+    hierarchy:
+      - explicit_venues
+      - all_in_category
+      - all
+    vague_triggers:
+      - all_keyword
+      - empty
+
+  strategy_style:
+    hierarchy:
+      - explicit_families
+      - adjacent_families
+      - all
+    vague_triggers:
+      - empty_array
+# service_family + fund_structure intentionally omitted — they are
+# commercial-axis picks, not tempt-logic surfaces. A prospect picking
+# "IM" stays IM; we never upsell them into DART via vagueness.
