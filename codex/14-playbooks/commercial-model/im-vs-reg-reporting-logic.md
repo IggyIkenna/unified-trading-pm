@@ -79,15 +79,46 @@ differs.
 
 ### IM typical pricing shape
 
-- Block 1 (reporting core) — Tier B. Institutional allocators need SLA certainty; reporting is the proof point.
-- Block 3 (IM allocator reporting) — Tier B. Specific to the engagement; fixed monthly.
-- Optional analytics packs — Tier A.
-- **No execution-layer block** — IM allocates capital; Odum runs execution. The execution cost is embedded in the
-  management-fee side of the commercial, not in block 7 per se.
+**Block entitlements (reporting-infrastructure portion):**
 
-IM pricing also carries a management-fee + performance-fee layer on the allocated capital, which is a separate
-commercial mechanic from the DART building-block pricing. IM blocks 1 + 3 are the infrastructure-access portion; the
-fees are the allocation-to-strategy portion. Both live in the IM commercial envelope, distinct from DART.
+- Block 1 (reporting core) — Tier B equivalent. Institutional allocators need SLA certainty; reporting is the proof
+  point. Bundled into the IM operating envelope (client does not see a block-by-block quote).
+- Block 3 (IM allocator reporting) — Tier B equivalent. Specific to the engagement; fixed monthly.
+- Optional analytics packs — Tier A.
+- **No execution-layer block** — IM allocates capital; Odum runs execution. The execution cost is embedded in the IM
+  operating envelope, not in block 7.
+
+**IM commercial envelope — NO management fee, perf-share only + platform-fee client-choice:**
+
+The IM engagement does **not** carry a management fee on allocated capital. Odum is paid via performance-share only,
+preserving alignment with the client and avoiding the "zero performance, still paid" flaw of traditional 2-and-20
+structures.
+
+- **No management fee** — allocated capital carries no % AUM charge. Explicit.
+- **30-35% performance-share band** on client net profits — 30% for commoditised strategies (BTC ML directional on
+  liquid perps), 35% for specialised / harder-to-replicate (sports ML where capacity is bound, India Options delta
+  trading where venue access is hard).
+- **Platform-fee client-choice at mandate signing** — client picks one of the following at contracting (NOT both):
+  - **Option A**: +5% performance-share uplift (base 30% → 35%, or base 35% → 40%). Zero fixed monthly. Pure
+    alignment. Attractive for clients who want skin-aligned pricing.
+  - **Option B**: Base performance-share + **$500 monthly flat platform-access fee**. Small fixed floor. Attractive
+    for clients who want a partial guarantee regardless of strategy year.
+
+The platform-fee choice is recorded at mandate signing and sticks for the mandate term. Either option gives Odum a
+partial revenue floor: Option A = more upside when the strategy performs; Option B = a small guarantee that runs
+regardless. See [`im-profit-share-structures.md`](im-profit-share-structures.md) for full mechanic including worked
+examples and the CME asymmetric co-invest / India Options special structures.
+
+**Existing mean-reversion IM (2-year running, ~£5k/mo gross) migration path is ADDITIVE:**
+
+Existing mean-rev IM clients (allocating via external-to-system structure, generating ~£5k/mo gross from 2-year-running
+mandates) retain their existing mandate structure (grandfathered). Any new mandate (e.g., BTC ML directional signed
+after Jun 2026) uses the new perf-share + platform-fee-choice model and runs **in parallel** as a separate mandate — NOT
+as a migration or a replacement. No migration discount. See
+[`im-profit-share-structures.md`](im-profit-share-structures.md) §Existing mean-reversion IM strategy — migration path.
+
+IM blocks 1 + 3 entitlements are the infrastructure-access portion; the performance-share + optional Option B platform
+fee are the allocation-to-strategy portion. Both live in the IM commercial envelope, distinct from DART.
 
 ### Reg Umbrella typical pricing shape
 
@@ -132,3 +163,5 @@ DART+Reg Umbrella client on the same surface sees transaction reporting (block 2
 - [pricing-building-blocks.md](pricing-building-blocks.md)
 - [../experience/im-decision-journey.md](../experience/im-decision-journey.md) — pb2a
 - [../experience/regulatory-umbrella-briefing.md](../experience/regulatory-umbrella-briefing.md) — pb2c
+- [im-profit-share-structures.md](im-profit-share-structures.md) — full IM commercial mechanics (perf-share,
+  platform-fee choice, CME asymmetric co-invest, India Options, mean-rev migration, BTC FoF wrapper)

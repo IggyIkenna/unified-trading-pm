@@ -148,6 +148,104 @@ uplift.
 
 Pricing combines blocks across both engagements; the client receives one invoice per engagement, not one bundled.
 
+## Named-client worked examples (2026 pipeline)
+
+These are the three named 2026-pipeline engagements and how they resolve against the rule-04 matrix. Two are DART paths
+(Elysium, Desmond); India Options is explicitly NOT DART and is included at the end as a pointer.
+
+### Worked example — Elysium (signals-only DART, DeFi staked-basis)
+
+**Matrix cell:** `(Client, downstream)` → signals-only DART.
+
+**Strategy scope:** DeFi staked-basis (carry-staked-basis archetype) on Drift perps plus staked ETH/SOL collateral.
+Client keeps strategy IP + decision logic upstream; Odum provides the downstream execution, cross-chain treasury
+management, reconciliation, reporting, analytics.
+
+**Commercial mechanic:** Profit-share **replaces** block pricing post go-live. Onboarding is a fixed $125k (partially
+paid; remaining $35k as of April 2026). Once live, Odum takes **30% of Elysium's fees/returns** from the strategy they
+operate via our stack. See [`im-profit-share-structures.md`](im-profit-share-structures.md) §Elysium framing — rationale:
+client preferred upside-aligned mechanics over flat Tier B monthly.
+
+**Capital phases:**
+
+- **Phase A** ($500k own capital, Jun 2026 go-live): proves out the strategy on Elysium's own book.
+- **Phase B** ($5-10M via their downstream client, H2 2026): scales once Phase A's 3-month track record is in.
+
+**Block composition baseline (for reference, before profit-share replaces it):**
+
+- Reporting core (Tier B)
+- Strategy-service entry × 1 (Tier B)
+- Instructions integration — standard depth (Tier B)
+- Execution layer (Tier B)
+- Chain packs × 4 (Ethereum L1 / Arbitrum / Base / Solana; Tier B)
+- Instrument-type packs × 2 (spot + perp; Tier B)
+- Analytics pack × 1 (execution quality; Tier A)
+
+Equivalent Tier B: ~£24k/mo (see [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md) §Worked
+example — Elysium Phase A). Actual commercial = profit-share replaces this.
+
+**2026 revenue target:**
+
+- **Conservative**: $125k total 2026 (onboarding + baseline profit-share).
+- **Aspirational**: $200-230k total 2026 with MEV + Solana L1 expansion + recursive-staking upsells added through
+  Q3/Q4.
+
+**Does NOT include:** research / promote pipeline (block 6). Rule 04 boundary preserved even though the commercial
+mechanic is profit-share-shaped.
+
+### Worked example — Desmond (prospective, Reg Umbrella + signals-only DART combined)
+
+**Matrix cell:** Two cells: `(Client, downstream)` signals-only DART + Reg Umbrella engagement. Composed per Example D
+above but with a named prospect profile.
+
+**Strategy scope:** Perp-funding arbitrage on CeFi perps — Binance-perp, Hyperliquid, possibly Bybit + OKX
+depending on exchange onboarding outcomes. Strategy-family commodity-archetype (perp-funding arb). Client keeps strategy
+IP upstream.
+
+**Commercial mechanic:** Two-engagement bundle with shared infrastructure.
+
+- **Reg Umbrella side**: reporting core + regulatory umbrella reporting + execution layer + venue packs (2-4 CeFi perp
+  venues) + instrument-type packs (perps). ~£12k/mo Tier B.
+- **Signals-only DART side**: reporting core (shared) + strategy-service entry × 1 + instructions integration (standard
+  depth) + scoped execution analytics. ~£10k/mo Tier B.
+- **Combined Tier B monthly**: **~£22k/mo** (Reg Umbrella £12k + signals-only DART £10k).
+- **Upfront fee**: **£25-50k range** — £25k worst-case / £50k best-case. Covers two-engagement onboarding,
+  per-venue provisioning, Reg Umbrella compliance setup, signals-integration build.
+
+**Start date:** **May 2026 earliest** (calendar constraint on client side).
+
+**IP-power tier:** Commodity archetype (perp-funding arb on liquid CeFi perps). Standard 20-30% exclusivity uplift
+available if Desmond wants scoped exclusivity on their specific venue set; no special premium above the commodity band
+because the strategy family is not uniquely differentiated. See
+[`exclusivity-and-noncompete.md`](exclusivity-and-noncompete.md) §IP-power tier anchors.
+
+**Revenue risk:** If Desmond slips past May, revenue slip is ~£22k-57k per month of delay (monthly + pro-rata upfront);
+the overall 2026 cash plan absorbs a 2-3 month slip without stress.
+
+### Worked example — India Options (NOT DART — `(Odum, full-pipeline)` IM engagement)
+
+**Matrix cell:** `(Odum, full-pipeline)` — this is **NOT a DART engagement**. Included here to make the routing explicit
+and prevent accidental DART-framing in sales conversations.
+
+**Strategy scope:** Odum-developed delta trading on NSE (Indian) options. Odum brings the strategy IP, the new-venue
+integration (NSE options adapter + clearing + margin), and the execution. Client allocates capital.
+
+**Commercial mechanic:** IM-framework, not DART Tier A/B blocks.
+
+- **$100k upfront onboarding** (covers NSE options integration + options-specific infrastructure; amortised over 3
+  months; commercially framed as block 13 custom premium per
+  [`pricing-building-blocks.md`](pricing-building-blocks.md) §India Options special structure).
+- **Ongoing**: standard **30-35% performance-share** + platform-fee client choice (Option A +5% perf uplift OR Option B
+  $500/mo flat).
+- **Allocation target**: $5-10M year-1 expected (gated on S&P ML signal proving out first).
+
+**Routing note:** If a prospect approaches mentioning Indian options, route the conversation to
+[`im-profit-share-structures.md`](im-profit-share-structures.md) §India Options — NOT to DART path resolution. The cell
+`(Odum, full-pipeline)` still resolves to an IM commercial path when Odum brings the strategy IP and manages the
+capital; DART path resolution is for clients doing their own research / their own signal generation.
+
+See [`im-profit-share-structures.md`](im-profit-share-structures.md) for the full IM mechanic.
+
 ## What each path does NOT include
 
 Rule-04 enforcement keeps these boundaries clean:
@@ -174,3 +272,8 @@ Rule-04 enforcement keeps these boundaries clean:
 - [exclusivity-and-noncompete.md](exclusivity-and-noncompete.md) — Tier B modifiers
 - [../experience/dart-briefing.md](../experience/dart-briefing.md) — pb2b briefing
 - [../experience/dart-demo.md](../experience/dart-demo.md) — pb3c demo
+- [im-profit-share-structures.md](im-profit-share-structures.md) — IM mechanics (India Options, CME asymmetric,
+  standard perf-share + platform-fee choice)
+- [signal-leasing.md](signal-leasing.md) — fourth commercial path
+- [../shared-core/dart-pricing-axes.md](../shared-core/dart-pricing-axes.md) — signals-only vs full-DART anchor
+  tables, Elysium worked example

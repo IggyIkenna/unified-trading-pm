@@ -48,8 +48,90 @@ The percentage depends on:
 - **Market attractiveness.** High-demand scopes carry higher premiums.
 
 Indicative ranges are populated by finance in [`pricing-building-blocks.md`](pricing-building-blocks.md) block 12 row.
-Until populated, the structure is: Tier B monthly × (1 + exclusivity_pct), where `exclusivity_pct` is a negotiated
-figure.
+Until tightened by finance, the structure is: Tier B monthly × (1 + exclusivity_pct), where `exclusivity_pct` is a
+negotiated figure anchored to the IP-power tier (see next section).
+
+## IP-power tier anchors — 2026 strategy catalogue
+
+Exclusivity premium is anchored to a four-tier ladder based on strategy scarcity and venue-access difficulty. The
+percentages below are **anchor ranges** — each specific quote still computes `revenue-forgone × margin multiplier` over
+the exclusivity term, which may land higher or lower than the anchor depending on the scope negotiated.
+
+Cross-reference [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md) §IP-power exclusivity tiers
+(block 12) — same anchor ranges, same worked examples; this doc provides the commercial negotiation framing,
+`dart-pricing-axes.md` provides the pricing-model framing.
+
+### Tier 1 — Commodity archetype (20-30% uplift)
+
+Strategies where the archetype is well-known and multiple external competitors could in principle offer a similar
+capability. Exclusivity limits Odum's ability to serve direct competitors on the same venue × strategy-family scope, but
+the scope is not alpha-defining.
+
+**Anchor uplift on Tier B monthly: 20-30%.**
+
+Examples from the 2026 catalogue:
+
+- **ML directional on liquid CeFi perps** (BTC / ETH perp on Binance / Coinbase / Hyperliquid) — the archetype and
+  instrument set are widely covered.
+- **Perp-funding arbitrage on CeFi perps** (Desmond's strategy scope — Binance-perp / Hyperliquid / Bybit / OKX) —
+  funding-arb is a commodity archetype with many implementations; Odum's edge is operational execution quality, not
+  alpha uniqueness.
+
+### Tier 2 — Specialised venue + archetype combo (50-80% uplift)
+
+Strategies that combine a non-commodity archetype with a specialised venue. The archetype by itself might be
+commoditised elsewhere, but the specific venue integration + execution pattern is scarce.
+
+**Anchor uplift on Tier B monthly: 50-80%.**
+
+Examples from the 2026 catalogue:
+
+- **Hyperliquid market-making** — market-making is a widely-known archetype, but Hyperliquid's venue mechanics (on-chain
+  perp DEX with discrete auction matching, rebate structure, latency-sensitive MM) require specialised integration.
+- **Drift carry-basis** — carry-basis is a known archetype, but Drift's Solana-L1 specifics + the staked-basis collateral
+  overlay (Elysium's scope) are specialised enough to warrant tier-2 exclusivity pricing.
+
+### Tier 3 — Scarce venue access (80-120% uplift)
+
+Strategies where the venue itself is difficult to access (new jurisdiction, unusual clearing, specialised legal entity
+requirement). Archetype may or may not be commoditised; venue access is the scarce resource.
+
+**Anchor uplift on Tier B monthly: 80-120%.**
+
+Examples from the 2026 catalogue:
+
+- **Indian options NSE delta trading** — NSE options access requires Indian regulatory + clearing + margin
+  infrastructure that is hard to stand up. Even a commoditised delta-trading archetype becomes scarce when tied to NSE
+  venue access. Onboarding premium is already embedded in the India Options $100k onboarding fee (see
+  [`im-profit-share-structures.md`](im-profit-share-structures.md) §India Options); block-12 exclusivity stacks on top
+  of that if a client wants to lock Odum out of offering NSE options access to competitors.
+- **Kalshi prediction markets** — regulated US event-contract venue; integration is not commoditised and Kalshi's
+  operating rules are specialised.
+
+### Tier 4 — Uniquely differentiated multi-leg strategy (120-200% uplift)
+
+Strategies where the multi-leg structure, signal composition, or execution pathway is uniquely Odum-differentiated —
+competitors could not easily replicate even with venue access. Alpha is structural, not just operational.
+
+**Anchor uplift on Tier B monthly: 120-200%.**
+
+Examples from the 2026 catalogue:
+
+- **Custom DeFi stat-arb** — client-specific multi-leg configurations on DeFi perps / spot / staked-basis overlays that
+  compose Odum's execution infrastructure in a non-replicable way.
+- **Novel event-driven multi-leg** — event-settled strategies that compose multiple archetypes (e.g., macro-calendar
+  event-driven + sports fixture-settled + prediction market convergence) in a way that is uniquely Odum.
+
+### How to apply the tier anchors in a quote
+
+1. Identify the strategy family + venue combo under exclusivity. Match to the tier above.
+2. Compute Odum's estimated revenue forgone from NOT serving the same scope to a direct competitor over the exclusivity
+   term.
+3. Compute revenue-forgone × margin multiplier (1.5-2× typical).
+4. Compare against the anchor uplift × Tier B monthly base. The higher of the two is the negotiating position; the
+   anchor is a floor for commodity-tier scopes and a ceiling-check for ambitious scopes.
+5. Document the specific forgone-revenue estimate inline in the quote's exclusivity line so the client sees the
+   reasoning.
 
 ## Legal framing
 
@@ -120,3 +202,9 @@ Escalate to leadership / legal before committing to exclusivity when:
 - [dart-entry-points.md](dart-entry-points.md) — exclusivity most common on `(Odum, full)` Full DART + Odum strategy
   engagements
 - [../shared-core/strategy-origin-vs-stack-depth.md](../shared-core/strategy-origin-vs-stack-depth.md) — cell resolution
+- [../shared-core/dart-pricing-axes.md](../shared-core/dart-pricing-axes.md) — IP-power tier anchors (pricing-model
+  framing; same ranges)
+- [../shared-core/strategy-allocation-lock-matrix.md](../shared-core/strategy-allocation-lock-matrix.md) — which
+  strategy cells are exclusivity-eligible (non-IM_RESERVED) per the 2026 allocation snapshot
+- [im-profit-share-structures.md](im-profit-share-structures.md) — India Options $100k onboarding ties into tier-3
+  venue-access pricing
