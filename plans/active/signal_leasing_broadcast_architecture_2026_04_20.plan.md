@@ -276,15 +276,33 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
       (data-testid=`signals-public-counterparty-cta`, href=`/services/signals/dashboard`).
       Post-auth redirect for counterparty-type users handled by B-3b's
       `lib/auth/counterparty.ts` (`COUNTERPARTY_POST_AUTH_REDIRECT`).
-- [ ] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list
+- [x] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list
       counterparties, show emission state, toggle entitlements, view per-counterparty delivery health.
       **No-orphan discipline**: inbound link from admin platform-shell nav + admin landing page service-tile.
-- [ ] [AGENT] P0. **Counterparty persona** (new domain entity per D9) — NOT a UI persona in `personas.ts`,
+      **SHIPPED** unified-trading-system-ui `d7d9e9b` — admin page (counterparty table + detail panel +
+      entitlement toggle + active flip + delivery-health rollup + audit event list), backed by
+      `CounterpartyStoreProvider` (3 anonymised fixtures seeded, localStorage persistence under
+      `counterparty-store/v1`, synthetic `COUNTERPARTY_ENTITLEMENT_CHANGED` / `COUNTERPARTY_ACTIVE_CHANGED`
+      events). Admin nav inbound via `ADMIN_TABS` entry "Signal Counterparties"
+      (`components/shell/service-tabs.tsx:552`). Non-admin personas hit an admin-only gate. 9 vitest
+      tests (store writers + persistence + no-op guards) + 5 vitest tests (page render + toggle + gate)
+      green; Playwright spec `signal-broadcast-admin.spec.ts` added.
+- [x] [AGENT] P0. **Counterparty persona** (new domain entity per D9) — NOT a UI persona in `personas.ts`,
       NOT a DART client variant. Distinct domain entity with its own auth provider integration (tenant-scoped).
       Define in UAC under `signal_broadcast/Counterparty` (already shipped) — wire UI auth gate to recognise
       counterparty-type users and route them to `/services/signals/dashboard` on login.
-- [ ] [AGENT] P0. **Route-audit gate**: before Phase 5 marks done, `rg "href=\"/services/signals" --type ts`
+      **SHIPPED** unified-trading-system-ui `d7d9e9b` — `lib/auth/counterparty.ts` exports
+      `COUNTERPARTY_USER_TYPE = "counterparty"`, `COUNTERPARTY_POST_AUTH_REDIRECT =
+      "/services/signals/dashboard"`, `isCounterpartyUser()` discriminator (opt-in via
+      `counterparty-tenant` marker), and `postAuthRedirectFor()` helper. Stub-level wiring — full
+      JWT-claim / org-scoped flow tracked as follow-up in roadmap/next-waves.md.
+- [x] [AGENT] P0. **Route-audit gate**: before Phase 5 marks done, `rg "href=\"/services/signals" --type ts`
       must show inbound-link paths for both `/dashboard` and `/counterparties` routes. No-orphan rule enforced.
+      **VERIFIED 2026-04-20** — `/services/signals/dashboard` inbound from public `/signals` CTA +
+      admin counterparties detail + `COUNTERPARTY_POST_AUTH_REDIRECT` constant.
+      `/services/signals/counterparties` inbound from `ADMIN_TABS` Operations group
+      (admin-only entitlement). Grep over `tests/` + `components/` + `lib/` + `app/` confirms both
+      routes resolve from non-test code paths.
 - [ ] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate (shipped);
       counterparty observability UI renders with mocked data on staging; admin counterparty surface operational;
       `npm test` + `tsc --noEmit` clean.
