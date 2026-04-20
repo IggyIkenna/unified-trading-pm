@@ -22,10 +22,6 @@
 >
 > **Out of scope:** actual service implementation, real cost numbers, UAC code changes. This doc specifies; Stage 3E G1
 > items ship the spec.
->
-> **Pending cross-references (as of 2026-04-20):** this doc cites `demo-ops/demo-restriction-profiles.md` at §1.3
-> (demo_universe input), §3 (input feeds table), and §4 (output consumers). That file is **TO-BE-SHIPPED** by Stage 2
-> Phase 2.4 (partial — 5 of 9 demo-ops docs shipped). Cross-references resolve once Phase 2.4 completes.
 
 ---
 

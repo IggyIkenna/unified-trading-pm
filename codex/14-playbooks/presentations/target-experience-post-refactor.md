@@ -22,12 +22,6 @@
 >
 > **Viewing:** slides are `##`-delimited; render in any markdown viewer. Mermaid diagrams render in GitHub + most modern
 > markdown renderers. Screenshots are `![alt](screenshots/<file>.png)` references.
->
-> **Pending cross-references (as of 2026-04-20):** slide 2 layered-architecture diagram names three files not yet
-> shipped by Stage 2: `experience/staging-demo-journey.md` (Phase 2.1 pb3d — TO-BE-SHIPPED),
-> `demo-ops/demo-restriction-profiles.md` + `demo-ops/demo-scripts/*.md` (Phase 2.4 partial — 5 of 9 demo-ops docs
-> shipped). Slide 16 references `staging-demo-journey.md` similarly. Diagrams kept as-is because the structure is
-> correct; the underlying files land in Phase 2.4 completion.
 
 ---
 
@@ -92,7 +86,10 @@ graph TD
 
     subgraph DemoOps["demo-ops/"]
         DO1[demo-restriction-profiles.md]
-        DO2[demo-scripts/*.md]
+        DO2[pre-demo-curation + discovery]
+        DO3[post-demo-followup-orchestration]
+        DO4[account-intelligence-record]
+        DO5[dart-demo-modes + upsell-overlays]
     end
 
     subgraph InfraSpec["infra-spec/  (Stage 3)"]
