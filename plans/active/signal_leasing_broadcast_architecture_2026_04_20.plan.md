@@ -257,7 +257,7 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
 
 - [x] [AGENT] P0. Public marketing surface (signals.html / signals/page.tsx / nav entry / platform 3-card fix /
       `/briefings/signals-out` pillar) — **shipped under marketing_site_restructure**. No further work here.
-- [ ] [AGENT] P0. **Counterparty observability UI** — light dashboard at
+- [x] [AGENT] P0. **Counterparty observability UI** — light dashboard at
       `app/(platform)/services/signals/dashboard/page.tsx`. Components:
       - `<SignalHistoryTable>` — last N emissions scoped to entitled slots; filter by slot / date / status
       - `<BacktestComparisonPanel>` — Odum-held backtest numbers vs live signal aggregate (read-only)
@@ -266,6 +266,16 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
       - NO catalogue / NO execution / NO research / NO reporting beyond signal-delivery audit.
       - **No-orphan-page discipline**: wire inbound link from public `/signals` page CTA ("Existing
         counterparty? View your dashboard →", gated by login) AND from counterparty-login post-auth redirect.
+      **SHIPPED** unified-trading-system-ui `6e8db9f` (components + route + mock data) + `c1c17b9`
+      (13 unit tests + Playwright spec). Route resolves at
+      `/services/signals/dashboard`; 4 components (`<SignalHistoryTable>`, `<BacktestComparisonPanel>`,
+      `<DeliveryHealthPanel>`, `<PnlAttributionPanel>`) under
+      `components/signal-broadcast/`; `PnlAttributionPanel` renders null until
+      `Counterparty.pnl_reporting_enabled` flips (post-Sept-2026 follow-up).
+      No-orphan inbound CTA wired from public `/signals` page
+      (data-testid=`signals-public-counterparty-cta`, href=`/services/signals/dashboard`).
+      Post-auth redirect for counterparty-type users handled by B-3b's
+      `lib/auth/counterparty.ts` (`COUNTERPARTY_POST_AUTH_REDIRECT`).
 - [ ] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list
       counterparties, show emission state, toggle entitlements, view per-counterparty delivery health.
       **No-orphan discipline**: inbound link from admin platform-shell nav + admin landing page service-tile.
