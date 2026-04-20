@@ -1,5 +1,11 @@
 # Next waves
 
+> **Superseded by [stage-3e-refactor-plan.md](../infra-spec/stage-3e-refactor-plan.md)** (2026-04-20).
+>
+> Stage 3E is the authoritative post-Stage-3 refactor backlog — 26 items grouped G1 / G2 / G3 with full context (current
+> state, target state, blast radius, blockers, owner, proposed follow-up plan, unlocked playbooks). Content below is
+> preserved for historical reference only. Do not add new wave items here; propose G-items to the Stage 3E doc.
+
 Follow-up work items identified during the playbook SSOT plan. Each item is a candidate for its own plan (or rolls into
 an existing active plan).
 
