@@ -59,33 +59,33 @@ refactor direction; undecided links rot and break triage discipline.
 
 ### Phase 5A — Enumerate and classify the 5
 
-- [ ] [AGENT] P0. Extract the 5 probable-broken hrefs from `page-triage/broken-links.md` with their source file:line.
-- [ ] [AGENT] P0. For each href, classify: **BUILD** (surface must exist per G2.4 direction) or **PRUNE** (reference is
+- [x] [AGENT] P0. Extract the 5 probable-broken hrefs from `page-triage/broken-links.md` with their source file:line.
+- [x] [AGENT] P0. For each href, classify: **BUILD** (surface must exist per G2.4 direction) or **PRUNE** (reference is
       stale / page will be merged or deprecated).
-- [ ] [AGENT] P0. For each BUILD decision, confirm against `cross-cutting/catalogue-ml-model.md` that the target route
+- [x] [AGENT] P0. For each BUILD decision, confirm against `cross-cutting/catalogue-ml-model.md` that the target route
       is in G2.4's scope.
 
 ### Phase 5B — Execute PRUNE decisions
 
-- [ ] [AGENT] P0. For each PRUNE href, remove the entry from `lib/lifecycle-route-mappings.ts` and any component that
+- [x] [AGENT] P0. For each PRUNE href, remove the entry from `lib/lifecycle-route-mappings.ts` and any component that
       renders it as a menu/link item.
-- [ ] [AGENT] P0. No `// TODO: removed` comments — clean deletion.
-- [ ] [AGENT] P0. Grep-verify the href string is gone from the UI repo:
+- [x] [AGENT] P0. No `// TODO: removed` comments — clean deletion.
+- [x] [AGENT] P0. Grep-verify the href string is gone from the UI repo:
       `rg -l "<pruned-href>" unified-trading-system-ui/` returns zero.
 
 ### Phase 5C — Execute BUILD decisions
 
-- [ ] [AGENT] P0. For each BUILD href, either (a) create the minimal stub page with a "This surface is being built as
+- [x] [AGENT] P0. For each BUILD href, either (a) create the minimal stub page with a "This surface is being built as
       part of G2.4 ML catalogue refactor" notice + a `data-testid="g2-4-placeholder"` hook, or (b) redirect the href to
       an existing equivalent page via `next.config.ts`.
-- [ ] [AGENT] P0. Ensure every BUILD stub is reachable from the main nav (no URL-only-reachable surfaces).
+- [x] [AGENT] P0. Ensure every BUILD stub is reachable from the main nav (no URL-only-reachable surfaces).
 
 ### Phase 5D — Verify + QG
 
-- [ ] [SCRIPT] P0. Re-run the page-triage broken-link scan —
+- [x] [SCRIPT] P0. Re-run the page-triage broken-link scan —
       `rg "href=.*(?:/ml|/models)" lib/lifecycle-route-mappings.ts` produces only links that resolve.
-- [ ] [SCRIPT] P0. Run UI QG — `cd unified-trading-system-ui && bash scripts/quality-gates.sh`.
-- [ ] [AGENT] P0. Run Playwright spec `refactor-g1-5-ml-catalogue-hrefs.spec.ts` — click every formerly-broken href;
+- [x] [SCRIPT] P0. Run UI QG — `cd unified-trading-system-ui && bash scripts/quality-gates.sh`.
+- [x] [AGENT] P0. Run Playwright spec `refactor-g1-5-ml-catalogue-hrefs.spec.ts` — click every formerly-broken href;
       every one returns HTTP 200 or an intentional redirect target.
 
 ## Critical files to be modified

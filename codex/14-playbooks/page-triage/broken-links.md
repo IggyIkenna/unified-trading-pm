@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Broken outbound hrefs
 
 Hrefs referenced in source but pointing at non-existent pages. Every item here must be resolved (build the target OR
@@ -40,20 +44,35 @@ prune the reference) in Phase 3 of the parent plan.
 - **Page.tsx**: missing
 - **Fix**: change to `/services/reports/executive`.
 
-## 5 probable (flagged for deeper audit)
+## 5 probable — resolved 2026-04-20 (Refactor G1.5, all PRUNED)
 
-These appear in [lib/lifecycle-route-mappings.ts](unified-trading-system-ui/lib/lifecycle-route-mappings.ts) but no
-page.tsx exists:
+All five entries were classified **PRUNE** and removed from
+[lib/lifecycle-route-mappings.ts](unified-trading-system-ui/lib/lifecycle-route-mappings.ts),
+[tests/e2e/tier0-route-registry.ts](unified-trading-system-ui/tests/e2e/tier0-route-registry.ts),
+[tests/e2e/warmup.setup.ts](unified-trading-system-ui/tests/e2e/warmup.setup.ts),
+[tests/e2e/research.spec.ts](unified-trading-system-ui/tests/e2e/research.spec.ts),
+[tests/e2e/research-flow.spec.ts](unified-trading-system-ui/tests/e2e/research-flow.spec.ts),
+[lib/mocks/fixtures/build-data.ts](unified-trading-system-ui/lib/mocks/fixtures/build-data.ts) (re-pointed mock hrefs to
+live routes) and [UI_STRUCTURE_MANIFEST.json](unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json).
 
-- `/services/research/ml/overview`
-- `/services/research/ml/experiments`
-- `/services/research/ml/features`
-- `/services/research/ml/validation`
-- `/services/research/ml/deploy`
+Per-href decision rationale (aligned with the forthcoming G2.4 ML Model Catalogue refactor — see
+[../cross-cutting/catalogue-ml-model.md](../cross-cutting/catalogue-ml-model.md)):
 
-**Fix**: for each, either (a) build the page.tsx if the ML Model Catalogue refactor needs it, or (b) prune the reference
-from lifecycle-route-mappings.ts. Decision goes in the ML Model Catalogue refactor plan — tracked in
-[../roadmap/next-waves.md](../roadmap/next-waves.md).
+| Pruned href                         | Rationale                                                                                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/services/research/ml/overview`    | Duplicates `/services/research/ml` base hub; G2.4 will elevate the hub to catalogue-landing status without a second "overview" route.                               |
+| `/services/research/ml/experiments` | Experiment iteration is a quant-research concept surfaced elsewhere (`/services/research/quant`); G2.4 catalogue parity spec does not list experiments as an entry. |
+| `/services/research/ml/features`    | Features already surface at `/services/research/features` and `/services/research/feature-etl`; avoid duplicate features surface under ML.                          |
+| `/services/research/ml/validation`  | Validation/governance rolls into `/services/research/ml/registry` + `/services/research/ml/governance`; no standalone validation page planned by G2.4.              |
+| `/services/research/ml/deploy`      | Promotion rolls into `/services/research/ml/registry` (with lock_state + maturity per architecture v2); no standalone deploy page.                                  |
+
+Durable test:
+[unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-5-ml-catalogue-hrefs.spec.ts](unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-5-ml-catalogue-hrefs.spec.ts)
+asserts each pruned href 404s and each remaining live ML sub-route renders for the admin persona.
+
+G2.4 follow-ups (outside G1.5 scope): elevate `/services/research/ml/` to catalogue status with coverage matrix
+(model_family × asset_class × training_period × maturity × lock_state), per-entry detail pages, and admin lock-state
+controls — tracked in [../roadmap/next-waves.md](../roadmap/next-waves.md).
 
 ## Verification
 
