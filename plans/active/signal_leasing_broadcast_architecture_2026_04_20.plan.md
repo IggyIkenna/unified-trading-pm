@@ -124,16 +124,16 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 
 ### Phase 1 — Pre-audit
 
-- [ ] [AGENT] P0. Grep every repo for existing `SIGNAL`, `broadcast`, `counterparty`, `signal_lease` tokens — establish
+- [x] [AGENT] P0. Grep every repo for existing `SIGNAL`, `broadcast`, `counterparty`, `signal_lease` tokens — establish
       what (if anything) already exists.
-- [ ] [AGENT] P0. Audit existing event taxonomy in UTL `STANDARD_LIFECYCLE_EVENTS` to confirm no naming collision.
-- [ ] [AGENT] P0. Audit secret-manager convention in existing code — reuse `ApiKeyReloader` pattern for counterparty
+- [x] [AGENT] P0. Audit existing event taxonomy in UTL `STANDARD_LIFECYCLE_EVENTS` to confirm no naming collision.
+- [x] [AGENT] P0. Audit secret-manager convention in existing code — reuse `ApiKeyReloader` pattern for counterparty
       credentials.
-- [ ] [AGENT] P0. Audit `shard-level-failure-isolation.md` + existing adapter error-classification pattern — signal
+- [x] [AGENT] P0. Audit `shard-level-failure-isolation.md` + existing adapter error-classification pattern — signal
       emission must classify errors through same `classify_venue_error()` pattern.
-- [ ] [AGENT] P0. Build manifest of all UAC entity schemas that will need `signal_broadcast/` additions.
-- [ ] [AGENT] P0. **Phase 1 success gate**: pre-audit manifest committed; no naming collisions; design patterns to reuse
-      identified.
+- [x] [AGENT] P0. Build manifest of all UAC entity schemas that will need `signal_broadcast/` additions.
+- [x] [AGENT] P0. **Phase 1 success gate**: pre-audit manifest committed; no naming collisions; design patterns to reuse
+      identified. Manifest: `plans/signal_leasing_preaudit_manifest_2026_04_20.md`.
 
 ### Phase 2 — UAC + UTL contracts
 
