@@ -14,25 +14,24 @@ depends_on:
 
 ## Context
 
-The public marketing site (`unified-trading-system-ui/public/*.html` + `app/(public)/` routes) has drifted from
-the locked commercial model after the Path-to-$100M finalisation + Signal Leasing 4th-path locking. Specifically:
+The public marketing site (`unified-trading-system-ui/public/*.html` + `app/(public)/` routes) has drifted from the
+locked commercial model after the Path-to-$100M finalisation + Signal Leasing 4th-path locking. Specifically:
 
-- The `/platform` page framed DART as three vague entry points ("data-only / research+execution / full operating
-  layer") — didn't match the rule-04 two-axis matrix. Fixed 2026-04-20 with a 3-card section, but that's a partial
-  fix.
+- The `/platform` page framed DART as three vague entry points ("data-only / research+execution / full operating layer")
+  — didn't match the rule-04 two-axis matrix. Fixed 2026-04-20 with a 3-card section, but that's a partial fix.
 - The Data layer copy said "available in your cloud" which violated rule 07 data-licensing-boundaries (no raw-data
   resale). Fixed 2026-04-20.
 - `/signals` shipped 2026-04-20 as an orphaned page with no inbound links (now fixed — nav entry added).
 - There is no **4-path click-through structure** distinguishing the two DART directions (signals-in vs signals-out),
   full DART platform, IM, and Reg Umbrella.
 - There is **no light-auth research gate** — detailed USP content (schema details, strategy family detail, fund/SMA
-  hierarchy visuals) is either fully public (USP leaks) or fully locked (prospects have no material between first
-  call and demo).
+  hierarchy visuals) is either fully public (USP leaks) or fully locked (prospects have no material between first call
+  and demo).
 - Schema-level content (the rule-10 eight-field instruction schema for signals-in; the signal payload schema for
-  signals-out; fund/SMA hierarchy visuals; strategy family + archetype surface) isn't surfaced click-through from
-  the marketing landing.
-- Strategy codex docs (`codex/09-strategy/architecture-v2/`) contain rich content on strategy families + archetypes
-  but the marketing site doesn't leverage any of it.
+  signals-out; fund/SMA hierarchy visuals; strategy family + archetype surface) isn't surfaced click-through from the
+  marketing landing.
+- Strategy codex docs (`codex/09-strategy/architecture-v2/`) contain rich content on strategy families + archetypes but
+  the marketing site doesn't leverage any of it.
 
 This plan produces a coherent marketing-site structure that:
 
@@ -43,45 +42,63 @@ This plan produces a coherent marketing-site structure that:
 
 ## Decisions needed (block Phase 1)
 
-| # | Decision | Options | Recommendation |
-|---|---|---|---|
-| M1 | **Overall nav structure** | (a) 5 top-level items (DART / Signals / IM / Reg / Firm); (b) 3 top-level items (Services + Firm + Contact) with dropdown under Services; (c) Current mixed style | (a) 5 top-level — maximises clarity; dropdowns can still organise sections within each |
-| M2 | **DART page scope** | (a) Single `/platform` page covering all DART variants; (b) Split to `/dart/signals-in`, `/dart/full`, remove `/platform`; (c) Keep `/platform` as DART umbrella + sub-pages per variant | (c) Umbrella + sub-pages — preserves existing page; click-throughs give detail |
-| M3 | **Signals-in vs Signals-out naming** | (a) "DART Signals-In" / "Signals Service (Signals-Out)"; (b) "Client-signal DART" / "Odum signals"; (c) Keep current terminology | (a) — direction-arrow framing is the clearest for prospects |
-| M4 | **Light-auth gate granularity** | (a) Single gate covering all research docs; (b) Per-path gates (DART-in code / DART-out code / Full-DART code / IM code / Reg code); (c) Tiered — one light gate for overview detail, heavier gate (Firebase staging) for demo | (c) Tiered — matches existing `authentication/` 3-tier model |
-| M5 | **Schema visibility post-click-through** | (a) Full schema JSON on the page; (b) Schema overview + "contact for full spec"; (c) Full schema inside light-auth gate | (c) Full schema inside light-auth gate — serious prospects get it; casual browsers see the shape |
-| M6 | **Fund/SMA hierarchy visuals** | (a) Static diagrams embedded in IM + Reg pages; (b) Interactive drill-down component; (c) Both | (a) Static first (faster ship); interactive as follow-up Stage 3 |
-| M7 | **Strategy family + archetype surface** | (a) Full catalogue with maturity + venue detail; (b) Summary list of archetypes with count; (c) Interactive matrix filtered by category | (a) Full catalogue behind the light-auth gate; preserves USP while giving serious prospects real content |
-| M8 | **Read-only key model for IM/Reg** | Document the "client provides read-only venue API keys" mechanic on IM + Reg pages (not currently surfaced) | Confirm the exact on-page copy |
-| M9 | **pb3b fund-slicing mechanic** | "IM client sees only their slice of the fund (Pooled) or their own SMA" — surface visually on IM page | Confirm visual scope |
-| M10 | **Existing clients referenced publicly** | Elysium / Desmond / CME client / India Options names: surface or anonymise on marketing site? | Recommendation: anonymise via "sector / geography / strategy family" until explicit permission signed |
+| #   | Decision                                 | Options                                                                                                                                                                                                                        | Recommendation                                                                                           |
+| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| M1  | **Overall nav structure**                | (a) 5 top-level items (DART / Signals / IM / Reg / Firm); (b) 3 top-level items (Services + Firm + Contact) with dropdown under Services; (c) Current mixed style                                                              | (a) 5 top-level — maximises clarity; dropdowns can still organise sections within each                   |
+| M2  | **DART page scope**                      | (a) Single `/platform` page covering all DART variants; (b) Split to `/dart/signals-in`, `/dart/full`, remove `/platform`; (c) Keep `/platform` as DART umbrella + sub-pages per variant                                       | (c) Umbrella + sub-pages — preserves existing page; click-throughs give detail                           |
+| M3  | **Signals-in vs Signals-out naming**     | (a) "DART Signals-In" / "Signals Service (Signals-Out)"; (b) "Client-signal DART" / "Odum signals"; (c) Keep current terminology                                                                                               | (a) — direction-arrow framing is the clearest for prospects                                              |
+| M4  | **Light-auth gate granularity**          | (a) Single gate covering all research docs; (b) Per-path gates (DART-in code / DART-out code / Full-DART code / IM code / Reg code); (c) Tiered — one light gate for overview detail, heavier gate (Firebase staging) for demo | (c) Tiered — matches existing `authentication/` 3-tier model                                             |
+| M5  | **Schema visibility post-click-through** | (a) Full schema JSON on the page; (b) Schema overview + "contact for full spec"; (c) Full schema inside light-auth gate                                                                                                        | (c) Full schema inside light-auth gate — serious prospects get it; casual browsers see the shape         |
+| M6  | **Fund/SMA hierarchy visuals**           | (a) Static diagrams embedded in IM + Reg pages; (b) Interactive drill-down component; (c) Both                                                                                                                                 | (a) Static first (faster ship); interactive as follow-up Stage 3                                         |
+| M7  | **Strategy family + archetype surface**  | (a) Full catalogue with maturity + venue detail; (b) Summary list of archetypes with count; (c) Interactive matrix filtered by category                                                                                        | (a) Full catalogue behind the light-auth gate; preserves USP while giving serious prospects real content |
+| M8  | **Read-only key model for IM/Reg**       | Document the "client provides read-only venue API keys" mechanic on IM + Reg pages (not currently surfaced)                                                                                                                    | Confirm the exact on-page copy                                                                           |
+| M9  | **pb3b fund-slicing mechanic**           | "IM client sees only their slice of the fund (Pooled) or their own SMA" — surface visually on IM page                                                                                                                          | Confirm visual scope                                                                                     |
+| M10 | **Existing clients referenced publicly** | Elysium / Desmond / CME client / India Options names: surface or anonymise on marketing site?                                                                                                                                  | Recommendation: anonymise via "sector / geography / strategy family" until explicit permission signed    |
 
 **All M1-M10 must be confirmed by user before Phase 1 executes.**
+
+## Decisions locked 2026-04-20
+
+User confirmed all 10 M-recommendations in session 2026-04-20. Phase 1 pre-audit unblocked.
+
+| # | Locked decision |
+|---|---|
+| M1 | 5 top-level nav items (DART / Signals / IM / Reg / Firm) |
+| M2 | `/platform` remains DART umbrella + split sub-pages `/platform/signals-in` and `/platform/full` for click-through detail |
+| M3 | "DART Signals-In" / "Signals Service (Signals-Out)" naming (direction-arrow explicit) |
+| M4 | Tiered light-auth gate matching existing `authentication/` 3-tier model |
+| M5 | Full schema content behind light-auth gate; page-level copy gives overview only |
+| M6 | Static SVG/HTML fund/SMA hierarchy visuals on `/strategies` + `/regulatory` in Phase 4; interactive drill-down deferred to Stage 3 |
+| M7 | Full strategy family + archetype catalogue behind light-auth gate (reads from `codex/09-strategy/architecture-v2/category-instrument-coverage.md`) |
+| M8 | Surface read-only-key mechanic on IM + Reg pages (scope of copy to be drafted in Phase 2) |
+| M9 | Fund-slicing visibility mechanic surfaced on IM page (pb3b narrative) |
+| M10 | Anonymise existing clients (sector / geography / strategy-family descriptors) until explicit written permission to name |
 
 ## Commercial-path mapping (what lives where)
 
 Per the locked rule-04 matrix + Signal Leasing 4th-path:
 
-| Path | Marketing URL | Primary content |
-|---|---|---|
-| **DART Signals-In** (Client, downstream — Elysium/Desmond shape) | `/platform#signals-in` or `/dart/signals-in` | Rule-10 8-field instruction schema; execution + reconciliation + reporting surfaces; pricing Tier B fixed block model |
-| **DART Full Pipeline** | `/platform#full-dart` or `/dart/full` | Research + promote + paper + live pipeline; metered backtest consumption; IP-power exclusivity |
-| **Signals Service (Signals-Out)** — QRT-type | `/signals` | Odum signals to counterparty execution; backend-first + light UI (signal history, backtest comparison, delivery health); hybrid pricing |
-| **Investment Management** | `/strategies` (renamed from current if clearer) | Allocate capital to Odum-run strategies; 30-35% perf + platform-fee choice; fund/SMA hierarchy; read-only venue keys |
-| **Regulatory Umbrella** | `/regulatory` | FCA cover; multi-fund/SMA client setup; similar read-only-key model; supervisory artifacts |
-| **Firm** | `/firm` | Team + operating history + FCA credentials |
-| **Contact** | `/contact` | First-call booking |
+| Path                                                             | Marketing URL                                   | Primary content                                                                                                                         |
+| ---------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **DART Signals-In** (Client, downstream — Elysium/Desmond shape) | `/platform#signals-in` or `/dart/signals-in`    | Rule-10 8-field instruction schema; execution + reconciliation + reporting surfaces; pricing Tier B fixed block model                   |
+| **DART Full Pipeline**                                           | `/platform#full-dart` or `/dart/full`           | Research + promote + paper + live pipeline; metered backtest consumption; IP-power exclusivity                                          |
+| **Signals Service (Signals-Out)** — QRT-type                     | `/signals`                                      | Odum signals to counterparty execution; backend-first + light UI (signal history, backtest comparison, delivery health); hybrid pricing |
+| **Investment Management**                                        | `/strategies` (renamed from current if clearer) | Allocate capital to Odum-run strategies; 30-35% perf + platform-fee choice; fund/SMA hierarchy; read-only venue keys                    |
+| **Regulatory Umbrella**                                          | `/regulatory`                                   | FCA cover; multi-fund/SMA client setup; similar read-only-key model; supervisory artifacts                                              |
+| **Firm**                                                         | `/firm`                                         | Team + operating history + FCA credentials                                                                                              |
+| **Contact**                                                      | `/contact`                                      | First-call booking                                                                                                                      |
 
 ## Cross-references
 
 - Parent: [path_to_100m_finalization_2026_04_20.plan.md](path_to_100m_finalization_2026_04_20.plan.md)
-- Sibling: [signal_leasing_broadcast_architecture_2026_04_20.plan.md](signal_leasing_broadcast_architecture_2026_04_20.plan.md)
-- Locked commercial model: `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`,
-  `dart-pricing-axes.md`, `im-profit-share-structures.md`
+- Sibling:
+  [signal_leasing_broadcast_architecture_2026_04_20.plan.md](signal_leasing_broadcast_architecture_2026_04_20.plan.md)
+- Locked commercial model: `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`, `dart-pricing-axes.md`,
+  `im-profit-share-structures.md`
 - Strategy codex: `codex/09-strategy/architecture-v2/category-instrument-coverage.md` +
   `strategy-allocation-lock-matrix.md`
-- Auth tier model: `codex/14-playbooks/authentication/light-auth-briefings.md`,
-  `firebase-staging.md`, `firebase-production.md`
+- Auth tier model: `codex/14-playbooks/authentication/light-auth-briefings.md`, `firebase-staging.md`,
+  `firebase-production.md`
 - Instruction schema: `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`
 
 ## Out of scope
@@ -117,47 +134,49 @@ Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
 
 ### Phase 1 — Marketing-page audit
 
-- [ ] [AGENT] P0. Audit all 7 marketing pages for rule-02 (tone), rule-06 (don't-show), rule-07 (no raw data),
-      rule-08 (no pricing leakage), rule-09 (one-liner expansions).
-- [ ] [AGENT] P0. Build per-page issue list + remediation spec.
-- [ ] [AGENT] P0. **Phase 1 gate: audit manifest committed; every inaccuracy catalogued.**
+- [x] [AGENT] P0. Audit all 7 marketing pages for rule-02 (tone), rule-06 (don't-show), rule-07 (no raw data), rule-08
+      (no pricing leakage), rule-09 (one-liner expansions). Done 2026-04-20.
+- [x] [AGENT] P0. Build per-page issue list + remediation spec. Committed as
+      [marketing_site_audit_manifest_2026_04_20.md](marketing_site_audit_manifest_2026_04_20.md) — 15 tone fixes
+      (T1-T15), term-drift table, per-briefing gap matrix, auth-state clarification, pricing-leakage items (T9-T11)
+      flagged for commercial review.
+- [x] [AGENT] P0. **Phase 1 gate: audit manifest committed; every inaccuracy catalogued.** Done 2026-04-20.
 
 ### Phase 2 — Public-page restructure
 
 - [ ] [AGENT] P0. `/platform` — split into umbrella + 2 click-through sub-pages: `/platform/signals-in` and
       `/platform/full`. Keep `/platform` as DART service-landing with 2 clear cards linking to sub-pages.
 - [ ] [AGENT] P0. `/signals` — already shipped; refine to emphasise backend-first + light-UI framing.
-- [ ] [AGENT] P0. `/strategies` (IM) — add fund/SMA hierarchy visual + read-only-key mechanic + client-slice
-      visibility framing (rule-03 same-system; pb3b narrative overlay).
+- [ ] [AGENT] P0. `/strategies` (IM) — add fund/SMA hierarchy visual + read-only-key mechanic + client-slice visibility
+      framing (rule-03 same-system; pb3b narrative overlay).
 - [ ] [AGENT] P0. `/regulatory` — add multi-fund/SMA client setup visual + read-only-key mechanic.
 - [ ] [AGENT] P0. `/homepage` — refresh top-level frame to reflect 4 DART-adjacent paths + IM + Reg cleanly.
 - [ ] [AGENT] P0. Cross-linking: every page links to siblings where relevant. No orphan pages.
-- [ ] [AGENT] P0. **Phase 2 gate: all 5 paths (DART-in, DART-full, Signals-out, IM, Reg) addressable from
-      homepage in 1 click.**
+- [ ] [AGENT] P0. **Phase 2 gate: all 5 paths (DART-in, DART-full, Signals-out, IM, Reg) addressable from homepage in 1
+      click.**
 
 ### Phase 3 — Light-auth research gate + schema content
 
 - [ ] [AGENT] P0. Introduce `/briefings/` route family (already exists per
-      `components/briefings/briefing-access-gate.tsx`). Provision briefing codes per path (DART-in code,
-      DART-out code, Full-DART code, IM code, Reg code).
+      `components/briefings/briefing-access-gate.tsx`). Provision briefing codes per path (DART-in code, DART-out code,
+      Full-DART code, IM code, Reg code).
 - [ ] [AGENT] P0. `/briefings/dart-signals-in` — rule-10 8-field instruction schema full spec + venue compatibility
       matrix + lifecycle semantics.
 - [ ] [AGENT] P0. `/briefings/signals-out` — signal payload schema full spec + delivery + light-UI mockup.
-- [ ] [AGENT] P0. `/briefings/full-dart` — research surface walkthrough + promote pipeline + backtest metering
-      detail.
+- [ ] [AGENT] P0. `/briefings/full-dart` — research surface walkthrough + promote pipeline + backtest metering detail.
 - [ ] [AGENT] P0. `/briefings/im` — fund/SMA mechanics + perf-fee mechanics (no specific numbers — those are still
       codex-private per rule 08).
 - [ ] [AGENT] P0. `/briefings/regulatory` — regulatory scope + onboarding workstreams + supervisory artifacts.
 - [ ] [AGENT] P0. Per-path briefing code in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_*` env vars + dev-default fallback.
-- [ ] [AGENT] P0. **Phase 3 gate: all 5 briefing paths behind light-auth; content renders; codes rotate per
-      prospect per `light-auth-briefings.md`.**
+- [ ] [AGENT] P0. **Phase 3 gate: all 5 briefing paths behind light-auth; content renders; codes rotate per prospect per
+      `light-auth-briefings.md`.**
 
 ### Phase 4 — Visuals
 
-- [ ] [AGENT] P0. Fund/SMA hierarchy diagram (static SVG or HTML/CSS). Shows: org → {Pooled fund with share classes
-      | SMA per client} → client → venue API keys. Embedded on `/strategies` (IM page).
-- [ ] [AGENT] P0. Multi-fund/SMA diagram for Reg Umbrella. Shows Reg client as "designated representative" with
-      N funds/SMAs under them. Embedded on `/regulatory`.
+- [ ] [AGENT] P0. Fund/SMA hierarchy diagram (static SVG or HTML/CSS). Shows: org → {Pooled fund with share classes |
+      SMA per client} → client → venue API keys. Embedded on `/strategies` (IM page).
+- [ ] [AGENT] P0. Multi-fund/SMA diagram for Reg Umbrella. Shows Reg client as "designated representative" with N
+      funds/SMAs under them. Embedded on `/regulatory`.
 - [ ] [AGENT] P0. Strategy family + archetype list (reads from `category-instrument-coverage.md` SSOT). Behind
       `/briefings/full-dart` light-auth gate. 18 archetypes × 5 categories × 8 instrument-types with lock state
       indicators.
@@ -167,10 +186,9 @@ Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
 
 ### Phase 5 — Docs alignment
 
-- [ ] [AGENT] P0. Update `codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light
-      auth gate path.
-- [ ] [AGENT] P0. Update `codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code
-      pattern.
+- [ ] [AGENT] P0. Update `codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light auth
+      gate path.
+- [ ] [AGENT] P0. Update `codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code pattern.
 - [ ] [AGENT] P0. Update `codex/14-playbooks/implementation-mapping/route-mapping.md` — register new routes.
 - [ ] [AGENT] P0. Update memory under
       `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/`.
@@ -180,10 +198,10 @@ Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
 
 - [ ] [AGENT] P0. `npx tsc --noEmit` clean.
 - [ ] [AGENT] P0. `CI=true npm test -- --run` all tests pass.
-- [ ] [AGENT] P0. Playwright marketing spec updated — asserts all 5 paths reachable from `/` + briefing gate
-      renders for each path.
-- [ ] [AGENT] P0. Manual spot-check: every page loads, every click-through works, no rule-07 / rule-08 copy
-      leaks, nav consistent across pages.
+- [ ] [AGENT] P0. Playwright marketing spec updated — asserts all 5 paths reachable from `/` + briefing gate renders for
+      each path.
+- [ ] [AGENT] P0. Manual spot-check: every page loads, every click-through works, no rule-07 / rule-08 copy leaks, nav
+      consistent across pages.
 - [ ] [AGENT] P0. Commit + push. Memory updated.
 
 ## Affected files (estimate)
@@ -198,14 +216,14 @@ Phase 0 (M1-M10 decisions) ──▶ Phase 1 (marketing-page audit)
 
 ## Risks + mitigations
 
-| Risk | Probability | Impact | Mitigation |
-|---|---|---|---|
-| USP leak through public page before gate lands | Medium | High | Ship Phase 3 light-auth gate BEFORE Phase 2's detailed-schema copy lands; stage the rollout |
-| Marketing copy drift from rule-09 voice | Medium | Medium | Tone audit per page against rule-02 checklist in Phase 1 |
-| Light-auth codes leaked by prospects sharing | Low | Low | Per-prospect rotation (already in `light-auth-briefings.md`); low-stakes content only |
-| Fund/SMA visual wrong vs legal reality | Medium | High | Legal review of visuals before Phase 4 ships |
-| Cross-link graph becomes hard to maintain | Low | Medium | Central `route-mapping.md` per impl-mapping dir |
-| Strategy family content leaks archetype-level IP | Medium | High | Rule 07-audit in Phase 1; strategy detail goes behind auth gate per M7 |
+| Risk                                             | Probability | Impact | Mitigation                                                                                  |
+| ------------------------------------------------ | ----------- | ------ | ------------------------------------------------------------------------------------------- |
+| USP leak through public page before gate lands   | Medium      | High   | Ship Phase 3 light-auth gate BEFORE Phase 2's detailed-schema copy lands; stage the rollout |
+| Marketing copy drift from rule-09 voice          | Medium      | Medium | Tone audit per page against rule-02 checklist in Phase 1                                    |
+| Light-auth codes leaked by prospects sharing     | Low         | Low    | Per-prospect rotation (already in `light-auth-briefings.md`); low-stakes content only       |
+| Fund/SMA visual wrong vs legal reality           | Medium      | High   | Legal review of visuals before Phase 4 ships                                                |
+| Cross-link graph becomes hard to maintain        | Low         | Medium | Central `route-mapping.md` per impl-mapping dir                                             |
+| Strategy family content leaks archetype-level IP | Medium      | High   | Rule 07-audit in Phase 1; strategy detail goes behind auth gate per M7                      |
 
 ## Success criteria
 
