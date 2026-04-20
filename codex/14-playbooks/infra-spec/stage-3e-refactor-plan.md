@@ -232,6 +232,111 @@ Each item below has:
 - **Unlocks playbooks.** pb1 `marketing-journey.md` (external codex links in anonymous marketing), pb2b
   `dart-briefing.md` (post-light-auth links into internal-ish codex sections).
 
+### 1.10 Questionnaire-to-configuration flow (2026-04-20 amendment)
+
+- **Current state.** No prospect-facing questionnaire. Sales / ops manually map a prospect's stated interest onto a
+  persona. No audit trail, no Firestore record, no `_apply_questionnaire_override` overlay feeding the
+  restriction-profile engine. Resolution of a `QuestionnaireResponse` → `RestrictionProfile` happens only in sales
+  heads.
+- **Target state.** Public `/questionnaire` route in `unified-trading-system-ui` with a 6-axis form (categories,
+  instrument_types, venue_scope, strategy_style, service_family [4-value prospect-facing enum], fund_structure). Submit
+  writes to Firestore + localStorage fallback. Admin playback surface in `user-management-ui` at `/questionnaires`. UAC
+  `QuestionnaireResponse` pydantic schema. Strategy-service endpoint
+  `POST /internal/restriction-profile/{persona_id}/resolve` accepts the response body and returns a resolved
+  `RestrictionProfile` via `_apply_questionnaire_override` overlay composed on top of `prod_restrictions` (G1.7).
+- **Blast radius.** UAC (1 new schema), strategy-service (1 new router + resolve endpoint), unified-trading-system-ui (1
+  new public route + form), user-management-ui (1 new admin route + Firestore reader), Firestore security rules
+  (questionnaire collection; follow-up plan).
+- **Blockers.** G1.7 restriction-profile engine (consumer of resolved profile). G1.11 service-family scope rules
+  (constrains the 4-value picker).
+- **Group.** G1
+- **Owner.** UAC + strategy-service + UI + user-management-ui
+- **Proposed follow-up plan.**
+  [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
+  — **SHIPPED 2026-04-20** (UAC `e4a9e72`, strategy-service `429ff53`, ui `ce53f4d`, user-management-ui `93f7a76`).
+- **Unlocks playbooks.** pb3a / pb3b / pb3c (questionnaire becomes the entry point to each demo walkthrough); feeds
+  account-intelligence-record CRM (G2.11).
+
+### 1.11 Service-family scope rules (rule 12) (2026-04-20 amendment)
+
+- **Current state.** Service-family constraints (which audiences can observe / report / research / promote /
+  admin-catalogue) exist as prose in Stage 2 docs. No rule file, no YAML, no UAC function. `access_control()` pre-check
+  does not consult scope rules — scope is implicit in persona-level entitlement arrays.
+- **Target state.** Rule 12 at `codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.{md,yaml}` codifies:
+  observe ∈ {DART}; reporting ∈ {IM, DART-reporting-only, Reg Umbrella}; research / promote ∈ {full-DART};
+  strategy-catalogue-admin ∈ {admin, IM-desk}. New UAC function
+  `check_service_family_scope(audience, service_family, activity) -> ScopeDecision` consumed as a pre-check inside
+  `access_control()` (G1.6). 6-value internal `ServiceFamily` enum
+  (`IM | RegUmbrella | DART | DART_reporting_only | admin | IM_desk`) vs 4-value prospect-facing enum
+  (`IM | DART | RegUmbrella | combo`) both declared in UAC.
+- **Blast radius.** UAC (1 new function + 1 new enum + YAML loader), codex (1 new rule + YAML), strategy-service
+  (access_control pre-check wire-in), user-management-ui (picker uses prospect-facing enum), unified-trading-system-ui
+  (questionnaire picker).
+- **Blockers.** G1.6 derivation engine (access_control is the consumer). G1.9 rule-registry slot 11 already taken by
+  codex scope registry → scope rules shipped as rule 12.
+- **Group.** G1
+- **Owner.** UAC + codex + strategy-service + UI
+- **Proposed follow-up plan.**
+  [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
+  — **SHIPPED 2026-04-20**.
+- **Unlocks playbooks.** pb3a / pb3c (hard scope on DART vs Reg Umbrella route access); validates G1.4 persona matrix.
+
+### 1.12 Public-site IA + briefings polish (2026-04-20 amendment)
+
+- **Current state.** 9 public pages (`/`, `/investment-management`, `/platform`, `/regulatory`, `/firm`, `/contact`,
+  `/demo`, `/signup`, `/login`) each render different headers. Briefings pages use ad-hoc hero formatting. Information
+  architecture drift — rule 02 tone and rule 06 LOCKED-VISIBLE guidance not surfaced consistently.
+- **Target state.** Single `<SiteHeader>` component adopted across all 9 public pages. New `<BriefingHero>` component
+  applies cut-through-noise formatting to `/briefings/*` sub-pages. UI-only refactor; no auth/routing changes. Follows
+  rule 02 tone + rule 06 visibility without touching entitlements or data.
+- **Blast radius.** 9 public page components, 2 new shared components (`<SiteHeader>`, `<BriefingHero>`), briefings
+  hub + sub-pages.
+- **Blockers.** None — UI-only, additive.
+- **Group.** G1
+- **Owner.** UI
+- **Proposed follow-up plan.**
+  [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
+  — **SHIPPED 2026-04-20**.
+- **Unlocks playbooks.** pb1 `marketing-journey.md` (consistent public-site framing), pb2b `dart-briefing.md` +
+  `regulatory-umbrella-briefing.md` (briefing hero polish).
+
+### 1.13 Demo upsell-overlay tempt-logic (2026-04-20 amendment)
+
+- **Current state.** Demo-ops docs reference "upsell overlay" and "tempt logic" in prose, but no runtime transform
+  widens the demo universe to tease adjacent-tier content. Sales must manually switch persona to showcase upgrade paths.
+- **Target state.** Per-axis widening rules in `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` +
+  `apply_tempt_logic(response, env) -> QuestionnaireResponse` transform in
+  `unified-api-contracts/unified_api_contracts/internal/architecture_v2/tempt_logic.py`. Chained into `resolve_profile`
+  BEFORE the questionnaire-overlay step. DEMO env only (`env.is_demo=True`); production is a no-op. Never widens
+  `service_family` or `fund_structure` axes (rule-12 scope is absolute, not teasable).
+- **Blast radius.** UAC (1 new module), demo-ops (1 new YAML), strategy-service (resolve endpoint reads tempt output).
+- **Blockers.** G1.7 restriction-profile engine (consumer), G1.10 questionnaire (input source).
+- **Group.** G1
+- **Owner.** UAC + strategy-service + demo-ops
+- **Proposed follow-up plan.**
+  [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
+  — **SHIPPED 2026-04-20** (commit `147c773`).
+- **Unlocks playbooks.** pb3c `dart-demo.md` (upsell path tease), pb3b `investment-management-demo.md` (flavour
+  widening).
+
+### 1.14 Presentation deck refresh + HTML stretch (2026-04-20 amendment)
+
+- **Current state.** `codex/14-playbooks/presentations/target-experience-post-refactor.md` drafted against the 9-item G1
+  enumeration; missing slides for items 1.10-1.14 and the 2026-04-20 amendment's cross-cutting lessons (MCP Playwright
+  discipline, dev/staging parity). No HTML reveal.js wrapper.
+- **Target state.** Markdown deck refreshed for the 14-item G1 surface + 7 new slides (G1.10 questionnaire, G1.11 scope
+  rules, G1.12 public-site IA, G1.13 tempt-logic, G1.4 persona matrix, MCP Playwright discipline, dev/staging parity).
+  Optional reveal.js HTML wrapper at `target-experience-post-refactor.html` — HTML stretch depends on G1.4 personas
+  screenshots landing first.
+- **Blast radius.** 1 markdown refresh, 1 new HTML wrapper (stretch), 0 code.
+- **Blockers.** G1.4 persona combinatorial expansion (screenshots for stretch only).
+- **Group.** G1 (markdown); G1 stretch (HTML, after G1.4).
+- **Owner.** codex / presentations
+- **Proposed follow-up plan.**
+  [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+  — **SHIPPED 2026-04-20** (markdown + HTML stretch both landed post-G1.4).
+- **Unlocks playbooks.** Operator-level communication of the Stage-3E roadmap to stakeholders.
+
 ---
 
 ## 2. G2 — next (ships in months 2–4)
@@ -528,14 +633,15 @@ Each item below has:
 
 ## 4. Group totals
 
-| Group     | Item count | Primary unlock                                                                                                                                                                            |
-| --------- | :--------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| G1        |     9      | Stage 3C derivation engine + phase unification + instruction-schema validation + LOCKED-VISIBLE + 2 new personas + 5 broken hrefs fixed + UAC ArchetypeCapabilityV2 + codex scope tagging |
-| G2        |     11     | JWT claims + API keys + 3 catalogue refactors (Data + ML + Execution Algo) + staging Firebase + demo automation + fund registry + 10 UAC gaps + allocator split + CRM base                |
-| G3        |     6      | Pricing engine + pricing numbers + CMS migration + DART rebrand + consistency agents + e2e expansion                                                                                      |
-| **Total** |   **26**   | Full G1 + G2 + G3 roadmap to a shippable SSOT end state                                                                                                                                   |
+| Group     | Item count | Primary unlock                                                                                                                                                                                                                                                                                 |
+| --------- | :--------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G1        |     14     | Stage 3C derivation engine + phase unification + instruction-schema validation + LOCKED-VISIBLE + 2 new personas + 5 broken hrefs fixed + UAC ArchetypeCapabilityV2 + codex scope tagging + questionnaire flow + service-family scope rules + public-site IA + tempt-logic + presentation deck |
+| G2        |     11     | JWT claims + API keys + 3 catalogue refactors (Data + ML + Execution Algo) + staging Firebase + demo automation + fund registry + 10 UAC gaps + allocator split + CRM base                                                                                                                     |
+| G3        |     6      | Pricing engine + pricing numbers + CMS migration + DART rebrand + consistency agents + e2e expansion                                                                                                                                                                                           |
+| **Total** |   **31**   | Full G1 + G2 + G3 roadmap to a shippable SSOT end state                                                                                                                                                                                                                                        |
 
-(The plan calls for ≥ 15; 26 is the complete enumerable backlog. Trim G3 items if scope compression is needed.)
+(The plan calls for ≥ 15; 31 is the complete enumerable backlog after the 2026-04-20 amendment added G1 items 1.10-1.14.
+Trim G3 items if scope compression is needed.)
 
 ---
 
@@ -550,12 +656,22 @@ G1 — now
  ├── 1.6 Derivation engine ships ◄─────── (uses ArchetypeCapabilityV2)
  │        │
  │        ├─▶ 1.7 Restriction-profile engine (demo registry)
+ │        │       │
+ │        │       ├─▶ 1.10 Questionnaire-to-configuration flow
+ │        │       │       │
+ │        │       │       ├─▶ 1.4 Persona combinatorial expansion
+ │        │       │       └─▶ 1.13 Demo upsell-overlay tempt-logic
+ │        │       │
+ │        │       └─▶ 1.11 Service-family scope rules (rule 12) ◄─── (access_control pre-check)
+ │        │
  │        ├─▶ 1.1 Phase-unification refactor
  │        ├─▶ 1.2 Instruction-schema validation service
  │        └─▶ 1.3 LOCKED-VISIBLE UI mode
  │
- ├── 1.4 prospect-dart + prospect-reg personas (independent)
- └── 1.5 Broken-href probable-5 cleanup (stubs, independent)
+ ├── 1.4 prospect-dart + prospect-reg personas (independent base; expanded via 1.10)
+ ├── 1.5 Broken-href probable-5 cleanup (stubs, independent)
+ ├── 1.12 Public-site IA + briefings polish (UI-only, independent)
+ └── 1.14 Presentation deck refresh (markdown independent; HTML stretch after 1.4)
 
 G2 — next (blocks on G1 completion)
  │
@@ -620,7 +736,7 @@ follow-up plan" column) or are retired once their scope is absorbed.
 Per-G progression is tracked in `plans/active/<proposed-follow-up-plan-name>.plan.md` Phase sections. Stage 3E itself is
 complete when:
 
-- All 9 G1 items have a tracked follow-up plan spawned or explicitly deferred with reason.
+- All 14 G1 items have a tracked follow-up plan spawned or explicitly deferred with reason.
 - All 11 G2 items have a tracked follow-up plan spawned or explicitly deferred with reason.
 - `roadmap/next-waves.md` superseded header is merged.
 - Each experience playbook in `experience/` has a "G-item dependencies" subsection naming which refactor items it
