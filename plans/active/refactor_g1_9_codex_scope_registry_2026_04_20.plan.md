@@ -61,41 +61,41 @@ customer-facing help surfaces in unified-trading-system-ui).
 
 ### Phase 9A — Define the scope frontmatter schema
 
-- [ ] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` documenting the scope enum +
+- [x] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` documenting the scope enum +
       frontmatter shape + default behaviour.
-- [ ] [AGENT] P0. Schema: `scope: [sales, engineer, admin, prospect, investor]` (array subset of enum; defaults to
+- [x] [AGENT] P0. Schema: `scope: [sales, engineer, admin, prospect, investor]` (array subset of enum; defaults to
       `[engineer, admin]` if omitted).
-- [ ] [AGENT] P0. Add a 30-line example-per-audience block to rule 11.
+- [x] [AGENT] P0. Add a 30-line example-per-audience block to rule 11.
 
 ### Phase 9B — Build the manifest-emitter tool
 
-- [ ] [AGENT] P0. Script at `codex/14-playbooks/_tools/build-scope-manifest.sh` (or Python equivalent at
+- [x] [AGENT] P0. Script at `codex/14-playbooks/_tools/build-scope-manifest.sh` (or Python equivalent at
       `_tools/build_scope_manifest.py`) — walks `codex/**/*.md`, reads frontmatter, emits
       `codex/14-playbooks/_generated/scope-manifest.json`.
-- [ ] [AGENT] P0. Manifest shape: `{[audience]: string[]}` — each audience maps to the paths of codex docs visible to
+- [x] [AGENT] P0. Manifest shape: `{[audience]: string[]}` — each audience maps to the paths of codex docs visible to
       it.
-- [ ] [AGENT] P0. Tool fails loud on invalid frontmatter (unknown scope value, malformed YAML).
+- [x] [AGENT] P0. Tool fails loud on invalid frontmatter (unknown scope value, malformed YAML).
 
 ### Phase 9C — Backfill scope frontmatter on existing codex
 
-- [ ] [AGENT] P0. Enumerate every `codex/**/*.md` without `scope:` frontmatter → list in `/tmp/g1_9_backfill.md`.
-- [ ] [AGENT] P0. Batch classify: `codex/14-playbooks/experience/*` → `[sales, prospect]`;
+- [x] [AGENT] P0. Enumerate every `codex/**/*.md` without `scope:` frontmatter → list in `/tmp/g1_9_backfill.md`.
+- [x] [AGENT] P0. Batch classify: `codex/14-playbooks/experience/*` → `[sales, prospect]`;
       `codex/14-playbooks/demo-ops/*` → `[sales, engineer, admin]`; `codex/09-strategy/**` → `[engineer, admin]`; etc.
       Full mapping in rule 11.
-- [ ] [AGENT] P0. Apply frontmatter patches — one commit per logical batch (do not one-line 500 files).
+- [x] [AGENT] P0. Apply frontmatter patches — one commit per logical batch (do not one-line 500 files).
 
 ### Phase 9D — Wire into SSOT index + CI gate
 
-- [ ] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` to register rule 11 + the manifest tool + the generated manifest path.
-- [ ] [AGENT] P0. Add a `codex/14-playbooks/_tools/check-scope-coverage.sh` script that fails CI if any codex doc lacks
+- [x] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` to register rule 11 + the manifest tool + the generated manifest path.
+- [x] [AGENT] P0. Add a `codex/14-playbooks/_tools/check-scope-coverage.sh` script that fails CI if any codex doc lacks
       `scope:` frontmatter.
-- [ ] [SCRIPT] P0. Hook check-scope-coverage.sh into `unified-trading-pm/scripts/quality-gates.sh`.
+- [x] [SCRIPT] P0. Hook check-scope-coverage.sh into `unified-trading-pm/scripts/quality-gates.sh`.
 
 ### Phase 9E — Verify
 
-- [ ] [SCRIPT] P0. Run `bash codex/14-playbooks/_tools/build-scope-manifest.sh` — produces valid JSON manifest.
-- [ ] [SCRIPT] P0. Run `bash codex/14-playbooks/_tools/check-scope-coverage.sh` — zero failures.
-- [ ] [SCRIPT] P0. Run PM QG — `cd unified-trading-pm && bash scripts/quality-gates.sh`.
+- [x] [SCRIPT] P0. Run `bash codex/14-playbooks/_tools/build-scope-manifest.sh` — produces valid JSON manifest.
+- [x] [SCRIPT] P0. Run `bash codex/14-playbooks/_tools/check-scope-coverage.sh` — zero failures.
+- [x] [SCRIPT] P0. Run PM QG — `cd unified-trading-pm && bash scripts/quality-gates.sh`.
 
 ## Critical files to be modified
 

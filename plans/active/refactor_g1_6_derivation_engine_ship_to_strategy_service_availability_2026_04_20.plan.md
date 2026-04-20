@@ -137,11 +137,15 @@ access-control middleware.
 - [x] [AGENT] P0. Re-exported 5 functions + ~20 types from the existing `unified_api_contracts.strategy` public facade
       (new `unified_api_contracts.strategy_availability` facade not created — avoids duplication with the established
       post-G1.8 domain facade).
-- [ ] [DEFERRED → G1.7] [AGENT] P1. `ClientAllocatorInstance` gate swap: `validate_allocation_authorised()` →
-      `access_control()`. The allocator gate needs a `UserContext` constructed by the HTTP middleware layer (role,
-      entitlements, persona) — that construction machinery is G1.7 scope (restriction-profile engine). For Wave C the
-      validator primitive stays in place and `access_control()` ships as the higher-level gate for HTTP / UI call-sites.
-      Captured as a Wave D item under `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`.
+- [x] [SHIPPED — Wave E closure 2026-04-20] [AGENT] P1. `ClientAllocatorInstance` gate swap landed in
+      `strategy-service/strategy_service/portfolio_allocator/service.py`. Now calls `allocator_access_control()` (UAC
+      thin wrapper that composes the item-visibility branches of `access_control` — CLIENT_EXCLUSIVE / RETIRED /
+      IM_RESERVED — without the route-based service-family-scope or phase entitlement gates that don't apply to internal
+      server-side allocator calls). `user_context_for_allocator(client_id, business_unit)` constructs the `UserContext`
+      for the allocator from the ClientAllocatorInstance fields. Both layers (`allocator_access_control` then legacy
+      `validate_allocation_authorised`) run as defence-in-depth. For Wave C the validator primitive stays in place and
+      `access_control()` ships as the higher-level gate for HTTP / UI call-sites. Captured as a Wave D item under
+      `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`.
 
 ### Phase 6E — Verify + QG
 
@@ -154,13 +158,16 @@ access-control middleware.
 
 ### Commit SHAs (pushed to `origin/live-defi-rollout` 2026-04-20)
 
-| Repo                      | SHA             | Summary                                                                                                   |
-| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------- |
-| unified-api-contracts     | `2c5a26b`       | derivation engine — 5 formulas + ~20 types + `strategy.py` facade re-export + 22 tests (20 pass + 2 skip) |
-| unified-trading-system-ui | `4e10192`       | reference Playwright spec — 4 personas + phase-query round-trip + G1.10 persona skips                     |
-| strategy-service          | (deferred G1.7) | allocator-gate swap to `access_control()` — needs UserContext wiring from HTTP middleware, G1.7 scope     |
+| Repo                      | SHA                    | Summary                                                                                                                                                                                                                    |
+| ------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unified-api-contracts     | `2c5a26b`              | derivation engine — 5 formulas + ~20 types + `strategy.py` facade re-export + 22 tests (20 pass + 2 skip)                                                                                                                  |
+| unified-trading-system-ui | `4e10192`              | reference Playwright spec — 4 personas + phase-query round-trip + G1.10 persona skips                                                                                                                                      |
+| strategy-service          | SHIPPED Wave E closure | allocator-gate swap landed via `allocator_access_control()` + `user_context_for_allocator()` (UAC) wired into `portfolio_allocator/service.py:run()` alongside legacy `validate_allocation_authorised` as defence-in-depth |
 
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-6-derivation-engine.spec.ts` green on tier-1 dev.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-6-derivation-engine.spec.ts` committed in UI `4e10192` (2026-04-20);
+      tier-1 dev run is CI-deferred. Spec iterates admin / prospect-im / client-full / client-data-only personas;
+      prospect-dart + prospect-regulatory now exist in Wave F personas expansion (`f59657c`) and will light up on next
+      CI run.
 
 ## Critical files to be modified
 

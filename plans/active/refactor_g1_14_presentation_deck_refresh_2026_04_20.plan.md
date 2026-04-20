@@ -91,18 +91,18 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 
 ### Phase 14D — Optional HTML stretch (AFTER G1.4 lands)
 
-- [ ] [AGENT] P1. Drop a reveal.js boilerplate at `presentations/target-experience-post-refactor.html` consuming the
+- [x] [AGENT] P1. Drop a reveal.js boilerplate at `presentations/target-experience-post-refactor.html` consuming the
       markdown as slide source.
-- [ ] [AGENT] P1. Embed the 7 existing screenshots + placeholder slots for new G1.4 persona screenshots.
-- [ ] [AGENT] P1. Verify deck renders locally (`open presentations/target-experience-post-refactor.html`).
-- [ ] [AGENT] P1. Commit HTML separately — do not block the markdown commit on the HTML.
+- [x] [AGENT] P1. Embed the 7 existing screenshots + placeholder slots for new G1.4 persona screenshots.
+- [x] [AGENT] P1. Verify deck renders locally (`open presentations/target-experience-post-refactor.html`).
+- [x] [AGENT] P1. Commit HTML separately — do not block the markdown commit on the HTML.
 
 ### Phase 14E — Verify
 
 - [x] [SCRIPT] P0. Markdown lints clean (no broken cross-references — run
       `rg "\[.*\]\(.*\)" target-experience-post-refactor.md` + spot-check each link resolves). 57 internal links
       validated 2026-04-20; zero broken.
-- [ ] [SCRIPT] P0. PM QG green.
+- [x] [SCRIPT] P0. PM QG green.
 
 ## Critical files to be modified
 
