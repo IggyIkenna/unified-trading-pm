@@ -137,18 +137,18 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 
 ### Phase 2 — UAC + UTL contracts
 
-- [ ] [AGENT] P0. Create `unified_api_contracts/signal_broadcast/` sub-package with: - `Counterparty` entity (id, name,
+- [x] [AGENT] P0. Create `unified_api_contracts/signal_broadcast/` sub-package with: - `Counterparty` entity (id, name,
       endpoint, auth_method, hmac_secret_ref, allowed_slots, schema_depth, active) - `SignalEmission` event schema
       (strategy_id, slot_label, emission_timestamp, signal_payload, idempotency_key, delivery_attempt) -
       `SignalAcknowledgement` event schema (emission_id, counterparty_id, ack_timestamp, status) - `SchemaDepth` enum
       (`minimal` | `standard` | `rich`) — mirrors rule 10 - `CounterpartyEntitlement` (counterparty_id, slot_label,
       active_from, active_to)
-- [ ] [AGENT] P0. Add `STRATEGY_SIGNAL_EMITTED_EXTERNAL` + `STRATEGY_SIGNAL_ACKNOWLEDGED` to UTL
+- [x] [AGENT] P0. Add `STRATEGY_SIGNAL_EMITTED_EXTERNAL` + `STRATEGY_SIGNAL_ACKNOWLEDGED` to UTL
       `STANDARD_LIFECYCLE_EVENTS`.
-- [ ] [AGENT] P0. Register new UAC external surface under `registry/capability_declarations/_signal_broadcast.py` per
+- [x] [AGENT] P0. Register new UAC external surface under `registry/capability_declarations/_signal_broadcast.py` per
       UAC Citadel architecture convention.
-- [ ] [AGENT] P0. QG on UAC + UTL: `bash scripts/quality-gates.sh` in each repo; clean + committed.
-- [ ] [AGENT] P0. **Phase 2 success gate**: UAC contracts shipped, UTL events registered, importable from consumer
+- [x] [AGENT] P0. QG on UAC + UTL: `bash scripts/quality-gates.sh` in each repo; clean + committed.
+- [x] [AGENT] P0. **Phase 2 success gate**: UAC contracts shipped, UTL events registered, importable from consumer
       repos.
 
 ### Phase 3 — strategy-service signal-broadcast sub-package
