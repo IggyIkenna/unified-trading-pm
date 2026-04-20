@@ -1,11 +1,22 @@
+---
+scope: [engineer, admin, investor]
+---
+
 # Target-experience presentation — post-refactor view
 
-> 16-slide deck generated from Stage 3 infra spec. Mermaid diagrams render inline; Playwright screenshots under
-> [`screenshots/`](screenshots/) are referenced by relative path.
+> **Version:** v2 — 2026-04-20, post 14-item G1 amendment.
+>
+> 23-slide deck generated from Stage 3 infra spec (16 original slides + 7 new slides for G1.10 / G1.11 / G1.12 / G1.13 /
+> G1.4 expansion / MCP Playwright discipline / dev-staging parity). Mermaid diagrams render inline; Playwright
+> screenshots under [`screenshots/`](screenshots/) are referenced by relative path. New persona screenshots land via
+> G1.4 Wave F.
 >
 > **Parent plan:**
 > [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
 > § Phase 3D.
+>
+> **This-refresh plan:**
+> [`plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
 >
 > **Inputs:**
 >
@@ -13,15 +24,20 @@
 > - [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md)
 > - [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md)
 > - [`../infra-spec/stage-3e-refactor-plan.md`](../infra-spec/stage-3e-refactor-plan.md)
-> - [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules
+> - [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules + rule 11 (service-family scope, G1.11)
 > - [`../experience/`](../experience/) — 9 experience playbooks
 > - [`../page-triage/`](../page-triage/) — 177-route classification
+> - [`../demo-ops/upsell-overlays.md`](../demo-ops/upsell-overlays.md) — tempt-logic spec (G1.13)
 >
 > **Audience:** Odum leadership + engineering + sales ops. Intended as an internal alignment doc, not client-facing.
 > External audiences see the rule 09 one-liner expansions (see slide 15), not this deck.
 >
 > **Viewing:** slides are `##`-delimited; render in any markdown viewer. Mermaid diagrams render in GitHub + most modern
 > markdown renderers. Screenshots are `![alt](screenshots/<file>.png)` references.
+>
+> **HTML viewing:** an auto-rendered reveal.js wrapper lives next to this file at
+> [`target-experience-post-refactor.html`](target-experience-post-refactor.html) — open directly in a browser
+> (`file://…`) for slide-mode navigation. The HTML embeds this markdown verbatim; regenerate after any edit here.
 
 ---
 
@@ -29,7 +45,9 @@
 
 **The Odum operating system, post-refactor.**
 
-Sixteen slides. Four thousand words of rules. Twenty-two blocker predicates. One registry. Four derivations.
+Twenty-three slides. Four thousand words of rules. Twenty-two blocker predicates. One registry. Four derivations.
+**Fourteen G1 items** (up from the original nine — the 2026-04-20 amendment added items 1.10–1.13 and 1.14; item 1.4
+expanded from a screenshots-only task into a persona-matrix expansion).
 
 User directive (2026-04-19):
 
@@ -38,7 +56,13 @@ User directive (2026-04-19):
 > level details we need UAC registry info for all possible combinations and blockers so that we can formulaically derive
 > the costing and the demo universe and the restrictions / access controls across the user journey possibilities."_
 
-This deck answers: what the end product looks like after Stage 3E G1 + G2 ships.
+2026-04-20 amendment directive:
+
+> _"Add items for the questionnaire flow, service-family scope rules, public-site IA polish, demo upsell tempt-logic,
+> and a persona-matrix expansion driven by the questionnaire axes. Wire MCP Playwright for dev + a durable spec for CI.
+> Make dev and staging behave identically outside the auth source."_
+
+This deck answers: what the end product looks like after Stage 3E G1 (14 items) + G2 ships.
 
 ---
 
@@ -503,11 +527,13 @@ xychart-beta
 ```
 
 Net: ~38 new canonical routes added (3 catalogue refactors × ~12 routes, plus LOCKED-VISIBLE admin routes, plus
-`/services/data-catalogue/*`, `/services/ml-model-catalogue/*`, `/services/execution-algo-catalogue/*`); 12 old routes
-refactored into the new catalogues (disappear from "refactor" bucket); 25 merge-into moves completed.
+`/services/data-catalogue/*`, `/services/ml-model-catalogue/*`, `/services/execution-algo-catalogue/*`, plus the G1.10
+questionnaire surface at `/questionnaire` and its admin-playback twin); 12 old routes refactored into the new catalogues
+(disappear from "refactor" bucket); 25 merge-into moves completed.
 
-G3 `visibility-slicing` e2e expansion asserts all 132 canonical routes + LOCKED-VISIBLE padlock states across 7 personas
-× 3 flavours.
+G3 `visibility-slicing` e2e expansion asserts all 132 canonical routes + LOCKED-VISIBLE padlock states across the
+**expanded 15-20 persona matrix** (G1.4) × 3 flavours. Pre-2026-04-20 the matrix was 7 personas × 3 flavours; G1.4
+widens the persona axis to cover the full questionnaire-dimension combinatoric.
 
 ---
 
@@ -619,33 +645,404 @@ Rule 02 voice throughout: present tense, specific over evocative, no adverbs, no
 
 ## Slide 16 — Next steps: which Stage 3E item unlocks which playbook
 
-Every experience playbook depends on a subset of Stage 3E refactor items. Shipping the G1 nine unlocks operational truth
-for every pb1 / pb2 / pb3 playbook.
+Every experience playbook depends on a subset of Stage 3E refactor items. Shipping the G1 **fourteen** unlocks
+operational truth for every pb1 / pb2 / pb3 playbook.
 
-| Playbook                                                                            | Depends on Stage 3E items                                                                                                        |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| pb1 [`marketing-journey.md`](../experience/marketing-journey.md)                    | 1.9 (codex scope tagging), 3.4 (DART marketing rebrand)                                                                          |
-| pb2 [`briefings-hub.md`](../experience/briefings-hub.md)                            | 1.9, 3.3 (briefings CMS — G3)                                                                                                    |
-| pb2a `regulatory-umbrella-briefing.md`                                              | 1.9, 2.8 (fund + business_unit registry)                                                                                         |
-| pb2b [`dart-briefing.md`](../experience/dart-briefing.md)                           | 1.2 (instruction-schema validation), 1.9, 3.2 (pricing numbers)                                                                  |
-| pb2c [`im-decision-journey.md`](../experience/im-decision-journey.md)               | 1.9, 2.8 (fund registry), 2.10 (allocator split)                                                                                 |
-| pb3a [`regulatory-demo.md`](../experience/regulatory-demo.md)                       | 1.4 (prospect-reg persona), 1.7 (restriction-profile engine), 2.6 (staging Firebase), 2.7 (demo provisioning automation)         |
-| pb3b [`investment-management-demo.md`](../experience/investment-management-demo.md) | 1.1 (phase-unification), 1.7, 2.6, 2.7, 2.10                                                                                     |
-| pb3c [`dart-demo.md`](../experience/dart-demo.md)                                   | 1.1, 1.2, 1.3 (LOCKED-VISIBLE), 1.4 (prospect-dart persona), 1.5 (broken-href cleanup), 1.7, 2.2 (per-client API keys), 2.6, 2.7 |
-| pb3d [`staging-demo-journey.md`](../experience/staging-demo-journey.md)             | 2.6, 2.7                                                                                                                         |
+| Playbook                                                                            | Depends on Stage 3E items                                                                                                                                                 |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pb1 [`marketing-journey.md`](../experience/marketing-journey.md)                    | 1.9 (codex scope tagging), 1.12 (public-site IA polish), 3.4 (DART marketing rebrand)                                                                                     |
+| pb2 [`briefings-hub.md`](../experience/briefings-hub.md)                            | 1.9, 1.12 (briefings polish), 3.3 (briefings CMS — G3)                                                                                                                    |
+| pb2a `regulatory-umbrella-briefing.md`                                              | 1.9, 1.11 (service-family scope rules), 2.8 (fund + business_unit registry)                                                                                               |
+| pb2b [`dart-briefing.md`](../experience/dart-briefing.md)                           | 1.2 (instruction-schema validation), 1.9, 1.11, 3.2 (pricing numbers)                                                                                                     |
+| pb2c [`im-decision-journey.md`](../experience/im-decision-journey.md)               | 1.9, 1.11, 2.8 (fund registry), 2.10 (allocator split)                                                                                                                    |
+| pb3a [`regulatory-demo.md`](../experience/regulatory-demo.md)                       | 1.4 (prospect-reg persona + expanded matrix), 1.7 (restriction-profile engine), 1.10 (questionnaire), 1.13 (tempt-logic), 2.6 (staging Firebase), 2.7 (demo provisioning) |
+| pb3b [`investment-management-demo.md`](../experience/investment-management-demo.md) | 1.1 (phase-unification), 1.4, 1.7, 1.10, 1.11, 1.13, 2.6, 2.7, 2.10                                                                                                       |
+| pb3c [`dart-demo.md`](../experience/dart-demo.md)                                   | 1.1, 1.2, 1.3 (LOCKED-VISIBLE), 1.4, 1.5 (broken-href cleanup), 1.7, 1.10, 1.11, 1.13, 2.2 (per-client API keys), 2.6, 2.7                                                |
+| pb3d [`staging-demo-journey.md`](../experience/staging-demo-journey.md)             | 1.4, 1.10, 2.6, 2.7                                                                                                                                                       |
 
-**Recommended next step.** Spawn the nine G1 follow-up plans simultaneously (each with its own agent prompt per Stage 3E
-§1 "Proposed follow-up plan" field); run in parallel where dependencies allow (see Stage 3E §5 dependency graph).
-Target: all G1 items shipped within 4–6 weeks, making every pb1–pb3 playbook operationally true.
+**Recommended next step.** Spawn the fourteen G1 follow-up plans simultaneously (each with its own agent prompt per
+Stage 3E §1 "Proposed follow-up plan" field plus the 2026-04-20 amendment items 1.10 / 1.11 / 1.12 / 1.13 / 1.14); run
+in parallel where dependencies allow (see Stage 3E §5 dependency graph; the waves are now A/B/C/D/E/F). Target: all G1
+items shipped within 4–6 weeks, making every pb1–pb3 playbook operationally true.
+
+Wave grouping (2026-04-20, supersedes the original A/B/C split):
+
+| Wave | Items                                                                                                          | Can start                                            |
+| ---- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| A    | 1.1 phase-unification · 1.3 LOCKED-VISIBLE · 1.5 broken-hrefs · 1.9 codex scope · 1.12 public-site · 1.14 deck | Immediately — no intra-G1 deps                       |
+| B    | 1.8 UAC ArchetypeCapabilityV2                                                                                  | After Wave A merges                                  |
+| C    | 1.2 instruction-schema · 1.6 derivation-engine                                                                 | After Wave B (both consume the UAC capability)       |
+| D    | 1.7 restriction-profile engine · 1.11 service-family scope rules                                               | After Wave C (both layer on the derivation engine)   |
+| E    | 1.10 questionnaire-to-configuration flow                                                                       | After Wave D (feeds G1.7)                            |
+| F    | 1.4 persona-matrix expansion · 1.13 demo upsell tempt-logic · 1.14 HTML stretch                                | After Wave E (consume questionnaire axes + personas) |
+
+---
+
+## Slide 17 — G1.10 Questionnaire-to-configuration flow
+
+Plan:
+[`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
+
+The prospect questionnaire is the **ingestion edge** of the derivation engine. Unauthenticated prospects fill out a
+multi-axis form at `/questionnaire`; sales operators replay the answers in `user-management-ui` before a demo. The
+response object feeds G1.7's `resolve_profile(..., questionnaire=QuestionnaireResponse)` arg so the downstream UI is
+pre-configured to what's relevant.
+
+```mermaid
+flowchart LR
+    subgraph Public["Prospect surface (public)"]
+        Q1[/questionnaire landing]
+        Q2["QuestionnaireForm component
+        multi-step, validated"]
+        Q3[Anonymous submit — lead record]
+    end
+
+    subgraph Axes["Questionnaire axes (= persona-matrix axes, G1.4)"]
+        A1[category — CeFi / DeFi / TradFi / Sports / Prediction]
+        A2[instrument_types — spot / perp / options / etc.]
+        A3[venue scope — single / group / all-in-family]
+        A4[strategy-style preferences]
+        A5[service-family picker — IM / DART / Reg / combo]
+        A6[fund structure — SMA / Pooled — IM+Reg only]
+    end
+
+    subgraph Admin["user-management-ui playback"]
+        P1[/questionnaires/ index]
+        P2[Per-response playback view]
+        P3[Demo-prep checklist binding]
+    end
+
+    subgraph Engine["Derivation engine consumer (G1.7)"]
+        R1["resolve_profile(user, route, item, phase,
+        questionnaire=response)"]
+        R2["apply_tempt_logic(response, env) —
+        demo widens vague axes (G1.13)"]
+        R3[RestrictionProfile overlay]
+    end
+
+    Q1 --> Q2 --> Q3
+    Q2 --> A1 & A2 & A3 & A4 & A5 & A6
+    Q3 --> P1 --> P2 --> P3
+    Q3 --> R1
+    R1 --> R2 --> R3
+```
+
+Dev-staging parity is load-bearing: **identical UI behaviour** in both environments; only the submission sink differs.
+Dev writes to `localStorage` for mock-auth persona seeding; staging POSTs to `user-management-api` which provisions a
+real Firebase staging user (five-space-IA ticket #12). The questionnaire is the **shared front door** for the entire
+G1.4 / G1.7 / G1.13 / five-space-IA pipeline.
+
+---
+
+## Slide 18 — G1.11 Service-family scope rules
+
+Plan:
+[`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
+
+Today the rules about "who can see observe / reporting / research / promote surfaces" are scattered across route gating,
+demo-ops docs, and implicit audience assumptions. G1.11 lifts them into an explicit rule file
+(`_ssot-rules/11-service-family-scope-rules.md` + `.yaml`) and enforces them inside `access_control()` as a pre-check
+before the generic entitlement gate.
+
+```mermaid
+graph TD
+    subgraph Surfaces["UI surface family"]
+        S1[observe  — live ops + alerting]
+        S2[reporting  — positions / P&L / reconciliation]
+        S3[research  — strategy catalogue iteration]
+        S4[promote  — paper → live promotion ladder]
+        S5[strategy-catalogue-admin  — lock / maturity toggles]
+    end
+
+    subgraph Families["Service families (rule 11)"]
+        F1[DART]
+        F2[DART-reporting-only]
+        F3[IM]
+        F4[Reg Umbrella]
+        F5[admin / IM-desk — Odum internal]
+    end
+
+    S1 --- F1
+    S2 --- F1 & F2 & F3 & F4
+    S3 --- F1
+    S4 --- F1
+    S5 --- F5
+
+    classDef hardGate fill:#fde2e2,stroke:#c22,color:#333;
+    class S1,S3,S4,S5 hardGate;
+```
+
+Hard constraints enforced by `check_service_family_scope(user, route)`:
+
+- `observe ∈ {DART}` — IM + Reg don't own observability; Odum or the client manages it outside Odum's infra.
+- `reporting ∈ {IM, DART-reporting-only, Reg Umbrella, DART}` — the four families with a reporting surface entitlement.
+- `research, promote ∈ {full-DART}` — IM runs predetermined strategies; Reg Umbrella is a compliance overlay.
+- `strategy-catalogue-admin ∈ {admin, IM-desk}` — locking demo visibility is Odum-internal.
+- `SMA vs Pooled` applies to **IM + Reg only** (DART clients bring their own capital infra).
+
+Violations surface as an explicit `ACCESS_DENIED: service-family-scope-violation` error in the route gate — not a silent
+hide. This is the rule 06 "show-don't-show" discipline codified: a surface is either entitled, LOCKED-VISIBLE, or
+hard-gated by family; never implicit.
+
+---
+
+## Slide 19 — G1.12 Public-site IA polish (before / after)
+
+Plan:
+[`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
+
+Pure UI refactor. No routes added/removed, no auth changes, no backend. Consolidates the public-site navigation under a
+single `<SiteHeader>` component across 9 pages and enforces cut-through-noise formatting on `/briefings/*`.
+
+```mermaid
+graph TB
+    subgraph Before["Before 2026-04-20 — mixed"]
+        B1[/  — <SiteHeader>]
+        B2[/investment-management  — <SpacesNavSections>]
+        B3[/platform  — <SiteHeader> + ad-hoc dropdown]
+        B4[/regulatory  — <SpacesNavSections>]
+        B5[/firm  — <SiteHeader>]
+        B6[/briefings/*  — exhaustive lists, no TL;DR]
+        B7[/contact · /demo · /signup · /login  — drift]
+    end
+
+    subgraph After["After G1.12 — consolidated"]
+        A1[All 9 public pages use one <SiteHeader>]
+        A2[Consistent dropdown + CTA + breadcrumb]
+        A3[/briefings/* starts with 1-sentence TL;DR + 1 CTA above the fold]
+        A4[Voice follows rule 02 — present tense, no adverbs]
+        A5[DART label from nav-copy.ts — already live 2026-04-19]
+    end
+
+    Before -.refactor.-> After
+```
+
+Sibling Wave A with G1.1 / G1.3 / G1.5 / G1.9 / G1.14 — all parallelisable because they touch different surface areas.
+The public site does **not** itself need LOCKED-VISIBLE (public is public), but the tile components reused elsewhere
+(`/platform` service tiles) do — those are G1.3's domain.
+
+---
+
+## Slide 20 — G1.13 Demo upsell-overlay tempt-logic
+
+Plan:
+[`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
+
+When a prospect's questionnaire response is **vague** on a given axis (e.g. "all" venues, no strategy style), the demo
+restriction profile **widens by one step** on that axis — surfacing adjacent capability as LOCKED-VISIBLE chips. When
+the prospect picks tightly (e.g. "Uniswap v3 only, pairs stat-arb, SMA"), profiles **tighten** back to the explicit
+picks. Demo only; prod never widens.
+
+```mermaid
+flowchart LR
+    subgraph Input["Questionnaire response"]
+        V1["vague axis — venues='all'"]
+        T1["tight axis — strategy_style='stat_arb'"]
+    end
+
+    subgraph Hierarchy["upsell-overlay-hierarchy.yaml"]
+        H1[explicit picks]
+        H2[adjacent capability]
+        H3[all-in-family]
+        H4[everything]
+    end
+
+    subgraph Transform["apply_tempt_logic(response, env)"]
+        X1[env = demo → widen +1 step per vague axis]
+        X2[env = prod → pass-through]
+    end
+
+    subgraph Output["Profile after widening"]
+        O1[vague axis → LOCKED-VISIBLE tiles appear for +1-step adjacent capability]
+        O2[tight axis → stays tight; no widening]
+    end
+
+    V1 --> X1 --> H2 --> O1
+    T1 --> X1 --> H1 --> O2
+    V1 -.prod.-> X2 --> O2
+```
+
+The tempt-logic is **never** a silent enrichment in prod. The widening only fires in demo environments, driven by a
+boolean env flag. Config lives at `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` as a declarative per-axis
+hierarchy. Engine code: `strategy-service/strategy_service/availability/tempt_logic.py`, chained into G1.7's
+`resolve_profile` between `QuestionnaireResponse` ingestion and `RestrictionProfile` emission.
+
+Narrative: this is the **operational surface of rule 06**. Show-don't-show becomes mechanical when the questionnaire
+axis is vague: we show adjacent capability with a padlock, inviting the prospect to tighten. When the axis is tight, we
+trust them and show only what they asked for.
+
+---
+
+## Slide 21 — G1.4 Persona combinatorial expansion (11 → 15-20)
+
+Plan:
+[`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/active/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)
+
+Today `unified-trading-system-ui/lib/auth/personas.ts` defines 11 personas. G1.4 expands to **15-20**, each
+parameterised across the G1.10 questionnaire dimensions, with deterministic `resolve_profile` output via G1.7 + G1.11.
+
+```mermaid
+graph LR
+    subgraph Axes["Persona-matrix axes (= questionnaire axes, G1.10)"]
+        A1[service-family  IM · DART · Reg · combo]
+        A2[venue scope  single · group · all]
+        A3[instrument types  spot · perp · options · events]
+        A4[fund structure  SMA · Pooled · n/a]
+        A5[strategy style  stat-arb · directional · carry · event · market-making]
+        A6[maturity  paper · live-tiny · live-allocated]
+        A7[seniority  analyst · PM · CIO · ops]
+    end
+
+    subgraph Output["Expanded persona registry (15-20)"]
+        O1["e.g. sarah.quant@examplehedge.com
+        CeFi · all-venues · perp · SMA
+        · stat-arb · live-allocated · PM"]
+        O2["e.g. raj.ops@exampleregfirm.com
+        Reg Umbrella · single-venue · spot
+        · Pooled · n/a · live-allocated · ops"]
+        O3["…and 13-18 more parameterised rows"]
+    end
+
+    A1 & A2 & A3 & A4 & A5 & A6 & A7 --> O1 & O2 & O3
+```
+
+Every persona row includes: realistic email, entitlement set, `questionnaire: QuestionnaireResponse`, `service_family`,
+`lock_state`. The same 15-20 personas exist in dev (localStorage-seeded via `tests/e2e/playbooks/seed-persona.ts`) and
+staging (provisioned as real Firebase users by user-management-ui, five-space-IA ticket #12). **Dev-staging parity
+applies to this list**: any persona added must land in both environments in the same PR.
+
+Screenshot regeneration for the new personas is owned by G1.4 (Wave F); the refreshed screenshots feed this deck's HTML
+stretch (Phase 14D).
+
+---
+
+## Slide 22 — MCP Playwright test discipline
+
+Plan:
+[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+(this plan) — plus pattern propagated across every sibling `refactor_g1_*_2026_04_20.plan.md`.
+
+Every G1 refactor plan ships **both** an MCP Playwright loop for dev and a durable spec for CI.
+
+```mermaid
+flowchart LR
+    subgraph Dev["Dev loop — MCP Playwright"]
+        D1[Agent session drives
+        mcp__playwright__browser_navigate]
+        D2[browser_snapshot / click / type
+        iterative refinement]
+        D3[No commit — disposable]
+    end
+
+    subgraph CI["CI — durable spec"]
+        C1["tests/e2e/playbooks/refactor/refactor-g1-N-*.spec.ts"]
+        C2[Seed persona via tests/e2e/playbooks/seed-persona.ts]
+        C3[Assert behavioural invariants + visibility-slicing]
+        C4[Include orphan-reachability check]
+    end
+
+    subgraph Gate["Quality-gates integration"]
+        G1[Wired into scripts/quality-gates.sh]
+        G2[Runs on every PR]
+        G3[Blocks merge on fail]
+    end
+
+    Dev -.committed spec mirrors what dev validated.-> CI
+    CI --> Gate
+```
+
+Rules:
+
+- **MCP Playwright** is never the durable artefact. Agent-driven browser control is disposable; whatever it validates
+  must be mirrored in a committed spec.
+- **Durable specs** sit under `unified-trading-system-ui/tests/e2e/playbooks/refactor/` and are named after the G1 plan.
+- **Persona seeding** goes through `tests/e2e/playbooks/seed-persona.ts` — never inline localStorage poking in specs.
+- **Orphan-reachability** assertions verify every cross-referenced plan file exists under `plans/active/` — the deck
+  spec enforces this for its own 14 plan cross-links.
+- Specs are wired into `scripts/quality-gates.sh` so the Pass 1 gate blocks merges on spec failure.
+
+---
+
+## Slide 23 — Dev / staging parity
+
+Plan: cross-cutting rule applied by G1.4 / G1.7 / G1.10 / G1.13 (and reinforced by
+[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)).
+
+The rule: **dev and staging must behave identically outside the auth source**. Anything that differs becomes an
+operational liability when sales operators rehearse in dev and then run the demo from staging.
+
+```mermaid
+graph TD
+    subgraph Must["Must match across dev ↔ staging"]
+        M1[Persona list — same 15-20 rows]
+        M2[RestrictionProfile outputs — same inputs → same profile]
+        M3[Questionnaire UI — identical axes, validation, flow]
+        M4[Tempt-logic — same yaml, same widening behaviour]
+        M5[Service-family scope rules — same _ssot-rules/11 enforcement]
+        M6[LOCKED-VISIBLE padlock behaviour — same rule-06 rendering]
+    end
+
+    subgraph MayDiffer["Only these MAY differ"]
+        D1[Auth source  localStorage mock-auth in dev · Firebase staging project in staging]
+        D2[Submission sink  localStorage in dev · user-management-api staging endpoint in staging]
+        D3[Data freshness  dev uses mocks · staging has live-ish staging data]
+    end
+
+    subgraph Why["Why it matters"]
+        W1[Sales rehearse in dev — muscle memory must transfer to staging]
+        W2[Debug path  local repro of a staging demo bug is only useful if dev = staging outside auth]
+        W3[Regression risk  any non-auth divergence creates demo surprises]
+    end
+
+    Must --> Why
+    MayDiffer -.allowed.-> Why
+```
+
+Enforcement mechanics:
+
+- **One persona list** (`lib/auth/personas.ts`) consumed by both environments.
+- **One questionnaire component tree** — same React components render both the dev localStorage flow and the staging
+  Firebase-write flow; the sink is the only seam.
+- **One rule 11 YAML** (`_ssot-rules/11-service-family-scope-rules.yaml`) enforced by `check_service_family_scope` —
+  identical in both envs.
+- **One tempt-logic YAML** (`demo-ops/upsell-overlay-hierarchy.yaml`) — identical widening in both envs.
+- **Playwright test suite** asserts parity where plausible — the durable specs under `tests/e2e/playbooks/refactor/` run
+  in dev by default and are portable to a staging run via a single env flag.
+
+The prod environment is orthogonal to this parity: prod **disables** tempt-logic entirely (`env = prod` pass-through),
+uses real Firebase prod personas, and submits to production sinks. Dev ↔ staging parity does **not** extend to prod.
 
 ---
 
 ## Cross-references
 
+### Infra spec + rules
+
 - [`../infra-spec/stage-3a-current-infra-audit.md`](../infra-spec/stage-3a-current-infra-audit.md)
 - [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md)
 - [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md)
 - [`../infra-spec/stage-3e-refactor-plan.md`](../infra-spec/stage-3e-refactor-plan.md)
-- [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules
+- [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules + rule 11 (service-family scope, G1.11)
 - [`../experience/`](../experience/) — 9 experience playbooks
+- [`../demo-ops/upsell-overlays.md`](../demo-ops/upsell-overlays.md) — G1.13 tempt-logic spec
+- [`../cross-cutting/bloomberg-style-aesthetic.md`](../cross-cutting/bloomberg-style-aesthetic.md) — visual language
 - [`../roadmap/next-waves.md`](../roadmap/next-waves.md) — superseded; content preserved
+
+### G1 plan cross-references (per slide)
+
+| Slide(s)           | G1 item                                   | Plan file                                                                                                                                                                                                    |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 9 (phase-binding)  | G1.1 Phase unification                    | [`refactor_g1_1_phase_unification_2026_04_20.plan.md`](../../../plans/active/refactor_g1_1_phase_unification_2026_04_20.plan.md)                                                                             |
+| 6 (access_control) | G1.2 Instruction-schema validation        | [`refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`](../../../plans/active/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md)                                     |
+| 8 (LOCKED-VISIBLE) | G1.3 LOCKED-VISIBLE UI service-tile mode  | [`refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`](../../../plans/active/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md)                                         |
+| 8, 13, 21          | G1.4 Persona combinatorial expansion      | [`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/active/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)                                                 |
+| 10                 | G1.5 ML Catalogue broken-hrefs cleanup    | [`refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md`](../../../plans/active/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md)                                             |
+| 6                  | G1.6 Derivation engine → strategy-service | [`refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`](../../../plans/active/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md) |
+| 8                  | G1.7 Restriction-profile engine           | [`refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`](../../../plans/active/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md)                                                           |
+| 3, 5               | G1.8 UAC ArchetypeCapabilityV2 (gap #1)   | [`refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md`](../../../plans/active/refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md)                                                         |
+| 16                 | G1.9 Codex scope registry                 | [`refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`](../../../plans/active/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md)                                                                       |
+| 17                 | G1.10 Questionnaire-to-configuration flow | [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)                                       |
+| 18                 | G1.11 Service-family scope rules          | [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)                                                         |
+| 19                 | G1.12 Public-site IA + briefings polish   | [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)                                       |
+| 20                 | G1.13 Demo upsell-overlay tempt-logic     | [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)                                               |
+| 22, 23             | G1.14 Presentation deck refresh (this)    | [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)                                                           |

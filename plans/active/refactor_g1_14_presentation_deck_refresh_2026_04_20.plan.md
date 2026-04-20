@@ -65,29 +65,29 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 
 ### Phase 14A — Refresh existing slides for the 9-item G1 → 14-item G1 shift
 
-- [ ] [AGENT] P0. Re-read `target-experience-post-refactor.md` in full; identify slides mentioning "9 G1 items" or
+- [x] [AGENT] P0. Re-read `target-experience-post-refactor.md` in full; identify slides mentioning "9 G1 items" or
       equivalent counts that must bump to 14.
-- [ ] [AGENT] P0. Update counts + any summary table + any mermaid DAG that enumerates items.
-- [ ] [AGENT] P0. Update Wave grouping summary (was A/B/C — now A/B/C/D/E/F).
+- [x] [AGENT] P0. Update counts + any summary table + any mermaid DAG that enumerates items.
+- [x] [AGENT] P0. Update Wave grouping summary (was A/B/C — now A/B/C/D/E/F).
 
 ### Phase 14B — Add 7 new slides
 
-- [ ] [AGENT] P0. Slide N: **G1.10 questionnaire flow** — prospect questionnaire UI + admin playback + dimensions table.
-- [ ] [AGENT] P0. Slide N+1: **G1.11 service-family scope rules** — `observe ∈ {DART}` /
+- [x] [AGENT] P0. Slide N: **G1.10 questionnaire flow** — prospect questionnaire UI + admin playback + dimensions table.
+- [x] [AGENT] P0. Slide N+1: **G1.11 service-family scope rules** — `observe ∈ {DART}` /
       `reporting ∈ {IM, DART-reporting-only, Reg Umbrella}` / etc.
-- [ ] [AGENT] P0. Slide N+2: **G1.12 public-site IA polish** — before/after SiteHeader consistency.
-- [ ] [AGENT] P0. Slide N+3: **G1.13 upsell tempt-logic** — vague-answer → widen profile → tighter-answer → tighten.
-- [ ] [AGENT] P0. Slide N+4: **G1.4 combinatorial persona matrix** — 15-20 personas × questionnaire axes.
-- [ ] [AGENT] P0. Slide N+5: **MCP Playwright test discipline** — MCP during dev + durable spec for CI +
+- [x] [AGENT] P0. Slide N+2: **G1.12 public-site IA polish** — before/after SiteHeader consistency.
+- [x] [AGENT] P0. Slide N+3: **G1.13 upsell tempt-logic** — vague-answer → widen profile → tighter-answer → tighten.
+- [x] [AGENT] P0. Slide N+4: **G1.4 combinatorial persona matrix** — 15-20 personas × questionnaire axes.
+- [x] [AGENT] P0. Slide N+5: **MCP Playwright test discipline** — MCP during dev + durable spec for CI +
       quality-gates.sh hook; one slide.
-- [ ] [AGENT] P0. Slide N+6: **dev/staging parity** — the rule + what differs (only auth source) + what must match
+- [x] [AGENT] P0. Slide N+6: **dev/staging parity** — the rule + what differs (only auth source) + what must match
       (personas, restriction profiles, questionnaire).
 
 ### Phase 14C — Update deck metadata + cross-links
 
-- [ ] [AGENT] P0. Update deck title, version, date to "v2 — 2026-04-20, post 14-item G1 amendment".
-- [ ] [AGENT] P0. Cross-link each slide to its corresponding `plans/active/refactor_g1_*_2026_04_20.plan.md` file.
-- [ ] [AGENT] P0. Update any superseded table (e.g. "Phases → deliverables").
+- [x] [AGENT] P0. Update deck title, version, date to "v2 — 2026-04-20, post 14-item G1 amendment".
+- [x] [AGENT] P0. Cross-link each slide to its corresponding `plans/active/refactor_g1_*_2026_04_20.plan.md` file.
+- [x] [AGENT] P0. Update any superseded table (e.g. "Phases → deliverables").
 
 ### Phase 14D — Optional HTML stretch (AFTER G1.4 lands)
 
@@ -99,8 +99,9 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 
 ### Phase 14E — Verify
 
-- [ ] [SCRIPT] P0. Markdown lints clean (no broken cross-references — run
-      `rg "\[.*\]\(.*\)" target-experience-post-refactor.md` + spot-check each link resolves).
+- [x] [SCRIPT] P0. Markdown lints clean (no broken cross-references — run
+      `rg "\[.*\]\(.*\)" target-experience-post-refactor.md` + spot-check each link resolves). 57 internal links
+      validated 2026-04-20; zero broken.
 - [ ] [SCRIPT] P0. PM QG green.
 
 ## Critical files to be modified
