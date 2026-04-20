@@ -204,7 +204,7 @@ Paths in the plan's "Mandatory read-set" — all 4.
 ### MCP Playwright clause (verbatim — REQUIRED)
 
 For the markdown-only pass, the Playwright spec shells out to a markdown link-checker and asserts exit 0. For the HTML
-stretch, drive `file://<path-to-HTML>` (or `localhost:3010/presentations/...` if served) through MCP Playwright tools
+stretch, drive `file://<path-to-HTML>` (or `localhost:3000/presentations/...` if served) through MCP Playwright tools
 during dev to verify slides render, screenshots load, keyboard nav works. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-14-presentation-deck.spec.ts` — seed admin persona
 via `tests/e2e/playbooks/seed-persona.ts`, walk through the deck, assert slide count + screenshots + cross-reference

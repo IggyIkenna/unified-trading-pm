@@ -71,8 +71,8 @@ The Odum platform has **four catalogues**, each an SSOT in service code, UAC, an
 
 ## Environments
 
-- **Local dev** — `localhost:3000` / `:3010` / `:3100` depending on tier. Demo auth default; Firebase optional. No real
-  API backends (mock mode).
+- **Local dev** — `localhost:3100` (T0, UI-only) / `localhost:3000` (T1/T2, with API gateways). Demo auth default;
+  Firebase optional. No real API backends (mock mode).
 - **Staging** — `odum-research.co.uk`. Demo-grade Firebase project (isolated from production). Used for prospect demos
   and internal development.
 - **Production** — `odum-research.com`. Real Firebase project `central-element-323112`. Real clients, real capital, real

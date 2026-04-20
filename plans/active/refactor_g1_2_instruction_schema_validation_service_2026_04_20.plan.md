@@ -150,7 +150,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) through MCP
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) through MCP
 Playwright tools — submit a series of instructions via the execution submission surface (wherever the UI client surface
 lives; `/services/execution/` or similar): valid instruction, missing-field, unsupported (archetype, category) pair,
 unsupported venue, purely-text. Verify 400 with structured FieldError[] surfaces to the UI; verify success case emits
@@ -221,7 +221,7 @@ Paths in the plan's "Mandatory read-set" — all 10.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to submit the matrix of valid + invalid instructions via the UI submission surface; verify
 structured 400 + FieldError[] surfaces and success case emits the integration-depth event. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-2-instruction-schema-validation.spec.ts` — seed

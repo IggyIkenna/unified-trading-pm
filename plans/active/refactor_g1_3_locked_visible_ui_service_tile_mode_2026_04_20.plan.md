@@ -68,7 +68,7 @@ session).
 
 Demo flows MUST behave identically in dev and staging:
 
-- **Dev (`localhost:3010`):** mock auth via `demo-provider.ts` + localStorage persona seed; LOCKED-VISIBLE state is
+- **Dev (`localhost:3000`):** mock auth via `demo-provider.ts` + localStorage persona seed; LOCKED-VISIBLE state is
   computed client-side from the seeded persona's restriction profile.
 - **Staging (`odum-research.co.uk`):** Firebase staging project; same personas provisioned as real Firebase users via
   user-management-ui; same LOCKED-VISIBLE computation server-side (or same client-side lookup against the real claim
@@ -163,7 +163,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — navigate to the services portal with different persona seeds (admin
 unlocks all; prospect-im has some padlocks), verify padlock visible + tooltip + disabled click. Iterate until every
 persona × tile combination behaves per the restriction profile matrix.
@@ -245,7 +245,7 @@ Any refactor that diverges dev from staging beyond those is a rule-03 violation 
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to verify padlocked tiles render the padlock + tooltip + disabled click across multiple
 persona seeds. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-3-locked-visible.spec.ts` — seed `prospect-im` +

@@ -174,7 +174,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — submit a vague questionnaire (e.g. all categories + empty strategy
 style), navigate to services portal, verify padlocked adjacent-capability tiles appear. Submit a tight questionnaire for
 same persona and verify those tiles are hidden. Toggle `DEMO_MODE` env and verify prod behaviour (no widening).
@@ -253,7 +253,7 @@ divergence = rule-03 violation.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to submit vague + tight questionnaires, verify widened vs tight profile in UI, toggle env to
 simulate prod + assert no widening. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-13-upsell-tempt-logic.spec.ts` — seed relevant

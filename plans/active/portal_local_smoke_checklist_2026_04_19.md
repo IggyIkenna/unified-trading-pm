@@ -13,8 +13,8 @@ checks without dev, **`pnpm build` then `pnpm start -p <port>`** plus `MARKETING
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
 | API gateway (mock)              | `cd unified-trading-api && CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local DISABLE_AUTH=true .venv/bin/uvicorn unified_trading_api.main:create_app --factory --host 127.0.0.1 --port 8030`                                | ☐    |
 | client-reporting-api (mock)     | `cd client-reporting-api && DISABLE_AUTH=true CLOUD_MOCK_MODE=true GCP_PROJECT_ID=test-project .venv/bin/uvicorn client_reporting_api.api.main:app --host 127.0.0.1 --port 8014`                                    | ☐    |
-| Portal (rewrites)               | `cd unified-trading-system-ui && NEXT_PUBLIC_MOCK_API=false NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8030 NEXT_PUBLIC_REPORTING_API_URL=http://127.0.0.1:8014 NEXT_PUBLIC_AUTH_PROVIDER=demo pnpm dev --port 3010` | ☐    |
-| Portal (mock-only, no backends) | `cd unified-trading-system-ui && NEXT_PUBLIC_MOCK_API=true pnpm dev --port 3010`                                                                                                                                    | ☐    |
+| Portal (rewrites)               | `cd unified-trading-system-ui && NEXT_PUBLIC_MOCK_API=false NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8030 NEXT_PUBLIC_REPORTING_API_URL=http://127.0.0.1:8014 NEXT_PUBLIC_AUTH_PROVIDER=demo pnpm dev --port 3000` | ☐    |
+| Portal (mock-only, no backends) | `cd unified-trading-system-ui && NEXT_PUBLIC_MOCK_API=true pnpm dev --port 3000`                                                                                                                                    | ☐    |
 
 ## Public & lighter gate (unauthenticated)
 

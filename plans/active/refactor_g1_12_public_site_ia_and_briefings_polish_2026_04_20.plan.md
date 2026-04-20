@@ -152,7 +152,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — navigate to each of the 9 public pages + 3 briefings pages, assert
 consistent DOM structure via `browser_snapshot`, verify CTA copy + dropdown behaviour + mobile breakpoint. Iterate until
 every page passes the consistency check.
@@ -222,7 +222,7 @@ Paths in the plan's "Mandatory read-set" — all 11.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to walk all 9 public pages + 3 briefings pages, verify consistent SiteHeader + CTA + mobile
 breakpoint + BriefingHero. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-12-public-site-ia.spec.ts` — seed anon state via

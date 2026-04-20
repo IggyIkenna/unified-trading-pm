@@ -81,7 +81,7 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
 
 Demo flows MUST behave identically in dev and staging:
 
-- **Dev (`localhost:3010`):** mock auth via `demo-provider.ts` + localStorage; persona identity comes from the seed.
+- **Dev (`localhost:3000`):** mock auth via `demo-provider.ts` + localStorage; persona identity comes from the seed.
   Restriction-profile engine receives the seeded persona ID and returns the same profile as it would in staging.
 - **Staging (`odum-research.co.uk`):** Firebase staging project; same personas provisioned as real Firebase users.
   Engine receives Firebase user ID, maps to persona, returns the same profile.
@@ -186,7 +186,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — seed 6 personas in turn, navigate services portal, assert tiles render
 per each persona's resolved RestrictionProfile. Toggle demo flavours where applicable and re-verify.
 
@@ -271,7 +271,7 @@ rule-03 violation.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to verify every persona's rendered tile states match the YAML-declared RestrictionProfile,
 including flavour toggles. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-7-restriction-profile.spec.ts` — seed 6 personas via

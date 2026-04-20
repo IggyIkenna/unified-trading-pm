@@ -172,7 +172,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — seed multiple personas, navigate strategy-catalogue, verify visible slot
 set matches `demo_universe(persona, flavour)` computed server-side. Seed an unauthorised persona and attempt a
 `/services/research/strategy/allocator` write action; verify deny response matches `access_control()` semantics.
@@ -246,7 +246,7 @@ Paths in the plan's "Mandatory read-set" — all 12, especially every v2 archety
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to verify the strategy-catalogue visible-slot set matches `demo_universe()` computed output
 per persona, and to verify `access_control` correctly gates phased write actions. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-6-derivation-engine.spec.ts` — seed 4 personas via

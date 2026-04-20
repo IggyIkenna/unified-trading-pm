@@ -86,7 +86,7 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
 
 Questionnaire behaves identically across dev and staging:
 
-- **Dev (`localhost:3010`):** `VITE_MOCK_API=true`. Submission sinks to localStorage under `questionnaire-response-v1`.
+- **Dev (`localhost:3000`):** `VITE_MOCK_API=true`. Submission sinks to localStorage under `questionnaire-response-v1`.
   demo-provider.ts reads the same key + resolves to a persona + profile overlay. UI behaviour indistinguishable from
   staging.
 - **Staging (`odum-research.co.uk`):** `VITE_MOCK_API=false`. Submission POSTs to user-management-api staging endpoint
@@ -198,7 +198,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — navigate to `/questionnaire`, walk through all 6 axes, submit, verify
 redirect + localStorage write + downstream UI (e.g. `/services/strategy-catalogue/`) reflects the questionnaire overlay.
 Seed various response combinations and iterate.
@@ -277,7 +277,7 @@ divergence = rule-03 violation.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to walk the questionnaire, submit multiple response combinations, verify localStorage
 write + downstream catalogue overlay. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-10-questionnaire.spec.ts` — run anonymous, walk 6

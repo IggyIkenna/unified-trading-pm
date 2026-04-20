@@ -179,7 +179,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — iterate the persona-switcher through every one of the 15-20 personas, for
 each: navigate to `/dashboard` + `/services/*` portal, assert tiles + nav reflect the persona's RestrictionProfile +
 service-family scope. Regenerate screenshots.
@@ -255,7 +255,7 @@ document it in handoff and proceed dev-only.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to iterate every one of the 15-20 personas, verify `/dashboard` + services portal render
 matches their profile + scope. Regenerate screenshots for PM commit. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-4-persona-matrix.spec.ts` — iterate every persona

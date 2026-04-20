@@ -118,7 +118,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` through MCP Playwright — navigate to each surface that previously
+**MCP Playwright during dev:** drive `localhost:3000` through MCP Playwright — navigate to each surface that previously
 rendered one of the 5 probable hrefs, click the link, verify target page loads or redirects to intended target. Iterate
 until all 5 resolve.
 
@@ -182,7 +182,7 @@ Paths in the plan's "Mandatory read-set" — all 6.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to click every one of the 5 formerly-broken hrefs and verify target-page-loads or
 intentional-redirect. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-5-ml-catalogue-hrefs.spec.ts` — seed admin persona

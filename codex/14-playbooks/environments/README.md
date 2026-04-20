@@ -8,11 +8,11 @@ scope: [engineer, admin]
 
 Odum runs in three distinct environments, each with its own domain, Firebase project, and data scope.
 
-| Tier    | Name       | Domain                               | Auth source                                                        | Data source                                         | Who uses it                    |
-| ------- | ---------- | ------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------ |
-| dev     | Local      | `localhost:3000` / `:3010` / `:3100` | Demo provider (localStorage personas) OR local Firebase dev config | Mock data, interactive state in `.local-dev-cache/` | Odum engineers                 |
-| staging | Staging    | `odum-research.co.uk`                | Firebase staging project (target) / demo provider (interim)        | Synthetic + demo data; no real positions            | Demo prospects + Odum internal |
-| prod    | Production | `odum-research.com`                  | Firebase production `central-element-323112`                       | Real positions, real capital, real reporting        | Paying clients + Odum internal |
+| Tier    | Name       | Domain                                           | Auth source                                                        | Data source                                         | Who uses it                    |
+| ------- | ---------- | ------------------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------ |
+| dev     | Local      | `localhost:3100` (T0) / `localhost:3000` (T1/T2) | Demo provider (localStorage personas) OR local Firebase dev config | Mock data, interactive state in `.local-dev-cache/` | Odum engineers                 |
+| staging | Staging    | `odum-research.co.uk`                            | Firebase staging project (target) / demo provider (interim)        | Synthetic + demo data; no real positions            | Demo prospects + Odum internal |
+| prod    | Production | `odum-research.com`                              | Firebase production `central-element-323112`                       | Real positions, real capital, real reporting        | Paying clients + Odum internal |
 
 Sibling docs:
 

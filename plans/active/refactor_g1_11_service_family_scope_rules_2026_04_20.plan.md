@@ -90,7 +90,7 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 
 Scope rules behave identically in dev and staging:
 
-- **Dev (`localhost:3010`):** mock auth seeds a persona tagged with a service family; `access_control` enforces the same
+- **Dev (`localhost:3000`):** mock auth seeds a persona tagged with a service family; `access_control` enforces the same
   rule table as staging.
 - **Staging (`odum-research.co.uk`):** Firebase staging users carry service-family claims; `access_control` enforces the
   same rule table.
@@ -202,7 +202,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100`
 (tier-0 static) through MCP Playwright tools — seed personas representing each service family (IM, Reg Umbrella, DART,
 DART-reporting-only, admin, IM-desk), attempt to navigate scoped routes, verify deny UX (e.g. padlock + "contact sales"
 tooltip) appears for out-of-scope navigation. Iterate until every (family × route) cell matches YAML.
@@ -276,7 +276,7 @@ Only the user-identity source differs (localStorage seed vs Firebase). Any diver
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to verify every (service-family × route) cell renders allow or deny matching the rule 11
 YAML. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-11-service-family-scope.spec.ts` — seed 6 personas

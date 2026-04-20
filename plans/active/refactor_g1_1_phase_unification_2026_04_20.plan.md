@@ -147,7 +147,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3010` (UI dev server via `bash scripts/dev-tiers.sh --tier 1`) or
+**MCP Playwright during dev:** drive `localhost:3000` (UI dev server via `bash scripts/dev-tiers.sh --tier 1`) or
 `:3100` (tier-0 static) through the MCP Playwright tools — navigate to each phased surface, toggle
 `?phase=research|paper|live`, assert DOM structure matches via `browser_snapshot`. Iterate until every surface behaves.
 
@@ -212,7 +212,7 @@ Paths in the plan's "Mandatory read-set" — all 8.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools during dev to verify every phased surface behaves identically under `?phase=research|paper|live` toggle
 with only data-source rebinding. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-1-phase-unification.spec.ts` — it must seed the
@@ -401,12 +401,12 @@ All edits land in `unified-trading-system-repos/unified-trading-system-ui`. No o
 
 ### Playwright assertions (MCP dev loop + durable spec)
 
-- **MCP dev loop** (pre-spec iteration on `localhost:3010` via `bash scripts/dev-tiers.sh --tier 1`):
-  1. `browser_navigate` → `http://localhost:3010/services/research/strategies` → `browser_snapshot` → record DOM tree +
+- **MCP dev loop** (pre-spec iteration on `localhost:3000` via `bash scripts/dev-tiers.sh --tier 1`):
+  1. `browser_navigate` → `http://localhost:3000/services/research/strategies` → `browser_snapshot` → record DOM tree +
      `data-phase` attribute.
-  2. `browser_navigate` → `http://localhost:3010/services/trading/strategies` → `browser_snapshot` → diff DOM tree:
+  2. `browser_navigate` → `http://localhost:3000/services/trading/strategies` → `browser_snapshot` → diff DOM tree:
      should be IDENTICAL modulo data-bound content (rows, counters). Only `data-phase` should flip.
-  3. `browser_navigate` → `http://localhost:3010/services/research/strategies?phase=paper` → `browser_snapshot` →
+  3. `browser_navigate` → `http://localhost:3000/services/research/strategies?phase=paper` → `browser_snapshot` →
      `data-phase="paper"`, same tree.
   4. Iterate until every phased surface from the audit behaves this way.
 - **Durable spec assertions** (in `refactor-g1-1-phase-unification.spec.ts`):
@@ -442,7 +442,7 @@ All edits land in `unified-trading-system-repos/unified-trading-system-ui`. No o
    `rg -n "lifecycle-route-mappings" unified-trading-system-ui/` will enumerate consumers before committing to the
    extension. If consumers resist the schema change, fallback is to keep the mapping dumb and introduce a separate
    `lib/phase/route-phase-registry.ts` side-table.
-4. **MCP Playwright dev server** — plan mandates `localhost:3010` via `bash scripts/dev-tiers.sh --tier 1`, but port
+4. **MCP Playwright dev server** — plan mandates `localhost:3000` via `bash scripts/dev-tiers.sh --tier 1`, but port
    3010 is the non-standard dev port for tier-1 UI. Confirm this server will actually be running when the agent
    re-enters; otherwise agent must `bash scripts/dev-tiers.sh --tier 1` first and wait for readiness probe.
 

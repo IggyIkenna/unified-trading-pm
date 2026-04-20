@@ -202,7 +202,7 @@ backfill pass).
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
+Drive `localhost:3000` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0 static) through MCP
 Playwright tools if the UI help surface consumes the manifest in this scope; otherwise the spec covers the CI-gate
 integration (a fixture codex doc lacking frontmatter fails `check-scope-coverage.sh`). Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-9-codex-scope-registry.spec.ts` — seed relevant

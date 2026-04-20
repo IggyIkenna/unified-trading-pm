@@ -173,7 +173,7 @@ Unblocks:
 
 **MCP Playwright during dev:** This is a UAC contract change; no UI directly exercises it in G1.8. However, the UI
 catalogue (strategy-catalogue routes) consumes strategy_availability for visibility today and will consume
-ArchetypeCapabilityV2 in G1.6. MCP Playwright in dev: drive `localhost:3010/services/strategy-catalogue` and verify the
+ArchetypeCapabilityV2 in G1.6. MCP Playwright in dev: drive `localhost:3000/services/strategy-catalogue` and verify the
 matrix page still renders post-UAC change (no import regression).
 
 **Durable spec for CI:**
@@ -243,7 +243,7 @@ Paths in the plan's "Mandatory read-set" — all 6 sections, especially every fi
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3010/services/strategy-catalogue` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0
+Drive `localhost:3000/services/strategy-catalogue` (UI dev via `bash scripts/dev-tiers.sh --tier 1`) or `:3100` (tier-0
 static) through MCP Playwright tools during dev to verify the strategy-catalogue matrix page still renders 18 archetypes
 post-UAC change (no import regression). Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` — seed admin
