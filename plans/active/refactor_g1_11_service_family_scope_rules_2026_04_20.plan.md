@@ -211,8 +211,21 @@ Unblocks:
 
 - **G1.4 persona matrix** — personas carry service-family tags; scope rules enforce their visibility.
 - **G1.10 questionnaire** — questionnaire's service-family picker maps directly to the YAML families.
-- **G1.14 deck slide** — rule 11 is a slide topic.
+- **G1.14 deck slide** — rule 12 is a slide topic.
 - **G2.x** — future client onboarding flows respect scope rules by default.
+
+## Follow-ups / spillover (carried past Wave D)
+
+- **Allocator-gate orphan (from G1.6 Phase 6D).** `portfolio_allocator/service.py:125` in strategy-service still calls
+  the legacy `validate_allocation_authorised()`. G1.7 reconciliation flagged this as carried-forward; G1.11 did NOT pick
+  it up either (scope was confined to UAC service-family pre-check, which lands BEFORE the allocator is ever invoked —
+  different layer). **Deferred to Wave E** as an independent cleanup commit: the swap needs a new `access_control`-
+  backed gate in strategy-service + test updates + strategy-service QG. Tracked in G1.6 plan as `[DEFERRED → G1.7]` on
+  line 140; the "→ G1.7" tag is now stale (G1.7 did not pick it up); Wave E (G1.10 questionnaire) agent should pick up
+  the swap since they'll already be modifying `portfolio_allocator/` surfaces for questionnaire-driven client setup.
+- **Audit review 2026-04-20:** verified all 13 Phase-11A-through-11E checkboxes flipped; rule 11 prose inside this plan
+  refers to rule-12 files on disk (Checkbox-mapping note at line 114 of this plan covers the rename). No further paper
+  fix required.
 
 ## Playwright test coverage (mandatory)
 

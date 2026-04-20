@@ -193,10 +193,12 @@ prose worth naming for downstream agents:
 ## Spillover carried from G1.6 (allocator-gate deferral)
 
 G1.6 Phase 6D checkbox "Wire access_control into ClientAllocatorInstance gate" was deferred to G1.7 per the committed
-plan. G1.7 as shipped did NOT pick it up; `portfolio_allocator/service.py:125` in strategy-service still calls the
-legacy `validate_allocation_authorised()` gate. This is an outstanding follow-up that should be picked up by **G1.11
-execution agent** (since G1.11 touches the `access_control()` pre-check path) or as an independent cleanup commit before
-Wave E dispatch. Do NOT leave it as an orphan past Wave E.
+plan. G1.7 as shipped did NOT pick it up; G1.11 as shipped (2026-04-20 commit `073e6c1`) also did NOT pick it up —
+G1.11's scope was the UAC-layer service-family pre-check, which lands at a different layer than the allocator's gate.
+`portfolio_allocator/service.py:125` in strategy-service still calls the legacy `validate_allocation_authorised()` gate.
+**Deferred to Wave E** per the 2026-04-20 Wave C/D audit — the Wave E (G1.10 questionnaire) agent should pick up the
+swap since they will already be modifying `portfolio_allocator/` surfaces for questionnaire-driven client setup. See
+`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` § Follow-ups / spillover.
 
 ## Critical files to be modified
 

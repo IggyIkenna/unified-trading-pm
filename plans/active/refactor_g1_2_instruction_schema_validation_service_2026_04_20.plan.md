@@ -92,7 +92,7 @@ preferential pricing and validation behaviour.
       `why: str`. `ConfigDict(frozen=True, extra="forbid")`.
 - [x] [AGENT] P0. Integration-depth scorer: weighted ratio over stage-3b fields (structured enum = 1.0, hybrid = 0.5,
       free text = 0.0).
-- [x] [AGENT] P0. 44 unit cases green — 8 Pydantic required-field + 10 BL-1..BL-10 + 3 venue-mismatch + 7 nested
+- [x] [AGENT] P0. 47 unit cases green — 8 Pydantic required-field + 10 BL-1..BL-10 + 3 venue-mismatch + 7 nested
       validator + 7 integration-depth boundaries + 4 happy-path + 3 result-invariant.
 
 ### Phase 2C — Wire the service wrapper
@@ -115,7 +115,9 @@ preferential pricing and validation behaviour.
 
 ### Phase 2E — Verify + QG
 
-- [x] [SCRIPT] P0. UAC: 44 validator tests green; ruff clean; basedpyright clean on new files.
+- [x] [SCRIPT] P0. UAC: 47 validator tests green (44 landed 2026-04-20 commit `6dfa23f`; +3 explicit 0.75/0.875/1.0
+      integration-depth spec-boundary cases in 2026-04-20 follow-up commit `ddb841f` to close the Wave C/D audit
+      test-count reconciliation); ruff clean; basedpyright clean on new files.
 - [x] [SCRIPT] P0. execution-service: 8 middleware tests green; ruff clean; basedpyright clean on new files.
 - [x] [SCRIPT] P0. UTL: 11 event tests green; ruff clean; basedpyright clean on new files.
 - [x] [AGENT] P0. Playwright spec `refactor-g1-2-instruction-schema-validation.spec.ts` committed (UI commit `50a3519`)
