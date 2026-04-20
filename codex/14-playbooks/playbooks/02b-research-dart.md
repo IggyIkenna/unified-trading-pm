@@ -1,5 +1,7 @@
 # Playbook 2b — Research & Docs: DART (Data Analytics, Research & Trading)
 
+> **Layer:** Implementation. Narrative lives in [experience/dart-briefing.md](../experience/dart-briefing.md).
+
 ## Who this is for
 
 Prospect interested in running their own strategies on Odum infrastructure. Already had a first call; now getting a

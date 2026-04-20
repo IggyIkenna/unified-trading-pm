@@ -1,5 +1,8 @@
 # Playbook 2a — Research & Docs: Investment Management
 
+> **Layer:** Implementation. Narrative lives in
+> [experience/im-decision-journey.md](../experience/im-decision-journey.md).
+
 ## Who this is for
 
 Prospect interested in allocating capital to Odum-managed systematic strategies. Already had a first call; now getting a

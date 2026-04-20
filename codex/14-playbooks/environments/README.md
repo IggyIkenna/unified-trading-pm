@@ -1,5 +1,7 @@
 # Environments — three tiers
 
+> **Layer:** Implementation. Narrative lives in [../experience/](../experience/).
+
 Odum runs in three distinct environments, each with its own domain, Firebase project, and data scope.
 
 | Tier    | Name       | Domain                               | Auth source                                                        | Data source                                         | Who uses it                    |

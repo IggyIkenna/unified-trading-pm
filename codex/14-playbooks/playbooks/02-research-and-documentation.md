@@ -1,5 +1,7 @@
 # Playbook 2 — Research & Documentation (post-first-call briefings)
 
+> **Layer:** Implementation. Narrative lives in [experience/briefings-hub.md](../experience/briefings-hub.md).
+
 ## Who this is for
 
 A prospect who had a first call with Odum and is now getting deeper-dive content to inform their interest. They're not

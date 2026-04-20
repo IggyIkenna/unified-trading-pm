@@ -1,5 +1,8 @@
 # Playbook 3b — Demo: Investment Management flavour
 
+> **Layer:** Implementation. Narrative lives in
+> [experience/investment-management-demo.md](../experience/investment-management-demo.md).
+
 ## Who this is for
 
 A warm prospect considering allocating capital to Odum-managed strategies. They've been provisioned a demo account on

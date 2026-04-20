@@ -1,5 +1,7 @@
 # Playbook 3c — Demo: DART flavour
 
+> **Layer:** Implementation. Narrative lives in [experience/dart-demo.md](../experience/dart-demo.md).
+
 ## Who this is for
 
 A warm prospect who wants to build and run their own strategies on Odum infrastructure (or commission Odum to build

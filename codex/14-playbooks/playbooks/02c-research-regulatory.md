@@ -1,5 +1,8 @@
 # Playbook 2c — Research & Docs: Regulatory Umbrella
 
+> **Layer:** Implementation. Narrative lives in
+> [experience/regulatory-umbrella-briefing.md](../experience/regulatory-umbrella-briefing.md).
+
 ## Who this is for
 
 Prospect interested in operating under Odum's FCA umbrella — they're a firm who wants to conduct regulated activity but

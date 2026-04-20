@@ -1,5 +1,8 @@
 # Playbook 3 — Warm-prospect demo on staging
 
+> **Layer:** Implementation. Narrative lives in
+> [experience/staging-demo-journey.md](../experience/staging-demo-journey.md).
+
 ## Who this is for
 
 A prospect who has had multiple calls, read the briefings, and committed to seeing the product in action. Odum

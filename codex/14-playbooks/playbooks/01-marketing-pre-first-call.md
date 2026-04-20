@@ -1,5 +1,7 @@
 # Playbook 1 — Marketing, pre-first-call
 
+> **Layer:** Implementation. Narrative lives in [experience/marketing-journey.md](../experience/marketing-journey.md).
+
 ## Who this is for
 
 An anonymous visitor who stumbled on the Odum homepage or was referred by word of mouth. They have **no prior

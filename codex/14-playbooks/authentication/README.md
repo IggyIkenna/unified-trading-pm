@@ -1,5 +1,7 @@
 # Authentication — three tiers
 
+> **Layer:** Implementation. Narrative lives in [../experience/](../experience/).
+
 Odum uses three distinct auth mechanisms, each scoped to a different audience and risk level.
 
 | Tier | Name                 | Provider                                             | Risk level                          | Audience                                            | Route gate                              |

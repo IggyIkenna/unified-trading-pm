@@ -1,5 +1,7 @@
 # Playbook 3a — Demo: Regulatory Umbrella flavour
 
+> **Layer:** Implementation. Narrative lives in [experience/regulatory-demo.md](../experience/regulatory-demo.md).
+
 ## Who this is for
 
 A warm prospect interested in operating under Odum's FCA umbrella. They've been provisioned a demo account on staging;
