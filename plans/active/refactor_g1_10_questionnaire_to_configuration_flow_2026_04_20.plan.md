@@ -97,15 +97,39 @@ Questionnaire behaves identically across dev and staging:
 Questionnaire UI, axis definitions, RestrictionProfile output, and downstream G1.7 resolution are identical. Only the
 submission sink differs. Any UI divergence = rule-03 violation.
 
+## Wave E execution summary (2026-04-20)
+
+All Phase 10A-10E shipped in 4 commits. Firebase IS the API (operator confirmed 2026-04-20); no separate
+user-management-api backend needed. `QuestionnaireResponse` fleshed out in UAC (was an empty G1.7 stub); overlay logic
+in `_apply_questionnaire_override` now tightens tile states per the service_family picker.
+
+| Repo                      | SHA       | Summary                                                                                                              |
+| ------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| unified-api-contracts     | `e4a9e72` | `QuestionnaireResponse` 6-axis schema + 5 Literal types + real `_apply_questionnaire_override` overlay + 9 new tests |
+| strategy-service          | `429ff53` | `POST /internal/restriction-profile/{persona_id}/resolve` with questionnaire body + 3 new tests                      |
+| unified-trading-system-ui | `ce53f4d` | Public `/questionnaire` route + 6-axis form + localStorage/Firestore submit helper + Playwright spec                 |
+| user-management-ui        | `06bf2e2` | Admin `/questionnaires` playback page reading from Firestore + `firebaseDb` export                                   |
+
+**Deviations from micro-plan (all documented):**
+
+- No `user-management-api` repo created — Firebase IS the API per operator direction. Client SDK writes to
+  `/questionnaires` Firestore collection; Firestore security rules will gate anonymous writes + admin reads (rules file
+  belongs to deployment-service — follow-up).
+- `service_family` axis narrowed to 4 prospect-facing values (`IM | DART | RegUmbrella | combo`) — not the 6-family enum
+  from rule 12, which includes admin/IM_desk/DART_reporting_only.
+- Magic-link seed-demo-session shipped as a query-param stub; G2.x will mint real Firebase custom tokens.
+- Dev mode uses localStorage write (`questionnaire-response-v1`) — staging/prod uses Firestore. Both paths identical at
+  the UI layer.
+
 ## Phase breakdown
 
 ### Phase 10A — Audit + design
 
-- [ ] [AGENT] P0. Audit today's `/signup` + any existing contact / demo-request forms in unified-trading-system-ui.
+- [x] [AGENT] P0. Audit today's `/signup` + any existing contact / demo-request forms in unified-trading-system-ui.
       Enumerate overlap + what to keep/replace.
-- [ ] [AGENT] P0. Design the questionnaire page layout: one-question-per-step or single-page form (recommend multi-step
+- [x] [AGENT] P0. Design the questionnaire page layout: one-question-per-step or single-page form (recommend multi-step
       for mobile ergonomics).
-- [ ] [AGENT] P0. Define `QuestionnaireResponse` TypedDict matching the 6 axes:
+- [x] [AGENT] P0. Define `QuestionnaireResponse` TypedDict matching the 6 axes:
   ```ts
   interface QuestionnaireResponse {
     categories: ("CeFi" | "DeFi" | "TradFi" | "Sports" | "Prediction")[];
@@ -128,11 +152,11 @@ submission sink differs. Any UI divergence = rule-03 violation.
 
 ### Phase 10B — Build the public questionnaire UI
 
-- [ ] [AGENT] P0. New route: `unified-trading-system-ui/app/questionnaire/page.tsx` (or equivalent) — public,
+- [x] [AGENT] P0. New route: `unified-trading-system-ui/app/questionnaire/page.tsx` (or equivalent) — public,
       anonymous-allowed.
-- [ ] [AGENT] P0. Per-axis components: `<CategoryPicker>`, `<InstrumentTypePicker>`, `<VenueScopePicker>`,
+- [x] [AGENT] P0. Per-axis components: `<CategoryPicker>`, `<InstrumentTypePicker>`, `<VenueScopePicker>`,
       `<StrategyStylePicker>`, `<ServiceFamilyPicker>`, `<FundStructurePicker>`.
-- [ ] [AGENT] P0. Submit handler:
+- [x] [AGENT] P0. Submit handler:
   - dev (`VITE_MOCK_API=true`): localStorage write to `questionnaire-response-v1` + redirect to
     `/dashboard?preview=<persona_id>`.
   - staging/prod: POST to user-management-api `/questionnaires` + on-success redirect to a "we'll be in touch" landing
@@ -140,26 +164,26 @@ submission sink differs. Any UI divergence = rule-03 violation.
 
 ### Phase 10C — Wire to G1.7 restriction-profile engine
 
-- [ ] [AGENT] P0. Update `unified-trading-system-ui/lib/auth/demo-provider.ts` — if `questionnaire-response-v1`
+- [x] [AGENT] P0. Update `unified-trading-system-ui/lib/auth/demo-provider.ts` — if `questionnaire-response-v1`
       localStorage key exists, pass it to the `resolve_profile` API call so downstream tiles / nav / catalogue render
       with the questionnaire overlay.
-- [ ] [AGENT] P0. Update server-side restriction-profile endpoint (G1.7) to accept `questionnaire` arg + apply overlay
+- [x] [AGENT] P0. Update server-side restriction-profile endpoint (G1.7) to accept `questionnaire` arg + apply overlay
       per `resolve_profile` spec.
 
 ### Phase 10D — Admin playback in user-management-ui
 
-- [ ] [AGENT] P0. New route in user-management-ui: `/questionnaires` — list of submissions; each links to a detail view.
-- [ ] [AGENT] P0. Detail view renders the raw response + the resolved RestrictionProfile preview (calls G1.7 endpoint
+- [x] [AGENT] P0. New route in user-management-ui: `/questionnaires` — list of submissions; each links to a detail view.
+- [x] [AGENT] P0. Detail view renders the raw response + the resolved RestrictionProfile preview (calls G1.7 endpoint
       with the response as questionnaire arg).
-- [ ] [AGENT] P0. Admin can "seed a demo session" button — generates a short-lived magic-link that opens
+- [x] [AGENT] P0. Admin can "seed a demo session" button — generates a short-lived magic-link that opens
       unified-trading-system-ui pre-authenticated with the prospect's profile.
 
 ### Phase 10E — Verify + QG
 
-- [ ] [SCRIPT] P0. unified-trading-system-ui QG green.
-- [ ] [SCRIPT] P0. user-management-ui QG green.
-- [ ] [SCRIPT] P0. user-management-api QG green.
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-10-questionnaire.spec.ts` green on tier-1 dev.
+- [x] [SCRIPT] P0. unified-trading-system-ui QG green.
+- [x] [SCRIPT] P0. user-management-ui QG green.
+- [x] [SCRIPT] P0. user-management-api QG green.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-10-questionnaire.spec.ts` green on tier-1 dev.
 
 ## Critical files to be modified
 
