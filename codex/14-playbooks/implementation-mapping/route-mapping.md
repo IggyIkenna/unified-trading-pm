@@ -20,19 +20,51 @@ Routes change over time. When a route moves, the mapping here updates and the Pl
 
 ### pb1 — Marketing Journey ([`../experience/marketing-journey.md`](../experience/marketing-journey.md))
 
-| Walkthrough section                          | Route                                                                                                          |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Home-page frame                              | `/` (public)                                                                                                   |
-| Three service tiles (DART, IM, Reg Umbrella) | `/services/dart`, `/services/investment-management`, `/services/regulatory-umbrella` (public descriptor pages) |
-| Bottom CTA booking flows                     | `/book/dart`, `/book/im`, `/book/regulatory-umbrella` (calendar integration)                                   |
+5-path public surface, locked 2026-04-20. Every route below has an inbound link from `/` (homepage path tiles + nav)
+so no orphan pages exist.
+
+| Walkthrough section                | Route                       | Inbound link path (parent)                                  |
+| ---------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| Home-page frame                    | `/` (public)                | *(root)*                                                    |
+| DART umbrella path tile            | `/platform`                 | `/` (homepage tile + header nav "DART")                     |
+| DART Signals-In (direction arrow)  | `/platform/signals-in`      | `/platform` (sub-path card) + `/` (homepage DART tile)      |
+| DART Full pipeline                 | `/platform/full`            | `/platform` (sub-path card) + `/` (homepage DART tile)      |
+| Signals Service (signals-out)      | `/signals`                  | `/` (homepage tile + header nav "Odum Signals")             |
+| Investment Management              | `/investment-management`    | `/` (homepage tile + header nav "Investment Management")    |
+| Regulatory Umbrella                | `/regulatory`               | `/` (homepage tile + header nav "Regulatory")               |
+| Firm (alias: `/who-we-are`)        | `/who-we-are`               | `/` (homepage tile + header nav "Who We Are")               |
+| Bottom CTA booking flow            | `/contact`                  | `/` + every path page's footer + header "Book a call"       |
+
+Route alias: the "Firm" nav label resolves to `/who-we-are`. The existing slug pre-dates the 5-path rename and has not
+been renamed to avoid breaking external inbound links.
+
+Services sub-routes (public descriptor pages under `/services/`):
+
+| Service descriptor | Route                      | Inbound link path                                          |
+| ------------------ | -------------------------- | ---------------------------------------------------------- |
+| Backtesting        | `/services/backtesting`    | `/platform/full` (services strip)                          |
+| Data               | `/services/data`           | `/platform` umbrella (services strip)                      |
+| Engagement         | `/services/engagement`     | `/investment-management` + `/regulatory` (services strip)  |
+| Execution          | `/services/execution`      | `/platform/signals-in` + `/signals` (services strip)       |
+| Investment         | `/services/investment`     | `/investment-management` (services strip)                  |
+| Platform           | `/services/platform`       | `/platform` umbrella (services strip)                      |
+| Regulatory         | `/services/regulatory`     | `/regulatory` (services strip)                             |
 
 ### pb2 — Briefings Hub ([`../experience/briefings-hub.md`](../experience/briefings-hub.md))
 
-| Walkthrough section  | Route                                                                |
-| -------------------- | -------------------------------------------------------------------- |
-| Hub landing          | `/briefings` (light-auth gated)                                      |
-| Three briefing cards | `/briefings/im`, `/briefings/dart`, `/briefings/regulatory-umbrella` |
-| Second-call booking  | Calendar iframe embedded on briefing footer                          |
+Light-auth gate (Tier 1 — see [`../authentication/light-auth-briefings.md`](../authentication/light-auth-briefings.md)).
+Six pillars, one per commercial path plus the DART umbrella.
+
+| Walkthrough section       | Route                                     | Inbound link path                           |
+| ------------------------- | ----------------------------------------- | ------------------------------------------- |
+| Hub landing               | `/briefings` (gated)                      | Email from sales contact (no public link)   |
+| DART umbrella briefing    | `/briefings/platform`                     | `/briefings` hub card                       |
+| DART Signals-In briefing  | `/briefings/dart-signals-in`              | `/briefings` hub card + platform pillar     |
+| DART Full briefing        | `/briefings/dart-full`                    | `/briefings` hub card + platform pillar     |
+| Signals-Out briefing      | `/briefings/signals-out`                  | `/briefings` hub card                       |
+| Investment Management briefing | `/briefings/investment-management`  | `/briefings` hub card                       |
+| Regulatory briefing       | `/briefings/regulatory`                   | `/briefings` hub card                       |
+| Second-call booking       | Calendar iframe embedded on briefing footer | n/a                                       |
 
 ### pb2a — IM Decision Journey ([`../experience/im-decision-journey.md`](../experience/im-decision-journey.md))
 
