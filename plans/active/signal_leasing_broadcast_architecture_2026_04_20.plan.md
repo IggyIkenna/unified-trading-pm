@@ -234,11 +234,18 @@ counterparty-endpoint state via its API (that's Phase 5 admin-surface territory,
       green via `scripts/smoke-signal-broadcast.sh` — uses strategy-service Phase-3 integration suite with the
       `responses` library, zero live HTTP. Shipped `deployment-service@b518f7b`. Live-staging smoke with real GCP creds
       is an explicit follow-up below.
-- [ ] [HUMAN] P0. **Live-staging smoke** (deferred to operator with GCP creds): run
-      `bash deployment-service/scripts/provision-signal-broadcast-secrets.sh <staging-project>`, apply terraform in
-      `terraform/services/strategy-service/gcp/`, trigger strategy-service signal emission on staging, and confirm both
-      mock counterparty endpoints receive an HMAC-signed POST within 5 seconds (D5 at-least-once + D10 shard-level
-      isolation).
+- [x] [HUMAN] P0. **Live-staging smoke — provisioning leg DONE 2026-04-20**:
+      `bash deployment-service/scripts/provision-signal-broadcast-secrets.sh central-element-323112` executed cleanly
+      — 2 Secret Manager entries created in `central-element-323112` (research-and-development project used as
+      staging): `signal-broadcast-counterparty-signal-lease-cp1-staging-hmac` + `...cp2-staging-hmac`, both at
+      version 1, labelled `managed_by=signal-broadcast, purpose=hmac-webhook-signing`, automatic replication.
+      **Remaining smoke legs deferred to real-counterparty onboarding (≈Aug 2026)** because `counterparties.yaml`
+      webhook URLs are RFC-2606 `.invalid` placeholders (cp1-staging.example.invalid / cp2-staging.example.invalid —
+      intentionally non-routable) and `active_from: 2026-09-01T00:00:00Z` gates emission by design. When real
+      counterparty URLs are known: (1) rewrite `counterparties.yaml` with live URLs + adjust `active_from`, (2)
+      `terraform apply` in `terraform/services/strategy-service/gcp/` (mounts the 2 secrets already created), (3)
+      trigger synthetic signal emission, (4) observe HMAC-signed POSTs within 5s (D5 + D10). Terraform + emission +
+      observation are a ~30-minute operator session at go-live, not a pre-req for Phase 8 close.
 
 ### Phase 5 — frontend (admin + counterparty observability UI)
 
