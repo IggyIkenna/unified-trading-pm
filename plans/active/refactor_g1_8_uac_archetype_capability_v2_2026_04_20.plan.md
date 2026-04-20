@@ -302,3 +302,117 @@ Never `--dep-branch`, never `git reset --hard`.
 - Playwright spec path + pass status.
 - 2 commit SHAs (UAC + UI) pushed to live-defi-rollout.
 - Any gaps or open questions for the user.
+
+---
+
+## Micro-execution plan (sub-agent Phase 1 — 2026-04-20)
+
+Operator-approved via plan-mode exit. Full copy lives at `~/.claude/plans/cozy-shimmying-cookie.md`. Summary below for
+in-repo discoverability.
+
+### SSOT decision (resolved 2026-04-20)
+
+Plan prose (§Context, §Phase 8A, §Verification) assumed each v2 archetype declares `valid_pairs` inline in Python —
+`rg valid_pairs strategy-service/.../v2/` returns **0 hits**. v2 classes only declare `ARCHETYPE` + `FAMILY` class vars.
+The real matrix lives in `codex/09-strategy/architecture-v2/category-instrument-coverage.md` + UI
+`lib/architecture-v2/coverage.ts`.
+
+**Operator confirmed: Python SSOT inline in UAC `archetype_capability.py`.** UI `coverage.ts` becomes a downstream
+consumer; codex markdown stays human-authored with parity-check against the UAC manifest in UAC QG. A **new PM-repo sync
+script** (`scripts/propagation/ sync-archetype-capability-to-ui.sh --check|--write`) enforces UAC-manifest →
+UI-`coverage.ts` parity and is wired into `unified-trading-system-ui/scripts/quality-gates.sh` so every UI push catches
+drift.
+
+### Downstream consumer audit (Citadel rule-6)
+
+Grep across all 60+ repos (excluding `.venv*`, `node_modules`, `build`, `_archived_pre_v2`):
+
+- `ArchetypeCapability` (no V2): **0 hits** → name free.
+- `ArchetypeCapabilityV2`: plan docs + UI `coverage.ts` type-alias → no runtime consumers.
+- `ArchetypeCapabilityRegistry`: plan docs only → no runtime consumers.
+- `for_pair(`: **0 hits** → new API surface.
+- `from unified_api_contracts.strategy_availability import`: 0 runtime, 2 tests → facade naming defaults to existing
+  `unified_api_contracts.strategy`.
+- `valid_pairs` outside v2/: **0 hits** → no leaky consumers.
+- `supported_pairs`: 1 hit in `registry/capability_declarations/_altdata.py` (different data-source context) → no
+  collision.
+
+**Conclusion: zero existing runtime consumers.** Wave C/D plans (G1.2, G1.6, G1.11) are the future consumers — they
+don't exist yet as running code. No backwards-compat shim needed.
+
+### Revised 3-commit flow (supersedes §Commit strategy above)
+
+1. **UAC** — `feat(uac): G1.8 — ArchetypeCapabilityV2 registry + generator + manifest`
+   - `internal/architecture_v2/archetype_capability.py` (NEW, ~180 LOC, Pydantic BaseModel pattern mirrored from
+     `strategy_availability.py:128-172`, module-level tuple `ARCHETYPE_CAPABILITY_REGISTRY`, free-function helpers
+     `capability_for`, `archetypes_for_pair`, `archetypes_for_venue`, `all_capabilities`).
+   - `internal/architecture_v2/archetype_capability_manifest.json` (NEW, generated, ~400 LOC).
+   - `internal/architecture_v2/__init__.py` (+4 — re-export).
+   - `strategy.py` domain facade (+2 — re-export; default to existing facade not a new `strategy_availability.py` public
+     module unless operator pushes back).
+   - `scripts/generate_archetype_capability_manifest.py` (NEW, ~120 LOC).
+   - `tests/internal/unit/test_archetype_capability_manifest_parity.py` (NEW, ~80 LOC — regenerates in-process, asserts
+     `len == 18`, asserts every `StrategyArchetypeV2` enum member has exactly one entry, spot-checks
+     `archetypes_for_pair(CEFI, PERPETUAL)`).
+
+2. **PM** — `feat(pm): G1.8 — UAC↔UI archetype-capability sync script`
+   - `scripts/propagation/sync-archetype-capability-to-ui.sh` (NEW, ~40 LOC — shell wrapper mirroring
+     `rollout-workflow-templates.sh` pattern).
+   - `scripts/propagation/sync_archetype_capability_to_ui.py` (NEW, ~120 LOC — reads UAC manifest JSON, renders UI
+     `coverage.ts` from deterministic TS template with AUTO-GEN header, `--check` diffs and exits 1 on drift, `--write`
+     overwrites).
+
+3. **UI** — `test(playbooks): G1.8 — UAC ArchetypeCapabilityV2 smoke spec + coverage.ts parity`
+   - `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` (NEW, ~60 LOC — mirrors
+     `refactor-g1-9-codex-scope-registry.spec.ts` pattern).
+   - `lib/architecture-v2/coverage.ts` (REGENERATED via PM `--write`, gains AUTO-GEN header).
+   - `scripts/quality-gates.sh` (+5 — invoke PM sync-check step before Playwright:
+     `bash "${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh" --check`).
+
+### Phase DAG (strict order)
+
+```
+8A audit → 8B design → 8C.1 gen + SSOT → 8C.2 type+registry+facade → 8C.3 manifest → 8D.1 UAC→codex parity → 8D.2 UAC QG → COMMIT 1 (UAC)
+                                                                                                                           ↓
+                                                                                                     8E.1 PM sync script → COMMIT 3 (PM)
+                                                                                                                           ↓
+                                                                                    8E.2 wire into UI QG → 8E.3 UI spec → UI QG → COMMIT 2 (UI)
+```
+
+UAC ships first (manifest authoritative), PM script second (reads UAC manifest from sibling repo), UI last (depends on
+PM script existing + coverage.ts regeneration).
+
+### Playwright assertions (tier-1, `localhost:3000`)
+
+1. `seedPersona(page, 'admin')` → `page.goto('http://localhost:3000/services/strategy-catalogue/')`.
+2. `expect(page.locator('[data-testid="archetype-tile"]')).toHaveCount(18)` — regression gate for UAC change breaking
+   the catalogue.
+3. For one archetype per family (8 total), assert detail route
+   `/services/strategy-catalogue/strategies/<archetype>/<slot>` → HTTP 200 (orphan-reachability).
+4. Visibility-slicing stub: comment-only TODO pointing to G1.6 — admin sees all today.
+5. `coverage.ts` AUTO-GEN banner assertion — catches hand-edits.
+
+Port canon: `localhost:3000` (tier-1 default per `scripts/dev-tiers.sh`). No stale `:3010` references in this plan.
+
+### Breaking-change / shim analysis (Citadel rule-3)
+
+Zero existing runtime consumers → **zero shims**. Purely additive: new module, new facade re-export, new manifest, new
+test, new spec. No rename, no deletion.
+
+### Remaining operator questions (non-blocking — can default)
+
+1. **Domain facade for re-export.** Plan §Decisions line 34 says
+   `from unified_api_contracts.strategy_availability import ArchetypeCapabilityV2`. No such public module exists.
+   Default: re-export from existing `unified_api_contracts/strategy.py`.
+2. **`supported_venues` source.** V2 archetypes don't declare venues. Default: deduce from `MarketCategory` × existing
+   UAC venue registry (every venue tagged with category).
+3. **`StrategyArchetypeV2.EVENT_DRIVEN` naming collision with family `EVENT_DRIVEN`.** Acceptable — will disambiguate in
+   test assertions.
+
+### Success criteria (final)
+
+- `len(ARCHETYPE_CAPABILITY_REGISTRY) == 18`; every `StrategyArchetypeV2` member covered.
+- UAC→codex parity test green; UAC QG green.
+- `bash sync-archetype-capability-to-ui.sh --check` fails pre-regeneration, passes after `--write`.
+- UI Playwright spec green on tier-1; existing `screenshots.spec.ts` + `visibility-slicing.spec.ts` unaffected.
+- 3 SHAs visible in `git log origin/live-defi-rollout --oneline -20` (UAC + PM + UI).
