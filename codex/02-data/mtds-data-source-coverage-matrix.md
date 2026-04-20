@@ -31,17 +31,24 @@ These counts are live-derived from `VenueMapping` and are the authoritative deno
 | **SPORTS**     |    ~23 bookmakers |     no     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, BET365, UNIBET, MARATHONBET, … — enumerate via `get_expected_bookmakers()`                                             |
 | **PREDICTION** |                 2 |     no     | POLYMARKET, KALSHI                                                                                                                                                                                |
 
-**Known UAC gaps** (observed 2026-04-20 — flagged for fix in Phase 6b):
+**UAC gaps — resolved 2026-04-20 in Phase 6b:**
 
-- COINBASE-SPOT, OKX-SPOT, OKX-FUTURES, OKX-SWAP currently return `[]` from `get_expected_data_types_for_venue()` —
-  registry under-specified. Aggregator cannot compute expected shards until UAC is completed.
-- PREDICTION venues return only `trades`; manifest SSOT §Layer 2 lists `prediction_trades`, `prediction_book_snapshot`,
-  `prediction_market_metadata`. UAC needs to carry the specialised names.
-- DEFI venues use `PROTOCOL-CHAIN` canonical names (`AAVEV3-ETHEREUM`). The chain axis is currently implicit in the
-  venue name — separate `chain` shard column exists in the manifest for multi-chain protocols; canonical form for
-  multi-chain expansion is `AAVEV3-ARBITRUM`, `AAVEV3-BASE`, etc. (not yet in registry — follow-up).
-- `HYPERLIQUID` appears twice in `VenueMapping.all_cefi_venues` — dedup required at the aggregator (possibly two
-  variants: CLOB vs centralised-futures). Confirm + dedup in UAC.
+- COINBASE-SPOT, OKX-SPOT, OKX-FUTURES, OKX-SWAP now have explicit suffixed entries in `VENUE_DATA_TYPE_CAPABILITIES`.
+  The bare `OKX` / `COINBASE` keys are retained for execution-context and client-config callers that don't split by
+  market; MTDS uses the suffixed forms.
+- `HYPERLIQUID` deduplicated in `VenueMapping.all_cefi_venues` — now returns a sorted
+  `set(tardis_to_venue.values()) | set(all_cefi_onchain_clob_venues)` (11 unique venues, was 12 with duplicate).
+
+**Remaining design notes (not bugs):**
+
+- PREDICTION venues declare only `trades` by design. Legacy `prediction_trades` name retired 2026-04-19 for
+  cross-category alignment. `book_snapshot_5` was intentionally removed at the same time — neither the Polymarket CLOB
+  adapter nor the Kalshi adapter captures book snapshots, and declaring them phantom-inflated the MTDS PREDICTION
+  completion denominator (35k expected vs ~5.7k observable). Re-add when + if either adapter grows a book-snapshot
+  collection path. `prediction_market_metadata` lives in the `instrument_availability` index (not `market_tick_data`)
+  because the instruments parquet IS the metadata.
+- DEFI multi-chain expansion (`AAVEV3-ARBITRUM`, `AAVEV3-BASE`, etc.) is a separate follow-up when the adapters start
+  writing to those chains.
 
 ## 2. CEFI — per venue × data_type matrix
 
@@ -50,19 +57,19 @@ crypto trades 24/7, so daily grid = all days in `[max(start, venue_start_date), 
 PERPETUAL, FUTURE, OPTION (per-instrument shard for `derivative_ticker` / `options_chain` / `futures_chain`; per-venue
 single shard for `trades` / `book_snapshot_5`).
 
-| venue           | expected data_types (UAC)                                                                | adapter (live / batch)   |
-| --------------- | ---------------------------------------------------------------------------------------- | ------------------------ |
-| ASTER           | book_snapshot_5, derivative_ticker, liquidations, trades                                 | aster (REST + WS)        |
-| BINANCE-SPOT    | book_snapshot_5, trades                                                                  | tardis / binance-spot    |
-| BINANCE-FUTURES | book_snapshot_5, derivative_ticker, futures_chain, liquidations, trades                  | tardis / binance-futures |
-| BYBIT           | book_snapshot_5, derivative_ticker, futures_chain, liquidations, trades                  | tardis / bybit           |
-| COINBASE-SPOT   | **(UAC empty — FIX)** expected: book_snapshot_5, trades                                  | coinbase-spot            |
-| DERIBIT         | book_snapshot_5, derivative_ticker, futures_chain, liquidations, options_chain, trades   | tardis / deribit         |
-| HYPERLIQUID     | book_snapshot_5, derivative_ticker, liquidations, trades                                 | hyperliquid direct       |
-| OKX-SPOT        | **(UAC empty — FIX)** expected: book_snapshot_5, trades                                  | tardis / okx-spot        |
-| OKX-FUTURES     | **(UAC empty — FIX)** expected: book_snapshot_5, derivative_ticker, trades               | tardis / okx-futures     |
-| OKX-SWAP        | **(UAC empty — FIX)** expected: book_snapshot_5, derivative_ticker, liquidations, trades | tardis / okx-swap        |
-| UPBIT           | book_snapshot_5, trades                                                                  | tardis / upbit           |
+| venue           | expected data_types (UAC)                                                              | adapter (live / batch)   |
+| --------------- | -------------------------------------------------------------------------------------- | ------------------------ |
+| ASTER           | book_snapshot_5, derivative_ticker, liquidations, trades                               | aster (REST + WS)        |
+| BINANCE-SPOT    | book_snapshot_5, trades                                                                | tardis / binance-spot    |
+| BINANCE-FUTURES | book_snapshot_5, derivative_ticker, futures_chain, liquidations, trades                | tardis / binance-futures |
+| BYBIT           | book_snapshot_5, derivative_ticker, futures_chain, liquidations, trades                | tardis / bybit           |
+| COINBASE-SPOT   | book_snapshot_5, trades                                                                | coinbase-spot            |
+| DERIBIT         | book_snapshot_5, derivative_ticker, futures_chain, liquidations, options_chain, trades | tardis / deribit         |
+| HYPERLIQUID     | book_snapshot_5, derivative_ticker, liquidations, trades                               | hyperliquid direct       |
+| OKX-SPOT        | book_snapshot_5, trades                                                                | tardis / okx-spot        |
+| OKX-FUTURES     | book_snapshot_5, derivative_ticker, trades                                             | tardis / okx-futures     |
+| OKX-SWAP        | book_snapshot_5, derivative_ticker, liquidations, trades                               | tardis / okx-swap        |
+| UPBIT           | book_snapshot_5, trades                                                                | tardis / upbit           |
 
 ### CEFI coverage axes
 
