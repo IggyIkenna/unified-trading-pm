@@ -1,0 +1,1372 @@
+# Category × Instrument Coverage Matrix (SSOT)
+
+> **Status:** Canonical as of 2026-04-19. Supersedes the ad-hoc "Supported scenarios" / "Supported venues + instrument
+> types" sections in individual archetype docs. Those per-archetype docs link back here and keep only the archetype's
+> rows from the table below.
+>
+> **Scope:** For every one of the 18 v2 strategy archetypes, every `(category, instrument_type)` cell is declared
+> SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled
+> representative `slot_label` examples.
+>
+> **Sources:** `strategy-service/strategy_service/engine/strategies/v2/`, UAC `registry/capability_declarations/`,
+> [`02-venues/venue-registry-reference.md`](../../02-venues/venue-registry-reference.md),
+> [`02-venues/unity-integration.md`](../../02-venues/unity-integration.md), individual
+> [`architecture-v2/archetypes/*.md`](archetypes/).
+
+---
+
+## Purpose
+
+The v2 architecture is intentionally factored so that **category is derived from the execution venue, not from the
+strategy code**. The same `ARBITRAGE_PRICE_DISPERSION` engine runs against CeFi spot, DeFi spot, or Unity event-settled
+markets — only the venue params differ. This document makes that combinatoric explicit so:
+
+1. **Strategy authors** can see which `(archetype, category, instrument_type)` cells are live today and which are
+   blocked by a missing venue, capability flag, or UAC declaration.
+2. **UAC maintainers** can see which registry additions unblock which cells.
+3. **UI / catalog** can render the matrix directly (via `lib/architecture-v2/coverage.ts` generated from this doc).
+4. **Operators** can build a block list of cells that cannot launch today and track them to closure.
+
+### Relationship to availability / lock state
+
+This universe is a single combinatoric matrix. Some slots are `PUBLIC` (DIY-client visible), some are
+`INVESTMENT_MANAGEMENT_RESERVED` (our funds), some are `CLIENT_EXCLUSIVE` (bespoke contract). Lock state is **metadata
+on the slot**, not a code-path axis — same engines, same wires, different visibility and RBAC. Full principle + UI
+surfaces: [`cross-cutting/strategy-availability-and-locking.md`](cross-cutting/strategy-availability-and-locking.md).
+
+Features / data are **not** part of the category axis. A strategy's execution category is defined by where its
+`StrategyInstruction` actions actually land; feature groups and ML models can draw from any category's data without
+changing the strategy's execution category.
+
+## Conventions
+
+### Status legend
+
+| Status      | Meaning                                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SUPPORTED` | Archetype engine code exists, UAC declares the venue + instrument, execution-service has the adapter. Can launch.                                                                                  |
+| `PARTIAL`   | Engine code exists and can emit correct instructions, but some declarative hook is missing (capability flag, policy registry entry, secondary venue data). Launchable with manual ops work-around. |
+| `BLOCKED`   | At least one hard dependency missing: no supported venue, no adapter, no UAC enum value, or no data feed. Cannot launch until dependency lands.                                                    |
+| `N/A`       | Combination doesn't make sense for this archetype (e.g., `YIELD_STAKING_SIMPLE × CeFi × spot` — CeFi has no native staking concept).                                                               |
+
+### Instrument-type vocabulary
+
+Eight types used as table rows. `perp` and `dated_future` are kept separate because they map to different venue
+populations (perp = crypto-native CEX + DEX; dated = TradFi), even though the underlying strategy code path is unified.
+
+| Instrument type | Covers                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spot`          | Cash market — crypto spot pair, equity share, FX spot, physical commodity                                                                                                                                                                                                                                                                                                                   |
+| `perp`          | Perpetual future (CEX + DEX perps)                                                                                                                                                                                                                                                                                                                                                          |
+| `dated_future`  | Expiring future (TradFi index/commodity/FX, crypto dated future). By default traded via a **rolling continuous underlying** — the strategy subscribes to `{underlying}-dated-...` and the roll service auto-switches the live contract when the next expiry becomes more liquid. See [Dated-future rolls and representative futures](#dated-future-rolls-and-representative-futures) below. |
+| `option`        | Call/put, vanilla or complex (single-venue multi-leg)                                                                                                                                                                                                                                                                                                                                       |
+| `lending`       | Supplied balance on a lending protocol (a-token, c-token, debt token)                                                                                                                                                                                                                                                                                                                       |
+| `staking`       | Staked native asset (LST: stETH, rETH, JitoSOL, mSOL)                                                                                                                                                                                                                                                                                                                                       |
+| `lp`            | AMM liquidity pool position (Uniswap V3 range, Curve, Balancer)                                                                                                                                                                                                                                                                                                                             |
+| `event_settled` | Binary outcome market (sports odds, prediction market)                                                                                                                                                                                                                                                                                                                                      |
+
+### Categories (4)
+
+| Category              | Execution venues                                                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CeFi`                | Binance, OKX, Bybit, Hyperliquid (hybrid), Deribit                                                                                                                     |
+| `DeFi`                | 7 chains × (Uniswap V2/V3, Balancer, Curve, SushiSwap, Aave V3, Compound V3, Euler, Morpho, Kamino, Lido, Rocket Pool, Jito, Marinade, GMX V2, Drift, Hyperliquid DEX) |
+| `TradFi`              | IBKR (NYSE/NASDAQ/LSE + FX + options), CME (ES/NQ/CL/GC/6E/6B), ICE (Brent, gas oil, softs)                                                                            |
+| `Sports & Prediction` | Unity (META_BROKER: 10 child books), Betfair direct, Smarkets direct, Matchbook direct, Polymarket, Kalshi (execution-future)                                          |
+
+Prediction is folded into `Sports & Prediction` because both settle event-driven and share the same archetype code
+paths; they are only distinguished by venue.
+
+### Slot label grammar (SSOT:
+
+[`../../06-coding-standards/strategy-identity-versioning.md`](../../06-coding-standards/strategy-identity-versioning.md))
+
+```
+{ARCHETYPE_ID}@{venue_scope}-{instrument_scope}[-{timeframe}]-{share_class}[-v{N}]-{env}
+```
+
+- `venue_scope` — single venue (`binance`, `hyperliquid`), venue pair (`binance-bybit`), chain + dex
+  (`uniswap-ethereum`, `multi-dex-arbitrum`), or meta-broker (`unity`, `ibkr`, `cme`).
+- `instrument_scope` — base asset + quote / product code (`btc-usdt`, `eth-perp-usdc`, `es-dec25-usd`, `epl-1x2`,
+  `sol-lst`, `aave-usdc`).
+- `timeframe` — optional, for strategies with explicit cadence (`5m`, `1h`, `daily`, `live`).
+- `share_class` — terminal settlement currency (`usdt`, `usdc`, `usd`, `gbp`, `eur`, `eth`, `btc`, `sol`).
+- `vN` — optional slot version suffix for material dependency changes (model family swap, venue swap).
+- `env` — `prod`, `uat`, `paper`, `shadow`.
+
+All examples below use `prod` — in practice we launch to `shadow` → `uat` → `paper` → `prod`.
+
+### Dated-future rolls and representative futures
+
+Most strategies that touch `dated_future` instruments (ML directional on CME ES, stat-arb on calendar spreads, basis
+trades on Deribit BTC-dated) want to trade the **continuous underlying**, not a specific expiry contract. The strategy
+should roll from ESZ5 to ESH6 automatically once ESH6 becomes the more liquid contract, not hold ESZ5 to expiry. This is
+a cross-cutting capability, not something each archetype re-implements.
+
+#### Continuous-underlying concept
+
+An **underlying** (pre-existing concept in the system) is the abstract representation of a tradeable instrument
+independent of any specific expiry:
+
+```
+BTC-USD-DERIBIT-DATED          # rolling crypto dated future
+ETH-USD-DERIBIT-DATED
+ES-USD-CME                     # E-mini S&P
+NQ-USD-CME                     # E-mini Nasdaq
+CL-USD-CME                     # WTI crude
+BRENT-USD-ICE                  # Brent crude
+GC-USD-CME                     # gold future
+6E-USD-CME                     # EUR/USD FX future
+```
+
+At any point in time each underlying resolves to a **representative future** — the currently-most-liquid listed contract
+for that underlying. Liquidity is measured **deterministically from features** (open interest, 24h volume, bid-ask
+depth, declared in a named feature group with a stable contract).
+
+#### End-to-end flow
+
+```
+1. features-service (delta-one feature group) continuously computes, per underlying:
+     representative_future(underlying_id, as_of) = <specific_contract_id>
+   based on declared liquidity measure. A change in that mapping is a state transition.
+
+2. On state transition, representative-future-service emits:
+     REPRESENTATIVE_FUTURE_CHANGED {
+       underlying_id, prior_contract, new_contract, decision_features, at
+     }
+   over Pub/Sub (plus in-process notifier for co-located subscribers).
+
+3. strategy-service subscribers on any slot using the `-dated-` scope for that
+   underlying receive the event. Each affected strategy instance reacts by
+   emitting a FUTURES_ROLL (an ATOMIC instruction variant):
+     ATOMIC {
+       leg 1: TRADE(prior_contract, target_units = 0)      # close leg
+       leg 2: TRADE(new_contract, target_units = current)  # open in new contract
+     }
+   Preferred expression: a **calendar-spread combo ticker** when the venue
+   lists one (e.g., CME `ES Z5-H6`, Deribit `BTC-26DEC25-27MAR26` combo). When
+   no combo ticker exists, the instruction falls back to two-leg ATOMIC with
+   synthetic-price guardrails (see step 4).
+
+4. execution-service handles the combo:
+   - **Combo listed at venue** → execute as single order against combo ticker;
+     venue guarantees simultaneous fill.
+   - **Combo not listed** → synthesize the combo: two-leg ATOMIC with a
+     `synthetic_fair_value_ref` computed from the individual legs' mid prices,
+     constrained by `max_roll_slippage_bps`. execution-service already computes
+     synthetic pricing for multi-leg bundles as part of the matching-engine
+     contract (batch=live); the roll case reuses that primitive.
+   - If combo creation fails at venue (e.g., exchange rejects non-standard
+     ratio) → escalate to two-leg LEADER_HEDGE with hard slippage guard.
+
+5. Circuit breakers:
+   - Roll slippage > `max_roll_slippage_bps` → **hard stop**: unwind prior
+     contract only, do not open new leg; alert ops; emit
+     `FUTURES_ROLL_FAILED`.
+   - Representative-future-service feed stale > T seconds → **soft freeze**:
+     no new opens, existing positions held; alert ops.
+   - Consecutive roll failures > N across the underlying → **ops escalation**,
+     strategy paused pending review.
+```
+
+#### Slot-label convention for dated futures
+
+- **Default (rolling continuous):** `{archetype}@{venue}-{underlying}-dated-{timeframe}-{shareclass}-{env}`. The
+  representative-future-service resolves `-dated-` to a specific contract at any instant. Use this for directional,
+  rules, stat-arb, and basis strategies that don't care about specific expiry dates.
+- **Explicit expiry (fixed):** `{archetype}@{venue}-{underlying}-fixed-{contract_code}-{timeframe}-{shareclass}-{env}`.
+  Used when the strategy is intentionally expiry-aware (calendar arbitrage, end-of-quarter basis, event-driven bets
+  anchored on a specific expiry week).
+
+Absence of both `-dated-` and `-fixed-` in an existing short-form label (e.g. `cme-es-nq-zscore`) implies rolling
+continuous semantics by default — but new labels should be explicit.
+
+#### Affected archetypes
+
+Rolling-by-default (use `-dated-`):
+
+- `ML_DIRECTIONAL_CONTINUOUS`
+- `RULES_DIRECTIONAL_CONTINUOUS`
+- `STAT_ARB_PAIRS_FIXED` (when pairing dated futures)
+- `STAT_ARB_CROSS_SECTIONAL`
+- `ARBITRAGE_PRICE_DISPERSION` (when a leg is a dated future — except explicit calendar arb which uses `-fixed-` on both
+  legs)
+- `EVENT_DRIVEN` (macro reactions on CME ES, ICE Brent, CME CL)
+- `MARKET_MAKING_CONTINUOUS` (if ever quoting a future — always quotes the front, so effectively rolling)
+
+Context-dependent:
+
+- `CARRY_BASIS_DATED` — default instance rolls with the front (`-dated-`); explicit end-of-quarter / expiry-targeted
+  instances use `-fixed-{contract}`.
+
+Expiry-aware by design (not served by this mechanism):
+
+- `VOL_TRADING_OPTIONS` — term structure matters; option rolls are handled internal to the archetype with a distinct
+  roll model (weekly → monthly → quarterly serial rolls).
+
+#### Registries this depends on
+
+- `RepresentativeFutureRegistry` (UAC) — declares which underlyings exist, which feature group feeds liquidity
+  measurement, and roll-trigger thresholds (e.g., "roll when next contract's 7-day rolling OI exceeds current's by
+  10%"). **Gap:** not yet declared — see UAC Registry Implications #11.
+- Per-venue `MultiLegOrderCapability` — whether the venue lists calendar-spread combo tickers and `max_legs` for
+  on-the-fly combo creation. Partially declared; see UAC Registry Implications #7.
+- `cross-cutting/futures-roll-and-combos.md` — canonical rolls + combo-creation spec (**to write** as part of the
+  rollout of this architecture).
+
+---
+
+# Archetypes (18)
+
+Ordered by family to match [`README.md`](README.md). Each archetype section contains: a one-line summary, the coverage
+table, and a block of representative slot_labels grouped by `(category, instrument_type)` cell.
+
+---
+
+## Family 1: ML Directional
+
+### 1. `ML_DIRECTIONAL_CONTINUOUS`
+
+> Family: [ml-directional](families/ml-directional.md). Code:
+> `strategy_service/engine/strategies/v2/ml_directional/continuous.py`.
+
+Model-predicted directional probability vs market implied; sized by Kelly × confidence. Holds until signal flips or
+time-box expires. Category-agnostic — venue choice determines category.
+
+#### Coverage
+
+| Category            | Instrument    | Status    | Representative venues                              | Signal variant      | Notes / Gap                                                                                                                            |
+| ------------------- | ------------- | --------- | -------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| CeFi                | spot          | SUPPORTED | Binance, OKX, Bybit, Hyperliquid                   | price               | —                                                                                                                                      |
+| CeFi                | perp          | SUPPORTED | Binance, OKX, Bybit, Hyperliquid, Deribit          | price               | —                                                                                                                                      |
+| CeFi                | dated_future  | PARTIAL   | Deribit (BTC / ETH dated)                          | price               | Deribit dated futures adapter path exists; settlement-aware reconciliation not batch-tested                                            |
+| CeFi                | option        | PARTIAL   | Deribit, OKX options                               | delta-as-expression | Expression axis supports `atm_call` / `25d_call` / `synthetic`; execution_policy lacks multi-leg option router for delta-1 replication |
+| CeFi                | lending       | N/A       | —                                                  | —                   | ML directional predicts price, not rates — see `YIELD_ROTATION_LENDING` for rate alpha                                                 |
+| CeFi                | staking       | N/A       | —                                                  | —                   | No CeFi native staking — see `YIELD_STAKING_SIMPLE`                                                                                    |
+| CeFi                | lp            | N/A       | —                                                  | —                   | No CeFi LP concept                                                                                                                     |
+| CeFi                | event_settled | N/A       | —                                                  | —                   | See `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                     |
+| DeFi                | spot          | PARTIAL   | Uniswap V3, Balancer (per-chain)                   | price               | Price feed reliability on thin DEX pairs needs UAC `pricing_fidelity: Literal["tick","snapshot"]` flag                                 |
+| DeFi                | perp          | SUPPORTED | Hyperliquid (DEX side), GMX V2, Drift              | price               | —                                                                                                                                      |
+| DeFi                | dated_future  | BLOCKED   | —                                                  | —                   | No DeFi dated-future venue; Deribit is CeFi                                                                                            |
+| DeFi                | option        | BLOCKED   | —                                                  | —                   | No supported DeFi options venue (Lyra / Dopex archived 2026-03)                                                                        |
+| DeFi                | lending       | N/A       | —                                                  | —                   | See `YIELD_ROTATION_LENDING`                                                                                                           |
+| DeFi                | staking       | N/A       | —                                                  | —                   | See `YIELD_STAKING_SIMPLE`                                                                                                             |
+| DeFi                | lp            | N/A       | —                                                  | —                   | See `MARKET_MAKING_CONTINUOUS` (LP submode)                                                                                            |
+| DeFi                | event_settled | N/A       | —                                                  | —                   | See `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                     |
+| TradFi              | spot          | PARTIAL   | IBKR (NYSE/NASDAQ/LSE equities, FX spot)           | price               | IBKR FIX adapter symbol universe + order-type capability not fully declared in UAC                                                     |
+| TradFi              | perp          | N/A       | —                                                  | —                   | TradFi has no perpetuals                                                                                                               |
+| TradFi              | dated_future  | PARTIAL   | CME (ES, NQ, CL, GC, 6E, 6B), ICE (Brent, gas oil) | price               | CME/ICE routing declaration incomplete; tick-window metadata present but adapter batch-tested only for ES/NQ/CL                        |
+| TradFi              | option        | PARTIAL   | CBOE via IBKR (equity + VIX options)               | delta-as-expression | CME options-on-futures (ES options, CL options) not declared in UAC                                                                    |
+| TradFi              | lending       | N/A       | —                                                  | —                   | No applicable concept                                                                                                                  |
+| TradFi              | staking       | N/A       | —                                                  | —                   | No applicable concept                                                                                                                  |
+| TradFi              | lp            | N/A       | —                                                  | —                   | No applicable concept                                                                                                                  |
+| TradFi              | event_settled | N/A       | —                                                  | —                   | See `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                     |
+| Sports & Prediction | any           | N/A       | —                                                  | —                   | Event-settled markets → `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                 |
+
+#### Representative slot_labels
+
+```
+# CeFi spot (price-driven directional, HOLD_UNTIL_FLIP)
+ML_DIRECTIONAL_CONTINUOUS@binance-btc-usdt-5m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@binance-eth-usdt-15m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@okx-sol-usdt-5m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@bybit-btc-usdt-1h-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@hyperliquid-btc-usdt-5m-usdt-prod
+
+# CeFi perp (most common)
+ML_DIRECTIONAL_CONTINUOUS@binance-btc-perp-5m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@bybit-eth-perp-15m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@hyperliquid-btc-perp-5m-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@hyperliquid-eth-perp-5m-usdt-v2-prod           # v2 = model family swap
+ML_DIRECTIONAL_CONTINUOUS@deribit-btc-perp-1h-usdt-prod
+
+# CeFi dated_future — rolling continuous (roll service picks actual contract)
+ML_DIRECTIONAL_CONTINUOUS@deribit-btc-dated-daily-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@deribit-eth-dated-daily-usdt-prod
+# Expiry-anchored variant (explicit contract — rare for this archetype)
+ML_DIRECTIONAL_CONTINUOUS@deribit-btc-fixed-dec25-daily-usdt-prod
+
+# CeFi option (delta-as-expression)
+ML_DIRECTIONAL_CONTINUOUS@deribit-btc-atm_call-daily-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@deribit-eth-25d_call-daily-usdt-prod
+ML_DIRECTIONAL_CONTINUOUS@deribit-btc-synthetic-daily-usdt-prod
+
+# DeFi spot (PARTIAL — pricing fidelity flag missing)
+ML_DIRECTIONAL_CONTINUOUS@uniswap-ethereum-weth-usdc-5m-usdc-prod
+ML_DIRECTIONAL_CONTINUOUS@uniswap-arbitrum-weth-usdc-15m-usdc-prod
+
+# DeFi perp
+ML_DIRECTIONAL_CONTINUOUS@gmx-arbitrum-eth-perp-5m-usdc-prod
+ML_DIRECTIONAL_CONTINUOUS@drift-solana-sol-perp-5m-usdc-prod
+ML_DIRECTIONAL_CONTINUOUS@hyperliquid-dex-btc-perp-5m-usdc-prod
+
+# TradFi spot equity
+ML_DIRECTIONAL_CONTINUOUS@ibkr-spy-1m-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@ibkr-aapl-daily-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@ibkr-eurusd-fx-15m-usd-prod
+
+# TradFi dated_future — rolling continuous
+ML_DIRECTIONAL_CONTINUOUS@cme-es-dated-1m-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@cme-nq-dated-15m-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@cme-cl-dated-daily-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@ice-brent-dated-daily-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@cme-gc-dated-daily-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@cme-6e-dated-15m-usd-prod
+
+# TradFi option
+ML_DIRECTIONAL_CONTINUOUS@ibkr-cboe-spy-atm_call-daily-usd-prod
+ML_DIRECTIONAL_CONTINUOUS@ibkr-cboe-qqq-25d_put-daily-usd-prod
+```
+
+---
+
+### 2. `ML_DIRECTIONAL_EVENT_SETTLED`
+
+> Family: [ml-directional](families/ml-directional.md). Code:
+> `strategy_service/engine/strategies/v2/ml_directional/event_settled.py`.
+
+ML probability vs implied on a binary outcome market (sports, prediction). Position held until settlement; `ONE_SHOT`
+hold policy. Fractional-Kelly per outcome, banked outside the position.
+
+#### Coverage
+
+| Category            | Instrument    | Status    | Representative venues                                                                                                     | Signal variant | Notes / Gap                                                                  |
+| ------------------- | ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------- |
+| CeFi                | any           | N/A       | —                                                                                                                         | —              | Event-settled does not apply to CeFi price markets                           |
+| DeFi                | any           | N/A       | —                                                                                                                         | —              | Event-settled does not apply to DeFi price markets                           |
+| TradFi              | any           | N/A       | —                                                                                                                         | —              | Event-settled does not apply to TradFi price markets                         |
+| Sports & Prediction | event_settled | SUPPORTED | Unity (all 10 child books — VX, Sharpbet, 3ET, Betdex, Matchbook, IBCbet, Betfair-via-Unity, Broker5 + 2 commission-free) | price (odds)   | Primary deployment target; Unity wallet = single pool                        |
+| Sports & Prediction | event_settled | PARTIAL   | Betfair direct, Smarkets direct, Matchbook direct, Betdaq direct                                                          | price (odds)   | Lay-side bankroll-as-collateral semantics need explicit execution_policy_ref |
+| Sports & Prediction | event_settled | SUPPORTED | Polymarket                                                                                                                | price (binary) | USDC settlement on Polygon chain                                             |
+| Sports & Prediction | event_settled | BLOCKED   | Kalshi                                                                                                                    | price          | Execution-future; data + pricing feeds live but execution adapter pending    |
+
+#### Representative slot_labels
+
+```
+# Unity (primary — sports event-settled)
+ML_DIRECTIONAL_EVENT_SETTLED@unity-epl-1x2-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-epl-over_under_2_5-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-champions-league-1x2-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-la-liga-1x2-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-nba-moneyline-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-nba-spread-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-atp-match-winner-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-wta-match-winner-usd-prod
+
+# Unity live (in-play)
+ML_DIRECTIONAL_EVENT_SETTLED@unity-epl-1x2-live-usd-prod
+ML_DIRECTIONAL_EVENT_SETTLED@unity-nba-live-moneyline-usd-prod
+
+# Betfair direct (lay-capable)
+ML_DIRECTIONAL_EVENT_SETTLED@betfair-direct-epl-1x2-gbp-prod
+ML_DIRECTIONAL_EVENT_SETTLED@betfair-direct-cricket-match-winner-gbp-prod
+
+# Smarkets direct
+ML_DIRECTIONAL_EVENT_SETTLED@smarkets-direct-epl-1x2-gbp-prod
+
+# Polymarket (prediction — USDC)
+ML_DIRECTIONAL_EVENT_SETTLED@polymarket-us-election-president-usdc-prod
+ML_DIRECTIONAL_EVENT_SETTLED@polymarket-btc-eoy-price-band-usdc-prod
+ML_DIRECTIONAL_EVENT_SETTLED@polymarket-superbowl-winner-usdc-prod
+
+# First-half prediction (specialised cadence)
+ML_DIRECTIONAL_EVENT_SETTLED@unity-epl-first-half-1x2-usd-prod
+```
+
+---
+
+## Family 2: Rules Directional
+
+### 3. `RULES_DIRECTIONAL_CONTINUOUS`
+
+> Family: [rules-directional](families/rules-directional.md). Code:
+> `strategy_service/engine/strategies/v2/rules_directional/continuous.py`.
+
+Explicit if-else rules on features (TA indicators, thresholds, z-scores) producing fire / no-fire signals. No ML model
+dependency. Useful when interpretability trumps predictive power (regulatory, research sandbox, fast iteration).
+
+#### Coverage
+
+| Category            | Instrument   | Status    | Representative venues            | Signal variant           | Notes / Gap                                                                                    |
+| ------------------- | ------------ | --------- | -------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| CeFi                | spot         | SUPPORTED | Binance, OKX, Bybit, Hyperliquid | TA rule / z-score        | —                                                                                              |
+| CeFi                | perp         | SUPPORTED | Binance, OKX, Bybit, Hyperliquid | TA rule / funding regime | —                                                                                              |
+| CeFi                | dated_future | PARTIAL   | Deribit (BTC / ETH dated)        | TA rule                  | Settlement-aware rule harness not batch-tested                                                 |
+| CeFi                | option       | BLOCKED   | —                                | —                        | Directional options via rules are non-standard; use `VOL_TRADING_OPTIONS` for vol-metric rules |
+| DeFi                | spot         | PARTIAL   | Uniswap V3 (on-chain TA signals) | TA rule                  | Same pricing-fidelity concern as ML_DIRECTIONAL_CONTINUOUS                                     |
+| DeFi                | perp         | PARTIAL   | GMX V2, Drift, Hyperliquid DEX   | TA rule / funding regime | No codex instance examples; capability declaration minor                                       |
+| DeFi                | dated_future | BLOCKED   | —                                | —                        | No DeFi dated future                                                                           |
+| DeFi                | option       | BLOCKED   | —                                | —                        | No supported DeFi options venue                                                                |
+| TradFi              | spot         | PARTIAL   | IBKR equities, FX                | TA rule                  | IBKR FIX adapter declaration gap same as ML                                                    |
+| TradFi              | dated_future | PARTIAL   | CME (ES/NQ/CL), ICE (Brent)      | TA rule                  | Same as ML                                                                                     |
+| TradFi              | option       | BLOCKED   | —                                | —                        | See CeFi note                                                                                  |
+| Sports & Prediction | any          | N/A       | —                                | —                        | Event-settled → `RULES_DIRECTIONAL_EVENT_SETTLED`                                              |
+
+Lending / staking / lp / event_settled rows are uniformly N/A for this archetype — rate alpha and LP alpha belong to
+carry/yield and market-making archetypes respectively.
+
+#### Representative slot_labels
+
+```
+# CeFi spot (TA rules)
+RULES_DIRECTIONAL_CONTINUOUS@binance-btc-usdt-15m-macd-usdt-prod
+RULES_DIRECTIONAL_CONTINUOUS@binance-eth-usdt-1h-bollinger-usdt-prod
+RULES_DIRECTIONAL_CONTINUOUS@hyperliquid-sol-usdt-5m-rsi-usdt-prod
+
+# CeFi perp (TA + funding regime)
+RULES_DIRECTIONAL_CONTINUOUS@binance-btc-perp-15m-ta-funding-usdt-prod
+RULES_DIRECTIONAL_CONTINUOUS@bybit-eth-perp-1h-trend-funding-usdt-prod
+RULES_DIRECTIONAL_CONTINUOUS@hyperliquid-btc-perp-5m-vwap-usdt-prod
+
+# DeFi perp
+RULES_DIRECTIONAL_CONTINUOUS@gmx-arbitrum-eth-perp-1h-ta-usdc-prod
+RULES_DIRECTIONAL_CONTINUOUS@drift-solana-sol-perp-15m-ta-usdc-prod
+
+# TradFi equity
+RULES_DIRECTIONAL_CONTINUOUS@ibkr-spy-daily-donchian-usd-prod
+RULES_DIRECTIONAL_CONTINUOUS@ibkr-qqq-15m-breakout-usd-prod
+
+# TradFi future — rolling continuous
+RULES_DIRECTIONAL_CONTINUOUS@cme-es-dated-1m-ta-usd-prod
+RULES_DIRECTIONAL_CONTINUOUS@cme-cl-dated-daily-trend-usd-prod
+RULES_DIRECTIONAL_CONTINUOUS@cme-nq-dated-15m-breakout-usd-prod
+RULES_DIRECTIONAL_CONTINUOUS@ice-brent-dated-daily-trend-usd-prod
+```
+
+---
+
+### 4. `RULES_DIRECTIONAL_EVENT_SETTLED`
+
+> Family: [rules-directional](families/rules-directional.md). Code:
+> `strategy_service/engine/strategies/v2/rules_directional/event_settled.py`.
+
+Hard-coded if-else rules on sports / prediction features (e.g., "back home team if xG differential > 1.2 AND rest_days
+differential > 2"). No model; interpretable signal for research + regulatory audit. Sanity-check alongside ML.
+
+#### Coverage
+
+| Category             | Instrument    | Status  | Representative venues                  | Signal variant        | Notes / Gap                                                                                       |
+| -------------------- | ------------- | ------- | -------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| CeFi / DeFi / TradFi | any           | N/A     | —                                      | —                     | Event-settled only                                                                                |
+| Sports & Prediction  | event_settled | PARTIAL | Unity, Betfair direct, Smarkets direct | threshold-rule / odds | Engine code complete; codex doc missing (archetype file stub only); no example instances declared |
+| Sports & Prediction  | event_settled | PARTIAL | Polymarket                             | threshold-rule        | Same — doc + examples gap                                                                         |
+| Sports & Prediction  | event_settled | BLOCKED | Kalshi                                 | —                     | Execution adapter pending                                                                         |
+
+This archetype is the "paper trail" complement to `ML_DIRECTIONAL_EVENT_SETTLED` — same venues, explicit rules instead
+of learned model.
+
+#### Representative slot_labels
+
+```
+# Unity (rules — Poisson / xG / rest-days / home-form thresholds)
+RULES_DIRECTIONAL_EVENT_SETTLED@unity-epl-xg-diff-usd-prod
+RULES_DIRECTIONAL_EVENT_SETTLED@unity-epl-home-form-rule-usd-prod
+RULES_DIRECTIONAL_EVENT_SETTLED@unity-la-liga-elo-threshold-usd-prod
+RULES_DIRECTIONAL_EVENT_SETTLED@unity-nba-rest-days-rule-usd-prod
+
+# Betfair direct
+RULES_DIRECTIONAL_EVENT_SETTLED@betfair-direct-epl-xg-diff-gbp-prod
+
+# Polymarket rule-based (e.g., price-band anchor)
+RULES_DIRECTIONAL_EVENT_SETTLED@polymarket-btc-price-band-rule-usdc-prod
+```
+
+---
+
+## Family 3: Carry & Yield
+
+### 5. `CARRY_BASIS_DATED`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/basis_dated.py`.
+
+Spot + dated-future paired position that locks in the annualised basis. Unwind at expiry (or roll). `LEADER_HEDGE`
+execution: leader leg fills, hedge leg follows within a deadline; abort if adverse move before hedge fills.
+
+#### Coverage
+
+| Category            | Instrument          | Status    | Representative venues                                        | Signal variant     | Notes / Gap                                                                                          |
+| ------------------- | ------------------- | --------- | ------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| CeFi                | spot + dated_future | SUPPORTED | Binance spot + Deribit dated, Coinbase + Deribit             | basis (annualised) | —                                                                                                    |
+| CeFi                | spot + option       | PARTIAL   | Deribit spot synthetic via option parity                     | put-call parity    | Option-parity expression path exists but no worked instance                                          |
+| DeFi                | spot + dated_future | BLOCKED   | —                                                            | —                  | No DeFi dated-future venue                                                                           |
+| TradFi              | spot + dated_future | PARTIAL   | IBKR spot (equity ETF) + CME future, ICE Brent spot + future | basis              | IBKR ↔ CME cross-venue routing policy not declared; spot-commodity physical settlement out-of-scope |
+| TradFi              | equity + ETF future | PARTIAL   | IBKR (SPY) + CME ES future                                   | index basis        | Dividend-adjusted basis calculation not in UAC canonical helpers                                     |
+| Sports & Prediction | any                 | N/A       | —                                                            | —                  | No dated-future analogue                                                                             |
+
+#### Representative slot_labels
+
+```
+# CeFi BTC / ETH basis — rolling continuous (default; trades the front as it rolls)
+CARRY_BASIS_DATED@binance-deribit-btc-dated-usdt-prod
+CARRY_BASIS_DATED@binance-deribit-eth-dated-usdt-prod
+CARRY_BASIS_DATED@coinbase-deribit-btc-dated-usd-prod
+
+# CeFi expiry-targeted basis (explicit contract — end-of-quarter arb)
+CARRY_BASIS_DATED@binance-deribit-btc-fixed-dec25-usdt-prod
+CARRY_BASIS_DATED@binance-deribit-eth-fixed-mar26-usdt-prod
+CARRY_BASIS_DATED@coinbase-deribit-btc-fixed-jun26-usd-prod
+
+# CeFi put-call parity synthetic (PARTIAL)
+CARRY_BASIS_DATED@deribit-btc-parity-synthetic-usdt-prod
+
+# TradFi index basis — rolling
+CARRY_BASIS_DATED@ibkr-cme-spy-es-dated-usd-prod
+CARRY_BASIS_DATED@ibkr-cme-qqq-nq-dated-usd-prod
+
+# TradFi index basis — expiry-targeted
+CARRY_BASIS_DATED@ibkr-cme-spy-es-fixed-dec25-usd-prod
+CARRY_BASIS_DATED@ibkr-cme-qqq-nq-fixed-mar26-usd-prod
+
+# TradFi commodity basis — rolling (Brent spot ETF + ICE future front)
+CARRY_BASIS_DATED@ibkr-ice-brent-dated-usd-prod
+CARRY_BASIS_DATED@ibkr-cme-gold-etf-gc-dated-usd-prod
+CARRY_BASIS_DATED@ibkr-ice-brent-fixed-feb26-usd-prod
+```
+
+---
+
+### 6. `CARRY_BASIS_PERP`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/basis_perp.py`.
+
+Spot + perp delta-neutral pair that captures funding rate (positive-funding → short perp + long spot; negative-funding →
+reverse). Held continuously; exits when funding sign flips or annualised funding drops below threshold.
+
+#### Coverage
+
+| Category            | Instrument                 | Status    | Representative venues                                           | Signal variant               | Notes / Gap                                                                                                               |
+| ------------------- | -------------------------- | --------- | --------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| CeFi                | spot + perp (single venue) | SUPPORTED | Binance (cross-margin netted), OKX, Bybit, Hyperliquid, Deribit | funding-rate                 | Cross-margin netting pre-flight gates spec'd in R&E Layer 3                                                               |
+| CeFi                | spot + perp (cross-venue)  | SUPPORTED | Binance spot + Bybit perp, OKX spot + Hyperliquid perp          | funding-rate                 | LEADER_HEDGE mode; two wallets                                                                                            |
+| DeFi                | spot + perp (same chain)   | SUPPORTED | Uniswap ETH + Hyperliquid DEX perp, Uniswap ETH + GMX V2 perp   | funding-rate                 | —                                                                                                                         |
+| DeFi                | spot + perp (cross chain)  | PARTIAL   | Uniswap Ethereum + GMX Arbitrum (bridged hedge)                 | funding-rate                 | Bridge latency breaks LEADER_HEDGE deadline — needs longer `max_hedge_delay_ms` config + bridge state machine integration |
+| DeFi                | LST + perp                 | SUPPORTED | Lido stETH + Hyperliquid DEX ETH-perp                           | funding-rate + staking yield | Note: effectively becomes `CARRY_STAKED_BASIS` (redirect there if staking is primary)                                     |
+| TradFi              | any                        | N/A       | —                                                               | —                            | TradFi has no perpetuals                                                                                                  |
+| Sports & Prediction | any                        | N/A       | —                                                               | —                            | No perp analogue                                                                                                          |
+
+#### Representative slot_labels
+
+```
+# CeFi single-venue netted basis (most capital-efficient)
+CARRY_BASIS_PERP@binance-btc-usdt-prod
+CARRY_BASIS_PERP@binance-eth-usdt-prod
+CARRY_BASIS_PERP@bybit-btc-usdt-prod
+CARRY_BASIS_PERP@hyperliquid-btc-usdt-prod
+CARRY_BASIS_PERP@deribit-btc-usdt-prod
+
+# CeFi cross-venue (spot on one, perp on another)
+CARRY_BASIS_PERP@binance-bybit-btc-usdt-prod
+CARRY_BASIS_PERP@okx-hyperliquid-eth-usdt-prod
+
+# DeFi same-chain
+CARRY_BASIS_PERP@uniswap-hyperliquid-eth-usdt-prod
+CARRY_BASIS_PERP@uniswap-gmx-eth-perp-arbitrum-usdc-prod
+CARRY_BASIS_PERP@uniswap-drift-sol-perp-solana-usdc-prod
+
+# DeFi cross-chain (PARTIAL — bridge latency)
+CARRY_BASIS_PERP@uniswap-ethereum-gmx-arbitrum-eth-usdc-prod
+
+# LST variant (staking yield + funding)
+CARRY_BASIS_PERP@lido-hyperliquid-steth-usdt-prod
+```
+
+---
+
+### 7. `CARRY_STAKED_BASIS`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`.
+
+Three-leg DeFi-native: stake (earn staking yield) + borrow against staked position (pay borrow rate) + perp hedge to
+stay delta-neutral (earn funding). Net yield = staking APY – borrow APY + funding APY.
+
+#### Coverage
+
+| Category            | Instrument               | Status    | Representative venues                                                                | Signal variant                         | Notes / Gap                                                |
+| ------------------- | ------------------------ | --------- | ------------------------------------------------------------------------------------ | -------------------------------------- | ---------------------------------------------------------- |
+| CeFi                | any                      | N/A       | —                                                                                    | —                                      | No CeFi native staking                                     |
+| DeFi (Ethereum)     | staking + lending + perp | SUPPORTED | Lido stETH + Aave V3 USDC + Hyperliquid ETH-perp (bridged) / GMX ETH-perp (Arbitrum) | staking APY + borrow APY + funding APY | ATOMIC 3-leg instruction; bridge path for cross-chain perp |
+| DeFi (Ethereum)     | staking + lending + perp | SUPPORTED | Rocket Pool rETH + Aave V3 + Hyperliquid ETH-perp                                    | same                                   | Same harness, different LST                                |
+| DeFi (Solana)       | staking + lending + perp | SUPPORTED | Jito JitoSOL + Kamino + Drift SOL-perp                                               | staking APY + borrow APY + funding APY | Solana-native 3-leg                                        |
+| DeFi (Solana)       | staking + lending + perp | SUPPORTED | Marinade mSOL + Kamino + Drift SOL-perp                                              | same                                   | Same harness, different LST                                |
+| TradFi              | any                      | N/A       | —                                                                                    | —                                      | No applicable concept                                      |
+| Sports & Prediction | any                      | N/A       | —                                                                                    | —                                      | No applicable concept                                      |
+
+#### Representative slot_labels
+
+```
+# Ethereum staked basis (Lido)
+CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-prod
+CARRY_STAKED_BASIS@lido-aave-gmx-arbitrum-eth-usdc-prod
+CARRY_STAKED_BASIS@rocketpool-aave-hyperliquid-eth-prod
+
+# Solana staked basis
+CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod
+CARRY_STAKED_BASIS@marinade-kamino-drift-sol-usdc-prod
+
+# Cross-LST comparison slot (v2 = LST swap)
+CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-v2-prod
+```
+
+---
+
+### 8. `CARRY_RECURSIVE_STAKED`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py`.
+
+Recursive lending loop: supply LST (stETH), borrow stablecoin against it, swap back to LST, re-supply — repeat N times
+to lever staking yield. Target LTV is a risk parameter; liquidation risk is the primary constraint.
+
+#### Coverage
+
+| Category            | Instrument                    | Status    | Representative venues                         | Signal variant                     | Notes / Gap                                                               |
+| ------------------- | ----------------------------- | --------- | --------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| CeFi                | any                           | N/A       | —                                             | —                                  | No CeFi native staking                                                    |
+| DeFi (Ethereum)     | staking + lending (recursive) | SUPPORTED | Lido stETH + Aave V3 (up to 6 loops, 75% LTV) | leveraged staking APY – borrow APY | Liquidation-cascade risk declared; per-protocol bonus schedule gap in UAC |
+| DeFi (Ethereum)     | staking + lending (recursive) | SUPPORTED | Rocket Pool rETH + Aave V3                    | same                               | —                                                                         |
+| DeFi (Ethereum)     | staking + lending (recursive) | PARTIAL   | Lido stETH + Compound V3, Euler, Morpho       | same                               | Alt lending protocols declared in UAC but not full recursive-loop tested  |
+| DeFi (Solana)       | staking + lending (recursive) | SUPPORTED | Jito JitoSOL + Kamino                         | leveraged staking APY – borrow APY | —                                                                         |
+| DeFi (Solana)       | staking + lending (recursive) | SUPPORTED | Marinade mSOL + Kamino                        | same                               | —                                                                         |
+| TradFi              | any                           | N/A       | —                                             | —                                  | No applicable concept                                                     |
+| Sports & Prediction | any                           | N/A       | —                                             | —                                  | No applicable concept                                                     |
+
+#### Representative slot_labels
+
+```
+# Ethereum recursive stETH (Aave)
+CARRY_RECURSIVE_STAKED@lido-aave-steth-ltv70-ethereum-prod
+CARRY_RECURSIVE_STAKED@lido-aave-steth-ltv75-ethereum-prod
+CARRY_RECURSIVE_STAKED@rocketpool-aave-reth-ltv70-ethereum-prod
+
+# Ethereum alt protocols (PARTIAL — not batch-tested)
+CARRY_RECURSIVE_STAKED@lido-compound-steth-ltv65-ethereum-prod
+CARRY_RECURSIVE_STAKED@lido-morpho-steth-ltv70-ethereum-prod
+CARRY_RECURSIVE_STAKED@lido-euler-steth-ltv70-ethereum-prod
+
+# Solana recursive
+CARRY_RECURSIVE_STAKED@jito-kamino-jitosol-ltv70-solana-prod
+CARRY_RECURSIVE_STAKED@marinade-kamino-msol-ltv70-solana-prod
+```
+
+---
+
+### 9. `YIELD_ROTATION_LENDING`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/rotation_lending.py`.
+
+Rotate stablecoin / asset supply across lending venues (and chains) to chase the highest net lending rate. Emits `LEND`
+(target supplied balance) and `BRIDGE` when cross-chain move is warranted by rate spread – bridge cost.
+
+#### Coverage
+
+| Category            | Instrument       | Status    | Representative venues                                                                                                                               | Signal variant                 | Notes / Gap                                                                                                                           |
+| ------------------- | ---------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| CeFi                | lending          | BLOCKED   | —                                                                                                                                                   | —                              | CeFi lending products (Binance Earn, Bybit) have withdrawal lockups + counterparty risk; deliberately out-of-scope                    |
+| DeFi (multi-chain)  | lending          | SUPPORTED | Aave V3 (Ethereum / Arbitrum / Optimism / Polygon / Base / Avalanche), Compound V3 (Ethereum), Euler (Ethereum), Morpho (Ethereum), Kamino (Solana) | lending-rate spread            | —                                                                                                                                     |
+| DeFi                | LST yield        | PARTIAL   | Across Lido / Rocket Pool / Jito / Marinade                                                                                                         | staking-rate spread            | Cross-LST rotation not a "lending" operation per se — consider a separate archetype or fold into `YIELD_STAKING_SIMPLE` rotation mode |
+| DeFi                | lending + bridge | SUPPORTED | Aave V3 across chains via Circle CCTP / LayerZero Stargate                                                                                          | rate spread net of bridge cost | Bridge cost + latency modeled in rotation decision                                                                                    |
+| TradFi              | any              | N/A       | —                                                                                                                                                   | —                              | TradFi lending (Fed Funds, repo) out-of-scope                                                                                         |
+| Sports & Prediction | any              | N/A       | —                                                                                                                                                   | —                              | No applicable concept                                                                                                                 |
+
+#### Representative slot_labels
+
+```
+# Single-chain USDC rotation
+YIELD_ROTATION_LENDING@aave-compound-morpho-usdc-ethereum-prod
+YIELD_ROTATION_LENDING@aave-euler-usdc-ethereum-prod
+
+# Multi-chain USDC rotation (primary deployment)
+YIELD_ROTATION_LENDING@aave-multichain-usdc-prod
+YIELD_ROTATION_LENDING@aave-ethereum-arbitrum-optimism-usdc-prod
+YIELD_ROTATION_LENDING@aave-multichain-usdt-prod
+
+# Solana lending
+YIELD_ROTATION_LENDING@kamino-solana-usdc-prod
+
+# WETH rotation (LST-adjacent)
+YIELD_ROTATION_LENDING@aave-morpho-weth-ethereum-prod
+```
+
+---
+
+### 10. `YIELD_STAKING_SIMPLE`
+
+> Family: [carry-and-yield](families/carry-and-yield.md). Code:
+> `strategy_service/engine/strategies/v2/carry_and_yield/staking_simple.py`.
+
+Straightforward native-asset staking (no leverage, no hedge). Emits `STAKE` (target staked balance) and `UNSTAKE` on
+client withdrawal or share-class rotation. Delta-exposed by design — stake ETH to earn ETH-denominated yield.
+
+#### Coverage
+
+| Category            | Instrument                   | Status    | Representative venues                                          | Signal variant | Notes / Gap                                           |
+| ------------------- | ---------------------------- | --------- | -------------------------------------------------------------- | -------------- | ----------------------------------------------------- |
+| CeFi                | any                          | N/A       | —                                                              | —              | No CeFi native staking                                |
+| DeFi (Ethereum)     | staking                      | SUPPORTED | Lido (stETH), Rocket Pool (rETH), Ether.fi (eETH)              | staking APY    | Ether.fi capability declaration minor pending         |
+| DeFi (Solana)       | staking                      | SUPPORTED | Jito (JitoSOL), Marinade (mSOL)                                | staking APY    | —                                                     |
+| DeFi                | staking (multi-LST rotation) | PARTIAL   | Across stETH / rETH / eETH (Ethereum); JitoSOL / mSOL (Solana) | APY spread     | Rotation mode exists in code but no instance declared |
+| TradFi              | any                          | N/A       | —                                                              | —              | No applicable concept                                 |
+| Sports & Prediction | any                          | N/A       | —                                                              | —              | No applicable concept                                 |
+
+#### Representative slot_labels
+
+```
+# Ethereum staking (ETH share class)
+YIELD_STAKING_SIMPLE@lido-steth-ethereum-eth-prod
+YIELD_STAKING_SIMPLE@rocketpool-reth-ethereum-eth-prod
+YIELD_STAKING_SIMPLE@etherfi-eeth-ethereum-eth-prod
+
+# Solana staking (SOL share class)
+YIELD_STAKING_SIMPLE@jito-jitosol-solana-sol-prod
+YIELD_STAKING_SIMPLE@marinade-msol-solana-sol-prod
+
+# Multi-LST rotation (PARTIAL — no declared instance yet)
+YIELD_STAKING_SIMPLE@multi-lst-ethereum-eth-prod
+YIELD_STAKING_SIMPLE@multi-lst-solana-sol-prod
+```
+
+---
+
+## Family 4: Arbitrage / Structural
+
+### 11. `ARBITRAGE_PRICE_DISPERSION`
+
+> Family: [arbitrage-structural](families/arbitrage-structural.md). Code:
+> `strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py`. Settlement: ATOMIC (preferred) or
+> LEADER_HEDGE.
+
+Detects price dispersion between venues on the same (or equivalent) instrument and locks in the spread via paired
+execution. Covers price, funding-rate, IV, and odds dispersion depending on cell.
+
+#### Coverage
+
+| Category            | Instrument    | Status    | Representative venues                                                                                | Signal variant                   | Notes / Gap                                                                                               |
+| ------------------- | ------------- | --------- | ---------------------------------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| CeFi                | spot          | SUPPORTED | Binance ↔ Bybit, Binance ↔ OKX, cross-CEX stables                                                  | price                            | —                                                                                                         |
+| CeFi                | perp          | PARTIAL   | Binance, OKX, Bybit, Hyperliquid, Deribit (price + funding-rate dispersion)                          | price + funding-rate             | UAC lacks `funding_arb` flag distinct from price-arb                                                      |
+| CeFi                | option        | PARTIAL   | Deribit ↔ OKX options                                                                               | IV dispersion                    | UAC `vol_arb` not a separate capability; execution_policy lacks multi-leg vol-arb algo                    |
+| DeFi                | spot          | SUPPORTED | Uniswap V3 ↔ Balancer ↔ Curve (per chain), Sushi                                                   | price (cross-DEX)                | —                                                                                                         |
+| DeFi                | perp          | SUPPORTED | Hyperliquid ↔ GMX V2 ↔ Drift                                                                       | price + funding-rate             | —                                                                                                         |
+| DeFi                | lp            | PARTIAL   | Uniswap V3 single-chain flash-loan arb                                                               | MEV-aware price dispersion       | Flash-loan receiver contract per-chain registry missing from UAC; deployed on testnet only on some chains |
+| DeFi                | option        | BLOCKED   | —                                                                                                    | —                                | No supported DeFi options venue                                                                           |
+| TradFi              | spot          | PARTIAL   | IBKR smart-router (NYSE ↔ NASDAQ ↔ ARCA for dual-listed), IBKR FX ↔ CME FX fut                    | price                            | Most TradFi intra-exchange arb subsumed by IBKR routing; explicit arb instances sparse                    |
+| TradFi              | dated_future  | PARTIAL   | CME calendar spreads, ICE Brent ↔ CME WTI                                                           | price (calendar / cross-product) | Cross-product routing policy not declared in UAC                                                          |
+| TradFi              | option        | PARTIAL   | CBOE via IBKR + same-surface no-arb (butterfly / calendar / parity)                                  | IV dispersion / surface          | CME options-on-futures + cross-listed equity options arb not declared                                     |
+| Sports & Prediction | event_settled | SUPPORTED | Unity 10 child books (single-wallet arb), Betfair direct ↔ Smarkets direct, Unity ↔ Betfair direct | price (odds dispersion)          | Unity single-wallet makes this near-atomic                                                                |
+| Sports & Prediction | event_settled | SUPPORTED | Polymarket ↔ Unity / Betfair for correlated markets                                                 | price (cross-category arb)       | —                                                                                                         |
+
+Not applicable: lending (no arb concept for a supplied balance — `YIELD_ROTATION_LENDING` captures rate spread), staking
+(no arb — `CARRY_STAKED_BASIS`).
+
+#### Representative slot_labels
+
+```
+# CeFi spot
+ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@binance-okx-eth-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@cross-cex-sol-usdt-prod
+
+# CeFi perp (price)
+ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-perp-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@hyperliquid-binance-eth-perp-usdt-prod
+
+# CeFi perp (funding-rate dispersion — PARTIAL, currently mis-labeled in UAC)
+ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@multi-cex-eth-funding-usdt-prod
+
+# CeFi option (IV dispersion)
+ARBITRAGE_PRICE_DISPERSION@deribit-okx-btc-vol-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@deribit-okx-eth-vol-usdt-prod
+ARBITRAGE_PRICE_DISPERSION@deribit-btc-surface-noarb-usdt-prod
+
+# DeFi spot (cross-DEX per chain)
+ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-ethereum-prod
+ARBITRAGE_PRICE_DISPERSION@multi-dex-weth-usdc-arbitrum-prod
+ARBITRAGE_PRICE_DISPERSION@uniswap-balancer-eth-usdc-optimism-prod
+ARBITRAGE_PRICE_DISPERSION@uniswap-sushi-weth-usdc-base-prod
+
+# DeFi perp
+ARBITRAGE_PRICE_DISPERSION@hyperliquid-gmx-eth-perp-usdc-prod
+ARBITRAGE_PRICE_DISPERSION@hyperliquid-drift-sol-perp-usdc-prod
+
+# DeFi LP (flash-loan)
+ARBITRAGE_PRICE_DISPERSION@uniswap-flashloan-eth-usdc-ethereum-prod
+ARBITRAGE_PRICE_DISPERSION@uniswap-flashloan-weth-usdc-arbitrum-prod
+
+# TradFi dated_future — cross-product ratio on rolling fronts (-dated- on both legs)
+ARBITRAGE_PRICE_DISPERSION@cme-es-nq-dated-ratio-usd-prod
+ARBITRAGE_PRICE_DISPERSION@ice-brent-cme-wti-dated-usd-prod
+# TradFi dated_future — explicit calendar arbitrage (specific expiries locked on both legs)
+ARBITRAGE_PRICE_DISPERSION@cme-es-calendar-fixed-dec25-mar26-usd-prod
+ARBITRAGE_PRICE_DISPERSION@cme-cl-calendar-fixed-jan26-apr26-usd-prod
+
+# TradFi option (same-surface no-arb)
+ARBITRAGE_PRICE_DISPERSION@cboe-spy-surface-noarb-usd-prod
+ARBITRAGE_PRICE_DISPERSION@cboe-qqq-surface-noarb-usd-prod
+
+# Sports event_settled (Unity cross-book)
+ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod
+ARBITRAGE_PRICE_DISPERSION@unity-nba-moneyline-usd-prod
+ARBITRAGE_PRICE_DISPERSION@unity-champions-league-1x2-usd-prod
+ARBITRAGE_PRICE_DISPERSION@unity-atp-ml-usd-prod
+ARBITRAGE_PRICE_DISPERSION@unity-nfl-spread-usd-prod
+
+# Sports event_settled (cross-exchange direct)
+ARBITRAGE_PRICE_DISPERSION@betfair-smarkets-epl-1x2-gbp-prod
+ARBITRAGE_PRICE_DISPERSION@betfair-matchbook-champions-league-gbp-prod
+
+# Cross-category (Polymarket ↔ sports)
+ARBITRAGE_PRICE_DISPERSION@polymarket-unity-elections-usdc-prod
+ARBITRAGE_PRICE_DISPERSION@polymarket-betfair-sports-usdc-prod
+ARBITRAGE_PRICE_DISPERSION@polymarket-unity-nba-champion-usdc-prod
+```
+
+---
+
+### 12. `LIQUIDATION_CAPTURE`
+
+> Family: [arbitrage-structural](families/arbitrage-structural.md). Code:
+> `strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py`.
+
+Snipe liquidation bonuses on lending protocols when borrowers fall below liquidation threshold. Multi-leg ATOMIC
+instruction: flash-loan → repay debt → seize collateral + bonus → unwind via swap → repay flash loan. Pure mechanical
+edge when profitable-after-gas.
+
+#### Coverage
+
+| Category            | Instrument | Status    | Representative venues                                 | Signal variant               | Notes / Gap                                                                                                                                                                              |
+| ------------------- | ---------- | --------- | ----------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CeFi                | any        | PARTIAL   | Hyperliquid (liquidation discovery API)               | liquidation-bonus (limited)  | Hyperliquid has liquidation feed but CEX liquidations settle internally — not capturable in the classic flash-loan sense; edge is limited to bid-ladder placement near liquidation price |
+| DeFi (Ethereum)     | lending    | SUPPORTED | Aave V3 liquidator (ETH, WBTC, USDC collateral pairs) | liquidation-bonus            | Flash-loan receiver contract deployed on Ethereum; per-protocol bonus schedule gap in UAC                                                                                                |
+| DeFi (Ethereum)     | lending    | PARTIAL   | Compound V3, Euler, Morpho liquidators                | liquidation-bonus            | Deployments per-protocol not fully rolled out                                                                                                                                            |
+| DeFi (L2)           | lending    | SUPPORTED | Aave V3 on Arbitrum / Optimism / Polygon / Base       | liquidation-bonus            | —                                                                                                                                                                                        |
+| DeFi (Solana)       | lending    | SUPPORTED | Kamino liquidator                                     | liquidation-bonus            | Different mechanic than EVM flash-loans (Solana program-level)                                                                                                                           |
+| DeFi                | perp       | PARTIAL   | GMX V2 liquidator role                                | liquidation-bonus (position) | Perp liquidations on DeFi perps have different economics than lending liquidations; code path exists but economics need separate UAC capability                                          |
+| TradFi              | any        | N/A       | —                                                     | —                            | No liquidator role in TradFi venues                                                                                                                                                      |
+| Sports & Prediction | any        | N/A       | —                                                     | —                            | No applicable concept                                                                                                                                                                    |
+
+#### Representative slot_labels
+
+```
+# Aave Ethereum liquidator (primary)
+LIQUIDATION_CAPTURE@aave-ethereum-eth-usdc-prod
+LIQUIDATION_CAPTURE@aave-ethereum-wbtc-usdc-prod
+LIQUIDATION_CAPTURE@aave-ethereum-steth-usdc-prod
+
+# Aave L2 liquidator
+LIQUIDATION_CAPTURE@aave-arbitrum-eth-usdc-prod
+LIQUIDATION_CAPTURE@aave-optimism-eth-usdc-prod
+LIQUIDATION_CAPTURE@aave-polygon-matic-usdc-prod
+LIQUIDATION_CAPTURE@aave-base-eth-usdc-prod
+
+# Alt protocols (PARTIAL — deployments in flight)
+LIQUIDATION_CAPTURE@compound-ethereum-eth-usdc-prod
+LIQUIDATION_CAPTURE@euler-ethereum-eth-usdc-prod
+LIQUIDATION_CAPTURE@morpho-ethereum-eth-usdc-prod
+
+# Solana
+LIQUIDATION_CAPTURE@kamino-solana-sol-usdc-prod
+
+# GMX V2 perp liquidator (PARTIAL — perp liq economics)
+LIQUIDATION_CAPTURE@gmx-arbitrum-eth-perp-usdc-prod
+
+# CeFi near-liquidation bid-laddering (PARTIAL)
+LIQUIDATION_CAPTURE@hyperliquid-btc-perp-bidladder-usdt-prod
+```
+
+---
+
+## Family 5: Market Making
+
+### 13. `MARKET_MAKING_CONTINUOUS`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/continuous.py`.
+
+Two-sided quoting (or LP provision) on continuously-priced markets. Three sub-modes: `CLOB` (central limit order book),
+`ACTIVE_LP` (Uniswap V3 concentrated liquidity, actively managed range), `PASSIVE_LP` (Curve / Balancer / Uniswap V2
+passive pool).
+
+#### Coverage
+
+| Category            | Instrument    | Status    | Representative venues                                                        | Signal variant                | Notes / Gap                                                                               |
+| ------------------- | ------------- | --------- | ---------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| CeFi                | spot          | SUPPORTED | Binance, OKX, Bybit, Hyperliquid                                             | bid-ask spread                | —                                                                                         |
+| CeFi                | perp          | SUPPORTED | Binance, OKX, Bybit, Hyperliquid, Deribit                                    | bid-ask spread + funding skew | —                                                                                         |
+| CeFi                | dated_future  | PARTIAL   | Deribit BTC / ETH dated                                                      | spread                        | Settlement-aware inventory model needed                                                   |
+| CeFi                | option        | PARTIAL   | Deribit, OKX options                                                         | vol-based spread              | Deribit MM requires multi-leg order capability; UAC lacks `multi_leg_order_max_legs` flag |
+| DeFi (per chain)    | lp            | SUPPORTED | Uniswap V3 / V4 (ACTIVE_LP), Orca (Solana), Raydium (Solana)                 | AMM fees (concentrated range) | —                                                                                         |
+| DeFi (per chain)    | lp            | SUPPORTED | Curve, Balancer, Uniswap V2 (PASSIVE_LP)                                     | AMM fees (passive pool)       | IL dynamics need archetype sub-section                                                    |
+| DeFi                | perp          | BLOCKED   | —                                                                            | —                             | DeFi perp MM not exposed as third-party role (protocol-level MM on Hyperliquid / GMX)     |
+| DeFi                | option        | BLOCKED   | —                                                                            | —                             | No supported DeFi options venue                                                           |
+| TradFi              | spot          | PARTIAL   | IBKR (market-maker status required, regulatory overhead)                     | bid-ask spread                | IBKR MM designation not declared; needs counterparty arrangement                          |
+| TradFi              | dated_future  | PARTIAL   | CME market-maker role                                                        | spread                        | Formal MM designation out-of-scope for initial rollout                                    |
+| TradFi              | option        | PARTIAL   | CBOE market-maker role                                                       | vol-based spread              | Formal MM designation out-of-scope                                                        |
+| Sports & Prediction | event_settled | PARTIAL   | Betfair direct (lay + back continuous), Unity child books that allow quoting | odds-spread                   | Bankroll-as-collateral lay semantics need explicit execution_policy_ref                   |
+
+#### Representative slot_labels
+
+```
+# CeFi spot MM
+MARKET_MAKING_CONTINUOUS@binance-btc-usdt-mm-usdt-prod
+MARKET_MAKING_CONTINUOUS@okx-eth-usdt-mm-usdt-prod
+MARKET_MAKING_CONTINUOUS@bybit-sol-usdt-mm-usdt-prod
+
+# CeFi perp MM
+MARKET_MAKING_CONTINUOUS@binance-btc-perp-mm-usdt-prod
+MARKET_MAKING_CONTINUOUS@hyperliquid-eth-perp-mm-usdt-prod
+MARKET_MAKING_CONTINUOUS@deribit-btc-perp-mm-usdt-prod
+
+# CeFi option MM (PARTIAL)
+MARKET_MAKING_CONTINUOUS@deribit-btc-option-mm-usdt-prod
+MARKET_MAKING_CONTINUOUS@deribit-eth-option-strip-mm-usdt-prod
+
+# DeFi active LP (Uniswap V3)
+MARKET_MAKING_CONTINUOUS@uniswap-v3-weth-usdc-ethereum-active-usdc-prod
+MARKET_MAKING_CONTINUOUS@uniswap-v3-weth-usdc-arbitrum-active-usdc-prod
+MARKET_MAKING_CONTINUOUS@uniswap-v3-wbtc-weth-ethereum-active-usdc-prod
+
+# DeFi active LP (Solana)
+MARKET_MAKING_CONTINUOUS@orca-sol-usdc-solana-active-usdc-prod
+MARKET_MAKING_CONTINUOUS@raydium-sol-usdc-solana-active-usdc-prod
+
+# DeFi passive LP
+MARKET_MAKING_CONTINUOUS@curve-3pool-ethereum-passive-usdc-prod
+MARKET_MAKING_CONTINUOUS@balancer-eth-usdc-ethereum-passive-usdc-prod
+MARKET_MAKING_CONTINUOUS@uniswap-v2-weth-usdc-ethereum-passive-usdc-prod
+
+# Sports MM (PARTIAL)
+MARKET_MAKING_CONTINUOUS@betfair-direct-epl-1x2-mm-gbp-prod
+MARKET_MAKING_CONTINUOUS@unity-epl-1x2-mm-usd-prod
+```
+
+---
+
+### 14. `MARKET_MAKING_EVENT_SETTLED`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/event_settled.py`.
+
+Back + lay quoting on event-settled exchanges. Inventory-skewed quotes with hard lay-liability bankroll caps.
+Continuous-ish quoting during market lifetime, final position snapped at event start, settled at outcome.
+
+#### Coverage
+
+| Category             | Instrument    | Status    | Representative venues                            | Signal variant    | Notes / Gap                                                              |
+| -------------------- | ------------- | --------- | ------------------------------------------------ | ----------------- | ------------------------------------------------------------------------ |
+| CeFi / DeFi / TradFi | any           | N/A       | —                                                | —                 | Event-settled only                                                       |
+| Sports & Prediction  | event_settled | SUPPORTED | Betfair direct (primary — lay-native)            | odds-spread + lay | —                                                                        |
+| Sports & Prediction  | event_settled | PARTIAL   | Smarkets direct, Matchbook direct, Betdaq direct | odds-spread       | Lay semantics per-venue differ slightly — capability flag per-venue gap  |
+| Sports & Prediction  | event_settled | PARTIAL   | Polymarket (CLOB side)                           | binary bid/ask    | Polymarket CLOB MM supported in theory but quoting UX differs (no "lay") |
+| Sports & Prediction  | event_settled | BLOCKED   | Kalshi                                           | —                 | Execution adapter pending                                                |
+| Sports & Prediction  | event_settled | BLOCKED   | Unity child books                                | —                 | Unity's Feed Connector is order-placement, not quoting                   |
+
+#### Representative slot_labels
+
+```
+# Betfair MM (primary)
+MARKET_MAKING_EVENT_SETTLED@betfair-direct-epl-1x2-mm-gbp-prod
+MARKET_MAKING_EVENT_SETTLED@betfair-direct-epl-ou25-mm-gbp-prod
+MARKET_MAKING_EVENT_SETTLED@betfair-direct-atp-match-winner-mm-gbp-prod
+MARKET_MAKING_EVENT_SETTLED@betfair-direct-nba-moneyline-mm-usd-prod
+MARKET_MAKING_EVENT_SETTLED@betfair-direct-epl-ht-ft-mm-gbp-prod
+
+# Smarkets / Matchbook (PARTIAL)
+MARKET_MAKING_EVENT_SETTLED@smarkets-direct-epl-1x2-mm-gbp-prod
+MARKET_MAKING_EVENT_SETTLED@matchbook-direct-atp-match-winner-mm-gbp-prod
+
+# Polymarket CLOB MM (PARTIAL)
+MARKET_MAKING_EVENT_SETTLED@polymarket-us-election-mm-usdc-prod
+MARKET_MAKING_EVENT_SETTLED@polymarket-sports-mm-usdc-prod
+```
+
+---
+
+## Family 6: Event-Driven
+
+### 15. `EVENT_DRIVEN`
+
+> Family: [event-driven](families/event-driven.md). Code:
+> `strategy_service/engine/strategies/v2/event_driven/event_driven.py`.
+
+Scheduled external events (macro data release, earnings, token unlock, protocol hard-fork, governance vote) with
+measurable surprise vs consensus. Emits `TRADE` (directional bet on surprise) and optionally `LEND` / `STAKE` (for yield
+events).
+
+#### Coverage
+
+| Category            | Instrument    | Status  | Representative venues                        | Signal variant               | Notes / Gap                                                                                                                               |
+| ------------------- | ------------- | ------- | -------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| CeFi                | spot          | PARTIAL | Binance, OKX (macro-reactive BTC / ETH)      | event-surprise (macro)       | External event calendar (Bloomberg / TE) not declared in UAC                                                                              |
+| CeFi                | perp          | PARTIAL | Binance, Hyperliquid, Bybit                  | event-surprise (macro)       | Same calendar gap                                                                                                                         |
+| CeFi                | option        | PARTIAL | Deribit (pre-FOMC vol, event straddles)      | IV regime change             | Event-straddle expression policy not declared                                                                                             |
+| DeFi                | spot          | PARTIAL | Uniswap (token unlock / airdrop reactive)    | event-surprise (tokenomics)  | Token unlock calendar source gap (TokenUnlocks.io etc.)                                                                                   |
+| DeFi                | perp          | PARTIAL | Hyperliquid, GMX (governance-vote reactive)  | event-surprise               | —                                                                                                                                         |
+| DeFi                | lending       | PARTIAL | Aave (rate-update governance votes)          | event-surprise (rate change) | Protocol-governance calendar gap                                                                                                          |
+| DeFi                | staking       | PARTIAL | Lido (oracle update / slashing event)        | event-surprise               | Slashing feed integration incomplete                                                                                                      |
+| TradFi              | spot          | PARTIAL | IBKR equities (earnings reactive)            | event-surprise (earnings)    | Earnings calendar source gap                                                                                                              |
+| TradFi              | dated_future  | PARTIAL | CME ES (NFP, FOMC, CPI reactive), CL (OPEC)  | event-surprise (macro)       | Event-type → instrument mapping not declared in execution_policy                                                                          |
+| TradFi              | option        | PARTIAL | CBOE (earnings-vol, VIX jumps)               | IV regime change             | Same as CeFi option                                                                                                                       |
+| Sports & Prediction | event_settled | PARTIAL | Unity (lineup-release reactive, injury news) | event-surprise (news)        | News-feed integration + lineup timing model not declared in event-driven archetype; likely evolves into dedicated news-reactive archetype |
+| Sports & Prediction | event_settled | PARTIAL | Polymarket (news-driven binary)              | event-surprise (news)        | Same                                                                                                                                      |
+
+#### Representative slot_labels
+
+```
+# CeFi macro-reactive spot / perp
+EVENT_DRIVEN@binance-btc-usdt-nfp-usdt-prod
+EVENT_DRIVEN@binance-btc-perp-fomc-usdt-prod
+EVENT_DRIVEN@hyperliquid-eth-perp-cpi-usdt-prod
+
+# CeFi option event straddle
+EVENT_DRIVEN@deribit-btc-option-fomc-straddle-usdt-prod
+EVENT_DRIVEN@deribit-eth-option-merge-straddle-usdt-prod
+
+# DeFi token-unlock reactive
+EVENT_DRIVEN@uniswap-ethereum-arb-token-unlock-usdc-prod
+EVENT_DRIVEN@uniswap-arbitrum-sui-token-unlock-usdc-prod
+
+# DeFi governance
+EVENT_DRIVEN@aave-ethereum-governance-rate-update-usdc-prod
+
+# DeFi staking slashing
+EVENT_DRIVEN@lido-ethereum-slashing-event-eth-prod
+
+# TradFi earnings
+EVENT_DRIVEN@ibkr-aapl-earnings-usd-prod
+EVENT_DRIVEN@ibkr-msft-earnings-usd-prod
+EVENT_DRIVEN@ibkr-nvda-earnings-usd-prod
+
+# TradFi macro — rolling continuous on futures (cboe VIX is not a dated-future rolling case)
+EVENT_DRIVEN@cme-es-dated-nfp-usd-prod
+EVENT_DRIVEN@cme-es-dated-fomc-usd-prod
+EVENT_DRIVEN@cme-cl-dated-opec-usd-prod
+EVENT_DRIVEN@cboe-vix-cpi-usd-prod
+
+# Sports news-reactive
+EVENT_DRIVEN@unity-epl-lineup-release-usd-prod
+EVENT_DRIVEN@unity-nba-injury-news-usd-prod
+
+# Prediction news-reactive
+EVENT_DRIVEN@polymarket-us-election-debate-usdc-prod
+```
+
+---
+
+## Family 7: Vol Trading
+
+### 16. `VOL_TRADING_OPTIONS`
+
+> Family: [vol-trading](families/vol-trading.md). Code: `strategy_service/engine/strategies/v2/vol_trading/options.py`.
+
+Trades vol metrics themselves: IV/RV divergence (short straddle when IV > RV), skew (risk-reversal), term-structure
+(calendar spread), cross-asset vol (BTC vol vs ETH vol). Always multi-leg; ATOMIC execution required.
+
+#### Coverage
+
+| Category            | Instrument                                                          | Status    | Representative venues                                  | Signal variant                     | Notes / Gap                                                                                                    |
+| ------------------- | ------------------------------------------------------------------- | --------- | ------------------------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| CeFi                | option                                                              | SUPPORTED | Deribit (BTC, ETH options — full surface), OKX options | IV/RV, skew, term, cross-asset vol | Full Deribit surface-model support; multi-leg ATOMIC supported                                                 |
+| DeFi                | option                                                              | BLOCKED   | —                                                      | —                                  | No supported DeFi options venue (Lyra / Dopex archived)                                                        |
+| TradFi              | option                                                              | PARTIAL   | CBOE via IBKR (equity options, VIX options)            | IV/RV, skew, term                  | CME options-on-futures (ES options, CL options) not declared in UAC                                            |
+| Sports & Prediction | any                                                                 | N/A       | —                                                      | —                                  | No vol concept                                                                                                 |
+| any                 | spot / perp / dated_future / lending / staking / lp / event_settled | N/A       | —                                                      | —                                  | By definition — `VOL_TRADING_OPTIONS` trades options exclusively; use `ML_DIRECTIONAL_*` for other instruments |
+
+#### Representative slot_labels
+
+```
+# CeFi Deribit (primary — BTC / ETH vol book)
+VOL_TRADING_OPTIONS@deribit-btc-vol-usdt-prod
+VOL_TRADING_OPTIONS@deribit-eth-vol-usdt-prod
+VOL_TRADING_OPTIONS@deribit-btc-skew-usdt-prod
+VOL_TRADING_OPTIONS@deribit-btc-term-structure-usdt-prod
+VOL_TRADING_OPTIONS@deribit-btc-eth-cross-vol-usdt-prod
+VOL_TRADING_OPTIONS@deribit-btc-atm-straddle-usdt-prod
+VOL_TRADING_OPTIONS@deribit-btc-rr25-usdt-prod
+
+# CeFi OKX options (smaller book)
+VOL_TRADING_OPTIONS@okx-btc-vol-usdt-prod
+VOL_TRADING_OPTIONS@okx-eth-vol-usdt-prod
+
+# TradFi CBOE via IBKR (PARTIAL)
+VOL_TRADING_OPTIONS@ibkr-cboe-spy-vol-usd-prod
+VOL_TRADING_OPTIONS@ibkr-cboe-spy-skew-usd-prod
+VOL_TRADING_OPTIONS@ibkr-cboe-vix-vol-usd-prod
+VOL_TRADING_OPTIONS@ibkr-cboe-qqq-term-structure-usd-prod
+```
+
+---
+
+## Family 8: Stat Arb / Pairs
+
+### 17. `STAT_ARB_PAIRS_FIXED`
+
+> Family: [stat-arb-pairs](families/stat-arb-pairs.md). Code:
+> `strategy_service/engine/strategies/v2/stat_arb_pairs/pairs_fixed.py`.
+
+Pre-declared cointegrated pair (e.g., BTC / ETH, GOOG / META). Z-score of spread, enter when z > threshold, exit on
+mean-reversion or time-box. Two-leg ATOMIC or LEADER_HEDGE.
+
+#### Coverage
+
+| Category            | Instrument      | Status    | Representative venues                                        | Signal variant          | Notes / Gap                                                          |
+| ------------------- | --------------- | --------- | ------------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------- |
+| CeFi                | spot            | SUPPORTED | Binance, OKX, Bybit (intra-exchange pairs)                   | z-score reversion       | —                                                                    |
+| CeFi                | perp            | SUPPORTED | Binance, OKX, Bybit, Hyperliquid (intra-exchange perp pairs) | z-score reversion       | —                                                                    |
+| CeFi                | mixed spot+perp | SUPPORTED | Binance spot-vs-perp pair                                    | z-score (basis anomaly) | Different shape from `CARRY_BASIS_PERP` — StatArb z-score, not carry |
+| DeFi                | spot            | PARTIAL   | Uniswap V3 (per-chain WETH vs WBTC, ETH vs stETH)            | z-score reversion       | Price-feed liquidity concerns on thinner pairs                       |
+| DeFi                | perp            | PARTIAL   | Hyperliquid, GMX, Drift (SOL/ETH, alt/BTC pairs)             | z-score reversion       | —                                                                    |
+| TradFi              | spot            | PARTIAL   | IBKR equities (sector pairs: AAPL/MSFT, XOM/CVX, JPM/BAC)    | z-score reversion       | Pair pre-declaration config path fine; no batch-tested instances     |
+| TradFi              | dated_future    | PARTIAL   | CME calendar / cross-product (ES vs NQ, CL vs HO)            | z-score reversion       | —                                                                    |
+| Sports & Prediction | any             | N/A       | —                                                            | —                       | No pair-trading concept                                              |
+
+#### Representative slot_labels
+
+```
+# CeFi spot pairs
+STAT_ARB_PAIRS_FIXED@binance-btc-eth-spot-usdt-prod
+STAT_ARB_PAIRS_FIXED@binance-eth-sol-spot-usdt-prod
+
+# CeFi perp pairs
+STAT_ARB_PAIRS_FIXED@binance-btc-eth-perp-usdt-prod
+STAT_ARB_PAIRS_FIXED@bybit-sol-eth-perp-usdt-prod
+STAT_ARB_PAIRS_FIXED@hyperliquid-btc-eth-perp-usdt-prod
+
+# Spot-vs-perp StatArb (not basis)
+STAT_ARB_PAIRS_FIXED@binance-btc-spot-perp-zscore-usdt-prod
+
+# DeFi
+STAT_ARB_PAIRS_FIXED@uniswap-ethereum-eth-wbtc-usdc-prod
+STAT_ARB_PAIRS_FIXED@hyperliquid-sol-eth-perp-usdc-prod
+
+# TradFi equity pairs
+STAT_ARB_PAIRS_FIXED@ibkr-goog-meta-daily-usd-prod
+STAT_ARB_PAIRS_FIXED@ibkr-aapl-msft-1h-usd-prod
+STAT_ARB_PAIRS_FIXED@ibkr-xom-cvx-daily-usd-prod
+STAT_ARB_PAIRS_FIXED@ibkr-jpm-bac-daily-usd-prod
+
+# TradFi future pairs — rolling continuous on both legs
+STAT_ARB_PAIRS_FIXED@cme-es-nq-dated-zscore-usd-prod
+STAT_ARB_PAIRS_FIXED@cme-cl-ho-dated-crack-usd-prod
+STAT_ARB_PAIRS_FIXED@ice-brent-cme-wti-dated-usd-prod
+STAT_ARB_PAIRS_FIXED@cme-gc-cl-dated-zscore-usd-prod
+```
+
+---
+
+### 18. `STAT_ARB_CROSS_SECTIONAL`
+
+> Family: [stat-arb-pairs](families/stat-arb-pairs.md). Code:
+> `strategy_service/engine/strategies/v2/stat_arb_pairs/cross_sectional.py`.
+
+Cross-sectional ranking across a basket (top decile long, bottom decile short, or quintile rotation). Rebalances at
+cadence (daily, weekly). ATOMIC basket execution or sequential per leg.
+
+#### Coverage
+
+| Category            | Instrument   | Status  | Representative venues                                     | Signal variant                    | Notes / Gap                                                                      |
+| ------------------- | ------------ | ------- | --------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------- |
+| CeFi                | spot         | PARTIAL | Binance (alt-basket cross-section)                        | momentum / mean-reversion ranking | Basket execution via sequential TRADE; batch-order path not tested               |
+| CeFi                | perp         | PARTIAL | Hyperliquid, Bybit (alt-basket)                           | momentum / MR ranking             | —                                                                                |
+| DeFi                | spot         | BLOCKED | —                                                         | —                                 | Multi-token atomic basket trade requires router support + gas efficiency concern |
+| DeFi                | perp         | PARTIAL | Hyperliquid DEX, GMX V2, Drift (alt-perp basket)          | momentum ranking                  | —                                                                                |
+| TradFi              | spot         | PARTIAL | IBKR (S&P 500 sector basket, market-cap-tercile rotation) | momentum / mean-reversion ranking | Batch-order capability not declared for IBKR; basket of 50–500 legs              |
+| TradFi              | dated_future | BLOCKED | —                                                         | —                                 | Cross-sectional basket on CME requires multi-leg order capability; not declared  |
+| Sports & Prediction | any          | N/A     | —                                                         | —                                 | No cross-section concept                                                         |
+
+#### Representative slot_labels
+
+```
+# CeFi spot alt-basket
+STAT_ARB_CROSS_SECTIONAL@binance-alt-basket-momentum-usdt-prod
+STAT_ARB_CROSS_SECTIONAL@binance-alt-basket-mr-usdt-prod
+
+# CeFi perp alt-basket
+STAT_ARB_CROSS_SECTIONAL@hyperliquid-alt-perp-momentum-usdt-prod
+STAT_ARB_CROSS_SECTIONAL@bybit-alt-perp-weekly-usdt-prod
+
+# DeFi perp alt-basket
+STAT_ARB_CROSS_SECTIONAL@hyperliquid-dex-alt-perp-momentum-usdc-prod
+STAT_ARB_CROSS_SECTIONAL@drift-solana-alt-perp-momentum-usdc-prod
+
+# TradFi sector / market-cap
+STAT_ARB_CROSS_SECTIONAL@ibkr-sp500-momentum-usd-prod
+STAT_ARB_CROSS_SECTIONAL@ibkr-sp500-sector-rotation-usd-prod
+STAT_ARB_CROSS_SECTIONAL@ibkr-russell2000-mr-usd-prod
+STAT_ARB_CROSS_SECTIONAL@ibkr-sector-tercile-momentum-usd-prod
+```
+
+---
+
+# Block List (cross-archetype summary)
+
+The 21 `(archetype, category, instrument)` triples with hard blockers, grouped by blocking reason. Each entry links back
+to the cell in the archetype sections above.
+
+## BL-1: No supported DeFi options venue
+
+Archetypes affected: `ML_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_CONTINUOUS`, `ARBITRAGE_PRICE_DISPERSION`,
+`MARKET_MAKING_CONTINUOUS`, `VOL_TRADING_OPTIONS`.
+
+Lyra and Dopex were archived 2026-03. No replacement DeFi options venue is currently declared. Unblock by evaluating
+Aevo, Premia, Hegic, or accepting DeFi options as out-of-scope.
+
+- `(ML_DIRECTIONAL_CONTINUOUS, DeFi, option)`
+- `(RULES_DIRECTIONAL_CONTINUOUS, DeFi, option)`
+- `(ARBITRAGE_PRICE_DISPERSION, DeFi, option)`
+- `(MARKET_MAKING_CONTINUOUS, DeFi, option)`
+- `(VOL_TRADING_OPTIONS, DeFi, option)`
+
+## BL-2: No DeFi dated-future venue
+
+Archetypes affected: `ML_DIRECTIONAL_CONTINUOUS`, `CARRY_BASIS_DATED`.
+
+Deribit is CeFi. No on-chain dated-future venue currently supported.
+
+- `(ML_DIRECTIONAL_CONTINUOUS, DeFi, dated_future)`
+- `(CARRY_BASIS_DATED, DeFi, spot + dated_future)`
+
+## BL-3: CeFi lending out-of-scope
+
+Archetypes affected: `YIELD_ROTATION_LENDING`.
+
+Binance Earn / Bybit lending have withdrawal lockups + counterparty risk. Decision: excluded from our product.
+
+- `(YIELD_ROTATION_LENDING, CeFi, lending)`
+
+## BL-4: CeFi directional options via rules (non-standard)
+
+Archetypes affected: `RULES_DIRECTIONAL_CONTINUOUS`.
+
+Directional options via rules is a degenerate case — use `VOL_TRADING_OPTIONS` for vol-metric rules or
+`ML_DIRECTIONAL_CONTINUOUS` with expression=`atm_call` for directional options.
+
+- `(RULES_DIRECTIONAL_CONTINUOUS, CeFi, option)`
+- `(RULES_DIRECTIONAL_CONTINUOUS, TradFi, option)`
+
+## BL-5: Kalshi execution adapter pending
+
+Archetypes affected: `ML_DIRECTIONAL_EVENT_SETTLED`, `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED`.
+
+Data + pricing live; execution adapter not built.
+
+- `(ML_DIRECTIONAL_EVENT_SETTLED, Sports & Prediction, event_settled) via Kalshi`
+- `(RULES_DIRECTIONAL_EVENT_SETTLED, Sports & Prediction, event_settled) via Kalshi`
+- `(MARKET_MAKING_EVENT_SETTLED, Sports & Prediction, event_settled) via Kalshi`
+
+## BL-6: Unity cannot quote (Feed Connector is place-only)
+
+Archetypes affected: `MARKET_MAKING_EVENT_SETTLED`.
+
+Unity's Java Feed Connector accepts PLACE_BET / CANCEL but does not expose a quoting API. Unity child books quote
+internally; we cannot add our own bids/offers through Unity.
+
+- `(MARKET_MAKING_EVENT_SETTLED, Sports & Prediction, event_settled) via Unity`
+
+## BL-7: DeFi perp MM not exposed as third-party role
+
+Archetypes affected: `MARKET_MAKING_CONTINUOUS`.
+
+Hyperliquid / GMX have protocol-level MM incentives; no third-party-MM role comparable to CLOB MM.
+
+- `(MARKET_MAKING_CONTINUOUS, DeFi, perp)`
+
+## BL-8: DeFi cross-sectional basket (multi-leg gas efficiency)
+
+Archetypes affected: `STAT_ARB_CROSS_SECTIONAL`.
+
+Atomic multi-token basket trade on DeFi is gas-prohibitive on EVM; requires specialised router (1inch Pathfinder style)
+not currently declared.
+
+- `(STAT_ARB_CROSS_SECTIONAL, DeFi, spot)`
+
+## BL-9: TradFi cross-sectional on futures basket
+
+Archetypes affected: `STAT_ARB_CROSS_SECTIONAL`.
+
+Multi-leg cross-sectional on CME futures basket requires batch-order capability not declared for CME adapter.
+
+- `(STAT_ARB_CROSS_SECTIONAL, TradFi, dated_future)`
+
+## BL-10: Dated-future auto-roll + combo creation not yet live
+
+Archetypes affected: all archetypes with `-dated-` slots on `dated_future` cells — `ML_DIRECTIONAL_CONTINUOUS`,
+`RULES_DIRECTIONAL_CONTINUOUS`, `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`,
+`ARBITRAGE_PRICE_DISPERSION × dated_future`, `EVENT_DRIVEN × dated_future`, `CARRY_BASIS_DATED` default mode.
+
+The end-to-end flow (features-service liquidity measure → representative-future-service state transition →
+`REPRESENTATIVE_FUTURE_CHANGED` event → strategy-service roll emission → execution-service combo resolution with
+synthetic-price guardrails) is spec'd in
+[Dated-future rolls and representative futures](#dated-future-rolls-and-representative-futures) but not yet implemented.
+Specific missing pieces:
+
+- `RepresentativeFutureRegistry` in UAC (see UAC Registry Implications #11)
+- `representative-future-service` (new service OR sub-module of features-service) — not yet scaffolded
+- `REPRESENTATIVE_FUTURE_CHANGED` event schema in UAC events
+- `FUTURES_ROLL` instruction variant in the polymorphic `StrategyInstruction` (or reuse of `ATOMIC`)
+- execution-service combo auto-creation when venue doesn't list the calendar-spread ticker
+- `max_roll_slippage_bps` guardrail + `FUTURES_ROLL_FAILED` circuit breaker
+
+Until this ships, dated-future strategies can run on **fixed-contract** slot labels only (`-fixed-{contract}-`), and ops
+manually rotate to the next expiry. Workable for a handful of strategies; does not scale.
+
+- `(any -dated- slot, any category, dated_future)` — functional but requires manual roll
+
+---
+
+# UAC Registry Implications
+
+Ten concrete UAC additions are needed so this matrix becomes queryable at runtime (rather than lived in a doc). Each is
+tracked separately in [`uac-registry-gaps.md`](uac-registry-gaps.md) (to be written as companion to this doc). In
+summary:
+
+| #   | Addition                                                                                                                                                                                                                                                                                                                                                                                                               | Unblocks                                                                                                                                                                                                                                                 |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `ArchetypeCapabilityV2` declaration — queryable archetype → (category, instrument_type) support map                                                                                                                                                                                                                                                                                                                    | The whole matrix; lets strategy-service validate config at deploy-time                                                                                                                                                                                   |
+| 2   | `VenueCapabilityV2.supported_signal_variants: dict[InstrumentType, list[str]]`                                                                                                                                                                                                                                                                                                                                         | price vs funding-rate vs IV dispersion distinction                                                                                                                                                                                                       |
+| 3   | `FlashLoanReceiverRegistry` with per-chain deployed contract addresses                                                                                                                                                                                                                                                                                                                                                 | `ARBITRAGE_PRICE_DISPERSION × DeFi × lp` (flash-loan arb)                                                                                                                                                                                                |
+| 4   | `LiquidationBonusScheduleV2` per-protocol per-collateral-token                                                                                                                                                                                                                                                                                                                                                         | `LIQUIDATION_CAPTURE` precise edge calc                                                                                                                                                                                                                  |
+| 5   | `EventCalendarSourceCapability` (Bloomberg, TradingEconomics, TokenUnlocks, protocol governance feeds)                                                                                                                                                                                                                                                                                                                 | `EVENT_DRIVEN` across all categories                                                                                                                                                                                                                     |
+| 6   | `IvSurfaceFidelity: Literal["full_surface","atm_only","none"]` on option-capable venue                                                                                                                                                                                                                                                                                                                                 | `VOL_TRADING_OPTIONS`, `ARBITRAGE_PRICE_DISPERSION × option`                                                                                                                                                                                             |
+| 7   | `MultiLegOrderCapability.max_legs: int` + per-venue exec-policy                                                                                                                                                                                                                                                                                                                                                        | Option MM + cross-sectional basket + ATOMIC multi-leg                                                                                                                                                                                                    |
+| 8   | `PricingFidelity: Literal["tick","snapshot","derived"]` on spot-capable DeFi venue                                                                                                                                                                                                                                                                                                                                     | `ML_DIRECTIONAL_CONTINUOUS × DeFi × spot`                                                                                                                                                                                                                |
+| 9   | `LaySideExecutionSemantics` per sports/prediction venue                                                                                                                                                                                                                                                                                                                                                                | `MARKET_MAKING_EVENT_SETTLED` variants                                                                                                                                                                                                                   |
+| 10  | `CrossVenueRoutingPolicy` for TradFi (IBKR ↔ CME bridge, ETF ↔ future basis)                                                                                                                                                                                                                                                                                                                                         | `CARRY_BASIS_DATED × TradFi`, `ARBITRAGE_PRICE_DISPERSION × TradFi × dated_future`                                                                                                                                                                       |
+| 11  | `RepresentativeFutureRegistry` + `REPRESENTATIVE_FUTURE_CHANGED` event contract — declares underlyings (`BTC-USD-DERIBIT-DATED`, `ES-USD-CME`, ...), the feature group that measures per-contract liquidity, roll-trigger threshold per underlying, and combo-ticker availability. Consumed by strategy-service (subscribers per `-dated-` slot) and execution-service (combo resolution + synthetic-price guardrail). | All `-dated-` slots across `ML_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_CONTINUOUS`, `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`, `ARBITRAGE_PRICE_DISPERSION × dated_future`, `EVENT_DRIVEN × dated_future`, `CARRY_BASIS_DATED` default mode |
+
+---
+
+# How this SSOT is used
+
+1. **Per-archetype docs** ([`architecture-v2/archetypes/*.md`](archetypes/)) include a short coverage section that is a
+   pointer + slimmed table of just that archetype's rows, with a "Full coverage:
+   [here](../category-instrument-coverage.md#N-ARCHETYPE_ID)" back-link.
+2. **Family docs** ([`architecture-v2/families/*.md`](families/)) include a family-level rollup — which categories the
+   family covers at all, and which archetype implements which category.
+3. **UI** —
+   [`lib/architecture-v2/archetypes.ts`](../../../../unified-trading-system-ui/lib/architecture-v2/archetypes.ts) gains
+   a `coverage: Record<Category, InstrumentCoverage[]>` field generated from this doc; rendered on `/families/[family]`
+   and archetype detail pages with per-cell slot_labels and block-list reasons.
+4. **Catalog** —
+   [`/catalog`](<../../../../unified-trading-system-ui/app/(platform)/services/research/strategy/catalog/page.tsx>)
+   shows the Cartesian product of (archetype × category × instrument_type), with filters and drill-down per cell.
+5. **UAC PRs** — each row in the UAC Registry Implications table becomes an issue; tracked in
+   [`uac-registry-gaps.md`](uac-registry-gaps.md).
+
+---
+
+# Changelog
+
+- **2026-04-19** — First version. All 18 archetypes × 4 categories × 8 instrument types populated with representative
+  slot_labels. 21 block-list entries. 10 UAC registry gaps identified. Companion doc `uac-registry-gaps.md` pending.
+- **2026-04-19 (same day)** — Added dated-future rolls architecture: continuous-underlying concept,
+  representative-future resolution via features, `REPRESENTATIVE_FUTURE_CHANGED` event contract, futures-roll as ATOMIC
+  combo (listed or synthesized), circuit breakers. Slot-label convention now distinguishes rolling (`-dated-`) from
+  fixed-expiry (`-fixed-{contract}-`). Updated slot-label examples across `ML_DIRECTIONAL_CONTINUOUS`,
+  `RULES_DIRECTIONAL_CONTINUOUS`, `CARRY_BASIS_DATED`, `ARBITRAGE_PRICE_DISPERSION`, `STAT_ARB_PAIRS_FIXED`,
+  `EVENT_DRIVEN`. New UAC registry gap #11 (`RepresentativeFutureRegistry`). New block-list entry BL-10 (auto-roll +
+  combo creation not yet implemented).

@@ -7,6 +7,34 @@ and three authentication tiers.
 This directory is the **master IA doc**. If a plan, UI change, or marketing asset doesn't trace back to a playbook in
 this directory, it's either missing context or out of scope.
 
+## Layered structure
+
+Two layers plus a rules set, co-located in this dir:
+
+- **[`_ssot-rules/`](_ssot-rules/)** — the ten rules governing every experience doc (grammar, tone, same-system
+  principle, DART commercial axes, building blocks, show / don't-show, data licensing, pricing, internal one-liners,
+  instruction schema). Citable, stable, orthogonal. Stage 1 output (2026-04-19).
+- **[`experience/`](experience/)** — narrative playbooks, sales-owned. One doc per (audience × moment) cell; nine
+  sections per doc ([rule 01](_ssot-rules/01-grammar.md)). Calm institutional tone
+  ([rule 02](_ssot-rules/02-tone-and-posture.md)). Canonical reference:
+  [`experience/im-decision-journey.md`](experience/im-decision-journey.md).
+- **[`playbooks/`](playbooks/)** and the other engineering-grade sub-dirs (`authentication/`, `environments/`,
+  `cross-cutting/`, `page-triage/`, `testing/`, `roadmap/`) — the **impl layer**. Engineering-owned; routes,
+  entitlements, services, data bindings, Playwright specs. Describes the same journeys at a different register.
+
+Reader paths by role:
+
+| Role                         | Read first                                                                                           | Then                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Sales / commercial / product | [`experience/`](experience/)                                                                         | [`_ssot-rules/`](_ssot-rules/) as content is invoked                  |
+| Leadership                   | [`experience/`](experience/)                                                                         | [`_ssot-rules/`](_ssot-rules/)                                        |
+| Engineering                  | [`playbooks/`](playbooks/) + [`cross-cutting/`](cross-cutting/)                                      | [`_ssot-rules/`](_ssot-rules/) when commercial decisions are in scope |
+| Admin / ops                  | [`playbooks/`](playbooks/) + [`authentication/`](authentication/) + [`environments/`](environments/) | All                                                                   |
+
+Experience docs and impl-layer docs are paired and cross-reference each other. Commercial content lives in the rules
+dir, never inlined into impl-layer docs; impl-layer docs cite the rules. This keeps commercial policy in one place while
+the engineering surface stays operational.
+
 ## What lives here
 
 - [glossary.md](glossary.md) — DART, IM, SMA, Pooled, Briefings, Umbrella, Demo account — one canonical definition per
