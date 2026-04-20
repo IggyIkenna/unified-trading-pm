@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Unified Trading System — SSOT Index
 
 Master map of canonical data sources. When in doubt about where a piece of information lives, consult this index.
