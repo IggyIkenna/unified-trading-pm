@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-04-20T20:45:19.177464+00:00",
+  "generatedAt": "2026-04-20T22:13:13.443967+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -413,6 +413,10 @@
       "versionRange": "vcrpy>=8.0.0,<9.0.0"
     },
     {
+      "name": "vulture",
+      "versionRange": "vulture>=2.0,<3.0.0"
+    },
+    {
       "name": "web3",
       "versionRange": "web3>=6.0.0,<7.0.0"
     },
@@ -429,5 +433,5 @@
       "versionRange": "zstandard>=0.22.0,<1.0.0"
     }
   ],
-  "count": 106
+  "count": 107
 }

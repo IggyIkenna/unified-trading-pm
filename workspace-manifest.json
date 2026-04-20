@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-04-20T20:36:58Z",
+  "lastUpdated": "2026-04-20T22:15:00Z",
   "notes": "Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Workspace clone alignment \u2014 repositories not present under workspace root marked status=archived (rollout/run-all-setup no longer warn on missing dirs). topologicalOrder rebuilt for active repos only; added fund-administration-service + unified-trading-api + user-management-ui to topo levels; workspace_infrastructure.setup_repos=[unified-trading-pm] (codex optional clone). | Updated 2026-03-24: Archive-only sweep \u2014 legacy split UIs, standalone APIs (incl. config/trading-analytics/ml-* -api), npm UI-kit/workspace repos, experimental services, and scratch/root data trees exist only under workspace-root archive/ (see archive/README.md). Manifest repositories = active surface only. | Prior: Archived odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api; removed from manifest. | Prior: Active surface: unified-trading-system-ui + deployment-ui + unified-trading-api + auth-api + deployment-api + domain APIs (see ui-api-mapping). | Prior: 2026-03-13 ci_status sweep \u2014 promoted 4 BASELINE_RECORDED\u2192VALIDATED; 15 FAILING. 2026-03-10 unified-admin-ui (npm monorepo) packa...",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
@@ -1165,7 +1165,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1197,8 +1197,8 @@
           "required": true
         }
       ],
-      "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
-      "ci_status": "FAILING",
+      "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",

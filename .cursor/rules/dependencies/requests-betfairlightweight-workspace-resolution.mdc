@@ -1,0 +1,24 @@
+---
+description: "Workspace requests>=2.33 vs betfairlightweight; per-repo uv overrides vs global flat compile"
+alwaysApply: false
+priority: 66
+tags:
+  - dependencies
+  - uv
+  - security
+---
+# Requests, betfairlightweight, and workspace resolution
+
+WHY: Workspace canonical pins **`requests>=2.33.0,<3.0.0`** (e.g. CVE-2026-25645). **`betfairlightweight`** declares transitive **`requests<2.33.0`** on PyPI for all versions in use. A **single flat** `uv pip compile` of every row in `workspace-constraints.toml` therefore **cannot** prove joint satisfiability for both pins at once — that is a property of **PyPI metadata**, not something you fix by editing a version string in the manifest without changing upstream.
+
+DO (institutional pattern):
+
+1. **Keep** `requests` at the workspace floor in `workspace-constraints.toml` / canonical manifest.
+2. **execution-service** (only consumer that needs betfair): declare **`[tool.uv] override-dependencies = ["requests>=2.33.0,<3.0.0"]`** so the **per-repo** `uv lock` resolves consistently (overrides apply at lock time).
+3. **Global validation**: `unified-trading-pm/scripts/workspace/validate-workspace-constraints.py` **omits** `betfairlightweight` from the flat compile graph (see `EXCLUDE_FROM_GLOBAL_COMPILE`). Canonical alignment for that package is unchanged; we only skip proving impossible joint resolution in one graph.
+
+NEVER: Lower the workspace `requests` floor just to make the flat compile pass (security regression).
+
+SSOT: `execution-service/pyproject.toml` (`[tool.uv]` overrides), `unified-trading-pm/scripts/workspace/validate-workspace-constraints.py` (exclude list).
+
+See also: `canonical-external-deps.mdc`, `dependency-version-alignment.mdc`.

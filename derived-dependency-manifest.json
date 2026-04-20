@@ -117,10 +117,11 @@
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
         "scipy": ["scipy>=1.15.0,<2.0.0"],
         "starlette": ["starlette>=0.46.3,<1.0.0"],
+        "vulture": ["vulture>=2.0,<3.0.0"],
         "web3": ["web3>=6.0.0,<7.0.0"]
       },
       "internal_count": 1,
-      "external_count": 54
+      "external_count": 55
     },
     "instruments-service": {
       "internal_deps": {
@@ -817,7 +818,7 @@
         "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.4"],
+        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
@@ -851,6 +852,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
         "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
+        "responses": ["responses>=0.24.1,<1.0.0"],
         "rich<15.0.0,": ["rich<15.0.0,>=14.2.0"],
         "ruff": ["ruff==0.15.0"],
         "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
@@ -858,7 +860,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 2,
-      "external_count": 39
+      "external_count": 40
     },
     "trading-agent-service": {
       "internal_deps": {
@@ -1302,6 +1304,7 @@
     "types_requests": "types-requests>=2.32.0,<3.0.0",
     "uvicorn[standard]": "uvicorn[standard]>=0.27.0,<1.0.0",
     "vcrpy": "vcrpy>=8.0.0,<9.0.0",
+    "vulture": "vulture>=2.0,<3.0.0",
     "web3": "web3>=6.0.0,<7.0.0",
     "websockets": "websockets>=14.0,<15.0.0",
     "yfinance": "yfinance>=0.2.66,<1.0.0",

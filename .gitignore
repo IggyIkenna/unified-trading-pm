@@ -7,6 +7,9 @@
 # Copy to repo root as .gitignore. Source: unified-trading-pm/scripts/templates/
 # =============================================================================
 
+# --- Archive/backup zips (never commit; too large / content is elsewhere) ---
+*.zip
+
 # --- Security (never commit credentials) ---
 *credentials*.json
 *-credentials.json
