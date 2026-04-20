@@ -9,18 +9,33 @@ this directory, it's either missing context or out of scope.
 
 ## Layered structure
 
-Two layers plus a rules set, co-located in this dir:
+The playbook SSOT is organised in three logical layers under one directory:
 
-- **[`_ssot-rules/`](_ssot-rules/)** — the ten rules governing every experience doc (grammar, tone, same-system
-  principle, DART commercial axes, building blocks, show / don't-show, data licensing, pricing, internal one-liners,
-  instruction schema). Citable, stable, orthogonal. Stage 1 output (2026-04-19).
-- **[`experience/`](experience/)** — narrative playbooks, sales-owned. One doc per (audience × moment) cell; nine
-  sections per doc ([rule 01](_ssot-rules/01-grammar.md)). Calm institutional tone
-  ([rule 02](_ssot-rules/02-tone-and-posture.md)). Canonical reference:
-  [`experience/im-decision-journey.md`](experience/im-decision-journey.md).
-- **[`playbooks/`](playbooks/)** and the other engineering-grade sub-dirs (`authentication/`, `environments/`,
-  `cross-cutting/`, `page-triage/`, `testing/`, `roadmap/`) — the **impl layer**. Engineering-owned; routes,
-  entitlements, services, data bindings, Playwright specs. Describes the same journeys at a different register.
+- **Rules layer — [`_ssot-rules/`](_ssot-rules/)**: the ten rules governing every experience doc (grammar, tone,
+  same-system principle, DART commercial axes, building blocks, show / don't-show, data licensing, pricing, internal
+  one-liners, instruction schema). Citable, stable, orthogonal. Stage 1 output (2026-04-19).
+- **Playbook layer** (Stage 2): narrative + commercial + operational docs:
+  - **[`experience/`](experience/)** — narrative playbooks, sales-owned. Nine sections per doc
+    ([rule 01](_ssot-rules/01-grammar.md)). Canonical reference:
+    [`experience/im-decision-journey.md`](experience/im-decision-journey.md).
+  - **[`shared-core/`](shared-core/)** — product truths reused across layers. Implementation maps for rules 03, 04, 05,
+    07, 10; shared reporting core; org/fund/client entity model; shared pb3a+pb3b walkthrough.
+  - **[`commercial-model/`](commercial-model/)** — blocks → packages → tiers. Three DART entry points; IM vs Reg
+    Umbrella pricing logic; pricing structure (TBD stubs).
+  - **[`demo-ops/`](demo-ops/)** — demo config (restriction profiles, demo modes, upsell overlays, curation) + sales ops
+    (account-intelligence record, discovery framework, decision matrix, meeting tracking) + orchestration (seven-day
+    stall trigger, post-demo follow-up).
+  - **[`implementation-mapping/`](implementation-mapping/)** — bridge narrative → code. Route mapping, persona fixtures,
+    provisioning flow, Playwright coverage.
+- **Impl layer — [`playbooks/`](playbooks/)** and the other engineering sub-dirs (`authentication/`, `environments/`,
+  `cross-cutting/`, `page-triage/`, `testing/`, `roadmap/`). Engineering-owned; routes, entitlements, services, data
+  bindings, Playwright specs. Describes the same journeys at a different register.
+- **Infra spec — [`infra-spec/`](infra-spec/)** (Stage 3): current-state audit (3A), UAC combo rules + YAML schema +
+  instruction-schema contract + downstream-analytics capability matrix (3B), derivation engine with 4 formulas (3C),
+  refactor plan with 26 G1/G2/G3 items (3E) — makes the rules + playbook-layer claims runtime-enforceable.
+- **Target-experience presentations — [`presentations/`](presentations/)** (Stage 3D): 16-slide markdown deck with
+  mermaid diagrams + 7 Playwright screenshots showing the post-refactor target state. Internal alignment +
+  investor-briefing-ready.
 
 Reader paths by role:
 
@@ -42,6 +57,55 @@ the engineering surface stays operational.
 - [information-architecture.md](information-architecture.md) — top-down IA: homepage → signed-in services → per-service
   sub-surfaces
 - [audiences-and-journeys.md](audiences-and-journeys.md) — 3 playbook families × N personas × 3 environments matrix
+
+### [shared-core/](shared-core/) (Stage 2)
+
+Product truths reused across experience and commercial docs. Implementation maps for rules 03, 04, 05, 07, 10. Eight
+content docs + README:
+
+- [same-system-principle.md](shared-core/same-system-principle.md) — rule 03 implementation
+- [org-fund-client-entity-model.md](shared-core/org-fund-client-entity-model.md) — entity hierarchy
+- [shared-reporting-core.md](shared-core/shared-reporting-core.md) — one reporting surface, 3 audiences
+- [strategy-origin-vs-stack-depth.md](shared-core/strategy-origin-vs-stack-depth.md) — rule 04 matrix
+- [venue-chain-instrument-scope.md](shared-core/venue-chain-instrument-scope.md) — rule 05 sub-scoping
+- [instruction-schema-fit-and-package-boundaries.md](shared-core/instruction-schema-fit-and-package-boundaries.md) —
+  rule 10
+- [data-licensing-boundaries.md](shared-core/data-licensing-boundaries.md) — rule 07 expanded
+- [client-reporting-demo-walkthrough.md](shared-core/client-reporting-demo-walkthrough.md) — shared pb3a+pb3b path
+
+### [commercial-model/](commercial-model/) (Stage 2)
+
+Blocks → packages → tiers. Six content docs + README:
+
+- [dart-entry-points.md](commercial-model/dart-entry-points.md) — 3 practical DART paths
+- [im-vs-reg-reporting-logic.md](commercial-model/im-vs-reg-reporting-logic.md) — same UI, two framings
+- [building-block-packaging.md](commercial-model/building-block-packaging.md) — 13 × 6 matrix
+- [pricing-building-blocks.md](commercial-model/pricing-building-blocks.md) — 3 cols × 13 rows (TBD)
+- [fixed-vs-variable-commercials.md](commercial-model/fixed-vs-variable-commercials.md) — Tier A vs Tier B
+- [exclusivity-and-noncompete.md](commercial-model/exclusivity-and-noncompete.md) — Tier B modifier
+
+### [demo-ops/](demo-ops/) (Stage 2)
+
+Demo config + sales ops + post-demo orchestration. Nine content docs + README:
+
+- [demo-restriction-profiles.md](demo-ops/demo-restriction-profiles.md)
+- [dart-demo-modes.md](demo-ops/dart-demo-modes.md)
+- [upsell-overlays.md](demo-ops/upsell-overlays.md)
+- [pre-demo-curation-rules.md](demo-ops/pre-demo-curation-rules.md)
+- [account-intelligence-record.md](demo-ops/account-intelligence-record.md)
+- [pre-demo-discovery-framework.md](demo-ops/pre-demo-discovery-framework.md)
+- [demo-decision-matrix.md](demo-ops/demo-decision-matrix.md)
+- [meeting-history-and-interest-tracking.md](demo-ops/meeting-history-and-interest-tracking.md)
+- [post-demo-followup-orchestration.md](demo-ops/post-demo-followup-orchestration.md)
+
+### [implementation-mapping/](implementation-mapping/) (Stage 2)
+
+Narrative → code bridge. Four content docs + README:
+
+- [route-mapping.md](implementation-mapping/route-mapping.md)
+- [persona-and-user-prototype-mapping.md](implementation-mapping/persona-and-user-prototype-mapping.md)
+- [demo-email-and-provisioning-flow.md](implementation-mapping/demo-email-and-provisioning-flow.md)
+- [playbook-to-qa-coverage.md](implementation-mapping/playbook-to-qa-coverage.md)
 
 ### [authentication/](authentication/)
 
