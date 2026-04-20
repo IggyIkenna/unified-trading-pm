@@ -331,3 +331,133 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 - Playwright spec pass status.
 - 4 commit SHAs pushed to live-defi-rollout.
 - Any gaps or open questions for the user.
+
+---
+
+## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
+
+> Drafted by Wave-D kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 7A.
+> Companion micro-plan for G1.11 in `refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` § Micro-execution
+> plan.
+
+### Plan-vs-reality drifts (verified 2026-04-20 against `live-defi-rollout` post-Wave-C)
+
+| #   | Plan claims                                                                                                                                                         | Reality post-Wave-C                                                                                                                                                                                                                                                                                                                                                                             | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Line 39 Decisions table: engine lives in `strategy-service/strategy_service/availability/restriction_profiles.py`. Lines 108, 138, 152 reinforce.                   | Wave-C Option X put `derivation.py` in **UAC** (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py`). G1.7's `resolve_profile()` must be callable by `demo_universe()` + `prod_restrictions()` inside derivation.py; those calls would become a **circular dep** if resolve_profile lives in strategy-service (UAC → strategy-service is the wrong direction). | **Recommend Option X carry-through.** Ship `restriction_profiles.py` in UAC at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py`. Tests in `unified-api-contracts/tests/internal/unit/test_restriction_profiles.py`. YAML loader uses `importlib.resources`-style path resolution (PM codex is sibling repo; dev/CI resolve via `UNIFIED_TRADING_WORKSPACE_ROOT` env var same as G1.8 `_find_codex_markdown()` helper). Operator sign-off requested. |
+| 2   | Line 121: "Integration with G1.6: `demo_universe()` + `prod_restrictions()` now call `resolve_profile` when caller provides a profile ID"                           | These functions live in UAC derivation.py now, not strategy-service. **Modifying derivation.py here risks merge conflict with G1.11's `access_control()` modification** (both Wave D items touch the same file).                                                                                                                                                                                | **Sequence conflicts, not parallelise.** G1.7 touches derivation.py `demo_universe()` + `prod_restrictions()` bodies; G1.11 touches `access_control()` + new pre-check call. Land G1.7 commit first, then G1.11 rebases. Document as sequential inside Wave D despite the plans being tagged parallel.                                                                                                                                                                                            |
+| 3   | Line 131: "Expose profile resolution as internal API: `execution-service` (or a strategy-service internal API) serves `/internal/restriction-profile/<persona_id>`" | G1.7 is a pure-function layer — no HTTP surface justification yet for Wave D. Stage-3c §5 says "restriction-profile-service" is a Stage-3E G3 concern.                                                                                                                                                                                                                                          | **Defer HTTP endpoint.** Ship only the pure function + YAML loader + UI integration. If UI needs server-rendered profile for SSR, add a minimal strategy-service `api/restriction_profile_router.py` in a FOLLOW-UP commit (stage-3c §5 G3 scope). For Wave D, UI-dev hydrates from bundled YAML (bundled at build via a TS mirror similar to how G1.8 coverage.ts mirrors UAC manifest).                                                                                                         |
+| 4   | Line 134: "dev (`VITE_MOCK_API=true`), lib/auth/demo-provider.ts reads the same YAML files (bundled at build)"                                                      | YAML-in-TS-bundle adds build-time complexity. Simpler: generate a `lib/architecture-v2/restriction-profiles.ts` TS mirror from YAML via a PM `scripts/propagation/sync-restriction-profiles-to-ui.sh` (mirrors G1.8's `sync-archetype-capability-to-ui.sh` pattern, canonical post-G1.8).                                                                                                       | **Use G1.8 sync-script pattern.** PM script reads YAML at `demo-ops/profiles/*.yaml`, renders TS mirror with AUTO-GEN banner, wired into UI `scripts/quality-gates.sh` pre-hook for drift detection. UI reads the TS mirror directly — no runtime YAML parsing.                                                                                                                                                                                                                                   |
+| 5   | Line 40 Decisions table: "Demo profile registry is declarative YAML at `codex/14-playbooks/demo-ops/profiles/`"                                                     | Directory does NOT exist today.                                                                                                                                                                                                                                                                                                                                                                 | Net-new, fine. Validator tool at `codex/14-playbooks/demo-ops/_tools/validate_profiles.py` (also net-new directory).                                                                                                                                                                                                                                                                                                                                                                              |
+| 6   | Line 116 signature: `resolve_profile(persona: Persona, flavour: DemoFlavour                                                                                         | None, env: Env, questionnaire: QuestionnaireResponse                                                                                                                                                                                                                                                                                                                                            | None = None)`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `Persona` + `DemoFlavour` already exist in UAC derivation.py (G1.6 shipped these). `Env` + `QuestionnaireResponse` are net-new. | Reuse existing `Persona` + `DemoFlavour`. Define `Env = Literal["dev", "staging", "prod"]` + placeholder `QuestionnaireResponse` BaseModel (concrete fields are G1.10 scope — ship with `extra="allow"` for forward-compat OR empty dict default for Wave D). |
+
+### Pre-audit manifest (Citadel rule-6)
+
+Grep across workspace excluding `.venv*`, `node_modules`, `build`, `_archived_pre_v2`:
+
+| Symbol                          | Current hits                                                                                                   | Action                                                                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolve_profile`               | 0 runtime                                                                                                      | Net-new.                                                                                                                                 |
+| `RestrictionProfile`            | 1 in UAC derivation.py (G1.6 shipped a stub type) + 1 in `prod_restrictions.py` plan prose only                | Extend the existing stub in derivation.py with full tile-map shape (`tiles: Mapping[str, Literal[...]]`). No rename — same type evolves. |
+| `check_service_family_scope`    | 0                                                                                                              | Net-new (G1.11 owns).                                                                                                                    |
+| `QuestionnaireResponse`         | 0                                                                                                              | Net-new. Minimal stub for Wave D; G1.10 fleshes out.                                                                                     |
+| `useTileLockState`              | 1 — `unified-trading-system-ui/lib/visibility/use-tile-lock-state.ts` (stub returns "unlocked" for every tile) | Replace stub body with real lookup into the TS mirror `lib/architecture-v2/restriction-profiles.ts`.                                     |
+| `demo-provider.ts` persona seed | existing `lib/auth/` infra                                                                                     | Profile loaded via the TS mirror; no changes to persona seed mechanism.                                                                  |
+
+### Execution DAG
+
+```
+7A YAML schema + 6 profile files + PM validator tool
+    └── 7B restriction_profiles.py in UAC + resolve_profile() + unit tests (≥ 20)
+        └── 7C Extend demo_universe() + prod_restrictions() in derivation.py to delegate to resolve_profile()
+            └── COMMIT 1 (UAC — must land BEFORE G1.11's access_control edit — sequencing note)
+        └── 7D PM sync-script (YAML → TS mirror with AUTO-GEN banner) + COMMIT 2 (PM)
+            └── 7E UI: use-tile-lock-state.ts replace stub; wire QG hook → COMMIT 3 (UI)
+                └── 7F Playwright spec → COMMIT 4 (UI add or same commit)
+```
+
+### Files × line-ranges × commit sequence
+
+**COMMIT 1 — UAC** `feat(uac): G1.7 — restriction-profile engine + 6 YAML profiles`
+
+| File                                                                                           | Action                                                                                                                                                                                       | Approx LOC |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/admin.yaml`                           | NEW                                                                                                                                                                                          | ~30        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/client-full.yaml`                     | NEW                                                                                                                                                                                          | ~40        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/prospect-im.yaml`                     | NEW                                                                                                                                                                                          | ~35        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/prospect-dart.yaml`                   | NEW                                                                                                                                                                                          | ~35        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/prospect-regulatory.yaml`             | NEW                                                                                                                                                                                          | ~30        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/anon.yaml`                            | NEW                                                                                                                                                                                          | ~25        |
+| `unified-trading-pm/codex/14-playbooks/demo-ops/_tools/validate_profiles.py`                   | NEW — schema validator (fails loud on unknown tile_id / state)                                                                                                                               | ~100       |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` | NEW — `Env`, `QuestionnaireResponse` stub, `resolve_profile()`, YAML loader via `UNIFIED_TRADING_WORKSPACE_ROOT`                                                                             | ~280       |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py`           | MODIFY — `demo_universe()` + `prod_restrictions()` delegate to `resolve_profile()` when caller provides a profile-id; extend `RestrictionProfile` type with `tiles: dict[str, Literal[...]]` | +40 / -5   |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/__init__.py`             | MODIFY — export new symbols                                                                                                                                                                  | +6         |
+| `unified-api-contracts/unified_api_contracts/strategy.py`                                      | MODIFY — re-export `resolve_profile`, `RestrictionProfile` (tile-map shape), `Env`, `QuestionnaireResponse`                                                                                  | +8         |
+| `unified-api-contracts/tests/internal/unit/test_restriction_profiles.py`                       | NEW — ≥ 20 cases: base profile per persona × 6, overlay application × 5, env override × 3, invalid inputs × 4, YAML loader tests × 2+                                                        | ~350       |
+
+Split rationale: keep all G1.7 UAC + PM work in a single commit so UAC CI tests see the YAML the loader expects. PM's
+sync-script commits separately.
+
+**COMMIT 2 — PM** `feat(pm): G1.7 — UAC→UI restriction-profiles sync script`
+
+| File                                                                        | Action                                                                    | Approx LOC |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------- |
+| `unified-trading-pm/scripts/propagation/sync-restriction-profiles-to-ui.sh` | NEW — shell wrapper (mirrors G1.8 `sync-archetype-capability-to-ui.sh`)   | ~40        |
+| `unified-trading-pm/scripts/propagation/sync_restriction_profiles_to_ui.py` | NEW — Python body reading YAML + rendering TS mirror with AUTO-GEN banner | ~150       |
+
+**COMMIT 3 — UI** `feat(ui/visibility): G1.7 — real tile-lock-state resolution + sync hook`
+
+| File                                                                                               | Action                                                                                                        | Approx LOC |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-trading-system-ui/lib/architecture-v2/restriction-profiles.ts`                            | REGENERATED (AUTO-GEN banner) — TS mirror of 6 YAML profiles + `resolveTileLockState(persona, tileId)` helper | ~200       |
+| `unified-trading-system-ui/lib/visibility/use-tile-lock-state.ts`                                  | MODIFY — replace stub body with `resolveTileLockState()` call; read persona from existing persona context     | +15 / -5   |
+| `unified-trading-system-ui/scripts/quality-gates.sh`                                               | MODIFY — add sync-check pre-hook (mirrors G1.8 pattern)                                                       | +4         |
+| `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-7-restriction-profile.spec.ts` | NEW — seed 6 personas, assert `data-lock-state` matches YAML, orphan-reachability, dev/staging parity note    | ~180       |
+
+### Playwright spec design
+
+Canonical port `localhost:3000`. Spec mirrors G1.8 + G1.6 shape. Seed 6 personas (`admin` / `client-full` /
+`prospect-im` / `prospect-dart` / `prospect-regulatory` / `anon`), navigate catalogue, assert per-tile `data-lock-state`
+attribute matches YAML-declared state. Dev/staging parity check via PM sync-script `--check` (same technique as G1.8
+coverage.ts).
+
+### Breaking-change analysis (Citadel rule-3)
+
+- G1.3's `use-tile-lock-state.ts` stub — EXPECTED stub replacement, not a regression. Stub already documents the G1.7
+  plan.
+- UAC `derivation.py` — `demo_universe()` + `prod_restrictions()` gain optional `profile_id` arg (kwargs-only, default
+  None to preserve existing test behaviour). New fallback path only fires when caller opts in.
+- New `RestrictionProfile` `tiles` field — extends the existing BaseModel. Existing consumers don't break because
+  `tiles: Mapping[str, ...] = {}` default.
+
+### Success criteria
+
+| Phase                     | Gate                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 7A YAML                   | 6 profile files pass `validate_profiles.py`; every tile_id exists in UI ServiceDefinition registry                         |
+| 7B engine                 | `from unified_api_contracts.strategy import resolve_profile, RestrictionProfile, Env` clean; ≥ 20 tests green              |
+| 7C derivation integration | UAC QG green; existing derivation tests still pass; new integration tests for profile-id path                              |
+| 7D PM sync                | `bash sync-restriction-profiles-to-ui.sh --check` fails pre-regen, passes after `--write` (same as G1.8)                   |
+| 7E UI                     | UI QG pre-hook catches drift; `useTileLockState` returns YAML-declared value; Playwright spec green; commit SHAs on origin |
+
+### Open questions for operator
+
+1. **Option X carry-through** (drift #1): ship `restriction_profiles.py` in UAC, not strategy-service? Default yes.
+   Operator confirm?
+2. **Sequencing with G1.11** (drift #2): both Wave D items modify UAC `derivation.py`. Land G1.7 first, G1.11 rebases?
+   Or keep parallel and accept merge conflicts? Default sequential (G1.7 first), G1.11 rebases.
+3. **HTTP endpoint defer** (drift #3): skip `/internal/restriction-profile/<id>` endpoint for Wave D; UI consumes via TS
+   mirror only. Adds it in a follow-up if SSR needs it. Default yes.
+4. **QuestionnaireResponse stub**: ship as empty BaseModel placeholder; concrete fields land in G1.10. Default yes.
+
+### Pre-flight for Phase 7A execution (when approved)
+
+```
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+git -C unified-api-contracts status --short
+git -C unified-trading-pm status --short
+git -C unified-trading-system-ui status --short
+# Wave C verified:
+ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py
+.venv-workspace/bin/python -c "from unified_api_contracts.strategy import resolve_profile" 2>&1 | head  # expect ImportError (not yet shipped)
+```

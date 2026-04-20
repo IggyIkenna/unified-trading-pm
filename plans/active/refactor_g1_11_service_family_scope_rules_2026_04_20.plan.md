@@ -334,3 +334,161 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 - Playwright spec pass status.
 - 3 commit SHAs pushed to live-defi-rollout.
 - Any gaps or open questions for the user.
+
+---
+
+## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
+
+> Drafted by Wave-D kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 11A.
+> Companion micro-plan for G1.7 in `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` § Micro-execution plan.
+
+### Plan-vs-reality drifts (verified 2026-04-20 against `live-defi-rollout` post-Wave-C)
+
+| #   | Plan claims                                                                                                                                                                                                                                                    | Reality                                                                                                                                                                                                                                          | Resolution                                                                                                                                                                                                                                                                              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Entire plan assumes **"rule 11"** is the new slot for service-family scope (file paths `_ssot-rules/11-service-family-scope-rules.{md,yaml}`, rule_id `11` inside YAML, etc.)                                                                                  | **Rule 11 slot is already taken** by `11-codex-scope-registry.md` (shipped with G1.9 on 2026-04-20). `ls _ssot-rules/` shows rules 01–11 all populated.                                                                                          | **Renumber to rule 12.** All file paths, the YAML `rule_id` key, rule-04 cross-ref text, and SSOT-INDEX registration move to `12-*`. Plan's Phase 11A-11E labels preserved (they're plan-phase identifiers, not rule numbers). Operator sign-off requested.                             |
+| 2   | Line 140 signature: `def check_service_family_scope(user: UserContext, route: str) -> ScopeDecision: ...` and Line 175: "MODIFY `derivation.py` (wire pre-check in `access_control`)" points at `strategy-service/strategy_service/availability/derivation.py` | Post-Wave-C, `derivation.py` lives in **UAC** (Option X). Plan's host assumption is stale. `UserContext` + `access_control` are UAC symbols now.                                                                                                 | **Option X carry-through.** Ship `service_family_scope.py` in UAC at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py`. Wire pre-check inside UAC `derivation.py` `access_control()`. Tests colocated in UAC. Operator sign-off requested. |
+| 3   | Lines 124, 173: both G1.7 **and** G1.11 modify `derivation.py` (G1.7 touches `demo_universe()` + `prod_restrictions()`; G1.11 touches `access_control()`)                                                                                                      | Same file, different functions → concurrent agent commits would merge-conflict on import block + `__init__.py` exports.                                                                                                                          | **Sequence, not parallelise.** Land G1.7's UAC commit first; G1.11 rebases on top and adds `access_control()` pre-check + new import. Plans are tagged parallel in frontmatter — relax that for Wave-D execution.                                                                       |
+| 4   | Line 125 YAML example `strategy-catalogue-admin` included in `admin.surfaces` list                                                                                                                                                                             | Plan defines a closed enum of service families `{IM, RegUmbrella, DART, DART-reporting-only, admin, IM-desk}`. The enum semantics are clear but `strategy-catalogue-admin` is a **route category**, not a service-family surface. Confuses axes. | Clarify in the YAML `surfaces` entries — use `surfaces: [...]` for surface-category names and a separate `route_allowlist: [pattern, ...]` (glob) for route-level allow. Align with the UI route layout.                                                                                |
+| 5   | Line 137 puts `service_family_scope.py` in strategy-service; Line 139 signature uses `UserContext` (a UAC type after G1.6). A strategy-service module importing a UAC type and being called BY a UAC function creates a dep loop.                              | Same root cause as drift #2 (plan is pre-Wave-C).                                                                                                                                                                                                | Resolved by drift #2 resolution (Option X host).                                                                                                                                                                                                                                        |
+| 6   | Plan's persona list (line 196 onwards): `admin`, `client-full`, `prospect-im`, `prospect-dart`, `prospect-regulatory`, `anon`                                                                                                                                  | Existing `lib/auth/personas.ts` doesn't have `prospect-dart` or `prospect-regulatory` — they ship with G1.10 questionnaire flow. G1.6 memory/MEMORY.md noted this.                                                                               | Playwright spec for G1.11 skips `prospect-dart` + `prospect-regulatory` with `TODO(G1.10)` marker; assert scope logic against the 4 existing personas via fixture-seeded UserContext instead of browser-real personas. Decouples this plan from G1.10 gate.                             |
+
+### Pre-audit manifest (Citadel rule-6)
+
+| Symbol                                       | Current hits                     | Action                                                                                                                                                                                                                                              |
+| -------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check_service_family_scope`                 | 0                                | Net-new.                                                                                                                                                                                                                                            |
+| `ScopeDecision`                              | 0                                | Net-new — `Literal["allow"] \| ScopeDeny` discriminated pair, mirrors `AccessDecision`.                                                                                                                                                             |
+| `ServiceFamily`                              | Several unrelated hits in UI     | New UAC enum `ServiceFamily = Literal["IM", "RegUmbrella", "DART", "DART_reporting_only", "admin", "IM_desk"]` (snake_case for `DART_reporting_only` + `IM_desk` to avoid hyphen issues in Python). Distinct from UI references — different domain. |
+| `access_control`                             | UAC derivation.py (G1.6 shipped) | MODIFY: add `check_service_family_scope(user, route)` pre-check at the top of the function body. If scope denies → short-circuit return `AccessDecision(status="deny", reason=scope_decision.reason, upgrade_hint=scope_decision.upgrade_hint)`.    |
+| `UserContext`                                | UAC derivation.py                | EXTEND: `UserContext` may already have `audience: ClientAudience`; `ClientAudience` enum maps 1:1 with `ServiceFamily` for the scope-check purpose. Add a `service_family` property or derive from audience. Flag design decision.                  |
+| `11-service-family-scope-rules.md` / `.yaml` | 0                                | Cannot use rule-11 slot (taken). Use **rule 12**: `12-service-family-scope-rules.md` + `.yaml`.                                                                                                                                                     |
+
+### Execution DAG
+
+```
+11A audit + draft rule 12 YAML + draft rule 12 md + validator tool in _tools/
+    └── COMMIT 1 (PM — rule 12 doc + yaml + validator)
+        └── 11B service_family_scope.py in UAC
+            └── 11C wire access_control pre-check in derivation.py (SEQUENCED AFTER G1.7's derivation.py edits land)
+                └── COMMIT 2 (UAC — depends on G1.7 UAC commit being on origin first)
+                    └── 11D PM cross-refs + SSOT-INDEX update → folded into COMMIT 1 OR NEW COMMIT 3 (PM)
+                        └── 11E UI Playwright spec + COMMIT 4 (UI)
+```
+
+### Files × line-ranges × commit sequence
+
+**COMMIT 1 — PM** `docs(ssot-rules): G1.11 — rule 12 service-family scope (yaml + md + validator + cross-refs)`
+
+| File                                                                                   | Action                                                                                     | Approx LOC |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.md`   | NEW — prose rule doc explaining each service-family row with rationale + cross-refs        | ~200       |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.yaml` | NEW — machine-readable rule table with 6 families × surfaces/excludes/route_allowlist      | ~80        |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py`      | NEW — schema validator (new `_tools/` dir under \_ssot-rules)                              | ~120       |
+| `unified-trading-pm/codex/00-SSOT-INDEX.md`                                            | MODIFY — register rule 12                                                                  | +3         |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`         | MODIFY — add "Service-family scope — see rule 12" cross-ref section (no table duplication) | +8         |
+
+**COMMIT 2 — UAC** `feat(uac): G1.11 — service-family scope enforcement wired into access_control()`
+
+| File                                                                                           | Action                                                                                                                            | Approx LOC |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py` | NEW — `ServiceFamily` enum, `ScopeDecision` type, `check_service_family_scope()`, YAML loader                                     | ~220       |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py`           | MODIFY — add scope pre-check at top of `access_control()` body                                                                    | +18        |
+| `unified-api-contracts/unified_api_contracts/internal/architecture_v2/__init__.py`             | MODIFY — export new symbols                                                                                                       | +4         |
+| `unified-api-contracts/unified_api_contracts/strategy.py`                                      | MODIFY — re-export `check_service_family_scope`, `ScopeDecision`, `ServiceFamily`                                                 | +6         |
+| `unified-api-contracts/tests/internal/unit/test_service_family_scope.py`                       | NEW — ≥ 30 cases: every (service-family × route-category) combination + malformed-YAML rejection + default-deny for unknown route | ~400       |
+| `unified-api-contracts/tests/internal/unit/test_derivation.py`                                 | MODIFY — add integration test: out-of-scope user → `access_control` returns deny via scope path                                   | +20        |
+
+**COMMIT 3 — UI** `test(playbooks): G1.11 — service-family scope Playwright spec`
+
+| File                                                                                                 | Action                                                                                                                                                                                                                                                                                                 | Approx LOC |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-11-service-family-scope.spec.ts` | NEW — seed 4 available personas (`admin`, `client-full`, `prospect-im`, `anon`) + fixture UserContext objects for the 6 ServiceFamily values; assert allow/deny per route matches rule 12 YAML; orphan-reachability for in-scope routes. Prospect-dart + prospect-regulatory skipped with TODO(G1.10). | ~220       |
+
+No UI `scripts/quality-gates.sh` edit needed — Playwright auto-discovers.
+
+### YAML schema proposal (operator-review)
+
+```yaml
+rule_id: 12
+rule_name: service-family-scope-rules
+service_families:
+  IM:
+    surfaces: [reporting, client_portal]
+    excludes: [observe, research, promote, strategy_catalogue_admin]
+    route_allowlist:
+      - /services/investment-management/**
+      - /services/reports/**
+  RegUmbrella:
+    surfaces: [reporting, compliance_overlay]
+    excludes: [observe, research, promote, strategy_catalogue_admin]
+    route_allowlist:
+      - /services/regulatory-umbrella/**
+      - /services/reports/**
+  DART:
+    surfaces: [reporting, observe, research, promote]
+    excludes: [strategy_catalogue_admin]
+    route_allowlist:
+      - /services/**
+      - "!/admin/**"
+  DART_reporting_only:
+    surfaces: [reporting]
+    excludes: [observe, research, promote, strategy_catalogue_admin]
+    route_allowlist:
+      - /services/reports/**
+  admin:
+    surfaces: [everything, strategy_catalogue_admin]
+    excludes: []
+    route_allowlist: ["/**"]
+  IM_desk:
+    surfaces: [strategy_catalogue_admin, reporting]
+    excludes: []
+    route_allowlist:
+      - /services/strategy-catalogue/admin/**
+      - /services/reports/**
+```
+
+Glob matcher chosen for readability; Python `fnmatch` with `**` handling (or `pathspec`). Negation via `!` prefix.
+
+### Breaking-change analysis (Citadel rule-3)
+
+- `access_control()` gains a pre-check. Existing Wave-C tests that pass admin/im_desk personas still return `allow`
+  because scope allows those; tests for other audiences may newly deny if the fixture persona's audience isn't in the
+  enum. **Pre-audit existing derivation tests:** rerun after pre-check wiring, adjust any fixture that assumed
+  scope-blind access.
+- New enum `ServiceFamily`: additive. Rule 12 prose and YAML close the set at 6 members.
+- `UserContext.audience` today accepts `Literal["trading_platform_subscriber", "im_desk", "im_client", "admin"]` per
+  G1.6 shipped code. Need mapping `audience → service_family`. Add helper
+  `service_family_from_audience(audience) -> ServiceFamily | None`.
+
+### Success criteria
+
+| Phase               | Gate                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 11A rule doc + YAML | `validate_scope_yaml.py` exit 0; SSOT-INDEX shows rule 12; rule 04 cross-ref rendered                                                                               |
+| 11B + 11C           | `from unified_api_contracts.strategy import check_service_family_scope, ServiceFamily` clean; integration test in UAC shows `access_control` denying via scope path |
+| 11D tests           | ≥ 30 unit cases green (every family × route combo)                                                                                                                  |
+| 11E Playwright      | spec green on tier-1 dev; scope-deny route shows G1.3 LOCKED-VISIBLE padlock                                                                                        |
+| final               | 3 commit SHAs on `origin/live-defi-rollout`; `contracts.py` 908-LOC WIP still sidesteppable via explicit staging                                                    |
+
+### Open questions for operator
+
+1. **Rule number** (drift #1): ship as **rule 12** (not 11 — slot taken). Operator confirm?
+2. **Option X carry-through** (drift #2,5): `service_family_scope.py` in UAC, not strategy-service. Operator confirm?
+3. **Sequencing G1.7 → G1.11** (drift #3): G1.7 lands first, G1.11 rebases onto UAC `derivation.py`. Or inverted.
+   Operator confirm order?
+4. **YAML schema — `surfaces` vs `route_allowlist` split** (drift #4): both fields per family, surfaces is the
+   audience-semantic vocabulary, route_allowlist is the glob that `check_service_family_scope` actually matches on.
+   Operator confirm?
+5. **Persona skips** (drift #6): Playwright spec skips `prospect-dart` + `prospect-regulatory` until G1.10 ships those
+   personas; fixture-seeded UserContext drives 6×N matrix instead. Operator confirm?
+
+### Pre-flight for Phase 11A execution (when approved)
+
+```
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+ls unified-trading-pm/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md  # expect exists — confirms rule-11 slot taken
+.venv-workspace/bin/python -c "from unified_api_contracts.strategy import check_service_family_scope" 2>&1 | head  # expect ImportError (not yet shipped)
+# After G1.7 UAC commit lands:
+git -C unified-api-contracts log --oneline origin/live-defi-rollout | grep "G1.7" | head
+```
