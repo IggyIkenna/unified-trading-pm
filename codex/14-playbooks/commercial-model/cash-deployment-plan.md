@@ -36,8 +36,8 @@ runway** (survival).
 ### Engineering team profit share (ongoing, revenue-based)
 
 - Modelled at **~10% of revenue** on top of base salary.
-- 2026 total estimate: £71k across the year (0.10 × £692k).
-- Mechanically variable — low months cost ~£1k, high revenue months cost ~£15k. Aligns team compensation with firm
+- 2026 total estimate: £66k across the year (0.10 × £636k, post Signal-leasing revision 2026-04-20).
+- Mechanically variable — low months cost ~£1k, high revenue months cost ~£14k. Aligns team compensation with firm
   performance.
 - Mechanism to confirm with team: ordinary income (taxable in-year) vs equity-like (delayed vesting).
 
@@ -86,17 +86,19 @@ If year-end cash falls below £300k (downside scenario):
 | Jun               | +22           | 229                |
 | Jul               | +17           | 246                |
 | Aug               | +2            | 248                |
-| Sep               | +1            | 249                |
-| Oct               | +99           | 348                |
-| Nov               | +64           | 412                |
-| Dec               | +52           | **464**            |
+| Sep               | -7            | 241                |
+| Oct               | +92           | 333                |
+| Nov               | +46           | 379                |
+| Dec               | +34           | **413**            |
 
-**Minimum £198k (April), maximum £464k (December). Above £150k reserve floor throughout.**
+**Minimum £198k (April), maximum £413k (December). Above £150k reserve floor throughout.** (Revised 2026-04-20 to
+reflect Signal-leasing anchor of ~$5k/mo combined from Sept 2026 — see `revenue-projection-2026-monthly.md` §Revision
+note.)
 
 ## 2027 entry position
 
-Year-end 2026 cash £464k entering 2027. At 2027 burn ~£45k/mo (3.5 FTE), that's ~10 months of runway on cash alone
-before considering 2027 revenue. Combined with projected 2027 revenue £2M+ per the deck trajectory, the business is
+Year-end 2026 cash £413k entering 2027. At 2027 burn ~£45k/mo (3.5 FTE), that's ~9 months of runway on cash alone before
+considering 2027 revenue. Combined with projected 2027 revenue £2M+ per the deck trajectory, the business is
 self-funding indefinitely without external capital.
 
 ## What this does NOT cover

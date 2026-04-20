@@ -126,8 +126,11 @@ Sums (£k):
 | **2026 total** | **96**   | **108**         | **25**          | **84** | **3**  | **28** | **79** | **233** | **16**       | **~£636k** |
 
 **Revision note (2026-04-20)**: Signal leasing revised from £12-24k/mo ramp (previous modelling) to £4k/mo flat Sept-Dec
-(~$5k combined from 2 narrow-scope counterparties). Annual impact: **-£56k** (from £692k to ~£636k). Year-end cash
-projection moves from ~£464k to **~£408k** — still well above £150k reserve floor; no funding implication.
+(~$5k combined from 2 narrow-scope counterparties live simultaneously Sept 2026 per
+`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`). Annual revenue impact: **-£56k** (from
+£692k to ~£636k). Net-of-cost impact with cascaded 10%-of-revenue profit-share: year-end cash moves from ~£464k to
+**~£413k** — still well above £150k reserve floor; no funding implication. P&L + cumulative-cash tables below are
+post-revision.
 
 ## Monthly cost decomposition (£k/month)
 
@@ -157,21 +160,21 @@ projection moves from ~£464k to **~£408k** — still well above £150k reserve
 
 ## Full monthly P&L
 
-| Month    | Revenue    | Base burn | Extras | Profit-share (10% of rev) | Total cost | **Net**        |
-| -------- | ---------- | --------- | ------ | ------------------------- | ---------- | -------------- |
-| Jan      | 8          | 34        | 0      | 1                         | 35         | **-27**        |
-| Feb      | 8          | 34        | 0      | 1                         | 35         | **-27**        |
-| Mar      | 8          | 34        | 0      | 1                         | 35         | **-27**        |
-| Apr      | 8          | 34        | 15     | 1                         | 50         | **-42**        |
-| May      | 65         | 34        | 15     | 7                         | 56         | **+9**         |
-| Jun      | 62         | 34        | 0      | 6                         | 40         | **+22**        |
-| Jul      | 57         | 34        | 0      | 6                         | 40         | **+17**        |
-| Aug      | 40         | 34        | 0      | 4                         | 38         | **+2**         |
-| Sep      | 83         | 34        | 40     | 8                         | 82         | **+1**         |
-| Oct      | 148        | 34        | 0      | 15                        | 49         | **+99**        |
-| Nov      | 109        | 34        | 0      | 11                        | 45         | **+64**        |
-| Dec      | 96         | 34        | 0      | 10                        | 44         | **+52**        |
-| **2026** | **~£692k** | £408k     | £70k   | ~£71k                     | £549k      | **+£143k net** |
+| Month    | Revenue    | Base burn | Extras | Profit-share (10% of rev) | Total cost | **Net**       |
+| -------- | ---------- | --------- | ------ | ------------------------- | ---------- | ------------- |
+| Jan      | 8          | 34        | 0      | 1                         | 35         | **-27**       |
+| Feb      | 8          | 34        | 0      | 1                         | 35         | **-27**       |
+| Mar      | 8          | 34        | 0      | 1                         | 35         | **-27**       |
+| Apr      | 8          | 34        | 15     | 1                         | 50         | **-42**       |
+| May      | 65         | 34        | 15     | 7                         | 56         | **+9**        |
+| Jun      | 62         | 34        | 0      | 6                         | 40         | **+22**       |
+| Jul      | 57         | 34        | 0      | 6                         | 40         | **+17**       |
+| Aug      | 40         | 34        | 0      | 4                         | 38         | **+2**        |
+| Sep      | 75         | 34        | 40     | 8                         | 82         | **-7**        |
+| Oct      | 140        | 34        | 0      | 14                        | 48         | **+92**       |
+| Nov      | 89         | 34        | 0      | 9                         | 43         | **+46**       |
+| Dec      | 76         | 34        | 0      | 8                         | 42         | **+34**       |
+| **2026** | **~£636k** | £408k     | £70k   | ~£66k                     | £544k      | **+£92k net** |
 
 ## Cumulative cash — starting April at £240k
 
@@ -182,12 +185,12 @@ projection moves from ~£464k to **~£408k** — still well above £150k reserve
 | Jun               | +22 | £229k           |
 | Jul               | +17 | £246k           |
 | Aug               | +2  | £248k           |
-| Sep               | +1  | £249k           |
-| Oct               | +99 | £348k           |
-| Nov               | +64 | £412k           |
-| Dec               | +52 | **£464k**       |
+| Sep               | -7  | £241k           |
+| Oct               | +92 | £333k           |
+| Nov               | +46 | £379k           |
+| Dec               | +34 | **£413k**       |
 
-**Cash never goes negative. Peak minimum £198k (April).** Year-end £464k (~$585k).
+**Cash never goes negative. Peak minimum £198k (April).** Year-end £413k (~$523k). Above £150k reserve floor throughout.
 
 ## Sensitivity scenarios
 
@@ -197,16 +200,16 @@ projection moves from ~£464k to **~£408k** — still well above £150k reserve
 - Elysium Phase B lands October with $7.5M allocation
 - Desmond contracts May
 - India Options lands October
-- Signal leasing 2 counterparties per deck
-- Year-end cash: **£464k**
+- Signal leasing 2 counterparties live Sept 2026 at ~$5k/mo combined (£4k/mo)
+- Year-end cash: **£413k**
 
 ### Upside case
 
 - BTC ML @ 20% annualised → +£15-20k/mo H2 uplift
 - Elysium Phase B $10M and lands August → +£6-12k
 - Elysium total upsell reaches $200k+ → +£15k
-- Signal leasing 3 counterparties by end-year → +£8k
-- Year-end cash: **£570-620k**
+- Signal leasing 3rd counterparty by end-year → +£4-8k
+- Year-end cash: **£520-570k**
 
 ### Downside case
 
@@ -226,7 +229,7 @@ projection moves from ~£464k to **~£408k** — still well above £150k reserve
 
 1. **Self-funding through 2026** — even in downside scenarios, cash stays positive and ends year ≥ opening. No bridge
    capital required.
-2. **India Options is the biggest single-month cash event** (October £99k net). Preserve by protecting S&P ML signal
+2. **India Options is the biggest single-month cash event** (October £92k net). Preserve by protecting S&P ML signal
    delivery.
 3. **Elysium upsells materially shape Q3-Q4 revenue** — pulling MEV / Solana / recursive-staking upsells earlier
    improves mid-year cashflow.
