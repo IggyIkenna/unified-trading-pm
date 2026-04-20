@@ -382,7 +382,7 @@ start_ui() {
   [ "$DEV_UI_SKIP_AUTH" = "true" ] && ui_env+=(VITE_SKIP_AUTH=true)
   # Use npx vite directly (not npm run dev) so the PID we capture is the
   # actual vite/node process, not an npm wrapper that exits immediately.
-  env "${ui_env[@]}" npx vite --port "$ui_port" > "/tmp/unified-dev-pids/${ui_repo}.log" 2>&1 &
+  env ${ui_env[@]+"${ui_env[@]}"} npx vite --port "$ui_port" > "/tmp/unified-dev-pids/${ui_repo}.log" 2>&1 &
   local pid=$!
   echo "$pid" > "${PID_DIR}/${ui_repo}.pid"
   # Also persist the port so dev-stop.sh can kill by port as a fallback
