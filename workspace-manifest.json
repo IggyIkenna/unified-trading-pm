@@ -720,6 +720,7 @@
       ],
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 84,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
       "notes": "New repo 2026-04-20 \u2014 Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
