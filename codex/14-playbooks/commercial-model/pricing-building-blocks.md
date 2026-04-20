@@ -9,9 +9,11 @@ scope: [sales, admin]
 > Point values resolve per engagement.
 >
 > **Internal-cost column is codex-private** per [rule 08](../_ssot-rules/08-pricing-principles.md) §Internal cost column
-> is codex-private. Finance populates cost numbers before Q3 2026; cost-column entries remain empty in this doc and
-> never appear in any client-facing quote or demo. The public-facing structure (Tier A / Tier B / modifier blocks) is
-> locked.
+> is codex-private. Populated 2026-04-20 from the ~£34k/mo base burn in
+> [`revenue-projection-2026-monthly.md`](revenue-projection-2026-monthly.md) §Monthly cost decomposition using the
+> allocation methodology below. These cost-column entries never appear in any client-facing quote, demo, or website
+> surface — they live only here and in the Stage 3C `cost()` derivation read path for callers with
+> `pricing.read_internal` capability. The public-facing structure (Tier A / Tier B / modifier blocks) is locked.
 
 **Rule source:** [rule 08 — pricing principles](../_ssot-rules/08-pricing-principles.md)
 
@@ -37,21 +39,69 @@ Three columns, thirteen rows. Internal column stays codex-private; Tier A is cos
 upfront + fixed monthly. Ranges mirror the signals-only anchor table in
 [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md).
 
+**Internal-cost column populated 2026-04-20** from the base-burn line items in
+[`revenue-projection-2026-monthly.md`](revenue-projection-2026-monthly.md) §Monthly cost decomposition (~£34k/mo base
+burn across 2.5 FTE engineering + data + cloud + corporate overhead). Allocation methodology is documented under
+[Internal-cost allocation methodology](#internal-cost-allocation-methodology) below. Numbers are anchors — per-deal
+cost-plus quotes pull the specific venue/chain/data licence figures in play. These entries stay codex-private per rule
+08 and never appear in client-facing quotes, demos, or the website.
+
 | #   | Block                                | Internal monthly cost | Tier A (cost-plus, variable) | Tier B fixed monthly                                | Tier B upfront                                  |
 | --- | ------------------------------------ | --------------------- | ---------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| 1   | Reporting core                       | codex-private (TBD)   | cost-plus monthly            | £3-5k/mo                                            | £10-20k                                         |
-| 2   | Regulatory umbrella reporting        | codex-private (TBD)   | cost-plus monthly            | £8-15k/mo                                           | £20-40k                                         |
-| 3   | IM allocator reporting               | codex-private (TBD)   | cost-plus monthly            | £3-6k/mo                                            | £10-20k                                         |
-| 4   | Strategy-service entry               | codex-private (TBD)   | cost-plus per-tenant-slot    | £0.4-0.8k per strategy/mo                           | £5-10k                                          |
-| 5   | Instructions integration (see depth) | codex-private (TBD)   | cost-plus per-depth          | £2-20k/mo (by depth)                                | £5-15k                                          |
-| 6   | Research / promote pipeline          | codex-private (TBD)   | not available on Tier A      | £5-15k/mo bundled credits                           | £15-30k                                         |
-| 7   | Execution layer                      | codex-private (TBD)   | cost-plus usage-variable     | £3-6k/mo                                            | £10-20k                                         |
-| 8   | Venue packs (per venue)              | codex-private (TBD)   | cost-plus per venue          | £1-2k per primary / £0.5-1k per marginal            | £3-8k per venue                                 |
-| 9   | Chain packs (per chain)              | codex-private (TBD)   | cost-plus per chain          | £0.5-1.5k per chain/mo                              | £2-5k per chain                                 |
-| 10  | Instrument-type packs (per type)     | codex-private (TBD)   | cost-plus per type           | £1-3k per type/mo                                   | £3-6k per type                                  |
-| 11  | Analytics packs (per family)         | codex-private (TBD)   | cost-plus per pack           | £0.5-3k per pack/mo                                 | £2-5k per pack                                  |
+| 1   | Reporting core                       | £1.8-2.5k             | cost-plus monthly            | £3-5k/mo                                            | £10-20k                                         |
+| 2   | Regulatory umbrella reporting        | £4-6k                 | cost-plus monthly            | £8-15k/mo                                           | £20-40k                                         |
+| 3   | IM allocator reporting               | £1.2-2k               | cost-plus monthly            | £3-6k/mo                                            | £10-20k                                         |
+| 4   | Strategy-service entry               | £0.2-0.4k per slot    | cost-plus per-tenant-slot    | £0.4-0.8k per strategy/mo                           | £5-10k                                          |
+| 5   | Instructions integration (see depth) | £1-10k (by depth)     | cost-plus per-depth          | £2-20k/mo (by depth)                                | £5-15k                                          |
+| 6   | Research / promote pipeline          | £3-6k                 | not available on Tier A      | £5-15k/mo bundled credits                           | £15-30k                                         |
+| 7   | Execution layer                      | £1.5-3k               | cost-plus usage-variable     | £3-6k/mo                                            | £10-20k                                         |
+| 8   | Venue packs (per venue)              | £0.3-0.8k per venue   | cost-plus per venue          | £1-2k per primary / £0.5-1k per marginal            | £3-8k per venue                                 |
+| 9   | Chain packs (per chain)              | £0.2-0.5k per chain   | cost-plus per chain          | £0.5-1.5k per chain/mo                              | £2-5k per chain                                 |
+| 10  | Instrument-type packs (per type)     | £0.3-1k per type      | cost-plus per type           | £1-3k per type/mo                                   | £3-6k per type                                  |
+| 11  | Analytics packs (per family)         | £0.2-1k per pack      | cost-plus per pack           | £0.5-3k per pack/mo                                 | £2-5k per pack                                  |
 | 12  | Exclusivity / non-compete premium    | n/a (modifier)        | Not available on Tier A      | 20-200% uplift on Tier B monthly (by IP-power tier) | —                                               |
 | 13  | Custom solution premium              | n/a (modifier)        | Not available on Tier A      | 10-25% of build fee annualised                      | engineering-hours × loaded cost × 1.5-2× margin |
+
+### Internal-cost allocation methodology
+
+Base burn of **~£34k/mo** (from [`revenue-projection-2026-monthly.md`](revenue-projection-2026-monthly.md)) breaks down
+into three layers:
+
+**Layer 1 — shared corporate overhead (~£6-7k/mo, not block-allocated):** FCA (£0.83), audit (£1.67), registrar (£0.33),
+banking (£0.05), AML (£1.0), SaaS (£2.0), agentic AI (£2.0). Spread across all active client contracts. Not a per-block
+line — shows up inside the Tier B "whole-contract" monthly.
+
+**Layer 2 — data + licence costs (~£4.67k/mo, allocated to blocks 8/9/10/11):** Tardis (£0.67), DeFi data Graph+Alchemy
+(£1.0), Sports data API-Football+weather (£1.0), TradFi data (£2.0). Allocated by domain — venue packs get roughly
+one-third, chain packs one-fifth, instrument-type packs one-third, analytics packs the remainder.
+
+**Layer 3 — engineering + cloud (~£21k/mo, allocated to blocks 1-7):** Engineering 2.5 FTE (£16.0) + GCP cloud (£5.0) =
+£21k/mo. Weighted by implementation+maintenance load:
+
+- Block 1 (reporting core): 10% → ~£2.1k
+- Block 2 (reg umbrella): 20% (FCA + reg workflow is engineering-heavy) → ~£5k (incl. regulatory-eng uplift)
+- Block 3 (IM reporting): 8% → ~£1.7k
+- Block 4 (strategy slot): variable; ~£0.3k/slot at steady-state
+- Block 5 (instructions integration): 10-50% depending on depth (minimal → rich)
+- Block 6 (research/promote): 18% → ~£3.8k
+- Block 7 (execution layer): 10% → ~£2.1k
+
+Block 12 and 13 are modifiers with no direct internal cost — margin on engineering hours (block 13) and revenue-forgone
+× margin (block 12) drive the external price.
+
+**Review cadence**: finance revisits the allocation every quarter or on any ±15% change in base burn (e.g. an additional
+FTE, new data vendor). Re-allocation commit message:
+`chore(pricing): re-populate internal-cost column per finance YYYY-MM-DD`.
+
+### Block 5 — internal cost by instruction-schema depth
+
+Per rule 10 schema-depth pricing dimension:
+
+| Block 5 depth | Internal | Tier A    | Tier B monthly | Tier B upfront                                            |
+| ------------- | -------- | --------- | -------------- | --------------------------------------------------------- |
+| Minimal       | £1-2k    | cost-plus | £2-4k/mo       | £5-10k                                                    |
+| Standard      | £2-4k    | cost-plus | £4-8k/mo       | £8-15k                                                    |
+| Rich          | £4-10k   | cost-plus | £8-20k/mo      | £10-15k (often with block 13 custom premium layered over) |
 
 ### Licensing-constraint notes per block
 
@@ -70,15 +120,10 @@ Blocks 1, 2, 3, 4, 5, 6, 7, 12, 13 do not carry upstream-data-licensing constrai
 
 ### Schema depth as a pricing dimension inside block 5
 
-Per [rule 10 §Schema depth as a pricing dimension](../_ssot-rules/10-strategy-instruction-schema-principles.md) and rule
-05 block 5 description, instruction-schema depth (minimal / standard / rich) shapes the block 5 price. Three sub-lines
-per tier:
-
-| Block 5 depth | Internal            | Tier A    | Tier B monthly | Tier B upfront                                            |
-| ------------- | ------------------- | --------- | -------------- | --------------------------------------------------------- |
-| Minimal       | codex-private (TBD) | cost-plus | £2-4k/mo       | £5-10k                                                    |
-| Standard      | codex-private (TBD) | cost-plus | £4-8k/mo       | £8-15k                                                    |
-| Rich          | codex-private (TBD) | cost-plus | £8-20k/mo      | £10-15k (often with block 13 custom premium layered over) |
+Block 5's depth-table is rendered inside the main pricing table above (see §Block 5 — internal cost by
+instruction-schema depth). Per
+[rule 10 §Schema depth as a pricing dimension](../_ssot-rules/10-strategy-instruction-schema-principles.md) and rule 05
+block 5 description, instruction-schema depth (minimal / standard / rich) shapes the block 5 price.
 
 ### Block 12 — exclusivity uplift by IP-power tier
 
@@ -171,20 +216,25 @@ path** alongside DART, IM, Reg Umbrella.
 ## How numbers populate (finance process)
 
 Odum finance owns the internal cost column and is responsible for tightening the Tier A/B external-facing ranges where
-required. The process:
+required.
 
-1. **Finance-drafts pass.** Finance produces internal cost numbers using cost analysis, market benchmarks, and the
-   per-block commercial rationale documented in
-   [`../_ssot-rules/08-pricing-principles.md`](../_ssot-rules/08-pricing-principles.md).
-2. **Leadership review.** Finance's draft is reviewed against commercial strategy (where the firm wants to land across
-   DART vs IM vs Reg Umbrella buyers; where exclusivity premiums should bite; the usage-variable shape on Tier A packs).
-3. **Populated commit.** Internal cost numbers replace `codex-private (TBD)` entries; range tighteners (if any) replace
-   the wide anchor ranges. Commit is finance-tagged: `chore(pricing): populate numbers per finance 2026-MM-DD`.
-4. **Stage 3C derivation update.** Once numbers populate, the Stage 3C `cost(combo, tier)` formula reads from this doc.
-   See [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md).
+**Status (2026-04-20):** internal-cost column populated from the
+[`revenue-projection-2026-monthly.md`](revenue-projection-2026-monthly.md) base-burn line items using the allocation
+methodology in §The pricing table. Tier A/B external ranges remain at their anchored values from commercial strategy.
 
-No internal cost numbers leak to client-facing surfaces in the interim. The commercial-model docs are codex-private;
-demo, quote, and website surfaces do not reference internal cost.
+**Re-populate trigger:** finance re-runs the allocation whenever base burn moves ±15% or a new data vendor / engineering
+hire lands. Re-allocation commit is tagged `chore(pricing): re-populate internal-cost column per finance YYYY-MM-DD` and
+includes a line in the PR body pointing at the specific revenue-projection-2026-monthly.md revision.
+
+**Stage 3C derivation read path:** the Stage 3C `cost(combo, tier)` formula reads this doc's internal-cost column when
+the caller carries the `pricing.read_internal` capability claim; callers without the claim get an
+`InternalCostLeakageError` + compliance event (rule 08 enforcement, wired in UAC
+`internal/architecture_v2/derivation_cost.py`). See
+[`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md) and
+[`../infra-spec/stage-3e-g2-env-split.md`](../infra-spec/stage-3e-g2-env-split.md) §5.
+
+No internal cost numbers leak to client-facing surfaces. The commercial-model docs are codex-private; demo, quote, and
+website surfaces do not reference internal cost.
 
 ## What this doc does not do
 

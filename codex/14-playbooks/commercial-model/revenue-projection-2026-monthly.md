@@ -243,7 +243,8 @@ post-revision.
 
 ## Follow-ups (finance-owned)
 
-- Finance to populate `pricing-building-blocks.md` internal-cost column with the line-item data above, per-block.
+- ✅ `pricing-building-blocks.md` internal-cost column populated 2026-04-20 from the line-item data above, per-block.
+  Re-trigger on ±15% base-burn moves.
 - Finance to confirm profit-share mechanism for engineering (10% of revenue? Or of net profit?) — currently modelled as
   10% of revenue which may be aggressive.
 - Commercial to confirm CME $50k skin-in-the-game funding source + scaling option (S1 flat vs S3 reduced).
