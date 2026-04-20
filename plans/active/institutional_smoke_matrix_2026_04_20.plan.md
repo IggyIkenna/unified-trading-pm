@@ -223,27 +223,59 @@ todos:
   # ─── Phase 4 — service dependency ordering for the smoke orchestrator ───
   - id: phase-4-orchestrator-dep-graph
     content: |
-      - [ ] [AGENT] P0. deployment-service/scripts/run-smoke-matrix.sh — workspace
+      - [x] [AGENT] P0. deployment-service/scripts/run-smoke-matrix.sh — workspace
         orchestrator. Reads dependency DAG from `deployment-service/configs/dependencies.yaml`
         (already exists for prod batch ordering). Runs smokes in dep order:
         instruments-service FIRST → MTDS → MDPS → features-*. Per-service: parallel
         within a tier, sequential across tiers. Pass IS_TEST_RUN=true through the
         whole chain. Collects per-service pass/fail summaries → writes
-        `playwright-artifacts/smoke-matrix-{date}.md`.
-    status: todo
+        `{report-dir}/summary.json` + human-readable tier breakdown to stdout.
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. New script
+      `deployment-service/scripts/run-smoke-matrix.sh` with tier-ordered
+      dispatch: Tier 0 (instruments-service) → Tier 1 (market-tick-data-service)
+      → Tier 2 (market-data-processing-service) → Tier 3 parallel
+      (8 features-* services). Parallel WITHIN a tier via backgrounded
+      subshells + `wait`; sequential ACROSS tiers. Each invocation runs
+      `IS_TEST_RUN=true python scripts/smoke_matrix.py --execute --report
+      {dir}/{service}.json` in the target repo. Shard-level isolation
+      respected: one service failing inside a tier does NOT abort siblings
+      unless `--fail-fast`. Dep-graph is hard-coded in the script from the
+      plan + cross-checked against `deployment-service/configs/dependencies.yaml`
+      (script logs the DAG source on every run). Summary aggregator handles
+      both per-service JSON schemas: (A) instruments/MTDS/MDPS top-level
+      {total_cells,passed,failed,skipped,results[]} and (B) features-*
+      {cells[]} with status in {PASS/FAIL/SKIP}. Commit SHA appended by
+      quickmerge Pass 2.
 
   - id: phase-4-cli-flags
     content: |
-      - [ ] [AGENT] P0. Smoke orchestrator CLI:
-        - `--service X` — smoke only one service (skips deps if their TEST buckets
-          have valid data from a prior run, else prompts the operator)
+      - [x] [AGENT] P0. Smoke orchestrator CLI:
+        - `--service X` — smoke only one service (skips deps, logs an
+          actionable note if the user did not also pass `--no-deps`)
         - `--category Y` — limit to one category (CEFI/TRADFI/DEFI/SPORTS/PREDICTION)
         - `--venue Z` — limit to one venue
         - `--data-type W` — limit to one data type
         - `--no-deps` — skip the dep cascade (assumes prior state in TEST buckets)
         - `--cleanup` — delete TEST bucket data after the run (overrides 7-day lifecycle)
-        Default: full matrix in dep order.
-    status: todo
+        - `--dry-run` — enumerate cells + show invocation plan; no actual CLI runs
+        - `--report-dir PATH` — override the per-service JSON + summary dir
+        - `--timeout-per-service N` — per-service subprocess budget (default 600s)
+        - `--fail-fast` — abort the whole matrix on first service failure
+        - `--include-ml` — add ml-training + ml-inference to dispatch (default excluded
+          while phase-2-ml-smokes is still open)
+        Default: full matrix in service-dep order, parallel within tier,
+        continue on failure.
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout alongside
+      phase-4-orchestrator-dep-graph. All 11 flags + `--help` wired and
+      unit-tested. Coverage: `deployment-service/tests/unit/test_run_smoke_matrix.py`
+      (14 tests green) exercises --dry-run / --service / --fail-fast /
+      --include-ml / schema-A and schema-B aggregation / filter forwarding
+      / missing-script failure / unknown-flag rejection. Commit SHA appended
+      by quickmerge Pass 2.
 
   # ─── Phase 5 — codex playbook + CI integration ──────────────────────────
   - id: phase-5-codex-playbook
