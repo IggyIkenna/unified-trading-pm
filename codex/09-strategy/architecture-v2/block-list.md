@@ -258,6 +258,7 @@ handful of strategies; does not scale.
 
 ## See also
 
+- [`README.md`](README.md) — architecture-v2 taxonomy + axes.
 - [`category-instrument-coverage.md`](category-instrument-coverage.md) — full coverage matrix; BL refs live in
   `blockListRefs` on each cell.
 - [`uac-registry-gaps.md`](uac-registry-gaps.md) — UAC gap numbers cross-referenced above (#6, #7, #11).
