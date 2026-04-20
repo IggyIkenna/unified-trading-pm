@@ -83,49 +83,74 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
 
 ### Phase 8A — Audit v2 archetype declarations
 
-- [ ] [AGENT] P0. For each of the 18 v2 archetypes (enumerate from
-      `strategy-service/strategy_service/engine/strategies/v2/`), extract the `valid_pairs` declaration (or equivalent
-      capability-shaping field).
-- [ ] [AGENT] P0. Build a table: archetype_id → family → supported (category, instrument_type) pairs → supported venues
-      → axis defaults.
-- [ ] [AGENT] P0. Write the table to `/tmp/g1_8_archetype_capability_audit.md` for reference.
+- [x] [AGENT] P0. Audit surfaced that v2 archetype modules do NOT declare `valid_pairs` inline — they declare only
+      `ARCHETYPE` and `FAMILY` class vars. The matrix lives in `coverage.ts` (UI) and `category-instrument-coverage.md`
+      (codex narrative). SSOT flipped to option C (Python SSOT in UAC) per operator.
+- [x] [AGENT] P0. Seed data for the SSOT extracted from `coverage.ts` by a one-shot builder (non-canonical, disposable)
+      into `archetype_capability_manifest.json`.
+- [x] [AGENT] P0. Archetype-id + family mapping captured: 18 archetypes × 8 families, matches `ARCHETYPE_TO_FAMILY` in
+      `internal/architecture_v2/enums.py`.
 
 ### Phase 8B — Design the UAC type
 
-- [ ] [AGENT] P0. Define `ArchetypeCapabilityV2` as a frozen dataclass (or `BaseModel`) matching the existing
-      strategy_availability.py pattern:
-  - `archetype_id: str`
-  - `family: ArchetypeFamily`
-  - `supported_pairs: frozenset[tuple[Category, InstrumentType]]`
-  - `supported_venues: frozenset[VenueId]`
-  - `axis_defaults: Mapping[Axis, Any]`
-  - (+ any additional fields surfaced in audit)
-- [ ] [AGENT] P0. Define `ArchetypeCapabilityRegistry` as a thread-safe, read-mostly registry with
-      `get(archetype_id) -> ArchetypeCapabilityV2` + `all() -> Sequence[ArchetypeCapabilityV2]` +
-      `for_pair(category, instrument) -> Sequence[ArchetypeCapabilityV2]` +
-      `for_venue(venue) -> Sequence[ArchetypeCapabilityV2]`.
-- [ ] [AGENT] P0. Loader loads from a generated manifest (JSON/YAML under
-      `unified_api_contracts/internal/architecture_v2/`) that's emitted by a one-shot script that reads v2 archetype
-      declarations; manifest is committed and checked for drift.
+- [x] [AGENT] P0. `ArchetypeCapability` (no V2 suffix — operator decision 2026-04-20) is a Pydantic BaseModel
+      (`frozen=True, extra="forbid"`) with fields: `archetype_id: StrategyArchetypeV2`, `family: StrategyFamilyV2`,
+      `uses_rolling_futures: bool`, `cells: tuple[ArchetypeCapabilityCell, ...]`. Derived properties `supported_pairs`,
+      `partial_pairs`, `blocked_pairs`, `supported_venues` replace the proposed `axis_defaults` / `supported_venues` /
+      `supported_pairs` fields (richer surface per coverage.ts).
+- [x] [AGENT] P0. Module-level tuple `ARCHETYPE_CAPABILITY_REGISTRY` + free functions `capability_for`,
+      `all_capabilities`, `archetypes_for_pair(include_partial=True|False)`, `archetypes_for_venue`. Mirrors
+      `strategy_availability.py` pattern — no Lock/thread-safety needed (immutable post-load).
+- [x] [AGENT] P0. JSON manifest at `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`
+      is committed SSOT; loaded via `importlib.resources` at module init.
 
 ### Phase 8C — Implement + wire facade
 
-- [ ] [AGENT] P0. Create `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py`
-      with the type + registry + loader.
-- [ ] [AGENT] P0. Re-export from the strategy_availability facade:
-      `unified-api-contracts/unified_api_contracts/strategy_availability.py` (or wherever the public facade lives;
-      confirm in Phase 8A) adds
-      `from .internal.architecture_v2.archetype_capability import ArchetypeCapabilityV2, ArchetypeCapabilityRegistry`.
-- [ ] [AGENT] P0. Add one-shot generator script at
-      `unified-api-contracts/scripts/generate_archetype_capability_manifest.py` that reads v2 code and emits the
-      JSON/YAML manifest.
-- [ ] [AGENT] P0. Commit the generated manifest.
+- [x] [AGENT] P0. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py` created
+      with the type, registry, loader, and 4 query helpers.
+- [x] [AGENT] P0. Re-export added to existing domain facade `unified-api-contracts/unified_api_contracts/strategy.py` —
+      consumers use
+      `from unified_api_contracts.strategy import ArchetypeCapability, ARCHETYPE_CAPABILITY_REGISTRY, ...`. Also
+      re-exported from `internal/architecture_v2/__init__.py` for internal paths.
+- [x] [AGENT] P0. Serialiser/drift-checker script at
+      `unified-api-contracts/scripts/generate_archetype_capability_manifest.py` (`--write` rewrites, default `--check`
+      exits 1 on drift).
+- [x] [AGENT] P0. Manifest committed at UAC commit `2a4fff4`.
 
-### Phase 8D — Drift-detection + QG
+### Phase 8D — Drift-detection + parity + QG
 
-- [ ] [AGENT] P0. Add a UAC test that re-runs the generator in-process, compares to the committed manifest, and fails on
-      drift. Lives at `unified-api-contracts/tests/internal/unit/test_archetype_capability_manifest_parity.py`.
-- [ ] [SCRIPT] P0. UAC quality-gates green (`cd unified-api-contracts && bash scripts/quality-gates.sh`).
+- [x] [AGENT] P0. UAC parity test at `tests/internal/unit/test_archetype_capability_manifest_parity.py` with 15 asserts
+      covering: 18-archetype count, every `StrategyArchetypeV2` enum member represented, family mapping matches
+      canonical `ARCHETYPE_TO_FAMILY`, pair-status cell coverage, BLOCKED cells carry block-list refs, SUPPORTED cells
+      carry venues, `EVENT_DRIVEN` archetype/family disambiguation, manifest round-trip stability, **codex markdown
+      structural parity** (section per archetype, family groupings, archetype-under-correct-family).
+- [x] [SCRIPT] P0. UAC quality-gates: lint + typecheck green. Single pre-existing size violation on
+      `internal/schemas/contracts.py` (+40 LOC WIP from another agent) is out-of-scope — not caused by G1.8.
+
+### Phase 8E — PM sync script + UI QG wiring + Playwright spec
+
+- [x] [AGENT] P0. PM sync script `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh` (+ Python
+      body `sync_archetype_capability_to_ui.py`) reads the UAC manifest and renders
+      `unified-trading-system-ui/lib/architecture-v2/coverage.ts` with an AUTO-GENERATED banner. `--check` (default)
+      exits 1 on drift, `--write` rewrites. Committed at PM commit `9b954c0b`.
+- [x] [AGENT] P0. `unified-trading-system-ui/scripts/quality-gates.sh` updated with a pre-base-ui hook — every UI push
+      hits `bash <PM>/scripts/propagation/sync-archetype-capability-to-ui.sh --check` and aborts on drift. **Explicit
+      hook line**:
+
+      ```bash
+      # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
+      SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
+      if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
+        bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
+      fi
+      ```
+
+- [x] [AGENT] P0. `lib/architecture-v2/coverage.ts` regenerated via `--write` — now carries the AUTO-GENERATED banner,
+      matches the UAC manifest byte-for-byte.
+- [x] [AGENT] P0. Playwright spec `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` asserts:
+      canonical paths exist, manifest has 18 archetypes, `sync --check` exits 0, AUTO-GEN banner present, every
+      archetype_id in the mapping, admin persona reaches `/services/strategy-catalogue/` without redirect-off. Committed
+      at UI commit `fd1895c`.
 
 ## Critical files to be modified
 
