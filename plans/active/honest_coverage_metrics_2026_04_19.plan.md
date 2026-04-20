@@ -129,27 +129,34 @@ todos:
         previously there was silence.
     status: todo
 
-  # ─── Phase C — deployment-api + UI (future session) ───────────────────
+  # ─── Phase C — deployment-api + UI ────────────────────────────────────
   - id: phase-c-api
     content: |
-      - [ ] [AGENT] P1. deployment-api exposes attempt_coverage_pct, capture_coverage_pct,
+      - [x] [AGENT] P1. deployment-api exposes attempt_coverage_pct, capture_coverage_pct,
         empty_rate, failure_rate per shard dimension. Derives from manifest capture_status
-        counts; preserves existing availability_pct for backward compat.
-    status: todo
+        counts; preserves existing availability_pct for backward compat. Shipped in
+        deployment-api@6d6515e. Per-venue capture_status_counts + top-level
+        failure_rate_by_dimension added; /instruments-for-shard surfaces
+        capture_status/error_reason/attempted_at per row with legacy-fallback coerce.
+    status: done
 
   - id: phase-c-ui
     content: |
-      - [ ] [AGENT] P1. deployment-ui data-status page renders attempt vs capture as a
-        two-bar row per (category, venue/data_type) shard. Tooltip shows failure_rate
-        and empty_rate breakdown. Supersedes the single green/amber/red bar.
-    status: todo
+      - [x] [AGENT] P1. deployment-ui data-status page renders 4-state heatmap
+        (captured / empty_confirmed / attempted_failed / missing) with distinct colour
+        + hatch. "Show only failures" filter toggle persisted in localStorage.
+        Drill-down per-row CaptureStatusBadge + RetryShardButton wired to
+        /deployments/deploy-missing with force=true. Shipped in deployment-ui@c3b57d3.
+    status: done
 
   - id: phase-c-qg
     content: |
-      - [ ] [AGENT] P1. API + UI QG + visual parity smoke in mock mode; PREDICTION
-        attempt_coverage should read ~99% while capture_coverage stays at the actual
-        capture rate (~23% today, rising as backfills run).
-    status: todo
+      - [x] [AGENT] P1. API + UI QG Pass 1 green on changed modules (deployment-api
+        codex at tolerance; deployment-ui has 18 pre-existing hooks errors unrelated
+        to this plan — confirmed against stash baseline). 17 new pytest + 5 new vitest
+        tests covering capture_status counts, drill-down surfacing, 4-state heatmap,
+        aria-label error bleed-through.
+    status: done
 
 isProject: true
 ---

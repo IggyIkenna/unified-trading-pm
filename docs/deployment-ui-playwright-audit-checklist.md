@@ -163,12 +163,15 @@ Validate BOTH appear in the service rail and BOTH have Data Status tabs.
 
 #### 2.B.3 Heatmap calendar
 
-| #      | Expectation                                                                                                                    |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| 2.B.3a | `HeatmapCalendar` renders one cell per day in range                                                                            |
-| 2.B.3b | Green = full coverage, yellow = partial, red = missing, grey = pre-launch                                                      |
-| 2.B.3c | Hovering a day shows tooltip `YYYY-MM-DD — <n>/<m> shards`                                                                     |
-| 2.B.3d | Pre-launch days (before `expected_start_dates.yaml` category_start) render **grey** and are **not counted** in the denominator |
+| #      | Expectation                                                                                                                                                                                                                                                                                              |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.B.3a | `HeatmapCalendar` renders one cell per day in range                                                                                                                                                                                                                                                      |
+| 2.B.3b | Green = captured, grey hatch = empty_confirmed, red diagonal hash = attempted_failed, solid red = missing (not attempted), grey = pre-launch                                                                                                                                                             |
+| 2.B.3c | Hovering a day shows tooltip `YYYY-MM-DD — <n>/<m> shards`                                                                                                                                                                                                                                               |
+| 2.B.3d | Pre-launch days (before `expected_start_dates.yaml` category_start) render **grey** and are **not counted** in the denominator                                                                                                                                                                           |
+| 2.B.3e | **Phase C — honest-coverage:** every cell renders exactly ONE of the 4 states: `captured` / `empty_confirmed` / `attempted_failed` / `missing` (plus the structural `future` / `no_expectation`). No "unknown" state is permitted. Cell's `data-status` attribute MUST be one of these values.           |
+| 2.B.3f | **Phase C — legend 4-state:** legend renders all four honest-coverage chips with `data-legend-state` attributes (`captured`, `empty_confirmed`, `attempted_failed`, `missing`). `attempted_failed` uses a red diagonal hash so it is visually distinct from solid red `missing` even in monochrome mode. |
+| 2.B.3g | **Phase C — failed aria-label:** clicking or keyboard-focusing an `attempted_failed` cell, the `aria-label` attribute MUST contain the classified error code from `error_reason` (e.g. `RATE_LIMIT_HIT`, `GRAPH_API_ERROR`).                                                                             |
 
 ---
 
@@ -286,6 +289,27 @@ as ✅ fixed or ❌ regressed.
 | 5.4 | Rate-metric rows (events/day) rendered 100% green bar                                                      | deployment-ui `ed2d198`              | Sports `FIXTURE_EVENTS` row — see §1.2                                                                                       |
 | 5.5 | Uniswap schema popup returned `symbol_column=symbol` for all Uniswap venues (override module not imported) | UAC `7a17536`                        | `UNISWAP_V3` schema should show `symbol_column=pool_address`, `UNISWAP_V4` should show `pool_id`                             |
 | 5.6 | Polymarket shard denominator `2806/401` mixed shard numerator with date denominator                        | same as 5.2                          | Prediction Polymarket row should show `X shards / Y shards` consistent units                                                 |
+
+---
+
+## 5b. Phase C — honest-coverage assertions (4-state + filter + retry)
+
+Every row is a new expectation introduced by the `honest_coverage_metrics_2026_04_19` plan (Phase C). Agent MUST assert
+each item explicitly; missing or incorrect = ❌ regressed.
+
+| #    | Expectation                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5b.1 | **Heatmap 4-state coverage:** every cell in any heatmap view renders exactly one of `{captured, empty_confirmed, attempted_failed, missing, future, no_expectation}`. No `unknown` state is permitted. Verified by reading `data-status` on each `[data-testid^="heatmap-day-"]`.                                                                                                                              |
+| 5b.2 | **Event-driven rows (PREDICTION + SPORTS):** show `"X% attempted · Y% captured (Z% empty)"` via `formatEventDrivenCoverageLabel`, not a single percentage. Verified via `[data-testid="event-driven-label-PREDICTION"]` text content.                                                                                                                                                                          |
+| 5b.3 | **Dense rows (CEFI / TRADFI / DEFI):** stay as a single percentage bar (no attempt/capture split). No regression of 2.B.3 layout.                                                                                                                                                                                                                                                                              |
+| 5b.4 | **Show only failures toggle:** the `[data-testid="show-only-failures-toggle"]` checkbox above the Category Breakdown card narrows the visible categories to those with `failure_rate > 0` when checked ON, restores on OFF. Preference persists in `localStorage['deployment-ui/show-only-failures']` (value `"1"` when on, `"0"` when off).                                                                   |
+| 5b.5 | **Drill-down shows capture_status badge:** clicking an `attempted_failed` day opens InstrumentsModal; each `[data-testid="shard-row-<id>"]` row carries a `[data-testid^="capture-status-badge-"]` badge whose `data-capture-status` matches the manifest row. The badge tooltip exposes `error_reason` text.                                                                                                  |
+| 5b.6 | **Retry button on failed rows:** for every shard row with `data-capture-status="attempted_failed"` a `[data-testid^="retry-shard-button-"]` button is rendered. Clicking fires a confirm() dialog; on accept, a `POST /deployments/deploy-missing` call is made with `force=true` + `start_date == end_date == day` + the correct service/category/venue in the body. Verified via `browser_network_requests`. |
+| 5b.7 | **Retry action fails loud:** if the POST returns non-2xx the button flips to `Retry failed` and `data-retry-status="err"`. If 2xx, flips to `Retried ✓` and `data-retry-status="ok"`.                                                                                                                                                                                                                          |
+| 5b.8 | **API surfaces capture_status_counts:** `/data-status/manifest` (and `/turbo`) response carries `capture_status_counts: {captured, empty_confirmed, attempted_failed}` per category and per venue, and a top-level `failure_rate_by_dimension` map keyed by venue containing `{failure_rate, attempted_failed_count}`. Verified by capturing the network response.                                             |
+| 5b.9 | **Drill-down endpoint surfaces capture metadata:** `/data-status/instruments-for-shard` response carries `capture_status`, `error_reason`, `attempted_at` on every item in `instruments[]`. Legacy manifest rows (no v5 column) coerce to `capture_status: "captured"` + empty `error_reason`/`attempted_at`. Verified by calling the endpoint for a known-post-Phase-B shard.                                 |
+
+Each row above maps to concrete DOM selectors / network assertions so the Playwright agent does not have to guess.
 
 ---
 
