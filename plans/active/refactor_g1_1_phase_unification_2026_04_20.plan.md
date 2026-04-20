@@ -264,3 +264,197 @@ git push origin live-defi-rollout
 - Playwright spec path + pass status.
 - Commit SHA pushed to live-defi-rollout.
 - Any blockers or gaps flagged for the user.
+
+## Micro-execution plan (sub-agent Phase 1)
+
+Drafted 2026-04-20 in plan-mode — no code touched yet. Awaiting explicit re-entry approval before executing.
+
+### Scope reality-check (read-only scan done during plan drafting)
+
+- `next.config.ts` referenced in plan does NOT exist — file is actually `next.config.mjs` (lines 80–300 already contain
+  a fully-wired `redirects()` block with 50+ entries). All Phase 1C redirect additions MUST land in `next.config.mjs`.
+  Plan prose at line 91 + 115 + 236 is the only source of the incorrect `.ts` suffix; real file is `.mjs`. No re-point
+  of the plan needed — deliverable spec in Critical Files is corrected inline in Phase 1C below.
+- App-router tree is Next.js App Router with route groups: forks live under `app/(platform)/services/research/**` vs
+  `app/(platform)/services/trading/**` (NOT a bare `app/services/`). Phase 1A audit path prefix is
+  `app/(platform)/services/`.
+- Forks short-list (confirmed via `ls` of both dirs, to be formalised in `/tmp/g1_1_fork_audit.md`):
+  - `research/strategies/page.tsx` vs `trading/strategies/{page,[id],basis-trade,grid,model-portfolios,staked-basis}` —
+    **intentional split** (research = catalogue enumeration, trading = live book per strategy). Keep.
+  - `research/execution/page.tsx` vs `trading/terminal/`, `trading/book/`, `trading/orders/`, `trading/positions/` —
+    **intentional split** (research = execution-policy config, trading = live venue terminal). Keep with doc-comment.
+  - `research/strategy/catalog/` (IM catalog) vs `strategy-catalogue/` top-level service — already split; not a phase
+    fork. Keep.
+  - `research/overview/` vs `trading/overview/` — **intentional split** (research landing vs trading desk landing).
+  - No true-duplicate page trees detected in the scan. Audit output will likely classify all pairs as intentional splits
+    (doc-comment only) or near-duplicates (port-delta + consolidation). No deletions expected.
+- Shell-component branch sites (rg-confirmed):
+  - `components/shell/lifecycle-nav.tsx` lines 104–112 — entitlement routing branching on
+    `path.startsWith("/services/research")` / `/services/trading` / `/services/execution` — **must become phase-aware**
+    via `usePhaseFromRoute()` output.
+  - `components/shell/service-tabs.tsx` and `lib/lifecycle-route-mappings.ts` — both hard-code parallel
+    `/services/research/*` and `/services/trading/*` tab definitions. Phase 1B must thread `phase` prop so each tab
+    block can be emitted by a single data-driven generator with a phase switch (or keep parallel tab lists but resolve
+    their target URLs through `usePhaseBinding(phase)`).
+  - `components/shell/spaces-nav-sections.tsx` line 92 — single static `/services/research/strategy/catalog` link. Must
+    be replaced with a phase-aware link that resolves via `usePhaseBinding` or at minimum documents why a static link is
+    correct (catalogue is phase-agnostic IM surface).
+  - `components/shell/breadcrumbs.tsx`, `trading-vertical-nav.tsx`, `notification-bell.tsx`, `command-palette.tsx` also
+    reference `/services/research` and/or `/services/trading` — Phase 1A audit will classify each as either (a)
+    phase-branching (must thread `phase`) or (b) static link (leave as-is, doc-comment).
+
+### Files × line ranges × commit sequence
+
+All edits land in `unified-trading-system-repos/unified-trading-system-ui`. No other repo touched.
+
+**Commit 1 — Phase 1A audit artefact (read-only, no code change)**
+
+- New file: `/tmp/g1_1_fork_audit.md` (NOT committed — scratch only; referenced by audit body embedded in commit 2
+  alongside phase primitives).
+
+**Commit 2 — Phase 1B primitives (new `lib/phase/` package; ZERO call-site changes)**
+
+- New: `lib/phase/types.ts` (≤20 LOC) — closed enum `type Phase = "research" | "paper" | "live"` + `PHASES` tuple +
+  narrowing `isPhase(x): x is Phase`.
+- New: `lib/phase/use-phase-from-route.ts` (≤40 LOC) — `usePhaseFromRoute(): Phase` hook reading `usePathname()` and
+  returning `research` for `/services/research/**`, `live` for `/services/trading/**` + `/services/execution/**`,
+  default `research`. Paper phase is opt-in via `?phase=paper` querystring (read through `useSearchParams`).
+- New: `lib/phase/use-phase-binding.ts` (≤60 LOC) — `usePhaseBinding(phase: Phase)` returns
+  `{ phase, fetcher, baseUrl, wsUrl, resolvePath }` where `resolvePath(segment)` maps a phase-agnostic segment
+  (`"/strategy/overview"`) to a fully-qualified phased URL (`/services/research/strategy/overview` for research,
+  `/services/trading/strategy/overview` for live, `/services/trading/strategy/overview?phase=paper` for paper).
+- Unit tests (vitest): `lib/phase/__tests__/phase.spec.ts` — narrowing, route-inference, `resolvePath` matrix.
+- **Commit message:** `refactor(ui): G1.1 phase-B introduce closed Phase enum + usePhaseBinding hook`
+- **Intended state after commit:** phase primitives exist but are NOT wired into any consumer; app behaviour unchanged;
+  vitest green; build green.
+
+**Commit 3 — Phase 1B thread (consumers accept `phase` prop; no route-string branching in shell)**
+
+- Modify `components/shell/lifecycle-nav.tsx`:
+  - Lines 87 + 139–140: add `const phase = usePhaseFromRoute();` next to `const pathname = usePathname() || "";`.
+  - Lines 102–113 (`isItemAccessible`): keep entitlement gates but replace the raw
+    `path.startsWith("/services/research")` checks with a derivation from the route's phase-aware mapping: compute
+    `const itemPhase = phaseForPath(item.path)` via a small helper and drop the string-prefix branching on the render
+    side. (The shell still needs to know which entitlement gate to apply — that's metadata on the route, not a shell
+    responsibility. Move the entitlement predicate into `lib/lifecycle-route-mappings.ts` as a `requiredEntitlement`
+    field on each mapping.)
+  - NO JSX/DOM change — component tree identical pre/post.
+- Modify `components/shell/service-tabs.tsx`:
+  - Currently stateless — prop signature already takes `tabs: ServiceTab[]` from callers. Add a `phase?: Phase` prop
+    - thread it through `TabRow` for use in `data-phase` attribute (for Playwright assertions). No URL rewriting here —
+      URL rewriting happens upstream in the callers (research/trading layouts) via `usePhaseBinding`.
+- Modify `components/shell/spaces-nav-sections.tsx`:
+  - Line 92: `href="/services/research/strategy/catalog"` — this is the IM strategy catalogue entry point, which is
+    phase-agnostic (it's a _catalogue_ of strategies across all phases). Add inline doc-comment stating the split is
+    intentional-catalogue, not phase-forked; no code change.
+- Modify `lib/lifecycle-route-mappings.ts`:
+  - Lines 17–297 (research routes) + lines 196–297 (trading routes): add `phase: Phase` metadata field to each mapping
+    so consumers can bind without string-prefix parsing.
+  - Add `requiredEntitlement?: string | TradingEntitlement` field so `lifecycle-nav.tsx` no longer needs path-string
+    branching for entitlement gating.
+- Modify `components/shell/breadcrumbs.tsx`, `trading-vertical-nav.tsx`, `notification-bell.tsx`, `command-palette.tsx`:
+  - For each `startsWith("/services/research")` / `startsWith("/services/trading")` occurrence, replace with
+    `phaseForPath(pathname) === "research"` / `=== "live"` using the new helper from
+    `lib/phase/use-phase-from-route.ts`.
+  - No DOM change.
+- Tests: extend `lib/phase/__tests__/phase.spec.ts` with route-mapping coverage + add component smoke spec for
+  `lifecycle-nav` asserting `data-phase` attribute flips when pathname changes.
+- **Commit message:** `refactor(ui): G1.1 phase-B thread Phase prop through shell (no DOM change)`
+
+**Commit 4 — Phase 1C redirects + fork-collapse (DELETE only where audit classifies as true-duplicate)**
+
+- Modify `next.config.mjs` (NOT `.ts`) within the existing `redirects()` block (~line 80–300): add `?phase=X`-preserving
+  rules ONLY for forks that the Phase 1A audit classifies as true-duplicate. Current scan suggests 0 true-duplicate
+  pairs — so this commit may be a no-op on `next.config.mjs`. Still run it as its own commit so the intent is
+  documentable.
+- Delete forked page dirs per audit — **expected to be empty set** based on current scan.
+- Add doc-comments at the top of `app/(platform)/services/research/page.tsx`, `app/(platform)/services/trading/page.tsx`
+  (and research vs trading overview/strategies/execution entry points) stating why each is an intentional split, not a
+  phase fork.
+- **Commit message:** `refactor(ui): G1.1 phase-C doc intentional splits + (redirects if any true-dup)` — message is
+  adaptive based on audit outcome.
+
+**Commit 5 — Phase 1D Playwright durable spec + QG wiring**
+
+- New: `tests/e2e/playbooks/refactor/refactor-g1-1-phase-unification.spec.ts` — mirrors existing
+  `research-and-documentation.spec.ts` shape. Must:
+  1. `import { seedPersona } from "../seed-persona";` — seed `admin`.
+  2. Walk canonical click-path landing → services portal → `/services/research/strategies` →
+     `/services/trading/strategies` → assert identical component-tree roots via
+     `expect(page.locator('[data-testid="phase-root"]')).toBeVisible()` and `getAttribute("data-phase")` flips from
+     `research` → `live`.
+  3. Assert visibility-slicing stub vs `usePhaseBinding` return values (G1.6 replaces with real `access_control` formula
+     when it ships).
+  4. Orphan-reachability: for every `/services/research/*` page reached by the crawl, assert it's reachable from main
+     nav (no URL-only pages).
+- Wire into `scripts/quality-gates.sh` Playwright step — check existing script first; if Playwright step is already
+  generic (`npx playwright test`), no edit needed; if per-spec-listed, add the new spec filename.
+- **Commit message:** `refactor(ui): G1.1 phase-D Playwright durable spec + QG wiring`
+
+**Commit 6 — Final: quickmerge (two-pass)**
+
+- Pass 1: `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — full gate local.
+- Pass 2:
+  `bash scripts/quickmerge.sh "refactor(ui): G1.1 — phase unification (no forked research/paper/live trees)" --agent`.
+- If WIP on live-defi-rollout blocks quickmerge, fall back to manual `git push origin live-defi-rollout` per plan's
+  Commit strategy fallback.
+
+### Playwright assertions (MCP dev loop + durable spec)
+
+- **MCP dev loop** (pre-spec iteration on `localhost:3010` via `bash scripts/dev-tiers.sh --tier 1`):
+  1. `browser_navigate` → `http://localhost:3010/services/research/strategies` → `browser_snapshot` → record DOM tree +
+     `data-phase` attribute.
+  2. `browser_navigate` → `http://localhost:3010/services/trading/strategies` → `browser_snapshot` → diff DOM tree:
+     should be IDENTICAL modulo data-bound content (rows, counters). Only `data-phase` should flip.
+  3. `browser_navigate` → `http://localhost:3010/services/research/strategies?phase=paper` → `browser_snapshot` →
+     `data-phase="paper"`, same tree.
+  4. Iterate until every phased surface from the audit behaves this way.
+- **Durable spec assertions** (in `refactor-g1-1-phase-unification.spec.ts`):
+  - `expect(getAttribute("[data-testid='phase-root']", "data-phase")).toBe("research")` after navigating research URL.
+  - `expect(getAttribute("[data-testid='phase-root']", "data-phase")).toBe("live")` after navigating trading URL.
+  - `expect(tree.snapshot()).toEqualForStructure(researchTree.snapshot())` — structural equality modulo data values.
+  - Orphan-reachability: crawl main nav, collect reachable paths, assert superset of URLs visited in step 1.
+
+### Guardrails (echoed from plan's "What NOT to do")
+
+- No `_archived_pre_v2/` references.
+- No `git reset --hard` / `git push --force`.
+- No `--dep-branch`.
+- No cherry-picking around unrelated WIP on `live-defi-rollout`.
+- No skipping MCP Playwright dev loop.
+- No touching G2/G3.
+- No new phases beyond `research | paper | live`.
+- No stale forked dirs left behind.
+
+### Unresolved questions for operator approval
+
+1. **Paper phase URL convention** — plan says `?phase=<X>` query param OR "route-segment binding" (line 93). The
+   micro-plan proposes `research`/`live` as distinct route prefixes + `?phase=paper` as a query-param opt-in riding on
+   the live tree (paper is _live execution with matching-engine fills_, not a separate service). Operator: confirm OR
+   specify a dedicated `/services/paper/**` route prefix instead. **Default if no answer: `?phase=paper` on live
+   prefix.**
+2. **Audit outcome expectation** — current reconnaissance suggests all research/trading page pairs are intentional
+   splits (catalogue vs terminal etc.), not phase forks. Expected deletions: 0. Expected redirects: 0. Operator: if you
+   believe a specific pair IS a true duplicate that should collapse, name it now so Phase 1C can plan the deletion
+   explicitly; otherwise proceed with "doc-only" Phase 1C.
+3. **`lifecycle-route-mappings.ts` schema extension** — adding `phase` + `requiredEntitlement` fields is a breaking
+   schema change for any external consumer that reads this object.
+   `rg -n "lifecycle-route-mappings" unified-trading-system-ui/` will enumerate consumers before committing to the
+   extension. If consumers resist the schema change, fallback is to keep the mapping dumb and introduce a separate
+   `lib/phase/route-phase-registry.ts` side-table.
+4. **MCP Playwright dev server** — plan mandates `localhost:3010` via `bash scripts/dev-tiers.sh --tier 1`, but port
+   3010 is the non-standard dev port for tier-1 UI. Confirm this server will actually be running when the agent
+   re-enters; otherwise agent must `bash scripts/dev-tiers.sh --tier 1` first and wait for readiness probe.
+
+### Success gates (pre-quickmerge)
+
+1. `rg -n "pathname.startsWith\(['\"]/services/research" unified-trading-system-ui/components/shell/` → zero hits.
+2. `rg -n "pathname.startsWith\(['\"]/services/trading" unified-trading-system-ui/components/shell/` → zero hits (added
+   as a secondary invariant).
+3. `rg -l "phase:\s*Phase" unified-trading-system-ui/components/shell/` → ≥ 3 files.
+4. `cd unified-trading-system-ui && CI=true npm test -- --run` → all green (existing + new vitest tests).
+5. `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build` → smoke build green. NOTE: repo is Next.js
+   (checked next.config.mjs) — step should be `npx next build` instead of `npx vite build`. Flagging for operator; plan
+   prose at line 101 needs the Next/Vite distinction reconciled. **Will run `npx next build` at QG time.**
+6. Playwright spec green on tier-1 dev.
+7. Commit SHA pushed to `origin/live-defi-rollout`.
