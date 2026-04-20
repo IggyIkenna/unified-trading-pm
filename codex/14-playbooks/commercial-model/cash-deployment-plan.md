@@ -1,3 +1,7 @@
+---
+scope: [admin]
+---
+
 # Cash Deployment Plan — April 2026 Starting £240k
 
 > **CODEX-PRIVATE / INTERNAL** per rule 08. Finance-sensitive. Do NOT surface on client-facing docs, demos, or website.

@@ -12,12 +12,12 @@ but not impenetrable — deliberately low-friction for prospects who have alread
 Decision M4 from `marketing_site_restructure_2026_04_20.plan.md` locks the gate as a **tiered** model matching the
 existing 3-tier authentication stack:
 
-| Tier | Scope                                                       | Mechanism                                                |
-| ---- | ----------------------------------------------------------- | -------------------------------------------------------- |
-| 0    | Public pages (`/platform`, `/signals`, `/investment-management`, `/regulatory`, `/who-we-are`) | No auth. Anonymous. Rule-06 / rule-08 redacted. |
-| 1    | Briefings (`/briefings/*`)                                  | **Light-auth code** (this doc). localStorage session.    |
-| 2    | Staging demo (`/demo/*`)                                    | Firebase staging — see [firebase-staging.md](firebase-staging.md). |
-| 3    | Production demo + client portal                             | Firebase production — see [firebase-production.md](firebase-production.md). |
+| Tier | Scope                                                                                          | Mechanism                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 0    | Public pages (`/platform`, `/signals`, `/investment-management`, `/regulatory`, `/who-we-are`) | No auth. Anonymous. Rule-06 / rule-08 redacted.                             |
+| 1    | Briefings (`/briefings/*`)                                                                     | **Light-auth code** (this doc). localStorage session.                       |
+| 2    | Staging demo (`/demo/*`)                                                                       | Firebase staging — see [firebase-staging.md](firebase-staging.md).          |
+| 3    | Production demo + client portal                                                                | Firebase production — see [firebase-production.md](firebase-production.md). |
 
 This doc covers Tier 1 only.
 
@@ -38,18 +38,18 @@ pillars. A single shared **global** code still works as a fallback (useful for b
 
 ### Env vars (six per-path codes + one global)
 
-The code validator reads seven env vars and treats a session as authenticated if the entered code matches **any** of
-the non-empty ones:
+The code validator reads seven env vars and treats a session as authenticated if the entered code matches **any** of the
+non-empty ones:
 
-| Env var                                                   | Pillar slug               | Unlocks                                           |
-| --------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`                        | *(global fallback)*       | Every pillar                                      |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_INVESTMENT_MANAGEMENT`  | `investment-management`   | IM briefing                                       |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_REGULATORY`             | `regulatory`              | Regulatory Umbrella briefing                      |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_PLATFORM`               | `platform`                | DART umbrella briefing                            |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_SIGNALS_IN`        | `dart-signals-in`         | DART Signals-In briefing                          |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_FULL`              | `dart-full`                | DART Full pipeline briefing                       |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_SIGNALS_OUT`            | `signals-out`             | Signals Service (signals-out) briefing            |
+| Env var                                                  | Pillar slug             | Unlocks                                |
+| -------------------------------------------------------- | ----------------------- | -------------------------------------- |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`                       | _(global fallback)_     | Every pillar                           |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_INVESTMENT_MANAGEMENT` | `investment-management` | IM briefing                            |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_REGULATORY`            | `regulatory`            | Regulatory Umbrella briefing           |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_PLATFORM`              | `platform`              | DART umbrella briefing                 |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_SIGNALS_IN`       | `dart-signals-in`       | DART Signals-In briefing               |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_FULL`             | `dart-full`             | DART Full pipeline briefing            |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_SIGNALS_OUT`           | `signals-out`           | Signals Service (signals-out) briefing |
 
 ### Validator semantics
 
@@ -65,10 +65,10 @@ empty) the gate is disabled entirely — useful for UI contributors who don't ne
 
 ### Current-path scoping (follow-up)
 
-The validator today treats any valid code as unlocking *every* pillar (session-level auth). A future enhancement is to
-scope the session to the pillar that the code belongs to — e.g. the IM code unlocks only `/briefings/investment-management`,
-forcing the prospect to request a separate code for DART. Tracked as a Stage 3 follow-up. The env-var structure above
-is already shaped for this.
+The validator today treats any valid code as unlocking _every_ pillar (session-level auth). A future enhancement is to
+scope the session to the pillar that the code belongs to — e.g. the IM code unlocks only
+`/briefings/investment-management`, forcing the prospect to request a separate code for DART. Tracked as a Stage 3
+follow-up. The env-var structure above is already shaped for this.
 
 ## Dev-default fallback
 
@@ -153,4 +153,5 @@ Rotation procedure:
 - Marketing journey (Tier 0): [../experience/marketing-journey.md](../experience/marketing-journey.md)
 - Firebase staging (next tier up): [firebase-staging.md](firebase-staging.md)
 - Route mapping: [../implementation-mapping/route-mapping.md](../implementation-mapping/route-mapping.md)
-- Restructure plan: [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)
+- Restructure plan:
+  [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)

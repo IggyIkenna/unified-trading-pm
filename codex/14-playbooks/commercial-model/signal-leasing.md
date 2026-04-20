@@ -1,3 +1,7 @@
+---
+scope: [admin, sales]
+---
+
 # Signal Leasing
 
 > Monthly licence model for leasing Odum-generated strategy signals to institutional counterparties. Distinct from DART
@@ -147,9 +151,9 @@ Sept-Dec). This ties to the ~£35k year-end cash-projection revision per
 
 **Backend enablement**: external broadcast mechanism requires the cross-repo refactor tracked in
 [`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
-The $5k/mo revenue is gated on that refactor landing before Sept 2026. Architecture
-implementation map (D1–D10, failure isolation, auth model, transport, observability) is
-in [`../shared-core/signal-broadcast-architecture.md`](../shared-core/signal-broadcast-architecture.md).
+The $5k/mo revenue is gated on that refactor landing before Sept 2026. Architecture implementation map (D1–D10, failure
+isolation, auth model, transport, observability) is in
+[`../shared-core/signal-broadcast-architecture.md`](../shared-core/signal-broadcast-architecture.md).
 
 ## Operational mechanics
 
@@ -187,5 +191,5 @@ Counterparty integration:
 - [../shared-core/signal-broadcast-architecture.md](../shared-core/signal-broadcast-architecture.md) — implementation
   map (D1–D10, failure isolation, auth, transport, observability)
 - [revenue-projection-2026-monthly.md](revenue-projection-2026-monthly.md) — signal leasing lines in 2026 model
-- [`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md) —
-  plan SSOT
+- [`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md)
+  — plan SSOT

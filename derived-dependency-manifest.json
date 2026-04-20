@@ -5,24 +5,27 @@
     "unified-trading-pm": {
       "internal_deps": {},
       "external_deps": {
+        "aiohttp": ["aiohttp>=3.13.4"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "cryptography": ["cryptography>=46.0.7"],
         "duckdb": ["duckdb>=1.2.0,<2.0.0"],
         "httpx": ["httpx>=0.28.1,<1.0.0"],
         "jsonschema": ["jsonschema>=4.0.0,<5.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
+        "pygments": ["pygments>=2.20.0"],
         "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
         "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
         "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
         "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
         "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
         "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"],
+        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.3"],
         "ruff": ["ruff==0.15.0"],
         "tomli-w": ["tomli-w>=1.0.0"]
       },
       "internal_count": 0,
-      "external_count": 15
+      "external_count": 18
     },
     "unified-trading-codex": {
       "skipped": true,
@@ -350,7 +353,6 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.4,<4.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "click": ["click>=8.3.1,<9.0.0"],
@@ -368,7 +370,7 @@
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
         "pygments": ["pygments>=2.20.0,<3.0.0"],
         "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.3,<10.0.0"],
+        "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
@@ -377,13 +379,12 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
         "pytz": ["pytz>=2024.1,<2026.0"],
-        "requests": ["requests>=2.33.0,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"],
         "yfinance<1.0.0,": ["yfinance<1.0.0,>=0.2.66"]
       },
       "internal_count": 2,
-      "external_count": 31
+      "external_count": 29
     },
     "features-cross-instrument-service": {
       "internal_deps": {
@@ -391,7 +392,6 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.4,<4.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "hmmlearn": ["hmmlearn>=0.3.0,<1.0.0"],
@@ -407,9 +407,8 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pygments": ["pygments>=2.20.0,<3.0.0"],
         "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.3,<10.0.0"],
+        "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
@@ -417,7 +416,6 @@
         "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "requests": ["requests>=2.33.0,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "ruptures": ["ruptures>=1.1.0,<2.0.0"],
         "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
@@ -425,7 +423,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 2,
-      "external_count": 32
+      "external_count": 29
     },
     "features-delta-one-service": {
       "internal_deps": {
@@ -472,7 +470,6 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.4,<4.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "mypy": ["mypy>=1.13.0,<2.0.0"],
@@ -486,9 +483,8 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pygments": ["pygments>=2.20.0,<3.0.0"],
         "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.3,<10.0.0"],
+        "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
@@ -496,13 +492,12 @@
         "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "requests": ["requests>=2.33.0,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 2,
-      "external_count": 28
+      "external_count": 25
     },
     "features-onchain-service": {
       "internal_deps": {
@@ -579,7 +574,6 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.4,<4.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
@@ -589,9 +583,8 @@
         "polars": ["polars>=1.37.0,<2.0.0"],
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pygments": ["pygments>=2.20.0,<3.0.0"],
         "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.3,<10.0.0"],
+        "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
@@ -599,14 +592,13 @@
         "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "requests": ["requests>=2.33.0,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 2,
-      "external_count": 25
+      "external_count": 22
     },
     "market-data-processing-service": {
       "internal_deps": {
@@ -886,7 +878,6 @@
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.4,<4.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "hmmlearn": ["hmmlearn>=0.3.0,<1.0.0"],
@@ -901,9 +892,8 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pygments": ["pygments>=2.20.0,<3.0.0"],
         "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.3,<10.0.0"],
+        "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
@@ -911,12 +901,11 @@
         "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "requests": ["requests>=2.33.0,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
       "internal_count": 2,
-      "external_count": 28
+      "external_count": 25
     },
     "trading-agent-service": {
       "internal_deps": {

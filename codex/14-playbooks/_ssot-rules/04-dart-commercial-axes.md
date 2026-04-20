@@ -71,13 +71,13 @@ Collapsing the matrix to the three cells that actually sell:
 
 ## Fourth path — Signals Service (outbound, NOT DART)
 
-Signal Leasing is a **fourth commercial path** that sits alongside — but outside — the DART matrix above.
-Direction is inverted: Odum emits strategy-level position/directional signals to authenticated counterparty
-endpoints who execute on their own infrastructure. No capital flows; Odum does not see counterparty fills.
+Signal Leasing is a **fourth commercial path** that sits alongside — but outside — the DART matrix above. Direction is
+inverted: Odum emits strategy-level position/directional signals to authenticated counterparty endpoints who execute on
+their own infrastructure. No capital flows; Odum does not see counterparty fills.
 
-Because the direction is outbound (Odum → counterparty) rather than inbound (client → Odum), it does not
-resolve to a cell in the (strategy origin × stack depth) matrix. Keep it as a separate commercial path to
-avoid pricing-leakage confusion with the `(Client, downstream)` signals-only DART cell, which is inbound.
+Because the direction is outbound (Odum → counterparty) rather than inbound (client → Odum), it does not resolve to a
+cell in the (strategy origin × stack depth) matrix. Keep it as a separate commercial path to avoid pricing-leakage
+confusion with the `(Client, downstream)` signals-only DART cell, which is inbound.
 
 - Commercial framing: `commercial-model/signal-leasing.md`
 - Architecture: `shared-core/signal-broadcast-architecture.md`

@@ -1,5 +1,5 @@
 ---
-scope: [engineer, admin, on-call]
+scope: [engineer, admin]
 ---
 
 # Smoke Testing Playbook
@@ -61,27 +61,21 @@ included repos have passed `@pytest.mark.smoke` AND `@pytest.mark.full_e2e`. Exc
 
 ### 2.4 Coverage matrix smoke
 
-`tests/smoke/test_coverage_matrix_smoke.py` parametrises over representative
-`(service × category × venue × data_type)` cells and enforces Steps 2 + 3 of
-the 3-step assertion (parquet exists under the category-specific prefix;
-manifest row has `capture_status in {captured, empty_confirmed}`).
-Step 1 (trigger) is a pre-condition — seed TEST buckets via per-service
-`scripts/smoke_matrix.py` first.
+`tests/smoke/test_coverage_matrix_smoke.py` parametrises over representative `(service × category × venue × data_type)`
+cells and enforces Steps 2 + 3 of the 3-step assertion (parquet exists under the category-specific prefix; manifest row
+has `capture_status in {captured, empty_confirmed}`). Step 1 (trigger) is a pre-condition — seed TEST buckets via
+per-service `scripts/smoke_matrix.py` first.
 
-Opt-in via `GCS_TEST_BUCKET_ENABLED=1`; skips cleanly in unit-only CI mode.
-One representative cell per distinct partition shape keeps this smoke <5 min
-even when fully wired. Add more cells by appending to `CELLS` in
-`tests/smoke/coverage_matrix_cells.py` — the pure-function helpers there
-are unit-tested independently (19 tests).
+Opt-in via `GCS_TEST_BUCKET_ENABLED=1`; skips cleanly in unit-only CI mode. One representative cell per distinct
+partition shape keeps this smoke <5 min even when fully wired. Add more cells by appending to `CELLS` in
+`tests/smoke/coverage_matrix_cells.py` — the pure-function helpers there are unit-tested independently (19 tests).
 
 Reuses the canonical SSOTs:
 
-- `codex/02-data/per-category-bucket-layouts.md` for prefix derivation
-  (SPORTS `sports_reference/.../entity=` vs CEFI/TRADFI/DEFI/PREDICTION
-  `instrument_availability/.../venue=`).
-- `codex/02-data/availability-manifest-and-data-status.md` for the
-  `capture_status` semantics (`empty_confirmed` is PASS,
-  `attempted_failed` is FAIL).
+- `codex/02-data/per-category-bucket-layouts.md` for prefix derivation (SPORTS `sports_reference/.../entity=` vs
+  CEFI/TRADFI/DEFI/PREDICTION `instrument_availability/.../venue=`).
+- `codex/02-data/availability-manifest-and-data-status.md` for the `capture_status` semantics (`empty_confirmed` is
+  PASS, `attempted_failed` is FAIL).
 
 ### 2.5 Adding a new smoke case
 

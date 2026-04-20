@@ -1,3 +1,7 @@
+---
+scope: [admin, sales]
+---
+
 # IM Profit-Share Structures
 
 > All Investment Management commercial mechanics: standard performance-share, platform-fee client-choice, CME asymmetric

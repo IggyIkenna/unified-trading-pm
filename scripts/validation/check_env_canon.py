@@ -26,7 +26,17 @@ except ImportError:
     EnvVars = None
 
 # Bootstrap allowlist: these files may use env before config exists; skip validation
-BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py", "config.py", "__main__.py", "kill_switch.py"}
+# heartbeat_cli.py is a VM-side bootstrap CLI (deployment-service): reads VM metadata env
+# vars at boot before the cloud config is reachable.
+BOOTSTRAP_BASENAMES = {
+    "_env_bootstrap.py",
+    "factory.py",
+    "constants.py",
+    "config.py",
+    "__main__.py",
+    "kill_switch.py",
+    "heartbeat_cli.py",
+}
 
 # Path segments to exclude from scanning
 EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "examples"}

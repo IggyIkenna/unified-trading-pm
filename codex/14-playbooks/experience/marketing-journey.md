@@ -7,8 +7,8 @@ scope: [sales, prospect]
 > Experience playbook for pb1. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md) and
 > [rule 02 (tone and posture)](../_ssot-rules/02-tone-and-posture.md).
 
-**Internal label:** pb1 (pre-first-call marketing) **Status:** Stage 2 live **Owner:** marketing **Restructure:**
-5-path nav + light-auth briefings gate shipped under
+**Internal label:** pb1 (pre-first-call marketing) **Status:** Stage 2 live **Owner:** marketing **Restructure:** 5-path
+nav + light-auth briefings gate shipped under
 [`../../../plans/active/marketing_site_restructure_2026_04_20.plan.md`](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md).
 
 ## Audience
@@ -38,14 +38,14 @@ Locked decision M1 (plan `marketing_site_restructure_2026_04_20.plan.md`): the s
 paths plus a Contact CTA. DART is the umbrella for the two direction-arrow sub-paths; Signals Service is a peer path
 rather than a sub-page of DART.
 
-| Nav label                 | Route                                                     | Covers                                                                                    |
-| ------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **DART**                  | `/platform` (umbrella) + `/platform/signals-in` + `/platform/full` | Full data-analytics-research-trading stack; two direction arrows under the umbrella       |
-| **Odum Signals**          | `/signals`                                                | Signals-out: Odum strategies delivered to a counterparty that executes (QRT-style)        |
-| **Investment Management** | `/investment-management`                                  | Allocate client capital to Odum-run strategies under Odum's FCA permissions               |
-| **Regulatory**            | `/regulatory`                                             | FCA Umbrella — Odum's permissions cover the client's regulated activity                   |
-| **Firm**                  | `/who-we-are`                                             | Team, operating history, FCA credentials                                                  |
-| *(secondary)* Contact     | `/contact`                                                | First-call booking for any path                                                           |
+| Nav label                 | Route                                                              | Covers                                                                              |
+| ------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| **DART**                  | `/platform` (umbrella) + `/platform/signals-in` + `/platform/full` | Full data-analytics-research-trading stack; two direction arrows under the umbrella |
+| **Odum Signals**          | `/signals`                                                         | Signals-out: Odum strategies delivered to a counterparty that executes (QRT-style)  |
+| **Investment Management** | `/investment-management`                                           | Allocate client capital to Odum-run strategies under Odum's FCA permissions         |
+| **Regulatory**            | `/regulatory`                                                      | FCA Umbrella — Odum's permissions cover the client's regulated activity             |
+| **Firm**                  | `/who-we-are`                                                      | Team, operating history, FCA credentials                                            |
+| _(secondary)_ Contact     | `/contact`                                                         | First-call booking for any path                                                     |
 
 **Route alias note:** the nav label "Firm" resolves to `/who-we-are` — the existing route slug pre-dates the 5-path
 rename. Implementation-mapping table
@@ -55,9 +55,9 @@ rename. Implementation-mapping table
 
 Two direction arrows exist around DART and must be named explicitly in every marketing touchpoint:
 
-- **DART Signals-In** — *your signals, our execution*. The client (Elysium, Desmond, an internal desk) owns the alpha;
+- **DART Signals-In** — _your signals, our execution_. The client (Elysium, Desmond, an internal desk) owns the alpha;
   Odum owns the execution, reconciliation, and reporting. Lives under `/platform/signals-in`.
-- **Signals Service (Signals-Out)** — *Odum → counterparty*. Odum owns the alpha; the counterparty (QRT-style) owns the
+- **Signals Service (Signals-Out)** — _Odum → counterparty_. Odum owns the alpha; the counterparty (QRT-style) owns the
   execution. Lives under `/signals`.
 
 These two phrases are canonical. They replace earlier shorthand ("client-signal DART" / "Odum signals"). HTML copy and
@@ -72,9 +72,9 @@ has already sent a code.
 ## Walkthrough
 
 The home page opens with two sentences that set the frame. The first names what Odum is: a firm that runs systematic
-trading strategies on its own capital, under its own FCA permissions, on infrastructure Odum built. The second names
-the five commercial paths — DART, Signals, Investment Management, Regulatory, Firm — and the fact that each is a
-specific answer to a specific operating problem, not a bundle.
+trading strategies on its own capital, under its own FCA permissions, on infrastructure Odum built. The second names the
+five commercial paths — DART, Signals, Investment Management, Regulatory, Firm — and the fact that each is a specific
+answer to a specific operating problem, not a bundle.
 
 From there the page splits into path tiles. Each tile is the rule-09 expansion of its service — three sentences,
 positioning / differentiator / proof point. DART is framed as two direction arrows (signals-in + full); Signals Service
@@ -89,9 +89,9 @@ is prefaced with "revolutionary" or "best-in-class". The posture is [axis.to](ht
 [podlabs.xyz](https://podlabs.xyz/): restrained, specific, written by an operating team.
 
 The bottom of the page offers one action per path. Book the IM desk session. Book the DART briefing call (specifying
-signals-in or full). Book the Signals Service scoping call. Book the Reg Umbrella scoping call. Each booking flow
-takes the visitor straight to a calendar. No email capture wall, no newsletter, no gated PDF. A visitor who is not ready
-to book leaves without friction; a visitor who is ready books in under ninety seconds.
+signals-in or full). Book the Signals Service scoping call. Book the Reg Umbrella scoping call. Each booking flow takes
+the visitor straight to a calendar. No email capture wall, no newsletter, no gated PDF. A visitor who is not ready to
+book leaves without friction; a visitor who is ready books in under ninety seconds.
 
 ## Post-first-call path — briefings gate
 
@@ -99,8 +99,8 @@ After a prospect has booked and run the first thirty-minute call, the sales cont
 `/briefings` — a light-auth layer (password gate, not Firebase — see
 [`../authentication/light-auth-briefings.md`](../authentication/light-auth-briefings.md)). Behind the gate live six
 briefing pillars — one per commercial path plus the DART umbrella — each with schema detail, custody mechanics,
-onboarding workstreams, and strategy-family catalogue material deliberately held back from the public pages. This is
-the mid-funnel experience that used to live in a PDF; now it lives in the same UI the prospect will use post-demo.
+onboarding workstreams, and strategy-family catalogue material deliberately held back from the public pages. This is the
+mid-funnel experience that used to live in a PDF; now it lives in the same UI the prospect will use post-demo.
 
 ## Key messages
 
@@ -148,8 +148,8 @@ booking path, referring URL, declared intent, and any questions submitted alongs
 call — IM desk, DART sales, Signals sales, or Reg Umbrella — prepares based on the record, runs the call, and after the
 call updates the record with the resolved commercial path. If the call produces intent, the prospect moves to the
 matching pb2 briefing path (one of six pillars behind the light-auth gate). If not, the record is marked and the
-follow-up orchestration from [`demo-ops/post-demo-followup-orchestration.md`](../demo-ops/post-demo-followup-orchestration.md)
-applies.
+follow-up orchestration from
+[`demo-ops/post-demo-followup-orchestration.md`](../demo-ops/post-demo-followup-orchestration.md) applies.
 
 ---
 
@@ -170,6 +170,7 @@ applies.
 - Light-auth gate: [../authentication/light-auth-briefings.md](../authentication/light-auth-briefings.md)
 - Commercial entry points: [../commercial-model/dart-entry-points.md](../commercial-model/dart-entry-points.md)
 - Route mapping: [../implementation-mapping/route-mapping.md](../implementation-mapping/route-mapping.md)
-- Restructure plan: [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)
+- Restructure plan:
+  [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)
 - Playwright specs: `unified-trading-system-ui/tests/e2e/playbooks/marketing-pre-first-call.spec.ts` +
   `marketing-site-restructure.spec.ts`
