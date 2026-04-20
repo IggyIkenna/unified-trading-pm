@@ -48,10 +48,15 @@ locked_since: 2026-04-20
 #   - MDPS 3-bug chain fix (safe_iterate_blobs + empty-bucket defence + pre-flight tolerance).
 #   - Manifest v5 record_empty/record_failed split.
 #
-# Open follow-up (not in this plan): extend `system-integration-tests/tests/smoke/`
-# with parametrised per-(service × category × venue × data_type) cases that
-# reuse the bucket layouts SSOT + 3-step assertion. That work belongs in the
-# SIT repo's own plan, not here.
+# 2026-04-20 follow-up SHIPPED: `system-integration-tests/tests/smoke/test_coverage_matrix_smoke.py`
+# (+ `coverage_matrix_cells.py` helpers + 19 unit tests in
+# `tests/unit/test_coverage_matrix_cells.py`, commit
+# system-integration-tests@048fcd2). Parametrises over 5 representative
+# cells (one per distinct partition shape — CEFI/TRADFI/DEFI/SPORTS/
+# PREDICTION), enforces Steps 2 + 3 (parquet + manifest). Opt-in via
+# `GCS_TEST_BUCKET_ENABLED=1`; skips cleanly without real GCS creds so SIT's
+# unit-only QG stays green. Reuses per-category-bucket-layouts SSOT for
+# prefix derivation. SIT README + playbook (§2.4) updated with usage.
 
 completion_gates:
   code: C5
