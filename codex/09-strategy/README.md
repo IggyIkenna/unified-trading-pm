@@ -16,6 +16,15 @@ scope: [engineer, admin]
   config mapped to its v2 placement. Nothing is silently dropped.
 - **Archive index**: [`_archived_pre_v2/README.md`](_archived_pre_v2/README.md) — if you're looking for a legacy doc.
 
+### Architecture v2 — Deep docs
+
+- [`architecture-v2/block-list.md`](architecture-v2/block-list.md) — BL-1..BL-10 hard-blocked (archetype × category ×
+  instrument) combos with rationale, remediation, and UAC gap refs. Mirrored at runtime by
+  `unified-trading-system-ui/lib/architecture-v2/block-list.ts`.
+- [`architecture-v2/restriction-policy.md`](architecture-v2/restriction-policy.md) — per-family restriction matrix
+  (allowed venues / instrument types / data types), lock-state default policy (PUBLIC vs
+  `INVESTMENT_MANAGEMENT_RESERVED`), and the 6-axis questionnaire → visible-cells mapping.
+
 ## What's still in this directory (not archived)
 
 These docs remain live because they cover non-strategy concerns or operational playbooks that v2 explicitly links out
