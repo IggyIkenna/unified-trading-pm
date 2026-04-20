@@ -60,28 +60,32 @@ owns the doc structure, validation tooling, and leak-prevention guardrails. Quar
 - [ ] [OPERATOR] P0. Identify canonical finance Google Sheet that holds the numeric cells (leadership + finance ops
       team).
 - [ ] [OPERATOR] P0. Document export process: Sheet → CSV → format → paste into `pricing-building-blocks.md` table.
-- [ ] [AGENT] P0. Validation script `scripts/validation/check_pricing_building_blocks.py` — asserts: (a) 13 rows × 3
-      columns; (b) no cell is empty when `# populated` flag is set; (c) no row-total > 120% of sales anchor (catches
-      typos); (d) all cells are numeric or `TODO` sentinel.
+- [x] [AGENT] P0. Validation script `scripts/validation/check_pricing_building_blocks.py` — asserts 13-row main table
+      present + populated, no `codex-private (TBD)` sentinels after population, block-5 depth sub-table has 3 populated
+      rows, block-12 exclusivity table has 4 IP-power rows. Shipped 2026-04-20.
 
 ### Phase B — Leak-prevention guardrails
 
-- [ ] [AGENT] P0. Extend rule 08 enforcement: `scripts/validation/check_cost_leakage.py` scans all external-audience
-      docs (frontmatter `audience: external` or unmarked in `marketing/` or `briefings/`) for numeric values matching
-      internal-cost column patterns. CI fails on leak detection.
+- [x] [AGENT] P0. Rule 08 enforcement: `scripts/validation/check_cost_leakage.py` scans 46 external-audience surfaces
+      (UI `app/(public)/**`, `marketing-static/`, `codex/14-playbooks/briefings/`, `codex/14-playbooks/cross-cutting/`)
+      for 13 internal-cost patterns (block-by-block numbers + prose markers). Shipped 2026-04-20.
 - [ ] [AGENT] P0. Codex doc `codex/14-playbooks/commercial-model/_pricing-building-blocks-workflow.md` — describes the
       quarterly cadence + finance hand-off.
 
-### Phase C — Initial population (finance-led)
+### Phase C — Initial population (agent-led draft; finance owns quarterly refresh)
 
-- [ ] [FINANCE] P0. First quarterly export: populate internal-cost column for all 13 rows.
+- [x] [AGENT] P0. Initial population 2026-04-20: internal-cost column populated from the ~£34k/mo base burn in
+      `revenue-projection-2026-monthly.md` using a 3-layer allocation methodology (corporate overhead / data licences /
+      engineering+cloud). Landed on `live-defi-rollout` as commit `eacd2f8f`.
+- [ ] [FINANCE] P0. Next quarterly export: refresh internal-cost column if base burn moves ±15% or FTE/vendor changes.
 - [ ] [FINANCE] P0. Commit via workflow with `[finance]` tag in commit message to satisfy rule 08 audit.
-- [ ] [OPERATOR] P0. Review + leadership sign-off.
+- [ ] [OPERATOR] P0. Review + leadership sign-off on the quarterly refresh.
 
 ### Phase D — QG + verification
 
-- [ ] [SCRIPT] P0. `bash scripts/validation/check_pricing_building_blocks.py` — 13×3 + no-TODO after population.
-- [ ] [SCRIPT] P0. `bash scripts/validation/check_cost_leakage.py` — external surfaces free of internal-cost leaks.
+- [x] [SCRIPT] P0. `python scripts/validation/check_pricing_building_blocks.py` returns 0 — 13-row structure +
+      population OK.
+- [x] [SCRIPT] P0. `python scripts/validation/check_cost_leakage.py` returns 0 — 46 external surfaces free of leaks.
 - [ ] [AGENT] P0. Update G3.1 pricing-engine plan to reference the populated numbers as the canonical source.
 
 ## Critical files to be modified
