@@ -1,0 +1,240 @@
+---
+title: Refactor G3.6 — Visibility-slicing e2e coverage expansion
+status: active
+priority: P1
+owner: agent
+locked_by: live-defi-rollout
+locked_since: 2026-04-20
+depends_on:
+  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6
+  - refactor_g1_1_phase_unification_2026_04_20.plan.md
+  - refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md
+  - refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md
+# Wave G3-α — independent. Consumes G1.1 + G1.3 + G1.4 (all shipped).
+---
+
+# Refactor G3.6 — Visibility-slicing e2e coverage expansion
+
+## Context
+
+Stage 3E §3.6 expands the Playwright visibility-slicing spec to cover every persona × route × phase cell. Today
+`tests/e2e/playbooks/visibility-slicing.spec.ts` covers 4 personas × 5-or-so routes. No LOCKED-VISIBLE coverage (G1.3
+shipped it). No prospect-dart / prospect-regulatory coverage (G1.4 shipped them). No phase-toggle assertion (G1.1
+shipped phase-unification). The matrix is now tractable because G1.1 + G1.3 + G1.4 all landed.
+
+Target: Playwright spec covers 7+ personas × 3 flavours × ~25 routes. LOCKED-VISIBLE padlock rendering asserted per
+persona. Phase-toggle restrictions asserted (G1.1 integration). Spec becomes the long-term safety net for all pb3
+surfaces.
+
+## Decisions locked with user (2026-04-20)
+
+| Decision                                                   | Chosen                                                     | Source                 |
+| ---------------------------------------------------------- | ---------------------------------------------------------- | ---------------------- |
+| 7 personas × 3 flavours × ~25 routes                       | Full matrix — avoid per-surface specs drifting             | Stage 3E §3.6          |
+| Asserts LOCKED-VISIBLE padlock + upgrade-hint modal        | G1.3's visible/hidden distinction is load-bearing          | G1.3 LOCKED-VISIBLE    |
+| Phase-toggle restrictions per `access_control(..., phase)` | G1.1 phase-unification — assert research/paper/live gating | G1.1 + G1.6 derivation |
+| Spec is CI-hard (not deferred nightly)                     | Visibility regressions are P0 for audience safety          | Operator emphasis      |
+| Runs against both mock + staging Firebase                  | Dev/staging parity                                         | CLAUDE.md parity rule  |
+
+## Cross-references
+
+- **Upstream:** G1.1, G1.3, G1.4 (all shipped); G1.6 derivation engine; G1.7 restriction-profile; G1.11 rule 12
+- **Wave G3-α peers (parallel):** G3.2, G3.3, G3.4, G3.5
+- **Existing spec:** `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts`
+
+## Mandatory read-set
+
+1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
+2. `refactor_g1_1_phase_unification_2026_04_20.plan.md`
+3. `refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`
+4. `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`
+5. `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` — current state
+6. `unified-trading-system-ui/tests/e2e/playbooks/seed-persona.ts`
+7. `unified-trading-system-ui/lib/auth/personas.ts` — 15-20 personas post-G1.4
+8. `codex/14-playbooks/cross-cutting/visibility-slicing.md`
+
+## Out of scope
+
+- Fixing any visibility-slicing bugs discovered (separate follow-ups per bug)
+- Adding new personas or routes (spec expansion only)
+- Testing data catalogues (G2.3/2.4/2.5 own their own specs)
+- Reading `_archived_pre_v2/` paths
+
+## Dev/staging parity rule
+
+Spec runs in two modes: `NEXT_PUBLIC_USE_FIREBASE_AUTH=false` (mock) and `=true` (staging Firebase via emulator).
+Assertions identical across modes — any divergence is a bug.
+
+## Phase breakdown
+
+### Phase A — Matrix enumeration
+
+- [ ] [AGENT] P0. Build a per-persona × per-route × per-phase matrix. Load personas from `personas.ts` (post-G1.4:
+      admin, internal-trader, client-full, client-data-only, client-premium, investor, advisor, prospect-im,
+      prospect-platform, prospect-regulatory, prospect-dart, +).
+- [ ] [AGENT] P0. Enumerate ~25 routes covering catalogues, terminal, reports, health, admin surfaces.
+- [ ] [AGENT] P0. For each cell, compute expected visibility via G1.6 derivation engine (client-side TS mirror or debug
+      endpoint).
+
+### Phase B — Spec expansion
+
+- [ ] [AGENT] P0. Replace `tests/e2e/playbooks/visibility-slicing.spec.ts` with parameterised suite iterating the
+      matrix.
+- [ ] [AGENT] P0. For each cell, assert: visible (DOM present) OR locked-visible (DOM present + padlock chip) OR
+      hidden-entirely (DOM absent).
+- [ ] [AGENT] P0. Phase-toggle sub-suite: for routes supporting `?phase=`, assert write-action availability per phase
+      (research/paper/live) matches derivation engine.
+
+### Phase C — LOCKED-VISIBLE + upgrade-hint modal
+
+- [ ] [AGENT] P0. For each locked-visible cell, click the tile; assert upgrade-hint modal opens with correct copy from
+      `upgrade_hints.yaml` (or equivalent source).
+- [ ] [AGENT] P0. Orphan-reachability: every visible cell has a reachable detail route.
+
+### Phase D — Dev/staging parity run
+
+- [ ] [AGENT] P0. CI runs spec twice: once mock, once staging Firebase emulator. Assert parity.
+
+### Phase E — QG
+
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
+
+## Critical files to be modified
+
+- `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` — MODIFY (expand to matrix)
+- `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing-fixtures.ts` — NEW (matrix generator)
+- `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing-expected.ts` — NEW (derivation-engine mirror for
+  expected state)
+- `unified-trading-system-ui/scripts/quality-gates.sh` — MODIFY (dev/staging dual run)
+
+## Execution DAG
+
+```
+A (matrix enumeration) → B (spec expansion)
+                           ↓
+                         C (LOCKED-VISIBLE + modal)
+                           ↓
+                         D (dev/staging parity)
+                           ↓
+                         E (QG)
+```
+
+## Verification
+
+1. Matrix covers 7+ personas × 3 flavours × ~25 routes.
+2. Phase-toggle sub-suite green.
+3. LOCKED-VISIBLE modal assertions green.
+4. Orphan-reachability green.
+5. Dev + staging parity: zero divergence.
+6. UI QG green (spec runs twice — dev mock + staging emulator).
+
+## Handoff
+
+Unblocks:
+
+- **Long-term safety net** for pb3a / pb3b / pb3c surfaces.
+- **Future wave regression catch** — any visibility slice change that breaks expected state fails CI.
+
+## Playwright test coverage (mandatory)
+
+**MCP Playwright during dev:** drive `localhost:3000` through MCP Playwright tools for each persona in the matrix;
+capture the baseline DOM state; export to `visibility-slicing-expected.ts`. Run the expanded spec against this baseline.
+
+**Durable spec for CI:** `tests/e2e/playbooks/visibility-slicing.spec.ts` (expanded):
+
+1. Seed each persona via `seed-persona.ts`.
+2. For each matrix cell, navigate + assert visible/locked-visible/hidden state.
+3. Click locked-visible tiles; assert upgrade-hint modal.
+4. Phase-toggle sub-suite for routes supporting `?phase=`.
+5. Orphan-reachability across visible cells.
+6. Wire into `scripts/quality-gates.sh`, running twice (mock + staging emulator).
+
+## AGENT EXECUTION PROMPT
+
+**Copy-paste everything below this line into a new agent session to execute Refactor G3.6 (Wave G3-α).**
+
+---
+
+You are executing **Refactor G3.6 — Visibility-slicing e2e coverage expansion** for the Unified Trading System at Odum
+Research. Wave G3-α; consumes G1.1 + G1.3 + G1.4 (all shipped).
+
+### Pre-flight check
+
+```
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
+git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
+ls unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts
+ls unified-trading-system-ui/tests/e2e/playbooks/seed-persona.ts
+grep -c "^export" unified-trading-system-ui/lib/auth/personas.ts  # count personas (G1.4 expanded)
+```
+
+All must exist. STOP if missing.
+
+### Mandatory rules injection
+
+- Read
+  `/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+- Read `/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm/plans/PLAN_FORMAT.md`
+- `WORKSPACE_ROOT = /Users/ikennaigboaka/Code/unified-trading-system-repos/`
+
+### Task
+
+Execute every checkbox in Phases A through E of this plan:
+`plans/active/refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.plan.md`
+
+### Read-set (mandatory)
+
+All 8 paths from the plan's Mandatory read-set.
+
+### Deliverables
+
+Per plan's Critical files list — 4 file changes in UI repo.
+
+### MCP Playwright clause (verbatim — REQUIRED)
+
+Drive `localhost:3000` through MCP Playwright tools for each persona; capture baseline DOM state; export as
+expected-state fixture. Run expanded spec against baseline. Commit the durable spec at
+`unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` (expanded) with matrix generator +
+expected-state fixture + phase-toggle sub-suite + LOCKED-VISIBLE modal assertions + orphan-reachability; wired into
+`scripts/quality-gates.sh` running twice (mock + staging emulator).
+
+### Commit strategy
+
+One commit in UI repo.
+
+```
+cd unified-trading-system-ui && bash scripts/quickmerge.sh "test(e2e): G3.6 — visibility-slicing matrix expansion (7 personas x 3 flavours x 25 routes)" --agent
+```
+
+Manual-git fallback. Never `--dep-branch`, never `git reset --hard` / `git push --force`.
+
+### Success criteria
+
+1. ✅ Matrix 7+ × 3 × 25 cells enumerated.
+2. ✅ Phase-toggle sub-suite green.
+3. ✅ LOCKED-VISIBLE modal assertions green.
+4. ✅ Orphan-reachability green.
+5. ✅ Dev + staging parity: zero divergence.
+6. ✅ UI QG green (dual run).
+7. ✅ 1 commit SHA pushed.
+
+### What NOT to do (verbatim guardrails)
+
+- Do NOT read, cite, or derive anything from `_archived_pre_v2/` — v2 only.
+- Do NOT `git reset --hard` or `git push --force`.
+- Do NOT use `--dep-branch` flag; `--agent` only.
+- Do NOT fix visibility bugs inside this spec — flag them as separate plans.
+- Do NOT add new personas or routes — expansion only.
+- Do NOT relax assertions to make the spec pass — fix the bug first, then expand coverage.
+- Do NOT skip the staging-emulator run — parity is the point.
+- Do NOT `--no-verify` pre-commit hooks.
+
+### Report back
+
+- Matrix cell count (personas × flavours × routes).
+- Visibility state breakdown (visible / locked-visible / hidden).
+- Phase-toggle sub-suite cell count.
+- Dev/staging parity: zero divergence confirmation.
+- UI QG results.
+- 1 commit SHA pushed to live-defi-rollout.
