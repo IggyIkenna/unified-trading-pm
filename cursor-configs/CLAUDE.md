@@ -59,6 +59,7 @@ Read these before making ANY code changes:
 - Shard-level failure isolation — no `raise` inside per-venue/per-shard loops (see
   codex/04-architecture/shard-level-failure-isolation.md)
 - Every adapter MUST classify errors through UAC `classify_venue_error()` and emit `ADAPTER_FETCH_FAILED` events
+- **Signal Leasing / strategy-service signal broadcast** — External-counterparty signal emission MUST use shard-level failure isolation (D10) + `classify_venue_error()` + `ADAPTER_FETCH_FAILED` event. Counterparty credentials via `ApiKeyReloader` + HMAC signing; never raises to signal generator. SSOT: `codex/14-playbooks/shared-core/signal-broadcast-architecture.md`; architecture plan: `plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`.
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)` — the message is not a format string
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
 - **Bandit B108 / temp paths** — Never hardcode `"/tmp"` in Python. Use `tempfile.gettempdir()` (POSIX `TMPDIR`, macOS

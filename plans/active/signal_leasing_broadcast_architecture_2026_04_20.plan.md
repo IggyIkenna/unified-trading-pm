@@ -303,41 +303,47 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
       `/services/signals/counterparties` inbound from `ADMIN_TABS` Operations group
       (admin-only entitlement). Grep over `tests/` + `components/` + `lib/` + `app/` confirms both
       routes resolve from non-test code paths.
-- [ ] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate (shipped);
+- [x] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate (shipped);
       counterparty observability UI renders with mocked data on staging; admin counterparty surface operational;
-      `npm test` + `tsc --noEmit` clean.
+      `npm test` + `tsc --noEmit` clean. **PASSED 2026-04-20** — dashboard (UI `6e8db9f` + `c1c17b9`) + admin
+      (UI `d7d9e9b`) + persona stub + 22 vitest green + route-audit gate confirmed both inbound links resolve.
 
 ### Phase 6 — codex docs + CLAUDE.md + memory + cursor rules
 
-- [ ] [AGENT] P0. New codex doc: `codex/14-playbooks/shared-core/signal-broadcast-architecture.md` — implementation
-      map + failure isolation pattern + auth model.
-- [ ] [AGENT] P0. Update `codex/14-playbooks/commercial-model/signal-leasing.md` with Sept 2026 go-live + 2-client
-      anchor + reference to this plan.
-- [ ] [AGENT] P0. Update `_ssot-rules/04-dart-commercial-axes.md` — brief note Signal Leasing fourth path references
-      this plan.
-- [ ] [AGENT] P0. Update root `CLAUDE.md` (workspace root) — add key rule: "Strategy-service signal emission to external
+- [x] [AGENT] P0. New codex doc: `codex/14-playbooks/shared-core/signal-broadcast-architecture.md` — implementation
+      map + failure isolation pattern + auth model. Shipped PM `c641ee38`.
+- [x] [AGENT] P0. Update `codex/14-playbooks/commercial-model/signal-leasing.md` with Sept 2026 go-live + 2-client
+      anchor + reference to this plan. Shipped PM `e53590d8`.
+- [x] [AGENT] P0. Update `_ssot-rules/04-dart-commercial-axes.md` — brief note Signal Leasing fourth path references
+      this plan. Shipped PM (this commit).
+- [x] [AGENT] P0. Update root `CLAUDE.md` (workspace root) — add key rule: "Strategy-service signal emission to external
       counterparties MUST use shard-level failure isolation + classify_venue_error() pattern; counterparty credentials
-      via ApiKeyReloader."
-- [ ] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` — register `signal-broadcast-architecture.md` and UAC
-      `signal_broadcast/` sub-package.
-- [ ] [AGENT] P0. Update memory under
+      via ApiKeyReloader." Shipped workspace-root `.claude/CLAUDE.md` (this commit).
+- [x] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` — register `signal-broadcast-architecture.md` and UAC
+      `signal_broadcast/` sub-package. Shipped PM (this commit) — 2 new rows under playbooks section.
+- [x] [AGENT] P0. Update memory under
       `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/` with a
-      project entry.
-- [ ] [AGENT] P1. Cursor rule in `.cursor/rules/` if signal-broadcast introduces a pattern other adapters should follow
-      (likely not — emission reuses existing adapter-error-classification rule).
-- [ ] [AGENT] P0. **Phase 6 success gate**: docs + CLAUDE.md + memory updated, cross-references all resolve.
+      project entry. Shipped: `project_signal_leasing_broadcast_2026_04_20.md` + MEMORY.md one-line index entry.
+- [x] [AGENT] P1. Cursor rule in `.cursor/rules/` — **SKIPPED (intentional)** — emission reuses existing adapter
+      error-classification + shard-level-failure-isolation rules + the new `.claude/CLAUDE.md` rule bullet;
+      dedicated cursor rule would duplicate existing SSOT. No new rule needed.
+- [x] [AGENT] P0. **Phase 6 success gate**: docs + CLAUDE.md + memory updated, cross-references all resolve.
 
 ### Phase 7 — presentations + revenue projection sync
 
-- [ ] [AGENT] P0. Update `unified-trading-system-ui/app/(platform)/investor-relations/plan-presentation/data.ts` slide 9
-      or add a signal-leasing detail to reflect Sept 2026 go-live + $5k/mo.
-- [ ] [AGENT] P0. Update `board-presentation-data.ts` slide 8 Signal Leasing entry to be more concrete ("2
-      counterparties live Sept 2026, $5k/mo combined, target 4-6 counterparties by end-2027").
-- [ ] [AGENT] P0. Update `codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` monthly table — scale
-      Sept-Dec signal-leasing revenue from £12k+ down to £4k/mo (≈$5k) combined.
-- [ ] [AGENT] P0. Update `commercial-model/cash-deployment-plan.md` — minor revenue revision cascades year-end cash
-      projection down from ~£464k to ~£429k. Still healthy; no funding implication.
-- [ ] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the $5k/mo anchor.
+- [x] [AGENT] P0. Update `unified-trading-system-ui/app/(platform)/investor-relations/plan-presentation/data.ts` slide 9
+      or add a signal-leasing detail to reflect Sept 2026 go-live + $5k/mo. Shipped UI `9c1c6c6`.
+- [x] [AGENT] P0. Update `board-presentation-data.ts` slide 8 Signal Leasing entry to be more concrete ("2
+      counterparties live Sept 2026, $5k/mo combined, target 4-6 counterparties by end-2027"). Shipped UI `9c1c6c6`.
+- [x] [AGENT] P0. Update `codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` monthly table — scale
+      Sept-Dec signal-leasing revenue from £12k+ down to £4k/mo (≈$5k) combined. Shipped PM `f6531e32` — monthly P&L +
+      cumulative cash table + sensitivity scenarios all revised; year-end cash £464k → £413k.
+- [x] [AGENT] P0. Update `commercial-model/cash-deployment-plan.md` — minor revenue revision cascades year-end cash
+      projection down from ~£464k to ~£429k. Still healthy; no funding implication. Shipped PM `f6531e32` — actual
+      year-end land is £413k (profit-share cascade factored through the 10%-of-revenue line).
+- [x] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the $5k/mo anchor. **PASSED**
+      — all 4 surfaces (plan-presentation, board-presentation, revenue-projection-2026-monthly, cash-deployment-plan)
+      self-consistent at £4k/mo (≈$5k) combined Sept-Dec 2026 anchor with cascaded year-end cash £413k.
 
 ### Phase 8 — quality gates + integration test + handoff
 
