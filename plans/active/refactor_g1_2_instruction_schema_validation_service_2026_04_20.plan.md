@@ -279,3 +279,160 @@ Never `--dep-branch`, never `git reset --hard`.
 - Playwright spec path + pass status.
 - 4 commit SHAs pushed to live-defi-rollout.
 - Any gaps or open questions for the user.
+
+---
+
+## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
+
+> Drafted by Wave-C kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 2A/2B
+> execution. Companion micro-plan for G1.6 is in
+> `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md` § Micro-execution plan.
+
+### Plan-prose drifts vs reality (verified 2026-04-20 against `live-defi-rollout`)
+
+| #   | Plan claims                                                                                              | Reality (post-G1.8)                                                                                                                                                             | Resolution                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Line 35: `ArchetypeCapabilityRegistry.for_pair(category, instrument)`                                    | UAC ships free function `archetypes_for_pair(category, instrument_type, *, include_partial=True)` + module-level tuple `ARCHETYPE_CAPABILITY_REGISTRY`                          | Validator calls `archetypes_for_pair()` from `unified_api_contracts.strategy`; no Registry class. Use `include_partial=False` for strict SUPPORTED-only archetype set.                                                                                                                                                                                                          |
+| 2   | Line 35: "checks venue is in archetype's `supported_venues`"                                             | `ArchetypeCapability.supported_venues` exists as `@property` aggregating over `cells`. `archetypes_for_venue(venue)` also exists.                                               | Either API works; validator prefers `capability.supported_venues` per archetype (tighter coupling + clearer error copy).                                                                                                                                                                                                                                                        |
+| 3   | Line 82-83: validator library at `unified_api_contracts/validation/instruction.py` (public path)         | Public validation facade does not exist. UAC rule: domain types live under `unified_api_contracts/internal/...`; public surface is `unified_api_contracts/{domain}.py` facades. | Put types + checker in `unified_api_contracts/internal/validation/instruction.py` (Pydantic `BaseModel` with `ConfigDict(frozen=True, extra="forbid")`, mirrors G1.8 pattern). Re-export from NEW public facade `unified_api_contracts/instruction.py` — `from unified_api_contracts.instruction import InstructionValidator, ClientInstruction, ValidationResult, FieldError`. |
+| 4   | Line 125-126: UTL events at `unified-trading-library/src/unified_trading_library/events/__init__.py`     | Real path: `unified-trading-library/unified_trading_library/events/__init__.py` (no `src/` prefix). `STANDARD_LIFECYCLE_EVENTS` lives in `event_types.py`.                      | Register `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` in `unified_trading_library/events/event_types.py`.                                                                                                                                                                                                                                                                           |
+| 5   | Line 34 (Decisions table): "Library in UAC (schema-owning repo); service wrapper in execution-service"   | UAC Citadel rule: Schema provenance — all domain types come from UAC. Execution-service has no existing `validation/` sub-package.                                              | Locked: types + validator in UAC (`internal/validation/`), public facade `unified_api_contracts.instruction`, middleware in execution-service `execution_service/validation/`.                                                                                                                                                                                                  |
+| 6   | Line 93 (Phase 2B): "the 10 block-list groups in `category-instrument-coverage.md` (BL-1 through BL-10)" | G1.8 codex parity test enforces these 10 groups exist in codex md; block_list_refs live on `ArchetypeCapabilityCell.block_list_refs`                                            | Validator does NOT re-check BL-\* groups directly — it asks `archetypes_for_pair()` (which respects blocks already baked into manifest by G1.8). Unit tests spot-check each BL-1..BL-10 group produces the right `FieldError`. Don't duplicate G1.8's invariants.                                                                                                               |
+
+Stage-3B richer schema reference (read-only SSOT for validator field-level checks):
+`codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md` defines the 8 required fields
+(instrument_venue_context, intended_action, size_or_target_exposure, timeframe_urgency, order_constraints,
+strategy_instruction_id, lifecycle_replace_cancel, risk_and_allocation_constraints) — the validator mirrors this
+structurally with Pydantic models.
+
+**Note:** The UTL parquet schema at
+`unified-trading-library/unified_trading_library/domain_client/schemas/instruction_schema.py` is a DIFFERENT,
+lower-level artefact (execution-service parquet contract — TRADE / SWAP / LEND / ... instruction-types with direction,
+quantity, etc.). G1.2's `ClientInstruction` is the HIGHER-level client-facing shape defined by stage-3b — the mapping
+between them is a validator concern (a valid `ClientInstruction` projects down to one or more rows of the UTL parquet
+schema). Keep both; do not merge.
+
+### Pre-audit manifest (Citadel rule-6)
+
+Grep across workspace, excluding `.venv*`, `node_modules`, `build`, `_archived_pre_v2`:
+
+| Symbol                                      | Current hits                                                                                                                                                        | Action                                                                                   | Note                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `InstructionValidator`                      | 0 runtime hits (plan mentions only)                                                                                                                                 | Net-new                                                                                  | No collision.                                                                                              |
+| `ClientInstruction`                         | 0 runtime hits                                                                                                                                                      | Net-new                                                                                  | UAC Pydantic model — new type.                                                                             |
+| `ValidationResult` (in a validator context) | Several in UTL/strategy-service domains (`unified_trading_library/domain/validation.py`, `strategy_service/engine/core/validation_service.py`) — unrelated contexts | Scope-rename — call ours `InstructionValidationResult` to avoid collision across facades | Picks: `InstructionValidationResult`, `InstructionFieldError` (not plain `ValidationResult`/`FieldError`). |
+| `FieldError`                                | 0 runtime hits as top-level symbol                                                                                                                                  | Net-new as `InstructionFieldError`                                                       | Safer namespacing.                                                                                         |
+| `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED`    | 0 runtime hits; only referenced in this plan                                                                                                                        | Net-new UTL event                                                                        | Register in `event_types.py` + `__init__.py` + schemas.py.                                                 |
+| `instruction_validator_middleware`          | 0 hits                                                                                                                                                              | Net-new module                                                                           | Execution-service `execution_service/validation/instruction_validator_middleware.py`.                      |
+| `integration_depth` (score field)           | 0 runtime hits                                                                                                                                                      | Net-new                                                                                  | Plan-unique scoring.                                                                                       |
+
+Zero existing runtime consumers → zero backwards-compat shims. Purely additive surface.
+
+### Execution DAG
+
+```
+2A (audit + design)
+    ├── 2B.1 UAC types (ClientInstruction, InstructionFieldError, InstructionValidationResult, IntegrationDepth)
+    │       └── 2B.2 UAC InstructionValidator + archetype_capability/venue checks + 30+ tests
+    │               └── COMMIT 1 (UAC)
+    ├── 2D UTL event registration (INSTRUCTION_INTEGRATION_DEPTH_OBSERVED + schema)
+    │       └── COMMIT 2 (UTL) — INDEPENDENT of UAC commit, can PARALLELIZE
+    └── after 2B.2 + 2D both complete:
+            2C execution-service middleware → COMMIT 3 (execution-service)
+                    └── 2E.1 UI Playwright spec → COMMIT 4 (UI)
+                                └── 2E.2 full 4-repo QG
+```
+
+**Parallel opportunity:** 2B.1+2B.2 (UAC) and 2D (UTL) have no interdep — a single agent can sequence them or two
+mini-agents can split. Recommend single agent since UTL work is ~20 LOC.
+
+### Files × line-ranges × commit sequence
+
+**COMMIT 1 — UAC** `feat(uac): G1.2 — instruction-schema validator library (rule 10 + stage-3b)`
+
+| File                                                                             | Action                                                                                                                                                                                                                                                                                                       | Approx LOC |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `unified-api-contracts/unified_api_contracts/internal/validation/__init__.py`    | NEW — export InstructionValidator, ClientInstruction, InstructionValidationResult, InstructionFieldError, IntegrationDepth                                                                                                                                                                                   | ~15        |
+| `unified-api-contracts/unified_api_contracts/internal/validation/instruction.py` | NEW — Pydantic `ClientInstruction` mirroring stage-3b §2 (8 required fields), `InstructionFieldError(field, violation, allowed, why)`, `InstructionValidationResult` discriminated union (Ok/Err), `InstructionValidator.validate()` calling `archetypes_for_pair()` + venue check, integration-depth scorer | ~250       |
+| `unified-api-contracts/unified_api_contracts/instruction.py`                     | NEW — public domain facade re-exporting the 5 symbols (matches G1.8 pattern)                                                                                                                                                                                                                                 | ~25        |
+| `unified-api-contracts/unified_api_contracts/__init__.py`                        | MODIFY — add new domain facade to package-level exports                                                                                                                                                                                                                                                      | +5         |
+| `unified-api-contracts/tests/internal/unit/test_instruction_validator.py`        | NEW — ≥30 cases: 8 required-field rejection (8), each BL-1..BL-10 pair-level rejection (10), venue-mismatch (3), integration_depth scoring boundaries (5+), happy path (3+)                                                                                                                                  | ~400       |
+
+Shape mirrors `strategy_availability.py:128-172` (BaseModel, frozen=True, extra=forbid, module-level helpers).
+Integration-depth scorer weights: structured enum = 1.0, free text = 0.0, hybrid = 0.5 (per plan line 90-91) —
+aggregated as ratio over present fields.
+
+**COMMIT 2 — UTL** `feat(utl/events): G1.2 — INSTRUCTION_INTEGRATION_DEPTH_OBSERVED event`
+
+| File                                                                         | Action                                                                                                                                      | Approx LOC |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-trading-library/unified_trading_library/events/event_types.py`      | MODIFY — add `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED = "INSTRUCTION_INTEGRATION_DEPTH_OBSERVED"` + inclusion in `STANDARD_LIFECYCLE_EVENTS` | +5         |
+| `unified-trading-library/unified_trading_library/events/schemas.py`          | MODIFY — payload dataclass `{instruction_id: str, integration_depth: float, client_id: str, timestamp: str}`                                | +20        |
+| `unified-trading-library/unified_trading_library/events/__init__.py`         | MODIFY — re-export new symbol                                                                                                               | +2         |
+| `unified-trading-library/tests/events/unit/test_new_events.py` (or new file) | MODIFY/NEW — registration + schema validation                                                                                               | +15        |
+
+**COMMIT 3 — execution-service** `feat(execution-service): G1.2 — instruction validator middleware`
+
+| File                                                                                 | Action                                                                                                                                   | Approx LOC |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `execution-service/execution_service/validation/__init__.py`                         | NEW                                                                                                                                      | ~5         |
+| `execution-service/execution_service/validation/instruction_validator_middleware.py` | NEW — pre-handler, on fail → structured 400 with `errors: InstructionFieldError[]`, on success → forward + emit UTL event carrying score | ~120       |
+| `execution-service/tests/unit/test_instruction_validator_middleware.py`              | NEW — ≥10 cases: bad instruction paths → 400 + no downstream call; good instruction → 200 + event emitted (mock bus)                     | ~200       |
+
+**COMMIT 4 — UI** `test(playbooks): G1.2 — validator Playwright spec`
+
+| File                                                                                                         | Action                                                                                                                                                                                                                                                                                           | Approx LOC |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-2-instruction-schema-validation.spec.ts` | NEW — mirrors `refactor-g1-8-*.spec.ts` shape: seed `client-full` via `seed-persona.ts`, matrix of invalid + valid submissions via `request.post`, assert 400 + FieldError[] for each invalid, assert integration_depth in success response, orphan-reachability of execution submission surface | ~140       |
+
+UI `scripts/quality-gates.sh` — no edit needed (Playwright auto-discovers `tests/e2e/playbooks/refactor/*.spec.ts`).
+
+### Playwright spec design
+
+Canonical port is `localhost:3000` (tier-1, per `unified-trading-system-ui/scripts/dev-tiers.sh`). The execution
+submission surface may not yet exist in the UI — spec uses direct API-level `request.post()` assertions against the
+execution-service endpoint (port 8004-8016 range, lookup in `ui-api-mapping.json`) for the 400/200 matrix, and
+additionally walks a canonical route like `/services/execution/` for the orphan-reachability assertion (reachable from
+main nav).
+
+If the execution submission surface is not yet wired into the UI (expected), the spec skips the UI-click path and runs
+API-only, with a `test.fixme()` hook that lights up when the UI surface lands (follow-up concern — not blocking G1.2
+merge).
+
+### Breaking-change analysis (Citadel rule-3)
+
+Zero existing runtime consumers → zero shims. Purely additive: new UAC facade (`unified_api_contracts.instruction`), new
+UTL event, new middleware, new test. No rename, no deletion. Stage-3b schema is the authoritative external contract;
+validator just enforces it.
+
+### Success criteria (per phase)
+
+| Phase         | Gate                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2A design     | Pydantic schema matches stage-3b §2 exactly; symbol naming locked (`Instruction*` prefix, no bare `ValidationResult`/`FieldError`)          |
+| 2B library    | `from unified_api_contracts.instruction import InstructionValidator` clean; ≥30 test cases green; UAC `bash scripts/quality-gates.sh` green |
+| 2C middleware | execution-service `bash scripts/quality-gates.sh` green; bad instruction → 400 + FieldError[]; good → 200 + event emitted                   |
+| 2D UTL        | event registered in `STANDARD_LIFECYCLE_EVENTS`; UTL `bash scripts/quality-gates.sh` green                                                  |
+| 2E verify     | UI Playwright spec green on tier-1 dev; 4 commit SHAs visible in `git log origin/live-defi-rollout --oneline -20`                           |
+
+### Open questions for operator
+
+1. **Symbol naming:** OK to call the types `InstructionValidator` / `ClientInstruction` / `InstructionValidationResult`
+   / `InstructionFieldError` (not `ValidationResult` / `FieldError`) to avoid cross-domain collisions with UTL's
+   `domain/validation.py` and strategy-service's `engine/core/validation_service.py`?
+2. **Public facade location:** OK to add a new `unified_api_contracts.instruction` public facade (matches G1.8 pattern —
+   new domain facade for new domain)? Alternative: re-export from existing `unified_api_contracts.execution` facade.
+   Defaulting to new facade unless you push back.
+3. **Execution submission UI surface:** Does a UI instruction-submission surface exist today, or is Playwright spec
+   API-only with a `test.fixme()` UI hook for future wiring? Defaulting to API-only + orphan-reachability stub.
+
+### Pre-flight for Phase 2A execution (when approved)
+
+```
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+# Already on live-defi-rollout; other agents have concurrent WIP on UAC/execution-service — stage files explicitly
+git -C unified-api-contracts status --short  # note WIP — do NOT stage unrelated files
+git -C execution-service status --short
+git -C unified-trading-library status --short
+.venv-workspace/bin/python -c "from unified_api_contracts.strategy import archetypes_for_pair, ARCHETYPE_CAPABILITY_REGISTRY; print(len(ARCHETYPE_CAPABILITY_REGISTRY))"  # expect 18
+```
