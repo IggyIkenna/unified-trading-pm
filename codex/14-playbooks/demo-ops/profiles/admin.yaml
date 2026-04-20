@@ -1,0 +1,20 @@
+# G1.7 restriction-profile — admin persona
+# Source of truth for the `admin` ServiceTile lock-state matrix.
+# Mirrored to `unified-trading-system-ui/lib/architecture-v2/restriction-profiles.ts`
+# by `unified-trading-pm/scripts/propagation/sync-restriction-profiles-to-ui.sh`.
+
+persona_id: admin
+base_audience: admin
+description: >-
+  Odum internal admin. Sees every service tile unlocked regardless of flavour. Short-circuit path in `access_control` —
+  admin scope always allows.
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: unlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: unlocked
+  admin: unlocked
+flavour_overrides: {}

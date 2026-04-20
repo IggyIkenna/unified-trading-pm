@@ -1,0 +1,28 @@
+# G1.7 restriction-profile — Regulatory Umbrella prospect persona
+# Prospect evaluating the Reg Umbrella engagement — emerging manager running
+# their own strategies under Odum's FCA permissions. Reporting-centric.
+
+persona_id: prospect-regulatory
+base_audience: reg_umbrella_client
+description: >-
+  Warm prospect on the Reg Umbrella path. Emerging manager who will operate their own strategies under Odum's regulatory
+  wrapper. Sees reporting + compliance-facing tiles. Research/promote hidden (compliance overlay, not strategy research
+  surface). Trading + observe padlocked because the client will operate those under their own infra once onboarded.
+tiles:
+  data: padlocked
+  research: hidden
+  promote: hidden
+  trading: padlocked
+  observe: padlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides:
+  turbo:
+    # Turbo focuses on the regulatory filing narrative
+    trading: hidden
+    observe: hidden
+  deep_dive:
+    # Deep-dive surfaces the trading+observe handoff story
+    trading: unlocked
+    observe: unlocked

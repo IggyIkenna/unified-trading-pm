@@ -1,0 +1,20 @@
+# G1.7 restriction-profile — anonymous / unauthenticated visitor
+# Public website visitor. No service tiles unlocked; the public site has its
+# own marketing routes which are outside this profile's scope.
+
+persona_id: anon
+base_audience: trading_platform_subscriber
+description: >-
+  Anonymous visitor (no authenticated persona). Every service tile is hidden — the marketing site routes them to sign-in
+  / book-a-call flows before any tile becomes reachable. Present here so the engine returns a deterministic profile
+  rather than a default-null.
+tiles:
+  data: hidden
+  research: hidden
+  promote: hidden
+  trading: hidden
+  observe: hidden
+  reports: hidden
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

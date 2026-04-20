@@ -1,0 +1,26 @@
+# G1.7 restriction-profile — IM prospect persona
+# Prospect evaluating Odum Investment Management (Odum-run funds, reporting-only
+# surface). Sees reporting + investor-relations. DART surfaces are padlocked
+# or hidden per rule 04 / future rule 12 service-family scope.
+
+persona_id: prospect-im
+base_audience: im_client
+description: >-
+  Warm prospect on the IM path. Odum runs strategies; client sees reporting + capital statements. DART surfaces
+  (research/promote/trading/observe) are hidden because IM clients don't operate strategies themselves.
+tiles:
+  data: padlocked
+  research: hidden
+  promote: hidden
+  trading: hidden
+  observe: hidden
+  reports: unlocked
+  investor-relations: unlocked
+  admin: hidden
+flavour_overrides:
+  turbo:
+    # Turbo focuses narrowly on IM narrative
+    data: hidden
+  sales_pitch:
+    # Sales-pitch flavour surfaces data as a padlocked upsell hint
+    data: padlocked

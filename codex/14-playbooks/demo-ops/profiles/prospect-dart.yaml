@@ -1,0 +1,27 @@
+# G1.7 restriction-profile — DART prospect persona
+# Warm prospect evaluating the DART (Data + Research + Trading) engagement.
+# DART surfaces are visible; full-pipeline upsell cues gated via padlocks.
+
+persona_id: prospect-dart
+base_audience: trading_platform_subscriber
+description: >-
+  Warm DART prospect. Sees the DART engagement story — data, research, trading, observe, reporting. Promote is padlocked
+  as a full-DART upsell tease. Investor-relations is hidden (IM-only).
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: padlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides:
+  broader_platform:
+    # Broader-platform flavour unlocks promote to showcase the full lifecycle
+    promote: unlocked
+  turbo:
+    # Turbo narrows to trading+observe narrative
+    data: padlocked
+    research: padlocked
+    reports: padlocked

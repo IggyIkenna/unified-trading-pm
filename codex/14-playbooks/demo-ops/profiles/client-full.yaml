@@ -1,0 +1,25 @@
+# G1.7 restriction-profile — full-DART client persona
+# Paying client on the full-DART engagement (research + promote + run + observe
+# + report). IM-only surfaces (investor-relations) remain hidden.
+
+persona_id: client-full
+base_audience: trading_platform_subscriber
+description: >-
+  Paying full-DART client. Operates the full Research→Promote→Trading→Observe lifecycle with reporting. Does not see
+  investor-relations (that's IM-side).
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: unlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides:
+  turbo:
+    # Turbo flavour focuses the demo on a narrow slice — hide reporting-heavy tiles
+    reports: padlocked
+  deep_dive:
+    # Deep-dive unlocks everything the client has paid for
+    {}
