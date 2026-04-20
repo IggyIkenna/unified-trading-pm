@@ -79,12 +79,13 @@ Violating any of these means you're doing something off-pattern — document why
 
 `create-code-tarballs.sh` supports four mutually-compatible scopes:
 
-| Flag                                                | Scope                                             | Typical use                                                |
-| --------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------- |
-| (none)                                              | CORE only — UAC / UTL / MTDS / deployment-service | UTL-only changes, CORE-only smoke                          |
-| `--all`                                             | CORE + every service repo (14+)                   | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
-| `--category CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos             | Category-specific rollout                                  |
-| `--include <repo>`                                  | CORE + the named repo (repeatable)                | Surgical addition                                          |
+| Flag                                                | Scope                                              | Typical use                                                |
+| --------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| (none)                                              | CORE only — UAC / UTL / MTDS / deployment-service  | UTL-only changes, CORE-only smoke                          |
+| `--all`                                             | CORE + every service repo (14+)                    | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
+| `--category CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos              | Category-specific rollout                                  |
+| `--ml-training`                                     | CORE + ml-training-service + features-\* consumers | ML training runs (any category)                            |
+| `--include <repo>`                                  | CORE + the named repo (repeatable)                 | Surgical addition                                          |
 
 **Category-to-repo mappings** are in `create-code-tarballs.sh` as bash arrays (`CEFI_REPOS`, `TRADFI_REPOS`,
 `DEFI_REPOS`, `SPORTS_REPOS`, `PREDICTION_REPOS`). Edit the script if you add a new service repo to a category.
@@ -115,18 +116,55 @@ VMs launched **before** step 2 still run the stale code. Check the tarball times
 
 ## Singleton-locked launchers (2026-04-20)
 
-Two launchers enforce singleton locks to prevent rate-limit thundering herds against shared API keys:
+Three launchers enforce singleton locks to prevent rate-limit thundering herds against shared API keys / quotas:
 
 - `launch-sfi-forward-poll.sh` — SFI/RapidAPI rate-limits per-key; 10 concurrent VMs thrash on 429 backoffs and produce
   no useful data. Lock: refuses launch if any `sfi-fwd-*` VM is RUNNING in the zone. `--force` bypass.
 - `launch-mtds-prediction-backfill-vm.sh` — Polymarket gamma rate-limits per-IP; concurrent VMs share the project egress
   NAT. Same lock pattern. `--force` bypass.
+- `launch-tradfi-backfill-vm.sh` (2026-04-20, CME Tier 1 Phase A) — Databento account is shared across the team;
+  concurrent VMs on wide windows risk contract-exceeded errors. Lock: refuses launch if any `tradfi-bf-*` VM is RUNNING
+  in the zone. `--force` bypass. Shards CME ES expiries year-by-year 2022-2026 (4 quarterly contracts per year on
+  `CME:FUTURE:ES-YYYYMMDD`). Default `VM_DATA_TYPES=ohlcv_1m;trades`; override with `--data-types`. Override instruments
+  with `--instrument-ids 'CME:FUTURE:ES-20260619;...'`. Machine `e2-standard-4` per shard.
 
 Incident reference: `memory/project_session_handover_2026_04_19.md` + the 2026-04-19 SFI herd that produced ~4
 successful writes across 10 VMs in 6 hours.
 
-**If you build a new launcher for a rate-limited adapter**: copy the singleton-lock pattern from the two above, not just
-the `gcloud compute instances create` boilerplate.
+**If you build a new launcher for a rate-limited adapter**: copy the singleton-lock pattern from the three above, not
+just the `gcloud compute instances create` boilerplate.
+
+---
+
+## ML training launcher (non-singleton, 2026-04-20)
+
+`launch-ml-training-vm.sh` (CME Tier 1 Phase A) — trains a single ml-training-service
+instrument×target×timeframe×model-family combination on GCE, writing the artefact to the ml model_registry in GCS.
+
+- **Not singleton-locked** — parallel training is expected (different instruments, different target types, different
+  hyper-param grids). ml-training-service does not share a rate-limited API key; it reads feature parquet + fits models
+  locally.
+- Machine choice via `--machine cpu|high|gpu`:
+  - `cpu` (default) → `n2-highmem-8` (64 GB RAM). Enough for LightGBM / XGBoost / CatBoost on 5-year 1-minute data.
+  - `high` → `n2-highmem-16` (128 GB RAM). For larger hyper-param grids / Optuna multi-trial runs.
+  - `gpu` → `n1-standard-8` + 1×T4 (~$0.35/h). Only when the harness config uses a GPU-enabled booster. Most
+    `swing_high` / `swing_low` models are fine on CPU.
+- Tarballs: prep with `bash create-code-tarballs.sh --ml-training` (CORE + ml-training-service + features-\* consumers).
+- Routing: launcher passes `VM_TASK=features-backfill` + `VM_BACKFILL_CMD="python -m ml_training_service ..."`, reusing
+  the features-backfill branch of `setup-data-pipeline-vm.sh` which already handles verbatim command execution (Phase B
+  will add a dedicated `VM_TASK=ml-training` branch).
+- Observability: inherits the `STALL_TIMEOUT_SEC=600` log-mtime watchdog + `timeout 30s` run_heartbeat + py-spy stack
+  dump + pkill-by-name fallback from `vm-exec-with-gcs-tee.sh` (deployed 2026-04-19 after the VM silent-hang class bug).
+
+Typical CME S&P 500 ML Tier 1 MVP invocation (once Phase B stitches the continuous ES series):
+
+```bash
+bash launch-ml-training-vm.sh \
+  --category TRADFI --instruments ES_FRONT \
+  --target-types 'swing_high;swing_low' --timeframes 1m \
+  --start-date 2022-01-01 --end-date 2025-12-31 \
+  --machine high
+```
 
 ---
 
