@@ -63,10 +63,24 @@ Read these before making ANY code changes:
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
 - Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
   `codex/06-coding-standards/cli-convention.md`.
-- **Availability manifest v4** — `ManifestWriter` writes proper shard columns (venue, chain, data_type, instrument_type,
-  league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type). **Never
-  overload `venue`** with non-venue data. For shard dimensions, data status page hierarchy, availability % calculation,
-  and integrity principles, see `codex/02-data/availability-manifest-and-data-status.md` (SSOT).
+- **Availability manifest v5 (honest-coverage)** — `ManifestWriter` writes proper shard columns (venue, chain,
+  data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id,
+  client_id, instruction_type) PLUS `capture_status` (`captured` / `empty_confirmed` / `attempted_failed`),
+  `error_reason`, `attempted_at`. Adapters MUST distinguish empty-vs-failed:
+  `record_empty(row_key=..., attempted_at=...)` for legitimately-zero-rows,
+  `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions. **Never overload
+  `venue`** with non-venue data. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+- **VM tarball deployment** — Backfill / migration / smoke / forward-poll VMs boot via
+  `gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` and pull tarballs from `gs://deployment-scripts-.../code/`.
+  Refresh tarballs after every code change with `bash deployment-service/scripts/vm/create-code-tarballs.sh <flag>`:
+  `--all` (safest for any multi-repo feature), `--category SPORTS|CEFI|TRADFI|DEFI|PREDICTION` (scoped to a category's
+  pipeline), `--include <repo>` (one-off addition). **Bare invocation only re-tars CORE**
+  (UAC/UTL/MTDS/deployment-service) — forgetting the flag silently runs stale code. SSOT:
+  `codex/05-infrastructure/vm-tarball-deployment.md`.
+- **Singleton-locked launchers** — Adapters with shared API keys / per-IP rate limits use a singleton-lock pattern in
+  the launcher (refuses launch if a same-prefix VM is RUNNING in the zone; `--force` bypass). Currently:
+  `launch-sfi-forward-poll.sh`, `launch-mtds-prediction-backfill-vm.sh`. New rate-limited adapters should copy the
+  pattern. Reference incident: 2026-04-19 SFI thundering herd (10 VMs / 6 hours / ~4 useful writes).
 
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)
 
