@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Transport Security
 
 **SSOT:** This document is the canonical reference for transport security decisions in the unified trading system.

@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Pre-Sprint Baseline (Phase 0)
 
 **Last Updated:** 2026-03-04 **SSOT for:** The Phase 0 audit protocol that every repo must pass before any hardening

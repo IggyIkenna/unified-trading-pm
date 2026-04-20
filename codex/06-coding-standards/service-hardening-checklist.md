@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Service Hardening Checklist — D1→D5 Validation
 
 **Owner:** Phase 3 — Service Hardening & Integration **SSOT:**

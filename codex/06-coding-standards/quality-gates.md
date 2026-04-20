@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Quality Gates
 
 ## TL;DR

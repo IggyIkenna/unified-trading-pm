@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Correlation ID Propagation
 
 ## Overview

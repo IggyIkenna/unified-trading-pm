@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Per-Client Exchange Credentials
 
 Exchange API credentials are stored per client and per venue in GCP Secret Manager (or AWS Secrets Manager when

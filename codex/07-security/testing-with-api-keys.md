@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Testing with Live API Keys
 
 **SSOT for:** `INTEGRATION_TEST_MODE` convention, VCR cassette matrix per interface, GCP auth integration test pattern.

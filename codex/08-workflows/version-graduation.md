@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Version Graduation (0.x.x → 1.0.0)
 
 ## Overview

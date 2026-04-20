@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # UI Branding Standardization
 
 ## Shared Component Library

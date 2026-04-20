@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Service-to-Service Authentication
 
 **SSOT:** This document defines the S2S auth phases for the Unified Trading System. Implementations live in

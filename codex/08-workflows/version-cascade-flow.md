@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Version Cascade Flow
 
 **SSOT:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`

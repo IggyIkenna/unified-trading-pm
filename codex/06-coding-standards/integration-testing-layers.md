@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Integration Testing Layers
 
 **Last Updated:** 2026-03-04 **SSOT for:** The 5-layer integration testing strategy across all repos. **Cross-refs:**

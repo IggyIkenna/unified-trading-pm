@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Internal Dependency Graph — Unified Libraries
 
 **Last Updated:** 2026-02-28 (full rewrite — previous version dated 2026-02-19 used obsolete pre-refactor library names)

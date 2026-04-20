@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Bucket Isolation Model -- Three-Tier Architecture
 
 SSOT: `unified-cloud-interface/unified_cloud_interface/constants.py` (`get_bucket_environment`, `get_bucket_name`,

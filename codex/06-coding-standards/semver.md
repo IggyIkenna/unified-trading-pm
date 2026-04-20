@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Semantic Versioning Standards
 
 ## Overview

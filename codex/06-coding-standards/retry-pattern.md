@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Retry Pattern
 
 ## Overview

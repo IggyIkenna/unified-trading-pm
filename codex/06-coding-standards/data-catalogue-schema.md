@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Data Catalogue Schema Standard
 
 This document defines the canonical schema for all `data-catalogue-*.yaml` files across the unified trading system.

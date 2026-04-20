@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Feature Branch Workflow
 
 **Last Updated:** 2026-02-28 **SSOT:** This document. Cross-refs: `always-use-quickmerge.mdc`,

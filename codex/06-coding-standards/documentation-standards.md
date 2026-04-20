@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Documentation Standards
 
 Every repo in the unified trading system must maintain a canonical set of documentation files. Missing or stub docs (3

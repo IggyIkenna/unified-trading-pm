@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Authentication Setup Guide
 
 ## TL;DR

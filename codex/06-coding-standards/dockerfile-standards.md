@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Dockerfile Standards
 
 SSOT for all Docker image patterns in the unified trading system.

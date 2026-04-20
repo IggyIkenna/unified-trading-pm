@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Runtime Tiers & Deployment Orchestration
 
 ## Core Invariant

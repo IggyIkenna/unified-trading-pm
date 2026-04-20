@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Secret Rotation Policy
 
 ## Rotation Schedule

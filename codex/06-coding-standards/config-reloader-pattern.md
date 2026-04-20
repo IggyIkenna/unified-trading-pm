@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Config Reloader Pattern
 
 ## When to Use

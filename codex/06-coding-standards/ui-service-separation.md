@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # UI / Service Separation
 
 **Last Updated:** 2026-02-28  

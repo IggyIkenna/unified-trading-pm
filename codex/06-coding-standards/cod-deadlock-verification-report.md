@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # COD Deadlock Protection - Verification Report
 
 **Date**: 2026-02-13  

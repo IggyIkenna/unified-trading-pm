@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Disaster Recovery -- RTO/RPO Targets
 
 ## Recovery Targets by Environment

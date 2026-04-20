@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Test Templates
 
 Canonical test file templates for the unified trading system. Copy these into `tests/unit/` in each service repo and

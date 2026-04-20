@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Service Pair Flows
 
 **SSOT:** This document describes canonical service-to-service interaction flows. Runtime behavior is defined in

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # UI Functionality Requirements — Unified Trading System
 
 **Purpose:** Reference for UI capabilities and how they map to APIs and the Python pipeline. For **current** product

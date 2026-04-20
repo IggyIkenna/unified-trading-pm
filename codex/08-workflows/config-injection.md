@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Dynamic Config Injection
 
 **Last Updated:** 2026-03-06 **Status:** Production **Owner:** Platform Engineering

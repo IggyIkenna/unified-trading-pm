@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Config Dynamic Injection Standard
 
 **Last Updated:** 2026-03-08 **Status:** Production **Owner:** Platform Engineering **SSOT:**

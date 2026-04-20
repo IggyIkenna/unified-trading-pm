@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Library Dependency Matrix
 
 > **Supersedes:** `archive/dependency-matrix.md` (2026-02-26). unified-api-contracts version table moved to

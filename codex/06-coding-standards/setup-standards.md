@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Setup Standards (setup.sh)
 
 ## TL;DR

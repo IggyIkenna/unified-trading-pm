@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # T+1 Batch Pipeline DAG
 
 **SSOT for:** T+1 nightly batch replay, GCS namespace conventions, batch-vs-live event comparison, deviation thresholds,

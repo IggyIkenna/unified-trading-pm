@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # SIT (System Integration Tests) Runbook
 
 ## Force-Unlock Staging

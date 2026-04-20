@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Intent-Level API Pattern (Service Protocol Abstraction)
 
 **Standard:** Services declare WHAT + MODE. Libraries decide HOW. Deployment injects WHERE.

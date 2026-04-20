@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Audit Logging
 
 ## TL;DR

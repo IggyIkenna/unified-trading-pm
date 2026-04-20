@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Local Development Guide
 
 **SSOT for:** Starting, stopping, and verifying the Unified Trading System locally. Port assignments, mode axes,

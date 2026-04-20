@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Prometheus Metrics
 
 ## Overview

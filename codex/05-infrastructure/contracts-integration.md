@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Contracts Integration Guide
 
 **Constraints SSOT:** [02-data/contracts-scope-and-layout.md](../02-data/contracts-scope-and-layout.md) — canonical vs

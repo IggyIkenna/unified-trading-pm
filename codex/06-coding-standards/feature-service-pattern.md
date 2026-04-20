@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Feature Service Pattern
 
 ## Overview

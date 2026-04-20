@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # CI/CD Setup
 
 > **SSOT**: `unified-trading-pm/docs/ci-cd-ssot.md`

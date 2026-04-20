@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Performance Targets
 
 **Status:** Active — all CI performance gates must validate against these targets.

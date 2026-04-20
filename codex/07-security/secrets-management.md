@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Secrets Management
 
 ## TL;DR

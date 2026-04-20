@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # MEV Protection
 
 MEV (Maximal Extractable Value) is the profit that block builders or validators can extract by reordering, inserting, or

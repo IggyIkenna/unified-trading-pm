@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # New Repo Setup — Complete Workflow
 
 ## Overview

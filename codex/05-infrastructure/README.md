@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 05 - Infrastructure Principles
 
 ## TL;DR

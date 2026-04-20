@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Coding Standard — Artifact Naming
 
 > **What it is:** Naming conventions for all versioned artifacts in the system — feature groups, ML models, execution

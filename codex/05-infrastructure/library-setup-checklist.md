@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Library Setup Checklist
 
 ## TL;DR

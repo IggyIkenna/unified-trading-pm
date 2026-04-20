@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Dependency Cascade
 
 **SSOT:** `unified-trading-pm/.github/workflows/cascade-qg-ordering.yml` (orchestrator),

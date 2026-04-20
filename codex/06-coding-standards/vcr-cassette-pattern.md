@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # VCR Cassette Pattern
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Secret Naming Convention
 
 **SSOT:** This document is the canonical reference for Secret Manager naming in the Unified Trading System. All new

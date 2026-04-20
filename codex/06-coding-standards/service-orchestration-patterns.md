@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Service Orchestration Patterns
 
 14 patterns extracted from the instruments-service and market-tick-data-service refactorings. Every service in the

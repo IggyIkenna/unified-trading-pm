@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Workspace Root Variable Pattern
 
 ## TL;DR

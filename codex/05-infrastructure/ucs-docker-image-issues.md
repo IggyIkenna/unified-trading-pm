@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # UCS Docker Image: Known Issues & Rollout Tracking
 
 **Owner:** Ikenna  

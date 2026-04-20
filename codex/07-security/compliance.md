@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # MiFID II / FCA Compliance Event Logging
 
 ## Regulatory Status

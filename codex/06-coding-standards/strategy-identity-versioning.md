@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Coding Standard — Strategy Identity + Versioning
 
 > **What it is:** Mandatory naming + versioning rules for strategies. Every strategy in the system has a 5-layer

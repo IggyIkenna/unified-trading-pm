@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Quickmerge Architecture
 
 Quickmerge is the standard commit workflow for all service repos. It runs all quality checks automatically before
