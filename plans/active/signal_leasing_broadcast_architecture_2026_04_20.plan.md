@@ -3,8 +3,6 @@ title: "Signal Leasing — broadcast-capable external-counterparty architecture"
 status: active
 priority: P0
 owner: agent
-locked_by: live-defi-rollout
-locked_since: 2026-04-20
 depends_on:
   - path_to_100m_finalization_2026_04_20
 ---
