@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Quality Gate Bypass Audit — Workspace Aggregate (SSOT)
 
 This document is the **codex-level single source of truth** for cross-repo quality gate bypass tracking. Each repo

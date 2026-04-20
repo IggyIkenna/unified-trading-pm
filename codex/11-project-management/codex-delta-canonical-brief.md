@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Codex Delta Canonical Brief
 
 **Last updated:** 2026-02-11  

@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # portfolio-allocator-service
 
 > **What it is:** The new service that owns the **strategy scope** of capital allocation. One instance per client, runs

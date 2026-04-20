@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Unified Trading System: Complete End-to-End Workflow
 
 ## Quick Reference (Links to Existing Diagrams)

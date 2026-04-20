@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Unknowns Questionnaire (Pre-Implementation Gate)
 
 Use this questionnaire before writing implementation tasks. If unresolved answers remain in critical sections, do not

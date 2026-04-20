@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Hive Schema Compatibility
 
 ## Overview

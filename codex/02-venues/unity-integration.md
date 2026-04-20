@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Unity Integration
 
 > **What it is:** Unity is our primary sports-betting prime broker. Meta-broker venue, single wallet, 10 child books,
@@ -60,29 +64,27 @@ Unity supplies a Java Feed Connector (binary) for protocol translation. Our arch
 
 ## Child books (10)
 
-Canonical registry: `unified_api_contracts.internal.UNITY_CHILD_BOOKS` (pulled
-from quant-portal.olesportsresearch.com/unity 2026-04-17). All books commissioned
-as **COMMISSION_ON_WIN** (charged on winning-bet payouts only). CROWN and SBO
-are commission-free per Unity pricing.
+Canonical registry: `unified_api_contracts.internal.UNITY_CHILD_BOOKS` (pulled from
+quant-portal.olesportsresearch.com/unity 2026-04-17). All books commissioned as **COMMISSION_ON_WIN** (charged on
+winning-bet payouts only). CROWN and SBO are commission-free per Unity pricing.
 
-| #   | Child book | Commission | Commission type   | Sports    | Notes                                |
-| --- | ---------- | ---------- | ----------------- | --------- | ------------------------------------ |
-| 1   | VX         | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first            |
-| 2   | SHARPBET   | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first            |
-| 3   | 3ET        | 0.5%       | COMMISSION_ON_WIN | SOC/TEN/BKT |                                      |
-| 4   | BETDEX     | 1.6%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Decentralized betting exchange       |
-| 5   | MATCHBOOK  | 2.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)                 |
-| 6   | IBC        | 2.5%       | COMMISSION_ON_WIN | SOC/BKT   | Asian — IBCBet handicap specialist   |
-| 7   | BETFAIR    | 2.8%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)                 |
-| 8   | BROKER5    | 3.0%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Avoid unless spread justifies        |
-| 9   | CROWN      | —          | Commission-free   | SOC/BKT   | Asian handicap specialist            |
-| 10  | SBO        | —          | Commission-free   | SOC/BKT   | Asian — SBOBet handicap specialist   |
+| #   | Child book | Commission | Commission type   | Sports      | Notes                              |
+| --- | ---------- | ---------- | ----------------- | ----------- | ---------------------------------- |
+| 1   | VX         | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first          |
+| 2   | SHARPBET   | 0.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Cheapest; preferred first          |
+| 3   | 3ET        | 0.5%       | COMMISSION_ON_WIN | SOC/TEN/BKT |                                    |
+| 4   | BETDEX     | 1.6%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Decentralized betting exchange     |
+| 5   | MATCHBOOK  | 2.2%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)               |
+| 6   | IBC        | 2.5%       | COMMISSION_ON_WIN | SOC/BKT     | Asian — IBCBet handicap specialist |
+| 7   | BETFAIR    | 2.8%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Exchange (via Unity)               |
+| 8   | BROKER5    | 3.0%       | COMMISSION_ON_WIN | SOC/TEN/BKT | Avoid unless spread justifies      |
+| 9   | CROWN      | —          | Commission-free   | SOC/BKT     | Asian handicap specialist          |
+| 10  | SBO        | —          | Commission-free   | SOC/BKT     | Asian — SBOBet handicap specialist |
 
 Sport legend: SOC = Soccer, TEN = Tennis, BKT = Basketball.
 
-Asian books (CROWN, SBO, IBC — marked `*` on the portal) are soccer/basketball
-only; they do not support tennis. Exchanges (BETDEX, MATCHBOOK, BETFAIR) charge
-commission on winning-bet payouts, consistent with exchange convention.
+Asian books (CROWN, SBO, IBC — marked `*` on the portal) are soccer/basketball only; they do not support tennis.
+Exchanges (BETDEX, MATCHBOOK, BETFAIR) charge commission on winning-bet payouts, consistent with exchange convention.
 
 ## Sports enabled (all 3)
 
@@ -103,14 +105,12 @@ Canonical registry: `unified_api_contracts.internal.UNITY_COMMERCIAL_TERMS`.
 
 ### Connection fee + free integration
 
-- One-off **connection fee** (non-refundable) buys demo account credentials +
-  support + free 2-month integration period:
+- One-off **connection fee** (non-refundable) buys demo account credentials + support + free 2-month integration period:
   - USD 550 · EUR 500 · GBP 450 · CNY 4,000
-- **2 months** of free API access from demo account creation, then monthly
-  subscription kicks in (unless turnover waiver is met).
-- If production cutover happens on or before the 15th of a month, 50% of the
-  month's subscription is charged AND the turnover waiver requirement is halved
-  for that month (prorated billing rule).
+- **2 months** of free API access from demo account creation, then monthly subscription kicks in (unless turnover waiver
+  is met).
+- If production cutover happens on or before the 15th of a month, 50% of the month's subscription is charged AND the
+  turnover waiver requirement is halved for that month (prorated billing rule).
 
 ### Deposit (production account)
 
@@ -129,11 +129,9 @@ Billing currency is per-client; Unity supports four:
 | GBP      | 2,200             | 220,000                          |
 | CNY      | 20,000            | 2,000,000                        |
 
-**Effective turnover** = absolute win + absolute loss (not gross volume).
-Subscription state is reviewed around the 2nd of each calendar month — prior
-month's fee is refunded if waiver was met, retained toward the new month
-otherwise. If balance is insufficient to cover the fee, Unity notifies before
-debiting.
+**Effective turnover** = absolute win + absolute loss (not gross volume). Subscription state is reviewed around the 2nd
+of each calendar month — prior month's fee is refunded if waiver was met, retained toward the new month otherwise. If
+balance is insufficient to cover the fee, Unity notifies before debiting.
 
 ### Monitoring
 
@@ -263,23 +261,22 @@ unity:
 ## Finalizing books 9 and 10
 
 Books 9 and 10 are carried as `TBD_BOOK_9` / `TBD_BOOK_10` stubs in
-`unified_api_contracts/internal/unity_child_books.py` until the user pulls the
-final identity + commission terms from the user-authenticated quant-portal.
+`unified_api_contracts/internal/unity_child_books.py` until the user pulls the final identity + commission terms from
+the user-authenticated quant-portal.
 
 **Workflow:**
 
-1. Log in to https://quant-portal.olesportsresearch.com/unity (requires
-   user authentication — no service credentials).
-2. Export the two remaining books' `child_venue_id`, `display_name`,
-   `commission_bps`, `commission_type`, and `supported_sports`.
+1. Log in to https://quant-portal.olesportsresearch.com/unity (requires user authentication — no service credentials).
+2. Export the two remaining books' `child_venue_id`, `display_name`, `commission_bps`, `commission_type`, and
+   `supported_sports`.
 3. Drop them into `unified-api-contracts/data/unity_child_books_update.yaml`:
 
    ```yaml
    books:
      - child_venue_id: REAL_BOOK_9_ID
        display_name: Real Book 9 Name
-       commission_bps: 45          # bps, not percent
-       commission_type: FLAT       # FLAT / TIERED / PERCENT / COMMISSION_ON_WIN / MAKER_TAKER
+       commission_bps: 45 # bps, not percent
+       commission_type: FLAT # FLAT / TIERED / PERCENT / COMMISSION_ON_WIN / MAKER_TAKER
        supported_sports: [SOCCER, TENNIS]
        notes: Commission verified from quant-portal on YYYY-MM-DD
        confirmed: true
@@ -315,23 +312,20 @@ final identity + commission terms from the user-authenticated quant-portal.
    git commit -m "feat(unity): finalize books 9 and 10 from quant-portal"
    ```
 
-**Invariants the script enforces** (via
-`unified_api_contracts.internal.validate_unity_child_book`):
+**Invariants the script enforces** (via `unified_api_contracts.internal.validate_unity_child_book`):
 
 - `supported_sports` must be a subset of `{SOCCER, TENNIS, BASKETBALL}`
-- Confirmed books with `commission_bps > 0` must sit in `[20, 300]` bps
-  (0.2% – 3.0%). Outside = almost certainly a unit error.
+- Confirmed books with `commission_bps > 0` must sit in `[20, 300]` bps (0.2% – 3.0%). Outside = almost certainly a unit
+  error.
 - Total count stays at 10 after merge.
-- Unconfirmed stubs must retain the `TBD_BOOK_` prefix and empty
-  `supported_sports` so they never leak into `unity_child_books_confirmed()`.
+- Unconfirmed stubs must retain the `TBD_BOOK_` prefix and empty `supported_sports` so they never leak into
+  `unity_child_books_confirmed()`.
 
 **Tests that will automatically cover the update:**
 
-- `tests/unit/test_unity_child_books.py` runs against the live
-  `UNITY_CHILD_BOOKS` list, so once books 9 and 10 are confirmed the count
-  (`exactly_eight_confirmed`) and partition tests need updating. The script
-  intentionally does NOT touch the tests — that reminder is left to the
-  human so the acceptance-test change happens in the same commit as the
+- `tests/unit/test_unity_child_books.py` runs against the live `UNITY_CHILD_BOOKS` list, so once books 9 and 10 are
+  confirmed the count (`exactly_eight_confirmed`) and partition tests need updating. The script intentionally does NOT
+  touch the tests — that reminder is left to the human so the acceptance-test change happens in the same commit as the
   data-landing commit.
 
 ## Cross-references

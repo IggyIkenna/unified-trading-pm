@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Validator Coverage Matrix - 2026-02-21
 
 ## Overview

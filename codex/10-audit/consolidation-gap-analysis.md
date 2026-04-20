@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Readiness Checklist Consolidation — Gap Analysis
 
 **Date**: 2026-03-11 **Author**: Stream A (automated) **Purpose**: Phase 0 READ-ONLY analysis before creating v3.0

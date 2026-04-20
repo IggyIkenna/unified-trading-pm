@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Market Making Strategy
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Catalogue Schema
 
 **SSOT for:** canonical schema for `unified-trading-pm/configs/data-catalogue.{service}.yaml` files (symlinked into

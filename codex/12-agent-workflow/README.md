@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # 12 — Agent Workflow
 
 Agent operating procedures for the Unified Trading System. Authoritative agent rules are in `.cursor/rules/*.mdc`

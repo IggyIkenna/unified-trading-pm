@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Contract Failure Handling
 
 ## Dead-Letter Queue Strategy

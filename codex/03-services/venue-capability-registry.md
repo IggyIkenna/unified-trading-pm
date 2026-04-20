@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # venue-capability-registry
 
 > **What it is:** The authoritative source of what each venue supports (operations, instruments, collateral rules,

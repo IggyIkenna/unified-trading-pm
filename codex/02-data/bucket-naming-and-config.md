@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Bucket Naming and Config Standards
 
 ## TL;DR

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Contracts Scope and Layout — SSOT
 
 **SSOT for:** AC vs UIC scope, dependency rule (AC cannot import UIC), and package layout. For full detail:

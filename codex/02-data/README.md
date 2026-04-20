@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data
 
 **Schema governance, storage patterns, and data quality standards for the Unified Trading System.**

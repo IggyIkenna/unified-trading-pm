@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Gap Analysis: Checklist Consolidation — 2026-03-11
 
 **Purpose**: Phase 0 gap analysis for `p0-audit-existing-checklists` (plan: repo_readiness_semver_hardening_2026_03_11).

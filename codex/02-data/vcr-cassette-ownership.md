@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # VCR Cassette Ownership and SSOT
 
 ## Rule

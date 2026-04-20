@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Operation Capability Registry
 
 **SSOT:** `unified-api-contracts/unified_api_contracts/registry/capability.py` + `venue_context.py`

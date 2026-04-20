@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Deprecated Services (2026)
 
 The following services have been removed or consolidated as part of the post-trade infrastructure refactor.

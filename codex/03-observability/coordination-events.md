@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Coordination Events -- Service-to-Service Wiring
 
 > Last updated: 2026-03-15. This document maps all coordination events defined in `unified-trading-library` and

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 11 — Project Management
 
 PM methodology standards, scope specifications (epics), architecture decision records, and domain reference data.

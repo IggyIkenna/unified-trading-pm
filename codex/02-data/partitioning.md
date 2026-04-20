@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Data Partitioning Conventions
 
 ## TL;DR

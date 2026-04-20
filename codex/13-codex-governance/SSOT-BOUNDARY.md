@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # SSOT Boundary: Codex vs PM
 
 This document is the canonical rule for where content belongs. All agents and developers must consult this before

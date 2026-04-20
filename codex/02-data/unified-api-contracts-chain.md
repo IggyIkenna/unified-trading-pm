@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # unified-api-contracts Chain
 
 ## TL;DR

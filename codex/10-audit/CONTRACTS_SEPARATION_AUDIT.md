@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Contracts Separation of Concerns — Audit Report
 
 > Updated 2026-03-15 to reflect UAC Citadel Architecture v2 layout.

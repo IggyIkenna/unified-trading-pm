@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Parser Fixes and Book Snapshot Clarification - 2026-02-21
 
 **Status**: ✅ COMPLETE - All parser issues resolved, drift detection: exit code 0

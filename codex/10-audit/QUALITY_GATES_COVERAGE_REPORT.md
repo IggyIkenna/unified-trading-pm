@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Quality Gates & Coverage Audit Report
 
 **Generated:** 2026-03-04 (UTC) **Source:** Parallel agent run across all Python repos in workspace **Target:** 70%

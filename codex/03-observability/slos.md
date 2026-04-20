@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Service Level Objectives (SLOs) — Unified Trading System
 
 **Last Updated:** 2026-03-06 **Owner:** Platform / SRE **Standard:** Google SRE — error budget model (30-day rolling

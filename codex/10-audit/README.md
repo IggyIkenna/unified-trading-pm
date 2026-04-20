@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 10-audit — Canonical Repo Readiness Checklist SSOT
 
 **This directory is the SSOT for all per-repo readiness state in the unified trading workspace.**

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Venue Registry — Reference
 
 > **What it is:** The canonical catalog of every venue the Unified Trading System trades on or pulls data from. Each

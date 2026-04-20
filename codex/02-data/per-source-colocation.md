@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Per-Source Co-Location Pattern
 
 **SSOT for:** the directory layout convention inside `unified_api_contracts/external/` that co-locates all artifacts for

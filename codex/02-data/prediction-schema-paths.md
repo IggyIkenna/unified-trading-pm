@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Prediction Market Schema Paths
 
 SSOT for prediction market data flowing through the unified trading system.

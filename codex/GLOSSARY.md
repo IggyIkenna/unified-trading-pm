@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Glossary
 
 Shared terminology used throughout the Unified Trading Codex. Alphabetical.

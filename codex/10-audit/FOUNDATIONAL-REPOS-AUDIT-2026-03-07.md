@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Foundational Repos Audit — 2026-03-07
 
 **SSOT:** This document. Registered in `unified-trading-codex/00-SSOT-INDEX.md`. **Scope:** 18 pre-service repos

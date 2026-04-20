@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DeFi Instrument Pipeline
 
 ## Overview

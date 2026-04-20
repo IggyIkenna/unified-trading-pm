@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Sports Instruments: Format, Matching, Normalization
 
 **Asset Class:** SPORTS (FOOTBALL)  

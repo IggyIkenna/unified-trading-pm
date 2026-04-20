@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Venue Availability SSOT
 
 > **See also:** `codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema

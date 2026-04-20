@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # SSOT Reference Mapping
 
 **Version**: 1.0  

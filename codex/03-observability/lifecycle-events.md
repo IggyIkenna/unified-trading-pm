@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Lifecycle Events
 
 ## TL;DR

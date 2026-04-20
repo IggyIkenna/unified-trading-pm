@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Unified Trading Codex
 
 The governing principles for the Unified Trading System. This repository is the single source of truth: if the code

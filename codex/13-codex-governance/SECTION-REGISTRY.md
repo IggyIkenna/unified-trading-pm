@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Codex Section Registry
 
 Canonical registry of all 14 codex sections. Update this when sections are renamed, repurposed, or content is

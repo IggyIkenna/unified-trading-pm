@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Prime Brokers (Meta-Broker Venue Model)
 
 > **What it is:** The meta-broker (prime-broker) pattern: one endpoint + one wallet that internally routes to multiple

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Deprecated UIs Notice
 
 **Date:** 2026-02-21

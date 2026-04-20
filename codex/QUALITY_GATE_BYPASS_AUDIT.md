@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Quality Gate Bypass Audit
 
 ## 2.1 File Size Exceptions

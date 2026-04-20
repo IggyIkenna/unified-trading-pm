@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Canonical Schema Groups
 
 All internal canonical schemas are defined in `unified_api_contracts.internal` (the `internal/` subpackage of

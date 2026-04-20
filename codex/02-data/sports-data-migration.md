@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Sports Data Migration: GCS Bucket Refactoring
 
 **Priority:** P1-high  

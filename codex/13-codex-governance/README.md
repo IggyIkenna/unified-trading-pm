@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # 13 — Codex Governance
 
 Meta-governance for the unified-trading-codex itself: the rules for what goes where, why, and how to keep the codex and

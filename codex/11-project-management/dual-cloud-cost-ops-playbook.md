@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Dual-Cloud and Cost Operations Playbook
 
 Operational guidance for dual-cloud readiness, rollback/version control, AWS-credit fallback planning, and low-cost

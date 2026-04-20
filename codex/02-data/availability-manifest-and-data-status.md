@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Availability Manifest & Data Status — SSOT
 
 > **This document is the single source of truth** for: what the availability manifest is, its schema, shard dimensions
