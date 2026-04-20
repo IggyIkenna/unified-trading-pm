@@ -305,3 +305,205 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 - Playwright spec pass status.
 - 3 commit SHAs pushed to live-defi-rollout.
 - Any gaps or open questions for the user.
+
+---
+
+## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
+
+> Drafted by Wave-C kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 6A/6B
+> execution. Companion micro-plan for G1.2 is in
+> `refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md` § Micro-execution plan.
+
+### Plan-prose drifts vs reality (verified 2026-04-20 against `live-defi-rollout`)
+
+| #   | Plan claims                                                                                                                                                                   | Reality (post-G1.8 + Phase-10.5)                                                                                                                                                                                                                                                                                                          | Resolution                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Line 104: "`ArchetypeCapabilityRegistry()` (G1.8) + `StrategyAvailabilityRegistry()` (existing Phase-10.5) + injected readonly views"                                         | Neither Registry class exists. Real: `ARCHETYPE_CAPABILITY_REGISTRY: tuple[ArchetypeCapability, ...]` + `STRATEGY_AVAILABILITY_REGISTRY: tuple[StrategyAvailabilityEntry, ...]`. Free helpers: `archetypes_for_pair`, `capability_for`, `archetypes_for_venue`, `availability_for`, `slots_visible_to`, `validate_allocation_authorised`. | Derivation functions accept `registry: Iterable[...] = STRATEGY_AVAILABILITY_REGISTRY` + `capability_registry: Iterable[ArchetypeCapability] = ARCHETYPE_CAPABILITY_REGISTRY` default args (matches `slots_visible_to(...)` pattern at [strategy_availability.py:259](unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py#L259)).                      |
+| 2   | Line 128-129: "Re-export from UAC facade — `unified_api_contracts.strategy_availability` gains a passthrough import"                                                          | `unified_api_contracts.strategy_availability` PUBLIC module does not exist (same drift as G1.8). The existing public facade is `unified_api_contracts.strategy`.                                                                                                                                                                          | Re-export the 5 derivation functions from existing `unified_api_contracts.strategy` facade (where G1.8 `ArchetypeCapability` already lives). Do NOT create a new `strategy_availability` facade.                                                                                                                                                                                                 |
+| 3   | Line 142: "strategy-service/strategy_service/engine/strategies/v2/orchestrator.py (or wherever ClientAllocatorInstance lives)"                                                | `ClientAllocatorInstance` lives at [strategy-service/strategy_service/portfolio_allocator/service.py:75](strategy-service/strategy_service/portfolio_allocator/service.py#L75). Already wires `availability_registry` + calls `validate_allocation_authorised()` (Phase 10.5 shipped).                                                    | Phase 6D modifies `portfolio_allocator/service.py` — REPLACE the `validate_allocation_authorised()` call with `access_control(user, route, item, phase)`. `validate_allocation_authorised` becomes the lower-level primitive `access_control` delegates to for the allocation-authorisation branch; do not delete it yet (still used for per-slot `business_unit`/`exclusive_client_id` checks). |
+| 4   | Plan: "four derivation formulas" (line 20-29 + title)                                                                                                                         | Stage-3C §1 defines **FIVE** formulas: `combo(dimensions)` (§1.1), `cost` (§1.2), `demo_universe` (§1.3), `prod_restrictions` (§1.4), `access_control` (§1.5). `combo` is formula #1 and feeds inputs to the other 4.                                                                                                                     | **Ship 5 formulas in one `derivation.py`.** `combo(dimensions)` is the valid-combo membership predicate; it wraps G1.8's `archetypes_for_pair()` + blocker filtering. Plan §Context + §Phase 6B text to be understood as "derivation engine = 5 formulas" notwithstanding the "four" wording.                                                                                                    |
+| 5   | Stage-3C §5 recommends sub-package layout: `combo.py`, `pricing/` sub-package, `demo_universe.py`, `prod_restrictions.py`, `access_control.py` — separate modules per formula | Plan line 40: "All 4 formulas live in one module — `strategy_service/availability/derivation.py`"                                                                                                                                                                                                                                         | Tension between plan (one module) and stage-3c (multiple modules). **Ship as one module for Wave C**; promote to sub-package layout in a follow-up refactor once the surface stabilises (tracked as future todo below). Keeps Wave C blast radius minimal. Operator confirmation requested.                                                                                                      |
+| 6   | Line 70: "11. `unified-api-contracts/.../strategy_availability.py`" reads straight from Phase-10.5 symbols; line 128 cross-ref calls these "Registry"                         | Module is `internal/architecture_v2/strategy_availability.py` — UAC-internal, not a public facade. Consumers import from `unified_api_contracts.internal.architecture_v2` OR from the public `unified_api_contracts.strategy` (which already re-exports availability surface post-G1.8).                                                  | Derivation engine imports from `unified_api_contracts.strategy` (public facade), not deep internal path. Matches Citadel Import Rules (workspace CLAUDE.md).                                                                                                                                                                                                                                     |
+
+**Input types the plan assumes exist but are net-new** (need declaring in UAC or strategy-service): `Combo`, `Persona`,
+`DemoFlavour`, `PricingTier`, `Price`, `ClientId`, `PackageId`, `UserContext`, `ItemRef`, `AccessDecision`,
+`RestrictionProfile`, `ArchetypeSlot`, `Phase`, `IntegrationDepth`. Stage-3C §1 gives the shape of each — Phase 6B
+declares them as Pydantic `BaseModel`s or enums colocated in `derivation.py` (types alongside the functions) with UAC
+public re-export. No cross-repo coordination needed.
+
+### Pre-audit manifest (Citadel rule-6)
+
+Grep across workspace excluding `.venv*`, `node_modules`, `build`, `_archived_pre_v2`:
+
+| Symbol                                              | Current hits                                                                                                                 | Action                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cost(` (in derivation context)                     | 0                                                                                                                            | Net-new. Unrelated `cost` in `unified-api-contracts/registry/capability_declarations/` is DeFi gas-cost context — no collision.                                                                                                                                                                         |
+| `demo_universe`                                     | 0                                                                                                                            | Net-new.                                                                                                                                                                                                                                                                                                |
+| `prod_restrictions`                                 | 0                                                                                                                            | Net-new.                                                                                                                                                                                                                                                                                                |
+| `access_control`                                    | 0 runtime; several references in stage-3c/3b specs only                                                                      | Net-new.                                                                                                                                                                                                                                                                                                |
+| `RestrictionProfile`                                | 0 runtime                                                                                                                    | Net-new — Pydantic model.                                                                                                                                                                                                                                                                               |
+| `AccessDecision`                                    | 0 runtime                                                                                                                    | Net-new — Pydantic discriminated union (`allow`/`locked_visible`/`deny`/`deny_phase`).                                                                                                                                                                                                                  |
+| `Persona`, `DemoFlavour`                            | 0 runtime                                                                                                                    | Net-new UAC enums — align with UI personas file for consistency (`unified-trading-system-ui/lib/auth/personas.ts` documents: admin, prospect-im, client-full, client-data-only, client-premium, internal-trader; Stage-3C calls out `prospect-dart`, `prospect-reg` as gaps to add — tracked in G1.10). |
+| `ClientAllocatorInstance`                           | 7 files in strategy-service                                                                                                  | Update 1 call-site at `portfolio_allocator/service.py:75` (wraps existing `validate_allocation_authorised`). 6 other hits are tests + cadence + `shadow_deployment.py` — the latter two may not need changes (verify in Phase 6D).                                                                      |
+| `validate_allocation_authorised`                    | internal helper + 4 test files + 1 allocator callsite                                                                        | Keep as inner primitive; callers invoke `access_control()` which includes `validate_allocation_authorised()` semantics for the allocation branch.                                                                                                                                                       |
+| `Phase` type (`Literal["research","paper","live"]`) | Threaded through UI at `unified-trading-system-ui/lib/phase/use-phase-binding.ts` + `use-phase-from-route.ts` (G1.1 shipped) | Python type mirror lives in this module.                                                                                                                                                                                                                                                                |
+
+Zero deletion, zero rename. Purely additive: new module with 5 functions + ~13 new types, one call-site update in
+allocator.
+
+### Execution DAG
+
+```
+6A (audit Phase-10.5 surface + stage-3c §1.1–§1.5 mapping)
+    └── 6B.1 declare types in derivation.py (Combo, Persona, DemoFlavour, PricingTier, Price, ClientContext,
+    │       UserContext, ItemRef, AccessDecision, RestrictionProfile, Phase, IntegrationDepth, etc.)
+    │       └── 6B.2 implement 5 formulas (combo, cost, demo_universe, prod_restrictions, access_control)
+    │               └── 6C unit tests (≥15 cases = 3 × 5 formulas), using stage-3c §1 worked examples as fixtures
+    │                       └── COMMIT 1 (strategy-service)
+    ├── 6D.1 public re-export via unified_api_contracts/strategy.py facade
+    │       └── COMMIT 2 (UAC) — INDEPENDENT of strategy-service commit once UAC can import the types;
+    │             actually sequential: UAC can't re-export until strategy-service ships
+    │       ALT: types live in UAC instead of strategy-service → sequencing flips.
+    │   See open question #2 below.
+    ├── 6D.2 replace ClientAllocatorInstance allocation gate with access_control() call
+    │       └── folded into COMMIT 1 (strategy-service)
+    └── 6E.1 UI Playwright spec → COMMIT 3 (UI)
+            └── 6E.2 workspace QG on strategy-service + UAC + UI
+```
+
+**Parallel opportunity with G1.2:** G1.2 ships `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` + validator; G1.6's `cost()`
+reads the `integration_depth: float` value. G1.6 can stub `integration_depth = 0.0` in its unit tests and accept the
+param as `Optional[float] = 0.0`, enabling fully-parallel execution. Real wiring (subscribing to the UTL event to feed
+pricing) is a G2.x concern per stage-3c §1.2 "Owning service" note — NOT part of G1.6.
+
+### Files × line-ranges × commit sequence
+
+**COMMIT 1 — strategy-service**
+`feat(strategy-service/availability): G1.6 — derivation engine (5 formulas per stage-3c)`
+
+| File                                                                     | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Approx LOC |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `strategy-service/strategy_service/availability/derivation.py`           | NEW — types (13) + 5 functions (combo, cost, demo_universe, prod_restrictions, access_control)                                                                                                                                                                                                                                                                                                                                                                                                                                                              | ~450       |
+| `strategy-service/strategy_service/availability/__init__.py`             | MODIFY — export 5 funcs + types, keep Phase-10.5 exports                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | +18        |
+| `strategy-service/tests/unit/availability/test_derivation.py`            | NEW — ≥15 cases: 3 per formula using stage-3c §1.1-§1.5 worked examples (combo canonical DeFi stat-arb + blocked DeFi options + BL-10 dated-future; cost hybrid tier + IM reporting-only + rule-08 exclusivity violation + internal-cost leakage; demo_universe prospect-dart broader + prospect-im turbo + prospect-reg turbo + admin; prod_restrictions signals-only + IM desk + reg umbrella + retired-slot BL-15; access_control DART research-phase deny + im_desk research allow + locked_visible block-6 + CLIENT_EXCLUSIVE 404 + paper-phase allow) | ~450       |
+| `strategy-service/strategy_service/portfolio_allocator/service.py`       | MODIFY — swap `validate_allocation_authorised()` call at line 125-129 for `access_control()` call; keep the Phase-10.5 primitive as the inner call inside `access_control`                                                                                                                                                                                                                                                                                                                                                                                  | ~+15 / -5  |
+| `strategy-service/tests/unit/availability/test_allocator_enforcement.py` | MODIFY — flip assertions to expect `AccessDecision` denial envelope (not raw exception), keep coverage                                                                                                                                                                                                                                                                                                                                                                                                                                                      | ~+20       |
+
+Key design notes:
+
+- `Phase = Literal["research", "paper", "live"]` — matches UI G1.1.
+- `combo(dimensions, *, today=None, capability_registry=ARCHETYPE_CAPABILITY_REGISTRY, availability_registry=STRATEGY_AVAILABILITY_REGISTRY)`
+  — reads the G1.8 + Phase-10.5 registries by default; callers can inject readonly views for testing.
+- `cost(combo, tier, integration_depth=0.0, pricing_registry=None)` — `pricing_registry` is None initially (shape-only;
+  numbers populate later per plan line 80-81 and stage-3c §1.2 "numbers populate later"); each `QuoteLine` carries a
+  `TODO_numeric: Literal[True]` marker. Operator sign-off on shape-only-for-now.
+- `demo_universe(persona, flavour, *, profile_registry=None)` — `profile_registry` reads Stage-2
+  `demo-ops/demo-restriction-profiles.md` once that file ships; interim fixture dict-in-module.
+- `prod_restrictions(client, package)` — contract-management layer is G1.7; fixture package dict-in-module for now.
+- `access_control(user, route, item, phase)` — composes the other 4 per stage-3c §1.5 visibility formula; returns
+  `AccessDecision(status, reason, upgrade_hint)`.
+- **No I/O, no UTL events, no global mutable state.** Event emission stays at call-sites (stores, watchdog, middleware).
+
+**COMMIT 2 — UAC** `feat(uac): G1.6 — re-export derivation engine from strategy public facade`
+
+| File                                                      | Action                                                                                                                     | Approx LOC |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-api-contracts/unified_api_contracts/strategy.py` | MODIFY — passthrough re-export of the 5 derivation functions + their types from `strategy_service.availability.derivation` | +25        |
+
+**Sequencing:** UAC re-export requires strategy-service to be importable in UAC's test env. Since strategy-service is a
+consumer of UAC (not vice-versa), re-exporting strategy-service symbols from UAC would introduce a CIRCULAR dependency.
+**This is a drift risk in the plan.** Resolution options:
+
+- Option X: Ship the types + pure functions in UAC (`unified_api_contracts/internal/architecture_v2/derivation.py`), and
+  have strategy-service merely host the service-level wiring + fixtures. Pros: no circular dep, matches G1.8 Citadel
+  pattern (schemas in UAC). Cons: forces types into UAC even though they have zero utility outside this plan.
+- Option Y: Skip the UAC re-export entirely. Consumers import from `strategy_service.availability` directly. Pros: no
+  circular dep, no UAC changes. Cons: violates the plan's "single-surface" Decision line 40.
+- Option Z: Ship the types only in UAC, ship the function BODIES in strategy-service that reads those types. UAC
+  re-exports just the types + abstract protocols; strategy-service provides the implementations. Pros: clean separation.
+  Cons: two-step hop for consumers.
+
+**Recommendation:** Option X. Matches G1.8 pattern exactly — UAC owns schemas + pure functions; strategy-service owns
+the runtime store (Phase 10.5). The "pure functions live in UAC" principle makes them importable by non-strategy
+consumers (pricing-engine future service, access-control middleware on any route) without pulling strategy-service as a
+dep. Operator sign-off requested.
+
+If Option X chosen:
+
+- COMMIT 1 moves to UAC: `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` (NEW),
+  facade re-export via `unified_api_contracts.strategy` (MODIFY).
+- COMMIT 2 moves to strategy-service: just the allocator-gate swap + tests.
+- Sequencing: UAC first, strategy-service second, UI third.
+
+**COMMIT 3 — UI** `test(playbooks): G1.6 — derivation engine reference spec`
+
+| File                                                                                             | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Approx LOC |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-6-derivation-engine.spec.ts` | NEW — seed 4 personas (admin, prospect-im, client-full, client-data-only) via `seed-persona.ts`; for each walk `/services/strategy-catalogue/` + assert visible slot set == `demo_universe(persona, "sales-pitch")` output (via debug endpoint OR client-side `from unified_api_contracts.strategy import demo_universe` TS mirror — pick one, default to debug endpoint); per-phase write-action attempt assertions against `access_control()` expected output; orphan-reachability: every visible slot has a reachable detail route | ~200       |
+
+UI `scripts/quality-gates.sh` — no edit needed (auto-discovery).
+
+### Playwright spec design
+
+Canonical port is `localhost:3000` (tier-1). Spec drives browser via MCP Playwright during dev, commits the durable spec
+for CI. Reference implementation — once this spec ships, other refactor specs can stop stubbing `access_control` and
+reference this one.
+
+Persona list locked to what exists today in `unified-trading-system-ui/lib/auth/personas.ts`: `admin`, `prospect-im`,
+`client-full`, `client-data-only`, `client-premium`, `internal-trader`. `prospect-dart` + `prospect-reg` noted in
+stage-3c as G1.10 gap — their absence is documented in the spec as `test.skip()` entries with TODO(G1.10) comments.
+
+### Breaking-change analysis (Citadel rule-3)
+
+One existing call-site modified (`portfolio_allocator/service.py:125-129`). Semantics swap from
+`validate_allocation_authorised() → raise` to `access_control() → AccessDecision(deny, reason)` — the new envelope
+carries the same information; existing tests flip to envelope-based assertion. No consumer behaviour change visible to
+the strategy-service HTTP surface today (no public endpoint surfaces allocator decisions yet).
+
+Other 6 `ClientAllocatorInstance` references (cadence.py, shadow_deployment.py, 4 test files) do NOT call the gate —
+they reference the class for allocation flow; no change needed. Verified spot-check in Phase 6A.
+
+### Success criteria (per phase)
+
+| Phase        | Gate                                                                                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6A audit     | Map of stage-3c §1.1–§1.5 formulas to Phase-10.5 symbols + G1.8 registry; type list locked                                                                                                         |
+| 6B implement | `from unified_api_contracts.strategy import cost, demo_universe, prod_restrictions, access_control, combo` (Option X) imports clean; OR `from strategy_service.availability import ...` (Option Y) |
+| 6C tests     | ≥15 cases green; stage-3c line cites in test docstrings                                                                                                                                            |
+| 6D integrate | Allocator test swap to envelope-based; strategy-service `bash scripts/quality-gates.sh` green                                                                                                      |
+| 6E verify    | UI Playwright spec green on tier-1 dev with 4 personas; 3 commit SHAs on origin/live-defi-rollout                                                                                                  |
+
+### Open questions for operator
+
+1. **5 vs 4 formulas** (§drift #4-5 above): Stage-3C §1.1 defines `combo(dimensions)` as formula #1; plan says 4.
+   Default: ship 5 functions in one `derivation.py` now. Operator confirm?
+2. **UAC vs strategy-service host** (§COMMIT 2 drift): UAC re-export creates circular dep. Recommendation: Option X —
+   ship pure functions in UAC `internal/architecture_v2/derivation.py`, re-export from `unified_api_contracts.strategy`.
+   Operator confirm?
+3. **Shape-only pricing** (§COMMIT 1 design note): `cost()` returns `PriceQuote` with `TODO_numeric: Literal[True]`
+   markers; numbers populate in a later wave per stage-3c §1.2. Confirm acceptable?
+4. **Multi-module sub-package split** (§drift #5): Stage-3C §5 recommends `combo.py` + `pricing/` + `demo_universe.py`
+   - `prod_restrictions.py` + `access_control.py` as separate modules. Plan says one `derivation.py`. Default:
+     single-module for Wave C, track multi-module split as future refactor follow-up. Confirm?
+
+### Pre-flight for Phase 6A execution (when approved)
+
+```
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+# Other agents have WIP on UAC — stage only G1.6 files
+git -C unified-api-contracts status --short
+git -C strategy-service status --short   # should be minimal
+.venv-workspace/bin/python -c "from unified_api_contracts.strategy import ARCHETYPE_CAPABILITY_REGISTRY; from unified_api_contracts.internal.architecture_v2 import STRATEGY_AVAILABILITY_REGISTRY; print(len(ARCHETYPE_CAPABILITY_REGISTRY), len(STRATEGY_AVAILABILITY_REGISTRY))"
+```
+
+### Future follow-up (not Wave C scope)
+
+- **Multi-module split** per stage-3c §5: `combo.py`, `pricing/` sub-package, `demo_universe.py`,
+  `prod_restrictions.py`, `access_control.py`. Ship once the single-module surface exceeds ~800 LOC or when
+  pricing-engine service splits off (Stage 3E G3).
+- **Numeric pricing tables** — populate the `pricing_registry` param from Stage-2
+  `commercial-model/pricing-building-blocks.md` once finance signs off on numbers.
+- **HTTP surface** — new `strategy-service/strategy_service/api/restriction_profile_router.py` per stage-3c §5 "API
+  surface" — 5 endpoints. Scope: next wave.
+- **prospect-dart + prospect-reg personas** — G1.10 scope.
+- **Integration-depth wiring from G1.2** — follow-up commit after G1.2 ships the UTL event.
