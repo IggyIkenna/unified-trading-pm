@@ -1,0 +1,172 @@
+---
+scope: [engineer, admin]
+---
+
+# Per-Category Bucket & Path Layouts — SSOT
+
+**Purpose**: canonical reference for every upstream/downstream GCS path layout per market category. Written 2026-04-20
+after the SPORTS smoke incident where MDPS + instruments-service + MTDS each had different implicit assumptions about
+SPORTS path shape and the mismatch surfaced as `list_files_in_bucket: string index out of range` +
+`get_instruments_for_date: 404 instrument_availability/instruments.parquet` + MDPS dep-checker silently mis-firing.
+
+**Status**: canonical. Any new service that reads or writes data partitioned by category MUST consult this doc before
+assuming a single-shape layout works across all categories.
+
+**Key insight**: category-specific path divergences are REAL and have been a source of recurring bugs. SPORTS in
+particular does NOT follow the same layout as CEFI/TRADFI/DEFI/PREDICTION.
+
+---
+
+## Category × bucket matrix
+
+| Service                       | CEFI                                  | TRADFI                                  | DEFI                                  | SPORTS                                  | PREDICTION                                  |
+| ----------------------------- | ------------------------------------- | --------------------------------------- | ------------------------------------- | --------------------------------------- | ------------------------------------------- |
+| **instruments-service write** | `instruments-store-cefi-{project_id}` | `instruments-store-tradfi-{project_id}` | `instruments-store-defi-{project_id}` | `instruments-store-sports-{project_id}` | `instruments-store-prediction-{project_id}` |
+| **MTDS raw tick write**       | `market-data-tick-cefi-{project_id}`  | `market-data-tick-tradfi-{project_id}`  | `market-data-tick-defi-{project_id}`  | `market-data-tick-sports-{project_id}`  | `market-data-tick-prediction-{project_id}`  |
+| **MDPS processed write**      | `market-data-tick-cefi-{project_id}`  | `market-data-tick-tradfi-{project_id}`  | `market-data-tick-defi-{project_id}`  | `market-data-tick-sports-{project_id}`  | `market-data-tick-prediction-{project_id}`  |
+
+Test-mode variants append `-test-`: e.g. `instruments-store-cefi-test-{project_id}`.
+
+---
+
+## Path layouts — the real divergences
+
+### instruments-service writes
+
+| Category                          | Primary path                                                                   | Notes                                                                                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CEFI / TRADFI / DEFI / PREDICTION | `instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet` | Hive-partitioned by venue. Single file per (date × venue). Legacy fallback: single-file `instruments.parquet` at day prefix.                                                                         |
+| **SPORTS**                        | `sports_reference/by_date/day={date}/entity={entity}/{entity}.parquet`         | **Different tree, different partition key**. Entities: `fixtures`, `footystats_odds`, `sfi_leagues`, `progressive_stats`, `teams`, `standings`, `lineups`, `injuries`, `weather`. No `venue=` level. |
+
+**Consequence**: a service that does `get_instruments_for_date(date, SPORTS)` and reads
+`instrument_availability/instruments.parquet` 404s. MDPS `cloud_data_provider.py` (fde923d) now dispatches on category —
+SPORTS returns an empty DataFrame with a clear info log; sports candle adapters read raw_tick_data directly without
+going through this method.
+
+### MTDS raw tick writes
+
+| Category   | Path pattern                                                                                                                  | Partition keys                                                                                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CEFI       | `raw_tick_data/by_date/day={date}/category={cat}/venue={v}/instrument_type={it}/data_type={dt}/ticks.parquet`                 | `date × category × venue × instrument_type × data_type`                                                                                                                        |
+| TRADFI     | same as CEFI                                                                                                                  | same                                                                                                                                                                           |
+| DEFI       | `raw_tick_data/by_date/day={date}/category={cat}/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/ticks.parquet`   | adds `chain=` level                                                                                                                                                            |
+| PREDICTION | `raw_tick_data/by_date/day={date}/instrument_type={BTC\|ETH\|FOOTBALL\|OTHER}/data_type={dt}/ticks.parquet`                   | **no `category=` or `venue=` level** (POLYMARKET-only for now). Shards by `instrument_type` (= market theme).                                                                  |
+| **SPORTS** | `raw_tick_data/by_date/day={date}/category={cat}/venue={v}/instrument_type={it}/data_type={dt}/league={league}/ticks.parquet` | **extra `league=` level** not present in other categories. Example: `.../category=sports/venue=ODDS_API/instrument_type=odds/data_type=odds/league=CHAMPIONSHIP/ticks.parquet` |
+
+**Consequence**: a service that iterates blobs with `list_blobs(prefix='raw_tick_data/by_date/day=.../')` and parses
+each blob's path assuming a fixed partition depth (7 segments) sees SPORTS blobs with 8 segments. Historically this
+caused `IndexError: string index out of range` during iterator materialization (exact SDK bug still under investigation;
+the observable symptom is the error). The fix (MDPS commit 1068ae1) is a `safe_iterate_blobs` helper that per-element
+catches IndexError/ValueError/TypeError/AttributeError in `path_parsing.py` — applied at all 4 list_blobs call sites in
+MDPS. Any future service reading the same path family MUST use the same pattern.
+
+### MDPS processed candle writes
+
+| Category             | Path pattern                                                                                           | Partition keys                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CEFI / TRADFI / DEFI | `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/venue={v}/{id}.parquet`            | standard                                                                                                                                                                                         |
+| PREDICTION           | `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/instrument_type={it}/{id}.parquet` | no venue (POLYMARKET implicit); shards by instrument_type                                                                                                                                        |
+| **SPORTS**           | `processed/by_date/day={date}/data_type=odds_horizon_bucket/bucketed.parquet`                          | **completely different tree** — `processed/` not `processed_candles/`. Single file per date. Bookmaker-time bucketed odds feature artefacts. See `market-tick-data-service/docs/SPORTS_ODDS.md`. |
+
+**Consequence**: MDPS does not produce per-venue candles for SPORTS. Its `dependency_checker.py` `OUTPUT_BUCKETS` map
+covers SPORTS only so the dep-check can resolve; the actual processing is handled by the sports adapters
+(`adapters/sports/bucket_assignment_adapter.py`, `odds_movement_adapter.py`, etc.) which write to the `processed/` tree.
+
+---
+
+## Dep-checker `UPSTREAM_DEPS` routing
+
+MDPS `dependency_checker.py` (commits f18dd5c + 3d38aef) has two maps:
+
+```python
+# Default — CEFI/TRADFI/DEFI fall back to this
+UPSTREAM_DEPS: ClassVar = {
+    "market-tick-data-service": {
+        "bucket_template": "market-data-tick-{category_lower}-{project_id}",
+        "path_template": "raw_tick_data/by_date/day={date}/",
+        "required": True,
+    },
+    "instruments-service": {
+        "bucket_template": "instruments-store-{category_lower}-{project_id}",
+        # NOTE: venue={venue} removed 2026-04-20 (3d38aef) — the base-class
+        # _format_template_vars never supplies {venue}, so the format() raised
+        # KeyError and the dep-check silently resolved to "Missing template var".
+        "path_template": "instrument_availability/by_date/day={date}/",
+        "required": True,
+    },
+}
+
+# Per-category override — SPORTS/PREDICTION have different upstream layouts
+UPSTREAM_DEPS_BY_CATEGORY: ClassVar = {
+    "SPORTS": {
+        "instruments-service": {
+            "bucket_template": "instruments-store-sports-{project_id}",
+            # SPORTS writes to sports_reference/, not instrument_availability/.
+            # Date-level existence is sufficient for dep-check.
+            "path_template": "sports_reference/by_date/day={date}/",
+            "required": True,
+        },
+        # No market-tick-data-service entry — sports processing reads
+        # MTDS raw tick data directly via its own adapter layer.
+    },
+    "PREDICTION": {
+        "instruments-service": {
+            "bucket_template": "instruments-store-prediction-{project_id}",
+            "path_template": "instrument_availability/by_date/day={date}/",
+            "required": True,
+        },
+    },
+}
+```
+
+Use `check_upstream_data_per_shard(date, category, venue, instrument_type, data_type)` (added in f18dd5c) for runtime
+per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
+
+---
+
+## Known quirks to preserve
+
+1. **SPORTS `category=sports` is lowercase** in the partition value (`category=sports`) while most other hive values
+   (venue, chain, instrument_type) are UPPER-CASE. Do not uppercase blindly.
+2. **PREDICTION pre-CLOB tarballs may still have `prediction_trades` data_type** — the registry was refactored
+   `2026-04-19 (ca246a9)` to use canonical `trades`. Old parquet files still have both; manifest reconciliation handles
+   the merge.
+3. **DeFi `chain=` partition uses the UAC canonical name** — `ETHEREUM`, `ARBITRUM`, `BASE`, `SOLANA` — NOT aliases.
+   MDPS does NOT handle `chain=` in its DependencyChecker; DeFi processing routes through `features-onchain-service` for
+   chain-specific logic.
+4. **MDPS `_list_instrument_files` matches by `data_type=` substring**, not by full partition match. For SPORTS where
+   the path has `data_type=odds/` but the orchestrator loops for `data_type=arbitrage_opportunity` etc., the mismatch
+   returns 0 files for the mismatched types — they hit the fallback at `_list_instrument_files` line ~223 which accepts
+   all parquet files at the date prefix. This is intentional: SPORTS adapters process all available parquet files and
+   emit per-data_type output based on row content, not partition path.
+5. **GCS list_blobs iterator can raise mid-iteration on certain partition shapes** — ALWAYS wrap
+   `list(client.list_blobs(...))` with `safe_iterate_blobs` from `path_parsing.py` (MDPS) or the equivalent pattern in
+   your service. Outer try/except is insufficient — it classifies whole-scan as failed and returns empty, silently
+   breaking coverage metrics.
+
+---
+
+## When to update this doc
+
+- Any new category added to the system (e.g. if a 6th category like `COMMODITIES` gets carved out separately from
+  TRADFI)
+- Any new path layout / partition level introduced (new hive segment)
+- Any bucket template change (rarely — requires coordinated migration)
+- Any service added that reads/writes category-partitioned data (new row in the matrix)
+
+## Cross-references
+
+- Manifest schema SSOT: `codex/02-data/availability-manifest-and-data-status.md`
+- MDPS dep-checker implementation:
+  `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`
+- SPORTS get_instruments_for_date SPORTS branch:
+  `market-data-processing-service/market_data_processing_service/app/core/cloud_data_provider.py` lines 107-122 (commit
+  fde923d)
+- safe_iterate_blobs helper: `market-data-processing-service/market_data_processing_service/app/utils/path_parsing.py`
+  (commit 1068ae1)
+- Polymarket trades schema:
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` (commit
+  bc33700 adds `instrument_id`)
+- Sports odds / bm_time: `market-tick-data-service/docs/SPORTS_ODDS.md`
+- Coverage roadmap (uses this doc): `unified-trading-pm/plans/active/proper_coverage_roadmap_2026_04_20.plan.md`
+- VM tarball deployment: `codex/05-infrastructure/vm-tarball-deployment.md`
