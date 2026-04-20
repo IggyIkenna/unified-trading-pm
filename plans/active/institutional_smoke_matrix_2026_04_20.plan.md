@@ -129,13 +129,31 @@ todos:
 
   - id: phase-2-features-smokes
     content: |
-      - [ ] [AGENT] P1. features-* services (sports, calendar, onchain, delta-one,
+      - [x] [AGENT] P1. features-* services (sports, calendar, onchain, delta-one,
         volatility, cross-instrument, multi-timeframe, commodity): each gets
-        `scripts/smoke_matrix.py`. Pattern matches the per-(feature_service ×
-        category) cells from `launch-features-backfill-vm.sh` (already documented
-        the matrix in its header). features-sports smoke_test_single_day.py +
-        features-delta-one smoke_test_single_day.py are starting templates.
-    status: todo
+        `scripts/smoke_matrix.py` + sub-CLI at `python -m <service>.smoke` +
+        unit tests. 17 viable cells total across the 8 services, honouring the
+        canonical matrix in launch-features-backfill-vm.sh. Each script runs
+        the 3-step assertion contract per cell: (1) run service CLI with
+        IS_TEST_RUN=true (2) verify GCS parquet in the -test- bucket (3) verify
+        TEST manifest capture_status. Shard-level isolation; architecturally-
+        unsupported cells emit SKIP.
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. 8 commits:
+      features-sports-service 9b384fb, features-calendar-service d8ba357,
+      features-onchain-service 9b04cd3, features-delta-one-service bc75d36,
+      features-volatility-service 02e1324, features-cross-instrument-service
+      0c9d3dc, features-multi-timeframe-service d9d3316,
+      features-commodity-service 8d2ff8e. 17 viable cells: sports(1 SPORTS)
+      + calendar(2 CEFI/TRADFI) + onchain(1 DEFI) + delta-one(4
+      CEFI/DEFI/TRADFI/PREDICTION) + volatility(2 CEFI/TRADFI) +
+      cross-instrument(3 CEFI/TRADFI/PREDICTION) + multi-timeframe(3
+      CEFI/DEFI/TRADFI) + commodity(1 TRADFI). ~109 new unit tests
+      (sports 13, calendar 16[1 skipped], onchain 16, delta-one 19,
+      volatility 11, cross-instrument 12, multi-timeframe 12,
+      commodity 10). Each script writes only to -test- buckets via
+      IS_TEST_RUN=true env var propagation from Phase 1 plumbing.
 
   - id: phase-2-ml-smokes
     content: |
