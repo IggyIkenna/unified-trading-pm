@@ -65,6 +65,18 @@ reporting are run internally. The commitment floor is twelve months, and the bri
 review, venue setup, per-client API-key issuance all carry fixed costs that the twelve-month floor recovers. The reader
 leaves understanding the shape of the engagement, not just its label.
 
+A short paragraph covers the **platform-fee client-choice mechanic**. At mandate signing the allocator picks a
+platform-fee option — either a +5% performance-fee uplift (pure alignment, zero fixed) or a $500/month platform-access
+fee (small floor regardless of strategy year). Either captures allocation to the same IM strategies; the difference is
+purely whether the allocator prefers higher variable share with zero floor, or base variable share with a small
+guaranteed floor. See
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md) for the
+mechanic in full.
+
+Footnote on catalogue scope for the narrative context when the allocator asks "what strategies are on offer today":
+the BTC Fund of Funds wrapper is an **external** fund-of-funds mandate, not an Odum-system strategy. It appears in
+client-reporting separately for the specific wrapper mandate and is not in the IM strategy catalogue.
+
 The briefing closes with the second-call hook: a forty-five-minute session with the IM desk to walk the specific
 strategies the allocator's mandate shape fits, the fund-structure choice, and the pricing.
 

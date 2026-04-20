@@ -123,6 +123,20 @@ is captured verbatim and routed to the demo-decision-matrix review.
   DART" message. Visible in nav, locked on click. Hidden entirely would break the upgrade-path conversation.
 - Pre-BACKTESTED maturity slots — [rule 06](../_ssot-rules/06-show-dont-show-discipline.md), HIDDEN-ENTIRELY.
 - Other clients' CLIENT_EXCLUSIVE slots — [rule 06](../_ssot-rules/06-show-dont-show-discipline.md), HIDDEN-ENTIRELY.
+- **IM_RESERVED strategies (HIDDEN-ENTIRELY per rule 06):**
+  - `ML_DIRECTIONAL_CONTINUOUS` × BTC perp/spot on Binance/Coinbase/Hyperliquid (Odum IM — BTC ML directional for 10
+    clients)
+  - `ML_DIRECTIONAL_CONTINUOUS` × S&P futures on CME (Odum IM — CME co-invest)
+  - `VOL_TRADING_OPTIONS` × NSE options (Odum IM — India Options)
+  - `ML_DIRECTIONAL_EVENT_SETTLED` × sports fixtures (Odum IM — Sports ML)
+  - `STAT_ARB_PAIRS_FIXED` × crypto pairs (Odum IM — mean reversion, but ALSO PUBLIC per rule; only shown as IM in this
+    filter for IM prospects)
+  - All other archetype × instrument × venue cells per
+    [`../shared-core/strategy-allocation-lock-matrix.md`](../shared-core/strategy-allocation-lock-matrix.md)
+    forward-plan list.
+
+  Cross-ref the matrix so the list stays maintainable — the matrix is the SSOT; this bullet mirrors its current
+  snapshot.
 - Other clients' positions, instructions, or reporting data —
   [rule 06](../_ssot-rules/06-show-dont-show-discipline.md) + [rule 07](../_ssot-rules/07-data-licensing-boundaries.md),
   HIDDEN-ENTIRELY. Entitlement slicing enforces this.

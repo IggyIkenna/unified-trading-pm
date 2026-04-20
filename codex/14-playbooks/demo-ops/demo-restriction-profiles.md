@@ -95,6 +95,29 @@ structured notes. The sales person composes the profile from those:
 - Blocks: 1 + 3 (IM) or 1 + 2 (Reg Umbrella). No execution, no strategy-service.
 - Routes to IM or Reg Umbrella demos, not DART.
 
+### IM_RESERVED filter — applies to ALL DART prospect profiles
+
+Every DART prospect profile (signals-only DART, full DART, combined) applies a catalogue-level filter at render time:
+
+- **Filter rule:** `entry.lockState !== "INVESTMENT_MANAGEMENT_RESERVED"` — unless the prospect is an authorised
+  per-client override (e.g. Elysium or Desmond) who may see specific IM_RESERVED cells granted by entitlement.
+- This is the runtime enforcement of the rule-06 HIDDEN-ENTIRELY discipline stated in the experience playbooks
+  ([`../experience/dart-briefing.md`](../experience/dart-briefing.md) §7 +
+  [`../experience/dart-demo.md`](../experience/dart-demo.md) §7).
+- The `prospect-platform` fixture in `unified-trading-system-ui/lib/auth/personas.ts` maps to audience
+  `trading_platform_subscriber`, which (per `unified-trading-system-ui/lib/architecture-v2/availability.ts`
+  `slotsVisibleTo`) filters out `INVESTMENT_MANAGEMENT_RESERVED` automatically — no per-route filter logic needed in
+  individual catalogue pages.
+- **Per-client override** (Elysium, Desmond): their personas / entitlements include explicit `allowed_cells` that
+  override the IM_RESERVED default for their specific scope. See
+  [`../shared-core/strategy-allocation-lock-matrix.md`](../shared-core/strategy-allocation-lock-matrix.md) §Special
+  cases for the per-client allowlists, and
+  [`../implementation-mapping/persona-and-user-prototype-mapping.md`](../implementation-mapping/persona-and-user-prototype-mapping.md)
+  for the persona-to-entitlement mapping.
+- Effect on the three DART profiles above: the IM_RESERVED filter composes with each profile's existing
+  `lock_state ∈ {PUBLIC, ...}` filter. Prospect demos render only PUBLIC slots plus any per-client-override IM_RESERVED
+  slots; they never render IM_RESERVED slots that belong to another client or to Odum's forward plan.
+
 ## Profile → registry → runtime
 
 Stored in Stage 3B's UAC combo registry keyed by profile_id. Stage 3C's derivation engine resolves

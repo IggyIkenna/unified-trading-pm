@@ -100,6 +100,34 @@ reporting-only access, if the commercial shape requires.
 Stage 3B's entitlement registry reads from the API-key-set level; Stage 3C's derivation engine resolves
 `(client, api_key_set, route, block)` → `visible | locked-visible | hidden`.
 
+## External-wrapper mandates
+
+Some mandates do not consume Odum-system compute — Odum acts as **allocator**, not strategy operator. The canonical
+example is the BTC Fund of Funds wrapper: a BTC client's 50 BTC mandate where Odum allocates to an external
+fund-of-funds vehicle Odum does not run. Odum keeps 20% of the client's profits (~0.5 BTC/yr) as pure-margin revenue
+with no system compute cost.
+
+External wrappers are modelled against this hierarchy as follows:
+
+- **NOT in the strategy catalogue.** There is no `(archetype, instrument, venue)` cell for the wrapper. No strategy
+  lock-state applies. No strategy-service tenant slot is consumed. Catalogue filters do not surface the wrapper to
+  any audience.
+- **Surfaced ONLY in `client-reporting`** for the specific wrapper mandate. The allocator's client view shows the
+  mandate as a standalone reporting line — external fund name, allocation, periodic return, Odum share booked — with
+  no linkage to the strategy catalogue.
+- **Entitlement attaches at the client level** via a `wrapper_mandate` flag on the API-key set (rule 05 block
+  entitlements still live at the API-key-set level — see table above). The flag turns on the wrapper reporting line
+  and nothing else.
+- **No data-licensing exposure.** Because no Odum strategy IP is involved, rule 07 data-licensing boundaries do not
+  apply to the wrapper's pricing or exposure.
+
+Net effect: wrapper mandates are low-surface-area legacy-style engagements that attach to the client entity without
+polluting the strategy catalogue or the lock-state machinery. See
+[`strategy-allocation-lock-matrix.md`](strategy-allocation-lock-matrix.md) §BTC Fund of Funds for the canonical
+lock-matrix treatment and
+[`../commercial-model/im-profit-share-structures.md`](../commercial-model/im-profit-share-structures.md)
+§BTC Fund of Funds wrapper for the commercial mechanic.
+
 ## Provisioning flow
 
 See

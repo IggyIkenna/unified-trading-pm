@@ -119,16 +119,22 @@ The client's strategic edge stays on the client's side of the fence. Signals-onl
 
 #### Signals-only versus full DART
 
-| Dimension                                  | Signals-only `(Client, downstream)` | Full DART `(Client, full-pipeline)` |
-| ------------------------------------------ | ----------------------------------- | ----------------------------------- |
-| Who generates signals                      | Client upstream                     | Client builds on DART research      |
-| Research / backtest surface                | Not included (rule 04 enforcement)  | Included                            |
-| Promote pipeline (backtest → paper → live) | Not included                        | Included                            |
-| Execution layer                            | Included                            | Included                            |
-| Venue / chain / instrument packs           | Scoped to client's flow             | Scoped to client's flow             |
-| Reconciliation + reporting                 | Included                            | Included                            |
-| Analytics packs on client's own flow       | Optional                            | Optional                            |
-| Cross-strategy research analytics          | Not included                        | Included                            |
+| Dimension                                  | Signals-only `(Client, downstream)`                | Full DART `(Client, full-pipeline)`                                       |
+| ------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------- |
+| Who generates signals                      | Client upstream                                    | Client builds on DART research                                            |
+| Research / backtest surface                | Not included (rule 04 enforcement; block 6 out)    | Included, metered or bundled-credits packaging                            |
+| Promote pipeline (backtest → paper → live) | Not included                                       | Included                                                                  |
+| Execution layer                            | Included                                           | Included                                                                  |
+| Venue / chain / instrument packs           | Scoped to client's flow                            | Scoped to client's flow                                                   |
+| Reconciliation + reporting                 | Included                                           | Included                                                                  |
+| Analytics packs on client's own flow       | Optional                                           | Optional                                                                  |
+| Cross-strategy research analytics          | Not included                                       | Included                                                                  |
+| Pricing model                              | Scope-fixed Tier B (block-based, no metering)      | Fixed-access layer + per-backtest metering + IP-power exclusivity tiers   |
+| Research access                            | Not included (block 6 excluded per rule 04)        | Included, metered or bundled-credits packaging                            |
+| Exclusivity                                | Limited / none typical                             | Available per IP-power tier uplift (commodity → uniquely-differentiated)  |
+
+See [`../shared-core/dart-pricing-axes.md`](../shared-core/dart-pricing-axes.md) for the full dimensional pricing model
+and worked examples on both paths.
 
 The upgrade path from signals-only to full DART is a formal commercial event (rule 04), not a bolt-on. A prospect who
 expects to need research and promote within the engagement should resolve to full DART now.
@@ -165,6 +171,10 @@ expects to need research and promote within the engagement should resolve to ful
 - Other clients' CLIENT_EXCLUSIVE strategy slots —
   [strategy-availability](../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md),
   HIDDEN-ENTIRELY.
+- Strategies in the catalogue with `INVESTMENT_MANAGEMENT_RESERVED` lock state — these are strategies Odum is running
+  for its own IM mandates (BTC ML, CME S&P, India Options delta trading, sports ML, and the forward-plan archetype cells
+  per [`../shared-core/strategy-allocation-lock-matrix.md`](../shared-core/strategy-allocation-lock-matrix.md)).
+  HIDDEN-ENTIRELY from DART prospects. Rule 03 + rule 06 enforcement.
 - Internal engineering architecture or component diagrams beyond the rule-03 same-system framing —
   [rule 06](../_ssot-rules/06-show-dont-show-discipline.md), HIDDEN-ENTIRELY for standard briefings. Technical-diligence
   sessions run a different playbook.
