@@ -75,10 +75,10 @@ changes, no routes added/removed, no backend.
 - [x] [AGENT] P0. Enumerate what nav component renders on each of the 9 public pages. Written to
       `/tmp/g1_12_nav_audit.md`. All 9 public routes already inherit `<SiteHeader>` via `app/(public)/layout.tsx`;
       briefings sub-tree adds `<BriefingAccessGate>` (a gate, not a shell).
-- [x] [AGENT] P0. Inconsistencies identified: (a) shell DOM selector missing — `<header>` had no `data-shell`
-      attribute; (b) CTA copy drift across briefings (no above-fold CTA); (c) exhaustive bulleted walls on
-      `/briefings/<slug>` pages violating rule 02; (d) breadcrumb behaviour consistent (back link pattern on slug
-      pages); (e) mobile breakpoint correct in SiteHeader (`hidden md:flex`) — no ad-hoc mobile treatment elsewhere.
+- [x] [AGENT] P0. Inconsistencies identified: (a) shell DOM selector missing — `<header>` had no `data-shell` attribute;
+      (b) CTA copy drift across briefings (no above-fold CTA); (c) exhaustive bulleted walls on `/briefings/<slug>`
+      pages violating rule 02; (d) breadcrumb behaviour consistent (back link pattern on slug pages); (e) mobile
+      breakpoint correct in SiteHeader (`hidden md:flex`) — no ad-hoc mobile treatment elsewhere.
 
 ### Phase 12B — Consolidate on `<SiteHeader>`
 
@@ -87,8 +87,8 @@ changes, no routes added/removed, no backend.
 - [x] [AGENT] P0. `SiteHeader` continues to consume `nav-copy.ts` SSOT — DART label, Investment Management / DART /
       Regulatory / Firm / Contact as top-level. No edits to `nav-copy.ts` (label already live per 2026-04-19).
 - [x] [AGENT] P0. Briefings CTA standardised to "Book 45-minute call" → `/contact`, sourced from
-      `lib/briefings/content.ts`. Marketing-journey shadow host keeps its "Book briefing" CTAs; no React-controlled
-      CTA drift across the 9 public pages.
+      `lib/briefings/content.ts`. Marketing-journey shadow host keeps its "Book briefing" CTAs; no React-controlled CTA
+      drift across the 9 public pages.
 - [x] [AGENT] P0. Mobile breakpoint preserved — `<SiteHeader>` uses `hidden md:flex` on the nav slot; unchanged.
 
 ### Phase 12C — Briefings polish
@@ -98,8 +98,8 @@ changes, no routes added/removed, no backend.
       `app/(public)/briefings/[slug]/page.tsx` and `app/(public)/briefings/page.tsx`. Exposes `[data-briefing-hero]` and
       `[data-testid="briefing-primary-cta"]` for Playwright.
 - [x] [AGENT] P0. Slug pages restructured into three sections: Situation (`pillar.summary`) · Position (existing
-      `pillar.bullets`, kept as-is, now under a framed heading) · Call (next-call copy + cross-links). Hub
-      restructured into hero + "The three paths" section + developer-docs pointer.
+      `pillar.bullets`, kept as-is, now under a framed heading) · Call (next-call copy + cross-links). Hub restructured
+      into hero + "The three paths" section + developer-docs pointer.
 - [x] [AGENT] P0. Hub page's per-pillar bullets removed (only TL;DR + "Open briefing →" link remains per card); slug
       pages' bullets retained as Position section (underlying content is unchanged — polish = layout only).
 - [x] [AGENT] P0. `lib/briefings/content.ts` extended non-destructively: added `tldr` and `cta` fields to
@@ -112,8 +112,8 @@ changes, no routes added/removed, no backend.
 - [x] [SCRIPT] P0. UI QG green (`scripts/quality-gates.sh`) — full run (typecheck + lint + tests + build) in 20s.
 - [x] [AGENT] P0. Playwright spec `tests/e2e/playbooks/refactor/refactor-g1-12-public-site-ia.spec.ts` — walks 9 public
       pages + 4 briefings pages (hub + 3 slugs), asserts `[data-shell="site-header"]` on every page,
-      `[data-briefing-hero]` + single CTA on every briefings surface, no LOCKED-VISIBLE on public, anon stays
-      on-path (G1.6 stub), orphan-reachability from header. 5/5 passed in 28.9s on tier-1 dev at `localhost:3100`.
+      `[data-briefing-hero]` + single CTA on every briefings surface, no LOCKED-VISIBLE on public, anon stays on-path
+      (G1.6 stub), orphan-reachability from header. 5/5 passed in 28.9s on tier-1 dev at `localhost:3100`.
 
 ## Critical files to be modified
 
