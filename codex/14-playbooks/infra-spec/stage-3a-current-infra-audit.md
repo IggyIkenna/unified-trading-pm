@@ -25,17 +25,17 @@
 The UI has shipped a large surface area — 177 routes across two apps — but the gap between **mechanical presence** and
 **SSOT-grade integrity** is wide. Four axes of debt:
 
-1. **UAC does not yet declare the capability dimensions rule 05 assumes.** 7 of 12 UAC gaps in
+1. **UAC does not yet declare the capability dimensions rule 05 assumes.** 11 of 12 UAC gaps in
    [`uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) are still proposals — only
-   `StrategyAvailabilityRegistry` (gap #12) is partially shipped and only `ArchetypeCapabilityV2` (gap #1) has the
-   beginnings of a Python mirror. No `FlashLoanReceiverRegistry`, no `LiquidationBonusScheduleV2`, no
-   `EventCalendarSourceCapability`, no `RepresentativeFutureRegistry`, no `CrossVenueRoutingPolicy`, no
-   `LaySideExecutionSemantics`, no `PricingFidelity`, no `IvSurfaceFidelity`.
+   `StrategyAvailabilityRegistry` (gap #12) is shipped. No `ArchetypeCapabilityV2`, no `FlashLoanReceiverRegistry`, no
+   `LiquidationBonusScheduleV2`, no `EventCalendarSourceCapability`, no `RepresentativeFutureRegistry`, no
+   `CrossVenueRoutingPolicy`, no `LaySideExecutionSemantics`, no `PricingFidelity`, no `IvSurfaceFidelity`, no
+   `MultiLegOrderCapability`, no `supported_signal_variants` on `VenueCapabilityV2`.
 2. **Four user-visible catalogue services are asymmetric.** Strategy Catalogue is finished (Phase 10 shipped
    `/services/strategy-catalogue/*` with master matrix + admin toggle + per-strategy detail). Data / ML / Execution Algo
    catalogues are each ~60% scaffolded and missing the common pattern (archetype master matrix → detail → admin lock →
    codex deep-link).
-3. **Entitlement system is a flat string set.** Role/entitlement gating lives in a hardcoded 36-line `if/else` cascade
+3. **Entitlement system is a flat string set.** Role/entitlement gating lives in a hardcoded 12-line `if/else` cascade
    at [`lifecycle-nav.tsx:102-113`](../../../../unified-trading-system-ui/components/shell/lifecycle-nav.tsx#L102-L113);
    entitlement keys are a 17-item string array in
    [`lib/config/auth.ts:11-29`](../../../../unified-trading-system-ui/lib/config/auth.ts#L11-L29). There is no
@@ -415,30 +415,30 @@ server-verified claim.
 Source: [`_ssot-rules/_source-v1-feedback.md`](../_ssot-rules/_source-v1-feedback.md) "On building-block dimensions".
 Each row names the rule 05 block, where it exists today, what's missing, and what blocks the missing piece from landing.
 
-|   # | Building block                            | Exists in (repo / path)                                                                           | Gap                                                                                                                       | Blocker                                                                                    |
-| --: | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-|   1 | Reporting core                            | `reports-service/`; UI `/services/reports/*`; duplicate cluster merged into Reports               | No rule 03-compliant "Research ≡ live" reporting axis: reports only display live; same-component research views not wired | `im_client` audience in UAC doesn't bind to reporting routes; Stage 3C derivation needed   |
-|   2 | Regulatory umbrella reporting             | `/regulatory` marketing; `/services/reports/reconciliation`; user-management-ui compliance views  | No `reserving_business_unit_id` declared for Reg Umbrella funds; no MLRO workflow UI                                      | UAC gap: "business_unit registry" (not in the 12-gap list); Stage 3B must declare          |
-|   3 | IM allocator reporting                    | `/investment-management` marketing; `portfolio-allocator`; UAC `validate_allocation_authorised()` | No IM-desk view of allocations segregated by `fund_id`; Phase 10.7 allocator-split not shipped                            | `fund_id` claim missing (§8); `business_unit` registry missing (§3.2)                      |
-|   4 | Strategy-service entry                    | `/services/strategy-catalogue/*` (Phase 10 shipped); UAC `StrategyAvailabilityRegistry`           | Phase 10.6 consumer-surface split not started (research / trading / IM catalogue / client-reporting views)                | UAC gap #1 `ArchetypeCapabilityV2` + audience→route mapping (Stage 3C)                     |
-|   5 | Instructions integration                  | `execution-service/`; `trading-agent`; UAC `execution/` domain                                    | No `ClientInstruction` schema declaring which rule 04 commercial-path allows which instruction type                       | UAC "ClientInstructionSchema" (not in 12-gap list; Stage 1 rule 10 will declare)           |
-|   6 | Research / promote pipeline               | `strategy-service/engine/strategies/v2/archetype_build_registry.py` + Phase 2 ledger              | UI admin surface for promotion-decision-ledger lives in Strategy Catalogue only; ML has none                              | UAC gap #1 + ML-family registry missing (§4.3)                                             |
-|   7 | Execution layer                           | `execution-service/`; UAC `_cefi.py`, `_defi.py`, `_sports.py`, `_tradfi.py`                      | 5 UAC gaps open: #3 flash-loan receiver, #7 multi-leg, #9 lay-side, #10 cross-venue routing, #6 IV surface                | Each gap blocks a specific algo surface; ship order per `uac-registry-gaps.md` phasing     |
-|   8 | Venue packs (per venue/group)             | `codex/02-venues/`; UAC `VENUE_REGISTRY` (canonical); `_cefi.py`/`_defi.py`/etc.                  | No `supported_signal_variants` per venue (UAC gap #2); venue-pack commercial metadata undeclared                          | UAC gap #2; Stage 3B commercial-packaging pattern not yet shipped                          |
-|   9 | Chain packs (per chain)                   | UAC `_defi_chain_data.py`; `CHAIN_RPC_TEMPLATES` in `_defi.py`                                    | No `FlashLoanReceiverRegistry` (gap #3); no chain-pack commercial metadata                                                | UAC gap #3                                                                                 |
-|  10 | Instrument-type packs (options/perps/...) | `canonical/domain/` sub-packages; UAC `InstrumentType` enum                                       | No `OptionVenueCapability` (gap #6); no `PricingFidelity` on DeFi spot (gap #8); no instrument-pack commercial metadata   | UAC gaps #6, #8                                                                            |
-|  11 | Analytics packs                           | `features-service/*`; `unified-features-interface/`; UI `/services/research/features`             | No `EventCalendarSourceCapability` (gap #5); analytics-pack commercial metadata undeclared; ML Catalogue fragmented       | UAC gap #5; §4.3 ML refactor                                                               |
-|  12 | Exclusivity / non-compete premium         | UAC `CLIENT_EXCLUSIVE` lock_state (Phase 10.5 shipped)                                            | No "non-compete radius" declaration (geography / asset-class / venue); commercial tier-B only, not structurally enforced  | Stage 3B must declare non-compete axis; contractual side not in UAC (§ commercial stage 2) |
-|  13 | Custom solution premium                   | No UAC declaration; ad-hoc in per-client contracts                                                | No "custom capability overlay" schema declaring what's non-standard; no versioning for custom builds                      | Custom-solution registry missing; defer to Stage 2 commercial-model + Stage 3E refactor    |
+|   # | Building block                            | Exists in (repo / path)                                                                           | Gap                                                                                                          | Blocker                                                                                    |
+| --: | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+|   1 | Reporting core                            | `reports-service/`; UI `/services/reports/*`; duplicate cluster merged into Reports               | No rule 03-compliant "Research ≡ live" reporting axis: reports only display live; research views not wired   | `im_client` audience in UAC doesn't bind to reporting routes; Stage 3C derivation needed   |
+|   2 | Regulatory umbrella reporting             | `/regulatory` marketing; `/services/reports/reconciliation`; user-management-ui compliance views  | No `reserving_business_unit_id` declared for Reg Umbrella funds; no MLRO workflow UI                         | UAC gap: "business_unit registry" (not in the 12-gap list); Stage 3B must declare          |
+|   3 | IM allocator reporting                    | `/investment-management` marketing; `portfolio-allocator`; UAC `validate_allocation_authorised()` | No IM-desk view of allocations segregated by `fund_id`; Phase 10.7 allocator-split not shipped               | `fund_id` claim missing (§8); `business_unit` registry missing (§3.2)                      |
+|   4 | Strategy-service entry                    | `/services/strategy-catalogue/*` (Phase 10 shipped); UAC `StrategyAvailabilityRegistry`           | Phase 10.6 consumer-surface split not started (research / trading / IM catalogue / client-reporting views)   | UAC gap #1 `ArchetypeCapabilityV2` + audience→route mapping (Stage 3C)                     |
+|   5 | Instructions integration                  | `execution-service/`; `trading-agent`; UAC `execution/` domain                                    | No `ClientInstruction` schema declaring which rule 04 commercial-path allows which instruction type          | UAC "ClientInstructionSchema" (not in 12-gap list; Stage 1 rule 10 will declare)           |
+|   6 | Research / promote pipeline               | `strategy-service/engine/strategies/v2/archetype_build_registry.py` + Phase 2 ledger              | UI admin surface for promotion-decision-ledger lives in Strategy Catalogue only; ML has none                 | UAC gap #1 + ML-family registry missing (§4.3)                                             |
+|   7 | Execution layer                           | `execution-service/`; UAC `_cefi.py`, `_defi.py`, `_sports.py`, `_tradfi.py`                      | 5 UAC gaps open: #3 flash-loan receiver, #7 multi-leg, #9 lay-side, #10 cross-venue routing, #6 IV surface   | Each gap blocks a specific algo surface; ship order per `uac-registry-gaps.md` phasing     |
+|   8 | Venue packs (per venue/group)             | `codex/02-venues/`; UAC `VENUE_REGISTRY` (canonical); `_cefi.py`/`_defi.py`/etc.                  | No `supported_signal_variants` per venue (UAC gap #2); venue-pack commercial metadata undeclared             | UAC gap #2; Stage 3B commercial-packaging pattern not yet shipped                          |
+|   9 | Chain packs (per chain)                   | UAC `_defi_chain_data.py`; `CHAIN_RPC_TEMPLATES` in `_defi.py`                                    | No `FlashLoanReceiverRegistry` (gap #3); no chain-pack commercial metadata                                   | UAC gap #3                                                                                 |
+|  10 | Instrument-type packs (options/perps/...) | `canonical/domain/` sub-packages; UAC `InstrumentType` enum                                       | No `OptionVenueCapability` (gap #6); no `PricingFidelity` on DeFi spot (gap #8); no instrument-pack metadata | UAC gaps #6, #8                                                                            |
+|  11 | Analytics packs                           | `features-service/*`; `unified-features-interface/`; UI `/services/research/features`             | No `EventCalendarSourceCapability` (gap #5); analytics-pack commercial metadata undeclared; ML fragmented    | UAC gap #5; §4.3 ML refactor                                                               |
+|  12 | Exclusivity / non-compete premium         | UAC `CLIENT_EXCLUSIVE` lock_state (Phase 10.5 shipped)                                            | No "non-compete radius" declaration (geography / asset-class / venue); commercial tier-B only                | Stage 3B must declare non-compete axis; contractual side not in UAC (§ commercial stage 2) |
+|  13 | Custom solution premium                   | No UAC declaration; ad-hoc in per-client contracts                                                | No "custom capability overlay" schema declaring what's non-standard; no versioning for custom builds         | Custom-solution registry missing; defer to Stage 2 commercial-model + Stage 3E refactor    |
 
 ---
 
 ## 10. Handover notes for Stages 3B / 3C / 3D / 3E
 
-- **Stage 3B (UAC combo rules):** 7 of 12 declared UAC gaps + 3 adjacent-but-missing mechanisms (§3.2) need combinatoric
-  declarations. Non-compete radius (block 12) and custom-solution schema (block 13) are new work on top of the
-  `uac-registry-gaps.md` queue. Start from block 4 `StrategyAvailabilityRegistry` (only one shipped) and work outward
-  along dependency edges (#1 `ArchetypeCapabilityV2` blocks most).
+- **Stage 3B (UAC combo rules):** 11 of 12 declared UAC gaps + 3 adjacent-but-missing mechanisms (§3.2) need
+  combinatoric declarations. Non-compete radius (block 12) and custom-solution schema (block 13) are new work on top of
+  the `uac-registry-gaps.md` queue. Start from block 4 `StrategyAvailabilityRegistry` (only one shipped) and work
+  outward along dependency edges (#1 `ArchetypeCapabilityV2` blocks most).
 - **Stage 3C (derivation engine):** must bridge the `UserRole → StrategyAvailability.Audience` mismatch (§5), declare
   the JWT claim set (§8), spec the LOCKED-VISIBLE rendering mode (§6.2), and generate the four catalogue surfaces
   (Strategy / Data / ML / Execution Algo) from a single registry. The Strategy Catalogue Phase 10 implementation is the
