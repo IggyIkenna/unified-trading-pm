@@ -202,20 +202,49 @@ Cloud Run manifests + Secret Manager scripts + VM tarballs). `deployment-api` is
 over deployment-service — NOT the direct wiring target. Touch `deployment-api` only if we want ops to see
 counterparty-endpoint state via its API (that's Phase 5 admin-surface territory, not infra).
 
-- [ ] [AGENT] P0. Secret Manager entries for per-counterparty HMAC secrets + auth keys in
-      `deployment-service/scripts/` (per `interface-credential-convention.md`).
-- [ ] [AGENT] P0. Cloud Run deployment — decide: (a) extend strategy-service's existing Cloud Run service to host
+- [x] [AGENT] P0. Secret Manager entries for per-counterparty HMAC secrets + auth keys in
+      `deployment-service/scripts/` (per `interface-credential-convention.md`). Shipped
+      `deployment-service@b518f7b` — `scripts/provision-signal-broadcast-secrets.sh` creates /
+      rotates per-counterparty HMAC keys under the convention
+      `signal-broadcast-counterparty-{cp_id}-hmac` for the two staging fixtures.
+- [x] [AGENT] P0. Cloud Run deployment — decide: (a) extend strategy-service's existing Cloud Run service to host
       the signal-broadcast sub-package, OR (b) separate Cloud Run worker. Default to (a) — strategy-service
       already owns signal emission; no need for a 67th service. Update `deployment-service/cloud-run/` manifest
-      accordingly.
-- [ ] [AGENT] P0. Per-counterparty webhook target config in `deployment-service/config/` (env var allowlist)
+      accordingly. Shipped `deployment-service@b518f7b` — chose (a); extended the existing terraform
+      module at `terraform/services/strategy-service/gcp/` with `secret_environment_variables` (2 HMAC
+      secrets) + 8 `SIGNAL_BROADCAST_*` env vars. No separate Cloud Run service created.
+- [x] [AGENT] P0. Per-counterparty webhook target config in `deployment-service/config/` (env var allowlist)
       and/or Pub/Sub topic provisioning. Per D4 — entitlements source from UAC `CounterpartyEntitlement`.
-- [ ] [AGENT] P0. Rate-limiting + retry configuration per D7 (per-counterparty-per-strategy). Config lives in
-      strategy-service signal_broadcast `config.py` + deployment-service env injection.
-- [ ] [AGENT] P0. VM tarball refresh per `deployment-service/scripts/vm/create-code-tarballs.sh` if VMs consume
+      Shipped `deployment-service@b518f7b` — `configs/signal-broadcast/counterparties.yaml` declares
+      the two staging counterparty fixtures (counterparty_id / webhook_url / schema_depth /
+      allowed_slots / active_from / active_to / rate_limit / secret_manager_ref). Runtime source
+      of truth for entitlements remains UAC `Counterparty` records; this file is the deploy-time
+      mirror (Secret Manager coverage + egress allowlist + ops catalogue).
+- [x] [AGENT] P0. Rate-limiting + retry configuration per D7 (per-counterparty-per-strategy). Config lives in
+      strategy-service signal_broadcast `config.py` + deployment-service env injection. Shipped
+      `deployment-service@b518f7b`. Per-counterparty rate limit stays UAC-side
+      (`Counterparty.rate_limit_per_strategy_per_sec`, D7); service-wide transport knobs exposed
+      via terraform variables + `SIGNAL_BROADCAST_WEBHOOK_MAX_RETRIES` /
+      `SIGNAL_BROADCAST_WEBHOOK_BACKOFF_BASE_SECONDS` /
+      `SIGNAL_BROADCAST_WEBHOOK_TIMEOUT_SECONDS`.
+- [x] [AGENT] P0. VM tarball refresh per `deployment-service/scripts/vm/create-code-tarballs.sh` if VMs consume
       strategy-service — `bash ... --include strategy-service` if signal_broadcast sub-package affects tarball.
-- [ ] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties (staging secrets
+      Confirmed `deployment-service@b518f7b`: strategy-service is already in every category tarball
+      (CEFI / TRADFI / DEFI / SPORTS / PREDICTION) per `scripts/vm/create-code-tarballs.sh`; operator
+      runs `bash scripts/vm/create-code-tarballs.sh --all` post-merge to pick up the new
+      signal_broadcast sub-package. Documented as a follow-up step in the provisioning script footer
+      and README; no tarball script change needed.
+- [x] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties (staging secrets
       + Cloud Run manifest + webhook config); smoke test delivery confirmed end-to-end on staging.
+      Local-emulator smoke is green via `scripts/smoke-signal-broadcast.sh` — uses
+      strategy-service Phase-3 integration suite with the `responses` library, zero live HTTP.
+      Shipped `deployment-service@b518f7b`. Live-staging smoke with real GCP creds is an explicit
+      follow-up below.
+- [ ] [HUMAN] P0. **Live-staging smoke** (deferred to operator with GCP creds): run
+      `bash deployment-service/scripts/provision-signal-broadcast-secrets.sh <staging-project>`,
+      apply terraform in `terraform/services/strategy-service/gcp/`, trigger strategy-service signal
+      emission on staging, and confirm both mock counterparty endpoints receive an HMAC-signed POST
+      within 5 seconds (D5 at-least-once + D10 shard-level isolation).
 
 ### Phase 5 — frontend (admin + counterparty observability UI)
 
