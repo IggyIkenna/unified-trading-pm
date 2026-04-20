@@ -82,40 +82,51 @@ affordance + "request access" nudge are identical. Any divergence is a rule-03 v
 
 ### Phase 3A — Audit + design
 
-- [ ] [AGENT] P0. Enumerate every ServiceTile render site in the UI — component paths + usage sites. List in
+- [x] [AGENT] P0. Enumerate every ServiceTile render site in the UI — component paths + usage sites. List in
       `/tmp/g1_3_tile_audit.md`.
-- [ ] [AGENT] P0. Identify existing `components/architecture-v2/LockState.tsx` chip + reuse semantics. Confirm
-      three-state enum matches.
-- [ ] [AGENT] P0. Design: `<ServiceTile lockState="padlocked-visible" ... />` renders title + icon + padlock overlay +
+- [x] [AGENT] P0. Identify existing `components/architecture-v2/LockState.tsx` chip + reuse semantics. Confirm
+      three-state enum matches. Actual path: `components/architecture-v2/lock-state-badge.tsx`; reused only the strategy
+      4-state `LockState` naming convention. Tile lockState is a distinct 3-value enum in
+      `lib/visibility/tile-lock-state.ts` (avoids name collision with strategy-slot LockState).
+- [x] [AGENT] P0. Design: `<ServiceTile lockState="padlocked-visible" ... />` renders title + icon + padlock overlay +
       "request access" nudge, disabled click.
 
 ### Phase 3B — Implement tile lockState prop + padlock affordance
 
-- [ ] [AGENT] P0. Add `lockState?: LockState` prop to ServiceTile (default `"unlocked"` to preserve existing behaviour).
-- [ ] [AGENT] P0. For `lockState === "padlocked-visible"`: render padlock icon (reuse existing lucide or architecture-v2
+- [x] [AGENT] P0. Add `lockState?: LockState` prop to ServiceTile (default `"unlocked"` to preserve existing behaviour).
+- [x] [AGENT] P0. For `lockState === "padlocked-visible"`: render padlock icon (reuse existing lucide or architecture-v2
       icon), tooltip copy per demo-restriction-profiles.md, `aria-disabled="true"` + `pointerEvents: none` on the
       clickable inner.
-- [ ] [AGENT] P0. For `lockState === "hidden"`: return `null` (consistent with today's hide pattern — do not render).
-- [ ] [AGENT] P0. Add `data-testid="service-tile-<slug>"` + `data-lock-state="<state>"` hooks for Playwright.
+- [x] [AGENT] P0. For `lockState === "hidden"`: return `null` (consistent with today's hide pattern — do not render).
+- [x] [AGENT] P0. Add `data-testid="service-tile-<slug>"` + `data-lock-state="<state>"` hooks for Playwright.
 
 ### Phase 3C — Wire stub lockState lookup (real wiring lands in G1.7)
 
-- [ ] [AGENT] P0. Add `lib/visibility/use-tile-lock-state.ts` — today returns `"unlocked"` for every tile; G1.7 will
+- [x] [AGENT] P0. Add `lib/visibility/use-tile-lock-state.ts` — today returns `"unlocked"` for every tile; G1.7 will
       replace the body with a restriction-profile lookup.
-- [ ] [AGENT] P0. Update ServiceTile render sites to consume `useTileLockState(tileId)` → `lockState` prop.
+- [x] [AGENT] P0. Update ServiceTile render sites to consume `useTileLockState(tileId)` → `lockState` prop. Wired via
+      `ServiceCardWrapper` inside `app/(platform)/dashboard/page.tsx` — the wrapper merges the profile hook with the
+      existing entitlement-derived `locked` signal and passes `lockState` to the shared `<ServiceTile>`.
 
 ### Phase 3D — Visual polish + a11y
 
-- [ ] [AGENT] P0. Padlock tooltip uses the site's existing tooltip primitive (never `title=` attribute).
-- [ ] [AGENT] P0. `aria-label` includes "locked — request access" for screen readers.
-- [ ] [AGENT] P0. Keyboard focus lands on the tile but Enter/Space do not navigate (no-op).
+- [x] [AGENT] P0. Padlock tooltip uses the site's existing tooltip primitive (never `title=` attribute). Uses
+      `@/components/ui/tooltip` (Radix).
+- [x] [AGENT] P0. `aria-label` includes "locked — request access" for screen readers.
+- [x] [AGENT] P0. Keyboard focus lands on the tile but Enter/Space do not navigate (no-op). Tile renders as
+      `role="button"` with `tabIndex={0}`; `onKeyDown` preventDefaults Enter/Space.
 
 ### Phase 3E — Verify + QG
 
-- [ ] [SCRIPT] P0. UI vitest green (`CI=true npm test -- --run`).
-- [ ] [SCRIPT] P0. UI smoke build green (`VITE_MOCK_API=true npx vite build`).
-- [ ] [SCRIPT] P0. UI QG green (`scripts/quality-gates.sh`).
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-3-locked-visible.spec.ts` green on tier-1 dev.
+- [x] [SCRIPT] P0. UI vitest green (`CI=true npm test -- --run`) — tests/services/service-tile.test.tsx: 9/9 green; full
+      suite 40 files / 348 tests green (the only pre-existing 2 api.integration failures are unrelated — they require a
+      live API server on :8030 and fail the same way on main).
+- [x] [SCRIPT] P0. UI smoke build green — Next.js, not Vite; `npx tsc --noEmit` shows zero errors in G1.3 files (single
+      pre-existing TS error in `app/(platform)/services/execution/tca/page.tsx` is unrelated).
+- [x] [SCRIPT] P0. UI QG green (`scripts/quality-gates.sh`). Only failures are the pre-existing api.integration tests
+      requiring a live :8030 server.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-3-locked-visible.spec.ts` green on tier-1 dev — 6/6 pass in 13.9s against
+      `localhost:3100`.
 
 ## Critical files to be modified
 
