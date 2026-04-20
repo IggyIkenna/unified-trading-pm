@@ -1,5 +1,5 @@
 ---
-scope: [internal, compliance, sales]
+scope: [admin, sales]
 visibility: internal-only
 ---
 
@@ -22,14 +22,14 @@ administrator handling NAV, subscriptions, and redemptions; Odum Research Ltd is
 
 ## Custody model per path
 
-| Path                 | Who holds the venue account / fund assets                                                        | How capital moves                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| IM — Pooled (Fund)   | Qualified 3rd-party custodian (Copper / equivalent) holds fund assets; POD is fund administrator | Client subscribes / redeems via Odum portal (UI + REST API)            |
-| IM — SMA             | Client, in their own entity name                                                                 | Client funds the venue directly; Odum has scoped execute+read API keys |
-| DART — Signals-In    | Client, in their own entity name                                                                 | Client funds the venue directly; Odum has scoped execute+read API keys |
-| DART — Full Pipeline | Client, in their own entity name                                                                 | Client funds the venue directly; Odum has scoped execute+read API keys |
-| Regulatory Umbrella  | Client, in their own entity name                                                                 | Client funds direct; Odum has read-only+read-transaction keys only     |
-| Odum Signals-Out     | Counterparty (their own stack)                                                                   | N/A — Odum sees no fills, no positions, no venues                      |
+| Path                 | Who holds the venue account / fund assets                                                                                                                                                                                                                    | How capital moves                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| IM — Pooled (Fund)   | Qualified 3rd-party custodian (Copper / equivalent) holds fund assets; POD is fund administrator                                                                                                                                                             | Client subscribes / redeems via Odum portal (UI + REST API)                                                   |
+| IM — SMA             | Client, in their own entity name                                                                                                                                                                                                                             | Client funds the venue directly; Odum has scoped execute+read API keys                                        |
+| DART — Signals-In    | **Default**: segregated sub-account inside Odum's venue accounts, held in the client's name via the exchange sub-account primitive (fast onboarding, avoids multi-week direct exchange onboarding). **Opt-out**: client's own venue or prime-broker account. | Client funds their sub-account (or own account) directly; Odum holds scoped execute+read API keys either way. |
+| DART — Full Pipeline | Same dual option as Signals-In                                                                                                                                                                                                                               | Same as Signals-In                                                                                            |
+| Regulatory Umbrella  | Client, in their own entity name                                                                                                                                                                                                                             | Client funds direct; Odum has read-only+read-transaction keys only                                            |
+| Odum Signals-Out     | Counterparty (their own stack)                                                                                                                                                                                                                               | N/A — Odum sees no fills, no positions, no venues                                                             |
 
 ## Structures and how custody works in each
 
@@ -65,13 +65,22 @@ administrator handling NAV, subscriptions, and redemptions; Odum Research Ltd is
 
 ### DART — Signals-In and Full Pipeline
 
-- Same mechanic as IM SMA: client holds their own venue accounts in their own entity name; Odum has scoped execute+read
-  API keys — no withdrawal authority, ever.
+Two execution-account options resolve at onboarding per DART engagement:
+
+**Default — segregated sub-account at Odum's venue accounts (fast onboarding).** Odum maintains master venue accounts
+across CeFi exchanges, TradFi brokers, and on-chain wallets. Each DART client is issued a native exchange sub-account /
+sub-wallet within those master accounts, held in the client's own name at the exchange's sub-account primitive (Binance
+sub-account, Hyperliquid sub-wallet, TradFi brokerage sub-account, wallet-per-client on-chain). This skips the
+multi-week direct exchange onboarding every new venue otherwise requires. Odum operates via scoped execute+read API keys
+kept in Secret Manager — no withdrawal authority, ever. Odum Research Ltd never holds principal.
+
+**Opt-out — client's own venue or prime-broker account.** If the client already holds (or prefers to hold) the venue
+relationship directly, they issue Odum the same scoped execute+read API keys against their own account. Same trading
+loop, same Secret Manager, same no-withdrawal-authority posture; just a different account owner on the exchange's books.
+
 - Instruction routing: the 8-field instruction schema carries a `client_id`; `execution-service` routes the order to the
-  correct venue using the scoped key. Sub-mandate partitioning (one DART engagement with N internal sub-clients) uses
-  the venue's native sub-account primitive where supported (Binance sub-account, Hyperliquid sub-wallet, TradFi
-  brokerage sub-account, wallet-per-client on-chain) — the sub-account is **still in the client's entity name**, not
-  Odum's.
+  correct sub-account / account via the scoped key. Sub-mandate partitioning (one DART engagement with N internal
+  sub-clients) uses further per-sub-mandate sub-accounts under the same mechanic.
 - If a DART client later wants a fund wrapper (share-class mechanics, third-party custody, regulated administrator) that
   pivots to IM Pooled mechanics; it is a separate commercial engagement, not a DART feature.
 

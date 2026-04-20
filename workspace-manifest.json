@@ -66,6 +66,7 @@
     "features-cross-instrument-service": "0.1.1",
     "features-multi-timeframe-service": "0.1.1",
     "features-sports-service": "0.1.0",
+    "fund-administration-service": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.3.1",
@@ -346,7 +347,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -694,6 +695,47 @@
       "role": "service",
       "tags": ["cefi", "feature-computation", "standard"],
       "internal_dependencies": ["unified-features-interface"]
+    },
+    "fund-administration-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "folder_name": "fund-administration-service",
+      "github_url": "https://github.com/IggyIkenna/fund-administration-service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": 84,
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "New repo 2026-04-20 \u2014 Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["event_bus", "cache", "config_store"],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": ["im", "fund-admin", "subscription-redemption"]
     },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
@@ -1212,7 +1254,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1940,7 +1982,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",

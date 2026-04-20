@@ -1,5 +1,5 @@
 ---
-scope: [internal, compliance, sales, engineering]
+scope: [admin, sales, engineer]
 visibility: internal-only
 ---
 
