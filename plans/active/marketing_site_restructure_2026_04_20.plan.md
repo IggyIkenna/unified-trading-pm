@@ -181,8 +181,9 @@ Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the w
       `investment`, `platform`, `regulatory`.
 - [x] [AGENT] P0. Homepage (`app/(public)/page.tsx` + `public/homepage.html`) + `site-header.tsx` updated with new
       5-path nav.
-- [ ] [AGENT] P0. **Content-depth polish remaining** on `/investment-management` + `/regulatory` — read-only-key
+- [x] [AGENT] P0. **Content-depth polish remaining** on `/investment-management` + `/regulatory` — read-only-key
       mechanic copy + client-slice visibility framing (pb3b narrative) + rule-03 same-system claim surfaced.
+      Done 2026-04-20 (UI `a93a9ff` — full React pages with Phase 2A pb3a/pb3b content on both routes).
 - [ ] [AGENT] P0. **Cross-linking sweep** — every page links to siblings; no orphan pages; nav consistency check
       across HTML + React routes.
 - [x] [AGENT] P0. **Phase 2 gate reached**: all 5 paths reachable in 1 click from homepage.
@@ -241,31 +242,33 @@ Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the w
 Briefings hub + 6 pillars shipped. Content-depth audit vs codex SSOT still pending per-pillar. Owner-agent for
 this phase should READ the cited SSOT and expand `lib/briefings/content.ts` where the current copy is thin.
 
-- [ ] [AGENT] P0. Audit `lib/briefings/content.ts` `dart-signals-in` pillar against
+- [x] [AGENT] P0. Audit `lib/briefings/content.ts` `dart-signals-in` pillar against
       `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`. Must include: rule-10
       8-field spec (per-field rows), venue × instrument × execution-mode compatibility matrix (CeFi / DeFi /
-      Polymarket / Sports), lifecycle supersede/add/cancel semantics, what-signals-only-does-NOT-enable.
-- [ ] [AGENT] P0. Audit `signals-out` pillar against `codex/14-playbooks/commercial-model/signal-leasing.md`. Must
+      Polymarket / Sports), lifecycle supersede/add/cancel semantics, what-signals-only-does-NOT-enable. Done
+      2026-04-20 (UI `12238b6`).
+- [x] [AGENT] P0. Audit `signals-out` pillar against `codex/14-playbooks/commercial-model/signal-leasing.md`. Must
       include: signal payload schema full spec (direction / size / confidence / valid_until / supersedes /
       idempotency key), webhook + REST-pull delivery mechanics (D2), HMAC-signing + idempotency rules, the four
       light-observability components (history / backtest compare / delivery health / optional P&L attribution),
-      hybrid commercial model (Option 4) copy.
-- [ ] [AGENT] P0. Audit `dart-full` pillar against `codex/09-strategy/architecture-v2/` docs. Must include:
+      hybrid commercial model (Option 4) copy. Done 2026-04-20 (UI `b87ee88`).
+- [x] [AGENT] P0. Audit `dart-full` pillar against `codex/09-strategy/architecture-v2/` docs. Must include:
       research surface walkthrough, promote pipeline (shadow → paper → live-tiny → allocated), backtest metering
       detail (baseline / complex / full-matrix sweep), IP-power exclusivity tier anchors (commodity through
-      uniquely-differentiated).
-- [ ] [AGENT] P0. Audit `investment-management` pillar against
+      uniquely-differentiated). Done 2026-04-20 (UI `f4775d0` four-tier exclusivity + `5379c4f` metered research
+      three-band).
+- [x] [AGENT] P0. Audit `investment-management` pillar against
       `codex/14-playbooks/commercial-model/im-profit-share-structures.md` +
       `shared-core/org-fund-client-entity-model.md`. Must include: fund/SMA mechanics + read-only-key mechanic +
       perf-fee band (30-35% no-management-fee) + platform-fee client-choice (Option A +5% perf / Option B $500/mo
-      — no specific numbers per rule 08).
-- [ ] [AGENT] P0. Audit `regulatory` pillar against `codex/14-playbooks/experience/regulatory-umbrella-briefing.md`.
+      — no specific numbers per rule 08). Done 2026-04-20 (UI `5379c4f`).
+- [x] [AGENT] P0. Audit `regulatory` pillar against `codex/14-playbooks/experience/regulatory-umbrella-briefing.md`.
       Must include: FCA scope enumeration, 5-workstream onboarding (legal / compliance / MLRO / venue / reporting),
-      supervisory-artifact index, 12-month minimum, read-only-key mechanic.
-- [ ] [AGENT] P0. Audit `platform` pillar (umbrella). Should cross-link to signals-in + full + signals-out without
-      duplicating their content.
-- [ ] [AGENT] P0. **Phase 3 gate: every pillar passes rule-02/06/07/08/09 audit; cross-refs to codex SSOT
-      embedded in the content-string JSDoc or inline.**
+      supervisory-artifact index, 12-month minimum, read-only-key mechanic. Done 2026-04-20 (UI `2eea185`).
+- [x] [AGENT] P0. Audit `platform` pillar (umbrella). Should cross-link to signals-in + full + signals-out without
+      duplicating their content. Done 2026-04-20 (UI `3cec060` added "Where to go next" cross-link routing section).
+- [x] [AGENT] P0. **Phase 3 gate: every pillar passes rule-02/06/07/08/09 audit; cross-refs to codex SSOT
+      embedded in the content-string JSDoc or inline.** Closed 2026-04-20.
 
 ### Phase 6 — Verification + QG + commit [REMAINING]
 
