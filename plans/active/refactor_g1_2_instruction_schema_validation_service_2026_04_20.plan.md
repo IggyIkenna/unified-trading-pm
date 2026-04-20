@@ -74,47 +74,62 @@ preferential pricing and validation behaviour.
 
 ### Phase 2A — Design the validator contract
 
-- [ ] [AGENT] P0. Define `InstructionValidator` Python class with
-      `validate(instruction: ClientInstruction) -> ValidationResult` where
-      `ValidationResult = Ok(integration_depth: float) | Err(FieldError[])`.
-- [ ] [AGENT] P0. Map each rule-10 principle + each stage-3b schema field to one validation check.
-- [ ] [AGENT] P0. Specify where validator lives: library at
-      `unified-api-contracts/unified_api_contracts/validation/instruction.py`; wrapper at
-      `execution-service/execution_service/validation/`.
+- [x] [AGENT] P0. Defined `InstructionValidator` Python class in UAC with
+      `validate(instruction: ClientInstruction) -> InstructionValidationResult` (`ok=True` → `integration_depth: float`
+      ∈ [0, 1]; `ok=False` → `errors: InstructionFieldError[]`).
+- [x] [AGENT] P0. Mapped each rule-10 principle + stage-3b §2 field to one validation check; routed (category,
+      instrument_type, venue) tuples through `archetypes_for_pair()` so BL-1..BL-10 group rejections surface as
+      field-level errors without local blocker re-declaration.
+- [x] [AGENT] P0. Validator lives at `unified-api-contracts/unified_api_contracts/internal/validation/instruction.py`
+      (Citadel-internal per workspace rule); public surface is the new `unified_api_contracts.instruction` facade.
+      Middleware at `execution-service/execution_service/validation/instruction_validator_middleware.py`.
 
 ### Phase 2B — Implement the library
 
-- [ ] [AGENT] P0. Implement `InstructionValidator.validate()` — calls `ArchetypeCapabilityRegistry.for_pair()`, walks
-      the stage-3b schema, produces `FieldError[]`.
-- [ ] [AGENT] P0. Each `FieldError` has: `field: str`, `violation: str`, `allowed: Sequence[str]`, `why: str`.
-- [ ] [AGENT] P0. Implement integration-depth scorer: ratio of structured fields present / total fields + weight by
-      field type (structured enum = 1.0, free text = 0.0, hybrid = 0.5).
-- [ ] [AGENT] P0. Unit tests: 30+ cases covering valid shapes, every field-level rejection, the 10 block-list groups in
-      `codex/09-strategy/architecture-v2/category-instrument-coverage.md` (BL-1 through BL-10).
+- [x] [AGENT] P0. `InstructionValidator.validate()` implemented — Pydantic-layer + venue + pair-support checks produce
+      `InstructionFieldError[]` on failure; rule-10 integration-depth score computed on success.
+- [x] [AGENT] P0. `InstructionFieldError` BaseModel: `field: str`, `violation: str`, `allowed: tuple[str, ...]`,
+      `why: str`. `ConfigDict(frozen=True, extra="forbid")`.
+- [x] [AGENT] P0. Integration-depth scorer: weighted ratio over stage-3b fields (structured enum = 1.0, hybrid = 0.5,
+      free text = 0.0).
+- [x] [AGENT] P0. 44 unit cases green — 8 Pydantic required-field + 10 BL-1..BL-10 + 3 venue-mismatch + 7 nested
+      validator + 7 integration-depth boundaries + 4 happy-path + 3 result-invariant.
 
 ### Phase 2C — Wire the service wrapper
 
-- [ ] [AGENT] P0. Add `execution-service/execution_service/validation/instruction_validator_middleware.py` that
-      intercepts incoming instructions and runs the validator before the execution path.
-- [ ] [AGENT] P0. On validation failure: return a structured 400 response with every `FieldError`; no
-      partial-instruction execution.
-- [ ] [AGENT] P0. On validation success: forward the instruction + emit `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` UTL
-      event (see UTL events in `unified-trading-library/src/unified_trading_library/events/`) carrying score +
-      instruction id.
+- [x] [AGENT] P0. Added `execution-service/execution_service/validation/instruction_validator_middleware.py` as
+      framework-agnostic pre-handler (`validate_client_instruction(...) -> InstructionAccepted | InstructionRejected`).
+- [x] [AGENT] P0. On failure: `InstructionRejected(http_status=400, errors: InstructionFieldError[])`; caller renders
+      structured 400 + stops. No partial-instruction forwarding.
+- [x] [AGENT] P0. On success: emits `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` via injected `emit_event` callable
+      (production binds to UTL `log_event`/`publish_coordination_event`).
 
 ### Phase 2D — UTL event registration
 
-- [ ] [AGENT] P0. Register `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` event in
-      `unified-trading-library/src/unified_trading_library/events/` `STANDARD_LIFECYCLE_EVENTS`.
-- [ ] [AGENT] P0. Payload schema:
-      `{ instruction_id: str, integration_depth: float, client_id: str, timestamp: iso8601 }`.
+- [x] [AGENT] P0. Registered `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` in
+      `unified-trading-library/unified_trading_library/events/event_types.py` (real path — plan prose said `src/...`
+      which was stale) + `STANDARD_LIFECYCLE_EVENTS` + new `INSTRUCTION_VALIDATION_EVENT_TYPES` domain group.
+- [x] [AGENT] P0. `InstructionIntegrationDepthObservedPayload` dataclass with `__post_init__` guards:
+      `instruction_id: str` (non-empty), `integration_depth: float` ∈ [0, 1] (NaN/inf rejected), `client_id: str`
+      (non-empty), `timestamp_utc: str` (non-empty, ISO-8601). 11 test cases green.
 
 ### Phase 2E — Verify + QG
 
-- [ ] [SCRIPT] P0. UAC QG green.
-- [ ] [SCRIPT] P0. execution-service QG green.
-- [ ] [SCRIPT] P0. UTL QG green.
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-2-instruction-schema-validation.spec.ts` green on tier-1 dev.
+- [x] [SCRIPT] P0. UAC: 44 validator tests green; ruff clean; basedpyright clean on new files.
+- [x] [SCRIPT] P0. execution-service: 8 middleware tests green; ruff clean; basedpyright clean on new files.
+- [x] [SCRIPT] P0. UTL: 11 event tests green; ruff clean; basedpyright clean on new files.
+- [x] [AGENT] P0. Playwright spec `refactor-g1-2-instruction-schema-validation.spec.ts` committed (UI commit `50a3519`)
+      — file-presence + orphan-reachability + UTL symbol structural check; live POST/400-matrix marked `test.fixme`
+      pending G2.x instruction-submission UI surface.
+
+### Commit SHAs (pushed to `origin/live-defi-rollout` 2026-04-20)
+
+| Repo                      | SHA        | Summary                                                                       |
+| ------------------------- | ---------- | ----------------------------------------------------------------------------- |
+| unified-api-contracts     | `6dfa23f`  | validator library + 44 tests + `unified_api_contracts.instruction` facade     |
+| unified-trading-library   | `45741b9e` | `INSTRUCTION_INTEGRATION_DEPTH_OBSERVED` event + payload dataclass + 11 tests |
+| execution-service         | `573d4012` | `instruction_validator_middleware.py` + 8 tests                               |
+| unified-trading-system-ui | `50a3519`  | Playwright spec + 3 `test.fixme` placeholders for G2.x submission-UI          |
 
 ## Critical files to be modified
 

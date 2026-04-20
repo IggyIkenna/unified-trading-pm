@@ -85,53 +85,81 @@ access-control middleware.
 
 ### Phase 6A — Audit existing Phase-10.5 availability module
 
-- [ ] [AGENT] P0. Read `strategy-service/strategy_service/availability/{store,watchdog,__init__}.py` in full. Note
-      extension points: what's exported; what's not.
-- [ ] [AGENT] P0. Read `stage-3c-derivation-engine.md` and map each of the 4 formulas to existing store data + new
-      inputs.
+- [x] [AGENT] P0. Read `strategy-service/strategy_service/availability/{store,watchdog,__init__}.py`. Confirmed
+      module-level tuple `STRATEGY_AVAILABILITY_REGISTRY` + free helpers `availability_for` / `slots_visible_to` /
+      `validate_allocation_authorised`. Phase-10.5 store + watchdog left untouched.
+- [x] [AGENT] P0. Mapped stage-3c §1.1-§1.5 → implementation in single module `derivation.py`. `combo()` wraps the G1.8
+      capability lookup; other four compose on top.
 
-### Phase 6B — Implement `derivation.py`
+### Phase 6B — Implement `derivation.py` (Option X: UAC host, not strategy-service)
 
-- [ ] [AGENT] P0. Create `strategy-service/strategy_service/availability/derivation.py` with these signatures:
+- [x] [AGENT] P0. Created `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` (Option X
+      — UAC host per operator sign-off Q5; avoids circular dep from a UAC re-export of strategy-service symbols). Ships
+      **5 formulas** (plan prose said 4; stage-3c §1.1 calls `combo(dimensions)` formula #1):
 
   ```python
-  def cost(combo: Combo, tier: PricingTier, integration_depth: float = 0.0) -> Price: ...
-  def demo_universe(persona: Persona, flavour: DemoFlavour) -> frozenset[ArchetypeSlot]: ...
-  def prod_restrictions(client: ClientId, package: PackageId) -> RestrictionProfile: ...
-  def access_control(user: UserContext, route: str, item: ItemRef, phase: Phase) -> AccessDecision: ...
+  def combo(dimensions, *, today=None,
+            capability_registry=ARCHETYPE_CAPABILITY_REGISTRY,
+            availability_registry=STRATEGY_AVAILABILITY_REGISTRY) -> frozenset[Combo]: ...           # §1.1
+  def cost(combo, tier, integration_depth=0.0, pricing_registry=None,
+           client_contract=None) -> PriceQuote: ...                                                   # §1.2
+  def demo_universe(persona, flavour, *, profile_registry=None,
+                    capability_registry=ARCHETYPE_CAPABILITY_REGISTRY) -> DemoUniverse: ...          # §1.3
+  def prod_restrictions(client, package, *,
+                        availability_registry=STRATEGY_AVAILABILITY_REGISTRY) -> ProductionRestrictions: ...  # §1.4
+  def access_control(user, route, item, phase, *,
+                     availability_registry=STRATEGY_AVAILABILITY_REGISTRY,
+                     capability_registry=ARCHETYPE_CAPABILITY_REGISTRY) -> AccessDecision: ...        # §1.5
   ```
 
-- [ ] [AGENT] P0. Each function pure — no global state, no I/O. Reads come from `ArchetypeCapabilityRegistry()` (G1.8) +
-      `StrategyAvailabilityRegistry()` (existing Phase-10.5) + injected readonly views.
-- [ ] [AGENT] P0. Implement per `stage-3c-derivation-engine.md` exactly — do not invent formulas; cite spec line for
-      each branch.
+- [x] [AGENT] P0. All 5 functions pure — no I/O, no globals, no UTL event emission. Event emission stays at call-sites
+      (stores, watchdog, middleware).
+- [x] [AGENT] P0. Shape-only pricing per stage-3c §1.2 (operator sign-off Q6) — every `QuoteLine` carries
+      `todo_numeric: Literal[True] = True`. Numeric tables populate once Stage-2
+      `commercial-model/pricing-building-blocks.md` signs off.
 
-### Phase 6C — Unit tests (≥ 3 worked examples per formula, matching Stage 3C success criterion)
+### Phase 6C — Unit tests (stage-3c §1 worked examples as fixtures)
 
-- [ ] [AGENT] P0. `strategy-service/tests/availability/test_derivation.py` — ≥ 12 cases (3 × 4 formulas) with worked
-      examples that exercise the 10 block-list groups.
-- [ ] [AGENT] P0. `cost` examples cover: low integration_depth penalty; high integration_depth discount; tier-A
-      cost-plus; tier-B fixed-upfront-plus-monthly.
-- [ ] [AGENT] P0. `demo_universe` examples cover: prospect-im persona × "sales-pitch" flavour; admin persona × any
-      flavour (full universe); client-exclusive persona (only their own slots).
-- [ ] [AGENT] P0. `prod_restrictions` examples cover: IM-Reserved × SaaS-package (empty — package doesn't include IM
-      slots); Reg-Umbrella client × standard package; admin × any package.
-- [ ] [AGENT] P0. `access_control` examples cover: `phase = "research"` + read route → OK; `phase = "live"` + write
-      route without live entitlement → DENY; `phase` axis orthogonal to maturity axis.
+- [x] [AGENT] P0. `unified-api-contracts/tests/internal/unit/test_derivation.py` — 22 cases (20 pass + 2 `pytest.skip`
+      for prospect-dart / prospect-reg personas that don't exist until G1.10). Every test docstring cites stage-3c §X.Y
+      Ex Z.
+- [x] [AGENT] P0. `cost` cases: hybrid tier + richer depth (§1.2 Ex 1); IM reporting-only (§1.2 Ex 2); rule-08
+      exclusivity violation (§1.2 Ex 3); internal-cost leakage guard (§1.2 Ex 4).
+- [x] [AGENT] P0. `demo_universe` cases: prospect-im turbo (§1.3 Ex 2); admin full-universe short-circuit (§1.3 Ex 4);
+      prospect-dart + prospect-reg deferred to G1.10 (skip markers).
+- [x] [AGENT] P0. `prod_restrictions` cases: signals-only client (§1.4 Ex 1); IM desk (§1.4 Ex 2); Reg Umbrella (§1.4 Ex
+      3); BL-15 RETIRED slot (§1.4 Ex 4).
+- [x] [AGENT] P0. `access_control` cases: DART signals-only deny research-phase (§1.5 Ex 1); im_desk research allow
+      (§1.5 Ex 2); locked_visible block-6 (§1.5 Ex 3); CLIENT_EXCLUSIVE 404 (§1.5 Ex 4); paper-phase allow (§1.5 Ex 5).
 
-### Phase 6D — Wire UTL events for allocator gate + service integration
+### Phase 6D — UAC facade re-export + allocator-gate (scoped)
 
-- [ ] [AGENT] P0. Wire `access_control` denial-emit into the existing `ClientAllocatorInstance` gate (shipped Phase
-      10.5). Replace fallback with `access_control()` call.
-- [ ] [AGENT] P0. Expose public API:
-      `from strategy_service.availability import cost, demo_universe, prod_restrictions, access_control`.
-- [ ] [AGENT] P0. Re-export from UAC facade — `unified_api_contracts.strategy_availability` gains a passthrough import
-      for the 4 functions so non-strategy-service consumers can import from UAC.
+- [x] [AGENT] P0. Re-exported 5 functions + ~20 types from the existing `unified_api_contracts.strategy` public facade
+      (new `unified_api_contracts.strategy_availability` facade not created — avoids duplication with the established
+      post-G1.8 domain facade).
+- [ ] [DEFERRED → G1.7] [AGENT] P1. `ClientAllocatorInstance` gate swap: `validate_allocation_authorised()` →
+      `access_control()`. The allocator gate needs a `UserContext` constructed by the HTTP middleware layer (role,
+      entitlements, persona) — that construction machinery is G1.7 scope (restriction-profile engine). For Wave C the
+      validator primitive stays in place and `access_control()` ships as the higher-level gate for HTTP / UI call-sites.
+      Captured as a Wave D item under `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`.
 
 ### Phase 6E — Verify + QG
 
-- [ ] [SCRIPT] P0. strategy-service QG green.
-- [ ] [SCRIPT] P0. UAC QG green.
+- [x] [SCRIPT] P0. UAC: 22 derivation tests green; ruff clean; basedpyright clean on `derivation.py`.
+- [x] [SCRIPT] P0. strategy-service: unchanged (no strategy-service commit in Wave C — allocator-gate swap deferred to
+      G1.7).
+- [x] [AGENT] P0. Playwright spec `refactor-g1-6-derivation-engine.spec.ts` committed (UI commit `4e10192`) — seeds 4
+      personas (admin / prospect-im / client-full / client-data-only), walks `/services/strategy-catalogue/` under each,
+      validates phase=research query-param round-trip for admin, skips prospect-dart/prospect-reg with TODO(G1.10).
+
+### Commit SHAs (pushed to `origin/live-defi-rollout` 2026-04-20)
+
+| Repo                      | SHA             | Summary                                                                                                   |
+| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------- |
+| unified-api-contracts     | `2c5a26b`       | derivation engine — 5 formulas + ~20 types + `strategy.py` facade re-export + 22 tests (20 pass + 2 skip) |
+| unified-trading-system-ui | `4e10192`       | reference Playwright spec — 4 personas + phase-query round-trip + G1.10 persona skips                     |
+| strategy-service          | (deferred G1.7) | allocator-gate swap to `access_control()` — needs UserContext wiring from HTTP middleware, G1.7 scope     |
+
 - [ ] [AGENT] P0. Playwright spec `refactor-g1-6-derivation-engine.spec.ts` green on tier-1 dev.
 
 ## Critical files to be modified
