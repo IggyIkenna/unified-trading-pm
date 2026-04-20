@@ -399,6 +399,11 @@ Per user message 2026-04-20 — "do everything, don't defer unless entirely nece
 - `user-management-api` repo: NOT created; handler lives inside user-management-ui.
 - Questionnaire schema stored as TypeScript types in UI + Pydantic model in UAC — kept in sync manually with a
   documentation cross-ref comment (sync-script overkill for 6 fields).
+- **Sync-script trigger (2026-04-20 follow-up addition):** if `QuestionnaireResponse` gains a 7th axis OR any existing
+  axis's enum changes, ship a sync-script matching the G1.8 `ArchetypeCapability` pattern. Reference:
+  `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh` (`--check` + `--write` modes; wired into
+  UI `scripts/quality-gates.sh` pre-base-ui hook so every push fails on drift). Without this trigger the UI TS mirror
+  WILL drift from UAC Pydantic at schema change time.
 
 ---
 
