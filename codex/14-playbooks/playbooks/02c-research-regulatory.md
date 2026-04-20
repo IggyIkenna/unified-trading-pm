@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 2c — Research & Docs: Regulatory Umbrella
 
 > **Layer:** Implementation. Narrative lives in

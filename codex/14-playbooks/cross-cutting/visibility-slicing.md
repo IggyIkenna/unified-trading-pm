@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Visibility slicing — the core model
 
 This is **THE** cross-cutting mechanism that ties authentication × entitlements × catalogue lock-state × catalogue

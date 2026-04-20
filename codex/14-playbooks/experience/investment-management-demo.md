@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Investment Management — Warm-Prospect Demo
 
 > Experience playbook for pb3b. Narrative overlay; the underlying reporting walkthrough lives in

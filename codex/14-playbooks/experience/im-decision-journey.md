@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Investment Management — Decision Journey
 
 > Canonical reference playbook. Stage 2 replicates this pattern across the other eight experience playbooks. Conforms to

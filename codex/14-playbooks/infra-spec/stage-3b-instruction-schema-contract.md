@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3B — Instruction Schema Contract (`(Client, downstream)` fit-check)
 
 > **Purpose.** Implements rule 10's commercial + product boundary as an engineering contract. Defines the required field

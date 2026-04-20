@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3C — Derivation engine (one registry, four derivations)
 
 > **Purpose.** Specify the pure-function derivation engine that consumes the Stage 3B UAC combo registry and produces

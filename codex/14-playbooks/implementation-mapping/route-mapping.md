@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Route Mapping — Experience Section → UI Route
 
 > Every experience-playbook walkthrough section maps to concrete UI routes. This doc is the index. Drives Playwright

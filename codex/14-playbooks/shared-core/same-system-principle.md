@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Same-System Principle — Implementation Map
 
 > Implementation map for [rule 03](../_ssot-rules/03-same-system-principle.md). Names the UI routes, component trees,

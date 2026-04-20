@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # DART — Post-First-Call Briefing
 
 > Experience playbook for pb2b. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md),

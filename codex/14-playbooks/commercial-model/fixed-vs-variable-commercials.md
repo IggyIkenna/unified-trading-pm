@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # Fixed vs Variable Commercials — Tier A vs Tier B Decision Tree
 
 > Tier A is cost-plus variable (no upfront, usage-linked). Tier B is fixed (upfront + fixed monthly, unlocks exclusivity

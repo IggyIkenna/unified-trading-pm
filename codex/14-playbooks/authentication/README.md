@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Authentication — three tiers
 
 > **Layer:** Implementation. Narrative lives in [../experience/](../experience/).

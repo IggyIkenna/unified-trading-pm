@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # [Playbook title — audience-facing, not internal shorthand]
 
 > **Template status:** canonical skeleton conforming to [rule 01](../_ssot-rules/01-grammar.md). Every experience

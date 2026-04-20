@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Pre-Demo Curation Rules
 
 > What to show / skip / skim per prospect profile. Sits between the restriction profile (mechanical) and the demo

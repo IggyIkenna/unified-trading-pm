@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Fund / Org / Client Hierarchy
 
 The structural model under which every client engagement exists. Shapes provisioning in user-management-ui, entitlements

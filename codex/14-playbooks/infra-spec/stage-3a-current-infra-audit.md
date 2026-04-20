@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3A — Current-infra audit
 
 > **Parent plan:**

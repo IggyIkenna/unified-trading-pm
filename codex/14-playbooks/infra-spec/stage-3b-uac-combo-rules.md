@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3B — UAC Combo Rules (Dimensions + Blocker Predicates)
 
 > **Purpose.** Declarative rule doc for the UAC combo registry that Stage 3C's derivation engine reads from. Lists every

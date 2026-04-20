@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Execution Algo Catalogue
 
 One of the four catalogues. See [catalogues.md](catalogues.md) for the umbrella pattern.

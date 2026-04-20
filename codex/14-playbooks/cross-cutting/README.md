@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # `cross-cutting/` — Concepts that span multiple playbooks
 
 > **Layer:** Implementation. Narrative lives in [../experience/](../experience/).

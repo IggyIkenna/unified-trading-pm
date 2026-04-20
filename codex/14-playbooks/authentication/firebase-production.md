@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Firebase production
 
 Production Firebase auth. Real clients, real money, real reporting. **High-risk tier** — all provisioning flows must

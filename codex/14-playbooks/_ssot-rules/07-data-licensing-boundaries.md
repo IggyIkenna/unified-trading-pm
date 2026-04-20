@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 07 — Data licensing boundaries
 
 > DART is enriched platform and research services built on top of underlying data sources. It is not direct raw-data

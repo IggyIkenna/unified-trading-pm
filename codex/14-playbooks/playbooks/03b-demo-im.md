@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 3b — Demo: Investment Management flavour
 
 > **Layer:** Implementation. Narrative lives in

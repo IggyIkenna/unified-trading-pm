@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Information Architecture
 
 Top-down canonical IA for the Odum platform. Every page in the UI must fit into this tree; orphans are triaged in

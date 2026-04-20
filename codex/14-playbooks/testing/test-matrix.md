@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Test matrix — playbook × persona × environment
 
 | Playbook                 | Spec file                            | Primary persona              | Other personas tested      | Environments                              |

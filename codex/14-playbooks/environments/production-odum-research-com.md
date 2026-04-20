@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Production — odum-research.com
 
 The production environment hosts real client capital, real positions, real reporting. **Every change gates through

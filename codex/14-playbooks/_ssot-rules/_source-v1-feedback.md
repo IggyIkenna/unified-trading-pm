@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Source: v1 agent feedback on the playbook SSOT (2026-04-19)
 
 This file captures the structural decisions from the "Client Experience Playbooks — Polished v1" feedback session, with

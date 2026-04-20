@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Staging Demo Journey — Warm-Prospect Hub
 
 > Experience playbook for pb3 hub. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md) and

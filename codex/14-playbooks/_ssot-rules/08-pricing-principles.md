@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 08 — Pricing principles
 
 > Two external tiers, per-block mixable, twelve-month minimum. Internal cost is codex-private. Exclusivity premiums are

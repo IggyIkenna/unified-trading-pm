@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 04 — DART commercial axes
 
 > Two axes, three practical paths. Every DART commercial engagement resolves to (strategy origin × stack depth). All

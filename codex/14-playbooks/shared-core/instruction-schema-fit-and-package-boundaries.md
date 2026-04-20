@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Instruction Schema Fit + Package Boundaries
 
 > Implementation map for [rule 10](../_ssot-rules/10-strategy-instruction-schema-principles.md). The eight required

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 2b — Research & Docs: DART (Data Analytics, Research & Trading)
 
 > **Layer:** Implementation. Narrative lives in [experience/dart-briefing.md](../experience/dart-briefing.md).

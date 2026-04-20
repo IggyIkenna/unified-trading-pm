@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect, investor]
+---
+
 # Glossary
 
 Single definition per term. Any doc in this directory (or elsewhere in codex) referencing one of these terms should link

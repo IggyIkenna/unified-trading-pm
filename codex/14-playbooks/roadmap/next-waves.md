@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Next waves
 
 > **Superseded by [stage-3e-refactor-plan.md](../infra-spec/stage-3e-refactor-plan.md)** (2026-04-20).

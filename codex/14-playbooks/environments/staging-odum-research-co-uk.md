@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Staging — odum-research.co.uk
 
 The staging environment is the primary **demo surface** for warm prospects (pb3) and the **QA surface** for internal

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3E — Refactor plan (supersedes roadmap/next-waves.md)
 
 > **Purpose.** The authoritative post-Stage-3 refactor backlog. Every gap surfaced in

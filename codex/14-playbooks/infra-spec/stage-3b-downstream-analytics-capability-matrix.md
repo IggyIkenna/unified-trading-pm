@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Stage 3B — Downstream Analytics Capability Matrix
 
 > **Purpose.** What Odum can produce for a client is a function of how deeply that client integrates upstream.

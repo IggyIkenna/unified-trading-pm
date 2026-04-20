@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 2a — Research & Docs: Investment Management
 
 > **Layer:** Implementation. Narrative lives in

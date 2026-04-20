@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Org / Fund / Client Entity Model
 
 > The entity hierarchy that underpins IM allocator reporting, Reg Umbrella registration, and DART client provisioning.

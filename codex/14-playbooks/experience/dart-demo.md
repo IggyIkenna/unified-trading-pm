@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # DART — Warm-Prospect Demo
 
 > Experience playbook for pb3c. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md),

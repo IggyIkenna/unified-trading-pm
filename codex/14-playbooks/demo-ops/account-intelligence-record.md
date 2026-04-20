@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Account Intelligence Record
 
 > The structured CRM record per prospect. Replaces "just a lead tag." Captures the commercial path, service interests,

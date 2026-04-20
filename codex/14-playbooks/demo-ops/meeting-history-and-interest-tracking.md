@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Meeting History and Interest Tracking
 
 > How each demo session logs back to the account-intelligence record so the next call is cumulative. Session outcomes,

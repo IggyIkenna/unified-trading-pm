@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Strategy Catalogue
 
 The canonical implementation of the 4-catalogue pattern (see [catalogues.md](catalogues.md)). Shipped as Phase 10 of the

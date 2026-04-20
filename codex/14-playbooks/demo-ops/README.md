@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # `demo-ops/` — Demo configuration + sales ops
 
 How demo restriction profiles are built, how demo modes layer on top, and how sales context flows into provisioning and

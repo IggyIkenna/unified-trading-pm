@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # 14-playbooks — Customer Playbook SSOT
 
 Single source of truth for how every class of Odum user (marketing prospect → post-first-call warm prospect →

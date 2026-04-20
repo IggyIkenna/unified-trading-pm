@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Roadmap — what comes after this SSOT
 
 The playbook SSOT is the CANONICAL IA. Actually implementing everything it describes is a multi-plan journey. This

@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # `commercial-model/` — Blocks-to-packages-to-tiers
 
 How the thirteen rule-05 building blocks compose into commercial packages, how rule-08 tiers apply, and where

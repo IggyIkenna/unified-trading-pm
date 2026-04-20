@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Client Reporting Demo Walkthrough — Shared
 
 > The shared click-path used by pb3a (Reg Umbrella demo) and pb3b (IM demo). One walkthrough, two narrative overlays.

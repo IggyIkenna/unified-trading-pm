@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # Building-Block Packaging — Which Blocks Cluster into Which Packages
 
 > The thirteen rule-05 blocks compose into standard commercial packages. Not every engagement builds a custom block set

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Demo Email and Provisioning Flow
 
 > How a sales "book demo" click flows to user-management-ui provisioning + welcome email. Current state described; Stage

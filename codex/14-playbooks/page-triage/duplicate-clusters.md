@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Duplicate clusters
 
 Overlap groups where multiple routes serve the same concept. Each cluster gets a merge decision.

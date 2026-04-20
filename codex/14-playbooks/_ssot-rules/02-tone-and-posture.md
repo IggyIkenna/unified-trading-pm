@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 02 — Tone and posture
 
 > Calm, specific, credible, lightly guided. Never desperate. Restrained institutional voice. Written by people who have

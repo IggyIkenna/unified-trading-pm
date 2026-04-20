@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Venue × Chain × Instrument-Type Scope
 
 > Implementation reference for the sub-scoping axes on rule-05 blocks 8, 9, and 10. Names the venues Odum operates on,

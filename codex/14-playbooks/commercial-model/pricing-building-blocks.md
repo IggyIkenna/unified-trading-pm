@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # Pricing Building Blocks — Structure (Numbers TBD)
 
 > Three columns × thirteen rows. **Numbers are `TBD` stubs** — Odum finance populates post-Stage-2 merge as a separate

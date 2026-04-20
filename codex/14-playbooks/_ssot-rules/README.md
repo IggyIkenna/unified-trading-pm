@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # `_ssot-rules/` — Rules governing every experience doc
 
 Every doc under [`../experience/`](../experience/) answers to these rules. The impl-layer docs under

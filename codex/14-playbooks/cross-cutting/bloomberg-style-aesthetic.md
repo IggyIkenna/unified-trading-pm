@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Bloomberg-style aesthetic
 
 UX principles governing every surface in the platform (except public marketing).

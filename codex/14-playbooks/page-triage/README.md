@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Page triage
 
 Classification of every `.tsx` page in unified-trading-system-ui and user-management-ui against the playbook spec. The

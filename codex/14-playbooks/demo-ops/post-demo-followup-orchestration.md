@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Post-Demo Follow-Up Orchestration
 
 > Seven-day stall trigger, asset / email delivery, provisioning, qualification criteria for moving to next stage. What

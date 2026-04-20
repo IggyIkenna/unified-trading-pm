@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Persona and User-Prototype Mapping
 
 > Each experience audience maps to a named persona fixture in `lib/auth/personas.ts`. This doc is the mapping.

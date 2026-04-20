@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # `playbooks/` — [IMPL LAYER]
 
 > **Layer marker:** these docs are the **engineering-grade implementation layer** of the playbook SSOT. They describe

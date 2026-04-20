@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Data Licensing Boundaries — Expanded Reference
 
 > Full version of [rule 07](../_ssot-rules/07-data-licensing-boundaries.md). Enumerates what DART sells (enriched

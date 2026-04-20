@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Partial archive
 
 Pages where SOME content/tabs/components promote into a playbook but OTHER content stays investor-only or archives.

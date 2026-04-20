@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Firebase staging
 
 Dedicated Firebase project for staging — **isolated from production**, used for demo accounts and Odum-internal

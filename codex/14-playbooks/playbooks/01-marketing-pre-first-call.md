@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 1 — Marketing, pre-first-call
 
 > **Layer:** Implementation. Narrative lives in [experience/marketing-journey.md](../experience/marketing-journey.md).

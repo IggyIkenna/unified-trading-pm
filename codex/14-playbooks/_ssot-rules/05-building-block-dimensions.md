@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 05 — Building-block dimensions
 
 > Thirteen building blocks. Every commercial engagement, demo restriction profile, and production entitlement composes

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 09 — Internal commercial one-liners
 
 > Three sentences, internal use only. Every public-facing doc expands them into a calm institutional paragraph using the

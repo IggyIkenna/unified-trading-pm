@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 3a — Demo: Regulatory Umbrella flavour
 
 > **Layer:** Implementation. Narrative lives in [experience/regulatory-demo.md](../experience/regulatory-demo.md).

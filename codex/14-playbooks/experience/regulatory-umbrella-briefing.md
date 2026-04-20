@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Regulatory Umbrella — Post-First-Call Briefing
 
 > Experience playbook for pb2c. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md) and

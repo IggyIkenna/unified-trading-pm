@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Demo Decision Matrix
 
 > Prospect profile → recommended demo path (flavour + mode + restriction profile + expected next commitment). Ties the

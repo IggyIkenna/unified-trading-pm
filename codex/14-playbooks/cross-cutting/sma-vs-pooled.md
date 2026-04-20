@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # SMA vs Pooled
 
 The structural decision at fund level. Surfaces in pb3a (Reg Umbrella demo) AND pb3b (IM demo) as the first choice the

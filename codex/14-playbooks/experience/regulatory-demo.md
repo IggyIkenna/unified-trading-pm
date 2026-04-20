@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Regulatory Umbrella — Warm-Prospect Demo
 
 > Experience playbook for pb3a. Narrative overlay; the underlying reporting walkthrough lives in

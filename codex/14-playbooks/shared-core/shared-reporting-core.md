@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Shared Reporting Core
 
 > The one client-reporting surface that IM allocators, Reg Umbrella firms, and DART clients all use. Entitlement

@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Demo Restriction Profiles
 
 > How a restriction profile is built from pre-call notes and how the profile drives demo user entitlements, catalogue

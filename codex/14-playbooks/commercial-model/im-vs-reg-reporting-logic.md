@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings
 
 > The reporting surface IM allocators and Reg Umbrella firms use is the same UI (rule 03 same-system principle). The

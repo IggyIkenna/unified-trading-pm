@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Briefings Hub — Post-First-Call Research Landing
 
 > Experience playbook for pb2 hub. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md) and

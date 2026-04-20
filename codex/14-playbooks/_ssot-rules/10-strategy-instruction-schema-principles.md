@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 10 — Strategy instruction schema principles
 
 > The fit-check layer for the `(Client, downstream)` DART path. Signals-only clients and Odum exchange a defined

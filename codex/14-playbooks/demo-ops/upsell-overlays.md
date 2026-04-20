@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Upsell Overlays — Base Package vs Next Tier
 
 > The in-demo toggle that shows "this is your base package" next to "this is what the next tier adds". Used sparingly in

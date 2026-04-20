@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # ML Model Catalogue
 
 One of the four catalogues. See [catalogues.md](catalogues.md) for the umbrella pattern.

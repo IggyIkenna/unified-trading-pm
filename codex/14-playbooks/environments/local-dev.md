@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Local dev
 
 ## Canonical source of truth

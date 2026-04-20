@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Example playbook test — pb1 Marketing
 
 Reference Playwright spec for the pb1 playbook. Every other playbook spec should follow the same shape: seed, navigate,

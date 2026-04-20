@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # `implementation-mapping/` — Bridge narrative → code
 
 Per-surface, per-persona, per-route mappings that tie the narrative experience playbooks to concrete engineering

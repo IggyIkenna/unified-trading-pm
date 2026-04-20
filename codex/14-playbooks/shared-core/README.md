@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # `shared-core/` — Product truths reused across layers
 
 Shared concepts the experience playbooks and the Stage 3 infra spec both consume. Each doc cites the `_ssot-rules/` file

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 2 — Research & Documentation (post-first-call briefings)
 
 > **Layer:** Implementation. Narrative lives in [experience/briefings-hub.md](../experience/briefings-hub.md).

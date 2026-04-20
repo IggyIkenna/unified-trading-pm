@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # DART Demo Modes — Broader Platform vs Turbo vs Deep-Dive
 
 > The demo-mode axis layers on top of the restriction profile. Same `(Client, downstream)` cell can be demoed in

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 3c — Demo: DART flavour
 
 > **Layer:** Implementation. Narrative lives in [experience/dart-demo.md](../experience/dart-demo.md).

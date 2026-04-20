@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # The four catalogues — umbrella doc
 
 Odum has FOUR catalogues, each an SSOT in service code, UAC, and UI. The same structural pattern applies to each — lock

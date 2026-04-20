@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Light auth — briefings gate
 
 The pb2 playbook (Research & Documentation) sits behind a lightweight password gate, not Firebase. Not-easily-hackable

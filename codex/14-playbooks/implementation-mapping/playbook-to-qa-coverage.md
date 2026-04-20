@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook-to-QA Coverage
 
 > Every experience playbook maps to a Playwright spec under `unified-trading-system-ui/tests/e2e/playbooks/`. Red rows =

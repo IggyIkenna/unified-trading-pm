@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Triage matrix — master table
 
 Every route in unified-trading-system-ui (158 pages) + user-management-ui (19 pages) classified against the playbook

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 01 — Experience playbook grammar
 
 > Nine sections, in this order, in every experience playbook. No omissions, no reordering, no merging. A playbook that

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Client Reporting — the shared surface
 
 The `/services/reports/*` tree is the ONE client-reporting surface. It's used by BOTH the Investment Management playbook

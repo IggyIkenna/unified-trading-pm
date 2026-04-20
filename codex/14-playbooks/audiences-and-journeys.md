@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Audiences and Journeys
 
 The full matrix of WHO uses the platform, WHERE they start, and HOW they progress. Every UI route must belong to at

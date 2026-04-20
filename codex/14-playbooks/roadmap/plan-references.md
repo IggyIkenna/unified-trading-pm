@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Plan references
 
 For every follow-up wave in [next-waves.md](next-waves.md), where the current information lives. Use this to avoid

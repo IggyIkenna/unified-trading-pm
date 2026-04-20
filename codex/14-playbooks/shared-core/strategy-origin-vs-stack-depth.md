@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Strategy Origin × Stack Depth — The DART Commercial Matrix
 
 > Implementation reference for [rule 04](../_ssot-rules/04-dart-commercial-axes.md). Worked examples, per-cell

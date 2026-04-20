@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 06 — Show / don't-show discipline
 
 > What you leave off the page matters as much as what you put on it. Every experience playbook has an explicit

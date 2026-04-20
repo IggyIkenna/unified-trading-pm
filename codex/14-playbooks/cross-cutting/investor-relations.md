@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Investor Relations
 
 A separate section of the platform (`/investor-relations/*`) for Odum **investors and advisors** — NOT for prospects.

@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # Marketing Journey — Anonymous Visitor to First Call
 
 > Experience playbook for pb1. Conforms to [rule 01 (grammar)](../_ssot-rules/01-grammar.md) and

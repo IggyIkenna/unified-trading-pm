@@ -1,3 +1,7 @@
+---
+scope: [sales, engineer, admin]
+---
+
 # Pre-Demo Discovery Framework
 
 > What sales infers about the prospect and records without interrogating them. DART readiness, strategy state, exchange

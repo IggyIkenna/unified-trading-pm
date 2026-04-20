@@ -1,3 +1,7 @@
+---
+scope: [sales, prospect]
+---
+
 # `experience/` — Narrative playbooks, sales-owned
 
 The experience layer of the playbook SSOT. Every doc in this dir answers to the ten rules in

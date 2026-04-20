@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Rule 03 — The same-system principle
 
 > One system, many views. DART, Investment Management, and Regulatory Umbrella are partitioned views of Odum's internal

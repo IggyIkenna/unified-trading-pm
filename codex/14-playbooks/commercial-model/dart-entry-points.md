@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # DART Entry Points — Three Commercial Paths
 
 > Opens with the DART rule-09 expansion. Maps the three practical DART commercial paths — reporting-only visibility,

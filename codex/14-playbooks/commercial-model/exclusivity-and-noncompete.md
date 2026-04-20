@@ -1,3 +1,7 @@
+---
+scope: [sales, admin]
+---
+
 # Exclusivity and Non-Compete — What It Means, Who Gets It
 
 > Exclusivity premium is rule 05 block 12 and rule 08 Tier-B-only modifier. This doc defines what exclusivity means at

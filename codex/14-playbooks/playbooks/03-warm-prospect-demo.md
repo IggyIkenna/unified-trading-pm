@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin, sales]
+---
+
 # Playbook 3 — Warm-prospect demo on staging
 
 > **Layer:** Implementation. Narrative lives in

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Testing — every playbook is tested
 
 Every playbook in this SSOT ships with a Playwright end-to-end test. The test walks the canonical click path from start
