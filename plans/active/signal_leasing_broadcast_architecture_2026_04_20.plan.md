@@ -30,6 +30,24 @@ This plan spans **strategy-service, execution-service, deployment-service, UAC, 
 cursor rules, frontend, presentations, and registry data**. Multi-repo. Phased execution with QG gates between
 phases.
 
+## Decisions locked 2026-04-20
+
+User confirmed D1-D10 per the recommendations below (session 2026-04-20). Phase 1 pre-audit unblocked.
+
+Additional scope added by user: counterparty observability UI (light dashboard) — integrated as Phase 5 deliverable
+alongside the public marketing page. Specifically:
+
+- **Counterparty observability UI** (light dashboard at `/signals/counterparty-view` or under a tenant-scoped
+  route):
+  - Signal history (last N emissions scoped to the counterparty's entitled slots)
+  - Backtest comparison (Odum-held backtest numbers vs live signal performance — read-only reference)
+  - Delivery health (webhook success rate, retry counts, avg latency)
+  - Optional P&L attribution if the counterparty reports back
+- Target user: institutional quant shops (QRT-style) who integrate primarily via backend API + webhook; the UI is
+  secondary observability only, NOT a full trading platform.
+- Scope: light dashboard only; NO catalogue / NO execution surface / NO research surface / NO reporting surface
+  beyond the counterparty's own signal-delivery audit trail.
+
 ## Decisions needed before execution (block Phase 1 start)
 
 | # | Decision | Options | Recommendation |
@@ -166,17 +184,30 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 - [ ] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties; smoke test delivery
       confirmed.
 
-### Phase 5 — frontend (marketing + admin)
+### Phase 5 — frontend (marketing + admin + counterparty observability UI)
 
-- [ ] [AGENT] P0. `public/signals.html` — marketing landing page for external-facing Signals service.
-- [ ] [AGENT] P0. `app/(public)/signals/page.tsx` — Next.js route using `MarketingStaticFromFile`.
-- [ ] [AGENT] P0. Add "Signals" to public nav (`components/shell/site-header.tsx` or equivalent).
-- [ ] [AGENT] P1. Admin surface at `app/(platform)/services/signals/counterparties/page.tsx` — list counterparties,
-      show emission state, toggle entitlements.
-- [ ] [AGENT] P0. `public/platform.html` — fix "Built for different entry points" 3-card section (reported as
-      inaccurate 2026-04-20) with Option B (DART / IM / Reg Umbrella) + cross-link to `/signals`.
-- [ ] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live; nav updated; platform page accurate;
-      `npm test` + `tsc --noEmit` clean.
+- [x] [AGENT] P0. `public/signals.html` — marketing landing page for external-facing Signals service. **Shipped
+      2026-04-20.**
+- [x] [AGENT] P0. `app/(public)/signals/page.tsx` — Next.js route using `MarketingStaticFromFile`. **Shipped
+      2026-04-20.**
+- [x] [AGENT] P0. Add "Signals" to public nav. **Shipped 2026-04-20 across all 7 marketing HTML pages.**
+- [x] [AGENT] P0. `public/platform.html` — fix "Built for different entry points" 3-card section with
+      rule-04-faithful framing + cross-link to `/signals`. **Shipped 2026-04-20.**
+- [ ] [AGENT] P0. **Counterparty observability UI** — light dashboard under a tenant-scoped route (e.g.
+      `/signals/dashboard` or under a per-counterparty subdomain). Components:
+      - `<SignalHistoryTable>` — last N emissions scoped to entitled slots; filter by slot / date / status
+      - `<BacktestComparisonPanel>` — Odum-held backtest performance numbers vs live signal aggregate; read-only
+      - `<DeliveryHealthPanel>` — webhook success rate, retry counts, avg latency, last-delivery timestamp per slot
+      - `<PnlAttributionPanel>` — OPTIONAL, only renders if counterparty reports P&L back
+      - No catalogue, no execution, no research, no reporting beyond signal-delivery audit
+- [ ] [AGENT] P0. Admin surface at `app/(platform)/services/signals/counterparties/page.tsx` — list counterparties,
+      show emission state, toggle entitlements, view per-counterparty delivery health.
+- [ ] [AGENT] P0. Counterparty persona (new domain entity per D9) integration — tenant-scoped auth for the
+      observability UI. Per rule-03 same-system principle, the UI components reuse existing dashboards; scoped by
+      entitlement to the counterparty-observability slice only.
+- [ ] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate
+      (shipped); counterparty observability UI renders with mocked data on staging; admin counterparty surface
+      operational; `npm test` + `tsc --noEmit` clean.
 
 ### Phase 6 — codex docs + CLAUDE.md + memory + cursor rules
 
