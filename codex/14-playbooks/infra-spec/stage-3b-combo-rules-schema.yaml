@@ -1,0 +1,870 @@
+# Stage 3B — UAC Combo Rules Registry Schema (sketch)
+#
+# This YAML is the data shape the eventual UAC PR ships. Stage 3C's derivation
+# engine reads from `combo_registry.yaml` (or an equivalent protobuf/avro) whose
+# structure matches this sketch. Companion prose spec:
+#   codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md
+#
+# Validation target:
+#   python -c "import yaml; yaml.safe_load(open('codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml'))"
+#
+# When UAC ships the real registry, this file becomes a fixture under
+# `unified-api-contracts/tests/fixtures/combo_registry/` and the live registry
+# lives under `unified-api-contracts/unified_api_contracts/registry/
+# combo_registry.py` with a loader that validates against this shape.
+
+schema_version: "stage-3b.v1"
+generated_at: "2026-04-20"
+source_rules:
+  - _ssot-rules/03-same-system-principle.md
+  - _ssot-rules/04-dart-commercial-axes.md
+  - _ssot-rules/05-building-block-dimensions.md
+  - _ssot-rules/07-data-licensing-boundaries.md
+  - _ssot-rules/10-strategy-instruction-schema-principles.md
+  - 09-strategy/architecture-v2/category-instrument-coverage.md
+  - 09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md
+  - 02-venues/venue-registry-reference.md
+
+# -----------------------------------------------------------------------------
+# Dimensions
+# -----------------------------------------------------------------------------
+dimensions:
+  category:
+    type: enum
+    values:
+      - CEFI
+      - TRADFI
+      - DEFI
+      - SPORTS
+      - PREDICTION
+
+  instrument_type:
+    type: enum
+    values:
+      - spot
+      - perp
+      - dated_future
+      - option
+      - lending
+      - staking
+      - lp
+      - event_settled
+
+  venue:
+    type: object
+    fields:
+      id:
+        type: string
+        description: stable venue identifier, lowercase snake_case
+      category:
+        type: category
+      venue_type:
+        type: enum
+        values: [SINGLE_VENUE, META_BROKER, DATA_AGGREGATOR]
+      supported_operations:
+        type: list[enum]
+        values:
+          [
+            TRADE,
+            SWAP,
+            LEND,
+            BORROW,
+            STAKE,
+            UNSTAKE,
+            QUOTE,
+            TRANSFER,
+            BRIDGE,
+            ATOMIC,
+            CANCEL,
+            TICKS,
+            OHLC,
+            ORDERBOOK,
+            TRADES,
+            FUNDING,
+            LIQUIDATIONS,
+            REFERENCE_DATA,
+          ]
+      supported_instruments:
+        type: list[instrument_type]
+      supported_chains:
+        type: list[chain]
+        optional: true
+        description: DeFi venues only
+      data_license_tier:
+        type: data_license_tier
+      lay_side_capable:
+        type: bool
+        optional: true
+        description: sports/prediction venues only
+      quote_capable:
+        type: bool
+        description: whether the venue exposes a quoting API (used by BL-6)
+      multi_leg_capability:
+        type: object
+        fields:
+          max_legs: int
+          calendar_spread_combo_listed: bool
+      pricing_fidelity:
+        type: enum
+        values: [tick, snapshot, derived]
+
+  chain:
+    type: enum
+    values:
+      - ethereum
+      - arbitrum
+      - optimism
+      - base
+      - polygon
+      - avalanche
+      - solana
+
+  strategy_archetype:
+    type: object
+    fields:
+      id:
+        type: enum
+        values:
+          - ML_DIRECTIONAL_CONTINUOUS
+          - ML_DIRECTIONAL_EVENT_SETTLED
+          - RULES_DIRECTIONAL_CONTINUOUS
+          - RULES_DIRECTIONAL_EVENT_SETTLED
+          - CARRY_BASIS_DATED
+          - CARRY_BASIS_PERP
+          - CARRY_STAKED_BASIS
+          - CARRY_RECURSIVE_STAKED
+          - YIELD_ROTATION_LENDING
+          - YIELD_STAKING_SIMPLE
+          - ARBITRAGE_PRICE_DISPERSION
+          - LIQUIDATION_CAPTURE
+          - STAT_ARB_PAIRS_FIXED
+          - STAT_ARB_CROSS_SECTIONAL
+          - MARKET_MAKING_CONTINUOUS
+          - MARKET_MAKING_EVENT_SETTLED
+          - VOL_TRADING_OPTIONS
+          - EVENT_DRIVEN
+      family:
+        type: enum
+        values:
+          - ML_DIRECTIONAL
+          - RULES_DIRECTIONAL
+          - CARRY_AND_YIELD
+          - ARBITRAGE_STRUCTURAL
+          - STAT_ARB_PAIRS
+          - MARKET_MAKING
+          - VOL_TRADING
+          - EVENT_DRIVEN
+      valid_pairs:
+        type: list[object]
+        fields:
+          category: category
+          instrument_type: instrument_type
+          status: enum
+          values: [SUPPORTED, PARTIAL, BLOCKED, N/A]
+      supported_venues:
+        type: list[string]
+      supported_signal_variants:
+        type: dict[instrument_type, list[string]]
+
+  feature_group:
+    type: string
+    description: opaque identifier from UAC FeatureGroupRegistry
+
+  model_family:
+    type: string
+    description: opaque identifier; versioned with v{N} on slot_label
+
+  exec_algo:
+    type: string
+    description: identifier from execution-service algo_library/
+
+  entitlement:
+    type: object
+    description: 13 building blocks from rule 05
+    fields:
+      block_id:
+        type: enum
+        values:
+          - reporting_core
+          - regulatory_umbrella_reporting
+          - im_allocator_reporting
+          - strategy_service_entry
+          - instructions_integration
+          - research_promote_pipeline
+          - execution_layer
+          - venue_packs
+          - chain_packs
+          - instrument_type_packs
+          - analytics_packs
+          - exclusivity_premium
+          - custom_solution_premium
+      sub_scope:
+        type: dict
+        optional: true
+        examples:
+          instructions_integration:
+            schema_depth: minimal | standard | rich
+          venue_packs:
+            venue: <venue_id>
+          chain_packs:
+            chain: <chain_id>
+          instrument_type_packs:
+            instrument_type: <type>
+          analytics_packs:
+            analytic_family: exposure | execution_quality | factor_attribution | regime_classification | liquidity
+      tier:
+        type: enum
+        values: [TIER_A, TIER_B]
+      data_license_tier:
+        type: data_license_tier
+        description: rule 07 constraint flag per block
+
+  lock_state:
+    type: enum
+    values:
+      - PUBLIC
+      - INVESTMENT_MANAGEMENT_RESERVED
+      - CLIENT_EXCLUSIVE
+      - RETIRED
+
+  maturity:
+    type: enum
+    values:
+      - CODE_NOT_WRITTEN
+      - CODE_WRITTEN
+      - CODE_AUDITED
+      - BACKTESTED
+      - PAPER_TRADING
+      - PAPER_TRADING_VALIDATED
+      - LIVE_TINY
+      - LIVE_ALLOCATED
+
+  lifecycle_phase:
+    type: enum
+    values:
+      - research
+      - paper
+      - live
+
+  org_scope:
+    type: string
+    description: JWT claim — odum_internal | client:<id> | prospect:<session_id>
+
+  fund_structure:
+    type: enum
+    values:
+      - POOLED
+      - SMA
+
+  data_license_tier:
+    type: enum
+    values:
+      - retail_ok
+      - institutional_only
+      - odum_proprietary
+
+  instruction_schema_fit:
+    type: enum
+    values:
+      - signals_only
+      - client_strategy_and_downstream
+      - full_pipeline
+    sub_dimensions:
+      schema_depth:
+        type: enum
+        values: [minimal, standard, rich]
+        applies_when: instruction_schema_fit == signals_only
+
+# -----------------------------------------------------------------------------
+# Slot definition — one row per entry in the strategy catalogue
+# -----------------------------------------------------------------------------
+slot_schema:
+  type: object
+  fields:
+    slot_label:
+      type: string
+      description: "see 09-strategy/architecture-v2/category-instrument-coverage.md §Slot label grammar"
+      example: "CARRY_BASIS_PERP@binance-btc-usdt-prod"
+    archetype: strategy_archetype.id
+    family: strategy_archetype.family
+    category: category
+    instrument_type: instrument_type
+    venues: list[string]
+    chains:
+      type: list[chain]
+      optional: true
+    timeframe:
+      type: string
+      optional: true
+    share_class:
+      type: string
+      description: terminal settlement currency — usdt | usdc | usd | gbp | eur | eth | btc | sol
+    version:
+      type: string
+      description: v1 | v2 | ... — increments on material dep change (model swap, venue swap)
+    env:
+      type: enum
+      values: [prod, uat, paper, shadow]
+    lock_state: lock_state
+    maturity: maturity
+    lifecycle_phase: lifecycle_phase
+    fund_structure:
+      type: fund_structure
+      optional: true
+    exclusive_client_id:
+      type: org_scope
+      optional: true
+      description: required when lock_state == CLIENT_EXCLUSIVE
+    reserving_business_unit_id:
+      type: string
+      optional: true
+      description: required when lock_state == INVESTMENT_MANAGEMENT_RESERVED
+    feature_groups: list[feature_group]
+    model_family:
+      type: model_family
+      optional: true
+    exec_algo: exec_algo
+    representative_future:
+      type: object
+      optional: true
+      description: populated for -dated- slots when RepresentativeFutureRegistry ships (UAC gap #11)
+      fields:
+        underlying_id: string
+        current_contract: string
+        liquidity_feature_group: feature_group
+        roll_threshold_pct: float
+
+# -----------------------------------------------------------------------------
+# Blocker predicates — BL-1..BL-22
+# -----------------------------------------------------------------------------
+blockers:
+  - id: BL-1
+    name: no_defi_options_venue
+    reason_category: venue_unsupported
+    predicate:
+      all:
+        - dimension: category
+          equals: DEFI
+        - dimension: instrument_type
+          equals: option
+    archetypes_affected:
+      - ML_DIRECTIONAL_CONTINUOUS
+      - RULES_DIRECTIONAL_CONTINUOUS
+      - ARBITRAGE_PRICE_DISPERSION
+      - MARKET_MAKING_CONTINUOUS
+      - VOL_TRADING_OPTIONS
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1192-1205"
+    resolvable_by_uac_addition: false
+
+  - id: BL-2
+    name: no_defi_dated_future_venue
+    reason_category: venue_unsupported
+    predicate:
+      all:
+        - dimension: category
+          equals: DEFI
+        - dimension: instrument_type
+          equals: dated_future
+    archetypes_affected:
+      - ML_DIRECTIONAL_CONTINUOUS
+      - CARRY_BASIS_DATED
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1206-1213"
+      - file: strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/basis_dated.py
+        lines: "47-49"
+    resolvable_by_uac_addition: false
+
+  - id: BL-3
+    name: cefi_lending_out_of_scope
+    reason_category: commercial
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: YIELD_ROTATION_LENDING
+        - dimension: category
+          equals: CEFI
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1215-1221"
+      - file: strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/rotation_lending.py
+        lines: "52-54"
+    resolvable_by_uac_addition: false
+
+  - id: BL-4
+    name: rules_directional_options_nonstandard
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: RULES_DIRECTIONAL_CONTINUOUS
+        - dimension: instrument_type
+          equals: option
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1223-1231"
+      - file: strategy-service/strategy_service/engine/strategies/v2/rules_directional/continuous.py
+        lines: "36-38"
+    resolvable_by_uac_addition: false
+
+  - id: BL-5
+    name: kalshi_execution_adapter_pending
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: venue
+          equals: kalshi
+        - dimension: venue.supported_operations
+          does_not_include: TRADE
+    archetypes_affected:
+      - ML_DIRECTIONAL_EVENT_SETTLED
+      - RULES_DIRECTIONAL_EVENT_SETTLED
+      - MARKET_MAKING_EVENT_SETTLED
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1233-1241"
+      - file: codex/02-venues/venue-registry-reference.md
+        note: Kalshi not listed under execution venues
+    resolvable_by_uac_addition: true
+    resolution: ship execution adapter + register TRADE in supported_operations
+
+  - id: BL-6
+    name: unity_cannot_quote
+    reason_category: venue_unsupported
+    predicate:
+      all:
+        - dimension: venue
+          equals: unity
+        - dimension: strategy_archetype.id
+          equals: MARKET_MAKING_EVENT_SETTLED
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1243-1250"
+      - file: strategy-service/strategy_service/engine/strategies/v2/market_making/event_settled.py
+        lines: "55-139"
+    resolvable_by_uac_addition: false
+
+  - id: BL-7
+    name: defi_perp_mm_no_third_party_role
+    reason_category: venue_unsupported
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: MARKET_MAKING_CONTINUOUS
+        - dimension: category
+          equals: DEFI
+        - dimension: instrument_type
+          equals: perp
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1252-1258"
+      - file: strategy-service/strategy_service/engine/strategies/v2/market_making/continuous.py
+        lines: "38-40"
+    resolvable_by_uac_addition: false
+
+  - id: BL-8
+    name: defi_cross_sectional_basket_gas_prohibitive
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: STAT_ARB_CROSS_SECTIONAL
+        - dimension: category
+          equals: DEFI
+        - dimension: instrument_type
+          equals: spot
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1260-1267"
+      - file: strategy-service/strategy_service/engine/strategies/v2/stat_arb_pairs/cross_sectional.py
+        lines: "48-50"
+    resolvable_by_uac_addition: true
+    resolution: declare 1inch Pathfinder adapter as exec_algo option
+
+  - id: BL-9
+    name: tradfi_cross_sectional_on_futures_basket
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: STAT_ARB_CROSS_SECTIONAL
+        - dimension: category
+          equals: TRADFI
+        - dimension: instrument_type
+          equals: dated_future
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1269-1275"
+    resolvable_by_uac_addition: true
+    resolution: UAC gap #7 — MultiLegOrderCapability.max_legs
+
+  - id: BL-10
+    name: dated_future_auto_roll_not_live
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: instrument_type
+          equals: dated_future
+        - dimension: slot_label
+          matches_regex: "-dated-"
+        - dimension: representative_future_service
+          equals: not_deployed
+    archetypes_affected:
+      - ML_DIRECTIONAL_CONTINUOUS
+      - RULES_DIRECTIONAL_CONTINUOUS
+      - STAT_ARB_PAIRS_FIXED
+      - STAT_ARB_CROSS_SECTIONAL
+      - ARBITRAGE_PRICE_DISPERSION
+      - EVENT_DRIVEN
+      - CARRY_BASIS_DATED
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "1277-1298"
+    mitigation: use -fixed-{contract}- slot labels; ops rotate manually
+    resolvable_by_uac_addition: true
+    resolution: UAC gap #11 — RepresentativeFutureRegistry + REPRESENTATIVE_FUTURE_CHANGED event
+
+  - id: BL-11
+    name: signals_only_no_research_promote
+    reason_category: commercial
+    predicate:
+      all:
+        - dimension: instruction_schema_fit
+          equals: signals_only
+        - dimension: entitlement.includes
+          value: research_promote_pipeline
+    evidence:
+      - file: _ssot-rules/10-strategy-instruction-schema-principles.md
+        note: "§Package boundaries — block 6 excluded by default from signals-only"
+    resolvable_by_uac_addition: false
+    rewrite_prompt: upgrade to full-DART pricing OR exclude block 6
+
+  - id: BL-12
+    name: institutional_raw_data_on_external_surface
+    reason_category: licensing
+    predicate:
+      all:
+        - dimension: data_license_tier
+          equals: institutional_only
+        - dimension: view_surface
+          equals: public_marketing
+    evidence:
+      - file: _ssot-rules/07-data-licensing-boundaries.md
+        note: "§Enforcement rules #1–#5 — no raw-data line items externally"
+    resolvable_by_uac_addition: false
+    rewrite_prompt: reframe as Odum-enriched service OR remove from public surface
+
+  - id: BL-13
+    name: demo_mode_lock_research_promote_for_signals_only
+    reason_category: visibility
+    predicate:
+      all:
+        - dimension: demo_mode
+          equals: true
+        - dimension: commercial_path
+          equals: client_downstream
+        - dimension: entitlement.block_id
+          equals: research_promote_pipeline
+    evidence:
+      - file: _ssot-rules/10-strategy-instruction-schema-principles.md
+        note: "§Interaction with the same-system principle — rule 06 LOCKED-VISIBLE"
+    resolvable_by_uac_addition: false
+
+  - id: BL-14
+    name: client_exclusive_visibility
+    reason_category: visibility
+    predicate:
+      all:
+        - dimension: slot.lock_state
+          equals: CLIENT_EXCLUSIVE
+        - dimension: viewer.org_scope
+          not_equal: slot.exclusive_client_id
+        - dimension: viewer.org_scope
+          not_equal: odum_internal
+    evidence:
+      - file: 09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md
+      - file: strategy-service/strategy_service/availability/
+        note: "Phase 10.5 backend commit 7e0b6a4 — exclusive_client_id validator"
+    resolvable_by_uac_addition: false
+
+  - id: BL-15
+    name: retired_slot_no_new_allocation
+    reason_category: commercial
+    predicate:
+      all:
+        - dimension: slot.lock_state
+          equals: RETIRED
+        - dimension: action
+          equals: new_allocation
+    evidence:
+      - file: 09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md
+        note: "RETIRED semantics — existing positions wind down"
+    resolvable_by_uac_addition: false
+
+  - id: BL-16
+    name: external_visibility_below_backtested
+    reason_category: visibility
+    predicate:
+      all:
+        - dimension: view_surface
+          in: [saas_subscriber, im_client, reg_umbrella_client]
+        - dimension: slot.maturity
+          in: [CODE_NOT_WRITTEN, CODE_WRITTEN, CODE_AUDITED]
+    evidence:
+      - file: plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md
+      - file: memory/MEMORY.md
+        note: "Strategy Architecture v2 finalization Phase 10.5 — external-visibility threshold = maturity ≥ BACKTESTED"
+    resolvable_by_uac_addition: false
+
+  - id: BL-17
+    name: live_tiny_allocation_cap
+    reason_category: risk
+    predicate:
+      all:
+        - dimension: slot.maturity
+          equals: LIVE_TINY
+        - dimension: allocation.target_notional
+          greater_than: LIVE_TINY_CAP
+    evidence:
+      - file: strategy-service/strategy_service/engine/strategies/v2/shadow_deployment.py
+        lines: "213-285"
+        note: "ShadowDeploymentPolicy.evaluate_shadow_deployment — LIVE_TINY → LIVE_ALLOCATED gating"
+    resolvable_by_uac_addition: false
+
+  - id: BL-18
+    name: signals_only_missing_required_fields
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: instruction_schema_fit
+          equals: signals_only
+        - dimension: client.schema.required_fields
+          does_not_include_all_of:
+            - instrument_venue_context
+            - intended_action
+            - size_or_target_exposure
+            - timeframe_urgency
+            - order_constraints
+            - strategy_instruction_id
+            - lifecycle_replace_cancel
+            - risk_and_allocation_constraints
+    evidence:
+      - file: _ssot-rules/10-strategy-instruction-schema-principles.md
+        note: "§What Odum execution needs — eight required fields"
+    resolvable_by_uac_addition: false
+    rewrite_prompt: either full-DART, bespoke custom-solution premium, or decline
+
+  - id: BL-19
+    name: tier_a_raw_data_forbidden
+    reason_category: licensing
+    predicate:
+      all:
+        - dimension: entitlement.tier
+          equals: TIER_A
+        - dimension: framing
+          equals: raw_data_feed
+    evidence:
+      - file: _ssot-rules/07-data-licensing-boundaries.md
+        note: |
+          §Enforcement rules #5 — "No 'Tier A raw data' combinations. If a Tier A quote line reads as a
+          raw-data pass-through, it's a joint rule-07 and rule-08 violation." Rule 07 #5 does NOT require
+          institutional_only upstream tier; raw-data FRAMING on a Tier A line is forbidden regardless.
+    resolvable_by_uac_addition: false
+
+  - id: BL-20
+    name: cross_chain_hedge_deadline_breach
+    reason_category: technical
+    predicate:
+      all:
+        - dimension: strategy_archetype.id
+          equals: CARRY_BASIS_PERP
+        - dimension: category
+          equals: DEFI
+        - dimension: leg_1.chain
+          not_equal: leg_2.chain
+        - dimension: config.max_hedge_delay_ms
+          less_than: BRIDGE_LATENCY_P99_MS
+    evidence:
+      - file: 09-strategy/architecture-v2/category-instrument-coverage.md
+        lines: "538-539"
+    resolvable_by_uac_addition: true
+    resolution: bridge state machine integration + max_hedge_delay_ms config
+
+  - id: BL-21
+    name: fund_structure_mismatch
+    reason_category: commercial_reporting
+    predicate:
+      all:
+        - dimension: slot.fund_structure
+          not_equal: allocator.fund_structure
+        - dimension: allocator.fund_structure
+          in: [POOLED, SMA]
+    evidence:
+      - file: _ssot-rules/_source-v1-feedback.md
+      - file: memory/MEMORY.md
+        note: "Playbook SSOT shipped 2026-04-19 — SMA vs Pooled applies to both IM + Reg Umbrella"
+    resolvable_by_uac_addition: false
+
+  - id: BL-22
+    name: client_exclusive_allocator_mismatch
+    reason_category: visibility_commercial
+    predicate:
+      all:
+        - dimension: slot.lock_state
+          equals: CLIENT_EXCLUSIVE
+        - dimension: allocator.org_scope
+          not_equal: slot.exclusive_client_id
+    evidence:
+      - file: unified-api-contracts/unified_api_contracts/strategy_availability/
+        note: "validate_allocation_authorised(saas|im_desk|admin) + allocator gate in strategy-service Phase 10.5"
+    resolvable_by_uac_addition: false
+
+# -----------------------------------------------------------------------------
+# Valid-combo resolution
+# -----------------------------------------------------------------------------
+valid_combo:
+  description: |
+    Stage 3C derivation engine applies this formula to resolve the visible slot
+    universe for (viewer, action) queries. Pure function of (registry, context).
+  formula: |
+    valid_strategies(venue, instrument_type, category) =
+      { archetype ∈ StrategyArchetypeV2
+          : (category, instrument_type) ∈ archetype.valid_pairs
+          ∧ venue ∈ archetype.supported_venues
+          ∧ venue.category == category
+          ∧ instrument_type ∈ venue.supported_instruments
+          ∧ ¬ blocked(archetype, venue, instrument_type, category)
+          ∧ data_license_tier_compatible(venue, client.entitlement_scope)
+          ∧ (if signals_only:
+               required_fields_present(client.schema)
+               ∧ archetype.instruction_schema_fit ⊆ {minimal, standard, rich})
+      }
+  resolution_order:
+    - step: cartesian_expansion
+      cardinality_estimate: "~21600"
+      shape: "archetype × category × instrument_type × venue"
+    - step: filter_by_valid_pairs
+      cardinality_estimate: "~1000"
+    - step: filter_by_venue_compatibility
+      cardinality_estimate: "~400"
+    - step: apply_blockers
+      cardinality_estimate: "~130 representative slots"
+      citation: "09-strategy/architecture-v2/category-instrument-coverage.md §changelog — 130 fully-spelled slots"
+    - step: apply_visibility_filters
+      depends_on: [viewer.org_scope, lock_state, maturity, lifecycle_phase]
+
+# -----------------------------------------------------------------------------
+# Four derivations (Stage 3C consumes)
+# -----------------------------------------------------------------------------
+derivations:
+  pricing_quote:
+    inputs: [commercial_path, blocks, tier]
+    rule_refs: [rule_05, rule_08, rule_07]
+    shape:
+      line_items:
+        - block_id: string
+          tier: TIER_A | TIER_B
+          sub_scope: dict
+          monthly: decimal
+          upfront:
+            type: decimal
+            applies_when: tier == TIER_B
+          internal_cost:
+            type: decimal
+            codex_private: true
+          data_license_tier: data_license_tier
+      premiums:
+        exclusivity_pct: decimal
+        custom_solution_uplift: decimal
+    blockers_applied: [BL-11, BL-18, BL-19]
+
+  demo_universe:
+    inputs: [prospect_profile, demo_mode_toggle, commercial_path_hypothesis]
+    rule_refs: [rule_03, rule_06, rule_07, rule_10]
+    shape:
+      visible_slots: list[slot_label]
+      locked_visible_slots: list[slot_label]
+      hidden_slots: list[slot_label]
+    blockers_applied: [BL-13, BL-14, BL-16]
+
+  prod_restrictions:
+    inputs: [client_contract, allocator_context]
+    rule_refs: [rule_05, rule_06, rule_10]
+    shape:
+      allowed_slots: list[slot_label]
+      allowed_blocks: list[entitlement.block_id]
+      max_allocation_per_slot: dict[slot_label, decimal]
+    blockers_applied: [BL-14, BL-15, BL-17, BL-21, BL-22]
+
+  codex_scope:
+    inputs: [audience]
+    audience_values: [odum_internal, im_desk, im_client, trading_platform_subscriber, prospect, public_marketing]
+    rule_refs: [rule_02, rule_03, rule_07]
+    shape:
+      visible_doc_paths: list[string]
+      hidden_doc_paths: list[string]
+      framing_profile: enriched_service | internal_cost_aware
+    blockers_applied: [BL-12, BL-19]
+
+# -----------------------------------------------------------------------------
+# Reconciliation pass (completed 2026-04-20 vs Agent A's merged rules 05/07/10)
+# -----------------------------------------------------------------------------
+reconciliation_pass:
+  completed_at: "2026-04-20"
+  against:
+    - _ssot-rules/05-building-block-dimensions.md
+    - _ssot-rules/07-data-licensing-boundaries.md
+    - _ssot-rules/10-strategy-instruction-schema-principles.md
+
+  verified:
+    - rule_id: 05
+      fields_referenced:
+        - entitlement block enum (13 values — match rule 05 §"The thirteen blocks")
+        - sub_scope shapes for block 5 (schema_depth), block 8 (venue), block 9 (chain), block 10 (instrument_type),
+          block 11 (analytic_family) — match rule 05 §"Sub-scoping within a block"
+        - BL-11 signals-only block-6 exclusion — confirmed by rule 05 §"Composition rules" (Client, downstream)
+          typical-blocks list
+    - rule_id: 07
+      fields_referenced:
+        - §Enforcement #4 "licensing-constraint flag per block" — authoritative source for data_license_tier
+        - §Cross-client aggregates — downstream-analytics matrix capability #12
+        - BL-12 (§Enforcement #3 upstream-licence audit before new venue/chain ships)
+    - rule_id: 10
+      fields_referenced:
+        - instruction_schema_fit enum (signals_only, client_strategy_and_downstream, full_pipeline) — derived from rule
+          10 §"Package boundaries"
+        - schema_depth sub-dimension (minimal, standard, rich) — exact match rule 10 §"Schema depth as a pricing
+          dimension"
+        - BL-11 (research_promote_pipeline excluded from signals_only) — confirmed by rule 10 §"Package boundaries"
+        - BL-18 required-fields enumeration — confirmed by rule 10 §"What Odum execution needs" 1:1
+
+  resolved:
+    - id: BL-19-predicate-narrowing
+      before: "entitlement.tier == TIER_A ∧ block.data_license_tier == institutional_only ∧ framing == raw_data_feed"
+      after: "entitlement.tier == TIER_A ∧ framing == raw_data_feed"
+      reason: |
+        Rule 07 §Enforcement #5 forbids Tier A raw-data framing regardless of upstream
+        data_license_tier. Initial predicate was over-narrow; retail_ok data framed as
+        raw on Tier A is still a violation.
+    - id: data_license_tier-labelling
+      before: "Three values per rule 07"
+      after: "Three values — Stage 3B derivation of rule 07 §Enforcement rule #4 licensing-constraint flag"
+      reason: |
+        Rule 07 mandates a per-block licensing-constraint flag but does not prescribe
+        specific enum values. The tier naming is a Stage 3B design choice.
+
+  watch_for:
+    - trigger: rule 10 required-fields list expands/renames
+      action_required:
+        - update BL-18 predicate here
+        - update stage-3b-instruction-schema-contract.md §2 field blocks + §4 unsupported-shapes error codes
+    - trigger: rule 07 introduces its own licensing-tier vocabulary
+      action_required:
+        - align dimensions.data_license_tier.values above
+        - align BL-12 + BL-19 citations
+        - align stage-3b-uac-combo-rules.md §1.15
+    - trigger: rule 05 renumbering (very unlikely per rule 05 §Enforcement #5)
+      action_required:
+        - re-key entitlement.block_id enum values across entire registry
