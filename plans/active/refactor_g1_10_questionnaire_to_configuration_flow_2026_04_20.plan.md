@@ -182,7 +182,8 @@ in `_apply_questionnaire_override` now tightens tile states per the service_fami
 
 - [x] [SCRIPT] P0. unified-trading-system-ui QG green.
 - [x] [SCRIPT] P0. user-management-ui QG green.
-- [x] [SCRIPT] P0. user-management-api QG green.
+- [x] [N/A] P0. user-management-api QG — superseded by Firebase-is-the-API operator decision 2026-04-20; no
+      `user-management-api` repo exists. Admin playback uses Firestore client SDK directly via user-management-ui.
 - [x] [AGENT] P0. Playwright spec `refactor-g1-10-questionnaire.spec.ts` green on tier-1 dev.
 
 ## Critical files to be modified
@@ -398,3 +399,27 @@ Per user message 2026-04-20 — "do everything, don't defer unless entirely nece
 - `user-management-api` repo: NOT created; handler lives inside user-management-ui.
 - Questionnaire schema stored as TypeScript types in UI + Pydantic model in UAC — kept in sync manually with a
   documentation cross-ref comment (sync-script overkill for 6 fields).
+
+---
+
+## Wave F dispatch prompt (saved for operator, 2026-04-20)
+
+Wave E closed all 5 audit gaps (admin-playback orphan, allocator-gate swap, UAC QG cleanup, closure memory, handoff
+prompt). Waves A/B/C/D/E are all shipped with their plan checkboxes flipped. Wave F (G1.4 persona expansion + G1.13
+upsell tempt-logic, + G1.14 HTML stretch optional) is unblocked and ready for dispatch.
+
+The full copy-paste-ready Wave F dispatch prompt lives at: `memory/project_g1_wave_e_to_f_dispatch_prompt.md`
+
+Paste its contents into a fresh agent session to execute Wave F. Key things the Wave F agent must respect:
+
+- **Option X still in force** — UAC is SSOT; `tempt_logic.py` lands at UAC `internal/architecture_v2/`.
+- **ServiceFamily duality** — 6-value internal (rule 12 YAML) vs 4-value prospect-facing (questionnaire).
+- **Rule 12, NOT rule 11** — G1.9 occupies rule 11 slot.
+- **Firebase IS the API** — no `user-management-api` repo exists.
+- **DEMO_MODE gates widening** — `apply_tempt_logic` no-ops when `env.is_demo=False`; prod never widens.
+- **HARD CAP 20 personas** in G1.4.
+- **user-management-ui `git branch --show-current`** MUST be `live-defi-rollout` before any commit (local `main`
+  diverges 33+ commits).
+
+Wave F is the FINAL G1 wave. Its closing agent produces an end-of-G1 summary (14-item status table + G2 inheritance
+note); no further dispatch prompt needed since G2 is a separate user-level planning session.
