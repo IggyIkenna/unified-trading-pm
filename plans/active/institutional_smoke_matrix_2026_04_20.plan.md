@@ -139,7 +139,7 @@ todos:
   # ─── Phase 3 — API Football dependency + sports ordering ────────────────
   - id: phase-3-api-football-dep-enforcement
     content: |
-      - [ ] [AGENT] P0. instruments-service sports adapters MUST throw a clear
+      - [x] [AGENT] P0. instruments-service sports adapters MUST throw a clear
         error if api-football reference data hasn't been fetched yet for the date.
         Today the dep is silent — sports adapters that depend on api-football
         (footystats, SFI, etc.) read from instruments-store-sports/.../entity=
@@ -148,17 +148,51 @@ todos:
         Run: python -m instruments_service --operation instruments --mode batch
         --category SPORTS --sports-provider API_FOOTBALL --start-date X --end-date X".
         Document in `codex/02-data/sports-adapter-dependency-order.md` (NEW).
-    status: todo
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. New helper
+      `instruments-service/instruments_service/reference_data/sports_dependency.py`
+      exposes `check_api_football_dependency(date, bucket=None)` +
+      `venue_requires_api_football(venue)`. Factory
+      `instruments_service/reference_data/adapters/sports/factory.py` now
+      accepts optional `date` + `bucket` kwargs; when `date` is supplied for
+      any non-api-football venue (footystats / understat / transfermarkt /
+      SFI / open_meteo / betfair), the factory raises
+      `unified_trading_library.DependencyError` with the CLI remediation
+      message before the adapter is instantiated. Error message includes the
+      expected gs:// path and the exact
+      `python -m instruments_service --sports-provider API_FOOTBALL` command
+      to run first. Honours `IS_TEST_RUN` via the shared instruments-service
+      bucket resolver. Tests in
+      `instruments-service/tests/unit/test_sports_dependency_enforcement.py`
+      (17 tests, all green). Commit SHA to be appended by quickmerge Pass 2.
 
   - id: phase-3-sports-internal-ordering
     content: |
-      - [ ] [AGENT] P1. Document the sports-internal adapter dependency order:
+      - [x] [AGENT] P1. Document the sports-internal adapter dependency order:
         api-football (canonical fixtures + leagues) MUST run FIRST, then
         footystats/SFI/Understat/odds-api can run in any order (they depend on
         api-football's canonical fixture IDs). Codify in
         `codex/02-data/sports-adapter-dependency-order.md`. Add unit test that
         verifies the ordering invariant.
-    status: todo
+    status: done
+    note: |
+      Shipped 2026-04-20 on live-defi-rollout. New codex doc
+      `unified-trading-pm/codex/02-data/sports-adapter-dependency-order.md`
+      covers: the T0/T1 invariant + dependency graph, per-adapter rationale
+      for depending on api-football, parallelisation rules after T0,
+      per-entity coverage matrix, failure modes (entirely missing, partially
+      missing, empty-day graceful degradation, test-bucket divergence), and
+      fail-loud-boundary rationale (pre-flight raises are allowed; shard-
+      level raises are not). Cross-linked FROM
+      `per-category-bucket-layouts.md` § Cross-references, registered in
+      `codex/00-SSOT-INDEX.md` immediately after the per-category-bucket
+      row, and cross-referenced from this plan. Ordering invariant is
+      enforced in code AND tested in the
+      `TestVenueRequiresApiFootball.test_dependent_set_matches_adapter_registry`
+      test which locks the `_API_FOOTBALL_DEPENDENT_VENUES` set against an
+      explicit expected frozenset. Commit SHA to be appended by quickmerge
+      Pass 2.
 
   # ─── Phase 4 — service dependency ordering for the smoke orchestrator ───
   - id: phase-4-orchestrator-dep-graph
