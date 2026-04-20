@@ -71,36 +71,36 @@ rewiring inside — never a cloned component tree.
 
 ### Phase 1A — Audit forks (read-only)
 
-- [ ] [AGENT] P0. Enumerate every page pair under `app/` where the same conceptual surface exists in both `research/`
+- [x] [AGENT] P0. Enumerate every page pair under `app/` where the same conceptual surface exists in both `research/`
       and `trading/` trees (or equivalents). Write audit to `/tmp/g1_1_fork_audit.md`.
-- [ ] [AGENT] P0. For each forked pair, classify: true duplicate / near-duplicate (diff < 30 LOC) / intentional split
+- [x] [AGENT] P0. For each forked pair, classify: true duplicate / near-duplicate (diff < 30 LOC) / intentional split
       (e.g. research = catalogue view, trading = terminal view).
-- [ ] [AGENT] P0. Identify every component under `components/shell/` that branches on
+- [x] [AGENT] P0. Identify every component under `components/shell/` that branches on
       `pathname.startsWith("/services/research")` vs `/services/trading/` — these become `phase`-prop sites.
 
 ### Phase 1B — Introduce `phase` prop + `usePhaseBinding` hook
 
-- [ ] [AGENT] P0. Add `type Phase = "research" | "paper" | "live"` to `lib/phase/types.ts` (new file).
-- [ ] [AGENT] P0. Add `usePhaseBinding(phase: Phase)` hook at `lib/phase/use-phase-binding.ts` — returns
+- [x] [AGENT] P0. Add `type Phase = "research" | "paper" | "live"` to `lib/phase/types.ts` (new file).
+- [x] [AGENT] P0. Add `usePhaseBinding(phase: Phase)` hook at `lib/phase/use-phase-binding.ts` — returns
       `{ fetcher, baseUrl, wsUrl }` swapping per phase.
-- [ ] [AGENT] P0. Thread `phase` prop through every phased component identified in 1A. Default prop value: infer from
+- [x] [AGENT] P0. Thread `phase` prop through every phased component identified in 1A. Default prop value: infer from
       route segment (`/services/research/*` → `"research"`, etc.) via `usePhaseFromRoute()` helper.
 
 ### Phase 1C — Collapse forked page trees
 
-- [ ] [AGENT] P0. For each true-duplicate pair, delete one side and add a redirect rule in `next.config.ts` pointing the
+- [x] [AGENT] P0. For each true-duplicate pair, delete one side and add a redirect rule in `next.config.ts` pointing the
       deleted path to the surviving path with `?phase=<X>` query param (or route-segment binding).
-- [ ] [AGENT] P0. For each near-duplicate pair, diff the two versions; port the delta into the survivor behind a
+- [x] [AGENT] P0. For each near-duplicate pair, diff the two versions; port the delta into the survivor behind a
       `phase === "X"` conditional; delete the other.
-- [ ] [AGENT] P0. For each intentional-split pair, add a doc comment explaining why a split is correct (e.g. catalogue
+- [x] [AGENT] P0. For each intentional-split pair, add a doc comment explaining why a split is correct (e.g. catalogue
       vs terminal are distinct surfaces, not phases of the same surface) and leave untouched.
 
 ### Phase 1D — Verify + QG
 
-- [ ] [SCRIPT] P0. Run `cd unified-trading-system-ui && CI=true npm test -- --run` — all vitest green.
-- [ ] [SCRIPT] P0. Run `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build` — smoke build green.
-- [ ] [SCRIPT] P0. Run `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — full gate green.
-- [ ] [AGENT] P0. Run Playwright spec `refactor-g1-1-phase-unification.spec.ts` to verify every phased surface behaves
+- [x] [SCRIPT] P0. Run `cd unified-trading-system-ui && CI=true npm test -- --run` — all vitest green.
+- [x] [SCRIPT] P0. Run `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build` — smoke build green.
+- [x] [SCRIPT] P0. Run `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — full gate green.
+- [x] [AGENT] P0. Run Playwright spec `refactor-g1-1-phase-unification.spec.ts` to verify every phased surface behaves
       identically under `?phase=research|paper|live` toggle with only data-source rebinding.
 
 ## Critical files to be modified
