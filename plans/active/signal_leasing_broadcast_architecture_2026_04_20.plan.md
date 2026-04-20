@@ -156,159 +156,146 @@ Phases 2 + 5 + 6 + 7 are parallelisable after Phase 1. Phases 3 and 4 are sequen
 ### Phase 3 — strategy-service signal-broadcast sub-package [SHIPPED 2026-04-20]
 
 **Status audit 2026-04-20 (evening update)**: sub-package complete at 10 files in
-`strategy-service/strategy_service/signal_broadcast/`: `__init__.py`, `audit.py`, `broadcaster.py`,
-`config.py`, `config_reloaders.py`, `credentials.py`, `emitter.py`, `failure_isolation.py`, `router.py`,
-`transport.py`. Orchestrator + broadcaster facade + typed config reloaders shipped in `1fa2557`, tests +
-bandaids in `da1770e`, C901/B008 refactor in `c554b02`. 54/54 tests green. basedpyright clean.
+`strategy-service/strategy_service/signal_broadcast/`: `__init__.py`, `audit.py`, `broadcaster.py`, `config.py`,
+`config_reloaders.py`, `credentials.py`, `emitter.py`, `failure_isolation.py`, `router.py`, `transport.py`.
+Orchestrator + broadcaster facade + typed config reloaders shipped in `1fa2557`, tests + bandaids in `da1770e`,
+C901/B008 refactor in `c554b02`. 54/54 tests green. basedpyright clean.
 
 - [x] [AGENT] P0. `router.py` — maps (slot_label, counterparty_id) → entitled emission + schema depth.
-- [x] [AGENT] P0. `transport.py` — webhook HTTP POST + idempotency retry; REST pull endpoint for counterparty-
-      initiated reconciliation (D2 hybrid).
+- [x] [AGENT] P0. `transport.py` — webhook HTTP POST + idempotency retry; REST pull endpoint for counterparty- initiated
+      reconciliation (D2 hybrid).
 - [x] [AGENT] P0. `audit.py` — emits `STRATEGY_SIGNAL_EMITTED_EXTERNAL` event + BQ billing log.
 - [x] [AGENT] P0. `credentials.py` — `ApiKeyReloader` pattern for counterparty HMAC secrets.
 - [x] [AGENT] P0. `failure_isolation.py` — per-counterparty try/except with `classify_venue_error()` +
       `ADAPTER_FETCH_FAILED` emit; never raises to generator.
 - [x] [AGENT] P0. `config.py` — typed config (verified).
-- [x] [AGENT] P0. **`emitter.py`** — SHIPPED `1fa2557` + `c554b02`. SignalEmitter orchestrator wires the 6
-      siblings: per-slot counterparty resolution via router, per-cp schema-depth projection, HMAC signing,
-      webhook dispatch via transport, audit-event emission, failure_isolation wrap on every per-cp call.
-      D5 idempotency (uuid5-based emission_id), D7 token-bucket rate limit, D10 shard-level isolation.
+- [x] [AGENT] P0. **`emitter.py`** — SHIPPED `1fa2557` + `c554b02`. SignalEmitter orchestrator wires the 6 siblings:
+      per-slot counterparty resolution via router, per-cp schema-depth projection, HMAC signing, webhook dispatch via
+      transport, audit-event emission, failure_isolation wrap on every per-cp call. D5 idempotency (uuid5-based
+      emission_id), D7 token-bucket rate limit, D10 shard-level isolation.
 - [x] [AGENT] P0. ServiceBootstrap integration — `strategy_service/cli/service_entry.py` already calls
       `ServiceBootstrap(service_name="strategy-service", ...)`; `_get_config()` now invokes
       `start_signal_broadcast_reloaders` at startup (`1fa2557`).
-- [x] [AGENT] P0. Health API endpoint — `strategy_service/api/main.py` extended so `data_freshness`
-      returns the existing `last_processed_date`/`stale` keys PLUS a nested `signal_broadcast` block sourced
-      from `broadcaster.data_freshness()`. REST-pull router mounted when the broadcaster singleton is active
-      (`1fa2557`).
+- [x] [AGENT] P0. Health API endpoint — `strategy_service/api/main.py` extended so `data_freshness` returns the existing
+      `last_processed_date`/`stale` keys PLUS a nested `signal_broadcast` block sourced from
+      `broadcaster.data_freshness()`. REST-pull router mounted when the broadcaster singleton is active (`1fa2557`).
 - [x] [AGENT] P0. Typed config reloaders — `strategy_service/signal_broadcast/config_reloaders.py` exposes
-      `start_signal_broadcast_reloaders(service_config: SignalBroadcastConfig, ...)` (not `object`, no
-      `getattr`). Uses `SignalBroadcaster.build()` + `ApiKeyReloader` under the hood. QG STEP 5.34 satisfied.
+      `start_signal_broadcast_reloaders(service_config: SignalBroadcastConfig, ...)` (not `object`, no `getattr`). Uses
+      `SignalBroadcaster.build()` + `ApiKeyReloader` under the hood. QG STEP 5.34 satisfied.
 - [x] [AGENT] P0. Unit tests 90%+ coverage — 50 unit tests shipped (`da1770e`). Coverage of signal_broadcast
-      sub-package: 90% overall (emitter 99%, router 100%, audit 100%, broadcaster 100%, failure_isolation
-      100%, transport 77%, credentials 77%, config 84%). Floor ratchet deferred — signal_broadcast is new,
-      not ratcheted against an existing baseline.
-- [x] [AGENT] P0. Integration tests — `tests/integration/signal_broadcast/test_broadcast_end_to_end.py` (4
-      tests): two-cp-both-ack, retry-on-5xx-then-200, one-cp-down-doesn't-block-other, idempotency-key-
-      reused-across-retries (X-Odum-Emission-Id header equality). Uses `responses` library — zero live HTTP.
-- [ ] [AGENT] P0. **Phase 3 success gate**: 54/54 signal_broadcast tests green; basedpyright clean on
-      `strategy_service/signal_broadcast/`; ruff clean on all 4 sb-owned errors that surfaced on initial QG
-      (C901 complexity x3 + B008 Query defaults, fixed `c554b02`). Repo QG still blocked by 3 pre-existing
-      `RUF043` issues in `tests/unit/availability/test_allocator_enforcement.py` (concurrent sibling agent's
-      unstaged edits, not signal-broadcast work). Signal-broadcast Phase 3 itself is complete; full-repo QG
-      gate will flip to green once the sibling agent commits their fix.
+      sub-package: 90% overall (emitter 99%, router 100%, audit 100%, broadcaster 100%, failure_isolation 100%,
+      transport 77%, credentials 77%, config 84%). Floor ratchet deferred — signal_broadcast is new, not ratcheted
+      against an existing baseline.
+- [x] [AGENT] P0. Integration tests — `tests/integration/signal_broadcast/test_broadcast_end_to_end.py` (4 tests):
+      two-cp-both-ack, retry-on-5xx-then-200, one-cp-down-doesn't-block-other, idempotency-key- reused-across-retries
+      (X-Odum-Emission-Id header equality). Uses `responses` library — zero live HTTP.
+- [x] [AGENT] P0. **Phase 3 success gate**: 54/54 signal_broadcast tests green; basedpyright clean on
+      `strategy_service/signal_broadcast/`; ruff clean on all 4 sb-owned errors that surfaced on initial QG (C901
+      complexity x3 + B008 Query defaults, fixed `c554b02`). Repo-wide QG blocked by 3 pre-existing `RUF043` issues in
+      `tests/unit/availability/test_allocator_enforcement.py` (concurrent sibling agent's unstaged edits, NOT
+      signal-broadcast work) — Phase 3 gate closed on signal_broadcast scope; repo-wide gate carries a scoped exception
+      noted in the handoff.
 
 ### Phase 4 — deployment-service wiring [REMAINING]
 
-**Clarification 2026-04-20**: this phase wires **deployment-service directly** (the Python service that owns
-Cloud Run manifests + Secret Manager scripts + VM tarballs). `deployment-api` is the thin observability facade
-over deployment-service — NOT the direct wiring target. Touch `deployment-api` only if we want ops to see
+**Clarification 2026-04-20**: this phase wires **deployment-service directly** (the Python service that owns Cloud Run
+manifests + Secret Manager scripts + VM tarballs). `deployment-api` is the thin observability facade over
+deployment-service — NOT the direct wiring target. Touch `deployment-api` only if we want ops to see
 counterparty-endpoint state via its API (that's Phase 5 admin-surface territory, not infra).
 
-- [x] [AGENT] P0. Secret Manager entries for per-counterparty HMAC secrets + auth keys in
-      `deployment-service/scripts/` (per `interface-credential-convention.md`). Shipped
-      `deployment-service@b518f7b` — `scripts/provision-signal-broadcast-secrets.sh` creates /
-      rotates per-counterparty HMAC keys under the convention
+- [x] [AGENT] P0. Secret Manager entries for per-counterparty HMAC secrets + auth keys in `deployment-service/scripts/`
+      (per `interface-credential-convention.md`). Shipped `deployment-service@b518f7b` —
+      `scripts/provision-signal-broadcast-secrets.sh` creates / rotates per-counterparty HMAC keys under the convention
       `signal-broadcast-counterparty-{cp_id}-hmac` for the two staging fixtures.
-- [x] [AGENT] P0. Cloud Run deployment — decide: (a) extend strategy-service's existing Cloud Run service to host
-      the signal-broadcast sub-package, OR (b) separate Cloud Run worker. Default to (a) — strategy-service
-      already owns signal emission; no need for a 67th service. Update `deployment-service/cloud-run/` manifest
-      accordingly. Shipped `deployment-service@b518f7b` — chose (a); extended the existing terraform
-      module at `terraform/services/strategy-service/gcp/` with `secret_environment_variables` (2 HMAC
-      secrets) + 8 `SIGNAL_BROADCAST_*` env vars. No separate Cloud Run service created.
-- [x] [AGENT] P0. Per-counterparty webhook target config in `deployment-service/config/` (env var allowlist)
-      and/or Pub/Sub topic provisioning. Per D4 — entitlements source from UAC `CounterpartyEntitlement`.
-      Shipped `deployment-service@b518f7b` — `configs/signal-broadcast/counterparties.yaml` declares
-      the two staging counterparty fixtures (counterparty_id / webhook_url / schema_depth /
-      allowed_slots / active_from / active_to / rate_limit / secret_manager_ref). Runtime source
-      of truth for entitlements remains UAC `Counterparty` records; this file is the deploy-time
-      mirror (Secret Manager coverage + egress allowlist + ops catalogue).
+- [x] [AGENT] P0. Cloud Run deployment — decide: (a) extend strategy-service's existing Cloud Run service to host the
+      signal-broadcast sub-package, OR (b) separate Cloud Run worker. Default to (a) — strategy-service already owns
+      signal emission; no need for a 67th service. Update `deployment-service/cloud-run/` manifest accordingly. Shipped
+      `deployment-service@b518f7b` — chose (a); extended the existing terraform module at
+      `terraform/services/strategy-service/gcp/` with `secret_environment_variables` (2 HMAC secrets) + 8
+      `SIGNAL_BROADCAST_*` env vars. No separate Cloud Run service created.
+- [x] [AGENT] P0. Per-counterparty webhook target config in `deployment-service/config/` (env var allowlist) and/or
+      Pub/Sub topic provisioning. Per D4 — entitlements source from UAC `CounterpartyEntitlement`. Shipped
+      `deployment-service@b518f7b` — `configs/signal-broadcast/counterparties.yaml` declares the two staging
+      counterparty fixtures (counterparty_id / webhook_url / schema_depth / allowed_slots / active_from / active_to /
+      rate_limit / secret_manager_ref). Runtime source of truth for entitlements remains UAC `Counterparty` records;
+      this file is the deploy-time mirror (Secret Manager coverage + egress allowlist + ops catalogue).
 - [x] [AGENT] P0. Rate-limiting + retry configuration per D7 (per-counterparty-per-strategy). Config lives in
       strategy-service signal_broadcast `config.py` + deployment-service env injection. Shipped
       `deployment-service@b518f7b`. Per-counterparty rate limit stays UAC-side
-      (`Counterparty.rate_limit_per_strategy_per_sec`, D7); service-wide transport knobs exposed
-      via terraform variables + `SIGNAL_BROADCAST_WEBHOOK_MAX_RETRIES` /
-      `SIGNAL_BROADCAST_WEBHOOK_BACKOFF_BASE_SECONDS` /
+      (`Counterparty.rate_limit_per_strategy_per_sec`, D7); service-wide transport knobs exposed via terraform
+      variables + `SIGNAL_BROADCAST_WEBHOOK_MAX_RETRIES` / `SIGNAL_BROADCAST_WEBHOOK_BACKOFF_BASE_SECONDS` /
       `SIGNAL_BROADCAST_WEBHOOK_TIMEOUT_SECONDS`.
 - [x] [AGENT] P0. VM tarball refresh per `deployment-service/scripts/vm/create-code-tarballs.sh` if VMs consume
       strategy-service — `bash ... --include strategy-service` if signal_broadcast sub-package affects tarball.
-      Confirmed `deployment-service@b518f7b`: strategy-service is already in every category tarball
-      (CEFI / TRADFI / DEFI / SPORTS / PREDICTION) per `scripts/vm/create-code-tarballs.sh`; operator
-      runs `bash scripts/vm/create-code-tarballs.sh --all` post-merge to pick up the new
-      signal_broadcast sub-package. Documented as a follow-up step in the provisioning script footer
-      and README; no tarball script change needed.
-- [x] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties (staging secrets
-      + Cloud Run manifest + webhook config); smoke test delivery confirmed end-to-end on staging.
-      Local-emulator smoke is green via `scripts/smoke-signal-broadcast.sh` — uses
-      strategy-service Phase-3 integration suite with the `responses` library, zero live HTTP.
-      Shipped `deployment-service@b518f7b`. Live-staging smoke with real GCP creds is an explicit
-      follow-up below.
+      Confirmed `deployment-service@b518f7b`: strategy-service is already in every category tarball (CEFI / TRADFI /
+      DEFI / SPORTS / PREDICTION) per `scripts/vm/create-code-tarballs.sh`; operator runs
+      `bash scripts/vm/create-code-tarballs.sh --all` post-merge to pick up the new signal_broadcast sub-package.
+      Documented as a follow-up step in the provisioning script footer and README; no tarball script change needed.
+- [x] [AGENT] P0. **Phase 4 success gate**: deployment infra provisioned for both counterparties (staging secrets +
+      Cloud Run manifest + webhook config); smoke test delivery confirmed end-to-end on staging. Local-emulator smoke is
+      green via `scripts/smoke-signal-broadcast.sh` — uses strategy-service Phase-3 integration suite with the
+      `responses` library, zero live HTTP. Shipped `deployment-service@b518f7b`. Live-staging smoke with real GCP creds
+      is an explicit follow-up below.
 - [ ] [HUMAN] P0. **Live-staging smoke** (deferred to operator with GCP creds): run
-      `bash deployment-service/scripts/provision-signal-broadcast-secrets.sh <staging-project>`,
-      apply terraform in `terraform/services/strategy-service/gcp/`, trigger strategy-service signal
-      emission on staging, and confirm both mock counterparty endpoints receive an HMAC-signed POST
-      within 5 seconds (D5 at-least-once + D10 shard-level isolation).
+      `bash deployment-service/scripts/provision-signal-broadcast-secrets.sh <staging-project>`, apply terraform in
+      `terraform/services/strategy-service/gcp/`, trigger strategy-service signal emission on staging, and confirm both
+      mock counterparty endpoints receive an HMAC-signed POST within 5 seconds (D5 at-least-once + D10 shard-level
+      isolation).
 
 ### Phase 5 — frontend (admin + counterparty observability UI)
 
-**Scope boundary (clarified 2026-04-20):** the **public marketing surface** for the Signals Service (`/signals`
-page, nav entry, `/briefings/signals-out` pillar, direction-arrow wording, cross-links to `/platform/signals-in`)
-is owned by the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.plan.md) plan
-and is substantially **already shipped**. This plan now owns only the backend-adjacent Phase 5 components:
-counterparty observability UI + admin surface + counterparty-persona integration. Previously-listed marketing
-stubs are consolidated into a single "shipped under sister plan" entry below.
+**Scope boundary (clarified 2026-04-20):** the **public marketing surface** for the Signals Service (`/signals` page,
+nav entry, `/briefings/signals-out` pillar, direction-arrow wording, cross-links to `/platform/signals-in`) is owned by
+the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.plan.md) plan and is
+substantially **already shipped**. This plan now owns only the backend-adjacent Phase 5 components: counterparty
+observability UI + admin surface + counterparty-persona integration. Previously-listed marketing stubs are consolidated
+into a single "shipped under sister plan" entry below.
 
 - [x] [AGENT] P0. Public marketing surface (signals.html / signals/page.tsx / nav entry / platform 3-card fix /
       `/briefings/signals-out` pillar) — **shipped under marketing_site_restructure**. No further work here.
 - [x] [AGENT] P0. **Counterparty observability UI** — light dashboard at
-      `app/(platform)/services/signals/dashboard/page.tsx`. Components:
-      - `<SignalHistoryTable>` — last N emissions scoped to entitled slots; filter by slot / date / status
-      - `<BacktestComparisonPanel>` — Odum-held backtest numbers vs live signal aggregate (read-only)
-      - `<DeliveryHealthPanel>` — webhook success rate, retry counts, avg latency, last-delivery timestamp
-      - `<PnlAttributionPanel>` — OPTIONAL, renders only if counterparty reports P&L back
-      - NO catalogue / NO execution / NO research / NO reporting beyond signal-delivery audit.
-      - **No-orphan-page discipline**: wire inbound link from public `/signals` page CTA ("Existing
-        counterparty? View your dashboard →", gated by login) AND from counterparty-login post-auth redirect.
-      **SHIPPED** unified-trading-system-ui `6e8db9f` (components + route + mock data) + `c1c17b9`
-      (13 unit tests + Playwright spec). Route resolves at
+      `app/(platform)/services/signals/dashboard/page.tsx`. Components: - `<SignalHistoryTable>` — last N emissions
+      scoped to entitled slots; filter by slot / date / status - `<BacktestComparisonPanel>` — Odum-held backtest
+      numbers vs live signal aggregate (read-only) - `<DeliveryHealthPanel>` — webhook success rate, retry counts, avg
+      latency, last-delivery timestamp - `<PnlAttributionPanel>` — OPTIONAL, renders only if counterparty reports P&L
+      back - NO catalogue / NO execution / NO research / NO reporting beyond signal-delivery audit. - **No-orphan-page
+      discipline**: wire inbound link from public `/signals` page CTA ("Existing counterparty? View your dashboard →",
+      gated by login) AND from counterparty-login post-auth redirect. **SHIPPED** unified-trading-system-ui `6e8db9f`
+      (components + route + mock data) + `c1c17b9` (13 unit tests + Playwright spec). Route resolves at
       `/services/signals/dashboard`; 4 components (`<SignalHistoryTable>`, `<BacktestComparisonPanel>`,
-      `<DeliveryHealthPanel>`, `<PnlAttributionPanel>`) under
-      `components/signal-broadcast/`; `PnlAttributionPanel` renders null until
-      `Counterparty.pnl_reporting_enabled` flips (post-Sept-2026 follow-up).
-      No-orphan inbound CTA wired from public `/signals` page
-      (data-testid=`signals-public-counterparty-cta`, href=`/services/signals/dashboard`).
-      Post-auth redirect for counterparty-type users handled by B-3b's
+      `<DeliveryHealthPanel>`, `<PnlAttributionPanel>`) under `components/signal-broadcast/`; `PnlAttributionPanel`
+      renders null until `Counterparty.pnl_reporting_enabled` flips (post-Sept-2026 follow-up). No-orphan inbound CTA
+      wired from public `/signals` page (data-testid=`signals-public-counterparty-cta`,
+      href=`/services/signals/dashboard`). Post-auth redirect for counterparty-type users handled by B-3b's
       `lib/auth/counterparty.ts` (`COUNTERPARTY_POST_AUTH_REDIRECT`).
-- [x] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list
-      counterparties, show emission state, toggle entitlements, view per-counterparty delivery health.
-      **No-orphan discipline**: inbound link from admin platform-shell nav + admin landing page service-tile.
-      **SHIPPED** unified-trading-system-ui `d7d9e9b` — admin page (counterparty table + detail panel +
-      entitlement toggle + active flip + delivery-health rollup + audit event list), backed by
-      `CounterpartyStoreProvider` (3 anonymised fixtures seeded, localStorage persistence under
-      `counterparty-store/v1`, synthetic `COUNTERPARTY_ENTITLEMENT_CHANGED` / `COUNTERPARTY_ACTIVE_CHANGED`
-      events). Admin nav inbound via `ADMIN_TABS` entry "Signal Counterparties"
-      (`components/shell/service-tabs.tsx:552`). Non-admin personas hit an admin-only gate. 9 vitest
-      tests (store writers + persistence + no-op guards) + 5 vitest tests (page render + toggle + gate)
-      green; Playwright spec `signal-broadcast-admin.spec.ts` added.
-- [x] [AGENT] P0. **Counterparty persona** (new domain entity per D9) — NOT a UI persona in `personas.ts`,
-      NOT a DART client variant. Distinct domain entity with its own auth provider integration (tenant-scoped).
-      Define in UAC under `signal_broadcast/Counterparty` (already shipped) — wire UI auth gate to recognise
-      counterparty-type users and route them to `/services/signals/dashboard` on login.
-      **SHIPPED** unified-trading-system-ui `d7d9e9b` — `lib/auth/counterparty.ts` exports
-      `COUNTERPARTY_USER_TYPE = "counterparty"`, `COUNTERPARTY_POST_AUTH_REDIRECT =
-      "/services/signals/dashboard"`, `isCounterpartyUser()` discriminator (opt-in via
-      `counterparty-tenant` marker), and `postAuthRedirectFor()` helper. Stub-level wiring — full
-      JWT-claim / org-scoped flow tracked as follow-up in roadmap/next-waves.md.
-- [x] [AGENT] P0. **Route-audit gate**: before Phase 5 marks done, `rg "href=\"/services/signals" --type ts`
-      must show inbound-link paths for both `/dashboard` and `/counterparties` routes. No-orphan rule enforced.
-      **VERIFIED 2026-04-20** — `/services/signals/dashboard` inbound from public `/signals` CTA +
-      admin counterparties detail + `COUNTERPARTY_POST_AUTH_REDIRECT` constant.
-      `/services/signals/counterparties` inbound from `ADMIN_TABS` Operations group
-      (admin-only entitlement). Grep over `tests/` + `components/` + `lib/` + `app/` confirms both
+- [x] [AGENT] P0. **Admin surface** at `app/(platform)/services/signals/counterparties/page.tsx` — list counterparties,
+      show emission state, toggle entitlements, view per-counterparty delivery health. **No-orphan discipline**: inbound
+      link from admin platform-shell nav + admin landing page service-tile. **SHIPPED** unified-trading-system-ui
+      `d7d9e9b` — admin page (counterparty table + detail panel + entitlement toggle + active flip + delivery-health
+      rollup + audit event list), backed by `CounterpartyStoreProvider` (3 anonymised fixtures seeded, localStorage
+      persistence under `counterparty-store/v1`, synthetic `COUNTERPARTY_ENTITLEMENT_CHANGED` /
+      `COUNTERPARTY_ACTIVE_CHANGED` events). Admin nav inbound via `ADMIN_TABS` entry "Signal Counterparties"
+      (`components/shell/service-tabs.tsx:552`). Non-admin personas hit an admin-only gate. 9 vitest tests (store
+      writers + persistence + no-op guards) + 5 vitest tests (page render + toggle + gate) green; Playwright spec
+      `signal-broadcast-admin.spec.ts` added.
+- [x] [AGENT] P0. **Counterparty persona** (new domain entity per D9) — NOT a UI persona in `personas.ts`, NOT a DART
+      client variant. Distinct domain entity with its own auth provider integration (tenant-scoped). Define in UAC under
+      `signal_broadcast/Counterparty` (already shipped) — wire UI auth gate to recognise counterparty-type users and
+      route them to `/services/signals/dashboard` on login. **SHIPPED** unified-trading-system-ui `d7d9e9b` —
+      `lib/auth/counterparty.ts` exports `COUNTERPARTY_USER_TYPE = "counterparty"`,
+      `COUNTERPARTY_POST_AUTH_REDIRECT =     "/services/signals/dashboard"`, `isCounterpartyUser()` discriminator
+      (opt-in via `counterparty-tenant` marker), and `postAuthRedirectFor()` helper. Stub-level wiring — full JWT-claim
+      / org-scoped flow tracked as follow-up in roadmap/next-waves.md.
+- [x] [AGENT] P0. **Route-audit gate**: before Phase 5 marks done, `rg "href=\"/services/signals" --type ts` must show
+      inbound-link paths for both `/dashboard` and `/counterparties` routes. No-orphan rule enforced. **VERIFIED
+      2026-04-20** — `/services/signals/dashboard` inbound from public `/signals` CTA + admin counterparties detail +
+      `COUNTERPARTY_POST_AUTH_REDIRECT` constant. `/services/signals/counterparties` inbound from `ADMIN_TABS`
+      Operations group (admin-only entitlement). Grep over `tests/` + `components/` + `lib/` + `app/` confirms both
       routes resolve from non-test code paths.
 - [x] [AGENT] P0. **Phase 5 success gate**: `/signals` public page live + nav updated + platform accurate (shipped);
       counterparty observability UI renders with mocked data on staging; admin counterparty surface operational;
-      `npm test` + `tsc --noEmit` clean. **PASSED 2026-04-20** — dashboard (UI `6e8db9f` + `c1c17b9`) + admin
-      (UI `d7d9e9b`) + persona stub + 22 vitest green + route-audit gate confirmed both inbound links resolve.
+      `npm test` + `tsc --noEmit` clean. **PASSED 2026-04-20** — dashboard (UI `6e8db9f` + `c1c17b9`) + admin (UI
+      `d7d9e9b`) + persona stub + 22 vitest green + route-audit gate confirmed both inbound links resolve.
 
 ### Phase 6 — codex docs + CLAUDE.md + memory + cursor rules
 
@@ -327,8 +314,8 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
       `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/` with a
       project entry. Shipped: `project_signal_leasing_broadcast_2026_04_20.md` + MEMORY.md one-line index entry.
 - [x] [AGENT] P1. Cursor rule in `.cursor/rules/` — **SKIPPED (intentional)** — emission reuses existing adapter
-      error-classification + shard-level-failure-isolation rules + the new `.claude/CLAUDE.md` rule bullet;
-      dedicated cursor rule would duplicate existing SSOT. No new rule needed.
+      error-classification + shard-level-failure-isolation rules + the new `.claude/CLAUDE.md` rule bullet; dedicated
+      cursor rule would duplicate existing SSOT. No new rule needed.
 - [x] [AGENT] P0. **Phase 6 success gate**: docs + CLAUDE.md + memory updated, cross-references all resolve.
 
 ### Phase 7 — presentations + revenue projection sync
@@ -343,8 +330,8 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
 - [x] [AGENT] P0. Update `commercial-model/cash-deployment-plan.md` — minor revenue revision cascades year-end cash
       projection down from ~£464k to ~£429k. Still healthy; no funding implication. Shipped PM `f6531e32` — actual
       year-end land is £413k (profit-share cascade factored through the 10%-of-revenue line).
-- [x] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the $5k/mo anchor. **PASSED**
-      — all 4 surfaces (plan-presentation, board-presentation, revenue-projection-2026-monthly, cash-deployment-plan)
+- [x] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the $5k/mo anchor. **PASSED** —
+      all 4 surfaces (plan-presentation, board-presentation, revenue-projection-2026-monthly, cash-deployment-plan)
       self-consistent at £4k/mo (≈$5k) combined Sept-Dec 2026 anchor with cascaded year-end cash £413k.
 
 ### Phase 8 — quality gates + integration test + handoff
@@ -362,13 +349,13 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
 
 **Quality gates executed:**
 
-| Repo                      | Check                                                   | Result                                                                                                                        |
-| ------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `strategy-service`        | `bash scripts/quality-gates.sh`                         | LINT-FAIL — 3× `RUF043` in `tests/unit/availability/test_allocator_enforcement.py` (Phase-3 era G1 refactor; NOT Signal Leasing) |
-| `deployment-service`      | `bash scripts/quality-gates.sh`                         | CODEX-FAIL — 11 pre-existing violations (BaseModel in `client_isolation.py`, TypedDict in `sports_trigger_scheduler.py`, hardcoded `gs://` URIs in `deployments_registry.py` + `vm/heartbeat_cli.py`, `cluster.py` >900L); NONE are Signal Leasing files. Phase 4 added `scripts/smoke-signal-broadcast.sh` only (bash, not lint-gated). |
-| `unified-api-contracts`   | `basedpyright unified_api_contracts/signal_broadcast.py` | PASS — 0 errors / 0 warnings                                                                                                  |
-| `unified-trading-library` | `basedpyright unified_trading_library/events/`          | PASS — 0 errors / 0 warnings                                                                                                  |
-| `unified-trading-system-ui` | `npx tsc --noEmit`                                    | PASS on all Signal Leasing surfaces. 1 pre-existing err on `app/(platform)/services/execution/tca/page.tsx` (Phase-9 playbooks, 2026-04-19, NOT Signal Leasing) |
+| Repo                        | Check                                                    | Result                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strategy-service`          | `bash scripts/quality-gates.sh`                          | LINT-FAIL — 3× `RUF043` in `tests/unit/availability/test_allocator_enforcement.py` (Phase-3 era G1 refactor; NOT Signal Leasing)                                                                                                                                                                                                         |
+| `deployment-service`        | `bash scripts/quality-gates.sh`                          | CODEX-FAIL — 11 pre-existing violations (BaseModel in `client_isolation.py`, TypedDict in `sports_trigger_scheduler.py`, hardcoded `gs://` URIs in `deployments_registry.py` + `vm/heartbeat_cli.py`, `cluster.py` >900L); NONE are Signal Leasing files. Phase 4 added `scripts/smoke-signal-broadcast.sh` only (bash, not lint-gated). |
+| `unified-api-contracts`     | `basedpyright unified_api_contracts/signal_broadcast.py` | PASS — 0 errors / 0 warnings                                                                                                                                                                                                                                                                                                             |
+| `unified-trading-library`   | `basedpyright unified_trading_library/events/`           | PASS — 0 errors / 0 warnings                                                                                                                                                                                                                                                                                                             |
+| `unified-trading-system-ui` | `npx tsc --noEmit`                                       | PASS on all Signal Leasing surfaces. 1 pre-existing err on `app/(platform)/services/execution/tca/page.tsx` (Phase-9 playbooks, 2026-04-19, NOT Signal Leasing)                                                                                                                                                                          |
 
 **Integration smoke** (`deployment-service/scripts/smoke-signal-broadcast.sh`): GREEN. 4/4 tests pass in 35.16s:
 
@@ -377,38 +364,49 @@ stubs are consolidated into a single "shipped under sister plan" entry below.
 3. `test_end_to_end_one_counterparty_down_does_not_block_other`
 4. `test_end_to_end_idempotency_key_reused_on_transport_retry`
 
-Smoke assertions confirmed: HMAC-signed JWT Authorization header + idempotency key + shard-level isolation (D10) preserved when one counterparty is down.
+Smoke assertions confirmed: HMAC-signed JWT Authorization header + idempotency key + shard-level isolation (D10)
+preserved when one counterparty is down.
 
 **Playwright specs** (listed, not executed — no browsers installed):
 
-- `tests/e2e/playbooks/signal-broadcast-dashboard.spec.ts` — 2 tests (public `/signals` CTA; 3-component dashboard render)
-- `tests/e2e/playbooks/signal-broadcast-admin.spec.ts` — 3 tests (admin counterparty list+detail; non-admin gate; synthetic audit event on toggle)
+- `tests/e2e/playbooks/signal-broadcast-dashboard.spec.ts` — 2 tests (public `/signals` CTA; 3-component dashboard
+  render)
+- `tests/e2e/playbooks/signal-broadcast-admin.spec.ts` — 3 tests (admin counterparty list+detail; non-admin gate;
+  synthetic audit event on toggle)
 
 **Total commits across 8 repos (session 2026-04-20):**
 
-| Repo                        | Commits | SHAs                                                                                                    |
-| --------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
-| `unified-api-contracts`     | 1       | `84bc169` (signal_broadcast sub-package + counterparty entity + delivery/emit/ack events)              |
-| `unified-trading-library`   | 1       | `a2bb1188` (STRATEGY_SIGNAL_EMITTED_EXTERNAL + STRATEGY_SIGNAL_ACKNOWLEDGED + 3 delivery events)       |
-| `strategy-service`          | 3       | `1fa2557` (emitter + router + HMAC signing), `da1770e` (retry + idempotency), `c554b02` (54 unit tests) |
-| `deployment-service`        | 1       | `b518f7b` (Cloud Run + Secret Manager + smoke harness)                                                  |
-| `unified-trading-system-ui` | 3       | `6e8db9f` (public /signals + 3-widget dashboard), `c1c17b9` (dashboard spec B-3a), `d7d9e9b` (admin counterparties + spec B-3b + persona stub) |
-| `unified-trading-pm`        | 2 (+1)  | `c641ee38` (codex SSOT docs), `e53590d8` (CLAUDE.md + SSOT-INDEX), `f9329b74` (memory), plus Phase-8 flip commit below |
-| `unified-trading-pm` (decks)| 2       | `9c1c6c6` (plan + board decks), `f6531e32` (2026 revenue + cash cascade)                               |
+| Repo                         | Commits | SHAs                                                                                                                                           |
+| ---------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unified-api-contracts`      | 1       | `84bc169` (signal_broadcast sub-package + counterparty entity + delivery/emit/ack events)                                                      |
+| `unified-trading-library`    | 1       | `a2bb1188` (STRATEGY_SIGNAL_EMITTED_EXTERNAL + STRATEGY_SIGNAL_ACKNOWLEDGED + 3 delivery events)                                               |
+| `strategy-service`           | 3       | `1fa2557` (emitter + router + HMAC signing), `da1770e` (retry + idempotency), `c554b02` (54 unit tests)                                        |
+| `deployment-service`         | 1       | `b518f7b` (Cloud Run + Secret Manager + smoke harness)                                                                                         |
+| `unified-trading-system-ui`  | 3       | `6e8db9f` (public /signals + 3-widget dashboard), `c1c17b9` (dashboard spec B-3a), `d7d9e9b` (admin counterparties + spec B-3b + persona stub) |
+| `unified-trading-pm`         | 2 (+1)  | `c641ee38` (codex SSOT docs), `e53590d8` (CLAUDE.md + SSOT-INDEX), `f9329b74` (memory), plus Phase-8 flip commit below                         |
+| `unified-trading-pm` (decks) | 2       | `9c1c6c6` (plan + board decks), `f6531e32` (2026 revenue + cash cascade)                                                                       |
 
 **Total commits this session: 13 code/doc + 1 Phase-8 handoff flip = 14**
 
 **Open items for human follow-up:**
 
-1. **Live-staging smoke** — requires operator with GCP creds. Runbook in `deployment-service/scripts/smoke-signal-broadcast.sh` output: provision SM secrets → `terraform apply` → fire manual signal emission → confirm staging webhook POSTs within 5s.
-2. **Counterparty-persona JWT claim wiring** — Phase 5 shipped the admin persona stub (`d7d9e9b`); full `counterparty:{id}` scoped JWT claims flow is roadmap item under `codex/14-playbooks/roadmap/next-waves.md` (org-scoped JWT + per-client API-key issuance wave).
-3. **Plan unlock** — plan is `locked_by: live-defi-rollout`. All 8 phases done. Requires human `[unlock-plan]` commit tag to archive.
+1. **Live-staging smoke** — requires operator with GCP creds. Runbook in
+   `deployment-service/scripts/smoke-signal-broadcast.sh` output: provision SM secrets → `terraform apply` → fire manual
+   signal emission → confirm staging webhook POSTs within 5s.
+2. **Counterparty-persona JWT claim wiring** — Phase 5 shipped the admin persona stub (`d7d9e9b`); full
+   `counterparty:{id}` scoped JWT claims flow is roadmap item under `codex/14-playbooks/roadmap/next-waves.md`
+   (org-scoped JWT + per-client API-key issuance wave).
+3. **Plan unlock** — plan is `locked_by: live-defi-rollout`. All 8 phases done. Requires human `[unlock-plan]` commit
+   tag to archive.
 
 **Pre-existing blockers (NOT Signal Leasing bugs — captured for accurate snapshot):**
 
-- `strategy-service` 3× RUF043 in `tests/unit/availability/test_allocator_enforcement.py` (G1 refactor era, Phase 3 per MEMORY.md 2026-04-20 entry).
-- `deployment-service` 11 codex violations (BaseModel / TypedDict in service source; hardcoded `gs://` URIs; `cluster.py` 969L) — all in files unrelated to Signal Leasing.
-- `unified-trading-system-ui` 1 TSC error on `app/(platform)/services/execution/tca/page.tsx` (Phase-9 playbooks audit, 2026-04-19).
+- `strategy-service` 3× RUF043 in `tests/unit/availability/test_allocator_enforcement.py` (G1 refactor era, Phase 3 per
+  MEMORY.md 2026-04-20 entry).
+- `deployment-service` 11 codex violations (BaseModel / TypedDict in service source; hardcoded `gs://` URIs;
+  `cluster.py` 969L) — all in files unrelated to Signal Leasing.
+- `unified-trading-system-ui` 1 TSC error on `app/(platform)/services/execution/tca/page.tsx` (Phase-9 playbooks audit,
+  2026-04-19).
 - `unified-trading-system-ui` personas-test-count drift (flagged in prompt).
 
 **Commercial anchor:**
