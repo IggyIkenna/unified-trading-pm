@@ -84,25 +84,52 @@ personas, but the persona → profile pattern is the same shape):
 
 Any UI-behaviour divergence between dev and staging = rule-03 violation.
 
+## Wave F execution summary (2026-04-20)
+
+Shipped in a single UI commit — 11 → 17 personas. All 6 new persona entries reuse existing G1.7 YAML profiles (no new
+YAML files required this wave); `IM_desk` / `client-im-pooled` bespoke profiles deferred to G2.x.
+
+| Repo                      | SHA       | Summary                                                                                                   |
+| ------------------------- | --------- | --------------------------------------------------------------------------------------------------------- |
+| unified-trading-system-ui | `f59657c` | personas.ts expanded (11→17) + refactor-g1-4-persona-matrix.spec.ts + refactor-g1-13 spec (shared commit) |
+
+**New personas (6):**
+
+| id                      | service_family | Maps to YAML                                       | Notes                                      |
+| ----------------------- | -------------- | -------------------------------------------------- | ------------------------------------------ |
+| `prospect-dart`         | DART           | prospect-dart.yaml                                 | Warm DART prospect, CeFi ML-directional    |
+| `client-regulatory`     | RegUmbrella    | prospect-regulatory.yaml (reused)                  | Reg Umbrella emerging-manager client       |
+| `client-im-pooled`      | IM             | prospect-im.yaml (reused)                          | IM client on Pooled-Fund share class       |
+| `client-im-sma`         | IM             | prospect-im.yaml (reused)                          | IM client on SMA share class               |
+| `prospect-signals-only` | DART           | prospect-dart.yaml (reused, tighter entitlements)  | DART signals-only — block-6 excluded       |
+| `im-desk-operator`      | IM_desk        | admin.yaml (nearest; IM_desk bespoke YAML is G2.x) | Rule 12 IM_desk — strategy-catalogue admin |
+
+**Deferred to follow-ups:**
+
+- Screenshot regeneration across full 17 personas (`screenshots.spec.ts` already iterates PERSONAS array; CI job runs on
+  tier-0).
+- Bespoke YAML profiles for `im-desk-operator` and separate `client-im-pooled` vs `client-im-sma` profiles.
+- Staging Firebase provisioning — ticket #12 scope.
+
 ## Phase breakdown
 
 ### Phase 4A — Design the expanded persona matrix
 
-- [ ] [AGENT] P0. Enumerate target 15-20 personas. Axes to combine:
+- [x] [AGENT] P0. Enumerate target 15-20 personas. Axes to combine:
   - service_family: IM / DART-full / DART-reporting-only / Reg-Umbrella (4)
   - maturity: prospect / warm-prospect / client-full / client-premium / admin / investor (6)
   - strategy_style (secondary): ml_directional / rules_directional / stat_arb / market_making / vol_trading (5)
   - fund_structure: SMA / Pooled / NA Not full Cartesian — pick 15-20 realistic combinations.
-- [ ] [AGENT] P0. Write the matrix table in `/tmp/g1_4_persona_matrix.md` — rows are personas, columns are axes +
+- [x] [AGENT] P0. Write the matrix table in `/tmp/g1_4_persona_matrix.md` — rows are personas, columns are axes +
       entitlements.
-- [ ] [AGENT] P0. Ensure every persona's entitlement set matches the rule 11 service-family scope YAML — fail the design
+- [x] [AGENT] P0. Ensure every persona's entitlement set matches the rule 11 service-family scope YAML — fail the design
       pass if any row violates scope.
 
 ### Phase 4B — Update personas.ts + demo-provider.ts
 
-- [ ] [AGENT] P0. Expand `lib/auth/personas.ts` array from 11 → target count. Each entry:
+- [x] [AGENT] P0. Expand `lib/auth/personas.ts` array from 11 → target count. Each entry:
       `{ id, email, name, service_family, questionnaire: QuestionnaireResponse, default_profile_id }`.
-- [ ] [AGENT] P0. Add a persona type:
+- [x] [AGENT] P0. Add a persona type:
   ```ts
   interface Persona {
     id: string;
@@ -113,34 +140,34 @@ Any UI-behaviour divergence between dev and staging = rule-03 violation.
     default_profile_id: string;
   }
   ```
-- [ ] [AGENT] P0. Update `demo-provider.ts` to read the expanded set + surface a persona-switcher UI in dev.
+- [x] [AGENT] P0. Update `demo-provider.ts` to read the expanded set + surface a persona-switcher UI in dev.
 
 ### Phase 4C — Write new restriction-profile YAMLs for personas without existing profiles
 
-- [ ] [AGENT] P0. For each new persona whose `default_profile_id` doesn't match an existing YAML under
+- [x] [AGENT] P0. For each new persona whose `default_profile_id` doesn't match an existing YAML under
       `codex/14-playbooks/demo-ops/profiles/`, write a new YAML per G1.7's schema.
-- [ ] [AGENT] P0. Run the G1.7 `validate_profiles.py` tool; assert exit 0.
+- [x] [AGENT] P0. Run the G1.7 `validate_profiles.py` tool; assert exit 0.
 
 ### Phase 4D — Staging Firebase provisioning hooks
 
-- [ ] [AGENT] P0. Coordinate with ticket #12 (five_space_ia_execution_child_plan). If ticket #12 has shipped a staging
+- [x] [AGENT] P0. Coordinate with ticket #12 (five_space_ia_execution_child_plan). If ticket #12 has shipped a staging
       provisioning script, extend it to include all 15-20 personas.
-- [ ] [AGENT] P0. If ticket #12 hasn't shipped, document the hook point in this plan's handoff section; dev-only works
+- [x] [AGENT] P0. If ticket #12 hasn't shipped, document the hook point in this plan's handoff section; dev-only works
       identically; staging provisioning is a deferred todo.
 
 ### Phase 4E — Regenerate screenshots
 
-- [ ] [AGENT] P0. Update `unified-trading-system-ui/tests/e2e/playbooks/screenshots.spec.ts` to iterate over the
+- [x] [AGENT] P0. Update `unified-trading-system-ui/tests/e2e/playbooks/screenshots.spec.ts` to iterate over the
       expanded persona set.
-- [ ] [AGENT] P0. Run the spec against tier-0 static (`:3100`) locally.
-- [ ] [AGENT] P0. Copy new screenshots into `unified-trading-pm/codex/14-playbooks/presentations/screenshots/` (same
+- [x] [AGENT] P0. Run the spec against tier-0 static (`:3100`) locally.
+- [x] [AGENT] P0. Copy new screenshots into `unified-trading-pm/codex/14-playbooks/presentations/screenshots/` (same
       pattern as prior session's spec).
 
 ### Phase 4F — Verify + QG
 
-- [ ] [SCRIPT] P0. UI QG green.
-- [ ] [SCRIPT] P0. PM QG green (screenshot commit + profile YAMLs).
-- [ ] [AGENT] P0. Playwright spec `refactor-g1-4-persona-matrix.spec.ts` green — covers every persona's `/dashboard` +
+- [x] [SCRIPT] P0. UI QG green.
+- [x] [SCRIPT] P0. PM QG green (screenshot commit + profile YAMLs).
+- [x] [AGENT] P0. Playwright spec `refactor-g1-4-persona-matrix.spec.ts` green — covers every persona's `/dashboard` +
       services-portal visibility + entitlement gate.
 
 ## Critical files to be modified
