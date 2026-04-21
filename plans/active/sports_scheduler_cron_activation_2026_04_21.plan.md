@@ -26,7 +26,7 @@ isProject: false
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Invocation**         | `sports-trigger run` = blocking poll loop (`SportsTriggerScheduler.run()`). `sports-trigger evaluate` = single `run_once()`; dry-run was `--dry-run` only (always default true) — fixed to `--dry-run/--execute` so real runs are possible from `evaluate`.                                                                                                                                                                           |
 | **Option B**           | **Feasible.** `run_once()` already runs periodic discovery + reference + fixture-proximate tiers. Added **`sports-trigger run --one-shot`** (exits after one cycle) for Cloud Scheduler → Cloud Run Job.                                                                                                                                                                                                                              |
-| **Docker / Cloud Run** | Root `Dockerfile` builds `api` (gunicorn dashboard) and `api-dev` for QG. **No** prior scheduler-only target. Added Docker stage **`sports-scheduler`** (`FROM api AS sports-scheduler`) with `CMD` = `python -m deployment_service sports-trigger run --one-shot`. `cloudbuild.yaml` still builds/pushes **`api`** only — extend with a second build step for `--target sports-scheduler` + push when ready to deploy the job image. |
+| **Docker / Cloud Run** | Root `Dockerfile` builds `api` (gunicorn dashboard) and `api-dev` for QG. **No** prior scheduler-only target. Added Docker stage **`sports-scheduler`** (`FROM api AS sports-scheduler`) with `CMD` = `python -m deployment_service sports-trigger run --one-shot` and `HEALTHCHECK NONE` (jobs don't serve HTTP). `cloudbuild.yaml` now includes `build-sports-scheduler` + `push-sports-scheduler` steps and declares both image tags in `images:`; QG gates both pushes. Cloud Run Job + Cloud Scheduler provisioned via `terraform/gcp/sports_scheduler_cron.tf` (`google_cloud_run_v2_job` + `google_cloud_scheduler_job` at `*/5 * * * *` UTC) — `terraform apply` deferred to orchestrator Phase 6. |
 | **Codex §12**          | Plan indexed under §12.4 deployment activation; dependency `sports_scheduler_periodic_tier_dispatch` at C5 remains the code prerequisite.                                                                                                                                                                                                                                                                                             |
 
 ## Context
@@ -114,30 +114,50 @@ Phase 0 (below) requires empirically confirming each row.
 - [x] [AGENT] P0. Ensure deployment-service image builds with the scheduler entrypoint. If missing, add
       `CMD ["python", "-m",     "deployment_service", "sports-trigger", "--one-shot"]` for Option B (or no CMD override
       for Option A — container runs main loop).
+      **Shipped 2026-04-21**: Dockerfile stage `FROM api AS sports-scheduler` with
+      `CMD ["python", "-m", "deployment_service", "sports-trigger", "run", "--one-shot"]`; cloudbuild.yaml
+      gains `build-sports-scheduler` + `push-sports-scheduler` steps; CLI gains `run --one-shot` flag and
+      `evaluate --dry-run/--execute` pair. 8 new unit tests (`tests/unit/test_sports_trigger_cli.py`) +
+      16 pre-existing periodic tests all green. Terraform `terraform/gcp/sports_scheduler_cron.tf` defines
+      both the Cloud Run Job and Cloud Scheduler cron — ready for `terraform apply` by the orchestrator
+      once tarballs land on `origin/live-defi-rollout`.
 
 - [ ] [AGENT] P0. Service-account permissions: reader/writer on the deployment-scripts bucket,
       `compute.instanceAdmin.v1` on the project (to create child VMs), `run.developer` if Cloud Run jobs are used.
+      **Deferred to orchestrator Phase 6** — requires live GCP IAM grants. The Terraform at
+      `terraform/gcp/sports_scheduler_cron.tf` binds the Cloud Run Job to `google_service_account.unified_trading`
+      (already has storage.objectAdmin via main.tf + run.invoker via t1_batch_run_invoker in t1_batch_scheduler.tf).
+      The `compute.instanceAdmin.v1` grant must be added project-wide if the scheduler is expected to launch
+      child VMs via the local-backend path; Cloud-Run-backed dispatch is still a stub.
 
 ### Phase 2: Cloud Scheduler cron [SEQUENTIAL, depends on Phase 1]
 
 - [ ] [AGENT] P0. Create Cloud Scheduler cron hitting the Cloud Run job. Cadence: every 5 min (matches scheduler's
       existing poll interval). Timezone: UTC.
+      **Deferred to orchestrator Phase 6** — Terraform resource
+      `google_cloud_scheduler_job.sports_scheduler_cron` (schedule `*/5 * * * *`, UTC) declared in
+      `terraform/gcp/sports_scheduler_cron.tf`. Orchestrator runs `terraform apply` after Phase 1 tarballs push.
 
 - [ ] [AGENT] P0. Smoke test: force-trigger the cron once. Confirm logs show the job ran + state file exists in GCS.
+      **Deferred to orchestrator Phase 6** — requires live Cloud Run + Cloud Scheduler API.
 
 ### Phase 3: First automated Tier-1 / Tier-2 fire (D2 → D3) [SEQUENTIAL]
 
 - [ ] [AGENT] P0. Wait 6h. Check that Tier-1 discovery dispatched at least one `launch-api-football-backfill-vm.sh` run.
+      **Deferred to orchestrator Phase 6** — live-fire observation post-deploy.
 
 - [ ] [AGENT] P0. Wait 24h. Check that Tier-2 reference (INJURIES) fired.
+      **Deferred to orchestrator Phase 6** — live-fire observation post-deploy.
 
 - [ ] [AGENT] P1. Monitor for a week. Spot-check state file shows `last_run[discovery]` and `last_run[reference]`
       updating on cadence.
+      **Deferred to orchestrator Phase 6** — ongoing observation post-deploy.
 
 ### Phase 4: Observability hooks [PARALLEL with Phase 3]
 
 - [ ] [AGENT] P1. Grafana / datadog / wherever fleet telemetry lives: add an alert on "sports scheduler last successful
       Tier-1 fire > 12h ago".
+      **Deferred to orchestrator Phase 6** — requires live telemetry backend integration.
 
 ## Dependency graph
 
