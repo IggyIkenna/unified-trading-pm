@@ -254,6 +254,44 @@ sports_reference/
 The denormalisation happens at feature-compute time (features-sports-service), not at ingestion. The raw shards stay
 normalised (single source of truth per data class); the feature pipeline owns the join + as-of discipline.
 
+### 9.1 Shipped implementation (2026-04-21)
+
+As of 2026-04-21, this contract is implemented by `features-sports-service/features_sports_service/pipeline/fixture_features.py`:
+
+- **UAC schema:** `unified_api_contracts.internal.FixtureFeatures` (Pydantic, `frozen=True`, `extra="forbid"`) declares
+  every column — 21 value-bearing fields plus provenance (`transfermarkt_values_partition_used`,
+  `standings_partition_used`, `weather_source`) and metadata (`feature_computed_at`, `schema_version`, `feature_group`).
+- **Feature group:** `fixture_features` — sibling to `derived_features` and `odds_features`. Written to
+  `gs://features-sports-{project}/sports_features/by_date/day={D}/feature_group=fixture_features/features.parquet` (or
+  per-league shards when `league_id` present). Manifest shards record `capture_status` via `ManifestWriter.record_empty`
+  / `record_failed` / `add` like the existing groups.
+- **Asof lookup helper:** `features_sports_service.pipeline.asof_lookup(df, key_cols, timestamp_col, as_of)` — strict
+  `<=` semantics; future rows dropped per key. Unit-tested for lookahead regression-gate: when a source `PLAYER_VALUES`
+  parquet contains rows dated after kickoff, the aggregate uses ONLY rows with `as_of_date <= kickoff_date`.
+- **Join details:**
+  - Transfermarkt — `FIXTURE_LINEUPS × PLAYER_VALUES` asof join. Aggregates per team: `sum(market_value_eur)` over
+    lineup players with resolved values, plus `team_value_coverage_pct = resolved / lineup_size`. Missing players ->
+    NULL (not 0).
+  - Standings — reads `entity=standings` from `day=kickoff_date - 1` (pre-match); falls back up to 7 days earlier.
+    Missing team (promoted/relegated mid-season) -> NULL for `home_standing_pre` / `away_standing_pre`.
+  - Weather — joined on `venue_id`; hourly-kickoff bucket already pre-computed upstream by instruments-service.
+    Preference order: `actual_ko_*` (ERA5 historical) > `forecast_t0_ko_*` (same-day nowcast) > `forecast_t24h_ko_*`
+    (T-24h forecast). `weather_source` column records which family fed each row.
+- **Failure isolation:** the per-fixture loop never raises. A fixture that hits an unexpected data shape emits a NULL
+  row with all value columns set to `None` and `weather_source="none"` so the shard as a whole still captures.
+- **Lookahead invariants enforced by unit tests:**
+  1. Future `PLAYER_VALUES` rows never surface in `home_team_value_eur_as_of_kickoff` (even when dominant in the source
+     DataFrame).
+  2. Weather picks the kickoff-hour bucket containing `kickoff_utc`, never adjacent hours / daily averages.
+  3. Missing raw inputs propagate NULL — never zeros, never "latest available", never a current-date fallback.
+- **Out-of-scope / follow-ups:**
+  - `calculators/squad_value_calculator.py` (old path) still defaults missing data to 0.0 — a data crime per §5. Replace
+    with the new `fixture_features` output once downstream consumers migrate.
+  - Transfermarkt `player_values` partitions exist only for `day=2019-01-01 / 2019-01-02` in prod as of 2026-04-21; the
+    2020-2026 backfill VM run is a prerequisite for non-NULL team-value coverage.
+  - `entity=sfi_standings/` is absent; the SFI-native join defined in §2.4 uses API-Football `entity=standings` as the
+    proxy until the SFI backfill lands.
+
 ## 10. Operational summary
 
 | Layer             | Cadence                         | Output                                                             |
