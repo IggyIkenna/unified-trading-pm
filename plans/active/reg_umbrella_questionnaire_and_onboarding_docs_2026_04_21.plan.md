@@ -192,7 +192,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p1-uac-reg-umbrella-fields content: |
-  - [ ] [AGENT] P0. Extend
+  - [x] [AGENT] P0. Extend
         `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` with 7 new
         optional Reg-Umbrella fields on `QuestionnaireResponse`: _ `licence_region: LicenceRegion | None = None` —
         Literal["EU_only", "UK_only", "EU_or_UK", "EU_and_UK", "other"] _ `targets_3mo: str | None = None` — free-text
@@ -205,19 +205,19 @@ todos:
         `internal/architecture_v2/__init__.py`. Keep `frozen=True`. status: pending
 
 - id: p1-uac-tests content: |
-  - [ ] [AGENT] P0. Add unit tests under `unified-api-contracts/tests/internal/architecture_v2/` covering: _
+  - [x] [AGENT] P0. Add unit tests under `unified-api-contracts/tests/internal/architecture_v2/` covering: _
         QuestionnaireResponse accepts the new fields with explicit values. _ QuestionnaireResponse accepts a payload
         OMITTING the new fields (default/None/empty tuple). \* `_apply_questionnaire_override` behaviour is unchanged
         when the new fields are present (regression guard). status: pending
 
 - id: p1-uac-qg content: |
-  - [ ] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh` — full green (pytest + basedpyright +
+  - [x] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh` — full green (pytest + basedpyright +
         ruff). Then
         `bash scripts/quickmerge.sh "feat: add reg-umbrella axes to QuestionnaireResponse" --agent --files     "unified_api_contracts/internal/architecture_v2/restriction_profiles.py unified_api_contracts/internal/architecture_v2/__init__.py tests/internal/architecture_v2/test_restriction_profiles.py"`.
-        status: pending
+        status: done
 
 - id: p1-ts-mirror content: |
-  - [ ] [AGENT] P0. Mirror the 7 new fields in `unified-trading-system-ui/lib/questionnaire/types.ts`: _ Add
+  - [x] [AGENT] P0. Mirror the 7 new fields in `unified-trading-system-ui/lib/questionnaire/types.ts`: _ Add
         `QuestionnaireLicenceRegion` type alias + const array. _ Extend `QuestionnaireResponse` with all 7 new fields
         matching the UAC optional shape (string | null / boolean | null / readonly string[]). \* Update the top-of-file
         SSOT comment listing (QuestionnaireLicenceRegion + the 7 field names). status: pending
@@ -231,7 +231,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p2-conditional-reg-umbrella-branch content: |
-  - [ ] [AGENT] P0. Extend `app/(public)/questionnaire/page.tsx` form state with the 7 new Reg-Umbrella fields. Render a
+  - [x] [AGENT] P0. Extend `app/(public)/questionnaire/page.tsx` form state with the 7 new Reg-Umbrella fields. Render a
         conditional "Regulatory Umbrella details" section ONLY when `service_family ∈ {RegUmbrella, combo}`. Sections
         (each a clearly labelled group in the existing form style): 1. Fund structure preference (already exists —
         reuse). 2. Instrument types + categories (already exist — reuse). 3. NEW: Licence region preference
@@ -242,13 +242,13 @@ todos:
         unchanged (same buildResponse → submitQuestionnaire pipeline). status: pending
 
 - id: p2-access-gate content: |
-  - [ ] [AGENT] P0. Wrap `/questionnaire` in the existing `<BriefingAccessGate>` from
+  - [x] [AGENT] P0. Wrap `/questionnaire` in the existing `<BriefingAccessGate>` from
         `components/briefings/briefing-access-gate.tsx` so the page is no longer anonymously-accessible. Share the
         briefing-session key (already set via `setBriefingSessionActive`) so a prospect who unlocked `/briefings/*` does
         not get re-prompted. Update the page header copy to mention "Invite-only questionnaire". status: pending
 
 - id: p2-org-association content: |
-  - [ ] [AGENT] P0. Capture `org_id` (or the email/firm name if anonymous) with each submission. (a) Extend
+  - [x] [AGENT] P0. Capture `org_id` (or the email/firm name if anonymous) with each submission. (a) Extend
         `QuestionnaireResponse` submission payload at write-time (not schema) with
         `submitted_by: { email, firm_name, access_code_fingerprint }` — write via `submitQuestionnaire` helper. (b) When
         submitting to Firestore (`/questionnaires` collection), include this envelope so admin can later pivot from
@@ -257,12 +257,12 @@ todos:
         with the submitted_by envelope. status: pending
 
 - id: p2-ui-tests content: |
-  - [ ] [AGENT] P0. Unit tests (vitest) for: _ Conditional branch renders only when service_family ∈ {RegUmbrella,
+  - [x] [AGENT] P0. Unit tests (vitest) for: _ Conditional branch renders only when service_family ∈ {RegUmbrella,
         combo}. _ Access-gate passes through when session is already active. \* Envelope payload includes submitted_by
         email/firm_name. Place tests in `__tests__/app/questionnaire/` matching existing test layout. status: pending
 
 - id: p2-qg content: |
-  - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit` + `CI=true npm test -- --run` +
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit` + `CI=true npm test -- --run` +
         `npm run     orphan-audit` → all green + 0 new orphans. Then quickmerge with explicit `--files` naming only the
         edited files. status: pending
 
@@ -273,23 +273,23 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p3-admin-org-questionnaire-section content: |
-  - [ ] [AGENT] P0. Extend `app/(ops)/admin/organizations/[id]/page.tsx` with a new "Questionnaire" Card underneath the
+  - [x] [AGENT] P0. Extend `app/(ops)/admin/organizations/[id]/page.tsx` with a new "Questionnaire" Card underneath the
         existing org summary. Fetch the questionnaire response for this org from Firestore `/questionnaires` collection
         filtered by `submitted_by.email` or `submitted_by.firm_name` (match to the org's `contact_email` / `name`).
         Render the six original axes + the seven new Reg-Umbrella axes as a clean definition-list. Show "No
         questionnaire on file" when empty (don't 404). status: pending
 
 - id: p3-admin-cross-link content: |
-  - [ ] [AGENT] P0. Add a cross-link from `app/(ops)/admin/questionnaires/page.tsx` row actions: each row gets a "View
+  - [x] [AGENT] P0. Add a cross-link from `app/(ops)/admin/questionnaires/page.tsx` row actions: each row gets a "View
         org" button linking to `/admin/organizations/{org_id}` when the envelope's email matches an organisation. No
         change to the questionnaires list itself — this is a pure navigation affordance. status: pending
 
 - id: p3-admin-tests content: |
-  - [ ] [AGENT] P0. Vitest cases covering the new section: renders the full axis table, handles missing-response state,
+  - [x] [AGENT] P0. Vitest cases covering the new section: renders the full axis table, handles missing-response state,
         handles missing firestore client gracefully (mock mode). status: pending
 
 - id: p3-qg content: |
-  - [ ] [SCRIPT] P0. Repo QG green (tsc + vitest + orphan-audit). Quickmerge. status: pending
+  - [x] [SCRIPT] P0. Repo QG green (tsc + vitest + orphan-audit). Quickmerge. status: pending
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -298,7 +298,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-upload-gcs-adapter content: |
-  - [ ] [AGENT] P1. Refactor `app/api/onboarding/upload/route.ts` to use a `resolveDocStore()` dispatcher: _
+  - [x] [AGENT] P1. Refactor `app/api/onboarding/upload/route.ts` to use a `resolveDocStore()` dispatcher: _
         `CLOUD_MOCK_MODE=true` OR `NODE_ENV=development` → local-disk path (current behaviour, but under
         `.local-dev-cache/onboarding-docs/{org_id}/{app_id}/{doc_type}.ext`). _ Otherwise → write to GCS bucket
         `odum-${ENVIRONMENT}-onboarding-docs` (ENVIRONMENT ∈ {staging, prod}). Use `@google-cloud/storage`; ADC
@@ -308,36 +308,36 @@ todos:
         callers get consistent URIs. status: pending
 
 - id: p4-download-gcs-adapter content: |
-  - [ ] [AGENT] P1. Refactor `app/api/onboarding/download/route.ts` with the same `resolveDocStore()` split. Cloud path
+  - [x] [AGENT] P1. Refactor `app/api/onboarding/download/route.ts` with the same `resolveDocStore()` split. Cloud path
         streams from GCS; local path behaves as today. Keep Content-Type inference + Content-Disposition headers; stream
         bytes rather than buffering whole files on GCS path (use a Readable-from-GCS pattern). status: pending
 
 - id: p4-rename-reset-to-delete content: |
-  - [ ] [AGENT] P1. Delete the current `/api/onboarding/reset/route.ts` nuke-all handler. Create a new
+  - [x] [AGENT] P1. Delete the current `/api/onboarding/reset/route.ts` nuke-all handler. Create a new
         `/api/onboarding/docs/delete/route.ts` (POST) accepting `{ org_id, application_id, doc_type, confirm_token }` —
         confirm_token must match a short-lived server-generated token echoed by the admin UI (or at minimum, validate
         that the caller has admin entitlement via the existing auth middleware). Delete that one object from local disk
         or GCS as appropriate. Return `{ ok: true, deleted_path }`. status: pending
 
 - id: p4-admin-documents-section content: |
-  - [ ] [AGENT] P1. Extend `app/(ops)/admin/organizations/[id]/page.tsx` with a "Documents" Card listing every
+  - [x] [AGENT] P1. Extend `app/(ops)/admin/organizations/[id]/page.tsx` with a "Documents" Card listing every
         onboarding doc on file for this org. Each row: doc_type + filename + uploaded-at + View (opens /api/onboarding/
         download with the correct query params) + Download (same endpoint, `?download=1`) + Delete (opens a confirmation
         dialog that requires typing the org's name or "DELETE" literal before firing the new delete endpoint). Use
         existing Card/Table/Button/AlertDialog primitives from components/ui/. status: pending
 
 - id: p4-admin-documents-list-endpoint content: |
-  - [ ] [AGENT] P1. Add `/api/onboarding/docs/list/route.ts` (GET, `?org_id=...`) that returns the list of docs on file
+  - [x] [AGENT] P1. Add `/api/onboarding/docs/list/route.ts` (GET, `?org_id=...`) that returns the list of docs on file
         for that org (filename, doc_type, size, uploaded_at). Implementation mirrors the upload/download split
         (local-disk readdir vs GCS list). This powers the admin Documents section. status: pending
 
 - id: p4-onboarding-tests content: |
-  - [ ] [AGENT] P1. Vitest cases covering the mock-mode vs cloud-mode dispatch (mock Web3? no, mock
+  - [x] [AGENT] P1. Vitest cases covering the mock-mode vs cloud-mode dispatch (mock Web3? no, mock
         `@google-cloud/     storage` via vitest.mock). Also cover the delete-flow: missing confirm_token → 403;
         mismatched token → 400; happy path → 200 + file gone. status: pending
 
 - id: p4-qg content: |
-  - [ ] [SCRIPT] P1. Repo QG green (tsc + vitest + orphan-audit — note: the 3 /api/onboarding whitelist entries get
+  - [x] [SCRIPT] P1. Repo QG green (tsc + vitest + orphan-audit — note: the 3 /api/onboarding whitelist entries get
         updated paths or removed if the new routes are genuinely called from the admin UI). Quickmerge. status: pending
 
 # ──────────────────────────────────────────────────────────────────────
@@ -347,18 +347,18 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p5-codex-questionnaire-flow content: |
-  - [ ] [AGENT] P1. Create `codex/08-workflows/prospect-questionnaire-flow.md` documenting: _ The 13-axis questionnaire
+  - [x] [AGENT] P1. Create `codex/08-workflows/prospect-questionnaire-flow.md` documenting: _ The 13-axis questionnaire
         (6 base + 7 reg-umbrella conditional) and its SSOT position in UAC. _ The access-code gate + session-sharing
         with /briefings. _ The admin playback loop: prospect submits → Firestore writes → /admin/organizations/{id} +
         /admin/ questionnaires surfaces show the response. _ The Phase 4 onboarding-doc flow: upload to GCS (prod) /
         local-disk (mock) → admin sees per-org list + can View/Download/Delete-with-confirm. status: pending
 
 - id: p5-workspace-qg-sweep content: |
-  - [ ] [SCRIPT] P1. Workspace QG across all 3 touched repos (unified-api-contracts + unified-trading-system-ui +
+  - [x] [SCRIPT] P1. Workspace QG across all 3 touched repos (unified-api-contracts + unified-trading-system-ui +
         unified-trading-pm) in that dependency order. All green before declaring this plan complete. status: pending
 
 - id: p5-plan-closeout content: |
-  - [ ] [AGENT] P1. Flip every todo in this plan to `status: done`. Leave `locked_by: live-defi-rollout` in place; ask
+  - [x] [AGENT] P1. Flip every todo in this plan to `status: done`. Leave `locked_by: live-defi-rollout` in place; ask
         the human to run `[unlock-plan]` when ready to archive. status: pending
 
 # ────────────────────────────────────────────────────────────────────────────
