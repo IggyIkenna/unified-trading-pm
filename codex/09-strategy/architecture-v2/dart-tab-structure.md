@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # DART Tab Structure — Per-Persona SSOT
 
 Status: **canonical** — source of truth for UI lifecycle-nav shape and DART sub-tab visibility. All UI implementations

@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Canonical Strategy-ID Naming Convention (v2)
 
 **SSOT for:** how a strategy is named across the platform — slot labels, fully-qualified ids, bare slot ids, URL paths,

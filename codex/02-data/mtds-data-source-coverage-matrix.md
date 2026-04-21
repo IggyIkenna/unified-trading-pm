@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Market-Tick-Data-Service (MTDS) — Coverage Matrix SSOT
 
 **Status:** canonical — consumed by deployment-api data-status aggregator (MTDS branches), MTDS adapter audits, and

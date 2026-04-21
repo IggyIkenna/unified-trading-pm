@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Legacy Family String Migration Report
 
 **Audit driver:** `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` § `p8-audit-legacy-family-strings`.
@@ -90,115 +94,119 @@ Per plan p8-audit-legacy-family-strings:
 - [x] Route slug `basis-trade` → `carry-basis` — done Wave 1 (UI `d417223`).
 - [x] Display label "Basis Trade" on dedicated page → "Carry Basis" — done Wave 1.
 - [x] Migration report produced (this document).
-- [ ] 53-strategy fixture regeneration — Phase 11 follow-up.
-- [x] v1→v2 equivalency audit — **see § 2.1 below (2026-04-21)**.
+- [x] 53-strategy fixture regeneration — done Wave 6 (2026-04-21).
+- [x] v1→v2 equivalency audit — done 2026-04-21; re-verdicted Wave 6 (see § 2.1).
 
 The plan checkbox can flip to `[x]` on the basis of the audit being complete + migrations being either applied or
 tracked. No further route-slug / display-label migrations are viable until Phase 11.
 
-### 2.1 v1 strategy-registry.ts equivalency audit (2026-04-21)
+### 2.1 v1 strategy-registry.ts equivalency audit (2026-04-21 Wave 6 re-verdict)
 
 **Audit driver:** `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` § follow-up Task C — user directive
 2026-04-21 "we don't need v1 strategies anymore as long as we are sure they are at least as maturely integrated in v2".
+Wave 6 Task A/B/C resolved each of the six 2026-04-21 gaps as follows.
 
-**Scope:** all 56 entries in `unified-trading-system-ui/lib/strategy-registry.ts` `STRATEGIES: Strategy[]`, mapped to
-the nearest v2 `(family, archetype, category)` triple and against UAC's post-Wave-3-A `STRATEGY_REGISTRY` (96 slot
-entries derived from `ARCHETYPE_CAPABILITY_REGISTRY`) + UI `lib/architecture-v2/coverage.ts`.
+**Verdict (post Wave 6): 0 GAP / 53 EQUIVALENT / 3 RETIRED.** The v1 `lib/strategy-registry.ts` fixture can now be
+deleted without losing coverage semantics.
 
-**Verdict:** **6 GAP / 50 EQUIVALENT → retain v1, do NOT delete.**
+Summary of the original six 2026-04-21 gaps + their Wave 6 resolution:
 
-Summary of gaps (detail per row below):
+| Cluster                    | Rows | Wave 5 verdict  | Wave 6 resolution                                          | Rationale                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------- | ---- | --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Elysium provider entries   | 3    | GAP (retired)   | **RETIRED**                                                | Provider deleted from UAC per workspace CLAUDE.md. v1 rows reference a retired venue. v2 offers no equivalent — they are RETIRED by design, not gaps to close. Marked explicitly in Wave 6 Task A; v1 rows deleted with the registry.                                                                                                                                                                     |
+| Sports value-betting       | 2    | GAP (semantics) | **EQUIVALENT** (via existing archetype + edge-method axis) | Value-betting is NOT a separate archetype — it is an `EdgeMethod.VALUE_PROB_VS_IMPLIED` config on the existing `ML_DIRECTIONAL_EVENT_SETTLED` archetype. Confirmed in `strategy_service/engine/strategies/v2/migration/legacy_strategy_mapping.py:304-382` — 5 archived v1 sports value-bet strategies already map this way. See `codex/09-strategy/architecture-v2/value-betting-archetype-decision.md`. |
+| TradFi bond mean-reversion | 1    | GAP (cell)      | **EQUIVALENT** (via existing TradFi·spot cell)             | `TRADFI_BOND_MEAN_REV_HUF_1D` trades treasury ETFs (TLT/IEF) on IBKR — these are spot equities by instrument-type, not a separate "bond" instrument. The existing `STAT_ARB_PAIRS_FIXED × TRADFI × spot` cell (venue `ibkr`) covers them. See `codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md`.                                                                                |
 
-| Cluster                    | Rows | Verdict         | Reason                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------- | ---- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Elysium provider entries   | 3    | GAP (retired)   | Provider deleted from UAC per workspace CLAUDE.md (Elysium, Arkham, Bloxroute, Pyth, Infura). v1 rows reference a retired venue. Strategy concepts (CARRY_BASIS_PERP / YIELD_ROTATION_LENDING / CARRY_RECURSIVE_STAKED) exist in v2, but mapped to other venues. Technically RETIRED, not SUPERSET — calling them EQUIVALENT would misrepresent coverage. |
-| Sports value-betting       | 2    | GAP (semantics) | v2 lacks a dedicated `VALUE_BETTING` archetype. `ARBITRAGE_PRICE_DISPERSION` is a riskless cross-bookmaker arb; value-betting is a single-side positive-EV wager with real drawdown risk. Distinct strategy semantics — SUPERSET mapping would lose risk-profile fidelity.                                                                                |
-| TradFi bond mean-reversion | 1    | GAP (cell)      | v2 has `STAT_ARB_PAIRS_FIXED` as an archetype, but `coverage.ts` does not declare a TradFi·bond cell for it. Archetype exists but the coverage cell is absent — SUPPORTED not PARTIAL, so v1 row is orphaned.                                                                                                                                             |
+**Wave-6 changes (UAC):**
 
-**Gated decision (per Task C gate "if ANY v1 entry maps to v2 GAP → STOP"):** v1 retained in place. Do NOT delete
-`lib/strategy-registry.ts`. Do NOT delete `legacyFamilyToV2()` — still in active use (18 files). Phase 11 fixture
-regeneration remains the canonical closure for this debt.
+- `archetype_capability_manifest.json` — added 2 representative slot labels under
+  `ML_DIRECTIONAL_EVENT_SETTLED × SPORTS × event_settled`
+  (`ML_DIRECTIONAL_EVENT_SETTLED@unity-nfl-moneyline-value-usd-prod`,
+  `ML_DIRECTIONAL_EVENT_SETTLED@unity-mlb-moneyline-value-usd-prod`) + a semantic note pointing at
+  value-betting-archetype-decision.md.
+- `archetype_capability_manifest.json` — added 1 representative slot label under `STAT_ARB_PAIRS_FIXED × TRADFI × spot`
+  (`STAT_ARB_PAIRS_FIXED@ibkr-tlt-ief-daily-usd-prod`) + a semantic note pointing at
+  tradfi-bond-instrument-type-decision.md.
+- UI `lib/architecture-v2/coverage.ts` — regenerated via
+  `bash unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh --write`.
 
-**Closure prerequisites for a future Phase-11-adjacent delete wave:**
+**No enum / archetype additions.** System-First rule: v2 already models both concepts cleanly; adding a
+`VALUE_BETTING_EVENT_SETTLED` archetype or a `bond` instrument type would have introduced a second SSOT for an existing
+primitive.
 
-1. Add `VALUE_BETTING` archetype to v2 (or justify folding into an existing archetype with a written semantic guard).
-2. Add TradFi·bond SUPPORTED cell under `STAT_ARB_PAIRS_FIXED` in `lib/architecture-v2/coverage.ts` + UAC
-   `ARCHETYPE_CAPABILITY_REGISTRY`.
-3. Mark the 3 Elysium rows explicitly RETIRED in the migration doc + in the v2 availability store (not EQUIVALENT).
-4. Regenerate `lib/mocks/fixtures/strategy-catalog-data.ts` from UAC `STRATEGY_REGISTRY` so consumer pages that need
-   rich mock data (instruments, performance, PnL breakdown, kelly sizing) have a v2-native source.
-5. Migrate 18 consumer files (per `rg "from.*lib/strategy-registry"`) from `STRATEGIES` / `getStrategyById` /
-   `generatePositionsForStrategy` to v2-equivalents sourced from `coverage.ts` + the new mock fixture.
-
-Once all 5 prerequisites ship, v1 `lib/strategy-registry.ts` can be deleted in a clean break wave.
+**Migration status:** CLOSED. Wave 6 Task E deletes `lib/strategy-registry.ts` + migrates 18 consumers (separate commits
+in this wave). Follow-up plan `strategy_fixture_v2_regeneration_*` was ABSORBED into this wave — no separate plan
+authored.
 
 ### 2.2 Full row-by-row audit table
 
 Mapping is `v1_archetype` + asset-class inference → `v2_family.v2_archetype` + `VenueCategoryV2`.
 
-| #   | v1 strategy_id                      | v1 asset   | v1 type          | v1 archetype           | v2 family            | v2 archetype                 | v2 category | Verdict                          |
-| --- | ----------------------------------- | ---------- | ---------------- | ---------------------- | -------------------- | ---------------------------- | ----------- | -------------------------------- |
-| 1   | DEFI_ETH_BASIS_HUF_1H               | DeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | DEFI        | EQUIVALENT                       |
-| 2   | DEFI_ETH_REC_STAKE_HUF_1H           | DeFi       | Leveraged Basis  | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_RECURSIVE_STAKED       | DEFI        | EQUIVALENT                       |
-| 3   | DEFI_UNI_LP_HUF_1H                  | DeFi       | LP Provision     | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI        | EQUIVALENT                       |
-| 4   | CEFI_BTC_MM_EVT_TICK                | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI        | EQUIVALENT                       |
-| 5   | CEFI_ETH_OPT_MM_EVT_TICK            | CeFi       | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | CEFI        | EQUIVALENT                       |
-| 6   | TRADFI_SPY_MOM_HUF_1D               | TradFi     | ML Directional   | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI      | EQUIVALENT                       |
-| 7   | SPORTS_NFL_ARB_SCE_GAME             | Sports     | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS      | EQUIVALENT                       |
-| 8   | CEFI_BTC_BASIS_SCE_1H               | CeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | CEFI        | EQUIVALENT                       |
-| 9   | PRED_POLY_ARB_SCE_1M                | Prediction | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION  | EQUIVALENT                       |
-| 10  | PRED_BTC_CEFI_ARB_SCE_5M            | Prediction | Arbitrage        | PREDICTION_ARB         | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION  | EQUIVALENT                       |
-| 11  | DEFI_AAVE_LEND_HUF_1D               | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI        | EQUIVALENT                       |
-| 12  | CEFI_BTC_ML_DIR_HUF_4H              | CeFi       | ML Directional   | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | CEFI        | EQUIVALENT                       |
-| 13  | SPORTS_NBA_ML_HUF_GAME              | Sports     | Sports ML        | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS      | EQUIVALENT                       |
-| 14  | DEFI_MORPHO_LEND_HUF_1D             | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI        | EQUIVALENT                       |
-| 15  | TRADFI_BOND_MEAN_REV_HUF_1D         | TradFi     | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | TRADFI      | **GAP**                          |
-| 16  | CEFI_ETH_MOM_HUF_4H                 | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 17  | CEFI_SOL_MOM_HUF_4H                 | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 18  | CEFI_MULTI_ARB_SCE_TICK             | CeFi       | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | CEFI        | EQUIVALENT                       |
-| 19  | CEFI_AVAX_MOMENTUM_HUF_1H           | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 20  | CEFI_ETH_MEAN_REV_SCE_4H            | CeFi       | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | CEFI        | EQUIVALENT (IM-live PUBLIC cell) |
-| 21  | CEFI_DOGE_MM_HUF_30S                | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI        | EQUIVALENT                       |
-| 22  | CEFI_LINK_MOMENTUM_SCE_2H           | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 23  | CEFI_ARB_MEAN_REV_HUF_15M           | CeFi       | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | CEFI        | EQUIVALENT                       |
-| 24  | CEFI_XRP_MM_HUF_1M                  | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI        | EQUIVALENT                       |
-| 25  | TRADFI_ES_ML_DIR_SCE_30M            | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI      | EQUIVALENT                       |
-| 26  | TRADFI_SPY_OPTIONS_ML_EVT_1D        | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI      | EQUIVALENT                       |
-| 27  | TRADFI_CL_ML_DIR_SCE_1H             | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI      | EQUIVALENT                       |
-| 28  | TRADFI_GC_MM_OPTIONS_EVT_TICK       | TradFi     | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI      | EQUIVALENT                       |
-| 29  | TRADFI_ZN_OPTIONS_ML_SCE_4H         | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI      | EQUIVALENT                       |
-| 30  | TRADFI_SI_ML_DIR_SCE_2H             | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI      | EQUIVALENT                       |
-| 31  | TRADFI_QQQ_MM_OPTIONS_EVT_5M        | TradFi     | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI      | EQUIVALENT                       |
-| 32  | TRADFI_EURUSD_ML_DIR_SCE_1H         | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI      | EQUIVALENT                       |
-| 33  | TRADFI_HG_OPTIONS_ML_SCE_1D         | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI      | EQUIVALENT                       |
-| 34  | DEFI_WBTC_BASIS_HUF_4H              | DeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | DEFI        | EQUIVALENT                       |
-| 35  | DEFI_STETH_STAKED_BASIS_HUF_1D      | DeFi       | Staked Basis     | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_STAKED_BASIS           | DEFI        | EQUIVALENT                       |
-| 36  | DEFI_ETH_RECURSIVE_STAKED_HUF_BLOCK | DeFi       | Recursive Staked | RECURSIVE_STAKED_BASIS | CARRY_AND_YIELD      | CARRY_RECURSIVE_STAKED       | DEFI        | EQUIVALENT                       |
-| 37  | DEFI_USDC_AAVE_LEND_HUF_1H          | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI        | EQUIVALENT                       |
-| 38  | DEFI_ARB_AMM_LP_HUF_4H              | DeFi       | AMM LP           | AMM_LP                 | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI        | EQUIVALENT                       |
-| 39  | DEFI_MATIC_AMM_LP_HUF_2H            | DeFi       | AMM LP           | AMM_LP                 | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI        | EQUIVALENT                       |
-| 40  | DEFI_DAI_AAVE_LEND_HUF_8H           | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI        | EQUIVALENT                       |
-| 41  | SPORTS_EPL_ARB_EVT_MATCH            | Sports     | Arbitrage        | SPORTS_ARB             | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS      | EQUIVALENT                       |
-| 42  | SPORTS_NFL_VALUE_BET_EVT_GAME       | Sports     | Value Betting    | SPORTS_ARB             | —                    | —                            | SPORTS      | **GAP**                          |
-| 43  | SPORTS_LALIGA_ML_EVT_MATCH          | Sports     | Sports ML        | SPORTS_ARB             | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS      | EQUIVALENT                       |
-| 44  | SPORTS_NBA_MM_EVT_QUARTER           | Sports     | Sports MM        | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_EVENT_SETTLED  | SPORTS      | EQUIVALENT                       |
-| 45  | SPORTS_MLB_VALUE_BET_EVT_GAME       | Sports     | Value Betting    | SPORTS_ARB             | —                    | —                            | SPORTS      | **GAP**                          |
-| 46  | SPORTS_SERIE_A_ARB_EVT_MATCH        | Sports     | Arbitrage        | SPORTS_ARB             | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS      | EQUIVALENT                       |
-| 47  | PREDICTION_POLY_ML_DIR_EVT_4H       | Prediction | ML Directional   | PREDICTION_ARB         | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | PREDICTION  | EQUIVALENT                       |
-| 48  | PREDICTION_POLY_ARB_EVT_1H          | Prediction | Arbitrage        | PREDICTION_ARB         | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION  | EQUIVALENT                       |
-| 49  | CEFI_MATIC_MOMENTUM_SCE_2H          | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 50  | CEFI_SUI_MOMENTUM_HUF_1H            | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI        | EQUIVALENT                       |
-| 51  | SPORTS_BETFAIR_MM_EVT_TICK          | Sports     | Sports MM        | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_EVENT_SETTLED  | SPORTS      | EQUIVALENT                       |
-| 52  | DEFI_ETH_STAKED_BASIS_HUF_1H        | DeFi       | Staked Basis     | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_STAKED_BASIS           | DEFI        | EQUIVALENT                       |
-| 53  | DEFI_AAVE_SUPPLY_USDC_HUF_1H        | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI        | EQUIVALENT                       |
-| 54  | ELYSIUM_AAVE_LENDING                | DeFi       | Yield Lending    | YIELD                  | —                    | —                            | —           | **GAP (retired)**                |
-| 55  | ELYSIUM_BASIS_TRADE                 | DeFi       | Basis Trade      | BASIS_TRADE            | —                    | —                            | —           | **GAP (retired)**                |
-| 56  | ELYSIUM_RECURSIVE_STAKED_BASIS      | DeFi       | Recursive Yield  | RECURSIVE_STAKED_BASIS | —                    | —                            | —           | **GAP (retired)**                |
+| #   | v1 strategy_id                      | v1 asset   | v1 type          | v1 archetype           | v2 family            | v2 archetype                 | v2 category                                                                  | Verdict                                                           |
+| --- | ----------------------------------- | ---------- | ---------------- | ---------------------- | -------------------- | ---------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1   | DEFI_ETH_BASIS_HUF_1H               | DeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | DEFI                                                                         | EQUIVALENT                                                        |
+| 2   | DEFI_ETH_REC_STAKE_HUF_1H           | DeFi       | Leveraged Basis  | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_RECURSIVE_STAKED       | DEFI                                                                         | EQUIVALENT                                                        |
+| 3   | DEFI_UNI_LP_HUF_1H                  | DeFi       | LP Provision     | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI                                                                         | EQUIVALENT                                                        |
+| 4   | CEFI_BTC_MM_EVT_TICK                | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI                                                                         | EQUIVALENT                                                        |
+| 5   | CEFI_ETH_OPT_MM_EVT_TICK            | CeFi       | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | CEFI                                                                         | EQUIVALENT                                                        |
+| 6   | TRADFI_SPY_MOM_HUF_1D               | TradFi     | ML Directional   | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI                                                                       | EQUIVALENT                                                        |
+| 7   | SPORTS_NFL_ARB_SCE_GAME             | Sports     | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS                                                                       | EQUIVALENT                                                        |
+| 8   | CEFI_BTC_BASIS_SCE_1H               | CeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | CEFI                                                                         | EQUIVALENT                                                        |
+| 9   | PRED_POLY_ARB_SCE_1M                | Prediction | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION                                                                   | EQUIVALENT                                                        |
+| 10  | PRED_BTC_CEFI_ARB_SCE_5M            | Prediction | Arbitrage        | PREDICTION_ARB         | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION                                                                   | EQUIVALENT                                                        |
+| 11  | DEFI_AAVE_LEND_HUF_1D               | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI                                                                         | EQUIVALENT                                                        |
+| 12  | CEFI_BTC_ML_DIR_HUF_4H              | CeFi       | ML Directional   | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | CEFI                                                                         | EQUIVALENT                                                        |
+| 13  | SPORTS_NBA_ML_HUF_GAME              | Sports     | Sports ML        | DIRECTIONAL            | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS                                                                       | EQUIVALENT                                                        |
+| 14  | DEFI_MORPHO_LEND_HUF_1D             | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI                                                                         | EQUIVALENT                                                        |
+| 15  | TRADFI_BOND_MEAN_REV_HUF_1D         | TradFi     | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | TRADFI (spot — Treasury ETFs on IBKR, not a separate `bond` instrument-type) | EQUIVALENT (Wave 6)                                               |
+| 16  | CEFI_ETH_MOM_HUF_4H                 | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 17  | CEFI_SOL_MOM_HUF_4H                 | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 18  | CEFI_MULTI_ARB_SCE_TICK             | CeFi       | Arbitrage        | ARBITRAGE              | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | CEFI                                                                         | EQUIVALENT                                                        |
+| 19  | CEFI_AVAX_MOMENTUM_HUF_1H           | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 20  | CEFI_ETH_MEAN_REV_SCE_4H            | CeFi       | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | CEFI                                                                         | EQUIVALENT (IM-live PUBLIC cell)                                  |
+| 21  | CEFI_DOGE_MM_HUF_30S                | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI                                                                         | EQUIVALENT                                                        |
+| 22  | CEFI_LINK_MOMENTUM_SCE_2H           | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 23  | CEFI_ARB_MEAN_REV_HUF_15M           | CeFi       | Mean Reversion   | MEAN_REVERSION         | STAT_ARB_PAIRS       | STAT_ARB_PAIRS_FIXED         | CEFI                                                                         | EQUIVALENT                                                        |
+| 24  | CEFI_XRP_MM_HUF_1M                  | CeFi       | Market Making    | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | CEFI                                                                         | EQUIVALENT                                                        |
+| 25  | TRADFI_ES_ML_DIR_SCE_30M            | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI                                                                       | EQUIVALENT                                                        |
+| 26  | TRADFI_SPY_OPTIONS_ML_EVT_1D        | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI                                                                       | EQUIVALENT                                                        |
+| 27  | TRADFI_CL_ML_DIR_SCE_1H             | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI                                                                       | EQUIVALENT                                                        |
+| 28  | TRADFI_GC_MM_OPTIONS_EVT_TICK       | TradFi     | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI                                                                       | EQUIVALENT                                                        |
+| 29  | TRADFI_ZN_OPTIONS_ML_SCE_4H         | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI                                                                       | EQUIVALENT                                                        |
+| 30  | TRADFI_SI_ML_DIR_SCE_2H             | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI                                                                       | EQUIVALENT                                                        |
+| 31  | TRADFI_QQQ_MM_OPTIONS_EVT_5M        | TradFi     | Options MM       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI                                                                       | EQUIVALENT                                                        |
+| 32  | TRADFI_EURUSD_ML_DIR_SCE_1H         | TradFi     | ML Directional   | ML_DIRECTIONAL         | ML_DIRECTIONAL       | ML_DIRECTIONAL_CONTINUOUS    | TRADFI                                                                       | EQUIVALENT                                                        |
+| 33  | TRADFI_HG_OPTIONS_ML_SCE_1D         | TradFi     | Options ML       | OPTIONS                | VOL_TRADING          | VOL_TRADING_OPTIONS          | TRADFI                                                                       | EQUIVALENT                                                        |
+| 34  | DEFI_WBTC_BASIS_HUF_4H              | DeFi       | Basis Trade      | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_BASIS_PERP             | DEFI                                                                         | EQUIVALENT                                                        |
+| 35  | DEFI_STETH_STAKED_BASIS_HUF_1D      | DeFi       | Staked Basis     | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_STAKED_BASIS           | DEFI                                                                         | EQUIVALENT                                                        |
+| 36  | DEFI_ETH_RECURSIVE_STAKED_HUF_BLOCK | DeFi       | Recursive Staked | RECURSIVE_STAKED_BASIS | CARRY_AND_YIELD      | CARRY_RECURSIVE_STAKED       | DEFI                                                                         | EQUIVALENT                                                        |
+| 37  | DEFI_USDC_AAVE_LEND_HUF_1H          | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI                                                                         | EQUIVALENT                                                        |
+| 38  | DEFI_ARB_AMM_LP_HUF_4H              | DeFi       | AMM LP           | AMM_LP                 | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI                                                                         | EQUIVALENT                                                        |
+| 39  | DEFI_MATIC_AMM_LP_HUF_2H            | DeFi       | AMM LP           | AMM_LP                 | MARKET_MAKING        | MARKET_MAKING_CONTINUOUS     | DEFI                                                                         | EQUIVALENT                                                        |
+| 40  | DEFI_DAI_AAVE_LEND_HUF_8H           | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI                                                                         | EQUIVALENT                                                        |
+| 41  | SPORTS_EPL_ARB_EVT_MATCH            | Sports     | Arbitrage        | SPORTS_ARB             | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS                                                                       | EQUIVALENT                                                        |
+| 42  | SPORTS_NFL_VALUE_BET_EVT_GAME       | Sports     | Value Betting    | SPORTS_ARB             | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS                                                                       | EQUIVALENT (Wave 6 — via `EdgeMethod.VALUE_PROB_VS_IMPLIED` axis) |
+| 43  | SPORTS_LALIGA_ML_EVT_MATCH          | Sports     | Sports ML        | SPORTS_ARB             | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS                                                                       | EQUIVALENT                                                        |
+| 44  | SPORTS_NBA_MM_EVT_QUARTER           | Sports     | Sports MM        | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_EVENT_SETTLED  | SPORTS                                                                       | EQUIVALENT                                                        |
+| 45  | SPORTS_MLB_VALUE_BET_EVT_GAME       | Sports     | Value Betting    | SPORTS_ARB             | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | SPORTS                                                                       | EQUIVALENT (Wave 6 — via `EdgeMethod.VALUE_PROB_VS_IMPLIED` axis) |
+| 46  | SPORTS_SERIE_A_ARB_EVT_MATCH        | Sports     | Arbitrage        | SPORTS_ARB             | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | SPORTS                                                                       | EQUIVALENT                                                        |
+| 47  | PREDICTION_POLY_ML_DIR_EVT_4H       | Prediction | ML Directional   | PREDICTION_ARB         | ML_DIRECTIONAL       | ML_DIRECTIONAL_EVENT_SETTLED | PREDICTION                                                                   | EQUIVALENT                                                        |
+| 48  | PREDICTION_POLY_ARB_EVT_1H          | Prediction | Arbitrage        | PREDICTION_ARB         | ARBITRAGE_STRUCTURAL | ARBITRAGE_PRICE_DISPERSION   | PREDICTION                                                                   | EQUIVALENT                                                        |
+| 49  | CEFI_MATIC_MOMENTUM_SCE_2H          | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 50  | CEFI_SUI_MOMENTUM_HUF_1H            | CeFi       | Momentum         | MOMENTUM               | RULES_DIRECTIONAL    | RULES_DIRECTIONAL_CONTINUOUS | CEFI                                                                         | EQUIVALENT                                                        |
+| 51  | SPORTS_BETFAIR_MM_EVT_TICK          | Sports     | Sports MM        | MARKET_MAKING          | MARKET_MAKING        | MARKET_MAKING_EVENT_SETTLED  | SPORTS                                                                       | EQUIVALENT                                                        |
+| 52  | DEFI_ETH_STAKED_BASIS_HUF_1H        | DeFi       | Staked Basis     | BASIS_TRADE            | CARRY_AND_YIELD      | CARRY_STAKED_BASIS           | DEFI                                                                         | EQUIVALENT                                                        |
+| 53  | DEFI_AAVE_SUPPLY_USDC_HUF_1H        | DeFi       | Lending          | YIELD                  | CARRY_AND_YIELD      | YIELD_ROTATION_LENDING       | DEFI                                                                         | EQUIVALENT                                                        |
+| 54  | ELYSIUM_AAVE_LENDING                | DeFi       | Yield Lending    | YIELD                  | —                    | —                            | —                                                                            | RETIRED (Wave 6 — Elysium venue deleted from UAC)                 |
+| 55  | ELYSIUM_BASIS_TRADE                 | DeFi       | Basis Trade      | BASIS_TRADE            | —                    | —                            | —                                                                            | RETIRED (Wave 6 — Elysium venue deleted from UAC)                 |
+| 56  | ELYSIUM_RECURSIVE_STAKED_BASIS      | DeFi       | Recursive Yield  | RECURSIVE_STAKED_BASIS | —                    | —                            | —                                                                            | RETIRED (Wave 6 — Elysium venue deleted from UAC)                 |
 
-### 2.3 Open v1→v2 gaps (track for follow-up plan)
+### 2.3 Open v1→v2 gaps — CLOSED (2026-04-21 Wave 6)
 
-Proposed follow-up plan title: `strategy_fixture_v2_regeneration_<date>.plan.md`. Five prerequisites enumerated in § 2.1
-above. Until that plan lands, `lib/strategy-registry.ts` + `legacyFamilyToV2()` remain in place.
+**Status:** MIGRATION COMPLETE. All 6 original gaps resolved (3 retired + 3 mapped to existing v2 cells). Follow-up plan
+`strategy_fixture_v2_regeneration_<date>.plan.md` was ABSORBED into
+`plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 — no separate plan authored. v1
+`lib/strategy-registry.ts` + `legacyFamilyToV2()` deleted in this wave.
 
 ---
 
@@ -206,4 +214,6 @@ above. Until that plan lands, `lib/strategy-registry.ts` + `legacyFamilyToV2()` 
 
 - `codex/09-strategy/architecture-v2/strategy-registry-v2.md` — canonical v2 registry overview.
 - `codex/09-strategy/architecture-v2/naming-convention.md` — `parse_strategy_id` / `format_strategy_id` canonical form.
-- `lib/architecture-v2/legacy-mapping.ts` — v1→v2 bridge with the explicit "Phase 11 regen + delete" follow-up comment.
+- `codex/09-strategy/architecture-v2/value-betting-archetype-decision.md` — Wave 6 decision on value-betting semantics.
+- `codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md` — Wave 6 decision on bond instrument type.
+- `lib/architecture-v2/legacy-mapping.ts` — v1→v2 bridge (removed in Wave 6 after fixture delete).
