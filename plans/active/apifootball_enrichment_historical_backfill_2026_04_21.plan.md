@@ -141,8 +141,8 @@ runtime. Chunking across multiple VMs hits the shared-key rate limit and yields 
 
 - [x] [AGENT] P0. Cheapest first — INJURIES is 1-call-per-date (league- agnostic) so ~2650 calls = ~1 hour on mid tier.
       `bash launch-api-football-backfill-vm.sh --entity INJURIES 2019-01-16 2026-04-20` — **launched 2026-04-21 21:40
-      UTC as `af-backfill-20260421-214057`** in `asia-northeast1-c` (e2-standard-2, singleton-lock held). Live tier
-      Mega 150k/day (confirmed via `/status`), 148k headroom.
+      UTC as `af-backfill-20260421-214057`** in `asia-northeast1-c` (e2-standard-2, singleton-lock held). Live tier Mega
+      150k/day (confirmed via `/status`), 148k headroom.
 - [ ] [AGENT] P0. Monitor VM to completion. Self-delete should fire.
 - [ ] [AGENT] P0. Run rescan. Audit INJURIES manifest coverage.
 

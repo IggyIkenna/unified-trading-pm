@@ -1,5 +1,5 @@
 ---
-scope: [engineer, ui]
+scope: [engineer]
 ---
 
 # Orphan-Route Audit Policy

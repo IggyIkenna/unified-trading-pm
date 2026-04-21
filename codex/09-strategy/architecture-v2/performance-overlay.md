@@ -1,5 +1,5 @@
 ---
-scope: [engineer, product, allocator]
+scope: [engineer]
 ---
 
 # `<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline

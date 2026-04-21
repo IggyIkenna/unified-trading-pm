@@ -1,5 +1,5 @@
 ---
-scope: [engineer, admin, ops]
+scope: [engineer, admin]
 ---
 
 # `odum-paper` Client Zero — Representative Paper Account

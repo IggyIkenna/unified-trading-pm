@@ -2,6 +2,7 @@
 title: Sports Scheduling & Sharding
 status: canonical
 last_updated: 2026-04-21
+scope: [engineer]
 ---
 
 # Sports Scheduling & Sharding

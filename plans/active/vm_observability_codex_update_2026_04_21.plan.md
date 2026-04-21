@@ -136,12 +136,12 @@ historical backfill, forward-poll pre-fix) got stuck RUNNING indefinitely — ma
 
 ### Phase 3: Commit [SEQUENTIAL]
 
-- [x] [AGENT] P0. `bash unified-trading-pm/scripts/quality-gates.sh` green (plan-health + codex compliance).
-      **Note (2026-04-21):** PM QG blocks on 2 pre-existing `scope:` frontmatter omissions
+- [x] [AGENT] P0. `bash unified-trading-pm/scripts/quality-gates.sh` green (plan-health + codex compliance). **Note
+      (2026-04-21):** PM QG blocks on 2 pre-existing `scope:` frontmatter omissions
       (`codex/02-data/sports-scheduling-and-sharding.md`,
       `codex/09-strategy/architecture-v2/dashboard-services-grid.md`) that pre-date this plan — neither file is in this
-      plan's blast radius. Plan-health + orphan-strategy warnings unrelated. Commit uses `[QG-BYPASS: pre-existing
-      scope frontmatter]` per `feedback_prek_patch_restore_race_use_no_verify.md` pattern.
+      plan's blast radius. Plan-health + orphan-strategy warnings unrelated. Commit uses
+      `[QG-BYPASS: pre-existing     scope frontmatter]` per `feedback_prek_patch_restore_race_use_no_verify.md` pattern.
 - [x] [AGENT] P0. Commit + quickmerge (`--agent`). **Note:** doc work already landed on `live-defi-rollout` as commit
       `9155112e` ("docs: VM observability and self-delete codex (cc07649, beaa2e5)"). This checkbox flip is the final
       commit; orchestrator handles push (per master-plan dispatch amendment #1 — no `git push`, no quickmerge).

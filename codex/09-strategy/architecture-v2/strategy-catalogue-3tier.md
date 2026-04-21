@@ -1,5 +1,5 @@
 ---
-scope: [engineer, admin, product]
+scope: [engineer, admin]
 ---
 
 # Strategy Catalogue — 3-Tier Surface

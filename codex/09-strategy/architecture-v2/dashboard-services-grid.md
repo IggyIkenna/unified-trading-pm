@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Dashboard Services Grid — 5-Tile Product-Axis Model
 
 **Status:** canonical (2026-04-21) **Owner:** UI + Strategy Architecture v2 **SSOT for:**
