@@ -228,7 +228,7 @@ not filter on this axis".
 
 ### 4.3 Strategy-style → family mapping
 
-| Questionnaire `strategy_style` | `StrategyFamilyV2`     |
+| Questionnaire `strategy_style` | `StrategyFamily`       |
 | ------------------------------ | ---------------------- |
 | `ml_directional`               | `ML_DIRECTIONAL`       |
 | `rules_directional`            | `RULES_DIRECTIONAL`    |

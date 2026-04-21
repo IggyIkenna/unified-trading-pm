@@ -125,7 +125,7 @@ Prediction markets are `event_settled` at the instrument axis; the distinction f
 
 ### 1.5 `strategy_archetype`
 
-Eighteen values from `StrategyArchetypeV2` enum, per
+Eighteen values from `StrategyArchetype` enum, per
 [`strategy-service/strategy_service/engine/strategies/v2/factory.py:45-65`](#file-citations):
 
 ```
@@ -272,7 +272,7 @@ pricing dimension".
 
 ```
 valid_strategies(venue, instrument_type, category) =
-  { archetype ∈ StrategyArchetypeV2
+  { archetype ∈ StrategyArchetype
       : (category, instrument_type) ∈ archetype.valid_pairs
       ∧ venue ∈ archetype.supported_venues
       ∧ venue.category == category

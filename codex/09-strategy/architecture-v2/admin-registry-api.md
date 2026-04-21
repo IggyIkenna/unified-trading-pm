@@ -13,11 +13,11 @@ the code — do not re-document the drift here.
 
 ## Contract summary
 
-| Endpoint                          | Owning service             | Source of truth                                                                                          |
-| --------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `GET /api/v1/registry/ml-models`  | strategy-service           | `StrategyArchetypeV2` (UAC) ∩ `StrategyFamilyV2.ML_DIRECTIONAL`, reconciled against active slot registry |
-| `GET /api/v1/registry/archetypes` | strategy-service           | `StrategyArchetypeV2` (UAC), reconciled against active `StrategyInstanceRegistry`                        |
-| `GET /api/v1/registry/features`   | every `features-*-service` | `FeatureGroupRegistry` (UTL `feature_service_base`) scoped to the owning service key                     |
+| Endpoint                          | Owning service             | Source of truth                                                                                      |
+| --------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/registry/ml-models`  | strategy-service           | `StrategyArchetype` (UAC) ∩ `StrategyFamily.ML_DIRECTIONAL`, reconciled against active slot registry |
+| `GET /api/v1/registry/archetypes` | strategy-service           | `StrategyArchetype` (UAC), reconciled against active `StrategyInstanceRegistry`                      |
+| `GET /api/v1/registry/features`   | every `features-*-service` | `FeatureGroupRegistry` (UTL `feature_service_base`) scoped to the owning service key                 |
 
 All three endpoints share the same admin auth gate: shared-secret compared against the `X-Admin-Token` request header
 via `hmac.compare_digest`. Services without the secret configured return `503` for every call — the surface is

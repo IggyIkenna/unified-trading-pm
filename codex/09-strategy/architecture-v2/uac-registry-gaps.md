@@ -50,7 +50,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Literal
 
 from unified_api_contracts.internal.architecture_v2.enums import (
-    StrategyArchetypeV2,
+    StrategyArchetype,
     VenueCategoryV2,
 )
 from unified_api_contracts.canonical.domain.instruments import InstrumentType  # canonical enum
@@ -68,7 +68,7 @@ class ArchetypeCoverageCell(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    archetype: StrategyArchetypeV2
+    archetype: StrategyArchetype
     category: VenueCategoryV2
     instrument_type: InstrumentType
     status: CoverageStatus
@@ -90,15 +90,15 @@ class ArchetypeCapabilityV2(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    archetype: StrategyArchetypeV2
+    archetype: StrategyArchetype
     # All cells for the archetype, one per (category, instrument_type).
     cells: tuple[ArchetypeCoverageCell, ...]
     # Archetype is rolling-future-aware (subscribes to REPRESENTATIVE_FUTURE_CHANGED).
     uses_rolling_futures: bool = False
 
 
-# The canonical map — one entry per StrategyArchetypeV2 value.
-ARCHETYPE_CAPABILITY_V2: dict[StrategyArchetypeV2, ArchetypeCapabilityV2] = {
+# The canonical map — one entry per StrategyArchetype value.
+ARCHETYPE_CAPABILITY_V2: dict[StrategyArchetype, ArchetypeCapabilityV2] = {
     # Populated from category-instrument-coverage.md — codegen or hand-maintained
     # with a QG check that enforces every (archetype, category, instrument_type)
     # in the markdown matrix matches a cell here.
@@ -107,7 +107,7 @@ ARCHETYPE_CAPABILITY_V2: dict[StrategyArchetypeV2, ArchetypeCapabilityV2] = {
 
 
 def coverage_for(
-    archetype: StrategyArchetypeV2,
+    archetype: StrategyArchetype,
     category: VenueCategoryV2,
     instrument_type: InstrumentType,
 ) -> ArchetypeCoverageCell | None:

@@ -730,7 +730,7 @@ valid_combo:
     universe for (viewer, action) queries. Pure function of (registry, context).
   formula: |
     valid_strategies(venue, instrument_type, category) =
-      { archetype ∈ StrategyArchetypeV2
+      { archetype ∈ StrategyArchetype
           : (category, instrument_type) ∈ archetype.valid_pairs
           ∧ venue ∈ archetype.supported_venues
           ∧ venue.category == category
