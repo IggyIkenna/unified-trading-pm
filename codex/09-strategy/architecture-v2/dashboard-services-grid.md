@@ -190,6 +190,9 @@ counterparty-outbound stays at the top level (it's a commercial product), the la
   lifecycle-nav). Sub-route chips on the dashboard are the dashboard-side projection of the same catalog.
 - [`restriction-policy.md`](./restriction-policy.md) — persona × cell visibility for the strategy coverage matrix;
   informs Strategy Catalogue chip behaviour.
+- [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) — Plan D. DART exclusive subscription + client
+  research fork + joint Odum-client version governance. DART tile gains `subscriptions` + `versions` chips; Admin & Ops
+  tile gains `strategy-version-approvals` chip.
 - `codex/14-playbooks/cross-cutting/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked / visible
   three-state enum across the product).
 - `codex/14-playbooks/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect personas.

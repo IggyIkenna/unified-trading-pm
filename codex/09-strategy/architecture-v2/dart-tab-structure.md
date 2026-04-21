@@ -145,3 +145,8 @@ background tone. Manual Execution tabs (place / cancel order) render below in a 
   `p7-admin-backend-reachability-audit`).
 - Replace DART Reports-sub `?embedded=1` param with a dedicated layout variant once Reports moves off the pre-existing
   shell.
+- **Plan D — DART exclusive subscription + research fork.** When
+  [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) ships, DART Full personas holding an active
+  `dart_exclusive` subscription gain a "Fork for research" action on `<RealityPositionCard>` (opens
+  `/services/research/{slot}/fork`). No new DART sub-tab is added — the admin approvals queue lives on the Admin & Ops
+  tile as `/admin/strategy-version-approvals`.

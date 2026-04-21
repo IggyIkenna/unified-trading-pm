@@ -61,22 +61,27 @@ examples for testing any DeFi strategy
 
 ### Strategy Lifecycle & Catalogue (NEW 2026-04-21)
 
-- strategy_lifecycle_maturity_model_2026_04_21.plan.md — UAC data model foundation. 9-phase
-  `StrategyMaturityPhase` enum, `ProductRouting`, `ShareClass`, venue-set-variants registry (Elysium:
-  base_3cex → premium_6cex → multi_evm → multi_evm_plus_sol), 5-dim `StrategyInstance`, `StrategyInstanceLifecycle`
-  record, `odum-paper` + `odum-live` client-zero seed rows, UAC → UI propagation script extension, admin
-  lifecycle-editor PATCH endpoint, UTL `LifecycleReloader`. Unblocks Plans B, C, D.
-- strategy_catalogue_3tier_surface_2026_04_21.plan.md — `<StrategyCatalogueSurface>` shared primitive with 4
-  viewModes (admin-universe / admin-editor / client-reality / client-fomo). Rebuilds
-  `/services/strategy-catalogue` as a 2-tab Reality + FOMO surface; adds admin universe + lifecycle-editor
-  pages. Depends on Plan A.
+- strategy_lifecycle_maturity_model_2026_04_21.plan.md — UAC data model foundation. 9-phase `StrategyMaturityPhase`
+  enum, `ProductRouting`, `ShareClass`, venue-set-variants registry (Elysium: base_3cex → premium_6cex → multi_evm →
+  multi_evm_plus_sol), 5-dim `StrategyInstance`, `StrategyInstanceLifecycle` record, `odum-paper` + `odum-live`
+  client-zero seed rows, UAC → UI propagation script extension, admin lifecycle-editor PATCH endpoint, UTL
+  `LifecycleReloader`. Unblocks Plans B, C, D.
+- strategy_catalogue_3tier_surface_2026_04_21.plan.md — `<StrategyCatalogueSurface>` shared primitive with 4 viewModes
+  (admin-universe / admin-editor / client-reality / client-fomo). Rebuilds `/services/strategy-catalogue` as a 2-tab
+  Reality + FOMO surface; adds admin universe + lifecycle-editor pages. Depends on Plan A.
 - performance_overlay_continuous_timeline_2026_04_21.plan.md — `<PerformanceOverlay>` chart primitive rendering
-  continuous backtest → paper → live timelines from odum-paper/live account series. 3 modes
-  (overlay / stitched / split), per-venue slicing, allocator query support. Wired into FOMO tearsheets, DART
-  terminal, Reports. Depends on Plan A.
-- orphan_audit_policy_2026_04_21.plan.md — 3-phase (advisory → fix-all → blocking) scanner that diffs Next
-  `app/` routes against all declared nav surfaces (lifecycle-nav, tile sub-routes, chip hrefs, breadcrumbs,
-  transitive Link closure). Whitelist for intentional direct-URL-only pages. quickmerge + GHA gate in Phase 3.
+  continuous backtest → paper → live timelines from odum-paper/live account series. 3 modes (overlay / stitched /
+  split), per-venue slicing, allocator query support. Wired into FOMO tearsheets, DART terminal, Reports. Depends on
+  Plan A.
+- orphan_audit_policy_2026_04_21.plan.md — 3-phase (advisory → fix-all → blocking) scanner that diffs Next `app/` routes
+  against all declared nav surfaces (lifecycle-nav, tile sub-routes, chip hrefs, breadcrumbs, transitive Link closure).
+  Whitelist for intentional direct-URL-only pages. quickmerge + GHA gate in Phase 3.
+- dart_exclusive_subscription_research_fork_2026_04_21.plan.md — Plan D: DART exclusive-subscription model
+  (`StrategyInstanceSubscription` with `dart_exclusive`/`im_allocation`/`signals_in` types + exclusive-lock invariant),
+  client-authored research fork lifecycle (`StrategyVersion` draft → pending_approval → approved → rolled_out), joint
+  Odum-client version governance gated on `backtest_1yr` + admin approval, UTA subscribe/fork/approve/rollout endpoints,
+  strategy-service `version_governance` module with canonical backtest-pipeline re-use, DART UI Subscribe/Fork/Admin
+  Approvals surfaces. 6 phases across UAC + UTL + UTA + strategy-service + UI + PM. Depends on Plans A + B + C.
 
 ### UI & Admin Unification
 
