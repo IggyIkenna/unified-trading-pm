@@ -73,62 +73,103 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
 
 ### Phase 0: Pre-audit [SEQUENTIAL — do first]
 
-- [ ] [AGENT] P0. Confirm Plan 3 Phases 2-5 landed (the pipeline code must exist before deploying it). Verify via
+- [x] [AGENT] P0. Confirm Plan 3 Phases 2-5 landed (the pipeline code must exist before deploying it). Verify via
       `git log     features-sports-service --oneline` for `compute_fixture_features`. If Plan 3 isn't at C5, PAUSE this
-      plan.
+      plan. ✅ `c7a363d` + `fc08073` on `live-defi-rollout` confirm `compute_fixture_features` + `_asof.py` +
+      batch_handler wiring + 24 tests shipped. Memory cross-checks match.
 
-- [ ] [AGENT] P0. Audit features-sports-service current deployment surface. Dockerfile? Cloud Run? Cron schedule?
+- [x] [AGENT] P0. Audit features-sports-service current deployment surface. Dockerfile? Cloud Run? Cron schedule? ✅
+      Dockerfile already compliant (`ARG PROJECT_ID` + unified-trading-library base). ServiceBootstrap wired in
+      `cli/main.py`; health API in `api/main.py` with `make_health_router` + `data_freshness` callback; typed config
+      reloaders in `config_reloaders.py` with `FeaturesSportsServiceConfig`. Cloud Run job + daily Workflow + Scheduler
+      exist in `deployment-service/terraform/services/features-sports-service/gcp/main.tf` — just needed daily-window +
+      schedule tweaks.
 
-- [ ] [AGENT] P0. Audit `deployment-service/configs/sports-trigger-tiers.yaml` Tier-3 `features_pre_match` entry — does
-      the scheduler-side wiring call `features-sports-service compute_fixture_features` or another CLI? Align names.
+- [x] [AGENT] P0. Audit `deployment-service/configs/sports-trigger-tiers.yaml` Tier-3 `features_pre_match` entry — does
+      the scheduler-side wiring call `features-sports-service compute_fixture_features` or another CLI? Align names. ✅
+      Already correct: `service: features-sports-service operation: compute args: --tables: fixture_features`. Matches
+      the actual CLI shape (`--operation compute --tables fixture_features` — there is no `compute_fixture_features`
+      operation; fixture_features is a table within `compute`).
 
 ### Phase 1: Image + CLI wiring (D1) [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Ensure features-sports-service image builds with
+- [x] [AGENT] P0. Ensure features-sports-service image builds with
       `python -m features_sports_service compute --operation fixture-features     --start-date X --end-date Y` (exact
-      flag names per Plan 3 Phase 3).
+      flag names per Plan 3 Phase 3). ✅ CLI shape validated — the actual invocation is
+      `python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features     --start-date X --end-date Y`
+      (fixture_features is a _table_ within the `compute` operation; there is no `fixture-features` operation in
+      cli/main.py `_OPERATIONS`). Plan wording was speculative — the real shape is used in the daily workflow + backfill
+      launcher.
 
-- [ ] [AGENT] P0. Daily-cron entrypoint:
+- [x] [AGENT] P0. Daily-cron entrypoint:
       `--start-date $(date -u -d     'yesterday' +%Y-%m-%d) --end-date $(date -u -d '+7 days'     +%Y-%m-%d)` (covers
-      backfill + forward horizon).
+      backfill + forward horizon). ✅ Implemented in `terraform/services/features-sports-service/gcp/main.tf` using
+      Cloud Workflows `sys.now()` arithmetic to compute `start_date = yesterday` and `end_date = +7 days`. Container
+      args wired to
+      `--operation compute --mode batch --category SPORTS --tables fixture_features --start-date     {start_date} --end-date {end_date}`.
+      Commit: deployment-service `35f18c7`.
 
 ### Phase 2: Cloud Scheduler + Cloud Run (D1 → D2) [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Create Cloud Run job + Cloud Scheduler cron at 07:00 UTC daily (after sports Tier-1 discovery at 06:00
-      UTC — Tier-1 should have the rolling-window FIXTURES fresh before features compute).
+- [x] [AGENT] P0. Create Cloud Run job + Cloud Scheduler cron at 07:00 UTC daily (after sports Tier-1 discovery at 06:00
+      UTC — Tier-1 should have the rolling-window FIXTURES fresh before features compute). ✅ Schedule moved
+      `0 11 * *     *` → `0 7 * * *` in `variables.tf`; daily workflow + backfill workflow container args aligned to the
+      FIXTURE_FEATURES CLI contract. Cloud Run **deploy step deferred to orchestrator Phase 6** so the deployed image
+      matches origin not local WIP.
 
 - [ ] [AGENT] P0. Service-account IAM: - Read: instruments-store-sports (fixtures + enrichments), other raw-data buckets
       Plan 3 joins from. - Read/write: features-sports bucket (output). - Write: deployment-scripts state bucket
-      (manifest).
+      (manifest). DEFERRED TO ORCHESTRATOR PHASE 6 — existing terraform already declares
+      `gcs_volumes = [{ name = "features-sports", bucket = "features-sports-${var.project_id}", read_only = false }]`
+      and the `service_account_email` variable; additional bucket grants for upstream reads (Transfermarkt / SFI /
+      OpenMeteo / API-Football `instruments-store-sports`) need project_id-scoped IAM bindings applied at deploy time.
 
 ### Phase 3: Tier-3 trigger wiring (D2) [PARALLEL with Phase 2]
 
-- [ ] [AGENT] P0. Verify `deployment-service/configs/sports-trigger-tiers.yaml` Tier-3 `features_pre_match` dispatches
+- [x] [AGENT] P0. Verify `deployment-service/configs/sports-trigger-tiers.yaml` Tier-3 `features_pre_match` dispatches
       `features-sports-service compute     --operation fixture-features --date <fixture-date> --fixture-id     <fixture>`.
-      Adjust if needed.
+      Adjust if needed. ✅ Verified no change needed. Existing YAML already calls `service: features-sports-service`
+      `operation: compute` with `args: {--tables: fixture_features}` — the canonical CLI contract (no `fixture-features`
+      operation exists; fixture_features is a _table_ within `compute`). Scheduler dispatcher passes the fixture date
+      via its own date-resolution path (existing sports-trigger-tiers.yaml § Tier-3 code).
 
 - [ ] [AGENT] P0. Test: force a T-1h trigger fire for a known upcoming fixture. Confirm features-sports-service runs +
-      writes a per-fixture parquet.
+      writes a per-fixture parquet. DEFERRED TO ORCHESTRATOR PHASE 6 — requires deployed Cloud Run service + live
+      upcoming fixture in the 2026-04-21 fixture window; validated locally by inspection of batch_handler.py
+      fixture_features branch (`pipeline.fixture_features.compute_fixture_features` call + per-league write +
+      ManifestWriter record_empty / record_failed wiring).
 
 ### Phase 4: Data-status integration (D3) [PARALLEL]
 
-- [ ] [AGENT] P0. deployment-api aggregator: add `FIXTURE_FEATURES` to `SPORTS_DATA_TYPE_META` with
+- [x] [AGENT] P0. deployment-api aggregator: add `FIXTURE_FEATURES` to `SPORTS_DATA_TYPE_META` with
       `axis: per_league_per_fixture_date`, `cadence_days: 1`, `source: "features_sports_service"`,
-      `classifications: ["Prediction", "Features"]`.
+      `classifications: ["Prediction", "Features"]`. ✅ Shipped in deployment-api `7110233`. Denominator changed from
+      plan's `source: "features_sports_service"` to `source: "api_football"` with `classifications: ("Prediction",)`
+      because `get_expected_leagues_for_source("features_sports_service", ...)` would return an empty list (no league
+      carries `features_sports_service` in its `data_sources` frozenset — it is a _derived_ source, not a raw adapter).
+      `api_football` is the correct gate on the whole join because FIXTURE_FEATURES can only materialise where upstream
+      FIXTURES exist. Deviation documented in the commit message.
 
 - [ ] [AGENT] P0. UI verification: SPORTS drilldown shows FIXTURE_FEATURES with completion % + per-league breakdown.
+      DEFERRED TO ORCHESTRATOR PHASE 6 — requires deployed deployment-api + deployment-ui stack and at least one day of
+      written FIXTURE_FEATURES manifest rows.
 
 ### Phase 5: Historical backfill (D3) [SEQUENTIAL, depends on Phase 4]
 
-- [ ] [AGENT] P0. New launcher `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh` patterned off
+- [x] [AGENT] P0. New launcher `deployment-service/scripts/vm/launch-features-sports-backfill-vm.sh` patterned off
       `launch-api-football-backfill-vm.sh`. Singleton-lock prefix `fs-backfill-`. Entity not applicable (the pipeline is
-      entity-agnostic).
+      entity-agnostic). ✅ Shipped in deployment-service `35f18c7`. e2-standard-4 / 100GB boot; singleton-locked on
+      `fs-backfill-*`; `VM_TASK=features-backfill` so `setup-data-pipeline-vm.sh` BACKFILL_CMD branch carries the full
+      `python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features     --start-date X --end-date Y`
+      invocation. `--skip-existing` + `--force` flags both wired.
 
 - [ ] [AGENT] P0. Launch backfill VM for 2018-01-01..2026-04-20. Expect long run (per-fixture join over 7 years of
-      data). Monitor for completion + self-delete.
+      data). Monitor for completion + self-delete. DEFERRED TO ORCHESTRATOR PHASE 6 — VM launch requires tarball refresh
+      (`bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`) + gcloud auth which belong to a
+      live-infra action.
 
 - [ ] [AGENT] P0. Coverage audit: FIXTURE_FEATURES coverage matches FIXTURES coverage for leagues where all join inputs
-      are present.
+      are present. DEFERRED TO ORCHESTRATOR PHASE 6 — blocked on backfill VM completion.
 
 ## Dependency graph
 
