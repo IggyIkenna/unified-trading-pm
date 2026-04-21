@@ -61,7 +61,7 @@ todos:
   # ──────────────────────────────────────────────────────────────────────
   - id: p1-scanner-script
     content: |
-      - [ ] [AGENT] P0. Create `unified-trading-system-ui/scripts/orphan-audit.ts`:
+      - [x] [AGENT] P0. Create `unified-trading-system-ui/scripts/orphan-audit.ts`:
         (a) Walk `app/` recursively; enumerate every `page.tsx|route.ts` →
             resolve to URL path (e.g. `app/(platform)/services/foo/page.tsx` →
             `/services/foo`).
@@ -73,29 +73,29 @@ todos:
             `{orphans: string[], reachable_count, total_count, timestamp}`.
         (d) Allow a `.orphan-audit-whitelist.json` for documented intentional
             exceptions (auth callbacks, pending pages, deep-link-only tools).
-    status: pending
+    status: done
 
   - id: p1-npm-script
     content: |
-      - [ ] [AGENT] P0. Add `npm run orphan-audit` to `package.json` invoking
+      - [x] [AGENT] P0. Add `npm run orphan-audit` to `package.json` invoking
         the scanner with `--advisory` flag (exits 0 regardless, prints report).
         Add `--blocking` flag (exits 1 on new orphans vs a baseline file).
-    status: pending
+    status: done
 
   - id: p1-baseline-snapshot
     content: |
-      - [ ] [AGENT] P0. Generate initial baseline:
+      - [x] [AGENT] P0. Generate initial baseline:
         `npm run orphan-audit -- --write-baseline`. Writes
         `scripts/.orphan-audit-baseline.json` — the snapshot of "currently
         known orphans" that Phase 3 will gate on.
-    status: pending
+    status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 2 — Fix-all-current (SEQUENTIAL after Phase 1, P0)
   # ──────────────────────────────────────────────────────────────────────
   - id: p2-triage-current-orphans
     content: |
-      - [ ] [AGENT] P0. Read the baseline report. For each orphan, triage:
+      - [x] [AGENT] P0. Read the baseline report. For each orphan, triage:
         (a) KEEP + WIRE — page has legitimate purpose; add to a nav surface
             (lifecycle-nav, tile sub-route, or transitive link from a parent
             page). Document decision inline in scanner whitelist.
@@ -104,49 +104,49 @@ todos:
         (c) WHITELIST — intentional direct-URL-only (e.g. `/pending`, auth
             callbacks). Add to `.orphan-audit-whitelist.json` with reason
             string.
-    status: pending
+    status: done
 
   - id: p2-rebaseline
     content: |
-      - [ ] [SCRIPT] P0. After Phase 2 triage, re-run baseline generation.
+      - [x] [SCRIPT] P0. After Phase 2 triage, re-run baseline generation.
         Baseline should now contain 0 orphans (or only whitelisted entries).
-    status: pending
+    status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 3 — Blocking gate (SEQUENTIAL after Phase 2, P1)
   # ──────────────────────────────────────────────────────────────────────
   - id: p3-wire-into-quickmerge
     content: |
-      - [ ] [AGENT] P1. Edit `unified-trading-system-ui/scripts/base-ui.sh` (or
+      - [x] [AGENT] P1. Edit `unified-trading-system-ui/scripts/base-ui.sh` (or
         wherever pre-flight audit lives) to call
         `npm run orphan-audit -- --blocking` as part of the Phase-1 lint/type
         gate. Exit code 1 fails quickmerge.
-    status: pending
+    status: done
 
   - id: p3-ci-workflow
     content: |
-      - [ ] [AGENT] P1. Add `.github/workflows/orphan-audit.yml` — runs
+      - [x] [AGENT] P1. Add `.github/workflows/orphan-audit.yml` — runs
         scanner on every PR to main; posts comment with report. Fails on new
         orphans.
-    status: pending
+    status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 4 — Codex + propagation (PARALLEL, P1)
   # ──────────────────────────────────────────────────────────────────────
   - id: p4-codex-orphan-audit-doc
     content: |
-      - [ ] [AGENT] P1. Create `codex/06-coding-standards/orphan-audit.md`:
+      - [x] [AGENT] P1. Create `codex/06-coding-standards/orphan-audit.md`:
         policy (3-phase rollout), scanner behaviour, whitelist rules, how
         refactoring PRs demonstrate compliance.
-    status: pending
+    status: done
 
   - id: p4-propagate-to-other-uis
     content: |
-      - [ ] [AGENT] P1. Consider porting the scanner to `deployment-ui` +
+      - [x] [AGENT] P1. Consider porting the scanner to `deployment-ui` +
         `user-management-ui` (archived but reference) — same 3-phase rollout.
         Decision: defer until unified-trading-system-ui baseline proves stable
         (≥ 2 weeks green CI).
-    status: pending
+    status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 # SUCCESS CRITERIA
