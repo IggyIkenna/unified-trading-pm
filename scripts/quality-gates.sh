@@ -102,6 +102,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/migrate_sports_gcs_to_hive.py"
     "!**/generate_ui_reference_data.py"
     "!**/generate_instrument_snapshot.py"
+    "!**/generate-strategy-instances-fixture.py"
     "!**/audit_dead_code.py"
 )
 BE_EXCLUDE_GLOBS=(
@@ -124,6 +125,7 @@ DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/smoke-test-dev.py"
     "!**/check_env_canon.py"
     "!**/generate_ui_reference_data.py"
+    "!**/generate-strategy-instances-fixture.py"
 )
 
 # Exclude diagram generator from basedpyright/codex checks (uses stdlib only,

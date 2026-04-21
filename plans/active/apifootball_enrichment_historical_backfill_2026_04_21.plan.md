@@ -30,6 +30,14 @@ caps (UAC):** `unified-api-contracts/unified_api_contracts/external/api_football
 encoded in UAC; **confirm live tier** from API-Football dashboard or from response headers (`x-ratelimit-requests-limit`
 / `x-ratelimit-requests-remaining`) on the first authenticated call.
 
+**Live tier confirmed (2026-04-21 via GET /status):**
+
+- Plan: **Mega** (higher than plan's worst-case Ultra estimate).
+- Daily cap: **150,000 requests/day** (`x-ratelimit-requests-limit: 150000`, response `subscription.plan = "Mega"`,
+  `requests.limit_day = 150000`).
+- Per-minute cap: **900 req/min** (`x-ratelimit-limit: 900`).
+- Subscription active through 2026-05-21 — backfill wave fits inside current billing cycle.
+
 **Call budget (2019-01-16..2026-04-20, ~2650 dates):**
 
 | Entity           | Order-of-magnitude calls | Notes                                    |
@@ -41,15 +49,17 @@ encoded in UAC; **confirm live tier** from API-Football dashboard or from respon
 | PLAYER_STATS     | highest                  | Per player per fixture                   |
 | **Total enrich** | ~600k–1.2M (plan est.)   | Serial across entities (singleton lock)  |
 
-**Wall-clock vs daily cap:**
+**Wall-clock vs daily cap (actual 150k/day Mega):**
 
-- **7500/day (Pro):** INJURIES uses under one day of quota; VM wall ~1–2h with pacing. Full enrichment wave spans **many
-  calendar months** if capped at 7500/day (plan: ~3–6 months).
-- **75000/day (Ultra):** Same totals → **~8–16 calendar days** of quota for the heavy tranche (plan: ~10–15 days).
+- INJURIES: <2% of one day's quota — VM wall ~1–2h with pacing.
+- Per heavy entity (STATS / EVENTS / LINEUPS / PLAYER_STATS): ~1–2 calendar days each at 150k/day.
+- **Total serial wave: ~5–9 calendar days VM wall-clock** across all 5 entities under singleton lock.
+- For historical reference only: 7500/day (Pro) → ~3–6 months; 75000/day (Ultra) → ~10–15 days.
 
 **Sharding decision:** **A — One long-running VM per entity, strictly serial** (singleton lock on `af-backfill-*`). **B
 (chunked multi-VM)** is rejected: shared API key rate limit yields 429 thrash without throughput gain (launcher
-documents 2026-04-19 SFI incident pattern).
+documents 2026-04-19 SFI incident pattern). At 150k/day we are network-bound not quota-bound for per-fixture entities;
+singleton lock still enforced per 900 req/min burst cap.
 
 ## Context
 
@@ -129,8 +139,10 @@ runtime. Chunking across multiple VMs hits the shared-key rate limit and yields 
 
 ### Phase 1: INJURIES backfill [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Cheapest first — INJURIES is 1-call-per-date (league- agnostic) so ~2650 calls = ~1 hour on mid tier.
-      `bash launch-api-football-backfill-vm.sh --entity INJURIES 2019-01-16 2026-04-20`
+- [x] [AGENT] P0. Cheapest first — INJURIES is 1-call-per-date (league- agnostic) so ~2650 calls = ~1 hour on mid tier.
+      `bash launch-api-football-backfill-vm.sh --entity INJURIES 2019-01-16 2026-04-20` — **launched 2026-04-21 21:40
+      UTC as `af-backfill-20260421-214057`** in `asia-northeast1-c` (e2-standard-2, singleton-lock held). Live tier
+      Mega 150k/day (confirmed via `/status`), 148k headroom.
 - [ ] [AGENT] P0. Monitor VM to completion. Self-delete should fire.
 - [ ] [AGENT] P0. Run rescan. Audit INJURIES manifest coverage.
 
