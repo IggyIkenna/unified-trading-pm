@@ -1,0 +1,258 @@
+---
+title: "features-sports-service — Per-Fixture Denormalisation Pipeline (Player Values / Standings / Weather Joins)"
+priority: P0
+status: active
+owner: agent
+created: 2026-04-21
+locked_by: live-defi-rollout
+locked_since: 2026-04-21
+type: code
+epic: none
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+repo_gates:
+  - repo: features-sports-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-api-contracts
+    code: C0
+    deployment: none
+    business: none
+depends_on: []
+isProject: false
+---
+
+## Context
+
+The sports raw-data layer shards by the **natural key** of each source:
+
+- API-Football `FIXTURES` / `FIXTURE_EVENTS` / `FIXTURE_STATS` / `FIXTURE_LINEUPS` / `PLAYER_STATS` → `fixture_id`.
+- Transfermarkt `PLAYER_VALUES` → `(player_id, as_of_date)`.
+- SFI `SFI_STANDINGS` → `(date, league_id)`.
+- OpenMeteo `WEATHER` → `(venue_lat, venue_lon, date)`.
+- Understat `XG` → `fixture_id` (after parsing).
+- FootyStats → `fixture_id`.
+
+The 2026-04-21 codex `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §9 locks the contract: raw
+shards stay normalised by their natural key; `features-sports-service` **denormalises everything onto `fixture_id`**
+with strict **as-of discipline** so every fixture has:
+
+- `home_team_value_eur_as_of_kickoff`, `away_team_value_eur_as_of_kickoff` (Transfermarkt).
+- `home_standing_pre_match`, `away_standing_pre_match` (SFI).
+- `kickoff_weather_temp_c`, `kickoff_weather_precip_mm`, `kickoff_weather_wind_kph`, … (OpenMeteo).
+- …in addition to the fixture-native columns already present.
+
+The join must NEVER leak lookahead: `as_of_date <= kickoff_date` strict for time-varying values; `kickoff_utc` bucket
+for hourly weather.
+
+### Blast radius
+
+- **features-sports-service** (primary):
+  - Determine if a fixture-level feature writer exists today. If yes, add the new columns to it. If no, this plan
+    creates the writer.
+  - GCS output path — suggest
+    `gs://features-sports-{pid}/by_date/day={D}/ entity=fixture_features/fixture_features.parquet` or per-league
+    sharding mirroring the manifest. Final path decided in Phase 1 pre-audit.
+  - Manifest writes via UTL `ManifestWriter` with `data_type=FIXTURE_FEATURES` (or existing name — confirm in
+    pre-audit).
+- **unified-api-contracts**:
+  - `unified_api_contracts.internal.features.sports` or similar — add the `FixtureFeatures` schema (TypedDict / pydantic
+    model) with all join output columns. Must be in UAC since features cross repo boundaries.
+  - Add a helper like `as_of_lookup(records, as_of_date, date_col="as_of_date")` if one doesn't already live in UAC for
+    time-series lookups.
+- **unified-trading-library**:
+  - If there's a shared "as-of join" helper (check `domain_client/` or `feature_calculator/`), use it. Otherwise keep
+    the join logic in features-sports-service; hoist only if a second service needs it.
+- **Downstream consumers**:
+  - `strategy-service` sports strategies will need to know these new columns exist. Grep for any hardcoded column list —
+    if absent, no downstream change needed; strategy code reads from UAC schema.
+  - `ml-training-service` + `ml-inference-service` — same: they read via UAC-declared feature contract.
+
+### Pre-audit manifest (partial — some unknown until executed)
+
+| File / thing to find                                                | Purpose                                                                    | Expected outcome                                                          |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `features-sports-service/features_sports_service/` tree             | Understand current service shape: entry point, feature computers, outputs. | Map existing feature-write paths to decide: extend or greenfield.         |
+| `features-sports-service/features_sports_service/*/main.py`         | Service entry (`__main__`) + CLI.                                          | Confirm how batch date ranges trigger feature compute.                    |
+| `unified-api-contracts/unified_api_contracts/internal/features/`    | Existing sports feature schemas.                                           | Find existing `FixtureFeatures` or equivalent. Extend it.                 |
+| `unified-api-contracts/unified_api_contracts/sports/league_data.py` | Existing helpers for league / fixture lookups.                             | Confirm `get_league_fixture_calendar`, `get_expected_leagues_for_source`. |
+| Raw data paths on GCS                                               | Actual layout of Transfermarkt / SFI / weather parquets.                   | Validate join-path assumptions below.                                     |
+
+The execution agent MUST run this pre-audit in Phase 0 before writing code. The join columns listed below assume the
+codex as source of truth but are subject to correction on empirical audit.
+
+### The join — conceptual
+
+For each fixture in the target date range:
+
+```
+fixture_id, kickoff_utc, home_team_id, away_team_id, venue_id, league_id
+        │
+        ├── join Transfermarkt PLAYER_VALUES
+        │   filter: player_id in (home_lineup ∪ away_lineup ∪ home_squad ∪ away_squad)
+        │   filter: as_of_date <= kickoff_date
+        │   aggregate: per team, sum-of-max(value) per player → team_value_eur
+        │
+        ├── join SFI_STANDINGS
+        │   filter: league_id == fixture.league_id
+        │   filter: date == kickoff_date - 1 day (use "pre-matchday" table)
+        │   extract: home_standing, away_standing, home_points, away_points
+        │
+        ├── join OPENMETEO_WEATHER
+        │   resolve: venue_id → (lat, lon)
+        │   filter: date == kickoff_date, hour == kickoff_utc.hour
+        │   extract: temp_c, precip_mm, wind_kph, humidity, cloud_cover, weather_code
+        │
+        └── produce: FixtureFeatures row
+```
+
+Missing inputs:
+
+- Transfermarkt value absent for a player → treat as `NULL` (leave in aggregate; do NOT default to 0 — it's not
+  "zero-value" it's "unknown").
+- SFI standings absent → row has `NULL` standing; do NOT fall back to alphabetical or today's standings (lookahead
+  bias).
+- OpenMeteo weather absent (pre-deployment history for 2018-2019) → `NULL` columns. Do NOT fetch current-date weather
+  onto a 2018 fixture.
+
+### Success criteria
+
+- `features-sports-service` produces a per-fixture parquet with all three joined data sources (Transfermarkt / SFI /
+  weather) for any date where the raw inputs exist on GCS.
+- `as_of_date <= kickoff_date` is strictly enforced for Transfermarkt values; a unit test proves lookahead is not
+  possible even when the source has future data.
+- Weather join picks the hourly bucket containing `kickoff_utc` — unit test with a 15:30 UTC kickoff picks the
+  15:00-16:00 bucket.
+- Fixtures with missing raw inputs produce a row with `NULL` columns (not zeros, not "latest available");
+  `capture_status` reflects partial vs complete (decide in Phase 1 whether the manifest shard status should be
+  `captured` / `partial_captured` / `empty_confirmed` when inputs are missing).
+- Schema declared in UAC `internal.features.sports` — downstream services consume via import, not by reading parquet
+  columns.
+- `bash features-sports-service/scripts/quality-gates.sh` green.
+- `bash unified-api-contracts/scripts/quality-gates.sh` green.
+- One end-to-end dry-run on 2024-09-01 (EPL Matchday 3) produces fixture features for all ~10 EPL matches with populated
+  weather + Transfermarkt + SFI columns. Spot-check one fixture manually.
+
+## Phases
+
+### Phase 0: Pre-audit [SEQUENTIAL — do first, do not skip]
+
+- [ ] [AGENT] P0. Read `features-sports-service/features_sports_service/` tree. Document: existing entry points,
+      existing feature schemas, existing output paths, existing manifest conventions. Update this plan's pre-audit table
+      with what you found (embed in a PRE-AUDIT-FINDINGS section at the top of this file).
+
+- [ ] [AGENT] P0. Read `unified-api-contracts/unified_api_contracts/internal/features/` — enumerate existing sports
+      feature contracts. Identify the right place to add `FixtureFeatures` (extend existing or create new).
+
+- [ ] [AGENT] P0. List GCS paths for all four raw inputs via `gsutil ls gs://instruments-store-sports-.../` for a
+      known-good date (e.g. 2024-09-01): - Fixtures:
+      `sports_reference/by_date/day=2024-09-01/entity=fixtures/fixtures.parquet`. - SFI standings: path TBC. -
+      Transfermarkt values: path TBC. - OpenMeteo weather: path TBC. Update the plan with confirmed paths.
+
+- [ ] [AGENT] P0. Spot-check the real parquet schemas with `pd.read_parquet(...).head()` / `.columns` to confirm column
+      names assumed in the conceptual join above. Discrepancies update this plan.
+
+### Phase 1: UAC schema + shared as-of helper [SEQUENTIAL, depends on Phase 0]
+
+- [ ] [AGENT] P0. Declare `FixtureFeatures` in UAC (internal module) with these columns minimum: - `fixture_id: str`,
+      `kickoff_utc: datetime`, `league_id: str`, `home_team_id: str`, `away_team_id: str`, `venue_id: str`. -
+      Transfermarkt: `home_team_value_eur_as_of_kickoff: float | None`,
+      `away_team_value_eur_as_of_kickoff: float | None`, `team_value_coverage_pct: float` (fraction of lineup with known
+      values). - SFI: `home_standing_pre: int | None`, `away_standing_pre: int | None`, `home_points_pre: int | None`,
+      `away_points_pre: int | None`. - Weather: `kickoff_temp_c: float | None`, `kickoff_precip_mm: float | None`,
+      `kickoff_wind_kph: float | None`, `kickoff_humidity_pct: float | None`, `kickoff_cloud_cover_pct: float | None`,
+      `kickoff_weather_code: int | None`. - Metadata: `feature_computed_at: datetime`, `schema_version: int = 1`.
+
+- [ ] [AGENT] P0. If a reusable "as-of-join" helper doesn't exist in UTL, add one to
+      `unified-trading-library/unified_trading_library/domain_client/` or similar:
+      `asof_lookup(df, key_col, date_col, as_of_date) ->     row_or_none`. Single file, single function, tested. If it
+      DOES exist, reuse it.
+
+- [ ] [AGENT] P0. Unit tests for the schema + the helper: - Schema round-trips via pydantic / TypedDict instantiation. -
+      `asof_lookup` picks the latest-before-or-equal; returns None if no row satisfies; strict `<=` semantics.
+
+### Phase 2: Join pipeline — per fixture [SEQUENTIAL, depends on Phase 1]
+
+- [ ] [AGENT] P0. Create (or extend) `features_sports_service/pipeline/fixture_features.py` — the denormalisation
+      pipeline:
+      `python     def compute_fixture_features(         fixture_date: date,         categories: list[str] = None,     ) -> list[FixtureFeatures]:         # 1. Load fixtures for date from sports_reference/by_date/day=D/entity=fixtures/         # 2. For each fixture:         #    a. Transfermarkt join (home + away team squad × PLAYER_VALUES asof)         #    b. SFI join (league standings asof kickoff_date - 1)         #    c. Weather join (venue lat/lon × hourly OpenMeteo asof kickoff hour)         # 3. Return list of FixtureFeatures dicts     `
+
+- [ ] [AGENT] P0. Transfermarkt join specifically: - Read lineup parquet if available, else squad parquet. - For each
+      player, `asof_lookup(values_for_player, as_of=kickoff_date)`. - Aggregate per team: sum-of-values, count with
+      known value, `team_value_coverage_pct = known / total_lineup_size`.
+
+- [ ] [AGENT] P0. SFI join specifically: - Read `SFI_STANDINGS` for `kickoff_date - 1 day`, fall back to most recent
+      prior date if absent (but only if within 7 days). - Extract `position`, `points` for home_team_id and
+      away_team_id. - If team not in standings (promoted / relegated mid-season), `NULL`.
+
+- [ ] [AGENT] P0. Weather join specifically: - Resolve `venue_id` to `(lat, lon)` via UAC `sports.venues` lookup
+      (confirm helper exists in Phase 0; add if missing). - Find hourly bucket for `kickoff_utc.floor(hour)`. - Populate
+      the weather columns.
+
+- [ ] [AGENT] P0. Write output parquet to features-sports-service's output bucket. Manifest row via `ManifestWriter`
+      with shard columns: `date`, `league_id`, `data_type="FIXTURE_FEATURES"`.
+
+- [ ] [AGENT] P0. Unit tests with synthetic fixtures + synthetic Transfermarkt / SFI / weather inputs proving: - As-of
+      invariant held (future values never leak). - Hourly weather bucket is the correct one. - NULL propagation on
+      missing inputs. - Coverage percentage math.
+
+### Phase 3: Orchestrator CLI integration [SEQUENTIAL, depends on Phase 2]
+
+- [ ] [AGENT] P0. Add a `--operation fixture-features` (or extend existing) on the features-sports-service CLI. Must
+      accept `--start-date`, `--end-date`, `--category SPORTS`, `--league-id L` (optional filter).
+
+- [ ] [AGENT] P0. Batch runner iterates dates, calls `compute_fixture_features` per date, writes outputs.
+
+- [ ] [AGENT] P0. Integration test: end-to-end for one date (can use GCS emulator) with three fixtures, confirm output
+      parquet has three rows with populated join columns.
+
+### Phase 4: Manifest + data-status integration [PARALLEL with Phase 3]
+
+- [ ] [AGENT] P1. Update `deployment-api` aggregator if `FIXTURE_FEATURES` isn't already a known data_type. Ensure it
+      appears in the data-status drilldown with its own completion percentage.
+
+- [ ] [AGENT] P2. Document in `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §9 — update the
+      denormalisation diagram to point at the shipped pipeline (not just the intent).
+
+### Phase 5: Backfill smoke + quality gates [SEQUENTIAL]
+
+- [ ] [AGENT] P0. Dry-run on 2024-09-01 (known EPL Matchday 3 date with all four data sources present on GCS).
+      Spot-check one fixture's output (home_team_value / standings / weather populate correctly, no lookahead).
+
+- [ ] [AGENT] P0. `bash unified-api-contracts/scripts/quality-gates.sh` green.
+
+- [ ] [AGENT] P0. `bash features-sports-service/scripts/quality-gates.sh` green.
+
+- [ ] [AGENT] P0. Commit + quickmerge each repo (`--agent`). Order: UAC first (dep), then features-sports-service.
+
+## Dependency graph
+
+```
+Phase 0 (pre-audit) ─► Phase 1 (UAC schema + asof helper) ─► Phase 2 (join pipeline)
+                                                                    │
+                                                                    ├─► Phase 3 (CLI integration)
+                                                                    │        │
+                                                                    └─► Phase 4 (manifest + codex) ─► Phase 5 (smoke + QG)
+```
+
+## SSOT cross-refs
+
+- Join contract: `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §§1, 2 (per-provider shard keys),
+  §9 (denormalisation diagram).
+- Manifest v5: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`.
+- Chunk-safe writes (if backfill is multi-year): `unified-trading-pm/codex/02-data/chunk-safe-manifest-migrations.md`.
+
+## Out of scope
+
+- **Raw data backfill** — this plan assumes the raw parquets exist for target dates. If they don't (e.g. 2018
+  pre-deployment), run `launch-api-football-backfill-vm.sh` first or wait for the historical backfill that's currently
+  in flight (VM `af-backfill-20260421-113002`).
+- **Live feature streaming** — this plan is batch. Real-time pre-match feature updates (Tier-3 T-1h) can reuse the same
+  pipeline but are dispatched by the scheduler (see `sports_scheduler_periodic_tier_dispatch_2026_04_21`).
+- **ML model retraining** — out of scope; ml-training-service consumes the new features but retraining cadence isn't
+  owned here.
+- **Per-player features** (player xG, player value trajectory) — this plan produces per-fixture features. Per-player
+  features can layer on later using the same join machinery.
