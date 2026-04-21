@@ -203,22 +203,37 @@ per v5 SSOT.
 
 ## 8. Open questions / follow-ups
 
-- **UAC gaps** listed in §1. Phase 6b fills these; aggregator should fail loud (not silent zero) if
-  `get_expected_data_types_for_venue(v)` returns `[]` for a venue in `all_*_venues()`.
-- **HYPERLIQUID duplicate** in `all_cefi_venues` — decide whether to merge both entries or carry CLOB vs non-CLOB as
-  distinct venues (check `is_cefi_onchain_clob_venue` method already present on VenueMapping).
-- **DEFI multi-chain expansion** — canonical `PROTOCOL-CHAIN` venue naming needs
-  Arbitrum/Base/Optimism/Polygon/BSC/Avalanche/Linea/Solana entries. Currently only `-ETHEREUM` set; adapters that
-  already write to Arbitrum etc. are likely registering manifest rows under `chain` axis but not declared as separate
-  venues.
-- **Instrument-level expected** — `trades` / `book_snapshot_5` are per-instrument shards. UAC helper
-  `get_expected_instrument_types_for_venue(venue)` returns instrument*types but not specific instruments. Instrument
-  enumeration comes from instruments-service output — aggregator reads `instruments_store*\*` buckets for the
-  current-day active instrument list. Honest per-instrument coverage is a Phase 6c+ stretch goal; base per-venue ×
-  per-data_type × per-day is the MVP.
+- ✅ **UAC gaps** (Phase 6b) — resolved: COINBASE-SPOT / OKX-SPOT / OKX-FUTURES / OKX-SWAP entries added; HYPERLIQUID
+  duplicate in `all_cefi_venues` deduped.
+- ✅ **DEFI multi-chain expansion** (Phase 7 #4) — 58 canonical PROTOCOL-CHAIN venues registered across 11 chains
+  (ETHEREUM / ARBITRUM / BASE / OPTIMISM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC / SOLANA).
+  `VENUE_DATA_TYPE_CAPABILITIES` filled for every new venue. `normalize_defi_venue(raw, chain=...)` resolves manifest's
+  split form `(venue=AAVE_V3, chain=POLYGON)` to canonical `AAVEV3-POLYGON`. Data-status aggregator also canonicalises
+  hyphenated DEFI data_types to underscore form (`lending-indices → lending_indices`) so the per-(venue, dt) filter
+  matches — lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up honestly.
+- ✅ **DeFi CLI handler ManifestWriter wiring** (Phase 7 #2) — `_defi_manifest.DefiManifestRecorder` helper plus 11
+  handler wires (dex_pools / dex_swaps / lending_indices / oracle_prices / lst_rates / liquidations / gas_fee /
+  perp_funding / evm_defi / solana_defi / eigenlayer_rewards). Live DeFi captures now emit honest v5 manifest rows
+  (captured / empty / failed-with-classification) directly, not only via rebuild scripts.
+- ✅ **SPORTS per-bookmaker × per-league Tier-2 sentinel** (Phase 7 #3) — orchestrator emits
+  `(bookmaker, league_id, fixture_date)` sentinel rows for the league-partitioned ODDS_API path. Size-capped to ~12
+  bookmakers × 33 PREDICTION leagues × in-season fixture dates per day (~396/day vs 4M naive fan-out).
+- ⏳ **Instrument-level expected** — `trades` / `book_snapshot_5` are per-instrument shards. UAC helper
+  `get_expected_instrument_types_for_venue(venue)` returns instrument_types but not specific instruments. Instrument
+  enumeration comes from instruments-service output — aggregator reads `instruments_store_*` buckets for the
+  current-day active instrument list. Honest per-instrument coverage is a Phase 8 stretch goal; base per-venue ×
+  per-data_type × per-day is the MVP shipped in Phase 6c.
+- ⏳ **HYPERLIQUID with chain=''** in perp-funding bucket — routing inconsistency; currently lands outside the
+  `(venue=HYPERLIQUID, chain=HYPERLIQUID)` canonical form. Cosmetic but worth investigation when the perp adapter is
+  next touched.
 
 ## 9. Changelog
 
 - **2026-04-20** — Initial SSOT. Authored as Phase 6a of the SPORTS data-status overhaul — applies the same
   honest-coverage discipline (no FIXTURES-rowcount-as-denominator) to MTDS across CEFI / TRADFI / DEFI / SPORTS /
   PREDICTION. Matrix supersedes any implicit per-category coverage rules previously scattered in MTDS adapters.
+- **2026-04-21** — Phase 7 closeout. DEFI multi-chain expansion (58 canonical venues), DeFi handler MW wiring
+  (11 handlers), SPORTS per-bookmaker × per-league Tier-2 sentinel, and hyphen→underscore data_type canonicalisation
+  in the aggregator all landed. Live DEFI honest coverage moved 4% → 50%. Follow-ups narrowed to per-instrument
+  sentinels (Phase 8) and VM FIXTURES backfill (operator work — script
+  `instruments-service/scripts/rescan_sports_fixtures_canonical.py`).
