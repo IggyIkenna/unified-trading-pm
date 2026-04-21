@@ -89,8 +89,13 @@ bash scripts/quickmerge.sh "chore: cleanup" --no-pr
 bash scripts/quality-gates.sh                   # standalone — misses dep validation + PR
 git add -A && git commit && git push            # bypasses all quality gates
 git reset --hard origin/main                    # FORBIDDEN — destroys local changes
-Finish with uncommitted changes in any modified repo
+Finish with uncommitted changes in any modified repo    # commit your OWN edits — see note below
 ```
+
+"Finish with uncommitted changes" targets the agent's **own** edits — never abandon your work in a dirty tree. It does
+**NOT** mean sweeping another agent's concurrent WIP into your `--files` list. If dep-repo working trees you don't own
+are dirty, **STOP and report to the user** before quickmerge; do not auto-bundle them. See CLAUDE.md key-rules and
+`SUB_AGENT_MANDATORY_RULES.md` (Quickmerge Safety) — "DO NOT autonomously run quickmerge when local dep repos are dirty".
 
 ## Nothing-to-Commit on Staging
 

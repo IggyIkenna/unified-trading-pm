@@ -50,6 +50,16 @@ Read these before making ANY code changes:
 - **NEVER use `--dep-branch` in agent/Claude Code sessions** — it is a human-only flag. Quickmerge exits(1) if
   `--dep-branch` is combined with `--agent`. Branch is read automatically from `active_feature_branch` in
   `workspace-manifest.json` (currently: `live-defi-rollout`). Dep conflict? Commit dep repo first, then re-run.
+- **DO NOT run quickmerge when local dep repos are dirty — unless the user explicitly asks.** If an upstream workspace
+  dep repo (UAC / UTL / UCI / UEI / MTDS / URDI, etc.) has uncommitted local changes, quickmerging a downstream consumer
+  is pointless and misleading: the consumer's path-dep resolution + `uv pip install -e ../<dep>` locally will pull the
+  dirty tree, but the pushed branch will link to origin/<dep> which lacks those edits → CI green locally, red remotely,
+  and the PR is a lie. Same applies to repeatedly quickmerging the SAME repo while other agents are mid-edit on it
+  (you'll absorb their untracked files into your stash — see the concurrent-quickmerge feedback memory). Protocol: (1)
+  check `git status` across every repo the target depends on, (2) if any dep is dirty, stop and report to the user, (3)
+  proceed with quickmerge only on explicit user go-ahead or after the deps land. Two legitimate exceptions: the user
+  explicitly says "just quickmerge / commit everything as-is", or the dirty files are purely advisory (generated SVGs /
+  DAGs that always regen on QG).
 - `from unified_trading_library.events import setup_events, log_event` — no fallbacks
 - `basedpyright` not `pyright` (and always with `run_timeout 120 basedpyright <source_dir>/`)
 - No `os.getenv()` — use `UnifiedCloudConfig`

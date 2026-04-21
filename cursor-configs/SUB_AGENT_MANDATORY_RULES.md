@@ -91,6 +91,17 @@ exceptions.
 - **Dependency conflict:** If a dep repo has uncommitted changes, commit them first on the `active_feature_branch` (read
   from `workspace-manifest.json`), then re-run quickmerge. NEVER use `--dep-branch` — that flag is HUMAN-ONLY and will
   cause quickmerge to exit with an error in `--agent` mode.
+- **DO NOT autonomously run quickmerge when local dep repos are dirty — wait for explicit user go-ahead.** If any
+  upstream workspace dep of the repo you are quickmerging has uncommitted changes in its working tree, stop and report
+  the state to the user. Quickmerging a downstream consumer with dirty upstream deps is pointless and misleading: the
+  consumer resolves path-deps locally (so tests + QG use the dirty tree) but the pushed branch references `origin/<dep>`
+  which lacks those edits → CI passes locally, fails remotely, and the PR description is a lie. Same protocol applies
+  when other agents are concurrently editing the SAME repo (see concurrent-quickmerge safety note): your `git stash -u`
+  will absorb their untracked files, and their subsequent pop can clobber your commit. Legitimate exceptions: (a) the
+  user explicitly says "quickmerge" / "commit everything as-is" / "yes push"; (b) the dirty files are purely generator
+  artefacts (DAG svg / derived-dependency-manifest.json that regenerate on every QG run). Protocol: (1) survey
+  `git status` in every dep repo before quickmerge, (2) if any dep is dirty, STOP and report; (3) proceed only after
+  user confirms or the deps land.
 - **Never bump versions manually** — CI bumps on merge to main
 - **Untrack ignored files** — if tracked files match `.gitignore`: detect with
   `git ls-files --ignored --exclude-standard`, then `git rm --cached <files>`. Never bare `git rm` (deletes files)
