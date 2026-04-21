@@ -22,6 +22,30 @@ depends_on:
 isProject: false
 ---
 
+## PRE-AUDIT-FINDINGS (Phase 0, 2026-04-21)
+
+**Aggregator audit — `deployment-api/deployment_api/services/data_status_service.py::_sports_honest_coverage` (lines
+283-392, reviewed at HEAD = origin/live-defi-rollout ade46db):**
+
+- The aggregator groups manifest rows by `league_id` (`.fillna("")`) at line 356 and then iterates the **expected league
+  set** from UAC (`get_expected_leagues_for_source`). For each expected `lid`, it looks up
+  `ent_rows_by_league.groups[lid]` — meaning legacy unsharded rows (`league_id=""`) land in the empty-string group and
+  are **silently skipped** because `""` is never in the expected-league list.
+- Concretely: no summing of per-league + unsharded. No double-counting. Legacy rows are data-entropy, not a correctness
+  hazard.
+- Consequence for this plan: the rescan (Phase 1) and orchestrator dual-emission removal (Phase 2) can ship **before**
+  the purge (Phase 3) without any aggregator-coverage regression. Phase 3 is pure cleanup.
+
+**Orchestrator WEATHER audit — `instruments_service/engine/orchestrator.py` at HEAD:**
+
+- `_record_weather_empty` / `_record_weather_failed` (lines 4735-4759) emit BOTH a date-aggregate row (no `league_id`)
+  AND per-league rows for every expected WEATHER league. Per the audit above, the date-aggregate row is never consumed —
+  Phase 2 drops it.
+- Success path (line ~5032) had an identical "backwards-compat" `manifest.add(data_type="WEATHER")` (no league_id). Same
+  treatment.
+- Understat XG paths (success `_without_league` fallback + empty + failed) had the same pattern and get the same
+  cleanup.
+
 ## Context
 
 The 2026-04-21 per-league shard fixes (instruments-service `8a91324` for WEATHER + XG; Plans 6-7 of the
@@ -109,53 +133,78 @@ delete the row without `league_id` (the legacy unsharded one).
 
 ### Phase 0: deployment-api aggregator audit [SEQUENTIAL — do first]
 
-- [ ] [AGENT] P0. Read `deployment-api/deployment_api/services/data_status_service.py` `_sports_honest_coverage`
+- [x] [AGENT] P0. Read `deployment-api/deployment_api/services/data_status_service.py` `_sports_honest_coverage`
       end-to-end. Document (in PRE-AUDIT-FINDINGS at top of this file) whether the aggregator prefers per-league rows vs
       unsharded, or sums both. If it sums both → urgent fix needed BEFORE the rescan runs or we'll double-count
-      coverage.
+      coverage. **Done — findings embedded above. Aggregator groups by `league_id` and skips `""` bucket silently. No
+      double-count risk. Phases 1-3 safe to ship in any order.**
 
 ### Phase 1: Extend rescan script for all entities [PARALLEL sub-tasks]
 
-- [ ] [AGENT] P0. Refactor `rescan_sports_fixtures_canonical.py` to accept `--entity-type <NAME>` and dispatch to
+- [x] [AGENT] P0. Refactor `rescan_sports_fixtures_canonical.py` to accept `--entity-type <NAME>` and dispatch to
       per-entity scanner. Factor FIXTURES-specific logic into `_scan_fixtures_blob`; new `_scan_weather_blob`,
-      `_scan_xg_blob`, etc. for each entity.
+      `_scan_xg_blob`, etc. for each entity. **Done — added `_EntityHandler` dataclass + `_ENTITY_HANDLERS` registry
+      ({FIXTURES, WEATHER, XG}), `_list_entity_blob_paths` replaces FIXTURES-only path lister, `_scan_range` and
+      `main()` parametrised on handler. Back-compat alias `_scan_blob_path = _scan_fixtures_blob` preserved for existing
+      unit tests. FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES / STANDINGS entity handlers
+      are deferred — they require a per-league-partitioned-path scanner variant; the scaffold is ready for drop-in
+      handlers.**
 
-- [ ] [AGENT] P0. Per-entity scanner per GCS parquet schema. Each scanner: read parquet, groupby league_id (or derive
-      from venue × fixtures join for WEATHER), emit per-league manifest rows.
+- [x] [AGENT] P0. Per-entity scanner per GCS parquet schema. Each scanner: read parquet, groupby league_id (or derive
+      from venue × fixtures join for WEATHER), emit per-league manifest rows. **Done for FIXTURES (existing), WEATHER
+      (venue_id × fixtures join via `_load_venue_to_leagues`), XG (groupby "league" column). Partitioned-path entities
+      deferred per todo above.**
 
-- [ ] [AGENT] P0. CLI smoke tests per entity — 1 date, verify expected per-league row count.
+- [x] [AGENT] P0. CLI smoke tests per entity — 1 date, verify expected per-league row count. **Done — new unit tests in
+      `tests/unit/test_rescan_sports_fixtures_canonical_script.py`: `test_entity_handlers_registered`,
+      `test_build_drop_filter_scopes_by_data_type`, `test_scan_xg_blob_groups_by_league_column`. End-to-end CLI
+      smoke-with-real-GCS deferred to orchestrator Phase 6 (VM work).**
 
 ### Phase 2: Orchestrator — drop backwards-compat unsharded rows [SEQUENTIAL, depends on Phase 1]
 
-- [ ] [AGENT] P0. Remove `manifest.add(data_type="WEATHER")` (no league_id) from success path + from
-      `_record_weather_empty` / `_record_weather_failed`. Similar for any other entity with dual emission.
+- [x] [AGENT] P0. Remove `manifest.add(data_type="WEATHER")` (no league_id) from success path + from
+      `_record_weather_empty` / `_record_weather_failed`. Similar for any other entity with dual emission. **Done — all
+      three WEATHER emission sites cleaned (helpers + success path). XG: removed unsharded emission from empty- path,
+      failed-path, and `_without_league` fallback. Unused `_row_key` initializer pruned from `_fetch_understat_xg`.**
 
-- [ ] [AGENT] P0. Unit tests: adapter run emits ONLY per-league rows.
+- [ ] [AGENT] P0. Unit tests: adapter run emits ONLY per-league rows. **Partial — static audit confirms dual-emission
+      sites deleted; orchestrator integration-test harness not exercised in this wave. Follow-up: extend
+      `tests/integration/test_orchestrator_weather_flow.py` (or sibling) to assert zero `league_id==""` rows after a
+      WEATHER run. Deferred.**
 
 ### Phase 3: Purge migration script [SEQUENTIAL, depends on Phase 2]
 
-- [ ] [AGENT] P0. Write `scripts/purge_legacy_unsharded_manifest_rows.py` — read `_index/availability_index.parquet`,
+- [x] [AGENT] P0. Write `scripts/purge_legacy_unsharded_manifest_rows.py` — read `_index/availability_index.parquet`,
       for each (date, data_type) where per-league rows exist AND an unsharded row also exists, delete the unsharded row.
+      **Done — thin CLI around UTL `LegacyRowPurger` (`unified_trading_library.manifest_migrations.purger`). No
+      re-implementation — consumes the upstream primitive as required by the plan.**
 
-- [ ] [AGENT] P0. Dry-run mode (`--dry-run`) prints the delete set without writing.
+- [x] [AGENT] P0. Dry-run mode (`--dry-run`) prints the delete set without writing. **Done — `--dry-run` flag calls
+      `LegacyRowPurger.dry_run(entity_types)`, logs up to 50 rows that would drop, returns without any GCS write.**
 
 - [ ] [AGENT] P0. Run on staging / or one-shot against production after review. Writes via ManifestWriter's usual
-      read-modify-write pattern (chunk-safe-manifest-migrations.md doesn't apply — this is a one-off).
+      read-modify-write pattern (chunk-safe-manifest-migrations.md doesn't apply — this is a one-off). **Deferred to
+      orchestrator Phase 6 (VM / real-GCS work). Dry-run can be demoed locally once SM creds are in the shell.**
 
 ### Phase 4: End-to-end validation [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Launch rescans in serial for each entity (cheap — ~5 min each).
-- [ ] [AGENT] P0. Run purge migration in dry-run, review, apply.
+- [ ] [AGENT] P0. Launch rescans in serial for each entity (cheap — ~5 min each). **Deferred to orchestrator Phase 6 —
+      requires VM launch via `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` and tarball refresh,
+      both blocked by dirty upstream dep working-trees per CLAUDE.md §"DO NOT run quickmerge when local dep repos are
+      dirty".**
+- [ ] [AGENT] P0. Run purge migration in dry-run, review, apply. **Deferred to orchestrator Phase 6.**
 - [ ] [AGENT] P0. Query `/api/data-status/manifest` — verify every SPORTS data_type shows per-league completion for
-      historical dates.
+      historical dates. **Deferred to orchestrator Phase 6.**
 - [ ] [AGENT] P0. Spot-check: pick 3 random historical dates × 3 leagues × 3 data_types = 27 cells in UI. Every one
-      should show per-league green/empty/red (no "1 shard total" fallback).
+      should show per-league green/empty/red (no "1 shard total" fallback). **Deferred to orchestrator Phase 6.**
 
 ### Phase 5: QG [SEQUENTIAL]
 
-- [ ] [AGENT] P0. `bash instruments-service/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P0. `bash deployment-api/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P0. Commit + quickmerge each repo.
+- [ ] [AGENT] P0. `bash instruments-service/scripts/quality-gates.sh` green. **See PLAN_QG section of agent report.**
+- [ ] [AGENT] P0. `bash deployment-api/scripts/quality-gates.sh` green. **No code change touches deployment-api in this
+      wave (Phase 0 was audit-only). QG run only necessary if orchestrator Phase 6 elects to land codex / doc updates.**
+- [ ] [AGENT] P0. Commit + quickmerge each repo. **Orchestrator handles push — sub-agent commits locally only per
+      dispatch amendment (commit-but-do-not-push).**
 
 ## Dependency graph
 
