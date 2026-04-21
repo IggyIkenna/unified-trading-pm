@@ -388,6 +388,44 @@ context required.
 Legend: **C0-C5** = code readiness per `plans/PLAN_FORMAT.md` (C5 = merged). **P0/P1/P2** = priority. **Gated on**:
 dependency plan that must reach C5 before this plan can fully execute.
 
+### 12.0 Live progress register (re-audit when plan checkboxes change)
+
+Last audit: 2026-04-21 post-master-dispatch. `[x] done` / `[ ] open` is the mechanical checkbox count in each
+plan file — not a judgement call. `First open item` surfaces what the next agent should tackle.
+
+| Plan                                               | `[x]` / `[ ]` | Status                             | First open item                                                                                  |
+| -------------------------------------------------- | ------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1 utl_manifest_migration_primitives                | 15 / 2        | **near-C5** — code landed          | Diff-test refactored vs pre-refactor rescan; VM smoke of `launch-sports-manifest-rescan-vm.sh`   |
+| 2 apifootball_enrichment_historical_backfill       | 3 / 7         | **in-flight** — ops work           | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks           |
+| 3 non_apifootball_provider_backfill_launchers      | 5 / 2         | **near-C5** — 4 launchers landed   | Per-launcher VM smokes; one QG line still called out in plan                                      |
+| 4 instruments_service_orchestrator_reliability_fixes | 10 / 8       | **half-way**                       | Re-smoke + more AF-entity shard work; forward-poll VM; E2E; QG; commits                          |
+| 5 sports_scheduler_cron_activation                 | 4 / 7         | **operator-bound**                 | IAM + Cloud Run + Cloud Scheduler + smokes + 6h/24h monitoring                                   |
+| 6 features_sports_pipeline_deployment              | 9 / 5         | **in-flight**                      | IAM + force-trigger + UI FIXTURE_FEATURES line + historical backfill VM + coverage audit         |
+| 7 upcoming_fixtures_ui_view                        | 12 / 1        | **near-C5**                        | Local dev smoke only                                                                             |
+| 8 vm_observability_codex_update                    | 7 / 0         | **DONE** ✅                        | —                                                                                                |
+| 9 sports_manifest_shard_migration_cleanup          | 7 / 9         | **half-way**                       | Tests + staging/prod runs + rescans + purge + manifest API + UI spot-check + QG + merge          |
+| 10 sports_data_status_fixture_level_drilldown      | 14 / 2        | **near-C5**                        | Manual dev smoke (SPORTS path through fixture list) + commit/quickmerge (deferred to orchestrator) |
+
+**On-disk implementation evidence** (sanity-check: the code is actually there):
+
+| Check                                                               | Result                                                          |
+| ------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `unified-trading-library/unified_trading_library/manifest_migrations/` | Present (chunk_splitter.py, migrator.py, rescan.py, purger.py) |
+| `deployment-service/scripts/vm/launch-{transfermarkt,footystats,openmeteo,understat}-backfill-vm.sh` | All 4 present                                                  |
+| `deployment-api/deployment_api/services/data_status_drilldown.py::build_fixture_breakdown` / `build_fixture_download` | Present                                                        |
+| `deployment-ui/src/api/client.ts::fetchFixtureBreakdown` + `FixtureBreakdown.test.tsx` | Present                                                        |
+| `deployment-api/deployment_api/routes/fixtures.py`                  | Present                                                         |
+| `codex/05-infrastructure/vm-tarball-deployment.md` Observability section | Present (Plan 8's target)                                       |
+
+**Heaviest remaining work:**
+
+- **Plan 2** (AF enrichment backfill) — multi-day VM runs gated by API-Football rate limit.
+- **Plan 4** (orchestrator reliability) — 4 of 7 bug groups + re-smoke still open.
+- **Plans 5 + 6** (deployment activation) — GCP auth + IAM + Cloud Scheduler creation; operator-sign-off territory.
+- **Plan 9** (shard-migration cleanup) — depends on Plan 1 C5 + Plan 4 Bugs 6-7; then runs per-entity rescans + purge.
+
+**Basically done (orchestrator-gate only):** Plans 7, 8, 10, 1 (post diff-test + smoke), 3 (post per-launcher smoke).
+
 ### 12.1 Shipped 2026-04-21 (reference only — no more work)
 
 | Plan                                                                                                                                 | Repos                                           | Status                     |
