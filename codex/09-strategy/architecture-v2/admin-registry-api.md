@@ -101,6 +101,36 @@ service without cross-contamination.
 availability manifest (v5 honest-coverage). `consumers` requires querying the strategy-service archetype registry for
 strategies that subscribe to the group — scheduled as a follow-up when the UI adapter needs the drill-down.
 
+## Client config (unified-trading-system-ui)
+
+The `CatalogueTruthinessAdapter` (`lib/admin/truthiness.ts`) reads three `NEXT_PUBLIC_*` env vars at call time. All
+three must be present for live mode; any missing var triggers mock fallback with a tagged warning.
+
+| Variable                            | Required        | Example                                        | Purpose                                                    |
+| ----------------------------------- | --------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `NEXT_PUBLIC_ADMIN_API_TOKEN`       | Yes (live mode) | `…rotated-secret…`                             | Shared admin secret sent as the `X-Admin-Token` header.    |
+| `NEXT_PUBLIC_STRATEGY_SERVICE_URL`  | Yes (live mode) | `http://localhost:8016`                        | Base URL for `/api/v1/registry/{archetypes,ml-models}`.    |
+| `NEXT_PUBLIC_FEATURES_SERVICE_URLS` | Optional        | `{"features-onchain":"http://localhost:8012"}` | JSON map `{service_key: base_url}` for features-\* mounts. |
+
+Rotation policy lives with Secret Manager — the token is a per-environment shared secret (staging vs production each get
+their own). Rotate by bumping the value in SM, then redeploying the UI image (Cloud Run bakes `NEXT_PUBLIC_*` at image
+build time per `config/docker-build.env.*`).
+
+### Adapter fallback behaviour
+
+The adapter catches and classifies all live-mode failures so the admin page never crashes:
+
+| Situation                             | `snapshot.status` | `snapshot.mode` | `snapshot.mock` |
+| ------------------------------------- | ----------------- | --------------- | --------------- |
+| All three env vars set + fetch 200    | `LIVE`            | `live`          | `false`         |
+| Env var(s) absent or CLOUD_MOCK_MODE  | `MOCK`            | `mock`          | `true`          |
+| Token set but service rejects 401/403 | `AUTH_ERROR`      | `mock`          | `true`          |
+| Network / DNS / CORS / timeout        | `UNREACHABLE`     | `mock`          | `true`          |
+
+`AUTH_ERROR` and `UNREACHABLE` still return the mock seed data — consumers render distinct banners
+(`catalogue-auth-error-banner`, `catalogue-unreachable-banner`) so operators see what failed rather than silently
+treating mock as live.
+
 ## Auth
 
 | Aspect               | Design                                                                                                                                                                |
