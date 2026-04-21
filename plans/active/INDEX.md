@@ -45,6 +45,9 @@ examples for testing any DeFi strategy
 - agent6_mock_data_quality_2026_03_22.plan.md — Mock data quality
 - agent8_e2e_tests_quality_2026_03_22.plan.md — E2E testing
 - sports_e2e_validation_2026_03_27.plan.md — Sports E2E validation
+- mtds_per_instrument_sentinels_2026_04_21.plan.md — Phase 8 honest-coverage: per-instrument Tier-3 sentinels for MTDS
+  `trades` / `book_snapshot_5` / `derivative_ticker` / `options_chain` / `futures_chain`. UAC accessor + MTDS
+  orchestrator + deployment-api aggregator + codex matrix. MVP cap=50 rollout. 4 repos.
 
 ### Service Remediation
 
