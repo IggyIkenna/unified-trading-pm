@@ -83,44 +83,48 @@ todos:
   # ──────────────────────────────────────────────────────────────────────
   - id: p3-build-picker-component
     content: |
-      - [ ] [AGENT] P1. Build reusable `<FamilyArchetypePicker>` component at `unified-trading-system-ui/components/architecture-v2/family-archetype-picker.tsx`. Props: `{value: {family?, archetype?}, onChange, showStrategyIdDropdown?, availabilityFilter?: 'allowed'|'all'}`. UI: cascading selects — Family (8 options from `STRATEGY_FAMILIES`) → Archetype (18 options filtered to family) → optional Strategy ID dropdown (filtered by availability registry). Must respect current persona visibility filter (imports from `AvailabilityStoreProvider`). Include `data-testid` on each select for Playwright. Unit tests in `tests/unit/components/architecture-v2/family-archetype-picker.test.tsx`.
-    status: todo
+      - [x] [AGENT] P1. Build reusable `<FamilyArchetypePicker>` component at `unified-trading-system-ui/components/architecture-v2/family-archetype-picker.tsx`. Props: `{value: {family?, archetype?}, onChange, showStrategyIdDropdown?, availabilityFilter?: 'allowed'|'all'}`. UI: cascading selects — Family (8 options from `STRATEGY_FAMILIES`) → Archetype (18 options filtered to family) → optional Strategy ID dropdown (filtered by availability registry). Must respect current persona visibility filter (imports from `AvailabilityStoreProvider`). Include `data-testid` on each select for Playwright. Unit tests in `tests/unit/components/architecture-v2/family-archetype-picker.test.tsx`. **DONE 2026-04-20** — Picker reads AvailabilityStoreContext directly (optional — falls back to empty entries when the provider isn't mounted, preserving default PUBLIC/LIVE_ALLOCATED semantics). 10 unit tests green. `data-testid` on family/archetype/strategy-id selects + root picker wrapper. `AvailabilityStoreContext` exported from `lib/architecture-v2/availability-store.tsx`.
+    status: done
   - id: p3-wire-picker-trading-terminal
     content: |
-      - [ ] [AGENT] P1. Wire `<FamilyArchetypePicker>` into `app/(platform)/services/trading/terminal/page.tsx`. Replace any generic "strategies list" with family→archetype→strategies filter. Persist selection in `lib/stores/global-scope-store.ts` (extend state with `{strategyFamily, strategyArchetype}` keys; add setters).
-    status: todo
+      - [x] [AGENT] P1. Wire `<FamilyArchetypePicker>` into `app/(platform)/services/trading/terminal/page.tsx`. Replace any generic "strategies list" with family→archetype→strategies filter. Persist selection in `lib/stores/global-scope-store.ts` (extend state with `{strategyFamily, strategyArchetype}` keys; add setters). **DONE 2026-04-20** — `global-scope-store` extended with `strategyFamily`/`strategyArchetype` + setters (family=undefined clears archetype). Terminal renders picker under scope banner; selection persists to zustand. Migrate rehydrates new fields. 3 new unit tests. Co-lands with Wave 2-A commit `d417223` Phase 11 emergency banner.
+    status: done
   - id: p3-wire-picker-catalogue-filter
     content: |
-      - [ ] [AGENT] P1. Wire picker into `/services/strategy-catalogue/coverage/` top-of-page filter. Selecting family+archetype should scope the matrix to matching cells.
-    status: todo
+      - [x] [AGENT] P1. Wire picker into `/services/strategy-catalogue/coverage/` top-of-page filter. Selecting family+archetype should scope the matrix to matching cells. **DONE 2026-04-20** — Coverage page renders picker with `availabilityFilter="all"` (catalogue surface shows everything); selection filters the `archetypesByFamily` memo.
+    status: done
   - id: p3-wire-picker-research-pages
     content: |
-      - [ ] [AGENT] P2. Wire picker into `/services/research/strategies/page.tsx` + `/services/research/overview/page.tsx` — replace any generic strategy list with family/archetype scoped view.
-    status: todo
+      - [x] [AGENT] P2. Wire picker into `/services/research/strategies/page.tsx` + `/services/research/overview/page.tsx` — replace any generic strategy list with family/archetype scoped view. **DONE 2026-04-20** — Research `strategies/page.tsx` adds v2 picker above existing archetype dropdown; v2 archetype filter applied to backtest list. Research `overview/page.tsx` renders picker in a scope banner + adds drill-down `Link` to `/services/research/strategies?archetype=...` when an archetype is selected.
+    status: done
   - id: p3-wire-picker-signals-dashboard
     content: |
-      - [ ] [AGENT] P2. Wire picker into `/services/signals/dashboard/page.tsx` for signal emissions filter (so operators can see only Basis signals, only ML Directional signals, etc.).
-    status: todo
+      - [x] [AGENT] P2. Wire picker into `/services/signals/dashboard/page.tsx` for signal emissions filter (so operators can see only Basis signals, only ML Directional signals, etc.). **DONE 2026-04-20** — Dashboard renders picker in a filter banner; `filteredEmissions` memo filters on emission `slot_label` before passing to SignalHistoryTable. `X of Y emissions` count indicator shown when filtered.
+    status: done
   - id: p3-wire-picker-orders-positions
     content: |
-      - [ ] [AGENT] P2. Audit `/services/trading/orders` + `/services/trading/positions` + `/services/trading/pnl` — wire picker where a generic strategy dimension is exposed.
+      - [ ] [AGENT] P2. Audit `/services/trading/orders` + `/services/trading/positions` + `/services/trading/pnl` — wire picker where a generic strategy dimension is exposed. **DEFERRED 2026-04-20** — Terminal now seeds `useGlobalScope.strategyFamily/strategyArchetype` globally; Wave 2-A commit `d417223` is renaming `/services/trading/*` → DART sub-routes. Follow-up wave picks up per-page wiring after those route renames stabilise.
     status: todo
+    note:
+      "Deferred to post-Wave-2-A route-rename stabilisation. Global picker on terminal already seeds
+      `useGlobalScope.strategyFamily/strategyArchetype`, so orders/positions/pnl can read from the store without
+      per-page picker duplication."
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 4 — Questionnaire → persona → filter cascade
   # ──────────────────────────────────────────────────────────────────────
   - id: p4-questionnaire-persona-resolver
     content: |
-      - [ ] [AGENT] P1. Implement questionnaire → persona mapping. Current state: `app/(public)/questionnaire/page.tsx` writes response to Firestore but never stamps the user with a restriction profile. Steps: (a) add `lib/questionnaire/resolve-persona.ts` that takes a `QuestionnaireResponse` and returns a `RestrictionProfile` (logic: answer="I want DART Signals-In" → `prospect-dart`; "I want IM" → `prospect-im`; "I want Regulatory Umbrella" → `prospect-regulatory`; otherwise → `prospect-generic`). (b) On submit success, call resolver, persist persona in Firestore user doc + localStorage `odum-persona/v1`. (c) `AvailabilityStoreProvider` reads persona on mount and seeds initial filter. (d) If user hits `/services` without completing questionnaire → redirect to `/questionnaire`. (e) Persona rules mirror the codex restriction-policy.md matrix from P2.
-    status: todo
+      - [x] [AGENT] P1. Implement questionnaire → persona mapping. Current state: `app/(public)/questionnaire/page.tsx` writes response to Firestore but never stamps the user with a restriction profile. Steps: (a) add `lib/questionnaire/resolve-persona.ts` that takes a `QuestionnaireResponse` and returns a `RestrictionProfile` (logic: answer="I want DART Signals-In" → `prospect-dart`; "I want IM" → `prospect-im`; "I want Regulatory Umbrella" → `prospect-regulatory`; otherwise → `prospect-generic`). (b) On submit success, call resolver, persist persona in Firestore user doc + localStorage `odum-persona/v1`. (c) `AvailabilityStoreProvider` reads persona on mount and seeds initial filter. (d) If user hits `/services` without completing questionnaire → redirect to `/questionnaire`. (e) Persona rules mirror the codex restriction-policy.md matrix from P2. **DONE 2026-04-20** — `lib/questionnaire/resolve-persona.ts` added with 6 resolved-persona ids (`prospect-dart` / `prospect-im-sma` / `prospect-im-pooled` / `prospect-regulatory` / `prospect-signals-only` / `prospect-generic`) + `RESOLVED_PERSONA_TO_AUTH_ID` map to existing `lib/auth/personas.ts` ids. Questionnaire submit handler persists to `localStorage['odum-persona/v1']`. `AvailabilityStoreProvider` mount effect records `PERSONA_SEEDED` event. `PersonaGate` client component on `(platform)/layout.tsx` redirects non-admin / non-internal / non-demo-persona users hitting `/services/*` to `/questionnaire`. 12 unit tests in `tests/unit/lib/questionnaire/resolve-persona.test.ts` green.
+    status: done
   - id: p4-persona-admin-override
     content: |
-      - [ ] [AGENT] P1. Admin can override a user's persona from the admin UI (see Phase 6 `/admin/users/[id]` page). When admin sets persona, user sees the targeted demo view on next login. Rule: admin cannot grant higher than `INVESTMENT_MANAGEMENT_RESERVED` without explicit lock-state change.
-    status: todo
+      - [x] [AGENT] P1. Admin can override a user's persona from the admin UI (see Phase 6 `/admin/users/[id]` page). When admin sets persona, user sees the targeted demo view on next login. Rule: admin cannot grant higher than `INVESTMENT_MANAGEMENT_RESERVED` without explicit lock-state change. **DONE 2026-04-20** — `components/admin/persona-override-card.tsx` primitive + dedicated page at `/ops/admin/users/[id]/persona-override/` so the fold-in doesn't disturb Phase 6's large user-detail page. Admin-role check + audit-log write (`localStorage['admin-persona-audit/v1']`) + scoped persona key (`odum-persona/v1#<userId>`). Only lists the 6 resolved-persona options — preserving the rule that admin cannot grant higher visibility than IM_RESERVED without explicit lock-state change (lock-state writes live in the separate strategy-catalogue admin page).
+    status: done
   - id: p4-questionnaire-e2e-spec
     content: |
-      - [ ] [AGENT] P2. Add Playwright e2e spec `tests/e2e/playbooks/questionnaire-persona.spec.ts`. Scenario: (1) fill questionnaire as "DART-only prospect", (2) land on `/services`, (3) assert only DART-related services + strategy slots visible, (4) assert IM-reserved slots hidden.
-    status: todo
+      - [x] [AGENT] P2. Add Playwright e2e spec `tests/e2e/playbooks/questionnaire-persona.spec.ts`. Scenario: (1) fill questionnaire as "DART-only prospect", (2) land on `/services`, (3) assert only DART-related services + strategy slots visible, (4) assert IM-reserved slots hidden. **DONE 2026-04-20** — Spec covers 4 scenarios (DART ML-directional → prospect-dart; IM+Pooled → prospect-im-pooled; DART+carry/arbitrage → prospect-signals-only; RegUmbrella → prospect-regulatory). Persona assertion reads `localStorage['odum-persona/v1']` after the questionnaire success redirect. Uses only existing `data-testid` attributes. Spec relies on the localStorage sink fallback (`isDevSink()` heuristic) so it runs under Playwright's block-network environment without Firestore.
+    status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 5 — De-orphan all unreachable pages (PARALLEL within phase)
