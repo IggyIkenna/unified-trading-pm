@@ -84,14 +84,21 @@ For each provider, four dimensions:
 
 ### 2.4 SoccerFootballInfo / SFI (`soccerfootball_info.py`)
 
-- **Fetches:** `SFI_STANDINGS` (league tables with live updates), `SFI_LEAGUES`, `PROGRESSIVE_STATS` (streaks,
-  sequences).
-- **Cadence:** Tier-1 every 6h for `SFI_STANDINGS` + `SFI_LEAGUES`; Tier-4 T+24h for `PROGRESSIVE_STATS` (needs
-  completed-matchday state).
-- **Published:** Standings update after every matchday's last whistle. Progressive stats recomputed daily.
-- **Shard key:** `(date, league_id)` for standings; `(league_id, season)` for progressive stats. Not fixture-native.
-- **Denormalisation to fixture:** for each fixture, features-sports-service takes the standings row with
-  `as_of_date == kickoff_date - 1` for each of home/away teams (opponent's pre-match table position is a feature).
+- **Fetches:** `SFI_LEAGUES`, `SFI_PROGRESSIVE_STATS` (streaks, sequences). **Not `SFI_STANDINGS`** — SFI has no
+  standings endpoint. This was confirmed against the archived service and is enforced by
+  [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
+  L4365-4367 (`_want_sfi_standings = False`). Pre-match league position / points come from the API-Football
+  `STANDINGS` endpoint (see §2.1); `features-sports-service` reads that pre-match partition via
+  `data/gcs_reader.py::read_pre_match_standings` (`day=kickoff_date - 1` with 7-day fallback).
+- **Cadence:** Tier-1 every 6h for `SFI_LEAGUES`; Tier-4 T+24h for `SFI_PROGRESSIVE_STATS` (needs completed-matchday
+  state).
+- **Published:** Progressive stats recomputed daily; league metadata refreshed on season boundaries.
+- **Shard key:** `(league_id, season)` for both entities. Not fixture-native.
+- **Backfill launchers:**
+  - `deployment-service/scripts/vm/launch-sfi-forward-poll.sh` — T-1 forward-poll (default cadence).
+  - `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh` — multi-year historical range (2020-2026 etc.);
+    singleton-locked against ALL `sfi-*` VMs (shared `soccer-football-info-api-key`; reference: 2026-04-19
+    thundering-herd incident).
 
 ### 2.5 OpenMeteo / Weather (`open_meteo.py`)
 
@@ -292,13 +299,11 @@ As of 2026-04-21, this contract is implemented by
   2. Weather picks the kickoff-hour bucket containing `kickoff_utc`, never adjacent hours / daily averages.
   3. Missing raw inputs propagate NULL — never zeros, never "latest available", never a current-date fallback.
 - **Out-of-scope / follow-ups:**
-  - Transfermarkt `player_values` partitions exist only for `day=2019-01-01 / 2019-01-02` in prod as of 2026-04-21; the
-    2020-2026 backfill VM run is a prerequisite for non-NULL team-value coverage.
-  - `entity=sfi_standings/` is absent; the SFI-native join defined in §2.4 uses API-Football `entity=standings` as the
-    proxy until the SFI backfill lands.
-  - Weather venue-id cross-ref: fixtures use numeric `venue_id='562'` while weather parquet uses textual codes like
-    `'DE_LEUNEN'`. `weather_source='none'` for 100% of fixtures on the 2024-09-01 dry-run despite populated weather
-    parquet. Fix needs a UAC venue-mapping hop.
+  - Transfermarkt `player_values` 2020-2026 backfill — prod has 2019-01 partitions only. Operator task; run
+    `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-01-01 2026-04-21`.
+  - SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS` 2020-2026 backfill — prod has 2019-01 partitions only. Operator task;
+    run `bash deployment-service/scripts/vm/launch-sfi-backfill-vm.sh 2020-01-01 2026-04-21`. Launcher shipped by plan
+    `features_sports_upstream_coverage_gaps_2026_04_21`. Note: there is no `SFI_STANDINGS` endpoint (see §2.4).
 
 ### 9.2 Derived-features data-crime fixes (2026-04-21)
 
@@ -319,6 +324,32 @@ Paired follow-up plan `features_sports_derived_data_crime_fixes_2026_04_21` remo
   fallback for legacy test frames. Resolves the `home_standing_pre NULL while home_points_pre populates` finding from
   the parent plan's 2024-09-01 dry-run — post-fix all 3 EPL fixtures populate `home_standing_pre` from the
   `day=2024-08-31` pre-match partition.
+
+### 9.3 Weather venue-id cross-ref — SCREAMING_SNAKE resolution (2026-04-21)
+
+Follow-up plan `features_sports_upstream_coverage_gaps_2026_04_21` shipped the venue-id cross-ref fix for the weather
+join. Root cause: OpenMeteo in `instruments-service.engine.orchestrator._fetch_weather_data` writes weather.parquet
+keyed by SCREAMING_SNAKE(venue_name) (e.g. "De Leunen" → `'DE_LEUNEN'`) via an in-adapter `_to_snake(name)` helper,
+while fixtures.parquet's `venue_id` is the raw numeric API-Football id (e.g. `'562'`). The two keys never matched, so
+parent plan's dry-run saw `weather_source='none'` for 100% of fixtures despite populated weather data.
+
+**Shipped fix** (FSS commit `???` from plan `features_sports_upstream_coverage_gaps_2026_04_21`):
+
+- `features-sports-service/features_sports_service/pipeline/fixture_features.py::_lookup_weather` now accepts the
+  fixture's `venue_name` alongside `venue_id` and tries two lookups in order: (1) raw `venue_id` (future-friendly if
+  upstream ever migrates to numeric weather keys — Option A) then (2) SCREAMING_SNAKE(venue_name) via
+  `_venue_name_to_canonical` which replicates the orchestrator's `_to_snake` transform exactly.
+- 4 new unit tests in `tests/unit/test_fixture_features_pipeline.py` proving: SCREAMING_SNAKE fallback resolves
+  ("De Leunen" → `DE_LEUNEN`), multi-word collapse ("Old Trafford" → `OLD_TRAFFORD`), unknown venue yields
+  `weather_source='none'`, raw numeric match takes precedence when both keys are present.
+- Dry-run on 2024-09-01 prod GCS: **115/170 fixtures now populate weather** (up from 0/170 before the fix). Remaining
+  55 `weather_source='none'` are venues absent from the UAC `VENUE_COORDINATES` registry — legitimate upstream
+  coverage gap, not a pipeline bug.
+
+Future cleanup (Option A, tracked as a separate plan when needed): migrate OpenMeteo upstream to write weather keyed
+on numeric `venue_id` matching fixtures + venues parquets. Rewrite existing textual-keyed weather parquets in a
+one-shot migration. This removes the downstream resolution hop and aligns all three entities on one venue-id
+semantic.
 
 ## 10. Operational summary
 
