@@ -92,6 +92,8 @@ class ImportChecker:
                 lines = f.readlines()
 
             for line_no, line in enumerate(lines, 1):
+                if "# noqa: qg-deep-import" in line or "# noqa:qg-deep-import" in line:
+                    continue
                 match = DEEP_IMPORT_PATTERN.match(line.strip())
                 if match:
                     package = match.group(1)
