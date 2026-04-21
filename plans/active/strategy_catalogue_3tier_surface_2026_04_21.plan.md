@@ -161,10 +161,11 @@ todos:
           prompting seed.
 
 - id: p2-followup-bulk-edit content: |
-  - [ ] [AGENT] P2. Add multi-row selection + "Apply maturity → X to N rows" button in
-        `AdminEditorGrid`; wire undo-toast with actual rollback button (not just dismiss).
-        status: pending
-        notes: "minor UX enhancement — primary editor flow is fully functional without it."
+  - [x] [AGENT] P2. Bulk-edit bar lives above the editor grid — checkbox per row + "select all" header checkbox, target
+        maturity + routing `<select>`s, "Apply to N" button. Runs concurrent PATCHes via `bulkApply(ids, body)` with a
+        worker-pool cap of 5 parallel. Each per-row success raises a 5-second-undo sonner toast with an actual Undo
+        button that issues a reverse PATCH restoring prior maturity / routing. Failures surface aggregated in the error
+        toast with a console.error breakdown. status: done
 
 - id: p2-admin-sub-routes content: |
   - [x] [AGENT] P0. Extend `SERVICE_REGISTRY` admin tile sub-routes with `strategy-universe` +

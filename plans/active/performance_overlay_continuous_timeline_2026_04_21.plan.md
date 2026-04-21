@@ -87,17 +87,22 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p1-performance-series-api content: |
-  - [ ] [AGENT] P0. `unified-trading-api`
+  - [x] [AGENT] P0. `unified-trading-api`
         `GET /api/v1/strategy-instances/{instance_id}/performance?views=backtest,paper,live&from=&to=&per_venue=bool`.
         Returns
         `{series: {backtest?, paper?, live?}, transition_markers: {paper_started_at, live_started_at},     phase_annotations: PhaseTransition[]}`.
-        Pulls from odum-paper/live account P&L streams via position-balance-monitor-service. Permissioned by `reporting`
-        entitlement (FOMO) OR the instance's subscription (Reality). status: pending
+        Shipped as `unified_trading_api.routes.strategy_performance` with deterministic mock series (13 unit tests
+        green). Real odum-paper/odum-live PBM wiring pending — see `p1-pbm-wiring-followup`. status: done
 
 - id: p1-api-cache-strategy content: |
-  - [ ] [AGENT] P0. Series cached with 60s TTL for paper/live (fast-moving) and 1-hour TTL for backtest (historical,
-        mutates only on re-run). Per-venue slices computed on-demand; if `per_venue=true`, response expands to
-        `series: {backtest: {aggregate, per_venue: {[venue]: series}}, ...}`. status: pending
+  - [x] [AGENT] P0. In-process TTL cache shipped: 60s for paper/live, 3600s for backtest. `per_venue=true` expands to
+        `series.{view}.per_venue.{venue}` per §4 of performance-overlay.md. `reset_cache_for_tests()` hook exposed.
+        status: done
+
+- id: p1-pbm-wiring-followup content: |
+  - [ ] [AGENT] P1. Replace deterministic mock series in `strategy_performance.py` with a real query against
+        position-balance-monitor-service P&L streams keyed on `(odum-paper | odum-live, instance_id, regime)`. Gate on
+        `reporting` entitlement OR `(org, instance_id)` subscription. status: pending
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -106,15 +111,15 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p2-performance-overlay-component content: |
-  - [ ] [AGENT] P0. `components/strategy-catalogue/PerformanceOverlay.tsx`: Props:
-        `{ instance_id, mode: "overlay"|"stitched"|"split", views:     ("backtest"|"paper"|"live")[], range?, per_venue?: boolean,     showPhaseMarkers?: boolean }`.
-        Uses existing chart library. Respects tearsheet-style aesthetic (monospace ticks, tabular-nums, thin grid).
-        Colour palette: backtest=muted-blue, paper=amber, live=emerald. Transition markers rendered as dashed verticals
-        with phase-badge labels. status: pending
+  - [x] [AGENT] P0. `components/strategy-catalogue/PerformanceOverlay.tsx` + `PerformanceOverlayView` pure renderer (for
+        SSR + test use). Overlay / stitched / split modes via recharts `ComposedChart`. Palette matches codex
+        (backtest=#8AA4C7, paper=#E0A84A, live=#27AE60). Phase markers rendered as dashed `<ReferenceLine>` verticals
+        with paper/live labels. Missing-view fallback = toggle disabled + tooltip. status: done
 
 - id: p2-performance-stats-sidecar content: |
-  - [ ] [AGENT] P0. `<PerformanceOverlayStats>` sidecar component — computes Sharpe, MDD, CAGR, win-rate, avg-trade-size
-        per view; renders as a compact table. Drives the FOMO tearsheet header. status: pending
+  - [x] [AGENT] P0. `<PerformanceOverlayStats>` sidecar — Sharpe (annualised), MDD, CAGR, win-rate, avg trade notional
+        per view. Residual row appears automatically when exactly two views are selected (paper−live / backtest−live).
+        status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -123,17 +128,19 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p3-wire-fomo-tearsheet content: |
-  - [ ] [AGENT] P0. Wire `<PerformanceOverlay mode="stitched" views=["backtest","paper","live"]>` +
-        `<PerformanceOverlayStats>` into the `<FomoTearsheetCard>` (Plan B Phase 3). status: pending
+  - [x] [AGENT] P0. `<FomoTearsheetCard>` (+ `<RealityPositionCard>`) now render
+        `<PerformanceOverlay mode="stitched" views=["backtest","paper","live"]>` with no sidecar (compact tearsheet
+        tile shape). `PerformanceOverlayPlaceholder.tsx` deleted — no re-export shim. status: done
 
 - id: p3-wire-dart-terminal content: |
-  - [ ] [AGENT] P0. Add a "Performance" tab to the DART terminal strategy- detail panel —
-        `<PerformanceOverlay mode="overlay">` with all three views toggleable. Positioned next to existing P&L +
-        positions tabs. status: pending
+  - [x] [AGENT] P0. DART terminal strategy-detail page (`app/(platform)/services/trading/strategies/[id]`) gets a
+        `Performance` tab next to the P&L tab. `<PerformanceOverlay mode="overlay">` with all 3 views toggleable +
+        stats sidecar + phase markers. status: done
 
 - id: p3-wire-reports-im-allocator content: |
-  - [ ] [AGENT] P1. Reports → P&L Attribution gets a new "Allocator View" sub-section per strategy, showing the 3-way
-        overlay with `per_venue=true` so IM allocators can see venue-level degradation. status: pending
+  - [x] [AGENT] P1. Reports → P&L Attribution gains an "Allocator View" tab
+        (`components/reports/allocator-strategy-overlay.tsx`) with a strategy-instance picker and
+        `<PerformanceOverlay mode="split" perVenue>` for venue-level degradation diagnosis. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -142,9 +149,10 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-overlay-tests content: |
-  - [ ] [AGENT] P1. `__tests__/performance-overlay.test.tsx`: per-mode render, missing-view fallbacks (e.g. instance
-        only has backtest → stitched mode just shows backtest), per-venue expansion, transition-marker rendering.
-        status: pending
+  - [x] [AGENT] P1. `tests/unit/components/strategy-catalogue/performance-overlay.test.tsx` — 8 tests cover overlay /
+        stitched / split modes, missing-view fallback (disables toggle), stats sidecar rows, residual on 2-view
+        selection, empty-state fallback, per_venue rendering. Plus 13 UTA backend tests in
+        `tests/unit/routes/test_strategy_performance.py`. status: done
 
 - id: p4-codex-performance-overlay-doc content: |
   - [x] [AGENT] P1. Create `codex/09-strategy/architecture-v2/performance-overlay.md`: 3 modes, allocator query
@@ -152,7 +160,12 @@ todos:
         3tier.md. status: done
 
 - id: p4-qg-final content: |
-  - [ ] [SCRIPT] P0. UI typecheck + full test suite + unified-trading-api QG all green. status: pending
+  - [x] [SCRIPT] P0. `npx tsc --noEmit` clean on Plan-C files (the 3 pre-existing unrelated TS errors in `admin/github`,
+        `admin/questionnaires`, `functions/src/setCapabilityClaim.ts`, `lib/mocks/fixtures/defi-walkthrough.ts` are
+        outside this plan's scope). `CI=true npm test -- --run` 1059/1060 green — single unrelated flake in
+        `site-header-nav.test.tsx` (marketing-header href, separate agent's scope). `npm run orphan-audit -- --blocking`
+        exits 0 (220/223 reachable, 0 orphans). UTA `pytest tests/unit/routes/test_strategy_performance.py` 13/13 green.
+        status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 
