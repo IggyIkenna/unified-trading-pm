@@ -28,6 +28,10 @@ scope: [engineer, admin]
   lifecycle-stage + DART sub-tab visibility matrix (8→4 lifecycle collapse, Observe/Research/Promote folded into DART,
   strategy-param version-bump contract, terminal emergency-banner copy). Mirrored at runtime by
   `unified-trading-system-ui/lib/auth/persona-lifecycle-shape.ts`.
+- [`architecture-v2/strategy-registry-v2.md`](architecture-v2/strategy-registry-v2.md) — SSOT for the post-v1-delete
+  `STRATEGY_REGISTRY` (UAC `internal/domain/strategy_service/registry.py`). 96 slot-labelled entries derived from
+  `ARCHETYPE_CAPABILITY_REGISTRY`, `to_dict()` shape change manifest, downstream consumer mapping (7 repos), and the
+  V2-suffix rename rationale.
 - [`architecture-v2/admin-registry-api.md`](architecture-v2/admin-registry-api.md) — SSOT for the Phase 7 admin-only
   HTTP surfaces (`/api/v1/registry/{archetypes,ml-models,features}`) that let the UI `CatalogueTruthinessAdapter`
   reconcile UAC canonical lists against live backend registries. Endpoints owned by strategy-service (archetypes + ML
