@@ -82,26 +82,26 @@ dispatched to a VM without laptop runs.
 
 ### Phase 1: Transfermarkt launcher [PARALLEL]
 
-- [ ] [AGENT] P0. Copy `launch-api-football-backfill-vm.sh` → `launch-transfermarkt-backfill-vm.sh`. Rename prefix
+- [x] [AGENT] P0. Copy `launch-api-football-backfill-vm.sh` → `launch-transfermarkt-backfill-vm.sh`. Rename prefix
       `af-backfill-` → `tm-backfill-` throughout. Swap `VM_SPORTS_PROVIDER=API_FOOTBALL` → `TRANSFERMARKT`. Entity list:
       `PLAYER_VALUES | TRANSFERS | TEAM_SQUAD | TRANSFERMARKT_LEAGUES`. Header comment cites codex §2.2 for cadence +
       publication rules.
 
 ### Phase 2: FootyStats launcher [PARALLEL]
 
-- [ ] [AGENT] P0. Sibling to `launch-footystats-forward-poll.sh` but for explicit historical ranges + rolling windows.
+- [x] [AGENT] P0. Sibling to `launch-footystats-forward-poll.sh` but for explicit historical ranges + rolling windows.
       Prefix `fs-backfill-`. Entity list: `FIXTURES | MATCH_STATS | ODDS_SNAPSHOTS | PREDICTIONS | PLAYER_PERFORMANCE`.
       Header: codex §2.3 re 6-24h publication lag for MATCH_STATS.
 
 ### Phase 3: OpenMeteo launcher [PARALLEL]
 
-- [ ] [AGENT] P0. `launch-openmeteo-backfill-vm.sh`. Prefix `weather-backfill-`. VM_SPORTS_PROVIDER=OPEN_METEO. Entity
+- [x] [AGENT] P0. `launch-openmeteo-backfill-vm.sh`. Prefix `weather-backfill-`. VM_SPORTS_PROVIDER=OPEN_METEO. Entity
       is singular: `WEATHER`. **Remove singleton-lock** — no API key, concurrent VMs safe. Header: codex §2.5 re
       forecast vs ERA5 archive branching.
 
 ### Phase 4: Understat launcher [PARALLEL]
 
-- [ ] [AGENT] P0. `launch-understat-backfill-vm.sh`. Prefix `us-backfill-`. VM_SPORTS_PROVIDER=UNDERSTAT. Entity: `XG`.
+- [x] [AGENT] P0. `launch-understat-backfill-vm.sh`. Prefix `us-backfill-`. VM_SPORTS_PROVIDER=UNDERSTAT. Entity: `XG`.
       Smaller window (6 leagues only — codex §2.6). Understat fetches per `(league, season)` so the adapter iterates
       season keys, not dates; date range selects which seasons overlap. Document this in the header comment.
 
@@ -110,10 +110,16 @@ dispatched to a VM without laptop runs.
 - [ ] [AGENT] P0. For each launcher, launch one VM on a known-good date: - Transfermarkt:
       `--entity PLAYER_VALUES 2024-09-01 2024-09-01` - FootyStats: `--entity ODDS_SNAPSHOTS 2024-09-01 2024-09-01` -
       OpenMeteo: `--entity WEATHER 2024-09-01 2024-09-01` - Understat: `--entity XG 2024-09-01 2024-09-01` Each VM must
-      land its parquet + self-delete (vm-exec-with-gcs-tee.sh fix from deployment-service beaa2e5).
+      land its parquet + self-delete (vm-exec-with-gcs-tee.sh fix from deployment-service beaa2e5). _Deferred to
+      orchestrator/operator per Wave dispatch (sub-agent must not launch VMs)._
 
-- [ ] [AGENT] P0. `bash deployment-service/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P0. Commit + quickmerge (`--agent`).
+- [ ] [AGENT] P0. `bash deployment-service/scripts/quality-gates.sh` green. Blocked 2026-04-21 by 4 pre-existing codex
+      violations outside this plan's scope: client_isolation.py (schema provenance + deep UAC imports — owned by Plan 3
+      concurrent work), deployments_registry.py (hardcoded project ID — pre-existing), data_status_checkers.py +
+      data_status_sports.py (deep UAC imports — pre-existing). Launcher shell scripts themselves pass bash -n and touch
+      no Python. Follow-up owed to those file owners.
+- [x] [AGENT] P0. Commit + quickmerge (`--agent`). _Committed locally as 9b24eed on live-defi-rollout; push deferred to
+      orchestrator per Wave dispatch amendment (sub-agent must not push)._
 
 ## Dependency graph
 
