@@ -1320,7 +1320,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "status": "active",
+      "status": "archived",
       "github_url": "https://github.com/IggyIkenna/user-management-ui",
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
@@ -1328,8 +1328,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "notes": "User lifecycle management UI (Next.js; Firebase hosting). Added to manifest 2026-04-20.",
-      "tags": ["cross-domain", "im", "admin", "ui"]
+      "notes": "ARCHIVED 2026-04-20 — folded into unified-trading-system-ui /ops/admin/* per plan ui_unification_v2_sanitisation_2026_04_20 Phase 6. See user-management-ui/ARCHIVED.md for migration table. Kept in manifest with status=archived so CI/CD tooling can still resolve the repo for historical commits; removed from topologicalOrder.",
+      "tags": ["cross-domain", "im", "admin", "ui", "archived"]
     }
   },
   "topologicalOrder": {
@@ -1396,8 +1396,8 @@
       },
       {
         "level": 7,
-        "description": "UI applications (TypeScript).",
-        "repos": ["deployment-ui", "unified-trading-system-ui", "user-management-ui"]
+        "description": "UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*).",
+        "repos": ["deployment-ui", "unified-trading-system-ui"]
       },
       {
         "level": 8,

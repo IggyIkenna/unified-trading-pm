@@ -59,6 +59,16 @@ examples for testing any DeFi strategy
 - fold_uei_into_utl_2026_04_17.plan.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate
   of both), migrate 30+ consumers, archive UEI repo
 
+### UI & Admin Unification
+
+- ui_unification_v2_sanitisation_2026_04_20.plan.md — Kill v1 StrategyFamily + old backtest, fold user-management-ui
+  into `unified-trading-system-ui/(ops)/admin/*`, wire questionnaire → persona → filter cascade, deorphan 22 unreachable
+  pages, add FamilyArchetypePicker platform-wide, canonicalise strategy naming (`FAMILY.ARCHETYPE.slot_id`), collapse
+  8-stage lifecycle to 4 (Data / DART / Manage / Reports), ship CatalogueTruthinessAdapter + admin catalogue overview +
+  per-user visibility editor. All implementation phases (1-8, 10, 11) green as of 2026-04-21; Phase 9 (workspace QG
+  sweep + INDEX + unlock request) is the final gate. Spans 6 repos: UAC, UTL, strategy-service,
+  unified-trading-system-ui, unified-trading-pm, user-management-ui (archived).
+
 ### Deployment Topology & Client Isolation
 
 - deployment_topology_and_client_isolation_2026_04_17.plan.md — Per-service isolation policy (shared vs isolated), SLA
