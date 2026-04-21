@@ -51,7 +51,7 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
 - Prod partitions exist only for `day=2019-01-01 / 2019-01-02` under
   `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day={D}/entity=player_values/`.
 - `launch-transfermarkt-backfill-vm.sh` already exists
-  ([`deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`](../../deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh))
+  ([`deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`](../../../deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh))
   — singleton-locked (shared API key, ~1 req/sec pacing), accepts explicit historical date ranges, routes via
   `setup-data-pipeline-vm.sh` → `python -m instruments_service --operation instruments --mode batch --category SPORTS --sports-provider TRANSFERMARKT --start-date ... --end-date ...`.
 - **No new code** needed here. Just tarball refresh + fire.
@@ -63,7 +63,7 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
   variant**.
 - **Codex correction needed**: `codex/02-data/sports-scheduling-and-sharding.md` §2.4 currently declares `SFI_STANDINGS`
   as a fetched data_type. But
-  [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
+  [`instruments-service/instruments_service/engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py)
   L4365-4367 explicitly says "SFI has NO standings endpoint (confirmed from archived service). Standings come from API
   Football" and sets `_want_sfi_standings = False`. Codex §2.4 `SFI_STANDINGS` declaration is aspirational and
   contradicts the shipped code — it needs to be removed / corrected.
@@ -81,7 +81,7 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
     loaded via `features-sports-service`'s `gcs_reader._normalize_fixtures` L188-190, `venue_id` is forced to numeric
     via `pd.to_numeric(errors="coerce")` → `str(int(v))`. Canonical string venues become empty `""`.
   - Weather: OpenMeteo orchestrator at
-    [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
+    [`instruments-service/instruments_service/engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py)
     L4670-4680 reads fixtures' `venue.venue_id` dict-path. If fixtures carry canonical dicts at that moment, the
     weather parquet is keyed by canonical textual codes. This is inconsistent with what gets read downstream.
 - **Venues reference (`day=all/entity=venues/venues.parquet`):** has columns
@@ -172,10 +172,10 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 
 ### Track A — Transfermarkt backfill 2020-2026 [OPERATOR, PARALLEL]
 
-- [ ] [HUMAN] P1. Refresh SPORTS category tarball:
+- [x] [HUMAN] P1. Refresh SPORTS category tarball:
       `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`.
 
-- [ ] [HUMAN] P1. Fire Transfermarkt backfill VM:
+- [x] [HUMAN] P1. Fire Transfermarkt backfill VM:
       `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2020-01-01 2026-04-21`.
       ETA: ~12-24h wall-clock on e2-standard-2 (rate-limited ~1 req/sec; ~2350 daily partitions × per-league fetch
       fan-out). Track via `gcloud logging read 'resource.labels.instance_id=<vm>' --limit 50 --format json` + events
@@ -209,10 +209,10 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
       - Remove the `Denormalisation to fixture` bullet's reference to SFI standings; redirect to the API-Football
         proxy.
 
-- [ ] [HUMAN] P1. Refresh SPORTS category tarball post-launcher-merge:
+- [x] [HUMAN] P1. Refresh SPORTS category tarball post-launcher-merge:
       `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`.
 
-- [ ] [HUMAN] P1. Fire SFI backfill VM:
+- [x] [HUMAN] P1. Fire SFI backfill VM:
       `bash deployment-service/scripts/vm/launch-sfi-backfill-vm.sh 2020-01-01 2026-04-21`. ETA: ~12-24h. Track via
       `gcloud logging` + `ADAPTER_FETCH_*` / `SFI_*` events.
 
@@ -229,7 +229,7 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
       this plan before coding.
 
 - [x] [AGENT] P0. Implement Option B (downstream resolution hop): in
-      [`features-sports-service/features_sports_service/pipeline/fixture_features.py`](../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
+      [`features-sports-service/features_sports_service/pipeline/fixture_features.py`](../../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
       `_lookup_weather`, accept an optional `venues: pd.DataFrame` param; when fixture `venue_id='562'` fails to find a
       weather row, fall back to resolving `venues[venues.venue_id == '562'].name.iloc[0]` →
       `build_venue_id(name)` → look up weather by that canonical code. If either hop fails, return `_empty_weather()`
