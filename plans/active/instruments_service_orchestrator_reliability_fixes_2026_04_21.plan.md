@@ -128,25 +128,45 @@ Phases 4-5 below cover these. **Not yet shipped.**
 
 ### Phase 1: Bug 1 — Pydantic goals None [PARALLEL]
 
-- [ ] [AGENT] P0. Update `ApiFootballFixture.goals` sub-model: `home: int | None`, `away: int | None`.
-- [ ] [AGENT] P0. Check all consumers (grep `goals.home|goals.away` in instruments-service + downstream). Update any
-      `int` assumption.
-- [ ] [AGENT] P0. Unit test covering unplayed-fixture payload.
+- [x] [AGENT] P0. Update `ApiFootballFixture.goals` sub-model: `home: int | None`, `away: int | None`. **Already fixed
+      upstream in UAC `external/api_football/schemas.py`** — `ApiFootballScore.home/away: int | None = None` and
+      `ApiFootballFixture.goals: ApiFootballScore | None = None`. No orchestrator change needed.
+- [x] [AGENT] P0. Check all consumers (grep `goals.home|goals.away` in instruments-service + downstream). Update any
+      `int` assumption. **Verified**: the only `goals.home/away` references in instruments-service source are inside
+      `api_football.py::_parse_fixture_response` which delegates to Pydantic validation and UAC
+      `normalize_api_football_fixture`. Both already treat the fields as optional.
+- [x] [AGENT] P0. Unit test covering unplayed-fixture payload. **Added:**
+      `tests/unit/test_sports_http_adapters.py::TestApiFootballHelpers::test_parse_fixture_response_unplayed_null_goals`
+      exercises `{"goals": {"home": None, "away": None}}`.
 
 ### Phase 2: Bug 2 — UnboundLocalError [PARALLEL]
 
-- [ ] [AGENT] P0. Locate the `get_leagues_needing_refresh` reference at orchestrator.py ≈821. Inspect: is it a deferred
-      import under an `if` block? Hoist to module-level OR add the missing branch.
+- [x] [AGENT] P0. Locate the `get_leagues_needing_refresh` reference at orchestrator.py ≈821. Inspect: is it a deferred
+      import under an `if` block? Hoist to module-level OR add the missing branch. **Fixed**: local
+      `from unified_api_contracts.sports import get_leagues_needing_refresh` (previously inside the TRANSFERMARKT branch
+      of `process_instruments`) was causing Python to treat the name as a function-local, so the second call site at
+      line 1431 raised `UnboundLocalError` whenever the TRANSFERMARKT branch was skipped. The symbol is now imported
+      once at module scope (orchestrator.py line 57) and the local `from` statement deleted.
 
-- [ ] [AGENT] P0. Unit test: call the handler path that triggered payload 8's failure. Assert no UnboundLocalError.
+- [x] [AGENT] P0. Unit test: call the handler path that triggered payload 8's failure. Assert no UnboundLocalError.
+      **Added:** `tests/unit/test_orchestrator_helpers.py::TestGetLeaguesNeedingRefreshImportScope` — two regression
+      tests: `test_imported_at_module_level` (asserts `hasattr(orchestrator, "get_leagues_needing_refresh")`) and
+      `test_no_local_import_in_source` (source scan rejects any future re-introduction of a function-local
+      `import get_leagues_needing_refresh`).
 
 ### Phase 3: Bug 3 — graceful 404 on future dates [PARALLEL]
 
-- [ ] [AGENT] P0. In the fixture-mapping-write path, catch the 404 explicitly. If the date is in `[today, today+N]`
+- [x] [AGENT] P0. In the fixture-mapping-write path, catch the 404 explicitly. If the date is in `[today, today+N]`
       (N=forward-poll horizon per codex §4) AND no fixtures were fetched, log INFO and skip. Otherwise retain ERROR
-      behaviour (missing parquet for a past date IS a problem).
+      behaviour (missing parquet for a past date IS a problem). **Fixed** in `orchestrator.py::_write_fixture_mapping`
+      generic exception handler: inspects `type(exc).__name__ == "NotFound"` / `"404" in str(exc)` /
+      `"No such object"     in str(exc)`, downgrades to INFO log + early return when `date ∈ [today, today+7]`, else
+      falls through to the existing `classify_and_emit_error` path.
 
-- [ ] [AGENT] P0. Unit test: mock GCS 404 for a future date; assert INFO log + no exception.
+- [x] [AGENT] P0. Unit test: mock GCS 404 for a future date; assert INFO log + no exception. **Existing:**
+      `tests/unit/test_orchestrator_helpers.py::TestWriteFixtureMapping::test_404_forward_poll_window_no_classify`
+      patches `datetime.now` to `2026-04-21` + raises a synthetic 404 for `day=2026-04-28` + asserts
+      `classify_and_emit_error` is never called.
 
 ### Phase 4: Bugs 4-5 — WEATHER + XG per-league shard — **SHIPPED 2026-04-21 `8a91324`**
 
