@@ -61,6 +61,9 @@ examples for testing any DeFi strategy
 
 ### UI & Admin Unification
 
+- dashboard_services_grid_collapse_2026_04_21.plan.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals ·
+  Reports · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and family/archetype filter
+  strip above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on `ui_unification_v2_sanitisation_2026_04_20`.
 - ui_unification_v2_sanitisation_2026_04_20.plan.md — Kill v1 StrategyFamily + old backtest, fold user-management-ui
   into `unified-trading-system-ui/(ops)/admin/*`, wire questionnaire → persona → filter cascade, deorphan 22 unreachable
   pages, add FamilyArchetypePicker platform-wide, canonicalise strategy naming (`FAMILY.ARCHETYPE.slot_id`), collapse

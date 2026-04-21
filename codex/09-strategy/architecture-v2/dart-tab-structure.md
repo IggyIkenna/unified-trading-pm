@@ -13,7 +13,13 @@ Cross-refs:
 
 - `codex/14-playbooks/` — per-audience playbooks. Each playbook declares which DART tabs its persona sees.
 - `codex/09-strategy/architecture-v2/restriction-policy.md` — default visibility for strategy cells per persona.
+- `codex/09-strategy/architecture-v2/dashboard-services-grid.md` — **sibling** 5-tile product-axis model for
+  `/dashboard`. Dashboard tile sub-route chips are the dashboard-side projection of the DART sub-tab catalog below;
+  persona-id × DART sub-tab visibility is the union of the DART dropdown in lifecycle-nav AND the DART tile chip row on
+  `/dashboard`.
 - `unified-trading-system-ui/lib/auth/persona-lifecycle-shape.ts` — runtime implementation of the shape table below.
+- `unified-trading-system-ui/lib/auth/persona-dashboard-shape.ts` — runtime implementation of the dashboard 5-tile
+  visibility (sibling to the above; see dashboard-services-grid.md).
 
 ---
 
