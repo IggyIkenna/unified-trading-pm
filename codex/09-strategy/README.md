@@ -24,6 +24,10 @@ scope: [engineer, admin]
 - [`architecture-v2/restriction-policy.md`](architecture-v2/restriction-policy.md) — per-family restriction matrix
   (allowed venues / instrument types / data types), lock-state default policy (PUBLIC vs
   `INVESTMENT_MANAGEMENT_RESERVED`), and the 6-axis questionnaire → visible-cells mapping.
+- [`architecture-v2/dart-tab-structure.md`](architecture-v2/dart-tab-structure.md) — authoritative per-persona
+  lifecycle-stage + DART sub-tab visibility matrix (8→4 lifecycle collapse, Observe/Research/Promote folded into DART,
+  strategy-param version-bump contract, terminal emergency-banner copy). Mirrored at runtime by
+  `unified-trading-system-ui/lib/auth/persona-lifecycle-shape.ts`.
 
 ## What's still in this directory (not archived)
 
