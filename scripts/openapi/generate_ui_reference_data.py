@@ -563,6 +563,92 @@ def extract_client_registry() -> dict[str, object]:
     return registry
 
 
+def extract_strategy_instance_catalogue() -> dict[str, object]:
+    """Extract the 5-dim strategy-instance catalogue (Plan A UAC foundation).
+
+    ``STRATEGY_INSTANCE_CATALOGUE`` materialises the cross-product of archetype,
+    venue-set-variant and share-class — the UI's <FamilyArchetypePicker> 3rd
+    cascade feeds off this, and <PerformanceOverlay> uses the instance_id as
+    the series key for backtest / paper / live data.
+    """
+    catalogue: dict[str, object] = {}
+    try:
+        from unified_api_contracts.internal.domain.strategy_service import (
+            STRATEGY_INSTANCE_CATALOGUE,
+        )
+
+        catalogue = STRATEGY_INSTANCE_CATALOGUE.to_dict()
+        instances = catalogue.get("instances", [])
+        count = len(instances) if isinstance(instances, list) else 0
+        logger.info("  Extracted strategy instance catalogue: %d instances", count)
+    except Exception as e:
+        logger.warning("  Failed to extract STRATEGY_INSTANCE_CATALOGUE: %s", e)
+
+    return catalogue
+
+
+def extract_venue_set_variants() -> list[dict[str, object]]:
+    """Extract the venue-set variant ladder (Plan A UAC foundation).
+
+    Each archetype has one or more named venue-set variants (Elysium has 4 —
+    base_3cex → premium_6cex → multi_evm → multi_evm_plus_sol). The UI picker
+    renders these as the 3rd cascade tier with the pricing_tier label.
+    """
+    variants: list[dict[str, object]] = []
+    try:
+        from unified_api_contracts.internal.domain.strategy_service import (
+            VENUE_SET_VARIANTS,
+        )
+
+        for v in VENUE_SET_VARIANTS:
+            variants.append(
+                {
+                    "id": v.id,
+                    "archetype": v.archetype.value,
+                    "venues": list(v.venues),
+                    "instrument_types": [it.value for it in v.instrument_types],
+                    "label": v.label,
+                    "pricing_tier": v.pricing_tier.value,
+                }
+            )
+        logger.info("  Extracted venue-set variants: %d", len(variants))
+    except Exception as e:
+        logger.warning("  Failed to extract VENUE_SET_VARIANTS: %s", e)
+
+    return variants
+
+
+def extract_lifecycle_enums() -> dict[str, list[str]]:
+    """Extract Plan A lifecycle enum values for UI dropdowns.
+
+    ``StrategyMaturityPhase`` drives the 9-phase admin editor and the
+    ``<PerformanceOverlay>`` gating. ``ProductRouting`` gates which product
+    surfaces can see each instance. ``AccountType`` distinguishes odum-paper
+    / odum-live seeds from live customer accounts.
+    """
+    result: dict[str, list[str]] = {}
+    try:
+        from unified_api_contracts.internal.domain.strategy_service import (
+            AccountType,
+            ProductRouting,
+            StrategyMaturityPhase,
+        )
+
+        result["strategy_maturity_phases"] = [p.value for p in StrategyMaturityPhase]
+        result["product_routings"] = [r.value for r in ProductRouting]
+        result["account_types"] = [t.value for t in AccountType]
+        logger.info(
+            "  Extracted lifecycle enums: %d phases, %d routings, %d account types",
+            len(result["strategy_maturity_phases"]),
+            len(result["product_routings"]),
+            len(result["account_types"]),
+        )
+    except Exception as e:
+        logger.warning("  Failed to extract lifecycle enums: %s", e)
+
+    return result
+
+
 def validate_config_registry_coverage(workspace_root: Path) -> None:
     """Check which service/api repos have config files vs config-registry.json coverage."""
     manifest_path = workspace_root / "unified-trading-pm" / "workspace-manifest.json"
@@ -707,7 +793,16 @@ def main() -> None:
     logger.info("\n17. Extracting client registry...")
     reference["client_registry"] = extract_client_registry()
 
-    logger.info("\n18. Validating config registry coverage...")
+    logger.info("\n18. Extracting strategy-instance catalogue (Plan A 5-dim)...")
+    reference["strategy_instance_catalogue"] = extract_strategy_instance_catalogue()
+
+    logger.info("\n19. Extracting venue-set variants (Plan A)...")
+    reference["venue_set_variants"] = extract_venue_set_variants()
+
+    logger.info("\n20. Extracting lifecycle enums (Plan A maturity/routing/account)...")
+    reference["lifecycle_enums"] = extract_lifecycle_enums()
+
+    logger.info("\n21. Validating config registry coverage...")
     validate_config_registry_coverage(workspace_root)
 
     # Write output
@@ -746,6 +841,16 @@ def main() -> None:
     cr_clients = cr.get("clients", cr) if isinstance(cr, dict) else cr
     cr_count = len(cr_clients) if isinstance(cr_clients, (list, dict)) else 0
     print(f"Client registry:         {cr_count} clients")
+    sic = reference.get("strategy_instance_catalogue", {})
+    sic_instances = sic.get("instances", []) if isinstance(sic, dict) else []
+    sic_count = len(sic_instances) if isinstance(sic_instances, list) else 0
+    print(f"Strategy instance catalogue: {sic_count} instances")
+    vsv = reference.get("venue_set_variants", [])
+    vsv_count = len(vsv) if isinstance(vsv, list) else 0
+    print(f"Venue-set variants:      {vsv_count}")
+    le = reference.get("lifecycle_enums", {})
+    le_phases = le.get("strategy_maturity_phases", []) if isinstance(le, dict) else []
+    print(f"Maturity phases:         {len(le_phases) if isinstance(le_phases, list) else 0}")
     print(f"\nOutput: {output_path}")
     print("=" * 60)
 

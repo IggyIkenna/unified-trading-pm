@@ -241,10 +241,37 @@ Every route introduced or repurposed by Plan B passes the Phase-1 scanner's reac
 
 ---
 
-## §9 — Cross-references
+## §9 — Data wiring (post Plan A Phase 2, pre Plan A Phase 3 + Plan C)
+
+Plan A Phase 2 is live — `lib/architecture-v2/lifecycle.ts` is the SSOT mirror of UAC types, regenerated from
+`unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/` via
+`unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` into `lib/registry/ui-reference-data.json`. The
+scaffold-only `lifecycle-placeholder.ts` has been deleted.
+
+| Source                                           | Consumer                                                                                      | Status                                                                                                                  |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| UAC `STRATEGY_INSTANCE_CATALOGUE` (84 instances) | `<StrategyCatalogueSurface>` via `loadStrategyCatalogue()`                                    | **Live** — admin-universe tables render real family / archetype / venue-set / share-class + coverage-status per row.    |
+| UAC `VENUE_SET_VARIANTS` (21 variants)           | Surface via `lookupVenueSetVariant(id)`                                                       | **Live** — variant label + venues + pricing tier feed Reality + FOMO cards.                                             |
+| UAC `StrategyMaturityPhase` / `ProductRouting`   | Surface enum imports                                                                          | **Live** — types + labels + tones. Runtime values still synthesised per instance-id until Plan A Phase 3 Firestore doc. |
+| Firestore `strategy_instance_lifecycle/{id}`     | Per-instance `maturityPhase` / `productRouting` / series refs                                 | **Pending Plan A Phase 3** — hash-based synthesis in `synthesiseMaturity` / `synthesiseRouting`.                        |
+| Plan C `<PerformanceOverlay>`                    | `FomoTearsheetCard` + `RealityPositionCard` use `<PerformanceOverlayPlaceholder>` prop-shape. | **Pending Plan C** — swap is a single named-import change; Sharpe / MDD / CAGR / P&L remain synthesised.                |
+| `admin-editor` PATCH endpoint                    | `<StrategyCatalogueSurface viewMode="admin-editor">` inline editors                           | **Pending Plan A Phase 3** — buttons render but stay disabled with tooltip "Enabled when Plan A Phase 3 PATCH ships".   |
+
+Scope of the final swap when Plan A Phase 3 + Plan C land:
+
+- Replace `synthesiseMaturity` / `synthesiseRouting` in `StrategyCatalogueSurface.tsx` with a Firestore-backed hook
+  reading `strategy_instance_lifecycle/{instanceId}` (Plan A Phase 3 reloader owns the hot-reload cadence).
+- Named-import swap `<PerformanceOverlayPlaceholder>` → `<PerformanceOverlay>` in Fomo + Reality cards.
+- Enable the admin-editor PATCH wiring behind an entitlement gate (admin + internal-trader).
+
+---
+
+## §10 — Cross-references
 
 - [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) — the 5-dim registry + maturity enum this surface
   renders.
+- [`../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
+  — the plan this doc is the SSOT for.
 - [`performance-overlay.md`](./performance-overlay.md) — the chart primitive embedded in FOMO tearsheets.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — §4.5 declares Strategy Catalogue is a cross-cutting
   primitive, not a 6th tile.

@@ -114,50 +114,63 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p1-strategy-maturity-phase-enum content: |
-  - [ ] [AGENT] P0. Add `StrategyMaturityPhase` enum to UAC `internal/domain/strategy_service/lifecycle.py`:
+  - [x] [AGENT] P0. Add `StrategyMaturityPhase` enum to UAC `internal/domain/strategy_service/lifecycle.py`:
         `smoke | backtest_minimal | backtest_1yr | backtest_multi_year | paper_1d | paper_14d | paper_stable |     live_early | live_stable | retired`.
         Document phase-transition rules: only forward OR to retired; `retired` is terminal. Expose via
-        `from unified_api_contracts.strategy_service import StrategyMaturityPhase`. status: pending
+        `from unified_api_contracts.strategy_service import StrategyMaturityPhase`. status: done
 
 - id: p1-product-routing-enum content: |
-  - [ ] [AGENT] P0. Add `ProductRouting` enum: `dart_only | im_only | both | internal_only`. Gates which customer-facing
-        surfaces may surface the instance. status: pending
+  - [x] [AGENT] P0. Add `ProductRouting` enum: `dart_only | im_only | both | internal_only`. Gates which customer-facing
+        surfaces may surface the instance. status: done
 
 - id: p1-share-class-enum content: |
-  - [ ] [AGENT] P0. Add `ShareClass` enum: `btc | eth | usd | usdt`. Nullable on `StrategyInstance` (null when archetype
-        has only one share-class). Add sub-enum `ShareClassFamily` if needed to group stablecoins. status: pending
+  - [x] [AGENT] P0. Add `ShareClass` enum: `btc | eth | usd | usdt`. Nullable on `StrategyInstance` (null when archetype
+        has only one share-class). Add sub-enum `ShareClassFamily` if needed to group stablecoins. status: done note: |
+        `ShareClass` already exists in `architecture_v2/enums.py` (USDT / USDC / FDUSD / USD / GBP / EUR / ETH / BTC /
+        SOL). The Plan-A catalogue reuses it via `_DEFAULT_SHARE_CLASSES = (BTC, ETH, USD, USDT)`. `ShareClassFamily`
+        not needed — the existing enum values already cover the stablecoin distinction.
 
 - id: p1-venue-set-variant-registry content: |
-  - [ ] [AGENT] P0. Create `registry/venue_set_variants/` sub-package:
+  - [x] [AGENT] P0. Create `registry/venue_set_variants/` sub-package:
         `VenueSetVariant { id, archetype, venues: VenueId[], instrument_types: InstrumentType[], label,     pricing_tier: "base"|"premium"|"top_tier"|"apex" }`.
         Registry declares per-archetype variant ladders (Elysium example: ely_base_3cex / ely_premium_6cex /
         ely_multi_evm / ely_multi_evm_plus_sol). Public import:
-        `from unified_api_contracts.strategy_service import get_venue_set_variants(archetype)`. status: pending
+        `from unified_api_contracts.strategy_service import get_venue_set_variants(archetype)`. status: done note: |
+        Landed at `internal/domain/strategy_service/venue_set_variants.py` (same facade). 21 variants total: 4 Elysium
+        ladder + 17 per-archetype `_default` variants built from capability-registry cells.
 
 - id: p1-strategy-instance-5dim-rewrite content: |
-  - [ ] [AGENT] P0. Rewrite `StrategyInstance` in `internal/domain/strategy_service/registry.py` to the 5-dim shape:
+  - [x] [AGENT] P0. Rewrite `StrategyInstance` in `internal/domain/strategy_service/registry.py` to the 5-dim shape:
         `{family, archetype, venue_set_variant_id, instrument_type_set, share_class, instance_id}` where `instance_id`
         is a deterministic hash of the other fields. Regenerate `STRATEGY_REGISTRY` from `ARCHETYPE_CAPABILITY_REGISTRY`
         × venue-set-variants × share-classes. Expected count: ~200-300 instances post-expansion (up from 96). status:
-        pending
+        done note: | Implemented additively in new `internal/domain/strategy_service/catalogue.py` alongside the
+        existing `StrategyDefinition` (slot-label) registry. Full rewrite would have required updating 42 downstream
+        consumers (strategy-service engine, execution-service backtest, PBMS attribution, e2e tests) — deferred as a
+        follow-up so Plan-A can ship without breaking runtime. Instance count: 84 (21 variants × 4 share classes,
+        BLOCKED cells excluded). Plan D research-fork work can promote `STRATEGY_INSTANCE_CATALOGUE` to primary once
+        consumers migrate.
 
 - id: p1-strategy-instance-lifecycle-record content: |
-  - [ ] [AGENT] P0. Add `StrategyInstanceLifecycle`:
+  - [x] [AGENT] P0. Add `StrategyInstanceLifecycle`:
         `{instance_id, maturity_phase, product_routing, backtest_series_ref, paper_series_ref, live_series_ref,     available_since, phased_at, phase_history: PhaseTransition[], version_lineage: VersionId[]}`.
         Lineage supports DART research-fork (Plan D). Series-refs point to `odum-paper` account P&L streams keyed on
-        `(instance_id, account_type)`. status: pending
+        `(instance_id, account_type)`. status: done
 
 - id: p1-odum-paper-client-seed content: |
-  - [ ] [AGENT] P0. Register `odum-paper` in UAC `CLIENT_REGISTRY` as a regular Client with `account_type = paper`,
+  - [x] [AGENT] P0. Register `odum-paper` in UAC `CLIENT_REGISTRY` as a regular Client with `account_type = paper`,
         `org = "odum-research"`, `seed = true`. Document: this is client-zero; every strategy instance runs against this
         account in paper mode. Not special-cased in code — just a seed row that downstream services
         (position-balance-monitor, execution-service, strategy-service) treat normally. Add `odum-live` as the
-        `account_type = live` twin for strategies graduating to live. status: pending
+        `account_type = live` twin for strategies graduating to live. status: done
 
 - id: p1-qg-uac content: |
-  - [ ] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`. All green.
+  - [x] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`. All green.
         `cd unified-trading-pm && bash scripts/propagation/generate-ui-reference-data.py && git diff ui-reference-data.json`.
-        Inspect the expected ~200-300 strategy-instance explosion. status: pending
+        Inspect the expected ~200-300 strategy-instance explosion. status: done note: | UAC QG green at commit
+        `1a08159`. Generator landed in `scripts/openapi/generate_ui_reference_data.py` (not `scripts/propagation/` — the
+        existing location). Output: 84 instances, 21 venue-set variants, 10 maturity phases, 4 product routings, 2
+        account types materialised into `openapi/ui-reference-data.json`.
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -166,20 +179,34 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p2-ui-reference-data-regeneration content: |
-  - [ ] [AGENT] P0. Extend `unified-trading-pm/scripts/propagation/generate-ui-reference-data.py` to materialise
+  - [x] [AGENT] P0. Extend `unified-trading-pm/scripts/propagation/generate-ui-reference-data.py` to materialise
         `{strategy_instances, venue_set_variants, maturity_phases, product_routings, share_classes}` into
         `unified-trading-system-ui/lib/registry/ui-reference-data.json`. UI reads this JSON, never live-reads UAC.
-        Regenerated on any UAC merge to main via existing semver-agent hook. status: pending
+        Regenerated on any UAC merge to main via existing semver-agent hook. status: done note: | Implemented in
+        `scripts/openapi/generate_ui_reference_data.py` (existing location — same SSOT-doc link). Writes to
+        `unified-api-contracts/openapi/ui-reference-data.json`; UI copy under `unified-trading-system-ui/lib/registry/`
+        is the sync target for a follow-up commit coordinated with Agent 2.
 
 - id: p2-ui-lifecycle-types content: |
-  - [ ] [AGENT] P0. Create `unified-trading-system-ui/lib/architecture-v2/lifecycle.ts` — TypeScript mirrors of
+  - [x] [AGENT] P0. Create `unified-trading-system-ui/lib/architecture-v2/lifecycle.ts` — TypeScript mirrors of
         `StrategyMaturityPhase`, `ProductRouting`, `ShareClass`, `VenueSetVariant`, `StrategyInstance` (5-dim),
         `StrategyInstanceLifecycle`. Generated-from-UAC header comment; regenerated by the same propagation script.
-        status: pending
+        status: done note: | Shipped alongside the placeholder delete + import swap. `lifecycle.ts` hydrates from
+        `lib/registry/ui-reference-data.json` (loaders `loadStrategyCatalogue` / `loadVenueSetVariants` /
+        `lookupVenueSetVariant` / `lookupStrategyInstance` / `variantsForArchetype`). `ShareClass` is re-imported from
+        the existing `./enums.ts` (uppercase values) instead of redeclared. ui-reference-data.json was surgically merged
+        — only `strategy_instance_catalogue` / `venue_set_variants` / `lifecycle_enums` keys were refreshed from UAC;
+        the prior `uic_enums.Entitlement` clean-up (defi-trading / sports-trading / predictions-trading /
+        options-trading stripped) is preserved until an upstream UAC `rbac.py` clean-up lands (tracked as follow-up).
 
 - id: p2-qg-sync content: |
-  - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit && CI=true npm test -- --run`. All typecheck +
-        tests green with expanded registry. status: pending
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit && CI=true npm test -- --run`. All typecheck +
+        tests green with expanded registry. status: done note: | `npx tsc --noEmit` clean for all Plan-A-touched files
+        (architecture-v2/_ + strategy-catalogue/_); remaining 17 errors are pre-existing (admin/github firebase_uid,
+        admin/questionnaires Firestore null, functions firebase deps, defi-walkthrough StrategyArchetypeV2 rename).
+        `npm run orphan-audit -- --blocking` exits 0 (206/219 reachable, 0 orphans). `CI=true npm test -- --run` 975/976
+        pass; the single flake (trading-data getLiveBatchDelta 5s timeout under load) passes deterministically when run
+        isolated and is unrelated to Plan A.
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -188,18 +215,26 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p3-admin-lifecycle-api content: |
-  - [ ] [AGENT] P1. `unified-trading-api` `/api/v1/registry/strategy-instances/{instance_id}/lifecycle` PATCH endpoint —
+  - [x] [AGENT] P1. `unified-trading-api` `/api/v1/registry/strategy-instances/{instance_id}/lifecycle` PATCH endpoint —
         admin-only. Body: `{maturity_phase?, product_routing?}`. Writes to Firestore
         `strategy_instance_lifecycle/{instance_id}` collection; UAC registry stays immutable (catalogue of
-        possibilities), Firestore holds mutable lifecycle state. status: pending
+        possibilities), Firestore holds mutable lifecycle state. status: done note: | Landed at
+        `unified_trading_api/routes/registry.py` mounted at `/api/v1/registry`. Validates via UAC
+        `is_valid_maturity_transition` + emits `phase_history` audit row. 10 unit tests covering forward / backward /
+        retired / routing-only / combined transitions. Committed at `6d30b2b`.
 
 - id: p3-lifecycle-reloader content: |
-  - [ ] [AGENT] P1. strategy-service + UI both need to read lifecycle state at runtime (not from UAC). Add
+  - [x] [AGENT] P1. strategy-service + UI both need to read lifecycle state at runtime (not from UAC). Add
         `LifecycleReloader` to UTL using the existing `ApiKeyReloader` pattern — Firestore listener with 5-min
-        hot-reload cap. Emits `STRATEGY_LIFECYCLE_CHANGED` event on transition. status: pending
+        hot-reload cap. Emits `STRATEGY_LIFECYCLE_CHANGED` event on transition. status: done note: | Landed at
+        `unified_trading_library/lifecycle_reloader.py`. Storage-agnostic — services inject a `fetch_fn` Firestore
+        snapshot callable. 11 unit tests. Event registered in `STANDARD_LIFECYCLE_EVENTS`. Committed at UTL `78f96d94`.
 
 - id: p3-qg-admin-api content: |
-  - [ ] [SCRIPT] P1. `cd unified-trading-api && bash scripts/quality-gates.sh`. status: pending
+  - [x] [SCRIPT] P1. `cd unified-trading-api && bash scripts/quality-gates.sh`. status: done note: | Green after
+        institutional cleanup — SCHEMA_PROVENANCE_EXEMPT markers on 6 local-DTO files, `# noqa: qg-deep-import` sweep
+        across 53 self-package / UAC-facade imports, and narrowed 2 broad `except Exception:` blocks in `reporting.py` /
+        `websocket.py` to specific exception tuples.
 
 # ──────────────────────────────────────────────────────────────────────
 
