@@ -67,7 +67,16 @@ examples for testing any DeFi strategy
   8-stage lifecycle to 4 (Data / DART / Manage / Reports), ship CatalogueTruthinessAdapter + admin catalogue overview +
   per-user visibility editor. All implementation phases (1-8, 10, 11) green as of 2026-04-21; Phase 9 (workspace QG
   sweep + INDEX + unlock request) is the final gate. Spans 6 repos: UAC, UTL, strategy-service,
-  unified-trading-system-ui, unified-trading-pm, user-management-ui (archived).
+  unified-trading-system-ui, unified-trading-pm, user-management-ui (archived). **Wave 6 (2026-04-21)** closed the 6 v1
+  equivalency gaps via architectural clarification (value-betting = EdgeMethod axis not archetype; treasury ETFs = spot
+  not new "bond" instrument-type; Elysium rows = RETIRED not GAP). UAC `b7c15d2` + PM `533a732f` + UI `27c1d71`. v1
+  strategy-registry.ts deletion + consumer migration tracked separately under
+  `strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md` (below).
+- strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md — Delete 7780-LOC
+  `unified-trading-system-ui/lib/strategy-registry.ts` + `legacyFamilyToV2()` helper. Migrate 18 consumer files to
+  v2-sourced data (coverage.ts + regenerated mock fixture from UAC STRATEGY_REGISTRY). Purge 3 Elysium rows from
+  mock-data-seed.ts + positions-data-context.tsx + ui-reference-data.json. 7 phases, single-repo scope
+  (unified-trading-system-ui). Depends on ui_unification_v2_sanitisation Wave 6 (gap closure done).
 
 ### Deployment Topology & Client Isolation
 
