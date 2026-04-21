@@ -51,9 +51,13 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
 1. **One setup script**: every launcher passes
    `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata. This is the **only**
    script that knows how to bring up a VM.
-2. **Metadata-driven workload**: `VM_TASK=<cefi-backfill|sports-forward-poll|...>` routes to a specific CLI assembly
+2. **Metadata-driven workload**: `VM_TASK=<cefi-backfill|sports-forward-poll|canonical-migration|sports-manifest-rescan|...>` routes to a specific CLI assembly
    inside `setup-data-pipeline-vm.sh`. Other metadata keys (`VM_SERVICE`, `VM_OPERATION`, `VM_CATEGORY`, `VM_VENUE`,
-   `VM_START_DATE`, `VM_END_DATE`, `VM_DATA_TYPES`, `VM_INSTRUMENT_IDS`) feed the CLI.
+   `VM_START_DATE`, `VM_END_DATE`, `VM_DATA_TYPES`, `VM_INSTRUMENT_IDS`, `VM_MIGRATION_CMD`) feed the CLI.
+   `VM_TASK=sports-manifest-rescan` (added 2026-04-21) cd's to `$WORKSPACE/instruments` and runs whatever
+   Python command `VM_MIGRATION_CMD` carries — used by `launch-sports-manifest-rescan-vm.sh` to invoke
+   `scripts/rescan_sports_fixtures_canonical.py` for the SPORTS FIXTURES per-league index rebuild
+   (see `codex/02-data/sports-data-source-coverage-matrix.md` §8, Wave 5 follow-up).
 3. **Tarball fleet in one bucket**: `gs://deployment-scripts-central-element-323112/code/<repo>-code.tar.gz`. One
    tarball per repo. VMs download the tarballs they need based on `VM_SERVICE`.
 4. **CORE always present, services opt-in**: `unified-api-contracts`, `unified-trading-library`,
