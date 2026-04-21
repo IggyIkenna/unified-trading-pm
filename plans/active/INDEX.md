@@ -48,6 +48,20 @@ examples for testing any DeFi strategy
   → NaN propagation, (2) `_compute_league_batch` lookahead (read standings from `day=kickoff_date - 1` not
   `day=kickoff_date`). Also resolves the `_normalize_standings` rank-column bug that surfaced in the parent plan's
   dry-run. Depends on the denormalisation plan (shipped).
+- features_sports_upstream_coverage_gaps_2026_04_21.plan.md — Third follow-up: close raw-layer coverage gaps that
+  prevent the fixture-features pipeline from populating. Three tracks: (A) Transfermarkt `player_values` 2020-2026
+  backfill — operator fires `launch-transfermarkt-backfill-vm.sh`; (B) SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS`
+  2020-2026 backfill — new `launch-sfi-backfill-vm.sh` shipped + codex §2.4 rewrite ("SFI has no standings
+  endpoint"); (C) Weather venue-id SCREAMING_SNAKE fallback shipped (115/170 fixtures now weather-populated vs
+  0/170 before). Tracks B+C code shipped 2026-04-21 (FSS `d21e49f` + deployment-service `885131e` + PM `77e7512c`);
+  VMs fired 2026-04-21 23:18Z.
+- transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md — Fourth follow-up: (1) cache
+  Transfermarkt team mappings to `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`
+  and skip API calls on non-trigger dates within staleness window (cuts ~80% of per-league-iteration wall-clock on
+  repeated runs); (2) UAC `LeagueDefinition.expected_team_count_per_season` + `ADAPTER_FETCH_ANOMALY` emit when
+  `|got - expected| / expected > 10%` catches silent partial writes (e.g. API returns 17 teams for EPL when we
+  expect 20); (3) same shape for SFI leagues with 24h staleness. 3 tracks, 4 repos (UAC + instruments-service +
+  features-sports-service + PM). Depends on upstream_coverage_gaps plan shipping + backfills completing.
 
 ### Data & Testing
 
