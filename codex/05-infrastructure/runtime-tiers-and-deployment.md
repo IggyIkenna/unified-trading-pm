@@ -49,7 +49,8 @@ gateways validate them. User management routes are in unified-trading-api. The s
 **Backfill / migration / smoke / forward-poll VMs** are a separate deployment pattern from T3-T6 (which are long-lived
 Cloud Run services). They use the **tarball-from-GCS** path: `setup-data-pipeline-vm.sh` startup script + per-repo
 tarballs at `gs://deployment-scripts-.../code/`. See `vm-tarball-deployment.md` for the architecture, invariants,
-refresh flags (`--all` / `--category` / `--include`), singleton-lock pattern, and debug recipe.
+refresh flags (`--all` / `--category` / `--include`), singleton-lock pattern, debug recipe, and **Observability &
+Lifecycle** (streaming GCS log, `/api/vm-deployments`, self-delete — `deployment-service` `cc07649` + `beaa2e5`).
 
 ### Startup
 

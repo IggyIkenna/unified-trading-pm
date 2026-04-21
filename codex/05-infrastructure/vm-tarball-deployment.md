@@ -51,13 +51,14 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
 1. **One setup script**: every launcher passes
    `startup-script-url=gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` in its metadata. This is the **only**
    script that knows how to bring up a VM.
-2. **Metadata-driven workload**: `VM_TASK=<cefi-backfill|sports-forward-poll|canonical-migration|sports-manifest-rescan|...>` routes to a specific CLI assembly
-   inside `setup-data-pipeline-vm.sh`. Other metadata keys (`VM_SERVICE`, `VM_OPERATION`, `VM_CATEGORY`, `VM_VENUE`,
-   `VM_START_DATE`, `VM_END_DATE`, `VM_DATA_TYPES`, `VM_INSTRUMENT_IDS`, `VM_MIGRATION_CMD`) feed the CLI.
-   `VM_TASK=sports-manifest-rescan` (added 2026-04-21) cd's to `$WORKSPACE/instruments` and runs whatever
-   Python command `VM_MIGRATION_CMD` carries — used by `launch-sports-manifest-rescan-vm.sh` to invoke
-   `scripts/rescan_sports_fixtures_canonical.py` for the SPORTS FIXTURES per-league index rebuild
-   (see `codex/02-data/sports-data-source-coverage-matrix.md` §8, Wave 5 follow-up).
+2. **Metadata-driven workload**:
+   `VM_TASK=<cefi-backfill|sports-forward-poll|canonical-migration|sports-manifest-rescan|...>` routes to a specific CLI
+   assembly inside `setup-data-pipeline-vm.sh`. Other metadata keys (`VM_SERVICE`, `VM_OPERATION`, `VM_CATEGORY`,
+   `VM_VENUE`, `VM_START_DATE`, `VM_END_DATE`, `VM_DATA_TYPES`, `VM_INSTRUMENT_IDS`, `VM_MIGRATION_CMD`) feed the CLI.
+   `VM_TASK=sports-manifest-rescan` (added 2026-04-21) cd's to `$WORKSPACE/instruments` and runs whatever Python command
+   `VM_MIGRATION_CMD` carries — used by `launch-sports-manifest-rescan-vm.sh` to invoke
+   `scripts/rescan_sports_fixtures_canonical.py` for the SPORTS FIXTURES per-league index rebuild (see
+   `codex/02-data/sports-data-source-coverage-matrix.md` §8, Wave 5 follow-up).
 3. **Tarball fleet in one bucket**: `gs://deployment-scripts-central-element-323112/code/<repo>-code.tar.gz`. One
    tarball per repo. VMs download the tarballs they need based on `VM_SERVICE`.
 4. **CORE always present, services opt-in**: `unified-api-contracts`, `unified-trading-library`,
@@ -68,9 +69,12 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    `deadsnakes` PPA + `python3.13-dev` + `build-essential` (C extensions: `ckzg`, `lru-dict` for web3).
 6. **Venv at `/home/ikennaigboaka/venv`**: all `nohup` invocations use the full venv path. `nohup python` without the
    full path fails on Ubuntu 24.04.
-7. **Logs tee'd to GCS**: `vm-exec-with-gcs-tee.sh` wraps the workload so stdout/stderr land at
-   `gs://deployment-scripts-.../vm-logs/<vm-name>/run.log` for post-mortem. Applies to most (not all) launchers — see
-   per-launcher notes.
+7. **Observability + lifecycle via wrapper**: Every launcher that routes the workload through `_launch_with_tee` →
+   [`vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh) gets the same guarantees:
+   streaming GCS log upload, Firestore-backed `/api/vm-deployments` registration via
+   [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), and optional self-delete
+   when `VM_SHUTDOWN_ON_COMPLETION=true` (see § Observability & Lifecycle). **Do not** assume SSH or manual instance
+   delete for routine runs.
 8. **Same region as GCS data**: `ZONE=asia-northeast1-c` for all data-pipeline VMs. Cross-region transfer cost + latency
    makes this non-negotiable.
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
@@ -194,6 +198,69 @@ bash launch-ml-training-vm.sh \
 Honest-coverage schema v5 (see `02-data/availability-manifest-and-data-status.md`) means every attempted shard has a
 manifest row: `captured` (data written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted,
 raised — with `error_reason` populated).
+
+---
+
+## Observability & Lifecycle
+
+**Provenance:** `deployment-service` commits `cc07649` (startup script downloads `heartbeat_daemon.py` to `/tmp/` — the
+daemon was previously missing, so Pub/Sub, GCS log streaming, and registry writes never started) and `beaa2e5`
+(`vm-exec-with-gcs-tee.sh` reads `VM_SHUTDOWN_ON_COMPLETION` and self-deletes the VM after the workload exits).
+Together, every VM launched via `launch-*.sh` inherits full lifecycle observability **without SSH** through the shared
+wrapper — not per-launcher one-offs.
+
+### Three guarantees
+
+1. **Streaming GCS log** — The heartbeat daemon uploads the task log under `/home/ikennaigboaka/logs/<task>.log` to
+   `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log` on a ~30s cadence. Operators inspect
+   progress by re-fetching the object (GCS is not a live `tail -f` stream — diff successive `gsutil cat` pulls).
+   Example: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -50`
+
+2. **Deployment registry** — At boot, the heartbeat CLI emits a REGISTER event; heartbeats every ~60s keep
+   `status=running`; exit archives `DEPLOYMENT_COMPLETED` or `DEPLOYMENT_FAILED`. Query entries via deployment-api:
+   [`vm_deployments.py`](../../../deployment-api/deployment_api/routes/vm_deployments.py) — e.g.
+   `curl -sS 'https://<deployment-api-host>/api/vm-deployments?status=running' | jq`
+
+3. **Self-delete on completion** — VM metadata `VM_SHUTDOWN_ON_COMPLETION=true` triggers
+   `gcloud compute instances delete --self --delete-disks=all` in a detached subshell after the workload return code is
+   captured. Launchers set this by default; omit it only for post-mortem SSH (rare).
+
+### How it works
+
+```
+Launcher (launch-*.sh)
+    │
+    └── gcloud compute instances create
+            └── startup-script-url=gs://.../vm/setup-data-pipeline-vm.sh
+                    │
+                    ├── installs Python + tarballs (this doc, above)
+                    ├── downloads /tmp/vm-exec-with-gcs-tee.sh (cc07649)
+                    ├── downloads /tmp/deployment_heartbeat.py
+                    ├── downloads /tmp/heartbeat_daemon.py (cc07649)
+                    └── _launch_with_tee <cmd>
+                            │
+                            └── vm-exec-with-gcs-tee.sh
+                                    ├── forks heartbeat_daemon.py (~60s heartbeat + ~30s GCS log)
+                                    ├── runs <cmd>, captures rc
+                                    ├── daemon archives DEPLOYMENT_COMPLETED | FAILED
+                                    └── self-delete if VM_SHUTDOWN_ON_COMPLETION=true (beaa2e5)
+```
+
+### What this replaced
+
+Before 2026-04-21, the daemon file was not present on the VM: wrappers logged that observability was disabled, **no**
+`/api/vm-deployments` rows appeared, **no** streaming GCS log landed, and **`VM_SHUTDOWN_ON_COMPLETION` was never read**
+— instances stayed RUNNING after rc=0 until manual `gcloud compute instances delete`. Operators relied on SSH + local
+tail
+
+- manual cleanup.
+
+### Implementation references
+
+- Wrapper (uploaded to `gs://.../vm/`):
+  [`deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`](../../../deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh)
+- Heartbeat / daemon:
+  [`deployment-service/deployment_service/vm/heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py)
 
 ---
 

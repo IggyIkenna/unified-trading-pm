@@ -222,6 +222,11 @@ Cloud Run instance is 10-100× cheaper than keeping an `e2-small` VM alive for a
 **Exception:** the daily historical refresh (when re-fetching a multi-day window) and one-off backfills stay on VMs —
 Cloud Run has a 60-minute max-per-request cap and VMs win on long-running batch.
 
+**VMs running longer than ~60s** use the shared wrapper's heartbeat daemon, streaming GCS log, `/api/vm-deployments`
+registry, and self-delete on completion — see
+[`vm-tarball-deployment.md` § Observability & Lifecycle](../05-infrastructure/vm-tarball-deployment.md#observability--lifecycle)
+(provenance: `deployment-service` `cc07649`, `beaa2e5`).
+
 See [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) for the VM
 shape; see
 [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) for

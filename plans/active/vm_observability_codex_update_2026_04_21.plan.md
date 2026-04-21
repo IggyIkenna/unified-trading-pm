@@ -21,42 +21,35 @@ isProject: false
 
 ## Context
 
-Two fixes landed 2026-04-21 that together give every VM launched via
-`setup-data-pipeline-vm.sh` full lifecycle observability without SSH:
+Two fixes landed 2026-04-21 that together give every VM launched via `setup-data-pipeline-vm.sh` full lifecycle
+observability without SSH:
 
-- **`deployment-service cc07649`** — setup script now downloads
-  `heartbeat_daemon.py` to `/tmp/` (was silently missing; wrapper
-  warned "observability disabled" and no Pub/Sub / GCS log streaming /
-  registry entries landed).
-- **`deployment-service beaa2e5`** — wrapper now reads
-  `VM_SHUTDOWN_ON_COMPLETION` metadata and fires `gcloud compute
-  instances delete --self --delete-disks=all` in a detached subshell
-  after the workload returns. Every launcher set the metadata; nothing
-  read it. Result: VMs completed rc=0 and ran forever until manual
-  delete (cost leak + cleanup chore).
+- **`deployment-service cc07649`** — setup script now downloads `heartbeat_daemon.py` to `/tmp/` (was silently missing;
+  wrapper warned "observability disabled" and no Pub/Sub / GCS log streaming / registry entries landed).
+- **`deployment-service beaa2e5`** — wrapper now reads `VM_SHUTDOWN_ON_COMPLETION` metadata and fires
+  `gcloud compute instances delete --self --delete-disks=all` in a detached subshell after the workload returns. Every
+  launcher set the metadata; nothing read it. Result: VMs completed rc=0 and ran forever until manual delete (cost
+  leak + cleanup chore).
 
-These changes apply to ALL 14 launchers in `deployment-service/scripts/vm/`
-through the shared wrapper — not launcher-specific.
+These changes apply to ALL 14 launchers in `deployment-service/scripts/vm/` through the shared wrapper — not
+launcher-specific.
 
-Codex needs to document the guarantees + the machinery so future VM
-touchers know observability is universal.
+Codex needs to document the guarantees + the machinery so future VM touchers know observability is universal.
 
 ## Blast radius
 
 - **unified-trading-pm** (only):
-  - `codex/05-infrastructure/vm-tarball-deployment.md` — extend with an
-    "Observability & Lifecycle" section covering heartbeat daemon,
-    streaming GCS log, `/api/vm-deployments` registry entry, and
-    self-delete on completion.
+  - `codex/05-infrastructure/vm-tarball-deployment.md` — extend with an "Observability & Lifecycle" section covering
+    heartbeat daemon, streaming GCS log, `/api/vm-deployments` registry entry, and self-delete on completion.
 
 ## Pre-audit manifest
 
-| File                                            | Existing content                                         | Action                                                           |
-| ----------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| `codex/05-infrastructure/vm-tarball-deployment.md` | Covers tarball refresh + launcher pattern.            | Add §"Observability & Lifecycle" at the end. No reorg.           |
-| `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` | Wrapper (uploaded to `gs://.../vm/`). Post-beaa2e5.  | Read-only reference — link to the self-delete block.             |
-| `deployment-service/deployment_service/vm/heartbeat_cli.py` | Daemon implementation.                          | Read-only reference.                                             |
-| `deployment-api/deployment_api/routes/vm_deployments.py` | `/api/vm-deployments` endpoint.                    | Cross-ref in codex: where to view registry entries.              |
+| File                                                        | Existing content                                    | Action                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| `codex/05-infrastructure/vm-tarball-deployment.md`          | Covers tarball refresh + launcher pattern.          | Add §"Observability & Lifecycle" at the end. No reorg. |
+| `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`     | Wrapper (uploaded to `gs://.../vm/`). Post-beaa2e5. | Read-only reference — link to the self-delete block.   |
+| `deployment-service/deployment_service/vm/heartbeat_cli.py` | Daemon implementation.                              | Read-only reference.                                   |
+| `deployment-api/deployment_api/routes/vm_deployments.py`    | `/api/vm-deployments` endpoint.                     | Cross-ref in codex: where to view registry entries.    |
 
 ## Content to document (outline)
 
@@ -64,26 +57,19 @@ touchers know observability is universal.
 
 Three guarantees every VM launched via `launch-*.sh` now provides:
 
-1. **Streaming GCS log** — Every 30 seconds, the heartbeat daemon
-   uploads `/home/ikennaigboaka/logs/<task>.log` to
-   `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log`.
-   Operators can tail this without SSH:
-   `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -f`
-   (well, not tail -f on GCS — operators re-cat + inspect; diffing between
-   pulls gives live progress).
+1. **Streaming GCS log** — Every 30 seconds, the heartbeat daemon uploads `/home/ikennaigboaka/logs/<task>.log` to
+   `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log`. Operators can tail this without SSH:
+   `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -f` (well, not tail -f on
+   GCS — operators re-cat + inspect; diffing between pulls gives live progress).
 
-2. **Deployment registry** — Every VM registers at boot with Firestore-
-   backed `/api/vm-deployments` via the heartbeat-cli REGISTER event.
-   Heartbeat every 60s keeps status=running; DEPLOYMENT_COMPLETED /
-   DEPLOYMENT_FAILED on exit. Query via
-   `curl -sS 'https://<deployment-api>/api/vm-deployments?status=running' | jq`.
+2. **Deployment registry** — Every VM registers at boot with Firestore- backed `/api/vm-deployments` via the
+   heartbeat-cli REGISTER event. Heartbeat every 60s keeps status=running; DEPLOYMENT_COMPLETED / DEPLOYMENT_FAILED on
+   exit. Query via `curl -sS 'https://<deployment-api>/api/vm-deployments?status=running' | jq`.
 
-3. **Self-delete on completion** — `VM_SHUTDOWN_ON_COMPLETION=true` in
-   VM metadata triggers `gcloud compute instances delete --self
-   --delete-disks=all` in a detached subshell after rc capture. All
-   launchers set this metadata by default; operators can disable by
-   omitting from the launcher's METADATA block (rare — only needed for
-   post-mortem SSH).
+3. **Self-delete on completion** — `VM_SHUTDOWN_ON_COMPLETION=true` in VM metadata triggers
+   `gcloud compute instances delete --self --delete-disks=all` in a detached subshell after rc capture. All launchers
+   set this metadata by default; operators can disable by omitting from the launcher's METADATA block (rare — only
+   needed for post-mortem SSH).
 
 ### §"How it works" (inline in the new section)
 
@@ -111,53 +97,46 @@ Launcher (launch-*.sh)
 ### §"What this replaces"
 
 Before 2026-04-21, VMs had:
+
 - No `/api/vm-deployments` entries (daemon missing)
 - No streaming log (daemon missing)
 - No self-delete (metadata unread)
 
-Operators had to SSH + tail local log + manually `gcloud delete`. Multiple
-VMs from today's session (morning rescan, historical backfill, forward-poll
-pre-fix) got stuck RUNNING indefinitely — manual cleanup by the orchestrator.
+Operators had to SSH + tail local log + manually `gcloud delete`. Multiple VMs from today's session (morning rescan,
+historical backfill, forward-poll pre-fix) got stuck RUNNING indefinitely — manual cleanup by the orchestrator.
 
 ### §Cross-refs to land
 
-- `codex/02-data/sports-scheduling-and-sharding.md` §8 (Cloud Run vs VM
-  — "VMs use the wrapper's heartbeat + self-delete for any run >60s")
-- `codex/05-infrastructure/runtime-tiers-and-deployment.md` if that doc
-  covers the same ground.
+- `codex/02-data/sports-scheduling-and-sharding.md` §8 (Cloud Run vs VM — "VMs use the wrapper's heartbeat + self-delete
+  for any run >60s")
+- `codex/05-infrastructure/runtime-tiers-and-deployment.md` if that doc covers the same ground.
 
 ## Success criteria
 
-- New §"Observability & Lifecycle" section in `vm-tarball-deployment.md`
-  covering the three guarantees above with links to the wrapper + daemon
-  implementations.
+- New §"Observability & Lifecycle" section in `vm-tarball-deployment.md` covering the three guarantees above with links
+  to the wrapper + daemon implementations.
 - Cross-refs from other codex docs that mention VMs.
 - No code changes. Doc-only.
-- Commit message cites `cc07649` + `beaa2e5` so the provenance is
-  reconstructible.
+- Commit message cites `cc07649` + `beaa2e5` so the provenance is reconstructible.
 
 ## Phases
 
 ### Phase 1: Extend vm-tarball-deployment.md [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Read the current doc end-to-end.
-- [ ] [AGENT] P0. Add the new §"Observability & Lifecycle" section at
-      the end (or before the cross-refs section if one exists).
-- [ ] [AGENT] P0. Include the mechanism diagram + operator commands for
-      each guarantee.
+- [x] [AGENT] P0. Read the current doc end-to-end.
+- [x] [AGENT] P0. Add the new §"Observability & Lifecycle" section at the end (or before the cross-refs section if one
+      exists).
+- [x] [AGENT] P0. Include the mechanism diagram + operator commands for each guarantee.
 
 ### Phase 2: Cross-ref updates [PARALLEL]
 
-- [ ] [AGENT] P1. Update `codex/02-data/sports-scheduling-and-sharding.md`
-      §8 to cite the new section.
-- [ ] [AGENT] P2. Sweep `codex/` for any mention of "SSH to tail log" or
-      "manually gcloud delete" that predates the fixes. Replace with a
-      pointer to the new section.
+- [x] [AGENT] P1. Update `codex/02-data/sports-scheduling-and-sharding.md` §8 to cite the new section.
+- [x] [AGENT] P2. Sweep `codex/` for any mention of "SSH to tail log" or "manually gcloud delete" that predates the
+      fixes. Replace with a pointer to the new section.
 
 ### Phase 3: Commit [SEQUENTIAL]
 
-- [ ] [AGENT] P0. `bash unified-trading-pm/scripts/quality-gates.sh` green
-      (plan-health + codex compliance).
+- [ ] [AGENT] P0. `bash unified-trading-pm/scripts/quality-gates.sh` green (plan-health + codex compliance).
 - [ ] [AGENT] P0. Commit + quickmerge (`--agent`).
 
 ## Dependency graph
@@ -169,5 +148,4 @@ Phase 1 (main doc) ─► Phase 2 (cross-refs) ─► Phase 3 (commit)
 ## Out of scope
 
 - Dashboard / UI for `/api/vm-deployments` — not today's scope.
-- Heartbeat daemon internals beyond the contract — link to code, don't
-  duplicate.
+- Heartbeat daemon internals beyond the contract — link to code, don't duplicate.
