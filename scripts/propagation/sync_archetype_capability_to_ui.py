@@ -32,7 +32,7 @@ _HEADER = """\
 // SSOT: unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json
 // Codex narrative: unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md
 
-import type { StrategyArchetypeV2, VenueCategoryV2 } from "./enums";
+import type { StrategyArchetype, VenueCategoryV2 } from "./enums";
 
 export type InstrumentTypeV2 =
   | "spot"
@@ -76,7 +76,7 @@ export type SignalVariant =
 export type RollMode = "rolling" | "fixed" | "both" | "n/a";
 
 export interface CoverageCell {
-  archetype: StrategyArchetypeV2;
+  archetype: StrategyArchetype;
   category: VenueCategoryV2;
   instrumentType: InstrumentTypeV2;
   status: CoverageStatus;
@@ -89,7 +89,7 @@ export interface CoverageCell {
 }
 
 export interface ArchetypeCoverage {
-  archetype: StrategyArchetypeV2;
+  archetype: StrategyArchetype;
   usesRollingFutures: boolean;
   cells: readonly CoverageCell[];
 }
@@ -148,19 +148,19 @@ def _render_archetype(entry: dict[str, object]) -> str:
 
 
 _FOOTER = """\
-export const ARCHETYPE_COVERAGE: Readonly<Record<StrategyArchetypeV2, ArchetypeCoverage>> = {
+export const ARCHETYPE_COVERAGE: Readonly<Record<StrategyArchetype, ArchetypeCoverage>> = {
 __MAPPING_BODY__
 };
 
 export function allCoverageCells(): readonly CoverageCell[] {
   const out: CoverageCell[] = [];
-  for (const archetype of Object.keys(ARCHETYPE_COVERAGE) as StrategyArchetypeV2[]) {
+  for (const archetype of Object.keys(ARCHETYPE_COVERAGE) as StrategyArchetype[]) {
     out.push(...ARCHETYPE_COVERAGE[archetype].cells);
   }
   return out;
 }
 
-export function coverageForArchetype(archetype: StrategyArchetypeV2): ArchetypeCoverage {
+export function coverageForArchetype(archetype: StrategyArchetype): ArchetypeCoverage {
   return ARCHETYPE_COVERAGE[archetype];
 }
 
