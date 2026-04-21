@@ -120,8 +120,8 @@ todos:
 - id: p1-strategy-catalogue-surface-component content: |
   - [x] [AGENT] P0. Create `components/strategy-catalogue/StrategyCatalogueSurface.tsx`: shared 4-viewMode primitive.
         Reads the real 84-instance 5-dim catalogue from `lib/registry/ui-reference-data.json` via
-        `loadStrategyCatalogue()`. Integrates `<FamilyArchetypePicker>`. Maturity + routing hash-synthesised until
-        Plan A Phase 3 Firestore lifecycle doc ships. status: done
+        `loadStrategyCatalogue()`. Integrates `<FamilyArchetypePicker>`. Maturity + routing hash-synthesised until Plan
+        A Phase 3 Firestore lifecycle doc ships. status: done
 
 - id: p1-strategy-catalogue-filter-types content: |
   - [x] [AGENT] P0. `lib/architecture-v2/catalogue-filter.ts` — typed filter state URL-serialisable for deep-links.
@@ -141,15 +141,30 @@ todos:
 
 - id: p2-admin-editor-page content: |
   - [x] [AGENT] P0. Create `app/(ops)/admin/strategy-lifecycle-editor/page.tsx` mounting
-        `<StrategyCatalogueSurface viewMode="admin-editor" />`. Inline editor buttons rendered but disabled with
-        tooltip "Enabled when Plan A Phase 3 PATCH endpoint ships". PATCH wiring deferred to follow-up
+        `<StrategyCatalogueSurface viewMode="admin-editor" />`. Inline editor buttons rendered but disabled with tooltip
+        "Enabled when Plan A Phase 3 PATCH endpoint ships". PATCH wiring deferred to follow-up
         `p2-followup-enable-editor`. status: done
 
 - id: p2-followup-enable-editor content: |
-  - [ ] [AGENT] P1. Enable inline `maturity_phase` + `product_routing` dropdowns, wire
-        `PATCH /api/v1/registry/strategy-instances/{id}/lifecycle`, add bulk-edit + 5-second-undo audit toast on
-        `/admin/strategy-lifecycle-editor`. status: pending
-        blocked_by: strategy_lifecycle_maturity_model_2026_04_21 (Plan A Phase 3).
+  - [x] [AGENT] P1. Enable inline `maturity_phase` + `product_routing` dropdowns, wire
+        `PATCH /api/v1/registry/strategy-instances/{id}/lifecycle`, add audit toast on
+        `/admin/strategy-lifecycle-editor`. status: done
+        notes: |
+          Shipped across 3 commits on live-defi-rollout: UTA `3d9b96e` (added 2 GET endpoints +
+          4 tests, 14/14 pass), UI `8962928` (new `useLifecycleEditor` hook + `AdminEditorGrid`
+          with live `<select>` dropdowns + optimistic update + sonner toast + error rollback
+          + 11 new tests). Forward-only transitions enforced client-side via
+          `isValidMaturityTransition` helper (mirror of UAC `lifecycle.py`); server re-validates
+          and rolls back on reject. Bulk-edit + 5-second-undo affordance deferred as
+          `p2-followup-bulk-edit` — current impl toasts but has no undo button (sonner default
+          5s dismiss). Rows without a server-side lifecycle record stay disabled with tooltip
+          prompting seed.
+
+- id: p2-followup-bulk-edit content: |
+  - [ ] [AGENT] P2. Add multi-row selection + "Apply maturity → X to N rows" button in
+        `AdminEditorGrid`; wire undo-toast with actual rollback button (not just dismiss).
+        status: pending
+        notes: "minor UX enhancement — primary editor flow is fully functional without it."
 
 - id: p2-admin-sub-routes content: |
   - [x] [AGENT] P0. Extend `SERVICE_REGISTRY` admin tile sub-routes with `strategy-universe` +
@@ -164,25 +179,23 @@ todos:
 
 - id: p3-client-catalogue-two-tab-layout content: |
   - [x] [AGENT] P0. Rewrite `app/(platform)/services/strategy-catalogue/page.tsx` as a two-tab surface: "Your
-        Subscriptions" (`viewMode="client-reality"`) + "Explore" (`viewMode="client-fomo"`). Default: Reality if the
-        org has ≥1 subscribed instance, else Explore. Subscriptions keyed on `instanceId`. status: done
+        Subscriptions" (`viewMode="client-reality"`) + "Explore" (`viewMode="client-fomo"`). Default: Reality if the org
+        has ≥1 subscribed instance, else Explore. Subscriptions keyed on `instanceId`. status: done
 
 - id: p3-fomo-tearsheet-cards content: |
   - [x] [AGENT] P0. `components/strategy-catalogue/FomoTearsheetCard.tsx` — per-instance header (family / archetype /
-        venue-set / share-class), `<PerformanceOverlayPlaceholder>` (prop shape matches Plan C
-        `<PerformanceOverlay>` for 1-line swap), key stats (Sharpe / MDD / CAGR synthesised until Plan C
-        `odum-paper` series wires in), "Request allocation" CTA gated by `allowsAllocationCta(maturity_phase)`.
-        status: done
+        venue-set / share-class), `<PerformanceOverlayPlaceholder>` (prop shape matches Plan C `<PerformanceOverlay>`
+        for 1-line swap), key stats (Sharpe / MDD / CAGR synthesised until Plan C `odum-paper` series wires in),
+        "Request allocation" CTA gated by `allowsAllocationCta(maturity_phase)`. status: done
 
 - id: p3-reality-position-cards content: |
   - [x] [AGENT] P0. `components/strategy-catalogue/RealityPositionCard.tsx` — per-subscribed-instance live P&L,
-        allocation, active venues, maturity badge; drill-through to DART terminal + Reports attribution.
-        status: done
+        allocation, active venues, maturity badge; drill-through to DART terminal + Reports attribution. status: done
 
 - id: p3-orphan-audit-preserve-route content: |
   - [x] [AGENT] P0. `/services/strategy-catalogue` route stays mounted. DART tile `strategy-catalogue` chip label
-        renamed to "Catalogue" via Phase 4. `npm run orphan-audit -- --blocking` exits 0 (221/208 reachable with the
-        2 new admin pages, 0 new orphans). status: done
+        renamed to "Catalogue" via Phase 4. `npm run orphan-audit -- --blocking` exits 0 (221/208 reachable with the 2
+        new admin pages, 0 new orphans). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -191,14 +204,14 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-dashboard-dart-chip-wiring content: |
-  - [x] [AGENT] P1. DART tile `strategy-catalogue` chip relabelled "Catalogue" in `lib/config/services.ts`; still
-        points at `/services/strategy-catalogue` (same URL — no orphan). DART personas keep the chip visible via
-        existing `PERSONA_SUBROUTE_SHAPES` entries. status: done
+  - [x] [AGENT] P1. DART tile `strategy-catalogue` chip relabelled "Catalogue" in `lib/config/services.ts`; still points
+        at `/services/strategy-catalogue` (same URL — no orphan). DART personas keep the chip visible via existing
+        `PERSONA_SUBROUTE_SHAPES` entries. status: done
 
 - id: p4-dashboard-im-access content: |
   - [x] [AGENT] P1. Reports tile gains a new "Catalogue" chip linking to `/services/strategy-catalogue?tab=explore`.
-        `client-im-pooled` + `client-im-sma` personas get the chip visible under `reports.catalogue`. IM clients
-        land on the FOMO tearsheet view directly from Reports. status: done
+        `client-im-pooled` + `client-im-sma` personas get the chip visible under `reports.catalogue`. IM clients land on
+        the FOMO tearsheet view directly from Reports. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -212,16 +225,16 @@ todos:
         client-fomo hides subscribed) + family/archetype filter cascade. 5 tests, all green. status: done
 
 - id: p5-fomo-cta-gating-test content: |
-  - [x] [AGENT] P0. `tests/unit/components/strategy-catalogue/fomo-cta-gating.test.tsx`: `allowsAllocationCta`
-        enables only for `paper_stable` / `live_early` / `live_stable`; exhaustive across every maturity phase.
-        `<FomoTearsheetCard>` CTA disabled below paper_stable, disabled without handler, disabled on retired.
-        6 tests, all green. status: done
+  - [x] [AGENT] P0. `tests/unit/components/strategy-catalogue/fomo-cta-gating.test.tsx`: `allowsAllocationCta` enables
+        only for `paper_stable` / `live_early` / `live_stable`; exhaustive across every maturity phase.
+        `<FomoTearsheetCard>` CTA disabled below paper_stable, disabled without handler, disabled on retired. 6 tests,
+        all green. status: done
 
 - id: p5-qg-final content: |
-  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit` clean for Plan-B files (remaining 17 errors
-        are pre-existing, unrelated). `npm run orphan-audit -- --blocking` exits 0. `CI=true npm test -- --run`
-        975/976 green — single flake (trading-data `getLiveBatchDelta` 5-second timeout under parallel load)
-        unrelated and passes deterministic when run in isolation. status: done
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit` clean for Plan-B files (remaining 17 errors are
+        pre-existing, unrelated). `npm run orphan-audit -- --blocking` exits 0. `CI=true npm test -- --run` 975/976
+        green — single flake (trading-data `getLiveBatchDelta` 5-second timeout under parallel load) unrelated and
+        passes deterministic when run in isolation. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -231,13 +244,13 @@ todos:
 
 - id: p6-codex-strategy-catalogue-3tier-doc content: |
   - [x] [AGENT] P1. `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` — 3 tiers + per-persona matrix +
-        Reality/FOMO split + allocation-request flow. §9 amended post-Plan-A-Phase-2 from "scaffold handoff" to
-        "data wiring" documenting catalogue/variants/enums live + maturity/routing synthesised + Plan-C overlay
-        pending. status: done
+        Reality/FOMO split + allocation-request flow. §9 amended post-Plan-A-Phase-2 from "scaffold handoff" to "data
+        wiring" documenting catalogue/variants/enums live + maturity/routing synthesised + Plan-C overlay pending.
+        status: done
 
 - id: p6-amend-dashboard-grid-codex content: |
-  - [x] [AGENT] P1. `dashboard-services-grid.md` §4.5 already documents the cross-cutting primitive; admin paths
-        updated `/services/admin/...` → `/admin/...` to match the actual `(ops)` group routing. status: done
+  - [x] [AGENT] P1. `dashboard-services-grid.md` §4.5 already documents the cross-cutting primitive; admin paths updated
+        `/services/admin/...` → `/admin/...` to match the actual `(ops)` group routing. status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 
