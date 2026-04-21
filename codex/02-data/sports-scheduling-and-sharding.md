@@ -350,7 +350,8 @@ dependency plan that must reach C5 before this plan can fully execute.
 
 | Priority | Plan                                                                                                                             | Repos                                                      | Gated on                                                         | Delivers                                                                                                                                                                                                         |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P0**   | [`sports_manifest_shard_migration_cleanup`](../../plans/active/sports_manifest_shard_migration_cleanup_2026_04_21.plan.md)       | instruments-service + deployment-api                       | `instruments_service_orchestrator_reliability_fixes` Bugs 6-7    | Extends chunk-safe rescan to every entity. Drops backwards-compat unsharded row emission. One-time legacy-row purge migration. Closes the three-state manifest orphan problem                                    |
+| **P0**   | [`utl_manifest_migration_primitives`](../../plans/active/utl_manifest_migration_primitives_2026_04_21.plan.md)                   | unified-trading-library + instruments-service              | —                                                                | Factors chunk-safe writer / rescan scanner / legacy-row purger into UTL as reusable primitives. Auto-emits MANIFEST*MIGRATION*\* events. Refactors `rescan_sports_fixtures_canonical.py` to thin wrapper         |
+| **P0**   | [`sports_manifest_shard_migration_cleanup`](../../plans/active/sports_manifest_shard_migration_cleanup_2026_04_21.plan.md)       | instruments-service + deployment-api                       | `utl_manifest_migration_primitives` + reliability Bugs 6-7       | Uses UTL primitives to scan every entity's parquet + emit per-league rows. Drops backwards-compat unsharded emission. One-time legacy-row purge. Closes the three-state manifest orphan problem                  |
 | **P1**   | [`sports_data_status_fixture_level_drilldown`](../../plans/active/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md) | deployment-api + deployment-ui                             | `sports_manifest_shard_migration_cleanup` + reliability Bugs 6-7 | Fixture-anchored UI navigation: Category → Data Type → League → Day → **Fixture** → Download CSV/JSON. Green-day expands fixture list with per-fixture coverage; red-day shows missing fixtures from AF schedule |
 | **P2**   | [`upcoming_fixtures_ui_view`](../../plans/active/upcoming_fixtures_ui_view_2026_04_21.plan.md)                                   | deployment-api + deployment-ui + unified-trading-system-ui | —                                                                | Per-league next-7-days forward-view cards (complementary to the backward drilldown above)                                                                                                                        |
 
@@ -395,3 +396,38 @@ For each plan, the executing agent needs exactly:
 
 One-sentence dispatch: "Execute `plans/active/<plan_name>.plan.md`. Follow pre-audit manifest strictly. Flip checkboxes
 as you go. Commit + quickmerge per repo in the phases."
+
+Also update the shard-migration plan's gated-on to include the UTL primitives plan — once the UTL refactor ships, the
+shard-migration plan's Phase 1 is "use the UTL primitives" not "extend the rescan script".
+
+### 12.8 Universal VM pre-flight (applies to every plan that launches a VM)
+
+Every plan that dispatches a GCE VM via `deployment-service/scripts/vm/launch-*.sh` MUST run these in order, BEFORE the
+launcher:
+
+1. **Pass 1 QG** on every repo the VM runs code from: `cd <repo> && bash scripts/quality-gates.sh`. Establishes that the
+   local venv's deps resolve + tests pass.
+2. **Tarball refresh** matching the repos above:
+   `bash deployment-service/scripts/vm/create-code-tarballs.sh --category <CAT>` (or `--all` for multi-repo features, or
+   `--include <repo>` for one-offs). Tarballs are built from the same venvs that just passed QG — so VM deps = local
+   deps.
+3. **Use a launcher, never raw gcloud**. Every `launch-*-vm.sh` script inherits observability from today's fixes
+   (`cc07649` + `beaa2e5`):
+   - Heartbeat daemon → Pub/Sub events + GCS log streaming every 30s + entry in `/api/vm-deployments`
+   - Self-delete on rc=0 → VMs auto-clean, no manual `gcloud compute instances delete`
+   - Singleton-lock semantics per rate-limited API key
+
+   Raw `gcloud compute instances create` bypasses all three. Don't do it.
+
+4. Launchers that route through `_launch_with_tee` (every existing one does) inherit the observability guarantees
+   automatically — no per-launcher wiring needed.
+
+Plans that violate the pre-flight (raw gcloud, skip tarball refresh, skip QG) should be flagged back to the operator
+before execution.
+
+**Observability endpoints (no SSH required):**
+
+- `gcloud compute instances list --filter="labels.purpose=<tag>" --zones=asia-northeast1-c` — list live VMs
+- `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log` — streaming log
+- `curl -sS 'https://<deployment-api>/api/vm-deployments?status=running' | jq` — registry query
+- Pub/Sub topic `deployment-lifecycle-events` — every DEPLOYMENT_STARTED / PROGRESS / COMPLETED / FAILED
