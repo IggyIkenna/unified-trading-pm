@@ -142,11 +142,15 @@ todos:
 
   - id: p4-propagate-to-other-uis
     content: |
-      - [x] [AGENT] P1. Consider porting the scanner to `deployment-ui` +
-        `user-management-ui` (archived but reference) — same 3-phase rollout.
-        Decision: defer until unified-trading-system-ui baseline proves stable
-        (≥ 2 weeks green CI).
-    status: done
+      - [ ] [AGENT] P1. Consider porting the scanner to `deployment-ui` — same 3-phase
+        rollout. `user-management-ui` dropped from scope 2026-04-21: GitHub repo
+        archived (gh repo archive), readiness YAML flipped to status=archived,
+        workspace-manifest entry already marked archived. The code was folded
+        into unified-trading-system-ui /ops/admin per plan
+        ui_unification_v2_sanitisation_2026_04_20 Phase 6. Only deployment-ui
+        remains as a port target; deferred until unified-trading-system-ui
+        baseline proves stable (≥ 2 weeks green CI).
+    status: deferred
 
 # ────────────────────────────────────────────────────────────────────────────
 # SUCCESS CRITERIA

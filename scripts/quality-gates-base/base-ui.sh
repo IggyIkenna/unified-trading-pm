@@ -214,6 +214,27 @@ else
   log_section "[2/6] LINT — skipped (--test / --lint / --quick)"
 fi
 
+# ── [2.5/6] ORPHAN-ROUTE AUDIT ───────────────────────────────────────────────
+# Blocks new orphan pages — Next.js app/ routes that are not reachable from any
+# declared navigation surface. Opts in per-repo: requires both
+# `scripts/orphan-audit.ts` and `scripts/.orphan-audit-baseline.json` to exist.
+# Skip with SKIP_ORPHAN_AUDIT=1 (human-only escape hatch) or in --test mode.
+# SSOT: unified-trading-pm/codex/06-coding-standards/orphan-audit.md.
+if [ "$SKIP_LINT" = false ] && [ "${SKIP_ORPHAN_AUDIT:-0}" != "1" ] && \
+   [ -f "scripts/orphan-audit.ts" ] && [ -f "scripts/.orphan-audit-baseline.json" ]; then
+  log_section "[2.5/6] ORPHAN-ROUTE AUDIT"
+  if _out=$(run_timeout 60 npx --yes tsx scripts/orphan-audit.ts --blocking 2>&1); then
+    echo "$_out" | tail -5
+    log_success "Orphan-route audit passed (no new orphans vs baseline)"
+  else
+    echo "$_out"
+    log_fail "Orphan-route audit FAILED — new unreachable page(s) introduced"
+    exit 1
+  fi
+elif [ -f "scripts/orphan-audit.ts" ] && [ ! -f "scripts/.orphan-audit-baseline.json" ]; then
+  log_warn "orphan-audit.ts found but no baseline — advisory-only (run: npm run orphan-audit:write-baseline)"
+fi
+
 # ── [3/6] UNIT TESTS + COVERAGE ─────────────────────────────────────────────
 # Runs only when package.json has a "test" script that is NOT playwright-only.
 # After tests: enforces MIN_UI_COVERAGE floor (default 70) by reading

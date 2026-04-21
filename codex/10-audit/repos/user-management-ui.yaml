@@ -8,9 +8,11 @@ repo_type: "ui"
 arch_tier: "ui"
 deployment_modes: null
 business_modes: null
-version: "0.1.0"
-status: "active"
-last_updated: "2026-03-18"
+version: "0.2.0"
+status: "archived"
+archived_at: "2026-04-20"
+archived_note: "Folded into unified-trading-system-ui /app/(ops)/admin/* per plan ui_unification_v2_sanitisation_2026_04_20 Phase 6. GitHub repo archived 2026-04-21. No Cloud Run service deployed for this UI. Backend user-management-api remains active. See user-management-ui/ARCHIVED.md for the migration table."
+last_updated: "2026-04-21"
 
 # ==============================================================================
 # CODE READINESS
