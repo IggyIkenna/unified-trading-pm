@@ -149,6 +149,32 @@ set.
 
 ---
 
+## §4.5 Strategy Catalogue is a cross-cutting primitive, not a DART sub-route
+
+**Amendment 2026-04-21:** The current `dart.subRoutes[]` listing includes
+`strategy-catalogue` — this is a **transitional wiring**. Post Plan A
+(`strategy_lifecycle_maturity_model_2026_04_21`) + Plan B
+(`strategy_catalogue_3tier_surface_2026_04_21`), Strategy Catalogue becomes a
+shared primitive (`<StrategyCatalogueSurface viewMode=... />`) invoked from
+multiple tiles:
+
+| Tile               | viewMode                 | Route                                            |
+| ------------------ | ------------------------ | ------------------------------------------------ |
+| Admin & Ops        | `admin-universe`         | `/services/admin/strategy-universe`              |
+| Admin & Ops        | `admin-editor`           | `/services/admin/strategy-lifecycle-editor`      |
+| DART (chip)        | `client-reality`         | `/services/strategy-catalogue?tab=reality`       |
+| Reports (chip)     | `client-fomo`            | `/services/strategy-catalogue?tab=explore`       |
+| IM surfaces (TBD)  | `client-fomo` / `reality`| same URL, persona-gated tabs                     |
+
+The DART tile keeps its `strategy-catalogue` chip (label "Catalogue") pointing
+at the Tier-3 client surface — the chip lives on DART because DART clients
+subscribe and configure strategies; they land on Reality by default.
+
+The current 5-tile model is unchanged; Strategy Catalogue is a **shared
+surface**, not a 6th tile. Uniformity holds.
+
+---
+
 ## §5 Disambiguation — "Odum Signals" vs "Signal Intake"
 
 | Surface              | Audience               | Direction | Tile / sub-route    | Entitlement      |

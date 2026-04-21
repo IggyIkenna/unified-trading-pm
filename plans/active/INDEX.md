@@ -59,6 +59,25 @@ examples for testing any DeFi strategy
 - fold_uei_into_utl_2026_04_17.plan.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate
   of both), migrate 30+ consumers, archive UEI repo
 
+### Strategy Lifecycle & Catalogue (NEW 2026-04-21)
+
+- strategy_lifecycle_maturity_model_2026_04_21.plan.md — UAC data model foundation. 9-phase
+  `StrategyMaturityPhase` enum, `ProductRouting`, `ShareClass`, venue-set-variants registry (Elysium:
+  base_3cex → premium_6cex → multi_evm → multi_evm_plus_sol), 5-dim `StrategyInstance`, `StrategyInstanceLifecycle`
+  record, `odum-paper` + `odum-live` client-zero seed rows, UAC → UI propagation script extension, admin
+  lifecycle-editor PATCH endpoint, UTL `LifecycleReloader`. Unblocks Plans B, C, D.
+- strategy_catalogue_3tier_surface_2026_04_21.plan.md — `<StrategyCatalogueSurface>` shared primitive with 4
+  viewModes (admin-universe / admin-editor / client-reality / client-fomo). Rebuilds
+  `/services/strategy-catalogue` as a 2-tab Reality + FOMO surface; adds admin universe + lifecycle-editor
+  pages. Depends on Plan A.
+- performance_overlay_continuous_timeline_2026_04_21.plan.md — `<PerformanceOverlay>` chart primitive rendering
+  continuous backtest → paper → live timelines from odum-paper/live account series. 3 modes
+  (overlay / stitched / split), per-venue slicing, allocator query support. Wired into FOMO tearsheets, DART
+  terminal, Reports. Depends on Plan A.
+- orphan_audit_policy_2026_04_21.plan.md — 3-phase (advisory → fix-all → blocking) scanner that diffs Next
+  `app/` routes against all declared nav surfaces (lifecycle-nav, tile sub-routes, chip hrefs, breadcrumbs,
+  transitive Link closure). Whitelist for intentional direct-URL-only pages. quickmerge + GHA gate in Phase 3.
+
 ### UI & Admin Unification
 
 - dashboard_services_grid_collapse_2026_04_21.plan.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals ·

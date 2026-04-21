@@ -403,3 +403,29 @@ todos:
 # - Filter strip collapsed-by-default; expanded state persists via localStorage
 
 # ────────────────────────────────────────────────────────────────────────────
+
+  # ──────────────────────────────────────────────────────────────────────
+  # PHASE 7 — Strategy Catalogue migration follow-up (SEQUENTIAL, P1)
+  # ──────────────────────────────────────────────────────────────────────
+  # Added 2026-04-21 after user directive clarified Strategy Catalogue is a
+  # cross-cutting primitive, not a DART-exclusive sub-route. See
+  # strategy_catalogue_3tier_surface_2026_04_21.plan.md for the full migration.
+  - id: p7-strategy-catalogue-primitive-migration
+    content: |
+      - [ ] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to
+        `/services/strategy-catalogue` (single-page catalogue). After Plan B
+        (strategy_catalogue_3tier_surface_2026_04_21) lands, the chip URL stays
+        the same but the destination page becomes the Tier-3 Reality + FOMO
+        two-tab primitive. No tile/chip surface change required here — just a
+        confirmation that the chip isn't orphaned after Plan B's page rewrite.
+        Also update DART tile chip label "Strategy Catalogue" → "Catalogue"
+        (shorter, clearer now it's a shared primitive).
+    status: pending
+  - id: p7-admin-sub-route-additions
+    content: |
+      - [ ] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle-
+        editor pages, extend SERVICE_REGISTRY admin tile sub-routes +
+        `PERSONA_SUBROUTE_SHAPES.admin` to include `strategy-universe` +
+        `strategy-lifecycle-editor`. Regenerate the ≤4-chip display logic
+        if admin tile exceeds the cap.
+    status: pending
