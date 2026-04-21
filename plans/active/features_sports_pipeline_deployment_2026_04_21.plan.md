@@ -97,7 +97,7 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       `python -m features_sports_service compute --operation fixture-features     --start-date X --end-date Y` (exact
       flag names per Plan 3 Phase 3). ✅ CLI shape validated — the actual invocation is
       `python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features     --start-date X --end-date Y`
-      (fixture_features is a _table_ within the `compute` operation; there is no `fixture-features` operation in
+      (fixture*features is a \_table* within the `compute` operation; there is no `fixture-features` operation in
       cli/main.py `_OPERATIONS`). Plan wording was speculative — the real shape is used in the daily workflow + backfill
       launcher.
 
@@ -130,7 +130,7 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       `features-sports-service compute     --operation fixture-features --date <fixture-date> --fixture-id     <fixture>`.
       Adjust if needed. ✅ Verified no change needed. Existing YAML already calls `service: features-sports-service`
       `operation: compute` with `args: {--tables: fixture_features}` — the canonical CLI contract (no `fixture-features`
-      operation exists; fixture_features is a _table_ within `compute`). Scheduler dispatcher passes the fixture date
+      operation exists; fixture*features is a \_table* within `compute`). Scheduler dispatcher passes the fixture date
       via its own date-resolution path (existing sports-trigger-tiers.yaml § Tier-3 code).
 
 - [ ] [AGENT] P0. Test: force a T-1h trigger fire for a known upcoming fixture. Confirm features-sports-service runs +

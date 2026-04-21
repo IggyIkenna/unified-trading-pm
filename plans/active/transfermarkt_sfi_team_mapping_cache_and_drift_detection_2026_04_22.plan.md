@@ -75,11 +75,11 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
 
 ### Existing team-mapping pattern to clone
 
-- [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
+- [`instruments-service/instruments_service/engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py)
   L3197-3256 — `_write_team_mapping(bucket)` writes a single flat parquet at
   `sports_reference/mappings/team_mapping.parquet` combining UAC `team_mappings.py` + `team_names.py`. No partitioning.
   Run once per date (`_write_team_mapping` + `_write_fixture_mapping(bucket, date)` both called at L3197-3198 — `_write_fixture_mapping` partitions by date, `_write_team_mapping` does not).
-- [`features-sports-service/features_sports_service/data/gcs_reader.py::read_team_mapping`](../../features-sports-service/features_sports_service/data/gcs_reader.py)
+- [`features-sports-service/features_sports_service/data/gcs_reader.py::read_team_mapping`](../../../features-sports-service/features_sports_service/data/gcs_reader.py)
   L720+ — reads the flat parquet. Parallel `read_fixture_mapping` at L741+. Clone this shape for Transfermarkt + SFI.
 
 ### Transfermarkt-specific
@@ -88,7 +88,7 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
   `adapter.get_teams(tm_code, season=season)`. Cache partition must be per-season to prevent 2023 → 2024 overwrites.
   Suggested path: `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
 - Trigger dates are driven by UAC `get_leagues_needing_refresh(date)` in
-  [`unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py`](../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py)
+  [`unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/season_dates.py)
   L176: season_start ± 3d + transfer_windows open ± 3d + close ± 3d. ~12-15 trigger dates per league per year.
 - Current per-league outcome tracking at L4219-4314 (`_captured_league_counts`, `_empty_leagues`, `_failed_leagues`,
   `_unmapped_leagues`) is the ideal hook point for the anomaly check — do the check inside the for-loop at L4225 just
@@ -97,7 +97,7 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
 ### SFI-specific
 
 - SFI adapter at
-  [`instruments-service/instruments_service/engine/orchestrator.py::_fetch_sfi_data`](../../instruments-service/instruments_service/engine/orchestrator.py)
+  [`instruments-service/instruments_service/engine/orchestrator.py::_fetch_sfi_data`](../../../instruments-service/instruments_service/engine/orchestrator.py)
   L4321+. Two entities: `SFI_LEAGUES` (league metadata), `SFI_PROGRESSIVE_STATS` (per-match streaks). No team entity
   at the provider level — SFI returns league-scoped progressive stats keyed by internal `match=<hex>` IDs, not
   per-team rosters like Transfermarkt. So the "team cache" for SFI is actually a **league-mapping cache** (SFI internal
@@ -105,7 +105,7 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
 
 ### UAC helpers to extend
 
-- [`unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py::get_expected_leagues_for_source`](../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py)
+- [`unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py::get_expected_leagues_for_source`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py)
   — already provides the league denominator for both providers; audit whether `LeagueDefinition` carries a team-count
   field today (grep says no) and add as optional.
 
@@ -192,7 +192,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 ### Track 1: Transfermarkt team-mapping cache [PARALLEL, depends on Phase 0]
 
 - [ ] [AGENT] P1. UAC: add `LeagueDefinition.expected_team_count_per_season: dict[int, int] | None = None` in
-      [`unified_api_contracts/canonical/domain/sports/league_data.py`](../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py).
+      [`unified_api_contracts/canonical/domain/sports/league_data.py`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py).
       Seed well-known leagues (EPL=20, LaLiga=20, Bundesliga=18, SerieA=20, Ligue1=18, Championship=24, EFL1=24,
       EFL2=24, MLS=29, etc.) for seasons 2020-2026 inclusive. Add public accessor
       `get_expected_team_count_for_league(league_id: str, season: int) -> int | None`. 5+ unit tests proving
@@ -211,7 +211,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
       3. Otherwise, proceed with API loop as today, then write cache at end.
 
 - [ ] [AGENT] P1. features-sports-service: add `read_transfermarkt_team_mapping(season: int) -> pd.DataFrame` to
-      [`data/gcs_reader.py`](../../features-sports-service/features_sports_service/data/gcs_reader.py) paralleling
+      [`data/gcs_reader.py`](../../../features-sports-service/features_sports_service/data/gcs_reader.py) paralleling
       `read_team_mapping` at L720+. Short-circuit + return empty DataFrame on 404 (same as existing helpers).
 
 - [ ] [AGENT] P1. Unit tests:
@@ -226,7 +226,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 ### Track 2: Drift-detection anomaly emit [SEQUENTIAL, depends on Track 1.1 UAC field]
 
 - [ ] [AGENT] P1. UTL: add `ADAPTER_FETCH_ANOMALY` to events registry if absent
-      ([`unified_trading_library/events/`](../../unified-trading-library/unified_trading_library/events/) — grep for
+      ([`unified_trading_library/events/`](../../../unified-trading-library/unified_trading_library/events/) — grep for
       `ADAPTER_FETCH_FAILED` to find the file). Payload shape: `{venue, endpoint, league_id, date, expected_count,
       got_count, deviation_pct, severity}`.
 
@@ -275,7 +275,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 ### Track 4: Codex + QG + quickmerge [SEQUENTIAL]
 
 - [ ] [AGENT] P1. Update codex
-      [`02-data/sports-scheduling-and-sharding.md`](../../unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md):
+      [`02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md):
       - §2.2 (Transfermarkt): document cache path
         `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + 7-day staleness +
         trigger-date invalidation. Cross-ref `get_leagues_needing_refresh` as authoritative trigger schedule.
