@@ -256,7 +256,8 @@ normalised (single source of truth per data class); the feature pipeline owns th
 
 ### 9.1 Shipped implementation (2026-04-21)
 
-As of 2026-04-21, this contract is implemented by `features-sports-service/features_sports_service/pipeline/fixture_features.py`:
+As of 2026-04-21, this contract is implemented by
+`features-sports-service/features_sports_service/pipeline/fixture_features.py`:
 
 - **UAC schema:** `unified_api_contracts.internal.FixtureFeatures` (Pydantic, `frozen=True`, `extra="forbid"`) declares
   every column — 21 value-bearing fields plus provenance (`transfermarkt_values_partition_used`,
@@ -319,3 +320,78 @@ As of 2026-04-21, this contract is implemented by `features-sports-service/featu
   [`codex/04-architecture/sports-live-odds-connectivity.md`](../04-architecture/sports-live-odds-connectivity.md)
 - VM tarball deployment:
   [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
+
+## 12. Roadmap — open plans (entry point for agent hand-off)
+
+This section is the canonical index of every open sports plan as of 2026-04-21. A fresh agent should read this section +
+the referenced plan file; together they contain everything needed to pick up any individual plan and execute. No other
+context required.
+
+Legend: **C0-C5** = code readiness per `plans/PLAN_FORMAT.md` (C5 = merged). **P0/P1/P2** = priority. **Gated on**:
+dependency plan that must reach C5 before this plan can fully execute.
+
+### 12.1 Shipped 2026-04-21 (reference only — no more work)
+
+| Plan                                                                                                                                 | Repos                                           | Status                     |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- | -------------------------- |
+| [`sports_scheduler_periodic_tier_dispatch`](../../plans/active/sports_scheduler_periodic_tier_dispatch_2026_04_21.plan.md)           | deployment-service                              | C5 (`d9652cd`)             |
+| [`instruments_service_rolling_window_cli_flags`](../../plans/active/instruments_service_rolling_window_cli_flags_2026_04_21.plan.md) | instruments-service + deployment-service        | C5 (`70517b2` + `b0eb874`) |
+| [`features_sports_denormalisation_pipeline`](../../plans/active/features_sports_denormalisation_pipeline_2026_04_21.plan.md)         | unified-api-contracts + features-sports-service | C5 (`ef1e89f` + `c7a363d`) |
+
+### 12.2 Open — data coverage + adapter quality
+
+| Priority | Plan                                                                                                                                             | Repos               | Gated on | Delivers                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/active/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                 | deployment-service  | —        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                     |
+| **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/active/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)               | deployment-service  | —        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                |
+| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/active/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md) | instruments-service | —        | 7 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open). **Currently C1** — Phase 4 WEATHER/XG shipped, Phases 1-3 + 5-7 open |
+
+### 12.3 Open — manifest + UI hygiene (gated on 12.2)
+
+| Priority | Plan                                                                                                                             | Repos                                                      | Gated on                                                         | Delivers                                                                                                                                                                                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0**   | [`sports_manifest_shard_migration_cleanup`](../../plans/active/sports_manifest_shard_migration_cleanup_2026_04_21.plan.md)       | instruments-service + deployment-api                       | `instruments_service_orchestrator_reliability_fixes` Bugs 6-7    | Extends chunk-safe rescan to every entity. Drops backwards-compat unsharded row emission. One-time legacy-row purge migration. Closes the three-state manifest orphan problem                                    |
+| **P1**   | [`sports_data_status_fixture_level_drilldown`](../../plans/active/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md) | deployment-api + deployment-ui                             | `sports_manifest_shard_migration_cleanup` + reliability Bugs 6-7 | Fixture-anchored UI navigation: Category → Data Type → League → Day → **Fixture** → Download CSV/JSON. Green-day expands fixture list with per-fixture coverage; red-day shows missing fixtures from AF schedule |
+| **P2**   | [`upcoming_fixtures_ui_view`](../../plans/active/upcoming_fixtures_ui_view_2026_04_21.plan.md)                                   | deployment-api + deployment-ui + unified-trading-system-ui | —                                                                | Per-league next-7-days forward-view cards (complementary to the backward drilldown above)                                                                                                                        |
+
+### 12.4 Open — deployment activation (dependencies already at C5)
+
+| Priority | Plan                                                                                                               | Repos                                        | Gated on                                         | Delivers                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| **P0**   | [`sports_scheduler_cron_activation`](../../plans/active/sports_scheduler_cron_activation_2026_04_21.plan.md)       | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5  | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod   |
+| **P1**   | [`features_sports_pipeline_deployment`](../../plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md) | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026 |
+
+### 12.5 Open — docs
+
+| Priority | Plan                                                                                                   | Repos              | Gated on | Delivers                                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------------ | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P2**   | [`vm_observability_codex_update`](../../plans/active/vm_observability_codex_update_2026_04_21.plan.md) | unified-trading-pm | —        | Doc-only. Extends `codex/05-infrastructure/vm-tarball-deployment.md` with Observability + Lifecycle section documenting today's fixes (`cc07649` + `beaa2e5`) |
+
+### 12.6 Execution DAG
+
+```
+Start-anywhere (independent):
+  ├─ apifootball_enrichment_historical_backfill  (P0)
+  ├─ non_apifootball_provider_backfill_launchers (P1)
+  ├─ upcoming_fixtures_ui_view                   (P2)
+  ├─ vm_observability_codex_update               (P2 docs)
+  ├─ sports_scheduler_cron_activation            (P0, unblocked)
+  ├─ features_sports_pipeline_deployment         (P1, unblocked)
+  └─ instruments_service_orchestrator_reliability_fixes  (P1, C1 — 4 of 7 phases remaining)
+           │
+           └─ Bugs 6-7 ship ─► sports_manifest_shard_migration_cleanup (P0)
+                                       │
+                                       └─► sports_data_status_fixture_level_drilldown (P1)
+```
+
+### 12.7 Agent-handoff minimum
+
+For each plan, the executing agent needs exactly:
+
+1. `plans/PLAN_FORMAT.md`
+2. `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+3. The plan file itself (self-contained — pre-audit manifest + phased DAG + success criteria)
+4. This codex doc (§1-11 for architecture; §12 for cross-plan dep awareness)
+
+One-sentence dispatch: "Execute `plans/active/<plan_name>.plan.md`. Follow pre-audit manifest strictly. Flip checkboxes
+as you go. Commit + quickmerge per repo in the phases."
