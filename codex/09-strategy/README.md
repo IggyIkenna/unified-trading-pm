@@ -28,6 +28,11 @@ scope: [engineer, admin]
   lifecycle-stage + DART sub-tab visibility matrix (8→4 lifecycle collapse, Observe/Research/Promote folded into DART,
   strategy-param version-bump contract, terminal emergency-banner copy). Mirrored at runtime by
   `unified-trading-system-ui/lib/auth/persona-lifecycle-shape.ts`.
+- [`architecture-v2/admin-registry-api.md`](architecture-v2/admin-registry-api.md) — SSOT for the Phase 7 admin-only
+  HTTP surfaces (`/api/v1/registry/{archetypes,ml-models,features}`) that let the UI `CatalogueTruthinessAdapter`
+  reconcile UAC canonical lists against live backend registries. Endpoints owned by strategy-service (archetypes + ML
+  models) and every `features-*-service` (features). Shared-secret `X-Admin-Token` auth, safe-by-default 503 when
+  unconfigured.
 
 ## What's still in this directory (not archived)
 
