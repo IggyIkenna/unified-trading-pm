@@ -148,17 +148,13 @@ todos:
 - id: p2-followup-enable-editor content: |
   - [x] [AGENT] P1. Enable inline `maturity_phase` + `product_routing` dropdowns, wire
         `PATCH /api/v1/registry/strategy-instances/{id}/lifecycle`, add audit toast on
-        `/admin/strategy-lifecycle-editor`. status: done
-        notes: |
-          Shipped across 3 commits on live-defi-rollout: UTA `3d9b96e` (added 2 GET endpoints +
-          4 tests, 14/14 pass), UI `8962928` (new `useLifecycleEditor` hook + `AdminEditorGrid`
-          with live `<select>` dropdowns + optimistic update + sonner toast + error rollback
-          + 11 new tests). Forward-only transitions enforced client-side via
-          `isValidMaturityTransition` helper (mirror of UAC `lifecycle.py`); server re-validates
-          and rolls back on reject. Bulk-edit + 5-second-undo affordance deferred as
-          `p2-followup-bulk-edit` — current impl toasts but has no undo button (sonner default
-          5s dismiss). Rows without a server-side lifecycle record stay disabled with tooltip
-          prompting seed.
+        `/admin/strategy-lifecycle-editor`. status: done notes: | Shipped across 3 commits on live-defi-rollout: UTA
+        `3d9b96e` (added 2 GET endpoints + 4 tests, 14/14 pass), UI `8962928` (new `useLifecycleEditor` hook +
+        `AdminEditorGrid` with live `<select>` dropdowns + optimistic update + sonner toast + error rollback + 11 new
+        tests). Forward-only transitions enforced client-side via `isValidMaturityTransition` helper (mirror of UAC
+        `lifecycle.py`); server re-validates and rolls back on reject. Bulk-edit + 5-second-undo affordance deferred as
+        `p2-followup-bulk-edit` — current impl toasts but has no undo button (sonner default 5s dismiss). Rows without a
+        server-side lifecycle record stay disabled with tooltip prompting seed.
 
 - id: p2-followup-bulk-edit content: |
   - [x] [AGENT] P2. Bulk-edit bar lives above the editor grid — checkbox per row + "select all" header checkbox, target

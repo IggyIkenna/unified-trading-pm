@@ -404,16 +404,14 @@ For each plan, the executing agent needs exactly:
 3. The plan file itself (self-contained — pre-audit manifest + phased DAG + success criteria)
 4. This codex doc (§1-11 for architecture; §12 for cross-plan dep awareness)
 
-**Preferred dispatch shape — master plan with orchestrator + parallel sub-agents:**
-Use [`sports_roadmap_master_execution_2026_04_21.plan.md`](../../plans/active/sports_roadmap_master_execution_2026_04_21.plan.md)
-— one orchestrator agent dispatches 8 parallel sub-agents for independent plans, barriers on
-completion, runs integration QG, pushes all repos serially (avoiding concurrent-push races),
-then dispatches the 2 chained plans. Sub-agents commit locally but don't push; orchestrator
-owns origin.
+**Preferred dispatch shape — master plan with orchestrator + parallel sub-agents:** Use
+[`sports_roadmap_master_execution_2026_04_21.plan.md`](../../plans/active/sports_roadmap_master_execution_2026_04_21.plan.md)
+— one orchestrator agent dispatches 8 parallel sub-agents for independent plans, barriers on completion, runs
+integration QG, pushes all repos serially (avoiding concurrent-push races), then dispatches the 2 chained plans.
+Sub-agents commit locally but don't push; orchestrator owns origin.
 
-**Solo dispatch** (if not using the master plan): "Execute
-`plans/active/<plan_name>.plan.md`. Follow pre-audit manifest strictly. Flip checkboxes as you
-go. Commit + quickmerge per repo in the phases."
+**Solo dispatch** (if not using the master plan): "Execute `plans/active/<plan_name>.plan.md`. Follow pre-audit manifest
+strictly. Flip checkboxes as you go. Commit + quickmerge per repo in the phases."
 
 Also update the shard-migration plan's gated-on to include the UTL primitives plan — once the UTL refactor ships, the
 shard-migration plan's Phase 1 is "use the UTL primitives" not "extend the rescan script".

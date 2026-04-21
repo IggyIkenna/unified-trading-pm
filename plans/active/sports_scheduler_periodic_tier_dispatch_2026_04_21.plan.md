@@ -97,80 +97,80 @@ Pick Firestore unless an existing state mechanism already uses one of the others
 
 ### Phase 1: State persistence + shared CLI builder [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Decide state-persistence backend (Firestore doc, local file, or GCS). Grep `deployment-service/` for
+- [x] [AGENT] P0. Decide state-persistence backend (Firestore doc, local file, or GCS). Grep `deployment-service/` for
       any existing state-file pattern (`deployments_registry`, `vm_state`, etc.) and match that. If nothing exists,
       default to Firestore. Document decision in a 3-line comment at the top of the periodic-tier code.
 
-- [ ] [AGENT] P0. Extract current per-fixture CLI assembly at `sports_trigger_scheduler.py:392-407` into a helper
+- [x] [AGENT] P0. Extract current per-fixture CLI assembly at `sports_trigger_scheduler.py:392-407` into a helper
       `_build_cli_cmd(service, operation, category, start_date, end_date,     extra_args, force_overwrite=False)`.
       Per-fixture path calls with `start_date == end_date == today`. Periodic path will call with rolling window.
 
-- [ ] [AGENT] P0. Add `PeriodicTierState` class with `get_last_run(tier_name) / set_last_run(tier_name, when)` methods.
+- [x] [AGENT] P0. Add `PeriodicTierState` class with `get_last_run(tier_name) / set_last_run(tier_name, when)` methods.
       Persist via the chosen backend. Load once at scheduler startup; write after each successful dispatch.
 
-- [ ] [AGENT] P0. Unit tests for `_build_cli_cmd` (both per-fixture and rolling-window shapes) + `PeriodicTierState`
+- [x] [AGENT] P0. Unit tests for `_build_cli_cmd` (both per-fixture and rolling-window shapes) + `PeriodicTierState`
       (round-trip persistence).
 
 ### Phase 2: Tier-1 discovery dispatch [SEQUENTIAL, depends on Phase 1]
 
-- [ ] [AGENT] P0. Add `_check_discovery()` method: iterate the `discovery` section of the YAML config, for each tier
+- [x] [AGENT] P0. Add `_check_discovery()` method: iterate the `discovery` section of the YAML config, for each tier
       entry compute whether `now - last_run[tier_name] >= timedelta(hours=frequency_hours)`, and if so, fire all
       declared services with the rolling window.
 
-- [ ] [AGENT] P0. Rolling window computation: read `discovery.rolling_window.lookback_days` (default 0) and
+- [x] [AGENT] P0. Rolling window computation: read `discovery.rolling_window.lookback_days` (default 0) and
       `discovery.rolling_window.lookahead_days` (default 0). Compute `start_date = today - lookback_days`,
       `end_date = today +     lookahead_days`. If absent, use single-day `today..today`.
 
-- [ ] [AGENT] P0. Force-overwrite wiring: if `discovery.rolling_window.force_overwrite: true`, append `--redo-all` (or
+- [x] [AGENT] P0. Force-overwrite wiring: if `discovery.rolling_window.force_overwrite: true`, append `--redo-all` (or
       the current instruments-service equivalent — verify by grepping the CLI arg parser) to the dispatched command so
       skip-if-exists doesn't kick in.
 
-- [ ] [AGENT] P0. Call `_check_discovery()` from the main poll loop in `cli/commands/sports_trigger.py` each iteration.
+- [x] [AGENT] P0. Call `_check_discovery()` from the main poll loop in `cli/commands/sports_trigger.py` each iteration.
 
-- [ ] [AGENT] P1. Unit tests for `_check_discovery()` covering: first-ever run (no state), cadence-elapsed firing,
+- [x] [AGENT] P1. Unit tests for `_check_discovery()` covering: first-ever run (no state), cadence-elapsed firing,
       cadence-not- elapsed skip, rolling-window date math (today = 2026-04-21 → start=2026-04-20 end=2026-04-28),
       force-overwrite flag presence.
 
 ### Phase 3: Tier-2 reference dispatch with window-condition [SEQUENTIAL, depends on Phase 2]
 
-- [ ] [AGENT] P0. Add `_check_reference()` method mirroring `_check_discovery()` but reads the `reference` section.
+- [x] [AGENT] P0. Add `_check_reference()` method mirroring `_check_discovery()` but reads the `reference` section.
 
-- [ ] [AGENT] P0. Window-condition gating: for services with `run_always:     false` and
+- [x] [AGENT] P0. Window-condition gating: for services with `run_always:     false` and
       `window_condition: transfer_window_open`, call UAC
       `from unified_api_contracts.sports import is_transfer_window_open` for each league the service scopes to. If the
       helper doesn't exist, add it to UAC as part of this phase (simple lookup against the season calendar — see codex
       §7.1). If it's per-league, loop over `get_expected_leagues_for_source("transfermarkt")` and fire the service with
       `--league L1,L2,...` for the leagues whose windows are open.
 
-- [ ] [AGENT] P0. Season-boundary gate: on start-of-season and end-of-season days (computed from UAC
+- [x] [AGENT] P0. Season-boundary gate: on start-of-season and end-of-season days (computed from UAC
       `sports.season_calendar`), fire a one-off `LEAGUES` + `TEAMS` + `STANDINGS` refresh. Declare this in the YAML as a
       new `season_boundary` tier or inline as a reference-tier `window_condition: season_boundary`. Prefer the YAML-
       declaration route for codex consistency.
 
-- [ ] [AGENT] P0. Call `_check_reference()` from the main poll loop.
+- [x] [AGENT] P0. Call `_check_reference()` from the main poll loop.
 
-- [ ] [AGENT] P1. Unit tests for `_check_reference()`: window-condition gating (true / false / unknown league),
+- [x] [AGENT] P1. Unit tests for `_check_reference()`: window-condition gating (true / false / unknown league),
       per-league loop assembly.
 
 ### Phase 4: Cloud Run dispatch parity [PARALLEL with Phase 3]
 
-- [ ] [AGENT] P1. Verify the existing `_backend="cloud"` stub at line 418-427 still applies — if it's still a TODO,
+- [x] [AGENT] P1. Verify the existing `_backend="cloud"` stub at line 418-427 still applies — if it's still a TODO,
       leave it TODO but ensure the new periodic dispatch hits the same code path as per-fixture dispatch does (no
       duplicate stub). If the stub has been filled in, route periodic dispatch through it.
 
-- [ ] [AGENT] P2. If Cloud Run dispatch works, wire the Tier-1/2 services to use Cloud Run by default (per codex §8 —
+- [x] [AGENT] P2. If Cloud Run dispatch works, wire the Tier-1/2 services to use Cloud Run by default (per codex §8 —
       periodic jobs are cheaper on Cloud Run than long-lived VMs). Leave Tier-3/4 on the existing path.
 
 ### Phase 5: Dry-run validation + quality gates [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Run the scheduler in `--dry-run` mode for one poll cycle with tier frequencies temporarily reduced
+- [x] [AGENT] P0. Run the scheduler in `--dry-run` mode for one poll cycle with tier frequencies temporarily reduced
       (e.g. `frequency_hours: 0.01` via test fixture). Verify both Tier-1 and Tier-2 fire with the correct rolling
       window + force-overwrite flags.
 
-- [ ] [AGENT] P0. `bash deployment-service/scripts/quality-gates.sh` green (ruff, basedpyright, tests, coverage ≥
+- [x] [AGENT] P0. `bash deployment-service/scripts/quality-gates.sh` green (ruff, basedpyright, tests, coverage ≥
       baseline).
 
-- [ ] [AGENT] P0. Commit + quickmerge (`--agent`, branch auto-read from workspace-manifest.json).
+- [x] [AGENT] P0. Commit + quickmerge (`--agent`, branch auto-read from workspace-manifest.json).
 
 ## Dependency graph
 

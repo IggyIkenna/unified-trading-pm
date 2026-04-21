@@ -45,6 +45,59 @@ state.
 
 ---
 
+## §2.5 — Whitelist Triage Rule
+
+The whitelist is for routes that are NOT and CANNOT BE human-navigable from any nav surface. Reviewers rejecting a
+whitelist PR MUST apply this test:
+
+> Can a human user (any persona) gain from seeing this page? If yes, it does NOT belong in the whitelist — it needs a
+> nav surface.
+
+### Acceptable whitelist reasons
+
+- **`MACHINE-ONLY`** — consumed by k8s / Cloud Run / monitoring as a liveness/readiness probe. Example: `/health`. No
+  human should ever navigate there; it returns JSON to a machine caller.
+- **`API-HANDLER`** — Next.js `route.ts` endpoint invoked via `fetch()` from a component. Example:
+  `/api/accounts/transfer-history`. Not a page; the UI that uses it IS reachable.
+- **`UNAUTHENTICATED-FUNNEL`** — the user literally cannot act on the page until an OAuth redirect or session-establish
+  flow completes. Examples: `/login`, `/signup`, `/pending`. These self-bootstrap from direct URL entry or OAuth
+  callback.
+
+### Unacceptable whitelist reasons (these need NAV wiring instead)
+
+- **"Admin-only, no public nav by design"** — wire into the Admin & Ops tile sub-routes. Admin is a role gate, not a
+  reachability reason.
+- **"Deep-link from another page's click handler"** — if the other page is reachable and clicks through to this one, the
+  scanner should detect it. If the scanner misses programmatic navigation (`router.push` / `window.location`), fix the
+  scanner — don't whitelist.
+- **"Query-param driven drilldown"** — add an explicit `<Link>` (even if the canonical entry is via POST-then-redirect)
+  so a tab-handover or back-button nav works.
+- **"Internal tool"** — internal roles still navigate. Wire it into an internal-only tile sub-route.
+
+### Reason string format (enforced by reviewer + test)
+
+Each whitelist entry's `reason` field MUST start with one of: `MACHINE-ONLY`, `API-HANDLER`, or
+`UNAUTHENTICATED-FUNNEL`. If your reason doesn't fit one of those three prefixes, the page belongs in a nav surface, not
+the whitelist. The executable enforcement lives in
+[`unified-trading-system-ui/__tests__/scripts/orphan-audit-detection.test.ts`](../../../unified-trading-system-ui/__tests__/scripts/orphan-audit-detection.test.ts)
+— a vitest run fails if a whitelist entry uses a disallowed reason prefix.
+
+### Programmatic-navigation detection
+
+Before adding an entry with an "admin deep-link" or "programmatic redirect" excuse, remember the scanner now recognises:
+
+- `<Link href="/path">` (static + template-literal form)
+- `router.push("/path")` / `router.replace("/path")` (any identifier, not just `router`)
+- `redirect("/path")` (Next.js server actions)
+- `window.location.href = "/path"` / `window.location.assign("/path")` / `window.location.replace("/path")`
+- `path: "/path"` / `href: "/path"` entries in nav config object literals
+- `source: "/x"` / `destination: "/y"` redirect entries in `next.config.{mjs,js,ts}`
+- Any generic `"/foo"` / `` `/foo` `` literal in `app/`, `components/`, `hooks/`, `lib/`
+
+If your deep-link pattern still isn't caught, extend the scanner regex — don't whitelist the route.
+
+---
+
 ## §3 — Scanner behaviour
 
 ### What counts as a route
@@ -129,11 +182,12 @@ Also prints a human-readable table to stdout:
 }
 ```
 
-**Whitelist is only for intentional orphans.** Rule of thumb: if you can't write a one-sentence reason that a reviewer
-would accept, the route should be wired or deleted, not whitelisted. Every entry requires:
+**Whitelist is only for intentional orphans.** See §2.5 Whitelist Triage Rule for the reviewer test and the three
+acceptable reason prefixes (`MACHINE-ONLY`, `API-HANDLER`, `UNAUTHENTICATED-FUNNEL`). If your reason doesn't start with
+one of those, the page needs nav wiring, not a whitelist entry. Every entry requires:
 
 - `route` — the URL path.
-- `reason` — why reachability-via-nav is inappropriate.
+- `reason` — **must begin with** `MACHINE-ONLY` / `API-HANDLER` / `UNAUTHENTICATED-FUNNEL` (see §2.5).
 - `added` — ISO date.
 - `owner` — team / persona responsible.
 

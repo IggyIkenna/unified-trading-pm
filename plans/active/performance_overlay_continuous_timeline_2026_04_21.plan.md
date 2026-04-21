@@ -129,13 +129,13 @@ todos:
 
 - id: p3-wire-fomo-tearsheet content: |
   - [x] [AGENT] P0. `<FomoTearsheetCard>` (+ `<RealityPositionCard>`) now render
-        `<PerformanceOverlay mode="stitched" views=["backtest","paper","live"]>` with no sidecar (compact tearsheet
-        tile shape). `PerformanceOverlayPlaceholder.tsx` deleted — no re-export shim. status: done
+        `<PerformanceOverlay mode="stitched" views=["backtest","paper","live"]>` with no sidecar (compact tearsheet tile
+        shape). `PerformanceOverlayPlaceholder.tsx` deleted — no re-export shim. status: done
 
 - id: p3-wire-dart-terminal content: |
   - [x] [AGENT] P0. DART terminal strategy-detail page (`app/(platform)/services/trading/strategies/[id]`) gets a
-        `Performance` tab next to the P&L tab. `<PerformanceOverlay mode="overlay">` with all 3 views toggleable +
-        stats sidecar + phase markers. status: done
+        `Performance` tab next to the P&L tab. `<PerformanceOverlay mode="overlay">` with all 3 views toggleable + stats
+        sidecar + phase markers. status: done
 
 - id: p3-wire-reports-im-allocator content: |
   - [x] [AGENT] P1. Reports → P&L Attribution gains an "Allocator View" tab

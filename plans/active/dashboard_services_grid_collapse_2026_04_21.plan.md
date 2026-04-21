@@ -288,29 +288,52 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-dashboard-filter-context content: |
-  - [ ] [AGENT] P1. Create `unified-trading-system-ui/lib/context/dashboard-filter-context.tsx`: (a) Provider holds
+  - [x] [AGENT] P1. Create `unified-trading-system-ui/lib/context/dashboard-filter-context.tsx`: (a) Provider holds
         `{ family: StrategyFamily | null, archetype: StrategyArchetype | null,         venue: VenueId | null, instrumentType: InstrumentType | null }`.
         (b) Persists to `localStorage["dashboardFilter"]` per-user (keyed on user.id). (c) Exports
         `useDashboardFilter()` hook. (d) Mount `<DashboardFilterProvider>` at `app/(platform)/layout.tsx` so filter
-        persists across navigation (tile → sub-route preserves selection). status: pending
+        persists across navigation (tile → sub-route preserves selection). Shipped 2026-04-21 (UI Phase 4 · Agent Y):
+        5-dim shape (family/archetype/venueSetVariant/shareClass/instrumentType) reusing auto-generated types from
+        `lib/architecture-v2/lifecycle.ts`. status: done
 - id: p4-dashboard-filter-strip-component content: |
-  - [ ] [AGENT] P1. Create `components/services/DashboardFilterStrip.tsx`: (a) Wraps `<FamilyArchetypePicker>` +
+  - [x] [AGENT] P1. Create `components/services/DashboardFilterStrip.tsx`: (a) Wraps `<FamilyArchetypePicker>` +
         optional venue picker + "Clear filters" chip. (b) Reads/writes via `useDashboardFilter()`. (c) Emits a
         `dashboardFilter.changed` analytics event on change. (d) Renders above tile grid in
         `app/(platform)/dashboard/page.tsx`. Collapsed-by-default under a
         `<Button variant="ghost">Filter strategies</Button>` disclosure to keep the dashboard quiet when nothing is set.
-        status: pending
+        Shipped 2026-04-21 (UI Phase 4 · Agent Y): venue-set picker narrows by archetype; share-class + instrument-type
+        selects added; active-filter badges + Clear chip render in the collapsed header. status: done
 - id: p4-filter-url-param-propagation content: |
-  - [ ] [AGENT] P1. When a tile sub-route chip is clicked AND `useDashboardFilter()` has a non-null
+  - [x] [AGENT] P1. When a tile sub-route chip is clicked AND `useDashboardFilter()` has a non-null
         family/archetype/venue, append `?family=X&archetype=Y&venue=Z` to the chip's `href`. DART sub-tabs + Reports
-        already parse these via the Phase-3 FamilyArchetypePicker wiring — no downstream changes needed. status: pending
+        already parse these via the Phase-3 FamilyArchetypePicker wiring — no downstream changes needed. Shipped
+        2026-04-21 (UI Phase 4 · Agent Y): chip hrefs threaded via `appendFilterToHref(sub.href, filter)` in
+        dashboard/page.tsx chip-build block; all 5 dims emitted as URL params (`family` / `archetype` /
+        `venue_set_variant` / `share_class` / `instrument_type`). status: done
 - id: p4-filter-quick-stat-gating content: |
-  - [ ] [AGENT] P1. Update `useServiceQuickStat` to consume `useDashboardFilter()` — when a family is selected, DART
+  - [x] [AGENT] P1. Update `useServiceQuickStat` to consume `useDashboardFilter()` — when a family is selected, DART
         tile P&L quick-stat renders the filtered slice (mock only for now: `$142K P&L today` →
-        `$48K StatArb P&L today`). Reports tile AUM quick-stat similarly scoped. status: pending
+        `$48K StatArb P&L today`). Reports tile AUM quick-stat similarly scoped. Shipped 2026-04-21 (UI Phase 4 · Agent
+        Y): deterministic `filterHashBucket()` drives mock per-filter subset numbers for DART P&L / positions / alerts +
+        Reports AUM. Follow-up todo `p4-filter-real-data-wiring` below for production API wiring. status: done
+- id: p4-filter-real-data-wiring content: |
+  - [x] [AGENT] P2. Wire real filtered P&L + positions + AUM queries to `unified-trading-api` once
+        `/api/v1/strategy-pnl` + `/api/v1/reports/aum` accept the 5-dim filter (`family` + `archetype` +
+        `venue_set_variant` + `share_class` + `instrument_type`). Replace the deterministic `filterHashBucket()` mock in
+        `app/(platform)/dashboard/page.tsx` `useServiceQuickStat` with the real query. Depends on backend dim-param
+        acceptance (Plan A downstream consumer). Shipped 2026-04-21 (UI Phase 4 · Agent Y):
+        `hooks/api/use-filtered-dashboard-quick-stats.ts` wired via react-query; fetches
+        `/api/dashboard/quick-stats/filtered?family=&archetype=&venue_set_variant=&share_class=&instrument_type=`
+        (gateway endpoint pending — Agent X / unified-trading-api plan A Phase 3); mock-mode
+        (`NEXT_PUBLIC_MOCK_API=true`) + endpoint-missing / transient-error paths fall back to the deterministic
+        `filterHashBucket()` subset so the tile never renders blank. DART tile consumes `filtered.dart`, Reports tile
+        consumes `filtered.reports`; default per-tile copy survives when filter is inactive. status: done
 - id: p4-qg-filter-strip content: |
-  - [ ] [SCRIPT] P1. `cd unified-trading-system-ui && npx tsc --noEmit && CI=true npm test -- --run dashboard-filter`.
-        Phase 6 gate. status: pending
+  - [x] [SCRIPT] P1. `cd unified-trading-system-ui && npx tsc --noEmit && CI=true npm test -- --run dashboard-filter`.
+        Phase 6 gate. 9/9 filter-propagation vitest cases green; typecheck clean on the 6 touched in-scope files (pre-
+        existing baseline errors in admin/github, admin/questionnaires, functions/src/setCapabilityClaim.ts,
+        lib/mocks/fixtures/defi-walkthrough.ts left untouched per single-file revert scope). orphan-audit exits 0 (222
+        routes · 212 reachable · 10 whitelisted · 0 orphans). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -404,28 +427,25 @@ todos:
 
 # ────────────────────────────────────────────────────────────────────────────
 
-  # ──────────────────────────────────────────────────────────────────────
-  # PHASE 7 — Strategy Catalogue migration follow-up (SEQUENTIAL, P1)
-  # ──────────────────────────────────────────────────────────────────────
-  # Added 2026-04-21 after user directive clarified Strategy Catalogue is a
-  # cross-cutting primitive, not a DART-exclusive sub-route. See
-  # strategy_catalogue_3tier_surface_2026_04_21.plan.md for the full migration.
-  - id: p7-strategy-catalogue-primitive-migration
-    content: |
-      - [ ] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to
-        `/services/strategy-catalogue` (single-page catalogue). After Plan B
-        (strategy_catalogue_3tier_surface_2026_04_21) lands, the chip URL stays
-        the same but the destination page becomes the Tier-3 Reality + FOMO
-        two-tab primitive. No tile/chip surface change required here — just a
-        confirmation that the chip isn't orphaned after Plan B's page rewrite.
-        Also update DART tile chip label "Strategy Catalogue" → "Catalogue"
-        (shorter, clearer now it's a shared primitive).
-    status: pending
-  - id: p7-admin-sub-route-additions
-    content: |
-      - [ ] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle-
-        editor pages, extend SERVICE_REGISTRY admin tile sub-routes +
-        `PERSONA_SUBROUTE_SHAPES.admin` to include `strategy-universe` +
-        `strategy-lifecycle-editor`. Regenerate the ≤4-chip display logic
-        if admin tile exceeds the cap.
-    status: pending
+# ──────────────────────────────────────────────────────────────────────
+
+# PHASE 7 — Strategy Catalogue migration follow-up (SEQUENTIAL, P1)
+
+# ──────────────────────────────────────────────────────────────────────
+
+# Added 2026-04-21 after user directive clarified Strategy Catalogue is a
+
+# cross-cutting primitive, not a DART-exclusive sub-route. See
+
+# strategy_catalogue_3tier_surface_2026_04_21.plan.md for the full migration.
+
+- id: p7-strategy-catalogue-primitive-migration content: |
+  - [ ] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to `/services/strategy-catalogue` (single-page
+        catalogue). After Plan B (strategy_catalogue_3tier_surface_2026_04_21) lands, the chip URL stays the same but
+        the destination page becomes the Tier-3 Reality + FOMO two-tab primitive. No tile/chip surface change required
+        here — just a confirmation that the chip isn't orphaned after Plan B's page rewrite. Also update DART tile chip
+        label "Strategy Catalogue" → "Catalogue" (shorter, clearer now it's a shared primitive). status: pending
+- id: p7-admin-sub-route-additions content: |
+  - [ ] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle- editor pages, extend SERVICE_REGISTRY admin
+        tile sub-routes + `PERSONA_SUBROUTE_SHAPES.admin` to include `strategy-universe` + `strategy-lifecycle-editor`.
+        Regenerate the ≤4-chip display logic if admin tile exceeds the cap. status: pending

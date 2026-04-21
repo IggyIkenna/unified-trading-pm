@@ -44,10 +44,10 @@ examples for testing any DeFi strategy
   standings + kickoff-hour weather. `FixtureFeatures` Pydantic in UAC; `pipeline/fixture_features.py` + `_asof.py` +
   batch_handler wiring in FSS. 32 unit tests green. Locked-by `live-defi-rollout` pending human `[unlock-plan]`.
 - features_sports_derived_data_crime_fixes_2026_04_21.plan.md — Follow-up to the denormalisation plan: remove two
-  pre-existing data crimes in `features-sports-service` derived_features — (1) `squad_value_calculator.py`
-  zero-default → NaN propagation, (2) `_compute_league_batch` lookahead (read standings from `day=kickoff_date - 1`
-  not `day=kickoff_date`). Also resolves the `_normalize_standings` rank-column bug that surfaced in the parent
-  plan's dry-run. Depends on the denormalisation plan (shipped).
+  pre-existing data crimes in `features-sports-service` derived_features — (1) `squad_value_calculator.py` zero-default
+  → NaN propagation, (2) `_compute_league_batch` lookahead (read standings from `day=kickoff_date - 1` not
+  `day=kickoff_date`). Also resolves the `_normalize_standings` rank-column bug that surfaced in the parent plan's
+  dry-run. Depends on the denormalisation plan (shipped).
 
 ### Data & Testing
 

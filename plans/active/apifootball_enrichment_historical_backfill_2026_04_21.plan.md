@@ -21,6 +21,36 @@ depends_on: []
 isProject: false
 ---
 
+## PLAN-SIZING (Phase 0 — 2026-04-21)
+
+**Plan tier source of truth:** Secret Manager holds `api-football-api-key` only (no tier metadata).
+`instruments-service/docs/SPORTS_INSTRUMENTS.md` documents the secret name, not subscription level. **Documented API
+caps (UAC):** `unified-api-contracts/unified_api_contracts/external/api_football/schemas.py` and
+`registry/venue_rate_limits.py` — **100 req/day (free), 7500/day (paid / Pro)**. Vendor “Ultra” (~75000/day) is not
+encoded in UAC; **confirm live tier** from API-Football dashboard or from response headers (`x-ratelimit-requests-limit`
+/ `x-ratelimit-requests-remaining`) on the first authenticated call.
+
+**Call budget (2019-01-16..2026-04-20, ~2650 dates):**
+
+| Entity           | Order-of-magnitude calls | Notes                                    |
+| ---------------- | ------------------------ | ---------------------------------------- |
+| INJURIES         | ~2650                    | 1 call per date (league-agnostic window) |
+| FIXTURE_STATS    | 150k–300k (plan est.)    | Per completed fixture                    |
+| FIXTURE_EVENTS   | same band                | Per completed fixture                    |
+| FIXTURE_LINEUPS  | same band                | Per completed fixture                    |
+| PLAYER_STATS     | highest                  | Per player per fixture                   |
+| **Total enrich** | ~600k–1.2M (plan est.)   | Serial across entities (singleton lock)  |
+
+**Wall-clock vs daily cap:**
+
+- **7500/day (Pro):** INJURIES uses under one day of quota; VM wall ~1–2h with pacing. Full enrichment wave spans **many
+  calendar months** if capped at 7500/day (plan: ~3–6 months).
+- **75000/day (Ultra):** Same totals → **~8–16 calendar days** of quota for the heavy tranche (plan: ~10–15 days).
+
+**Sharding decision:** **A — One long-running VM per entity, strictly serial** (singleton lock on `af-backfill-*`). **B
+(chunked multi-VM)** is rejected: shared API key rate limit yields 429 thrash without throughput gain (launcher
+documents 2026-04-19 SFI incident pattern).
+
 ## Context
 
 Today's backfill work brought SPORTS FIXTURES from ~1% honest coverage to 99.2% for top leagues. But the SPORTS category
@@ -90,10 +120,10 @@ runtime. Chunking across multiple VMs hits the shared-key rate limit and yields 
 
 ### Phase 0: Plan sizing [SEQUENTIAL — do first]
 
-- [ ] [AGENT] P0. Query API-Football current plan tier + daily rate limit (look in Secret Manager / check
+- [x] [AGENT] P0. Query API-Football current plan tier + daily rate limit (look in Secret Manager / check
       `instruments-service/docs/` for plan tier notes). Document in a PLAN-SIZING section at the top of this file.
 
-- [ ] [AGENT] P0. Compute expected VM wall-clock per entity from: number of in-season (league, date) combos ×
+- [x] [AGENT] P0. Compute expected VM wall-clock per entity from: number of in-season (league, date) combos ×
       fixtures-per-combo × 1 API call, vs. the plan's daily limit. Pick between: - A) One long-running VM per entity,
       serial - B) Chunked by year (3 VMs each covering 2-3 years) Document choice.
 

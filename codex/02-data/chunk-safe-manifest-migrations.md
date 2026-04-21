@@ -7,6 +7,10 @@ scope: [engineer, admin]
 
 # Chunk-Safe Manifest Migrations
 
+**Canonical implementation:** `unified-trading-library` → `unified_trading_library.manifest_migrations`
+(`ManifestMigrator`, `RescanScanner`, `LegacyRowPurger`, `chunked_date_ranges`). Consumer repos (e.g.
+`instruments-service`) keep thin CLI entry points; do not fork the chunk-safe machinery into a second copy.
+
 Pattern for running long migrations / backfills / rescans in parallel across N VMs without racing on the availability
 manifest index.
 
@@ -164,9 +168,9 @@ Candidates that should adopt this pattern on their next long migration:
 - Instruments-service per-instrument sentinel backfill (Tier-3 shards over many chains × instrument_types).
 - Features-onchain feature-group rebuild.
 
-The Python helpers (`_split_date_range`, `_worker_partial_blob`, `_merge_into_canonical`) in
-`rescan_sports_fixtures_canonical.py` are intentionally stateless and can be lifted into a shared library if a second
-script needs them. Until then, copy + localise the filter predicate to the migration's row key.
+Use **UTL** (`ManifestMigrator` + `chunked_date_ranges` + optional `RescanScanner` / `LegacyRowPurger`) for every new
+migration — wire a migration-specific `drop_canonical_row` predicate and Parquet scan callbacks; do not duplicate
+coordinator/worker/partial-path logic in service repos.
 
 ## SSOT cross-refs
 

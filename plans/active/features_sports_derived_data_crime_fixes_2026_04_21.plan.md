@@ -33,7 +33,7 @@ of that plan. They remain on HEAD as of 2026-04-21 and violate codex `02-data/sp
 ### Crime 1 — `squad_value_calculator.py` defaults missing data to `0.0`
 
 File:
-[`features_sports_service/calculators/squad_value_calculator.py`](../../features-sports-service/features_sports_service/calculators/squad_value_calculator.py)
+[`features_sports_service/calculators/squad_value_calculator.py`](../../../features-sports-service/features_sports_service/calculators/squad_value_calculator.py)
 
 - `_compute_team_squad_features` at L58-63 returns a dict pre-populated with `0.0` for every column when the team has no
   row in `squad_data`:
@@ -60,7 +60,7 @@ divide-by-zero else-branch that writes `0.0`.
 ### Crime 2 — `_compute_league_batch` reads standings from `day=kickoff_date` (potential lookahead)
 
 File:
-[`features_sports_service/exporters/derived_features_exporter.py`](../../features-sports-service/features_sports_service/exporters/derived_features_exporter.py)
+[`features_sports_service/exporters/derived_features_exporter.py`](../../../features-sports-service/features_sports_service/exporters/derived_features_exporter.py)
 L364 + L1128-L1200
 
 - `derived_features_exporter.export_derived_features` reads `standings = ref_data.get("standings", pd.DataFrame())`
@@ -77,7 +77,7 @@ L364 + L1128-L1200
 back up to 7 days earlier if `day=kickoff_date - 1` is absent (consistent with `read_reference_entity`'s existing
 slow-moving-entity fallback logic, but anchored strictly before kickoff day). This matches the contract already
 implemented in
-[`features_sports_service/pipeline/fixture_features.py`](../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
+[`features_sports_service/pipeline/fixture_features.py`](../../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
 `_load_pre_match_standings`.
 
 ### Blast radius
@@ -162,23 +162,23 @@ implemented in
 
 - [ ] [AGENT] P0. Grep the full workspace for all readers of league-calculator output columns. Identify exact column
       names by reading
-      [`features_sports_service/calculators/league_calculator.py`](../../features-sports-service/features_sports_service/calculators/league_calculator.py)
+      [`features_sports_service/calculators/league_calculator.py`](../../../features-sports-service/features_sports_service/calculators/league_calculator.py)
       `LEAGUE_COLUMNS`. Document every read site. Flag value-comparison patterns as above.
 
 - [ ] [AGENT] P0. Read
-      [`features_sports_service/data/gcs_reader.py::_normalize_standings`](../../features-sports-service/features_sports_service/data/gcs_reader.py)
+      [`features_sports_service/data/gcs_reader.py::_normalize_standings`](../../../features-sports-service/features_sports_service/data/gcs_reader.py)
       (around L408). Document whether `rank` is renamed, dropped, or preserved. This is the root of the
       `home_standing_pre NULL` dry-run finding from the parent plan and must be resolved HERE (shared code path).
 
 - [ ] [AGENT] P0. Read
-      [`features_sports_service/calculators/league_calculator.py::compute_league_from_standings`](../../features-sports-service/features_sports_service/calculators/league_calculator.py).
+      [`features_sports_service/calculators/league_calculator.py::compute_league_from_standings`](../../../features-sports-service/features_sports_service/calculators/league_calculator.py).
       Audit for zero-defaults on missing teams (same pattern as squad_value). If found, add a Phase 1.5 item to fix in
       the same plan.
 
 ### Phase 1: Fix squad_value_calculator zero-defaults [SEQUENTIAL, depends on Phase 0]
 
 - [ ] [AGENT] P0. In
-      [`features_sports_service/calculators/squad_value_calculator.py`](../../features-sports-service/features_sports_service/calculators/squad_value_calculator.py): -
+      [`features_sports_service/calculators/squad_value_calculator.py`](../../../features-sports-service/features_sports_service/calculators/squad_value_calculator.py): -
       Replace `defaults: dict[str, float] = {..: 0.0, ..}` in `_compute_team_squad_features` (L58-63) with
       `defaults: dict[str, float] = {..: np.nan, ..}`. - Replace
       `result: dict[str, float] = {col: 0.0 for col in SQUAD_VALUE_COLUMNS}` in `_compute_squad_value_for_fixture`
@@ -189,7 +189,7 @@ implemented in
       Validate.
 
 - [ ] [AGENT] P0. Update / extend
-      [`tests/unit/test_new_phase4_calculators.py`](../../features-sports-service/tests/unit/test_new_phase4_calculators.py): -
+      [`tests/unit/test_new_phase4_calculators.py`](../../../features-sports-service/tests/unit/test_new_phase4_calculators.py): -
       Add `test_squad_value_missing_team_yields_nan_not_zero` — fixture with a team NOT in `squad_data` →
       `home_squad_value_eur` is NaN. - Add `test_squad_value_ratio_nan_when_denominator_missing` — away team missing →
       `squad_value_ratio` is NaN (not 0.0, not inf). - Add `test_squad_value_exception_branch_emits_nan_row` — inject
@@ -199,14 +199,14 @@ implemented in
 ### Phase 2: Fix \_compute_league_batch lookahead [SEQUENTIAL, depends on Phase 1]
 
 - [ ] [AGENT] P0. Hoist
-      [`pipeline/fixture_features.py::_load_pre_match_standings`](../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
+      [`pipeline/fixture_features.py::_load_pre_match_standings`](../../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
       into `features_sports_service/data/gcs_reader.py` as
       `read_pre_match_standings(target_date: date) -> tuple[pd.DataFrame, str | None]`. This makes it a reusable read
       helper for any calculator that needs the pre-match snapshot. Update `pipeline/fixture_features.py` to import from
       the hoisted location.
 
 - [ ] [AGENT] P0. In
-      [`features_sports_service/exporters/derived_features_exporter.py`](../../features-sports-service/features_sports_service/exporters/derived_features_exporter.py): -
+      [`features_sports_service/exporters/derived_features_exporter.py`](../../../features-sports-service/features_sports_service/exporters/derived_features_exporter.py): -
       Around L364, REPLACE `standings = ref_data.get("standings", pd.DataFrame())` with
       `standings, standings_partition = read_pre_match_standings(target_date)`. - Log the partition at INFO:
       `logger.info("derived_features[%s]: standings loaded from %s", date_str, standings_partition or "absent")`. -
@@ -224,7 +224,7 @@ implemented in
       `_compute_league_batch` reads (after its internal `rank → position` rename at L1141).
 
 - [ ] [AGENT] P0. Unit tests in
-      [`tests/unit/test_exporters.py`](../../features-sports-service/tests/unit/test_exporters.py) or new
+      [`tests/unit/test_exporters.py`](../../../features-sports-service/tests/unit/test_exporters.py) or new
       `tests/unit/test_league_batch_lookahead.py`: - `test_standings_read_uses_day_minus_one` — patch
       `read_reference_entity` to record calls; assert `date_str="2024-08-31"` was called for `kickoff_date=2024-09-01`,
       and `date_str="2024-09-01"` was NEVER called with `entity="standings"`. -
@@ -258,8 +258,8 @@ implemented in
 - [ ] [AGENT] P0. Commit + quickmerge features-sports-service (`--agent`, scoped `--files`).
 
 - [ ] [AGENT] P0. Update codex
-      [`codex/02-data/sports-scheduling-and-sharding.md`](../../unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md)
-      §2.4 (SFI/standings denormalisation) + §9.1 (fixture-features shipped block): remove the "out-of-scope follow-ups"
+      [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §2.4
+      (SFI/standings denormalisation) + §9.1 (fixture-features shipped block): remove the "out-of-scope follow-ups"
       bullets covering these two crimes. Add a §5.1 subsection "Examples of shipped fixes" pointing at this plan's
       commits.
 
@@ -291,10 +291,10 @@ Phase 0 (audit + grep downstream + read _normalize_standings)
 ## SSOT cross-refs
 
 - Data-crime definition:
-  [`codex/02-data/sports-scheduling-and-sharding.md`](../../unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md)
-  §5 (lookahead-bias rules).
+  [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §5
+  (lookahead-bias rules).
 - Validation-pattern rule:
-  [`codex/06-coding-standards/validation-patterns.md`](../../unified-trading-pm/codex/06-coding-standards/validation-patterns.md) +
+  [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md) +
   `.cursor/rules/standards/no-empty-fallbacks.mdc`.
 - Parent plan (declared these as out-of-scope follow-ups):
   [`plans/active/features_sports_denormalisation_pipeline_2026_04_21.plan.md`](features_sports_denormalisation_pipeline_2026_04_21.plan.md)

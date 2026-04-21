@@ -89,25 +89,25 @@ UI renders: day-grouped → league-grouped → per-fixture card with kickoff tim
 
 ### Phase 1: deployment-api endpoint [PARALLEL]
 
-- [ ] [AGENT] P0. Add `GET /api/fixtures/upcoming` route. Query params: `days: int = 7`, `league_id: str | None = None`.
-- [ ] [AGENT] P0. Build response model `UpcomingFixture` with canonical columns from fixtures.parquet. Validate via
+- [x] [AGENT] P0. Add `GET /api/fixtures/upcoming` route. Query params: `days: int = 7`, `league_id: str | None = None`.
+- [x] [AGENT] P0. Build response model `UpcomingFixture` with canonical columns from fixtures.parquet. Validate via
       pydantic.
-- [ ] [AGENT] P0. Implement `list_upcoming_fixtures(days, league_id)` helper reading parquets from
+- [x] [AGENT] P0. Implement `list_upcoming_fixtures(days, league_id)` helper reading parquets from
       `gs://instruments-store-sports-{pid}/     sports_reference/by_date/day={D}/entity=fixtures/fixtures.parquet` for D
       in [today, today+days]. Concat + filter + sort by kickoff_utc.
-- [ ] [AGENT] P0. Unit tests (mocked GCS).
+- [x] [AGENT] P0. Unit tests (mocked GCS).
 
 ### Phase 2: deployment-ui component [PARALLEL]
 
-- [ ] [AGENT] P0. `src/api/client.ts`: add `fetchUpcomingFixtures(opts)` + `UpcomingFixture` type.
-- [ ] [AGENT] P0. `src/components/UpcomingFixtures.tsx`: card grid component. Grouped-by-day details/summary blocks,
+- [x] [AGENT] P0. `src/api/client.ts`: add `fetchUpcomingFixtures(opts)` + `UpcomingFixture` type.
+- [x] [AGENT] P0. `src/components/UpcomingFixtures.tsx`: card grid component. Grouped-by-day details/summary blocks,
       league sub-groups, per-fixture card with kickoff (local time), teams, venue, status.
-- [ ] [AGENT] P0. Add to DataStatusTab as a new section OR new tab route.
-- [ ] [AGENT] P0. Vitest unit test with mocked API client.
+- [x] [AGENT] P0. Add to DataStatusTab as a new section OR new tab route.
+- [x] [AGENT] P0. Vitest unit test with mocked API client.
 
 ### Phase 3: unified-trading-system-ui integration [PARALLEL, optional]
 
-- [ ] [AGENT] P1. Audit if sports-markets tab exists. If yes, add UpcomingFixtures there using the deployment-api
+- [x] [AGENT] P1. Audit if sports-markets tab exists. If yes, add UpcomingFixtures there using the deployment-api
       endpoint. If no, SKIP this phase with a note + close plan at C5 for the two repos actually changed.
 
 ### Phase 4: QG + smoke [SEQUENTIAL]

@@ -4,37 +4,32 @@
 
 Two plans landed 2026-04-21 under `plans/active/`:
 
-1. **`smoke_dep_chain_tactical_fixes_2026_04_20.plan.md`** — Phase A tactical
-   (SIT manifest filter, path-layout SSOT reconcile, launcher extensions for
-   SPORTS+PREDICTION, stale default date, VM auto-shutdown, SIGKILL
-   investigation, manifest v5 semantic docs, QG on all touched repos).
+1. **`smoke_dep_chain_tactical_fixes_2026_04_20.plan.md`** — Phase A tactical (SIT manifest filter, path-layout SSOT
+   reconcile, launcher extensions for SPORTS+PREDICTION, stale default date, VM auto-shutdown, SIGKILL investigation,
+   manifest v5 semantic docs, QG on all touched repos).
 
-2. **`universe_ssot_fix_2026_04_20.plan.md`** — Phase B architectural
-   drift. Instruments-service must be the SSOT for every venue's universe
-   across all 5 categories. No MTDS adapter discovers symbols/markets at
-   download time. Filters (UAC `capability_declarations` +
-   `service_config`) apply ON TOP of the full universe — not as a
-   replacement for universe discovery. Coverage = fetched / filtered_universe
-   stays honest (100% possible even with a small MVP filter).
+2. **`universe_ssot_fix_2026_04_20.plan.md`** — Phase B architectural drift. Instruments-service must be the SSOT for
+   every venue's universe across all 5 categories. No MTDS adapter discovers symbols/markets at download time. Filters
+   (UAC `capability_declarations` + `service_config`) apply ON TOP of the full universe — not as a replacement for
+   universe discovery. Coverage = fetched / filtered_universe stays honest (100% possible even with a small MVP filter).
 
 ### Background — why these plans exist
 
-2026-04-20 institutional smoke canary (first run of
-`launch-instruments-smoke-vm.sh` + `launch-canonical-smoke-vm.sh` dep chain)
-surfaced 11 issues. 5 bucket-naming sites were fixed inline (commits:
-instruments-service@e6e50c7, UTL@4ee91009, deployment-service@2163ec3,
-MTDS@1363e3f + @81b1b6f). CEFI × BINANCE-FUTURES × 2026-04-19 proved green
+2026-04-20 institutional smoke canary (first run of `launch-instruments-smoke-vm.sh` + `launch-canonical-smoke-vm.sh`
+dep chain) surfaced 11 issues. 5 bucket-naming sites were fixed inline (commits: instruments-service@e6e50c7,
+UTL@4ee91009, deployment-service@2163ec3, MTDS@1363e3f + @81b1b6f). CEFI × BINANCE-FUTURES × 2026-04-19 proved green
 end-to-end (131 parquet written via Tier-0 → Tier-1 dep chain).
 
-Remaining issues split into **tactical** (Phase A, in-session-shippable) and
-**architectural** (Phase B, multi-day per venue class).
+Remaining issues split into **tactical** (Phase A, in-session-shippable) and **architectural** (Phase B, multi-day per
+venue class).
 
 Critical architectural clarification from the operator:
+
 - Filters (MVP subset) are correct as-is — NOT the problem
-- Universe discovery happening at MTDS-runtime (via `/markets`, `/sports`,
-  hardcoded SYMBOL arrays, inline UAC registry walks) is WRONG
-- Every universe discovery should happen in instruments-service once per date
-  and be written to GCS parquet; every downstream reads that parquet
+- Universe discovery happening at MTDS-runtime (via `/markets`, `/sports`, hardcoded SYMBOL arrays, inline UAC registry
+  walks) is WRONG
+- Every universe discovery should happen in instruments-service once per date and be written to GCS parquet; every
+  downstream reads that parquet
 
 ## Phase A execution (single agent, ~2-3 hr)
 
@@ -90,11 +85,9 @@ archive until Phase B green).
 
 ## Phase B execution (parallel sub-agents, ~3-7 days)
 
-Phase B has 9 todos, 6 of which split cleanly per venue class and can run
-**in parallel** (B1 TradFi, B2 Hyperliquid+Aster, B3 Polymarket, B4 Kalshi,
-B5 Sports-bookmakers). B6 (remove preflight bypass) must run AFTER B1-B5.
-B7 (DeFi pool universe) can run parallel with B1-B5. B8 (filter audit) can
-run any time. B9 (verification) is terminal.
+Phase B has 9 todos, 6 of which split cleanly per venue class and can run **in parallel** (B1 TradFi, B2
+Hyperliquid+Aster, B3 Polymarket, B4 Kalshi, B5 Sports-bookmakers). B6 (remove preflight bypass) must run AFTER B1-B5.
+B7 (DeFi pool universe) can run parallel with B1-B5. B8 (filter audit) can run any time. B9 (verification) is terminal.
 
 ### Parallelization graph
 
@@ -203,17 +196,14 @@ QG green + commit + push + flip plan checkbox.
 
 ### B7 (DeFi pool universe) — follow-up
 
-Parallel-safe with B1-B5. See plan todo `phase-b7-defi-pool-universe` for
-scope. DeFi lending_indices already works; this adds the pool/swap
-universe needed for Uniswap/Balancer tick ingest.
+Parallel-safe with B1-B5. See plan todo `phase-b7-defi-pool-universe` for scope. DeFi lending_indices already works;
+this adds the pool/swap universe needed for Uniswap/Balancer tick ingest.
 
 ### B8 (filter-model audit + new doc)
 
-Can run any time — creates a new codex doc at
-`codex/02-data/universe-and-filter-model.md` documenting the canonical
-pattern (universe discovery → filter → fetch → coverage). Also audits all
-filter call sites to confirm they run AFTER universe load, not IN the
-adapter.
+Can run any time — creates a new codex doc at `codex/02-data/universe-and-filter-model.md` documenting the canonical
+pattern (universe discovery → filter → fetch → coverage). Also audits all filter call sites to confirm they run AFTER
+universe load, not IN the adapter.
 
 ### B9 (verification)
 
@@ -245,20 +235,18 @@ Expected cost: ~$3-5 in VM-hours for full 5-category × 2-tier matrix run.
 
 - **Branch**: live-defi-rollout
 - **Commit style**: conventional commits (feat / fix / docs / chore / refactor)
-- **Commit co-author footer**:
-  `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
+- **Commit co-author footer**: `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
 - **No `--dep-branch`, no `--force-push`** (rule from workspace CLAUDE.md)
-- **Pre-commit hook failures**: investigate + fix the underlying issue; do NOT
-  use `--no-verify` unless explicitly authorised
-- **Concurrent agents**: `git pull --rebase origin live-defi-rollout` before
-  push. Stash local uncommitted first if needed.
-- **Plan lock**: both plans have `locked_by: live-defi-rollout`. Do NOT
-  archive or delete plan files without `[unlock-plan]` tag in commit.
+- **Pre-commit hook failures**: investigate + fix the underlying issue; do NOT use `--no-verify` unless explicitly
+  authorised
+- **Concurrent agents**: `git pull --rebase origin live-defi-rollout` before push. Stash local uncommitted first if
+  needed.
+- **Plan lock**: both plans have `locked_by: live-defi-rollout`. Do NOT archive or delete plan files without
+  `[unlock-plan]` tag in commit.
 
 ## Report back
 
-Each agent: on completion, post to this file (append under `## Agent Reports`)
-with format:
+Each agent: on completion, post to this file (append under `## Agent Reports`) with format:
 
 ```
 ### {Agent ID} — {date} — {status}

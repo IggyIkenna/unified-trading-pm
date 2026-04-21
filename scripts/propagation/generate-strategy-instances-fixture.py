@@ -136,9 +136,7 @@ class StrategyEntry:
 def _load_registry(workspace: Path) -> list[StrategyEntry]:
     uac = workspace / "unified-api-contracts"
     sys.path.insert(0, str(uac))
-    from unified_api_contracts.internal.domain.strategy_service.registry import (
-        STRATEGY_REGISTRY,
-    )
+    from unified_api_contracts.internal.domain.strategy_service import STRATEGY_REGISTRY
 
     out: list[StrategyEntry] = []
     for s in STRATEGY_REGISTRY.all():
