@@ -175,7 +175,14 @@ coverage because the denominator assumes every (conditionId × day) combo should
 
 ## 7. Aggregator algorithm (v5 honest-coverage) — MTDS
 
-For each `(category, venue, data_type)` the data-status aggregator computes:
+Two tiers depending on whether the data_type is per-instrument or venue-level. UAC
+`is_per_instrument_shard_data_type(dt)` is the discriminator — returns True for
+`trades` / `book_snapshot_5` / `derivative_ticker` / `options_chain` /
+`futures_chain` / `dex_swaps` / `dex_pools` / `lending_indices` / `oracle_prices` /
+`lst_rates` / `rewards` / `risk_params` / `prediction_trades` /
+`prediction_book_snapshot` / `prediction_market_metadata`. Everything else
+(`liquidations`, `ohlcv_*`, `tbbo`, `gas_fees`, `perp_funding`, `odds`) is
+venue-level.
 
 ```python
 # From UAC + this SSOT
@@ -192,14 +199,34 @@ for venue in expected_venues:
                 expected_dates = [d for d in expected_dates if is_in_tradfi_tick_window(d)]
         else:
             expected_dates = daily_grid(effective_start, end_date)
-        # DeFi adds chain axis; SPORTS adds (league, bookmaker, fixture_date).
-        # Base honest-coverage:
-        found_pairs = distinct (venue, dt, date) with capture_status in {captured, empty_confirmed}
-        ratio = len(found_pairs) / max(1, len(expected_dates))
+        # Tier-3 per-instrument (Phase 8C/8D): for per-instrument shards the
+        # denominator is |expected_instruments| × |expected_dates| and the
+        # numerator is distinct (instrument_id, date) pairs with
+        # capture_status in {captured, empty_confirmed}. Instrument list
+        # comes from UAC seed or a runtime provider; capped per Phase 8E
+        # (--per-instrument-sentinel-cap flag; MVP=50/Expanded=200/Full=10000).
+        if is_per_instrument_shard_data_type(dt):
+            instruments = get_expected_instruments_for_venue(
+                venue, dt, as_of_date=effective_start, cap=sentinel_cap
+            )
+            expected_shards = len(instruments) * len(expected_dates)
+            found_shards = distinct (instrument_id, date) for (venue, dt) in manifest
+            # Legacy fallback: if all matching rows have empty instrument_id
+            # (pre-Phase-8C writes), degrade to Tier-2 per-(venue, dt, date)
+            # denominator and surface legacy_row_count so the UI can render
+            # a migration-in-progress badge.
+        else:
+            # Tier-2 venue-level (Phase 6d): denominator = |expected_dates|.
+            found_shards = distinct (venue, dt, date) with capture_status in {captured, empty_confirmed}
+        # DeFi adds chain axis; SPORTS adds (league, bookmaker, fixture_date)
+        # via Phase 7 Tier-2 orchestrator fan-out.
+        ratio = found_shards / max(1, expected_shards)
 ```
 
 No multipliers. No cross-venue row-count comparisons. `capture_status="empty_confirmed"` counts toward `found_shards`
-per v5 SSOT.
+per v5 SSOT. Instrument universe capped per Phase 8E rollout — see
+`codex/02-data/per-instrument-sentinel-rollout.md` for the 3-tier progression
+(MVP=50 → Expanded=200 → Full=10000) and observability gates.
 
 ## 8. Open questions / follow-ups
 
@@ -218,11 +245,18 @@ per v5 SSOT.
 - ✅ **SPORTS per-bookmaker × per-league Tier-2 sentinel** (Phase 7 #3) — orchestrator emits
   `(bookmaker, league_id, fixture_date)` sentinel rows for the league-partitioned ODDS_API path. Size-capped to ~12
   bookmakers × 33 PREDICTION leagues × in-season fixture dates per day (~396/day vs 4M naive fan-out).
-- ⏳ **Instrument-level expected** — `trades` / `book_snapshot_5` are per-instrument shards. UAC helper
-  `get_expected_instrument_types_for_venue(venue)` returns instrument_types but not specific instruments. Instrument
-  enumeration comes from instruments-service output — aggregator reads `instruments_store_*` buckets for the
-  current-day active instrument list. Honest per-instrument coverage is a Phase 8 stretch goal; base per-venue ×
-  per-data_type × per-day is the MVP shipped in Phase 6c.
+- ✅ **Instrument-level expected** (Phase 8) — shipped. Per-instrument shard data_types (`trades` /
+  `book_snapshot_5` / `derivative_ticker` / `options_chain` / `futures_chain` / `dex_swaps` / `dex_pools` /
+  `lending_indices` / `oracle_prices` / `lst_rates` / `rewards` / `risk_params` / `prediction_*`) now use a
+  `|expected_instruments| × |expected_dates|` Tier-3 denominator. UAC accessor
+  `get_expected_instruments_for_venue(venue, data_type, cap=N)` returns the expected instrument list (MVP seed
+  tables for CEFI/TRADFI spot/perp/options; DeFi + PREDICTION seeds land in follow-up Wave 8G). MTDS orchestrator
+  emits Tier-3 sentinels per `(venue, data_type, instrument_id, date)`; deployment-api aggregator reads those
+  and computes honest coverage. Size-capped via `--per-instrument-sentinel-cap` CLI flag — see
+  `codex/02-data/per-instrument-sentinel-rollout.md` for the 3-tier progression.
+- ⏳ **Phase 8G DeFi + PREDICTION seeds** — MVP seed tables for DeFi (top-20 Uniswap pools, top-10 Aave reserves)
+  and PREDICTION (top-N active condition IDs) are placeholders. Until seeded, DeFi per-instrument dts return 0
+  expected shards and fall back to the Tier-2 venue-level axis. ≈5 engineer-hours to source.
 - ⏳ **HYPERLIQUID with chain=''** in perp-funding bucket — routing inconsistency; currently lands outside the
   `(venue=HYPERLIQUID, chain=HYPERLIQUID)` canonical form. Cosmetic but worth investigation when the perp adapter is
   next touched.
@@ -237,3 +271,10 @@ per v5 SSOT.
   in the aggregator all landed. Live DEFI honest coverage moved 4% → 50%. Follow-ups narrowed to per-instrument
   sentinels (Phase 8) and VM FIXTURES backfill (operator work — script
   `instruments-service/scripts/rescan_sports_fixtures_canonical.py`).
+- **2026-04-21** — Phase 8 closeout. Tier-3 per-instrument sentinel fan-out shipped across MTDS orchestrator
+  (commit `2947dd2`) + deployment-api aggregator (`c059e6f`); UAC `get_expected_instruments_for_venue` +
+  `is_per_instrument_shard_data_type` accessors landed (`74e278c`); `--per-instrument-sentinel-cap` CLI flag
+  wired with 3-tier rollout doc at `codex/02-data/per-instrument-sentinel-rollout.md` (MTDS `629e414c` + PM
+  `4cc0ce7a`). Per-instrument denominator replaces the per-(venue, data_type, date) shard axis for 15
+  per-instrument data_types; venue-level data_types (liquidations, ohlcv_*, tbbo, gas_fees, perp_funding, odds)
+  stay on Tier-2. Remaining follow-ups: Wave 8G DeFi + PREDICTION seed tables, and VM FIXTURES backfill.
