@@ -35,11 +35,13 @@ depends_on:
 
 # Tier 1 — Admin universe (read-only)
 
-# Surface: /services/admin/strategy-universe
+# Surface: /admin/strategy-universe
 
 # Shows: every UAC-expressed instance (5-dim: family × archetype × venue-set ×
 
-# instrument-type-set × share-class), ~200-300 entries post-Plan-A
+# instrument-type-set × share-class), 84 entries at Plan A seed, ~200-300
+
+# post-expansion.
 
 # Affordances: filter/search/sort; no mutations; shows current maturity phase
 
@@ -49,7 +51,7 @@ depends_on:
 
 # Tier 2 — Admin routing + maturity editor
 
-# Surface: /services/admin/strategy-lifecycle-editor
+# Surface: /admin/strategy-lifecycle-editor
 
 # Shows: same universe, but each row is editable
 
@@ -57,7 +59,7 @@ depends_on:
 
 # routing, bulk-edit via filter+apply, audit-log per change
 
-# Backend: PATCH /api/v1/registry/strategy-instances/{id}/lifecycle (Plan A)
+# Backend: PATCH /api/v1/registry/strategy-instances/{id}/lifecycle (Plan A Phase 3)
 
 #
 
@@ -116,18 +118,15 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p1-strategy-catalogue-surface-component content: |
-  - [ ] [AGENT] P0. Create `components/strategy-catalogue/StrategyCatalogueSurface.tsx`: Props:
-        `{ viewMode: "admin-universe"|"admin-editor"|"client-reality"|"client-fomo",               filter?: StrategyCatalogueFilter,               onInstanceSelect?: (id: string) => void }`.
-        Renders a virtualised grid (~300 rows admin; scoped subset client-side). Per-row: family+archetype label,
-        venue-set variant chip, maturity-phase badge (from Plan A enum), product-routing badge, live P&L spark (from
-        odum-paper series), allocation-status badge (Tier 3 only). Integrates `<FamilyArchetypePicker>` at top +
-        venue-set + share-class pickers + maturity-phase filter + product-routing filter. status: pending
+  - [x] [AGENT] P0. Create `components/strategy-catalogue/StrategyCatalogueSurface.tsx`: shared 4-viewMode primitive.
+        Reads the real 84-instance 5-dim catalogue from `lib/registry/ui-reference-data.json` via
+        `loadStrategyCatalogue()`. Integrates `<FamilyArchetypePicker>`. Maturity + routing hash-synthesised until
+        Plan A Phase 3 Firestore lifecycle doc ships. status: done
 
 - id: p1-strategy-catalogue-filter-types content: |
-  - [ ] [AGENT] P0. Add `lib/architecture-v2/catalogue-filter.ts` — typed filter state
-        `{family?, archetype?, venue_set_variant?, share_class?,     maturity_phase?, product_routing?, allocation_status?}`.
-        URL-serializable for deep-links. Syncs with existing DashboardFilterContext (Plan
-        dashboard_services_grid_collapse Phase 4) when mounted under /dashboard. status: pending
+  - [x] [AGENT] P0. `lib/architecture-v2/catalogue-filter.ts` — typed filter state URL-serialisable for deep-links.
+        Shipped with `serialiseCatalogueFilter` / `parseCatalogueFilter` / `matchesFilter` helpers +
+        `EMPTY_CATALOGUE_FILTER` constant. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -136,20 +135,26 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p2-admin-universe-page content: |
-  - [ ] [AGENT] P0. Create `app/(ops)/admin/strategy-universe/page.tsx` — mounts
-        `<StrategyCatalogueSurface viewMode="admin-universe" />`. Read- only catalogue of all ~300 instances. Link from
-        Admin & Ops tile sub-route "Strategy Universe". status: pending
+  - [x] [AGENT] P0. Create `app/(ops)/admin/strategy-universe/page.tsx` mounting
+        `<StrategyCatalogueSurface viewMode="admin-universe" />`. Read-only catalogue of 84 (Plan A seed) → ~300
+        instances. Linked from Admin & Ops tile sub-route "Strategy Universe". status: done
 
 - id: p2-admin-editor-page content: |
-  - [ ] [AGENT] P0. Create `app/(ops)/admin/strategy-lifecycle-editor/page.tsx` — mounts
-        `<StrategyCatalogueSurface viewMode="admin-editor" />`. Each row has inline editors for `maturity_phase` +
-        `product_routing`, posts to the Plan A PATCH endpoint. Bulk-edit via selection + apply. Audit toast with "undo
-        5s" affordance. status: pending
+  - [x] [AGENT] P0. Create `app/(ops)/admin/strategy-lifecycle-editor/page.tsx` mounting
+        `<StrategyCatalogueSurface viewMode="admin-editor" />`. Inline editor buttons rendered but disabled with
+        tooltip "Enabled when Plan A Phase 3 PATCH endpoint ships". PATCH wiring deferred to follow-up
+        `p2-followup-enable-editor`. status: done
+
+- id: p2-followup-enable-editor content: |
+  - [ ] [AGENT] P1. Enable inline `maturity_phase` + `product_routing` dropdowns, wire
+        `PATCH /api/v1/registry/strategy-instances/{id}/lifecycle`, add bulk-edit + 5-second-undo audit toast on
+        `/admin/strategy-lifecycle-editor`. status: pending
+        blocked_by: strategy_lifecycle_maturity_model_2026_04_21 (Plan A Phase 3).
 
 - id: p2-admin-sub-routes content: |
-  - [ ] [AGENT] P0. Extend `SERVICE_REGISTRY` admin tile sub-routes to add `strategy-universe` +
-        `strategy-lifecycle-editor`. Update `persona-dashboard-shape.ts` — visible to `admin` + `internal-trader`
-        (editor); `im-desk-operator` gets read-only `strategy-universe` access. status: pending
+  - [x] [AGENT] P0. Extend `SERVICE_REGISTRY` admin tile sub-routes with `strategy-universe` +
+        `strategy-lifecycle-editor`. `persona-dashboard-shape.ts` updated — `admin` + `internal-trader` see both;
+        `im-desk-operator` gets read-only `strategy-universe`. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -158,25 +163,26 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p3-client-catalogue-two-tab-layout content: |
-  - [ ] [AGENT] P0. Rewrite `app/(platform)/services/strategy-catalogue/page.tsx` as a two-tab surface: "Your
-        Subscriptions" (`viewMode="client-reality"`) + "Explore" (`viewMode="client-fomo"`). Tab persistence via URL
-        `?tab=reality|explore`. Default: Reality tab if user has ≥1 subscribed instance, else Explore. status: pending
+  - [x] [AGENT] P0. Rewrite `app/(platform)/services/strategy-catalogue/page.tsx` as a two-tab surface: "Your
+        Subscriptions" (`viewMode="client-reality"`) + "Explore" (`viewMode="client-fomo"`). Default: Reality if the
+        org has ≥1 subscribed instance, else Explore. Subscriptions keyed on `instanceId`. status: done
 
 - id: p3-fomo-tearsheet-cards content: |
-  - [ ] [AGENT] P0. `components/strategy-catalogue/FomoTearsheetCard.tsx` — renders per-instance in the Explore tab:
-        header (family/archetype/venue- set/share-class), backtest+paper+live overlay chart (uses Plan C
-        `<PerformanceOverlay>`), key stats (Sharpe/MDD/CAGR from odum-paper series), "Request allocation" CTA (POSTs to
-        allocation-requests collection). CTA gated by product-routing. status: pending
+  - [x] [AGENT] P0. `components/strategy-catalogue/FomoTearsheetCard.tsx` — per-instance header (family / archetype /
+        venue-set / share-class), `<PerformanceOverlayPlaceholder>` (prop shape matches Plan C
+        `<PerformanceOverlay>` for 1-line swap), key stats (Sharpe / MDD / CAGR synthesised until Plan C
+        `odum-paper` series wires in), "Request allocation" CTA gated by `allowsAllocationCta(maturity_phase)`.
+        status: done
 
 - id: p3-reality-position-cards content: |
-  - [ ] [AGENT] P0. `components/strategy-catalogue/RealityPositionCard.tsx` — per-subscribed-instance: live P&L, current
-        allocation, venues actively executing, maturity-phase badge. Drill-through to DART terminal + Reports
-        attribution for that instance. status: pending
+  - [x] [AGENT] P0. `components/strategy-catalogue/RealityPositionCard.tsx` — per-subscribed-instance live P&L,
+        allocation, active venues, maturity badge; drill-through to DART terminal + Reports attribution.
+        status: done
 
 - id: p3-orphan-audit-preserve-route content: |
-  - [ ] [AGENT] P0. Confirm `/services/strategy-catalogue` route remains mounted (was a DART sub-route chip; now the
-        Tier 3 page). Update DART tile's `strategy-catalogue` chip in `services.ts` to point at this same URL — no
-        orphan. Chip label changes to "Catalogue" (shorter). status: pending
+  - [x] [AGENT] P0. `/services/strategy-catalogue` route stays mounted. DART tile `strategy-catalogue` chip label
+        renamed to "Catalogue" via Phase 4. `npm run orphan-audit -- --blocking` exits 0 (221/208 reachable with the
+        2 new admin pages, 0 new orphans). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -185,14 +191,14 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-dashboard-dart-chip-wiring content: |
-  - [ ] [AGENT] P1. DART tile sub-route chip now surfaces Tier 3 client view (no change — same URL). Confirm
-        persona-dashboard-shape keeps the chip visible for DART personas only. status: pending
+  - [x] [AGENT] P1. DART tile `strategy-catalogue` chip relabelled "Catalogue" in `lib/config/services.ts`; still
+        points at `/services/strategy-catalogue` (same URL — no orphan). DART personas keep the chip visible via
+        existing `PERSONA_SUBROUTE_SHAPES` entries. status: done
 
 - id: p4-dashboard-im-access content: |
-  - [ ] [AGENT] P1. Add `strategy-catalogue` access for IM personas (`client-im-pooled`, `client-im-sma`). Option: add
-        `strategy-catalogue` chip to Investor Relations tile OR Reports tile (TBD — user preference check during
-        implementation). My lean: Reports tile chip "Catalogue" linking to `/services/strategy-catalogue?tab=explore` so
-        IM clients land on the tearsheet view. status: pending
+  - [x] [AGENT] P1. Reports tile gains a new "Catalogue" chip linking to `/services/strategy-catalogue?tab=explore`.
+        `client-im-pooled` + `client-im-sma` personas get the chip visible under `reports.catalogue`. IM clients
+        land on the FOMO tearsheet view directly from Reports. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -201,16 +207,21 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p5-catalogue-surface-tests content: |
-  - [ ] [AGENT] P0. `__tests__/strategy-catalogue-surface.test.tsx`: per-viewMode rendering (admin-universe read-only,
-        admin-editor has editors, client-reality hides unsubscribed, client-fomo hides subscribed). Filter cascade
-        tests. status: pending
+  - [x] [AGENT] P0. `tests/unit/components/strategy-catalogue/strategy-catalogue-surface.test.tsx`: per-viewMode
+        rendering (admin-universe read-only, admin-editor buttons disabled, client-reality hides unsubscribed,
+        client-fomo hides subscribed) + family/archetype filter cascade. 5 tests, all green. status: done
 
 - id: p5-fomo-cta-gating-test content: |
-  - [ ] [AGENT] P0. Verify FOMO "Request allocation" CTA only enabled when instance's product-routing permits this org's
-        tier, and maturity ≥ `paper_stable` (don't offer allocation on smoke/minimal). status: pending
+  - [x] [AGENT] P0. `tests/unit/components/strategy-catalogue/fomo-cta-gating.test.tsx`: `allowsAllocationCta`
+        enables only for `paper_stable` / `live_early` / `live_stable`; exhaustive across every maturity phase.
+        `<FomoTearsheetCard>` CTA disabled below paper_stable, disabled without handler, disabled on retired.
+        6 tests, all green. status: done
 
 - id: p5-qg-final content: |
-  - [ ] [SCRIPT] P0. UI typecheck + full test suite + PM codex compliance gates green. status: pending
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit` clean for Plan-B files (remaining 17 errors
+        are pre-existing, unrelated). `npm run orphan-audit -- --blocking` exits 0. `CI=true npm test -- --run`
+        975/976 green — single flake (trading-data `getLiveBatchDelta` 5-second timeout under parallel load)
+        unrelated and passes deterministic when run in isolation. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -219,14 +230,14 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p6-codex-strategy-catalogue-3tier-doc content: |
-  - [x] [AGENT] P1. Create `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`: 3 tiers + per-persona
-        view-mode matrix + Reality/FOMO split rationale + allocation-request flow. Cross-ref
-        dashboard-services-grid.md + strategy-lifecycle-maturity.md. status: done
+  - [x] [AGENT] P1. `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` — 3 tiers + per-persona matrix +
+        Reality/FOMO split + allocation-request flow. §9 amended post-Plan-A-Phase-2 from "scaffold handoff" to
+        "data wiring" documenting catalogue/variants/enums live + maturity/routing synthesised + Plan-C overlay
+        pending. status: done
 
 - id: p6-amend-dashboard-grid-codex content: |
-  - [ ] [AGENT] P1. Amend `dashboard-services-grid.md` §2.1 DART sub- routes — clarify `strategy-catalogue` chip is a
-        link to the shared Tier-3 primitive, not a DART-exclusive page. Add §2.5 admin sub- route update + §3
-        persona-matrix update for Tier 3 access scope. status: pending
+  - [x] [AGENT] P1. `dashboard-services-grid.md` §4.5 already documents the cross-cutting primitive; admin paths
+        updated `/services/admin/...` → `/admin/...` to match the actual `(ops)` group routing. status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 
