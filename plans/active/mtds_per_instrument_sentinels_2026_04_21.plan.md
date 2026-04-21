@@ -58,8 +58,8 @@ todos:
 
   - id: wave-8e-mvp-cap-size-rollout-strategy
     content: |
-      - [ ] [AGENT] P0. MVP cap + rollout config — in UAC, document `_DEFAULT_PER_INSTRUMENT_SENTINEL_CAP` threshold decision in `codex/02-data/mtds-data-source-coverage-matrix.md` § 8 under the (now-resolved) "Instrument-level expected" bullet. Explicitly document the three rollout tiers: (1) MVP = cap=50 per (venue, dt), applied to `VenueMapping.spot_mvp_filtered_venues` (UPBIT + COINBASE) + the 21 MVP base assets; (2) Expanded = cap=200 applied to all CEFI + PREDICTION venues; (3) Full = uncapped, only after manifest-write-rate analysis confirms GCS object-count stays under 10M across 4-year backfill window. Wire `--per-instrument-sentinel-cap` CLI flag through MTDS `tick_data_handler.py` so operators can dial the cap per run without a code change. Include an MTDS operational smoke that asserts no single date produces more than N_CAP * len(expected_dts) * len(venues) sentinel rows.
-    status: todo
+      - [x] [AGENT] P0. MVP cap + rollout config — `--per-instrument-sentinel-cap INT` CLI flag wired through MTDS `cli/main.py` → `tick_data_handler.py` → `process_ticks(per_instrument_sentinel_cap=...)` → `get_expected_instruments_for_venue(..., cap=sentinel_cap)`. Module-level `_DEFAULT_PER_INSTRUMENT_SENTINEL_CAP = 50` preserved as MVP fallback when flag absent. Rollout tiers (MVP=50 / Expanded=200 / Full=10000) documented in new `codex/02-data/per-instrument-sentinel-rollout.md` — promotion criteria (manifest row-count drift <5%/day for 30d; honest-coverage ±2pp; INSTRUMENT_PROVIDER_FAILED <5/day; record_empty p99 <2s; GCS object budget <10M), observability gates, rollback path including emergency `--per-instrument-sentinel-cap=0` Tier-3-disabled escape hatch. Registered in `codex/00-SSOT-INDEX.md`. 2 new unit tests in `tests/unit/test_orchestrator_per_data_type_sentinel.py` — CLI argparse + end-to-end cap honoured (cap=2 bounds Tier-3 fan-out to 2 instruments per dt).
+    status: done
     blocked_by: wave-8d-deployment-api-aggregator
 
   - id: wave-8f-codex-matrix-update
