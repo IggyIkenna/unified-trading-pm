@@ -153,31 +153,31 @@ implemented in
 
 ### Phase 0: Pre-audit [SEQUENTIAL — do first, do not skip]
 
-- [ ] [AGENT] P0. Grep the full workspace for all readers of `squad_value_eur`, `home_squad_value_eur`,
+- [x] [AGENT] P0. Grep the full workspace for all readers of `squad_value_eur`, `home_squad_value_eur`,
       `away_squad_value_eur`, `squad_value_ratio`, `home_avg_player_value`, `away_avg_player_value`,
       `home_squad_age_avg`, `away_squad_age_avg`, `home_foreigners_pct`, `away_foreigners_pct`,
       `home_net_transfer_spend`, `away_net_transfer_spend`, `home_squad_depth`, `away_squad_depth`, `squad_depth_diff`.
       Document every read site in this plan's pre-audit section. Flag any `== 0`, `> 0`, `< 0`, or `fillna(0)` patterns
       that would break when the column starts carrying NaN.
 
-- [ ] [AGENT] P0. Grep the full workspace for all readers of league-calculator output columns. Identify exact column
+- [x] [AGENT] P0. Grep the full workspace for all readers of league-calculator output columns. Identify exact column
       names by reading
       [`features_sports_service/calculators/league_calculator.py`](../../../features-sports-service/features_sports_service/calculators/league_calculator.py)
       `LEAGUE_COLUMNS`. Document every read site. Flag value-comparison patterns as above.
 
-- [ ] [AGENT] P0. Read
+- [x] [AGENT] P0. Read
       [`features_sports_service/data/gcs_reader.py::_normalize_standings`](../../../features-sports-service/features_sports_service/data/gcs_reader.py)
       (around L408). Document whether `rank` is renamed, dropped, or preserved. This is the root of the
       `home_standing_pre NULL` dry-run finding from the parent plan and must be resolved HERE (shared code path).
 
-- [ ] [AGENT] P0. Read
+- [x] [AGENT] P0. Read
       [`features_sports_service/calculators/league_calculator.py::compute_league_from_standings`](../../../features-sports-service/features_sports_service/calculators/league_calculator.py).
       Audit for zero-defaults on missing teams (same pattern as squad_value). If found, add a Phase 1.5 item to fix in
       the same plan.
 
 ### Phase 1: Fix squad_value_calculator zero-defaults [SEQUENTIAL, depends on Phase 0]
 
-- [ ] [AGENT] P0. In
+- [x] [AGENT] P0. In
       [`features_sports_service/calculators/squad_value_calculator.py`](../../../features-sports-service/features_sports_service/calculators/squad_value_calculator.py): -
       Replace `defaults: dict[str, float] = {..: 0.0, ..}` in `_compute_team_squad_features` (L58-63) with
       `defaults: dict[str, float] = {..: np.nan, ..}`. - Replace
@@ -188,7 +188,7 @@ implemented in
       `.astype(float)` ensure at L269-270 — pandas already treats `float | NaN` as float64, no further change needed.
       Validate.
 
-- [ ] [AGENT] P0. Update / extend
+- [x] [AGENT] P0. Update / extend
       [`tests/unit/test_new_phase4_calculators.py`](../../../features-sports-service/tests/unit/test_new_phase4_calculators.py): -
       Add `test_squad_value_missing_team_yields_nan_not_zero` — fixture with a team NOT in `squad_data` →
       `home_squad_value_eur` is NaN. - Add `test_squad_value_ratio_nan_when_denominator_missing` — away team missing →
@@ -198,14 +198,14 @@ implemented in
 
 ### Phase 2: Fix \_compute_league_batch lookahead [SEQUENTIAL, depends on Phase 1]
 
-- [ ] [AGENT] P0. Hoist
+- [x] [AGENT] P0. Hoist
       [`pipeline/fixture_features.py::_load_pre_match_standings`](../../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
       into `features_sports_service/data/gcs_reader.py` as
       `read_pre_match_standings(target_date: date) -> tuple[pd.DataFrame, str | None]`. This makes it a reusable read
       helper for any calculator that needs the pre-match snapshot. Update `pipeline/fixture_features.py` to import from
       the hoisted location.
 
-- [ ] [AGENT] P0. In
+- [x] [AGENT] P0. In
       [`features_sports_service/exporters/derived_features_exporter.py`](../../../features-sports-service/features_sports_service/exporters/derived_features_exporter.py): -
       Around L364, REPLACE `standings = ref_data.get("standings", pd.DataFrame())` with
       `standings, standings_partition = read_pre_match_standings(target_date)`. - Log the partition at INFO:
@@ -213,17 +213,17 @@ implemented in
       Leave `read_all_reference_data`'s `standings` key unchanged (other calculators may use it as today's snapshot —
       but this file's `_compute_league_batch` must use the pre-match read).
 
-- [ ] [AGENT] P0. Audit `_compute_league_batch` at L1128+ for any internal same-day filter logic that becomes redundant
+- [x] [AGENT] P0. Audit `_compute_league_batch` at L1128+ for any internal same-day filter logic that becomes redundant
       after Phase 2 (e.g. "filter standings rows to `date < kickoff_date`"). If present, simplify — the partition is now
       the right one by construction.
 
-- [ ] [AGENT] P0. Fix the `gcs_reader._normalize_standings` column-rename bug surfaced in the parent plan's dry-run
+- [x] [AGENT] P0. Fix the `gcs_reader._normalize_standings` column-rename bug surfaced in the parent plan's dry-run
       (`home_standing_pre` NULL while `home_points_pre` populates). Expected root cause: either `rank` is dropped or
       renamed to `position` at the reader level. Reconcile so the column exposed to calculators is named consistently
       and matches what `pipeline/fixture_features._lookup_standing` reads (`row.get("rank")`) and what
       `_compute_league_batch` reads (after its internal `rank → position` rename at L1141).
 
-- [ ] [AGENT] P0. Unit tests in
+- [x] [AGENT] P0. Unit tests in
       [`tests/unit/test_exporters.py`](../../../features-sports-service/tests/unit/test_exporters.py) or new
       `tests/unit/test_league_batch_lookahead.py`: - `test_standings_read_uses_day_minus_one` — patch
       `read_reference_entity` to record calls; assert `date_str="2024-08-31"` was called for `kickoff_date=2024-09-01`,
@@ -235,35 +235,35 @@ implemented in
 
 ### Phase 3: Downstream audit + fix if needed [PARALLEL with Phase 2 testing]
 
-- [ ] [AGENT] P1. For every hit found in Phase 0 grep that does `== 0`, `> 0`, `< 0`, or `fillna(0)` on the affected
+- [x] [AGENT] P1. For every hit found in Phase 0 grep that does `== 0`, `> 0`, `< 0`, or `fillna(0)` on the affected
       columns, document the site in this plan and either (a) update it to NaN-aware comparison, or (b) assert it's
       correct as-is (e.g. a feature transformer that legitimately treats 0 and NaN identically via `fillna(0)` after
       receiving NaN from upstream).
 
-- [ ] [AGENT] P1. Re-run `pytest tests/unit/` on any downstream consumer repo identified (`ml-training-service`,
+- [x] [AGENT] P1. Re-run `pytest tests/unit/` on any downstream consumer repo identified (`ml-training-service`,
       `ml-inference-service`, `strategy-service`) with the new NaN-propagating fixture. Assert no tests regress. If any
       do, file a follow-up plan rather than patching downstream here.
 
 ### Phase 4: QG + quickmerge + codex [SEQUENTIAL]
 
-- [ ] [AGENT] P0. `bash features-sports-service/scripts/quality-gates.sh` green.
+- [x] [AGENT] P0. `bash features-sports-service/scripts/quality-gates.sh` green.
 
-- [ ] [AGENT] P0. Dry-run on 2024-09-01 against prod GCS (`central-element-323112`). Assert: - `home_squad_value_eur` /
+- [x] [AGENT] P0. Dry-run on 2024-09-01 against prod GCS (`central-element-323112`). Assert: - `home_squad_value_eur` /
       `away_squad_value_eur` are `NaN` for at least one team that previously emitted `0.0` (run diff against HEAD output
       as baseline). - `home_rank` / `home_points_gap_*` (exact names per league_calculator output) come from
       `day=2024-08-31` partition per the INFO log line. Spot-check one EPL fixture. - The `fixture_features` pipeline's
       `home_standing_pre` column also populates correctly now that the `_normalize_standings` rank-column bug is fixed
       (aligned fix).
 
-- [ ] [AGENT] P0. Commit + quickmerge features-sports-service (`--agent`, scoped `--files`).
+- [x] [AGENT] P0. Commit + quickmerge features-sports-service (`--agent`, scoped `--files`).
 
-- [ ] [AGENT] P0. Update codex
+- [x] [AGENT] P0. Update codex
       [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §2.4
       (SFI/standings denormalisation) + §9.1 (fixture-features shipped block): remove the "out-of-scope follow-ups"
       bullets covering these two crimes. Add a §5.1 subsection "Examples of shipped fixes" pointing at this plan's
       commits.
 
-- [ ] [AGENT] P0. Flip this plan's todos `[x]` + quickmerge PM (plan update only, use the doc fast-path).
+- [x] [AGENT] P0. Flip this plan's todos `[x]` + quickmerge PM (plan update only, use the doc fast-path).
 
 - [ ] [HUMAN] P0. Approve unlock of this plan (`[unlock-plan]` commit with `locked_by`/`locked_since` removed from
       frontmatter) once all todos are `[x]` and both squad-value + league-batch dry-run assertions pass.

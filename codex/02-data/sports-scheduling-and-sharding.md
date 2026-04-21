@@ -292,12 +292,33 @@ As of 2026-04-21, this contract is implemented by
   2. Weather picks the kickoff-hour bucket containing `kickoff_utc`, never adjacent hours / daily averages.
   3. Missing raw inputs propagate NULL — never zeros, never "latest available", never a current-date fallback.
 - **Out-of-scope / follow-ups:**
-  - `calculators/squad_value_calculator.py` (old path) still defaults missing data to 0.0 — a data crime per §5. Replace
-    with the new `fixture_features` output once downstream consumers migrate.
   - Transfermarkt `player_values` partitions exist only for `day=2019-01-01 / 2019-01-02` in prod as of 2026-04-21; the
     2020-2026 backfill VM run is a prerequisite for non-NULL team-value coverage.
   - `entity=sfi_standings/` is absent; the SFI-native join defined in §2.4 uses API-Football `entity=standings` as the
     proxy until the SFI backfill lands.
+  - Weather venue-id cross-ref: fixtures use numeric `venue_id='562'` while weather parquet uses textual codes like
+    `'DE_LEUNEN'`. `weather_source='none'` for 100% of fixtures on the 2024-09-01 dry-run despite populated weather
+    parquet. Fix needs a UAC venue-mapping hop.
+
+### 9.2 Derived-features data-crime fixes (2026-04-21)
+
+Paired follow-up plan `features_sports_derived_data_crime_fixes_2026_04_21` removed two pre-existing crimes from
+`features-sports-service` on 2026-04-21 (FSS commit `576d210`):
+
+- **`calculators/squad_value_calculator.py`** — every `0.0` default flipped to `np.nan`. Missing-team / missing-row /
+  divide-by-zero-guard paths now propagate NaN so ML downstream can distinguish "Transfermarkt coverage unknown" from
+  "team literally worth €0" (direct violation of §5 before the fix). 4 regression tests in
+  `test_new_phase4_calculators.py` proving NaN propagation + populated-team backward compat.
+- **`exporters/derived_features_exporter.py::_compute_league_batch`** — standings read hoisted to
+  `data/gcs_reader.py::read_pre_match_standings(target_date)` which reads `day=kickoff_date - 1` with 7-day fallback.
+  Previously read `day=kickoff_date` which could include post-match table refreshes from earlier-kickoff fixtures
+  (same-day Tier-1 cron fires every 6h). 7 regression tests in `test_pre_match_standings.py` proving the same-day
+  partition is NEVER read + fallback + empty-result discipline.
+- **Aligned bug fix**: `pipeline/fixture_features.py::_lookup_standing` read the raw `rank` column, but
+  `gcs_reader._normalize_standings` renames `rank → position` at read time. Fix reads `position` (canonical) with `rank`
+  fallback for legacy test frames. Resolves the `home_standing_pre NULL while home_points_pre populates` finding from
+  the parent plan's 2024-09-01 dry-run — post-fix all 3 EPL fixtures populate `home_standing_pre` from the
+  `day=2024-08-31` pre-match partition.
 
 ## 10. Operational summary
 
