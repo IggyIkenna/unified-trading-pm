@@ -68,18 +68,13 @@ For each provider, four dimensions:
   `fixture_id → [{player_id, value_eur_as_of_kickoff}]` by joining `FIXTURE_LINEUPS` (who played) × `PLAYER_VALUES` (≤
   kickoff). The player value is the most-recent snapshot with `as_of_date <= kickoff_date`. **Duplicating the value onto
   every fixture is correct** — it preserves the as-of invariant and keeps the features table flat.
-- **Team-mapping cache** (shipped 2026-04-22,
-  `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
-  per-season roster parquet at
-  `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
-  Columns: `league_id, canonical_league, team_id, name, squad_size,
-  player_count, last_fetched_at`. 7-day staleness window; on a cache-hit
-  non-trigger date (`get_leagues_needing_refresh(date) == []`) the adapter
-  short-circuits the per-league API loop, populates
-  `_captured_league_counts` from the cache, and emits
-  `UPSTREAM_FETCH_COMPLETED` with `details.cached=True`. The cache is
-  rewritten on every live-fetch branch, keeping `last_fetched_at` fresh.
-  Reader: [`features-sports-service/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
+- **Team-mapping cache** (shipped 2026-04-22, `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
+  per-season roster parquet at `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
+  Columns: `league_id, canonical_league, team_id, name, squad_size, player_count, last_fetched_at`. 7-day staleness
+  window; on a cache-hit non-trigger date (`get_leagues_needing_refresh(date) == []`) the adapter short-circuits the
+  per-league API loop, populates `_captured_league_counts` from the cache, and emits `UPSTREAM_FETCH_COMPLETED` with
+  `details.cached=True`. The cache is rewritten on every live-fetch branch, keeping `last_fetched_at` fresh. Reader:
+  [`features-sports-service/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
 
 ### 2.3 FootyStats (`footystats.py`)
 
@@ -99,8 +94,8 @@ For each provider, four dimensions:
 - **Fetches:** `SFI_LEAGUES`, `SFI_PROGRESSIVE_STATS` (streaks, sequences). **Not `SFI_STANDINGS`** — SFI has no
   standings endpoint. This was confirmed against the archived service and is enforced by
   [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
-  L4365-4367 (`_want_sfi_standings = False`). Pre-match league position / points come from the API-Football
-  `STANDINGS` endpoint (see §2.1); `features-sports-service` reads that pre-match partition via
+  L4365-4367 (`_want_sfi_standings = False`). Pre-match league position / points come from the API-Football `STANDINGS`
+  endpoint (see §2.1); `features-sports-service` reads that pre-match partition via
   `data/gcs_reader.py::read_pre_match_standings` (`day=kickoff_date - 1` with 7-day fallback).
 - **Cadence:** Tier-1 every 6h for `SFI_LEAGUES`; Tier-4 T+24h for `SFI_PROGRESSIVE_STATS` (needs completed-matchday
   state).
@@ -111,15 +106,11 @@ For each provider, four dimensions:
   - `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh` — multi-year historical range (2020-2026 etc.);
     singleton-locked against ALL `sfi-*` VMs (shared `soccer-football-info-api-key`; reference: 2026-04-19
     thundering-herd incident).
-- **League-mapping cache** (shipped 2026-04-22,
-  `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
-  flat parquet at `sports_reference/mappings/sfi_league_mapping.parquet`
-  (not season-scoped — SFI hex league IDs are long-lived). Columns:
-  `canonical_league_id, sfi_league_hex, name, last_fetched_at`. 24h
-  staleness window. Cache-hit on non-trigger dates skips the paid
-  `get_leagues` call and feeds `sfi_league_ids` directly from the
-  cache; progressive-stats per-match fetches still run because they're
-  date-scoped. Reader:
+- **League-mapping cache** (shipped 2026-04-22, `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
+  flat parquet at `sports_reference/mappings/sfi_league_mapping.parquet` (not season-scoped — SFI hex league IDs are
+  long-lived). Columns: `canonical_league_id, sfi_league_hex, name, last_fetched_at`. 24h staleness window. Cache-hit on
+  non-trigger dates skips the paid `get_leagues` call and feeds `sfi_league_ids` directly from the cache;
+  progressive-stats per-match fetches still run because they're date-scoped. Reader:
   [`features-sports-service/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
 
 ### 2.5 OpenMeteo / Weather (`open_meteo.py`)
@@ -289,6 +280,16 @@ shape; see
 [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) for
 Cloud Run job wiring.
 
+**VM-daemon pattern for live schedulers** — Long-lived scheduling processes (polling loops, cron-alternatives) can run
+as GCE daemons via the `launch-*-vm.sh` + `setup-data-pipeline-vm.sh` + `VM_TASK=*-poll` pathway. Zero
+Cloud-Run-image dependency — the VM boots off the existing tarball deployment infra (UAC / UTL / service tarballs on
+GCS) and the launcher omits `VM_SHUTDOWN_ON_COMPLETION=true` so the VM stays up. Uses the shared singleton-lock
+pattern (same-prefix-running refusal with `--force` bypass) to prevent double-dispatch. First adopted by
+sports-scheduler 2026-04-22 (`launch-sports-scheduler-vm.sh` + `SPORTS_SCHEDULER_poll` branch in
+`setup-data-pipeline-vm.sh`) as a workaround for Plan 12 + Plan 13 Cloud Build blockers; pattern is reusable for any
+service whose shipped CLI already contains an internal polling loop (e.g. features-sports live forward-poll,
+execution-service live signal broadcast watchdog).
+
 ## 9. Per-fixture denormalisation pattern
 
 Fixture-native providers (API-Football fixture-scope entities, FootyStats, Understat) write directly to per-fixture
@@ -350,8 +351,8 @@ As of 2026-04-21, this contract is implemented by
 - **Out-of-scope / follow-ups:**
   - Transfermarkt `player_values` 2020-2026 backfill — prod has 2019-01 partitions only. Operator task; run
     `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-01-01 2026-04-21`.
-  - SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS` 2020-2026 backfill — prod has 2019-01 partitions only. Operator task;
-    run `bash deployment-service/scripts/vm/launch-sfi-backfill-vm.sh 2020-01-01 2026-04-21`. Launcher shipped by plan
+  - SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS` 2020-2026 backfill — prod has 2019-01 partitions only. Operator task; run
+    `bash deployment-service/scripts/vm/launch-sfi-backfill-vm.sh 2020-01-01 2026-04-21`. Launcher shipped by plan
     `features_sports_upstream_coverage_gaps_2026_04_21`. Note: there is no `SFI_STANDINGS` endpoint (see §2.4).
 
 ### 9.2 Derived-features data-crime fixes (2026-04-21)
@@ -388,17 +389,16 @@ parent plan's dry-run saw `weather_source='none'` for 100% of fixtures despite p
   fixture's `venue_name` alongside `venue_id` and tries two lookups in order: (1) raw `venue_id` (future-friendly if
   upstream ever migrates to numeric weather keys — Option A) then (2) SCREAMING_SNAKE(venue_name) via
   `_venue_name_to_canonical` which replicates the orchestrator's `_to_snake` transform exactly.
-- 4 new unit tests in `tests/unit/test_fixture_features_pipeline.py` proving: SCREAMING_SNAKE fallback resolves
-  ("De Leunen" → `DE_LEUNEN`), multi-word collapse ("Old Trafford" → `OLD_TRAFFORD`), unknown venue yields
+- 4 new unit tests in `tests/unit/test_fixture_features_pipeline.py` proving: SCREAMING_SNAKE fallback resolves ("De
+  Leunen" → `DE_LEUNEN`), multi-word collapse ("Old Trafford" → `OLD_TRAFFORD`), unknown venue yields
   `weather_source='none'`, raw numeric match takes precedence when both keys are present.
-- Dry-run on 2024-09-01 prod GCS: **115/170 fixtures now populate weather** (up from 0/170 before the fix). Remaining
-  55 `weather_source='none'` are venues absent from the UAC `VENUE_COORDINATES` registry — legitimate upstream
-  coverage gap, not a pipeline bug.
+- Dry-run on 2024-09-01 prod GCS: **115/170 fixtures now populate weather** (up from 0/170 before the fix). Remaining 55
+  `weather_source='none'` are venues absent from the UAC `VENUE_COORDINATES` registry — legitimate upstream coverage
+  gap, not a pipeline bug.
 
-Future cleanup (Option A, tracked as a separate plan when needed): migrate OpenMeteo upstream to write weather keyed
-on numeric `venue_id` matching fixtures + venues parquets. Rewrite existing textual-keyed weather parquets in a
-one-shot migration. This removes the downstream resolution hop and aligns all three entities on one venue-id
-semantic.
+Future cleanup (Option A, tracked as a separate plan when needed): migrate OpenMeteo upstream to write weather keyed on
+numeric `venue_id` matching fixtures + venues parquets. Rewrite existing textual-keyed weather parquets in a one-shot
+migration. This removes the downstream resolution hop and aligns all three entities on one venue-id semantic.
 
 ## 10. Operational summary
 
@@ -439,46 +439,46 @@ dependency plan that must reach C5 before this plan can fully execute.
 
 ### 12.0 Live progress register (re-audit when plan checkboxes change)
 
-Last audit: 2026-04-22 post-Bug-4 fix + follow-up flips. `[x] done` / `[ ] open` is the mechanical checkbox count
-in each plan file — not a judgement call. `First open item` surfaces what the next agent should tackle.
+Last audit: 2026-04-22 post-Bug-4 fix + follow-up flips. `[x] done` / `[ ] open` is the mechanical checkbox count in
+each plan file — not a judgement call. `First open item` surfaces what the next agent should tackle.
 
-| Plan                                                 | `[x]` / `[ ]` | Status                           | First open item                                                                                     |
-| ---------------------------------------------------- | ------------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 1 utl_manifest_migration_primitives                  | 15 / 2        | **near-C5** — code landed        | Diff-test refactored vs pre-refactor rescan; VM smoke of `launch-sports-manifest-rescan-vm.sh`      |
-| 2 apifootball_enrichment_historical_backfill         | 3 / 7         | **in-flight** — ops work         | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks              |
-| 3 non_apifootball_provider_backfill_launchers        | 5 / 2         | **near-C5** — 4 launchers landed | Per-launcher VM smokes; one QG line still called out in plan                                        |
-| 4 instruments_service_orchestrator_reliability_fixes | 12 / 8        | **half-way** (Bug 4 shipped)     | Re-smoke WEATHER+XG (`8a91324`) + Bugs 7-8 AF enrichment + STANDINGS per-league + forward-poll VM   |
-| 5 sports_scheduler_cron_activation                   | 4 / 7         | **operator-bound**               | IAM + Cloud Run + Cloud Scheduler + smokes + 6h/24h monitoring                                      |
-| 6 features_sports_pipeline_deployment                | 9 / 5         | **in-flight**                    | IAM + force-trigger + UI FIXTURE_FEATURES line + historical backfill VM + coverage audit            |
-| 7 upcoming_fixtures_ui_view                          | 12 / 1        | **near-C5**                      | Local dev smoke only                                                                                |
-| 8 vm_observability_codex_update                      | 7 / 0         | **DONE** ✅                      | —                                                                                                   |
-| 9 sports_manifest_shard_migration_cleanup            | 11 / 5        | **half-way** (3 newly flipped)   | Staging/prod purge apply + rescan VM launch + manifest API verify + UI spot-check (VM/operator)     |
-| 10 sports_data_status_fixture_level_drilldown        | 15 / 1        | **near-C5**                      | Manual dev smoke only (SPORTS path through fixture list → CSV download)                             |
-| 11 transfermarkt_sfi_team_mapping_cache_and_drift    | 0 / 22        | **authored** — ready-to-pick-up  | Phase 0 audit: confirm TM + SFI adapter signatures + UAC LeagueDefinition fields + UTL event enum   |
-| 12 deployment_service_build_infrastructure_repair    | 0 / 8         | **authored** — ready-to-pick-up  | Phase 0 archaeology: confirm `ui/api/backends/deployment` never existed + live `deployment-dashboard` image age + gunicorn.conf.py location. Blocks Plan 5 cron activation. |
+| Plan                                                 | `[x]` / `[ ]` | Status                           | First open item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------- | ------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 utl_manifest_migration_primitives                  | 15 / 2        | **near-C5** — code landed        | Diff-test refactored vs pre-refactor rescan; VM smoke of `launch-sports-manifest-rescan-vm.sh`                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 2 apifootball_enrichment_historical_backfill         | 3 / 7         | **in-flight** — ops work         | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 3 non_apifootball_provider_backfill_launchers        | 5 / 2         | **near-C5** — 4 launchers landed | Per-launcher VM smokes; one QG line still called out in plan                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 4 instruments_service_orchestrator_reliability_fixes | 12 / 8        | **half-way** (Bug 4 shipped)     | Re-smoke WEATHER+XG (`8a91324`) + Bugs 7-8 AF enrichment + STANDINGS per-league + forward-poll VM                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 5 sports_scheduler_cron_activation                   | 7 / 4         | **live via VM-daemon** ✅        | Activated 2026-04-22 via `launch-sports-scheduler-vm.sh` on `sports-scheduler-20260422-111929` (Cloud Run path deferred on Plans 12 + 13). Remaining: 6h / 24h first-fire observation + Grafana alert wiring                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 6 features_sports_pipeline_deployment                | 9 / 5         | **in-flight**                    | IAM + force-trigger + UI FIXTURE_FEATURES line + historical backfill VM + coverage audit                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 7 upcoming_fixtures_ui_view                          | 12 / 1        | **near-C5**                      | Local dev smoke only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 8 vm_observability_codex_update                      | 7 / 0         | **DONE** ✅                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 9 sports_manifest_shard_migration_cleanup            | 11 / 5        | **half-way** (3 newly flipped)   | Staging/prod purge apply + rescan VM launch + manifest API verify + UI spot-check (VM/operator)                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 10 sports_data_status_fixture_level_drilldown        | 15 / 1        | **near-C5**                      | Manual dev smoke only (SPORTS path through fixture list → CSV download)                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 11 transfermarkt_sfi_team_mapping_cache_and_drift    | 0 / 22        | **authored** — ready-to-pick-up  | Phase 0 audit: confirm TM + SFI adapter signatures + UAC LeagueDefinition fields + UTL event enum                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 12 deployment_service_build_infrastructure_repair    | 0 / 8         | **authored** — ready-to-pick-up  | Phase 0 archaeology: confirm `ui/api/backends/deployment` never existed + live `deployment-dashboard` image age + gunicorn.conf.py location. Blocks Plan 5 cron activation.                                                                                                                                                                                                                                                                                                                                |
 | 13 utl_base_image_rebuild_and_workflow_unblock       | 0 / 18        | **authored** — ready-to-pick-up  | Phase 0 archaeology confirmed: UTL `:latest` AR image frozen at 2026-04-15 (20+ UTL commits behind). Cloud Build trigger fires but every build since 2026-04-20 18:08 FAILS with `unified-api-contracts was not found in the package registry` inside Dockerfile `uv pip install -e .`. Fix = clone UAC source into Docker build context (Option A). Blocks Plan 6 Phase 3 (features-sports smoke), features-onchain daily workflow, Plan 3 sports-scheduler Cloud Run activation (also gated on Plan 12). |
 
 **On-disk implementation evidence** (sanity-check: the code is actually there):
 
-| Check                                                               | Result                                                          |
-| ------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `unified-trading-library/unified_trading_library/manifest_migrations/` | Present (chunk_splitter.py, migrator.py, rescan.py, purger.py) |
-| `deployment-service/scripts/vm/launch-{transfermarkt,footystats,openmeteo,understat}-backfill-vm.sh` | All 4 present                                                  |
+| Check                                                                                                                 | Result                                                         |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `unified-trading-library/unified_trading_library/manifest_migrations/`                                                | Present (chunk_splitter.py, migrator.py, rescan.py, purger.py) |
+| `deployment-service/scripts/vm/launch-{transfermarkt,footystats,openmeteo,understat}-backfill-vm.sh`                  | All 4 present                                                  |
 | `deployment-api/deployment_api/services/data_status_drilldown.py::build_fixture_breakdown` / `build_fixture_download` | Present                                                        |
-| `deployment-ui/src/api/client.ts::fetchFixtureBreakdown` + `FixtureBreakdown.test.tsx` | Present                                                        |
-| `deployment-api/deployment_api/routes/fixtures.py`                  | Present                                                         |
-| `codex/05-infrastructure/vm-tarball-deployment.md` Observability section | Present (Plan 8's target)                                       |
+| `deployment-ui/src/api/client.ts::fetchFixtureBreakdown` + `FixtureBreakdown.test.tsx`                                | Present                                                        |
+| `deployment-api/deployment_api/routes/fixtures.py`                                                                    | Present                                                        |
+| `codex/05-infrastructure/vm-tarball-deployment.md` Observability section                                              | Present (Plan 8's target)                                      |
 
 **Heaviest remaining work:**
 
 - **Plan 2** (AF enrichment backfill) — multi-day VM runs gated by API-Football rate limit.
-- **Plan 4** (orchestrator reliability) — Bugs 7-8 (AF enrichment + STANDINGS per-league) + re-smoke still open.
-  Bug 4 (adapter output dict coercion) shipped 2026-04-22 `7f2cbf0`.
+- **Plan 4** (orchestrator reliability) — Bugs 7-8 (AF enrichment + STANDINGS per-league) + re-smoke still open. Bug 4
+  (adapter output dict coercion) shipped 2026-04-22 `7f2cbf0`.
 - **Plans 5 + 6** (deployment activation) — GCP auth + IAM + Cloud Scheduler creation; operator-sign-off territory.
-- **Plan 9** (shard-migration cleanup) — depends on Plan 1 C5 + Plan 4 Bugs 7-8; then runs per-entity rescans + purge.
-  3 todos flipped 2026-04-22 crediting `5f2cae3` (Phase 1-2) + `d194288` (Phase 2 XG test inversion).
-- **Plan 11** (transfermarkt + SFI team-mapping cache + drift detection) — newly authored 2026-04-22 `e5d941e1`,
-  22 todos / 4 tracks / 4 repos; Phase 0 pre-audit pending.
+- **Plan 9** (shard-migration cleanup) — depends on Plan 1 C5 + Plan 4 Bugs 7-8; then runs per-entity rescans + purge. 3
+  todos flipped 2026-04-22 crediting `5f2cae3` (Phase 1-2) + `d194288` (Phase 2 XG test inversion).
+- **Plan 11** (transfermarkt + SFI team-mapping cache + drift detection) — newly authored 2026-04-22 `e5d941e1`, 22
+  todos / 4 tracks / 4 repos; Phase 0 pre-audit pending.
 
 **Basically done (orchestrator-gate only):** Plans 7, 8, 10, 1 (post diff-test + smoke), 3 (post per-launcher smoke).
 
@@ -492,12 +492,12 @@ in each plan file — not a judgement call. `First open item` surfaces what the 
 
 ### 12.2 Open — data coverage + adapter quality
 
-| Priority | Plan                                                                                                                                             | Repos               | Gated on | Delivers                                                                                                                                                                                                                                                        |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/active/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                 | deployment-service  | —        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                     |
-| **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/active/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)               | deployment-service  | —        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                |
-| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/active/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md) | instruments-service | —        | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1 adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs 7-8) + Phases 6-7 open |
-| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/active/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-sports-service + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `|got - expected|/expected > 10%` without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22 `e5d941e1`** |
+| Priority | Plan                                                                                                                                                         | Repos                                                                                      | Gated on                                                                                                                                 | Delivers                                                                                                                                                                                                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/active/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                             | deployment-service                                                                         | —                                                                                                                                        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                                                                                                       |
+| **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/active/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)                           | deployment-service                                                                         | —                                                                                                                                        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                                                                                                  |
+| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/active/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md)             | instruments-service                                                                        | —                                                                                                                                        | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1 adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs 7-8) + Phases 6-7 open |
+| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/active/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-sports-service + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `                                                   | got - expected | /expected > 10%`without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
 
 ### 12.3 Open — manifest + UI hygiene (gated on 12.2)
 
@@ -515,12 +515,12 @@ forked coordinator/worker logic in `instruments-service`.
 
 ### 12.4 Open — deployment activation (dependencies already at C5)
 
-| Priority | Plan                                                                                                                           | Repos                                        | Gated on                                         | Delivers                                                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
-| **P0**   | [`utl_base_image_rebuild_and_workflow_unblock`](../../plans/active/utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md) | unified-trading-library                      | —                                                | Rebuild UTL base image in AR (frozen since 2026-04-15, 20+ commits behind). Fix `cloudbuild.yaml` Docker build step which fails because `uv pip install -e .` can't resolve UAC from AR. Option A: clone UAC into Docker build context via new cloudbuild step. **Blocks Plan 6 Phase 3 (features-sports smoke), features-onchain daily workflow, Plan 3 sports-scheduler Cloud Run activation (also gated on Plan 12).** |
-| **P0**   | [`deployment_service_build_infrastructure_repair`](../../plans/active/deployment_service_build_infrastructure_repair_2026_04_22.plan.md) | deployment-service                           | —                                                | Repair 6 bugs in Dockerfile + cloudbuild.yaml blocking all Cloud Builds since 2026-02-20. Lands first fresh `deployment-dashboard` + `sports-scheduler` AR image in 2+ months. **Blocks Plan 5** below. |
-| **P0**   | [`sports_scheduler_cron_activation`](../../plans/active/sports_scheduler_cron_activation_2026_04_21.plan.md)                   | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5 + `deployment_service_build_infrastructure_repair` + `utl_base_image_rebuild_and_workflow_unblock` | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod   |
-| **P1**   | [`features_sports_pipeline_deployment`](../../plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md)             | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 + `utl_base_image_rebuild_and_workflow_unblock` | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026 |
+| Priority | Plan                                                                                                                                     | Repos                                        | Gated on                                                                                                                                           | Delivers                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P0**   | [`utl_base_image_rebuild_and_workflow_unblock`](../../plans/active/utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md)       | unified-trading-library                      | —                                                                                                                                                  | Rebuild UTL base image in AR (frozen since 2026-04-15, 20+ commits behind). Fix `cloudbuild.yaml` Docker build step which fails because `uv pip install -e .` can't resolve UAC from AR. Option A: clone UAC into Docker build context via new cloudbuild step. **Blocks Plan 6 Phase 3 (features-sports smoke), features-onchain daily workflow, Plan 3 sports-scheduler Cloud Run activation (also gated on Plan 12).** |
+| **P0**   | [`deployment_service_build_infrastructure_repair`](../../plans/active/deployment_service_build_infrastructure_repair_2026_04_22.plan.md) | deployment-service                           | —                                                                                                                                                  | Repair 6 bugs in Dockerfile + cloudbuild.yaml blocking all Cloud Builds since 2026-02-20. Lands first fresh `deployment-dashboard` + `sports-scheduler` AR image in 2+ months. **Blocks Plan 5** below.                                                                                                                                                                                                                   |
+| **P0**   | [`sports_scheduler_cron_activation`](../../plans/active/sports_scheduler_cron_activation_2026_04_21.plan.md)                             | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5 + `deployment_service_build_infrastructure_repair` + `utl_base_image_rebuild_and_workflow_unblock` | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod                                                                                                                                                                                                                                                                                                                                                        |
+| **P1**   | [`features_sports_pipeline_deployment`](../../plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md)                       | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 + `utl_base_image_rebuild_and_workflow_unblock`                                                   | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026                                                                                                                                                                                                                                                                                                                                                      |
 
 ### 12.5 Open — docs
 

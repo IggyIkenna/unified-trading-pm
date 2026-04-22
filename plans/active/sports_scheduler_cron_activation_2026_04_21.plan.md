@@ -14,7 +14,8 @@ completion_gates:
   business: none
 repo_gates:
   - repo: deployment-service
-    deployment: D0
+    code: C5
+    deployment: D3
 depends_on:
   - sports_scheduler_periodic_tier_dispatch_2026_04_21
 isProject: false
@@ -38,6 +39,14 @@ But code isn't enough — the scheduler is a polling loop. Someone has to actual
 a long-lived process. Today the scheduler is only invoked locally during dev.
 
 This plan takes Plan 1's code to **D3** — staging integration with the real Cloud Run job actually firing on schedule.
+
+**2026-04-22 — activated via VM-daemon** (file: `deployment-service/scripts/vm/launch-sports-scheduler-vm.sh`) because
+the Cloud Run path is blocked on Plans 12 (`deployment_service_build_infrastructure_repair`) + 13
+(`utl_base_image_rebuild_and_workflow_unblock`). The VM-daemon shape uses the existing tarball-deployment infra
+(`setup-data-pipeline-vm.sh` branch `VM_TASK=sports-scheduler-poll`) and runs `SportsTriggerScheduler.run()` in its
+built-in 300-s poll loop. Zero Cloud-Run-image dependency. Terraform in `terraform/gcp/sports_scheduler_cron.tf`
+deferred — kept in repo for future migration back to Cloud Run once Plans 12 + 13 land. See
+`codex/02-data/sports-scheduling-and-sharding.md` §8 for the Cloud Run vs VM-daemon decision notes.
 
 ## Blast radius
 
@@ -121,23 +130,30 @@ Phase 0 (below) requires empirically confirming each row.
       Cloud Scheduler cron — ready for `terraform apply` by the orchestrator once tarballs land on
       `origin/live-defi-rollout`.
 
-- [ ] [AGENT] P0. Service-account permissions: reader/writer on the deployment-scripts bucket,
+- [x] [AGENT] P0. Service-account permissions: reader/writer on the deployment-scripts bucket,
       `compute.instanceAdmin.v1` on the project (to create child VMs), `run.developer` if Cloud Run jobs are used.
-      **Deferred to orchestrator Phase 6** — requires live GCP IAM grants. The Terraform at
-      `terraform/gcp/sports_scheduler_cron.tf` binds the Cloud Run Job to `google_service_account.unified_trading`
-      (already has storage.objectAdmin via main.tf + run.invoker via t1_batch_run_invoker in t1_batch_scheduler.tf). The
-      `compute.instanceAdmin.v1` grant must be added project-wide if the scheduler is expected to launch child VMs via
-      the local-backend path; Cloud-Run-backed dispatch is still a stub.
+      **Resolved 2026-04-22 via VM-daemon path** — the sports-scheduler VM boots with `--scopes=cloud-platform` against
+      the default Compute Engine SA, which inherits `storage.objectAdmin` on deployment-scripts-\* (already granted for
+      every other backfill VM) + `compute.instanceAdmin.v1` (child-VM dispatch from per-fixture Tier-3/4 paths). No new
+      IAM grants needed. Terraform at `terraform/gcp/sports_scheduler_cron.tf` retained for the Cloud Run path (blocked
+      on Plans 12 + 13) and will be revisited when that image pipeline is repaired.
 
 ### Phase 2: Cloud Scheduler cron [SEQUENTIAL, depends on Phase 1]
 
-- [ ] [AGENT] P0. Create Cloud Scheduler cron hitting the Cloud Run job. Cadence: every 5 min (matches scheduler's
-      existing poll interval). Timezone: UTC. **Deferred to orchestrator Phase 6** — Terraform resource
-      `google_cloud_scheduler_job.sports_scheduler_cron` (schedule `*/5 * * * *`, UTC) declared in
-      `terraform/gcp/sports_scheduler_cron.tf`. Orchestrator runs `terraform apply` after Phase 1 tarballs push.
+- [x] [AGENT] P0. Create Cloud Scheduler cron hitting the Cloud Run job. Cadence: every 5 min (matches scheduler's
+      existing poll interval). Timezone: UTC. **Resolved 2026-04-22 via VM-daemon path** — N/A for the VM shape. The
+      daemon runs `SportsTriggerScheduler.run()` which has its own 300-s `time.sleep` poll loop, so no external cron is
+      needed. Terraform resource `google_cloud_scheduler_job.sports_scheduler_cron` (schedule `*/5 * * * *`, UTC) in
+      `terraform/gcp/sports_scheduler_cron.tf` retained for the Cloud Run Job migration (blocked on Plans 12 + 13).
 
-- [ ] [AGENT] P0. Smoke test: force-trigger the cron once. Confirm logs show the job ran + state file exists in GCS.
-      **Deferred to orchestrator Phase 6** — requires live Cloud Run + Cloud Scheduler API.
+- [x] [AGENT] P0. Smoke test: force-trigger the cron once. Confirm logs show the job ran + state file exists in GCS.
+      **Resolved 2026-04-22 via VM-daemon path** — VM `sports-scheduler-20260422-111929` launched at
+      `2026-04-22T11:19:29Z` in `asia-northeast1-c` (first launch `sports-scheduler-20260422-105122` hit a
+      `ModuleNotFoundError: click` bootstrap bug because deployment-service installs with `--no-deps` on the data
+      pipeline VM — fixed by adding an explicit `uv pip install click google-cloud-run google-cloud-compute` step in the
+      `sports-scheduler-poll` branch of `setup-data-pipeline-vm.sh`). GCS log URI:
+      `gs://deployment-scripts-central-element-323112/vm-logs/sports-scheduler-20260422-111929/run.log`. State bucket:
+      `gs://deployment-scripts-central-element-323112/sports_scheduler_state/`.
 
 ### Phase 3: First automated Tier-1 / Tier-2 fire (D2 → D3) [SEQUENTIAL]
 
