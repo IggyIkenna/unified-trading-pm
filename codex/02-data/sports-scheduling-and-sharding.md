@@ -390,21 +390,22 @@ dependency plan that must reach C5 before this plan can fully execute.
 
 ### 12.0 Live progress register (re-audit when plan checkboxes change)
 
-Last audit: 2026-04-21 post-master-dispatch. `[x] done` / `[ ] open` is the mechanical checkbox count in each
-plan file — not a judgement call. `First open item` surfaces what the next agent should tackle.
+Last audit: 2026-04-22 post-Bug-4 fix + follow-up flips. `[x] done` / `[ ] open` is the mechanical checkbox count
+in each plan file — not a judgement call. `First open item` surfaces what the next agent should tackle.
 
-| Plan                                               | `[x]` / `[ ]` | Status                             | First open item                                                                                  |
-| -------------------------------------------------- | ------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 1 utl_manifest_migration_primitives                | 15 / 2        | **near-C5** — code landed          | Diff-test refactored vs pre-refactor rescan; VM smoke of `launch-sports-manifest-rescan-vm.sh`   |
-| 2 apifootball_enrichment_historical_backfill       | 3 / 7         | **in-flight** — ops work           | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks           |
-| 3 non_apifootball_provider_backfill_launchers      | 5 / 2         | **near-C5** — 4 launchers landed   | Per-launcher VM smokes; one QG line still called out in plan                                      |
-| 4 instruments_service_orchestrator_reliability_fixes | 10 / 8       | **half-way**                       | Re-smoke + more AF-entity shard work; forward-poll VM; E2E; QG; commits                          |
-| 5 sports_scheduler_cron_activation                 | 4 / 7         | **operator-bound**                 | IAM + Cloud Run + Cloud Scheduler + smokes + 6h/24h monitoring                                   |
-| 6 features_sports_pipeline_deployment              | 9 / 5         | **in-flight**                      | IAM + force-trigger + UI FIXTURE_FEATURES line + historical backfill VM + coverage audit         |
-| 7 upcoming_fixtures_ui_view                        | 12 / 1        | **near-C5**                        | Local dev smoke only                                                                             |
-| 8 vm_observability_codex_update                    | 7 / 0         | **DONE** ✅                        | —                                                                                                |
-| 9 sports_manifest_shard_migration_cleanup          | 7 / 9         | **half-way**                       | Tests + staging/prod runs + rescans + purge + manifest API + UI spot-check + QG + merge          |
-| 10 sports_data_status_fixture_level_drilldown      | 14 / 2        | **near-C5**                        | Manual dev smoke (SPORTS path through fixture list) + commit/quickmerge (deferred to orchestrator) |
+| Plan                                                 | `[x]` / `[ ]` | Status                           | First open item                                                                                     |
+| ---------------------------------------------------- | ------------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1 utl_manifest_migration_primitives                  | 15 / 2        | **near-C5** — code landed        | Diff-test refactored vs pre-refactor rescan; VM smoke of `launch-sports-manifest-rescan-vm.sh`      |
+| 2 apifootball_enrichment_historical_backfill         | 3 / 7         | **in-flight** — ops work         | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks              |
+| 3 non_apifootball_provider_backfill_launchers        | 5 / 2         | **near-C5** — 4 launchers landed | Per-launcher VM smokes; one QG line still called out in plan                                        |
+| 4 instruments_service_orchestrator_reliability_fixes | 12 / 8        | **half-way** (Bug 4 shipped)     | Re-smoke WEATHER+XG (`8a91324`) + Bugs 7-8 AF enrichment + STANDINGS per-league + forward-poll VM   |
+| 5 sports_scheduler_cron_activation                   | 4 / 7         | **operator-bound**               | IAM + Cloud Run + Cloud Scheduler + smokes + 6h/24h monitoring                                      |
+| 6 features_sports_pipeline_deployment                | 9 / 5         | **in-flight**                    | IAM + force-trigger + UI FIXTURE_FEATURES line + historical backfill VM + coverage audit            |
+| 7 upcoming_fixtures_ui_view                          | 12 / 1        | **near-C5**                      | Local dev smoke only                                                                                |
+| 8 vm_observability_codex_update                      | 7 / 0         | **DONE** ✅                      | —                                                                                                   |
+| 9 sports_manifest_shard_migration_cleanup            | 11 / 5        | **half-way** (3 newly flipped)   | Staging/prod purge apply + rescan VM launch + manifest API verify + UI spot-check (VM/operator)     |
+| 10 sports_data_status_fixture_level_drilldown        | 15 / 1        | **near-C5**                      | Manual dev smoke only (SPORTS path through fixture list → CSV download)                             |
+| 11 transfermarkt_sfi_team_mapping_cache_and_drift    | 0 / 22        | **authored** — ready-to-pick-up  | Phase 0 audit: confirm TM + SFI adapter signatures + UAC LeagueDefinition fields + UTL event enum   |
 
 **On-disk implementation evidence** (sanity-check: the code is actually there):
 
@@ -420,9 +421,13 @@ plan file — not a judgement call. `First open item` surfaces what the next age
 **Heaviest remaining work:**
 
 - **Plan 2** (AF enrichment backfill) — multi-day VM runs gated by API-Football rate limit.
-- **Plan 4** (orchestrator reliability) — 4 of 7 bug groups + re-smoke still open.
+- **Plan 4** (orchestrator reliability) — Bugs 7-8 (AF enrichment + STANDINGS per-league) + re-smoke still open.
+  Bug 4 (adapter output dict coercion) shipped 2026-04-22 `7f2cbf0`.
 - **Plans 5 + 6** (deployment activation) — GCP auth + IAM + Cloud Scheduler creation; operator-sign-off territory.
-- **Plan 9** (shard-migration cleanup) — depends on Plan 1 C5 + Plan 4 Bugs 6-7; then runs per-entity rescans + purge.
+- **Plan 9** (shard-migration cleanup) — depends on Plan 1 C5 + Plan 4 Bugs 7-8; then runs per-entity rescans + purge.
+  3 todos flipped 2026-04-22 crediting `5f2cae3` (Phase 1-2) + `d194288` (Phase 2 XG test inversion).
+- **Plan 11** (transfermarkt + SFI team-mapping cache + drift detection) — newly authored 2026-04-22 `e5d941e1`,
+  22 todos / 4 tracks / 4 repos; Phase 0 pre-audit pending.
 
 **Basically done (orchestrator-gate only):** Plans 7, 8, 10, 1 (post diff-test + smoke), 3 (post per-launcher smoke).
 
@@ -440,7 +445,8 @@ plan file — not a judgement call. `First open item` surfaces what the next age
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/active/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                 | deployment-service  | —        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                     |
 | **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/active/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)               | deployment-service  | —        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                |
-| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/active/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md) | instruments-service | —        | 7 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open). **Currently C1** — Phase 4 WEATHER/XG shipped, Phases 1-3 + 5-7 open |
+| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/active/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md) | instruments-service | —        | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1 adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs 7-8) + Phases 6-7 open |
+| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/active/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-sports-service + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `|got - expected|/expected > 10%` without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22 `e5d941e1`** |
 
 ### 12.3 Open — manifest + UI hygiene (gated on 12.2)
 
@@ -452,8 +458,8 @@ forked coordinator/worker logic in `instruments-service`.
 | Priority | Plan                                                                                                                             | Repos                                                      | Gated on                                                         | Delivers                                                                                                                                                                                                         |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **P0**   | [`utl_manifest_migration_primitives`](../../plans/active/utl_manifest_migration_primitives_2026_04_21.plan.md)                   | unified-trading-library + instruments-service              | —                                                                | Factors chunk-safe writer / rescan scanner / legacy-row purger into UTL as reusable primitives. Auto-emits MANIFEST*MIGRATION*\* events. Refactors `rescan_sports_fixtures_canonical.py` to thin wrapper         |
-| **P0**   | [`sports_manifest_shard_migration_cleanup`](../../plans/active/sports_manifest_shard_migration_cleanup_2026_04_21.plan.md)       | instruments-service + deployment-api                       | `utl_manifest_migration_primitives` + reliability Bugs 6-7       | Uses UTL primitives to scan every entity's parquet + emit per-league rows. Drops backwards-compat unsharded emission. One-time legacy-row purge. Closes the three-state manifest orphan problem                  |
-| **P1**   | [`sports_data_status_fixture_level_drilldown`](../../plans/active/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md) | deployment-api + deployment-ui                             | `sports_manifest_shard_migration_cleanup` + reliability Bugs 6-7 | Fixture-anchored UI navigation: Category → Data Type → League → Day → **Fixture** → Download CSV/JSON. Green-day expands fixture list with per-fixture coverage; red-day shows missing fixtures from AF schedule |
+| **P0**   | [`sports_manifest_shard_migration_cleanup`](../../plans/active/sports_manifest_shard_migration_cleanup_2026_04_21.plan.md)       | instruments-service + deployment-api                       | `utl_manifest_migration_primitives` + reliability Bugs 7-8       | Uses UTL primitives to scan every entity's parquet + emit per-league rows. Drops backwards-compat unsharded emission. One-time legacy-row purge. Closes the three-state manifest orphan problem                  |
+| **P1**   | [`sports_data_status_fixture_level_drilldown`](../../plans/active/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md) | deployment-api + deployment-ui                             | `sports_manifest_shard_migration_cleanup` + reliability Bugs 7-8 | Fixture-anchored UI navigation: Category → Data Type → League → Day → **Fixture** → Download CSV/JSON. Green-day expands fixture list with per-fixture coverage; red-day shows missing fixtures from AF schedule |
 | **P2**   | [`upcoming_fixtures_ui_view`](../../plans/active/upcoming_fixtures_ui_view_2026_04_21.plan.md)                                   | deployment-api + deployment-ui + unified-trading-system-ui | —                                                                | Per-league next-7-days forward-view cards (complementary to the backward drilldown above)                                                                                                                        |
 
 ### 12.4 Open — deployment activation (dependencies already at C5)
@@ -479,9 +485,10 @@ Start-anywhere (independent):
   ├─ vm_observability_codex_update               (P2 docs)
   ├─ sports_scheduler_cron_activation            (P0, unblocked)
   ├─ features_sports_pipeline_deployment         (P1, unblocked)
-  └─ instruments_service_orchestrator_reliability_fixes  (P1, C1 — 4 of 7 phases remaining)
+  ├─ transfermarkt_sfi_team_mapping_cache_and_drift_detection  (P2, unblocked — 3 parent plans at C5)
+  └─ instruments_service_orchestrator_reliability_fixes  (P1, C1 — Bugs 7-8 + re-smoke + E2E + QG remain)
            │
-           └─ Bugs 6-7 ship ─► sports_manifest_shard_migration_cleanup (P0)
+           └─ Bugs 7-8 ship ─► sports_manifest_shard_migration_cleanup (P0)
                                        │
                                        └─► sports_data_status_fixture_level_drilldown (P1)
 ```
