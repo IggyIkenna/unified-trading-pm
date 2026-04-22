@@ -65,31 +65,38 @@ Allocator + reporting services read from this registry instead of strings. Share
 
 ## Phase breakdown
 
-### Phase A — Registry schema
+### Phase A — Registry schema — SHIPPED 2026-04-22 (UAC `48bf6ee`)
 
-- [ ] [AGENT] P0. Declare `FundBusinessUnitEntry` Pydantic model at
+- [x] [AGENT] P0. Declare `FundBusinessUnitEntry` Pydantic model at
       `unified-api-contracts/unified_api_contracts/internal/architecture_v2/fund_business_unit.py`:
       `{fund_id, fund_name, business_unit, reserving_business_unit_id, custody_model, service_family, notes?}`.
-- [ ] [AGENT] P0. `custody_model` enum: `CLIENT_OWNED_VENUE | COPPER_CUSTODIAN | NOT_APPLICABLE`.
-- [ ] [AGENT] P0. `FUND_BUSINESS_UNIT_REGISTRY: tuple[FundBusinessUnitEntry, ...]` module-level tuple with seed records:
+- [x] [AGENT] P0. `custody_model` enum: `CLIENT_OWNED_VENUE | COPPER_CUSTODIAN | NOT_APPLICABLE`.
+- [x] [AGENT] P0. `FUND_BUSINESS_UNIT_REGISTRY: tuple[FundBusinessUnitEntry, ...]` module-level tuple with seed records:
       IM Pooled (Copper), Reg Umbrella (client-owned), per-client SMA fixtures, admin, IM-desk.
-- [ ] [AGENT] P0. Helper functions: `fund_for(fund_id) -> FundBusinessUnitEntry`,
+- [x] [AGENT] P0. Helper functions: `fund_for(fund_id) -> FundBusinessUnitEntry`,
       `funds_for_business_unit(business_unit) -> tuple[FundBusinessUnitEntry, ...]`,
       `reserving_business_unit_for(fund_id) -> str`.
 
 ### Phase B — UAC tests + codex parity
 
-- [ ] [AGENT] P0. `unified-api-contracts/tests/internal/unit/test_fund_business_unit.py` — ≥10 cases: every seeded
+- [x] [AGENT] P0. `unified-api-contracts/tests/internal/unit/test_fund_business_unit.py` — ≥10 cases: every seeded
       record retrievable; invariant: each `fund_id` unique; invariant: `reserving_business_unit_id` resolves to a known
       business_unit.
-- [ ] [AGENT] P0. Codex parity test — structural check that
+- [x] [AGENT] P0. Codex parity test — structural check that
       `codex/14-playbooks/shared-core/fund-administration-and-custody.md`'s fund list matches the registry records.
 
-### Phase C — Allocator call-site refactor
+### Phase C — Allocator call-site refactor — DEFERRED to G2.10
 
 - [ ] [AGENT] P0. Update `strategy-service/strategy_service/portfolio_allocator/service.py` to lookup
       `reserving_business_unit_id` via `reserving_business_unit_for(fund_id)` instead of string concatenation.
 - [ ] [AGENT] P0. Update allocator tests to assert registry-driven lookups.
+
+> **Amendment 2026-04-22:** `ClientAllocatorInstance` does not currently carry `fund_id`; it only carries
+> `business_unit ∈ {saas, im_desk, admin}` (the 3-value literal). The plan's "replace string concatenation" phrasing
+> anticipated a signature that doesn't exist. Adding `fund_id` to `ClientAllocatorInstance` is a bigger surface change
+> that naturally folds into the G2.10 allocator UI split (which introduces fund-dropdown selection). **Phase C is
+> therefore deferred into G2.10's execution scope**; the UAC registry from Phase A is already usable by any fund-aware
+> caller via `reserving_business_unit_for(fund_id)`.
 
 ### Phase D — UI consumers
 
