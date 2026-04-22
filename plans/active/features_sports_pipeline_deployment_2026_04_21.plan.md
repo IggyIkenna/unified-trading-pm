@@ -187,16 +187,20 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       invocation. `--skip-existing` + `--force` flags both wired.
 
 - [x] [AGENT] P0. Launch backfill VM for 2018-01-01..2026-04-20. Expect long run (per-fixture join over 7 years of
-      data). Monitor for completion + self-delete. ✅ `fs-backfill-20260422-013051` launched in `asia-northeast1-c`
-      2026-04-22T01:30:51+09:00 (e2-standard-4 / 100 GB / ubuntu-2404-lts-amd64) with
+      data). Monitor for completion + self-delete. ✅ `fs-backfill-20260422-013719` launched in `asia-northeast1-c`
+      2026-04-22T01:37:19+09:00 (e2-standard-4 / 100 GB / ubuntu-2404-lts-amd64) with
       `VM_BACKFILL_CMD="python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features --start-date 2018-01-01 --end-date 2026-04-20"`.
       Singleton lock verified (second launch rejected). GCS log:
-      `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260422-013051/run.log`.
-      Self-delete on completion via `VM_SHUTDOWN_ON_COMPLETION=true`. **Three prior launch attempts failed**:
-      `-010950` self-deleted after ~3 min with no GCS log (heartbeat uploader 30s interval missed); `-011832` died
-      because pyproject.toml still carried the archived `unified-market-interface>=0.3.2` dep (VM uses
-      `uv pip install --no-sources -e` not `--no-deps` so transitive resolution fails on UMI — fixed via commit
-      `cd6ee40`). Tarballs refreshed at 2026-04-22T00:29:10Z after those fixes; `-013051` is the fourth and
+      `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260422-013719/run.log`.
+      Self-delete on completion via `VM_SHUTDOWN_ON_COMPLETION=true`. **Four prior launch attempts failed**:
+      (1) `-010950` self-deleted after ~3 min with no GCS log (heartbeat uploader 30s interval missed);
+      (2) `-011832` died because pyproject.toml still carried archived `unified-market-interface>=0.3.2` dep —
+      VM uses `uv pip install --no-sources -e` (not `--no-deps`) so transitive resolution fails on UMI. Fixed by
+      features-sports-service `cd6ee40` dropping the stale deps.
+      (3) `-013051` died with `argparse.ArgumentError: argument --force: conflicting option string: --force` —
+      features_sports_service/cli/main.py::_extra_args re-declared `--force` already added by UTL
+      `service_cli.py::run()`. Fixed by features-sports-service `0dfc0ba` dropping the duplicate.
+      Tarballs refreshed at 2026-04-22T00:37:10Z after both fixes; `-013719` is the fifth and
       cleanly-launched attempt. Operator should tail the GCS log; expected multi-day runtime for the full 7-year
       window.
 
