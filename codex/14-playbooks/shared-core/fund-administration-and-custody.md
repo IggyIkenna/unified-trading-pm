@@ -16,20 +16,30 @@ visibility: internal-only
 
 This is a hard invariant, not a feature per structure. Confusion historically arose because public surfaces framed SMA
 as "you keep custody" and left Fund structure unclear — making it sound like Fund = Odum-custodies. Not true. Fund
-custody is handled by a **qualified third-party custodian** (Copper for crypto; equivalent regulated custodians for
-TradFi and on-chain positions) under their own regulatory permissions; POD (the regulated affiliate of Odum) is the fund
-administrator handling NAV, subscriptions, and redemptions; Odum Research Ltd is the investment manager only.
+custody is handled by a **qualified third-party custodian** (Copper for crypto; equivalent regulated custody banks for
+TradFi) under their own regulatory permissions. The **fund administrator** (NAV accounting, subscription / redemption
+processing, investor AML/KYC) is asset-class-specific:
+
+- **Crypto-denominated funds** — POD (the regulated affiliate of Odum). POD is crypto-only; it does **not** administer
+  TradFi-denominated funds.
+- **TradFi-denominated funds** — a separate regulated fund administrator (SS&C / Citco / Apex / equivalent, to be
+  selected per mandate). TBD per engagement.
+- **Mixed / multi-asset funds** — structure depends on dominant asset class; typically one administrator per sub-fund
+  rather than mixing within a single vehicle.
+
+Odum Research Ltd is the investment manager only in every case.
 
 ## Custody model per path
 
-| Path                 | Who holds the venue account / fund assets                                                                                                                                                                                                                    | How capital moves                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| IM — Pooled (Fund)   | Qualified 3rd-party custodian (Copper / equivalent) holds fund assets; POD is fund administrator                                                                                                                                                             | Client subscribes / redeems via Odum portal (UI + REST API)                                                   |
-| IM — SMA             | Client, in their own entity name                                                                                                                                                                                                                             | Client funds the venue directly; Odum has scoped execute+read API keys                                        |
-| DART — Signals-In    | **Default**: segregated sub-account inside Odum's venue accounts, held in the client's name via the exchange sub-account primitive (fast onboarding, avoids multi-week direct exchange onboarding). **Opt-out**: client's own venue or prime-broker account. | Client funds their sub-account (or own account) directly; Odum holds scoped execute+read API keys either way. |
-| DART — Full Pipeline | Same dual option as Signals-In                                                                                                                                                                                                                               | Same as Signals-In                                                                                            |
-| Regulatory Umbrella  | Client, in their own entity name                                                                                                                                                                                                                             | Client funds direct; Odum has read-only+read-transaction keys only                                            |
-| Odum Signals-Out     | Counterparty (their own stack)                                                                                                                                                                                                                               | N/A — Odum sees no fills, no positions, no venues                                                             |
+| Path                             | Who holds the venue account / fund assets                                                                                                                                                                                                                    | How capital moves                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| IM — Pooled (Fund, crypto-denom) | Qualified 3rd-party custodian (Copper / equivalent) holds fund assets; **POD** is fund administrator (crypto-only)                                                                                                                                           | Client subscribes / redeems via Odum portal (UI + REST API)                                                   |
+| IM — Pooled (Fund, TradFi-denom) | Qualified 3rd-party TradFi custody bank (prime broker / regulated custodian) holds fund assets; separate regulated fund administrator (SS&C / Citco / Apex / equivalent, TBD per mandate)                                                                    | Client subscribes / redeems via Odum portal (UI + REST API)                                                   |
+| IM — SMA                         | Client, in their own entity name                                                                                                                                                                                                                             | Client funds the venue directly; Odum has scoped execute+read API keys                                        |
+| DART — Signals-In                | **Default**: segregated sub-account inside Odum's venue accounts, held in the client's name via the exchange sub-account primitive (fast onboarding, avoids multi-week direct exchange onboarding). **Opt-out**: client's own venue or prime-broker account. | Client funds their sub-account (or own account) directly; Odum holds scoped execute+read API keys either way. |
+| DART — Full Pipeline             | Same dual option as Signals-In                                                                                                                                                                                                                               | Same as Signals-In                                                                                            |
+| Regulatory Umbrella              | Client, in their own entity name                                                                                                                                                                                                                             | Client funds direct; Odum has read-only+read-transaction keys only                                            |
+| Odum Signals-Out                 | Counterparty (their own stack)                                                                                                                                                                                                                               | N/A — Odum sees no fills, no positions, no venues                                                             |
 
 ## Structures and how custody works in each
 
@@ -43,17 +53,30 @@ administrator handling NAV, subscriptions, and redemptions; Odum Research Ltd is
   Capital stays with the client throughout.
 - Applies to CeFi, DeFi (wallet keys equivalent), and TradFi brokerage keys.
 
-### IM — Pooled (Fund) — via POD administrator and 3rd-party custodian
+### IM — Pooled (Fund) — asset-class-specific administrator + 3rd-party custodian
 
-- Pooled fund holds assets at a **qualified third-party custodian** — Copper for crypto; equivalent regulated custodians
-  for TradFi (prime broker / regulated custody bank) and on-chain positions. The custodian holds assets under their own
-  regulatory permissions.
-- **POD** is the fund administrator / corporate-services provider. POD handles NAV accounting, subscription / redemption
-  processing, and KYC / AML on investors.
+Same mechanic, two asset-class tracks:
+
+**Crypto-denominated pooled funds** (primary engagement as of 2026-04):
+
+- Assets at a qualified crypto custodian (Copper the reference; Fireblocks / BitGo / equivalent as alternatives).
+- **POD** is the fund administrator — crypto-only. POD handles NAV accounting, subscription / redemption processing, and
+  investor AML/KYC.
+- This is the track the `fund-administration-service` repo integrates against in Phase 6+.
+
+**TradFi-denominated pooled funds** (future engagement — not yet live):
+
+- Assets at a qualified TradFi custody bank (prime broker / regulated custodian — specific entity TBD per mandate).
+- Fund administrator is a traditional regulated fund-admin firm (SS&C / Citco / Apex / equivalent — TBD per mandate).
+  **Not POD.** Selecting the TradFi administrator is an onboarding step once the first TradFi-Pooled mandate is scoped.
+
+**Common to both tracks:**
+
+- The custodian holds assets under their own regulatory permissions.
 - Odum Research Ltd is the investment manager (FCA 975797). Odum Research Ltd never holds principal, never touches
   client capital, and does not have custodial permissions.
-- Trading credentials: Odum operates strategies via execute+read API keys that the fund administrator (POD) provisions
-  against the custodian's execution interfaces — mirroring the SMA mechanic from Odum's side, with POD as the
+- Trading credentials: Odum operates strategies via execute+read API keys that the fund administrator provisions against
+  the custodian's execution interfaces — mirroring the SMA mechanic from Odum's side, with the administrator as the
   counterparty instead of the end-client.
 - Clients see share-class NAV and position attribution via the Odum portal (entitlement-filtered). Subscriptions and
   redemptions submit through the portal — automated via the client dashboard UI and via REST API. Every state transition

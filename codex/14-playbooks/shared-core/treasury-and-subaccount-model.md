@@ -19,9 +19,11 @@ visibility: internal-only
 never holds principal.**
 
 The Pooled fund's assets sit with a **qualified third-party custodian** under that custodian's own regulatory
-permissions — Copper for crypto, equivalent regulated custody banks for TradFi, wallet-based custody solutions for
-on-chain. POD is the fund administrator running NAV accounting and the subscription / redemption rail. Odum Research Ltd
-is the investment manager and the client-facing product surface.
+permissions — Copper (primary reference) for crypto, Fireblocks / BitGo as crypto alternatives; qualified TradFi custody
+banks (prime broker / regulated bank, TBD per mandate) for TradFi-denominated funds. The **fund administrator** is
+asset-class-specific: **POD is the crypto-only administrator** (the first and currently only integration); TradFi Pooled
+funds require a separate regulated fund-admin firm (SS&C / Citco / Apex / equivalent — TBD per mandate). Odum Research
+Ltd is the investment manager and the client-facing product surface in every case.
 
 ## Which commercial paths use this model
 
