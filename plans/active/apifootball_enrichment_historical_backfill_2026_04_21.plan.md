@@ -143,15 +143,30 @@ runtime. Chunking across multiple VMs hits the shared-key rate limit and yields 
       `bash launch-api-football-backfill-vm.sh --entity INJURIES 2019-01-16 2026-04-20` — **launched 2026-04-21 21:40
       UTC as `af-backfill-20260421-214057`** in `asia-northeast1-c` (e2-standard-2, singleton-lock held). Live tier Mega
       150k/day (confirmed via `/status`), 148k headroom.
-- [ ] [AGENT] P0. Monitor VM to completion. Self-delete should fire.
-- [ ] [AGENT] P0. Run rescan. Audit INJURIES manifest coverage.
+- [x] [AGENT] P0. Monitor VM to completion. Self-delete should fire. **Completed 2026-04-22 02:40 UTC as
+      `af-backfill-20260422-011538`** (relaunched by orchestrator after Bug 4 / Bug 9 fixes landed — see
+      instruments-service 7f2cbf0 + UAC 61840c9). VM self-deleted cleanly: 556 stale dates re-fetched, **74,874 injury
+      rows** over 2019-01-16 → 2026-04-20, exit_code=0. Zero `FileNotFoundError` + zero `'dict' object has no attribute
+      'model_dump'` in 23,570-line log — both fixes verified under production load. Rate-limit 429s handled cleanly
+      (1,100 events, all auto-recovered).
+- [x] [AGENT] P0. Run rescan. Audit INJURIES manifest coverage. **Completed 2026-04-22 02:47 UTC as
+      `sports-manifest-rescan-20260422-034343`** — self-deleted clean, exit_code=0. Rescan wrote 419,628 rows
+      (preserved 180,039 existing + added 239,589 new FIXTURES per-league entries) in 4 min. Top-10 leagues:
+      FA_CUP 5971 / ARGENTINA_PRIMERA_NACIONAL 3930 / ENG_LEAGUE_TWO 3904 / ENG_CHAMPIONSHIP 3899 etc.
 
 ### Phase 2: FIXTURE_STATS backfill [SEQUENTIAL, depends on Phase 1]
 
-- [ ] [AGENT] P0. Per-fixture entity — cost scales with total fixture count in the window. Plan-sizing Phase 0
-      determines chunks.
-- [ ] [AGENT] P0. Launch one or more VMs per sizing decision.
-- [ ] [AGENT] P0. Monitor + rescan + audit.
+- [x] [AGENT] P0. Per-fixture entity — cost scales with total fixture count in the window. Plan-sizing Phase 0
+      determines chunks. **Single-VM A-strategy (singleton-lock serial) confirmed optimal** given API-Football Mega
+      rate-limit profile. Unlike INJURIES, FIXTURE_STATS enters the enrichment-only fast-path (reads fixture IDs from
+      GCS, skips URDI re-fetch, only hits `/fixtures/statistics`) — ~10-12 stale dates/min steady state.
+- [x] [AGENT] P0. Launch one or more VMs per sizing decision. **Launched 2026-04-22 03:52 UTC as
+      `af-backfill-20260422-035221`** (`--entity FIXTURE_STATS 2019-01-16 2026-04-20`, singleton-locked, VM_SHUTDOWN_ON_COMPLETION=true).
+- [ ] [AGENT] P0. Monitor + rescan + audit. In progress at orchestrator handoff — detached chain orchestrator
+      `/tmp/af-entity-chain.sh` (PID 13179, nohup + disown'd) waits for FIXTURE_STATS self-delete, fires rescan,
+      then sequentially launches FIXTURE_EVENTS → FIXTURE_LINEUPS → PLAYER_STATS (each with rescan between). Progress
+      log at `/tmp/af-chain-progress.log`; GCS log at
+      `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260422-035221/run.log`.
 
 ### Phase 3: FIXTURE_EVENTS backfill [SEQUENTIAL, depends on Phase 2]
 
@@ -190,3 +205,7 @@ Strictly sequential per-entity due to shared API key rate-limit.
 - Enrichment of pre-deployment 2018 dates (already captured by 2018 historical backfill).
 - New launcher code — existing `--entity` flag suffices.
 - Non-API-Football providers — separate plan (`non_apifootball_provider_backfill_launchers_2026_04_21`).
+- **STANDINGS entity** — `launch-api-football-backfill-vm.sh` whitelist only accepts `FIXTURES | INJURIES |
+  FIXTURE_STATS | FIXTURE_EVENTS | FIXTURE_LINEUPS | PLAYER_STATS`. STANDINGS is a league-level shard (not per-fixture)
+  handled by a different scheduling path. Standalone backfill for STANDINGS is a separate followup plan — not launched
+  in this wave.
