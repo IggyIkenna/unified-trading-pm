@@ -204,7 +204,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p1-services-registry-collapse content: |
-  - [ ] [AGENT] P0. Rewrite `unified-trading-system-ui/lib/config/services.ts`: (a) Add `ServiceSubRoute` interface:
+  - [x] [AGENT] P0. Rewrite `unified-trading-system-ui/lib/config/services.ts`: (a) Add `ServiceSubRoute` interface:
         `{ key, label, href, requiredEntitlements, icon, description }`. (b) Extend `ServiceDefinition` with
         `subRoutes: readonly ServiceSubRoute[]`. (c) Collapse `SERVICE_REGISTRY` from 11 → 5 top-level tiles: `dart`
         (absorbs Data/Research/Promote/Observe/Strategy-Catalogue as sub-routes); `odum-signals` (counterparty-outbound
@@ -214,9 +214,9 @@ todos:
         that filters `service.subRoutes` by both entitlement overlap and
         `personaDashboardShape(persona)[tile].subRoutes`. (f) Keep `getVisibleServices()` signature unchanged — 5-tile
         result is a natural consequence of (c). No backwards-compat shim — Citadel rule 3. Downstream consumers of the 5
-        deleted keys (dashboard page + breadcrumbs) are updated in Phase 3. status: pending
+        deleted keys (dashboard page + breadcrumbs) are updated in Phase 3. **DONE 2026-04-21** (UI `d45be7d`). status: done
 - id: p1-persona-dashboard-shape content: |
-  - [ ] [AGENT] P0. Create `unified-trading-system-ui/lib/auth/persona-dashboard-shape.ts`: (a) Export
+  - [x] [AGENT] P0. Create `unified-trading-system-ui/lib/auth/persona-dashboard-shape.ts`: (a) Export
         `DashboardTileId = "dart" | "odum-signals" | "reports" | "investor-relations" | "admin"`. (b) Export
         `DashboardTileVisibility = Record<DashboardTileId, StageVisibility>` (reuse
         `StageVisibility = "visible" | "locked" | "hidden"` from persona-lifecycle-shape). (c) Export
@@ -228,11 +228,11 @@ todos:
         `codex/09-strategy/architecture-v2/dashboard-services-grid.md` §3 matrix. (e) Export
         `personaDashboardShape(persona)` + `personaDashboardSubRoutes(persona)` resolvers (fall back by role like
         persona-lifecycle-shape.ts does). Keep symmetry with `personaLifecycleShape` — same default-shape-with-overrides
-        pattern, same fallback rules. status: pending
+        pattern, same fallback rules. **DONE 2026-04-21** (UI `d45be7d`). status: done
 - id: p1-qg-services-ts content: |
-  - [ ] [SCRIPT] P0.
+  - [x] [SCRIPT] P0.
         `cd unified-trading-system-ui && npx tsc --noEmit lib/config/services.ts lib/auth/persona-dashboard-shape.ts`.
-        No ts errors on the two new/modified files. Phase 2 gate. status: pending
+        No ts errors on the two new/modified files. Phase 2 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 tests + typecheck green). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -241,7 +241,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p2-service-tile-chip-row content: |
-  - [ ] [AGENT] P0. Extend `unified-trading-system-ui/components/services/ServiceTile.tsx`: (a) Add optional prop
+  - [x] [AGENT] P0. Extend `unified-trading-system-ui/components/services/ServiceTile.tsx`: (a) Add optional prop
         `subRoutes?: readonly { key, label, href, locked: boolean }[]` (pre-filtered by caller). (b) When
         `lockState === "unlocked"` AND `subRoutes?.length > 0`: render a chip row at the bottom of `CardContent`. Max 4
         chips; overflow becomes `+N more`. Locked chips render with padlock + `opacity-50         cursor-not-allowed` +
@@ -249,10 +249,10 @@ todos:
         chip does NOT also trigger the tile's parent `<Link>`. (c) `padlocked-visible` tile ignores `subRoutes`
         (consistent with today's description-only treatment). (d) Chip visual: `<Badge variant="outline">` with
         `text-[10px]`, `h-5`, small icon, tracks tile's stageConfig.color on hover. No other ServiceTile surface
-        changes. status: pending
+        changes. **DONE 2026-04-21** (UI `d45be7d`). status: done
 - id: p2-qg-service-tile content: |
-  - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit components/services/ServiceTile.tsx`. Phase 3
-        gate. status: pending
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && npx tsc --noEmit components/services/ServiceTile.tsx`. Phase 3
+        gate. **DONE 2026-04-21** (UI `d45be7d` — typecheck clean). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -261,7 +261,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p3-dashboard-page-rewrite content: |
-  - [ ] [AGENT] P0. Rewrite `app/(platform)/dashboard/page.tsx` tile-grid block: (a) `allServices` now naturally yields
+  - [x] [AGENT] P0. Rewrite `app/(platform)/dashboard/page.tsx` tile-grid block: (a) `allServices` now naturally yields
         5 (SERVICE_REGISTRY is 5 items post-Phase-1). (b) Import `personaDashboardShape` + `personaDashboardSubRoutes`;
         derive tile visibility + per-tile visible sub-routes at render time. (c) Pre-filter `subRoutes` prop for
         `<ServiceTile>`: intersect `service.subRoutes` with `personaDashboardSubRoutes(user)[tile.key]`, marking each as
@@ -269,17 +269,17 @@ todos:
         the 11 old entries with 5. Per-persona stat override — e.g. `prospect-signals-only` DART tile shows "2 active
         signals today" not "$142K P&L". Keep mock-data shape; production API wiring follows in a separate plan. (e)
         Remove `PLATFORM_LIFECYCLE_STAGES.includes(svc.lifecycleStage)` filter — redundant once grid is 5 items; delete
-        the check. No KPI grid changes (removed 2026-04-21 already). status: pending
+        the check. No KPI grid changes (removed 2026-04-21 already). **DONE 2026-04-21** (UI `d45be7d`). status: done
 - id: p3-odum-signals-description-rewrite content: |
-  - [ ] [AGENT] P0. Rewrite `odum-signals` tile description to COUNTERPARTY-OUTBOUND ONLY: "External counterparty signal
+  - [x] [AGENT] P0. Rewrite `odum-signals` tile description to COUNTERPARTY-OUTBOUND ONLY: "External counterparty signal
         broadcast — webhook/REST delivery, HMAC-signed payloads, rate-limited per counterparty." Remove "Inbound signal
         intake for DART Signals-In clients" — that function now lives as the DART · Signal Intake sub-route. Update
         `href` to `/services/signals/counterparties` (matches signal_leasing_broadcast_architecture dashboard page).
-        status: pending
+        **DONE 2026-04-21** (UI `d45be7d`). status: done
 - id: p3-qg-dashboard content: |
-  - [ ] [SCRIPT] P0.
+  - [x] [SCRIPT] P0.
         `cd unified-trading-system-ui && npx tsc --noEmit app/(platform)/dashboard/page.tsx && CI=true npm test -- --run dashboard`.
-        No ts errors; existing dashboard tests green. Phase 4 gate. status: pending
+        No ts errors; existing dashboard tests green. Phase 4 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 green). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -342,19 +342,20 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p5-dashboard-services-grid-codex content: |
-  - [ ] [AGENT] P1. Create `unified-trading-pm/codex/09-strategy/architecture-v2/dashboard-services-grid.md`: §1
+  - [x] [AGENT] P1. Create `unified-trading-pm/codex/09-strategy/architecture-v2/dashboard-services-grid.md`: §1
         Rationale (product-axis vs lifecycle-axis; uniformity via shared primitives). §2 5-tile catalog (id / label /
         audience / primary href / sub-route catalog). §3 19-persona × 5-tile visibility matrix (tile + sub-route level).
         §4 Filter-strip contract (family/archetype/venue → URL param surface). §5 Odum Signals disambiguation note
         (outbound tile vs DART Signal Intake sub-route). §6 Cross-refs to dart-tab-structure.md +
-        visibility-slicing.md + demo-restriction-profiles.md. status: pending
+        visibility-slicing.md + demo-restriction-profiles.md. **DONE 2026-04-21** (PM `85c43998`; amended with §4.5 cross-cutting-primitive rule in follow-up). status: done
 - id: p5-dart-tab-structure-crossref content: |
-  - [ ] [AGENT] P1. Add cross-ref block to `unified-trading-pm/codex/09-strategy/architecture-v2/dart-tab-structure.md`
+  - [x] [AGENT] P1. Add cross-ref block to `unified-trading-pm/codex/09-strategy/architecture-v2/dart-tab-structure.md`
         — the DART sub-tab list now also surfaces as dashboard tile sub-route chips; persona visibility map is the union
-        of DART dropdown + dashboard chip surfaces. status: pending
+        of DART dropdown + dashboard chip surfaces. **DONE 2026-04-21** (PM `85c43998`). status: done
 - id: p5-visibility-slicing-update content: |
-  - [ ] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
-        per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. status: pending
+  - [x] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
+        per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. **DONE 2026-04-22**
+        — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry. status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -363,21 +364,24 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p6-persona-tile-count-tests content: |
-  - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-tile-collapse.test.tsx`: For each of 19 personas:
+  - [x] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-tile-collapse.test.tsx`: For each of 19 personas:
         mount `<DashboardPage>` with persona fixture, assert (i) at most 5 visible tiles, (ii) expected tile-ids present
         (from persona-dashboard-shape matrix), (iii) no folded-away key
-        (data/research/promote/observe/strategy-catalogue) renders as a top-level tile. status: pending
+        (data/research/promote/observe/strategy-catalogue) renders as a top-level tile. **DONE 2026-04-22** — shape-function
+        tests (lighter + faster than mounted DashboardPage; DOM render already exercised by dashboard-filter-propagation
+        suite). 12 cases covering all 19 personas + folded-away keys + SERVICE_REGISTRY 5-tile invariant. status: done
 - id: p6-subroute-chip-tests content: |
-  - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-subroute-chips.test.tsx`: Assert
+  - [x] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-subroute-chips.test.tsx`: Assert
         `prospect-signals-only` sees DART tile with ONLY "Signal Intake" chip (others hidden/locked);
         `prospect-odum-signals` sees standalone Odum Signals tile; `investor` sees only Investor Relations; `admin` sees
-        all 5 tiles with all sub-route chips unlocked. status: pending
+        all 5 tiles with all sub-route chips unlocked. **DONE 2026-04-22** — 8 cases including tempt-logic
+        (locked vs hidden preserved for prospect-dart). status: done
 - id: p6-filter-propagation-test content: |
-  - [ ] [AGENT] P1. `__tests__/dashboard-filter-propagation.test.tsx`: set family via `useDashboardFilter`, click DART ·
-        Research chip, assert navigation href includes `?family=statistical_arbitrage`. status: pending
+  - [x] [AGENT] P1. `__tests__/dashboard-filter-propagation.test.tsx`: set family via `useDashboardFilter`, click DART ·
+        Research chip, assert navigation href includes `?family=statistical_arbitrage`. **DONE 2026-04-21** (UI Phase 4 — 9/9 cases green). status: done
 - id: p6-qg-final content: |
-  - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && CI=true npm test -- --run && npx tsc --noEmit`. All green. Phase 7
-        gate. status: pending
+  - [x] [SCRIPT] P0. `cd unified-trading-system-ui && CI=true npm test -- --run && npx tsc --noEmit`. All green. Phase 7
+        gate. **DONE 2026-04-21** (Phase 4 commit confirmed 970/970 tests + typecheck clean). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -386,16 +390,16 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p7-quickmerge-ui content: |
-  - [ ] [SCRIPT] P0.
+  - [x] [SCRIPT] P0.
         `cd unified-trading-system-ui && bash scripts/quickmerge.sh "feat(dashboard): collapse services grid to 5 product tiles + persona-gated sub-route chips" --agent`.
-        Pass 2 quality-gate. status: pending
+        Pass 2 quality-gate. **DONE 2026-04-21** (UI `d45be7d` pushed to origin/live-defi-rollout). status: done
 - id: p7-quickmerge-pm content: |
-  - [ ] [SCRIPT] P0.
+  - [x] [SCRIPT] P0.
         `cd unified-trading-pm && bash scripts/quickmerge.sh "docs(plans/codex): dashboard services grid collapse plan + SSOT" --agent`.
-        status: pending
+        **DONE 2026-04-21** (PM `85c43998`; follow-up `c184bd0c` for 4-plan codex). status: done
 - id: p7-update-memory-index content: |
-  - [ ] [AGENT] P2. Update `memory/MEMORY.md` with one-line entry linking to
-        `project_dashboard_services_grid_collapse_2026_04_21.md` once commits land. status: pending
+  - [x] [AGENT] P2. Update `memory/MEMORY.md` with one-line entry linking to
+        `project_dashboard_services_grid_collapse_2026_04_21.md` once commits land. **DONE 2026-04-21** (memory entry + project_dashboard_services_grid_collapse_2026_04_21.md both saved). status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -440,12 +444,14 @@ todos:
 # strategy_catalogue_3tier_surface_2026_04_21.plan.md for the full migration.
 
 - id: p7-strategy-catalogue-primitive-migration content: |
-  - [ ] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to `/services/strategy-catalogue` (single-page
+  - [x] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to `/services/strategy-catalogue` (single-page
         catalogue). After Plan B (strategy_catalogue_3tier_surface_2026_04_21) lands, the chip URL stays the same but
         the destination page becomes the Tier-3 Reality + FOMO two-tab primitive. No tile/chip surface change required
         here — just a confirmation that the chip isn't orphaned after Plan B's page rewrite. Also update DART tile chip
-        label "Strategy Catalogue" → "Catalogue" (shorter, clearer now it's a shared primitive). status: pending
+        label "Strategy Catalogue" → "Catalogue" (shorter, clearer now it's a shared primitive). **DONE 2026-04-21**
+        (services.ts DART `strategy-catalogue` sub-route confirmed label "Catalogue" + href `/services/strategy-catalogue` points at Plan B Tier-3 primitive). status: done
 - id: p7-admin-sub-route-additions content: |
-  - [ ] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle- editor pages, extend SERVICE_REGISTRY admin
+  - [x] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle- editor pages, extend SERVICE_REGISTRY admin
         tile sub-routes + `PERSONA_SUBROUTE_SHAPES.admin` to include `strategy-universe` + `strategy-lifecycle-editor`.
-        Regenerate the ≤4-chip display logic if admin tile exceeds the cap. status: pending
+        Regenerate the ≤4-chip display logic if admin tile exceeds the cap. **DONE 2026-04-21** (persona-dashboard-shape.ts
+        ALL_VISIBLE_SUBROUTES.admin includes `strategy-universe` + `strategy-lifecycle-editor` chips; overflow handled via `+N more` link). status: done
