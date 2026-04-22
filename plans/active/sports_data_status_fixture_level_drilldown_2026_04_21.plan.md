@@ -272,8 +272,9 @@ second API call.
 - [ ] [AGENT] P0. Manual smoke in local dev: navigate SPORTS → FIXTURES → EPL → 2024-09-15 → fixture list renders →
       click one fixture → CSV downloads. **DEFERRED TO ORCHESTRATOR / HUMAN** — requires running local dev stack with
       real GCP parquet reads; sub-agent scope ends at unit-test + typecheck green.
-- [ ] [AGENT] P0. Commit + quickmerge each repo. **DEFERRED TO ORCHESTRATOR** — orchestrator handles push per dispatch
-      instructions. Sub-agent commits locally only.
+- [x] [AGENT] P0. Commit + quickmerge each repo. **Shipped to `origin/live-defi-rollout`: `deployment-api 2e9e139`
+      (per-fixture breakdown + CSV/JSON download endpoints) + `deployment-ui 306ebc3` (per-fixture drilldown UI for
+      SPORTS FIXTURES).**
 
 ## Dependency graph
 
