@@ -406,6 +406,7 @@ in each plan file — not a judgement call. `First open item` surfaces what the 
 | 9 sports_manifest_shard_migration_cleanup            | 11 / 5        | **half-way** (3 newly flipped)   | Staging/prod purge apply + rescan VM launch + manifest API verify + UI spot-check (VM/operator)     |
 | 10 sports_data_status_fixture_level_drilldown        | 15 / 1        | **near-C5**                      | Manual dev smoke only (SPORTS path through fixture list → CSV download)                             |
 | 11 transfermarkt_sfi_team_mapping_cache_and_drift    | 0 / 22        | **authored** — ready-to-pick-up  | Phase 0 audit: confirm TM + SFI adapter signatures + UAC LeagueDefinition fields + UTL event enum   |
+| 12 deployment_service_build_infrastructure_repair    | 0 / 8         | **authored** — ready-to-pick-up  | Phase 0 archaeology: confirm `ui/api/backends/deployment` never existed + live `deployment-dashboard` image age + gunicorn.conf.py location. Blocks Plan 5 cron activation. |
 
 **On-disk implementation evidence** (sanity-check: the code is actually there):
 
@@ -464,10 +465,11 @@ forked coordinator/worker logic in `instruments-service`.
 
 ### 12.4 Open — deployment activation (dependencies already at C5)
 
-| Priority | Plan                                                                                                               | Repos                                        | Gated on                                         | Delivers                                                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
-| **P0**   | [`sports_scheduler_cron_activation`](../../plans/active/sports_scheduler_cron_activation_2026_04_21.plan.md)       | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5  | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod   |
-| **P1**   | [`features_sports_pipeline_deployment`](../../plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md) | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026 |
+| Priority | Plan                                                                                                                           | Repos                                        | Gated on                                         | Delivers                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| **P0**   | [`deployment_service_build_infrastructure_repair`](../../plans/active/deployment_service_build_infrastructure_repair_2026_04_22.plan.md) | deployment-service                           | —                                                | Repair 6 bugs in Dockerfile + cloudbuild.yaml blocking all Cloud Builds since 2026-02-20. Lands first fresh `deployment-dashboard` + `sports-scheduler` AR image in 2+ months. **Blocks Plan 5** below. |
+| **P0**   | [`sports_scheduler_cron_activation`](../../plans/active/sports_scheduler_cron_activation_2026_04_21.plan.md)                   | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5 + `deployment_service_build_infrastructure_repair` | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod   |
+| **P1**   | [`features_sports_pipeline_deployment`](../../plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md)             | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026 |
 
 ### 12.5 Open — docs
 
@@ -483,8 +485,10 @@ Start-anywhere (independent):
   ├─ non_apifootball_provider_backfill_launchers (P1)
   ├─ upcoming_fixtures_ui_view                   (P2)
   ├─ vm_observability_codex_update               (P2 docs)
-  ├─ sports_scheduler_cron_activation            (P0, unblocked)
-  ├─ features_sports_pipeline_deployment         (P1, unblocked)
+  ├─ deployment_service_build_infrastructure_repair  (P0) ─┐
+  │                                                         │
+  │                                                         └─► sports_scheduler_cron_activation (P0, gated on build repair)
+  ├─ features_sports_pipeline_deployment         (P1, unblocked — own Dockerfile clean; Phase 6 confirms)
   ├─ transfermarkt_sfi_team_mapping_cache_and_drift_detection  (P2, unblocked — 3 parent plans at C5)
   └─ instruments_service_orchestrator_reliability_fixes  (P1, C1 — Bugs 7-8 + re-smoke + E2E + QG remain)
            │
