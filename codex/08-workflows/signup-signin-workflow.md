@@ -19,32 +19,50 @@ current vs target state of what the UI actually implements.
 
 ## 1. The full prospect journey
 
-The target funnel has four ordered stages. Each stage writes a durable artifact the next stage consumes; a prospect can
-pause and resume at any point via their email address.
+The target funnel has **six ordered stages**. Each stage writes a durable artifact the next stage consumes; a prospect
+can pause and resume at any point via their email address. The sequencing is deliberate — each step tailors the next one
+so neither side re-treads ground on later calls.
 
 ```
-Briefings / marketing pages
-       │    (reader decides this is worth a call)
+Deep dives / marketing pages (optional read)
+       │    (reader decides this is worth a call, requests access code)
        ▼
 Questionnaire (~2 min, 6 base + 7 Reg-Umbrella axes)
        │    → Firestore /questionnaires/{id}  (staging/prod)
        │    → localStorage                    (dev / mock)
        │    → sends envelope {email, firm, fingerprint}
        ▼
-Demo (45-min call) ← Calendly
-       │    (internal notes logged post-call; no UI writes)
+Initial call (~30 min) — fit discussion
+       │    (confirm Odum is the right shape, confirm we understood
+       │     enough from the questionnaire to tailor the right product)
        ▼
-Signup (self-serve form → user-management-api)
+Demo (guided → self-serve)
+       │    (operator walkthrough first; then prospect drives it themselves
+       │     and decides whether the value is there)
+       ▼
+Bespoke tailoring
+       │    (catalogue opens here: ~2,500 combinations. Customise strategies,
+       │     infrastructure, regulatory posture from it. Contract scope
+       │     is locked off in preparation for signup.)
+       ▼
+Signup + go live (self-serve form → user-management-api)
        │    → Firebase Auth user (disabled, pending_approval)
        │    → Firestore /users/{uid} profile
        │    → attaches questionnaire_response_id from envelope.email
+       │    (same week as the bespoke conversation is realistic when green)
        ▼
 Signin → dashboard (post-approval, access-token granted)
 ```
 
-Key property: **the questionnaire's email is the primary cross-link**. The signup flow looks up the prior questionnaire
-response by that email and attaches it to the user record — so client-facing staff opening the admin view see the full
-journey in one place.
+Key properties:
+
+- **The questionnaire's email is the primary cross-link.** The signup flow looks up the prior questionnaire response by
+  that email and attaches it to the user record — so client-facing staff opening the admin view see the full journey in
+  one place.
+- **Signup sits near the end of the funnel, not the start.** Short-circuiting to signup before the demo would mean
+  provisioning blind; the sequencing above exists so we don't.
+- **The ~2,500-combination catalogue opens at the bespoke-tailoring stage**, not earlier. It's not coy — it's how trust
+  is built, and it protects clients who have already locked off their piece.
 
 ---
 
@@ -61,16 +79,31 @@ journey in one place.
 - **Access gate:** briefing access code (light-auth, shared key). Not the same as the main app sign-in.
 - **SSOT:** [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md).
 
-### 2.2 Demo stage
+### 2.2 Initial call stage (~30 min)
 
-- **Not a UI write.** External booking via Calendly.
-- Internal CRM follow-up happens in operator tools; no public-facing artifact beyond the calendar event.
-- A prospect can reach signup without doing a demo — the funnel strongly prefers demo-before-signup for IM / Regulatory,
-  but allows email-capture for DART / Odum Signals before the demo call.
+- **Not a UI write.** Booked via Calendly, operator-led.
+- Purpose: fit confirmation. Check that Odum is the right shape for the prospect, and that we've understood enough from
+  the questionnaire to tailor the right product at the demo.
+- Operator notes go into internal CRM; no public-facing artifact beyond the calendar event.
 
-### 2.3 Signup stage
+### 2.3 Demo stage
 
-#### 2.3.1 Gate: questionnaire-completed check
+- **Not a UI write** (platform provisioning at this stage is always an operator-side affair; account + keys come later
+  at signup).
+- Two halves: (1) guided walkthrough where an Odum operator drives the UI against the prospect's shape, (2) self-serve
+  exploration where the prospect runs the platform themselves and forms a value judgement.
+- **The catalogue does not open at the demo.** It opens at bespoke tailoring (§2.4) only if the fit is confirmed here.
+
+### 2.4 Bespoke tailoring stage
+
+- **Not a UI write.** Usually one or two targeted calls, sometimes a shared document trail.
+- **The ~2,500-combination catalogue opens here.** Strategies, infrastructure, regulatory posture are customised from
+  it; the contract scope that will drive signup is locked off during this stage.
+- Output: a concrete contract shape the prospect can sign off on; ready to move to signup.
+
+### 2.5 Signup stage
+
+#### 2.5.1 Gate: questionnaire-completed check
 
 - `/signup` reads `localStorage[questionnaire-response-v1]` on mount.
 - **If present:** show a one-line acknowledgement banner ("Questionnaire on file for `<email>` — we'll attach your
@@ -81,7 +114,7 @@ journey in one place.
   2. "I've already filled it in, continue" (secondary, for cross-device cases) — proceeds directly to the form; we rely
      on email cross-reference at submit time.
 
-#### 2.3.2 Service-specific signup fields
+#### 2.5.2 Service-specific signup fields
 
 Signup UI is shaped by the `?service=` query param. Four paths; fields are minimal per path because we already have the
 prospect's answers from the questionnaire.
@@ -97,13 +130,13 @@ prospect's answers from the questionnaire.
 document exchange (signed agreements, proof of address, etc.) happens on the admin side via Firebase Storage signed URLs
 after approval.
 
-#### 2.3.3 Password rules
+#### 2.5.3 Password rules
 
 - Minimum 12 characters, at least one uppercase + lowercase + digit.
 - Password is set at signup (not assigned by ops).
 - Firebase Auth user is created in `disabled=true` state; ops flips `disabled=false` after KYC/AML checks pass.
 
-#### 2.3.4 Questionnaire attachment
+#### 2.5.4 Questionnaire attachment
 
 The signup API (POST `/api/v1/signup`) attaches the prospect's prior questionnaire response to the new user profile via
 two paths, in priority order:
@@ -122,7 +155,7 @@ manually on review.
 The signup response body returns the resolved id (or `null`) plus an `email_verification_pending` flag so admin tooling
 can show the pending-verify state alongside the application.
 
-### 2.4 Signin stage
+### 2.6 Signin stage
 
 - Standard Firebase Auth email + password.
 - `disabled=true` accounts see a "pending approval" landing page (`/pending`) with status info and a support contact
@@ -150,7 +183,7 @@ What's already wired:
 - [x] `SignupPayload.questionnaire_response_id` is forwarded by the wizard from
       `localStorage[questionnaire-envelope-v1].submissionId` (Firestore submit now persists the id back onto the
       envelope so cross-page reads are typed). Mock backend implements both the direct-id and email-lookup attachment
-      paths described in §2.3.4 (2026-04-22).
+      paths described in §2.5.4 (2026-04-22).
 - [x] DART + Odum Signals path on `GenericSignup` shows a "post-demo provisioning" callout so prospects know account
       keys are issued after the demo, not at form submit (2026-04-22).
 - [x] `SignupPayload.send_email_verification` opts the new account into Firebase admin-SDK email verification at signup
@@ -159,7 +192,7 @@ What's already wired:
 
 Gaps remaining:
 
-- [ ] Real user-management-api implementation of the §2.3.4 attachment paths + Firebase admin-SDK email-verification
+- [ ] Real user-management-api implementation of the §2.5.4 attachment paths + Firebase admin-SDK email-verification
       link generation. The UI + mock surfaces are in place; production wiring lives outside this workspace and is the
       remaining handoff.
 
@@ -170,4 +203,4 @@ Gaps remaining:
 | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Commit                    |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
 | 2026-04-22 | Initial playbook. Questionnaire gate + service-list refresh landed in unified-trading-system-ui.                                                                                                                                                                                                                                                                                                                                                               | _(see live-defi-rollout)_ |
-| 2026-04-22 | §2.3.4 + Gaps remaining sweep: slim Regulatory step 3 (no-upload contract-summary panel), drop the IM doc-blocker on submit + the redundant duplicate `submitSignup` in step 4, persist `submissionId` on the questionnaire envelope, mock signup attaches the questionnaire by id-or-email lookup and records the email-verify intent, post-demo provisioning callout on DART / Signals path. Real user-management-api implementation remains as a follow-up. | _(see live-defi-rollout)_ |
+| 2026-04-22 | §2.5.4 + Gaps remaining sweep: slim Regulatory step 3 (no-upload contract-summary panel), drop the IM doc-blocker on submit + the redundant duplicate `submitSignup` in step 4, persist `submissionId` on the questionnaire envelope, mock signup attaches the questionnaire by id-or-email lookup and records the email-verify intent, post-demo provisioning callout on DART / Signals path. Real user-management-api implementation remains as a follow-up. | _(see live-defi-rollout)_ |
