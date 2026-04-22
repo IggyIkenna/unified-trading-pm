@@ -5,11 +5,16 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.1
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
+    2026-04-20)
 # Wave G2-α — parallel with G2-α peers 2.6, 2.8, 2.9, 2.11. Downstream Wave G2-β: 2.2, 2.7, 2.10.
+# PATH AMENDMENT 2026-04-22: user-management-ui archived; admin surfaces now live at
+#   unified-trading-system-ui/app/(ops)/admin/* + lib/admin/* + server/admin/*.
 ---
 
 # Refactor G2.1 — Org-scoped JWT claims
@@ -28,13 +33,13 @@ the lookup for localhost).
 
 ## Decisions locked with user (2026-04-20)
 
-| Decision                                                                                                    | Chosen                                                                                                                         | Source                                             |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Firebase IS the API — no separate `user-management-api` repo                                                | Claims emitted via Firebase Admin SDK call-sites colocated with user-management-ui provisioning handlers                       | Operator 2026-04-20 (Wave E closure memory)        |
-| Claim set: `{org_id, business_unit_id, service_family, audience, fund_id, client_id, api_key_scopes}`       | Minimum enforceable surface to make `access_control()` self-contained                                                          | Stage 3E §2.1 + Stage 3C §1.5 UserContext shape    |
-| `service_family` claim uses 6-value internal enum (`IM RegUmbrella DART DART_reporting_only admin IM_desk`) | Prospect-facing 4-value enum (`IM DART RegUmbrella combo`) stays UI-only — claims encode what the backend actually resolves to | G1.11 rule 12 + Wave E closure note                |
-| Staging Firebase must land FIRST                                                                            | Claim emission path needs a real Firebase project that isn't prod                                                              | Hard prereq — G2.6 `staging Firebase provisioning` |
-| Mock-auth (localhost) keeps client-side persona lookup                                                      | CI + dev-tier-0 remain credential-free; dev only consults claims when `NEXT_PUBLIC_USE_FIREBASE_AUTH=true`                     | CLAUDE.md 5-axis mode table                        |
+| Decision                                                                                                    | Chosen                                                                                                                                                                            | Source                                             |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Firebase IS the API — no separate `user-management-api` repo                                                | Claims emitted via Firebase Admin SDK call-sites colocated with admin provisioning handlers in unified-trading-system-ui `(ops)/admin/*` (user-management-ui archived 2026-04-20) | Operator 2026-04-20 + fold 2026-04-22              |
+| Claim set: `{org_id, business_unit_id, service_family, audience, fund_id, client_id, api_key_scopes}`       | Minimum enforceable surface to make `access_control()` self-contained                                                                                                             | Stage 3E §2.1 + Stage 3C §1.5 UserContext shape    |
+| `service_family` claim uses 6-value internal enum (`IM RegUmbrella DART DART_reporting_only admin IM_desk`) | Prospect-facing 4-value enum (`IM DART RegUmbrella combo`) stays UI-only — claims encode what the backend actually resolves to                                                    | G1.11 rule 12 + Wave E closure note                |
+| Staging Firebase must land FIRST                                                                            | Claim emission path needs a real Firebase project that isn't prod                                                                                                                 | Hard prereq — G2.6 `staging Firebase provisioning` |
+| Mock-auth (localhost) keeps client-side persona lookup                                                      | CI + dev-tier-0 remain credential-free; dev only consults claims when `NEXT_PUBLIC_USE_FIREBASE_AUTH=true`                                                                        | CLAUDE.md 5-axis mode table                        |
 
 ## Cross-references
 
@@ -57,8 +62,8 @@ the lookup for localhost).
 6. `unified-trading-system-ui/lib/auth/personas.ts` — 11 personas reference
 7. `unified-trading-system-ui/lib/auth/demo-provider.ts`
 8. `unified-trading-system-ui/lib/config/auth.ts`
-9. `user-management-ui/lib/firebase.ts` — admin SDK surface
-10. `user-management-ui/app/(platform)/` — provisioning handlers
+9. `unified-trading-system-ui/lib/admin/firebase.ts` — admin SDK surface
+10. `unified-trading-system-ui/app/(ops)/admin/users/` + `server/admin/providers.js` — provisioning handlers (post-fold)
 
 ## Out of scope
 
@@ -98,9 +103,9 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 - [ ] [AGENT] P0. Codex doc `codex/06-coding-standards/jwt-claims-contract.md` — describes the claim shape + consumer
       pattern + mock-vs-real axis split.
 
-### Phase C — user-management-ui claim emission
+### Phase C — admin claim emission (in unified-trading-system-ui `(ops)/admin/*` post-fold)
 
-- [ ] [AGENT] P0. Extend user-management-ui provisioning handlers to call Firebase Admin SDK
+- [ ] [AGENT] P0. Extend unified-trading-system-ui `(ops)/admin/` provisioning handlers to call Firebase Admin SDK
       `setCustomUserClaims(uid, claims)` at account creation + persona-change. Claims derived from the new user's
       questionnaire response (G1.10) and rule-12 service-family scope (G1.11).
 - [ ] [AGENT] P0. Admin UI surface `/admin/users/[uid]/claims` — read-only view of current custom claims + history (last
@@ -120,7 +125,7 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 ### Phase E — QG + verification
 
 - [ ] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. `cd user-management-ui && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
 - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
 - [ ] [AGENT] P0. Playwright spec green on tier-1 dev AND staging Firebase.
 - [ ] [AGENT] P0. Backfill script dry-run report: count of users updated, 0 errors.
@@ -131,9 +136,9 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 - `unified-api-contracts/unified_api_contracts/auth.py` — NEW facade (or extend existing)
 - `unified-api-contracts/tests/internal/unit/test_jwt_claims.py` — NEW
 - `codex/06-coding-standards/jwt-claims-contract.md` — NEW
-- `user-management-ui/lib/firebase-admin.ts` — MODIFY (add setCustomUserClaims helpers)
-- `user-management-ui/app/admin/users/[uid]/claims/page.tsx` — NEW
-- `user-management-ui/scripts/backfill_jwt_claims.ts` — NEW
+- `unified-trading-system-ui/server/admin/firebase-admin.ts` — MODIFY (add setCustomUserClaims helpers)
+- `unified-trading-system-ui/app/(ops)/admin/users/[uid]/claims/page.tsx` — NEW
+- `unified-trading-system-ui/scripts/admin/backfill_jwt_claims.ts` — NEW
 - `unified-trading-system-ui/lib/auth/claims.ts` — NEW
 - `unified-trading-system-ui/lib/auth/use-auth.ts` — MODIFY
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-1-jwt-claims.spec.ts` — NEW
@@ -143,7 +148,7 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 ```
 A (UAC schema) → B (UAC tests + codex)
                    ↓
-                 C (user-management-ui emission) + D (trading-system-ui reader) [parallel]
+                 C (admin emission) + D (claim reader) [parallel]
                    ↓
                  E (QG + Playwright)
 ```
@@ -151,7 +156,7 @@ A (UAC schema) → B (UAC tests + codex)
 ## Verification
 
 1. UAC tests: ≥12 green cases.
-2. user-management-ui: `setCustomUserClaims` wired + admin claims-view page renders.
+2. unified-trading-system-ui `(ops)/admin/*`: `setCustomUserClaims` wired + admin claims-view page renders.
 3. unified-trading-system-ui: `UserContext` identical in mock and real-firebase modes for same persona.
 4. Backfill script dry-run: count equals expected Firebase user count; 0 validation errors.
 5. Playwright spec green in CI.
@@ -200,12 +205,12 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-contracts pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
-git -C user-management-ui checkout live-defi-rollout && git -C user-management-ui pull
+# NOTE: user-management-ui archived 2026-04-20; admin work lands in unified-trading-system-ui under (ops)/admin/
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py
-ls user-management-ui/lib/firebase.ts
+ls unified-trading-system-ui/lib/admin/firebase.ts
 # Verify G2.6 staging Firebase landed
-grep -q "FIREBASE_PROJECT_ID.*staging" user-management-ui/.env.example 2>/dev/null || echo "G2.6 NOT SHIPPED — BLOCK"
+grep -q "FIREBASE_PROJECT_ID.*staging" unified-trading-system-ui/.env.example 2>/dev/null || echo "G2.6 NOT SHIPPED — BLOCK"
 ```
 
 All must exist + G2.6 gate satisfied. STOP if any missing.
@@ -245,8 +250,8 @@ Three repos touched → three commits. `git pull --rebase` before each push.
 
 ```
 cd unified-api-contracts && bash scripts/quickmerge.sh "feat(uac): G2.1 — JwtClaims schema + decoder + UserContext adapter" --agent
-cd ../user-management-ui && bash scripts/quickmerge.sh "feat(user-management-ui): G2.1 — Firebase custom claim emission + admin view + backfill" --agent
-cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(auth): G2.1 — claim reader + UserContext parity across mock/real" --agent
+# Admin emission + claim reader ship in one UI commit now that user-management-ui is folded.
+cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(admin+auth): G2.1 — Firebase custom-claim emission in (ops)/admin + claim reader + UserContext parity + backfill" --agent
 ```
 
 Manual-git fallback if quickmerge blocks on unrelated WIP: per-repo
@@ -257,7 +262,7 @@ Manual-git fallback if quickmerge blocks on unrelated WIP: per-repo
 
 1. ✅ `JwtClaims` + `decode_claims` + `user_context_from_claims` exported from UAC auth facade.
 2. ✅ ≥12 UAC tests green.
-3. ✅ user-management-ui: claim emission wired; admin view renders; backfill dry-run succeeds.
+3. ✅ unified-trading-system-ui `(ops)/admin/*`: claim emission wired; admin view renders; backfill dry-run succeeds.
 4. ✅ unified-trading-system-ui: `UserContext` parity between mock and real modes.
 5. ✅ Playwright spec green on tier-1 dev + staging Firebase.
 6. ✅ QG green on all three repos.

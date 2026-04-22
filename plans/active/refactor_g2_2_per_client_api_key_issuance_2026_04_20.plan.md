@@ -5,12 +5,16 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.2
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
+    2026-04-20)
 # Wave G2-β — sequential after G2-α (needs 2.1 + 2.6). Parallel with G2.7, G2.10.
+# PATH AMENDMENT 2026-04-22: admin surfaces live at unified-trading-system-ui/app/(ops)/admin/*.
 ---
 
 # Refactor G2.2 — Per-client API key issuance
@@ -52,7 +56,7 @@ deployment-api. UAC declares the `ApiKeyScope` enum: `read_data`, `read_reportin
 4. `codex/06-coding-standards/config-reloader-pattern.md`
 5. `unified-trading-library/` — ApiKeyReloader pattern reference
 6. `deployment-api/` (or equivalent) — rate-limiting entry point
-7. `user-management-ui/lib/firebase.ts`
+7. `unified-trading-system-ui/lib/admin/firebase.ts` + `server/admin/firebase-admin.ts` (post-fold)
 
 ## Out of scope
 
@@ -87,8 +91,8 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 
 ### Phase C — Secret Manager integration
 
-- [ ] [AGENT] P0. user-management-ui admin handler: issues new API key via Firebase Admin SDK + writes to GCP Secret
-      Manager at `api-keys/{client_id}/{key_id}` with access controls.
+- [ ] [AGENT] P0. unified-trading-system-ui `(ops)/admin/` handler: issues new API key via Firebase Admin SDK + writes
+      to GCP Secret Manager at `api-keys/{client_id}/{key_id}` with access controls.
 - [ ] [AGENT] P0. Admin UI `/admin/clients/[id]/api-keys` — list current keys, issue new, rotate, revoke.
 - [ ] [AGENT] P0. Display key ONCE at issuance (never again); copy-to-clipboard UI.
 
@@ -102,7 +106,7 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 ### Phase E — QG + verification
 
 - [ ] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. `cd user-management-ui && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
 - [ ] [SCRIPT] P0. `cd deployment-api && bash scripts/quality-gates.sh`
 - [ ] [AGENT] P0. Playwright spec `refactor-g2-2-api-keys.spec.ts` — admin flow, issue + rotate + revoke.
 - [ ] [AGENT] P0. Integration smoke — issue key, hit a deployment-api endpoint with `Authorization: Bearer`, verify
@@ -114,8 +118,8 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 - `unified-api-contracts/unified_api_contracts/auth.py` — MODIFY (extend facade)
 - `unified-api-contracts/tests/internal/unit/test_api_keys.py` — NEW
 - `codex/06-coding-standards/api-key-issuance.md` — NEW
-- `user-management-ui/app/admin/clients/[id]/api-keys/page.tsx` — NEW
-- `user-management-ui/lib/api-keys/issue.ts` — NEW
+- `unified-trading-system-ui/app/(ops)/admin/clients/[id]/api-keys/page.tsx` — NEW
+- `unified-trading-system-ui/lib/admin/api-keys/issue.ts` — NEW
 - `deployment-api/middleware/api_key_auth.py` — NEW (or equivalent)
 - `deployment-api/middleware/rate_limit.py` — MODIFY (per-client axis)
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-2-api-keys.spec.ts` — NEW
@@ -125,7 +129,7 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 ```
 A (UAC schema) → B (tests + codex)
                    ↓
-                 C (SM + user-management-ui) + D (deployment-api middleware) [parallel]
+                 C (SM + admin UI in (ops)/admin) + D (deployment-api middleware) [parallel]
                    ↓
                  E (QG + Playwright + integration smoke)
 ```
@@ -150,7 +154,7 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3001` (user-management-ui) through MCP Playwright tools as admin
+**MCP Playwright during dev:** drive `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools as admin
 persona. Issue a new API key for a test client, copy the value, switch to `localhost:3000`, hit a DART data endpoint
 using the key in `Authorization: Bearer`; verify scope enforcement.
 
@@ -179,7 +183,7 @@ G2-β; G2.1 + G2.6 must be shipped first.
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-contracts pull
-git -C user-management-ui checkout live-defi-rollout && git -C user-management-ui pull
+# user-management-ui archived 2026-04-20 (ARCHIVED.md at repo root). Admin work lands in unified-trading-system-ui.
 git -C deployment-api checkout live-defi-rollout && git -C deployment-api pull 2>/dev/null || echo "verify deployment-api repo name"
 # Verify G2.1 + G2.6 shipped
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/jwt_claims.py 2>/dev/null || echo "G2.1 NOT SHIPPED — BLOCK"
@@ -209,8 +213,8 @@ Per plan's Critical files list — 9 files across 4 repos.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3001` (user-management-ui) + `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools.
-Issue API key via admin UI; hit scope-gated endpoints; verify 200/403/401 round-trip. Commit the durable spec at
+Drive `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools. Issue API key via admin UI; hit
+scope-gated endpoints; verify 200/403/401 round-trip. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-2-api-keys.spec.ts` — seeded via `seed-persona.ts`,
 full CRUD + rotation cycle asserted, wired into `scripts/quality-gates.sh`, including orphan-reachability.
 
@@ -220,7 +224,7 @@ Four repos touched → four commits. `git pull --rebase` before each push.
 
 ```
 cd unified-api-contracts && bash scripts/quickmerge.sh "feat(uac): G2.2 — ApiKeyScope + ApiKey + validate_api_key helpers" --agent
-cd ../user-management-ui && bash scripts/quickmerge.sh "feat(api-keys): G2.2 — issuance + rotation admin UI + SM integration" --agent
+cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(admin/api-keys): G2.2 — issuance + rotation (ops)/admin UI + SM integration" --agent
 cd ../deployment-api && bash scripts/quickmerge.sh "feat(auth): G2.2 — API-key auth middleware + per-client rate limiting" --agent
 cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "test(playbooks): G2.2 — API-key issuance Playwright spec" --agent
 ```

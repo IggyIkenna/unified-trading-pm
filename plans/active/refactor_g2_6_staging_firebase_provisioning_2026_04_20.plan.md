@@ -5,11 +5,15 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.6
   - plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md (folded)
   - plans/active/five_space_ia_execution_child_plan_2026_04_17.md ticket #12 (folded)
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
+    2026-04-20)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.8, 2.9, 2.11. Gates G2-β (2.2, 2.7, 2.10).
+# PATH AMENDMENT 2026-04-22: user-management-ui archived; Firebase config lives at unified-trading-system-ui/lib/admin/firebase.ts + lib/auth/firebase-config.ts.
 ---
 
 # Refactor G2.6 — Staging Firebase provisioning
@@ -22,8 +26,8 @@ hitting a real-firebase code path either crashes or falls into prod — unaccept
 `five_space_ia #12` and deferred through Wave E; Wave G2-α is now the canonical home.
 
 Target: a provisioned staging Firebase project (e.g. `odum-staging`) with security rules + CI hooks + env-var surface
-wired through unified-trading-system-ui and user-management-ui. Warm-prospect demos route through staging; prod stays
-reserved for paid clients.
+wired through unified-trading-system-ui (which now hosts the former user-management-ui admin surfaces — folded
+2026-04-20). Warm-prospect demos route through staging; prod stays reserved for paid clients.
 
 ## Decisions locked with user (2026-04-20)
 
@@ -52,7 +56,8 @@ reserved for paid clients.
 3. `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` — ticket #12 section
 4. `codex/14-playbooks/authentication/` — all auth playbook docs
 5. `codex/05-infrastructure/runtime-tiers-and-deployment.md`
-6. `user-management-ui/lib/firebase.ts` — current prod-only bootstrap
+6. `unified-trading-system-ui/lib/admin/firebase.ts` + `lib/auth/firebase-config.ts` + `lib/auth/firebase-provider.ts` —
+   current prod-only bootstrap (post-fold SSOT)
 7. `unified-trading-system-ui/lib/firebase.ts` (or equivalent config)
 8. `deployment-service/scripts/` — any existing Firebase rule deployers
 9. `CLAUDE.md` — Testing Infrastructure section (emulator setup)
@@ -87,7 +92,7 @@ specs run identically against both (staging uses the Firebase emulator for CI).
 
 - [ ] [AGENT] P0. Add `NEXT_PUBLIC_FIREBASE_API_KEY_STAGING`, `AUTH_DOMAIN_STAGING`, `PROJECT_ID_STAGING`,
       `STORAGE_BUCKET_STAGING`, `MESSAGING_SENDER_ID_STAGING`, `APP_ID_STAGING` to `.env.example` in both UIs.
-- [ ] [AGENT] P0. `user-management-ui/lib/firebase.ts` + `unified-trading-system-ui/lib/firebase.ts` — extend config
+- [ ] [AGENT] P0. `unified-trading-system-ui/lib/admin/firebase.ts` + `lib/auth/firebase-config.ts` — extend config
       switcher to read `_STAGING`-suffixed vars when `NEXT_PUBLIC_ENV=staging`. Default to prod vars when unset.
 - [ ] [AGENT] P0. Add `firebase.json` + `.firebaserc` entries for the staging project (keeps multi-project CLI config
       working).
@@ -114,14 +119,15 @@ specs run identically against both (staging uses the Firebase emulator for CI).
       claims back, verifies basic Firestore read/write.
 - [ ] [AGENT] P0. Operator-run smoke: sign in with Google on `odum-research.co.uk`, create a test user, verify claims
       emission surface (will be wired in G2.1 — here just verify the account exists).
-- [ ] [SCRIPT] P0. `cd user-management-ui && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh` (covers `(ops)/admin/*` post-fold)
 - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
 
 ## Critical files to be modified
 
-- `user-management-ui/lib/firebase.ts` — MODIFY (env switcher)
-- `user-management-ui/firebase.json` + `.firebaserc` — MODIFY
-- `user-management-ui/.env.example` — MODIFY
+- `unified-trading-system-ui/lib/admin/firebase.ts` — MODIFY (admin-SDK env switcher)
+- `unified-trading-system-ui/lib/auth/firebase-config.ts` — MODIFY (client-SDK env switcher)
+- `unified-trading-system-ui/firebase.json` + `.firebaserc` — MODIFY
+- `unified-trading-system-ui/.env.example` — MODIFY
 - `unified-trading-system-ui/lib/firebase.ts` — MODIFY
 - `unified-trading-system-ui/.env.example` — MODIFY
 - `deployment-service/firestore/staging/firestore.rules` — NEW
@@ -191,10 +197,11 @@ Wave G2-α; no G2 plan dependencies.
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
-git -C user-management-ui checkout live-defi-rollout && git -C user-management-ui pull
+# user-management-ui archived 2026-04-20; all admin work in unified-trading-system-ui.
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
 git -C deployment-service checkout live-defi-rollout && git -C deployment-service pull
-ls user-management-ui/lib/firebase.ts
+ls unified-trading-system-ui/lib/admin/firebase.ts
+ls unified-trading-system-ui/lib/auth/firebase-config.ts
 ls unified-trading-system-ui/lib/firebase.ts 2>/dev/null || echo "verify config location"
 # Check Phase A operator prereq: ask operator to confirm odum-staging Firebase project exists
 firebase projects:list 2>/dev/null | grep -q odum-staging || echo "OPERATOR — run Phase A first"
@@ -220,8 +227,7 @@ All 9 paths from the plan's Mandatory read-set. Read the two folded plans fully.
 
 ### Deliverables
 
-Per plan's Critical files list — 10 files across 3 repos (user-management-ui, unified-trading-system-ui,
-deployment-service).
+Per plan's Critical files list — 10 files across 2 repos (unified-trading-system-ui, deployment-service).
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
@@ -237,7 +243,7 @@ Three repos touched → three commits. `git pull --rebase` before each push.
 
 ```
 cd deployment-service && bash scripts/quickmerge.sh "feat(firestore): G2.6 — staging Firestore rules + emulator tests + CI deploy" --agent
-cd ../user-management-ui && bash scripts/quickmerge.sh "feat(firebase): G2.6 — staging env switcher + config surface" --agent
+# user-management-ui archived — env switcher commits in unified-trading-system-ui only.
 cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(firebase): G2.6 — staging env switcher + staging-firebase Playwright smoke" --agent
 ```
 

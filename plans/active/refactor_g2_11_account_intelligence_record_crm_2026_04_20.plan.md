@@ -5,9 +5,13 @@ priority: P1
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.11
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
+    2026-04-20)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.8, 2.9. G2/G3 border — defer if bandwidth tight.
+# PATH AMENDMENT 2026-04-22: CRM admin surfaces live at unified-trading-system-ui/app/(ops)/admin/prospects/* + lib/admin/account-intelligence/.
 ---
 
 # Refactor G2.11 — Account-intelligence-record CRM base
@@ -20,20 +24,21 @@ deviations, and next playbook. Today this information lives in sales-person head
 exists; this wave stands up the minimum enforceable surface.
 
 Target: Firestore collection `/account_intelligence/{prospect_id}` + admin UI surface at `/admin/prospects/[id]` in
-user-management-ui. Questionnaire response (G1.10) auto-populates the record at submission; demo-provisioning (G2.7)
-appends to demo_history; sales team edits not_show_deviations + next_playbook manually.
+unified-trading-system-ui `(ops)/admin/*` (post user-management-ui fold 2026-04-20). Questionnaire response (G1.10)
+auto-populates the record at submission; demo-provisioning (G2.7) appends to demo_history; sales team edits
+not_show_deviations + next_playbook manually.
 
 Priority P1 (not P0) because the CRM is nice-to-have; G1.10 questionnaire already captures the foundation via the
 `/questionnaires` Firestore collection. This plan formalises the CRM layer on top.
 
 ## Decisions locked with user (2026-04-20)
 
-| Decision                                                             | Chosen                                                          | Source                             |
-| -------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------- |
-| Firestore backend (not a separate DB)                                | "Firebase IS the API" per Wave E closure memory                 | Operator 2026-04-20                |
-| Minimal schema — 8 fields, no workflow engine                        | Can expand once real usage tells us what sales needs            | Stage 3E §2.11 "Minimal CRM table" |
-| Admin UI lives in user-management-ui (not unified-trading-system-ui) | Prospect data is internal; no public surface                    | Rule 06 + user-management-ui SSOT  |
-| P1 priority — G2/G3 border                                           | Explicit in Stage 3E §2.11 — can slide to G3 if bandwidth tight | Stage 3E §2.11                     |
+| Decision                                                                           | Chosen                                                          | Source                             |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------- |
+| Firestore backend (not a separate DB)                                              | "Firebase IS the API" per Wave E closure memory                 | Operator 2026-04-20                |
+| Minimal schema — 8 fields, no workflow engine                                      | Can expand once real usage tells us what sales needs            | Stage 3E §2.11 "Minimal CRM table" |
+| Admin UI lives in unified-trading-system-ui `(ops)/admin/*` (post-fold 2026-04-20) | Prospect data is internal; no public surface                    | Rule 06 + fold memo 2026-04-20     |
+| P1 priority — G2/G3 border                                                         | Explicit in Stage 3E §2.11 — can slide to G3 if bandwidth tight | Stage 3E §2.11                     |
 
 ## Cross-references
 
@@ -49,8 +54,8 @@ Priority P1 (not P0) because the CRM is nice-to-have; G1.10 questionnaire alread
 2. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
 3. `codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
 4. `codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md` — §Enforcement #5
-5. `user-management-ui/app/(platform)/questionnaires/page.tsx` — G1.10 admin playback pattern
-6. `user-management-ui/lib/firebase.ts`
+5. `unified-trading-system-ui/app/(ops)/admin/questionnaires/page.tsx` — G1.10 admin playback pattern
+6. `unified-trading-system-ui/lib/admin/firebase.ts`
 
 ## Out of scope
 
@@ -63,14 +68,14 @@ Priority P1 (not P0) because the CRM is nice-to-have; G1.10 questionnaire alread
 
 ### Phase A — Schema + Firestore rules
 
-- [ ] [AGENT] P0. Declare TypeScript interface `user-management-ui/lib/account-intelligence/types.ts`:
+- [ ] [AGENT] P0. Declare TypeScript interface `unified-trading-system-ui/lib/admin/account-intelligence/types.ts`:
       `{prospect_id, org_id, commercial_path, resolved_cell, demo_history[], not_show_deviations[], upcoming_actions[], next_playbook}`.
 - [ ] [AGENT] P0. Firestore security rules update at `deployment-service/firestore/staging/firestore.rules`: admin-only
       read/write on `/account_intelligence/**`.
 
 ### Phase B — Firestore writer + reader
 
-- [ ] [AGENT] P0. `user-management-ui/lib/account-intelligence/firestore.ts` — `getRecord(prospect_id)`,
+- [ ] [AGENT] P0. `unified-trading-system-ui/lib/admin/account-intelligence/firestore.ts` — `getRecord(prospect_id)`,
       `createRecord(record)`, `appendDemoHistory(prospect_id, entry)`, `updateNotShowDeviations(prospect_id, list)`,
       `updateNextPlaybook(prospect_id, playbook_id)`.
 - [ ] [AGENT] P0. Hook `useAccountIntelligence(prospect_id)` for React components.
@@ -78,26 +83,27 @@ Priority P1 (not P0) because the CRM is nice-to-have; G1.10 questionnaire alread
 
 ### Phase C — Admin UI
 
-- [ ] [AGENT] P0. `user-management-ui/app/admin/prospects/page.tsx` — list view, filterable by commercial_path.
-- [ ] [AGENT] P0. `user-management-ui/app/admin/prospects/[id]/page.tsx` — detail view + edit UI for
+- [ ] [AGENT] P0. `unified-trading-system-ui/app/(ops)/admin/prospects/page.tsx` — list view, filterable by
+      commercial_path.
+- [ ] [AGENT] P0. `unified-trading-system-ui/app/(ops)/admin/prospects/[id]/page.tsx` — detail view + edit UI for
       not_show_deviations + next_playbook.
-- [ ] [AGENT] P0. Admin navigation link added to user-management-ui shell.
+- [ ] [AGENT] P0. Admin navigation link added to unified-trading-system-ui `(ops)/admin/*` shell.
 
 ### Phase D — QG + verification
 
-- [ ] [SCRIPT] P0. `cd user-management-ui && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh` (covers (ops)/admin/prospects)
 - [ ] [SCRIPT] P0. `cd deployment-service && bash scripts/quality-gates.sh`
 - [ ] [AGENT] P0. Playwright spec `refactor-g2-11-crm.spec.ts` — admin persona, CRUD record, assert Firestore.
 - [ ] [AGENT] P0. Manual smoke: submit questionnaire as prospect → verify CRM record auto-created.
 
 ## Critical files to be modified
 
-- `user-management-ui/lib/account-intelligence/types.ts` — NEW
-- `user-management-ui/lib/account-intelligence/firestore.ts` — NEW
-- `user-management-ui/lib/account-intelligence/hooks.ts` — NEW (useAccountIntelligence)
-- `user-management-ui/app/admin/prospects/page.tsx` — NEW
-- `user-management-ui/app/admin/prospects/[id]/page.tsx` — NEW
-- `user-management-ui/app/(public)/questionnaire/submit-handler.ts` (or equivalent) — MODIFY
+- `unified-trading-system-ui/lib/admin/account-intelligence/types.ts` — NEW
+- `unified-trading-system-ui/lib/admin/account-intelligence/firestore.ts` — NEW
+- `unified-trading-system-ui/lib/admin/account-intelligence/hooks.ts` — NEW (useAccountIntelligence)
+- `unified-trading-system-ui/app/(ops)/admin/prospects/page.tsx` — NEW
+- `unified-trading-system-ui/app/(ops)/admin/prospects/[id]/page.tsx` — NEW
+- `unified-trading-system-ui/app/(public)/questionnaire/submit-handler.ts` (or equivalent) — MODIFY
 - `deployment-service/firestore/staging/firestore.rules` — MODIFY
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-11-crm.spec.ts` — NEW (tests submit flow;
   assertion happens against Firestore state)
@@ -118,7 +124,7 @@ A (schema + rules) → B (writer + reader + questionnaire hook)
 2. Questionnaire submission auto-creates CRM record.
 3. Admin list + detail views render + edit flow works.
 4. Playwright spec green.
-5. QG green on user-management-ui + deployment-service.
+5. QG green on unified-trading-system-ui + deployment-service.
 
 ## Handoff
 
@@ -130,9 +136,9 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3001` (user-management-ui dev) through MCP Playwright tools as admin
-persona. Submit a questionnaire in a separate tab at `localhost:3000` as a prospect; verify the admin UI surfaces the
-new CRM record.
+**MCP Playwright during dev:** drive `localhost:3000` (unified-trading-system-ui `(ops)/admin/prospects`) through MCP
+Playwright tools as admin persona. Submit a questionnaire in a separate tab at `localhost:3000` as a prospect; verify
+the admin UI surfaces the new CRM record.
 
 **Durable spec for CI:** `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-11-crm.spec.ts`:
 
@@ -157,11 +163,11 @@ Research. Wave G2-α, priority P1. Deferrable if bandwidth tight.
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
-git -C user-management-ui checkout live-defi-rollout && git -C user-management-ui pull
+# user-management-ui archived 2026-04-20; admin surfaces under unified-trading-system-ui/(ops)/admin.
 git -C deployment-service checkout live-defi-rollout && git -C deployment-service pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
-ls user-management-ui/lib/firebase.ts
-ls user-management-ui/app/\(platform\)/questionnaires/page.tsx  # G1.10 pattern reference
+ls unified-trading-system-ui/lib/admin/firebase.ts
+ls unified-trading-system-ui/app/\(ops\)/admin/questionnaires/page.tsx  # G1.10 pattern post-fold
 ls codex/14-playbooks/demo-ops/account-intelligence-record.md
 ```
 
@@ -189,8 +195,8 @@ Per plan's Critical files list — 8 files across 3 repos.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3001` (user-management-ui) + `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools.
-Submit questionnaire as prospect at :3000; verify admin CRM record renders at :3001. Commit the durable spec at
+Drive `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools. Submit questionnaire as prospect at
+:3000; verify admin CRM record renders at :3001. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-11-crm.spec.ts` — seeded personas, CRUD flow
 asserted, wired into `scripts/quality-gates.sh`, including orphan-reachability.
 
@@ -200,8 +206,7 @@ Three repos touched → three commits. `git pull --rebase` before each push.
 
 ```
 cd deployment-service && bash scripts/quickmerge.sh "feat(firestore): G2.11 — account_intelligence collection rules" --agent
-cd ../user-management-ui && bash scripts/quickmerge.sh "feat(crm): G2.11 — account-intelligence-record base + admin UI" --agent
-cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "test(playbooks): G2.11 — CRM submission spec" --agent
+cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(admin/crm): G2.11 — account-intelligence-record base + (ops)/admin/prospects UI + CRM submission spec" --agent
 ```
 
 Manual-git fallback per-repo. Never `--dep-branch`, never `git reset --hard` / `git push --force`.
@@ -212,7 +217,7 @@ Manual-git fallback per-repo. Never `--dep-branch`, never `git reset --hard` / `
 2. ✅ Questionnaire submit auto-creates CRM record.
 3. ✅ Admin list + detail render + edit works.
 4. ✅ Playwright spec green.
-5. ✅ QG green on user-management-ui + deployment-service + unified-trading-system-ui.
+5. ✅ QG green on deployment-service + unified-trading-system-ui (user-management-ui archived).
 6. ✅ 3 commit SHAs pushed to `origin/live-defi-rollout`.
 
 ### What NOT to do (verbatim guardrails)

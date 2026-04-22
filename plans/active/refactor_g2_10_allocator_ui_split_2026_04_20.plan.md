@@ -5,12 +5,15 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.10
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_8_fund_business_unit_registry_2026_04_20.plan.md
   - plans/active/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md (folded)
 # Wave G2-β — sequential after G2-α. Parallel with G2.2, G2.7.
+# ROUTE-GROUP AMENDMENT 2026-04-22: Next.js app router uses `(platform)` route group for authenticated surfaces.
+# All `app/services/...` paths below should read `app/(platform)/services/...`. Public pages stay in `(public)`.
 ---
 
 # Refactor G2.10 — Phase 10.7 portfolio-allocator UI split
@@ -28,8 +31,10 @@ Rule 03 also requires that allocator is NOT a research surface — it's a commer
 
 Target:
 
-- `/services/investment-management/allocator` — IM-desk, careful, human-approved proposal-then-apply flow.
-- `/services/trading-platform/allocator` — trading-platform-subscriber, auto-apply on client infra.
+- `/services/investment-management/allocator` (route group `(platform)`) — IM-desk, careful, human-approved
+  proposal-then-apply flow.
+- `/services/trading-platform/allocator` (route group `(platform)`) — trading-platform-subscriber, auto-apply on client
+  infra.
 - Research-side allocator page DELETED.
 - Same `portfolio_allocator` core; instance-configuration (not code-fork) picks behaviour per-audience.
 
@@ -61,7 +66,8 @@ Target:
 6. `codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
 7. `codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
 8. `strategy-service/strategy_service/portfolio_allocator/service.py`
-9. `unified-trading-system-ui/app/services/research/strategy/allocator/page.tsx` (current surface — to delete)
+9. `unified-trading-system-ui/app/(platform)/services/research/strategy/allocator/page.tsx` (current surface — to
+   delete)
 
 ## Out of scope
 
@@ -79,16 +85,17 @@ identically across environments — no fork.
 
 ### Phase A — Surface scaffolding
 
-- [ ] [AGENT] P0. Create `unified-trading-system-ui/app/services/investment-management/allocator/page.tsx` — new IM-side
-      surface. Proposal-then-apply flow; `<ApprovalQueue>` component.
-- [ ] [AGENT] P0. Create `unified-trading-system-ui/app/services/trading-platform/allocator/page.tsx` — new
+- [ ] [AGENT] P0. Create `unified-trading-system-ui/app/(platform)/services/investment-management/allocator/page.tsx` —
+      new IM-side surface. Proposal-then-apply flow; `<ApprovalQueue>` component.
+- [ ] [AGENT] P0. Create `unified-trading-system-ui/app/(platform)/services/trading-platform/allocator/page.tsx` — new
       platform-side surface. Auto-apply flow; `<AllocationApplied>` confirmation component.
 - [ ] [AGENT] P0. Lifecycle route mappings updated to register both + remove research-side.
 
 ### Phase B — Audience routing
 
 - [ ] [AGENT] P0. `lib/auth/allocator-routing.ts` — `resolveAllocatorRoute(audience)` →
-      `/services/investment-management/allocator` or `/services/trading-platform/allocator`.
+      `/services/investment-management/allocator` (route group `(platform)`) or `/services/trading-platform/allocator`
+      (route group `(platform)`).
 - [ ] [AGENT] P0. `<AllocatorLink>` component resolves audience from JWT claim + routes correctly.
 - [ ] [AGENT] P0. Any legacy link to `/services/research/strategy/allocator` → redirect through `resolveAllocatorRoute`.
 
@@ -106,10 +113,11 @@ identically across environments — no fork.
 
 ### Phase E — Deletion + redirects
 
-- [ ] [AGENT] P0. DELETE `unified-trading-system-ui/app/services/research/strategy/allocator/page.tsx` and any nested
-      routes.
+- [ ] [AGENT] P0. DELETE `unified-trading-system-ui/app/(platform)/services/research/strategy/allocator/page.tsx` and
+      any nested routes.
 - [ ] [AGENT] P0. Add 308 redirect in `next.config.mjs` from `/services/research/strategy/allocator` →
-      `/services/investment-management/allocator` (benign default; audience-router will redirect platform users).
+      `/services/investment-management/allocator` (route group `(platform)`) (benign default; audience-router will
+      redirect platform users).
 - [ ] [AGENT] P0. Remove route from `lib/lifecycle-route-mappings.ts`.
 
 ### Phase F — QG + verification
@@ -122,9 +130,9 @@ identically across environments — no fork.
 
 ## Critical files to be modified
 
-- `unified-trading-system-ui/app/services/investment-management/allocator/page.tsx` — NEW
-- `unified-trading-system-ui/app/services/trading-platform/allocator/page.tsx` — NEW
-- `unified-trading-system-ui/app/services/research/strategy/allocator/page.tsx` — DELETE
+- `unified-trading-system-ui/app/(platform)/services/investment-management/allocator/page.tsx` — NEW
+- `unified-trading-system-ui/app/(platform)/services/trading-platform/allocator/page.tsx` — NEW
+- `unified-trading-system-ui/app/(platform)/services/research/strategy/allocator/page.tsx` — DELETE
 - `unified-trading-system-ui/lib/auth/allocator-routing.ts` — NEW
 - `unified-trading-system-ui/components/allocator/ApprovalQueue.tsx` — NEW
 - `unified-trading-system-ui/components/allocator/AllocationApplied.tsx` — NEW
@@ -172,10 +180,11 @@ deleted research-side URL; assert 308 redirect.
 **Durable spec for CI:**
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-10-allocator-split.spec.ts`:
 
-1. Seed `im-desk` persona; navigate to `/services/investment-management/allocator`; assert proposal queue renders.
+1. Seed `im-desk` persona; navigate to `/services/investment-management/allocator` (route group `(platform)`); assert
+   proposal queue renders.
 2. Approve a proposal; assert `ALLOCATION_APPLIED_BY_APPROVER` event.
-3. Seed `trading-platform-subscriber` persona; navigate to `/services/trading-platform/allocator`; assert auto-apply
-   confirmation.
+3. Seed `trading-platform-subscriber` persona; navigate to `/services/trading-platform/allocator` (route group
+   `(platform)`); assert auto-apply confirmation.
 4. Navigate to legacy `/services/research/strategy/allocator`; assert 308 redirect.
 5. Include orphan-reachability assertion.
 6. Wire into `scripts/quality-gates.sh`.
@@ -199,7 +208,7 @@ git -C strategy-service checkout live-defi-rollout && git -C strategy-service pu
 # Verify G2.1 + G2.8 shipped
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/jwt_claims.py 2>/dev/null || echo "G2.1 NOT SHIPPED"
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/fund_business_unit.py 2>/dev/null || echo "G2.8 NOT SHIPPED"
-ls unified-trading-system-ui/app/services/research/strategy/allocator/page.tsx  # must exist to delete
+ls unified-trading-system-ui/app/(platform)/services/research/strategy/allocator/page.tsx  # must exist to delete
 ```
 
 All gates green + research-side page exists (to delete). STOP if any missing.

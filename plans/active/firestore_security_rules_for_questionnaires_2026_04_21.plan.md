@@ -5,9 +5,11 @@ priority: P1
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md (§Deviations)
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in)
 ---
 
 # Firestore security rules for G1.10 questionnaires collection
@@ -41,7 +43,7 @@ This plan fills in the 3 required rules. Rides on G2.6 staging Firebase provisio
 
 1. `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md` — §Deviations
 2. `refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` — Firestore rules phase
-3. `user-management-ui/lib/firebase.ts` — Firestore client pattern
+3. `unified-trading-system-ui/lib/admin/firebase.ts` — Firestore client pattern
 
 ## Out of scope
 

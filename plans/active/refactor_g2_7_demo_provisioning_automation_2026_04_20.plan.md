@@ -5,13 +5,17 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.7
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
   - plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md (folded)
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
+    2026-04-20)
 # Wave G2-β — sequential after G2-α. Parallel with G2.2, G2.10.
+# PATH AMENDMENT 2026-04-22: admin surfaces live at unified-trading-system-ui/app/(ops)/admin/demos/*.
 ---
 
 # Refactor G2.7 — Demo-provisioning automation
@@ -53,7 +57,7 @@ from a dropdown (DART / IM / Reg Umbrella × flavour). Credentials auto-rotate. 
 4. `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`
 5. `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
 6. `codex/14-playbooks/demo-ops/dart-demo-modes.md`
-7. `user-management-ui/lib/firebase.ts`
+7. `unified-trading-system-ui/lib/admin/firebase.ts` + `server/admin/firebase-admin.ts` (post-fold)
 8. `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` (G1.13)
 
 ## Out of scope
@@ -81,16 +85,16 @@ resolve via the same UAC `create_demo_credential()` helper — no code-fork.
 
 ### Phase B — Firebase Admin SDK emission
 
-- [ ] [AGENT] P0. `user-management-ui/lib/demo-provisioning/issue.ts` — Firebase Admin SDK: creates unique user,
-      attaches custom claims (G2.1 shape + `demo_profile_id`), generates magic-link.
+- [ ] [AGENT] P0. `unified-trading-system-ui/lib/admin/demo-provisioning/issue.ts` — Firebase Admin SDK: creates unique
+      user, attaches custom claims (G2.1 shape + `demo_profile_id`), generates magic-link.
 - [ ] [AGENT] P0. 1-day TTL enforcement — scheduled Cloud Function deletes expired users.
 
 ### Phase C — Admin UI
 
-- [ ] [AGENT] P0. `user-management-ui/app/admin/demos/new/page.tsx` — form: prospect_id dropdown (from CRM G2.11),
-      `demo_profile_id` dropdown, flavour dropdown, TTL override.
+- [ ] [AGENT] P0. `unified-trading-system-ui/app/(ops)/admin/demos/new/page.tsx` — form: prospect_id dropdown (from CRM
+      G2.11), `demo_profile_id` dropdown, flavour dropdown, TTL override.
 - [ ] [AGENT] P0. Submit → calls `issue.ts`, shows magic-link + expiry + access QR code.
-- [ ] [AGENT] P0. `user-management-ui/app/admin/demos/page.tsx` — list active demos, revoke, extend TTL.
+- [ ] [AGENT] P0. `unified-trading-system-ui/app/(ops)/admin/demos/page.tsx` — list active demos, revoke, extend TTL.
 
 ### Phase D — CRM + restriction-profile integration
 
@@ -101,7 +105,7 @@ resolve via the same UAC `create_demo_credential()` helper — no code-fork.
 ### Phase E — QG + verification
 
 - [ ] [SCRIPT] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. `cd user-management-ui && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh` (covers (ops)/admin/demos)
 - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh`
 - [ ] [AGENT] P0. Playwright spec `refactor-g2-7-demo-provisioning.spec.ts` — admin flow: issue credential → sign in as
       prospect → assert visibility slice matches profile+overlay.
@@ -111,10 +115,10 @@ resolve via the same UAC `create_demo_credential()` helper — no code-fork.
 
 - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/demo_provisioning.py` — NEW
 - `unified-api-contracts/tests/internal/unit/test_demo_provisioning.py` — NEW
-- `user-management-ui/lib/demo-provisioning/issue.ts` — NEW
-- `user-management-ui/lib/demo-provisioning/revoke.ts` — NEW
-- `user-management-ui/app/admin/demos/page.tsx` — NEW
-- `user-management-ui/app/admin/demos/new/page.tsx` — NEW
+- `unified-trading-system-ui/lib/admin/demo-provisioning/issue.ts` — NEW
+- `unified-trading-system-ui/lib/admin/demo-provisioning/revoke.ts` — NEW
+- `unified-trading-system-ui/app/(ops)/admin/demos/page.tsx` — NEW
+- `unified-trading-system-ui/app/(ops)/admin/demos/new/page.tsx` — NEW
 - `deployment-service/functions/expire_demo_credentials.ts` — NEW (Cloud Function)
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-7-demo-provisioning.spec.ts` — NEW
 
@@ -148,9 +152,9 @@ Unblocks:
 
 ## Playwright test coverage (mandatory)
 
-**MCP Playwright during dev:** drive `localhost:3001` (user-management-ui) through MCP Playwright tools as admin
-persona. Issue a demo credential for a test prospect; copy magic-link; open in incognito and sign in; verify
-persona-scoped visibility in `localhost:3000`.
+**MCP Playwright during dev:** drive `localhost:3000` (unified-trading-system-ui `(ops)/admin/demos`) through MCP
+Playwright tools as admin persona. Issue a demo credential for a test prospect; copy magic-link; open in incognito and
+sign in; verify persona-scoped visibility in `localhost:3000`.
 
 **Durable spec for CI:**
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-7-demo-provisioning.spec.ts`:
@@ -178,7 +182,7 @@ G2-β; G2.1 + G2.6 + G1.7 + G1.10 must be shipped.
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-contracts pull
-git -C user-management-ui checkout live-defi-rollout && git -C user-management-ui pull
+# user-management-ui archived 2026-04-20.
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
 git -C deployment-service checkout live-defi-rollout && git -C deployment-service pull
 # Verify G2.1 (JWT claims), G2.6 (staging Firebase), G1.7 (restriction-profile), G1.10 (questionnaire) shipped
@@ -210,8 +214,8 @@ Per plan's Critical files list — 8 files across 4 repos.
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 
-Drive `localhost:3001` (user-management-ui) + `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools.
-Issue demo credential + sign in + verify visibility slice + concurrent smoke. Commit the durable spec at
+Drive `localhost:3000` (unified-trading-system-ui) through MCP Playwright tools. Issue demo credential + sign in +
+verify visibility slice + concurrent smoke. Commit the durable spec at
 `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g2-7-demo-provisioning.spec.ts` — full flow + 3
 concurrent prospects + revoke, wired into `scripts/quality-gates.sh`, including orphan-reachability.
 
@@ -221,7 +225,7 @@ Four repos touched → four commits. `git pull --rebase` before each push.
 
 ```
 cd unified-api-contracts && bash scripts/quickmerge.sh "feat(uac): G2.7 — DemoCredential schema + resolver" --agent
-cd ../user-management-ui && bash scripts/quickmerge.sh "feat(demo-provisioning): G2.7 — admin issuance UI + magic-link" --agent
+cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "feat(admin/demo-provisioning): G2.7 — (ops)/admin/demos issuance UI + magic-link" --agent
 cd ../deployment-service && bash scripts/quickmerge.sh "feat(functions): G2.7 — expire_demo_credentials TTL enforcer" --agent
 cd ../unified-trading-system-ui && bash scripts/quickmerge.sh "test(playbooks): G2.7 — demo-provisioning flow + concurrent smoke" --agent
 ```

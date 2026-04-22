@@ -5,10 +5,14 @@ priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+amended: 2026-04-22
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.9
   - codex/09-strategy/architecture-v2/uac-registry-gaps.md
+  - UAC commit `e6f7c6d` (2026-04-21) — V2 suffix dropped; canonical is `ArchetypeCapability` (not
+    `ArchetypeCapabilityV2`)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.8, 2.11. Some sub-gaps consumed by G2-γ (2.3, 2.4, 2.5).
+# V2 SUFFIX AMENDMENT 2026-04-22: post `e6f7c6d` the type is `ArchetypeCapability` (no V2). References throughout this plan updated accordingly.
 ---
 
 # Refactor G2.9 — UAC capability declarations (remaining 10 gaps #2–#11)
@@ -16,9 +20,10 @@ depends_on:
 ## Context
 
 Stage 3E §2.9 ships UAC gaps #2 through #11 from the tracker at
-[`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md). Gap #1 (`ArchetypeCapabilityV2`)
-shipped in G1.8; gap #12 (`StrategyAvailabilityRegistry`) shipped in Phase 10.5. The remaining 10 declarations are
-additive + each is a self-contained sub-wave with its own consumers.
+[`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md). Gap #1 (`ArchetypeCapability` —
+originally shipped as `ArchetypeCapabilityV2` in G1.8; V2 suffix dropped via UAC `e6f7c6d` on 2026-04-21) shipped in
+G1.8; gap #12 (`StrategyAvailabilityRegistry`) shipped in Phase 10.5. The remaining 10 declarations are additive + each
+is a self-contained sub-wave with its own consumers.
 
 The ten gaps:
 
@@ -51,7 +56,8 @@ independently parallelisable by downstream agents; a single umbrella plan keeps 
 - **Downstream Wave G2-γ:** G2.3 (Data Catalogue), G2.4 (ML Model Catalogue), G2.5 (Execution Algo Catalogue) — each
   consumes specific gaps
 - **Gap tracker:** `codex/09-strategy/architecture-v2/uac-registry-gaps.md`
-- **G1 precedent:** G1.8 `ArchetypeCapabilityV2` (gap #1) established the pattern
+- **G1 precedent:** G1.8 `ArchetypeCapability` (gap #1, originally shipped as `ArchetypeCapabilityV2` and renamed
+  2026-04-21) established the pattern
 
 ## Mandatory read-set
 
