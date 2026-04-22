@@ -114,6 +114,38 @@ mid-funnel experience that used to live in a PDF; now it lives in the same UI th
    that reality.
 5. Book thirty minutes. The intro call resolves which path fits and what the next session looks like.
 
+## Competitive landscape — internal positioning (not on the page)
+
+> This section informs the voice of the public site but does not appear on it. Competitor firm names are
+> [rule 02 (tone and posture)](../_ssot-rules/02-tone-and-posture.md) banned from external surfaces. The canonical comp
+> set, tiers, and posture guidance live in
+> [`../shared-core/competitive-landscape.md`](../shared-core/competitive-landscape.md) and should be read before any
+> pitch deck, press piece, or discovery call that references the market.
+
+The trading-infrastructure market is sold in six layers: data and market intelligence, research / backtest / strategy
+development, execution and smart order routing, charting and terminal UX, open-source automation, and regulatory /
+hosted-manager services. Specialists exist in every layer, and several are genuinely better on their home lane than Odum
+would be if Odum tried to win that lane head-on. The honest external frame is therefore not "we beat any one of them" —
+it is "we deliver a single operating layer across the layers the market usually sells separately, so the buyer stops
+paying the stitching tax." Public-site copy expresses this without naming firms: _unified layer vs fragmented stack_.
+
+Odum's combined shape sits across regulated coverage, investment-management reporting, strategy and research operating
+system, downstream execution and operating control, one taxonomy across five categories (crypto, DeFi, TradFi, sports,
+prediction), and one unified experience across the full trade lifecycle. Any single bullet in that list has a stronger
+specialist. The combined shape does not, which is the thing protected in messaging.
+
+**Posture rule for anyone running a discovery call:** partner-first, never conquest-first. If a prospect names a
+specific firm, acknowledge the firm's strength on its home lane (honest), explain Odum's different shape (specific), and
+decline to disparage — several of the firms referenced in the comp set are in Odum's own supplier stack. Internal PR
+tone references split into two buckets: the DART-side institutional-infra register (reference firms on the execution /
+research / reporting layer) and the fund-services register (reference firms on the hosted-manager / ManCo layer). See
+[`../shared-core/competitive-landscape.md`](../shared-core/competitive-landscape.md) for the full comp set, tier
+structure, and per-layer posture guidance.
+
+The site keeps to the [rule 02](../_ssot-rules/02-tone-and-posture.md) voice and the
+[rule 03](../_ssot-rules/03-same-system-principle.md) mechanism claim. The "unified layer" frame is the external
+expression of the combined-shape advantage; the competitor set informs calibration but never appears on the page.
+
 ## What not to show
 
 - Pricing numbers or building-block breakdowns on the public site — [rule 08](../_ssot-rules/08-pricing-principles.md),
@@ -165,6 +197,8 @@ follow-up orchestration from
 - [rule 08 — pricing principles](../_ssot-rules/08-pricing-principles.md) — no pricing on the public site
 - [rule 09 — internal commercial one-liners](../_ssot-rules/09-internal-commercial-oneliners.md) — expansion pattern
   used by the five path tiles
+- [shared-core/competitive-landscape.md](../shared-core/competitive-landscape.md) — internal comp set, tiers, PR tone
+  references; public-site copy derives the "unified layer vs fragmented stack" frame from here without naming firms
 - Impl-layer: [../playbooks/01-marketing-pre-first-call.md](../playbooks/01-marketing-pre-first-call.md)
 - Follow-up briefing hub: [briefings-hub.md](briefings-hub.md)
 - Light-auth gate: [../authentication/light-auth-briefings.md](../authentication/light-auth-briefings.md)

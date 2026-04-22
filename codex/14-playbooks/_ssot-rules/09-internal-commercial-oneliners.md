@@ -106,6 +106,31 @@ A prospect may be a candidate for more than one service. The positioning rule is
 3. **Route to rule 04's axis resolution for DART ambiguity.** If the DART one-liner fits but it's unclear whether
    they're signals-only or full, resolve via rule 04 before expanding.
 
+## Competitive positioning (internal shorthand per path)
+
+Internal one-line comp frames. Use in sales notes, CRM records, and internal briefs only. Public docs use the "unified
+layer vs fragmented stack" frame without naming firms — rule 02 line 74 forbids competitor names on external surfaces.
+Full comp set, tiers (A / B / C + Umbrella), and PR tone references live in
+[`../shared-core/competitive-landscape.md`](../shared-core/competitive-landscape.md).
+
+| Path                      | Closest comp set (internal shorthand)                      | Internal frame                                                                                  |
+| ------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **DART — full pipeline**  | Deltix (QuantOffice + CryptoCortex), Talos, Versify        | Research + execution + reporting on one operating layer; batch = live same code path            |
+| **DART — signals-in**     | Talos, CoinRoutes, Aplo, Interactive Brokers               | Execution cover + reconciliation + reporting without forcing the client to migrate research     |
+| **Odum Signals (out)**    | No direct infra comp — QRT-style counterparty relationship | Odum's alpha delivered to a counterparty who executes; adjacent category to fee-for-execution   |
+| **Investment Management** | Allocator-side: boutiques + platforms; Reporting: Deltix   | Allocate to Odum-run strategies under Odum's FCA; reporting surface = same one Odum uses        |
+| **Regulatory Umbrella**   | Waystone, FundRock (different scope)                       | Narrower than multi-jurisdictional ManCo; trading-firm regulated cover under Odum's permissions |
+| **Research layer only**   | QuantConnect / LEAN                                        | Standalone research tools exist; Odum's differentiator is the live-execution + reporting layers |
+
+Reading guide:
+
+- **Tier A** firms (Deltix, Talos, CoinRoutes, Versify) overlap multiple Odum layers and are the primary internal comps
+  for DART. Tier B single-layer specialists (Amberdata, QuantConnect, Interactive Brokers, TradingView, Hummingbot,
+  Aplo) inform individual-layer conversations but are not combined-shape comps.
+- **Partner-first.** Several firms in the comp set are in Odum's own supplier stack. Never disparage in a client-facing
+  context, even when asked directly.
+- **Tone references** (axis.to, podlabs.xyz) are voice cues, not feature comps — see [rule 02](02-tone-and-posture.md).
+
 ## Enforcement rules
 
 1. **One-liners are verbatim.** Don't rephrase them per doc. The wording above is canonical.
@@ -129,3 +154,5 @@ intros, and proposal-template boilerplate all derive from these.
 - [`03-same-system-principle.md`](03-same-system-principle.md) — the mechanism behind all three one-liners
 - [`04-dart-commercial-axes.md`](04-dart-commercial-axes.md) — DART one-liner resolves to a specific path per prospect
 - [`../glossary.md`](../glossary.md) — canonical one-sentence definitions (related but narrower scope)
+- [`../shared-core/competitive-landscape.md`](../shared-core/competitive-landscape.md) — internal comp set + tiers + PR
+  tone references; source for the per-path table above

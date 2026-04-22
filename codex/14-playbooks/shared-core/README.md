@@ -34,6 +34,7 @@ appears in three playbooks and in a demo profile, promote it here.
 | [instruction-schema-fit-and-package-boundaries.md](instruction-schema-fit-and-package-boundaries.md) | rule 10            | pb2b fit-check, pb3c demo gate, Stage 3B schema       |
 | [data-licensing-boundaries.md](data-licensing-boundaries.md)                                         | rule 07            | pricing, marketing, demo data pipeline                |
 | [client-reporting-demo-walkthrough.md](client-reporting-demo-walkthrough.md)                         | rule 03 + rule 06  | pb3a, pb3b shared demo click-path                     |
+| [competitive-landscape.md](competitive-landscape.md)                                                 | rule 02 + rule 09  | marketing, sales, PR — internal-only comp set + tiers |
 
 ## Relationship to other dirs
 
