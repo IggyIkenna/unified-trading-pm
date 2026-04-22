@@ -180,41 +180,41 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 
 ### Phase 0: Pre-audit verification [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Confirm TM + SFI adapter signatures match assumptions in PRE-AUDIT-FINDINGS. Grep
+- [x] [AGENT] P0. Confirm TM + SFI adapter signatures match assumptions in PRE-AUDIT-FINDINGS. Grep
       `TransfermarktTeamSquad` definition + `SFI_LEAGUES` response shape. Update PRE-AUDIT-FINDINGS with any deltas.
 
-- [ ] [AGENT] P0. Confirm UAC `LeagueDefinition` current fields via grep. Confirm no existing
+- [x] [AGENT] P0. Confirm UAC `LeagueDefinition` current fields via grep. Confirm no existing
       `expected_team_count` field anywhere in UAC sports.
 
-- [ ] [AGENT] P0. Confirm `ADAPTER_FETCH_ANOMALY` event definition in UTL events registry (or note it's missing and
+- [x] [AGENT] P0. Confirm `ADAPTER_FETCH_ANOMALY` event definition in UTL events registry (or note it's missing and
       needs adding in Track 2.4).
 
 ### Track 1: Transfermarkt team-mapping cache [PARALLEL, depends on Phase 0]
 
-- [ ] [AGENT] P1. UAC: add `LeagueDefinition.expected_team_count_per_season: dict[int, int] | None = None` in
+- [x] [AGENT] P1. UAC: add `LeagueDefinition.expected_team_count_per_season: dict[int, int] | None = None` in
       [`unified_api_contracts/canonical/domain/sports/league_data.py`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py).
       Seed well-known leagues (EPL=20, LaLiga=20, Bundesliga=18, SerieA=20, Ligue1=18, Championship=24, EFL1=24,
       EFL2=24, MLS=29, etc.) for seasons 2020-2026 inclusive. Add public accessor
       `get_expected_team_count_for_league(league_id: str, season: int) -> int | None`. 5+ unit tests proving
       accessor works for known and unknown leagues + seasons.
 
-- [ ] [AGENT] P1. instruments-service: add `_write_transfermarkt_team_mapping(bucket, teams_df, season)` paralleling
+- [x] [AGENT] P1. instruments-service: add `_write_transfermarkt_team_mapping(bucket, teams_df, season)` paralleling
       `_write_team_mapping` at L3203. Write to `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
       Columns: `league_id, canonical_league, team_id, name, squad_size, player_count, last_fetched_at`. Idempotent
       (overwrites on re-run).
 
-- [ ] [AGENT] P1. instruments-service: modify `_fetch_transfermarkt_data` cache-hit short-circuit. Flow:
+- [x] [AGENT] P1. instruments-service: modify `_fetch_transfermarkt_data` cache-hit short-circuit. Flow:
       1. At the top of `_want_teams` block, try to read `mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
       2. If cache exists AND `last_fetched_at` is within 7 days AND `date` is NOT a trigger date for any league
          (`get_leagues_needing_refresh(date)` returns `[]`) → populate `_captured_league_counts` from cache + emit
          per-league `captured` manifest rows with `cached=True` provenance metadata + skip the API loop.
       3. Otherwise, proceed with API loop as today, then write cache at end.
 
-- [ ] [AGENT] P1. features-sports-service: add `read_transfermarkt_team_mapping(season: int) -> pd.DataFrame` to
+- [x] [AGENT] P1. features-sports-service: add `read_transfermarkt_team_mapping(season: int) -> pd.DataFrame` to
       [`data/gcs_reader.py`](../../../features-sports-service/features_sports_service/data/gcs_reader.py) paralleling
       `read_team_mapping` at L720+. Short-circuit + return empty DataFrame on 404 (same as existing helpers).
 
-- [ ] [AGENT] P1. Unit tests:
+- [x] [AGENT] P1. Unit tests:
       - Cache write: given a teams DataFrame, assert parquet landed at expected path with expected schema.
       - Cache hit on non-trigger date: patched `get_leagues_needing_refresh` returns `[]`, cache parquet exists →
         no API calls made (mock adapter raises if called).
@@ -225,12 +225,12 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 
 ### Track 2: Drift-detection anomaly emit [SEQUENTIAL, depends on Track 1.1 UAC field]
 
-- [ ] [AGENT] P1. UTL: add `ADAPTER_FETCH_ANOMALY` to events registry if absent
+- [x] [AGENT] P1. UTL: add `ADAPTER_FETCH_ANOMALY` to events registry if absent
       ([`unified_trading_library/events/`](../../../unified-trading-library/unified_trading_library/events/) — grep for
       `ADAPTER_FETCH_FAILED` to find the file). Payload shape: `{venue, endpoint, league_id, date, expected_count,
       got_count, deviation_pct, severity}`.
 
-- [ ] [AGENT] P1. instruments-service: inside TM per-league loop at L4225-4253, after `_league_count` is computed
+- [x] [AGENT] P1. instruments-service: inside TM per-league loop at L4225-4253, after `_league_count` is computed
       but before `_captured_league_counts[...] = _league_count`, call:
       ```python
       expected = get_expected_team_count_for_league(league_def.league_id, season)
@@ -251,7 +251,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
       Same pattern in SFI loop if applicable (league-count anomaly not team-count; cross-check expected Prediction
       league denominator against returned league count).
 
-- [ ] [AGENT] P1. Unit tests:
+- [x] [AGENT] P1. Unit tests:
       - EPL returns 17 teams, expected 20 → `ADAPTER_FETCH_ANOMALY` event emitted with `deviation_pct=15.0` +
         `severity=MEDIUM`.
       - EPL returns 12 teams → `severity=HIGH`.
@@ -261,20 +261,20 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 
 ### Track 3: SFI league-mapping cache [PARALLEL with Track 1]
 
-- [ ] [AGENT] P2. instruments-service: add `_write_sfi_league_mapping(bucket, leagues_df)` writing to
+- [x] [AGENT] P2. instruments-service: add `_write_sfi_league_mapping(bucket, leagues_df)` writing to
       `sports_reference/mappings/sfi_league_mapping.parquet` (no season partition — SFI leagues are long-lived hex
       IDs not season-scoped). Columns: `canonical_league_id, sfi_league_hex, name, last_fetched_at`.
 
-- [ ] [AGENT] P2. instruments-service: modify `_fetch_sfi_data` cache-hit short-circuit. SFI leagues refresh
+- [x] [AGENT] P2. instruments-service: modify `_fetch_sfi_data` cache-hit short-circuit. SFI leagues refresh
       cadence per codex §2.4: Tier-1 every 6h for `SFI_LEAGUES`. Shorter staleness window (24h) than TM.
 
-- [ ] [AGENT] P2. features-sports-service: `read_sfi_league_mapping() -> pd.DataFrame` in gcs_reader.
+- [x] [AGENT] P2. features-sports-service: `read_sfi_league_mapping() -> pd.DataFrame` in gcs_reader.
 
-- [ ] [AGENT] P2. Unit tests (parallel shape to Track 1.5).
+- [x] [AGENT] P2. Unit tests (parallel shape to Track 1.5).
 
 ### Track 4: Codex + QG + quickmerge [SEQUENTIAL]
 
-- [ ] [AGENT] P1. Update codex
+- [x] [AGENT] P1. Update codex
       [`02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md):
       - §2.2 (Transfermarkt): document cache path
         `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + 7-day staleness +
@@ -283,11 +283,11 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
       - New §2.7 "Data-quality drift detection" subsection documenting the `ADAPTER_FETCH_ANOMALY` event + threshold
         (10% deviation). Cross-ref UAC `get_expected_team_count_for_league`.
 
-- [ ] [AGENT] P1. `bash unified-api-contracts/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P1. `bash instruments-service/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P1. `bash features-sports-service/scripts/quality-gates.sh` green.
+- [x] [AGENT] P1. `bash unified-api-contracts/scripts/quality-gates.sh` green.
+- [x] [AGENT] P1. `bash instruments-service/scripts/quality-gates.sh` green.
+- [x] [AGENT] P1. `bash features-sports-service/scripts/quality-gates.sh` green.
 
-- [ ] [AGENT] P1. Commit + push in dep order: UAC first → instruments-service → features-sports-service → PM.
+- [x] [AGENT] P1. Commit + push in dep order: UAC first → instruments-service → features-sports-service → PM.
 
 - [ ] [HUMAN] P2. Post-merge validation: re-run
       `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-06-01 2025-06-14`

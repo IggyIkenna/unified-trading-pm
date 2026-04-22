@@ -68,6 +68,18 @@ For each provider, four dimensions:
   `fixture_id → [{player_id, value_eur_as_of_kickoff}]` by joining `FIXTURE_LINEUPS` (who played) × `PLAYER_VALUES` (≤
   kickoff). The player value is the most-recent snapshot with `as_of_date <= kickoff_date`. **Duplicating the value onto
   every fixture is correct** — it preserves the as-of invariant and keeps the features table flat.
+- **Team-mapping cache** (shipped 2026-04-22,
+  `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
+  per-season roster parquet at
+  `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`.
+  Columns: `league_id, canonical_league, team_id, name, squad_size,
+  player_count, last_fetched_at`. 7-day staleness window; on a cache-hit
+  non-trigger date (`get_leagues_needing_refresh(date) == []`) the adapter
+  short-circuits the per-league API loop, populates
+  `_captured_league_counts` from the cache, and emits
+  `UPSTREAM_FETCH_COMPLETED` with `details.cached=True`. The cache is
+  rewritten on every live-fetch branch, keeping `last_fetched_at` fresh.
+  Reader: [`features-sports-service/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
 
 ### 2.3 FootyStats (`footystats.py`)
 
@@ -99,6 +111,16 @@ For each provider, four dimensions:
   - `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh` — multi-year historical range (2020-2026 etc.);
     singleton-locked against ALL `sfi-*` VMs (shared `soccer-football-info-api-key`; reference: 2026-04-19
     thundering-herd incident).
+- **League-mapping cache** (shipped 2026-04-22,
+  `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`):
+  flat parquet at `sports_reference/mappings/sfi_league_mapping.parquet`
+  (not season-scoped — SFI hex league IDs are long-lived). Columns:
+  `canonical_league_id, sfi_league_hex, name, last_fetched_at`. 24h
+  staleness window. Cache-hit on non-trigger dates skips the paid
+  `get_leagues` call and feeds `sfi_league_ids` directly from the
+  cache; progressive-stats per-match fetches still run because they're
+  date-scoped. Reader:
+  [`features-sports-service/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
 
 ### 2.5 OpenMeteo / Weather (`open_meteo.py`)
 
@@ -124,6 +146,33 @@ For each provider, four dimensions:
   matches.
 - **Shard key:** `fixture_id` once parsed; fetch granularity is `(league_id, season)` so the adapter reads the
   season-wide JSON and explodes into per-fixture rows.
+
+### 2.7 Data-quality drift detection (shipped 2026-04-22)
+
+Plan:
+[`transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`](../../plans/active/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md).
+
+Honest-coverage tells us _whether_ a shard wrote — it does not tell us whether the number of rows is sane. A successful
+fetch that silently returns 17 teams for EPL (expected 20) lands in the manifest as `captured` and looks identical to a
+legit 20-row fetch. The two gaps closed by this plan:
+
+- **Per-league team-count** (Transfermarkt): UAC
+  [`get_expected_team_count_for_league(league_id: str, season: int) -> int | None`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py)
+  is the canonical denominator. Values are seeded in `LEAGUE_EXPECTED_TEAM_COUNTS` (EPL=20, LaLiga=20, Bundesliga=18,
+  MLS expansion tracked year-by-year, …). `None` means "no seed → silent skip, never emit". The TM adapter's per-league
+  loop calls the shared helper `orchestrator._maybe_emit_drift_anomaly(...)` with a 10% warn / 25% HIGH threshold.
+- **Expected-league denominator** (SFI): after `adapter.get_leagues()` the SFI fetch counts how many returned leagues
+  map into `SOCCER_FOOTBALL_INFO_IDS` and compares the count against
+  `get_expected_leagues_for_source("soccer_football_info", classifications=["Prediction"])`. Wider 15% warn / 30% HIGH
+  threshold because SFI routinely drops and re-adds fringe leagues day-to-day.
+
+Both paths call `log_event("ADAPTER_FETCH_ANOMALY", details={…})` — never raise. Details shape:
+`{venue, endpoint, league_id, date, season?, expected_count, got_count, deviation_pct, severity}`. The manifest write
+still proceeds so shard-level failure isolation is preserved.
+
+Event registration:
+[`unified-trading-library/unified_trading_library/events/event_types.py`](../../../unified-trading-library/unified_trading_library/events/event_types.py)
+(`ADAPTER_FETCH_ANOMALY`, `ADAPTER_FETCH_FAILED`, `ADAPTER_FETCH_EVENT_TYPES`).
 
 ## 3. Match-state-driven odds polling
 
