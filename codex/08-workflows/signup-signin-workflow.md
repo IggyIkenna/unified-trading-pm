@@ -105,10 +105,22 @@ after approval.
 
 #### 2.3.4 Questionnaire attachment
 
-- At submit, the signup API (POST `/api/v1/signup`) receives the prospect's email.
-- Backend looks up the most recent `/questionnaires/{id}` document where `submitted_by.email == signup.email` and stores
-  that ID on the user profile as `questionnaire_response_id`.
-- If no match: user profile is created without the ID; ops is notified so they can manually link on review.
+The signup API (POST `/api/v1/signup`) attaches the prospect's prior questionnaire response to the new user profile via
+two paths, in priority order:
+
+1. **Direct id (preferred).** The browser persists the response id on the questionnaire envelope (Firestore doc id in
+   staging/prod, `q-local-<ts>` in dev/mock — see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md)).
+   The signup wizard reads `submissionId` off `localStorage[questionnaire-envelope-v1]` and forwards it as
+   `questionnaire_response_id` on the request body. Backend writes it to the user profile verbatim.
+2. **Email lookup (fallback).** If the request body omits `questionnaire_response_id` (cross-device case, envelope
+   evicted, etc.), the backend looks up the most recent `/questionnaires/{id}` where
+   `submitted_by.email == signup.email` and adopts that id.
+
+If both paths fail the user profile is created with `questionnaire_response_id = null` and ops is notified to link
+manually on review.
+
+The signup response body returns the resolved id (or `null`) plus an `email_verification_pending` flag so admin tooling
+can show the pending-verify state alongside the application.
 
 ### 2.4 Signin stage
 
@@ -130,24 +142,32 @@ What's already wired:
 - [x] Deep-dive (briefings) light-auth gate via `lib/briefings/access-code.ts`.
 - [x] Questionnaire-completed gate on `/signup` (2026-04-22).
 - [x] Service-list refresh on signup to match the four-path nav (2026-04-22).
+- [x] Signup wizard step 3 is no-upload for both IM and Regulatory; KYC / AML / PEP documents move to the admin
+      signed-URL drop-box post-approval (2026-04-22). The step-4 review surfaces the deferral inline so prospects know
+      what to expect.
+- [x] Contact-channel picker (phone / Telegram / WhatsApp) on wizard step 1, with `contact_channel` + `contact_value` on
+      the signup payload (2026-04-22).
+- [x] `SignupPayload.questionnaire_response_id` is forwarded by the wizard from
+      `localStorage[questionnaire-envelope-v1].submissionId` (Firestore submit now persists the id back onto the
+      envelope so cross-page reads are typed). Mock backend implements both the direct-id and email-lookup attachment
+      paths described in §2.3.4 (2026-04-22).
+- [x] DART + Odum Signals path on `GenericSignup` shows a "post-demo provisioning" callout so prospects know account
+      keys are issued after the demo, not at form submit (2026-04-22).
+- [x] `SignupPayload.send_email_verification` opts the new account into Firebase admin-SDK email verification at signup
+      time. Mock backend records `email_verification_pending: true` on the user profile so admin tooling can surface it
+      (2026-04-22).
 
 Gaps remaining:
 
-- [ ] Signup wizard still has a document-upload step for IM (`onboarding-wizard-tail.tsx` step 3). Target: remove for
-      IM; keep a minimal version for Regulatory (engagement type + entity details → contract generation; no PEP docs at
-      this stage).
-- [ ] Contact-channel picker (phone / Telegram / WhatsApp) not yet implemented — current step 1 only has an optional
-      phone field.
-- [ ] Signup payload (`lib/api/signup-client.ts::SignupPayload`) doesn't yet carry `questionnaire_response_id`; backend
-      lookup-by-email is also not yet implemented in user-management-api.
-- [ ] DART + Odum Signals signup currently routes through `GenericSignup` (email capture) rather than a dedicated
-      minimal form. Works for now; may want a clearer "post-demo provisioning" label.
-- [ ] No email confirmation step — Firebase `sendEmailVerification()` is not called at signup.
+- [ ] Real user-management-api implementation of the §2.3.4 attachment paths + Firebase admin-SDK email-verification
+      link generation. The UI + mock surfaces are in place; production wiring lives outside this workspace and is the
+      remaining handoff.
 
 ---
 
 ## 4. Change log
 
-| Date       | Change                                                                                           | Commit                    |
-| ---------- | ------------------------------------------------------------------------------------------------ | ------------------------- |
-| 2026-04-22 | Initial playbook. Questionnaire gate + service-list refresh landed in unified-trading-system-ui. | _(see live-defi-rollout)_ |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Commit                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 2026-04-22 | Initial playbook. Questionnaire gate + service-list refresh landed in unified-trading-system-ui.                                                                                                                                                                                                                                                                                                                                                               | _(see live-defi-rollout)_ |
+| 2026-04-22 | §2.3.4 + Gaps remaining sweep: slim Regulatory step 3 (no-upload contract-summary panel), drop the IM doc-blocker on submit + the redundant duplicate `submitSignup` in step 4, persist `submissionId` on the questionnaire envelope, mock signup attaches the questionnaire by id-or-email lookup and records the email-verify intent, post-demo provisioning callout on DART / Signals path. Real user-management-api implementation remains as a follow-up. | _(see live-defi-rollout)_ |
