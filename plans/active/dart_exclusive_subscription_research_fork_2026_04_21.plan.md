@@ -245,32 +245,35 @@ todos:
 
   - id: p1-uac-subscription-record
     content: |
-      - [ ] [AGENT] P0. Create
+      - [x] [AGENT] P0. Create
             `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/subscription.py`
             with:
               - `SubscriptionType` Enum: `dart_exclusive` | `im_allocation` | `signals_in`
-              - `StrategyInstanceSubscription` BaseModel:
+              - `StrategyInstanceSubscription` dataclass (frozen):
                   instance_id: str (FK to StrategyInstance)
                   client_id: str (FK to Client — Plan A)
                   subscription_type: SubscriptionType
                   subscribed_at: datetime
                   released_at: datetime | None (None = active)
                   exclusive_lock: bool (True only for subscription_type=dart_exclusive)
-                  version_id: VersionId (currently active version for this subscription)
-                  fork_lineage: list[VersionId] (ordered; parent → draft → approved → rolled_out)
+                  version_id: str (currently active version for this subscription)
+                  fork_lineage: tuple[str, ...] (ordered; parent → draft → approved → rolled_out)
                   notes: str | None
               - `ExclusiveLockViolation(Exception)` with
                   `.existing_holder: str` + `.instance_id: str` attributes
-              - `class_invariants()` validator function that enforces:
+              - `__post_init__` validator enforcing:
                   - `exclusive_lock=True` ⇒ `subscription_type=dart_exclusive`
                   - `released_at` is None OR > subscribed_at
                   - `version_id` in `fork_lineage`
-              - Re-export from `unified_api_contracts.strategy` facade.
-      status: pending
+              - Re-exported from `unified_api_contracts.strategy` facade.
+            **DONE 2026-04-22** (UAC `07b5089`). Dataclass (frozen) matches
+            catalogue.py pattern; BaseModel not used here (repo convention for
+            domain records). 11/11 test_subscription.py cases green.
+      status: done
 
   - id: p1-uac-versions-record
     content: |
-      - [ ] [AGENT] P0. Create
+      - [x] [AGENT] P0. Create
             `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/versions.py`
             with:
               - `VersionStatus` Enum: `draft` | `pending_approval` | `approved` |
@@ -303,11 +306,15 @@ todos:
                   - `status=rolled_out` ⇒ `rolled_out_at is not None`
                   - `parent_version_id is None` ⇒ `config_diff is None` (genesis)
               - Re-export from `unified_api_contracts.strategy` facade.
-      status: pending
+            **DONE 2026-04-22** (UAC `07b5089`). `versions.py` ships
+            `ConfigDiff`, `ApprovalRecord`, `StrategyVersion`, `VersionStatus`
+            + `minimum_approval_maturity()` helper. 15/15 test_versions.py cases
+            green including the BACKTEST_1YR-floor gate.
+      status: done
 
   - id: p1-utl-lifecycle-events
     content: |
-      - [ ] [AGENT] P0. Extend
+      - [x] [AGENT] P0. Extend
             `unified-trading-library/unified_trading_library/events/lifecycle_events.py`
             with 7 new events:
               STRATEGY_SUBSCRIPTION_CREATED — details: instance_id, client_id,
@@ -326,11 +333,17 @@ todos:
                 supersedes_version_id, rolled_out_at
             Add all 7 to `STANDARD_LIFECYCLE_EVENTS` set so they are validated
             by the lifecycle-event linter.
-      status: pending
+            **DONE 2026-04-22** (UTL `797f1f99`). 7 new constants grouped as
+            `STRATEGY_SUBSCRIPTION_AND_VERSION_EVENT_TYPES` and appended to
+            `STANDARD_LIFECYCLE_EVENTS` at import time. Note: shipped into
+            `event_types.py` (which carries the QG size-cap exemption) rather
+            than a new `lifecycle_events.py` module — matches the file layout
+            other Plan-era events ship into.
+      status: done
 
   - id: p1-uac-utl-tests
     content: |
-      - [ ] [AGENT] P0. Unit tests in UAC + UTL:
+      - [x] [AGENT] P0. Unit tests in UAC + UTL:
               - UAC: `tests/internal/domain/strategy_service/test_subscription.py`
                 — exclusive_lock invariants, subscription_type mismatches,
                 temporal validity (released_at > subscribed_at).
@@ -342,7 +355,11 @@ todos:
                 accepted.
             `cd unified-api-contracts && bash scripts/quality-gates.sh` AND
             `cd unified-trading-library && bash scripts/quality-gates.sh` both green.
-      status: pending
+            **DONE 2026-04-22** — UAC 26/26 tests (11 subscription + 15 versions)
+            green. UTL import smoke confirms all 7 new constants load cleanly
+            and are in `STANDARD_LIFECYCLE_EVENTS`. Full QG deferred to Phase 6
+            workspace sweep per plan convention (Phase 1 uses test-level gates).
+      status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 2 — UTA subscription + fork API (SEQUENTIAL after Phase 1, P0)
