@@ -153,6 +153,32 @@ set.
 
 ---
 
+## §4.6 DART exclusive subscriptions + research-fork (Plan D)
+
+**Amendment 2026-04-22:** DART clients holding a `DART_EXCLUSIVE` subscription
+can fork strategy instances via the Research surface and publish new versions
+under joint Odum-client governance. The surfaces land as:
+
+- DART tile sub-route chip `subscriptions` → `/services/trading/subscriptions`
+- DART tile sub-route chip `versions`      → `/services/trading/versions`
+- Admin & Ops sub-route chip `strategy-version-approvals` →
+  `/admin/strategy-version-approvals`
+
+Client-reality catalogue rows gain a `<SubscribeButton>` component when the
+instance permits DART exclusive subscription and no other org holds the lock.
+Research `FixtureForkDialog` on subscribed instances drafts a new version
+(draft → pending_approval → approved → rolled_out) subject to the
+`BACKTEST_1YR` floor.
+
+SSOT:
+[`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) +
+[`../../14-playbooks/shared-core/strategy-version-governance.md`](../../14-playbooks/shared-core/strategy-version-governance.md).
+Implementation shipping in Plan D phases (Phase 1 UAC schema + Phase 2 UTA
+endpoints landed 2026-04-22; Phase 3 strategy-service worker + Phase 4 UI
+pages tracked on the plan).
+
+---
+
 ## §4.5 Strategy Catalogue is a cross-cutting primitive, not a DART sub-route
 
 **Amendment 2026-04-21:** The current `dart.subRoutes[]` listing includes `strategy-catalogue` — this is a

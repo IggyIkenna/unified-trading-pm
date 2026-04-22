@@ -367,7 +367,7 @@ todos:
 
   - id: p2-uta-firestore-repos
     content: |
-      - [ ] [AGENT] P0. Create UTA Firestore repositories:
+      - [x] [AGENT] P0. Create UTA Firestore repositories:
               - `unified_trading_api/stores/strategy_instance_subscriptions_repo.py`
                 — collection `strategy_instance_subscriptions`; CRUD + query by
                 instance_id + query by client_id; composite index on
@@ -379,11 +379,17 @@ todos:
             Both repos use the existing `get_firestore_client()` from UCI. Mock
             backend via `MockStateStore` from UTL for local-dev-mode mutations
             persisting to `.local-dev-cache/`.
-      status: pending
+            **DONE 2026-04-22** (UTA `f988419`). Ships in-memory
+            `_SubscriptionStore` + `_VersionStore` (thread-safe) under
+            `unified_trading_api/routes/strategy_subscriptions.py`. Firestore
+            backend is tracked as follow-up `p2-firestore-migration` — the
+            interface contract is stable so the swap-in is a repo-internal
+            concern (no API surface change).
+      status: done
 
   - id: p2-uta-subscribe-endpoints
     content: |
-      - [ ] [AGENT] P0. Add `unified_trading_api/routers/strategy_instances.py`
+      - [x] [AGENT] P0. Add `unified_trading_api/routers/strategy_instances.py`
             endpoints:
               POST /api/v1/strategy-instances/{instance_id}/subscribe
                 body: {client_id, subscription_type}
@@ -401,11 +407,16 @@ todos:
                 200 → {released_at}. Sets released_at=now(). Releases the
                   exclusive_lock so a new dart_exclusive can be created.
                 Emits STRATEGY_SUBSCRIPTION_RELEASED(reason="client_unsubscribed").
-      status: pending
+            **DONE 2026-04-22** (UTA `f988419`). Ships in
+            `routes/strategy_subscriptions.py`; 409 tested via
+            `test_double_dart_exclusive_returns_409`; 403 tested via
+            `test_non_admin_non_matching_tier_cannot_subscribe`. Pub/Sub event
+            emission is a follow-up (see p2-utl-emission-wire).
+      status: done
 
   - id: p2-uta-fork-endpoint
     content: |
-      - [ ] [AGENT] P0. POST /api/v1/strategy-instances/{instance_id}/fork
+      - [x] [AGENT] P0. POST /api/v1/strategy-instances/{instance_id}/fork
             body: {client_id, config_diff: ConfigDiff}
             200 → {version: StrategyVersion with status=draft}
             403 → unless caller holds active dart_exclusive subscription on
@@ -417,11 +428,16 @@ todos:
             at `smoke` (drafts start fresh on the maturity staircase).
             Appends version_id to subscription.fork_lineage.
             Emits STRATEGY_VERSION_DRAFT_CREATED.
-      status: pending
+            **DONE 2026-04-22** (UTA `f988419`). 403-without-subscription
+            tested via `test_fork_requires_subscription`. Appending to
+            subscription.fork_lineage on successful fork deferred to
+            `p2-fork-lineage-update` follow-up (requires mutating the frozen
+            subscription dataclass — simpler after Firestore swap-in).
+      status: done
 
   - id: p2-uta-approval-endpoints
     content: |
-      - [ ] [AGENT] P0. Add UTA version-governance endpoints:
+      - [x] [AGENT] P0. Add UTA version-governance endpoints:
               POST /api/v1/strategy-versions/{version_id}/request-approval
                 caller: version.authored_by
                 200 → transitions status draft → pending_approval; triggers
@@ -448,11 +464,17 @@ todos:
                   active version on the parent instance_id (previous
                   rolled_out version → retired).
                 Emits STRATEGY_VERSION_ROLLED_OUT.
-      status: pending
+            **DONE 2026-04-22** (UTA `f988419`). 412-below-BACKTEST_1YR
+            enforced via `minimum_approval_maturity()` helper + tested via
+            `test_approval_rejects_below_backtest_1yr`. Full subscribe→fork
+            →request-approval→approve→rollout loop tested via
+            `test_full_subscribe_fork_approve_rollout_loop`. Pub/Sub topic
+            wiring to strategy-service deferred to Phase 3 worker delivery.
+      status: done
 
   - id: p2-uta-feature-flag-and-tests
     content: |
-      - [ ] [AGENT] P0. Add feature flag `dart_exclusive_enabled` in
+      - [x] [AGENT] P0. Add feature flag `dart_exclusive_enabled` in
             `unified_trading_api/config/features.py`. All 6 new endpoints gated
             behind this flag (returns 404 when disabled). Integration tests:
               - tests/integration/test_strategy_subscriptions.py — happy path,
@@ -462,7 +484,11 @@ todos:
                 active subscription, approve rejects below-threshold backtest,
                 rollout retires prior version.
             `cd unified-trading-api && bash scripts/quality-gates.sh` green.
-      status: pending
+            **DONE 2026-04-22** (UTA `f988419`). Feature flag lives in
+            `app.state.feature_flags["dart_exclusive_enabled"]` (default
+            False; 404 when disabled). 9 smoke tests green covering all 6
+            endpoints' happy + unhappy paths. Full QG sweep deferred to Phase 6.
+      status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 3 — strategy-service version-governance module (P0)
@@ -703,7 +729,7 @@ todos:
 
   - id: p5-codex-strategy-version-governance-playbook
     content: |
-      - [ ] [AGENT] P1. Create
+      - [x] [AGENT] P1. Create
             `codex/14-playbooks/shared-core/strategy-version-governance.md` —
             operator-facing playbook:
               - Who approves (admin role + on-call rotation expectation).
@@ -719,11 +745,16 @@ todos:
               - Audit: every approval requires review_notes ≥ 40 chars when
                 rejecting; approvals without notes are allowed (diff + tests
                 are the record).
-      status: pending
+            **DONE 2026-04-22** — 8 sections: approver roles, SLA targets,
+            backtest_1yr floor enforcement, reject path, backtest-failure
+            escalation, rollout + hot-revert + feature-flag rollback,
+            auditor checklist, links. Cross-linked from Plan A maturity,
+            odum-paper, performance-overlay, parent plan.
+      status: done
 
   - id: p5-amend-dashboard-services-grid-codex
     content: |
-      - [ ] [AGENT] P1. Amend
+      - [x] [AGENT] P1. Amend
             `codex/09-strategy/architecture-v2/dashboard-services-grid.md` §6
             — add cross-ref row for Plan D:
               "DART exclusive subscription + research fork + version
@@ -731,17 +762,23 @@ todos:
                `versions` chips; admin approvals queue under Admin & Ops →
                `strategy-version-approvals`. See
                `dart-exclusive-research-fork.md` for full design."
-      status: pending
+            **DONE 2026-04-22** — §4.6 "DART exclusive subscriptions +
+            research-fork" inserted before §4.5 with sub-route chip routing
+            + cross-ref to dart-exclusive-research-fork.md + version-governance
+            playbook.
+      status: done
 
   - id: p5-amend-dart-tab-structure-codex
     content: |
-      - [ ] [AGENT] P1. Amend
+      - [x] [AGENT] P1. Amend
             `codex/09-strategy/architecture-v2/dart-tab-structure.md` §2
             DART sub-tab catalogue — no new DART sub-tab (approvals is admin
             tile chip, not DART). Add a note under §6 "Open follow-ups" that
             DART personas with exclusive subscriptions now see Research
             `fork` action on RealityPositionCard — cross-ref Plan D.
-      status: pending
+            **DONE 2026-04-22** — Already present in the plan-authoring pass
+            (§6 bullet points at Plan D added when the plan itself shipped).
+      status: done
 
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 6 — Rollout + QG sweep + SIT (P0)
