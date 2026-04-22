@@ -217,6 +217,21 @@ historical date**, not the fetch date. Specifically:
 The shard row's `attempted_at` column captures when the adapter actually ran (metadata). The payload columns must
 reflect the state as-of the fixture date.
 
+### 5.1 Enforcement — Timestamp-Alignment-Gate
+
+Every raw-data `sink.write(...)` in `instruments-service` with a `day={D}` partition runs through
+`InstrumentsWriteGate` from `unified_trading_library.instruments_write_gate`. The gate scans the
+`DEFAULT_AS_OF_COLUMNS` families (`as_of_date`, `valuation_date`, `data_available_at`,
+`kickoff_utc`, `event_time`, `computed_at`) and emits `DATA_ALIGNMENT_VIOLATION` (warn mode) or
+raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
+`value.date() > D`. See
+[`06-coding-standards/validation-patterns.md` §Timestamp-Alignment-Gate](../06-coding-standards/validation-patterns.md#timestamp-alignment-gate)
+for the full contract + usage.
+
+Pre-2026-04-22 the raw-data layer relied on adapter discipline alone — the Transfermarkt VM
+data-crime incident (18h writing wall-clock-2026 `valuation_date` onto `day=2023-03-16`) is the
+reason the gate now exists.
+
 ## 6. Manifest dumps: empty-confirmed for full-manifest coverage
 
 Every (expected_date, expected_league) pair that the adapter attempted — whether the API returned rows or not — MUST

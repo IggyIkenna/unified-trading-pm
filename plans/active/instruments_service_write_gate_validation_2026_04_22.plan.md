@@ -175,27 +175,32 @@ Rollout: warn-mode first to measure violation volume; strict-mode once all adapt
 
 ### Phase 3: Measurement + codex [SEQUENTIAL — operator + follow-up]
 
-- [ ] [AGENT] P1. Wire warn-mode through the remaining ~26 Category-A `sink.write` sites in
-      `orchestrator.py`: API-Football predictions L1676/L1728/L3643/L3679, teams L2691, standings
-      L2744, injuries L2807/L2823/L2839/L2859, footystats matches L3881/L3896/L3908, odds
-      L4044/L4064/L4080, understat xG L4237/L4251/L4263, fixtures L3002, empty-predictions L1349,
-      footystats leagues L4380. Mechanical replacement of `sink.write(...)` → `_gated_sink_write(...)`.
+- [x] [AGENT] P1. Expanded warn-mode coverage from 4 → 25 sites in instruments-service
+      `d049d8b`. Every sports per-date `sink.write(...)` now goes through `_gated_sink_write`:
+      API-Football leagues/teams/standings/injuries/fixtures/per_fixture_* (14 sites),
+      FootyStats predictions/matches/odds (9 sites), Understat xG (3 sites), Transfermarkt
+      leagues (1 site; PLAYER_VALUES was 454cca3), SFI leagues/standings/progressive_stats
+      (3 sites, 454cca3), OpenMeteo weather (1 site), plus 4 instrument-universe per-date
+      writes (DeFi/CeFi/TradFi/Prediction; gate no-ops today but catches future
+      `computed_at` / `data_available_at` schema drift). 8 new TestVenueParityCases tests
+      added, 14/14 green. Mapping / index / cache writes (no `day=` partition) intentionally
+      left plain — gate would no-op.
 
-- [ ] [AGENT] P1. After ≥ 1 week of warn-mode in prod with the 4 seats + any expanded coverage,
-      query `events.jsonl` for `DATA_ALIGNMENT_VIOLATION` count per `venue` + `entity` + `column`.
-      Document baseline in plan.
+- [ ] [AGENT] P1. After ≥ 1 week of warn-mode in prod, query `events.jsonl` for
+      `DATA_ALIGNMENT_VIOLATION` count per `venue` + `entity` + `column`. Document baseline
+      here.
 
-- [ ] [AGENT] P1. Fix adapters surfaced by warn-mode baseline. Candidates: `transfermarkt.py:224`
-      season fallback (harden adapter even though orchestrator `cdded95` guards the call site),
-      `footystats.py:161` identical pattern.
+- [ ] [AGENT] P1. Fix adapters surfaced by warn-mode baseline. Known candidates from Phase 0
+      grep: `transfermarkt.py:224` + `footystats.py:161` both still carry
+      `effective_season = season if season is not None else datetime.now(UTC).year`. Harden
+      the adapter-side fallback even though orchestrator `cdded95` guards the call site.
 
-- [ ] [AGENT] P1. Flip default to `mode="strict"` in `_WRITE_GATE`. Per-shard try/except catches
-      `TimestampAlignmentError` → `manifest.record_failed(..., error="ALIGNMENT_VIOLATION")`.
+- [ ] [AGENT] P1. Flip default to `mode="strict"` in `_WRITE_GATE`. Per-shard try/except
+      catches `TimestampAlignmentError` → `manifest.record_failed(..., error="ALIGNMENT_VIOLATION")`.
 
-- [ ] [AGENT] P1. Update
-      [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md)
-      with §Timestamp-Alignment-Gate subsection. Cross-ref from
-      `02-data/sports-scheduling-and-sharding.md` §5.
+- [x] [AGENT] P1. Shipped codex §Timestamp-Alignment-Gate in
+      [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md).
+      Cross-ref §5.1 added in [`02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md#51-enforcement--timestamp-alignment-gate).
 
 ### Phase 4: QG + quickmerge [SEQUENTIAL]
 
