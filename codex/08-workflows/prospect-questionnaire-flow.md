@@ -196,5 +196,8 @@ Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never 
   index rather than the current two-query join. Defer until list exceeds ~500 docs.
 - **Questionnaire versioning**: if the schema grows past 15 axes, promote to `QuestionnaireResponseV2` with a `version`
   tag and migrate Firestore docs.
-- **Port orphan-audit to deployment-ui**: deferred — deployment-ui is Vite/React (not Next.js), so scanner needs a
-  framework adapter to discover React Router routes. Revisit after unified-trading-system-ui baseline ≥ 2 weeks green.
+- ~~**Port orphan-audit to deployment-ui**: deferred — deployment-ui is Vite/React (not Next.js), so scanner needs a
+  framework adapter to discover React Router routes.~~ **Shipped 2026-04-22** in deployment-ui `e5d2355`. React Router
+  variant at `deployment-ui/scripts/orphan-audit.ts` discovers `<Route path="...">` JSX; same whitelist / baseline /
+  blocking contract as the Next.js variant. Triage surfaced 2 real orphans (`/chaos`, `/client-subscriptions`) —
+  wired into `Header.tsx` admin nav. See `codex/06-coding-standards/orphan-audit.md §8`.
