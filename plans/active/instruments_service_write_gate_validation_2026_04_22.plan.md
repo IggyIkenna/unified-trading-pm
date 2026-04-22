@@ -66,9 +66,9 @@ shard or record_failed in the manifest.
 
 ### Existing UTL validators + their current callers
 
-- [`unified_trading_library/point_in_time.py`](../../unified-trading-library/unified_trading_library/point_in_time.py):
+- [`unified_trading_library/point_in_time.py`](../../../unified-trading-library/unified_trading_library/point_in_time.py):
   `PointInTimeEnforcer`, `enforce_point_in_time`, `validate_pit_safety`. Filter-based; suits feature writes.
-- [`unified_trading_library/feature_service_base/write_gate.py`](../../unified-trading-library/unified_trading_library/feature_service_base/write_gate.py)
+- [`unified_trading_library/feature_service_base/write_gate.py`](../../../unified-trading-library/unified_trading_library/feature_service_base/write_gate.py)
   L322: calls `validate_timestamp_date_alignment` — but only via `FeatureWriteGate` in feature services.
 - **Zero callers in instruments-service** (grep confirmed 2026-04-22).
 
@@ -167,7 +167,7 @@ Rollout: warn-mode first to measure violation volume; strict-mode once all adapt
 - [ ] [AGENT] P1. Flip default to strict-mode. Update codex.
 
 - [ ] [AGENT] P1. Update
-      [`codex/06-coding-standards/validation-patterns.md`](../../unified-trading-pm/codex/06-coding-standards/validation-patterns.md)
+      [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md)
       with the new §Timestamp-Alignment-Gate subsection. Cross-ref from codex
       `02-data/sports-scheduling-and-sharding.md` §5.
 
