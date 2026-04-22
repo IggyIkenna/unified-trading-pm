@@ -158,26 +158,66 @@ Sibling static HTML pages (`platform.html`, `signals.html`, `strategies.html`, `
 
 ## Phase 3 — Commit + merge
 
-- [ ] [AGENT] P0. Single combined commit on `live-defi-rollout`:
-      `feat(homepage): restore old-hero structure + branded service row + trust-badge trio + aligned card CTAs` — covers
-      homepage.html hero rewrite + section-2 stats-strip dedup + section-3 card flex alignment + PublicDepthNextStrip
-      cleanup.
-- [ ] [AGENT] P0. Push to `origin/live-defi-rollout` (manual `git push`, not quickmerge — this is a UI-only change with
-      no upstream Python dep in play, matches session convention).
+- [x] [AGENT] P0. Shipped on `live-defi-rollout`: unified-trading-system-ui `27e4ff1` (hero rewrite + card alignment)
+      and follow-up commit (font swap + 4-chip trust row + briefings intro); PM plan commit `4fa2f158`.
 
-## Phase 4 — Follow-ups + sibling consistency
+## Phase 1c — Font + trust-strip merge + briefings-intro (added 2026-04-22 in session)
 
-- [ ] [AGENT] P1. Sibling static pages (`platform.html`, `signals.html`, `strategies.html`, `regulatory.html`,
-      `who-we-are.html`, `contact.html`) — audit their page-heros for consistency with new homepage hero. If any subpage
-      repeats `Odum Research` as H1, strip it.
-- [ ] [AGENT] P1. `app/(public)/investment-management/page.tsx` + `app/(public)/platform/page.tsx` — if any of these
-      render a hero inline (not just `MarketingStaticFromFile`), check whether the new trust-badge trio should appear on
-      those too. If yes, extract the badge row into a small shared component to avoid drift.
-- [ ] [AGENT] P1. Codex SSOT update — add a short entry to `codex/14-playbooks/design/marketing-hero-structure.md` (new
-      file if missing) documenting the hero blocks (asset-pill / H1 / tagline / service-row / CTAs / proof-strip /
-      trust-row) so future agents don't drift.
-- [ ] [HUMAN] P1. Deploy to production (odum-research.com) once main has merged; verify AUM line renders `$7.5M+`
-      against the real prod build.
+Per user follow-up ask: (a) homepage was the only static HTML using `Inter` — every other public page uses
+`IBM Plex Sans`. Swap homepage to match, unifying the site. (b) the two strips under the CTAs (3 trust + 3 proof = 6
+items) read busy. Merge into **4 chips**, with the FCA/AUM and Security/ECP pairs wrapped into single badges per user
+design. (c) the briefings-hub intro copy reads flat — feels missing the system-level USP and the "stack them" hint that
+the hero carries. Re-inline the hero framing so briefings and homepage share the same sales voice.
+
+- [x] [AGENT] P0. `public/homepage.html` — swap Google Fonts link + `--font-sans` + `--font-mono` from `Inter` +
+      `JetBrains Mono` to `IBM Plex Sans` + `IBM Plex Mono` (JetBrains kept as mono fallback for browsers with IBM Plex
+      Mono unavailable). Every other static page (`platform.html`, `signals.html`, `strategies.html`, `regulatory.html`,
+      `who-we-are.html`, `contact.html`) already uses IBM Plex Sans — homepage was the outlier.
+- [x] [AGENT] P0. Collapse `<div class="hero-trust-row">` (3 chips) + `<div class="proof-strip">` (3 items) into a
+      single 4-chip trust-row: - `FCA 975797 · $7.5M+ AUM` (shield-check, `is-fca`) -
+      `Institutional Security · Professional & ECP` (lock, `is-security`) - `No-Code to Full-Code` (stack, `is-flex`) -
+      `London, UK · HQ` (map-pin, `is-hq` — new amber colour variant) Extended `.hero-trust-badge` CSS with `strong`
+      (primary text) + `.sep` (dot separator) + `.dim` (muted secondary) child styling.
+- [x] [AGENT] P0. `content/briefings/_hub.yaml` `intro:` field — prepend the system-level USP and append the stack-
+      paths hint so the briefings intro mirrors the hero: "Odum runs one regulated operating system — the same
+      infrastructure we use to run our own capital, available to institutional clients (Professional and ECP) at any
+      entry point … Use one, or stack them — the paths feed each other." Existing 4-path breakdown + DART-routing
+      sentence preserved.
+
+## Phase 4 — Sibling hero propagation + follow-ups (scope expanded 2026-04-22)
+
+- [ ] [AGENT] P1. **Hero pattern propagation** — user ask: "migrate the look and feel of the Unified Trading
+      Infrastructure first page into the new page; it's mainly words changing." Apply the homepage hero structure (asset
+      pill · H1 · long tagline · 4-icon service row · CTAs · stats row · 4-chip trust row) to each sibling public page,
+      with page-specific H1 / tagline / CTAs: | Page | H1 (proposed) | Tagline (proposed) | |
+      --------------------------- | ----------------------------------------- |
+      ------------------------------------------------------------------------------------------------------------------------
+      | | `strategies.html` → /im | `Investment Management` |
+      `We allocate and run capital under our FCA permissions — same systematic strategies we run on our own book.` | |
+      `platform.html` → /platform | `DART — Data Analytics, Research & Trading` |
+      `Run your strategy on the same stack we use internally — Signals-In for execution-only, or Full for research-to-live.`
+      | | `signals.html` → /signals | `Odum Signals` |
+      `We emit signals; you execute on your own stack — HMAC-signed webhooks or REST pull.` | | `regulatory.html` → /reg
+      | `Regulatory Umbrella` | `Operate regulated activity under our FCA permissions — scope named, not assumed.` | |
+      `who-we-are.html` → /who | `Who we are` |
+      `FCA-regulated since 2023. Built by traders who ran desks at leading prop-trading firms.` | - Stats row: keep
+      identical across all pages (5 / 100+ / 24-7 / 100+ TB / 5 service lines) — it's system-level, not page-level. -
+      Trust row: keep identical 4 chips. Consistent trust signal across the site. - 4-icon service row: keep identical
+      (IM / DART / Odum Signals / Umbrella) but add an `.is-current` class to the icon matching the current page so the
+      viewer sees which path they're on; no click-through on current. - Service-icon row on sibling pages acts as a
+      **path switcher** — the user can jump between products from any page without going back to home. - **Extract
+      shared fragments** — `.hero-service-row`, `.hero-stats`, `.hero-trust-row` should become their own fragments that
+      sibling pages include. Options: (a) duplicate the HTML (fast, drift risk) or (b) a small JS inline-include helper
+      (cleaner, one seam). Default (a) for this round — each static HTML is read into ShadowDOM independently; a shared
+      CSS fragment imported by each would work but needs the loader contract to honour `<link>` across shadow hosts.
+- [ ] [AGENT] P1. Codex SSOT update — add a `codex/14-playbooks/design/marketing-hero-structure.md` doc (new file if
+      missing) documenting the hero blocks (asset-pill / H1 / tagline / service-row / CTAs / stats-row / trust-row as 4
+      merged chips) so future agents don't drift. Include the page-specific H1/tagline table above as the canonical copy
+      SSOT.
+- [ ] [HUMAN] P1. Manual 375px mobile walk-through — confirm hero + cards stack cleanly across homepage + all sibling
+      pages after Phase 4 lands.
+- [ ] [HUMAN] P1. Deploy to production (odum-research.com) once main has merged; verify IBM Plex Sans loads + AUM line
+      renders `$7.5M+` + 4-chip trust row renders correctly against the real prod build.
 
 ## Success criteria
 
