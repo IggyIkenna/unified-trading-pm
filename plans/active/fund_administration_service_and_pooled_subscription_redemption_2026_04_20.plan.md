@@ -167,7 +167,7 @@ Phase 0 (UAC + UTL)
 ## Phase 0 — UAC + UTL foundations (PARALLEL with itself, SEQUENTIAL with everything else)
 
 - id: uac-fund-administration-subpackage content: |
-  - [ ] [AGENT] P0. UAC: create sub-package `unified_api_contracts/internal/domain/fund_administration/` with types
+  - [x] [AGENT] P0. UAC: create sub-package `unified_api_contracts/internal/domain/fund_administration/` with types
         `AllocatorSubscription`, `AllocatorRedemption`, `FundAllocation`, and enums `SubscriptionStatus`,
         `RedemptionStatus`, `AllocationExecutionStatus`. Re-export from `unified_api_contracts.internal` facade per
         Citadel import rules. Dataclasses with frozen=True; AwareDatetime; Decimal for money. No pydantic BaseModel
@@ -175,32 +175,32 @@ Phase 0 (UAC + UTL)
         `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` §"Contract surface". status: pending
 
 - id: uac-wallet-role-enum content: |
-  - [ ] [AGENT] P0. UAC: add `WalletRole` enum (`TREASURY` / `TRADING` / `RESERVE`) to `internal/domain/account.py`. Add
+  - [x] [AGENT] P0. UAC: add `WalletRole` enum (`TREASURY` / `TRADING` / `RESERVE`) to `internal/domain/account.py`. Add
         `wallet_role: WalletRole | None = None` field to `TradingAccount`. Additive + default None preserves
         back-compat; no downstream migration required. status: pending
 
 - id: utl-lifecycle-events content: |
-  - [ ] [AGENT] P0. UTL: register 10 events in `STANDARD_LIFECYCLE_EVENTS` — `SUBSCRIPTION_REQUESTED`,
+  - [x] [AGENT] P0. UTL: register 10 events in `STANDARD_LIFECYCLE_EVENTS` — `SUBSCRIPTION_REQUESTED`,
         `SUBSCRIPTION_APPROVED`, `SUBSCRIPTION_REJECTED`, `SUBSCRIPTION_SETTLED`, `REDEMPTION_REQUESTED`,
         `REDEMPTION_APPROVED`, `REDEMPTION_REJECTED`, `REDEMPTION_PROCESSED`, `REDEMPTION_SETTLED`,
         `FUND_ALLOCATION_REBALANCED`. Add event payload schemas that reference UAC fund_administration types. status:
         pending
 
 - id: uac-tests content: |
-  - [ ] [AGENT] P0. UAC tests: roundtrip serialisation + frozen-dataclass invariants for each new type; ensure
+  - [x] [AGENT] P0. UAC tests: roundtrip serialisation + frozen-dataclass invariants for each new type; ensure
         `unified_api_contracts.internal` facade re-exports work.
         `cd unified-api-contracts && bash scripts/quality-gates.sh` must pass. status: pending
 
 ## Phase 1a — PBMS TreasuryMonitor extension (PARALLEL with Phase 1b)
 
 - id: pbms-treasury-config-extend content: |
-  - [ ] [AGENT] P0. PBMS: extend `TreasuryConfig` in `position_balance_monitor_service/core/treasury_monitor.py` with
+  - [x] [AGENT] P0. PBMS: extend `TreasuryConfig` in `position_balance_monitor_service/core/treasury_monitor.py` with
         optional `target_allocations: dict[str, Decimal] | None = None` (strategy_id → target USD), optional
         `share_class: str | None = None`, optional `fund_id: str | None = None`. All additive + backwards compatible.
         status: pending
 
 - id: pbms-treasury-snapshot-delta content: |
-  - [ ] [AGENT] P0. PBMS: add `allocation_deltas: dict[str, Decimal]` to `TreasurySnapshot` — per-strategy delta from
+  - [x] [AGENT] P0. PBMS: add `allocation_deltas: dict[str, Decimal]` to `TreasurySnapshot` — per-strategy delta from
         target (positive = needs top-up from treasury, negative = excess in trading wallet that should sweep back).
         Delta computed when `target_allocations` is set; None when not set. status: pending
 
@@ -217,7 +217,7 @@ Phase 0 (UAC + UTL)
 ## Phase 1b — Execution-service TransferAdapter fund-context (PARALLEL with Phase 1a)
 
 - id: es-transfer-fund-context content: |
-  - [ ] [AGENT] P0. ES: extend `TransferAdapter.execute_internal_transfer` signature with optional
+  - [x] [AGENT] P0. ES: extend `TransferAdapter.execute_internal_transfer` signature with optional
         `fund_context: FundTransferContext | None = None` where
         `FundTransferContext = {fund_id: str, share_class: str, allocation_id: str | None}`. All adapter impls accept +
         pass-through into event payloads. Additive; no behavioural change when fund_context is None. status: pending
@@ -229,20 +229,20 @@ Phase 0 (UAC + UTL)
 ## Phase 2 — fund-administration-service (SEQUENTIAL after Phase 0 + Phase 1a + Phase 1b)
 
 - id: fas-repo-scaffold content: |
-  - [ ] [AGENT] P0. Create NEW repo `fund-administration-service/` with standard service scaffolding per
+  - [x] [AGENT] P0. Create NEW repo `fund-administration-service/` with standard service scaffolding per
         `unified-trading-library` template — pyproject.toml (flat deps), Dockerfile (ARG PROJECT_ID +
         asia-northeast1-docker.pkg.dev base), scripts/quality-gates.sh, ServiceBootstrap wiring (per STEP 5.61 QG rule),
         api/main.py with make_health_router (STEP 5.62), typed config reloaders (STEP 5.34), tests/ + mocks. Add to
         workspace-manifest.json. status: pending
 
 - id: fas-subscription-state-machine content: |
-  - [ ] [AGENT] P0. FAS: implement subscription state machine — `PENDING → APPROVED / REJECTED → SETTLED`. Approval step
+  - [x] [AGENT] P0. FAS: implement subscription state machine — `PENDING → APPROVED / REJECTED → SETTLED`. Approval step
         runs AML/KYC gate (stub for now, real POD integration in follow-up); on approval, resolve NAV strike from
         nearest FundNAVSnapshot and compute units_issued = amount / nav_per_unit. On SETTLED, emit SUBSCRIPTION_SETTLED
         and update share-class unit register. status: pending
 
 - id: fas-redemption-state-machine content: |
-  - [ ] [AGENT] P0. FAS: implement redemption state machine — `PENDING → APPROVED / REJECTED → PROCESSED → SETTLED`.
+  - [x] [AGENT] P0. FAS: implement redemption state machine — `PENDING → APPROVED / REJECTED → PROCESSED → SETTLED`.
         Approval runs liquidity + mandate-limit gates. On APPROVED, schedule grace-period expiry (default 5 days,
         configurable per fund). On grace-period expiry, resolve settlement NAV from FundNAVSnapshot, compute
         cash_amount_due (units \* settlement_nav - redemption_fees via FeeStructure), call
@@ -250,20 +250,20 @@ Phase 0 (UAC + UTL)
         REDEMPTION_PROCESSED then REDEMPTION_SETTLED with tx hash / wire ref. status: pending
 
 - id: fas-capital-routing-orchestrator content: |
-  - [ ] [AGENT] P0. FAS: `CapitalRouter` that reads `TreasurySnapshot.allocation_deltas` from PBMS, decides which
+  - [x] [AGENT] P0. FAS: `CapitalRouter` that reads `TreasurySnapshot.allocation_deltas` from PBMS, decides which
         per-strategy trading wallets to top-up or sweep, calls `TransferAdapter.execute_internal_transfer` for each with
         `FundTransferContext`, tracks rebalance in `FundAllocation` records, emits FUND_ALLOCATION_REBALANCED.
         Idempotent on `allocation_id`. status: pending
 
 - id: fas-rest-api content: |
-  - [ ] [AGENT] P0. FAS: REST API — `POST /subscriptions`, `GET /subscriptions/{id}`,
+  - [x] [AGENT] P0. FAS: REST API — `POST /subscriptions`, `GET /subscriptions/{id}`,
         `POST /subscriptions/{id}/approve`, `POST /redemptions`, `GET /redemptions/{id}`,
         `GET /funds/{fund_id}/allocations`, `POST /funds/{fund_id}/allocations/rebalance`,
         `GET /funds/{fund_id}/nav/history`. OpenAPI spec + contract tests against UAC types. Auth via platform API-key;
         route all writes through audit-log event emission. status: pending
 
 - id: fas-background-tasks content: |
-  - [ ] [AGENT] P1. FAS: background tasks — subscription auto-approval on clean AML (stub for now); grace-period expiry
+  - [x] [AGENT] P1. FAS: background tasks — subscription auto-approval on clean AML (stub for now); grace-period expiry
         handler (polls pending redemptions with settlement due); NAV-strike scheduler (triggers FundNAVSnapshot capture
         at publish cadence). Use scheduler pattern from other services. status: pending
 
@@ -275,13 +275,13 @@ Phase 0 (UAC + UTL)
 ## Phase 3 — Platform UI (PARALLEL with Phase 4 after Phase 2)
 
 - id: ui-routes-scaffold content: |
-  - [ ] [AGENT] P0. UI: scaffold `app/(platform)/services/im/funds/` with routes `/subscriptions` (list + request form),
+  - [x] [AGENT] P0. UI: scaffold `app/(platform)/services/im/funds/` with routes `/subscriptions` (list + request form),
         `/redemptions` (list + request form), `/allocations` (current targets + rebalance button + treasury health),
         `/history` (per-allocator ledger). Match existing `/services/reports/fund-operations/` visual style. status:
         pending
 
 - id: ui-api-client content: |
-  - [ ] [AGENT] P0. UI: lib/api/fund-administration.ts typed client for FAS REST API. Reuse existing auth-header
+  - [x] [AGENT] P0. UI: lib/api/fund-administration.ts typed client for FAS REST API. Reuse existing auth-header
         injection pattern from other platform-API clients. status: pending
 
 - id: ui-subscription-flow content: |
@@ -300,7 +300,7 @@ Phase 0 (UAC + UTL)
         `POST /funds/{fund_id}/allocations/rebalance`. status: pending
 
 - id: ui-mock-mode content: |
-  - [ ] [AGENT] P0. UI: mock mode (VITE_MOCK_API=true) returns deterministic subscription/redemption fixtures so local
+  - [x] [AGENT] P0. UI: mock mode (VITE_MOCK_API=true) returns deterministic subscription/redemption fixtures so local
         dev + CI smoke works without backend. Fixtures cover PENDING / APPROVED / SETTLED subscription, plus pending +
         settled redemption with cash account ledger. status: pending
 
@@ -312,7 +312,7 @@ Phase 0 (UAC + UTL)
 ## Phase 4 — Client-reporting-api allocator views (PARALLEL with Phase 3)
 
 - id: cra-allocator-statements content: |
-  - [ ] [AGENT] P0. client-reporting-api: add routes `GET /allocators/{client_id}/subscriptions`,
+  - [x] [AGENT] P0. client-reporting-api: add routes `GET /allocators/{client_id}/subscriptions`,
         `GET /allocators/{client_id}/redemptions`, `GET /allocators/{client_id}/cash-account` (movements + balance).
         Filter strictly by client_id entitlement. Data sourced from fund-administration-service + existing
         FundNAVSnapshot pipeline. status: pending

@@ -353,7 +353,7 @@ todos:
         — the DART sub-tab list now also surfaces as dashboard tile sub-route chips; persona visibility map is the union
         of DART dropdown + dashboard chip surfaces. **DONE 2026-04-21** (PM `85c43998`). status: done
 - id: p5-visibility-slicing-update content: |
-  - [x] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
+  - [ ] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
         per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. **DONE 2026-04-22**
         — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry. status: done
 
@@ -364,14 +364,14 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p6-persona-tile-count-tests content: |
-  - [x] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-tile-collapse.test.tsx`: For each of 19 personas:
+  - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-tile-collapse.test.tsx`: For each of 19 personas:
         mount `<DashboardPage>` with persona fixture, assert (i) at most 5 visible tiles, (ii) expected tile-ids present
         (from persona-dashboard-shape matrix), (iii) no folded-away key
         (data/research/promote/observe/strategy-catalogue) renders as a top-level tile. **DONE 2026-04-22** — shape-function
         tests (lighter + faster than mounted DashboardPage; DOM render already exercised by dashboard-filter-propagation
         suite). 12 cases covering all 19 personas + folded-away keys + SERVICE_REGISTRY 5-tile invariant. status: done
 - id: p6-subroute-chip-tests content: |
-  - [x] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-subroute-chips.test.tsx`: Assert
+  - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-subroute-chips.test.tsx`: Assert
         `prospect-signals-only` sees DART tile with ONLY "Signal Intake" chip (others hidden/locked);
         `prospect-odum-signals` sees standalone Odum Signals tile; `investor` sees only Investor Relations; `admin` sees
         all 5 tiles with all sub-route chips unlocked. **DONE 2026-04-22** — 8 cases including tempt-logic
