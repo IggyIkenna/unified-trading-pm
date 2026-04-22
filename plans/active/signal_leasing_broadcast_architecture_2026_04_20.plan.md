@@ -434,41 +434,41 @@ stores.
 | `live_return_pct` (null)   | Only set if counterparty has posted P&L attribution for the same window                                                    | from `PnlAttributionStore.rows_for(cp_id)`     |
 | `window_start` / `_end`    | Rolling 30d from now, truncated to UTC midnight                                                                            | N/A                                            |
 
-- [ ] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_ingest.py` with
+- [x] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_ingest.py` with
       `BacktestPaperLiveIngest` class. Constructor takes: `broadcaster: SignalBroadcaster`,
       `maturity_reader: MaturityLedgerReader`, `bq_reader: EmissionBqReader`, `window_days: int = 30`,
       `refresh_interval_seconds: float = 900.0` (default 15 min).
-- [ ] [AGENT] P0. Method `ingest_once() -> None` — for each counterparty in
+- [x] [AGENT] P0. Method `ingest_once() -> None` — for each counterparty in
       `broadcaster._router.all_counterparties()`, for each entitled slot in `cp.allowed_slots`, build a
       `BacktestPaperLiveRow` by joining maturity-ledger reads + BQ live-signal aggregates; call
       `broadcaster.backtest_store.replace_rows(cp.id, rows)`.
-- [ ] [AGENT] P0. Per-counterparty failure isolation — a maturity-ledger or BQ read failure for one counterparty
+- [x] [AGENT] P0. Per-counterparty failure isolation — a maturity-ledger or BQ read failure for one counterparty
       MUST NOT stall ingest for the others. Catch all exceptions per-counterparty, classify through
       `classify_venue_error()`, emit `ADAPTER_FETCH_FAILED` via `log_event`, continue to the next counterparty.
       Mirror the pattern from `emitter.py` Phase 3.
-- [ ] [AGENT] P0. Scheduler — background daemon thread started by `SignalBroadcaster.start()`. Calls `ingest_once()`
+- [x] [AGENT] P0. Scheduler — background daemon thread started by `SignalBroadcaster.start()`. Calls `ingest_once()`
       every `config.observability_refresh_interval_seconds` (new typed field on `SignalBroadcastConfig`). Idempotent
       start/stop matching the existing credential reloader pattern. Shutdown on `SignalBroadcaster.stop()` via
       `threading.Event.set()`.
-- [ ] [AGENT] P0. Abstractions `MaturityLedgerReader` + `EmissionBqReader` — small Protocol classes over the strategy-service
+- [x] [AGENT] P0. Abstractions `MaturityLedgerReader` + `EmissionBqReader` — small Protocol classes over the strategy-service
       `availability.*` module + a BQ client. Injectable so tests can stub with in-memory fakes.
-- [ ] [AGENT] P0. Typed config reloader extension — add `observability_refresh_interval_seconds: float = 900.0` +
+- [x] [AGENT] P0. Typed config reloader extension — add `observability_refresh_interval_seconds: float = 900.0` +
       `observability_window_days: int = 30` to `SignalBroadcastConfig`. No `object` type, no `getattr`.
-- [ ] [AGENT] P0. Unit tests — 90%+ coverage on `BacktestPaperLiveIngest` with fake readers. Cover: happy path,
+- [x] [AGENT] P0. Unit tests — 90%+ coverage on `BacktestPaperLiveIngest` with fake readers. Cover: happy path,
       one-counterparty-fails-others-continue, slot entitlement filter, null paper columns for BACKTESTED-only slots,
       null live_return_pct when no P&L attribution exists.
-- [ ] [AGENT] P0. Integration test — BQ emulator (`BIGQUERY_EMULATOR_HOST=localhost:9050`) seeded with synthetic
+- [x] [AGENT] P0. Integration test — BQ emulator (`BIGQUERY_EMULATOR_HOST=localhost:9050`) seeded with synthetic
       `STRATEGY_SIGNAL_EMITTED_EXTERNAL` events, in-memory maturity ledger fixture, confirm
       `BacktestPaperLiveStore.rows_for(cp_id)` returns rows whose shape matches what
       `GET /signal_broadcast/backtest-paper-live` exposes and what the UI hook consumes.
-- [ ] [AGENT] P0. Emit `OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` /
+- [x] [AGENT] P0. Emit `OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` /
       `OBSERVABILITY_INGEST_FAILED` lifecycle events via `log_event` so ops can see ingest health in the event
       stream. Freshness exposed via `broadcaster.data_freshness()` — add `observability_last_ingest_at` alongside
       the existing `last_emission_at`.
-- [ ] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on signal_broadcast scope
+- [x] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on signal_broadcast scope
       (pre-existing unrelated drift outside this scope allowed). Ruff + basedpyright clean.
-- [ ] [AGENT] P0. Commit + push with `--no-verify` per session practice. Plan checkbox flip.
-- [ ] [AGENT] P0. **Phase 11 success gate**: scheduler running end-to-end on a local stack; UI
+- [x] [AGENT] P0. Commit + push with `--no-verify` per session practice. Plan checkbox flip.
+- [x] [AGENT] P0. **Phase 11 success gate**: scheduler running end-to-end on a local stack; UI
       `GET /signal_broadcast/backtest-paper-live` returns non-empty rows after one refresh cycle; failure of one
       counterparty's BQ read does not block the others; all tests green.
 
