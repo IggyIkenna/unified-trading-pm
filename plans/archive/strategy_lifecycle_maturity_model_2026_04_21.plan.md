@@ -3,8 +3,8 @@
 name: strategy-lifecycle-maturity-model-2026-04-21 overview: UAC data-model foundation for strategy maturity phasing,
 venue-set-scaling variants, share-class 5th dimension, and the `odum-paper` client-zero representative-paper-account.
 SSOT for Plan B (Strategy Catalogue 3-tier UI), Plan C (PerformanceOverlay), and Plan D (DART exclusive +
-research-fork). Nothing downstream can ship until this lands. type: mixed epic: epic-code-completion status: active
-locked_by: live-defi-rollout locked_since: 2026-04-21
+research-fork). Nothing downstream can ship until this lands. type: mixed epic: epic-code-completion status: archived
+archived_on: 2026-04-22
 
 completion_gates: code: C5 deployment: D0 business: none
 
