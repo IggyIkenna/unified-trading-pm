@@ -51,17 +51,31 @@ examples for testing any DeFi strategy
 - features_sports_upstream_coverage_gaps_2026_04_21.plan.md — Third follow-up: close raw-layer coverage gaps that
   prevent the fixture-features pipeline from populating. Three tracks: (A) Transfermarkt `player_values` 2020-2026
   backfill — operator fires `launch-transfermarkt-backfill-vm.sh`; (B) SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS`
-  2020-2026 backfill — new `launch-sfi-backfill-vm.sh` shipped + codex §2.4 rewrite ("SFI has no standings
-  endpoint"); (C) Weather venue-id SCREAMING_SNAKE fallback shipped (115/170 fixtures now weather-populated vs
-  0/170 before). Tracks B+C code shipped 2026-04-21 (FSS `d21e49f` + deployment-service `885131e` + PM `77e7512c`);
-  VMs fired 2026-04-21 23:18Z.
+  2020-2026 backfill — new `launch-sfi-backfill-vm.sh` shipped + codex §2.4 rewrite ("SFI has no standings endpoint");
+  (C) Weather venue-id SCREAMING_SNAKE fallback shipped (115/170 fixtures now weather-populated vs 0/170 before). Tracks
+  B+C code shipped 2026-04-21 (FSS `d21e49f` + deployment-service `885131e` + PM `77e7512c`); VMs fired 2026-04-21
+  23:18Z.
 - transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md — Fourth follow-up: (1) cache
-  Transfermarkt team mappings to `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet`
-  and skip API calls on non-trigger dates within staleness window (cuts ~80% of per-league-iteration wall-clock on
-  repeated runs); (2) UAC `LeagueDefinition.expected_team_count_per_season` + `ADAPTER_FETCH_ANOMALY` emit when
-  `|got - expected| / expected > 10%` catches silent partial writes (e.g. API returns 17 teams for EPL when we
-  expect 20); (3) same shape for SFI leagues with 24h staleness. 3 tracks, 4 repos (UAC + instruments-service +
-  features-sports-service + PM). Depends on upstream_coverage_gaps plan shipping + backfills completing.
+  Transfermarkt team mappings to `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` and
+  skip API calls on non-trigger dates within staleness window (cuts ~80% of per-league-iteration wall-clock on repeated
+  runs); (2) UAC `LeagueDefinition.expected_team_count_per_season` + `ADAPTER_FETCH_ANOMALY` emit when
+  `|got - expected| / expected > 10%` catches silent partial writes (e.g. API returns 17 teams for EPL when we expect
+  20); (3) same shape for SFI leagues with 24h staleness. 3 tracks, 4 repos (UAC + instruments-service +
+  features-sports-service + PM). **Phase 1+2 already partially shipped by semver-rollout-bot commit `9bf23d8` in
+  instruments-service (cache helpers + drift_emit + 24 tests); my season-derivation fix `cdded95` is complementary.**
+- sfi_chunk_parallel_backfill_2026_04_22.plan.md — Cut SFI backfill wall-clock from ~68 days (single-VM observed
+  2026-04-22 @ ~1.4 dates/hour) to ~3-5 days via chunk-safe multi-VM pattern. Clones `rescan_sports_fixtures_canonical.py`
+  3-mode shape (single / worker / coordinator). Phase 0 measures the real SFI per-minute API ceiling; Phase 2 has
+  two routes — Option 1 (GCS-lease rate-coordinator shared across workers, optimal) or Option 2 (independent chunks,
+  3x slower but simpler). Phase 3 extends `launch-sfi-backfill-vm.sh` with `--chunks N`. 3 repos
+  (instruments-service + deployment-service + PM).
+- instruments_service_write_gate_validation_2026_04_22.plan.md — Close the architectural gap where raw-data sinks
+  in instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
+  `InstrumentsWriteGate.validate_and_write(df, partition, batch_date, mode='strict'|'warn')` asserting
+  `value.date() <= batch_date` for every as-of column candidate. Warn-mode rollout measures violation volume;
+  flip to strict once adapters clean. Motivated by the 2026-04-22 TM-VM incident (bugs fixed in instruments-service
+  `cdded95`) which existed undetected on HEAD because zero UTL validators fire at raw-data write time. 3 repos
+  (UTL + instruments-service + PM).
 
 ### Data & Testing
 
