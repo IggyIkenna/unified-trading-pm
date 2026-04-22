@@ -163,3 +163,78 @@ Phase 1+2 (CeFi/Tardis)    Phase 3 (TradFi)
 - BINANCE-FUTURES perpetual has trades for full 2019→now + liquidations for full range
 - CME future has trades + ohlcv_1m + tbbo for 2021→now
 - CBOE VIX has ohlcv_15m gap filled to present
+
+## Phase: Fix-stack Smoke (2026-04-22)
+
+### Why
+
+Prior 95-VM launch (2026-04-19) saw 55 heavy VMs hit `rc=137` SIGKILL during
+parquet encoding — OOM on `e2-standard-4` (16 GB) and recurring on `e2-highmem-4`
+(32 GB) because per-date `writer_manifest.write()` lost in-memory manifest rows
+on SIGKILL. Three fixes landed since (on origin/live-defi-rollout):
+
+- **Fix #1** MTDS `ab91a2c` — `ManifestWriter(..., batch_size=1)` in
+  `engine/orchestrator.py:1243` so every shard `.add()` auto-flushes to the UTL
+  module-level buffer. End-of-date `.flush()` backstop.
+- **Fix #3** MTDS `ab91a2c` — pyarrow streaming decompress in
+  `_decompress_and_parse_csv_legacy` (gzip.GzipFile + `pacsv.open_csv` +
+  `split_blocks=True, self_destruct=True`). Benchmarked 1050→498 MB peak RSS on
+  BYBIT BTCUSDT 2024-01-02 (2.1× reduction).
+- **Fix #5** UTL `881d9ec0` + MTDS `b888eff` — ResourceProfiler 75% RSS warning
+  fires `flush_all_live_writers()` via `_LIVE_WRITERS: set[weakref.ref]` +
+  `MANIFEST_EMERGENCY_FLUSH` event before the 85% CRITICAL tripwire.
+
+Smoke must validate the full stack on a real VM at the target machine type
+(`e2-standard-2`, 8 GB) before relaunching the 95-VM fleet.
+
+### Smoke VM
+
+```
+name            cefi-smoke-fixstack-20260422
+zone            asia-northeast1-c
+machine-type    e2-standard-2  (8 GB RAM — the fleet target)
+venue           BINANCE-FUTURES
+date range      2024-01-02 → 2024-01-02  (single day)
+instruments     BTCUSDT;ETHUSDT  (2 symbols, vs 9 in full fleet)
+data_types      trades;book_snapshot_5  (heavy profile)
+VM_TASK         cefi-backfill
+```
+
+### Execution
+
+- [x] [SCRIPT] P0. Kill zombies from prior session (5 VMs, 2026-04-20 exited, still RUNNING)
+- [x] [SCRIPT] P0. Verify Fix #1/#3/#5 commits on origin/live-defi-rollout + tarballs ≤24h old
+- [x] [SCRIPT] P0. Launch `cefi-smoke-fixstack-20260422` VM at e2-standard-2
+- [ ] [AGENT] P0. Tail `gs://deployment-scripts-central-element-323112/vm-logs/cefi-smoke-fixstack-20260422/run.log` until `rc=0` or `rc=137`
+- [ ] [AGENT] P0. Capture ResourceProfiler peak-RSS sample from log (target ≤1 GB on Linux glibc)
+- [ ] [AGENT] P0. Inspect `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet` for 2024-01-02 BINANCE-FUTURES rows with `capture_status` populated
+- [ ] [AGENT] P0. Record smoke result summary in this plan
+
+### Success Criteria (Smoke)
+
+1. VM exits `rc=0` (not SIGKILL, not CMD_PID stall from watchdog)
+2. Log contains ≥2 `"Manifest updated"` lines (one per symbol-day — per-shard flush firing, not just per-date)
+3. Log contains per-shard counters `rows_in>0 rows_out>0 events_emitted>0`
+4. Manifest parquet has 2024-01-02 rows with `venue=BINANCE-FUTURES` + `capture_status IN (captured, empty_confirmed, attempted_failed)` (at least one `captured`)
+5. Peak RSS ≤ 1 GB on Linux glibc (macOS benchmark was 498 MB)
+6. If 75% warning fires: `MANIFEST_EMERGENCY_FLUSH` event emits with `flushed_rows_per_bucket` populated
+
+### Gate
+
+**Only proceed to the 95-VM full relaunch (next section) after ALL 6 smoke criteria pass.** If any fail, fix before scaling.
+
+## Phase: Fleet Relaunch at e2-standard-2 (pending smoke)
+
+### Why
+
+Post-smoke, `launch-cefi-sharded-backfill.sh:160` heavy-profile machine type must be downgraded from `e2-highmem-4` → `e2-standard-2`. Target: CeFi MTDS coverage 33.54% → 90%+ (bounded by Tardis sub-license coverage, not memory). TradFi similar.
+
+### Execution
+
+- [ ] [SCRIPT] P0. Edit `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh:160` — heavy profile e2-highmem-4 → e2-standard-2
+- [ ] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI` (tarball refresh)
+- [ ] [SCRIPT] P0. `DRY_RUN=1 bash scripts/vm/launch-cefi-sharded-backfill.sh` — confirm metadata
+- [ ] [SCRIPT] P0. Full launch (~95 VMs)
+- [ ] [AGENT] P0. Monitor via `gcloud compute instances list`; reap zombies with `xargs -P 20` parallel delete pattern
+- [ ] [AGENT] P0. Post-drain: `/api/data-status/turbo?service=market-tick-data-service&force=true` → CEFI completion_pct should climb 33.54% → 90%+
+- [ ] [AGENT] P0. Record final capture_status distribution + rc count (rc=0 vs rc=137 vs other)
