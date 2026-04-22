@@ -123,24 +123,32 @@ a friendly "Firebase not configured" message instead of crashing.
 `lib/onboarding/doc-store.ts` exposes a `DocStore` adapter with two backends picked at request-time by
 `resolveDocStore()`:
 
-| Backend          | Selected when                                         | Behaviour                                          |
-| ---------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| `localStore`     | `CLOUD_MOCK_MODE=true` OR `ENVIRONMENT ∈ {dev, test}` | Writes / reads `.local-dev-cache/onboarding-docs/` |
-| `cloudStubStore` | Otherwise (staging / prod)                            | Throws a fail-loud error pointing at this doc      |
+| Backend             | Selected when                                         | Behaviour                                                                                                |
+| ------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `localStore`        | `CLOUD_MOCK_MODE=true` OR `ENVIRONMENT ∈ {dev, test}` | Writes / reads `.local-dev-cache/onboarding-docs/`                                                       |
+| `cloudStorageStore` | Otherwise (staging / prod)                            | Uses `@google-cloud/storage` against bucket `odum-${env}-onboarding-docs` with ADC credentials (§5a) |
 
 Canonical `gs://odum-${env}-onboarding-docs/{org}/{app}/{doc}.ext` URIs are always emitted on upload regardless of
 backend, so downstream readers (admin UI, analytics) see a stable path.
 
-### §5a Enabling the cloud path
+### §5a Cloud backend — operator setup
 
-1. Install the Google Cloud Storage client: `pnpm add @google-cloud/storage` (or `firebase-admin` if we want to reuse
-   Firebase Auth for server-side admin gates).
-2. Mint the bucket in the target GCP project: `odum-staging-onboarding-docs`, `odum-prod-onboarding-docs`. Rotate keys
-   quarterly; grant `roles/storage.objectAdmin` to the Cloud Run service account running the UI.
-3. Replace the body of `cloudStubStore` in `lib/onboarding/doc-store.ts` with GCS-backed `upload` / `download` / `list`
-   / `delete`. The adapter interface (`DocStore`) is stable — only the stub body changes.
-4. Verify the cloud path with an integration test that uses `CLOUD_MOCK_MODE=false` + ADC credentials.
-5. Delete the `NOT_IMPLEMENTED` constant + stub. The `resolveDocStore()` dispatcher picks automatically.
+The cloud backend ships with `@google-cloud/storage` wired. Before a non-mock environment can serve `/api/onboarding/*`
+without errors, the operator must provision:
+
+1. **Bucket exists:** `gsutil mb -p ${GCP_PROJECT} -l europe-west2 gs://odum-${env}-onboarding-docs` (one per env —
+   `staging`, `production`). Use uniform bucket-level access; object versioning optional but recommended for regulatory
+   docs.
+2. **IAM:** grant `roles/storage.objectAdmin` on the bucket to the Cloud Run service account running
+   `unified-trading-system-ui`. Avoid project-level grants — keep the blast radius scoped to the single bucket.
+3. **Credentials:** the SDK uses ADC. On Cloud Run the attached service account works out of the box. For local admin
+   runs, `gcloud auth application-default login` is sufficient. Never ship a service-account JSON file into the image.
+4. **Smoke test:** from a staging deployment, POST a small PDF to `/api/onboarding/upload` with test org/app/doc_type
+   → GET `/api/onboarding/download` → delete via the admin UI's typed-confirm dialog. Watch Cloud Logging for the
+   `ADMIN_DOC_DELETED` structured event (see §8).
+
+The `DocStore` adapter interface is stable — swap backends by setting `CLOUD_MOCK_MODE=true` (falls back to local disk)
+without touching call sites.
 
 ### §5b REST surface
 
@@ -166,12 +174,27 @@ Documents panel). They are in the orphan-audit whitelist under the `API-HANDLER`
 
 ---
 
-## §7 — Follow-ups
+## §8 — Admin audit events
 
-- **Cloud storage live**: install `@google-cloud/storage` and replace `cloudStubStore` (see §5a).
+`lib/admin/audit.ts` exposes `recordAdminEvent()` which always emits a structured `console.info` JSON line (picked up
+by Cloud Logging as a log entry) AND attempts a Firestore `/admin_events` write when Firebase is configured. Firestore
+failures are swallowed — a logging failure never fails a business op.
+
+Current event types (extend inline until corpus >10, then promote to a UAC enum):
+
+| Type                | Fires from                    | `target` shape                           | `details` shape                                |
+| ------------------- | ----------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| `ADMIN_DOC_DELETED` | `/api/onboarding/docs/delete` | `{ org_id, application_id, doc_type }`  | `{ deleted_path, backend: "local" \| "cloud" }` |
+
+Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never blocks on logging.
+
+---
+
+## §9 — Follow-ups
+
 - **Admin playback pivot from email → org_id**: when Firestore `/questionnaires` grows large we may want a server-side
   index rather than the current two-query join. Defer until list exceeds ~500 docs.
-- **Delete audit log**: currently `/docs/delete` returns `{ ok, deleted_path }` but does not write an audit event. Hook
-  `log_event("ADMIN_DOC_DELETED", {...})` once the UTL client-side bridge lands.
 - **Questionnaire versioning**: if the schema grows past 15 axes, promote to `QuestionnaireResponseV2` with a `version`
   tag and migrate Firestore docs.
+- **Port orphan-audit to deployment-ui**: deferred — deployment-ui is Vite/React (not Next.js), so scanner needs a
+  framework adapter to discover React Router routes. Revisit after unified-trading-system-ui baseline ≥ 2 weeks green.
