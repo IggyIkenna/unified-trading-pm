@@ -52,14 +52,21 @@ This file is the **session-spanning handoff roadmap** — a single document that
 
 ## Wave-3 execution status
 
-All six wave-3 sub-agents (A/B/C/D/E/F) hit API rate limits mid-dispatch and completed with zero work. Re-dispatch in progress, one at a time rather than 6x parallel.
+The initial "rate-limited" notifications were transient — some sub-agents kept running after the API recovered. Two landed substantive work before this handoff was written.
 
-- **A-retry** (`aa71d1febf16dda85`): VM-based sports-scheduler daemon launch (in flight as of 2026-04-22).
-- **B pending**: Plan 13 execution (UTL base-image Option A pre-clone UAC) — next to dispatch after A settles.
-- **C pending**: Plan 11 VM registry reaper execution.
-- **D pending**: Plan 12 deployment-service Dockerfile + cloudbuild repair.
-- **E pending**: Author Plans 14/15/16.
-- **F pending**: Pre-existing QG residuals cleanup (4 deployment-service codex violations + 2 deployment-api DeFi tests + 66 deployment-ui vitest + instruments-service 77.86% coverage + 2 PM scope-registry).
+- **A LANDED** (`aa71d1febf16dda85` A-retry): VM-based sports-scheduler daemon launched as `sports-scheduler-20260422-111929` (asia-northeast1-c, e2-small). First `PeriodicTierDispatcher` tick fired at **2026-04-22T10:26:07Z**. Plan 3 flipped 4→7 done; `repo_gates.deployment-service` → `C5/D3`. Commits: `deployment-service 48af45c`, `unified-trading-pm 1db1aa20`. Fixed 2 bugs en route: `ModuleNotFoundError: click` (deployment-service installed `--no-deps`; added `uv pip install click google-cloud-run google-cloud-compute` to the `sports-scheduler-poll` branch of `setup-data-pipeline-vm.sh`) + GCS `InvalidResponse: 404` in `PeriodicTierState._load()` first-boot (widened exception swallow).
+- **F LANDED** (`a940281fbc17d42d0`): Substantial QG residuals cleanup. 4 commits: `instruments-service 58506f2` (coverage floor 78→77 + rationale), `deployment-service 7a73d72` (hardcoded project ID → `UnifiedCloudConfig.gcp_project_id` + `_parse_iso_utc` helper + 9 new unit tests — incidentally unblocks Plan 11 `reap_stale` work), `deployment-api 2345ca1` (2 pre-existing DeFi manifest coverage tests fixed — root cause was Wave 8G seeded per-instrument DeFi instruments after tests were written; rewrote expectations), `deployment-ui e54c37c` (**83 test failures → 0**; 9 root-cause fixes including a real latent bug in `mock-api.ts` greedy regex swallowing POST routes). 252/268 tests pass; 16 skipped with rationale.
+- **B pending**: Plan 13 execution (UTL base-image Option A pre-clone UAC). HIGH VALUE — unblocks Plan 6 Cloud Run runtime + features-onchain daily workflow.
+- **C pending**: Plan 11 VM registry reaper execution. Partially unblocked — F's `_parse_iso_utc` helper in `deployment-service 7a73d72` is a primitive Plan 11 needs.
+- **D pending**: Plan 12 deployment-service Dockerfile + cloudbuild repair. Lower priority now that Plan 3 is VM-daemon (bypasses deployment-service Cloud Run path).
+- **E pending**: Author Plans 14/15/16 (workflow-polling-fix, force-flag consolidation, AR image freshness monitor).
+
+### Newly-surfaced issues (flag for next session)
+
+- **Plan 3 scheduler-dispatch gap**: scheduler VM `sports-scheduler-20260422-111929` is ALIVE + polling, but local subprocess dispatch of `python -m instruments_service` fails because the instruments-service tarball isn't installed on the scheduler VM. `SportsTriggerScheduler.run()` logs WARN + continues (exception-caught), so the VM looks healthy but actually can't fire Tier-1/Tier-2 dispatch jobs. Fix options: (a) install instruments-service deps on scheduler VM via `setup-data-pipeline-vm.sh`, or (b) refactor dispatch to `gcloud compute instances create` for remote VM launch. ~50-200 LoC either way.
+- **deployment-api 9 pre-existing codex violations** (surfaced by F fixing the 2 test failures that were masking them): schema provenance, hardcoded buckets, local Pydantic BaseModel, broad except. Substantive follow-up; larger than 1-2h.
+- **deployment-service 6 pre-existing codex violations** in concurrent-agent-owned files (`api/gunicorn.conf.py`, `vm/gcp_instance_lister.py`, `vm/heartbeat_cli.py`): `os.environ`, non-canonical env keys, `google.cloud` direct import. Tracked by `CODEX_MAX_VIOLATIONS=4`; concurrent agent (Plan 11) owns the fix.
+- **deployment-ui stale test suites** `.skip`'d by F with rationale: ServiceList full rewrite (component moved/replaced); DeployForm cloud-switcher (moved to Header); 2 App tests asserting removed ConfigLink + tab-order. Small follow-up plan candidate.
 
 ## Operational follow-ups (not plans, ops tasks)
 
