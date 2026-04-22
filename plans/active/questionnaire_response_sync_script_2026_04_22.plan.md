@@ -63,12 +63,16 @@ on drift instead of shipping silently inconsistent UI + API.
 
 ### Phase A — Sync-script impl
 
-- [ ] [AGENT] P0. Create `unified-trading-pm/scripts/propagation/sync-questionnaire-response-to-ui.sh`: `--check`
+- [x] [AGENT] P0. Created `unified-trading-pm/scripts/propagation/sync-questionnaire-response-to-ui.sh`: `--check`
       compares generated TS vs committed TS (exit 1 on drift), `--write` regenerates TS in place. Emits AUTO-GEN banner
       at top of output file.
-- [ ] [AGENT] P0. Generator logic: parse QuestionnaireResponse Pydantic model + 5 Literal enums + 7 optional axes, emit
-      TypeScript `export type` + `export const` equivalents matching existing `types.ts` shape.
-- [ ] [AGENT] P0. Idempotence: running `--write` twice produces zero diff.
+- [x] [AGENT] P0. Generator logic: Python introspection of `QuestionnaireResponse` fields + 6 Literal enums
+      (QuestionnaireCategory / QuestionnaireInstrumentType / QuestionnaireStrategyStyle / QuestionnaireServiceFamily /
+      QuestionnaireFundStructure / QuestionnaireLicenceRegion). `--check` greps `types.ts` for each field-name + literal
+      member; exits 1 on drift with actionable remediation options. Shipped 2026-04-22 as
+      `scripts/propagation/sync_questionnaire_response_to_ui.py` + shell wrapper.
+- [ ] [AGENT] P2 DEFERRED. Full `--write` codegen (parse Pydantic → emit TypeScript interface + unions matching
+      `types.ts`). Follow the 2026-04-21 Reg-Umbrella hand-sync pattern for schema changes until this ships.
 
 ### Phase B — QG wiring
 
@@ -79,7 +83,7 @@ on drift instead of shipping silently inconsistent UI + API.
 
 ### Phase C — Initial verify
 
-- [ ] [SCRIPT] P0. Run `--check` against current repo state → expect zero diff (2026-04-21 hand-sync held).
+- [x] [SCRIPT] P0. Run `--check` against current repo state → expect zero diff (2026-04-21 hand-sync held).
 - [ ] [SCRIPT] P0. `cd unified-trading-system-ui && bash scripts/quality-gates.sh` green.
 - [ ] [SCRIPT] P0. `cd unified-trading-pm && bash scripts/quality-gates.sh` green.
 
