@@ -22,6 +22,38 @@ for workspace rules.
 - Branch on every sub-repo: `live-defi-rollout` (already checked out; NEVER switch)
 - Parent plan SSOT: `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` § Phase 11 (the full scope is pre-written there — do NOT re-debate, just execute)
 
+## State update 2026-04-22 (prior agent killed mid-investigation — re-dispatch)
+
+A first attempt at Phase 11 was dispatched 2026-04-22 and killed before writing any strategy-service code. The
+only deliverable that landed from that attempt is the UTL events commit. Concretely:
+
+**Partially done — skip this step:**
+- **UTL** `unified-trading-library@2676ce2d` — `OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` /
+  `OBSERVABILITY_INGEST_FAILED` already registered in `STANDARD_LIFECYCLE_EVENTS`. Do NOT add them again. Just
+  import via `from unified_trading_library.events import log_event` and use the event name strings.
+
+**Still to do — your scope:**
+- `strategy_service/signal_broadcast/observability_ingest.py` — file does not exist yet
+- `SignalBroadcastConfig.observability_refresh_interval_seconds` / `observability_window_days` — not added
+- `config_reloaders.py` — no ingest wiring
+- `SignalBroadcaster` scheduler lifecycle hooks — not added
+- `SignalBroadcaster.data_freshness()` — doesn't yet include `observability_last_ingest_at`
+- Unit tests — none written
+- Integration test (BQ emulator) — not written
+- Plan checkboxes for Phase 11 — all still `- [ ]` (12 items in the `- [ ] [AGENT]` count)
+- Memory entry — not written
+
+**Concurrent cross-repo drift to read before you build:**
+- `strategy-service@4fe8e02` ("Counterparty Phase 3 migration") finalised the V2 Counterparty shape. Re-read
+  `strategy_service/signal_broadcast/router.py` + `broadcaster.py` + `emitter.py` before coding — the per-counterparty
+  `schema_depth` + `rate_limit` now live on `CounterpartyEntitlementProfile` (accessed via
+  `router.profile_for(cp_id)` / `router.schema_depth_for(cp_id)`), NOT on `Counterparty`. Current V2 Counterparty
+  fields are exactly: `id`, `name`, `status`, `endpoint`, `allowed_slots`, `hmac_secret_ref`, `rate_limit_ref`,
+  `created_at`, `updated_at`. Use `is_counterparty_active(cp)` from `router.py` (already a thin `cp.status ==
+  CounterpartyStatus.ACTIVE` check post-migration).
+
+Rest of this document stands unchanged.
+
 ## What's already shipped (DO NOT rebuild)
 
 - **UI** (`unified-trading-system-ui@51382fa`): `/services/signals/dashboard` calls 4 REST-pull hooks; `BacktestComparisonPanel` renders 3-way (backtest / paper / live). Mock/live branch on `NEXT_PUBLIC_MOCK_API`. Out of your scope.
@@ -105,14 +137,20 @@ Update `config_reloaders.py` to construct `BacktestPaperLiveIngest` + call `.sta
 
 Extend `SignalBroadcaster.data_freshness()` (already exists in `broadcaster.py`) to include `observability_last_ingest_at` alongside `last_emission_at`. Add an `observability_last_ingest_at: datetime | None` property on the ingest class; broadcaster reads it through a constructor-injected reference.
 
-### 4. Lifecycle events
+### 4. Lifecycle events — ALREADY SHIPPED IN UTL `2676ce2d`, DO NOT RE-LAND
 
-Emit 3 events via `log_event` from `unified_trading_library.events`:
-- `OBSERVABILITY_INGEST_STARTED` — at scheduler thread boot
-- `OBSERVABILITY_INGEST_COMPLETED` — details = `{counterparties_processed, rows_written, duration_ms}`
-- `OBSERVABILITY_INGEST_FAILED` — details = `{error_code, counterparty_id | null, duration_ms}`
+The 3 events (`OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` / `OBSERVABILITY_INGEST_FAILED`)
+are already in UTL `STANDARD_LIFECYCLE_EVENTS`. In your ingest module, just call:
 
-Register the 3 new event-type strings in `unified_trading_library` `STANDARD_LIFECYCLE_EVENTS` (cross-repo edit — small PR in UTL). Mirror the pattern used by `STRATEGY_SIGNAL_EMITTED_EXTERNAL` from Phase 2 (see `unified_trading_library/unified_trading_library/events/event_types.py` ~line 649). Both UTL + strategy-service commits go on `live-defi-rollout` with `--no-verify`.
+```python
+from unified_trading_library.events import log_event
+
+log_event("OBSERVABILITY_INGEST_STARTED", details={...})
+log_event("OBSERVABILITY_INGEST_COMPLETED", details={"counterparties_processed": N, "rows_written": M, "duration_ms": T})
+log_event("OBSERVABILITY_INGEST_FAILED", details={"error_code": "...", "counterparty_id": "..." | None, "duration_ms": T})
+```
+
+Do NOT touch UTL.
 
 ### 5. Tests
 
@@ -152,13 +190,7 @@ git commit --no-verify -m "feat(signal_broadcast): observability ingest populato
 git push origin live-defi-rollout
 ```
 
-UTL commit (separate, first):
-```
-cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-library
-git add unified_trading_library/events/...
-git commit --no-verify -m "feat: OBSERVABILITY_INGEST_STARTED/COMPLETED/FAILED events"
-git push origin live-defi-rollout
-```
+(No UTL commit this round — the events already landed in `2676ce2d`.)
 
 ### 7. Plan checkbox flip
 
