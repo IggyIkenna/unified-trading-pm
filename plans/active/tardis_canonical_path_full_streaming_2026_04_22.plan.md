@@ -104,20 +104,22 @@ Two full copies on GCS; two sets of in-memory parquet buffers.
 ### Phase 3 — QG + tarball refresh (SEQUENTIAL after Phase 2)
 
 - [x] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
-- [ ] [SCRIPT] P0. Commit + push to `live-defi-rollout` (git commit --no-verify + push; concurrent-agent dirt rules per
-      CLAUDE.md)
+- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
+      (tarball refreshed at 2026-04-23T13:47:33Z, 24s after P2.B commit 1364211)
+- [x] [SCRIPT] P0. Commit + push to `live-defi-rollout` (commit 1364211 pushed; PM plan update committed below)
 
 ### Phase 4 — Re-smoke on e2-standard-2 (SEQUENTIAL after Phase 3)
 
-- [ ] [SCRIPT] P0. Delete any orphan parquets from 2026-04-18 smoke v2 if user wants a clean slate (optional)
-- [ ] [SCRIPT] P0. Relaunch smoke VM `cefi-smoke-p2b-20260422` on e2-standard-2, BINANCE-FUTURES 2026-04-18,
-      BTCUSDT+ETHUSDT, trades+book_snapshot_5
-- [ ] [AGENT] P0. Monitor log for: rc=0, `Manifest updated` lines per shard, `capture_status` rows in manifest parquet,
-      peak RSS sample
-- [ ] [AGENT] P0. Verify canonical parquets exist on GCS; manifest parquet has new 2026-04-18 rows with `capture_status`
-      populated
-- [ ] [AGENT] P0. If smoke passes all 6 criteria from cefi_tradfi plan → unblock P0.B fleet relaunch
+- [x] [SCRIPT] P0. Delete any orphan parquets from 2026-04-18 smoke v2 if user wants a clean slate (optional — skipped,
+      BINANCE-FUTURES data from 2026-04-22 smoke retained as baseline)
+- [x] [SCRIPT] P0. Relaunch smoke VM `cefi-smoke-p2b-20260423-153352` on e2-standard-2, BINANCE-FUTURES 2026-04-18
+      (pre-captured), BINANCE-SPOT+BYBIT 2026-04-18, BTCUSDT+ETHUSDT, trades+book_snapshot_5
+- [x] [AGENT] P0. Monitor log: rc=0 ✅, `Manifest updated` ✅ (58 new entries, 251451 total), `capture_status` populated
+      ✅, no OOM (no 75% RSS warning, no rc=137) ✅, P2.B dual-write eliminated (0.0 MB total in PartitionedTickWriter)
+      ✅
+- [x] [AGENT] P0. Verify canonical parquets exist on GCS: BINANCE-SPOT 4.9M rows + BYBIT 5.1M rows + BINANCE-FUTURES
+      8.6M rows (from 2026-04-22) all on GCS ✅; manifest has 2026-04-18 rows with `capture_status` populated ✅
+- [x] [AGENT] P0. Smoke passes all criteria → P0.B fleet relaunch unblocked ✅
 
 ## Success criteria
 
