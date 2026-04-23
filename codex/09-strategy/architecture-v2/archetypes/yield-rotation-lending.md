@@ -78,6 +78,10 @@ execution_policy_ref: defi-lending-default-v4
 - Typical Sharpe: 2.0-4.0 (excellent given it's effectively a higher-yielding cash strategy)
 - Kill switches: protocol incident (exploit, pause, oracle failure), asset depeg > threshold, chain congestion
   preventing withdrawal
+- Chainlink oracle divergence tiering (applied per supplied asset):
+  - **1-2% warn** — log + alert, no position change
+  - **2-3% reduce** — halve allocation on the affected chain
+  - **>3% exit** — withdraw fully from the affected chain pending oracle recovery
 
 ## Reaction to equity change
 

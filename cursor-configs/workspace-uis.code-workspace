@@ -1,29 +1,37 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": "unified-trading-pm/codex",
+      "name": "Codex"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-api",
+      "name": "🔌 API",
     },
     {
-      "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI"
+      "path": "e2e-testing",
+      "name": "E2E Testing"
     },
     {
-      "path": "../../deployment-ui",
-      "name": "\ud83d\udee0\ufe0f Deployment UI"
-    }
+      "path": "unified-internal-contracts",
+      "name": "🤝 Internal Contracts",
+    },
+    {
+      "path": "deployment-ui",
+      "name": "Deployment UI"
+    },
+    {
+      "path": ".",
+      "name": "📁 Workspace Root"
+    },
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",

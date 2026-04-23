@@ -1,51 +1,47 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../unified-api-contracts"
-    },
-    {},
-    {},
-    {},
-    {
-      "path": "../../unified-trading-library"
-    },
-    {},
-    {
-      "path": "../../unified-market-interface"
+      "path": "unified-api-contracts"
     },
     {
-      "path": "../../unified-ml-interface"
+      "path": "unified-trading-library"
     },
     {
-      "path": "../../matching-engine-library"
+      "path": "unified-market-interface"
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "unified-ml-interface"
     },
     {
-      "path": "../../unified-feature-calculator-library"
+      "path": "matching-engine-library"
     },
     {
-      "path": "../../unified-features-interface"
+      "path": "execution-algo-library"
     },
     {
-      "path": "../../unified-feature-orchestration-library"
+      "path": "unified-feature-calculator-library"
+    },
+    {
+      "path": "unified-features-interface"
+    },
+    {
+      "path": "unified-feature-orchestration-library"
     }
   ],
   "settings": {

@@ -1,42 +1,42 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../ml-inference-service"
+      "path": "ml-inference-service"
     },
     {
-      "path": "../../ml-training-service"
+      "path": "ml-training-service"
     },
     {
-      "path": "../../unified-ml-interface"
+      "path": "unified-ml-interface"
     },
     {
-      "path": "../../unified-feature-calculator-library"
+      "path": "unified-feature-calculator-library"
     },
     {
-      "path": "../../unified-features-interface"
+      "path": "unified-features-interface"
     },
     {
-      "path": "../../unified-feature-orchestration-library"
+      "path": "unified-feature-orchestration-library"
     },
     {
-      "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI"
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     }
   ],
   "settings": {

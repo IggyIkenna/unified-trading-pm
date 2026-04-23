@@ -1,53 +1,53 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../instruments-service"
+      "path": "instruments-service"
     },
     {
-      "path": "../../market-data-processing-service"
+      "path": "market-data-processing-service"
     },
     {
-      "path": "../../market-tick-data-service"
+      "path": "market-tick-data-service"
     },
     {
-      "path": "../../features-calendar-service"
+      "path": "features-calendar-service"
     },
     {
-      "path": "../../features-commodity-service"
+      "path": "features-commodity-service"
     },
     {
-      "path": "../../features-cross-instrument-service"
+      "path": "features-cross-instrument-service"
     },
     {
-      "path": "../../features-delta-one-service"
+      "path": "features-delta-one-service"
     },
     {
-      "path": "../../features-multi-timeframe-service"
+      "path": "features-multi-timeframe-service"
     },
     {
-      "path": "../../features-onchain-service"
+      "path": "features-onchain-service"
     },
     {
-      "path": "../../features-sports-service"
+      "path": "features-sports-service"
     },
     {
-      "path": "../../features-volatility-service"
+      "path": "features-volatility-service"
     }
   ],
   "settings": {

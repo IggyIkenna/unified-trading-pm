@@ -1,137 +1,132 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../batch-live-reconciliation-service"
+      "path": "batch-live-reconciliation-service"
     },
     {
-      "path": "../../client-reporting-api"
+      "path": "client-reporting-api"
     },
     {
-      "path": "../../deployment-api"
+      "path": "deployment-api"
     },
     {
-      "path": "../../deployment-service"
+      "path": "deployment-service"
     },
     {
-      "path": "../../deployment-ui"
+      "path": "deployment-ui"
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "execution-algo-library"
     },
     {
-      "path": "../../execution-service"
+      "path": "execution-service"
     },
     {
-      "path": "../../features-calendar-service"
+      "path": "features-calendar-service"
     },
     {
-      "path": "../../features-commodity-service"
+      "path": "features-commodity-service"
     },
     {
-      "path": "../../features-cross-instrument-service"
+      "path": "features-cross-instrument-service"
     },
     {
-      "path": "../../features-delta-one-service"
+      "path": "features-delta-one-service"
     },
     {
-      "path": "../../features-multi-timeframe-service"
+      "path": "features-multi-timeframe-service"
     },
     {
-      "path": "../../features-onchain-service"
+      "path": "features-onchain-service"
     },
     {
-      "path": "../../features-sports-service"
+      "path": "features-sports-service"
     },
     {
-      "path": "../../features-volatility-service"
+      "path": "features-volatility-service"
     },
     {
-      "path": "../../ibkr-gateway-infra"
+      "path": "ibkr-gateway-infra"
     },
     {
-      "path": "../../instruments-service"
+      "path": "instruments-service"
     },
     {
-      "path": "../../market-data-processing-service"
+      "path": "market-data-processing-service"
     },
     {
-      "path": "../../market-tick-data-service"
+      "path": "market-tick-data-service"
     },
     {
-      "path": "../../matching-engine-library"
+      "path": "matching-engine-library"
     },
     {
-      "path": "../../ml-inference-service"
+      "path": "ml-inference-service"
     },
     {
-      "path": "../../ml-training-service"
+      "path": "ml-training-service"
     },
     {
-      "path": "../../pnl-attribution-service"
+      "path": "pnl-attribution-service"
     },
     {
-      "path": "../../position-balance-monitor-service"
+      "path": "position-balance-monitor-service"
     },
     {
-      "path": "../../risk-and-exposure-service"
+      "path": "risk-and-exposure-service"
     },
     {
-      "path": "../../strategy-service"
+      "path": "strategy-service"
     },
     {
-      "path": "../../system-integration-tests"
+      "path": "system-integration-tests"
     },
     {
-      "path": "../../trading-agent-service"
+      "path": "trading-agent-service"
     },
     {
-      "path": "../../unified-api-contracts"
-    },
-    {},
-    {},
-    {},
-    {},
-    {
-      "path": "../../unified-feature-calculator-library"
+      "path": "unified-api-contracts"
     },
     {
-      "path": "../../unified-feature-orchestration-library"
+      "path": "unified-feature-calculator-library"
     },
     {
-      "path": "../../unified-features-interface"
+      "path": "unified-feature-orchestration-library"
     },
     {
-      "path": "../../unified-market-interface"
+      "path": "unified-features-interface"
     },
     {
-      "path": "../../unified-ml-interface"
-    },
-    {},
-    {
-      "path": "../../unified-trading-api"
+      "path": "unified-market-interface"
     },
     {
-      "path": "../../unified-trading-library"
+      "path": "unified-ml-interface"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-api"
     },
     {
-      "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI"
+      "path": "unified-trading-library"
+    },
+    {
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
+    },
+    {
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     }
   ],
   "settings": {

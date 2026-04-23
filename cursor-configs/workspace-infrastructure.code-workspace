@@ -1,35 +1,35 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../deployment-api"
+      "path": "deployment-api"
     },
     {
-      "path": "../../deployment-service"
+      "path": "deployment-service"
     },
     {
-      "path": "../../deployment-ui"
+      "path": "deployment-ui"
     },
     {
-      "path": "../../ibkr-gateway-infra"
+      "path": "ibkr-gateway-infra"
     },
     {
-      "path": "../../alerting-service"
+      "path": "alerting-service"
     }
   ],
   "settings": {

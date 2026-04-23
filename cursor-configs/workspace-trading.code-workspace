@@ -1,48 +1,48 @@
 {
   "folders": [
     {
-      "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "path": ".",
+      "name": "📁 Workspace Root"
     },
     {
-      "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "path": ".cursor",
+      "name": "⚙️ Cursor Config"
     },
     {
-      "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
     {
-      "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
     },
     {
-      "path": "../../execution-service"
+      "path": "execution-service"
     },
     {
-      "path": "../../unified-trading-api"
+      "path": "unified-trading-api"
     },
     {
-      "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI"
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     },
     {
-      "path": "../../strategy-service"
+      "path": "strategy-service"
     },
     {
-      "path": "../../position-balance-monitor-service"
+      "path": "position-balance-monitor-service"
     },
     {
-      "path": "../../risk-and-exposure-service"
+      "path": "risk-and-exposure-service"
     },
     {
-      "path": "../../pnl-attribution-service"
+      "path": "pnl-attribution-service"
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "execution-algo-library"
     },
     {
-      "path": "../../matching-engine-library"
+      "path": "matching-engine-library"
     }
   ],
   "settings": {

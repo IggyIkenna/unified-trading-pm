@@ -71,6 +71,8 @@ rebalance_cadence_days: 30 # e.g., claim rewards + restake monthly
 - Drawdowns: LST depeg (stETH depegged to ~0.94 in 2022; rare but real)
 - Typical Sharpe: very high in nominal terms (low vol); tail risk is depeg
 - Kill switches: depeg > threshold (e.g., 1%), slashing events on validators, protocol incident
+- Depeg kill-switch default: **100 bps (1%)** absolute deviation between LST oracle price and redemption NAV;
+  auto-unwind on breach. Tightened per-LST when volatility warrants (e.g. 50 bps on stETH post-2022).
 
 ## Reaction to equity change
 
