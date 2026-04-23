@@ -135,18 +135,14 @@ expected entitlement × role × lock_state × maturity matrix. Single source of 
 
 ## Dashboard 5-tile grid + sub-route chip slicing (2026-04-21 addendum)
 
-The `/dashboard` surface applies the same `visible(user, item)` rule at two
-granularities: **tile level** (which of the 5 product tiles render — DART ·
-Odum Signals · Reports · Investor Relations · Admin & Ops) and **sub-route
-chip level** (which chips render under each unlocked tile). Tile visibility is
-resolved via `lib/auth/persona-dashboard-shape.ts → personaDashboardShape()`;
-chip visibility via `personaDashboardSubRoutes()`. Both return a
-`visible | locked | hidden` triple per item, feeding the same three-state
-`<ServiceTile>` primitive used for admin-locked surfaces. The 19-persona ×
-5-tile × N-chip matrix is the SSOT at
+The `/dashboard` surface applies the same `visible(user, item)` rule at two granularities: **tile level** (which of the
+5 product tiles render — DART · Odum Signals · Reports · Investor Relations · Admin & Ops) and **sub-route chip level**
+(which chips render under each unlocked tile). Tile visibility is resolved via
+`lib/auth/persona-dashboard-shape.ts → personaDashboardShape()`; chip visibility via `personaDashboardSubRoutes()`. Both
+return a `visible | locked | hidden` triple per item, feeding the same three-state `<ServiceTile>` primitive used for
+admin-locked surfaces. The 19-persona × 5-tile × N-chip matrix is the SSOT at
 [`codex/09-strategy/architecture-v2/dashboard-services-grid.md`](../../09-strategy/architecture-v2/dashboard-services-grid.md)
-§3 — visibility-slicing.md remains the canonical rule; dashboard-services-grid.md
-is the per-surface instantiation.
+§3 — visibility-slicing.md remains the canonical rule; dashboard-services-grid.md is the per-surface instantiation.
 
 ## Related
 
@@ -154,5 +150,6 @@ is the per-surface instantiation.
 - Strategy catalogue lock + maturity: [catalogue-strategy.md](catalogue-strategy.md)
 - Fund/org hierarchy (feeds into user.org_id): [fund-org-hierarchy.md](fund-org-hierarchy.md)
 - UAC `slots_visible_to` helper (Phase 10.5): MEMORY.md "Phase 10.5 backend shipped"
-- Dashboard 5-tile grid: [../../09-strategy/architecture-v2/dashboard-services-grid.md](../../09-strategy/architecture-v2/dashboard-services-grid.md)
+- Dashboard 5-tile grid:
+  [../../09-strategy/architecture-v2/dashboard-services-grid.md](../../09-strategy/architecture-v2/dashboard-services-grid.md)
 - Roadmap for unification: [../roadmap/next-waves.md](../roadmap/next-waves.md)

@@ -214,7 +214,8 @@ todos:
         that filters `service.subRoutes` by both entitlement overlap and
         `personaDashboardShape(persona)[tile].subRoutes`. (f) Keep `getVisibleServices()` signature unchanged — 5-tile
         result is a natural consequence of (c). No backwards-compat shim — Citadel rule 3. Downstream consumers of the 5
-        deleted keys (dashboard page + breadcrumbs) are updated in Phase 3. **DONE 2026-04-21** (UI `d45be7d`). status: done
+        deleted keys (dashboard page + breadcrumbs) are updated in Phase 3. **DONE 2026-04-21** (UI `d45be7d`). status:
+        done
 - id: p1-persona-dashboard-shape content: |
   - [x] [AGENT] P0. Create `unified-trading-system-ui/lib/auth/persona-dashboard-shape.ts`: (a) Export
         `DashboardTileId = "dart" | "odum-signals" | "reports" | "investor-relations" | "admin"`. (b) Export
@@ -232,7 +233,8 @@ todos:
 - id: p1-qg-services-ts content: |
   - [x] [SCRIPT] P0.
         `cd unified-trading-system-ui && npx tsc --noEmit lib/config/services.ts lib/auth/persona-dashboard-shape.ts`.
-        No ts errors on the two new/modified files. Phase 2 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 tests + typecheck green). status: done
+        No ts errors on the two new/modified files. Phase 2 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 tests +
+        typecheck green). status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -279,7 +281,8 @@ todos:
 - id: p3-qg-dashboard content: |
   - [x] [SCRIPT] P0.
         `cd unified-trading-system-ui && npx tsc --noEmit app/(platform)/dashboard/page.tsx && CI=true npm test -- --run dashboard`.
-        No ts errors; existing dashboard tests green. Phase 4 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 green). status: done
+        No ts errors; existing dashboard tests green. Phase 4 gate. **DONE 2026-04-21** (UI `d45be7d` — 970/970 green).
+        status: done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -347,15 +350,17 @@ todos:
         audience / primary href / sub-route catalog). §3 19-persona × 5-tile visibility matrix (tile + sub-route level).
         §4 Filter-strip contract (family/archetype/venue → URL param surface). §5 Odum Signals disambiguation note
         (outbound tile vs DART Signal Intake sub-route). §6 Cross-refs to dart-tab-structure.md +
-        visibility-slicing.md + demo-restriction-profiles.md. **DONE 2026-04-21** (PM `85c43998`; amended with §4.5 cross-cutting-primitive rule in follow-up). status: done
+        visibility-slicing.md + demo-restriction-profiles.md. **DONE 2026-04-21** (PM `85c43998`; amended with §4.5
+        cross-cutting-primitive rule in follow-up). status: done
 - id: p5-dart-tab-structure-crossref content: |
   - [x] [AGENT] P1. Add cross-ref block to `unified-trading-pm/codex/09-strategy/architecture-v2/dart-tab-structure.md`
         — the DART sub-tab list now also surfaces as dashboard tile sub-route chips; persona visibility map is the union
         of DART dropdown + dashboard chip surfaces. **DONE 2026-04-21** (PM `85c43998`). status: done
 - id: p5-visibility-slicing-update content: |
   - [ ] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
-        per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. **DONE 2026-04-22**
-        — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry. status: done
+        per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. **DONE
+        2026-04-22** — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry. status:
+        done
 
 # ──────────────────────────────────────────────────────────────────────
 
@@ -367,18 +372,20 @@ todos:
   - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-tile-collapse.test.tsx`: For each of 19 personas:
         mount `<DashboardPage>` with persona fixture, assert (i) at most 5 visible tiles, (ii) expected tile-ids present
         (from persona-dashboard-shape matrix), (iii) no folded-away key
-        (data/research/promote/observe/strategy-catalogue) renders as a top-level tile. **DONE 2026-04-22** — shape-function
-        tests (lighter + faster than mounted DashboardPage; DOM render already exercised by dashboard-filter-propagation
-        suite). 12 cases covering all 19 personas + folded-away keys + SERVICE_REGISTRY 5-tile invariant. status: done
+        (data/research/promote/observe/strategy-catalogue) renders as a top-level tile. **DONE 2026-04-22** —
+        shape-function tests (lighter + faster than mounted DashboardPage; DOM render already exercised by
+        dashboard-filter-propagation suite). 12 cases covering all 19 personas + folded-away keys + SERVICE_REGISTRY
+        5-tile invariant. status: done
 - id: p6-subroute-chip-tests content: |
   - [ ] [AGENT] P0. `unified-trading-system-ui/__tests__/dashboard-subroute-chips.test.tsx`: Assert
         `prospect-signals-only` sees DART tile with ONLY "Signal Intake" chip (others hidden/locked);
         `prospect-odum-signals` sees standalone Odum Signals tile; `investor` sees only Investor Relations; `admin` sees
-        all 5 tiles with all sub-route chips unlocked. **DONE 2026-04-22** — 8 cases including tempt-logic
-        (locked vs hidden preserved for prospect-dart). status: done
+        all 5 tiles with all sub-route chips unlocked. **DONE 2026-04-22** — 8 cases including tempt-logic (locked vs
+        hidden preserved for prospect-dart). status: done
 - id: p6-filter-propagation-test content: |
   - [x] [AGENT] P1. `__tests__/dashboard-filter-propagation.test.tsx`: set family via `useDashboardFilter`, click DART ·
-        Research chip, assert navigation href includes `?family=statistical_arbitrage`. **DONE 2026-04-21** (UI Phase 4 — 9/9 cases green). status: done
+        Research chip, assert navigation href includes `?family=statistical_arbitrage`. **DONE 2026-04-21** (UI Phase 4
+        — 9/9 cases green). status: done
 - id: p6-qg-final content: |
   - [x] [SCRIPT] P0. `cd unified-trading-system-ui && CI=true npm test -- --run && npx tsc --noEmit`. All green. Phase 7
         gate. **DONE 2026-04-21** (Phase 4 commit confirmed 970/970 tests + typecheck clean). status: done
@@ -399,7 +406,8 @@ todos:
         **DONE 2026-04-21** (PM `85c43998`; follow-up `c184bd0c` for 4-plan codex). status: done
 - id: p7-update-memory-index content: |
   - [x] [AGENT] P2. Update `memory/MEMORY.md` with one-line entry linking to
-        `project_dashboard_services_grid_collapse_2026_04_21.md` once commits land. **DONE 2026-04-21** (memory entry + project_dashboard_services_grid_collapse_2026_04_21.md both saved). status: done
+        `project_dashboard_services_grid_collapse_2026_04_21.md` once commits land. **DONE 2026-04-21** (memory entry +
+        project_dashboard_services_grid_collapse_2026_04_21.md both saved). status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -449,9 +457,11 @@ todos:
         the destination page becomes the Tier-3 Reality + FOMO two-tab primitive. No tile/chip surface change required
         here — just a confirmation that the chip isn't orphaned after Plan B's page rewrite. Also update DART tile chip
         label "Strategy Catalogue" → "Catalogue" (shorter, clearer now it's a shared primitive). **DONE 2026-04-21**
-        (services.ts DART `strategy-catalogue` sub-route confirmed label "Catalogue" + href `/services/strategy-catalogue` points at Plan B Tier-3 primitive). status: done
+        (services.ts DART `strategy-catalogue` sub-route confirmed label "Catalogue" + href
+        `/services/strategy-catalogue` points at Plan B Tier-3 primitive). status: done
 - id: p7-admin-sub-route-additions content: |
   - [x] [AGENT] P1. After Plan B Phase 2 ships admin universe + lifecycle- editor pages, extend SERVICE_REGISTRY admin
         tile sub-routes + `PERSONA_SUBROUTE_SHAPES.admin` to include `strategy-universe` + `strategy-lifecycle-editor`.
-        Regenerate the ≤4-chip display logic if admin tile exceeds the cap. **DONE 2026-04-21** (persona-dashboard-shape.ts
-        ALL_VISIBLE_SUBROUTES.admin includes `strategy-universe` + `strategy-lifecycle-editor` chips; overflow handled via `+N more` link). status: done
+        Regenerate the ≤4-chip display logic if admin tile exceeds the cap. **DONE 2026-04-21**
+        (persona-dashboard-shape.ts ALL_VISIBLE_SUBROUTES.admin includes `strategy-universe` +
+        `strategy-lifecycle-editor` chips; overflow handled via `+N more` link). status: done

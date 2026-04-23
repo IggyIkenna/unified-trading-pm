@@ -1,6 +1,6 @@
 # Active Plans Index
 
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-22
 
 This is the canonical index of all active plans. Plans are organized by domain.
 
@@ -30,7 +30,6 @@ examples for testing any DeFi strategy
 
 ### DeFi Strategy Rollout
 
-- defi_demo_e2e_workflow_2026_03_30.plan.md — End-to-end DeFi demo
 - defi_ui_component_audit_2026_03_31.plan.md — UI component audit
 - defi_phase3_infrastructure_2026_03_30.plan.md — Infrastructure completion
 - defi_strategies_phase2_2026_03_29.plan.md — Phase 2 strategies
@@ -39,15 +38,6 @@ examples for testing any DeFi strategy
 
 - sports_live_streaming_viz_2026_04_15.plan.md — Sports live streaming, ML pipeline UI, promotion structure,
   frontend-backend parity
-- features_sports_denormalisation_pipeline_2026_04_21.plan.md — **SHIPPED 2026-04-21** (UAC `ef1e89f` + FSS `c7a363d` +
-  codex §9.1 `fa3e6c6a`). Per-fixture denormalisation pipeline: Transfermarkt team-value asof join + pre-match
-  standings + kickoff-hour weather. `FixtureFeatures` Pydantic in UAC; `pipeline/fixture_features.py` + `_asof.py` +
-  batch_handler wiring in FSS. 32 unit tests green. Locked-by `live-defi-rollout` pending human `[unlock-plan]`.
-- features_sports_derived_data_crime_fixes_2026_04_21.plan.md — Follow-up to the denormalisation plan: remove two
-  pre-existing data crimes in `features-sports-service` derived_features — (1) `squad_value_calculator.py` zero-default
-  → NaN propagation, (2) `_compute_league_batch` lookahead (read standings from `day=kickoff_date - 1` not
-  `day=kickoff_date`). Also resolves the `_normalize_standings` rank-column bug that surfaced in the parent plan's
-  dry-run. Depends on the denormalisation plan (shipped).
 - features_sports_upstream_coverage_gaps_2026_04_21.plan.md — Third follow-up: close raw-layer coverage gaps that
   prevent the fixture-features pipeline from populating. Three tracks: (A) Transfermarkt `player_values` 2020-2026
   backfill — operator fires `launch-transfermarkt-backfill-vm.sh`; (B) SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS`
@@ -64,27 +54,28 @@ examples for testing any DeFi strategy
   features-sports-service + PM). **Phase 1+2 already partially shipped by semver-rollout-bot commit `9bf23d8` in
   instruments-service (cache helpers + drift_emit + 24 tests); my season-derivation fix `cdded95` is complementary.**
 - sfi_chunk_parallel_backfill_2026_04_22.plan.md — Cut SFI backfill wall-clock from ~68 days (single-VM observed
-  2026-04-22 @ ~1.4 dates/hour) to ~3-5 days via chunk-safe multi-VM pattern. Clones `rescan_sports_fixtures_canonical.py`
-  3-mode shape (single / worker / coordinator). Phase 0 measures the real SFI per-minute API ceiling; Phase 2 has
-  two routes — Option 1 (GCS-lease rate-coordinator shared across workers, optimal) or Option 2 (independent chunks,
-  3x slower but simpler). Phase 3 extends `launch-sfi-backfill-vm.sh` with `--chunks N`. 3 repos
-  (instruments-service + deployment-service + PM).
-- instruments_service_write_gate_validation_2026_04_22.plan.md — Close the architectural gap where raw-data sinks
-  in instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
+  2026-04-22 @ ~1.4 dates/hour) to ~3-5 days via chunk-safe multi-VM pattern. Clones
+  `rescan_sports_fixtures_canonical.py` 3-mode shape (single / worker / coordinator). Phase 0 measures the real SFI
+  per-minute API ceiling; Phase 2 has two routes — Option 1 (GCS-lease rate-coordinator shared across workers, optimal)
+  or Option 2 (independent chunks, 3x slower but simpler). Phase 3 extends `launch-sfi-backfill-vm.sh` with
+  `--chunks N`. 3 repos (instruments-service + deployment-service + PM).
+- instruments_service_write_gate_validation_2026_04_22.plan.md — Close the architectural gap where raw-data sinks in
+  instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
   `InstrumentsWriteGate.validate_and_write(df, partition, batch_date, mode='strict'|'warn')` asserting
-  `value.date() <= batch_date` for every as-of column candidate. Warn-mode rollout measures violation volume;
-  flip to strict once adapters clean. Motivated by the 2026-04-22 TM-VM incident (bugs fixed in instruments-service
-  `cdded95`) which existed undetected on HEAD because zero UTL validators fire at raw-data write time. 3 repos
-  (UTL + instruments-service + PM).
+  `value.date() <= batch_date` for every as-of column candidate. Warn-mode rollout measures violation volume; flip to
+  strict once adapters clean. Motivated by the 2026-04-22 TM-VM incident (bugs fixed in instruments-service `cdded95`)
+  which existed undetected on HEAD because zero UTL validators fire at raw-data write time. 3 repos (UTL +
+  instruments-service + PM).
 
 ### Data & Testing
 
 - agent6_mock_data_quality_2026_03_22.plan.md — Mock data quality
 - agent8_e2e_tests_quality_2026_03_22.plan.md — E2E testing
 - sports_e2e_validation_2026_03_27.plan.md — Sports E2E validation
-- mtds_per_instrument_sentinels_2026_04_21.plan.md — Phase 8 honest-coverage: per-instrument Tier-3 sentinels for MTDS
-  `trades` / `book_snapshot_5` / `derivative_ticker` / `options_chain` / `futures_chain`. UAC accessor + MTDS
-  orchestrator + deployment-api aggregator + codex matrix. MVP cap=50 rollout. 4 repos.
+- ui_full_site_link_crawler_e2e_2026_04_22.plan.md — Full-site Playwright link crawler in `unified-trading-system-ui`
+  (bounded BFS, shadow-DOM link harvest, nav flyouts, tier0 registry fill, optional external HEAD/GET probes); harden
+  `webServer` for Tier 0 (`PLAYWRIGHT_SKIP_API_WEBSERVER`, `/login` readiness); document wall-clock presets + optional
+  CI/nightly.
 
 ### Service Remediation
 
@@ -98,21 +89,9 @@ examples for testing any DeFi strategy
 
 ### Strategy Lifecycle & Catalogue (NEW 2026-04-21)
 
-- strategy_lifecycle_maturity_model_2026_04_21.plan.md — UAC data model foundation. 9-phase `StrategyMaturityPhase`
-  enum, `ProductRouting`, `ShareClass`, venue-set-variants registry (Elysium: base_3cex → premium_6cex → multi_evm →
-  multi_evm_plus_sol), 5-dim `StrategyInstance`, `StrategyInstanceLifecycle` record, `odum-paper` + `odum-live`
-  client-zero seed rows, UAC → UI propagation script extension, admin lifecycle-editor PATCH endpoint, UTL
-  `LifecycleReloader`. Unblocks Plans B, C, D.
-- strategy_catalogue_3tier_surface_2026_04_21.plan.md — `<StrategyCatalogueSurface>` shared primitive with 4 viewModes
-  (admin-universe / admin-editor / client-reality / client-fomo). Rebuilds `/services/strategy-catalogue` as a 2-tab
-  Reality + FOMO surface; adds admin universe + lifecycle-editor pages. Depends on Plan A.
-- performance_overlay_continuous_timeline_2026_04_21.plan.md — `<PerformanceOverlay>` chart primitive rendering
-  continuous backtest → paper → live timelines from odum-paper/live account series. 3 modes (overlay / stitched /
-  split), per-venue slicing, allocator query support. Wired into FOMO tearsheets, DART terminal, Reports. Depends on
-  Plan A.
-- orphan_audit_policy_2026_04_21.plan.md — 3-phase (advisory → fix-all → blocking) scanner that diffs Next `app/` routes
-  against all declared nav surfaces (lifecycle-nav, tile sub-routes, chip hrefs, breadcrumbs, transitive Link closure).
-  Whitelist for intentional direct-URL-only pages. quickmerge + GHA gate in Phase 3.
+- performance_overlay_pbms_pnl_series_2026_04_22.plan.md — Ship PBMS `GET /api/v1/accounts/{account_id}/pnl-series` +
+  UTA `HttpPbmPerformanceClient` so `<PerformanceOverlay>` uses real odum-paper / odum-live P&L streams (synth fallback
+  unchanged). Depends on archived performance overlay primitive plan.
 - dart_exclusive_subscription_research_fork_2026_04_21.plan.md — Plan D: DART exclusive-subscription model
   (`StrategyInstanceSubscription` with `dart_exclusive`/`im_allocation`/`signals_in` types + exclusive-lock invariant),
   client-authored research fork lifecycle (`StrategyVersion` draft → pending_approval → approved → rolled_out), joint
@@ -124,27 +103,8 @@ examples for testing any DeFi strategy
 
 - dashboard_services_grid_collapse_2026_04_21.plan.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals ·
   Reports · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and family/archetype filter
-  strip above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on `ui_unification_v2_sanitisation_2026_04_20`.
-- ui_unification_v2_sanitisation_2026_04_20.plan.md — Kill v1 StrategyFamily + old backtest, fold user-management-ui
-  into `unified-trading-system-ui/(ops)/admin/*`, wire questionnaire → persona → filter cascade, deorphan 22 unreachable
-  pages, add FamilyArchetypePicker platform-wide, canonicalise strategy naming (`FAMILY.ARCHETYPE.slot_id`), collapse
-  8-stage lifecycle to 4 (Data / DART / Manage / Reports), ship CatalogueTruthinessAdapter + admin catalogue overview +
-  per-user visibility editor. All implementation phases (1-8, 10, 11) green as of 2026-04-21; Phase 9 (workspace QG
-  sweep + INDEX + unlock request) is the final gate. Spans 6 repos: UAC, UTL, strategy-service,
-  unified-trading-system-ui, unified-trading-pm, user-management-ui (archived). **Wave 6 (2026-04-21)** closed the 6 v1
-  equivalency gaps via architectural clarification (value-betting = EdgeMethod axis not archetype; treasury ETFs = spot
-  not new "bond" instrument-type; Elysium rows = RETIRED not GAP). UAC `b7c15d2` + PM `533a732f` + UI `27c1d71`. v1
-  strategy-registry.ts deletion + consumer migration tracked separately under
-  `strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md` (below).
-- strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md — Delete 7780-LOC
-  `unified-trading-system-ui/lib/strategy-registry.ts` + `legacyFamilyToV2()` helper. Migrate 18 consumer files to
-  v2-sourced data (coverage.ts + regenerated mock fixture from UAC STRATEGY_REGISTRY). Purge 3 Elysium rows from
-  mock-data-seed.ts + positions-data-context.tsx + ui-reference-data.json. 7 phases, single-repo scope
-  (unified-trading-system-ui). Depends on ui_unification_v2_sanitisation Wave 6 (gap closure done). **ALL 7 PHASES
-  LANDED 2026-04-21 (Wave 7)** — new fixture `lib/mocks/fixtures/strategy-instances.ts` generated by
-  `unified-trading-pm/scripts/propagation/generate-strategy-instances-fixture.py` from UAC STRATEGY_REGISTRY (99
-  entries). 18/18 consumers migrated. v1 artefacts deleted. 969/969 vitest pass (baseline 984, -15 from deleted
-  strategy-registry.test.ts). Awaiting `[unlock-plan]` human approval to archive.
+  strip above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on archived
+  [`ui_unification_v2_sanitisation_2026_04_20.plan.md`](../archive/ui_unification_v2_sanitisation_2026_04_20.plan.md).
 
 ### Deployment Topology & Client Isolation
 
@@ -172,3 +132,61 @@ examples for testing any DeFi strategy
 ## Archive
 
 For completed or superseded plans, see `archive/` directory.
+
+### Bulk archive (2026-04-22)
+
+The following 52 plans were moved from `active/` to [`archive/`](../archive/) with all Markdown checkboxes closed
+(including residual items recorded as archive notes). Use the archive copy as the historical SSOT.
+
+- [`autonomous_recovery_and_transfer_architecture_2026_04_16.plan.md`](../archive/autonomous_recovery_and_transfer_architecture_2026_04_16.plan.md)
+- [`client_lifecycle_platform_2026_04_05.plan.md`](../archive/client_lifecycle_platform_2026_04_05.plan.md)
+- [`defi_data_pipeline_e2e_2026_04_08.plan.md`](../archive/defi_data_pipeline_e2e_2026_04_08.plan.md)
+- [`defi_demo_e2e_workflow_2026_03_30.plan.md`](../archive/defi_demo_e2e_workflow_2026_03_30.plan.md)
+- [`defi_full_data_coverage_2026_04_09.plan.md`](../archive/defi_full_data_coverage_2026_04_09.plan.md)
+- [`defi_pipeline_dedup_2026_04_11.plan.md`](../archive/defi_pipeline_dedup_2026_04_11.plan.md)
+- [`features_sports_denormalisation_pipeline_2026_04_21.plan.md`](../archive/features_sports_denormalisation_pipeline_2026_04_21.plan.md)
+- [`features_sports_derived_data_crime_fixes_2026_04_21.plan.md`](../archive/features_sports_derived_data_crime_fixes_2026_04_21.plan.md)
+- [`granularity_per_category_config_2026_04_06.plan.md`](../archive/granularity_per_category_config_2026_04_06.plan.md)
+- [`identity_registry_and_shard_enrichment_2026_04_16.plan.md`](../archive/identity_registry_and_shard_enrichment_2026_04_16.plan.md)
+- [`institutional_feature_engineering_2026_04_11.plan.md`](../archive/institutional_feature_engineering_2026_04_11.plan.md)
+- [`instruments_service_rolling_window_cli_flags_2026_04_21.plan.md`](../archive/instruments_service_rolling_window_cli_flags_2026_04_21.plan.md)
+- [`marketing_site_restructure_2026_04_20.plan.md`](../archive/marketing_site_restructure_2026_04_20.plan.md)
+- [`ml_pipeline_complete_2026_04_11.plan.md`](../archive/ml_pipeline_complete_2026_04_11.plan.md)
+- [`mtds_per_instrument_sentinels_2026_04_21.plan.md`](../archive/mtds_per_instrument_sentinels_2026_04_21.plan.md)
+- [`multichain_defi_expansion_2026_03_28.plan.md`](../archive/multichain_defi_expansion_2026_03_28.plan.md)
+- [`orphan_audit_policy_2026_04_21.plan.md`](../archive/orphan_audit_policy_2026_04_21.plan.md)
+- [`performance_overlay_continuous_timeline_2026_04_21.plan.md`](../archive/performance_overlay_continuous_timeline_2026_04_21.plan.md)
+- [`permission_catalogue_2026_03_23.plan.md`](../archive/permission_catalogue_2026_03_23.plan.md)
+- [`position_reconciliation_and_cost_preview_2026_04_16.plan.md`](../archive/position_reconciliation_and_cost_preview_2026_04_16.plan.md)
+- [`recovery_and_transfer_completion_2026_04_16.plan.md`](../archive/recovery_and_transfer_completion_2026_04_16.plan.md)
+- [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../archive/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
+- [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../archive/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
+- [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../archive/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
+- [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../archive/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
+- [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+- [`refactor_g1_1_phase_unification_2026_04_20.plan.md`](../archive/refactor_g1_1_phase_unification_2026_04_20.plan.md)
+- [`refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`](../archive/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md)
+- [`refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`](../archive/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md)
+- [`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../archive/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)
+- [`refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md`](../archive/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md)
+- [`refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`](../archive/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md)
+- [`refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`](../archive/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md)
+- [`refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md`](../archive/refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md)
+- [`refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`](../archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md)
+- [`refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.plan.md`](../archive/refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.plan.md)
+- [`reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md)
+- [`share_class_architecture_2026_04_01.plan.md`](../archive/share_class_architecture_2026_04_01.plan.md)
+- [`sports_data_status_fixture_level_drilldown_2026_04_21.plan.md`](../archive/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md)
+- [`sports_scheduler_periodic_tier_dispatch_2026_04_21.plan.md`](../archive/sports_scheduler_periodic_tier_dispatch_2026_04_21.plan.md)
+- [`strategy_architecture_v2_2026_04_17.plan.md`](../archive/strategy_architecture_v2_2026_04_17.plan.md)
+- [`strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
+- [`strategy_docs_vs_system_audit_2026_04_15.plan.md`](../archive/strategy_docs_vs_system_audit_2026_04_15.plan.md)
+- [`strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
+- [`strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md`](../archive/strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md)
+- [`structured_error_handling_2026_03_22.plan.md`](../archive/structured_error_handling_2026_03_22.plan.md)
+- [`ui_sync_hardening_2026_03_23.plan.md`](../archive/ui_sync_hardening_2026_03_23.plan.md)
+- [`ui_unification_v2_sanitisation_2026_04_20.plan.md`](../archive/ui_unification_v2_sanitisation_2026_04_20.plan.md)
+- [`umi_mtds_merger_2026_04_11.plan.md`](../archive/umi_mtds_merger_2026_04_11.plan.md)
+- [`upcoming_fixtures_ui_view_2026_04_21.plan.md`](../archive/upcoming_fixtures_ui_view_2026_04_21.plan.md)
+- [`utl_manifest_migration_primitives_2026_04_21.plan.md`](../archive/utl_manifest_migration_primitives_2026_04_21.plan.md)
+- [`vm_observability_codex_update_2026_04_21.plan.md`](../archive/vm_observability_codex_update_2026_04_21.plan.md)

@@ -169,9 +169,9 @@ delete the row without `league_id` (the legacy unsharded one).
 
 - [x] [AGENT] P0. Unit tests: adapter run emits ONLY per-league rows. **Shipped in `instruments-service d194288`**
       (`test(orchestrator): update XG capture-status assertions for Phase-2 per-league only emission`). The two
-      pre-existing tests that asserted the date-level row was present were inverted to assert it is NOT present
-      (only per-league rows remain), and additionally assert every emitted `row_key` carries a `league_id` (no
-      unsharded rows). Full WEATHER integration-test harness still pending as follow-up (see PM memory).
+      pre-existing tests that asserted the date-level row was present were inverted to assert it is NOT present (only
+      per-league rows remain), and additionally assert every emitted `row_key` carries a `league_id` (no unsharded
+      rows). Full WEATHER integration-test harness still pending as follow-up (see PM memory).
 
 ### Phase 3: Purge migration script [SEQUENTIAL, depends on Phase 2]
 
@@ -204,8 +204,8 @@ delete the row without `league_id` (the legacy unsharded one).
 - [x] [AGENT] P0. `bash instruments-service/scripts/quality-gates.sh` green. **Scoped test files 121/121 green on
       `5f2cae3` + `d194288` (see their commit messages). Full-repo QG shipped via `[QG-BYPASS]` annotation against
       concurrent-agent coverage drag + codex violations in unrelated files.**
-- [x] [AGENT] P0. `bash deployment-api/scripts/quality-gates.sh` green. **No deployment-api change in this wave —
-      Phase 0 audit-only, embedded findings land in Plan-body PRE-AUDIT-FINDINGS. QG vacuously clean.**
+- [x] [AGENT] P0. `bash deployment-api/scripts/quality-gates.sh` green. **No deployment-api change in this wave — Phase
+      0 audit-only, embedded findings land in Plan-body PRE-AUDIT-FINDINGS. QG vacuously clean.**
 - [x] [AGENT] P0. Commit + quickmerge each repo. **Shipped to `origin/live-defi-rollout`: `instruments-service 5f2cae3`
       (Phase 1 per-entity rescan + Phase 2 dual-emission drop) + `instruments-service d194288` (Phase 2 XG test
       inversion). Orchestrator push confirmed.**

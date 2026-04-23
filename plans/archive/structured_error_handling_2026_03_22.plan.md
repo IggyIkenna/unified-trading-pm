@@ -236,7 +236,8 @@ UNKNOWN                               → ALERT
 - [x] [AGENT] P1. features-calendar-service: Complete migration of DEPRECATED schemas to UIC — VERIFIED: models.py
       already has SCHEMA_PROVENANCE_EXEMPT marker. Schemas are calendar-domain-specific (CalendarFeatureRow,
       TradingCalendar) not cross-service contracts, so local definition is correct.
-- [ ] [AGENT] P2. strategy-service types.py: Audit 30+ TypedDicts — move cross-service contracts to UIC
+- [x] [AGENT] P2. strategy-service types.py: Audit 30+ TypedDicts — move cross-service contracts to UIC _(archived
+      2026-04-22 — follow-up typing sweep; track under UAC/UIC schema governance, not this plan.)_
 
 ### 5.3 Missing **main**.py
 

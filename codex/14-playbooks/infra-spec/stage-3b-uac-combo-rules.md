@@ -467,7 +467,7 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `slot.maturity == LIVE_TINY ∧ allocation.target_notional > LIVE_TINY_CAP`
 - **Reason:** risk (shadow deployment validator per
-  [`shadow-deployment-pattern.md`](../../09-strategy/architecture-v2/cross-cutting/shadow-deployment-pattern.md))
+  [`shadow-deployment-pattern.md`](../../04-architecture/shadow-deployment-pattern.md))
 - **Evidence:** `ShadowDeploymentPolicy.evaluate_shadow_deployment` in
   [`strategy_service/engine/strategies/v2/shadow_deployment.py:213-285`](#file-citations) — "LIVE_TINY → LIVE_ALLOCATED
   promotion on first non-zero AllocationDirective."

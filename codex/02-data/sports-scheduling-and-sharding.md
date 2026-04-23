@@ -219,18 +219,16 @@ reflect the state as-of the fixture date.
 
 ### 5.1 Enforcement — Timestamp-Alignment-Gate
 
-Every raw-data `sink.write(...)` in `instruments-service` with a `day={D}` partition runs through
-`InstrumentsWriteGate` from `unified_trading_library.instruments_write_gate`. The gate scans the
-`DEFAULT_AS_OF_COLUMNS` families (`as_of_date`, `valuation_date`, `data_available_at`,
-`kickoff_utc`, `event_time`, `computed_at`) and emits `DATA_ALIGNMENT_VIOLATION` (warn mode) or
-raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
+Every raw-data `sink.write(...)` in `instruments-service` with a `day={D}` partition runs through `InstrumentsWriteGate`
+from `unified_trading_library.instruments_write_gate`. The gate scans the `DEFAULT_AS_OF_COLUMNS` families
+(`as_of_date`, `valuation_date`, `data_available_at`, `kickoff_utc`, `event_time`, `computed_at`) and emits
+`DATA_ALIGNMENT_VIOLATION` (warn mode) or raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
 `value.date() > D`. See
 [`06-coding-standards/validation-patterns.md` §Timestamp-Alignment-Gate](../06-coding-standards/validation-patterns.md#timestamp-alignment-gate)
 for the full contract + usage.
 
-Pre-2026-04-22 the raw-data layer relied on adapter discipline alone — the Transfermarkt VM
-data-crime incident (18h writing wall-clock-2026 `valuation_date` onto `day=2023-03-16`) is the
-reason the gate now exists.
+Pre-2026-04-22 the raw-data layer relied on adapter discipline alone — the Transfermarkt VM data-crime incident (18h
+writing wall-clock-2026 `valuation_date` onto `day=2023-03-16`) is the reason the gate now exists.
 
 ## 6. Manifest dumps: empty-confirmed for full-manifest coverage
 
@@ -296,14 +294,14 @@ shape; see
 Cloud Run job wiring.
 
 **VM-daemon pattern for live schedulers** — Long-lived scheduling processes (polling loops, cron-alternatives) can run
-as GCE daemons via the `launch-*-vm.sh` + `setup-data-pipeline-vm.sh` + `VM_TASK=*-poll` pathway. Zero
-Cloud-Run-image dependency — the VM boots off the existing tarball deployment infra (UAC / UTL / service tarballs on
-GCS) and the launcher omits `VM_SHUTDOWN_ON_COMPLETION=true` so the VM stays up. Uses the shared singleton-lock
-pattern (same-prefix-running refusal with `--force` bypass) to prevent double-dispatch. First adopted by
-sports-scheduler 2026-04-22 (`launch-sports-scheduler-vm.sh` + `SPORTS_SCHEDULER_poll` branch in
-`setup-data-pipeline-vm.sh`) as a workaround for Plan 12 + Plan 13 Cloud Build blockers; pattern is reusable for any
-service whose shipped CLI already contains an internal polling loop (e.g. features-sports live forward-poll,
-execution-service live signal broadcast watchdog).
+as GCE daemons via the `launch-*-vm.sh` + `setup-data-pipeline-vm.sh` + `VM_TASK=*-poll` pathway. Zero Cloud-Run-image
+dependency — the VM boots off the existing tarball deployment infra (UAC / UTL / service tarballs on GCS) and the
+launcher omits `VM_SHUTDOWN_ON_COMPLETION=true` so the VM stays up. Uses the shared singleton-lock pattern
+(same-prefix-running refusal with `--force` bypass) to prevent double-dispatch. First adopted by sports-scheduler
+2026-04-22 (`launch-sports-scheduler-vm.sh` + `SPORTS_SCHEDULER_poll` branch in `setup-data-pipeline-vm.sh`) as a
+workaround for Plan 12 + Plan 13 Cloud Build blockers; pattern is reusable for any service whose shipped CLI already
+contains an internal polling loop (e.g. features-sports live forward-poll, execution-service live signal broadcast
+watchdog).
 
 ## 9. Per-fixture denormalisation pattern
 
@@ -454,9 +452,9 @@ dependency plan that must reach C5 before this plan can fully execute.
 
 ### 12.0 Live progress register (re-audit when plan checkboxes change)
 
-Last audit: 2026-04-22 late (Plan 1 DONE 17/0; Plan 11 near-C5 20/2; Plans 6 + 10 flipped; Plan 5 activated via VM-daemon
-path). `[x] done` / `[ ] open` is the mechanical checkbox count in each plan file — not a judgement call. `First open
-item` surfaces what the next agent should tackle.
+Last audit: 2026-04-22 late (Plan 1 DONE 17/0; Plan 11 near-C5 20/2; Plans 6 + 10 flipped; Plan 5 activated via
+VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in each plan file — not a judgement call.
+`First open item` surfaces what the next agent should tackle.
 
 | Plan                                                 | `[x]` / `[ ]` | Status                           | First open item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------------------------------------------- | ------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -464,7 +462,7 @@ item` surfaces what the next agent should tackle.
 | 2 apifootball_enrichment_historical_backfill         | 3 / 7         | **in-flight** — ops work         | VM monitoring through completion, rescan, audits, more VMs, data-status + spot-checks                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 3 non_apifootball_provider_backfill_launchers        | 5 / 2         | **near-C5** — 4 launchers landed | Per-launcher VM smokes; one QG line still called out in plan                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 4 instruments_service_orchestrator_reliability_fixes | 12 / 8        | **half-way** (Bug 4 shipped)     | Re-smoke WEATHER+XG (`8a91324`) + Bugs 7-8 AF enrichment + STANDINGS per-league + forward-poll VM                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 5 sports_scheduler_cron_activation                   | 7 / 4         | **live via VM-daemon** ✅        | Activated 2026-04-22 via `launch-sports-scheduler-vm.sh` on `sports-scheduler-20260422-111929` (Cloud Run path deferred on Plans 12 + 13). Remaining: 6h / 24h first-fire observation + Grafana alert wiring                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 5 sports_scheduler_cron_activation                   | 7 / 4         | **live via VM-daemon** ✅        | Activated 2026-04-22 via `launch-sports-scheduler-vm.sh` on `sports-scheduler-20260422-111929` (Cloud Run path deferred on Plans 12 + 13). Remaining: 6h / 24h first-fire observation + Grafana alert wiring                                                                                                                                                                                                                                                                                               |
 | 6 features_sports_pipeline_deployment                | 11 / 3        | **near-C5**                      | Historical backfill VM + coverage audit + UI FIXTURE_FEATURES polish (blocked on Plan 13 UTL base image)                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 7 upcoming_fixtures_ui_view                          | 12 / 1        | **near-C5**                      | Local dev smoke only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 8 vm_observability_codex_update                      | 7 / 0         | **DONE** ✅                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |

@@ -25,8 +25,8 @@ Today's API-Football forward-poll (VM `af-backfill-20260421-142640`) surfaced th
 instruments-service orchestrator. Each is non-fatal (the VM completed rc=0 and wrote parquets for every date) but
 noisy + two are latent correctness risks. A fourth bug (Bug 4 — adapter-output dict coercion) was surfaced by the
 2026-04-21 INJURIES backfill VM (`af-backfill-20260421-214057`) and shipped as `instruments-service 7f2cbf0` on
-2026-04-22. Counting the shard-uniformity fixes, this plan now tracks **8 bugs** total (Bugs 1-3 reliability,
-Bug 4 adapter coercion, Bugs 5-6 WEATHER + XG sharding shipped, Bugs 7-8 AF enrichment + STANDINGS sharding open).
+2026-04-22. Counting the shard-uniformity fixes, this plan now tracks **8 bugs** total (Bugs 1-3 reliability, Bug 4
+adapter coercion, Bugs 5-6 WEATHER + XG sharding shipped, Bugs 7-8 AF enrichment + STANDINGS sharding open).
 
 ### Bug 1 — Pydantic validation on future-fixture goals
 
@@ -69,11 +69,12 @@ forward-poll horizon and no fixtures were fetched.
 
 ### Bug 4 — INJURIES/leagues/teams/predictions/fixtures/progressive-stats adapter output coerced to dict — **SHIPPED 2026-04-22 `7f2cbf0`**
 
-Surfaced by the INJURIES backfill VM `af-backfill-20260421-214057` log on 2026-04-21: `AttributeError: 'dict' object
-has no attribute 'model_dump'` on every date of the run (~2650 API-Football requests burned with zero injury rows
-captured). UAC sports normalizers (`unified_api_contracts/external/api_football/normalize.py` et al.) return
-`dict[str, object]`, but adapter return-type annotations still claimed `list[CanonicalX]` Pydantic models. The
-orchestrator called `.model_dump()` trusting the annotations — blew up the moment a normalizer returned a dict.
+Surfaced by the INJURIES backfill VM `af-backfill-20260421-214057` log on 2026-04-21:
+`AttributeError: 'dict' object has no attribute 'model_dump'` on every date of the run (~2650 API-Football requests
+burned with zero injury rows captured). UAC sports normalizers
+(`unified_api_contracts/external/api_football/normalize.py` et al.) return `dict[str, object]`, but adapter return-type
+annotations still claimed `list[CanonicalX]` Pydantic models. The orchestrator called `.model_dump()` trusting the
+annotations — blew up the moment a normalizer returned a dict.
 
 **Fixed in `instruments-service 7f2cbf0`**: introduced `_coerce_adapter_output(item) -> dict[str, object]` helper
 (accepts either `dict` or a Pydantic model, returns a plain dict) and applied it to all 10 adapter-output

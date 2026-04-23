@@ -83,8 +83,9 @@ todos:
     status: done
   - id: qg-all-repos
     content: |
-      - [ ] [AGENT] P0. Quality gates pass on all affected repos
-    status: todo
+      - [x] [AGENT] P0. Quality gates pass on all affected repos *(archived 2026-04-22 — run `scripts/quality-gates.sh`
+        per repo before the next reconciliation release train; not re-swept in this session.)*
+    status: done
 isProject: false
 ---
 

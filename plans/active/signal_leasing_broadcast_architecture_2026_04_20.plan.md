@@ -350,57 +350,57 @@ into a single "shipped under sister plan" entry below.
 
 ### Phase 9 — UI paper column + mock/live fetch hooks [SHIPPED 2026-04-20]
 
-Added 2026-04-20 after the user asked whether the dashboard surfaces backtest / paper / live the way
-DART trading services do. Shipped end-to-end in
-`unified-trading-system-ui@51382fa` on `live-defi-rollout`.
+Added 2026-04-20 after the user asked whether the dashboard surfaces backtest / paper / live the way DART trading
+services do. Shipped end-to-end in `unified-trading-system-ui@51382fa` on `live-defi-rollout`.
 
-- [x] [AGENT] P0. Rename `BacktestVsLiveRow` → `BacktestPaperLiveRow`; add `paper_sharpe` / `paper_return_pct`
-      / `paper_signal_count` (nullable) + `live_return_pct` (nullable) + `window_start` / `window_end`. All metrics
-      share the same reporting window for same-period comparability. TypeScript SSOT:
+- [x] [AGENT] P0. Rename `BacktestVsLiveRow` → `BacktestPaperLiveRow`; add `paper_sharpe` / `paper_return_pct` /
+      `paper_signal_count` (nullable) + `live_return_pct` (nullable) + `window_start` / `window_end`. All metrics share
+      the same reporting window for same-period comparability. TypeScript SSOT:
       `unified-trading-system-ui/lib/signal-broadcast/types.ts`.
-- [x] [AGENT] P0. `BacktestComparisonPanel` rewritten to a 3-way grouped view (Backtest / Paper / Live column
-      sections) with em-dash rendering for slots at the `BACKTESTED`-only stage of the maturity ladder. Window
-      label (e.g. `2026-03-21 → 2026-04-20`) pinned to the description.
+- [x] [AGENT] P0. `BacktestComparisonPanel` rewritten to a 3-way grouped view (Backtest / Paper / Live column sections)
+      with em-dash rendering for slots at the `BACKTESTED`-only stage of the maturity ladder. Window label (e.g.
+      `2026-03-21 → 2026-04-20`) pinned to the description.
 - [x] [AGENT] P0. New `lib/signal-broadcast/hooks.ts` exporting `useSignalEmissions` / `useBacktestPaperLive` /
       `useDeliveryHealth` / `usePnlAttribution`. Each returns `{ data, loading, error, isMock }`. Mock / live branching
       via `isMockDataMode()` (`NEXT_PUBLIC_MOCK_API`) — mock in tier-0/demo/UAT, live fetch to
       `${NEXT_PUBLIC_STRATEGY_SERVICE_URL}/signal_broadcast/...?counterparty_id=...` in staging/prod.
-- [x] [AGENT] P0. Dashboard page (`app/(platform)/services/signals/dashboard/page.tsx`) migrated to hooks — shows
-      a `demo / mock data` amber badge when any hook is mock-serving, per-panel `FetchErrorBanner` on remote failures.
+- [x] [AGENT] P0. Dashboard page (`app/(platform)/services/signals/dashboard/page.tsx`) migrated to hooks — shows a
+      `demo / mock data` amber badge when any hook is mock-serving, per-panel `FetchErrorBanner` on remote failures.
 - [x] [AGENT] P0. 7 new vitest tests (3-way panel + 4 hooks mock/live branches + error surfacing). 33/33 green on the
       signal-broadcast UI suite. `npx tsc --noEmit` clean on all touched files.
-- [x] [AGENT] P0. **Phase 9 success gate**: UI dashboard renders 3-way parity; hooks branch mock/live correctly;
-      tier-0 demo continues to show realistic fixture data while staging/prod will hit live endpoints as soon as the
-      Phase 10 strategy-service read endpoints ship.
+- [x] [AGENT] P0. **Phase 9 success gate**: UI dashboard renders 3-way parity; hooks branch mock/live correctly; tier-0
+      demo continues to show realistic fixture data while staging/prod will hit live endpoints as soon as the Phase 10
+      strategy-service read endpoints ship.
 
 ### Phase 10 — strategy-service observability read endpoints [SHIPPED 2026-04-20]
 
-Added 2026-04-20 immediately after Phase 9 — the UI fetch hooks were pointed at endpoints that hadn't been built
-yet on strategy-service. Shipped in `unified-api-contracts@bdc9ca0` + `strategy-service@6e6fd8d` on `live-defi-rollout`.
+Added 2026-04-20 immediately after Phase 9 — the UI fetch hooks were pointed at endpoints that hadn't been built yet on
+strategy-service. Shipped in `unified-api-contracts@bdc9ca0` + `strategy-service@6e6fd8d` on `live-defi-rollout`.
 
 - [x] [AGENT] P0. UAC: `unified_api_contracts/signal_broadcast/observability.py` with `DeliveryHealth` /
       `BacktestPaperLiveRow` / `PnlAttributionRow` + three `*Envelope` response shapes + `PnlAttributionReport` POST
       body. All `ConfigDict(frozen=True, extra="forbid")`; field names locked to the UI TS mirrors.
 - [x] [AGENT] P0. Strategy-service `observability_stores.py` with 3 thread-safe in-process stores:
-      `DeliveryHealthTracker` (rolling-24h counter — populated online by `WebhookTransport` on every dispatch
-      attempt, with success / retry / latency tracking), `BacktestPaperLiveStore` (batch store with
+      `DeliveryHealthTracker` (rolling-24h counter — populated online by `WebhookTransport` on every dispatch attempt,
+      with success / retry / latency tracking), `BacktestPaperLiveStore` (batch store with
       `replace_rows(counterparty_id, rows)` writer — populated by the Phase 11 ingest job), `PnlAttributionStore`
       (per-counterparty rows + store-level opt-in set via `register_opt_in(cp_id)`).
-- [x] [AGENT] P0. `WebhookTransport` wired to record to `DeliveryHealthTracker` on every dispatch attempt —
-      latency computed via `time.monotonic()` around the POST; `None` latency (connection error) counts toward total
-      but not toward avg-latency.
+- [x] [AGENT] P0. `WebhookTransport` wired to record to `DeliveryHealthTracker` on every dispatch attempt — latency
+      computed via `time.monotonic()` around the POST; `None` latency (connection error) counts toward total but not
+      toward avg-latency.
 - [x] [AGENT] P0. `build_rest_pull_router` split into 2 helpers (`_register_emission_routes` +
       `_register_observability_routes`) to hold ruff C901 ≤ 7 with 4 new endpoints added.
-- [x] [AGENT] P0. 4 new endpoints: `GET /signal_broadcast/delivery-health` + `GET /signal_broadcast/backtest-paper-live`
-      + `GET /signal_broadcast/pnl-attribution` + `POST /signal_broadcast/pnl-attribution` (opt-in guarded). All use
-      the same HMAC-signed-JWT bearer auth the existing `/emissions` + `/acknowledge` use.
+- [x] [AGENT] P0. 4 new endpoints: `GET /signal_broadcast/delivery-health` +
+      `GET /signal_broadcast/backtest-paper-live` + `GET /signal_broadcast/pnl-attribution` +
+      `POST /signal_broadcast/pnl-attribution` (opt-in guarded). All use the same HMAC-signed-JWT bearer auth the
+      existing `/emissions` + `/acknowledge` use.
 - [x] [AGENT] P0. `SignalBroadcaster.build` instantiates the 3 stores + exposes them via `health_tracker` /
       `backtest_store` / `pnl_store` properties so populators + tests can write without reaching into transport.
 - [x] [AGENT] P0. 23 new tests — 8 store unit + 15 endpoint integration via FastAPI `TestClient`. Ruff + basedpyright
       clean on the full signal_broadcast sub-package.
 - [x] [AGENT] P0. Side-fix: `router.is_counterparty_active(cp)` helper introduced during Phase 10 to bridge V1/V2
-      Counterparty shapes; subsequently simplified by another agent in `3d9792f` + `8df7576` (UAC facade migration
-      to V2 primary settled, V1 compat shim no longer needed — `is_counterparty_active` now just checks
+      Counterparty shapes; subsequently simplified by another agent in `3d9792f` + `8df7576` (UAC facade migration to V2
+      primary settled, V1 compat shim no longer needed — `is_counterparty_active` now just checks
       `cp.status == CounterpartyStatus.ACTIVE`).
 - [x] [AGENT] P0. **Phase 10 success gate**: UI hooks at `NEXT_PUBLIC_MOCK_API=false` now resolve against live
       strategy-service endpoints; tier-0 demo unchanged. 23 new tests green. UI TS mirrors + Python UAC shapes
@@ -408,50 +408,46 @@ yet on strategy-service. Shipped in `unified-api-contracts@bdc9ca0` + `strategy-
 
 ### Phase 11 — observability ingest populator [REMAINING]
 
-The Phase 10 endpoints exist + the UI reads them, but two of the three stores
-(`BacktestPaperLiveStore` + `PnlAttributionStore` for non-opt-in view) return `[]`
-until a populator schedules writes. `DeliveryHealthTracker` is the only one
-populated online (from `WebhookTransport`). This phase ships the populator that
-aggregates strategy-service's own data sources (maturity ledger + BQ audit sink)
-into per-counterparty `BacktestPaperLiveRow` rows and calls
-`broadcaster.backtest_store.replace_rows(cp_id, rows)` on a schedule.
+The Phase 10 endpoints exist + the UI reads them, but two of the three stores (`BacktestPaperLiveStore` +
+`PnlAttributionStore` for non-opt-in view) return `[]` until a populator schedules writes. `DeliveryHealthTracker` is
+the only one populated online (from `WebhookTransport`). This phase ships the populator that aggregates
+strategy-service's own data sources (maturity ledger + BQ audit sink) into per-counterparty `BacktestPaperLiveRow` rows
+and calls `broadcaster.backtest_store.replace_rows(cp_id, rows)` on a schedule.
 
-No UI work. No UAC work. No new endpoints. Purely the last-mile wire-up between
-strategy-service's existing data sources and the already-shipped observability
-stores.
+No UI work. No UAC work. No new endpoints. Purely the last-mile wire-up between strategy-service's existing data sources
+and the already-shipped observability stores.
 
 **Scope + sources:**
 
-| Metric                     | Source                                                                                                                     | Aggregation                                    |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `backtest_sharpe`          | `strategy_service.availability` maturity ledger — per-slot backtest summary rows attached at the `BACKTESTED` stage        | latest per (counterparty_id, slot_label)       |
-| `backtest_return_pct`      | Maturity ledger (same row)                                                                                                 | latest per (counterparty_id, slot_label)       |
-| `paper_sharpe` (null OK)   | Maturity ledger — `PAPER_TRADING` / `PAPER_TRADING_VALIDATED` stage rows                                                   | latest if slot past `PAPER_TRADING`, else null |
-| `paper_return_pct` (null)  | Maturity ledger (same row)                                                                                                 | latest if past `PAPER_TRADING`, else null      |
-| `paper_signal_count` (null) | Maturity ledger (count of paper-emitted signals over window)                                                               | sum if past `PAPER_TRADING`, else null         |
-| `live_signal_count`        | BQ `STRATEGY_SIGNAL_EMITTED_EXTERNAL` event sink (already wired via `EmissionAuditor` Phase 3)                             | count over rolling window per (cp, slot)       |
-| `live_signal_hit_rate`     | BQ sink joined against counterparty ack status (`processed` vs `rejected`)                                                 | successes / total over window                  |
-| `live_return_pct` (null)   | Only set if counterparty has posted P&L attribution for the same window                                                    | from `PnlAttributionStore.rows_for(cp_id)`     |
-| `window_start` / `_end`    | Rolling 30d from now, truncated to UTC midnight                                                                            | N/A                                            |
+| Metric                      | Source                                                                                                              | Aggregation                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `backtest_sharpe`           | `strategy_service.availability` maturity ledger — per-slot backtest summary rows attached at the `BACKTESTED` stage | latest per (counterparty_id, slot_label)       |
+| `backtest_return_pct`       | Maturity ledger (same row)                                                                                          | latest per (counterparty_id, slot_label)       |
+| `paper_sharpe` (null OK)    | Maturity ledger — `PAPER_TRADING` / `PAPER_TRADING_VALIDATED` stage rows                                            | latest if slot past `PAPER_TRADING`, else null |
+| `paper_return_pct` (null)   | Maturity ledger (same row)                                                                                          | latest if past `PAPER_TRADING`, else null      |
+| `paper_signal_count` (null) | Maturity ledger (count of paper-emitted signals over window)                                                        | sum if past `PAPER_TRADING`, else null         |
+| `live_signal_count`         | BQ `STRATEGY_SIGNAL_EMITTED_EXTERNAL` event sink (already wired via `EmissionAuditor` Phase 3)                      | count over rolling window per (cp, slot)       |
+| `live_signal_hit_rate`      | BQ sink joined against counterparty ack status (`processed` vs `rejected`)                                          | successes / total over window                  |
+| `live_return_pct` (null)    | Only set if counterparty has posted P&L attribution for the same window                                             | from `PnlAttributionStore.rows_for(cp_id)`     |
+| `window_start` / `_end`     | Rolling 30d from now, truncated to UTC midnight                                                                     | N/A                                            |
 
-- [x] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_ingest.py` with
-      `BacktestPaperLiveIngest` class. Constructor takes: `broadcaster: SignalBroadcaster`,
-      `maturity_reader: MaturityLedgerReader`, `bq_reader: EmissionBqReader`, `window_days: int = 30`,
-      `refresh_interval_seconds: float = 900.0` (default 15 min).
-- [x] [AGENT] P0. Method `ingest_once() -> None` — for each counterparty in
-      `broadcaster._router.all_counterparties()`, for each entitled slot in `cp.allowed_slots`, build a
-      `BacktestPaperLiveRow` by joining maturity-ledger reads + BQ live-signal aggregates; call
-      `broadcaster.backtest_store.replace_rows(cp.id, rows)`.
-- [x] [AGENT] P0. Per-counterparty failure isolation — a maturity-ledger or BQ read failure for one counterparty
-      MUST NOT stall ingest for the others. Catch all exceptions per-counterparty, classify through
-      `classify_venue_error()`, emit `ADAPTER_FETCH_FAILED` via `log_event`, continue to the next counterparty.
-      Mirror the pattern from `emitter.py` Phase 3.
+- [x] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_ingest.py` with `BacktestPaperLiveIngest`
+      class. Constructor takes: `broadcaster: SignalBroadcaster`, `maturity_reader: MaturityLedgerReader`,
+      `bq_reader: EmissionBqReader`, `window_days: int = 30`, `refresh_interval_seconds: float = 900.0` (default 15
+      min).
+- [x] [AGENT] P0. Method `ingest_once() -> None` — for each counterparty in `broadcaster._router.all_counterparties()`,
+      for each entitled slot in `cp.allowed_slots`, build a `BacktestPaperLiveRow` by joining maturity-ledger reads + BQ
+      live-signal aggregates; call `broadcaster.backtest_store.replace_rows(cp.id, rows)`.
+- [x] [AGENT] P0. Per-counterparty failure isolation — a maturity-ledger or BQ read failure for one counterparty MUST
+      NOT stall ingest for the others. Catch all exceptions per-counterparty, classify through `classify_venue_error()`,
+      emit `ADAPTER_FETCH_FAILED` via `log_event`, continue to the next counterparty. Mirror the pattern from
+      `emitter.py` Phase 3.
 - [x] [AGENT] P0. Scheduler — background daemon thread started by `SignalBroadcaster.start()`. Calls `ingest_once()`
       every `config.observability_refresh_interval_seconds` (new typed field on `SignalBroadcastConfig`). Idempotent
       start/stop matching the existing credential reloader pattern. Shutdown on `SignalBroadcaster.stop()` via
       `threading.Event.set()`.
-- [x] [AGENT] P0. Abstractions `MaturityLedgerReader` + `EmissionBqReader` — small Protocol classes over the strategy-service
-      `availability.*` module + a BQ client. Injectable so tests can stub with in-memory fakes.
+- [x] [AGENT] P0. Abstractions `MaturityLedgerReader` + `EmissionBqReader` — small Protocol classes over the
+      strategy-service `availability.*` module + a BQ client. Injectable so tests can stub with in-memory fakes.
 - [x] [AGENT] P0. Typed config reloader extension — add `observability_refresh_interval_seconds: float = 900.0` +
       `observability_window_days: int = 30` to `SignalBroadcastConfig`. No `object` type, no `getattr`.
 - [x] [AGENT] P0. Unit tests — 90%+ coverage on `BacktestPaperLiveIngest` with fake readers. Cover: happy path,
@@ -461,10 +457,9 @@ stores.
       `STRATEGY_SIGNAL_EMITTED_EXTERNAL` events, in-memory maturity ledger fixture, confirm
       `BacktestPaperLiveStore.rows_for(cp_id)` returns rows whose shape matches what
       `GET /signal_broadcast/backtest-paper-live` exposes and what the UI hook consumes.
-- [x] [AGENT] P0. Emit `OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` /
-      `OBSERVABILITY_INGEST_FAILED` lifecycle events via `log_event` so ops can see ingest health in the event
-      stream. Freshness exposed via `broadcaster.data_freshness()` — add `observability_last_ingest_at` alongside
-      the existing `last_emission_at`.
+- [x] [AGENT] P0. Emit `OBSERVABILITY_INGEST_STARTED` / `OBSERVABILITY_INGEST_COMPLETED` / `OBSERVABILITY_INGEST_FAILED`
+      lifecycle events via `log_event` so ops can see ingest health in the event stream. Freshness exposed via
+      `broadcaster.data_freshness()` — add `observability_last_ingest_at` alongside the existing `last_emission_at`.
 - [x] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on signal_broadcast scope
       (pre-existing unrelated drift outside this scope allowed). Ruff + basedpyright clean.
 - [x] [AGENT] P0. Commit + push with `--no-verify` per session practice. Plan checkbox flip.
@@ -477,8 +472,8 @@ stores.
 - Hot-reloading the refresh interval (requires config reloader machinery beyond the typed-field add — follow-up).
 - Multi-process ingest coordination — strategy-service runs as a single Cloud Run service, so per-process ingest is
   fine. If it scales horizontally later, a distributed lock or leader election lands as a separate plan.
-- Reconciling the counterparty's own fills against the signals we emitted — Odum does not observe counterparty
-  fills (D10). Only P&L the counterparty explicitly posts back is surfaced; the rest stays null by design.
+- Reconciling the counterparty's own fills against the signals we emitted — Odum does not observe counterparty fills
+  (D10). Only P&L the counterparty explicitly posts back is surfaced; the rest stays null by design.
 
 ## Handoff — 2026-04-20
 

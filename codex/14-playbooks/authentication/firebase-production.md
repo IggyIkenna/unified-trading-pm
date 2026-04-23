@@ -62,13 +62,13 @@ trip. Tracked in [../roadmap/next-waves.md](../roadmap/next-waves.md).
 
 ## Production-only safeguards
 
-| Safeguard                              | Where enforced                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| No auth bypass env var                 | `DISABLE_AUTH` ignored when `NEXT_PUBLIC_AUTH_PROVIDER=firebase`                                   |
-| Password reset requires verified email | Firebase default config                                                                            |
-| Admin actions require re-auth          | [user-management-ui](user-management-ui) server middleware — `X-Acting-User-Email` header required |
-| API keys never log-shipped             | [ApiKeyReloader](unified-trading-library/api_key_reloader.py) from UTL — keys in memory only       |
-| Deprovisioning cascades                | Disable user → Firebase claims revoked → UI sign-out within 1 hour (token refresh)                 |
+| Safeguard                              | Where enforced                                                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| No auth bypass env var                 | `DISABLE_AUTH` ignored when `NEXT_PUBLIC_AUTH_PROVIDER=firebase`                                                     |
+| Password reset requires verified email | Firebase default config                                                                                              |
+| Admin actions require re-auth          | [user-management-ui](user-management-ui) server middleware — `X-Acting-User-Email` header required                   |
+| API keys never log-shipped             | [ApiKeyReloader](unified-trading-library/unified_trading_library/api_key_reloader.py) from UTL — keys in memory only |
+| Deprovisioning cascades                | Disable user → Firebase claims revoked → UI sign-out within 1 hour (token refresh)                                   |
 
 ## Never do on production
 

@@ -123,9 +123,9 @@ a friendly "Firebase not configured" message instead of crashing.
 `lib/onboarding/doc-store.ts` exposes a `DocStore` adapter with two backends picked at request-time by
 `resolveDocStore()`:
 
-| Backend             | Selected when                                         | Behaviour                                                                                                |
-| ------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `localStore`        | `CLOUD_MOCK_MODE=true` OR `ENVIRONMENT ∈ {dev, test}` | Writes / reads `.local-dev-cache/onboarding-docs/`                                                       |
+| Backend             | Selected when                                         | Behaviour                                                                                            |
+| ------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `localStore`        | `CLOUD_MOCK_MODE=true` OR `ENVIRONMENT ∈ {dev, test}` | Writes / reads `.local-dev-cache/onboarding-docs/`                                                   |
 | `cloudStorageStore` | Otherwise (staging / prod)                            | Uses `@google-cloud/storage` against bucket `odum-${env}-onboarding-docs` with ADC credentials (§5a) |
 
 Canonical `gs://odum-${env}-onboarding-docs/{org}/{app}/{doc}.ext` URIs are always emitted on upload regardless of
@@ -143,8 +143,8 @@ without errors, the operator must provision:
    `unified-trading-system-ui`. Avoid project-level grants — keep the blast radius scoped to the single bucket.
 3. **Credentials:** the SDK uses ADC. On Cloud Run the attached service account works out of the box. For local admin
    runs, `gcloud auth application-default login` is sufficient. Never ship a service-account JSON file into the image.
-4. **Smoke test:** from a staging deployment, POST a small PDF to `/api/onboarding/upload` with test org/app/doc_type
-   → GET `/api/onboarding/download` → delete via the admin UI's typed-confirm dialog. Watch Cloud Logging for the
+4. **Smoke test:** from a staging deployment, POST a small PDF to `/api/onboarding/upload` with test org/app/doc_type →
+   GET `/api/onboarding/download` → delete via the admin UI's typed-confirm dialog. Watch Cloud Logging for the
    `ADMIN_DOC_DELETED` structured event (see §8).
 
 The `DocStore` adapter interface is stable — swap backends by setting `CLOUD_MOCK_MODE=true` (falls back to local disk)
@@ -176,15 +176,15 @@ Documents panel). They are in the orphan-audit whitelist under the `API-HANDLER`
 
 ## §8 — Admin audit events
 
-`lib/admin/audit.ts` exposes `recordAdminEvent()` which always emits a structured `console.info` JSON line (picked up
-by Cloud Logging as a log entry) AND attempts a Firestore `/admin_events` write when Firebase is configured. Firestore
+`lib/admin/audit.ts` exposes `recordAdminEvent()` which always emits a structured `console.info` JSON line (picked up by
+Cloud Logging as a log entry) AND attempts a Firestore `/admin_events` write when Firebase is configured. Firestore
 failures are swallowed — a logging failure never fails a business op.
 
 Current event types (extend inline until corpus >10, then promote to a UAC enum):
 
-| Type                | Fires from                    | `target` shape                           | `details` shape                                |
-| ------------------- | ----------------------------- | ---------------------------------------- | ---------------------------------------------- |
-| `ADMIN_DOC_DELETED` | `/api/onboarding/docs/delete` | `{ org_id, application_id, doc_type }`  | `{ deleted_path, backend: "local" \| "cloud" }` |
+| Type                | Fires from                    | `target` shape                         | `details` shape                                 |
+| ------------------- | ----------------------------- | -------------------------------------- | ----------------------------------------------- |
+| `ADMIN_DOC_DELETED` | `/api/onboarding/docs/delete` | `{ org_id, application_id, doc_type }` | `{ deleted_path, backend: "local" \| "cloud" }` |
 
 Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never blocks on logging.
 
@@ -199,5 +199,5 @@ Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never 
 - ~~**Port orphan-audit to deployment-ui**: deferred — deployment-ui is Vite/React (not Next.js), so scanner needs a
   framework adapter to discover React Router routes.~~ **Shipped 2026-04-22** in deployment-ui `e5d2355`. React Router
   variant at `deployment-ui/scripts/orphan-audit.ts` discovers `<Route path="...">` JSX; same whitelist / baseline /
-  blocking contract as the Next.js variant. Triage surfaced 2 real orphans (`/chaos`, `/client-subscriptions`) —
-  wired into `Header.tsx` admin nav. See `codex/06-coding-standards/orphan-audit.md §8`.
+  blocking contract as the Next.js variant. Triage surfaced 2 real orphans (`/chaos`, `/client-subscriptions`) — wired
+  into `Header.tsx` admin nav. See `codex/06-coding-standards/orphan-audit.md §8`.

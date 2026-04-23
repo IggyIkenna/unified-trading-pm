@@ -100,9 +100,10 @@ todos:
         status: done
 
 - id: p1-pbm-wiring-followup content: |
-  - [ ] [AGENT] P1. Replace deterministic mock series in `strategy_performance.py` with a real query against
+  - [x] [AGENT] P1. Replace deterministic mock series in `strategy_performance.py` with a real query against
         position-balance-monitor-service P&L streams keyed on `(odum-paper | odum-live, instance_id, regime)`. Gate on
-        `reporting` entitlement OR `(org, instance_id)` subscription. status: pending
+        `reporting` entitlement OR `(org, instance_id)` subscription. _(archived 2026-04-22 — mock remains; wire PBMS
+        query in a future active plan.)_ status: deferred
 
 # ──────────────────────────────────────────────────────────────────────
 

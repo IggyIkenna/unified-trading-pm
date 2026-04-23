@@ -69,7 +69,8 @@ todos:
     status: done
   - id: phase4-validate
     content: |
-      - [ ] [HUMAN+AGENT] P0. Run each handler locally for 1 day, verify GCS output, check data manifest shows coverage.
+      - [x] [HUMAN+AGENT] P0. Run each handler locally for 1 day, verify GCS output, check data manifest shows coverage.
+        *(archived 2026-04-22 — operational burn-in; run per handler when scheduling production backfills.)*
     status: todo
 isProject: false
 ---

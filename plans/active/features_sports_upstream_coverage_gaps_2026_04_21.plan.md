@@ -1,5 +1,7 @@
 ---
-title: "features-sports — close upstream-data coverage gaps (Transfermarkt 2020-26 backfill, SFI LEAGUES+PROGRESSIVE backfill, weather venue-id cross-ref)"
+title:
+  "features-sports — close upstream-data coverage gaps (Transfermarkt 2020-26 backfill, SFI LEAGUES+PROGRESSIVE
+  backfill, weather venue-id cross-ref)"
 priority: P1
 status: active
 owner: agent
@@ -29,11 +31,7 @@ repo_gates:
     code: C0
     deployment: none
     business: none
-depends_on:
-  [
-    features_sports_denormalisation_pipeline_2026_04_21,
-    features_sports_derived_data_crime_fixes_2026_04_21,
-  ]
+depends_on: [features_sports_denormalisation_pipeline_2026_04_21, features_sports_derived_data_crime_fixes_2026_04_21]
 isProject: false
 ---
 
@@ -41,8 +39,8 @@ isProject: false
 
 While shipping the denormalisation pipeline (plan `features_sports_denormalisation_pipeline_2026_04_21`) and the
 data-crime follow-up (`features_sports_derived_data_crime_fixes_2026_04_21`), three upstream-data gaps surfaced that
-prevent the pipeline from producing non-NULL values in prod. None of them are pipeline logic bugs (the 31 pipeline
-unit tests remain green); all three are raw-layer coverage or cross-ref issues.
+prevent the pipeline from producing non-NULL values in prod. None of them are pipeline logic bugs (the 31 pipeline unit
+tests remain green); all three are raw-layer coverage or cross-ref issues.
 
 ## PRE-AUDIT-FINDINGS (2026-04-21 — agent)
 
@@ -53,7 +51,8 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
 - `launch-transfermarkt-backfill-vm.sh` already exists
   ([`deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`](../../../deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh))
   — singleton-locked (shared API key, ~1 req/sec pacing), accepts explicit historical date ranges, routes via
-  `setup-data-pipeline-vm.sh` → `python -m instruments_service --operation instruments --mode batch --category SPORTS --sports-provider TRANSFERMARKT --start-date ... --end-date ...`.
+  `setup-data-pipeline-vm.sh` →
+  `python -m instruments_service --operation instruments --mode batch --category SPORTS --sports-provider TRANSFERMARKT --start-date ... --end-date ...`.
 - **No new code** needed here. Just tarball refresh + fire.
 
 ### Track B — SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS` backfill (new launcher + operator run + codex fix)
@@ -67,8 +66,8 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
   L4365-4367 explicitly says "SFI has NO standings endpoint (confirmed from archived service). Standings come from API
   Football" and sets `_want_sfi_standings = False`. Codex §2.4 `SFI_STANDINGS` declaration is aspirational and
   contradicts the shipped code — it needs to be removed / corrected.
-- **New launcher** `launch-sfi-backfill-vm.sh` needed — same shape as `launch-sfi-forward-poll.sh` but accepts
-  explicit historical date ranges (like `launch-transfermarkt-backfill-vm.sh`), entity filter
+- **New launcher** `launch-sfi-backfill-vm.sh` needed — same shape as `launch-sfi-forward-poll.sh` but accepts explicit
+  historical date ranges (like `launch-transfermarkt-backfill-vm.sh`), entity filter
   (`SFI_LEAGUES | SFI_PROGRESSIVE_STATS`), singleton-lock with `sfi-backfill-*` prefix distinct from `sfi-fwd-*`.
 
 ### Track C — Weather venue-id cross-ref (code + data-quality fix)
@@ -82,8 +81,8 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
     via `pd.to_numeric(errors="coerce")` → `str(int(v))`. Canonical string venues become empty `""`.
   - Weather: OpenMeteo orchestrator at
     [`instruments-service/instruments_service/engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py)
-    L4670-4680 reads fixtures' `venue.venue_id` dict-path. If fixtures carry canonical dicts at that moment, the
-    weather parquet is keyed by canonical textual codes. This is inconsistent with what gets read downstream.
+    L4670-4680 reads fixtures' `venue.venue_id` dict-path. If fixtures carry canonical dicts at that moment, the weather
+    parquet is keyed by canonical textual codes. This is inconsistent with what gets read downstream.
 - **Venues reference (`day=all/entity=venues/venues.parquet`):** has columns
   `venue_id (numeric), name, city, country, capacity, surface, latitude, longitude, altitude` — uses NUMERIC ids
   (aligned with fixtures, not aligned with current weather parquet).
@@ -94,28 +93,28 @@ unit tests remain green); all three are raw-layer coverage or cross-ref issues.
   - **Option B (downstream helper):** features-sports-service `pipeline/fixture_features._lookup_weather` resolves
     numeric `venue_id` → canonical code via `venues.parquet` (numeric `venue_id` → `name` → `build_venue_id(name)`).
     Works without backfilling weather parquets; one extra join-hop at feature-compute time.
-- **Recommendation:** Option B first (quick win, fixes the feature pipeline immediately). Track Option A as a
-  cross-repo cleanup plan for later once Option B proves the mapping is correct.
+- **Recommendation:** Option B first (quick win, fixes the feature pipeline immediately). Track Option A as a cross-repo
+  cleanup plan for later once Option B proves the mapping is correct.
 
 ### Blast radius
 
-| Track | Repos touched                                      | Code changes                                              | Operator runs |
-| ----- | -------------------------------------------------- | --------------------------------------------------------- | ------------- |
-| A     | deployment-service (tarball) + instruments-store (VM target bucket) | 0 code — tarball refresh + VM fire                       | 1 multi-year VM run |
-| B     | deployment-service (new launcher) + unified-trading-pm (codex §2.4 fix) | New `launch-sfi-backfill-vm.sh` ~200 LoC (copy-adapt pattern from Transfermarkt launcher) + codex §2.4 rewrite | 1 multi-year VM run |
-| C     | features-sports-service (pipeline/fixture_features.py) + unified-trading-pm (codex §9.1 update) | `_lookup_weather` venue-id resolution hop via venues DF + 3 unit tests | 0 (dry-run verification on 2024-09-01) |
+| Track | Repos touched                                                                                   | Code changes                                                                                                   | Operator runs                          |
+| ----- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| A     | deployment-service (tarball) + instruments-store (VM target bucket)                             | 0 code — tarball refresh + VM fire                                                                             | 1 multi-year VM run                    |
+| B     | deployment-service (new launcher) + unified-trading-pm (codex §2.4 fix)                         | New `launch-sfi-backfill-vm.sh` ~200 LoC (copy-adapt pattern from Transfermarkt launcher) + codex §2.4 rewrite | 1 multi-year VM run                    |
+| C     | features-sports-service (pipeline/fixture_features.py) + unified-trading-pm (codex §9.1 update) | `_lookup_weather` venue-id resolution hop via venues DF + 3 unit tests                                         | 0 (dry-run verification on 2024-09-01) |
 
 ### Pre-audit manifest
 
-| File / thing to find                                                                                    | Purpose                                                                 | Expected outcome                                                              |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`                                     | Pattern reference for Track A fire + Track B new launcher.              | Singleton-lock + `setup-data-pipeline-vm.sh` routing + `--entity` filter; confirmed L1-50. |
-| `deployment-service/scripts/vm/launch-sfi-forward-poll.sh`                                              | Pattern reference for Track B new launcher (shares SFI-specific metadata). | Singleton-lock + rate-limit guidance + provider token metadata; confirmed L1-40. |
-| `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`                                               | Check `VM_TASK=sports-forward-poll` handles the backfill payload too (or a new VM_TASK branch is needed). | Confirm in Phase 0 — if a dedicated branch is required for sfi-backfill vs sfi-forward-poll, extend setup script. |
-| `instruments-service/instruments_service/engine/orchestrator.py` L4365-4367                             | Confirm `_want_sfi_standings = False` comment on SFI endpoint reality.  | Codex §2.4 `SFI_STANDINGS` bullet contradicts shipped code — remove.          |
-| `instruments-service/instruments_service/reference_data/adapters/sports/adapters/open_meteo.py`         | Audit what `venue_id` key OpenMeteo writes (canonical vs numeric).      | Confirm the numeric-vs-textual mismatch origin; decide Track C Option A vs B. |
-| `features-sports-service/features_sports_service/data/gcs_reader.py` L188-190 (`_normalize_fixtures`)   | Confirm the `pd.to_numeric` force that drops canonical string venue_ids. | Extend fixture normalisation to keep both forms (numeric + text) until a migration reconciles the upstream write-paths. |
-| `unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py`                  | Check `build_venue_id(name)` exists + its exact hash formula.            | Reuse for numeric→canonical mapping in `_lookup_weather` if Option B is chosen. |
+| File / thing to find                                                                                  | Purpose                                                                                                   | Expected outcome                                                                                                        |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`                                   | Pattern reference for Track A fire + Track B new launcher.                                                | Singleton-lock + `setup-data-pipeline-vm.sh` routing + `--entity` filter; confirmed L1-50.                              |
+| `deployment-service/scripts/vm/launch-sfi-forward-poll.sh`                                            | Pattern reference for Track B new launcher (shares SFI-specific metadata).                                | Singleton-lock + rate-limit guidance + provider token metadata; confirmed L1-40.                                        |
+| `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`                                             | Check `VM_TASK=sports-forward-poll` handles the backfill payload too (or a new VM_TASK branch is needed). | Confirm in Phase 0 — if a dedicated branch is required for sfi-backfill vs sfi-forward-poll, extend setup script.       |
+| `instruments-service/instruments_service/engine/orchestrator.py` L4365-4367                           | Confirm `_want_sfi_standings = False` comment on SFI endpoint reality.                                    | Codex §2.4 `SFI_STANDINGS` bullet contradicts shipped code — remove.                                                    |
+| `instruments-service/instruments_service/reference_data/adapters/sports/adapters/open_meteo.py`       | Audit what `venue_id` key OpenMeteo writes (canonical vs numeric).                                        | Confirm the numeric-vs-textual mismatch origin; decide Track C Option A vs B.                                           |
+| `features-sports-service/features_sports_service/data/gcs_reader.py` L188-190 (`_normalize_fixtures`) | Confirm the `pd.to_numeric` force that drops canonical string venue_ids.                                  | Extend fixture normalisation to keep both forms (numeric + text) until a migration reconciles the upstream write-paths. |
+| `unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py`                | Check `build_venue_id(name)` exists + its exact hash formula.                                             | Reuse for numeric→canonical mapping in `_lookup_weather` if Option B is chosen.                                         |
 
 ### Success criteria
 
@@ -130,8 +129,8 @@ Per-track:
   updated to match the shipped "no standings endpoint" reality. One live backfill run for 2020-01-01..2026-04-21
   populates `entity=sfi_leagues` + `entity=progressive_stats` daily.
 - **Track C.** `features-sports-service/scripts/quality-gates.sh` green. New unit tests prove numeric venue_id resolves
-  to canonical weather-row. Dry-run on 2024-09-01 shows `weather_source` ∈ `{actual, forecast_t0, forecast_t24h}` for
-  at least some fixtures (not `'none'` across the board).
+  to canonical weather-row. Dry-run on 2024-09-01 shows `weather_source` ∈ `{actual, forecast_t0, forecast_t24h}` for at
+  least some fixtures (not `'none'` across the board).
 
 ### Dependency graph
 
@@ -181,7 +180,8 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
       fan-out). Track via `gcloud logging read 'resource.labels.instance_id=<vm>' --limit 50 --format json` + events
       `ADAPTER_FETCH_*` / `TRANSFERMARKT_*`.
 
-- [ ] [AGENT] P1. Post-backfill verification: `gsutil ls gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2022-06-15/entity=player_values/`
+- [ ] [AGENT] P1. Post-backfill verification:
+      `gsutil ls gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2022-06-15/entity=player_values/`
       returns non-empty parquet. Re-run `compute_fixture_features("2024-09-01")` **without** the
       `_load_transfermarkt_values` patch from the parent plan's dry-run — `home_team_value_eur_as_of_kickoff` populates
       for at least some EPL fixtures (Transfermarkt covers EPL, non-EPL leagues may still NULL).
@@ -193,21 +193,18 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
       branch needed? If the forward-poll path works for backfill too, skip to next item; else extend setup script.
 
 - [x] [AGENT] P1. Create `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh` by copy-adapting the Transfermarkt
-      launcher pattern. Key differences:
-      - Singleton-lock prefix `sfi-backfill-*` (distinct from `sfi-fwd-*`; both locks can coexist since they target
-        different VM families but share the same SFI API key — actually: they must lock EACH OTHER since they share
-        `soccer-football-info-api-key`; use `sfi-*` prefix for the lock check).
-      - Provider token: `--sports-provider SOCCER_FOOTBALL_INFO`.
-      - Entity filter: `--entity SFI_LEAGUES | SFI_PROGRESSIVE_STATS` (mirror the Transfermarkt flag name).
-      - Default range: none (explicit start + end required — this is a backfill, not a rolling poll).
-      - Header comment cites codex §2.4 for SFI_STANDINGS-is-absent reality.
+      launcher pattern. Key differences: - Singleton-lock prefix `sfi-backfill-*` (distinct from `sfi-fwd-*`; both locks
+      can coexist since they target different VM families but share the same SFI API key — actually: they must lock EACH
+      OTHER since they share `soccer-football-info-api-key`; use `sfi-*` prefix for the lock check). - Provider token:
+      `--sports-provider SOCCER_FOOTBALL_INFO`. - Entity filter: `--entity SFI_LEAGUES | SFI_PROGRESSIVE_STATS` (mirror
+      the Transfermarkt flag name). - Default range: none (explicit start + end required — this is a backfill, not a
+      rolling poll). - Header comment cites codex §2.4 for SFI_STANDINGS-is-absent reality.
 
-- [x] [AGENT] P1. Update codex `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §2.4:
-      - Remove `SFI_STANDINGS` from the `Fetches:` list.
-      - Add a one-line note: "SFI has no standings endpoint. Pre-match league position comes from API-Football
-        `STANDINGS` (see §2.1). This is enforced by `instruments-service.engine.orchestrator.py` L4365-4367."
-      - Remove the `Denormalisation to fixture` bullet's reference to SFI standings; redirect to the API-Football
-        proxy.
+- [x] [AGENT] P1. Update codex `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §2.4: - Remove
+      `SFI_STANDINGS` from the `Fetches:` list. - Add a one-line note: "SFI has no standings endpoint. Pre-match league
+      position comes from API-Football `STANDINGS` (see §2.1). This is enforced by
+      `instruments-service.engine.orchestrator.py` L4365-4367." - Remove the `Denormalisation to fixture` bullet's
+      reference to SFI standings; redirect to the API-Football proxy.
 
 - [x] [HUMAN] P1. Refresh SPORTS category tarball post-launcher-merge:
       `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`.
@@ -225,22 +222,21 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 ### Track C — Weather venue-id cross-ref [PARALLEL]
 
 - [x] [AGENT] P0. Audit OpenMeteo adapter to confirm what `venue_id` representation it emits. If OpenMeteo writes
-      canonical textual codes (`DE_LEUNEN`) while `venues.parquet` writes numeric (`562`), document the mismatch in
-      this plan before coding.
+      canonical textual codes (`DE_LEUNEN`) while `venues.parquet` writes numeric (`562`), document the mismatch in this
+      plan before coding.
 
 - [x] [AGENT] P0. Implement Option B (downstream resolution hop): in
       [`features-sports-service/features_sports_service/pipeline/fixture_features.py`](../../../features-sports-service/features_sports_service/pipeline/fixture_features.py)
       `_lookup_weather`, accept an optional `venues: pd.DataFrame` param; when fixture `venue_id='562'` fails to find a
-      weather row, fall back to resolving `venues[venues.venue_id == '562'].name.iloc[0]` →
-      `build_venue_id(name)` → look up weather by that canonical code. If either hop fails, return `_empty_weather()`
-      as today.
+      weather row, fall back to resolving `venues[venues.venue_id == '562'].name.iloc[0]` → `build_venue_id(name)` →
+      look up weather by that canonical code. If either hop fails, return `_empty_weather()` as today.
 
-- [x] [AGENT] P0. Unit tests in `tests/unit/test_fixture_features_pipeline.py` (extend existing file):
-      - `test_weather_venue_id_resolved_via_venues_mapping_when_raw_numeric_id_not_in_weather_parquet` — fixture
-        `venue_id='562'`, weather has only `'DE_LEUNEN'`, venues df maps `562 → "De Leunen"`, UAC `build_venue_id`
-        produces `'DE_LEUNEN'` → weather row picked up.
-      - `test_weather_venue_id_fallback_yields_empty_when_no_canonical_match` — numeric id maps to a name that
-        `build_venue_id` yields a textual code NOT in weather → `weather_source='none'`.
+- [x] [AGENT] P0. Unit tests in `tests/unit/test_fixture_features_pipeline.py` (extend existing file): -
+      `test_weather_venue_id_resolved_via_venues_mapping_when_raw_numeric_id_not_in_weather_parquet` — fixture
+      `venue_id='562'`, weather has only `'DE_LEUNEN'`, venues df maps `562 → "De Leunen"`, UAC `build_venue_id`
+      produces `'DE_LEUNEN'` → weather row picked up. -
+      `test_weather_venue_id_fallback_yields_empty_when_no_canonical_match` — numeric id maps to a name that
+      `build_venue_id` yields a textual code NOT in weather → `weather_source='none'`.
 
 - [x] [AGENT] P0. Dry-run on 2024-09-01 against prod GCS: `weather_source` ∈ `{actual, forecast_t0, forecast_t24h}` for
       ≥1 EPL fixture. Log `weather_source` coverage summary.
@@ -257,14 +253,14 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 
 - [ ] [HUMAN] P0. Approve unlock of this plan (`[unlock-plan]` commit removing `locked_by`/`locked_since`) once all
       tracks reach their success criteria. Note: Track A + Track B operator runs take 12-24h each and span multiple
-      sessions; the HUMAN unlock can be requested once Track C + Track B launcher code + codex fixes are shipped and
-      the operator VMs are in-flight.
+      sessions; the HUMAN unlock can be requested once Track C + Track B launcher code + codex fixes are shipped and the
+      operator VMs are in-flight.
 
 ## Parallelisation
 
 - Tracks A, B, C are fully independent — different repos, different dep graphs, different operator vs code work.
-- Within Track B, the launcher + codex update + `setup-data-pipeline-vm.sh` audit can be done in one agent pass;
-  tarball refresh + VM fire are operator-sequential.
+- Within Track B, the launcher + codex update + `setup-data-pipeline-vm.sh` audit can be done in one agent pass; tarball
+  refresh + VM fire are operator-sequential.
 - Within Track C, the OpenMeteo audit (Phase 0 C.1) determines the implementation path; C.2-C.6 are sequential within
   Track C.
 
@@ -277,11 +273,14 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 - Canonical venue ids: `unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py`
   `build_venue_id`.
 - Tarball refresh SSOT: `deployment-service/scripts/vm/create-code-tarballs.sh` (`--category SPORTS` flag).
-- Singleton-lock pattern: `launch-sfi-forward-poll.sh` + `launch-transfermarkt-backfill-vm.sh` + `launch-mtds-prediction-backfill-vm.sh`.
+- Singleton-lock pattern: `launch-sfi-forward-poll.sh` + `launch-transfermarkt-backfill-vm.sh` +
+  `launch-mtds-prediction-backfill-vm.sh`.
 
 ## Out of scope
 
-- Track C Option A (OpenMeteo upstream write-path migration to numeric `venue_id` + existing weather parquet rewrite)
-  — file as a follow-up plan once Option B ships and proves the numeric→canonical mapping is correct.
-- FootyStats / Understat backfills — covered by existing `launch-footystats-backfill-vm.sh` + `launch-understat-backfill-vm.sh`; neither is flagged as a gap today.
-- Weather ERA5 historical backfill for 2018-2019 — mentioned in parent plan's "Out of scope" list; dedicated plan if needed.
+- Track C Option A (OpenMeteo upstream write-path migration to numeric `venue_id` + existing weather parquet rewrite) —
+  file as a follow-up plan once Option B ships and proves the numeric→canonical mapping is correct.
+- FootyStats / Understat backfills — covered by existing `launch-footystats-backfill-vm.sh` +
+  `launch-understat-backfill-vm.sh`; neither is flagged as a gap today.
+- Weather ERA5 historical backfill for 2018-2019 — mentioned in parent plan's "Out of scope" list; dedicated plan if
+  needed.

@@ -62,19 +62,19 @@ The `client_factory` module exists in current UTL source
 Rather than a "simple rebuild", archaeology shows the Cloud Build pipeline IS auto-wired but has been FAILING for 2+
 days. Plan 13 must actually diagnose the build breakage and fix it, not just click rebuild.
 
-| Check                                                    | Finding                                                                                                                                                                                                                                                                                 |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| UTL `Dockerfile` present                                 | Yes — `unified-trading-library/Dockerfile` (99 lines). `FROM python:3.13-slim` → installs gcsfuse, gcloud CLI, uv, keyrings-google-artifactregistry-auth, then `uv pip install --system --no-cache-dir --no-sources -e .`.                                                               |
-| UTL `cloudbuild.yaml` present                            | Yes — publishes wheel + Docker base image on push to `live-defi-rollout`.                                                                                                                                                                                                               |
-| Cloud Build trigger                                      | **Exists and fires.** `unified-trading-library-live-defi-rollout` (id `493290ef-2200-42e3-b9ba-c0d84894ed46`). Watches `^live-defi-rollout$`. `filename: cloudbuild.yaml`. Not disabled.                                                                                                 |
-| Last successful `:latest` tag in AR                      | 2026-04-15T16:55:26Z. Image SHA `40fa7ab5...`.                                                                                                                                                                                                                                          |
-| Commits on UTL `origin/live-defi-rollout` since then     | 20+ commits including `4da72fc0 feat: merge unified-events-interface into unified_trading_library.events`, `bf7ad8d1 feat(events): register ADAPTER_FETCH_FAILED + ADAPTER_FETCH_ANOMALY`, `b2ad7d0c feat(manifest-migrations): add UTL ManifestMigrator`, `78f96d94 feat(lifecycle)...`. |
+| Check                                                                   | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UTL `Dockerfile` present                                                | Yes — `unified-trading-library/Dockerfile` (99 lines). `FROM python:3.13-slim` → installs gcsfuse, gcloud CLI, uv, keyrings-google-artifactregistry-auth, then `uv pip install --system --no-cache-dir --no-sources -e .`.                                                                                                                                                                                                                                              |
+| UTL `cloudbuild.yaml` present                                           | Yes — publishes wheel + Docker base image on push to `live-defi-rollout`.                                                                                                                                                                                                                                                                                                                                                                                               |
+| Cloud Build trigger                                                     | **Exists and fires.** `unified-trading-library-live-defi-rollout` (id `493290ef-2200-42e3-b9ba-c0d84894ed46`). Watches `^live-defi-rollout$`. `filename: cloudbuild.yaml`. Not disabled.                                                                                                                                                                                                                                                                                |
+| Last successful `:latest` tag in AR                                     | 2026-04-15T16:55:26Z. Image SHA `40fa7ab5...`.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Commits on UTL `origin/live-defi-rollout` since then                    | 20+ commits including `4da72fc0 feat: merge unified-events-interface into unified_trading_library.events`, `bf7ad8d1 feat(events): register ADAPTER_FETCH_FAILED + ADAPTER_FETCH_ANOMALY`, `b2ad7d0c feat(manifest-migrations): add UTL ManifestMigrator`, `78f96d94 feat(lifecycle)...`.                                                                                                                                                                               |
 | Recent Cloud Build runs (filter `tags:library-unified-trading-library`) | **Every build since 2026-04-20 18:08 has FAILED.** 2026-04-22T00:38 `bf7ad8d1` WORKING (not yet finished at Phase 0 time). 2026-04-21T20:56 `74757e88` FAILURE. 2026-04-21T12:16 `78f96d94` FAILURE. 2026-04-21T03:00 `6be6fc1a` FAILURE. 2026-04-21T02:43 `258c6e0b` FAILURE. 2026-04-20T22:46 `a7d8a489` FAILURE. 2026-04-20T19:31 `7b01f8b2` FAILURE. 2026-04-20T19:28 `613fe77d` FAILURE. 2026-04-20T19:27 `4ee91009` FAILURE. 2026-04-20T18:08 `cd96d9fb` FAILURE. |
-| Root-cause error (from failed build `8244328b` log tail) | `Step #11 "build-base-image": RUN uv pip install --system --no-cache-dir --no-sources -e .` fails with: `× No solution found when resolving dependencies: Because unified-api-contracts was not found in the package registry and unified-trading-library==0.3.167 depends on unified-api-contracts>=0.1.0,<1.0.0, we can conclude that unified-trading-library==0.3.167 cannot be used.` |
-| UAC wheel in AR                                          | Stale. `0.1.20` (2026-04-02T00:57:13) and `0.2.38` (2026-03-12). Nothing newer. Current `unified-api-contracts/pyproject.toml` still declares `version = "0.1.20"` — so semver-agent has NOT bumped UAC in 20+ days on this branch.                                                     |
-| UTL wheel in AR                                          | Stale. `0.3.167` (2026-04-02T01:19:22) and `0.3.191` (2026-03-13). Current `unified-trading-library/pyproject.toml` declares `version = "0.3.167"` — same version, 20+ commits of new source → Cloud Build's `publish-python` step is idempotent (same version + same commit-SHA range), but the wheel content is incomplete for downstream. |
-| UAC Cloud Build trigger                                  | `unified-api-contracts-live-defi-rollout` exists and fires. UAC builds may be failing for a similar reason — confirm in Phase 0.                                                                                                                                                        |
-| Blast radius — services using UTL base image             | 25 active service Dockerfiles. Confirmed list in pre-audit manifest below.                                                                                                                                                                                                              |
+| Root-cause error (from failed build `8244328b` log tail)                | `Step #11 "build-base-image": RUN uv pip install --system --no-cache-dir --no-sources -e .` fails with: `× No solution found when resolving dependencies: Because unified-api-contracts was not found in the package registry and unified-trading-library==0.3.167 depends on unified-api-contracts>=0.1.0,<1.0.0, we can conclude that unified-trading-library==0.3.167 cannot be used.`                                                                               |
+| UAC wheel in AR                                                         | Stale. `0.1.20` (2026-04-02T00:57:13) and `0.2.38` (2026-03-12). Nothing newer. Current `unified-api-contracts/pyproject.toml` still declares `version = "0.1.20"` — so semver-agent has NOT bumped UAC in 20+ days on this branch.                                                                                                                                                                                                                                     |
+| UTL wheel in AR                                                         | Stale. `0.3.167` (2026-04-02T01:19:22) and `0.3.191` (2026-03-13). Current `unified-trading-library/pyproject.toml` declares `version = "0.3.167"` — same version, 20+ commits of new source → Cloud Build's `publish-python` step is idempotent (same version + same commit-SHA range), but the wheel content is incomplete for downstream.                                                                                                                            |
+| UAC Cloud Build trigger                                                 | `unified-api-contracts-live-defi-rollout` exists and fires. UAC builds may be failing for a similar reason — confirm in Phase 0.                                                                                                                                                                                                                                                                                                                                        |
+| Blast radius — services using UTL base image                            | 25 active service Dockerfiles. Confirmed list in pre-audit manifest below.                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### What actually needs fixing (narrowed scope)
 
@@ -90,21 +90,21 @@ but without sources uv MUST resolve `unified-api-contracts>=0.1.0,<1.0.0` from t
 `cloudbuild.yaml` step `build-base-image` does pass `--build-arg EXTRA_PYTHON_INDEX_URL="<token-embedded-AR-URL>"`, but
 the build FAILS at this step — meaning one of:
 
-1. **AR OAuth2 token expiry**: `gcloud auth print-access-token` tokens live ~1 hour. If the cloudbuild step
-   `auth-ar` runs early and `build-base-image` starts > 1h later after quality-gates, the token embedded in
+1. **AR OAuth2 token expiry**: `gcloud auth print-access-token` tokens live ~1 hour. If the cloudbuild step `auth-ar`
+   runs early and `build-base-image` starts > 1h later after quality-gates, the token embedded in
    `EXTRA_PYTHON_INDEX_URL` expires inside the Docker build.
 2. **uv + extra-index-url interaction with `--no-sources`**: When `--no-sources` is passed, uv does not re-read
-   `[tool.uv.sources]` AT ALL, so it relies on the extra-index. If `EXTRA_PYTHON_INDEX_URL` is empty (or the
-   `pip.conf` write at Dockerfile line 70-72 silently produces no-op because uv doesn't read pip.conf), uv sees no
-   secondary index and fails the resolution.
+   `[tool.uv.sources]` AT ALL, so it relies on the extra-index. If `EXTRA_PYTHON_INDEX_URL` is empty (or the `pip.conf`
+   write at Dockerfile line 70-72 silently produces no-op because uv doesn't read pip.conf), uv sees no secondary index
+   and fails the resolution.
 3. **UAC wheel version mismatch**: even if auth works, AR only has UAC `0.1.20` and `0.2.38`. The UTL pyproject pin
-   `>=0.1.0,<1.0.0` SHOULD accept `0.1.20`. So this is less likely the failure mode — but worth verifying by
-   checking if the pin has moved to `>=0.2.0` on some recent commit.
+   `>=0.1.0,<1.0.0` SHOULD accept `0.1.20`. So this is less likely the failure mode — but worth verifying by checking if
+   the pin has moved to `>=0.2.0` on some recent commit.
 
-**Most likely root cause: (1) token expiry or (2) uv not respecting `EXTRA_PYTHON_INDEX_URL` as pip would.** A clean
-fix is to copy the repo's own UAC sibling into `.deps/unified-api-contracts/` BEFORE the `COPY . .` + install, the same
-way the AWS CodeBuild path already does (Dockerfile line 79-80), so the build is self-sufficient and doesn't depend on
-AR network calls at all.
+**Most likely root cause: (1) token expiry or (2) uv not respecting `EXTRA_PYTHON_INDEX_URL` as pip would.** A clean fix
+is to copy the repo's own UAC sibling into `.deps/unified-api-contracts/` BEFORE the `COPY . .` + install, the same way
+the AWS CodeBuild path already does (Dockerfile line 79-80), so the build is self-sufficient and doesn't depend on AR
+network calls at all.
 
 ### Related orthogonal issues (flagged here, owned by sibling plans — not in Plan 13 scope)
 
@@ -123,33 +123,33 @@ AR network calls at all.
 Every service whose Dockerfile `FROM`s the UTL base image. A rebuild of `:latest` fixes all 25 in one shot (next build
 of each service pulls the new base).
 
-| Repo                                | Dockerfile path                       | Notes                                                                                          |
-| ----------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| features-sports-service             | `Dockerfile`                          | Cloud Run Job. Active witness — D2+D3 deployed 2026-04-22T00:30Z, ImportError on first run.    |
-| features-onchain-service            | `Dockerfile`                          | Active witness — daily workflow failing.                                                        |
-| features-calendar-service           | `Dockerfile`                          |                                                                                                |
-| features-commodity-service          | `Dockerfile`                          |                                                                                                |
-| features-cross-instrument-service   | `Dockerfile`                          |                                                                                                |
-| features-delta-one-service          | `Dockerfile`                          |                                                                                                |
-| features-volatility-service         | `Dockerfile`                          |                                                                                                |
-| features-multi-timeframe-service    | `Dockerfile`                          |                                                                                                |
-| instruments-service                 | `Dockerfile`                          |                                                                                                |
-| market-tick-data-service            | `Dockerfile`                          |                                                                                                |
-| market-data-processing-service      | `Dockerfile`                          |                                                                                                |
-| execution-service                   | `Dockerfile`                          |                                                                                                |
-| strategy-service                    | `Dockerfile`                          |                                                                                                |
-| trading-agent-service               | `Dockerfile`                          |                                                                                                |
-| ml-inference-service                | `Dockerfile`                          |                                                                                                |
-| ml-training-service                 | `Dockerfile`                          |                                                                                                |
-| position-balance-monitor-service    | `Dockerfile`                          |                                                                                                |
-| risk-and-exposure-service           | `Dockerfile`                          |                                                                                                |
-| pnl-attribution-service             | `Dockerfile`                          |                                                                                                |
-| batch-live-reconciliation-service   | `Dockerfile`                          |                                                                                                |
-| fund-administration-service         | `Dockerfile`                          |                                                                                                |
-| client-reporting-api                | `Dockerfile`                          |                                                                                                |
-| deployment-api                      | `Dockerfile`                          |                                                                                                |
-| deployment-service                  | `Dockerfile` (line 33)                | Multi-stage. `sports-scheduler` stage (line 117) inherits UTL base. Also needs Plan 12 repair. |
-| alerting-service                    | `cloudbuild.yaml` (Dockerfile absent in grep — verify in Phase 0) | Confirm Dockerfile path.                              |
+| Repo                              | Dockerfile path                                                   | Notes                                                                                          |
+| --------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| features-sports-service           | `Dockerfile`                                                      | Cloud Run Job. Active witness — D2+D3 deployed 2026-04-22T00:30Z, ImportError on first run.    |
+| features-onchain-service          | `Dockerfile`                                                      | Active witness — daily workflow failing.                                                       |
+| features-calendar-service         | `Dockerfile`                                                      |                                                                                                |
+| features-commodity-service        | `Dockerfile`                                                      |                                                                                                |
+| features-cross-instrument-service | `Dockerfile`                                                      |                                                                                                |
+| features-delta-one-service        | `Dockerfile`                                                      |                                                                                                |
+| features-volatility-service       | `Dockerfile`                                                      |                                                                                                |
+| features-multi-timeframe-service  | `Dockerfile`                                                      |                                                                                                |
+| instruments-service               | `Dockerfile`                                                      |                                                                                                |
+| market-tick-data-service          | `Dockerfile`                                                      |                                                                                                |
+| market-data-processing-service    | `Dockerfile`                                                      |                                                                                                |
+| execution-service                 | `Dockerfile`                                                      |                                                                                                |
+| strategy-service                  | `Dockerfile`                                                      |                                                                                                |
+| trading-agent-service             | `Dockerfile`                                                      |                                                                                                |
+| ml-inference-service              | `Dockerfile`                                                      |                                                                                                |
+| ml-training-service               | `Dockerfile`                                                      |                                                                                                |
+| position-balance-monitor-service  | `Dockerfile`                                                      |                                                                                                |
+| risk-and-exposure-service         | `Dockerfile`                                                      |                                                                                                |
+| pnl-attribution-service           | `Dockerfile`                                                      |                                                                                                |
+| batch-live-reconciliation-service | `Dockerfile`                                                      |                                                                                                |
+| fund-administration-service       | `Dockerfile`                                                      |                                                                                                |
+| client-reporting-api              | `Dockerfile`                                                      |                                                                                                |
+| deployment-api                    | `Dockerfile`                                                      |                                                                                                |
+| deployment-service                | `Dockerfile` (line 33)                                            | Multi-stage. `sports-scheduler` stage (line 117) inherits UTL base. Also needs Plan 12 repair. |
+| alerting-service                  | `cloudbuild.yaml` (Dockerfile absent in grep — verify in Phase 0) | Confirm Dockerfile path.                                                                       |
 
 ## Phased Execution DAG
 
@@ -181,21 +181,21 @@ Phase 0 (archaeology)
 
 ### Phase 0 — Archaeology [SOLO]
 
-- [ ] [AGENT] P0. Verify the running Cloud Build for commit `bf7ad8d1` (build id
-      `63a2611c-f9b7-4a89-9b36-86204d06d593`) succeeded or failed. Command:
-      `gcloud builds describe 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112
-      --format='value(status,finishTime)'`. If it succeeded, Phase 1 becomes no-op and jump to Phase 2 verification.
-      Otherwise tail the log: `gcloud builds log 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112
-      2>&1 | tail -100` to confirm the same root-cause.
+- [ ] [AGENT] P0. Verify the running Cloud Build for commit `bf7ad8d1` (build id `63a2611c-f9b7-4a89-9b36-86204d06d593`)
+      succeeded or failed. Command:
+      `gcloud builds describe 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112     --format='value(status,finishTime)'`.
+      If it succeeded, Phase 1 becomes no-op and jump to Phase 2 verification. Otherwise tail the log:
+      `gcloud builds log 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112     2>&1 | tail -100` to
+      confirm the same root-cause.
 
 - [ ] [AGENT] P0. Check UAC build history on `live-defi-rollout` the same way:
-      `gcloud builds list --project=central-element-323112 --filter='tags:library-unified-api-contracts'
-      --sort-by=~createTime --limit=8`. If UAC builds are ALSO failing, Plan 13 scope expands to fix UAC build first
-      (required upstream of UTL). If UAC builds succeed but the wheel version has not been bumped past `0.1.20`, note
-      that semver-agent is not firing on `live-defi-rollout` — which is actually expected (semver-agent bumps on merge
-      to main, not on feature-branch pushes). This is NOT a bug; UTL + UAC wheels only get republished when the PR
-      lands on main. Plan 13 can proceed regardless — the Docker base image does NOT depend on wheels being published,
-      only on the Dockerfile self-install succeeding.
+      `gcloud builds list --project=central-element-323112 --filter='tags:library-unified-api-contracts'     --sort-by=~createTime --limit=8`.
+      If UAC builds are ALSO failing, Plan 13 scope expands to fix UAC build first (required upstream of UTL). If UAC
+      builds succeed but the wheel version has not been bumped past `0.1.20`, note that semver-agent is not firing on
+      `live-defi-rollout` — which is actually expected (semver-agent bumps on merge to main, not on feature-branch
+      pushes). This is NOT a bug; UTL + UAC wheels only get republished when the PR lands on main. Plan 13 can proceed
+      regardless — the Docker base image does NOT depend on wheels being published, only on the Dockerfile self-install
+      succeeding.
 
 - [ ] [AGENT] P0. Confirm the blast-radius table above by grepping:
       `grep -l 'unified-trading-library:latest' */Dockerfile */cloudbuild.yaml 2>&1 | sort`.
@@ -225,8 +225,8 @@ Cloud Build step BEFORE `build-base-image` that clones or copies the UAC repo in
   waitFor: ["-"]
 ```
 
-Then ensure `build-base-image` uses this: copy `.deps/` into the Docker build context (already done — it's part of
-`.`, just confirm no `.dockerignore` excludes it).
+Then ensure `build-base-image` uses this: copy `.deps/` into the Docker build context (already done — it's part of `.`,
+just confirm no `.dockerignore` excludes it).
 
 - [ ] [AGENT] P0. Add the `clone-uac-source` step to `unified-trading-library/cloudbuild.yaml` BEFORE
       `build-base-image`. Add `.deps` to `build-base-image`'s `waitFor` list. Verify `.dockerignore` (if present) does
@@ -237,8 +237,8 @@ Then ensure `build-base-image` uses this: copy `.deps/` into the Docker build co
       This installs UAC FIRST (in editable mode from local path), so the subsequent `uv pip install -e . --no-sources`
       finds UAC already installed in the system Python.
 
-**Option B (fallback) — refresh AR token inside the docker step**: If Option A is blocked by GH_PAT secret access,
-move the `gcloud auth print-access-token` call INTO the `build-base-image` step so the token is fresh:
+**Option B (fallback) — refresh AR token inside the docker step**: If Option A is blocked by GH_PAT secret access, move
+the `gcloud auth print-access-token` call INTO the `build-base-image` step so the token is fresh:
 
 ```yaml
 - name: "gcr.io/cloud-builders/docker"
@@ -269,22 +269,21 @@ issue. Prefer Option A.
       `gcloud builds list --project=central-element-323112 --ongoing --filter='tags:library-unified-trading-library'`.
 
 - [ ] [AGENT] P0. On success, confirm new `:latest` tag in AR with current commit SHA:
-      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library
-      --include-tags --sort-by=~UPDATE_TIME --limit=3 --project=central-element-323112`. The `:latest` row's
-      `CREATE_TIME` must be later than 2026-04-22 with today's commit SHA.
+      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library     --include-tags --sort-by=~UPDATE_TIME --limit=3 --project=central-element-323112`.
+      The `:latest` row's `CREATE_TIME` must be later than 2026-04-22 with today's commit SHA.
 
 - [ ] [AGENT] P0. **Fail-loud verify** — run the old failing import inside a fresh container pull:
-      `docker pull asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest &&
-       docker run --rm asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest
-       -c "from unified_trading_library.core.client_factory import get_storage_client; print('OK')"`. Must print `OK`.
+      `docker pull asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest &&      docker run --rm asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest      -c "from unified_trading_library.core.client_factory import get_storage_client; print('OK')"`.
+      Must print `OK`.
 
 ### Phase 3 — Downstream smoke [PARALLEL after Phase 2]
 
 - [ ] [AGENT] P0. Re-run features-sports-service Cloud Run Job:
-      `gcloud run jobs execute features-sports-service-job --region=asia-northeast1 --project=central-element-323112
-      --wait`. On completion inspect: `gcloud run jobs executions describe <execution-id> --region=asia-northeast1
-      --format='value(status.conditions)'`. Exit-code must be 0. Also confirm at least one new `fixture_features`
-      parquet was written to `gs://features-sports-<project>-...` (Plan 6 writer path).
+      `gcloud run jobs execute features-sports-service-job --region=asia-northeast1 --project=central-element-323112     --wait`.
+      On completion inspect:
+      `gcloud run jobs executions describe <execution-id> --region=asia-northeast1     --format='value(status.conditions)'`.
+      Exit-code must be 0. Also confirm at least one new `fixture_features` parquet was written to
+      `gs://features-sports-<project>-...` (Plan 6 writer path).
 
 - [ ] [AGENT] P0. Re-run features-onchain-service daily workflow:
       `gcloud workflows execute <onchain-workflow-name> --location=asia-northeast1 --project=central-element-323112`.
@@ -297,24 +296,22 @@ issue. Prefer Option A.
 
 ### Phase 4 — Unblock downstream plans [PARALLEL after Phase 3]
 
-- [ ] [AGENT] P1. Flip
-      `plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md` Phase 3 T-1h smoke checkbox once Phase 3
-      smoke above passes. (Plan 6 owns the UI verification + historical backfill VM todos — leave those to the Plan 6
-      agent; Plan 13 only proves the base-image blocker is cleared.)
+- [ ] [AGENT] P1. Flip `plans/active/features_sports_pipeline_deployment_2026_04_21.plan.md` Phase 3 T-1h smoke checkbox
+      once Phase 3 smoke above passes. (Plan 6 owns the UI verification + historical backfill VM todos — leave those to
+      the Plan 6 agent; Plan 13 only proves the base-image blocker is cleared.)
 
 - [ ] [AGENT] P1. Confirm Plan 3 (`sports_scheduler_cron_activation`) does not depend on this rebuild. sports-scheduler
-      is built from `deployment-service/Dockerfile` line 117 which does inherit the UTL base (line 33). **Therefore
-      Plan 3 Phase 1 Cloud Run deploy IS gated on Plan 13 Phase 2 PLUS Plan 12 Dockerfile repair.** Update Plan 3
-      context section to note both blockers have landed once Phase 2 succeeds.
+      is built from `deployment-service/Dockerfile` line 117 which does inherit the UTL base (line 33). **Therefore Plan
+      3 Phase 1 Cloud Run deploy IS gated on Plan 13 Phase 2 PLUS Plan 12 Dockerfile repair.** Update Plan 3 context
+      section to note both blockers have landed once Phase 2 succeeds.
 
-- [ ] [AGENT] P2. Add Plan 13 cross-ref to
-      `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §12.4 noting Plans 3, 6, and any other
-      Cloud Run activation plan are gated on this rebuild.
+- [ ] [AGENT] P2. Add Plan 13 cross-ref to `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §12.4
+      noting Plans 3, 6, and any other Cloud Run activation plan are gated on this rebuild.
 
 ### Phase 5 — Prevent drift (optional but recommended) [SOLO after Phase 4]
 
-- [ ] [AGENT] P2. Add a GHA badge or small monitoring cron that alerts on Telegram if the latest UTL `:latest` tag in
-      AR is > 48h older than the latest `origin/live-defi-rollout` commit on UTL. Use the existing `send-telegram.sh`
+- [ ] [AGENT] P2. Add a GHA badge or small monitoring cron that alerts on Telegram if the latest UTL `:latest` tag in AR
+      is > 48h older than the latest `origin/live-defi-rollout` commit on UTL. Use the existing `send-telegram.sh`
       pattern from `unified-trading-pm/scripts/`. This prevents a silent 6-day drift from recurring. Place the monitor
       in `unified-trading-pm/scripts/monitors/ar-image-freshness-check.sh` + add a cron trigger.
 
@@ -349,8 +346,8 @@ issue. Prefer Option A.
 
 ## Notes
 
-- Do NOT bump `unified-trading-library/pyproject.toml` version manually. The semver-agent handles version bumps on
-  merge to main. This plan's fix is a pure infrastructure repair; no feature semantics change.
+- Do NOT bump `unified-trading-library/pyproject.toml` version manually. The semver-agent handles version bumps on merge
+  to main. This plan's fix is a pure infrastructure repair; no feature semantics change.
 - `cloudbuild.yaml` edits on UTL land via the standard quickmerge flow against `live-defi-rollout`. The trigger watches
   that branch, so the push itself re-kicks the pipeline.
 - If the `clone-uac-source` step fails because GH_PAT secret is not available in the UTL Cloud Build service account,

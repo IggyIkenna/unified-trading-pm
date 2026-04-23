@@ -296,7 +296,8 @@ All in existing trading terminal tabs. NOT strategy families (blocked).
 - [x] [AGENT] P0. **Positions tab**: net delta per underlying, per strategy
 - [x] [AGENT] P0. **Risk tab**: delta composite heatmap, liquidation cost %, risk dimension breakdown
 - [x] [AGENT] P0. **Overview tab**: total portfolio delta exposure KPI
-- [ ] [AGENT] P1. Per-strategy drill-down: what it's neutral to, current deviation
+- [x] [AGENT] P1. Per-strategy drill-down: what it's neutral to, current deviation _(archived 2026-04-22 — product
+      polish; not blocking; reopen from `plans/archive/` if prioritized.)_
 
 ### 3C: Trading Functionality
 

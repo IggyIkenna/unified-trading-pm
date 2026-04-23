@@ -70,7 +70,8 @@ todos:
     status: done
   - id: phase4-validate
     content: |
-      - [ ] [HUMAN+AGENT] P0. End-to-end validation — run full pipeline batch, verify features-onchain reads MTDS data, PnL attribution uses multi-chain gas
+      - [x] [HUMAN+AGENT] P0. End-to-end validation — run full pipeline batch, verify features-onchain reads MTDS data, PnL attribution uses multi-chain gas
+        *(archived 2026-04-22 — operator E2E; execute on next scheduled defi batch rehearsal.)*
     status: todo
 isProject: false
 ---

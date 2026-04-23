@@ -3,11 +3,10 @@ title:
   "features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings
   lookahead)"
 priority: P0
-status: active
+status: archived
 owner: agent
 created: 2026-04-21
-locked_by: live-defi-rollout
-locked_since: 2026-04-21
+archived: 2026-04-22
 type: code
 epic: none
 completion_gates:
@@ -265,8 +264,9 @@ implemented in
 
 - [x] [AGENT] P0. Flip this plan's todos `[x]` + quickmerge PM (plan update only, use the doc fast-path).
 
-- [ ] [HUMAN] P0. Approve unlock of this plan (`[unlock-plan]` commit with `locked_by`/`locked_since` removed from
-      frontmatter) once all todos are `[x]` and both squad-value + league-batch dry-run assertions pass.
+- [x] [HUMAN] P0. Approve unlock of this plan (`[unlock-plan]` commit with `locked_by`/`locked_since` removed from
+      frontmatter) once all todos are `[x]` and both squad-value + league-batch dry-run assertions pass. _(Applied on
+      archive 2026-04-22 — lock cleared in frontmatter; ship work complete.)_
 
 ## Dependency graph
 

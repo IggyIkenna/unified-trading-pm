@@ -72,11 +72,11 @@ re-discovering context that's already in an existing plan or memory entry.
 
 ## Wave 7 — Staging smoke
 
-| Wave item           | Reference                                                                                  | Location  |
-| ------------------- | ------------------------------------------------------------------------------------------ | --------- |
-| Playwright setup    | [tests/playbooks/](../../../../unified-trading-system-ui/tests/playbooks/) (after Phase 5) | UI repo   |
-| Test matrix         | [test-matrix.md](../testing/test-matrix.md)                                                | This SSOT |
-| Staging env details | [staging-odum-research-co-uk.md](../environments/staging-odum-research-co-uk.md)           | This SSOT |
+| Wave item           | Reference                                                                                          | Location  |
+| ------------------- | -------------------------------------------------------------------------------------------------- | --------- |
+| Playwright setup    | [tests/e2e/playbooks/](../../../../unified-trading-system-ui/tests/e2e/playbooks/) (after Phase 5) | UI repo   |
+| Test matrix         | [test-matrix.md](../testing/test-matrix.md)                                                        | This SSOT |
+| Staging env details | [staging-odum-research-co-uk.md](../environments/staging-odum-research-co-uk.md)                   | This SSOT |
 
 ## Wave 8 — Briefings content
 

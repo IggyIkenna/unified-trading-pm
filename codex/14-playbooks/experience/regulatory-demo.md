@@ -60,7 +60,11 @@ not the internal workbooks that produce them (those are rule-06 HIDDEN-ENTIRELY)
 The fourth is the shared reporting walkthrough — positions, exposures, P&L, reconciliation — per
 [`../shared-core/client-reporting-demo-walkthrough.md`](../shared-core/client-reporting-demo-walkthrough.md).
 Reg-specific frame: the Umbrella firm's Pooled/SMA structural choice drives accounting and reporting setup, not which
-features exist.
+features exist. Mandate-shape framing is deferred to the upstream briefing — the demo surface is identical across Shapes
+1, 2, and 3 (Odum-as-IM default vs. AR route), so the walkthrough does not branch on shape. If the prospect opens a
+mandate-shape question during the demo, route it back to the briefing
+([regulatory-umbrella-briefing.md](regulatory-umbrella-briefing.md) "Who faces whom — mandate shapes") rather than
+litigate it on a reporting surface.
 
 The session closes with the onboarding-path recap. Five workstreams (legal, compliance, MLRO, venue, reporting) and
 their Odum owners. The next commitment is the onboarding kickoff date, not another demo.

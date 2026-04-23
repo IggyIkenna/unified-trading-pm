@@ -303,17 +303,17 @@ jobs:
 
 ## §8 — Porting to sibling UIs
 
-| UI                           | Status      | Framework   | Scanner location                               |
-| ---------------------------- | ----------- | ----------- | ---------------------------------------------- |
-| `unified-trading-system-ui`  | ✅ shipped  | Next.js app/ | `scripts/orphan-audit.ts` (discovers via filesystem walk of `app/**`) |
-| `deployment-ui`              | ✅ shipped 2026-04-22 | Vite + React Router v6 | `scripts/orphan-audit.ts` (React Router variant — discovers via `<Route path="...">` JSX) |
-| `user-management-ui`         | 🗄️ archived 2026-04-21 | n/a (folded into unified-trading-system-ui /ops/admin per `ui_unification_v2_sanitisation_2026_04_20` Phase 6) | — |
+| UI                          | Status                 | Framework                                                                                                      | Scanner location                                                                          |
+| --------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `unified-trading-system-ui` | ✅ shipped             | Next.js app/                                                                                                   | `scripts/orphan-audit.ts` (discovers via filesystem walk of `app/**`)                     |
+| `deployment-ui`             | ✅ shipped 2026-04-22  | Vite + React Router v6                                                                                         | `scripts/orphan-audit.ts` (React Router variant — discovers via `<Route path="...">` JSX) |
+| `user-management-ui`        | 🗄️ archived 2026-04-21 | n/a (folded into unified-trading-system-ui /ops/admin per `ui_unification_v2_sanitisation_2026_04_20` Phase 6) | —                                                                                         |
 
 The React Router variant is a near-twin of the Next.js variant: same whitelist / baseline / blocking contract, same
-`--advisory` / `--blocking` / `--write-baseline` CLI, same policy doc (this file). The one variant-specific wrinkle:
-the scanner must scrub `<Route path="...">` declarations from content before the generic path-literal harvest,
-otherwise the declaration's own path literal satisfies the self-reachability check and every declared route appears
-reachable via itself. This was caught during port (2026-04-22) via a stub-route regression test.
+`--advisory` / `--blocking` / `--write-baseline` CLI, same policy doc (this file). The one variant-specific wrinkle: the
+scanner must scrub `<Route path="...">` declarations from content before the generic path-literal harvest, otherwise the
+declaration's own path literal satisfies the self-reachability check and every declared route appears reachable via
+itself. This was caught during port (2026-04-22) via a stub-route regression test.
 
 Porting cost to a hypothetical future UI is low — copy the scanner that matches the framework, update the whitelist /
 baseline stubs, run `--write-baseline`, triage the surfaced orphans, add the 3 npm scripts.

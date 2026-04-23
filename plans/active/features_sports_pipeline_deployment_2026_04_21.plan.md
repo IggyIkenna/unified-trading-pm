@@ -117,25 +117,25 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/features-sports-service:latest`
       (also tagged `:abf1f73`). **Required three features-sports-service commits** (`90156d8` + `5d24bda` + `abf1f73` +
       `cd6ee40`): (1) Dockerfile `uv sync --system` → `uv pip install --system --no-deps -e .` for uv >=0.11; (2)
-      missing `features_sports_service/__main__.py` re-export of `cli.main:main` needed for `python -m` entrypoint;
-      (3) remove stale `unified-market-interface` + `market-tick-data-service` deps from pyproject.toml (UMI archived,
+      missing `features_sports_service/__main__.py` re-export of `cli.main:main` needed for `python -m` entrypoint; (3)
+      remove stale `unified-market-interface` + `market-tick-data-service` deps from pyproject.toml (UMI archived,
       MTDS-as-dep-service unused). Cloudbuild substitution issue (`_PKG_NAME` declared but unreferenced) worked around
       via minimal custom `cloudbuild-minimal.yaml` (no QG-in-image) — the upstream cloudbuild.yaml template QG step
       expects sibling unified-trading-pm repo not shipped in service tarball; separate follow-up plan needed to fix
       template. Terraform applied with 4 resources created: Cloud Run Job `features-sports-service-job` (uid
       `f6873056-d17d-4060-9d8d-53f04a788751`), Daily Workflow `features-sports-service-daily`, Backfill Workflow
-      `features-sports-service-backfill`, Scheduler `features-sports-service-daily-trigger` (ENABLED, `0 7 * * *`,
-      hits daily workflow). `backend.tf` + `terraform.tfvars` authored from onchain pattern. No prod resources touched
-      — the 3 pre-existing `uts-*-features-sports-t1-schedule` schedulers (from `terraform/gcp/t1_batch_scheduler.tf`)
-      are disjoint and untouched. Also seeded placeholder versions for `betfair-app-key` / `oddsjam-api-key` /
-      `opticodds-api-key` secrets (they were empty shells blocking Cloud Run Job create); unused at the
-      FIXTURE_FEATURES join level but referenced by the terraform for future Tier-2 odds integration.
-      **Known-broken:** Cloud Run executions currently hit `ImportError` inside `unified_trading_library.core.__init__`
-      line 11 (`from unified_trading_library.core.client_factory import ...`) — the UTL base image
-      `unified-trading-library:latest` at `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library`
-      is **stale relative to current UTL source**. A workspace-wide UTL base-image rebuild is out-of-scope for Plan 6;
-      filed as operator follow-up. VM backfill does NOT use the base image (it installs UTL from the fresh tarball)
-      so it is unaffected.
+      `features-sports-service-backfill`, Scheduler `features-sports-service-daily-trigger` (ENABLED, `0 7 * * *`, hits
+      daily workflow). `backend.tf` + `terraform.tfvars` authored from onchain pattern. No prod resources touched — the
+      3 pre-existing `uts-*-features-sports-t1-schedule` schedulers (from `terraform/gcp/t1_batch_scheduler.tf`) are
+      disjoint and untouched. Also seeded placeholder versions for `betfair-app-key` / `oddsjam-api-key` /
+      `opticodds-api-key` secrets (they were empty shells blocking Cloud Run Job create); unused at the FIXTURE_FEATURES
+      join level but referenced by the terraform for future Tier-2 odds integration. **Known-broken:** Cloud Run
+      executions currently hit `ImportError` inside `unified_trading_library.core.__init__` line 11
+      (`from unified_trading_library.core.client_factory import ...`) — the UTL base image
+      `unified-trading-library:latest` at
+      `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library` is **stale relative to current UTL
+      source**. A workspace-wide UTL base-image rebuild is out-of-scope for Plan 6; filed as operator follow-up. VM
+      backfill does NOT use the base image (it installs UTL from the fresh tarball) so it is unaffected.
 
 - [x] [AGENT] P0. Service-account IAM: - Read: instruments-store-sports (fixtures + enrichments), other raw-data buckets
       Plan 3 joins from. - Read/write: features-sports bucket (output). - Write: deployment-scripts state bucket
@@ -143,9 +143,9 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       project-level roles matching `features-onchain-sa` pattern: `roles/run.invoker`,
       `roles/secretmanager.secretAccessor`, `roles/storage.objectAdmin` (satisfies both upstream bucket reads +
       features-sports bucket writes + deployment-scripts manifest writes in a single project-wide binding),
-      `roles/workflows.invoker`. terraform `services/features-sports-service/gcp/terraform.tfvars` +
-      `backend.tf` created (project_id placeholder pattern matches onchain). Fine-grained per-bucket bindings deferred
-      to a follow-up — `storage.objectAdmin` at project scope is already sufficient for MVP.
+      `roles/workflows.invoker`. terraform `services/features-sports-service/gcp/terraform.tfvars` + `backend.tf`
+      created (project_id placeholder pattern matches onchain). Fine-grained per-bucket bindings deferred to a follow-up
+      — `storage.objectAdmin` at project scope is already sufficient for MVP.
 
 ### Phase 3: Tier-3 trigger wiring (D2) [PARALLEL with Phase 2]
 
@@ -191,18 +191,16 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       2026-04-22T01:37:19+09:00 (e2-standard-4 / 100 GB / ubuntu-2404-lts-amd64) with
       `VM_BACKFILL_CMD="python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features --start-date 2018-01-01 --end-date 2026-04-20"`.
       Singleton lock verified (second launch rejected). GCS log:
-      `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260422-013719/run.log`.
-      Self-delete on completion via `VM_SHUTDOWN_ON_COMPLETION=true`. **Four prior launch attempts failed**:
-      (1) `-010950` self-deleted after ~3 min with no GCS log (heartbeat uploader 30s interval missed);
-      (2) `-011832` died because pyproject.toml still carried archived `unified-market-interface>=0.3.2` dep —
-      VM uses `uv pip install --no-sources -e` (not `--no-deps`) so transitive resolution fails on UMI. Fixed by
-      features-sports-service `cd6ee40` dropping the stale deps.
-      (3) `-013051` died with `argparse.ArgumentError: argument --force: conflicting option string: --force` —
-      features_sports_service/cli/main.py::_extra_args re-declared `--force` already added by UTL
-      `service_cli.py::run()`. Fixed by features-sports-service `0dfc0ba` dropping the duplicate.
-      Tarballs refreshed at 2026-04-22T00:37:10Z after both fixes; `-013719` is the fifth and
-      cleanly-launched attempt. Operator should tail the GCS log; expected multi-day runtime for the full 7-year
-      window.
+      `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260422-013719/run.log`. Self-delete on
+      completion via `VM_SHUTDOWN_ON_COMPLETION=true`. **Four prior launch attempts failed**: (1) `-010950` self-deleted
+      after ~3 min with no GCS log (heartbeat uploader 30s interval missed); (2) `-011832` died because pyproject.toml
+      still carried archived `unified-market-interface>=0.3.2` dep — VM uses `uv pip install --no-sources -e` (not
+      `--no-deps`) so transitive resolution fails on UMI. Fixed by features-sports-service `cd6ee40` dropping the stale
+      deps. (3) `-013051` died with `argparse.ArgumentError: argument --force: conflicting option string: --force` —
+      features_sports_service/cli/main.py::\_extra_args re-declared `--force` already added by UTL
+      `service_cli.py::run()`. Fixed by features-sports-service `0dfc0ba` dropping the duplicate. Tarballs refreshed at
+      2026-04-22T00:37:10Z after both fixes; `-013719` is the fifth and cleanly-launched attempt. Operator should tail
+      the GCS log; expected multi-day runtime for the full 7-year window.
 
 - [ ] [AGENT] P0. Coverage audit: FIXTURE_FEATURES coverage matches FIXTURES coverage for leagues where all join inputs
       are present. DEFERRED TO ORCHESTRATOR PHASE 6 — blocked on backfill VM completion.

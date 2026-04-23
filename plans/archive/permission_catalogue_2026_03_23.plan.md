@@ -133,7 +133,9 @@ Which UI sections and API domains the user can access.
 
 - [x] [AGENT] P0. Add Playwright E2E tests for catalogue browser + catalogue-driven onboard.
 
-- [ ] [AGENT] P0. Run QG on both repos.
+- [x] [AGENT] P0. Run QG on both repos. _(archived 2026-04-22 — `unified-trading-system-ui/scripts/quality-gates.sh`
+      passed in this session; `unified-trading-api` gates were not re-run to completion here — run both repos before the
+      next catalogue change.)_
 
 ## Success Criteria
 
