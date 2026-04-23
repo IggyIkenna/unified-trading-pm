@@ -82,27 +82,28 @@ Two full copies on GCS; two sets of in-memory parquet buffers.
 
 ### Phase 1 — PartitionedTickWriter counts-only surface (SEQUENTIAL)
 
-- [ ] [AGENT] P0. Add `PartitionedTickWriter.record_shard_count(instrument_type, data_type, third_key, count)` — mutates
+- [x] [AGENT] P0. Add `PartitionedTickWriter.record_shard_count(instrument_type, data_type, third_key, count)` — mutates
       `_row_counts`, no DataFrame, no GCS write
-- [ ] [AGENT] P0. Add `PartitionedTickWriter.record_instrument(instrument_type, data_type, symbol)` — mutates
+- [x] [AGENT] P0. Add `PartitionedTickWriter.record_instrument(instrument_type, data_type, symbol)` — mutates
       `_instrument_symbols`
-- [ ] [AGENT] P0. Unit test both new methods
+- [x] [AGENT] P0. Unit test both new methods
 
 ### Phase 2 — TardisAdapter surgical refactor (SEQUENTIAL after Phase 1)
 
-- [ ] [AGENT] P0. `finalise_and_write_cefi_shards`: add `partition_writer` kwarg; call `record_shard_count` +
+- [x] [AGENT] P0. `finalise_and_write_cefi_shards`: add `partition_writer` kwarg; call `record_shard_count` +
       `record_instrument` after each shard write
-- [ ] [AGENT] P0. `download_batch`: remove `del writer` on line 924
-- [ ] [AGENT] P0. `download_batch`: remove `small_frames.append(df)` + `pd.concat(small_frames)` — drop each `df` after
+- [x] [AGENT] P0. `download_batch`: remove `del writer` on line 924
+- [x] [AGENT] P0. `download_batch`: remove `small_frames.append(df)` + `pd.concat(small_frames)` — drop each `df` after
       finalise returns
-- [ ] [AGENT] P0. `download_batch`: return `pd.DataFrame()` (empty) in all success paths
-- [ ] [AGENT] P0. Thread `writer` through `finalise_and_write_cefi_shards` call sites in `download_batch` (per-symbol +
+- [x] [AGENT] P0. `download_batch`: return `pd.DataFrame()` (empty) in all success paths
+- [x] [AGENT] P0. Thread `writer` through `finalise_and_write_cefi_shards` call sites in `download_batch` (per-symbol +
       bulk paths)
-- [ ] [AGENT] P0. Regression test: `download_batch` returns empty DataFrame; writer counts populated
+- [x] [AGENT] P0. Regression test: `download_batch` returns empty DataFrame; writer counts populated
+- [x] [AGENT] P0. Fix `partition_counts` 3-tuple unpack to handle v6 5-tuple keys (ValueError guard)
 
 ### Phase 3 — QG + tarball refresh (SEQUENTIAL after Phase 2)
 
-- [ ] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
+- [x] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
 - [ ] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
 - [ ] [SCRIPT] P0. Commit + push to `live-defi-rollout` (git commit --no-verify + push; concurrent-agent dirt rules per
       CLAUDE.md)
