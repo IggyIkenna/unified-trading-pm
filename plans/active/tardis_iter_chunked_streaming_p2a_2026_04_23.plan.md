@@ -160,31 +160,33 @@ correct counts via `partition_writer.record_shard_count()`.
 
 ### Phase 1 — `TardisBaseClient.async_iter_bytes` (SEQUENTIAL)
 
-- [ ] [AGENT] P0. Add `async_iter_bytes(url, requires_auth, chunk_size=4MiB)` to `TardisBaseClient` — raises
+- [x] [AGENT] P0. Add `async_iter_bytes(url, requires_auth, chunk_size=4MiB)` to `TardisBaseClient` — raises
       `TardisHTTPError(status)` on non-200; yields `bytes` chunks via `resp.content.iter_chunked(chunk_size)`
-- [ ] [AGENT] P0. Unit test: mock aiohttp response with 3 chunks → `async_iter_bytes` yields all 3; mock 400 → raises
-      `TardisHTTPError`
+- [x] [AGENT] P0. Unit test: mock aiohttp response with 3 chunks → `async_iter_bytes` yields all 3; mock 400/404 →
+      raises `TardisHTTPError`; `requires_auth=False` → empty per-request headers. (MTDS `81f0fa4`)
 
 ### Phase 2 — `download_csv_streaming` queue bridge (SEQUENTIAL after Phase 1)
 
-- [ ] [AGENT] P0. Refactor `download_csv_streaming` to use `asyncio.Queue` + `run_in_executor` bridge (keep old
-      `_chunk_iter` path as fallback when `_fetch_tardis_bytes` is used for backwards compatibility in tests)
+- [x] [AGENT] P0. Refactor `download_csv_streaming` to use `asyncio.Queue(maxsize=8)` + `run_in_executor` bridge;
+      `TardisHTTPError` forwarded as queue item → propagates through `_sync_iter` → catches in `run_in_executor`
+      handler. Legacy `_chunk_iter` / `_fetch_tardis_bytes` path eliminated. (MTDS `81f0fa4`)
 - [ ] [AGENT] P0. Integration test: `download_csv_streaming` with a large synthetic gzipped CSV (>50 MB) verifies peak
       RSS < 100 MB via `resource.getrusage`
 
 ### Phase 3 — `_download_bulk` streaming wire-up (SEQUENTIAL after Phase 2)
 
-- [ ] [AGENT] P0. When `canonical_bucket` is provided in `_download_bulk`, call `download_csv_streaming` to a temp path
-      rather than `download_csv` (DataFrame). After streaming, read-back the temp parquet for
-      `finalise_and_write_cefi_shards` splitting, or pass directly if shard layout matches.
+- [x] [AGENT] P0. When `canonical_bucket` is provided in `_download_bulk`, calls `download_csv_streaming` to a temp
+      parquet, reads back with `pd.read_parquet`, filters by `instrument_ids`, calls `finalise_and_write_cefi_shards`.
+      `canonical_bucket=None` falls through to legacy `download_csv` path. (MTDS `81f0fa4`)
 - [ ] [AGENT] P0. Regression test: `_download_bulk` with `canonical_bucket` set → no full DataFrame in memory; parquet
       written to GCS; `partition_writer` counts populated
 
 ### Phase 4 — QG + tarball + smoke (SEQUENTIAL after Phase 3)
 
-- [ ] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
-- [ ] [SCRIPT] P0. Commit + push to `live-defi-rollout`
+- [x] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` — all gates passed (185s)
+- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
+      (tarball refreshed 2026-04-23T15:59:12Z)
+- [x] [SCRIPT] P0. Commit + push to `live-defi-rollout` (MTDS `81f0fa4`)
 - [ ] [SCRIPT] P0. Launch `cefi-smoke-p2a-{date}` on e2-standard-2, DERIBIT 2026-04-18, BTC, options_chain+trades —
       should complete rc=0 without OOM
 - [ ] [AGENT] P0. Verify peak RSS < 1 GB on smoke log; canonical options_chain parquet on GCS
