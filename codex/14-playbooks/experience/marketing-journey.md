@@ -26,22 +26,22 @@ DeFi-native execution, or signal distribution). They are anonymous. No credentia
 ## What Odum must prove
 
 - Odum is a live operating firm — not a stealth pre-launch, not a platform looking for pilot clients.
-- Odum covers five commercial paths — **DART** (split across direction arrows: signals-in and full pipeline), **Signals
-  Service** (signals-out), **Investment Management**, **Regulatory Umbrella**, and the **Firm** itself — with a specific
-  answer at each.
+- Odum covers five commercial paths — **DART** (split across direction arrows: signals-in and full pipeline), **Odum
+  Signals** (signals-out direction), **Investment Management**, **Regulatory Umbrella**, and the **Firm** itself — with
+  a specific answer at each.
 - The voice on the page is the voice of people who run trading operations, not a marketing agency rendering of one.
 - There is a plausible next step for any of these audiences, and that next step is a calendar slot — not a waitlist.
 
 ## Nav structure — 5 top-level paths
 
 Locked decision M1 (plan `marketing_site_restructure_2026_04_20.plan.md`): the shell header exposes **five** top-level
-paths plus a Contact CTA. DART is the umbrella for the two direction-arrow sub-paths; Signals Service is a peer path
-rather than a sub-page of DART.
+paths plus a Contact CTA. DART is the umbrella for the two direction-arrow sub-paths; Odum Signals is a peer path rather
+than a sub-page of DART.
 
 | Nav label                 | Route                                                              | Covers                                                                              |
 | ------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | **DART**                  | `/platform` (umbrella) + `/platform/signals-in` + `/platform/full` | Full data-analytics-research-trading stack; two direction arrows under the umbrella |
-| **Odum Signals**          | `/signals`                                                         | Signals-out: Odum strategies delivered to a counterparty that executes (QRT-style)  |
+| **Odum Signals**          | `/signals`                                                         | Odum strategies delivered to a counterparty that executes (QRT-style, outbound)     |
 | **Investment Management** | `/investment-management`                                           | Allocate client capital to Odum-run strategies under Odum's FCA permissions         |
 | **Regulatory**            | `/regulatory`                                                      | FCA Umbrella — Odum's permissions cover the client's regulated activity             |
 | **Firm**                  | `/who-we-are`                                                      | Team, operating history, FCA credentials                                            |
@@ -57,8 +57,8 @@ Two direction arrows exist around DART and must be named explicitly in every mar
 
 - **DART Signals-In** — _your signals, our execution_. The client (Elysium, Desmond, an internal desk) owns the alpha;
   Odum owns the execution, reconciliation, and reporting. Lives under `/platform/signals-in`.
-- **Signals Service (Signals-Out)** — _Odum → counterparty_. Odum owns the alpha; the counterparty (QRT-style) owns the
-  execution. Lives under `/signals`.
+- **Odum Signals** (signals-out direction) — _Odum → counterparty_. Odum owns the alpha; the counterparty (QRT-style)
+  owns the execution. Lives under `/signals`.
 
 These two phrases are canonical. They replace earlier shorthand ("client-signal DART" / "Odum signals"). HTML copy and
 React component copy both use this form.
@@ -77,8 +77,8 @@ five commercial paths — DART, Signals, Investment Management, Regulatory, Firm
 answer to a specific operating problem, not a bundle.
 
 From there the page splits into path tiles. Each tile is the rule-09 expansion of its service — three sentences,
-positioning / differentiator / proof point. DART is framed as two direction arrows (signals-in + full); Signals Service
-is framed as Odum → counterparty; Investment Management allocates client capital to Odum-run strategies; Regulatory
+positioning / differentiator / proof point. DART is framed as two direction arrows (signals-in + full); Odum Signals is
+framed as Odum → counterparty; Investment Management allocates client capital to Odum-run strategies; Regulatory
 Umbrella operates the client's regulated activity under Odum's permissions; the Firm tile summarises operating history
 and FCA credentials. Each tile links to the named path route for a deeper read without naming pricing.
 
@@ -89,9 +89,9 @@ is prefaced with "revolutionary" or "best-in-class". The posture is [axis.to](ht
 [podlabs.xyz](https://podlabs.xyz/): restrained, specific, written by an operating team.
 
 The bottom of the page offers one action per path. Book the IM desk session. Book the DART briefing call (specifying
-signals-in or full). Book the Signals Service scoping call. Book the Reg Umbrella scoping call. Each booking flow takes
-the visitor straight to a calendar. No email capture wall, no newsletter, no gated PDF. A visitor who is not ready to
-book leaves without friction; a visitor who is ready books in under ninety seconds.
+signals-in or full). Book the Odum Signals scoping call. Book the Reg Umbrella scoping call. Each booking flow takes the
+visitor straight to a calendar. No email capture wall, no newsletter, no gated PDF. A visitor who is not ready to book
+leaves without friction; a visitor who is ready books in under ninety seconds.
 
 ## Post-first-call path — briefings gate
 

@@ -55,7 +55,7 @@ different data sources (historical vs live); the logic is identical.
 **Audit:** grep for any service that claims to compute "backtest attribution" or "paper P&L" separately from the live
 attribution pipeline. Any duplicate logic is a rule-03 violation.
 
-### (c) The trading terminal is a live/batch toggle over the same component tree
+### (c) DART is a live/batch toggle over the same component tree
 
 `/services/trading/terminal` accepts a `phase` prop / URL parameter. The component tree is identical across phases; the
 data binding differs.

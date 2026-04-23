@@ -60,7 +60,7 @@ This family covers:
 | Signal                      | Source                                                                                                         |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Current orderbook (bid/ask) | Venue L2 book feed                                                                                             |
-| Theoretical fair price      | Consensus mid across eligible venues, Pinnacle (sports), sharp book reference, or fitted vol surface (options) |
+| Theoretical fair price      | Consensus mid across eligible venues, Smarkets (sports), sharp book reference, or fitted vol surface (options) |
 | Realized vol (recent)       | Computed from tick/candle history                                                                              |
 | Inventory state             | PBMS + local shadow                                                                                            |
 | Reference price movements   | Venue feeds subscribed for ref-price tracking                                                                  |
@@ -138,7 +138,7 @@ Config references:
 - **venue_capability_refs** — venues where we quote (with fee schedule, tick size, min size, etc.)
 - **feature_group_refs** — orderbook / theo / realized-vol features
 - **execution_policy_ref** — MM-specific policy (e.g., CONTINUOUS_QUOTE_WITH_DELTA_PROXY algo)
-- Optional **reference_price_source** — e.g., Pinnacle for sports, fitted IV surface for options
+- Optional **reference_price_source** — e.g., Smarkets for sports, fitted IV surface for options
 - Optional **model_id** — ML-predicted fair-value adjustment, adverse-selection classifier
 
 ## Typical instance examples

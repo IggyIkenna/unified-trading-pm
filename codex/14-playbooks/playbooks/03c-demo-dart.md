@@ -152,7 +152,7 @@ CODE_AUDITED+ entries by default, with admin-only ability to reveal IM_RESERVED 
   2. Service tiles show: Data, Research, Promote, Trading, Observe unlocked; Admin locked
   3. Navigate each of the 4 catalogues → each renders with entries filtered per entitlement
   4. Strategy-catalogue coverage matrix renders the expected archetypes
-  5. Trading terminal loads (with mock market data in staging)
+  5. DART trading terminal loads (with mock market data in staging)
 
 ## Related
 

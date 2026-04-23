@@ -41,15 +41,15 @@ pillars. A single shared **global** code still works as a fallback (useful for b
 The code validator reads seven env vars and treats a session as authenticated if the entered code matches **any** of the
 non-empty ones:
 
-| Env var                                                  | Pillar slug             | Unlocks                                |
-| -------------------------------------------------------- | ----------------------- | -------------------------------------- |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`                       | _(global fallback)_     | Every pillar                           |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_INVESTMENT_MANAGEMENT` | `investment-management` | IM briefing                            |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_REGULATORY`            | `regulatory`            | Regulatory Umbrella briefing           |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_PLATFORM`              | `platform`              | DART umbrella briefing                 |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_SIGNALS_IN`       | `dart-signals-in`       | DART Signals-In briefing               |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_FULL`             | `dart-full`             | DART Full pipeline briefing            |
-| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_SIGNALS_OUT`           | `signals-out`           | Signals Service (signals-out) briefing |
+| Env var                                                  | Pillar slug             | Unlocks                      |
+| -------------------------------------------------------- | ----------------------- | ---------------------------- |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`                       | _(global fallback)_     | Every pillar                 |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_INVESTMENT_MANAGEMENT` | `investment-management` | IM briefing                  |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_REGULATORY`            | `regulatory`            | Regulatory Umbrella briefing |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_PLATFORM`              | `platform`              | DART umbrella briefing       |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_SIGNALS_IN`       | `dart-signals-in`       | DART Signals-In briefing     |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_DART_FULL`             | `dart-full`             | DART Full pipeline briefing  |
+| `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_SIGNALS_OUT`           | `signals-out`           | Odum Signals briefing        |
 
 ### Validator semantics
 
@@ -109,7 +109,7 @@ Rotation procedure:
 
 1. Sales contact confirms first call went well; prospect wants deeper briefing content.
 2. Sales contact picks the matching pillar(s) from the six available (IM / Regulatory / DART umbrella / DART Signals-In
-   / DART Full / Signals-Out) and sends the corresponding per-path code (or the global code if the prospect wants broad
+   / DART Full / Odum Signals) and sends the corresponding per-path code (or the global code if the prospect wants broad
    access).
 3. Email to prospect includes:
    - Link to `/briefings/{pillar-slug}`

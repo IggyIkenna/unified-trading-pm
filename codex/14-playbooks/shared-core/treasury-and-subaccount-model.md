@@ -34,7 +34,7 @@ Ltd is the investment manager and the client-facing product surface in every cas
 | DART — Signals-In    | NO                  | Client-owned venue accounts                 | Client funds venue directly              |
 | DART — Full Pipeline | NO                  | Client-owned venue accounts                 | Client funds venue directly              |
 | Regulatory Umbrella  | NO                  | Client-owned venue accounts                 | Client funds venue directly              |
-| Odum Signals-Out     | N/A                 | Counterparty (their own stack)              | N/A                                      |
+| Odum Signals         | N/A                 | Counterparty (their own stack)              | N/A                                      |
 
 ## Structure — how Pooled custody and administration compose
 

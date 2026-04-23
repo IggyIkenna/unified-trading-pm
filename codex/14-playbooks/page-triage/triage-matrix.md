@@ -123,7 +123,7 @@ Action legend: see [README.md](README.md).
 | route                                           | classification | reuse_hint               | action                                                                  | confidence | notes                      |
 | ----------------------------------------------- | -------------- | ------------------------ | ----------------------------------------------------------------------- | ---------- | -------------------------- |
 | `/services/trading/overview`                    | HUB            | pb3:demo-dart            | `promote`                                                               | High       | Trading landing            |
-| `/services/trading/terminal`                    | HUB            | pb3:demo-dart            | `promote`                                                               | High       | Live trading terminal      |
+| `/services/trading/terminal`                    | HUB            | pb3:demo-dart            | `promote`                                                               | High       | Live DART trading terminal |
 | `/services/trading/accounts`                    | LINKED         | pb3:demo-dart            | `promote`                                                               | High       | Account list               |
 | `/services/trading/accounts/saft`               | ORPHAN         | pb3:demo-im              | `defer`                                                                 | Low        | SAFT flow                  |
 | `/services/trading/alerts`                      | LINKED         | pb3:demo-dart            | `promote`                                                               | High       |                            |

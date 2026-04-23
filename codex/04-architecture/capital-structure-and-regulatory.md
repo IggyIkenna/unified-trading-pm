@@ -410,7 +410,7 @@ Key instructions used: `TRANSFER`, `BRIDGE`, `SWAP`, `LEND`, `BORROW`, `STAKE`, 
 ```
 Firm Unity pool (USD)
       │
-      ├── TRADE bet #1 on Unity → routed to Pinnacle (via Unity API)
+      ├── TRADE bet #1 on Unity → routed to Smarkets (via Unity API)
       ├── TRADE bet #2 on Unity → routed to VX
       ├── TRADE bet #3 on Unity → routed to Betfair-via-Unity
       │

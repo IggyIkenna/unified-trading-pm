@@ -500,7 +500,7 @@ graph TD
     end
 
     subgraph BatchE [Batch E: Execution]
-        Execution[execution-service<br/>asset_class=SPORTS<br/>Betfair + Pinnacle + Polymarket via USEI]
+        Execution[execution-service<br/>asset_class=SPORTS<br/>Betfair + Smarkets + Polymarket via USEI]
     end
 
     GCS[(GCS + PubSub)]

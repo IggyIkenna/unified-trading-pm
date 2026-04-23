@@ -55,7 +55,7 @@ scope: [engineer, admin]
 
 | Expression                     | Venues                                                    | Notes                                   |
 | ------------------------------ | --------------------------------------------------------- | --------------------------------------- |
-| `BET_BACK`                     | Pinnacle, Betfair (back), VX, SharpBet, Unity child books | Bet on outcome                          |
+| `BET_BACK`                     | Smarkets, Betfair (back), VX, SharpBet, Unity child books | Bet on outcome                          |
 | `BET_LAY`                      | Betfair only                                              | Bet against outcome (exchange mechanic) |
 | `BET_BACK_ARB_SET`             | 2+ bookmakers across outcomes                             | Arb bet set (multi-outcome lock)        |
 | `BET_CLOB_YES` / `BET_CLOB_NO` | Polymarket, Kalshi                                        | Binary CLOB share                       |

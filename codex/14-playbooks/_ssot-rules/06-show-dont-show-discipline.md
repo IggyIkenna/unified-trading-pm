@@ -72,8 +72,8 @@ Each commercial path carries default exclusions. Experience playbooks may overri
 
 ### Reporting-only visibility (IM / Reg Umbrella entry)
 
-- Full DART surface (research/promote pipeline, strategy catalogue depth, trading terminal beyond the read-only views
-  the reporting surface offers).
+- Full DART surface (research/promote pipeline, strategy catalogue depth, DART trading terminal beyond the read-only
+  views the reporting surface offers).
 - Strategy-service internals. They don't touch it.
 - Execution-algo internals. They don't touch it.
 

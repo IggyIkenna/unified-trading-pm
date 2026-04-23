@@ -25,7 +25,7 @@ each market settles discretely on event resolution.
 
 ```
 1. THEO PRICE: compute fair price per outcome
-   - Sharp-book reference (Pinnacle pre-match)
+   - Sharp-book reference (Smarkets pre-match)
    - Vig-free consensus across bookmakers
    - Model-derived fair (from ML if available)
    - Fitted exchange mid

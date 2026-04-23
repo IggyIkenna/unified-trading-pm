@@ -44,7 +44,7 @@ Odum Platform
 │   │   ├── strategy-catalogue/   (Strategy Catalogue — fixed universe SSOT)
 │   │   ├── ml-model-catalogue/   (ML Model Catalogue — PROPOSED, see roadmap)
 │   │   ├── execution-algo-catalogue/ (Execution Algo Catalogue — PROPOSED, see roadmap)
-│   │   ├── trading/       (Trading terminal + positions + orders)
+│   │   ├── trading/       (DART trading terminal + positions + orders)
 │   │   ├── execution/     (Execution quality + TCA + algos)
 │   │   ├── promote/       (Strategy promotion lifecycle)
 │   │   ├── observe/       (Observation — health, risk, alerts, reconciliation)

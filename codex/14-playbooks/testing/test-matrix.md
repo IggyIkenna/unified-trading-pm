@@ -70,7 +70,7 @@ These specs share a helper (`walkClientReportingFlow`) since pb3a and pb3b are U
 3. Service tiles: Data, Research, Promote, Trading, Observe UNLOCKED; Admin LOCKED; Reports OPTIONAL
 4. Navigate each of 4 catalogues
 5. Strategy catalogue coverage matrix renders archetypes
-6. Trading terminal loads
+6. DART trading terminal loads
 
 ### `visibility-slicing.spec.ts` (parametrised)
 

@@ -60,7 +60,7 @@ Real-time orderbook state.
 | ----------------------------------------------- | ----------------------------- |
 | L2 bid/ask depth                                | Market Making (CLOB)          |
 | Theo fair-value computer (mid, VWAP, consensus) | Market Making                 |
-| Reference price (e.g., Pinnacle for sports)     | Market Making (event-settled) |
+| Reference price (e.g., Smarkets for sports)     | Market Making (event-settled) |
 | Inventory state (from PBMS + local shadow)      | Market Making                 |
 
 ### Price-dispersion scanners

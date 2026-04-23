@@ -102,8 +102,8 @@ Uniswap V2/V3/V4, Curve, Aave V3, Morpho, Euler, Fluid, EtherFi, Lido, Ethena, B
 ### Venues/Sources
 
 **Exchanges**: Betfair, Smarkets, Betdaq, Matchbook, Kalshi, Polymarket. **Reference data**: API Football (fixtures,
-leagues, teams), OddsAPI (odds aggregation), OpticOdds. **Bookmakers** (odds only): Bet365, Pinnacle, DraftKings,
-FanDuel, BetMGM, etc.
+leagues, teams), OddsAPI (odds aggregation), OpticOdds. **Bookmakers** (odds only): Bet365, DraftKings, FanDuel, BetMGM,
+etc.
 
 ### Ownership
 

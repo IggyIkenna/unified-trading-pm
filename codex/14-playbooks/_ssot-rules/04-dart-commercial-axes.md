@@ -28,8 +28,8 @@ How much of the Odum operating stack is the client buying into?
 - **Reporting-only visibility** — Client uses reporting surface only. Closer to regulatory or investor-relations access
   than true DART. Often a Reg Umbrella or IM entry point in disguise.
 - **Client strategy + downstream integration** — Client keeps strategy generation upstream. Odum provides execution,
-  trading terminal, position monitoring, reconciliation, and selected analytics to the extent the client's instruction
-  schema supports them. Does NOT include the richer research / backtest / promote layer.
+  DART trading terminal, position monitoring, reconciliation, and selected analytics to the extent the client's
+  instruction schema supports them. Does NOT include the richer research / backtest / promote layer.
 - **Full DART pipeline** — Client buys into the deeper stack: enriched data services, research, backtesting, promotion,
   execution, trading, observation. Odum strategy exposure, if offered, sits here.
 
@@ -69,7 +69,7 @@ Collapsing the matrix to the three cells that actually sell:
 3. **Full DART pipeline** — `(Client, full)` or `(Odum, full)` cell. The richer engagement. Odum strategy exposure, when
    present, sits here.
 
-## Fourth path — Signals Service (outbound, NOT DART)
+## Fourth path — Odum Signals (outbound, NOT DART)
 
 Signal Leasing is a **fourth commercial path** that sits alongside — but outside — the DART matrix above. Direction is
 inverted: Odum emits strategy-level position/directional signals to authenticated counterparty endpoints who execute on

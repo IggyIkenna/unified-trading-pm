@@ -75,7 +75,7 @@ graph TD
 | ml-training-service            | AUGMENT     | Sports configs, walk-forward validation (k-fold + standard)  |
 | ml-inference-service           | AUGMENT     | Sports model loading, prediction endpoint                    |
 | strategy-service               | AUGMENT     | Arbitrage, value betting, Kelly criterion                    |
-| execution-service              | AUGMENT     | Betfair, Pinnacle, Polymarket API clients                    |
+| execution-service              | AUGMENT     | Betfair, Smarkets, Polymarket API clients                    |
 | All UIs                        | AUGMENT     | Asset class filter, sports-specific views                    |
 
 ---
@@ -146,7 +146,7 @@ FOOTBALL:POLYMARKET:MATCH_WINNER:UNKNOWN:2024-2025:TEAM_A-TEAM_B::TEAM_A
 | Source                 | Purpose                    | Protocol       | Cost                         |
 | ---------------------- | -------------------------- | -------------- | ---------------------------- |
 | **Betfair Stream API** | Live odds (best liquidity) | WebSocket      | Free (with betting activity) |
-| **Pinnacle API**       | Sharp odds (CLV reference) | REST + polling | Free                         |
+| **Smarkets API**       | Sharp odds (CLV reference) | REST + polling | Free                         |
 | **Polymarket**         | Prediction market odds     | WebSocket      | Free                         |
 
 ---
@@ -266,7 +266,7 @@ def validate_no_leakage(fixture, features, horizon):
 **Example:**
 
 - Betfair: Team A wins @ 2.1 (implied prob: 47.6%)
-- Pinnacle: Team A loses @ 2.2 (implied prob: 45.5%)
+- Smarkets: Team A loses @ 2.2 (implied prob: 45.5%)
 - **Total implied prob:** 93.1% → 6.9% arbitrage opportunity
 
 **Challenge:** Bookmaker limits (max bet size ~$500-$2k before account closure)
@@ -322,13 +322,13 @@ where:
 
 **Authentication:** Session token (OAuth)
 
-### Pinnacle Line API
+### Smarkets Line API
 
 **Advantages:**
 
 - Sharp odds (professional bettors accepted)
 - Good liquidity
-- **CLV reference:** Pinnacle closing odds = market consensus
+- **CLV reference:** Smarkets closing odds = market consensus
 
 **API:**
 
@@ -460,7 +460,7 @@ gs://ml-models/SPORTS/
 - **Odds API:** $200/month (historical odds, 15+ bookmakers)
 - **API-Football:** $50/month (fixtures, teams, stats)
 - **Betfair Live Stream:** $0 (free with betting activity)
-- **Pinnacle API:** $0 (free)
+- **Smarkets API:** $0 (free)
 
 ### Infrastructure Costs
 
@@ -518,7 +518,7 @@ gs://ml-models/SPORTS/
 | **B** | market-data-processing-service (AUGMENTED) | Odds API (batch), Betfair Stream (live), API-Football ingestion | GCS odds snapshots + ProcessedOddsOutput; PubSub market-data-updated (asset_class=SPORTS), arbitrage-detected |
 | **C** | features-sports-service (NEW standalone)   | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT)    | GCS features; PubSub sports-features-computed                                                                 |
 | **D** | strategy-service (AUGMENTED)               | Arbitrage, value betting, Kelly criterion for SPORTS            | PubSub bet-orders (asset_class=SPORTS); GCS orders                                                            |
-| **E** | execution-service (AUGMENTED)              | Betfair, Pinnacle, Polymarket API clients via USEI              | GCS BetExecution; PubSub bet-executions (asset_class=SPORTS)                                                  |
+| **E** | execution-service (AUGMENTED)              | Betfair, Smarkets, Polymarket API clients via USEI              | GCS BetExecution; PubSub bet-executions (asset_class=SPORTS)                                                  |
 
 **DEPRECATED sports-specific services (archived 2026-03-01):**
 
@@ -559,7 +559,7 @@ topic patterns with `asset_class=SPORTS` attribute), Secret Manager for sports A
 
 ### Phase 5: Execution (Q4 2026)
 
-- AUGMENT execution-service with sports venue clients (Betfair, Pinnacle, Polymarket APIs via USEI) — **no separate
+- AUGMENT execution-service with sports venue clients (Betfair, Smarkets, Polymarket APIs via USEI) — **no separate
   sports-execution-service**
 - Test paper trading (no real money)
 - Deploy live with small capital ($1k)

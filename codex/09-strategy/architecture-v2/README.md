@@ -208,7 +208,7 @@ Child book wallets (10 books managed by Unity)
 Back to Unity central balance
 ```
 
-**No inter-book transfers required** — Unity holds a central balance that funds all child books. A bet on Pinnacle via
+**No inter-book transfers required** — Unity holds a central balance that funds all child books. A bet on Smarkets via
 Unity and a bet on Betfair via Unity both debit/credit the same central balance. This is the key operational advantage
 of Unity vs direct-book execution.
 
@@ -414,7 +414,7 @@ t=0, Allocator state:
 
 t=0, strategies emit bets:
   Arb sees cross-book arb opportunity Manchester United 1X2:
-    TRADE(unity child_book=Pinnacle, back home, $5k)
+    TRADE(unity child_book=Smarkets, back home, $5k)
     TRADE(unity child_book=3ET, lay home, equivalent $5k)
     → Unity executes both on single wallet; P&L guaranteed regardless of result
     → No transfer needed between books; Unity nets

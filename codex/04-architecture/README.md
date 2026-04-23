@@ -103,7 +103,7 @@ The pipeline processes four market categories through the same service graph:
 | **CEFI**   | Centralized Finance   | Binance, Deribit, Bybit, OKX, Upbit, Coinbase, Hyperliquid, Aster | Tardis API, Protocol APIs                             |
 | **TRADFI** | Traditional Finance   | CME, CBOE, NASDAQ, NYSE, ICE, FX                                  | Databento API, Yahoo Finance                          |
 | **DEFI**   | Decentralized Finance | Uniswap V2/V3/V4, Curve, AAVE V3, Morpho, Lido, EtherFi, Ethena   | The Graph, Protocol SDKs                              |
-| **SPORTS** | Sports Betting        | Betfair, Pinnacle, Polymarket, Odds API bookmakers                | Odds API, API-Football, Betfair Stream, USEI adapters |
+| **SPORTS** | Sports Betting        | Betfair, Smarkets, Polymarket, Odds API bookmakers                | Odds API, API-Football, Betfair Stream, USEI adapters |
 
 Each category shares the same pipeline services but with different venues, data types, instrument types, and external
 API dependencies. SPORTS was added as the fourth asset class (2026-03-01) and flows through the existing services
@@ -125,7 +125,7 @@ API dependencies. SPORTS was added as the fourth asset class (2026-03-01) and fl
 | ml-training-service            | Train LightGBM models (3-stage pipeline)                                                                    | None                                                          | Sports configs, walk-forward validation                                       |
 | ml-inference-service           | Generate ML predictions from trained models                                                                 | None                                                          | Sports model loading                                                          |
 | strategy-service               | Generate trading signals and strategy instructions                                                          | None                                                          | Arbitrage, value betting, Kelly criterion                                     |
-| execution-service              | Backtest execution on tick-level data (NautilusTrader)                                                      | None                                                          | Betfair, Pinnacle, Polymarket via USEI                                        |
+| execution-service              | Backtest execution on tick-level data (NautilusTrader)                                                      | None                                                          | Betfair, Smarkets, Polymarket via USEI                                        |
 
 ---
 

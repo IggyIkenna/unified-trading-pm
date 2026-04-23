@@ -72,8 +72,8 @@ you actually lock in the spread?), not directional risk.
 | Cross-CEX arb (fungible same instrument)       | Leg-and-hedge                               | Binance spot ↔ Bybit spot BTC-USDT — no venue supports simultaneous cross-CEX fill |
 | Cross-DEX arb on same chain without flash loan | ATOMIC (multicall)                          | Uniswap ↔ Balancer ETH-USDC on Ethereum                                            |
 | Cross-chain arb                                | Leg-and-hedge (bridge time kills atomicity) | Uniswap Ethereum ↔ Uniswap Arbitrum (same asset, different chain)                  |
-| Sports cross-book via Unity                    | ATOMIC within Unity API                     | Back on Pinnacle-via-Unity + lay on Betfair-via-Unity, submitted near-atomic        |
-| Sports cross-book direct (different accounts)  | Leg-and-hedge                               | Back on Pinnacle direct + lay on Betfair direct                                     |
+| Sports cross-book via Unity                    | ATOMIC within Unity API                     | Back on Smarkets-via-Unity + lay on Betfair-via-Unity, submitted near-atomic        |
+| Sports cross-book direct (different accounts)  | Leg-and-hedge                               | Back on Smarkets direct + lay on Betfair direct                                     |
 | Cross-venue vol arb (Deribit ↔ OKX options)   | Leg-and-hedge                               | Two options venues, separate wallets                                                |
 
 ### Leader-hedge strategy choice

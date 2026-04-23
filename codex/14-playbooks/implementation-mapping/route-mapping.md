@@ -29,7 +29,7 @@ no orphan pages exist.
 | DART umbrella path tile           | `/platform`              | `/` (homepage tile + header nav "DART")                  |
 | DART Signals-In (direction arrow) | `/platform/signals-in`   | `/platform` (sub-path card) + `/` (homepage DART tile)   |
 | DART Full pipeline                | `/platform/full`         | `/platform` (sub-path card) + `/` (homepage DART tile)   |
-| Signals Service (signals-out)     | `/signals`               | `/` (homepage tile + header nav "Odum Signals")          |
+| Odum Signals (signals-out path)   | `/signals`               | `/` (homepage tile + header nav "Odum Signals")          |
 | Investment Management             | `/investment-management` | `/` (homepage tile + header nav "Investment Management") |
 | Regulatory Umbrella               | `/regulatory`            | `/` (homepage tile + header nav "Regulatory")            |
 | Firm (alias: `/who-we-are`)       | `/who-we-are`            | `/` (homepage tile + header nav "Who We Are")            |
@@ -61,7 +61,7 @@ Six pillars, one per commercial path plus the DART umbrella.
 | DART umbrella briefing         | `/briefings/platform`                       | `/briefings` hub card                     |
 | DART Signals-In briefing       | `/briefings/dart-signals-in`                | `/briefings` hub card + platform pillar   |
 | DART Full briefing             | `/briefings/dart-full`                      | `/briefings` hub card + platform pillar   |
-| Signals-Out briefing           | `/briefings/signals-out`                    | `/briefings` hub card                     |
+| Odum Signals briefing          | `/briefings/signals-out`                    | `/briefings` hub card                     |
 | Investment Management briefing | `/briefings/investment-management`          | `/briefings` hub card                     |
 | Regulatory briefing            | `/briefings/regulatory`                     | `/briefings` hub card                     |
 | Second-call booking            | Calendar iframe embedded on briefing footer | n/a                                       |

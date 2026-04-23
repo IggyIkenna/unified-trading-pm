@@ -38,7 +38,7 @@ attribution service, same schema, same chart component. The only difference is t
 **Violation example:** A "backtest P&L calculator" that re-implements attribution logic because the researcher didn't
 want to call the live service. Any such duplication is a rule-03 violation and must be consolidated.
 
-### (c) The trading terminal is a live/batch toggle over the same component tree
+### (c) DART is a live/batch toggle over the same component tree
 
 The terminal does not fork into a "backtest UI" and a "live UI". It is one UI with a mode selector. Same numbers, same
 tables, same charts. Switching from live to batch rebinds the data source; it does not load a different page.

@@ -51,7 +51,7 @@ TIER 2 — Domain/Market Interfaces (protocols + schemas + connectivity, no clou
   NOTE: The following T2 interface repos have been merged into their respective services (no longer exist as standalone repos):
   - unified-trade-execution-interface (UTEI) → execution-service (CeFi order/fill adapters, OMS, OrderTracker, SmartOrderRouter)
   - unified-defi-execution-interface (UDEI) → execution-service (BaseAMMAdapter, Uniswap/Curve/DeFi pool adapters)
-  - unified-sports-execution-interface (USEI) → execution-service (BaseSportsAdapter, Betfair/Pinnacle adapters)
+  - unified-sports-execution-interface (USEI) → execution-service (BaseSportsAdapter, Betfair/Smarkets adapters)
   - unified-position-interface (UPI) → position-balance-monitor-service (position/account schemas + CCXT/OKX/IBKR adapters)
   - unified-reference-data-interface (URDI) → instruments-service (REST venue adapters, API key resolution, IBKR corp actions)
   Do NOT import from or reference these eliminated repos.
