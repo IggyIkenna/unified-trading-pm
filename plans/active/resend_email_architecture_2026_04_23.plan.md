@@ -83,19 +83,17 @@ These cannot be automated — they require access to Resend and the domain regis
 4. Go to your domain registrar (where `odum-research.com` is registered) and add ALL DNS records for both domains
 5. Back in Resend dashboard, click **Verify** for both domains — wait for DNS propagation (may take up to 24h)
 
-### Step 2 — API keys
+### Step 2 — API keys (already in Secret Manager — just verify domain scope)
 
-6. In Resend → API Keys → **Create API Key** for production
-   - Name: `odum-portal-prod`
-   - Permission: `Sending access`
-   - Domain: `mail.odum-research.com`
-   - Copy the key → add to Cloud Run secret `RESEND_API_KEY` (or directly in Cloud Run env vars for the production
-     service)
-7. **Create API Key** for staging
-   - Name: `odum-portal-staging`
-   - Permission: `Sending access`
-   - Domain: `staging-mail.odum-research.com`
-   - Copy the key → add to Cloud Run secret/env for the staging service
+The prod and staging Resend API keys are already stored in Secret Manager and mounted to Cloud Run. No new key creation
+needed. Just confirm in the Resend dashboard that each key has sending permission scoped to the correct domain:
+
+6. Resend → API Keys → open the prod key → confirm it has **Sending access** scoped to `mail.odum-research.com` (if it
+   was created with "All domains", that also works — scoping is tighter but optional)
+7. Open the staging key → confirm sending access for `staging-mail.odum-research.com`
+
+If either key is scoped to a different domain or has no domain, edit it in Resend to match. The Secret Manager values
+and Cloud Run mounts do not need to change.
 
 ### Step 3 — Firebase Console
 
@@ -108,18 +106,12 @@ These cannot be automated — they require access to Resend and the domain regis
     - Set to `https://www.odum-research.com/auth`
     - This makes Firebase redirect to our custom handler pages
 
-### Step 4 — Environment variable wiring (after domains verified)
+### Step 4 — Confirm Secret Manager mount name (quick check)
 
-These server-side variables are NOT baked into the Docker image — they are injected at Cloud Run runtime (not in
-`docker-build.env.*` files):
-
-```
-RESEND_API_KEY=re_...           # prod Cloud Run env / secret
-RESEND_API_KEY=re_...           # staging Cloud Run env / secret (different value)
-```
-
-The `docker-build.env.production` file intentionally has no `RESEND_API_KEY` — it carries only `NEXT_PUBLIC_*` vars.
-Server-only secrets go in Cloud Run's environment.
+8. Confirm the Secret Manager secret name the prod Cloud Run service mounts `RESEND_API_KEY` from (e.g.
+   `gcloud run services describe odum-portal --region ... --format json | jq .spec.template.spec.containers[0].env`).
+   Code references `process.env.RESEND_API_KEY` — if the mount uses a different env var name, align it now. Nothing else
+   to do — the keys and mounts are already in place.
 
 ---
 
@@ -395,9 +387,9 @@ Firebase redirects `oobCode` + `mode` to our pages after the user clicks the ema
 | 1   | **You**  | Add `mail.odum-research.com` domain in Resend + get DNS records                                     |
 | 2   | **You**  | Add `staging-mail.odum-research.com` domain + get DNS records                                       |
 | 3   | **You**  | Add DNS records at registrar → verify in Resend                                                     |
-| 4   | **You**  | Create prod API key in Resend (`odum-portal-prod`)                                                  |
-| 5   | **You**  | Create staging API key in Resend (`odum-portal-staging`)                                            |
-| 6   | **You**  | Add `RESEND_API_KEY` to Cloud Run env for each service (NOT in docker-build.env files)              |
+| 4   | **You**  | Resend → confirm prod key sending scope covers `mail.odum-research.com` (key already in SM)         |
+| 5   | **You**  | Resend → confirm staging key sending scope covers `staging-mail.odum-research.com`                  |
+| 6   | **You**  | Confirm Cloud Run mounts SM secrets as `RESEND_API_KEY` (already mounted — just verify the name)    |
 | 7   | **You**  | Firebase Console → Auth → Templates → set custom action URL to `https://www.odum-research.com/auth` |
 | 8   | **Code** | `lib/email/resend.ts` shared client                                                                 |
 | 9   | **Code** | Fix `website@` → `hello@` and `.co.uk` → `.com` in existing routes                                  |
