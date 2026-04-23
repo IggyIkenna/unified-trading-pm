@@ -534,3 +534,23 @@ pattern — follow it strictly.
 - Orphan parquets on GCS for 2026-04-18 BINANCE-FUTURES (77 MiB, 4 files) — rebuild script will pick up
 - 49 failed VMs' work from 2026-04-22 relaunch: parquets preserved on GCS, manifest rows partial
 - 457 `In CSV column #5` failures on BINANCE-FUTURES derivative_ticker — Phase 2b includes the pyarrow fix
+
+### 2026-04-23 execution (this session — all Phase 2b/3B/3C/4/6 shipped)
+
+On-origin commits:
+
+- UTL `35b7f6d8` — Phase 3B ResourceProfiler burst-aware sampling + `on_memory_critical_sync` callback + 5 new tests (23/23 lifecycle tests green).
+- MTDS `0b8ab42` — Phase 2b + Phase 4:
+  - `tardis_shared.finalise_rows_and_path` extended with `quote_asset` / `margin_type` / `underlying_hint` kwargs (v6 chain path).
+  - `tardis_adapter.finalise_and_write_cefi_shards` refactored: `df.copy()` removed; chain bundles split by (underlying, quote, margin); v6 kwargs threaded into `record_shard_count`/`record_instrument`.
+  - `orchestrator.PartitionedTickWriter` + drain loop + `shard_counts` updated to variable-length tuples; manifest `.add()` receives `quote_asset` + `margin_type`.
+  - pyarrow CSV `ConvertOptions.column_types` override for `funding_rate`/`mark_price`/etc. (L5 null-schema fix).
+  - `rebuild_cefi_manifest.py` extended: new `_PAT_V6_CHAIN` regex, `ParsedShard` gains `quote_asset`/`margin_type`, manifest rows emit v6 columns. 8 new unit tests.
+  - `migrate_deribit_margin_split_v6.py` (NEW): one-off row-splitter for legacy DERIBIT bundles. Date-sharded, OCC-safe, shard-level isolation, legacy parquet preserved (rollbackable).
+  - Test lock: 57/57 Tardis + v6 tests green, 628 MTDS unit + adapter tests green.
+- deployment-service `1c2282f` — Phase 3C `scripts/vm/reap-zombies.sh`: reusable `tail -10`-based reaper with run.log silence + no-log-after-N-sec detection. Exits 2 on any delete failure.
+- PM `<this-commit>` — Phase 6 codex doc `codex/02-data/shard-granularity-cefi.md` documenting the v6 shard key matrix, venue-symbol parser, downstream impact, and non-goals.
+
+Phase 2c (`build_instrument_id` + quote/margin kwargs) is DEFERRED: the canonical instrument_id stays v5-shaped for catalogue back-compat; disambiguation is load-bearing at the *shard path* + *manifest row* layer. Shipping Phase 2c would force downstream consumers to rewrite stored IDs, which is a migration we don't currently need. Phase 3A (pre-flight key widening) is a NO-OP for the same reason — finer granularity flows in naturally as v6 manifest rows accumulate.
+
+Phase 5 (tarball refresh + fleet relaunch) remains an operator step — requires `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` followed by launching a smoke VM on one date, verifying v6 manifest rows land, then full fleet relaunch.
