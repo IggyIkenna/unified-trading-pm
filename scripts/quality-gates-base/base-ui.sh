@@ -235,6 +235,22 @@ elif [ -f "scripts/orphan-audit.ts" ] && [ ! -f "scripts/.orphan-audit-baseline.
   log_warn "orphan-audit.ts found but no baseline — advisory-only (run: npm run orphan-audit:write-baseline)"
 fi
 
+# ── [2.6] ENVIRONMENT MODE INVARIANTS ───────────────────────────────────────
+# Static structural checks enforcing the three-axis environment/auth/data philosophy.
+# Requires: tests/e2e/environment-mode-invariants.spec.ts (no server needed).
+# SSOT: unified-trading-pm/codex/08-workflows/environment-mode-philosophy.md
+if [ -f "tests/e2e/environment-mode-invariants.spec.ts" ]; then
+  log_section "[2.6] ENVIRONMENT MODE INVARIANTS"
+  if _out=$(run_timeout 60 npx playwright test tests/e2e/environment-mode-invariants.spec.ts \
+      --config playwright.invariants.config.ts --project=chromium --reporter=dot 2>&1); then
+    log_ok "Environment mode invariants passed"
+  else
+    echo "$_out"
+    log_fail "Environment mode invariants FAILED — see output above"
+    GATE_FAILURES=$((GATE_FAILURES + 1))
+  fi
+fi
+
 # ── [3/6] UNIT TESTS + COVERAGE ─────────────────────────────────────────────
 # Runs only when package.json has a "test" script that is NOT playwright-only.
 # After tests: enforces MIN_UI_COVERAGE floor (default 70) by reading
