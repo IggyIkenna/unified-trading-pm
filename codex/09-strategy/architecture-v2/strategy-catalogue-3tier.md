@@ -266,12 +266,131 @@ Scope of the final swap when Plan A Phase 3 + Plan C land:
 
 ---
 
+## §11 — Explore tab is discovery-only; P&L links out
+
+The Explore (FOMO) tab is a **discovery + subscription-request** surface. It is **not** a reporting surface.
+
+- Every FOMO card shows a compact tier badge + sidecar stats + a teaser sparkline — all derived from `odum-paper` /
+  `odum-live` (Odum's own runs, never client data).
+- The "View returns →" CTA on every card links out to `/services/reports/strategy/{instanceId}` — the authoritative
+  reporting surface (owned by the reporting service).
+- FOMO cards **never duplicate** the full overlay chart, attribution breakdown, or drawdown curve. Those live on the
+  reporting service page, not on the catalogue tile.
+- Rationale: FOMO is per-instance "is this interesting for me?" at a glance; reporting is per-instance "show me the
+  returns" in depth. Splitting them keeps the Explore tab scannable and respects the one-source-of-truth rule for
+  performance data.
+
+The Reality tab follows the same pattern: `<RealityPositionCard>` shows live P&L summary + drill-through link ("View in
+Reports attribution") — no inline full-fidelity chart.
+
+---
+
+## §12 — Questionnaire seeding into the Explore filter
+
+Filter state on the Explore tab is pre-seeded by the 11-axis `QuestionnaireResponse` submitted at step 3 of client
+onboarding (see [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md)).
+
+**Surface wiring.** After questionnaire submit, the page redirects via
+`router.push("/services/strategy-catalogue?tab=explore&from=questionnaire&${filterQs}")`. The catalogue page reads
+`?tab=` and `?from=` URL params and calls `parseCatalogueFilter(URLSearchParams)` to hydrate
+`<StrategyCatalogueSurface>`'s initial filter. When `from=questionnaire`, an emerald banner renders: "Showing strategies
+that match your questionnaire profile. **[View all]** **[Edit preferences]**."
+
+**Seeding logic SSOT.**
+[`unified-trading-system-ui/lib/questionnaire/resolve-persona.ts::seedFiltersFromQuestionnaire()`](../../../../unified-trading-system-ui/lib/questionnaire/resolve-persona.ts).
+Mapping detail: [`strategy-questionnaire-mapping.md`](./strategy-questionnaire-mapping.md).
+
+| Axis                       | Filter dimension                                                         |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `categories`               | `venueCategories` (CEFI / DEFI / TRADFI / SPORTS / PREDICTION)           |
+| `strategy_style`           | `families` (8-family mapping)                                            |
+| `market_neutral=neutral`   | Rules-based expansion: adds `ARBITRAGE_STRUCTURAL` alongside carry picks |
+| `share_class_preferences`  | `shareClasses` (union across selected preferences)                       |
+| `risk_profile`             | `coverageStatuses` (low → SUPPORTED only; high → SUPPORTED + PARTIAL)    |
+| `leverage_preference=none` | Excludes `option` from instrument types (ui-side, not stored on filter)  |
+
+**Rules-based expansion layer.** The mapping isn't a 1:1 lookup — some combinations expand. The canonical example:
+`strategy_style=[carry] AND market_neutral=neutral` → filter includes **both** `CARRY_AND_YIELD` and
+`ARBITRAGE_STRUCTURAL` (structural arb is neutral by construction and closely related to carry strategies).
+`market_neutral=directional` with no styles chosen broadens to the three directional families.
+
+---
+
+## §13 — Expanding universe: ~99 seed instances, more unlock with tier
+
+The 99 seed instances in `STRATEGY_INSTANCE_CATALOGUE` are a representative sample, not the full system capacity. The
+FOMO feed on the Explore tab deliberately shows three surfaces:
+
+1. **`SUPPORTED` instances** — fully wired, live in `odum-paper` or higher maturity.
+2. **`PARTIAL` instances** — code path wired, some venues / share classes still rolling out. Tier badge: "Full +
+   Signals-In" or "DART Full only" depending on archetype plan-tier.
+3. **"Unlock with tier expansion" stubs** — instances the prospect's universe could expand to after mandate uplift
+   (adding venue access, adding a category, upgrading to Full). Rendered as locked tearsheets with upgrade CTAs — they
+   are not hidden, because hiding them breaks the upgrade conversation.
+
+The derivative generator (ARCHETYPE_CAPABILITY_REGISTRY × base/premium/multicat/full ladders) is the authoritative
+source; `STRATEGY_REGISTRY` is a 99-entry derivative. See
+[`feedback_generic_variant_ladder_applies_to_every_archetype.md`](../../../../.claude/projects/…/memory/feedback_generic_variant_ladder_applies_to_every_archetype.md)
+for the ladder pattern.
+
+---
+
+## §14 — DART Full vs Signals-In: same catalogue, different capabilities
+
+DART Full and DART Signals-In share the **same strategy catalogue**. The universe visible in FOMO is identical for both
+tiers; what differs is which capabilities the tier unlocks.
+
+**4 archetypes are Full-only** (require `strategy-full` + `ml-full` entitlements for the research + promote lifecycle):
+
+- `ML_DIRECTIONAL_CONTINUOUS`
+- `ML_DIRECTIONAL_EVENT_SETTLED`
+- `EVENT_DRIVEN`
+- `VOL_TRADING_OPTIONS`
+
+Rationale: these archetypes depend on the ML training pipeline or event-model authoring workflow, which Signals-In tier
+does not include.
+
+**The other 14 archetypes are "both"** — available in Signals-In and Full.
+
+**Tier badge rendering.** `<FomoTearsheetCard>` (see `components/strategy-catalogue/FomoTearsheetCard.tsx`) consults
+`getArchetypePlanTier(archetype)`:
+
+- `"both"` → emerald "Full + Signals-In" badge.
+- `"full-only"` → amber "DART Full only" lock badge.
+
+**Signals-In upgrade banner.** When `viewMode="client-fomo"` and the entitlements set lacks `strategy-full`,
+`<StrategyCatalogueSurface>` renders an amber alert above the grid: "Viewing as Signals-In — N/M strategies available. X
+more unlock with DART Full. **[Upgrade]**" — the CTA links to `/contact?service=dart-full&action=upgrade`.
+
+SSOT for the full feature matrix:
+[`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md).
+
+---
+
+## §15 — Admin catalogue management (already built)
+
+Tier 1 (admin-universe) + Tier 2 (admin-editor) are live at `/services/admin/strategy-universe` +
+`/services/admin/strategy-lifecycle-editor` respectively. Both mount the same `<StrategyCatalogueSurface>` primitive
+with different `viewMode=` props. See §2 + §3 above for column definitions and the mutation matrix. That is the
+authoritative admin surface — there is no separate "admin catalogue editor" page.
+
+---
+
 ## §10 — Cross-references
 
 - [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) — the 5-dim registry + maturity enum this surface
   renders.
+- [`strategy-questionnaire-mapping.md`](./strategy-questionnaire-mapping.md) — 11-axis → filter derivation SSOT.
+- [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md) — 7-step client onboarding
+  sequence; Explore tab is step 4's landing surface.
+- [`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md) — DART Full vs
+  Signals-In feature matrix + locked-section design + DemoPlanToggle.
+- [`../../06-coding-standards/strategy-display-conventions.md`](../../06-coding-standards/strategy-display-conventions.md)
+  — never-render-raw-IDs rule + archetype / family bespoke names used in every card.
 - [`../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
   — the plan this doc is the SSOT for.
+- [`../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+  — plan for the questionnaire-seeding + tier-badge + upgrade-banner additions (§11-§14).
 - [`performance-overlay.md`](./performance-overlay.md) — the chart primitive embedded in FOMO tearsheets.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — §4.5 declares Strategy Catalogue is a cross-cutting
   primitive, not a 6th tile.

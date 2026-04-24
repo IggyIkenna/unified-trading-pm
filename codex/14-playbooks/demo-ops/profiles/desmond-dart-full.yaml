@@ -1,0 +1,89 @@
+# Demo profile — Desmond H-W (DART Full upgrade-preview persona)
+# Paired with desmond-signals-in via DemoPlanToggle. Landed 2026-04-24 alongside
+# the 5 new questionnaire strategy-preference axes (UAC c715109).
+
+persona_id: desmond-dart-full
+base_audience: trading_platform_subscriber
+display_name: Desmond H-W
+email: desmondhw@gmail.com
+password: odum-demo-2026
+role: client
+org:
+  id: desmond-capital
+  name: Desmond Capital
+
+# Full DART entitlements — research + promote + trading + observe + reports +
+# investor relations. Paired persona (desmond-signals-in) strips strategy-full
+# + ml-full to preview the Signals-In universe.
+entitlements:
+  - investor-relations
+  - investor-platform
+  - data-pro
+  - execution-full
+  - ml-full
+  - strategy-full
+  - reporting
+
+# Pre-seeded questionnaire — written to localStorage("questionnaire-response-v1")
+# on login by demo-provider QUESTIONNAIRE_PRESEEDS. Same preseed as the paired
+# desmond-signals-in persona (they share the same prospect profile).
+questionnaire_response:
+  categories: [CeFi, DeFi]
+  instrument_types: [perp]
+  venue_scope: all
+  strategy_style: [carry, arbitrage, stat_arb]
+  service_family: DART
+  fund_structure: [prop]
+  market_neutral: neutral
+  share_class_preferences: []
+  risk_profile: low
+  target_sharpe_min: null
+  leverage_preference: low
+
+# Tiles visible under current entitlement set. All DART lifecycle stages
+# unlocked; investor-relations unlocked (firm is a prop desk evaluating Odum).
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: unlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: unlocked
+  admin: hidden
+
+# Demo toggle pairing
+plan_toggle:
+  paired_persona_id: desmond-signals-in
+  tier: full
+  paired_tier: signals-in
+
+# Sales context — what the team already knows about Desmond from Telegram
+# conversations. Do not duplicate CRM data here; this is demo-hygiene context so
+# the operator running the walkthrough can frame the session.
+notes: |
+  - Likely fits: funding-rate arb (CARRY_BASIS_PERP on CeFi perps) + stable
+    yield (CARRY_STAKED_BASIS, YIELD_STAKING_SIMPLE on DeFi).
+  - May start Signals-In (keeps strategy IP) and upgrade to DART Full later if
+    he wants Odum ML backtest + Promote. Toggle lets him preview both tiers in
+    one demo.
+  - Reg Umbrella candidate on a longer horizon — UK-regulated prop desk, FCA
+    exposure via Odum's permissions plausible once mandate lands.
+  - Risk profile "low" + leverage "low" → SUPPORTED-only coverage filter;
+    option instruments NOT excluded (low vs none).
+  - neutral → Explore tab rules-expansion adds ARBITRAGE_STRUCTURAL alongside
+    carry + stat_arb, surfaces Lido-only CARRY_STAKED_BASIS (recursive-staked
+    locked as next-tier expansion stub).
+
+# Surfaces + walkthrough hints for the operator
+walkthrough_hints:
+  - Land on /services/strategy-catalogue?tab=explore&from=questionnaire with the banner "Showing strategies that match
+    your questionnaire profile".
+  - Demonstrate CARRY_BASIS_PERP + CARRY_STAKED_BASIS tearsheets; point to "Full + Signals-In" emerald tier badge on
+    both cards.
+  - Flip DemoPlanToggle to desmond-signals-in; same universe renders but Research + Promote tabs in the DART tile row
+    become locked (click → /services/dart/locked?from=research or ?from=promote).
+  - Discuss ML_DIRECTIONAL archetypes with Desmond as the upgrade hook (amber "DART Full only" badge; available on Full
+    but not Signals-In).
+  - On /services/reports/strategy/{instance_id}, highlight that P&L and returns always link out of the FOMO card into
+    the reporting service — one source of truth for performance.

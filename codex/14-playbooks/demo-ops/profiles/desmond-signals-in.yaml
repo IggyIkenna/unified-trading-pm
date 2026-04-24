@@ -1,0 +1,86 @@
+# Demo profile — Desmond H-W (DART Signals-In base-tier persona)
+# Paired with desmond-dart-full via DemoPlanToggle. Landed 2026-04-24.
+
+persona_id: desmond-signals-in
+base_audience: trading_platform_subscriber
+display_name: Desmond H-W
+email: desmondhw@gmail.com
+password: odum-demo-2026
+role: client
+org:
+  id: desmond-capital
+  name: Desmond Capital
+
+# DART Signals-In entitlements — no strategy-full, no ml-full.
+# Research + Promote sub-routes are gated via service-tabs.tsx
+# requiredEntitlement="strategy-full"; their lockedRedirectTo sends clicks to
+# /services/dart/locked?from=research (Strategy Config) or ?from=promote
+# (Deployment).
+entitlements:
+  - investor-relations
+  - investor-platform
+  - data-pro
+  - execution-full
+  - reporting
+
+# Pre-seeded questionnaire — identical to desmond-dart-full; the two personas
+# share the same prospect profile. Written to
+# localStorage("questionnaire-response-v1") on login by demo-provider
+# QUESTIONNAIRE_PRESEEDS.
+questionnaire_response:
+  categories: [CeFi, DeFi]
+  instrument_types: [perp]
+  venue_scope: all
+  strategy_style: [carry, arbitrage, stat_arb]
+  service_family: DART
+  fund_structure: [prop]
+  market_neutral: neutral
+  share_class_preferences: []
+  risk_profile: low
+  target_sharpe_min: null
+  leverage_preference: low
+
+# Tile visibility. Trading + observe + data + reports unlocked; research +
+# promote render but link to /services/dart/locked.
+tiles:
+  data: unlocked
+  research: locked-redirect # -> /services/dart/locked?from=research
+  promote: locked-redirect # -> /services/dart/locked?from=promote
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: unlocked
+  admin: hidden
+
+# Demo toggle pairing
+plan_toggle:
+  paired_persona_id: desmond-dart-full
+  tier: signals-in
+  paired_tier: full
+
+# Paired-persona context
+notes: |
+  Paired persona — toggles to desmond-dart-full via DemoPlanToggle. Same
+  strategy catalogue visible in Explore tab (the universe is tier-independent),
+  but 4 Full-only archetypes render with amber "DART Full only" badges instead
+  of emerald "Full + Signals-In":
+    - ML_DIRECTIONAL_CONTINUOUS
+    - ML_DIRECTIONAL_EVENT_SETTLED
+    - EVENT_DRIVEN
+    - VOL_TRADING_OPTIONS
+  The Signals-In upgrade banner renders above the FOMO grid: "Viewing as
+  Signals-In — N/M strategies available. X more unlock with DART Full." CTA
+  sends to /contact?service=dart-full&action=upgrade.
+
+  Use this persona when the prospect asks "what am I missing if I stay on
+  Signals-In?" — the toggle is the answer.
+
+walkthrough_hints:
+  - Toggle away from desmond-dart-full to land here; note Research + Promote tiles in the DART tab row switch from
+    unlocked (emerald nav) to cursor-pointer redirect to /services/dart/locked.
+  - On /services/strategy-catalogue?tab=explore, point to the amber upgrade banner at the top of the grid
+    (entitlements.includes("strategy-full") is false, triggering the banner).
+  - Click one of the 4 Full-only archetype cards — the amber lock badge is the visual cue. View-returns CTA still links
+    to /services/reports/strategy/{instance_id} (Signals-In gets read access to the reporting surface).
+  - Demonstrate that strategy customisation + ML backtest UI are gated, but signal intake webhook + execution +
+    reporting are fully accessible.
