@@ -416,6 +416,130 @@ DEFI:
         - oracle_prices # sUSDe exchange rate - use to compute yield
       start_date: "2024-02-16"
 
+    # ==========================================================================
+    # New DeFi data types (defi_data_types_completeness_2026_04_24)
+    # Handlers: liquidation_events, flash_loan_events, staking_yields,
+    #   position_data, token_transfers, bridge_events, governance_events, mev_events
+    # ==========================================================================
+
+    # Liquidation events - Aave V3 LiquidationCall + Morpho liquidationEvents
+    AAVEV3-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: lending
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - liquidation_events # LiquidationCall via The Graph subgraph
+        - flash_loan_events # FlashLoan via The Graph subgraph
+        - position_data # Top 500 user positions by variable debt
+      start_date: "2023-01-27"
+
+    MORPHO-ETHEREUM-EVENTS:
+      domain: defi
+      book_type: AMM
+      fee_type: lending
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - liquidation_events # liquidationEvents via The Graph subgraph
+      start_date: "2024-01-08"
+
+    # Staking yields - Lido stETH + EtherFi weETH daily APY snapshots
+    LIDO-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - staking_yields # stETH APY via api.lido.fi
+      start_date: "2020-12-18"
+
+    ETHERFI-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - staking_yields # weETH APY via api.etherfi.id
+      start_date: "2024-02-01"
+
+    # Token transfers - ERC-20 transfer events (Alchemy alchemy_getAssetTransfers)
+    ALCHEMY-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - token_transfers # ERC-20 transfer events for top DeFi tokens
+      start_date: "2020-01-01"
+
+    # Bridge events - cross-chain transfer events from Across + Stargate subgraphs
+    ACROSS-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - bridge_events # FundsDeposited events via The Graph subgraph
+      start_date: "2021-11-09" # Across Protocol launch
+
+    STARGATE-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - bridge_events # Swap events via The Graph subgraph
+      start_date: "2022-03-17" # Stargate Finance launch
+
+    # Governance events - DAO proposal + vote events
+    COMPOUND-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - governance_events # Proposals + votes via The Graph subgraph
+      start_date: "2020-01-01"
+
+    AAVE-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - governance_events # Proposals + votes via The Graph subgraph
+      start_date: "2020-07-01"
+
+    UNISWAP-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - governance_events # Proposals + votes via The Graph subgraph
+      start_date: "2020-09-17" # UNI token launch / DAO creation
+
+    # MEV events - MEV-Boost relay proposer payload stats (Flashbots relay API)
+    FLASHBOTS-ETHEREUM:
+      domain: defi
+      book_type: AMM
+      fee_type: none
+      instrument_types: [SPOT_ASSET]
+      folders: [events]
+      data_types:
+        - mev_events # Proposer payload delivered stats from boost-relay.flashbots.net
+      start_date: "2022-09-15" # The Merge (PoS transition)
+
 # =============================================================================
 # SPORTS - Sports Betting (Post-commercialization)
 # =============================================================================
