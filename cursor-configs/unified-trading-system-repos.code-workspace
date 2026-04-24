@@ -9,8 +9,18 @@
       "name": "⚙️ Cursor Config"
     },
     {
-      "path": ".venv-workspace",
-      "name": "🐍 Venv"
+      "path": "unified-trading-api"
+    },
+    {
+      "path": "unified-trading-library"
+    },
+    {
+      "path": "unified-trading-pm",
+      "name": "📋 Project Management"
+    },
+    {
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     },
     {
       "path": "batch-live-reconciliation-service"
@@ -115,19 +125,9 @@
       "path": "unified-ml-interface"
     },
     {
-      "path": "unified-trading-api"
+      "path": ".venv-workspace",
+      "name": "🐍 Venv"
     },
-    {
-      "path": "unified-trading-library"
-    },
-    {
-      "path": "unified-trading-pm",
-      "name": "📋 Project Management"
-    },
-    {
-      "path": "unified-trading-system-ui",
-      "name": "🎨 UI"
-    }
   ],
   "settings": {
     "terminal.integrated.env.osx": {
