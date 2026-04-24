@@ -96,16 +96,45 @@ Cross-references:
 - [x] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh` — QG passed.
 - [x] [SCRIPT] P1. Quickmerge MTDS with Phase 3 adapters. **DONE: pushed to origin/live-defi-rollout a5a9b71.**
 
-### Phase 4 — Pool filtering policy enforcement (SEQUENTIAL after Phase 1)
+### Phase 2.5 — Instruments-first refactor for pool-based handlers (FOLLOW-UP, after Phase 2)
 
-**SKIPPED in full per user instruction: pool filtering policy owned by instruments-service. MTDS adapters consume
-already-filtered instrument IDs from the instruments manifest. No `DeFiPoolInclusionPolicy` in UAC.**
+**User direction (2026-04-24):** MTDS adapters must not re-discover pools. Instead, read pool/contract addresses from
+the instruments manifest (already filtered by instruments-service at discovery time) and use those IDs to query
+subgraphs/APIs. Missing data = instruments upstream didn't capture those pools — propagates naturally.
 
-- [x] [AGENT] P0. Pool filtering policy — SKIPPED (Part 7 explicitly excluded).
-- [x] [AGENT] P0. Adapter updates — SKIPPED.
-- [x] [AGENT] P0. Manifest sentinel — SKIPPED.
-- [x] [QG] P0. Skipped.
-- [x] [SCRIPT] P0. Skipped.
+Handlers that need refactoring (currently use direct subgraph queries with hardcoded protocol addresses):
+
+- [ ] [AGENT] P1. `liquidation_events_handler.py` — replace hardcoded Aave/Morpho pool list with manifest lookup:
+      `read_instruments_manifest(venue="AAVE-ETHEREUM", instrument_type=LENDING)` → extract pool addresses → filter
+      subgraph query to those addresses only.
+- [ ] [AGENT] P1. `flash_loan_events_handler.py` — same pattern: manifest lookup for Aave pool addresses.
+- [ ] [AGENT] P1. `token_transfers_handler.py` — read token contract addresses from instruments manifest
+      (`instrument_type=SPOT_ASSET`) rather than hardcoded top-20 list.
+- [ ] [AGENT] P1. `bridge_events_handler.py` — read bridge contract addresses from instruments if available; fallback to
+      protocol constants for bridges not yet in instruments.
+
+Handlers NOT needing refactor (inherently protocol/chain-level, no per-instrument IDs):
+
+- `gas_fees_handler.py` — chain-level aggregate, no instrument IDs
+- `mev_events_handler.py` — block/relay level, no instrument IDs
+- `governance_events_handler.py` — proposal-level, no per-pool IDs
+- `staking_yields_handler.py` — protocol-level APY, not per-pool (but can validate protocol address from instruments)
+- `position_data_handler.py` — aggregate top-N by TVL, not per-instrument
+
+Also add unit tests for all 8 handlers (currently unverified):
+
+- [ ] [AGENT] P1. Write `tests/unit/test_liquidation_events_handler.py`, `test_flash_loan_events_handler.py`,
+      `test_staking_yields_handler.py`, `test_token_transfers_handler.py`, `test_bridge_events_handler.py`,
+      `test_governance_events_handler.py`, `test_mev_events_handler.py`, `test_position_data_handler.py`. Each must have
+      ≥1 test with mocked API/subgraph response verifying correct parquet output structure.
+- [ ] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh`
+- [ ] [SCRIPT] P1. Quickmerge MTDS.
+
+### Phase 4 — Pool filtering policy (SKIPPED)
+
+**Skipped per user direction:** pool filtering owned by instruments-service at discovery time. MTDS consumes
+already-filtered instrument IDs from the manifest. `DeFiPoolInclusionPolicy` added to UAC by mistake; being removed (UAC
+commit pending on live-defi-rollout).
 
 ### Phase 5 — Deployment-api expected counts + data status tab (SEQUENTIAL after Phase 2)
 
@@ -134,8 +163,11 @@ already-filtered instrument IDs from the instruments manifest. No `DeFiPoolInclu
 ## Success criteria
 
 - **Code gates:** All repos QG green; basedpyright clean; ruff clean.
-- **Test gates:** Each new adapter has ≥1 unit test with mocked subgraph response.
-- **Coverage gate:** deployment-ui data status tab shows 14 DeFi data types with real coverage %; no "100% because
-  denominator=0" misleading scores.
-- **Pool policy gate:** Uniswap/Aave/Curve/Balancer/Morpho all read policy from UAC registry; no inline TVL logic
-  remaining in adapter source.
+- **Test gates:** Each of the 8 new handlers has ≥1 unit test with mocked subgraph/API response (Phase 2.5 follow-up).
+- **Coverage gate:** deployment-ui data status tab shows DeFi data_type breakdown with real coverage %; no "100% because
+  denominator=0" misleading scores (Phase 5 follow-up).
+- **Instruments-first gate (Phase 2.5):** Pool-based handlers (`liquidation_events`, `flash_loan_events`,
+  `token_transfers`, `bridge_events`) read contract/pool addresses from the instruments manifest rather than hardcoded
+  protocol lists.
+- **Removal gate:** `rg -i "DeFiPoolInclusionPolicy" --type py` returns 0 results (pool policy never committed;
+  confirmed clean).
