@@ -1,3 +1,7 @@
+---
+scope: [admin, sales]
+---
+
 # Signup / Signin workflow — prospect → client
 
 **Status:** target-state playbook · 2026-04-22

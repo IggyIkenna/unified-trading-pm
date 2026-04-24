@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Environment × Auth × Data Mode Philosophy
 
 **SSOT for all environment/mock/auth decisions in `unified-trading-system-ui`.**

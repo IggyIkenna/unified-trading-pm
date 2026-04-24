@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # CeFi shard granularity — instrument_type × quote_asset × margin_type (v6)
 
 **Status:** active as of 2026-04-23 (manifest schema v6 shipped). **SSOT:**

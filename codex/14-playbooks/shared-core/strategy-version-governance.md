@@ -1,5 +1,5 @@
 ---
-scope: [engineer, admin, ops]
+scope: [engineer, admin]
 ---
 
 # Strategy Version Governance — Operator Playbook
