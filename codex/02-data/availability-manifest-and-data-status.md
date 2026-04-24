@@ -91,15 +91,34 @@ Each service writes a specific subset of columns. "—" means the column is alwa
 | SPORTS     | —                                                                                                              | —                                                                                              | —         | EXCHANGE_ODDS, FIXED_ODDS                                     | league_id (EPL, BUNDESLIGA, etc.) |
 | PREDICTION | POLYMARKET, KALSHI                                                                                             | —                                                                                              | —         | PREDICTION_MARKET                                             | —                                 |
 
+> **Removed venues:** OddsJam, PredictIt, Betdaq, and Smarkets have been deleted from all repos (UAC, MTDS,
+> execution-service, instruments-service, consumer repos, and UI repos). No manifest rows exist or should be expected
+> for these venues. Do not add expected-shard entries for them in UAC registry functions.
+
+> **Hyperliquid and Aster instrument-type guard:** Both venues support perpetuals only. Any attempt to fetch
+> `instrument_type=OPTION` or `instrument_type=FUTURE` from these venues raises
+> `UnsupportedCapabilityError(venue=..., capability="options")` in the MTDS `BaseOnchainPerpAdapter`.
+> instruments-service must apply the same guard at reference-data fetch time. Consequently, **no OPTION or FUTURE
+> manifest rows should ever exist for HYPERLIQUID or ASTER** — the data status page treats any such row as a pipeline
+> misconfiguration.
+
 ### Layer 2: market-tick-data-service (raw market data)
 
 | Category   | venue                                                                                           | chain                                 | data_type                                                                                                                | instrument_type                                | league_id |
 | ---------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | --------- |
 | CEFI       | BINANCE-SPOT, BYBIT, DERIBIT, OKX, COINBASE, ...                                                | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, options_chain, futures_chain                                   | spot, perpetuals, futures_chain, options_chain | —         |
+| CEFI \*    | HYPERLIQUID, ASTER                                                                              | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, perp_funding                                                   | **perpetuals only** — see guard note below     | —         |
 | TRADFI     | CME, NASDAQ, NYSE, ICE, CBOE                                                                    | —                                     | trades, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo                                                                             | equity, futures_chain, options_chain, index    | —         |
 | DEFI       | AAVE_V3, UNISWAP_V3, CURVE, DRIFT, ...                                                          | ETHEREUM, ARBITRUM, BASE, SOLANA, ... | swaps, liquidity, rate_indices, oracle_prices, utilization, rewards, risk_params, gas_fees, lst_rates, perp_funding, tvl | pool, lending, lst                             | —         |
-| SPORTS     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, ... (~23 bookmakers) | —                                     | odds                                                                                                                     | —                                              | league_id |
+| SPORTS     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, ... (~21 bookmakers) | —                                     | odds                                                                                                                     | —                                              | league_id |
 | PREDICTION | POLYMARKET, KALSHI                                                                              | —                                     | prediction_trades, prediction_book_snapshot, prediction_market_metadata                                                  | prediction_market                              | —         |
+
+> **\* Hyperliquid / Aster perpetuals-only guard:** `BaseOnchainPerpAdapter` raises
+> `UnsupportedCapabilityError(venue=..., capability="options")` when `instrument_type` is OPTION or FUTURE. The
+> instruments-service reference-data adapter applies the same guard. The UAC registry functions
+> `get_expected_instrument_types_for_venue()` and `get_expected_data_types_for_venue()` return only
+> perpetuals-compatible types for these venues — so the expected-shard denominator is never inflated with option/futures
+> rows.
 
 ### Layer 2.5: market-data-processing-service (bucketed data)
 
@@ -109,6 +128,23 @@ Each service writes a specific subset of columns. "—" means the column is alwa
 | TRADFI   | same as MTDS | —      | trades, option_chain, futures_chain, rate_indices          | equity, futures_chain, options_chain           | 15s, 1m, 5m, 15m, 1h, 4h, 24h                    | —         |
 | DEFI     | protocols    | chains | swaps, liquidity, rate_indices, oracle_prices, utilization | pool, lending, lst                             | 15s, 1m, 5m, 15m, 1h, 4h, 24h                    | —         |
 | SPORTS   | bookmakers   | —      | odds_horizon_bucket                                        | —                                              | T-24h, T-12h, T-6h, T-4h, T-2h, T-1h, T-10m, T-0 | league_id |
+
+#### Combo Shard Key (Phase 4 forward-reference)
+
+Bundle-level combo chains will be tracked at a dedicated shard key. The manifest row for a combo chain shard uses:
+
+| Column            | Value                            |
+| ----------------- | -------------------------------- |
+| `venue`           | underlying venue (e.g. DERIBIT)  |
+| `data_type`       | `COMBO_CHAIN`                    |
+| `instrument_type` | `COMBO`                          |
+| `chain`           | `""` (CeFi) or chain name (DeFi) |
+| `league_id`       | `""` (not applicable)            |
+
+The shard granularity is `venue × underlying × date × data_type=COMBO_CHAIN`, analogous to how `options_chain` shards
+are keyed at `venue × underlying × date × data_type=options_chain`. Expected-shard denominator for combo chains comes
+from UAC `get_expected_data_types_for_venue(venue)` — the registry must include `COMBO_CHAIN` for venues that support
+combo instruments. This section is a forward-reference; implementation is tracked in Phase 4 of the relevant plan.
 
 ### Layer 3: Feature Services
 
@@ -318,9 +354,12 @@ doesn't exist, and the data status page will show false negatives.
 
 Top multi-chain protocols: AAVE_V3 (8 chains), BALANCER (6), UNISWAP_V3 (5).
 
-## Sports Bookmaker Venues (~23 Audited)
+## Sports Bookmaker Venues (~21 Audited)
 
 These are the actual pricing venues for sports odds. "ODDS_API" is the data aggregator, NOT a venue.
+
+**Removed bookmakers:** Smarkets, Betdaq, and OddsJam have been removed from all repos. No manifest rows exist for these
+venues and they must not appear in UAC registry functions or expected-shard calculations.
 
 | Bookmaker    | Accuracy            | Execution?                        |
 | ------------ | ------------------- | --------------------------------- |
@@ -342,7 +381,6 @@ These are the actual pricing venues for sports odds. "ODDS_API" is the data aggr
 | BET888SPORT  | Audited             | No                                |
 | LIVESCOREBET | Audited             | No                                |
 | MATCHBOOK    | Exchange, consensus | Yes (adapter exists)              |
-| SMARKETS     | Exchange, consensus | Yes (adapter exists)              |
 | BETFAIR_SB   | Sportsbook variant  | No                                |
 | UNIBET_UK    | Audited             | No                                |
 
