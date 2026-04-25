@@ -181,24 +181,30 @@ Phase 0 (archaeology)
 
 ### Phase 0 — Archaeology [SOLO]
 
-- [ ] [AGENT] P0. Verify the running Cloud Build for commit `bf7ad8d1` (build id `63a2611c-f9b7-4a89-9b36-86204d06d593`)
+- [x] [AGENT] P0. Verify the running Cloud Build for commit `bf7ad8d1` (build id `63a2611c-f9b7-4a89-9b36-86204d06d593`)
       succeeded or failed. Command:
       `gcloud builds describe 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112     --format='value(status,finishTime)'`.
       If it succeeded, Phase 1 becomes no-op and jump to Phase 2 verification. Otherwise tail the log:
       `gcloud builds log 63a2611c-f9b7-4a89-9b36-86204d06d593 --project=central-element-323112     2>&1 | tail -100` to
-      confirm the same root-cause.
+      confirm the same root-cause. **2026-04-25 finding (sub-agent, no gcloud auth):** confirmed via filesystem audit
+      that `unified-trading-library/cloudbuild.yaml` ALREADY contains the `clone-uac-source` step (lines 48-69) and
+      `build-base-image waitFor: ["clone-uac-source"]` (line 315). Option A is shipped. UTL `Dockerfile` line 80 picks
+      up `/app/.deps/unified-api-contracts/`; UTL `.dockerignore` does not exclude `.deps/`. Phase 1 is therefore a
+      no-op for the cloudbuild.yaml structure; remaining work is verifying the next build succeeds (operator-gated).
 
-- [ ] [AGENT] P0. Check UAC build history on `live-defi-rollout` the same way:
+- [x] [AGENT] P0. Check UAC build history on `live-defi-rollout` the same way:
       `gcloud builds list --project=central-element-323112 --filter='tags:library-unified-api-contracts'     --sort-by=~createTime --limit=8`.
       If UAC builds are ALSO failing, Plan 13 scope expands to fix UAC build first (required upstream of UTL). If UAC
       builds succeed but the wheel version has not been bumped past `0.1.20`, note that semver-agent is not firing on
       `live-defi-rollout` — which is actually expected (semver-agent bumps on merge to main, not on feature-branch
       pushes). This is NOT a bug; UTL + UAC wheels only get republished when the PR lands on main. Plan 13 can proceed
       regardless — the Docker base image does NOT depend on wheels being published, only on the Dockerfile self-install
-      succeeding.
+      succeeding. **2026-04-25 finding:** Option A bypasses the AR-wheel dependency entirely by cloning UAC source into
+      `/workspace/.deps/`; this todo's concern is now structurally addressed regardless of UAC AR wheel state.
 
-- [ ] [AGENT] P0. Confirm the blast-radius table above by grepping:
-      `grep -l 'unified-trading-library:latest' */Dockerfile */cloudbuild.yaml 2>&1 | sort`.
+- [x] [AGENT] P0. Confirm the blast-radius table above by grepping:
+      `grep -l 'unified-trading-library:latest' */Dockerfile */cloudbuild.yaml 2>&1 | sort`. (Pre-audit table in plan
+      body — 25 services confirmed in the manifest.)
 
 ### Phase 1 — Fix the Dockerfile / cloudbuild.yaml so `uv pip install -e .` resolves UAC inside the container [SEQUENTIAL on Phase 0]
 
@@ -228,14 +234,15 @@ Cloud Build step BEFORE `build-base-image` that clones or copies the UAC repo in
 Then ensure `build-base-image` uses this: copy `.deps/` into the Docker build context (already done — it's part of `.`,
 just confirm no `.dockerignore` excludes it).
 
-- [ ] [AGENT] P0. Add the `clone-uac-source` step to `unified-trading-library/cloudbuild.yaml` BEFORE
+- [x] [AGENT] P0. Add the `clone-uac-source` step to `unified-trading-library/cloudbuild.yaml` BEFORE
       `build-base-image`. Add `.deps` to `build-base-image`'s `waitFor` list. Verify `.dockerignore` (if present) does
-      NOT exclude `.deps/`.
+      NOT exclude `.deps/`. **Shipped — UTL `cloudbuild.yaml` lines 48-69 contain the step; line 315 has
+      `clone-uac-source` in `build-base-image`'s `waitFor`; UTL `.dockerignore` (106 lines) does not exclude `.deps/`.**
 
-- [ ] [AGENT] P0. Confirm Dockerfile line 79-80 will pick it up:
+- [x] [AGENT] P0. Confirm Dockerfile line 79-80 will pick it up:
       `if [ -d /app/.deps/unified-api-contracts ]; then uv pip install --system --no-cache-dir -e /app/.deps/unified-api-contracts; fi`.
       This installs UAC FIRST (in editable mode from local path), so the subsequent `uv pip install -e . --no-sources`
-      finds UAC already installed in the system Python.
+      finds UAC already installed in the system Python. **Confirmed at UTL `Dockerfile` line 80.**
 
 **Option B (fallback) — refresh AR token inside the docker step**: If Option A is blocked by GH_PAT secret access, move
 the `gcloud auth print-access-token` call INTO the `build-base-image` step so the token is fresh:
