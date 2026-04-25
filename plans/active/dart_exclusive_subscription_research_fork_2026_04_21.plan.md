@@ -553,6 +553,54 @@ todos:
   # ──────────────────────────────────────────────────────────────────────
   # PHASE 4 — UI DART subscription + fork + approvals flow (P0)
   # ──────────────────────────────────────────────────────────────────────
+  #
+  # **2026-04-25 PLACEMENT AUDIT — REVISED PATHS**
+  #
+  # An audit before Phase 4 implementation found 3 of the originally proposed
+  # routes would compete with already-shipped surfaces. Revised mapping:
+  #
+  #   Original path                                          → Revised path
+  #   /services/trading/subscriptions/page.tsx               → DELETE; replace
+  #     `subscribedInstanceIdsFor()` placeholder in existing
+  #     `/services/strategy-catalogue/page.tsx` (Reality tab) with the real
+  #     Plan D subscription query.
+  #   /services/trading/versions/page.tsx                    → /services/trading/
+  #     strategies/[id]/versions/page.tsx (per-instance version timeline; sits
+  #     next to existing [id]/page.tsx — versions are per-instance, not global).
+  #   /admin/strategy-version-approvals/page.tsx             → /(ops)/approvals/
+  #     strategy-versions/page.tsx (NEST under existing onboarding-approvals
+  #     tree at /(ops)/approvals/page.tsx; reuses lib/api/approvals-client.ts
+  #     patterns; one canonical admin Approvals home with multiple tabs).
+  #   components/strategy-versions/VersionLineageBadge.tsx   → components/
+  #     strategy-catalogue/VersionLineageBadge.tsx (co-located with
+  #     RealityPositionCard / FomoTearsheetCard / PerformanceOverlay siblings).
+  #
+  # SERVICE_REGISTRY tile-chip additions also revised:
+  #   - DART tile: NO new chips (existing "Catalogue" chip already covers
+  #     subscribe / fork — both happen inside <RealityPositionCard> +
+  #     <FomoTearsheetCard>; per-instance versions reachable via the existing
+  #     strategy detail page's new "Versions" tab).
+  #   - Admin & Ops tile: ONE generic "Approvals" chip → /(ops)/approvals
+  #     (existing page; gains a tabbed "Strategy Versions" section).
+  #
+  # Net delta vs original Phase 4 spec:
+  #   - 3 fewer new top-level pages (subscriptions, versions, strategy-version-
+  #     approvals all become sub-routes/tabs of existing surfaces).
+  #   - 1 fewer top-level admin chip (single Approvals chip vs 3 separate).
+  #   - Component placement unchanged (correct first time).
+  #   - Orphan-audit risk: zero — every new page reachable from a top-level
+  #     chip OR transitive <Link> from an already-reachable page.
+  #
+  # Click-through map (orphan-audit clean):
+  #
+  #   /dashboard
+  #     ├─ DART · Catalogue → /services/strategy-catalogue (existing; Reality + Explore tabs)
+  #     │     ├─ <RealityPositionCard> + <VersionLineageBadge> + <ForkDialog> modal
+  #     │     └─ <FomoTearsheetCard> + <SubscribeButton>
+  #     ├─ DART (existing strategy detail) → /services/trading/strategies/[id]
+  #     │     └─ NEW "Versions" tab → /strategies/[id]/versions
+  #     └─ Admin & Ops · Approvals → /(ops)/approvals (existing)
+  #           └─ NEW tab "Strategy Versions" → /approvals/strategy-versions
 
   - id: p4-ui-subscribe-button-component
     content: |
@@ -621,9 +669,11 @@ todos:
 
   - id: p4-ui-admin-approvals-page
     content: |
-      - [ ] [AGENT] P0. Create
-            `app/(ops)/admin/strategy-version-approvals/page.tsx`. Admin-only
-            queue view of all StrategyVersions with status=pending_approval:
+      - [ ] [AGENT] P0. **REVISED PATH (2026-04-25 placement audit):** Create
+            `app/(ops)/approvals/strategy-versions/page.tsx` (NEST under the
+            existing `/(ops)/approvals/` onboarding-approvals tree — NOT a new
+            top-level admin page). Admin-only queue view of all
+            StrategyVersions with status=pending_approval:
               - Columns: version_id, parent_instance (family.archetype.slot),
                 authored_by, maturity_phase badge, backtest_series link,
                 requested_at.
@@ -633,41 +683,84 @@ todos:
                 `<PerformanceOverlay>` from Plan C preloaded with
                 backtest_series_ref).
               - Polling cadence 30s; optimistic row updates on action.
-            Wired from Admin & Ops tile via new chip `strategy-version-approvals`.
+            Reuse `lib/api/approvals-client.ts` patterns + add a tab strip on
+            the existing `/(ops)/approvals/page.tsx` for "Onboarding" vs
+            "Strategy Versions". Wired from Admin & Ops tile via a single
+            generic `approvals` chip → /(ops)/approvals (NOT a dedicated
+            `strategy-version-approvals` chip).
       status: pending
 
   - id: p4-ui-version-lineage-badge
     content: |
-      - [ ] [AGENT] P0. Create
-            `components/strategy-versions/VersionLineageBadge.tsx`. Renders
-            "v{N} (forked from v{parentN})" with hover-card showing full
-            lineage from genesis. Injected into RealityPositionCard,
-            FomoTearsheetCard, and the DART terminal header. `v` numbers
-            derived from position in parent instance's version history
-            (0-indexed genesis = v0).
+      - [ ] [AGENT] P0. **REVISED PATH (2026-04-25 placement audit):** Create
+            `components/strategy-catalogue/VersionLineageBadge.tsx` (CO-LOCATE
+            with sibling components: `RealityPositionCard`, `FomoTearsheetCard`,
+            `PerformanceOverlay`, `StrategyCatalogueSurface` — already shipped
+            in this dir). Do NOT create a new `components/strategy-versions/`
+            sibling dir. Renders "v{N} (forked from v{parentN})" with
+            hover-card showing full lineage from genesis. Injected into
+            RealityPositionCard, FomoTearsheetCard, the DART terminal header,
+            AND the new `/services/trading/strategies/[id]/versions/page.tsx`
+            timeline. `v` numbers derived from position in parent instance's
+            version history (0-indexed genesis = v0).
       status: pending
 
   - id: p4-ui-tile-chip-wiring
     content: |
-      - [ ] [AGENT] P0. Extend `lib/config/services.ts`:
-              - DART tile: add chips
-                  `subscriptions` → `/services/trading/subscriptions` (new
-                    overview page showing caller's active dart_exclusive
-                    subscriptions as RealityPositionCard grid)
-                  `versions` → `/services/trading/versions` (caller's
-                    authored draft + pending versions)
-              - Admin & Ops tile: add chip
-                  `strategy-version-approvals` →
-                    `/admin/strategy-version-approvals`
+      - [ ] [AGENT] P0. **REVISED PATHS (2026-04-25 placement audit):** Extend
+            `lib/config/services.ts` with the SMALLER chip set. The original
+            spec proposed 3 new chips (`subscriptions`, `versions`,
+            `strategy-version-approvals`) creating top-level surfaces that
+            would compete with already-shipped pages. Revised mapping:
+              - DART tile: NO new chips. Subscribe + fork happen INSIDE the
+                existing "Catalogue" chip (= /services/strategy-catalogue;
+                Reality + Explore tabs already shipped). Per-instance version
+                history lives as a tab on the existing strategy detail page
+                (/services/trading/strategies/[id]/versions, see new
+                p4-ui-strategy-detail-versions-tab below).
+              - Admin & Ops tile: ONE generic `approvals` chip → /(ops)/approvals
+                (existing onboarding-approvals page). Add a tab strip on that
+                page for "Onboarding" vs "Strategy Versions" — Plan D ships
+                the "Strategy Versions" tab + sub-route at
+                /(ops)/approvals/strategy-versions/page.tsx (see
+                p4-ui-admin-approvals-page above).
             Update `persona-dashboard-shape.ts`:
-              - `prospect-dart` + `client-full` see `subscriptions` + `versions`
-              - `admin` + `internal-trader` see all three chips + approvals
-              - `client-premium` + `elysium-defi` see `subscriptions`
-                (no `versions` — no fork capability without ml-full)
-              - DART Signals-In personas see `subscriptions` only (signals_in
-                type, no fork).
-            Update `persona-lifecycle-shape.ts` — no change (approvals is
+              - `admin` + `internal-trader` see the new `approvals` chip on
+                Admin & Ops tile.
+              - All other Plan D wiring is via in-card actions on existing
+                catalogue + strategy-detail surfaces; no new chip visibility
+                rules required for client / prospect personas.
+            Update `persona-lifecycle-shape.ts` — no change (approvals is an
             admin-only chip, not a lifecycle tab).
+            The placeholder `subscribedInstanceIdsFor()` in
+            `app/(platform)/services/strategy-catalogue/page.tsx` MUST be
+            replaced with the real Plan D subscription query; this is the
+            primary Reality-tab seam for client-facing subscribe state.
+      status: pending
+
+  - id: p4-ui-strategy-detail-versions-tab
+    content: |
+      - [ ] [AGENT] P0. **NEW (2026-04-25 placement audit):** Add a "Versions"
+            tab to the existing per-strategy detail page at
+            `app/(platform)/services/trading/strategies/[id]/page.tsx`,
+            backed by a new sub-route
+            `app/(platform)/services/trading/strategies/[id]/versions/page.tsx`.
+            Replaces the original spec's `/services/trading/versions/` global
+            list (versions are per-instance, not a flat list).
+            Page renders:
+              - Timeline of all StrategyVersion records for this instance_id
+                (genesis → drafts → pending_approval → approved → rolled_out
+                → retired), most-recent-first.
+              - `<VersionLineageBadge>` per row.
+              - Per-version actions for the holder of the active dart_exclusive
+                subscription: "View backtest" (opens <PerformanceOverlay>),
+                "Request approval" (draft only), "View diff" (opens config
+                diff modal).
+              - Per-version actions for admin: "Approve / Reject / Rollout"
+                — these route to the same UTA endpoints as the admin queue
+                page so the admin can act from either surface.
+            Reachable from: existing `[id]/page.tsx` tab strip + transitive
+            <Link> from RealityPositionCard's "View versions" action.
       status: pending
 
   - id: p4-ui-api-clients
