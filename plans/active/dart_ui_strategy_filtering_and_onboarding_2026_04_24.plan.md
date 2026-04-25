@@ -652,3 +652,475 @@ and extend the full system.
 3. Commit order: unified-api-contracts → unified-trading-system-ui → unified-trading-pm (codex last)
 4. Never quickmerge when dep repos have uncommitted changes
 5. Two-pass: Pass 1 = full QG; quickmerge = Pass 2 (lint/format/typecheck/codex only)
+
+---
+
+## Phase 9 — Full Combinatoric Envelope + Admin Locking & Routing (ADDENDUM 2026-04-24)
+
+### Motivation
+
+The 99-instance `STRATEGY_REGISTRY` is a curated representative slice. The real product surface — enumerated by
+`unified-api-contracts/scripts/enumerate_envelope.py` into `catalogue_envelope.md` — is **1,609 single-share-class
+instances + 28 bespoke-capable archetypes** (each representing ∞ per-client configurations) across 9 families:
+
+- `ARBITRAGE_STRUCTURAL` (724), `CARRY_AND_YIELD` (355), `MARKET_MAKING` (186 + 7 bespoke), `ML_DIRECTIONAL` (105 + 2),
+  `RULES_DIRECTIONAL` (75 + 2), `STAT_ARB_PAIRS` (70 + 2), `VOL_TRADING` (57 + 9), `EVENT_DRIVEN` (28 + 1), `PORTFOLIO`
+  (9 + 4).
+
+UI catalogue today exposes only the 99. We need:
+
+1. **Envelope → UI as the backing store** with **progressive disclosure** so clients are not overwhelmed. Admin sees
+   all; clients see what is unlocked for their org.
+2. **VOL / MM / PORTFOLIO archetype splits** currently mocked in `enumerate_envelope.py` must be lifted into the UAC
+   capability manifest (`archetype_capability.py`) so UI + downstream services all share the same SSOT.
+3. **Admin locking & routing model**: lock by family, archetype, or individual instance. Route to **DART** surface
+   (research/promote), **Reporting-only** surface (IM reporting, no research), or **locked entirely**. Attach
+   assignments to an **organisation** (Odum, a client org, or a third-party manager org) — attachment must flow through
+   from admin action to user surfacing.
+4. **Family / archetype dropdown filter** already landed on IM reporting (performance, trades, portfolio-analytics) in
+   this session (uncommitted, 2026-04-24). Wire the same cascade into DART signals dashboard + research surfaces.
+
+### Pre-Audit Manifest
+
+#### `unified-api-contracts`
+
+| File                                                          | Action                                                                                                                                                                                                                           |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `internal/architecture_v2/archetype_capability.py`            | Add VOL archetype split (9), MM archetype split (7 including DEFI_LP sub-archetypes), PORTFOLIO family (4 canonical archetypes). Remove legacy `VOL_TRADING_OPTIONS`, `MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED`. |
+| `internal/architecture_v2/archetype_capability_manifest.json` | Regenerate via `scripts/generate_archetype_capability_manifest.py` after Python change.                                                                                                                                          |
+| `internal/architecture_v2/strategy_availability.py`           | Add `BespokeEligibility` flag + per-archetype `bespoke_capable: bool`.                                                                                                                                                           |
+| `internal/architecture_v2/enums.py`                           | Add `STRATEGY_FAMILY` enum value `PORTFOLIO`; `StrategyArchetype` values for 20 new archetypes.                                                                                                                                  |
+| `scripts/enumerate_envelope.py`                               | Remove mocked splits once manifest lifted; script becomes a thin wrapper over the manifest.                                                                                                                                      |
+| `internal/architecture_v2/admin_assignment.py`                | NEW — `AdminStrategyAssignment` model. Fields: `assignment_id`, `scope` (`family` \| `archetype` \| `instance`), `scope_id`, `route` (`DART` \| `REPORTING_ONLY` \| `LOCKED`), `org_id`, `created_at`, `created_by`, `notes`.    |
+| `internal/domain/client_reporting/StrategyInfo`               | Extend with `family: str`, `archetype: str`, `route: StrategyRoute` (already added optionally in UI fixture 2026-04-24; make authoritative).                                                                                     |
+
+#### `unified-trading-system-ui`
+
+| File                                                         | Action                                                                                                                                                                                                                            |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/architecture-v2/envelope.ts`                            | NEW — import the generated manifest JSON as the full envelope; typed accessors grouped by family / archetype / bespoke flag.                                                                                                      |
+| `lib/architecture-v2/catalogue-filter.ts`                    | Add `bespoke?: boolean`, `route?: StrategyRoute` filter dims.                                                                                                                                                                     |
+| `components/strategy-catalogue/StrategyCatalogueSurface.tsx` | Progressive-disclosure UX: Family accordion (9 rows) → Archetype accordion → representative instances (curated) + "Show all N combinations" drill-down button; bespoke row rendered separately with "Request custom build →" CTA. |
+| `components/strategy-catalogue/FomoTearsheetCard.tsx`        | Bespoke variant — no metrics stub, "Start a conversation" CTA.                                                                                                                                                                    |
+| `components/admin/AdminStrategyAssignmentTable.tsx`          | NEW — admin-only surface: scope selector (family / archetype / instance), route dropdown (DART / REPORTING_ONLY / LOCKED), org picker, assignment history.                                                                        |
+| `app/(ops)/admin/strategy-assignments/page.tsx`              | NEW — admin page hosting the above table.                                                                                                                                                                                         |
+| `lib/entitlements/strategy-route.ts`                         | NEW — `resolveStrategyRoute(user, instance, assignments): StrategyRoute \| "HIDDEN"`. Checks org attachments + route.                                                                                                             |
+| `components/reports/performance-dashboard.tsx`               | **DONE 2026-04-24 (uncommitted)**: family/archetype cascading dropdowns.                                                                                                                                                          |
+| `components/reports/trades-dashboard.tsx`                    | **DONE 2026-04-24 (uncommitted)**: family/archetype dropdowns + client-side strategy_id filter.                                                                                                                                   |
+| `components/reports/portfolio-analytics.tsx`                 | **DONE 2026-04-24 (uncommitted)**: family/archetype dropdowns + cascade client filter.                                                                                                                                            |
+| `components/strategy-catalogue/*` — DART signals dashboard   | Add same cascade. Scope: `app/(platform)/services/signals/dashboard/page.tsx` + research/promote pages.                                                                                                                           |
+
+#### `unified-trading-pm`
+
+| File                                                            | Action                                                                                                                                                                               |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` | Document the three-layer model: curated representatives (99) → full envelope (1,609) → bespoke (∞). Document progressive-disclosure UX.                                              |
+| `codex/09-strategy/architecture-v2/admin-locking-routing.md`    | NEW — SSOT for the `AdminStrategyAssignment` model. Covers: scope hierarchy (instance > archetype > family), route semantics, org-attachment flow-through, locking precedence rules. |
+| `codex/09-strategy/architecture-v2/archetype-taxonomy.md`       | Update: 9 families, full archetype list including 9 VOL + 7 MM + 4 PORTFOLIO.                                                                                                        |
+
+### Execution DAG
+
+```
+P9.1 (UAC manifest lift — VOL/MM/PORTFOLIO splits) ──────────────────────── QG ─┐
+          │                                                                     │
+          └─ P9.2 (enumerate_envelope.py becomes manifest-read) ────────────────┤
+                                                                                │
+P9.3 (UAC AdminStrategyAssignment model) ────────────────────────────── QG ────┤
+                                                                                │
+                     P9.4 (UI envelope.ts + catalogue-filter dims) ── PARALLEL ─┤
+                     P9.5 (UI progressive disclosure in StrategyCatalogueSurface)┤
+                     P9.6 (UI admin strategy-assignments page) ─── PARALLEL ────┤
+                     P9.7 (UI DART signals/research/promote cascade) ─ PARALLEL ─┤
+                                                                                │
+                     P9.8 (Codex SSOT docs) ─────────────────────── LAST ───────┘
+```
+
+### Todos
+
+#### UAC
+
+- [ ] [CODE] P9.1.1 — Add 9 VOL archetype entries to `archetype_capability.py` (`VOL_ARB_RV_IV`,
+      `VOL_SPREAD_STRUCTURES`, `VOL_CARRY`, `VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`, `VOL_STRADDLE`,
+      `VOL_SYNTHETIC_DELTA`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`). Remove legacy `VOL_TRADING_OPTIONS`.
+- [ ] [CODE] P9.1.2 — Split `MARKET_MAKING` into `MARKET_MAKING_PASSIVE_SPREAD`, `MARKET_MAKING_INVENTORY_SKEW`,
+      `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`,
+      `DEFI_LP_VAULT`. Remove legacy `MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED`.
+- [ ] [CODE] P9.1.3 — Add `PORTFOLIO` family + 4 archetypes (`PORTFOLIO_MULTI_STRATEGY`, `PORTFOLIO_RISK_PARITY`,
+      `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_TACTICAL_OVERLAY`).
+- [ ] [CODE] P9.1.4 — Add `bespoke_capable: bool` field to `ArchetypeCapabilityClaim`. Flag 28 archetypes (full list in
+      `enumerate_envelope.py::_BESPOKE_CAPABLE`).
+- [ ] [SCRIPT] P9.1.5 — Regenerate `archetype_capability_manifest.json` via
+      `scripts/generate_archetype_capability_manifest.py`.
+- [ ] [CODE] P9.2.1 — Simplify `enumerate_envelope.py`: remove mocked splits, read everything from manifest.
+- [ ] [CODE] P9.3.1 — Create `internal/architecture_v2/admin_assignment.py` with `AdminStrategyAssignment` model.
+- [ ] [QG] P9.UAC — `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+
+#### UI
+
+- [ ] [CODE] P9.4.1 — Create `lib/architecture-v2/envelope.ts` — typed envelope accessors.
+- [ ] [CODE] P9.4.2 — Extend `catalogue-filter.ts` with `bespoke?: boolean`, `route?: StrategyRoute` dims.
+- [ ] [CODE] P9.5.1 — Refactor `StrategyCatalogueSurface.tsx` to progressive-disclosure accordion (family → archetype →
+      curated reps + "Show all N" drill).
+- [ ] [CODE] P9.5.2 — Add bespoke row renderer + "Request custom build →" CTA in `FomoTearsheetCard.tsx`.
+- [ ] [CODE] P9.6.1 — Create `components/admin/AdminStrategyAssignmentTable.tsx` +
+      `app/(ops)/admin/strategy-assignments/page.tsx`.
+- [ ] [CODE] P9.6.2 — Wire assignments through `lib/entitlements/strategy-route.ts`; consumers =
+      StrategyCatalogueSurface + IM reporting dashboards.
+- [ ] [CODE] P9.7.1 — Add family/archetype cascade to DART `signals/dashboard/page.tsx`.
+- [ ] [CODE] P9.7.2 — Add family/archetype cascade to DART research + promote pages (scope TBD on audit).
+- [ ] [QG] P9.UI — UI quality gates + `npm test -- --run`.
+
+#### Codex (LAST)
+
+- [ ] [DOC] P9.8.1 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with curated / envelope /
+      bespoke three-layer model + progressive-disclosure UX.
+- [ ] [DOC] P9.8.2 — Create `codex/09-strategy/architecture-v2/admin-locking-routing.md` (SSOT for
+      AdminStrategyAssignment).
+- [ ] [DOC] P9.8.3 — Update `codex/09-strategy/architecture-v2/archetype-taxonomy.md` with full 9-family / 32-archetype
+      list.
+- [ ] [QG] P9.DOC — `cd unified-trading-pm && bash scripts/quality-gates.sh`.
+
+### Success Criteria (Phase 9)
+
+- **Code**: All three QG groups pass.
+- **Business**:
+  - Admin can lock a family, archetype, or instance and route to DART / REPORTING_ONLY / LOCKED with an org attach;
+    change surfaces immediately to affected users.
+  - Client sees only routed-to-DART instances in DART, routed-to-REPORTING_ONLY in IM reports, never sees LOCKED ones.
+  - Envelope view in StrategyCatalogueSurface renders 1,600+ instances progressively without performance degradation
+    (virtualisation or pagination, not a flat 1.6k DOM).
+  - Bespoke rows render with correct CTA and do not attempt metric stubs.
+- **Docs**: Codex SSOT covers the full model; no ad-hoc documentation outside codex.
+
+### Decisions confirmed 2026-04-24
+
+1. **Archetype IDs**: names as proposed are final. Lift into UAC manifest unchanged.
+2. **Default route** for new admin assignments: `DART`.
+3. **Org-attach flow-through**: **batch refresh** (daily). Real-time not required.
+4. **Progressive-disclosure UX**: **accordion or tree**. Implement accordion first; tree is a follow-up if the accordion
+   becomes unwieldy at 5k+ rows.
+
+### Primary-category axis + capability rules (2026-04-24)
+
+The envelope now uses **primary category** (`CEFI` / `DEFI` / `TRADFI` / `SPORTS` / `PREDICTION` / `CROSS_CATEGORY`) as
+the top-level axis:
+
+1. User picks category first.
+2. Then family (within that category only).
+3. Then archetype.
+4. Then instance (representative) or "Show all N combinations" drill-down.
+5. Bespoke rows appear inline per (category × archetype) with a "Request custom build →" CTA.
+
+**Category × archetype capability rules** are mocked in `scripts/enumerate_envelope.py::_ARCHETYPE_ALLOWED_CATEGORIES`.
+These forbid nonsensical combinations — e.g. `CARRY_*` on SPORTS (no funding rates), `VOL_*` on SPORTS/PREDICTION (no
+options), `DEFI_LP_*` on TRADFI, `MARKET_MAKING_QUEUE_MICROSTRUCTURE` on DEFI (no order-book queue on AMMs). These rules
+must be lifted into the UAC manifest alongside the archetype split (Phase 9.1).
+
+**Per-category venue universe** also mocked in `scripts/enumerate_envelope.py` — wider than the currently-integrated
+`venue_ids` in the manifest. CEFI spot/perp uses a 10-venue list
+(Binance/OKX/Bybit/Hyperliquid/Deribit/Coinbase/Kraken/Bitget/Gate/ KuCoin); DEFI expands per protocol × chain; TRADFI
+covers IBKR/CME/ICE/CBOE/Saxo/LMAX/ Eurex/NYSE/NASDAQ; SPORTS covers
+Unity/Betfair/Smarkets/Sporttrade/Sportradar/FanDuel/ DraftKings; PREDICTION covers Polymarket/Kalshi/Unity/Manifold.
+
+Envelope output **2026-04-24**: **5,355 single-share-class instances + 51 bespoke archetype-rows** across 9 families × 6
+categories. Breakdown:
+
+| Category          | Instances | Bespoke |
+| ----------------- | --------: | ------: |
+| CEFI              |     1,175 |      19 |
+| DEFI              |     3,501 |       8 |
+| TRADFI            |       512 |      12 |
+| SPORTS            |       112 |       4 |
+| PREDICTION        |        46 |       4 |
+| CROSS (Portfolio) |         9 |       4 |
+
+### Admin-assignment multi-route rule (CRITICAL)
+
+A single strategy (scope = family / archetype / instance) **may** be routed to both `DART` and `REPORTING_ONLY`
+simultaneously, **only if the attached org is the same**. Route + org is a composite key:
+
+- `(scope_id, org_A, DART) + (scope_id, org_A, REPORTING_ONLY)` — ✅ allowed. Same org sees the strategy on both
+  surfaces.
+- `(scope_id, org_A, DART) + (scope_id, org_B, REPORTING_ONLY)` — ❌ forbidden. Different orgs on different routes means
+  two orgs are competing for the same strategy. The admin write must reject with `ORG_CONFLICT_ON_STRATEGY`.
+- `(scope_id, org_A, LOCKED)` — exclusive. No other assignment on the same scope_id regardless of org.
+
+Implementation: `admin_assignment.py::AdminStrategyAssignmentWriter.validate()` checks the existing assignment set on
+write, rejects conflicts loud.
+
+### Config version is an implicit locking axis
+
+Every instance today runs on config `v1` (baseline parameters). As config groups evolve (thresholds, windows, sizing,
+feature toggles), new versions emerge. Client org subscriptions lock in a specific version — changing version is a
+deliberate admin action. Version-governance is the mechanism for bounding the otherwise-infinite config space.
+
+This ties into the existing **Plan D version governance** work (strategy-lifecycle version_governance worker + UAC
+subscription.py + UTL 7-event registration, shipped 2026-04-22). Phase 9's admin-assignment model should carry a
+`config_version: str` field (default `"v1"`) alongside `scope`, `route`, `org_id`.
+
+### Shipped 2026-04-24/25
+
+UAC `9a9242d` (envelope script + curated snapshot script) on origin/live-defi-rollout. UI 5 files (IM reporting cascade
+dropdowns + glossary fix) — quickmerge in flight 2026-04-25.
+
+### Envelope artefacts (live)
+
+Catalogue snapshot scripts now emit to GCS on every run:
+
+| Artefact                                           | GCS path                                                                              | Console                                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Curated 99 (representative slot labels)            | `gs://strategy-store-cefi-central-element-323112/catalogue/snapshot.md` (next ship)   | —                                                                                                                                        |
+| Full combinatoric envelope (6,063 + 75 bespoke)    | `gs://strategy-store-cefi-central-element-323112/catalogue/envelope.md`               | https://console.cloud.google.com/storage/browser/_details/strategy-store-cefi-central-element-323112/catalogue/envelope.md               |
+| Strategy → instruments resolver (stub: venue-only) | `gs://strategy-store-cefi-central-element-323112/catalogue/strategy_instruments.json` | https://console.cloud.google.com/storage/browser/_details/strategy-store-cefi-central-element-323112/catalogue/strategy_instruments.json |
+
+Run scripts via:
+
+```
+cd unified-api-contracts && source ../.venv-workspace/bin/activate
+python scripts/enumerate_envelope.py --upload
+python scripts/enumerate_strategy_instruments.py --upload
+```
+
+### Catalogue scope as of 2026-04-25
+
+**6,063 single-share-class instances + 75 bespoke-capable archetypes** across 9 families × 6 categories:
+
+| Category       | Instances | Bespoke |
+| -------------- | --------: | ------: |
+| CEFI           |     1,395 |      28 |
+| DEFI           |     3,792 |      12 |
+| TRADFI         |       620 |      21 |
+| SPORTS         |       112 |       4 |
+| PREDICTION     |        54 |       5 |
+| CROSS_CATEGORY |        90 |       5 |
+
+VOL family expanded to 18 archetypes including 0DTE (`VOL_0DTE_GAMMA_SCALPING`, `VOL_0DTE_PIN_RISK`), term-structure
+(`VOL_TERM_STRUCTURE_ARB`, `VOL_TERM_STRUCTURE_SLOPE`, `VOL_DISPERSION`), variance swap, LEAPS convexity, cross-asset
+spread (BTC vol vs ETH vol), and ratio-spread structures (1×2 / 2×3 / broken-wing). MEV split adds 4 DeFi-only
+archetypes (sandwich, JIT liquidity, backrun, liquidation bundle). Cross-domain event arb covers Polymarket↔Betfair
+same-event arb. Prediction-market MM is its own archetype.
+
+---
+
+## Phase 10 — Strategy → Instruments Resolver + UI Filter Hierarchy Fix
+
+### Motivation (2026-04-25)
+
+The catalogue tells you _what shape_ of instrument is allowed (archetype × category × venue × instrument*type). The
+instruments-service writes \_which concrete instruments exist right now* per-(category, day, venue) parquet rolls under
+`gs://instruments-store-{category}-central-element-323112/instrument_availability/by_date/`. We need a resolver that
+joins the two so UI surfaces (DART, terminal, IM reporting) can answer "which instruments can I trade for this strategy
+slot today?"
+
+Plus the DART filter hierarchy is wrong — currently shows 2 levels (`strategy family` + `strategy`) with family value
+mislabelled "DeFi/DeFi". The correct hierarchy per Phase 9 decisions is **`category → family → archetype → instance`**
+(4-level).
+
+### Pre-Audit Manifest
+
+| File                                                                                                  | Action                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unified-api-contracts/scripts/enumerate_strategy_instruments.py`                                     | NEW (shipped 2026-04-25 as stub). Phase 10 upgrades stub resolver to read real parquet from `instruments-store-*` buckets.                                                                                                         |
+| `unified-trading-system-ui/lib/architecture-v2/strategy-instruments.ts`                               | NEW. Fetches `catalogue/strategy_instruments.json` from GCS (or cached), exposes `instrumentsForSlot(slotLabel)`.                                                                                                                  |
+| `unified-trading-system-ui/components/strategy-catalogue/StrategyCatalogueSurface.tsx`                | Replace 2-level family/strategy filter with 4-level `category → family → archetype → instance` cascade. Drop "DeFi/DeFi" mis-labelling.                                                                                            |
+| `unified-trading-system-ui/components/terminal/order-entry-form.tsx`                                  | When user picks a strategy, scope instrument dropdown to `instrumentsForSlot(slotLabel)`.                                                                                                                                          |
+| `unified-trading-system-ui/components/reports/{performance,trades,portfolio-analytics}-dashboard.tsx` | Add category dropdown above family dropdown (currently 2-level: family → strategy; new: category → family → archetype → strategy).                                                                                                 |
+| `unified-trading-system-ui/lib/auth/personas.ts` + `lib/auth/demo-provider.ts`                        | Demo personas — Desmond + Patrick (Elysium) — `assigned_strategies` field carries actual catalogue slot labels (e.g. `CARRY_BASIS_PERP@binance-perp-4h-btc-prod`). Demo provider hydrates these via `instrumentsForSlot` at login. |
+
+### Execution DAG
+
+```
+P10.1 (UAC: real parquet resolver in enumerate_strategy_instruments.py) ─── QG ──┐
+                                                                                  │
+P10.2 (UI: strategy-instruments.ts client-side accessor) ─── PARALLEL ────────────┤
+P10.3 (UI: 4-level filter cascade in StrategyCatalogueSurface) ─── PARALLEL ──────┤
+P10.4 (UI: terminal order-entry instrument scoping) ─── PARALLEL ─────────────────┤
+P10.5 (UI: IM reporting 4-level cascade + drop "DeFi/DeFi" bug) ─── PARALLEL ─────┤
+                                                                                  │
+P10.6 (Demo personas → catalogue link via assigned_strategies field) ─────────────┤
+                                                                                  │
+P10.7 (Codex SSOT: instruments-resolver-architecture.md) ─── LAST ────────────────┘
+```
+
+### Todos
+
+#### UAC (resolver)
+
+- [ ] [CODE] P10.1.1 — Replace `_resolve_instruments_stub` with real parquet read: walk
+      `gs://instruments-store-{category}/instrument_availability/by_date/` for latest day per venue, read parquet,
+      filter by instrument_type, collect unique symbols.
+- [ ] [CODE] P10.1.2 — Add per-category bucket auth + retry logic.
+- [ ] [CODE] P10.1.3 — Schedule resolver via Cloud Scheduler nightly (writes to GCS overwriting prior).
+- [ ] [QG] P10.1.UAC — quality-gates.
+
+#### UI (filter cascade + accessor + terminal)
+
+- [ ] [CODE] P10.2.1 — Create `lib/architecture-v2/strategy-instruments.ts` — fetches GCS JSON (cached), exposes
+      `instrumentsForSlot(slotLabel)`, `slotsForArchetype(archetype)`, `slotsForCategory(category)`.
+- [ ] [CODE] P10.3.1 — Refactor `StrategyCatalogueSurface.tsx` filter UI to 4-level cascade:
+      `category → family → archetype → instance`.
+- [ ] [CODE] P10.3.2 — Fix the "DeFi/DeFi" mis-label in family chip rendering — root cause is family field being
+      populated with `category` value.
+- [ ] [CODE] P10.4.1 — In `components/terminal/order-entry-form.tsx`, scope instrument dropdown by
+      `instrumentsForSlot(selectedStrategy)`.
+- [ ] [CODE] P10.5.1 — Add category dropdown above existing family dropdown in performance/trades/portfolio-analytics
+      dashboards (extend the cascade landed 2026-04-24 from 2-level to 3-level + archetype).
+- [ ] [QG] P10.UI — quality-gates.
+
+#### Demo persona link
+
+- [ ] [CODE] P10.6.1 — Extend `Persona` interface: `assigned_strategies: string[]` (slot labels from catalogue).
+- [ ] [CODE] P10.6.2 — Seed Desmond DART-Full with
+      `["CARRY_BASIS_PERP@binance-perp-4h-btc-prod", "ARBITRAGE_PRICE_DISPERSION@binance-bybit-spot-tick-btc-prod", "STAT_ARB_CROSS_SECTIONAL@binance-spot-1h-btc-prod"]`
+      (or equivalent — derive from his questionnaire profile).
+- [ ] [CODE] P10.6.3 — Seed Patrick (Elysium) base with
+      `["CARRY_BASIS_PERP@lido-hyperliquid-staking+perp-1d-eth-prod", "CARRY_STAKED_BASIS@lido-aave-hyperliquid-staking+perp-1d-eth-prod"]`;
+      Patrick `-full` adds `CARRY_RECURSIVE_STAKED@*`.
+- [ ] [CODE] P10.6.4 — `demo-provider.ts` uses `instrumentsForSlot` to derive concrete instrument list per persona at
+      login (replaces hardcoded mock instrument lists).
+
+#### Codex
+
+- [ ] [DOC] P10.7.1 — `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
+      catalogue ↔ instruments-service join, GCS layout, refresh cadence.
+- [ ] [DOC] P10.7.2 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with 4-level filter
+      hierarchy decision.
+
+### Success Criteria (Phase 10)
+
+- **Code**: All QGs pass.
+- **Business**:
+  - User selecting `CARRY_BASIS_PERP@binance-perp-...` in DART catalogue sees a concrete instrument list (e.g.
+    BTC-USDT-PERP, ETH-USDT-PERP, ...) sourced from instruments-service.
+  - DART filter shows 4 levels (category → family → archetype → instance), not 2.
+  - "DeFi/DeFi" mis-label gone.
+  - Desmond + Patrick demo personas resolve their catalogue strategies via the same path as production users.
+  - Terminal order entry scopes instrument dropdown to the selected strategy's allowed set.
+- **Docs**: Codex SSOT covers the resolver join.
+
+---
+
+## Phase 11 — Full 5k+ Catalogue UI Rendering, Asset-Group Rename, Access-Aware Lock States (ADDENDUM 2026-04-25)
+
+### Motivation
+
+The 5k+ envelope already exists as data (`gs://strategy-store-cefi-central-element-323112/catalogue/envelope.md` +
+`strategy_instruments.json`). The DART UI today only renders the curated 99 from `STRATEGY_REGISTRY`. Phase 11 wires the
+full envelope into the catalogue UI with:
+
+- Primary execution category as top-level filter (with "All" option for category-agnostic strategies)
+- "asset class" → **"asset group"** terminology rename across ALL surfaces (constants, labels, types, codex)
+- Access-aware rendering: locked-but-visible strategies, reports-only access vs terminal access split
+- Progressive-disclosure accordion for 5k+ rows (virtualised)
+
+### Pre-Audit Manifest
+
+| File                                                                                   | Action                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unified-trading-system-ui/lib/architecture-v2/asset-group.ts`                         | NEW or rename from `asset-class.ts`. SSOT constant export `ASSET_GROUPS`, `AssetGroup` type, label map.                                                                    |
+| `unified-trading-system-ui/lib/**/*.{ts,tsx}`                                          | Project-wide rename `asset_class` → `asset_group`, `assetClass` → `assetGroup`, `AssetClass` → `AssetGroup`, `"asset class"` → `"asset group"` in user-facing strings.     |
+| `unified-api-contracts/.../enums.py`                                                   | If `AssetClass` enum exists, rename to `AssetGroup`. Update all consumers.                                                                                                 |
+| `unified-trading-pm/codex/**/*.md`                                                     | Update terminology in codex SSOT docs.                                                                                                                                     |
+| `unified-trading-system-ui/components/strategy-catalogue/StrategyCatalogueSurface.tsx` | Render full envelope (not just 99). Virtualised list (react-window or @tanstack/react-virtual) for 5k+ rows. Top-level category filter with "All" option.                  |
+| `unified-trading-system-ui/lib/architecture-v2/envelope-loader.ts`                     | NEW. Fetches `envelope.md` + `strategy_instruments.json` from GCS (or proxied via Next.js API route). Cached with stale-while-revalidate.                                  |
+| `unified-trading-system-ui/app/api/catalogue/envelope/route.ts`                        | NEW. Proxies GCS read so client doesn't need GCS auth. Returns envelope + instruments JSON.                                                                                |
+| `unified-trading-system-ui/lib/entitlements/strategy-route.ts`                         | NEW (overlap with Phase 9). Computes user's per-strategy access state: `terminal-and-reports` / `reports-only` / `locked-visible` / `hidden`.                              |
+| `unified-trading-system-ui/components/strategy-catalogue/StrategyCard.tsx`             | Render lock icon + access-state badge per strategy. Locked-visible cards greyed but interactive (hover shows "Available in Reports only" or "Upgrade to unlock terminal"). |
+| `unified-trading-system-ui/app/(platform)/services/terminal/page.tsx`                  | Terminal entry blocks reports-only strategies; show "Reports access only — upgrade for terminal" inline.                                                                   |
+
+### Constant SSOT for shared terms
+
+To prevent drift like "DeFi/DeFi" or "asset class" vs "asset group", introduce typed constants:
+
+```ts
+// lib/architecture-v2/terminology.ts
+export const TERMS = {
+  ASSET_GROUP: "asset group",
+  STRATEGY_FAMILY: "strategy family",
+  STRATEGY_ARCHETYPE: "strategy archetype",
+  STRATEGY_INSTANCE: "strategy instance",
+  PRIMARY_CATEGORY: "primary execution category",
+  // ...
+} as const;
+```
+
+UI labels MUST reference `TERMS.*` rather than inline strings.
+
+### Execution DAG
+
+```
+P11.1 (asset_class → asset_group rename — UAC + UI + codex) ── QG ──┐
+                                                                     │
+P11.2 (envelope-loader.ts + /api/catalogue/envelope route) ──────────┤
+P11.3 (StrategyCatalogueSurface full-envelope rendering, virtualised)┤
+P11.4 (Top-level category filter with "All" option) ── PARALLEL ─────┤
+P11.5 (Access-aware lock states + reports-only/terminal split) ──────┤
+P11.6 (Terminology constants TERMS.* across UI) ── PARALLEL ─────────┤
+P11.7 (Codex SSOT — update terminology + lock-state spec) ── LAST ───┘
+```
+
+### Todos
+
+#### Asset-group rename (P11.1)
+
+- [ ] [CODE] P11.1.1 — UAC: rename any `AssetClass` enum/type to `AssetGroup`, update all imports.
+- [ ] [CODE] P11.1.2 — UI: ripgrep `assetClass`, `AssetClass`, `asset_class`, `"asset class"`. Rename to `assetGroup` /
+      `AssetGroup` / `asset_group` / `"asset group"`. Run typecheck after.
+- [ ] [CODE] P11.1.3 — Create `lib/architecture-v2/terminology.ts` with `TERMS.*` constants. Replace inline strings.
+- [ ] [DOC] P11.1.4 — Codex grep + replace.
+- [ ] [QG] P11.1.QG — quality gates each repo.
+
+#### Envelope rendering (P11.2-P11.4)
+
+- [ ] [CODE] P11.2.1 — `app/api/catalogue/envelope/route.ts` — Next.js API route proxying GCS reads of `envelope.md` +
+      `strategy_instruments.json`. Server-side ADC.
+- [ ] [CODE] P11.2.2 — `lib/architecture-v2/envelope-loader.ts` — client-side fetcher (SWR / react-query). Returns typed
+      `EnvelopeEntry[]` parsed from envelope.md grouped sections.
+- [ ] [CODE] P11.3.1 — `StrategyCatalogueSurface.tsx` — switch from `STRATEGY_REGISTRY` (99) to envelope data source.
+      Virtualise the table — `@tanstack/react-virtual`. Test 5k+ rows render < 200ms.
+- [ ] [CODE] P11.3.2 — Progressive accordion: category → family → archetype → instances. Expand-all / collapse-all
+      controls.
+- [ ] [CODE] P11.4.1 — Top-level category dropdown with "All" option for category-agnostic browsing. Wire into
+      `catalogue-filter.ts`.
+
+#### Access-aware lock states (P11.5)
+
+- [ ] [CODE] P11.5.1 — `lib/entitlements/strategy-route.ts` —
+      `resolveStrategyAccess(user, slotLabel) → "terminal" | "reports-only" | "locked-visible" | "hidden"`.
+- [ ] [CODE] P11.5.2 — `StrategyCard.tsx` — lock icon + access badge per state. Hover tooltip explains.
+- [ ] [CODE] P11.5.3 — Reports surfaces include reports-only strategies; terminal blocks them with inline upgrade CTA.
+
+#### Phase 11 success criteria
+
+- [ ] User browses 5,000+ catalogue rows without performance degradation (virtualised, < 200ms initial render).
+- [ ] "asset class" string nowhere in user-facing UI; `assetClass` identifier nowhere in TS/Python source.
+- [ ] DART catalogue at `https://uat.odum-research.com/services/strategy-catalogue` shows lock icons per user's access;
+      locked-visible cards remain interactive.
+- [ ] Reports-only strategies appear in IM reporting surfaces but block terminal entry with explicit messaging.
+
+---
+
+## Open todos / nice-to-haves (2026-04-25 backlog)
+
+These don't fit cleanly into a Phase but should land before the catalogue is "production-clean":
+
+- [ ] [CODE] N1 — `enumerate_envelope.py` and `enumerate_strategy_instruments.py` should be wired into PM
+      `scripts/dev/dev-start.sh` so local dev surfaces fresh GCS artefacts on every stack start.
+- [ ] [SCRIPT] N2 — Cloud Scheduler nightly job for both scripts (overwrite GCS artefacts each night).
+- [ ] [CODE] N3 — Lift VOL/MM/PORTFOLIO/MEV/cross-domain splits from `enumerate_envelope.py` mocks into the UAC
+      `archetype_capability` manifest as the SSOT (currently script-mocked).
+- [ ] [CODE] N4 — Add the 5 new questionnaire axes (already in UAC restriction_profiles) into questionnaire-axes codex
+      doc.
+- [ ] [CODE] N5 — Demo persona toggle (DART Full ↔ Signals-In) wire-up — landed `d7f4805c` but UAT smoke-test pending
+      Desmond email send.
+- [ ] [CODE] N6 — FOMO banner on `?from=questionnaire` (P3.4) — awaiting browser test.
+- [ ] [CODE] N7 — Glossary `<Term>` wiring on questionnaire option labels — partially landed (strategy-family +
+      strategy-archetype 2026-04-25); remaining: ml-directional, rules-directional, carry-yield, arbitrage,
+      event-driven, perp, spot, sma, pooled, dart, im.
+- [ ] [DOC] N8 — Phase 8 codex docs (9 files) still pending; Phase 9 + 10 + 11 will subsume some.
+- [ ] [CODE] N9 — IM reporting cascade dropdowns landed 2026-04-25 (commit pending) at 2-level (family + archetype).
+      Phase 11 extends this to 4-level with category top-level.
+- [ ] [INFRA] N10 — Verify `strategy-store-{cefi,defi,tradfi}-central-*` buckets are accessible to the Next.js API
+      route's service account when deployed (currently uses ADC for local dev).
+- [ ] [DOC] N11 — Add `instruments-service` parquet schema to codex (currently only InstrumentDefinition Pydantic model
+      is documented).

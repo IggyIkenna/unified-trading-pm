@@ -971,8 +971,16 @@ if [ -n "$FILES_ARG" ]; then
     exit 1
   fi
   if [ -z "$(git diff --cached --name-only)" ]; then
-    echo "[$REPO_NAME] ❌ No changes in --files paths. Nothing to commit."
-    exit 1
+    # No staged changes in --files paths. If the branch is already ahead of main,
+    # the work was already committed (e.g. agent committed + pushed before quickmerge).
+    # Fall through to the push + PR stage rather than exiting.
+    AHEAD_COUNT=$(git rev-list origin/main..HEAD --count 2>/dev/null || echo "0")
+    if [ "$AHEAD_COUNT" -gt 0 ]; then
+      echo "[$REPO_NAME] ℹ️  No uncommitted changes in --files paths; branch is $AHEAD_COUNT commit(s) ahead of main — changes already committed. Proceeding to push + PR."
+    else
+      echo "[$REPO_NAME] ❌ No changes in --files paths. Nothing to commit."
+      exit 1
+    fi
   fi
 else
   git add -A
