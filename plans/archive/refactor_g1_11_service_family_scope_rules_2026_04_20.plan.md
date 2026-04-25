@@ -17,6 +17,19 @@ depends_on:
 
 # Refactor G1.11 — Service-family scope rules
 
+> ## Implementation note (post-ship — Option X pattern)
+>
+> Plan body says scope rules live in `strategy-service/strategy_service/availability/service_family_scope.py`. **Actual
+> ship hosts pure logic in UAC; the access_control() pre-check is wired in UAC alongside the rules** (Option X).
+>
+> Authoritative paths (verified 2026-04-22):
+>
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py` — scope rules
+>   - access_control pre-check, all in UAC
+>
+> Plan body's `strategy-service/strategy_service/availability/service_family_scope.py` reference is kept for historical
+> context; trust this note over body prose.
+
 ## Context
 
 Stage 3E §1.11 (2026-04-20 amendment): codify hard service-family scope constraints as machine-readable rules, enforced

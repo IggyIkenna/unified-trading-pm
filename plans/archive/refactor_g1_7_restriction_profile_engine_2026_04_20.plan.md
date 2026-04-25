@@ -17,6 +17,20 @@ depends_on:
 
 # Refactor G1.7 — Restriction-profile engine
 
+> ## Implementation note (post-ship — Option X pattern)
+>
+> Plan body says the engine lives in `strategy-service/strategy_service/availability/restriction_profiles.py`. **Actual
+> ship hosts pure logic in UAC; strategy-service only carries the HTTP wrapper** (Option X).
+>
+> Authoritative paths (verified 2026-04-22):
+>
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` — engine + registry
+> - `strategy-service/strategy_service/api/restriction_profile_router.py` — HTTP wrapper
+>   (`/internal/restriction-profile`)
+>
+> The plan body's `strategy-service/strategy_service/availability/restriction_profiles.py` reference is kept for
+> historical context; trust this note over body prose.
+
 ## Context
 
 Stage 3E §1.7 builds the demo-profile registry + persona-overlay engine specified in

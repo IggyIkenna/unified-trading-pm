@@ -15,6 +15,25 @@ depends_on:
 
 # Refactor G1.6 — Derivation engine → strategy-service availability
 
+> ## Implementation note (post-ship — Option X pattern)
+>
+> Plan body says the four derivation formulas live in `strategy-service/strategy_service/availability/derivation.py`.
+> **Actual ship hosts pure logic in UAC; strategy-service only carries thin HTTP wrappers** (Option X — contracts host
+> pure logic, services consume).
+>
+> Authoritative paths (verified 2026-04-22):
+>
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` — combo formula
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_cost.py` — cost formula
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_access.py` — access_control formula
+> - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_demo.py` — demo_universe +
+>   prod_restrictions
+> - `strategy-service/strategy_service/api/` — HTTP wrapper routers only (no logic)
+>
+> Wave-E split commit: UAC `441a494 refactor(uac): G1.6 Wave E — split derivation.py + workspace-root helper`. The plan
+> body's "strategy-service/strategy_service/availability/derivation.py" references are kept for historical context only;
+> trust this note over body prose.
+
 ## Context
 
 Stage 3E §1.6 ships the four derivation formulas specified in `stage-3c-derivation-engine.md` as real code inside
