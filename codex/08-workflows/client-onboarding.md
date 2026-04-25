@@ -82,11 +82,25 @@ Explore tab is discovery + subscription surface only. Detailed P&L / returns alw
 
 ### Step 5 — Strategy evaluation pack (optional)
 
-| Actor  | Action                                                                                                                                                                                                                     |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | For proprietary-strategy (DART Signals-In / Full) prospects, sends the `/strategy-evaluation` URL so they can upload their own strategy spec for side-by-side comparison with Odum-catalogue equivalents. Not always used. |
-| Client | Uploads spec; system produces a comparison pack.                                                                                                                                                                           |
-| System | `/strategy-evaluation` (already shipped) persists the pack to Firestore; admin views it at `/admin/strategy-evaluations/{id}`.                                                                                             |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | For proprietary-strategy (DART Signals-In / Full / Odum-Signals-out) prospects, sends the `/strategy-evaluation` URL so they can describe their strategy and upload evidence. Not always used.                                                                                                                                                                                                                                                       |
+| Client | Fills the 8-step wizard (about-you → path → strategy shape → backtest setup → evidence/metrics → strategy/risk → path-specific → validation). Trade-log / equity-curve CSV uploads up to 500 MB. Drafts auto-save to localStorage **and** to Firestore (`strategy_evaluation_drafts/{sha256(email)}`) so they can resume from any device.                                                                                                            |
+| System | On submit, persists the pack to Firestore (`strategy_evaluations/{id}`) via Firebase **Admin SDK** + emails the submitter a magic-link CTA. The link opens `/strategy-evaluation/status?token=…` — a server-rendered (force-dynamic) page showing submission details, downloadable docs, and an "Edit and resubmit" link. Each refile is a new linked document (`parentSubmissionId` pointer); no in-place mutation. Internal copy BCC'd to `info@`. |
+| System | "Already submitted? Resend my access link →" on the form: looks up `strategy_evaluations` by email; falls back to `strategy_evaluation_drafts` and emails a "Resume your draft" link (`/strategy-evaluation?draft=email`). Always returns generic confirmation client-side so the endpoint can't enumerate emails.                                                                                                                                   |
+| Admin  | Views submissions at `/admin/strategy-evaluations/{id}`.                                                                                                                                                                                                                                                                                                                                                                                             |
+
+Architecture notes:
+
+- Form is split into a server-component shell (`page.tsx`) and a client wizard (`_client.tsx`). The shell resolves
+  `?token=` (magic-link refile) or `?draft=email` (draft resume) via Admin SDK and bakes the prior payload into the
+  initial render via `initialData` props — avoids the React 19 / Next.js 15 client-fetch hydration race that produced
+  flash-of-empty-fields.
+- All Firestore reads/writes from API routes use `firebase-admin` so the routes work regardless of
+  `NEXT_PUBLIC_FIREBASE_*` bake-state (UAT historically didn't have those vars).
+- Storage rules are size-cap-only (500 MB). Earlier content-type allow-list rejected legitimate `.md` uploads.
+- Confirmation emails route via Resend from `hello@mail.odum-research.com` (prod) / `hello@mail.uat.odum-research.com`
+  (uat) / `onboarding@resend.dev` (dev).
 
 Skip this step when the prospect is purely interested in Odum-catalogue strategies (majority of DART Full, IM, Reg
 Umbrella cases).
