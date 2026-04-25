@@ -955,16 +955,20 @@ P10.7 (Codex SSOT: instruments-resolver-architecture.md) ─── LAST ──�
 
 #### UI (filter cascade + accessor + terminal)
 
-- [ ] [CODE] P10.2.1 — Create `lib/architecture-v2/strategy-instruments.ts` — fetches GCS JSON (cached), exposes
+- [x] [CODE] P10.2.1 — Create `lib/architecture-v2/strategy-instruments.ts` — fetches GCS JSON (cached), exposes
       `instrumentsForSlot(slotLabel)`, `slotsForArchetype(archetype)`, `slotsForCategory(category)`.
-- [ ] [CODE] P10.3.1 — Refactor `StrategyCatalogueSurface.tsx` filter UI to 4-level cascade:
-      `category → family → archetype → instance`.
-- [ ] [CODE] P10.3.2 — Fix the "DeFi/DeFi" mis-label in family chip rendering — root cause is family field being
-      populated with `category` value.
-- [ ] [CODE] P10.4.1 — In `components/terminal/order-entry-form.tsx`, scope instrument dropdown by
-      `instrumentsForSlot(selectedStrategy)`.
-- [ ] [CODE] P10.5.1 — Add category dropdown above existing family dropdown in performance/trades/portfolio-analytics
+      **Done:** shipped as `lib/architecture-v2/envelope-loader.ts` (superset API). 2026-04-25.
+- [x] [CODE] P10.3.1 — Refactor `StrategyCatalogueSurface.tsx` filter UI to 4-level cascade:
+      `category → family → archetype → instance`. **Done:** commit `0be7b2bc`. 2026-04-25.
+- [x] [CODE] P10.3.2 — Fix the "DeFi/DeFi" mis-label in family chip rendering — root cause is family field being
+      populated with `category` value. **Done:** `EnvelopeBrowser.tsx` now calls `formatFamily(row.family)`. 2026-04-25.
+- [x] [CODE] P10.4.1 — In `use-terminal-page-data.ts`, scope watchlist instruments via
+      `useStrategyScopedInstruments(linkedStrategyId ?? "manual", instruments, (inst) => inst.instrumentKey)`.
+      CeFi-only default when no strategy linked. **Done:** 2026-04-25.
+- [x] [CODE] P10.5.1 — Add category dropdown above existing family dropdown in performance/trades/portfolio-analytics
       dashboards (extend the cascade landed 2026-04-24 from 2-level to 3-level + archetype).
+      **Done:** Cascade was already built. Fixed label formatting — category/family/archetype SelectItems now use
+      `CATEGORY_LABELS`, `formatFamily()`, `formatArchetype()` in all 3 reporting pages. 2026-04-25.
 - [ ] [QG] P10.UI — quality-gates.
 
 #### Demo persona link
@@ -981,8 +985,8 @@ P10.7 (Codex SSOT: instruments-resolver-architecture.md) ─── LAST ──�
 
 #### Codex
 
-- [ ] [DOC] P10.7.1 — `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
-      catalogue ↔ instruments-service join, GCS layout, refresh cadence.
+- [x] [DOC] P10.7.1 — `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
+      catalogue ↔ instruments-service join, GCS layout, refresh cadence. **Done:** commit `20c4532` by teammate. 2026-04-25.
 - [ ] [DOC] P10.7.2 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with 4-level filter
       hierarchy decision.
 
