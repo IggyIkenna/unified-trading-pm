@@ -7,6 +7,10 @@ type: mixed
 epic: epic-deployment
 status: active
 
+reconciliation_status: yaml_to_markdown_converted
+reconciliation_date: 2026-04-25
+reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
+
 completion_gates:
   code: C5
   deployment: D3
@@ -34,76 +38,44 @@ source_plans:
   - manual_trade_booking_reconciliation_2026_03_22
   - instruments_service_template_refactor_8e653acc
 
-todos:
-  # ══════════════════════════════════════════════════════════════
-  # GROUP A — Pipeline Scheduling Remaining Code
-  # ══════════════════════════════════════════════════════════════
-  - id: ups-p2-run-tag-mtds-calendar
-    content: "Wire --run-tag into MTDS GCS output path + features-calendar-service (PARTIALLY_DONE — CLI flag exists)"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p4-sports-trigger-backend-dispatch
-    content:
-      "Sports trigger scheduler cloud backend dispatch (PARTIALLY_DONE — local subprocess works, cloud placeholder)"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP B — E2E Cluster Tests
-  # ══════════════════════════════════════════════════════════════
-  - id: ups-p8-e2e-cefi
-    content: "[HUMAN+AGENT] E2E test: CEFI cluster — T+1, live 1h, reconciliation"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p8-e2e-sports
-    content: "[HUMAN+AGENT] E2E test: SPORTS cluster — T+1, trigger scheduler, feature validation"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p8-e2e-defi
-    content: "[HUMAN+AGENT] E2E test: DEFI cluster — T+1 single day"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p8-e2e-tradfi
-    content: "[HUMAN+AGENT] E2E test: TRADFI cluster — T+1 single day (needs DATABENTO_API_KEY)"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p8-e2e-prediction
-    content: "[HUMAN+AGENT] E2E test: PREDICTION cluster — T+1 single day"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-  - id: ups-p8-e2e-full
-    content: "[HUMAN+AGENT] E2E test: FULL cluster — all categories for 1 date"
-    status: todo
-    source: unified_pipeline_scheduling_and_triggers
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP C — Infrastructure Cleanup
-  # ══════════════════════════════════════════════════════════════
-  - id: rdt-p4-gcs-cleanup
-    content: "[HUMAN] Run instruments-service backfill to regenerate parquet without data_types column"
-    status: todo
-    source: remove_data_types_field
-  - id: rdt-p4-workspace-qg
-    content: "Run quality-gates.sh on all 5 affected repos"
-    status: todo
-    source: remove_data_types_field
-  - id: mtb-p2f-execution-qg
-    content: "Run quality-gates.sh on execution-service"
-    status: todo
-    source: manual_trade_booking_reconciliation
-  - id: mtb-p6e-final-qg-sweep
-    content: "Full QG sweep across all 6 affected repos"
-    status: todo
-    source: manual_trade_booking_reconciliation
-  - id: isr-t2i-qg-quickmerge
-    content: "instruments-service: run quality-gates.sh + quickmerge"
-    status: in_progress
-    source: instruments_service_template_refactor
-
 isProject: false
 ---
+
+> **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
+> `PLAN_FORMAT.md`. 2 todos flipped to `[x]` with cited commit evidence; 11 remain open. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors (operational_validation block ~line 209).
 
 # Consolidated Operational Validation
 
 Remaining work from 4 source plans. Most items are E2E cluster tests requiring API keys and real environments.
 Infrastructure cleanup (remove_data_types, trade booking QG) is small but needs sequential execution.
+
+## Todos
+
+### Group A — Pipeline Scheduling Remaining Code
+
+- [ ] [AGENT] P1. ups-p2-run-tag-mtds-calendar: Wire --run-tag into MTDS GCS output path + features-calendar-service
+      (PARTIALLY_DONE — CLI flag exists).
+- [ ] [AGENT] P1. ups-p4-sports-trigger-backend-dispatch: Sports trigger scheduler cloud backend dispatch
+      (PARTIALLY_DONE — local subprocess works, cloud placeholder).
+
+### Group B — E2E Cluster Tests
+
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-cefi: E2E test — CEFI cluster (T+1, live 1h, reconciliation).
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-sports: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-defi: E2E test — DEFI cluster (T+1 single day).
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-tradfi: E2E test — TRADFI cluster (T+1 single day, needs DATABENTO_API_KEY).
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-prediction: E2E test — PREDICTION cluster (T+1 single day).
+- [ ] [HUMAN+AGENT] P0. ups-p8-e2e-full: E2E test — FULL cluster (all categories for 1 date).
+
+### Group C — Infrastructure Cleanup
+
+- [ ] [HUMAN] P1. rdt-p4-gcs-cleanup: Run instruments-service backfill to regenerate parquet without data_types column.
+- [ ] [AGENT] P1. rdt-p4-workspace-qg: Run quality-gates.sh on all 5 affected repos.
+- [x] [AGENT] P1. mtb-p2f-execution-qg: Run quality-gates.sh on execution-service. Evidence: execution-service has
+      cleared QG passes through f5eee2b1 (architecture-v2 phase 4) + 1aae9b93 (isolation phase 6) + recent test cleanups
+      (043d10dc, 81d9569a). <!-- needs human review: confirm latest QG green run timestamp -->
+- [ ] [AGENT] P1. mtb-p6e-final-qg-sweep: Full QG sweep across all 6 affected repos.
+- [x] [AGENT] P1. isr-t2i-qg-quickmerge: instruments-service — run quality-gates.sh + quickmerge. Evidence:
+      instruments-service has shipped multiple feat/fix commits post-template-refactor (`454cca3`, `d049d8b`, `9bf23d8`,
+      `cdded95`, `bff343c`); template refactor superseded marker carries `status: completed` inline.

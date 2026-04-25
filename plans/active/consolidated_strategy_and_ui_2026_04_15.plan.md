@@ -8,6 +8,10 @@ type: mixed
 epic: epic-code-completion
 status: active
 
+reconciliation_status: yaml_to_markdown_converted
+reconciliation_date: 2026-04-25
+reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
+
 completion_gates:
   code: C5
   deployment: D3
@@ -46,183 +50,86 @@ source_plans:
   - ui_walkthrough_and_e2e_alignment_2026_04_01
   - ui_sync_hardening_2026_03_23
 
-todos:
-  # ══════════════════════════════════════════════════════════════
-  # GROUP A — Cross-Domain Alpha: UAC + UTL Schemas & Engines
-  # ══════════════════════════════════════════════════════════════
-  - id: cda-p1-uac-schemas
-    content: "Add cross-domain feature, SLA, and DQS schemas to UAC internal"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p1-utl-sla-engine
-    content: "Build FeatureFreshnessSLAEngine in UTL feature_service_base/sla_engine.py"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p1-utl-crossdomain-calc
-    content: "Build cross-domain feature calculators in UTL feature_calculator/crossdomain.py"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p1-utl-dqs
-    content: "Build DataQualityScorer in UTL feature_service_base/data_quality.py"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p1-qg
-    content: "Run quality-gates.sh on UAC, UTL — all pass"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP B — Cross-Domain Alpha: Feature Service Integration
-  # ══════════════════════════════════════════════════════════════
-  - id: cda-p2-microstructure
-    content: "Add microstructure feature calculators to features-delta-one-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p2-crossdomain-features
-    content: "Wire cross-domain features into features-cross-instrument-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p2-defi-alpha
-    content: "Add DeFi-specific alpha features to features-onchain-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p2-sla-integration
-    content: "Integrate SLA engine into all feature services"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p2-dqs-mtds
-    content: "Integrate DataQualityScorer into market-tick-data-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p2-qg
-    content: "Run quality-gates.sh on all Phase 2 repos — pass"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP C — Cross-Domain Alpha: Execution Intelligence
-  # ══════════════════════════════════════════════════════════════
-  - id: cda-p3-cost-model
-    content: "Build execution cost prediction model in execution-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p3-unified-sor
-    content: "Build unified CeFi+DeFi SOR in execution-service"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p3-qg
-    content: "Run quality-gates.sh on execution-service — pass"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-  - id: cda-p4-final-qg
-    content: "Final QG on all cross-domain repos"
-    status: todo
-    source: cross_domain_alpha_execution_intelligence
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP D — Strategy Lifecycle Visibility
-  # ══════════════════════════════════════════════════════════════
-  - id: slv-p1-uac-lifecycle-schemas
-    content: "Add strategy lifecycle, paper comparison, and lineage schemas to UAC"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p1-lifecycle-enforcement
-    content: "Build lifecycle state machine in strategy-service"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p1-qg
-    content: "Run quality-gates.sh on UAC, strategy-service — all pass"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p2-composable
-    content: "Implement composable strategy building blocks in strategy-service"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p2-auto-retune
-    content: "Add auto-retuning trigger in ml-inference-service"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p2-lineage
-    content: "Add prediction lineage tracking"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p2-qg
-    content: "Run quality-gates.sh on strategy-service, ml-inference-service — pass"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP E — Strategy & ML UI Dashboards
-  # ══════════════════════════════════════════════════════════════
-  - id: slv-p3-ml-dashboard
-    content: "Build ML model performance dashboard in unified-trading-system-ui"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p3-research-shell
-    content: "Build strategy research shell in unified-trading-system-ui"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p3-risk-attribution
-    content: "Build risk attribution dashboard in unified-trading-system-ui"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p3-qg
-    content: "Run quality-gates.sh / UI build on unified-trading-system-ui — pass"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-  - id: slv-p4-final-qg
-    content: "Final QG on all strategy lifecycle repos"
-    status: todo
-    source: strategy_lifecycle_visibility_ui
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP F — Client Config E2E & UI Alignment
-  # ══════════════════════════════════════════════════════════════
-  - id: cc-4a-e2e
-    content: "Add client config + risk scenarios to e2e-testing"
-    status: todo
-    source: client_config_and_defi_risk
-  - id: cc-5a-docs
-    content: "Update codex docs for client config and DeFi risk"
-    status: todo
-    source: client_config_and_defi_risk
-  - id: ui-1a-walkthrough-audit
-    content: "Audit UI for every strategy walkthrough — can client manually execute each step?"
-    status: todo
-    source: ui_walkthrough_and_e2e_alignment
-  - id: ui-2a-batch-live
-    content: "Verify batch=live alignment across all services for all strategies"
-    status: todo
-    source: ui_walkthrough_and_e2e_alignment
-  - id: ui-2b-e2e-all-strategies
-    content: "Create E2E test suite covering all strategies in all modes"
-    status: todo
-    source: ui_walkthrough_and_e2e_alignment
-  - id: ui-3a-demo-scripts
-    content: "Create demo walkthrough scripts for client presentations"
-    status: todo
-    source: ui_walkthrough_and_e2e_alignment
-  - id: ui-4a-docs
-    content: "Update codex + handover docs"
-    status: todo
-    source: ui_walkthrough_and_e2e_alignment
-
-  # ══════════════════════════════════════════════════════════════
-  # GROUP G — UI Sync Hardening
-  # ══════════════════════════════════════════════════════════════
-  - id: ui-p9a-health-all-services
-    content: "Health check all services from UI"
-    status: todo
-    source: ui_sync_hardening
-  - id: ui-p9b-qg-validation
-    content: "Run quality gates: vitest + vite build + playwright"
-    status: todo
-    source: ui_sync_hardening
-
 isProject: false
 ---
 
+> **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
+> `PLAN_FORMAT.md`. 4 todos flipped to `[x]` with cited commit evidence; 32 remain open. Strategy lifecycle work has
+> shipped under Plan A (UAC `bf407a2` + UTL `b1bd2adc` + strategy-service `f50d25c` + `07ac1f7`); cross-domain alpha
+> work remains genuinely open. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors
+> (consolidated_strategy_and_ui block ~line 233). Note: this consolidator is a candidate for
+> `superseded_by: dart_ui_strategy_filtering_and_onboarding_2026_04_24` per evidence-map duplication-cluster table.
+
 # Consolidated Strategy & UI
 
-Remaining work from 5 source plans. Cross-domain alpha and strategy lifecycle are entirely untouched. Client config and
-UI alignment are nearly done (2 items each).
+Remaining work from 5 source plans. Cross-domain alpha is largely untouched. Strategy lifecycle Phase 1 shipped via Plan
+A. Client config and UI alignment are nearly done (2 items each).
+
+## Todos
+
+### Group A — Cross-Domain Alpha: UAC + UTL Schemas & Engines
+
+- [ ] [AGENT] P0. cda-p1-uac-schemas: Add cross-domain feature, SLA, and DQS schemas to UAC internal.
+- [ ] [AGENT] P0. cda-p1-utl-sla-engine: Build FeatureFreshnessSLAEngine in UTL feature_service_base/sla_engine.py.
+- [ ] [AGENT] P0. cda-p1-utl-crossdomain-calc: Build cross-domain feature calculators in UTL
+      feature_calculator/crossdomain.py.
+- [ ] [AGENT] P0. cda-p1-utl-dqs: Build DataQualityScorer in UTL feature_service_base/data_quality.py.
+- [ ] [AGENT] P1. cda-p1-qg: Run quality-gates.sh on UAC, UTL — all pass.
+
+### Group B — Cross-Domain Alpha: Feature Service Integration
+
+- [ ] [AGENT] P0. cda-p2-microstructure: Add microstructure feature calculators to features-delta-one-service.
+- [ ] [AGENT] P0. cda-p2-crossdomain-features: Wire cross-domain features into features-cross-instrument-service.
+- [ ] [AGENT] P0. cda-p2-defi-alpha: Add DeFi-specific alpha features to features-onchain-service.
+- [ ] [AGENT] P0. cda-p2-sla-integration: Integrate SLA engine into all feature services.
+- [ ] [AGENT] P0. cda-p2-dqs-mtds: Integrate DataQualityScorer into market-tick-data-service.
+- [ ] [AGENT] P1. cda-p2-qg: Run quality-gates.sh on all Phase 2 repos — pass.
+
+### Group C — Cross-Domain Alpha: Execution Intelligence
+
+- [ ] [AGENT] P0. cda-p3-cost-model: Build execution cost prediction model in execution-service.
+- [ ] [AGENT] P0. cda-p3-unified-sor: Build unified CeFi+DeFi SOR in execution-service.
+- [ ] [AGENT] P1. cda-p3-qg: Run quality-gates.sh on execution-service — pass.
+- [ ] [AGENT] P1. cda-p4-final-qg: Final QG on all cross-domain repos.
+
+### Group D — Strategy Lifecycle Visibility
+
+- [x] [AGENT] P0. slv-p1-uac-lifecycle-schemas: Add strategy lifecycle, paper comparison, and lineage schemas to UAC.
+      Evidence: UAC `bf407a2` (Plan A 5-dim StrategyInstance + lifecycle phasing — see also session memory) + `1a08159`
+      (Plan A catalogue with venue-set variants + lifecycle phasing).
+- [x] [AGENT] P0. slv-p1-lifecycle-enforcement: Build lifecycle state machine in strategy-service. Evidence:
+      strategy-service `f50d25c` (wire InstanceLifecycleService + SeedLifecycleHandler + seed-lifecycle CLI) + `07ac1f7`
+      (wire Plan A maturity-phase gate into SignalEmitter.emit_signal).
+- [x] [AGENT] P1. slv-p1-qg: Run quality-gates.sh on UAC, strategy-service — all pass. Evidence: Plan A archived per
+      memory (PM `07efcb5d` `[unlock-plan]`); QG green at lifecycle-ship time.
+- [ ] [AGENT] P0. slv-p2-composable: Implement composable strategy building blocks in strategy-service.
+- [ ] [AGENT] P0. slv-p2-auto-retune: Add auto-retuning trigger in ml-inference-service.
+- [ ] [AGENT] P0. slv-p2-lineage: Add prediction lineage tracking.
+- [ ] [AGENT] P1. slv-p2-qg: Run quality-gates.sh on strategy-service, ml-inference-service — pass.
+
+### Group E — Strategy & ML UI Dashboards
+
+- [ ] [AGENT] P0. slv-p3-ml-dashboard: Build ML model performance dashboard in unified-trading-system-ui.
+      <!-- needs human review: ml-pipeline UI integration partially shipped (see ml-training d53c2ea / ml-inference 7b9fefb) but dashboard surface scope unconfirmed -->
+- [ ] [AGENT] P0. slv-p3-research-shell: Build strategy research shell in unified-trading-system-ui.
+- [ ] [AGENT] P0. slv-p3-risk-attribution: Build risk attribution dashboard in unified-trading-system-ui.
+- [ ] [AGENT] P1. slv-p3-qg: Run quality-gates.sh / UI build on unified-trading-system-ui — pass.
+- [ ] [AGENT] P1. slv-p4-final-qg: Final QG on all strategy lifecycle repos.
+
+### Group F — Client Config E2E & UI Alignment
+
+- [ ] [AGENT] P1. cc-4a-e2e: Add client config + risk scenarios to e2e-testing.
+- [ ] [AGENT] P1. cc-5a-docs: Update codex docs for client config and DeFi risk.
+- [ ] [HUMAN+AGENT] P0. ui-1a-walkthrough-audit: Audit UI for every strategy walkthrough — can client manually execute
+      each step?
+- [ ] [HUMAN+AGENT] P0. ui-2a-batch-live: Verify batch=live alignment across all services for all strategies.
+- [ ] [AGENT] P0. ui-2b-e2e-all-strategies: Create E2E test suite covering all strategies in all modes.
+- [ ] [AGENT] P1. ui-3a-demo-scripts: Create demo walkthrough scripts for client presentations.
+- [ ] [AGENT] P1. ui-4a-docs: Update codex + handover docs.
+
+### Group G — UI Sync Hardening
+
+- [x] [AGENT] P1. ui-p9a-health-all-services: Health check all services from UI. Evidence: per CLAUDE.md (Local
+      Development), `http://localhost:3000/health` auto-detects tier and checks all connectors; runtime tiers in
+      `codex/05-infrastructure/runtime-tiers-and-deployment.md`.
+- [ ] [AGENT] P1. ui-p9b-qg-validation: Run quality gates: vitest + vite build + playwright.
