@@ -94,30 +94,39 @@ Dev (`localhost:3000` tier-1 mock-auth) and staging (`odum-research.co.uk` real-
 path. The switch is an env var (`NEXT_PUBLIC_USE_FIREBASE_AUTH`) + Firebase config values — no code-fork. Playwright
 specs run identically against both (staging uses the Firebase emulator for CI).
 
-## Status update 2026-04-25
+## Status update 2026-04-25 (REVISED end-of-day)
 
-Operator confirmed `odum-staging` Firebase project is **provisioned** — alias `staging` already in `.firebaserc`, `uat`
-deploy target maps to Cloud Run `odum-portal-staging`, mail domain `mail.uat.odum-research.com` configured, storage
-rules separate from Firestore. Phase A is **DONE** (operator side); the remainder of this plan is the agent-side wiring
-(Phases B–E).
+**Earlier today** an over-eager status entry concluded Phase A was DONE based on config artifacts in the repo
+(`.firebaserc` alias `staging` → `odum-staging`, `firebase.json` `uat` hosting target, mail domain
+`mail.uat.odum-research.com`). **That conclusion was wrong.** Verified:
 
-**Blocker on naively flipping UAT to Firebase**: `DemoPlanToggle` (Desmond DART Full ⇄ Signals-In, Elysium DeFi ⇄ DeFi
-Full) calls `loginByEmail(pairedPersonaId, "")` — an empty-password persona swap that only works against the demo
-provider's local `PERSONAS` table. Real Firebase rejects empty passwords. The toggle is the FOMO/upgrade-preview
-narrative for prospect demos and is core to the staging walkthrough.
+```bash
+gcloud projects describe odum-staging
+# → ERROR: ikenna@odum-research.com does not have permission to access projects
+#   instance [odum-staging] (or it may not exist).
+firebase projects:list   # odum-staging NOT in the list
+```
 
-**Migration path** (additive — does not block Phase B–E):
+The `.firebaserc` alias and `firebase.json` `uat` hosting target are **aspirational config**. The `uat` hosting target
+inside `firebase.json` lives under `targets.central-element-323112.hosting` — i.e. it points at a hosting site name on
+the **prod GCP project**, not at a staging project. The actual `odum-staging` project hasn't been created.
 
-1. Refactor `DemoPlanToggle` from a persona-swap to a **tier-override** flag in localStorage. The auth context reads the
-   override on top of the real Firebase user and merges entitlements at render time. The UI keeps the toggle UX
-   identical (button still flips Full ⇄ Signals-In) but the underlying data flow is "real user + entitlement overlay"
-   instead of "swap personas".
-2. Or: provision two real Firebase users per prospect (`desmond+full@…` / `desmond+signals@…`), wire the toggle to
-   `signOut` + `signIn`. More invasive, less smooth UX.
+**What this means for UAT auth:** UAT cannot flip `NEXT_PUBLIC_AUTH_PROVIDER=demo` → `firebase` until the `odum-staging`
+project exists. Doing the flip now would either crash the bundle (no Firebase config values to inline) or fall back to
+prod Firebase (`central-element-323112`) — defeating the "separate auth surface for warm-prospect demos" intent.
 
-Recommendation: **keep UAT in demo mode until tier-override refactor lands**; demo-mode advisor accounts on
-`@odum-research.co.uk` continue working client-side via the per-prospect redirect in
-`lib/auth/personas.ts::DEMO_PERSONA_EMAILS`. Real-Firebase advisor login is a follow-up after toggle refactor.
+**The toggle blocker has been resolved.** The original concern (`DemoPlanToggle` calling `loginByEmail(pairedId, "")`
+which only worked against the demo provider) is fixed by the tier-override refactor in `lib/auth/tier-override.ts`
+shipped 2026-04-25. The toggle now writes a localStorage flag that overlays entitlements on top of the raw user;
+identity stays stable, only entitlements flip. Smoke-tested on UAT against the 6-persona matrix — works in demo mode
+today, will work unchanged once UAT moves to Firebase.
+
+**Phase A operator work that's actually still pending** — see Phase A section below for the checkbox-tracked list.
+
+Once the operator items are done, the agent-side flip is mechanical (Phase B): paste the 6 web-app config values into
+`config/docker-build.env.uat`, change `NEXT_PUBLIC_AUTH_PROVIDER=demo` → `firebase`, redeploy. The `DemoPlanToggle`
+keeps working unchanged because tier-override is localStorage-driven and decoupled from the auth provider — verified
+2026-04-25 via the 6-persona smoke test.
 
 SSOT cross-ref:
 [`../../codex/08-workflows/environment-mode-philosophy.md`](../../codex/08-workflows/environment-mode-philosophy.md)
@@ -127,16 +136,27 @@ SSOT cross-ref:
 
 ### Phase A — Firebase project provisioning (operator + agent)
 
-- [x] [OPERATOR] P0. Create `odum-staging` Firebase project via Firebase console. Enable Auth, Firestore, Hosting. Note
-      the project ID + all 6 `FIREBASE_*` config values. **Done — confirmed 2026-04-25 (operator). `.firebaserc` alias
-      `staging` → `odum-staging`. UAT deploy target wired in `firebase.json` hosting block.**
-- [x] [OPERATOR] P0. Add `odum-research.co.uk` to authorized domains in Firebase Auth. **Done — confirmed 2026-04-25.
-      Mail domain `mail.uat.odum-research.com` (commit `0d2966fe`) confirms domain authorization is in place.**
+> **Revision 2026-04-25 (end-of-day):** Items below were briefly marked `[x]` based on `.firebaserc` config artifacts.
+> That was wrong — the actual `odum-staging` GCP/Firebase project does not exist
+> (`gcloud projects describe odum-staging` → permission denied / not found; `firebase projects:list` → no entry).
+> Reverted to `[ ]`. Aspirational config (`.firebaserc` alias, `firebase.json` `uat` hosting target on the **prod**
+> project) is not equivalent to a provisioned project. Plan A blockers are fully open until the operator runs the items
+> below.
+
+- [ ] [OPERATOR] P0. Create `odum-staging` Firebase project via Firebase console (or
+      `firebase projects:create     odum-staging`). Enable Auth, Firestore, Hosting. Note the project ID + all 6
+      `FIREBASE_*` web-app config values. _Aspirational config already in place: `.firebaserc` alias `staging` →
+      `odum-staging`; `firebase.json` `targets.central-element-323112.hosting.uat` → `odum-portal-staging-site`
+      (currently a hosting target on the **prod** GCP project, not on a staging project)._
+- [ ] [OPERATOR] P0. Add `odum-research.co.uk` + `uat.odum-research.com` to authorized auth domains in the new
+      `odum-staging` Firebase project. (Note: `mail.uat.odum-research.com` is the Resend mail domain (commit
+      `0d2966fe`); separate from Firebase auth domain authorization.)
 - [ ] [OPERATOR] P0. Generate Admin SDK service-account key; upload to GCP Secret Manager as `firebase-admin-staging`
-      (project `odum-research` or the workspace-canonical SM project). **Status unconfirmed — verify with operator
-      before Phase B.**
-- [ ] [OPERATOR] P0. Configure Firebase Auth sign-in methods (email/password + Google OAuth at minimum). **Status
-      unconfirmed — verify with operator before Phase B.**
+      (project `odum-research` or the workspace-canonical SM project).
+- [ ] [OPERATOR] P0. Configure Firebase Auth sign-in methods (email/password + Google OAuth at minimum).
+- [ ] [OPERATOR] P0. Hand the 6 public web-app config values back to the engineering thread: `apiKey`, `authDomain`,
+      `projectId`, `storageBucket`, `messagingSenderId`, `appId`. These are public — paste into the plan or directly
+      into `unified-trading-system-ui/config/docker-build.env.uat`. The agent-side flip depends on these.
 
 ### Phase B — Env-var + config surface
 

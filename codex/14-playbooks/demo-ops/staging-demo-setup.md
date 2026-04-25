@@ -25,27 +25,35 @@ live wiring shipped 2026-04-24 around the Desmond H-W and Elysium demo shapes.
 This is an operational playbook — _how_ to configure a demo. For the _what_ (commercial framing, scope design), see
 [`demo-decision-matrix.md`](./demo-decision-matrix.md) + [`pre-demo-curation-rules.md`](./pre-demo-curation-rules.md).
 
-> **Auth context — important.** UAT (`uat.odum-research.com` → Cloud Run service `odum-portal-staging`) currently runs
-> the **demo auth provider** (`NEXT_PUBLIC_AUTH_PROVIDER=demo` in `docker-build.env.uat`). A real Firebase staging
-> project (`odum-staging`, aliased `staging` in `.firebaserc`) **is provisioned** but not yet wired into the UAT bundle.
-> The demo provider is retained because the `DemoPlanToggle` (DART Full ⇄ Signals-In, DeFi ⇄ DeFi Full) does
-> empty-password persona swaps via `loginByEmail(pairedId, "")`, which only works client-side. See
-> [`../../08-workflows/environment-mode-philosophy.md`](../../08-workflows/environment-mode-philosophy.md) §Axis 2 for
-> the full trade-off analysis and the migration path to a tier-override pattern.
+> **Auth context — important (revised 2026-04-25 end-of-day).** UAT (`uat.odum-research.com` → Cloud Run service
+> `odum-portal-staging`) runs the **demo auth provider** (`NEXT_PUBLIC_AUTH_PROVIDER=demo` in `docker-build.env.uat`).
+> The `odum-staging` Firebase project referenced in `.firebaserc` and `firebase.json` is **aspirational config only** —
+> the actual project has not been provisioned (verified via `gcloud projects describe odum-staging` →
+> permission-denied/not-found and `firebase projects:list`). The toggle blocker (`DemoPlanToggle` doing empty-password
+> persona swaps) has been resolved by the **tier-override refactor** in `lib/auth/tier-override.ts` shipped 2026-04-25 —
+> the toggle now writes a localStorage flag that overlays entitlements on top of any user regardless of auth provider.
+> UAT can graduate to real Firebase once the operator provisions the `odum-staging` project. See
+> [`../../08-workflows/environment-mode-philosophy.md`](../../08-workflows/environment-mode-philosophy.md) §Axis 2 and
+> [`../../../plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md`](../../../plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md)
+> Phase A for the operator checklist.
 
 ---
 
 ## §2 — Email-based demo persona mapping
 
 The demo auth provider (`lib/auth/demo-provider.ts`) accepts both **persona id** and **email + password** as login
-credentials. Persona lookup goes via two functions in `lib/auth/personas.ts`:
+credentials. Persona lookup uses `getPersonaByEmail(email)` from `lib/auth/personas.ts` — returns the first match.
 
-- `getPersonaById(id)` — used by `DemoPlanToggle` when swapping between paired tiers (Signals-In ↔ Full). Bypasses the
-  password check — the toggle trusts the current demo session.
-- `getPersonaByEmail(email)` — used when a prospect logs in with their real email. Returns the **first match**. If a
-  prospect has two paired personas (same email, different tiers), login lands on whichever is listed first in the
-  `PERSONAS` array. Convention: list the **Full tier first** so the initial login is the upgrade-preview variant;
-  prospect toggles down to Base tier if they want to see the locked-tab experience.
+> **2026-04-25 — DemoPlanToggle no longer swaps personas.** The toggle is now backed by the **tier-override** pattern
+> in [`unified-trading-system-ui/lib/auth/tier-override.ts`](../../../../unified-trading-system-ui/lib/auth/tier-override.ts).
+> Click writes a localStorage flag (`tier-override-v1`) keyed by user email. `useAuth()` reads it via
+> `applyTierOverride()` and replaces the user's entitlements at render time — identity (email, uid, org, displayName,
+> role) stays stable. This decouples the toggle from the auth provider so the same UX works in demo-mode AND real
+> Firebase. See `lib/auth/tier-override.ts::TIER_BUNDLES` for the email-keyed bundle definitions.
+
+For paired-tier demo prospects (Desmond, Patrick), the **base persona** in `personas.ts` carries the identity (org,
+displayName, base entitlements). The TIER_BUNDLES entry for that email defines the alternate tier's entitlements; the
+toggle flips between them client-side.
 
 A persona entry shape:
 
@@ -64,22 +72,33 @@ A persona entry shape:
 
 ---
 
-## §3 — Persona naming convention
+## §3 — Persona naming convention (legacy + new)
 
-Every demo-client with a plan-toggle pairing uses the suffix pattern:
+Until 2026-04-25, every demo-client with a plan-toggle pairing had **two persona IDs sharing one email**, and the
+`DemoPlanToggle.TOGGLE_MAP` flipped between them via persona-swap. Live examples kept for backwards compat:
 
 | Shape          | Base tier persona id       | Full tier persona id      |
 | -------------- | -------------------------- | ------------------------- |
-| DART (default) | `{client-slug}-signals-in` | `{client-slug}-dart-full` |
-| DeFi-first     | `{client-slug}-defi`       | `{client-slug}-defi-full` |
+| DART (default) | `desmond-signals-in`       | `desmond-dart-full`       |
+| DeFi-first     | `elysium-defi`             | `elysium-defi-full`       |
 
-Live examples:
+The **new pattern (2026-04-25)** is a single canonical persona per email + a `TierBundle` entry in
+`lib/auth/tier-override.ts` that declares both tiers' entitlements declaratively:
 
-- `desmond-signals-in` ↔ `desmond-dart-full` (DART shape)
-- `elysium-defi` ↔ `elysium-defi-full` (DeFi-first shape — Patrick / Bank Elysium)
+```ts
+{
+  emailPattern: "desmondhw@gmail.com",
+  defaultTier: "dart-full",
+  tiers: [
+    { key: "dart-full",        label: "DART Full",  entitlements: [...], tone: "emerald" },
+    { key: "dart-signals-in",  label: "Signals-In", entitlements: [...], tone: "amber"  },
+  ],
+}
+```
 
-`DemoPlanToggle`'s `TOGGLE_MAP` is a bidirectional dict keyed by persona id; both directions must be registered so the
-toggle works from either side.
+The bundle is the SSOT for both tiers' entitlement sets; the persona just carries identity. The toggle reads/writes
+`localStorage["tier-override-v1"]` keyed by user email and broadcasts a `TIER_OVERRIDE_EVENT` to force a re-render in
+`useAuth()`. No re-login, no `signOut`/`signIn`, no second persona lookup — all client-side state.
 
 ---
 
@@ -134,19 +153,23 @@ Entitlement sets:
 - **DeFi Full:** `[data-pro, execution-full, strategy-full, {domain:trading-defi, tier:basic}, reporting]`
 - **DeFi Base:** drop `strategy-full`.
 
-### 5.2 Register TOGGLE_MAP (if paired)
+### 5.2 Register TierBundle (if paired)
 
-Edit `components/demo/DemoPlanToggle.tsx::TOGGLE_MAP` — add both directions:
+Edit `lib/auth/tier-override.ts::TIER_BUNDLES` — append an entry keyed by the prospect's email:
 
 ```ts
-TOGGLE_MAP = {
-  ...,
-  "{client-slug}-dart-full": "{client-slug}-signals-in",
-  "{client-slug}-signals-in": "{client-slug}-dart-full",
+{
+  emailPattern: "<prospect-email>",
+  defaultTier: "dart-full",       // or "defi-full" for DeFi-first shape
+  tiers: [
+    { key: "dart-full",       label: "DART Full",  entitlements: [...full set...], tone: "emerald" },
+    { key: "dart-signals-in", label: "Signals-In", entitlements: [...signals-in set...], tone: "amber" },
+  ],
 }
 ```
 
-Without this, the toggle renders but clicking it is a no-op.
+The bundle is the SSOT for what each tier surfaces. `DemoPlanToggle` renders for any user whose email matches a
+bundle entry — works in demo mode AND real Firebase mode.
 
 ### 5.3 Add questionnaire preseed (if pre-scoped)
 
