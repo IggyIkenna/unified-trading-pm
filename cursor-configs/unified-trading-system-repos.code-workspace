@@ -125,9 +125,6 @@
       "path": "unified-ml-interface"
     },
     {
-      "path": "user-management-api"
-    },
-    {
       "path": ".venv-workspace",
       "name": "🐍 Venv"
     },
