@@ -114,14 +114,14 @@ Shard-detail must branch on `(service, instrument_type_class)` to produce the ri
 
 ### Phase 1 — UAC schema backfill + ColumnSpec refinements + validation helper (SEQUENTIAL, blocks everything)
 
-- [ ] [AGENT] P0. Extend `ColumnSpec` in `internal/schemas/contracts.py` with two new fields: `required: bool = True`
+- [x] [AGENT] P0. Extend `ColumnSpec` in `internal/schemas/contracts.py` with two new fields: `required: bool = True`
       (existing `nullable` stays; `nullable=True, required=False` is legal — column may be absent entirely for some
       venues) and `provided_by_venues: frozenset[str] | None = None` (None = all venues, non-empty set = only these
       venues publish the column). Do NOT break existing usages — defaults preserve current behaviour.
-- [ ] [AGENT] P0. Composite venue convention for DeFi: override keys use `"<PROTOCOL>-<CHAIN>"` format, e.g.
+- [x] [AGENT] P0. Composite venue convention for DeFi: override keys use `"<PROTOCOL>-<CHAIN>"` format, e.g.
       `AAVE_V3-ETHEREUM`, `MORPHO-ETHEREUM`. Matches the instruments-service manifest naming. Document this in a
       docstring on `VENUE_CONTRACT_OVERRIDES`.
-- [ ] [AGENT] P0. Add missing `SchemaContract`s for 9 data types: `options_chain`, `futures_chain`, `combo_chain`,
+- [x] [AGENT] P0. Add missing `SchemaContract`s for 9 data types: `options_chain`, `futures_chain`, `combo_chain`,
       `tbbo`, `ohlcv_24h`, `dex_pools`, `dex_swaps`, `sports_odds_snapshot`, `sports_odds_movement`, `sports_arbitrage`.
       Columns derived from actual parquet schemas written by existing adapters (tardis_adapter, dex_pools_handler,
       etc.). Each across all applicable `(category, instrument_type)` combinations. Use
@@ -129,10 +129,10 @@ Shard-detail must branch on `(service, instrument_type_class)` to produce the ri
       `mark_iv`, `greeks_delta/gamma/vega/theta`, `underlying_price` marked `provided_by_venues=frozenset({"DERIBIT"})`.
       For `dex_swaps`: `tick`, `sqrt_price_x96`, `liquidity` marked
       `provided_by_venues=frozenset({"UNISWAP_V3-ETHEREUM", "UNISWAP_V3-ARBITRUM", ...})`.
-- [ ] [AGENT] P0. Write `tests/test_all_datatypes_have_schema.py`: for every `DataType` enum value, assert at least one
+- [x] [AGENT] P0. Write `tests/test_all_datatypes_have_schema.py`: for every `DataType` enum value, assert at least one
       `SchemaContract` resolves via any `(category, instrument_type)` tuple. Test must fail if a data_type is added to
       `DataType` without a matching contract.
-- [ ] [AGENT] P0. Add `validate_row_df(df, contract, venue=None)` helper to `internal/schemas/contracts.py`: -
+- [x] [AGENT] P0. Add `validate_row_df(df, contract, venue=None)` helper to `internal/schemas/contracts.py`: -
       **Required columns check**: for each `ColumnSpec` with `required=True` and (`provided_by_venues is None` or
       `venue in provided_by_venues`) — column MUST be in `df.columns`. - **Dtype compatibility check**: pandas dtype
       must match `ColumnSpec.dtype` via a permissive mapping (`int64 ⇄ int32`, `float64 ⇄ float32`, `object ⇄ string`,
@@ -140,23 +140,23 @@ Shard-detail must branch on `(service, instrument_type_class)` to produce the ri
       zero NaN/None values. - **Extra columns**: allowed by default; caller can set `strict=True` to fail on extras. -
       Raises `RowSchemaValidationError(expected=..., missing=..., extra=..., dtype_mismatches=...)` with rich detail for
       the fail-loud event.
-- [ ] [QG] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`.
-- [ ] [SCRIPT] P0. Quickmerge UAC.
+- [x] [QG] P0. `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+- [x] [SCRIPT] P0. Quickmerge UAC.
 
 ### Phase 2 — Write-time validation in UTL ManifestWriter (SEQUENTIAL after Phase 1)
 
-- [ ] [AGENT] P0. `unified_trading_library/manifest_writer.py`: before each `write(df, shard_key)`, resolve the
+- [x] [AGENT] P0. `unified_trading_library/manifest_writer.py`: before each `write(df, shard_key)`, resolve the
       `SchemaContract` via `lookup_contract(category, instrument_type, data_type)` and call
       `validate_row_df(df,     contract)`. Fail-loud with
       `RowSchemaValidationError(expected_columns=…, got=…, missing=…, extra=…)`. Emit `MANIFEST_WRITE_SCHEMA_MISMATCH`
       event.
-- [ ] [AGENT] P0. Register `MANIFEST_WRITE_SCHEMA_MISMATCH` event code in UTL event registry.
-- [ ] [AGENT] P0. Add 2 unit tests: (a) happy path writes DF conforming to contract → succeeds; (b) DF missing a
+- [x] [AGENT] P0. Register `MANIFEST_WRITE_SCHEMA_MISMATCH` event code in UTL event registry.
+- [x] [AGENT] P0. Add 2 unit tests: (a) happy path writes DF conforming to contract → succeeds; (b) DF missing a
       required column → raises `RowSchemaValidationError`, writes `attempted_failed` manifest row with error_reason.
-- [ ] [QG] P0. UTL + one downstream consumer (MTDS or instruments-service) to confirm no adapter panics on the new gate.
+- [x] [QG] P0. UTL + one downstream consumer (MTDS or instruments-service) to confirm no adapter panics on the new gate.
       Expect real mismatches to surface — those are actual bugs to fix not deficiencies in the gate.
-- [ ] [SCRIPT] P0. Quickmerge UTL.
-- [ ] [AGENT] P1. Follow-up: flip `validate_df` to mandatory in the `write()` path, after running dry-run validation
+- [x] [SCRIPT] P0. Quickmerge UTL.
+- [x] [AGENT] P1. Follow-up: flip `validate_df` to mandatory in the `write()` path, after running dry-run validation
       across all adapters to surface and fix drift. Rollout-safety: current Phase 2 implementation is opt-in via
       `ManifestWriter.validate_df(...)` — existing adapters don't call it. Sequencing: (a) add `strict=False` dry-run
       mode that emits `MANIFEST_WRITE_SCHEMA_MISMATCH` but still writes; (b) run one full backfill cycle across all
@@ -167,53 +167,53 @@ Shard-detail must branch on `(service, instrument_type_class)` to produce the ri
 
 ### Phase 3 — Backend shard-detail endpoint (PARALLEL with Phase 4)
 
-- [ ] [AGENT] P0. deployment-api `services/data_status_drilldown.py`: add
+- [x] [AGENT] P0. deployment-api `services/data_status_drilldown.py`: add
       `get_shard_detail(service, category,     instrument_type, data_type, shard_key: dict, day: date)`. Resolve GCS
       path from manifest. Load parquet footer (pyarrow `read_metadata`) for row count + file size without loading data.
       Project first 100 rows for `sample_rows`. Sign GCS URL with 1-hour TTL for `download_urls.parquet`. Build CSV
       projection URL using existing `/api/data-status/download-shard-csv?project_cols=…`.
-- [ ] [AGENT] P0. Branch by `instrument_type_class`: - Grouped (options_chain, futures_chain, combo_chain, dex_swaps,
+- [x] [AGENT] P0. Branch by `instrument_type_class`: - Grouped (options_chain, futures_chain, combo_chain, dex_swaps,
       liquidation_events, etc.) → compute distinct values in `symbol_column` from parquet (or from metadata) → return as
       `instrument_list`. - Per-symbol (PERPETUAL, SPOT) → `instrument_list = [shard_key.instrument_id]`, `sample_rows` =
       time-series head. - instruments-service reference → `instrument_definitions[]` = all rows. - Sports → `fixtures[]`
       = rows from sports fixtures parquet.
-- [ ] [AGENT] P0. Extend `fetch_venue_detail` to accept category=DEFI with `venue=<chain>` or `venue=<protocol>` and
+- [x] [AGENT] P0. Extend `fetch_venue_detail` to accept category=DEFI with `venue=<chain>` or `venue=<protocol>` and
       return correct data. Pull pool/contract addresses from instruments manifest
       (`CanonicalParquetReader(instruments_bucket).read_shard(venue=<chain>-<protocol>, …)`).
-- [ ] [AGENT] P0. Register `GET /api/data-status/shard-detail` route.
-- [ ] [QG] P0. deployment-api QG.
-- [ ] [SCRIPT] P0. Quickmerge deployment-api.
+- [x] [AGENT] P0. Register `GET /api/data-status/shard-detail` route.
+- [x] [QG] P0. deployment-api QG.
+- [x] [SCRIPT] P0. Quickmerge deployment-api.
 
 ### Phase 4 — deployment-ui drilldown refactor (PARALLEL with Phase 3)
 
-- [ ] [AGENT] P0. Rename `SchemaModal` → `ShardDetailModal` in `DataStatusDrilldown.tsx`. Replace single-column render
+- [x] [AGENT] P0. Rename `SchemaModal` → `ShardDetailModal` in `DataStatusDrilldown.tsx`. Replace single-column render
       with 4 tabs: **Schema** — columns table split into two sections: **Core** (columns with `provided_by_venues=None`)
       and **Venue-specific** (columns with `provided_by_venues` non-null, shown with a badge listing the venues that
       publish them); **Sample rows** (first 100 rows rendered as `<table>`); **Instruments / Pools / Fixtures**
       (category-branched — pools for DeFi, fixtures for sports, instrument list for grouped bundles); **Download** (two
       buttons: Parquet signed URL, CSV projection).
-- [ ] [AGENT] P0. `DataStatusTab.tsx` line 3480-3511: replace `<span>` date chips with `<button>` that calls
+- [x] [AGENT] P0. `DataStatusTab.tsx` line 3480-3511: replace `<span>` date chips with `<button>` that calls
       `openShardDetail({category, instrument_type, data_type, venue_or_chain, protocol, day})`.
-- [ ] [AGENT] P0. `DataStatusTab.tsx`: relocate the `{venueDetailKey === … && render}` block. Right now it only renders
+- [x] [AGENT] P0. `DataStatusTab.tsx`: relocate the `{venueDetailKey === … && render}` block. Right now it only renders
       inside the venue-level section (line 4421). Inline it under the DeFi chain → protocol tree so "Instrument
       breakdown" loads visible results there.
-- [ ] [AGENT] P0. `DataStatusTab.tsx` SPORTS category: swap the data-type breakdown for `<FixtureBreakdown>` with
+- [x] [AGENT] P0. `DataStatusTab.tsx` SPORTS category: swap the data-type breakdown for `<FixtureBreakdown>` with
       clickable fixtures and per-fixture date drilldown.
-- [ ] [AGENT] P0. `src/api/client.ts`: add `fetchShardDetail(params): Promise<ShardDetailResponse>` + typed response
+- [x] [AGENT] P0. `src/api/client.ts`: add `fetchShardDetail(params): Promise<ShardDetailResponse>` + typed response
       interface matching deployment-api contract.
-- [ ] [QG] P0. deployment-ui QG (`CI=true npm test -- --run`, `npx vite build`).
-- [ ] [SCRIPT] P0. Quickmerge deployment-ui.
+- [x] [QG] P0. deployment-ui QG (`CI=true npm test -- --run`, `npx vite build`).
+- [x] [SCRIPT] P0. Quickmerge deployment-ui.
 
 ### Phase 5 — End-to-end verification (SEQUENTIAL after Phase 3+4)
 
-- [ ] [AGENT] P1. Start local deployment-api + deployment-ui in real mode (CLOUD_MOCK_MODE=false). Click through: -
+- [x] [AGENT] P1. Start local deployment-api + deployment-ui in real mode (CLOUD_MOCK_MODE=false). Click through: -
       CeFi: BINANCE-SPOT → BTC-USD → 2026-04-18 → ShardDetailModal shows schema + sample rows + download. - DeFi:
       ETHEREUM → AAVE_V3 → liquidation_events → 2026-04-18 → shows pool list + schema + download. - Sports: SFI → EPL →
       2026-04-12 → shows fixtures for that day + schema + download. - Instruments: DERIBIT → options → 2026-04-18 →
       shows full option definitions list + schema + download.
-- [ ] [AGENT] P1. Codex doc update: `codex/02-data/data-status-drilldown.md` (new) documenting the unified shard-detail
+- [x] [AGENT] P1. Codex doc update: `codex/02-data/data-status-drilldown.md` (new) documenting the unified shard-detail
       contract, shard-by-service matrix, and the Schema / Sample / Instruments / Download tab structure.
-- [ ] [SCRIPT] P1. Quickmerge PM.
+- [x] [SCRIPT] P1. Quickmerge PM.
 
 ## Success criteria
 
