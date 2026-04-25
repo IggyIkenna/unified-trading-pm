@@ -1,114 +1,181 @@
 ---
-title: Handover prompt — UAT-to-Firebase flip resumption
+title: Handover prompt — UAT-to-Firebase flip resumption (revised end-of-day)
 status: handover-prompt
 created: 2026-04-25
+revised: 2026-04-25 (end-of-day — corrected mental model)
 ---
 
 # Handover prompt — UAT-to-Firebase flip (resumption)
 
-> **How to use:** when the operator (Ikenna) has completed the Firebase user provisioning + domain authorization
-> on the shared `central-element-323112` Firebase project, paste the prompt below into a fresh Claude Code session
-> to resume the migration.
+> **Use this when** the operator has confirmed (a) `seed-firebase-users.mjs --env=staging` has been run on
+> `odum-staging`, (b) `uat.odum-research.com` is in `odum-staging` Authorized Domains, (c) user-management-api
+> `/authorize` Firestore store on `odum-staging` is seeded for the demo emails. Then paste the prompt below into
+> a fresh Claude Code session.
+
+> **Important context for the next agent:** the env-file flip is ALREADY committed (UI commit `b5c1c757`). What
+> remains is operator-side user seeding + agent-side QG + redeploy + smoke. Don't re-flip the env file.
 
 ---
 
 ## Prompt to paste into next session
 
 ```
-I'm resuming the UAT-to-Firebase migration from 2026-04-25. Background memory:
-project_uat_firebase_flip_handover_2026_04_25.md.
+I'm resuming the UAT-to-Firebase migration. Background memory:
+- project_uat_firebase_flip_handover_2026_04_25.md (this thread's handover)
+- project_odum_staging_firebase_isolation_2026_04_25.md (operator-side
+  IAM topology + cross-project SA bindings)
+- feedback_compute_vs_firebase_project_split.md (the architectural pattern)
 
-Operator action confirmed complete (please verify before flipping):
+Current state on origin/live-defi-rollout:
 
-1. uat.odum-research.com is in Firebase Authorized domains for project
-   central-element-323112 (Auth → Settings).
+1. unified-trading-system-ui/config/docker-build.env.uat is already
+   flipped (UI commit b5c1c757):
+     NEXT_PUBLIC_AUTH_PROVIDER=firebase
+     NEXT_PUBLIC_FIREBASE_PROJECT_ID=odum-staging
+     (5 other NEXT_PUBLIC_FIREBASE_* values for odum-staging)
+   Don't re-flip. Comment block in the env file has the full
+   compute-vs-Firebase split explanation.
 
-2. Real Firebase user records exist on central-element-323112 for these
-   demo emails (verify in Firebase console → Authentication → Users):
+2. UAT compute still runs on prod GCP project (central-element-323112)
+   Cloud Run service odum-portal-staging. Only the Firebase backend is
+   on odum-staging. Cross-project IAM bindings already in place: prod
+   compute SA 1060025368044-compute@developer.gserviceaccount.com has
+   datastore.user + storage.admin + firebaseauth.admin on odum-staging.
 
-      admin@odum-research.co.uk          / OdumIR2026!
-      investor@odum-research.co.uk       / OdumIR2026!
-      advisor@odum-research.co.uk        / OdumIR2026!
-      desmondhw@gmail.com                / odum-demo-2026
-      patrick@bankelysium.com            / demo
-      demo-signals@odum-research.co.uk   / OdumIR2026!
-      demo-im@odum-research.co.uk        / OdumIR2026!
+3. lib/auth/tier-override.ts ships the provider-agnostic toggle.
+   DemoPlanToggle verified across 6 personas in demo mode earlier
+   today; should keep working unchanged after the flip lands in
+   production deployment.
 
-   (Plus optionally the prospect-*@odum-research.com emails — see
-   plan G2.6 Phase A for the full list.)
+4. Firebase 6-char password minimum: personas with password "demo" in
+   lib/auth/personas.ts get bumped to "demo123" inside
+   scripts/admin/seed-firebase-users.mjs at user-creation time. The
+   personas.ts file itself stays at "demo" so dev demo-provider keeps
+   working (it does string-equality client-side, no policy enforcement).
 
-3. user-management-api /authorize returns the right role + entitlements +
-   org for each demo email (test by hitting the endpoint with a Firebase
-   ID token from one of the demo accounts; verify the AuthUser shape
-   matches the persona definition in lib/auth/personas.ts).
+Please do, in this order:
 
-If all three confirmed, please:
+A. VERIFY operator prereqs are done (ask Ikenna to confirm if unsure):
+   - scripts/admin/seed-firebase-users.mjs --env=staging has been run.
+     The script's STAGING_USERS list should cover at minimum:
+       admin@odum-research.co.uk          / OdumIR2026!
+       investor@odum-research.co.uk       / OdumIR2026!
+       advisor@odum-research.co.uk        / OdumIR2026!
+       desmondhw@gmail.com                / odum-demo-2026
+       patrick@bankelysium.com            / demo123  (bumped from demo)
+       demo-signals@odum-research.co.uk   / OdumIR2026!
+       demo-im@odum-research.co.uk        / OdumIR2026!
+     Plus optionally the 5 prospect-*@odum-research.com / demo123.
+     If the script is missing entries, patch it (don't run yet).
+     If already run, ask operator for the run output / verify via
+     Firebase console → odum-staging → Authentication → Users.
 
-1. Edit unified-trading-system-ui/config/docker-build.env.uat:
-   - Change NEXT_PUBLIC_AUTH_PROVIDER=demo → firebase.
-   - Paste the 6 NEXT_PUBLIC_FIREBASE_* values from
-     docker-build.env.production directly below (apiKey, authDomain,
-     projectId, storageBucket, messagingSenderId, appId — same values
-     because UAT and prod share the project).
-   - Remove the "Migration to firebase auth" comment block (it's no
-     longer relevant once the flip lands).
+   - uat.odum-research.com is in Firebase console → odum-staging →
+     Authentication → Settings → Authorized domains. Without this,
+     sign-ins from UAT hit auth/unauthorized-domain.
 
-2. Run quality gates:
-   cd unified-trading-system-ui && bash scripts/quality-gates.sh
+   - user-management-api /authorize returns role + entitlements + org
+     for each demo email. The endpoint keys off email; demo emails
+     need to be seeded into whatever Firestore collection / admin
+     store the API reads from (now living in odum-staging's Firestore,
+     not prod's).
 
-3. Deploy UAT:
-   bash scripts/deploy-cloud-run.sh --env=uat --cloud
+B. RUN quality gates:
+     cd unified-trading-system-ui && bash scripts/quality-gates.sh
 
-4. Smoke test on https://uat.odum-research.com/login — log in with each
-   of the 7 required emails. Verify:
+C. DEPLOY UAT (still targets the same Cloud Run service on
+   central-element-323112; only the bundle's Firebase config changes):
+     bash scripts/deploy-cloud-run.sh --env=uat --cloud
+   Wait for completion (typically 5–10 min via Cloud Build with layer
+   cache).
 
-   a) Sign-in succeeds (no auth/user-not-found / auth/wrong-password).
-   b) Dashboard renders the right tile shape per persona.
-   c) DemoPlanToggle still flips entitlements without re-login for
-      Desmond (DART Full ⇄ Signals-In) and Patrick (DeFi Full ⇄ DeFi
-      Base) — the tier-override pattern is provider-agnostic, so this
-      should Just Work.
-   d) Investor lands on /investor-relations.
-   e) demo-im-reports-only sees only the Reports tile (1 service /
-      2 lifecycle stages).
-   f) Admin sees the admin panel.
+D. SMOKE TEST on https://uat.odum-research.com/login. Use a fresh
+   browser profile (clear localStorage + cookies; or playwright
+   --isolated). For each of the 7 required emails:
 
-5. Commit the env-file change + push. Add a memory entry recording the
-   flip date + verification matrix.
+   1. Sign-in succeeds (no auth/user-not-found, no
+      auth/wrong-password, no auth/unauthorized-domain).
+   2. Lands on the right surface (admin-odum → admin-dashboard or
+      wherever it routes; investor → /investor-relations; clients →
+      /dashboard).
+   3. Dashboard renders the persona-appropriate tile shape:
+      - admin: all 5 tiles (DART, Odum Signals, Reports, IR, Admin)
+      - investor: lands on /investor-relations
+      - desmondhw@gmail.com: DART + Reports tiles, DemoPlanToggle
+        showing "DART Full" (emerald). Click it — toggle flips to
+        "Signals-In" (amber) WITHOUT a re-login. tier-override-v1 in
+        localStorage. FOMO grid Signals-In banner re-renders.
+      - patrick@bankelysium.com: DART + Reports tiles, toggle
+        "DeFi Full" ⇄ "DeFi Base"
+      - demo-signals: DART + Reports tiles, no toggle
+      - demo-im: Reports tile only ("1 service across 2 lifecycle
+        stages"), no toggle
+   4. Sign out, sign back in — state persists correctly.
 
-6. Update plan G2.6 — mark Phase A operator items [x] and Phase B agent
-   items [x]. Move plan to archive once Phase E smoke is green.
+E. COMMIT memory + plan updates after smoke is green:
+   - Add a memory entry recording the flip date + verification matrix.
+   - Update plans/active/refactor_g2_6_staging_firebase_provisioning_
+     2026_04_20.plan.md — mark Phase A operator items [x] and Phase B
+     agent items [x]. Status update should reflect the deployed
+     reality: separate odum-staging Firebase project + shared prod
+     Cloud Run compute (NOT the "shared everything" model some
+     intermediate revisions described).
+   - Update unified-trading-pm/codex/08-workflows/environment-mode-
+     philosophy.md §Axis 2 — staging IS odum-staging Firebase, prod
+     IS central-element-323112 Firebase. Cloud Run compute is on
+     central-element-323112 for both URLs.
 
-If any sign-in fails, do NOT roll back the env file blindly. Diagnose:
-- auth/user-not-found → operator missed that email, ask them to add it.
-- auth/wrong-password → password mismatch with PERSONAS, ask operator
-  to reset to the documented value.
-- AuthUser missing entitlements → user-management-api /authorize not
-  returning persona shape; check Firestore admin store seeding.
+F. If all green, the migration is complete. Plan G2.6 can move to
+   plans/archive/ if you have unlock-plan authority (otherwise leave
+   locked_by: live-defi-rollout for human review).
 
-The refactor that unblocked this (lib/auth/tier-override.ts) is
-already shipped + verified across all 6 personas in demo mode.
-Decoupled from auth provider.
+Diagnostic guide if something fails:
+
+- auth/user-not-found → seed script missed that email; re-run.
+- auth/wrong-password → password mismatch with the bumped value
+  (demo → demo123 for short-password personas).
+- auth/unauthorized-domain → uat.odum-research.com not in Authorized
+  domains for odum-staging.
+- AuthUser missing entitlements (sign-in OK but tile-less dashboard) →
+  user-management-api /authorize not seeded with persona shape on
+  odum-staging Firestore.
+- tier-override flag not flipping entitlements after toggle click →
+  TIER_OVERRIDE_EVENT not firing or useAuth listener missing; check
+  hooks/use-auth.tsx.
+
+Files to read for context:
+- unified-trading-system-ui/config/docker-build.env.uat (already
+  flipped; comment block has the architecture)
+- unified-trading-system-ui/scripts/admin/seed-firebase-users.mjs
+  (verify STAGING_USERS list before invoking)
+- unified-trading-system-ui/lib/auth/tier-override.ts (TIER_BUNDLES)
+- unified-trading-system-ui/lib/auth/personas.ts (definitions)
+- unified-trading-system-ui/lib/auth/firebase-provider.ts (login flow)
 ```
 
 ---
 
 ## Reference: what's already shipped (DON'T RE-DO)
 
+- `unified-trading-system-ui/config/docker-build.env.uat` flipped to firebase + odum-staging config (UI `b5c1c757`).
 - `unified-trading-system-ui/lib/auth/tier-override.ts` — tier-override module + TIER_BUNDLES (Desmond, Patrick).
 - `unified-trading-system-ui/components/demo/DemoPlanToggle.tsx` — refactored to write override flag.
-- `unified-trading-system-ui/hooks/use-auth.tsx` — applies tier-override at render time, listens for event.
-- 2 new demo personas in `lib/auth/personas.ts`: `demo-signals-client`, `demo-im-reports-only`.
+- `unified-trading-system-ui/hooks/use-auth.tsx` — applies tier-override at render time.
+- `unified-trading-system-ui/lib/auth/personas.ts` — 2 new demo personas (`demo-signals-client`,
+  `demo-im-reports-only`).
 - Tile shapes + YAML profiles + restriction-profiles sync for the 2 new personas.
-- All 6 personas verified end-to-end on UAT in demo mode.
+- 6-persona end-to-end smoke verified on UAT in demo mode.
+- `seed-firebase-users.mjs` STAGING_USERS list with `demo`→`demo123` password bump.
+- Cross-project IAM: prod compute SA has `datastore.user` + `storage.admin` + `firebaseauth.admin` on
+  `odum-staging`.
 
-## Reference: still operator-blocked
+## Reference: what's still pending
 
-See `plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` Phase A.
+- Operator: run seed script + confirm Authorized domains + seed user-mgmt-api authorize store on odum-staging.
+- Agent (next session): QG + redeploy + 6-persona smoke + commit memory/plan updates.
 
-## Reference commits
+## Reference: deferred follow-on (when MOCK_API flips to false)
 
-- UI `b18e2947` — `docker-build.env.uat` annotated with migration checklist.
-- UI tier-override module shipped via `7aa7f102` (chore-sync absorbed earlier commits).
-- UI `a42a9851` — dashboard "{N} services" math fix + per-instance FOMO lock badges.
-- PM `fc579c01` — plan G2.6 + env-mode-philosophy retargeted to shared-project model.
+- `unified-trading-api` Firebase ID token verification needs to handle `odum-staging`-issued tokens. Two paths:
+  (a) deploy a separate API instance on `odum-staging`, (b) dual-verify on the existing API. Out of scope until
+  the day MOCK_API is flipped.
