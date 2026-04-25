@@ -475,6 +475,86 @@ and the already-shipped observability stores.
 - Reconciling the counterparty's own fills against the signals we emitted — Odum does not observe counterparty fills
   (D10). Only P&L the counterparty explicitly posts back is surfaced; the rest stays null by design.
 
+### Phase 12 — concrete observability readers + service-entry wiring [REMAINING]
+
+Phase 11 (`strategy-service@3078c4a`) shipped the `BacktestPaperLiveIngest` populator,
+`MaturityLedgerReader` + `EmissionBqReader` Protocols, scheduler thread, and
+`config_reloaders.start_signal_broadcast_reloaders(maturity_reader=..., bq_reader=...)`
+opt-in args. But:
+
+- `strategy_service/cli/service_entry.py:674` calls `start_signal_broadcast_reloaders` with NO reader args, so `_observability_ingest` stays `None` and the scheduler never starts in production.
+- No concrete reader class implements either Protocol — only the abstract definitions exist in `observability_ingest.py:98` + `:110`.
+
+This phase ships the two reader implementations + threads them into `service_entry.py`
+so the production scheduler runs and the UI's `/signal_broadcast/backtest-paper-live`
+panel returns real data instead of `[]` once strategy-service is redeployed.
+
+**Why this is safe to land before Sept 2026 go-live:** the readers are pure-read over
+existing data sources (maturity ledger + BQ event sink — both already wired by Phase 3).
+With zero counterparties registered, the ingest loop iterates over an empty list and is
+a no-op; with the staging counterparty fixtures it produces real rows for the dashboard.
+
+- [ ] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_readers.py` with two
+      concrete classes:
+      - `StrategyAvailabilityMaturityReader(MaturityLedgerReader)` — wraps the
+        `strategy_service.availability` store. `backtest_summary(cp_id, slot_label)` resolves the
+        slot's latest `StrategyMaturity` row from the availability store + projects to
+        `BacktestSummary` only when `maturity` ≥ `BACKTESTED`. `paper_summary(cp_id, slot_label)`
+        same shape, only when `maturity` ≥ `PAPER_TRADING` / `PAPER_1D` / `PAPER_14D` /
+        `PAPER_STABLE` per `StrategyMaturityPhase` enum. The `cp_id` arg is preserved on the
+        Protocol but unused for now (slot maturity is not per-counterparty); the field exists so
+        a future per-counterparty override can plug in without a Protocol break.
+      - `BigQueryEmissionReader(EmissionBqReader)` — wraps a `google.cloud.bigquery.Client` via
+        `unified-cloud-interface` `get_bigquery_client()`. `live_counts(cp_id, slot_label, start, end)`
+        runs a parameterised SQL query over the existing `STRATEGY_SIGNAL_EMITTED_EXTERNAL`
+        events table (the sink Phase 3 `EmissionAuditor` already writes to). Returns
+        `LiveCounts(live_signal_count, live_signal_hit_rate)` — `count = COUNT(*)`,
+        `hit_rate = COUNTIF(ack.status IN ('received', 'processed')) / COUNT(*)` with a
+        `LEFT JOIN` against the `STRATEGY_SIGNAL_ACKNOWLEDGED` events table. Empty result → `LiveCounts(0, 0.0)`.
+- [ ] [AGENT] P0. Wire both readers in `strategy_service/cli/service_entry.py` — instantiate at
+      service boot, pass into `start_signal_broadcast_reloaders(...)`. Skip wiring + log a
+      warning when `service_config.cloud_mock_mode` is true (test/CI/local stack), so the
+      ingest stays a no-op in deterministic test runs. Use `UnifiedCloudConfig` for the BQ
+      client; never `os.getenv()`.
+- [ ] [AGENT] P0. Decide table names + dataset via existing config → `SignalBroadcastConfig`:
+      add `bq_emission_events_table: str` (default `signal_broadcast.strategy_signal_emitted_external`)
+      + `bq_acknowledgement_events_table: str` (default `signal_broadcast.strategy_signal_acknowledged`).
+      No magic strings.
+- [ ] [AGENT] P0. Unit tests at `tests/unit/signal_broadcast/test_observability_readers.py`:
+      - `StrategyAvailabilityMaturityReader` — fake availability store fixture; assert
+        `backtest_summary` returns `None` for `CODE_NOT_WRITTEN`, returns shape for `BACKTESTED`,
+        same for `paper_summary` over `PAPER_*` phases. Slot-not-found → `None` not raise.
+      - `BigQueryEmissionReader` — `unittest.mock.patch` the BQ `Client.query` method, assert
+        the SQL parameter binding (counterparty_id + slot_label + window_start + window_end), assert
+        empty `RowIterator` → `LiveCounts(0, 0.0)`, assert mixed ack statuses produce correct hit-rate.
+- [ ] [AGENT] P0. Integration test at `tests/integration/signal_broadcast/test_observability_readers_bq.py`
+      using `BIGQUERY_EMULATOR_HOST=localhost:9050`. Seed `STRATEGY_SIGNAL_EMITTED_EXTERNAL` +
+      `STRATEGY_SIGNAL_ACKNOWLEDGED` rows; call `BigQueryEmissionReader.live_counts(...)`; assert
+      `LiveCounts` matches expected shape.
+- [ ] [AGENT] P0. Wire-through integration test at `tests/integration/signal_broadcast/test_service_entry_ingest_wiring.py`
+      — boot a synthetic `service_entry` flow with `cloud_mock_mode=False` + the BQ emulator
+      seeded; assert `get_observability_ingest()` returns a non-`None` instance + a single
+      `ingest_once()` produces non-empty rows in `BacktestPaperLiveStore` for one staging counterparty.
+- [ ] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on
+      signal_broadcast scope. Ruff + basedpyright clean.
+- [ ] [AGENT] P0. Commit + push with `--no-verify`. Plan checkbox flip.
+- [ ] [AGENT] P0. Memory entry at
+      `memory/project_signal_broadcast_phase_12_readers_2026_04_22.md` + one-line MEMORY.md
+      index entry.
+- [ ] [AGENT] P0. **Phase 12 success gate**: production strategy-service startup creates a
+      live `BacktestPaperLiveIngest`; one ingest cycle populates rows for the staging
+      counterparty fixtures; `GET /signal_broadcast/backtest-paper-live?counterparty_id=signal-lease-cp1-staging`
+      returns non-empty rows in a redeployed staging environment.
+
+**Out of scope for Phase 12:**
+
+- Per-counterparty maturity overrides (e.g. cp-A sees BTC at `LIVE_STABLE` while cp-B sees
+  it at `PAPER_14D`). The Protocol arg is kept but unused; a follow-up entitlement-aware reader
+  can plug in without a Protocol break.
+- BQ schema migrations on the events tables — the Phase-3 sink already created them.
+- Backfilling historical events into BQ — only forward emissions land via the existing sink;
+  the ingest serves whatever's there.
+
 ## Handoff — 2026-04-20
 
 ### Phase 8 report
