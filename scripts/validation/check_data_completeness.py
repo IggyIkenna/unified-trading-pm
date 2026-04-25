@@ -57,7 +57,7 @@ class CompletenessResult:
     """Completeness check result for a single data source."""
 
     source: str
-    asset_class: str
+    asset_group: str
     criticality: str
     expected_rows: int
     actual_rows: int
@@ -70,7 +70,7 @@ class CompletenessResult:
         """Convert to JSONDict-compatible details for log_event()."""
         return {
             "source": self.source,
-            "asset_class": self.asset_class,
+            "asset_group": self.asset_group,
             "criticality": self.criticality,
             "expected_rows": self.expected_rows,
             "actual_rows": self.actual_rows,
@@ -81,13 +81,13 @@ class CompletenessResult:
         }
 
 
-def _trading_hours_for_class(asset_class: str) -> int:
+def _trading_hours_for_class(asset_group: str) -> int:
     """Return approximate trading hours for an asset class."""
-    if asset_class in {"crypto_cefi", "crypto_defi", "onchain"}:
+    if asset_group in {"crypto_cefi", "crypto_defi", "onchain"}:
         return _CRYPTO_TRADING_HOURS
-    if asset_class in {"tradfi"}:
+    if asset_group in {"tradfi"}:
         return _TRADFI_TRADING_HOURS
-    if asset_class in {"sports"}:
+    if asset_group in {"sports"}:
         return _SPORTS_TRADING_HOURS
     # feature / ml — same as the underlying data cadence (treat as 24h)
     return _CRYPTO_TRADING_HOURS
@@ -95,7 +95,7 @@ def _trading_hours_for_class(asset_class: str) -> int:
 
 def _expected_rows(contract: DataFreshnessContract) -> int:
     """Compute expected row count for yesterday given the contract cadence."""
-    hours = _trading_hours_for_class(contract.asset_class)
+    hours = _trading_hours_for_class(contract.asset_group)
     rows_per_hour = max(1, 3600 // contract.expected_cadence_seconds)
     return hours * rows_per_hour
 
@@ -123,7 +123,7 @@ def check_source_mock(contract: DataFreshnessContract, check_date: date) -> Comp
 
     return CompletenessResult(
         source=contract.source,
-        asset_class=contract.asset_class,
+        asset_group=contract.asset_group,
         criticality=contract.criticality,
         expected_rows=expected,
         actual_rows=actual,
@@ -208,7 +208,7 @@ def _write_markdown_report(results: list[CompletenessResult], check_date: date, 
     for r in sorted(results, key=lambda x: (x.passed, -x.coverage_pct)):
         tick = "✓" if r.passed else "✗"
         lines.append(
-            f"| {r.source} | {r.asset_class} | {r.criticality} "
+            f"| {r.source} | {r.asset_group} | {r.criticality} "
             f"| {r.coverage_pct:.1f}% | {tick} | {r.expected_rows} | {r.actual_rows} |"
         )
 

@@ -104,7 +104,7 @@ JSON (see `unified-config-interface` `ibkr_credentials.py`).
   endpoints (assert via cassette, URL capture, or known sandbox response).
 
 New services: add a row to the service readiness YAML under data availability referencing this doc when
-`asset_class_readiness` includes mock / testnet / live dimensions.
+`asset_group_readiness` includes mock / testnet / live dimensions.
 
 ---
 

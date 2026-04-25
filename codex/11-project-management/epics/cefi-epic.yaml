@@ -40,169 +40,169 @@ required_repos:
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-cloud-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-config-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: execution-algo-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t1
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-reference-data-interface
     arch_tier: library-t1
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-feature-calculator-library
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-market-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-ml-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-position-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trade-execution-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-domain-client
     arch_tier: library-t3
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: instruments-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: market-tick-data-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: market-data-processing-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: features-delta-one-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: features-calendar-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: features-volatility-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: ml-training-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: ml-inference-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: cefi
+    asset_group: cefi
 
   - repo: strategy-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: execution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: pnl-attribution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: risk-and-exposure-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br3
-    asset_class: core
+    asset_group: core
 
   - repo: position-balance-monitor-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br3
-    asset_class: core
+    asset_group: core
 
   - repo: alerting-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br3
-    asset_class: core
+    asset_group: core
 
 optional_repos:
   - repo: unified-defi-execution-interface
-    asset_class: defi
+    asset_group: defi
     note: "Required for DeFi epic. Optional for CeFi."
 
   - repo: features-onchain-service
-    asset_class: defi
+    asset_group: defi
     note: "DeFi onchain features not required for CeFi."

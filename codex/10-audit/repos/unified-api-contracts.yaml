@@ -177,8 +177,8 @@ code_audit_items:
 # ASSET CLASS READINESS
 # ==============================================================================
 
-asset_class_readiness:
-  supported_asset_classes: [core]
+asset_group_readiness:
+  supported_asset_groupes: [core]
 
   core:
     mvp_ready: false

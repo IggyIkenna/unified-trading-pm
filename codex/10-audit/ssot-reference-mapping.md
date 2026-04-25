@@ -4,8 +4,7 @@ scope: [engineer, admin]
 
 # SSOT Reference Mapping
 
-**Version**: 1.0  
-**Last Updated**: 2026-03-03 **Status**: Active (Post-Audit Reconciliation)
+**Version**: 1.0 **Last Updated**: 2026-03-03 **Status**: Active (Post-Audit Reconciliation)
 
 ---
 
@@ -174,7 +173,7 @@ proven and should be replicated). After epic completes, successful patterns migr
 | --------------------- | ---------------------------------------------- | ------------------------------------------------------------------------- |
 | **MVP instruments**   | `mvp-universe.yaml` instruments.included       | BTC, ETH only for MVP                                                     |
 | **MVP venues**        | `mvp-universe.yaml` venues.{category}.included | Selected venues per category (CEFI: 6, DEFI: 3, TRADFI: 3)                |
-| **MVP asset classes** | `mvp-universe.yaml` asset_classes.included     | CRYPTO_CEFI, DEFI, TRADFI_FUTURES, TRADFI_ETFS (excludes OPTIONS, SPORTS) |
+| **MVP asset classes** | `mvp-universe.yaml` asset_groupes.included     | CRYPTO_CEFI, DEFI, TRADFI_FUTURES, TRADFI_ETFS (excludes OPTIONS, SPORTS) |
 | **MVP strategies**    | `mvp-universe.yaml` strategies.defi_mvp        | 4 DeFi strategies (staking, lending, recursive staking, basis trade)      |
 | **MVP exclusions**    | `mvp-universe.yaml` \*.excluded                | Explicitly excluded protocols, data types, services                       |
 
@@ -417,6 +416,5 @@ vim instruments-service/instruments_service/orchestration_service.py
 
 ---
 
-**Maintained by**: Production Readiness Working Group  
-**Review cycle**: After any Phase 0 reconciliation  
-**Last reconciliation**: 2026-02-21 (Phase 0 initial)
+**Maintained by**: Production Readiness Working Group **Review cycle**: After any Phase 0 reconciliation **Last
+reconciliation**: 2026-02-21 (Phase 0 initial)

@@ -129,7 +129,7 @@ domain_coverage:
       description: "Supported venues (or ALL for platform/UI services)"
       example: ["BINANCE", "COINBASE", "DERIBIT", "AAVEV3_ETHEREUM"]
 
-    asset_classes:
+    asset_groupes:
       type: list[enum]
       description: "Supported asset classes (or ALL)"
       values: [CRYPTO_CEFI, DEFI, TRADFI_EQUITIES, TRADFI_OPTIONS, TRADFI_FUTURES, SPORTS, ALL]
@@ -362,7 +362,7 @@ example_pipeline_service:
 
   domain_coverage:
     venues: ["BINANCE", "COINBASE", "DERIBIT"]
-    asset_classes: ["CRYPTO_CEFI"]
+    asset_groupes: ["CRYPTO_CEFI"]
     feature_groups: ["candles", "orderbook_snapshots"]
     timeframes: ["1m", "5m", "15m", "1h", "1d"]
 
@@ -421,7 +421,7 @@ example_ui_service:
 
   domain_coverage:
     venues: ["ALL"]
-    asset_classes: ["ALL"]
+    asset_groupes: ["ALL"]
 
   infrastructure:
     has_ui: true

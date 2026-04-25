@@ -1,0 +1,16 @@
+persona_id: demo-im-reports-only
+base_audience: trading_platform_subscriber
+description: >-
+  Reports-only IM client demo persona. No DART tile, no investor-relations — just the Reports surface. Use this when
+  demoing the IM allocator's view: monthly P&L, attribution, settlement reconciliation. Distinct from client-im-pooled /
+  client-im-sma which also have investor-relations (they're warmer client states).
+tiles:
+  data: hidden
+  research: hidden
+  promote: hidden
+  trading: hidden
+  observe: hidden
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

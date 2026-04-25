@@ -41,7 +41,7 @@ todos:
   # Phase 2
   - id: p2-unify-taxonomy-archetypes
     content: |
-      - [x] [AGENT] P0. Add MOMENTUM, MEAN_REVERSION, STATISTICAL_ARB to taxonomy.ts STRATEGY_ARCHETYPES + configs. Delete duplicate enums from strategy-platform-types.ts (STRATEGY_ARCHETYPES, ASSET_CLASSES, TESTING_STAGES). Make strategy-platform-types.ts import from taxonomy.ts.
+      - [x] [AGENT] P0. Add MOMENTUM, MEAN_REVERSION, STATISTICAL_ARB to taxonomy.ts STRATEGY_ARCHETYPES + configs. Delete duplicate enums from strategy-platform-types.ts (STRATEGY_ARCHETYPES, asset_groupES, TESTING_STAGES). Make strategy-platform-types.ts import from taxonomy.ts.
     status: done
   - id: p2-unify-pnl-factors
     content: |
@@ -330,7 +330,7 @@ depends on the path fix (needs correct paths to diff), so the path fix agent run
 ### Phase 2 Gate
 
 - `npx tsc --noEmit` passes — no type errors from taxonomy changes
-- `strategy-platform-types.ts` has zero locally-defined STRATEGY_ARCHETYPES/ASSET_CLASSES/TESTING_STAGES
+- `strategy-platform-types.ts` has zero locally-defined STRATEGY_ARCHETYPES/asset_groupES/TESTING_STAGES
 - All strategy-registry.ts archetype values exist in taxonomy.ts
 - All strategy-registry.ts PnL component IDs exist in taxonomy.ts PNL_FACTORS
 

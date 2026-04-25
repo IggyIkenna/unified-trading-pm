@@ -39,115 +39,115 @@ required_repos:
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-cloud-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-config-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t1
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-domain-client
     arch_tier: library-t3
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-market-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trade-execution-interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: instruments-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: market-tick-data-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: market-data-processing-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: features-delta-one-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: features-calendar-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: ml-training-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: ml-inference-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: tradfi
+    asset_group: tradfi
 
   - repo: strategy-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: execution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: pnl-attribution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: risk-and-exposure-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br3
-    asset_class: core
+    asset_group: core
 
   # ── TradFi-specific infrastructure ────────────────────────────────────────
 
@@ -155,16 +155,16 @@ required_repos:
     arch_tier: infra
     min_stage: cr4
     min_br_stage: na
-    asset_class: tradfi
+    asset_group: tradfi
     rationale: "IBKR gateway required for TradFi order routing. CR4 only (infra repo)."
 
 optional_repos:
   - repo: features-commodity-service
-    asset_class: tradfi
+    asset_group: tradfi
     note: "Commodity features (energy) useful for TradFi but not required for MVP scope (ES/MES/SPY/VIX)."
 
   - repo: unified-defi-execution-interface
-    asset_class: defi
+    asset_group: defi
 
   - repo: features-onchain-service
-    asset_class: defi
+    asset_group: defi

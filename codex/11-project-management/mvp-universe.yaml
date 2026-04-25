@@ -129,7 +129,7 @@ venues:
     alignment_notes:
       - See venue_data_types.yaml SPORTS section
 
-asset_classes:
+asset_groupes:
   included:
     - CRYPTO_CEFI
     - DEFI

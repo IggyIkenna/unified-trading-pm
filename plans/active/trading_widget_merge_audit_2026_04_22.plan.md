@@ -37,7 +37,7 @@ Every widget on every trading tab was classified against the write-surface of th
 | ---- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | A    | Interdependent workflow partners — all widgets write to one shared workflow state and share a single submit. None works alone. | **Merge into one host widget.**                                                                                         |
 | B    | Scope / selector (tab-wide) — widget only writes scope (org, account, instrument, date range). Every other widget reads it.    | **Fold into the primary consumer if it drives only one widget; keep as a dedicated scope bar if it drives 2+ widgets.** |
-| C    | List ↔ detail (pure reader) — one widget writes `selectedXId`, the detail widget only reads it. Detail has no other purpose.   | **Keep separate** — canonical drilldown pattern, user explicitly approved.                                              |
+| C    | List ↔ detail (pure reader) — one widget writes `selectedXId`, the detail widget only reads it. Detail has no other purpose.  | **Keep separate** — canonical drilldown pattern, user explicitly approved.                                              |
 | D    | Independent — owns own state, reads only scope.                                                                                | Keep as-is.                                                                                                             |
 
 ## Findings — Tab by Tab
@@ -299,6 +299,6 @@ No D-gates apply (UI-only).
   data-context write surface. No code changes yet.
 - 2026-04-22 — plan promoted to `active` after user sign-off on all 7 open questions; WU-terminal-instrument-bar
   rewritten as WU-4 shared-watchlist; WU-defi-strategy-config-audit closed inline as Type D no-op.
-- 2026-04-22 — all 5 WUs shipped. WU-1 (book, 36382b7), WU-2 (bundles, 2ff874e), WU-3 (options, 9b1f964),
-  WU-4+5 (terminal watchlist + finding #4 close, dd2ec4b). Cert JSONs created for book-order-entry,
-  bundle-builder, terminal-watchlist. Plan status → complete.
+- 2026-04-22 — all 5 WUs shipped. WU-1 (book, 36382b7), WU-2 (bundles, 2ff874e), WU-3 (options, 9b1f964), WU-4+5
+  (terminal watchlist + finding #4 close, dd2ec4b). Cert JSONs created for book-order-entry, bundle-builder,
+  terminal-watchlist. Plan status → complete.

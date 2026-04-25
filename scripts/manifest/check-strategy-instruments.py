@@ -4,8 +4,8 @@ Validate strategy-manifest.json instrument references.
 
 For each strategy, verifies:
 1. All venues[] are valid (present in UAC VENUE_CATEGORY_MAP)
-2. All asset_classes[] are valid InstrumentType enum values (from UAC)
-3. Generates a matrix output: strategy x venue x asset_class
+2. All asset_groupes[] are valid InstrumentType enum values (from UAC)
+3. Generates a matrix output: strategy x venue x asset_group
 
 Exit 0 if all valid, exit 1 with details on invalid entries.
 """
@@ -52,10 +52,10 @@ def main() -> int:
     for strategy in strategies:
         sid = str(strategy.get("strategy_id", "UNKNOWN"))
         venues_raw = strategy.get("venues", [])
-        asset_classes_raw = strategy.get("asset_classes", [])
+        asset_groupes_raw = strategy.get("asset_groupes", [])
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
-        asset_classes: list[str] = asset_classes_raw if isinstance(asset_classes_raw, list) else []
+        asset_groupes: list[str] = asset_groupes_raw if isinstance(asset_groupes_raw, list) else []
 
         # Validate venues
         for venue in venues:
@@ -63,8 +63,8 @@ def main() -> int:
             status = "OK" if venue_str in valid_venues else "INVALID_VENUE"
             if status != "OK":
                 errors.append(f"  {sid}: venue '{venue_str}' not in VENUE_CATEGORY_MAP")
-            # Add to matrix for each asset_class
-            for ac in asset_classes:
+            # Add to matrix for each asset_group
+            for ac in asset_groupes:
                 ac_str = str(ac)
                 ac_status = "OK" if ac_str in valid_instrument_types else "INVALID_TYPE"
                 combined = (
@@ -74,14 +74,14 @@ def main() -> int:
                 )
                 matrix_rows.append((sid, venue_str, ac_str, combined))
 
-        # Validate asset_classes independently (in case venues is empty)
-        for ac in asset_classes:
+        # Validate asset_groupes independently (in case venues is empty)
+        for ac in asset_groupes:
             ac_str = str(ac)
             if ac_str not in valid_instrument_types:
-                errors.append(f"  {sid}: asset_class '{ac_str}' not a valid InstrumentType")
+                errors.append(f"  {sid}: asset_group '{ac_str}' not a valid InstrumentType")
 
-        # Handle case with venues but no asset_classes
-        if venues and not asset_classes:
+        # Handle case with venues but no asset_groupes
+        if venues and not asset_groupes:
             for venue in venues:
                 venue_str = str(venue)
                 status = "OK" if venue_str in valid_venues else "INVALID_VENUE"
@@ -107,7 +107,7 @@ def main() -> int:
                 print(err, file=sys.stderr)
         return 1
 
-    print("\nAll strategies pass venue and asset_class validation.")
+    print("\nAll strategies pass venue and asset_group validation.")
     return 0
 
 

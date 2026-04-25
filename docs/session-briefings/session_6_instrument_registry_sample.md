@@ -77,7 +77,7 @@ The sample is designed to be:
 CEFI_BASE_ASSETS: list[str] = ["BTC", "ETH", "SOL"]
 
 # TradFi equity symbols per venue
-# Format: (symbol, asset_class) — asset_class is one of: equity, etf, index
+# Format: (symbol, asset_group) — asset_group is one of: equity, etf, index
 TRADFI_EQUITIES: dict[str, list[tuple[str, str]]] = {
     "NASDAQ": [("AAPL", "equity"), ("QQQ", "etf")],
     "NYSE": [("GLD", "etf"), ("IBIT", "etf")],

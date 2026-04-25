@@ -43,7 +43,7 @@ All 7 are orphans per static audit — tab-only access. No inbound links from da
 1. **Unify as `/services/execution-catalogue/` OR leave under `/services/execution/` but enhance to catalogue surface**
 2. **Decision point**: does execution-algo-catalogue live under DART service family or under Trading? Currently both
    routes touch it. Resolve in [../playbooks/02b-research-dart.md](../playbooks/02b-research-dart.md).
-3. **Coverage matrix**: algo × venue × asset_class × order_type (limit / market / iceberg / TWAP / etc.)
+3. **Coverage matrix**: algo × venue × asset_group × order_type (limit / market / iceberg / TWAP / etc.)
 4. **Per-algo detail**: algo spec, benchmarks it supports, TCA reports, venue applicability
 5. **Fix the `/services/execution/tca` broken link** — either build the page or prune the reference
 

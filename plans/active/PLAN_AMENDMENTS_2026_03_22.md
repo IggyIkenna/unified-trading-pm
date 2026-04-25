@@ -90,7 +90,7 @@ read them instead of hardcoding 10.
   - 13 documented archetypes from codex/09-strategy/
   - 5 asset classes from representative_sample.py (CeFi, TradFi, DeFi, Sports, Prediction)
   - Using the naming convention: `{ASSET}_{ARCHETYPE}_{MODE}` (e.g. `CEFI_MOMENTUM_LIVE_1H`)
-- Each strategy config includes: archetype, asset_class, instruments[] (from UAC registry), execution_mode, timeframe,
+- Each strategy config includes: archetype, asset_group, instruments[] (from UAC registry), execution_mode, timeframe,
   risk_limits, org_id
 - PnL timeseries generated per-strategy (180 days) with archetype-appropriate characteristics:
   - Momentum: trending with sharp reversals

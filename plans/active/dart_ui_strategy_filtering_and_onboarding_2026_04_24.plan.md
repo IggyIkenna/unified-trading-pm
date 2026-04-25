@@ -1018,7 +1018,7 @@ full envelope into the catalogue UI with:
 | File                                                                                   | Action                                                                                                                                                                     |
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `unified-trading-system-ui/lib/architecture-v2/asset-group.ts`                         | NEW or rename from `asset-class.ts`. SSOT constant export `ASSET_GROUPS`, `AssetGroup` type, label map.                                                                    |
-| `unified-trading-system-ui/lib/**/*.{ts,tsx}`                                          | Project-wide rename `asset_class` → `asset_group`, `assetClass` → `assetGroup`, `AssetClass` → `AssetGroup`, `"asset class"` → `"asset group"` in user-facing strings.     |
+| `unified-trading-system-ui/lib/**/*.{ts,tsx}`                                          | Project-wide rename `asset_group` → `asset_group`, `assetClass` → `assetGroup`, `AssetClass` → `AssetGroup`, `"asset class"` → `"asset group"` in user-facing strings.     |
 | `unified-api-contracts/.../enums.py`                                                   | If `AssetClass` enum exists, rename to `AssetGroup`. Update all consumers.                                                                                                 |
 | `unified-trading-pm/codex/**/*.md`                                                     | Update terminology in codex SSOT docs.                                                                                                                                     |
 | `unified-trading-system-ui/components/strategy-catalogue/StrategyCatalogueSurface.tsx` | Render full envelope (not just 99). Virtualised list (react-window or @tanstack/react-virtual) for 5k+ rows. Top-level category filter with "All" option.                  |
@@ -1049,7 +1049,7 @@ UI labels MUST reference `TERMS.*` rather than inline strings.
 ### Execution DAG
 
 ```
-P11.1 (asset_class → asset_group rename — UAC + UI + codex) ── QG ──┐
+P11.1 (asset_group → asset_group rename — UAC + UI + codex) ── QG ──┐
                                                                      │
 P11.2 (envelope-loader.ts + /api/catalogue/envelope route) ──────────┤
 P11.3 (StrategyCatalogueSurface full-envelope rendering, virtualised)┤
@@ -1064,7 +1064,7 @@ P11.7 (Codex SSOT — update terminology + lock-state spec) ── LAST ──�
 #### Asset-group rename (P11.1)
 
 - [ ] [CODE] P11.1.1 — UAC: rename any `AssetClass` enum/type to `AssetGroup`, update all imports.
-- [ ] [CODE] P11.1.2 — UI: ripgrep `assetClass`, `AssetClass`, `asset_class`, `"asset class"`. Rename to `assetGroup` /
+- [ ] [CODE] P11.1.2 — UI: ripgrep `assetClass`, `AssetClass`, `asset_group`, `"asset class"`. Rename to `assetGroup` /
       `AssetGroup` / `asset_group` / `"asset group"`. Run typecheck after.
 - [ ] [CODE] P11.1.3 — Create `lib/architecture-v2/terminology.ts` with `TERMS.*` constants. Replace inline strings.
 - [ ] [DOC] P11.1.4 — Codex grep + replace.

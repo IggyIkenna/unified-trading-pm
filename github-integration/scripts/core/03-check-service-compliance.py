@@ -284,8 +284,8 @@ def check_missing_services(registry: RegistryDict) -> list[Gap]:
             breakdown = generate_service_creation_breakdown(service)
             raw_venues = service.get("venues") or []
             venues: list[str] = cast(list[str], raw_venues) if isinstance(raw_venues, list) else []
-            raw_asset_classes = service.get("asset_classes") or []
-            asset_classes: list[str] = cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
+            raw_asset_groupes = service.get("asset_groupes") or []
+            asset_groupes: list[str] = cast(list[str], raw_asset_groupes) if isinstance(raw_asset_groupes, list) else []
             gaps.append(
                 Gap(
                     gap_type="missing_service",
@@ -297,7 +297,7 @@ def check_missing_services(registry: RegistryDict) -> list[Gap]:
                         f"**Type:** {service.get('type')}\n"
                         f"**Layer:** {service.get('layer', 'N/A')}\n"
                         f"**Venues:** {', '.join(venues)}\n"
-                        f"**Asset Classes:** {', '.join(asset_classes)}\n"
+                        f"**Asset Classes:** {', '.join(asset_groupes)}\n"
                     ),
                     breakdown=breakdown,
                     milestone=str(service.get("milestone", "")) or None,

@@ -339,7 +339,7 @@ def extract_strategy_configs(workspace_root: Path) -> list[dict[str, object]]:
                 "category": s.get("category", ""),
                 "subcategory": s.get("subcategory", ""),
                 "domain": s.get("domain", ""),
-                "asset_classes": s.get("asset_classes", []),
+                "asset_groupes": s.get("asset_groupes", []),
                 "venues": s.get("venues", []),
                 "instruments": s.get("instruments", []),
                 "batch_capable": s.get("batch_capable", False),

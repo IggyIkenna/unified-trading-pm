@@ -679,7 +679,7 @@ data_catalogue:
     - COINBASE
     - AAVEV3_ETHEREUM
     - UNISWAPV3-ETHEREUM
-  asset_classes:
+  asset_groupes:
     - CRYPTO_CEFI
     - DEFI
   feature_groups:

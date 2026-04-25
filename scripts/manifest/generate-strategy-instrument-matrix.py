@@ -2,7 +2,7 @@
 """Generate a strategy-instrument validation matrix from strategy-manifest.json.
 
 Cross-references strategies with their declared instrument requirements:
-1. Validates each strategy's `instruments` list against `venues` and `asset_classes`
+1. Validates each strategy's `instruments` list against `venues` and `asset_groupes`
 2. Checks instrument ID format consistency (VENUE:TYPE:PAYLOAD[@CHAIN])
 3. Reports strategy-instrument coverage (which strategies cover which instruments)
 4. Detects instrument conflicts (same instrument claimed by incompatible strategies)
@@ -95,27 +95,27 @@ def validate_instruments_vs_venues(
     return errors
 
 
-def validate_instruments_vs_asset_classes(
+def validate_instruments_vs_asset_groupes(
     strategy: dict[str, object],
 ) -> list[str]:
-    """Check that each instrument's type is in the strategy's declared asset_classes list."""
+    """Check that each instrument's type is in the strategy's declared asset_groupes list."""
     errors: list[str] = []
     sid = str(strategy.get("strategy_id", "UNKNOWN"))
     instruments_raw = strategy.get("instruments")
-    asset_classes_raw = strategy.get("asset_classes")
+    asset_groupes_raw = strategy.get("asset_groupes")
 
     if not instruments_raw or not isinstance(instruments_raw, list):
         return errors
-    if not asset_classes_raw or not isinstance(asset_classes_raw, list):
+    if not asset_groupes_raw or not isinstance(asset_groupes_raw, list):
         return errors
 
-    ac_set: set[str] = {str(ac) for ac in asset_classes_raw}
+    ac_set: set[str] = {str(ac) for ac in asset_groupes_raw}
     for instrument_id in instruments_raw:
         iid = str(instrument_id)
         inst_type = extract_instrument_type(iid)
         if inst_type and inst_type not in ac_set:
             errors.append(
-                f"{sid}: instrument '{iid}' has type '{inst_type}' not in declared asset_classes {sorted(ac_set)}"
+                f"{sid}: instrument '{iid}' has type '{inst_type}' not in declared asset_groupes {sorted(ac_set)}"
             )
     return errors
 
@@ -160,20 +160,20 @@ def build_matrix(
     """Build the strategy-instrument matrix as a list of row dicts.
 
     Each row contains:
-        strategy_id, category, venue, asset_class, instruments, live_capable, batch_capable
+        strategy_id, category, venue, asset_group, instruments, live_capable, batch_capable
     """
     rows: list[dict[str, str | list[str]]] = []
     for strategy in strategies:
         sid = str(strategy.get("strategy_id", "UNKNOWN"))
         category = str(strategy.get("category", "UNKNOWN"))
         venues_raw = strategy.get("venues")
-        asset_classes_raw = strategy.get("asset_classes")
+        asset_groupes_raw = strategy.get("asset_groupes")
         instruments_raw = strategy.get("instruments")
         live_capable = str(strategy.get("live_capable", False))
         batch_capable = str(strategy.get("batch_capable", False))
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
-        asset_classes: list[str] = asset_classes_raw if isinstance(asset_classes_raw, list) else []
+        asset_groupes: list[str] = asset_groupes_raw if isinstance(asset_groupes_raw, list) else []
         instruments: list[str] = [str(i) for i in instruments_raw] if isinstance(instruments_raw, list) else []
 
         rows.append(
@@ -181,7 +181,7 @@ def build_matrix(
                 "strategy_id": sid,
                 "category": category,
                 "venues": venues,
-                "asset_classes": asset_classes,
+                "asset_groupes": asset_groupes,
                 "instruments": instruments,
                 "live_capable": live_capable,
                 "batch_capable": batch_capable,
@@ -281,9 +281,9 @@ def main() -> int:
     for strategy in strategies:
         all_errors.extend(validate_instruments_vs_venues(strategy))
 
-    # ── Validate instruments vs asset_classes ────────────────────────────────
+    # ── Validate instruments vs asset_groupes ────────────────────────────────
     for strategy in strategies:
-        all_errors.extend(validate_instruments_vs_asset_classes(strategy))
+        all_errors.extend(validate_instruments_vs_asset_groupes(strategy))
 
     # ── Build instrument map and detect conflicts ────────────────────────────
     instrument_map = build_instrument_to_strategies_map(strategies)

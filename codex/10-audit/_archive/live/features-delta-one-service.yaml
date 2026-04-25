@@ -677,7 +677,7 @@ data_catalogue:
     - BINANCE-SPOT
     - BINANCE-FUTURES
     - COINBASE
-  asset_classes:
+  asset_groupes:
     - CRYPTO_CEFI
   feature_groups:
     - basis

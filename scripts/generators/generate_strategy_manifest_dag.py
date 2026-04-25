@@ -3,7 +3,7 @@
 
 Outputs a Mermaid diagram to stdout showing:
   - Strategy nodes (colored by maturity)
-  - Edges: strategy -> asset_classes
+  - Edges: strategy -> asset_groupes
   - Edges: strategy -> venues
 """
 
@@ -41,10 +41,10 @@ def main() -> int:
         return 0
 
     # Collect unique asset classes and venues
-    all_asset_classes: set[str] = set()
+    all_asset_groupes: set[str] = set()
     all_venues: set[str] = set()
     for strat in strategies:
-        all_asset_classes.update(strat.get("asset_classes", []))
+        all_asset_groupes.update(strat.get("asset_groupes", []))
         all_venues.update(strat.get("venues", []))
 
     lines: list[str] = []
@@ -52,8 +52,8 @@ def main() -> int:
     lines.append("")
 
     # --- Subgraph: Asset Classes ---
-    lines.append("    subgraph Asset_Classes")
-    for ac in sorted(all_asset_classes):
+    lines.append("    subgraph asset_groupes")
+    for ac in sorted(all_asset_groupes):
         ac_id = _sanitize_id(f"ac_{ac}")
         lines.append(f'        {ac_id}["{ac}"]')
     lines.append("    end")
@@ -83,7 +83,7 @@ def main() -> int:
     for strat in strategies:
         name = strat["name"]
         s_id = _sanitize_id(f"s_{name}")
-        for ac in strat.get("asset_classes", []):
+        for ac in strat.get("asset_groupes", []):
             ac_id = _sanitize_id(f"ac_{ac}")
             lines.append(f"    {ac_id} --> {s_id}")
     lines.append("")

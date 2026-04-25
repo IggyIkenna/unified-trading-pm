@@ -162,9 +162,9 @@ class Epic:
         raw_venues = self.service.get("venues") or []
         venues_list: list[str] = cast(list[str], raw_venues) if isinstance(raw_venues, list) else []
         venues = ", ".join(venues_list)
-        raw_assets = self.service.get("asset_classes") or []
+        raw_assets = self.service.get("asset_groupes") or []
         assets_list: list[str] = cast(list[str], raw_assets) if isinstance(raw_assets, list) else []
-        asset_classes = ", ".join(assets_list)
+        asset_groupes = ", ".join(assets_list)
 
         body_parts: list[str] = [
             f"**Service:** `{self.service_name}`",
@@ -177,8 +177,8 @@ class Epic:
 
         if venues:
             body_parts.append(f"**Venues:** {venues}")
-        if asset_classes:
-            body_parts.append(f"**Asset Classes:** {asset_classes}")
+        if asset_groupes:
+            body_parts.append(f"**Asset Classes:** {asset_groupes}")
 
         body_parts.extend(
             [

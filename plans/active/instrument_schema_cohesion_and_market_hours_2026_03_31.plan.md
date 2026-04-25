@@ -38,7 +38,7 @@ The instrument definition layer has two systemic problems:
 | tick_size/strike/lot_size type | Decimal                                | float                                            | string                  | 20+ files       |
 | available_since naming         | available_since                        | available_from_datetime                          | available_from_datetime | 10+ files       |
 | lot_size naming                | lot_size                               | min_size                                         | min_size                | 10+ files       |
-| asset_class type               | AssetClass enum                        | str                                              | string                  | 7+ files        |
+| asset_group type               | AssetClass enum                        | str                                              | string                  | 7+ files        |
 | option_type type               | str                                    | OptionType enum                                  | string                  | 5+ files        |
 | settle_asset                   | removed (derivable)                    | settle_asset (explicit)                          | settle_asset            | 45+ normalizers |
 | MarginType                     | enum defined, no field                 | inverse: bool                                    | N/A                     | Dead code       |
@@ -105,7 +105,7 @@ Phase 4: Workspace-wide validation
 
 - [x] [AGENT] P1. Change InstrumentRecord `option_type: str | None` → `option_type: OptionType | None`. Re-export
       OptionType from internal alongside InstrumentRecord.
-- [x] [AGENT] P1. Change CanonicalInstrument `asset_class: str | None` → `asset_class: AssetClass | None`. Re-export
+- [x] [AGENT] P1. Change CanonicalInstrument `asset_group: str | None` → `asset_group: AssetClass | None`. Re-export
       AssetClass from canonical alongside CanonicalInstrument.
 - [x] [AGENT] P1. Remove dead MarginType enum OR add `margin_type: MarginType | None = None` to InstrumentRecord.
       Decision: add it — execution-service needs it for inverse/linear/quanto routing. Remove `inverse: bool` from
@@ -122,7 +122,7 @@ Phase 4: Workspace-wide validation
 - [x] [AGENT] P0. Add matching fields to CanonicalInstrument (already has trading_hours_open/close, holiday_calendar,
       auction_open/close_utc — verify alignment and add any missing).
 - [ ] [AGENT] P1. Update `instrument_validation.py` — require `holiday_calendar` and `timezone` for TradFi instruments
-      (asset_class in {EQUITY, COMMODITY, FX, FIXED_INCOME}).
+      (asset_group in {EQUITY, COMMODITY, FX, FIXED_INCOME}).
 
 ### 1F. Document serialization contract
 

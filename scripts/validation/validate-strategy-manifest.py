@@ -34,7 +34,7 @@ REQUIRED_FIELDS = {
     "display_name",
     "category",
     "domain",
-    "asset_classes",
+    "asset_groupes",
     "venues",
     "class_path",
     "maturity",
@@ -134,10 +134,10 @@ def validate_required_fields(strategies: list[dict[str, object]]) -> list[str]:
         if domain is not None and str(domain) not in VALID_DOMAINS:
             errors.append(f"{sid}: unknown domain '{domain}' (valid: {sorted(VALID_DOMAINS)})")
 
-        # Validate asset_classes is a list
-        ac = strat.get("asset_classes")
+        # Validate asset_groupes is a list
+        ac = strat.get("asset_groupes")
         if ac is not None and not isinstance(ac, list):
-            errors.append(f"{sid}: 'asset_classes' must be a list, got {type(ac).__name__}")
+            errors.append(f"{sid}: 'asset_groupes' must be a list, got {type(ac).__name__}")
 
         # Validate venues is a list
         venues = strat.get("venues")
@@ -214,7 +214,7 @@ def generate_instrument_matrix(
 ) -> tuple[list[tuple[str, str, str]], list[str]]:
     """Generate strategy-instrument validation matrix.
 
-    Returns (matrix_rows, warnings) where each row is (strategy_id, venue, asset_class).
+    Returns (matrix_rows, warnings) where each row is (strategy_id, venue, asset_group).
     """
     matrix_rows: list[tuple[str, str, str]] = []
     warnings: list[str] = []
@@ -222,22 +222,22 @@ def generate_instrument_matrix(
     for strat in strategies:
         sid = str(strat.get("strategy_id", "UNKNOWN"))
         venues_raw = strat.get("venues", [])
-        asset_classes_raw = strat.get("asset_classes", [])
+        asset_groupes_raw = strat.get("asset_groupes", [])
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
-        asset_classes: list[str] = asset_classes_raw if isinstance(asset_classes_raw, list) else []
+        asset_groupes: list[str] = asset_groupes_raw if isinstance(asset_groupes_raw, list) else []
 
         if not venues:
             warnings.append(f"{sid}: no venues defined")
-        if not asset_classes:
-            warnings.append(f"{sid}: no asset_classes defined")
+        if not asset_groupes:
+            warnings.append(f"{sid}: no asset_groupes defined")
 
         for venue in venues:
-            for ac in asset_classes:
+            for ac in asset_groupes:
                 matrix_rows.append((sid, str(venue), str(ac)))
 
-        # Handle edge case: venues but no asset_classes
-        if venues and not asset_classes:
+        # Handle edge case: venues but no asset_groupes
+        if venues and not asset_groupes:
             for venue in venues:
                 matrix_rows.append((sid, str(venue), "(none)"))
 

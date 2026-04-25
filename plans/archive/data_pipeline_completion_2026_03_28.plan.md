@@ -18,7 +18,7 @@ readiness:
 The instruments-service and market-tick-data-service sessions (2026-03-27/28) delivered:
 
 - InstrumentRecord schema slimdown (36 → 22 fields)
-- Per-instrument asset_class from UAC registry
+- Per-instrument asset_group from UAC registry
 - Streaming downloads with StreamingParquetWriter (17M rows validated)
 - E2E audit: 11/12 PASS across CeFi, TradFi, DeFi, Sports, Prediction
 - staleness_seconds on options LOCF for vol surface quality

@@ -39,7 +39,7 @@ missing, flag as a UAC gap.
 ## What to build for parity
 
 1. **Unify under `/services/ml-catalogue/` or elevate `/services/research/ml/` to catalogue status**
-2. **Coverage matrix**: model_family × asset_class × training_period × maturity × lock_state
+2. **Coverage matrix**: model_family × asset_group × training_period × maturity × lock_state
 3. **Per-entry detail**: one page per model registry entry with training history, performance, governance state
 4. **Lock state + maturity mirror**: same 4 lock states + 8 maturity stages as strategy catalogue
 5. **Governance tab**: who-signed-off, audit trail, incident history

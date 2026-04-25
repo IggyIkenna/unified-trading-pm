@@ -28,7 +28,7 @@ services:
         - COINBASE
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
     data_coverage:
@@ -71,7 +71,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - TRADFI_EQUITIES
         - CRYPTO_CEFI
     data_coverage:
@@ -108,7 +108,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -150,7 +150,7 @@ services:
         - COINBASE
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
       feature_groups:
@@ -198,7 +198,7 @@ services:
         - COINBASE
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
       feature_groups:
@@ -250,7 +250,7 @@ services:
         - BINANCE-SPOT
         - BINANCE-FUTURES
         - COINBASE
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
       feature_groups:
         - basis
@@ -302,7 +302,7 @@ services:
         - BINANCE-FUTURES
         - DERIBIT
         - CME
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - TRADFI_OPTIONS
       feature_groups:
@@ -355,7 +355,7 @@ services:
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
         - COMPOUND_V3_ETH
-      asset_classes:
+      asset_groupes:
         - DEFI
       feature_groups:
         - tvl
@@ -408,7 +408,7 @@ services:
         - POLYMARKET
         - BETFAIR
         - PINNACLE
-      asset_classes:
+      asset_groupes:
         - SPORTS
       feature_groups:
         - team_features
@@ -498,7 +498,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -543,7 +543,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -585,7 +585,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
     data_coverage:
@@ -639,7 +639,7 @@ services:
         - COINBASE
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
     data_coverage:
@@ -697,7 +697,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -743,7 +743,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -782,7 +782,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     data_coverage:
       start_date: "2020-01-01"
@@ -814,7 +814,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: false
@@ -847,7 +847,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: false
@@ -878,7 +878,7 @@ services:
         - COINBASE
         - AAVEV3_ETHEREUM
         - UNISWAPV3-ETHEREUM
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
     infrastructure:
@@ -903,7 +903,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: false
@@ -949,7 +949,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -990,7 +990,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1039,7 +1039,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1084,7 +1084,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1128,7 +1128,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1173,7 +1173,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1219,7 +1219,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - CRYPTO_CEFI
         - DEFI
     infrastructure:
@@ -1266,7 +1266,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1311,7 +1311,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1356,7 +1356,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true
@@ -1401,7 +1401,7 @@ services:
     domain_coverage:
       venues:
         - ALL
-      asset_classes:
+      asset_groupes:
         - ALL
     infrastructure:
       has_ui: true

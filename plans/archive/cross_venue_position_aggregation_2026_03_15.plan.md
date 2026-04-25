@@ -2,7 +2,7 @@
 name: cross-venue-position-aggregation
 overview: |
   Institutional-grade cross-venue position aggregation engine with full asset-class coverage.
-  Adds AggregatedPosition (with asset_class, instrument_type, strategy_id, margin_type,
+  Adds AggregatedPosition (with asset_group, instrument_type, strategy_id, margin_type,
   underlying, expiry), PortfolioView (with Greeks, PnL attribution, risk groups),
   DeFi schemas (lending + LP + staking), and SportsArbPosition to UAC/UIC.
   Builds CrossVenueAggregator (composing UIC CrossAssetPortfolioAggregator),
@@ -93,7 +93,7 @@ todos:
     content: |
       - [x] [AGENT] P1. Create PnLAttributionAggregator in PBMS core/pnl_attribution_aggregator.py.
         Sums PnL components (delta, gamma, theta, vega, rho, funding, basis, interest_rate,
-        carry, fx, residual) across all positions. Groups by: asset_class, strategy, risk_group.
+        carry, fx, residual) across all positions. Groups by: asset_group, strategy, risk_group.
         Output: PortfolioPnLAttribution.
     status: done
     blocked_by: p1-pbms-cross-venue-aggregator
@@ -196,7 +196,7 @@ todos:
   - id: p2-pbms-rest-endpoints
     content: |
       - [x] [AGENT] P1. Add REST endpoints to PBMS api/routes/:
-        GET /aggregated-positions?asset_class=&venue=&instrument_type=&limit=50&offset=0
+        GET /aggregated-positions?asset_group=&venue=&instrument_type=&limit=50&offset=0
         GET /aggregated-positions/{instrument_id}
         GET /portfolio-view/{client_id}
         GET /sports-arb-positions
@@ -227,7 +227,7 @@ todos:
       - [x] [AGENT] P1. Create CorrelationConfigLoader in PBMS core/correlation_config.py.
         Load from correlation_matrix_json env var (default hardcoded matrix).
         Support: same_underlying=1.0 (always), empirical pairs (BTC/ETH, ETH/SOL, etc.),
-        asset_class_defaults. Method: get_correlation(underlying_a, underlying_b) -> Decimal.
+        asset_group_defaults. Method: get_correlation(underlying_a, underlying_b) -> Decimal.
     status: done
     blocked_by: p1-pbms-risk-group-aggregator
     note: "CorrelationConfigLoader with get_correlation() in core/correlation_config.py — confirmed 2026-03-16"
@@ -235,7 +235,7 @@ todos:
     content: |
       - [x] [AGENT] P0. Unit tests for CrossVenueAggregator: 9 cases -- single venue,
         two venues same instrument, remove venue, build_portfolio_view, weighted avg entry,
-        all Decimal, concurrent safety, asset_class/instrument_type preserved, strategy_id.
+        all Decimal, concurrent safety, asset_group/instrument_type preserved, strategy_id.
     status: done
     blocked_by: p1-pbms-cross-venue-aggregator
     note: "tests/unit/test_cross_venue_aggregator.py confirmed — 2026-03-16"

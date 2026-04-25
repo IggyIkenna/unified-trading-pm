@@ -35,7 +35,7 @@ axes:
   instrument_types:
     hierarchy:
       - explicit_picks
-      - adjacent_by_asset_class
+      - adjacent_by_asset_group
       - all_in_category
       - everything
     vague_triggers:

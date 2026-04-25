@@ -3,7 +3,7 @@
 Tests cover:
 - Instrument format validation (canonical VENUE:TYPE:PAYLOAD[@CHAIN])
 - Instrument vs venue cross-reference validation
-- Instrument vs asset_class cross-reference validation
+- Instrument vs asset_group cross-reference validation
 - Instrument-to-strategy map building
 - Conflict detection (same instrument, different categories)
 - Matrix generation
@@ -42,20 +42,20 @@ def _make_strategy(
     strategy_id: str = "TEST_STRAT",
     category: str = "CEFI",
     venues: list[str] | None = None,
-    asset_classes: list[str] | None = None,
+    asset_groupes: list[str] | None = None,
     instruments: list[str] | None = None,
 ) -> dict[str, object]:
     if venues is None:
         venues = ["BINANCE-FUTURES"]
-    if asset_classes is None:
-        asset_classes = ["PERPETUAL"]
+    if asset_groupes is None:
+        asset_groupes = ["PERPETUAL"]
     if instruments is None:
         instruments = ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"]
     return {
         "strategy_id": strategy_id,
         "category": category,
         "venues": venues,
-        "asset_classes": asset_classes,
+        "asset_groupes": asset_groupes,
         "instruments": instruments,
         "live_capable": True,
         "batch_capable": True,
@@ -135,24 +135,24 @@ class TestInstrumentsVsVenues:
         assert not errors
 
 
-# ── Tests: validate_instruments_vs_asset_classes ─────────────────────────────
+# ── Tests: validate_instruments_vs_asset_groupes ─────────────────────────────
 
 
 class TestInstrumentsVsAssetClasses:
     def test_valid_instrument_type(self) -> None:
         strat = _make_strategy(
-            asset_classes=["PERPETUAL"],
+            asset_groupes=["PERPETUAL"],
             instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
         )
-        errors = MOD.validate_instruments_vs_asset_classes(strat)
+        errors = MOD.validate_instruments_vs_asset_groupes(strat)
         assert not errors
 
-    def test_instrument_type_not_in_asset_classes(self) -> None:
+    def test_instrument_type_not_in_asset_groupes(self) -> None:
         strat = _make_strategy(
-            asset_classes=["SPOT"],
+            asset_groupes=["SPOT"],
             instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
         )
-        errors = MOD.validate_instruments_vs_asset_classes(strat)
+        errors = MOD.validate_instruments_vs_asset_groupes(strat)
         assert len(errors) == 1
         assert "PERPETUAL" in errors[0]
 
@@ -351,7 +351,7 @@ class TestPrintMatrixTable:
                 "strategy_id": "TEST_STRAT",
                 "category": "CEFI",
                 "venues": ["BINANCE-FUTURES"],
-                "asset_classes": ["PERPETUAL"],
+                "asset_groupes": ["PERPETUAL"],
                 "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
                 "live_capable": "True",
                 "batch_capable": "True",
@@ -366,7 +366,7 @@ class TestPrintMatrixTable:
                 "strategy_id": "TEST_STRAT",
                 "category": "CEFI",
                 "venues": ["VENUE_" + str(i) for i in range(20)],
-                "asset_classes": ["PERPETUAL"],
+                "asset_groupes": ["PERPETUAL"],
                 "instruments": ["VENUE_" + str(i) + ":PERPETUAL:BTC-USDT@LIN" for i in range(20)],
                 "live_capable": "True",
                 "batch_capable": "True",
@@ -380,7 +380,7 @@ class TestPrintMatrixTable:
                 "strategy_id": "TEST_STRAT",
                 "category": "CEFI",
                 "venues": [],
-                "asset_classes": [],
+                "asset_groupes": [],
                 "instruments": [],
                 "live_capable": "False",
                 "batch_capable": "False",

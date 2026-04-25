@@ -677,7 +677,7 @@ data_catalogue:
     - POLYMARKET
     - BETFAIR
     - PINNACLE
-  asset_classes:
+  asset_groupes:
     - SPORTS
   feature_groups:
     - team_features

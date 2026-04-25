@@ -168,7 +168,7 @@ Extends `onchain_freshness.py` pattern to all sources:
 ```python
 class DataFreshnessContract(BaseModel):
     source: str
-    asset_class: str  # "crypto_cefi"|"crypto_defi"|"tradfi"|"onchain"|"sports"|"feature"|"ml"
+    asset_group: str  # "crypto_cefi"|"crypto_defi"|"tradfi"|"onchain"|"sports"|"feature"|"ml"
     max_age_seconds: int       # FEED_UNHEALTHY threshold
     warn_age_seconds: int      # DATA_STALE threshold (warning)
     expected_cadence_seconds: int  # how often data should arrive
@@ -272,7 +272,7 @@ FEED_UNHEALTHY = "FEED_UNHEALTHY"                   # max threshold breached
 DATA_COMPLETENESS_CHECK = "DATA_COMPLETENESS_CHECK" # scheduled completeness report
 ```
 
-Payload schema for `DATA_STALE` / `FEED_UNHEALTHY`: `source`, `age_seconds`, `max_age_seconds`, `asset_class`,
+Payload schema for `DATA_STALE` / `FEED_UNHEALTHY`: `source`, `age_seconds`, `max_age_seconds`, `asset_group`,
 `criticality`, `timestamp`
 
 ---

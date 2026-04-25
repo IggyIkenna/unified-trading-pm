@@ -704,11 +704,11 @@ def generate_labels_for_service(service: ServiceDict, mode: str | None = None) -
     # Asset classes (from nested domain_coverage)
     raw_domain = service.get("domain_coverage") or {}
     domain_coverage: dict[str, object] = cast(dict[str, object], raw_domain) if isinstance(raw_domain, dict) else {}
-    raw_asset_classes = domain_coverage.get("asset_classes") or []
-    asset_classes: list[str] = cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
-    for asset_class in asset_classes:
+    raw_asset_groupes = domain_coverage.get("asset_groupes") or []
+    asset_groupes: list[str] = cast(list[str], raw_asset_groupes) if isinstance(raw_asset_groupes, list) else []
+    for asset_group in asset_groupes:
         # Normalize label (e.g., CRYPTO_CEFI -> crypto-cefi)
-        normalized = asset_class.lower().replace("_", "-")
+        normalized = asset_group.lower().replace("_", "-")
         labels.append(f"asset/{normalized}")
 
     # UI category (from nested ui_metadata)

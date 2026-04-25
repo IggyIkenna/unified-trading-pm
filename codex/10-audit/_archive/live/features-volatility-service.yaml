@@ -678,7 +678,7 @@ data_catalogue:
     - BINANCE-FUTURES
     - DERIBIT
     - CME
-  asset_classes:
+  asset_groupes:
     - CRYPTO_CEFI
     - TRADFI_OPTIONS
   feature_groups:

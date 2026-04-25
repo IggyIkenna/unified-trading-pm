@@ -29,11 +29,27 @@ a build-time env var for this — it cannot be trusted to match where the app is
 
 _Which user database is auth backed by?_
 
-| Auth mode   | When                                             | Firebase project                                 |
-| ----------- | ------------------------------------------------ | ------------------------------------------------ |
-| **local**   | `NEXT_PUBLIC_AUTH_PROVIDER=demo`, localhost only | None — localStorage personas                     |
-| **staging** | UAT build                                        | Firebase staging project                         |
-| **prod**    | Production build                                 | Firebase prod project (`central-element-323112`) |
+| Auth mode   | When                                                                                                    | Firebase / GCP project                           |
+| ----------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **local**   | `NEXT_PUBLIC_AUTH_PROVIDER=demo`, localhost only                                                        | None — localStorage personas                     |
+| **staging** | _Provisioned but not wired_ — `odum-staging` Firebase project exists (alias `staging` in `.firebaserc`) | `odum-staging`                                   |
+| **uat**     | UAT build (current) — `NEXT_PUBLIC_AUTH_PROVIDER=demo` in `docker-build.env.uat`                        | None — localStorage personas (same as local-dev) |
+| **prod**    | Production build                                                                                        | Firebase prod project (`central-element-323112`) |
+
+**Current state (2026-04-25):** UAT runs the **demo provider** (not the staging Firebase project), even though
+`odum-staging` is provisioned. The trade-off:
+
+- **Why demo on UAT:** the `DemoPlanToggle` (Desmond DART Full ⇄ Signals-In, Elysium DeFi ⇄ DeFi Full) calls
+  `loginByEmail(pairedPersonaId, "")` — an empty-password persona swap that only works against the demo provider's local
+  `PERSONAS` table. Real Firebase auth rejects empty passwords. The toggle is the FOMO/upgrade-preview narrative for
+  prospect demos and is core to the staging walkthrough today.
+- **What the UAT bundle does host:** advisor accounts on `@odum-research.co.uk` are baked into `PERSONAS` and
+  authenticate client-side. The prod login form bounces them to UAT via the per-prospect redirect (see
+  `lib/auth/personas.ts::DEMO_PERSONA_EMAILS`).
+- **What we'd need to flip UAT to real Firebase:** (a) refactor `DemoPlanToggle` to a **tier-override** pattern in
+  localStorage that overlays entitlements on top of a real Firebase user (instead of swapping personas), or (b)
+  provision two real Firebase users per prospect (`desmond+full@gmail.com` / `desmond+signals@gmail.com`) and have the
+  toggle do `signOut` + `signIn`. Both are non-trivial; deferred until prospect-demo volume justifies the cost.
 
 For **local dev**: devs never need Firebase credentials. The `demo` auth provider uses personas from
 `lib/auth/personas.ts` stored in localStorage. An `admin` persona is pre-seeded in `.env.local` via

@@ -217,7 +217,7 @@ File: `unified-trading-library/unified_trading_library/monitors/feature_metrics.
 ```python
 FEATURE_LAG_SECONDS = Gauge(
     "feature_lag_seconds", "Feature pipeline lag",
-    ["service", "asset_class"]
+    ["service", "asset_group"]
 )
 FEATURE_COVERAGE_PCT = Gauge(
     "feature_coverage_pct", "% of expected features present",

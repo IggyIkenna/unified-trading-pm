@@ -74,7 +74,7 @@ _ARCHETYPE_EXEC_MODE: dict[str, str] = {
 }
 
 
-_CATEGORY_TO_ASSET_CLASS: dict[str, str] = {
+_CATEGORY_TO_asset_group: dict[str, str] = {
     "CEFI": "CeFi",
     "DEFI": "DeFi",
     "TRADFI": "TradFi",
@@ -364,7 +364,7 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
         exec_mode = "LIVE" if readiness_status == "LIVE" else "BOTH"
         desc = (
             f"{_ARCHETYPE_TO_FAMILY_V1_NAME[e.archetype_v2]} strategy on "
-            f"{_CATEGORY_TO_ASSET_CLASS[e.category]} "
+            f"{_CATEGORY_TO_asset_group[e.category]} "
             f"venue{'s' if len(venues) > 1 else ''} {', '.join(venues)}."
             + (f" Underlying: {underlying}." if underlying else "")
         )
@@ -698,7 +698,7 @@ def _generate_instances(entries: list[StrategyEntry]) -> str:
         venues = _derive_venues(body, e.category)
         underlying = _derive_underlying(body)
         exec_mode = _ARCHETYPE_EXEC_MODE[e.archetype_v2]
-        asset_class = _CATEGORY_TO_ASSET_CLASS[e.category]
+        asset_group = _CATEGORY_TO_asset_group[e.category]
         client = _CATEGORY_DEFAULT_CLIENT[e.category]
         net_exposure = _rand_int(e.slot + "netexp", 500_000, 15_000_000)
         sharpe = round(_rand_float(e.slot + "sharpe", 1.2, 2.6), 2)
@@ -717,7 +717,7 @@ def _generate_instances(entries: list[StrategyEntry]) -> str:
         )
         lines.append(f'    strategyIdPattern: "{_ts_escape(e.slot)}",')
         lines.append(f'    clientId: "{client}",')
-        lines.append(f'    assetClass: "{asset_class}",')
+        lines.append(f'    assetClass: "{asset_group}",')
         lines.append(f'    strategyType: "{_ts_escape(strategy_type)}",')
         lines.append(f'    family: "{e.family_v2}",')
         lines.append(f'    archetype: "{e.archetype_v2}",')

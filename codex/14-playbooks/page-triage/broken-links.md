@@ -71,7 +71,7 @@ Durable test:
 asserts each pruned href 404s and each remaining live ML sub-route renders for the admin persona.
 
 G2.4 follow-ups (outside G1.5 scope): elevate `/services/research/ml/` to catalogue status with coverage matrix
-(model_family × asset_class × training_period × maturity × lock_state), per-entry detail pages, and admin lock-state
+(model_family × asset_group × training_period × maturity × lock_state), per-entry detail pages, and admin lock-state
 controls — tracked in [../roadmap/next-waves.md](../roadmap/next-waves.md).
 
 ## Verification

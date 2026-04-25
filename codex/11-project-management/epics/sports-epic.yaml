@@ -35,61 +35,61 @@ required_repos:
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-cloud-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-config-interface
     arch_tier: library-t0
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-trading-library
     arch_tier: library-t1
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: unified-domain-client
     arch_tier: library-t3
     min_stage: cr5
     min_br_stage: na
-    asset_class: core
+    asset_group: core
 
   - repo: instruments-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: strategy-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: execution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   - repo: pnl-attribution-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: core
+    asset_group: core
 
   # ── Sports-specific ───────────────────────────────────────────────────────
 
@@ -97,31 +97,31 @@ required_repos:
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
-    asset_class: sports
+    asset_group: sports
     rationale: "USEI provides Betfair CLOB (via UTEI) and Pinnacle adapters."
 
   - repo: features-sports-service
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
-    asset_class: sports
+    asset_group: sports
     rationale: "Pre-match ML features (team form, H2H, venue, weather, market odds)."
 
 optional_repos:
   - repo: features-delta-one-service
-    asset_class: cefi
+    asset_group: cefi
     note: "CeFi feature service. Not required for sports arb strategy."
 
   - repo: ml-training-service
-    asset_class: cefi
+    asset_group: cefi
     note: "ML models optional for sports MVP (arb is rule-based)."
 
   - repo: ml-inference-service
-    asset_class: cefi
+    asset_group: cefi
     note: "Same as above."
 
   - repo: unified-defi-execution-interface
-    asset_class: defi
+    asset_group: defi
 
   - repo: features-onchain-service
-    asset_class: defi
+    asset_group: defi

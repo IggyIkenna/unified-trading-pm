@@ -89,7 +89,7 @@ todos:
           category: str                 # CEFI, DEFI, TRADFI, SPORTS, PREDICTION
           archetype: StrategyArchetype
           allowed_modes: list[str]      # [HUF] for DeFi, [SCE, HUF] for specific CeFi
-          asset_class: str
+          asset_group: str
           default_timeframe: str
           version: int = 1
           description: str = ""
@@ -523,7 +523,7 @@ model. Records (orders, fills, positions) lack shard dimensions needed for filte
 | Source File                                                                                  | What                                  | Action                                 |
 | -------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------- |
 | `unified-trading-system-ui/lib/strategy-registry.ts`                                         | 65+ hand-written strategy definitions | Source data → migrate to UAC           |
-| `unified-trading-system-ui/lib/config/services/strategies.config.ts`                         | ARCHETYPES, ASSET_CLASS_COLORS        | Keep in UI (display-only config)       |
+| `unified-trading-system-ui/lib/config/services/strategies.config.ts`                         | ARCHETYPES, asset_group_COLORS        | Keep in UI (display-only config)       |
 | `unified-trading-system-ui/hooks/api/use-strategies.ts`                                      | `useStrategyCatalog()` hook           | Update to read from generated registry |
 | `unified-trading-system-ui/components/widgets/strategies/strategy-family-browser-widget.tsx` | Family browser                        | Update data source                     |
 | `unified-trading-system-ui/lib/types/strategy-platform.ts`                                   | Strategy platform types               | Align with generated types             |

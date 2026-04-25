@@ -1,0 +1,16 @@
+persona_id: demo-signals-client
+base_audience: trading_platform_subscriber
+description: >-
+  Clean Signals-In product showcase persona. Distinct from prospect-dart-signals-in (which carries Telegram-conversation
+  context) and from desmond-signals-in (which is one toggle-half of a paired demo). Used in general UAT walkthroughs to
+  show what a Signals-In client sees: DART terminal + Signal Intake + Observe + Reports; Research + Promote padlocked.
+tiles:
+  data: unlocked
+  research: padlocked
+  promote: padlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

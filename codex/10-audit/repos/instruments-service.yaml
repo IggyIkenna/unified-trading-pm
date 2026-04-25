@@ -324,8 +324,8 @@ code_audit_items:
 # ASSET CLASS READINESS
 # ==============================================================================
 
-asset_class_readiness:
-  supported_asset_classes: [core, cefi, defi, tradfi, sports]
+asset_group_readiness:
+  supported_asset_groupes: [core, cefi, defi, tradfi, sports]
 
   core:
     mvp_ready: false

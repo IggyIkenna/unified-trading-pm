@@ -380,7 +380,7 @@ todos:
 - id: ic-greeks-position-schema content: "Create unified_internal_contracts/positions/greeks.py: GreeksExposure (delta,
   gamma, theta, vega, rho, delta_notional_usd, underlying)" status: pending
 - id: ic-pnl-breakdown-schema content: "Create unified_internal_contracts/pnl/breakdown.py: PnLBreakdown with
-  instrument_id, instrument_type, underlying, asset_class, delta_pnl, basis_pnl, funding_pnl, greeks_pnl dimensions"
+  instrument_id, instrument_type, underlying, asset_group, delta_pnl, basis_pnl, funding_pnl, greeks_pnl dimensions"
   status: pending
 - id: ic-pnl-attribution-complete content: "Complete pnl-attribution-service: delta PnL, funding rate PnL, basis PnL,
   interest rate PnL, Greeks PnL (options), mark-to-market vs realized, 6-dimension breakdown" status: pending

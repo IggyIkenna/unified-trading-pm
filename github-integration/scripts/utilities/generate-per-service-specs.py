@@ -168,13 +168,13 @@ def _extract_domain_metadata(service: JsonDict) -> dict[str, str | list[str]]:
     domain_coverage: JsonDict = _get_dict(service, "domain_coverage")
     pipeline_metadata: JsonDict = _get_dict(service, "pipeline_metadata")
     venues: list[str] = _get_str_list(domain_coverage, "venues")
-    asset_classes: list[str] = _get_str_list(domain_coverage, "asset_classes")
+    asset_groupes: list[str] = _get_str_list(domain_coverage, "asset_groupes")
     upstream_deps: list[str] = _get_str_list(pipeline_metadata, "upstream_dependencies")
 
     batch_status: str = "Supported" if _get_bool(data_coverage, "batch_mode") else "Not Supported"
     live_status: str = "Supported" if _get_bool(data_coverage, "live_mode") else "Not Supported"
     venues_str: str = chr(10).join([f"- {v}" for v in venues]) if venues else "- N/A"
-    ac_str: str = chr(10).join([f"- {ac}" for ac in asset_classes]) if asset_classes else "- N/A"
+    ac_str: str = chr(10).join([f"- {ac}" for ac in asset_groupes]) if asset_groupes else "- N/A"
     deps_str: str = chr(10).join([f"- `{d}`" for d in upstream_deps]) if upstream_deps else "- None"
 
     return {
@@ -310,7 +310,7 @@ def generate_data_spec(service: JsonDict) -> str:
 - Type: GCS
 - Location: `{output_bucket}`
 - Format: Parquet (or specify)
-- Partitioning: (date, venue, asset_class - TBD)
+- Partitioning: (date, venue, asset_group - TBD)
 
 ## Schema Definitions (TODO: Manual Review Required)
 

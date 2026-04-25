@@ -97,7 +97,7 @@ Phase 1 (unified-internal-contracts) → Phase 2a/2b/2c (PARALLEL) → Phase 2d 
       CatBoostHyperparams | HuberHyperparams | PoissonGLMHyperparams | RidgeHyperparams. Require explicit `model_type`
       in all configs; migrate stored configs that omit it (no silent default).
 - [ ] [AGENT] P0. Add `EnsembleConfig` + `EnsembleMember` Pydantic models
-- [ ] [AGENT] P0. Add `TrainingPipelineConfig` Pydantic model with: asset_class, task_type (regression/classification),
+- [ ] [AGENT] P0. Add `TrainingPipelineConfig` Pydantic model with: asset_group, task_type (regression/classification),
       multi_model, pool_horizons, meta_input_strategy (residual/signal_vector), validation_granularity
       (seasonal/quarterly/monthly/yearly), competition_phase_filter, evaluation_metrics, selection_metric,
       pipeline_dependencies, walk_forward_folds, train_test_ratio, time_horizons

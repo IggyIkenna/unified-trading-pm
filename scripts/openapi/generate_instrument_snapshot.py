@@ -132,7 +132,7 @@ def _load_sports_fixtures(workspace_root: Path) -> list[dict[str, object]]:
             "base_asset": home_team,
             "quote_asset": away_team,
             "status": "active",
-            "asset_class": "sports",
+            "asset_group": "sports",
             "league": league,
             "home_team": home_team,
             "away_team": away_team,

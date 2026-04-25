@@ -677,7 +677,7 @@ validator_coverage:
 data_catalogue:
   venues:
     - ALL
-  asset_classes:
+  asset_groupes:
     - TRADFI_EQUITIES
     - CRYPTO_CEFI
   feature_groups: []

@@ -285,11 +285,11 @@ business_readiness:
 # Drives epic-level aggregation: compute-epic-readiness.py reads these fields to
 # compute per-epic completion %.
 #
-# supported_asset_classes: list of asset classes this repo participates in.
+# supported_asset_groupes: list of asset classes this repo participates in.
 #   Valid values: cefi | defi | tradfi | sports | core
 #   "core" = required by all epics (infrastructure/shared repos).
 #
-# Per asset class block (repeat for each class in supported_asset_classes):
+# Per asset class block (repeat for each class in supported_asset_groupes):
 #   mvp_ready: true once all sub-fields are satisfied for MVP scope.
 #   data.historical_available: batch historical data exists for this asset class.
 #   data.historical_start_date: ISO date of earliest available data (from mvp-universe.yaml).
@@ -305,16 +305,16 @@ business_readiness:
 #     quickmerged: CR5 (quickmerge PR merged) achieved on this branch.
 #
 # Epic gate: epic = 100% when all required repos have
-#   asset_class_readiness.{class}.branch_status.main.quickmerged: true
+#   asset_group_readiness.{class}.branch_status.main.quickmerged: true
 #   AND business_readiness.current_stage >= br5 (for service repos).
 #
 # AGENTS: do NOT set mvp_ready: true autonomously — derive it from sub-fields.
 # ==============================================================================
 
-asset_class_readiness:
-  supported_asset_classes: [] # list of: cefi | defi | tradfi | sports | core
+asset_group_readiness:
+  supported_asset_groupes: [] # list of: cefi | defi | tradfi | sports | core
 
-  # Template block — copy and rename key per asset class in supported_asset_classes.
+  # Template block — copy and rename key per asset class in supported_asset_groupes.
   # Example shown for "defi"; replace with "cefi", "tradfi", "sports", or "core".
   defi: # replace key with actual asset class
     mvp_ready: false

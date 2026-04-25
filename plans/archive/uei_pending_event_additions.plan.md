@@ -31,7 +31,7 @@ todos:
     content: >-
       Add 5 data freshness events from data_availability_live_expectations_2026_03_10.plan.md Phase 2: DATA_STALE,
       DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK. Payload schema for
-      DATA_STALE/FEED_UNHEALTHY: source, age_seconds, max_age_seconds, asset_class, criticality, timestamp.
+      DATA_STALE/FEED_UNHEALTHY: source, age_seconds, max_age_seconds, asset_group, criticality, timestamp.
     status: done
     note: "DONE 2026-03-11 — all 5 events in schemas.py"
 

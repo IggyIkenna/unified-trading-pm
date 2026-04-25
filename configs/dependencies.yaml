@@ -78,7 +78,7 @@ services:
     outputs:
       - name: raw_tick_data
         bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: raw_tick_data/by_date/day={date}/data_type={data_type}/instrument_type={asset_class}/venue={venue}/{instrument}.parquet
+        path_template: raw_tick_data/by_date/day={date}/data_type={data_type}/instrument_type={asset_group}/venue={venue}/{instrument}.parquet
         required_dimensions:
           - category
           - venue
@@ -127,7 +127,7 @@ services:
     outputs:
       - name: processed_candles
         bucket_template: market-data-tick-{category_lower}-{project_id}
-        path_template: processed_candles/by_date/day={date}/timeframe={timeframe}/data_type={data_type}/{asset_class}/{instrument}.parquet
+        path_template: processed_candles/by_date/day={date}/timeframe={timeframe}/data_type={data_type}/{asset_group}/{instrument}.parquet
         required_dimensions:
           - category
           - timeframe

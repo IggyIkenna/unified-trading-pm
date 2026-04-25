@@ -45,14 +45,14 @@ def _make_strategy(
     display_name: str = "Test Strategy",
     category: str = "CEFI",
     domain: str = "cefi",
-    asset_classes: list[str] | None = None,
+    asset_groupes: list[str] | None = None,
     venues: list[str] | None = None,
     class_path: str = "strategy_service.engine.strategies.test.TestStrategy",
     maturity: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Create a minimal valid strategy entry."""
-    if asset_classes is None:
-        asset_classes = ["PERPETUAL"]
+    if asset_groupes is None:
+        asset_groupes = ["PERPETUAL"]
     if venues is None:
         venues = ["BINANCE-FUTURES"]
     if maturity is None:
@@ -83,7 +83,7 @@ def _make_strategy(
         "display_name": display_name,
         "category": category,
         "domain": domain,
-        "asset_classes": asset_classes,
+        "asset_groupes": asset_groupes,
         "venues": venues,
         "class_path": class_path,
         "maturity": maturity,
@@ -205,9 +205,9 @@ class TestValidateRequiredFields:
         assert len(errors) == 1
         assert "unknown domain" in errors[0]
 
-    def test_asset_classes_not_list(self) -> None:
+    def test_asset_groupes_not_list(self) -> None:
         strat = _make_strategy()
-        strat["asset_classes"] = "PERPETUAL"
+        strat["asset_groupes"] = "PERPETUAL"
         errors = MOD.validate_required_fields([strat])
         assert any("list" in e for e in errors)
 
@@ -339,7 +339,7 @@ class TestGenerateInstrumentMatrix:
     def test_basic_matrix(self) -> None:
         strat = _make_strategy(
             venues=["BINANCE-FUTURES", "BYBIT"],
-            asset_classes=["PERPETUAL", "SPOT"],
+            asset_groupes=["PERPETUAL", "SPOT"],
         )
         rows, warnings = MOD.generate_instrument_matrix([strat])
         assert len(rows) == 4  # 2 venues x 2 asset classes
@@ -350,13 +350,13 @@ class TestGenerateInstrumentMatrix:
         rows, warnings = MOD.generate_instrument_matrix([strat])
         assert any("no venues" in w for w in warnings)
 
-    def test_empty_asset_classes_warns(self) -> None:
-        strat = _make_strategy(asset_classes=[])
+    def test_empty_asset_groupes_warns(self) -> None:
+        strat = _make_strategy(asset_groupes=[])
         rows, warnings = MOD.generate_instrument_matrix([strat])
-        assert any("no asset_classes" in w for w in warnings)
+        assert any("no asset_groupes" in w for w in warnings)
 
-    def test_venues_only_no_asset_classes(self) -> None:
-        strat = _make_strategy(venues=["BINANCE"], asset_classes=[])
+    def test_venues_only_no_asset_groupes(self) -> None:
+        strat = _make_strategy(venues=["BINANCE"], asset_groupes=[])
         rows, warnings = MOD.generate_instrument_matrix([strat])
         # Should produce rows with "(none)" for asset class
         assert len(rows) == 1

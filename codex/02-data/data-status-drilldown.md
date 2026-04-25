@@ -117,37 +117,37 @@ it?" directly from the modal.
 ## Write-time validation
 
 `unified_trading_library.ManifestWriter.record_captured(...)` automatically resolves the contract via UAC
-`lookup_contract` and calls `validate_row_df(df, contract, venue=venue)` **before** staging the manifest row.
-Adapters do NOT need to call validation explicitly — it runs every time. Behaviour:
+`lookup_contract` and calls `validate_row_df(df, contract, venue=venue)` **before** staging the manifest row. Adapters
+do NOT need to call validation explicitly — it runs every time. Behaviour:
 
 - **Pass** → manifest row staged with `capture_status=captured`.
 - **`SchemaContractNotFoundError`** (no contract registered for the shard's tuple) → `MANIFEST_WRITE_SCHEMA_MISSING`
-  warn-level event; the write proceeds (this is a temporary state during contract rollout — every `DataType` enum
-  value has a contract as of UAC `cf79d54`, so this branch should be rare).
+  warn-level event; the write proceeds (this is a temporary state during contract rollout — every `DataType` enum value
+  has a contract as of UAC `cf79d54`, so this branch should be rare).
 - **`RowSchemaValidationError`** (contract registered + DF violates) →
-  - **Strict mode (production default)**: `MANIFEST_WRITE_SCHEMA_MISMATCH` error event with full detail
-    (expected / missing / extra / dtype_mismatches / null_violations / venue), `attempted_failed` manifest row
-    written carrying `error_reason`, parquet does **not** upload, exception re-raised so the adapter's shard-level
-    failure-isolation loop catches it. The bad data never reaches GCS.
+  - **Strict mode (production default)**: `MANIFEST_WRITE_SCHEMA_MISMATCH` error event with full detail (expected /
+    missing / extra / dtype_mismatches / null_violations / venue), `attempted_failed` manifest row written carrying
+    `error_reason`, parquet does **not** upload, exception re-raised so the adapter's shard-level failure-isolation loop
+    catches it. The bad data never reaches GCS.
   - **Warn-only mode (opt-out)**: same event emitted but no exception; manifest row stays `captured` and parquet
     uploads. Used when an operator needs to push a backfill through known drift while the adapter is being fixed.
 
-**Default is strict** as of `unified-config-interface` 2026-04-25 — `UnifiedCloudConfig.manifest_strict_schema_validation`
-defaults to `True`. To opt out at the boundary, set `MANIFEST_STRICT_SCHEMA_VALIDATION=false` for that VM / Cloud Run
-service / local dev. Test fixtures that need warn-only behaviour pass `strict_validation=False` to the
-`ManifestWriter` constructor explicitly.
+**Default is strict** as of `unified-config-interface` 2026-04-25 —
+`UnifiedCloudConfig.manifest_strict_schema_validation` defaults to `True`. To opt out at the boundary, set
+`MANIFEST_STRICT_SCHEMA_VALIDATION=false` for that VM / Cloud Run service / local dev. Test fixtures that need warn-only
+behaviour pass `strict_validation=False` to the `ManifestWriter` constructor explicitly.
 
 **Where failures surface for ops:**
 
 1. **Events bucket** — `gs://central-element-323112-events/events/<service>/<date>/<vm>/events.jsonl` carries one
-   `MANIFEST_WRITE_SCHEMA_MISMATCH` event per failed write. Each event's `metadata.details` block contains the full
-   diff (`expected`, `missing_required`, `extra_columns`, `dtype_mismatches`, `null_violations`, `venue`) so the
-   root cause is in the event itself — no log archeology required.
-2. **Availability manifest** — `_index/availability_index.parquet` row for the shard has `capture_status=attempted_failed`
-   and `error_reason=<RowSchemaValidationError message>` so the data-status UI surfaces the failure on the same
-   chip the user clicks.
-3. **Deployment-ui Data Status modal** — `ShardDetailModal` → `gcs.error_reason` is rendered as a red panel above
-   the tabs.
+   `MANIFEST_WRITE_SCHEMA_MISMATCH` event per failed write. Each event's `metadata.details` block contains the full diff
+   (`expected`, `missing_required`, `extra_columns`, `dtype_mismatches`, `null_violations`, `venue`) so the root cause
+   is in the event itself — no log archeology required.
+2. **Availability manifest** — `_index/availability_index.parquet` row for the shard has
+   `capture_status=attempted_failed` and `error_reason=<RowSchemaValidationError message>` so the data-status UI
+   surfaces the failure on the same chip the user clicks.
+3. **Deployment-ui Data Status modal** — `ShardDetailModal` → `gcs.error_reason` is rendered as a red panel above the
+   tabs.
 
 ## UI flow per category
 

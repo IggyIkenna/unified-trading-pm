@@ -72,7 +72,7 @@ fields:
       Minimum business_readiness stage. 'na' for libraries and non-revenue repos.
       All service repos require br5 (PnL backtest) — the business invariant.
 
-  required_repos[].asset_class:
+  required_repos[].asset_group:
     values: [core, defi, cefi, tradfi, sports]
     description: |
       "core" = required by all epics regardless of asset class.
@@ -87,7 +87,7 @@ aggregation_logic:
     A required repo counts as COMPLETE when ALL of:
     1. code_readiness.current_stage ordinal >= min_stage ordinal
     2. (if min_br_stage != na) business_readiness.current_stage ordinal >= min_br_stage ordinal
-    3. asset_class_readiness.{asset_class OR core}.branch_status.main.quickmerged = true
+    3. asset_group_readiness.{asset_group OR core}.branch_status.main.quickmerged = true
 
   epic_pct: |
     epic_pct = (count of complete required_repos / total required_repos) * 100

@@ -319,8 +319,8 @@ code_audit_items:
 # ASSET CLASS READINESS
 # ==============================================================================
 
-asset_class_readiness:
-  supported_asset_classes: [cefi, defi]
+asset_group_readiness:
+  supported_asset_groupes: [cefi, defi]
 
   cefi:
     mvp_ready: false

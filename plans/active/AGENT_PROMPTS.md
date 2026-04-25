@@ -46,7 +46,7 @@ SEPARATION OF CONCERNS (CRITICAL):
 - No two sources of truth: if the API seeds strategies, the UI does NOT also hardcode strategies.
 - Missing service functionality? Add it to the service/API — don't work around it in the UI.
 - Instruments: imported from UAC representative_sample.py (50+ specs). Seed generators read the registry.
-- Strategies: CONFIG, not code. 50+ strategies via archetype x asset_class config expansion.
+- Strategies: CONFIG, not code. 50+ strategies via archetype x asset_group config expansion.
 
 LIVE/BATCH COEXISTENCE (applies to ALL domain data):
 - Live mode: `?mode=live` → reads `{domain}_live` collections. WebSocket updates tickers/positions/PnL in real-time.

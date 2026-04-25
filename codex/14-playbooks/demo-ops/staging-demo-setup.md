@@ -25,6 +25,14 @@ live wiring shipped 2026-04-24 around the Desmond H-W and Elysium demo shapes.
 This is an operational playbook — _how_ to configure a demo. For the _what_ (commercial framing, scope design), see
 [`demo-decision-matrix.md`](./demo-decision-matrix.md) + [`pre-demo-curation-rules.md`](./pre-demo-curation-rules.md).
 
+> **Auth context — important.** UAT (`uat.odum-research.com` → Cloud Run service `odum-portal-staging`) currently runs
+> the **demo auth provider** (`NEXT_PUBLIC_AUTH_PROVIDER=demo` in `docker-build.env.uat`). A real Firebase staging
+> project (`odum-staging`, aliased `staging` in `.firebaserc`) **is provisioned** but not yet wired into the UAT bundle.
+> The demo provider is retained because the `DemoPlanToggle` (DART Full ⇄ Signals-In, DeFi ⇄ DeFi Full) does
+> empty-password persona swaps via `loginByEmail(pairedId, "")`, which only works client-side. See
+> [`../../08-workflows/environment-mode-philosophy.md`](../../08-workflows/environment-mode-philosophy.md) §Axis 2 for
+> the full trade-off analysis and the migration path to a tier-override pattern.
+
 ---
 
 ## §2 — Email-based demo persona mapping

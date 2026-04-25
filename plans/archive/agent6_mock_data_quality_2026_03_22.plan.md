@@ -33,7 +33,7 @@ todos:
         - 13 code-complete archetypes: momentum, mean-reversion, ML-directional, options-ML, basis-trade, staked-basis, recursive-basis, AAVE-lending, AMM-LP, arbitrage, value-betting, ML-sports, market-making
         - 5 asset classes from UAC representative_sample.py: CeFi, TradFi, DeFi, Sports, Prediction
         - Naming convention: `{ASSET}_{ARCHETYPE}_{MODE}_{TIMEFRAME}` e.g. `CEFI_MOMENTUM_LIVE_1H`
-        Each strategy config includes: id, name, archetype, asset_class, instruments[] (referencing UAC registry symbols), execution_mode (live/paper), timeframe, risk_limits, org_id, inception_date.
+        Each strategy config includes: id, name, archetype, asset_group, instruments[] (referencing UAC registry symbols), execution_mode (live/paper), timeframe, risk_limits, org_id, inception_date.
         Instruments in each strategy MUST reference symbols that exist in UAC representative_sample.py — no invented instruments.
         Store in MockStateStore `strategies` and `strategy_configs` collections.
         The UI reads strategy lists from `GET /analytics/strategies` and `GET /analytics/strategy-configs` — NOT from `trading-data.ts` or `strategy-registry.ts`.
@@ -111,7 +111,7 @@ todos:
     status: done
   - id: a6-p1c-tickers-seed
     content: |
-      - [x] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for ALL instruments from UAC representative_sample.py. Import the registry (same as candles). Each ticker: `{ instrument, venue, price, bid, ask, volume_24h, change_24h_pct, asset_class, timestamp }`. Prices realistic as of today: BTC ~$67K, ETH ~$3.5K, AAPL ~$195, QQQ ~$490, ES ~$5300, VIX ~$15, aTokens at protocol rates, sports at probability-based pricing (0.30-0.70).
+      - [x] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for ALL instruments from UAC representative_sample.py. Import the registry (same as candles). Each ticker: `{ instrument, venue, price, bid, ask, volume_24h, change_24h_pct, asset_group, timestamp }`. Prices realistic as of today: BTC ~$67K, ETH ~$3.5K, AAPL ~$195, QQQ ~$490, ES ~$5300, VIX ~$15, aTokens at protocol rates, sports at probability-based pricing (0.30-0.70).
         These serve as the starting point for the WebSocket mock tick generator (Agent 5). Also seed `tickers_batch` with yesterday's close prices (slightly different from live).
     status: done
   # ── DEPENDENCY GATE: Phase 2 requires Agent 5 (API service layer) ────────

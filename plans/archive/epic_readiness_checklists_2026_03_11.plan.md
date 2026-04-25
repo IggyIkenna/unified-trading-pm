@@ -28,7 +28,7 @@ required for all service repos in the epic.
 
 ### Stream 1 — Schema: Extend per-repo YAML template ✅
 
-- `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` — added `asset_class_readiness` section
+- `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` — added `asset_group_readiness` section
 
 ### Stream 2 — Epic definitions in codex ✅
 
@@ -38,9 +38,9 @@ required for all service repos in the epic.
 - `unified-trading-codex/11-project-management/epics/tradfi-epic.yaml` — mvp_priority: 3
 - `unified-trading-codex/11-project-management/epics/sports-epic.yaml` — mvp_priority: 4
 
-### Stream 3 — Populate asset_class_readiness for DeFi repos ✅
+### Stream 3 — Populate asset_group_readiness for DeFi repos ✅
 
-Ten per-repo YAMLs updated with `asset_class_readiness` blocks:
+Ten per-repo YAMLs updated with `asset_group_readiness` blocks:
 
 - unified-defi-execution-interface, features-onchain-service, unified-api-contracts
 - unified-trading-library, unified-domain-client, instruments-service

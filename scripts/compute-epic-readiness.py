@@ -2,7 +2,7 @@
 """
 compute-epic-readiness.py
 =========================
-Aggregates per-repo asset_class_readiness data into epic-level % completion.
+Aggregates per-repo asset_group_readiness data into epic-level % completion.
 
 Usage:
     python unified-trading-pm/scripts/compute-epic-readiness.py [--output-dir <path>]
@@ -102,12 +102,12 @@ def br_ordinal(stage: str | None) -> int:
 
 def get_branch_status(
     repo_data: dict[str, Any],
-    asset_class: str,
+    asset_group: str,
 ) -> dict[str, Any]:
     """Return branch_status dict for the given asset class (or core fallback)."""
-    acr: dict[str, Any] = cast(dict[str, Any], repo_data.get("asset_class_readiness") or {})
+    acr: dict[str, Any] = cast(dict[str, Any], repo_data.get("asset_group_readiness") or {})
     # Prefer exact class key, fall back to "core"
-    class_data: dict[str, Any] = cast(dict[str, Any], acr.get(asset_class) or acr.get("core") or {})
+    class_data: dict[str, Any] = cast(dict[str, Any], acr.get(asset_group) or acr.get("core") or {})
     return cast(dict[str, Any], class_data.get("branch_status") or {})
 
 
@@ -115,7 +115,7 @@ def is_repo_complete(
     repo_data: dict[str, Any],
     min_cr_stage: str,
     min_br_stage: str,
-    asset_class: str,
+    asset_group: str,
 ) -> tuple[bool, str]:
     """
     Return (is_complete, reason) for a single required repo entry.
@@ -123,7 +123,7 @@ def is_repo_complete(
     Complete when ALL of:
     1. code_readiness.current_stage ordinal >= min_cr_stage ordinal
     2. (if min_br_stage != na) business_readiness.current_stage >= min_br_stage
-    3. asset_class_readiness.{asset_class|core}.branch_status.main.quickmerged = true
+    3. asset_group_readiness.{asset_group|core}.branch_status.main.quickmerged = true
     """
     # ── CR check ──────────────────────────────────────────────────────────
     cr_current: str = cast(
@@ -141,7 +141,7 @@ def is_repo_complete(
             return False, f"BR stage: {br_current} (need {min_br_stage.upper()})"
 
     # ── Branch gate ───────────────────────────────────────────────────────
-    branch_status = get_branch_status(repo_data, asset_class)
+    branch_status = get_branch_status(repo_data, asset_group)
     main_status: dict[str, Any] = cast(dict[str, Any], branch_status.get("main") or {})
     if not main_status.get("quickmerged", False):
         return False, "branch_status.main.quickmerged = false"
@@ -172,14 +172,14 @@ def compute_epic(
         repo_name: str = cast(str, req["repo"])
         min_cr: str = cast(str, req.get("min_stage") or "cr5")
         min_br: str = cast(str, req.get("min_br_stage") or "na")
-        asset_class: str = cast(str, req.get("asset_class") or "core")
+        asset_group: str = cast(str, req.get("asset_group") or "core")
 
         repo_data = repos.get(repo_name)
         if repo_data is None:
             blocking_repos.append(
                 {
                     "repo": repo_name,
-                    "asset_class": asset_class,
+                    "asset_group": asset_group,
                     "blocking_reason": "No per-repo YAML found in 10-audit/repos/",
                     "cr_current": None,
                     "br_current": None,
@@ -188,7 +188,7 @@ def compute_epic(
             )
             continue
 
-        ok, reason = is_repo_complete(repo_data, min_cr, min_br, asset_class)
+        ok, reason = is_repo_complete(repo_data, min_cr, min_br, asset_group)
         if ok:
             completed += 1
             completed_repos.append(repo_name)
@@ -199,14 +199,14 @@ def compute_epic(
             br_current = cast(
                 str, cast(dict[str, Any], repo_data.get("business_readiness") or {}).get("current_stage") or "BR0"
             )
-            branch_status = get_branch_status(repo_data, asset_class)
+            branch_status = get_branch_status(repo_data, asset_group)
             main_qm: bool = cast(
                 bool, cast(dict[str, Any], branch_status.get("main") or {}).get("quickmerged") or False
             )
             blocking_repos.append(
                 {
                     "repo": repo_name,
-                    "asset_class": asset_class,
+                    "asset_group": asset_group,
                     "blocking_reason": reason,
                     "cr_current": cr_current,
                     "cr_required": min_cr.upper(),
@@ -222,7 +222,7 @@ def compute_epic(
     optional_status: list[dict[str, Any]] = []
     for opt in optional:
         repo_name = cast(str, opt["repo"])
-        asset_class = cast(str, opt.get("asset_class") or "")
+        asset_group = cast(str, opt.get("asset_group") or "")
         repo_data = repos.get(repo_name)
         cr_current = (
             cast(str, cast(dict[str, Any], repo_data.get("code_readiness") or {}).get("current_stage") or "CR0")
@@ -232,7 +232,7 @@ def compute_epic(
         optional_status.append(
             {
                 "repo": repo_name,
-                "asset_class": asset_class,
+                "asset_group": asset_group,
                 "note": opt.get("note", ""),
                 "cr_current": cr_current,
                 "yaml_present": repo_data is not None,
@@ -323,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
         if result["blocking_repos"]:
             blocking: list[dict[str, Any]] = cast(list[dict[str, Any]], result["blocking_repos"])
             for br in blocking:
-                print(f"   ✗ {br['repo']} [{br['asset_class']}]: {br['blocking_reason']}")
+                print(f"   ✗ {br['repo']} [{br['asset_group']}]: {br['blocking_reason']}")
 
     return 1 if any_errors else 0
 

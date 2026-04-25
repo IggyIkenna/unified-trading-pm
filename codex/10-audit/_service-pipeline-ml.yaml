@@ -89,7 +89,7 @@ group_items:
 
       For ml-inference-service:
       - Load sports models from gs://ml-models/SPORTS/{model_type}/{version}/
-      - Inference endpoint supports asset_class=SPORTS routing
+      - Inference endpoint supports asset_group=SPORTS routing
       - Batch prediction mode (predict on all upcoming fixtures)
 
       ✅ Pass: Sports configs, loss functions, metrics, model loading

@@ -1254,7 +1254,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -1276,7 +1276,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1297,7 +1297,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
