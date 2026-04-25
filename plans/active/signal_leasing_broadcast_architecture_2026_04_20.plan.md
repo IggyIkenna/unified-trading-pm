@@ -500,7 +500,7 @@ redeployed.
 ledger + BQ event sink — both already wired by Phase 3). With zero counterparties registered, the ingest loop iterates
 over an empty list and is a no-op; with the staging counterparty fixtures it produces real rows for the dashboard.
 
-- [ ] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_readers.py` with two concrete classes: -
+- [x] [AGENT] P0. New file `strategy_service/signal_broadcast/observability_readers.py` with two concrete classes: -
       `StrategyAvailabilityMaturityReader(MaturityLedgerReader)` — wraps the `strategy_service.availability` store.
       `backtest_summary(cp_id, slot_label)` resolves the slot's latest `StrategyMaturity` row from the availability
       store + projects to `BacktestSummary` only when `maturity` ≥ `BACKTESTED`. `paper_summary(cp_id, slot_label)` same
@@ -513,34 +513,34 @@ over an empty list and is a no-op; with the staging counterparty fixtures it pro
       `EmissionAuditor` already writes to). Returns `LiveCounts(live_signal_count, live_signal_hit_rate)` —
       `count = COUNT(*)`, `hit_rate = COUNTIF(ack.status IN ('received', 'processed')) / COUNT(*)` with a `LEFT JOIN`
       against the `STRATEGY_SIGNAL_ACKNOWLEDGED` events table. Empty result → `LiveCounts(0, 0.0)`.
-- [ ] [AGENT] P0. Wire both readers in `strategy_service/cli/service_entry.py` — instantiate at service boot, pass into
+- [x] [AGENT] P0. Wire both readers in `strategy_service/cli/service_entry.py` — instantiate at service boot, pass into
       `start_signal_broadcast_reloaders(...)`. Skip wiring + log a warning when `service_config.cloud_mock_mode` is true
       (test/CI/local stack), so the ingest stays a no-op in deterministic test runs. Use `UnifiedCloudConfig` for the BQ
       client; never `os.getenv()`.
-- [ ] [AGENT] P0. Decide table names + dataset via existing config → `SignalBroadcastConfig`: add
+- [x] [AGENT] P0. Decide table names + dataset via existing config → `SignalBroadcastConfig`: add
       `bq_emission_events_table: str` (default `signal_broadcast.strategy_signal_emitted_external`) +
       `bq_acknowledgement_events_table: str` (default `signal_broadcast.strategy_signal_acknowledged`). No magic
       strings.
-- [ ] [AGENT] P0. Unit tests at `tests/unit/signal_broadcast/test_observability_readers.py`: -
+- [x] [AGENT] P0. Unit tests at `tests/unit/signal_broadcast/test_observability_readers.py`: -
       `StrategyAvailabilityMaturityReader` — fake availability store fixture; assert `backtest_summary` returns `None`
       for `CODE_NOT_WRITTEN`, returns shape for `BACKTESTED`, same for `paper_summary` over `PAPER_*` phases.
       Slot-not-found → `None` not raise. - `BigQueryEmissionReader` — `unittest.mock.patch` the BQ `Client.query`
       method, assert the SQL parameter binding (counterparty_id + slot_label + window_start + window_end), assert empty
       `RowIterator` → `LiveCounts(0, 0.0)`, assert mixed ack statuses produce correct hit-rate.
-- [ ] [AGENT] P0. Integration test at `tests/integration/signal_broadcast/test_observability_readers_bq.py` using
+- [x] [AGENT] P0. Integration test at `tests/integration/signal_broadcast/test_observability_readers_bq.py` using
       `BIGQUERY_EMULATOR_HOST=localhost:9050`. Seed `STRATEGY_SIGNAL_EMITTED_EXTERNAL` + `STRATEGY_SIGNAL_ACKNOWLEDGED`
       rows; call `BigQueryEmissionReader.live_counts(...)`; assert `LiveCounts` matches expected shape.
-- [ ] [AGENT] P0. Wire-through integration test at
+- [x] [AGENT] P0. Wire-through integration test at
       `tests/integration/signal_broadcast/test_service_entry_ingest_wiring.py` — boot a synthetic `service_entry` flow
       with `cloud_mock_mode=False` + the BQ emulator seeded; assert `get_observability_ingest()` returns a non-`None`
       instance + a single `ingest_once()` produces non-empty rows in `BacktestPaperLiveStore` for one staging
       counterparty.
-- [ ] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on signal_broadcast scope. Ruff +
+- [x] [AGENT] P0. QG: `cd strategy-service && bash scripts/quality-gates.sh` clean on signal_broadcast scope. Ruff +
       basedpyright clean.
-- [ ] [AGENT] P0. Commit + push with `--no-verify`. Plan checkbox flip.
-- [ ] [AGENT] P0. Memory entry at `memory/project_signal_broadcast_phase_12_readers_2026_04_22.md` + one-line MEMORY.md
+- [x] [AGENT] P0. Commit + push with `--no-verify`. Plan checkbox flip.
+- [x] [AGENT] P0. Memory entry at `memory/project_signal_broadcast_phase_12_readers_2026_04_22.md` + one-line MEMORY.md
       index entry.
-- [ ] [AGENT] P0. **Phase 12 success gate**: production strategy-service startup creates a live
+- [x] [AGENT] P0. **Phase 12 success gate**: production strategy-service startup creates a live
       `BacktestPaperLiveIngest`; one ingest cycle populates rows for the staging counterparty fixtures;
       `GET /signal_broadcast/backtest-paper-live?counterparty_id=signal-lease-cp1-staging` returns non-empty rows in a
       redeployed staging environment.
