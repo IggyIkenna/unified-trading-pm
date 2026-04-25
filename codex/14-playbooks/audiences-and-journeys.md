@@ -15,10 +15,11 @@ least one cell of this matrix.
 
 ## Persona × playbook matrix
 
-| Persona                              | pb1 Marketing |  pb2 Briefings  | pb3 Demo  | Real client |           Admin           | Reference fixture                                                                                                                 |
+| Persona                              | pb1 Marketing |  pb2 Deep Dive  | pb3 Demo  | Real client |           Admin           | Reference fixture                                                                                                                 |
 | ------------------------------------ | :-----------: | :-------------: | :-------: | :---------: | :-----------------------: | --------------------------------------------------------------------------------------------------------------------------------- |
 | Anonymous visitor                    |      ✅       |        —        |     —     |      —      |             —             | (no auth)                                                                                                                         |
-| Post-first-call prospect             |      ✅       | ✅ (light auth) |     —     |      —      |             —             | Briefings access code                                                                                                             |
+| Cold-inbound prospect                |      ✅       | ✅ (light auth) |     —     |      —      |             —             | Brief questionnaire submit (channel A — most common)                                                                              |
+| Warm hand-off prospect               |      ✅       | ✅ (light auth) |     —     |      —      |             —             | Per-path access code from sales (channel B)                                                                                       |
 | Warm prospect — IM flavour           |      ✅       |       ✅        | ✅ (pb3b) |      —      |             —             | persona `prospect-im`                                                                                                             |
 | Warm prospect — DART flavour         |      ✅       |       ✅        | ✅ (pb3c) |      —      |             —             | persona `prospect-dart` (to add)                                                                                                  |
 | Warm prospect — Reg Umbrella flavour |      ✅       |       ✅        | ✅ (pb3a) |      —      |             —             | persona `prospect-reg` (to add)                                                                                                   |
@@ -49,19 +50,29 @@ Anonymous visitor
     ↓ (stumbles on homepage or is referred)
     → Opens / — sees three-service pitch (Invest / Build & Run / Regulate)
     → Clicks a service tile → lands on /investment-management or /platform or /regulatory
-    → Clicks "Discuss a Mandate" or "Book a Demo" → /contact
-    ↓ (Odum schedules first call)
-Post-first-call prospect
-    → Odum sends link to /briefings with briefings access code
-    → Prospect enters code → lands on /briefings hub
-    → Clicks into IM / DART / Reg-Umbrella pillar based on interest
-    → Reads deep-briefing content (board-deck quality, not product walkthrough)
-    ↓ (Odum schedules deeper call or demo)
-Warm prospect (demo)
+    → Either: clicks a Deep Dive item in the side-nav (Briefings / Docs / Our Story / FAQ),
+              OR clicks "Book a Call" → Calendly,
+              OR clicks "Contact / Discuss a Mandate" → /contact form
+    ↓
+Cold-inbound prospect (channel A — most common since 2026-04-25)
+    → Hits Deep Dive route → <BriefingAccessGate> renders with brief questionnaire embedded inline
+    → Fills questionnaire → setBriefingSessionActive() + email-back (code + Next steps + Calendly + Strategy Eval)
+    → Lands on /briefings → reads the relevant pillar(s) + sibling docs
+    ↓
+Warm hand-off prospect (channel B — sales-led)
+    → Odum sends direct briefing link + per-path access code
+    → Uses "I already have a code" disclosure on the gate → unlocks
+    → Reads briefings; sales arranges call directly
+    ↓
+Both channels converge here:
+    → Books 30-min Calendly walk-through call
+    → Submits Strategy Evaluation DDQ at /strategy-evaluation (mandatory before Sandbox demo)
+    ↓ (Odum schedules Sandbox demo)
+Warm prospect (Tier 2 demo)
     → Odum provisions demo user in user-management-ui on staging
-    → Odum sends link to odum-research.co.uk + demo credentials
+    → Odum sends link to uat.odum-research.com + demo credentials
     → Prospect signs in → lands on /dashboard → services portal
-    → Experience sliced to their flavour (pb3a / pb3b / pb3c)
+    → Experience sliced to their flavour (pb3a / pb3b / pb3c) using their DDQ answers
     ↓ (prospect commits)
 Real client
     → Odum provisions real user in user-management-ui against production Firebase

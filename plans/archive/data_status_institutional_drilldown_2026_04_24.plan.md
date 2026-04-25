@@ -2,8 +2,6 @@
 title: "Data Status institutional-grade drilldown — schema backfill, write-time validation, unified shard-detail"
 status: active
 created: 2026-04-24
-locked_by: live-defi-rollout
-locked_since: 2026-04-24
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

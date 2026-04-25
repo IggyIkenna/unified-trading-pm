@@ -36,7 +36,7 @@ treated as derivative.
 
 | Domain                     | SSOT File                       | What It Defines                                                                                                                                          | Checklist Items             |
 | -------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| **Sharding dimensions**    | `sharding.{service}.yaml`       | Exact shard keys (category×venue×date), CLI args (`--category`, `--venue`, `--date`), compute recommendations (vCPUs, RAM), runtime estimates            | BASE-20                     |
+| **Sharding dimensions**    | `sharding.{service}.yaml`       | Exact shard keys (category×venue×date), CLI args (`--asset-group`, `--venue`, `--date`), compute recommendations (vCPUs, RAM), runtime estimates         | BASE-20                     |
 | **Data availability**      | `expected_start_dates.yaml`     | Earliest expected data per service/category/venue. Used by data-status CLI to calculate completion %. Defines "Skip Invalid Dates Philosophy"            | BASE-21, HARDENING-03       |
 | **Shard completion**       | `data-catalogue.{service}.yaml` | Tracks which shards have `stage_1_has_run` (job submitted), `stage_2_data_complete` (data verified in GCS)                                               | BASE-23                     |
 | **Venue mappings**         | `venues.yaml`                   | Canonical category→venue mapping (CEFI/TRADFI/DEFI), expected data types per venue, provider mappings (Tardis, Databento, The Graph)                     | BASE-22, validation scripts |

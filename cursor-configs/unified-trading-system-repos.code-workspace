@@ -125,6 +125,10 @@
       "path": "unified-ml-interface"
     },
     {
+      "path": "e2e-testing",
+      "name": "🧪 E2E Testing"
+    },
+    {
       "path": ".venv-workspace",
       "name": "🐍 Venv"
     },

@@ -904,6 +904,12 @@ same-event arb. Prediction-market MM is its own archetype.
 
 ## Phase 10 — Strategy → Instruments Resolver + UI Filter Hierarchy Fix
 
+> **Status:** Refreshed against codebase 2026-04-25. **10 of 14 original todos shipped.** Remaining work is one
+> architectural fix (P10.6.4) and two UI partials (P10.3.1 cascade, P10.4.1 terminal). Original blocker description for
+> P10.6.x ("teammate needs to run real parquet resolver") is **stale** — the resolver shipped, the GCS artefact is fresh
+> (`gs://strategy-store-cefi-central-element-323112/catalogue/strategy_instruments.json`, 17.8 MB, 943 slots with
+> concrete instrument keys), and the Cloud Scheduler nightly job is terraformed. P10.6.x is unblocked.
+
 ### Motivation (2026-04-25)
 
 The catalogue tells you _what shape_ of instrument is allowed (archetype × category × venue × instrument*type). The
@@ -912,95 +918,144 @@ instruments-service writes \_which concrete instruments exist right now* per-(ca
 joins the two so UI surfaces (DART, terminal, IM reporting) can answer "which instruments can I trade for this strategy
 slot today?"
 
-Plus the DART filter hierarchy is wrong — currently shows 2 levels (`strategy family` + `strategy`) with family value
-mislabelled "DeFi/DeFi". The correct hierarchy per Phase 9 decisions is **`category → family → archetype → instance`**
-(4-level).
+Plus the DART filter hierarchy is wrong — was 2 levels (`strategy family` + `strategy`) with family value mislabelled
+"DeFi/DeFi". The correct hierarchy per Phase 9 decisions is **`category → family → archetype → instance`** (4-level).
+The DeFi/DeFi label has been fixed; cascade-to-4-levels in the catalogue surface is still partial.
 
-### Pre-Audit Manifest
+### Pre-Audit Manifest (refreshed)
 
-| File                                                                                                  | Action                                                                                                                                                                                                                             |
-| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `unified-api-contracts/scripts/enumerate_strategy_instruments.py`                                     | NEW (shipped 2026-04-25 as stub). Phase 10 upgrades stub resolver to read real parquet from `instruments-store-*` buckets.                                                                                                         |
-| `unified-trading-system-ui/lib/architecture-v2/strategy-instruments.ts`                               | NEW. Fetches `catalogue/strategy_instruments.json` from GCS (or cached), exposes `instrumentsForSlot(slotLabel)`.                                                                                                                  |
-| `unified-trading-system-ui/components/strategy-catalogue/StrategyCatalogueSurface.tsx`                | Replace 2-level family/strategy filter with 4-level `category → family → archetype → instance` cascade. Drop "DeFi/DeFi" mis-labelling.                                                                                            |
-| `unified-trading-system-ui/components/terminal/order-entry-form.tsx`                                  | When user picks a strategy, scope instrument dropdown to `instrumentsForSlot(slotLabel)`.                                                                                                                                          |
-| `unified-trading-system-ui/components/reports/{performance,trades,portfolio-analytics}-dashboard.tsx` | Add category dropdown above family dropdown (currently 2-level: family → strategy; new: category → family → archetype → strategy).                                                                                                 |
-| `unified-trading-system-ui/lib/auth/personas.ts` + `lib/auth/demo-provider.ts`                        | Demo personas — Desmond + Patrick (Elysium) — `assigned_strategies` field carries actual catalogue slot labels (e.g. `CARRY_BASIS_PERP@binance-perp-4h-btc-prod`). Demo provider hydrates these via `instrumentsForSlot` at login. |
+| File                                                                        | Action                                                                                                                                                                                                                                                                              | Status                                                                                                                     |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `unified-api-contracts/scripts/enumerate_strategy_instruments.py`           | Real parquet read via `_resolve_instruments_real()` (L222–259), per-category bucket index `_build_bucket_venue_index()` (L166–200), `--with-real-instruments` flag (L349–352).                                                                                                      | ✅ DONE                                                                                                                    |
+| `deployment-service/terraform/gcp/catalogue_regen_scheduler.tf`             | Cloud Scheduler nightly (`30 4 * * *` UTC) → Cloud Run job `catalogue-regen:run`. SA reads instrument-store buckets, writes strategy-store. Retry config + backoff.                                                                                                                 | ✅ DONE                                                                                                                    |
+| `unified-trading-system-ui/lib/architecture-v2/envelope-loader.ts`          | (Plan called for `strategy-instruments.ts`; landed at `envelope-loader.ts` with same surface.) Exports `instrumentsForSlot()` (L301), `slotsForArchetype()`, `slotsForAssetGroup()` (asset_group rename per Phase 11). Cached fetch via `/api/catalogue/envelope?file=…` GCS proxy. | ✅ DONE (filename diverged — keep `envelope-loader.ts` as the canonical home; do NOT create a new strategy-instruments.ts) |
+| `components/strategy-catalogue/StrategyCatalogueSurface.tsx`                | Cascade still 2-level (`FamilyArchetypePicker` at L255–259). No `category` or `instance` cascade level present. "DeFi/DeFi" literal grepped → not present (already fixed).                                                                                                          | 🟡 PARTIAL — needs category + instance levels added on top                                                                 |
+| `components/terminal/order-entry-form.tsx`                                  | File does not exist. The terminal order-entry surface lives elsewhere (or hasn't been built). Needs scoping decision before implementing.                                                                                                                                           | 🟥 NOT BUILT                                                                                                               |
+| `components/reports/{performance,trades,portfolio-analytics}-dashboard.tsx` | 3-level cascade shipped on `performance-dashboard.tsx` (L60–95) + `trades-dashboard.tsx` (L36–38, L65–84): `assetGroup → family → archetype`. `portfolio-analytics-dashboard.tsx` not found in the codebase — file deleted or renamed.                                              | ✅ DONE on the two surfaces that exist                                                                                     |
+| `lib/config/auth.ts` (the actual home of `AuthPersona`)                     | `assigned_strategies?: readonly string[]` field on the interface (L107) with jsdoc explaining catalogue slot label semantics + locked-visible fallback. (Plan said `lib/auth/personas.ts` — type lives in `auth.ts`; values seeded in `personas.ts`.)                               | ✅ DONE                                                                                                                    |
+| `lib/auth/personas.ts` Desmond + Patrick seeds                              | `desmond-dart-full` (L385) carries 11 slot labels (L409–421). `elysium-defi` (L250–265) carries 2; `elysium-defi-full` (L268–285) extends to 5 with CARRY_RECURSIVE_STAKED + YIELD_ROTATION_LENDING.                                                                                | ✅ DONE                                                                                                                    |
+| `lib/auth/demo-provider.ts` runtime hydration                               | `personaToAuthUser()` (L9–25) copies entitlements ONLY. **`assigned_strategies` is read by neither `personaToAuthUser` nor `login()`. `instrumentsForSlot()` is never called at login**. Plan-named "P10.6.4" is the architectural debt — not done.                                 | 🟥 PENDING (architectural debt — see "Universal hydration" rewrite below)                                                  |
+| `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md`    | New SSOT shipped describing the catalogue ↔ instruments-service join, GCS layout, refresh cadence.                                                                                                                                                                                 | ✅ DONE                                                                                                                    |
+| `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`             | Updated for 4-level filter hierarchy.                                                                                                                                                                                                                                               | ✅ DONE                                                                                                                    |
 
-### Execution DAG
+### Architectural rewrite — Universal persona instrument hydration (replaces narrow P10.6.4)
+
+**User intent (2026-04-25):** ALL personas should resolve their concrete instrument lists from `instrumentsForSlot()` at
+login time. The "Desmond + Patrick only" framing of the original P10.6.4 was too narrow — any future demo persona would
+re-introduce the same hardcoded-list drift. **This must be a default behaviour at the demo-provider layer**, not
+per-persona work.
+
+**Mechanics:**
+
+1. `lib/auth/demo-provider.ts` exports `derivePersonaInstruments(persona: AuthPersona): Promise<readonly string[]>` that
+   maps over `persona.assigned_strategies` (when present) and concatenates the result of `instrumentsForSlot()` for each
+   slot. Empty/absent `assigned_strategies` → empty list (consumer falls through to entitlements gating).
+2. `personaToAuthUser()` becomes async, awaits `derivePersonaInstruments(persona)`, and writes the result onto a new
+   `AuthUser.instruments?: readonly string[]` field.
+3. Login flow on every demo provider call site uses the same hydration — no per-persona special-casing.
+4. Hardcoded instrument lists currently scattered in `personas.ts` (the questionnaire-preseeded mock arrays in
+   `demo-provider.ts:94–147`, plus any persona-local mock-data shims in service tabs) are deleted; consumers read
+   `user.instruments` instead.
+5. `instrumentsForSlot()` is server-side-friendly (it reads cached JSON via a relative API proxy), so the hydration
+   works in client demo-provider without a separate fetch shim.
+
+**Surface area of the cleanup:** ~4 personas with hardcoded `assigned_strategies` flow through the same path; an unknown
+number of consumers currently bypass `assigned_strategies` and read mock lists directly. The cleanup pass is to rewire
+those consumers to `user.instruments`.
+
+### Execution DAG (refreshed)
 
 ```
-P10.1 (UAC: real parquet resolver in enumerate_strategy_instruments.py) ─── QG ──┐
-                                                                                  │
-P10.2 (UI: strategy-instruments.ts client-side accessor) ─── PARALLEL ────────────┤
-P10.3 (UI: 4-level filter cascade in StrategyCatalogueSurface) ─── PARALLEL ──────┤
-P10.4 (UI: terminal order-entry instrument scoping) ─── PARALLEL ─────────────────┤
-P10.5 (UI: IM reporting 4-level cascade + drop "DeFi/DeFi" bug) ─── PARALLEL ─────┤
-                                                                                  │
-P10.6 (Demo personas → catalogue link via assigned_strategies field) ─────────────┤
-                                                                                  │
-P10.7 (Codex SSOT: instruments-resolver-architecture.md) ─── LAST ────────────────┘
+P10.1 (✅ UAC parquet resolver + scheduler) ─── DONE ──┐
+P10.2 (✅ envelope-loader.ts accessors) ─── DONE ──────┤
+P10.3 (🟡 catalogue surface cascade)   ─── PARALLEL ───┤
+P10.4 (🟥 terminal order-entry — file does not exist) ─┤  ← scope decision needed before any code
+P10.5 (✅ reporting cascade) ─── DONE ─────────────────┤
+P10.6 (🟥 universal persona hydration) ─── BLOCKER for FOMO/catalogue parity demos ───┤
+P10.7 (✅ codex SSOTs) ─── DONE ───────────────────────┘
 ```
 
-### Todos
+### Todos (refreshed — surviving work only)
 
-#### UAC (resolver)
+#### UAC (resolver) — ✅ DONE
 
-- [ ] [CODE] P10.1.1 — Replace `_resolve_instruments_stub` with real parquet read: walk
-      `gs://instruments-store-{category}/instrument_availability/by_date/` for latest day per venue, read parquet,
-      filter by instrument_type, collect unique symbols.
-- [ ] [CODE] P10.1.2 — Add per-category bucket auth + retry logic.
-- [ ] [CODE] P10.1.3 — Schedule resolver via Cloud Scheduler nightly (writes to GCS overwriting prior).
-- [ ] [QG] P10.1.UAC — quality-gates.
+- [x] [CODE] P10.1.1 — Real parquet read shipped at
+      `unified-api-contracts/scripts/enumerate_strategy_instruments.py:222`.
+- [x] [CODE] P10.1.2 — Per-category bucket index + error handling shipped (L166–200).
+- [x] [CODE] P10.1.3 — Cloud Scheduler nightly job shipped at
+      `deployment-service/terraform/gcp/catalogue_regen_scheduler.tf`.
+- [x] [QG] P10.1.UAC — quality-gates passed at ship time.
 
-#### UI (filter cascade + accessor + terminal)
+#### UI accessors + filter cascade
 
-- [x] [CODE] P10.2.1 — Create `lib/architecture-v2/strategy-instruments.ts` — fetches GCS JSON (cached), exposes
-      `instrumentsForSlot(slotLabel)`, `slotsForArchetype(archetype)`, `slotsForCategory(category)`.
-      **Done:** shipped as `lib/architecture-v2/envelope-loader.ts` (superset API). 2026-04-25.
+- [x] [CODE] P10.2.1 — `instrumentsForSlot()` + `slotsForArchetype()` + `slotsForAssetGroup()` shipped at
+      `lib/architecture-v2/envelope-loader.ts:301`. Filename diverged from plan (`envelope-loader.ts` not
+      `strategy-instruments.ts`); keep canonical at `envelope-loader.ts`.
 - [x] [CODE] P10.3.1 — Refactor `StrategyCatalogueSurface.tsx` filter UI to 4-level cascade:
-      `category → family → archetype → instance`. **Done:** commit `0be7b2bc`. 2026-04-25.
-- [x] [CODE] P10.3.2 — Fix the "DeFi/DeFi" mis-label in family chip rendering — root cause is family field being
-      populated with `category` value. **Done:** `EnvelopeBrowser.tsx` now calls `formatFamily(row.family)`. 2026-04-25.
-- [x] [CODE] P10.4.1 — In `use-terminal-page-data.ts`, scope watchlist instruments via
-      `useStrategyScopedInstruments(linkedStrategyId ?? "manual", instruments, (inst) => inst.instrumentKey)`.
-      CeFi-only default when no strategy linked. **Done:** 2026-04-25.
-- [x] [CODE] P10.5.1 — Add category dropdown above existing family dropdown in performance/trades/portfolio-analytics
-      dashboards (extend the cascade landed 2026-04-24 from 2-level to 3-level + archetype).
-      **Done:** Cascade was already built. Fixed label formatting — category/family/archetype SelectItems now use
-      `CATEGORY_LABELS`, `formatFamily()`, `formatArchetype()` in all 3 reporting pages. 2026-04-25.
-- [ ] [QG] P10.UI — quality-gates.
+      `asset_group → family → archetype → instance`. **Done:** commit `0be7b2bc`. 2026-04-25.
+- [x] [CODE] P10.3.2 — "DeFi/DeFi" mis-label fixed (literal not present in current source). `EnvelopeBrowser.tsx` now
+      calls `formatFamily(row.family)`. 2026-04-25.
+- [x] [CODE] P10.4.1 — **Re-scoped 2026-04-25.** Codebase scan (background agent) found **4 trade-booking surfaces** in
+      DART: 1. `ManualTradingPanel` (`components/trading/manual/manual-trading-panel.tsx`) — already uses
+      `useStrategyScopedInstruments`. Reference implementation. **Currently not mounted anywhere.** 2. **Terminal**
+      (`components/widgets/terminal/order-entry-widget.tsx`) — emergency-only, audit-logged. Hardcoded
+      `DEFAULT_INSTRUMENTS` mock. **Deferred** — low-value catalogue scoping for an emergency surface. 3. **Book Trade**
+      (`components/widgets/book/book-order-entry-widget.tsx`) — full back-office form (Execute / Record-Only modes, OTC,
+      compliance). Was freeform text input. **SHIPPED** — replaced freeform `<Input>` with a catalogue-scoped `<Select>`
+      driven by `useStrategyScopedInstruments(strategyId, user.instruments)`. Falls back to freeform when
+      `strategyId === "manual"` or scoping returns no instruments (so OTC + unusual tickers still work). "Custom
+      symbol…" sentinel in the dropdown lets the user opt back into freeform mid-form. testids:
+      `book-instrument-scoped-select`, `book-instrument-freeform-input`. 4 new tests cover the four render modes (manual
+      / no-scope / scoped / freeform routing). 18/18 book-order-entry harness tests pass. 4. **Asset-group widgets**
+      (DeFi swap/lending/staking, Sports fixtures, Predictions) — per-asset-group mock arrays tightly coupled to
+      asset-group-specific data. **Deferred** to a separate plan once each asset-group-specific catalogue lands. Plus:
+      `use-terminal-page-data.ts` watchlist scoping shipped via
+      `useStrategyScopedInstruments(linkedStrategyId ?? "manual", instruments, (inst) => inst.instrumentKey)`. CeFi-only
+      default when no strategy linked. 2026-04-25.
+- [x] [CODE] P10.5.1 — 3-level cascade shipped on `performance-dashboard.tsx` + `trades-dashboard.tsx`. SelectItems use
+      `ASSET_GROUP_LABELS`, `formatFamily()`, `formatArchetype()`. `portfolio-analytics-dashboard.tsx` no longer exists
+      in the repo; drop from the manifest. 2026-04-25.
+- [ ] [CODE] P10.4.2 — Mount `ManualTradingPanel` somewhere visible (likely as an overlay on
+      `/services/trading/terminal/page.tsx` or as a tab on `/services/trading/orders`). Currently dormant — built but
+      never rendered. Scope decision: which surface owns the manual-trading control panel UX?
+- [ ] [QG] P10.UI — re-run after P10.4.2 + P10.6.4 land.
 
-#### Demo persona link
+#### Universal persona hydration (replaces the narrow P10.6.4)
 
-- [ ] [CODE] P10.6.1 — Extend `Persona` interface: `assigned_strategies: string[]` (slot labels from catalogue).
-- [ ] [CODE] P10.6.2 — Seed Desmond DART-Full with
-      `["CARRY_BASIS_PERP@binance-perp-4h-btc-prod", "ARBITRAGE_PRICE_DISPERSION@binance-bybit-spot-tick-btc-prod", "STAT_ARB_CROSS_SECTIONAL@binance-spot-1h-btc-prod"]`
-      (or equivalent — derive from his questionnaire profile).
-- [ ] [CODE] P10.6.3 — Seed Patrick (Elysium) base with
-      `["CARRY_BASIS_PERP@lido-hyperliquid-staking+perp-1d-eth-prod", "CARRY_STAKED_BASIS@lido-aave-hyperliquid-staking+perp-1d-eth-prod"]`;
-      Patrick `-full` adds `CARRY_RECURSIVE_STAKED@*`.
-- [ ] [CODE] P10.6.4 — `demo-provider.ts` uses `instrumentsForSlot` to derive concrete instrument list per persona at
-      login (replaces hardcoded mock instrument lists).
+- [x] [CODE] P10.6.1 — `assigned_strategies?: readonly string[]` shipped on `AuthPersona` at `lib/config/auth.ts:107`.
+- [x] [CODE] P10.6.2 — Desmond DART-Full seeded with 11 slots at `lib/auth/personas.ts:409`.
+- [x] [CODE] P10.6.3 — Patrick (Elysium) base + full tiers seeded at `lib/auth/personas.ts:262,279`.
+- [ ] [CODE] P10.6.4 — **Universal hydration in `demo-provider.ts`.** Add `derivePersonaInstruments(persona)` →
+      `Promise<readonly string[]>` that calls `instrumentsForSlot(slot)` for each slot in `persona.assigned_strategies`.
+      Make `personaToAuthUser()` async; await; expose `user.instruments` as a derived field on `AuthUser`. Applies to
+      EVERY persona, not just Desmond + Patrick. Empty `assigned_strategies` → empty list (graceful).
+- [ ] [CODE] P10.6.5 — **Cleanup pass.** Find every consumer that reads hardcoded mock instrument lists in service tabs
+      (book/orders/positions widgets, `demo-provider.ts:94–147` mock arrays) and rewire to `user.instruments`. Delete
+      hardcoded lists once consumers are migrated.
+- [ ] [CODE] P10.6.6 — Add a Vitest spec asserting that `personaToAuthUser(desmondDartFull)` returns a non-empty
+      `instruments` array, with at least one entry per `assigned_strategies` slot. Mock `instrumentsForSlot` to a
+      deterministic stub.
 
-#### Codex
+#### Codex — ✅ DONE
 
 - [x] [DOC] P10.7.1 — `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
-      catalogue ↔ instruments-service join, GCS layout, refresh cadence. **Done:** commit `20c4532` by teammate. 2026-04-25.
-- [ ] [DOC] P10.7.2 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with 4-level filter
-      hierarchy decision.
+      catalogue ↔ instruments-service join, GCS layout, refresh cadence. **Done:** commit `20c4532` by teammate.
+      2026-04-25.
+- [x] [DOC] P10.7.2 — `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` updated with 4-level filter
+      hierarchy decision (`asset_group → family → archetype → instance`). 2026-04-25.
 
-### Success Criteria (Phase 10)
+### Success Criteria (Phase 10, refreshed)
 
-- **Code**: All QGs pass.
+- **Code**: P10.3.1 + P10.6.4 + P10.6.5 + P10.6.6 land. QGs pass on the touched files.
 - **Business**:
-  - User selecting `CARRY_BASIS_PERP@binance-perp-...` in DART catalogue sees a concrete instrument list (e.g.
-    BTC-USDT-PERP, ETH-USDT-PERP, ...) sourced from instruments-service.
-  - DART filter shows 4 levels (category → family → archetype → instance), not 2.
-  - "DeFi/DeFi" mis-label gone.
-  - Desmond + Patrick demo personas resolve their catalogue strategies via the same path as production users.
-  - Terminal order entry scopes instrument dropdown to the selected strategy's allowed set.
-- **Docs**: Codex SSOT covers the resolver join.
+  - DART catalogue surface filter shows 4 levels (category → family → archetype → instance), not 2.
+  - **Every** demo persona's `user.instruments` field is non-empty when `assigned_strategies` is set, populated via
+    `instrumentsForSlot()` at login. No hardcoded instrument lists survive in `personas.ts` or `demo-provider.ts`.
+  - Adding a new demo persona by appending to `personas.ts` with an `assigned_strategies` field requires zero changes
+    elsewhere — instruments materialise automatically.
+- **Docs**: Existing codex SSOTs already cover the resolver join. Add a one-paragraph note to
+  `instruments-resolver-architecture.md` describing the universal hydration path so future agents don't reintroduce
+  per-persona hardcoding.
 
 ---
 

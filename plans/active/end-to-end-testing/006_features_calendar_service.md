@@ -16,7 +16,7 @@ sparingly; most calendar features are time-based, not price-based).
 
 **Key uniqueness:** Calendar features are TIME-BASED, not price-based. They derive from reference data (earnings dates,
 dividend ex-dates, economic calendars, expiry schedules) rather than candle/tick data. The service processes two
-internal feature categories per run: `time_features` and `economic_events`. No `--category` CLI arg — the service is
+internal feature categories per run: `time_features` and `economic_events`. No `--asset-group` CLI arg — the service is
 UNIVERSAL across all asset categories (TRADFI earnings, CEFI exchange events, etc.).
 
 **Frontend:** Feeds calendar widget, earnings calendar, economic events timeline in Research/Data tabs.
@@ -41,8 +41,8 @@ The service uses a hand-rolled CLI (`batch_handler.py` `create_parser()`) rather
 - `--max-results` (limit days processed)
 - `--run-tag` (GCS prefix: `batch` or `t1-recon`)
 
-Note: No `--category` flag. The service always processes BOTH `time_features` and `economic_events` internally. Calendar
-features are universal across all market categories.
+Note: No `--asset-group` flag. The service always processes BOTH `time_features` and `economic_events` internally.
+Calendar features are universal across all market categories.
 
 ## Test Matrix
 
@@ -77,7 +77,7 @@ features are universal across all market categories.
 
 ### Phase 4: Category Sweep
 
-Calendar features do NOT take a `--category` CLI arg — they are universal. However, we must verify that the features
+Calendar features do NOT take a `--asset-group` CLI arg — they are universal. However, we must verify that the features
 produced are valid for all downstream consumers (TRADFI, CEFI, DEFI, SPORTS, PREDICTION).
 
 | #   | Internal category | What to verify                                                   | Status |

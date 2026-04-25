@@ -117,7 +117,7 @@ yields DataFrame chunks.
   - Pass `instrument_ids` filter if provided
 
 **Success:**
-`python3 -m market_tick_data_service --operation download --mode batch --category CEFI --venues BINANCE-SPOT --data-types trades --start-date 2026-03-23`
+`python3 -m market_tick_data_service --operation download --mode batch --asset-group CEFI --venues BINANCE-SPOT --data-types trades --start-date 2026-03-23`
 downloads trades and writes to GCS.
 
 ## Phase 2b: UMI adapter download_batch() — TradFi via Databento (PARALLEL with Phase 2)
@@ -131,7 +131,7 @@ downloads trades and writes to GCS.
   - Route CME, ICE, NYSE, NASDAQ → DatabentoAdapter
   - Map venue → dataset via UAC registry
 
-**Success:** `--category TRADFI --venues CME --data-types trades` works.
+**Success:** `--asset-group TRADFI --venues CME --data-types trades` works.
 
 ## Phase 2c: DeFi verification (PARALLEL with Phase 2)
 
@@ -141,7 +141,7 @@ downloads trades and writes to GCS.
   - Results aggregated into DataFrame
 - [x] [AGENT] P1. Add `instrument_ids` filter support to `BaseDefiAdapter.download_batch()`
 
-**Success:** `--category DEFI --venues AAVEV3-ETHEREUM --data-types rate_indices` works.
+**Success:** `--asset-group DEFI --venues AAVEV3-ETHEREUM --data-types rate_indices` works.
 
 ## Phase 3: MTDS orchestrator — venue×data_type sharding
 

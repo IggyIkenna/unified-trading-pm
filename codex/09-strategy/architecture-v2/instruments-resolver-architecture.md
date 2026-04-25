@@ -123,6 +123,31 @@ tenorsForArchetype(archetype): Promise<string[] | null>
 
 Cached in-memory per page load. The `/api/catalogue/envelope` route adds a 5-minute `cache-control` header.
 
+### 3.1 Universal persona hydration (2026-04-25)
+
+Demo personas (and, in production, real users provisioned with `AdminStrategyAssignment` records) carry an
+`assigned_strategies: readonly string[]` field — the closed list of catalogue slot labels routed to the org. At login,
+`DemoAuthProvider.personaToAuthUser()` (in `lib/auth/demo-provider.ts`) calls a single helper:
+
+```ts
+derivePersonaInstruments(persona): Promise<readonly string[]>
+```
+
+This helper fans out over `persona.assigned_strategies`, calls `instrumentsForSlot(slot)` for each, deduplicates, and
+returns the union. The result lands on `AuthUser.instruments` — the **single source of truth** for "which instruments
+can this user trade". Same code path runs at login AND at session restore so a catalogue regen between visits propagates
+without stale localStorage.
+
+**Design rule:** any new demo persona is a single append to `lib/auth/personas.ts` with an `assigned_strategies` array.
+**Never** add a hardcoded mock instrument list per persona — the universal hydration covers it. Empty
+`assigned_strategies` → empty `instruments` array; consumers fall through to entitlement-level gating.
+
+**Layered with `useStrategyScopedInstruments(slotKey, baseList)`:** the per-slot hook (in
+`lib/architecture-v2/use-strategy-scoped-instruments.ts`) narrows a base list to ONE slot's allowed instruments at the
+component level (e.g. when the user picks a strategy in `<ManualTradingPanel>`). `user.instruments` is the ALL-slots
+union for surfaces that show the prospect's full tradeable universe (e.g. portfolio overview, watchlists). Both read
+from the same `instrumentsForSlot()` SSOT — no drift.
+
 ---
 
 ## §4 — Refresh cadence

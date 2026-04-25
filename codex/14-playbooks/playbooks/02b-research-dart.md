@@ -2,7 +2,7 @@
 scope: [engineer, admin, sales]
 ---
 
-# Playbook 2b — Research & Docs: DART (Data Analytics, Research & Trading)
+# Playbook 2b — Deep Dive: DART (Data Analytics, Research & Trading)
 
 > **Layer:** Implementation. Narrative lives in [experience/dart-briefing.md](../experience/dart-briefing.md).
 
@@ -16,8 +16,10 @@ thereafter use DART. Never use "DRT".
 
 ## Pre-req state
 
-- Prospect signed in via briefings gate (pb2)
-- Selected the DART (Platform) pillar from the briefings hub
+- Prospect has unlocked the Deep Dive section via the brief questionnaire on the lock screen OR a per-path access code
+  (see [02-research-and-documentation.md](02-research-and-documentation.md) and
+  [../authentication/light-auth-briefings.md](../authentication/light-auth-briefings.md))
+- Selected the DART (Platform) pillar from the briefings hub OR landed here directly via a sales-sent link
 
 ## Route
 

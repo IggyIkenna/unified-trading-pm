@@ -17,7 +17,7 @@ drift and discrepancies. Runs as a Cloud Run Job on a nightly schedule.
 - **NOT ServiceCLI-based** -- simple argparse with `--date`, `--dry-run`, `--log-level`
 - **No `--operation`** -- single operation (reconciliation)
 - **No `--mode`** -- effectively batch-only (nightly run)
-- **No `--category`** -- reconciles ALL domains in one run
+- **No `--asset-group`** -- reconciles ALL domains in one run
 - **Mock mode:** `ReconConfig().is_mock_mode()` checked before argparse (early exit)
 - **CLI:** `python -m batch_live_reconciliation_service --date 2026-03-21 --dry-run`
 
@@ -107,8 +107,8 @@ for b in blobs[:10]:
 
 ### Phase 4: Category Sweep
 
-**Not applicable.** Batch-live-reconciliation-service reconciles ALL domains in a single run. There is no `--category`
-flag. Each stage (ML, Strategy, Execution) covers all instruments regardless of category.
+**Not applicable.** Batch-live-reconciliation-service reconciles ALL domains in a single run. There is no
+`--asset-group` flag. Each stage (ML, Strategy, Execution) covers all instruments regardless of category.
 
 However, verify that the reconciliation report includes data from multiple categories:
 

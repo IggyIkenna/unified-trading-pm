@@ -7,8 +7,10 @@ scope: [engineer, admin]
 ## TL;DR
 
 - **Universal partition key**: `by_date/day={date}/` -- every service partitions by date.
-- **Bucket naming**: `{domain}-{category_lower}-{project_id}` for category-scoped; `{domain}-{project_id}` for shared.
-- **Three categories**: CEFI, TRADFI, DEFI -- each gets its own bucket for category-scoped data.
+- **Bucket naming**: `{domain}-{asset_group_lower}-{project_id}` for asset-group–scoped data; `{domain}-{project_id}`
+  for shared buckets.
+- **Core venue asset groups**: CEFI, TRADFI, DEFI — each gets its own bucket when data is partitioned by that axis
+  (older docs said “category”).
 - **Additional dimensions** vary by service: timeframe, data_type, instrument_type, feature_group, etc.
 - **Hive-style partitioning**: `key=value/` directory structure for partition pushdown in queries.
 - Path templates are defined in `dependencies.yaml` and are the single source of truth.
@@ -50,12 +52,12 @@ gs://{bucket}/{prefix}/by_date/day={date}/{additional_dimensions}/{filename}.par
 
 ## Bucket Naming Convention
 
-### Category-Scoped Buckets
+### Asset-group–scoped buckets
 
-For data that is inherently tied to a market category:
+For data that is inherently tied to a **venue asset group** (CeFi / TradFi / DeFi / Sports / Prediction):
 
 ```
-{domain}-{category_lower}-{project_id}
+{domain}-{asset_group_lower}-{project_id}
 
 Examples:
   instruments-store-cefi-test-project
@@ -65,7 +67,7 @@ Examples:
   features-delta-one-tradfi-test-project
 ```
 
-### Shared Buckets (No Category)
+### Shared buckets (not sharded by venue asset group)
 
 For data that applies across categories:
 
@@ -94,18 +96,19 @@ Examples:
 
 ---
 
-## Category Dimension
+## Venue asset group dimension
 
-Four categories partition the asset class universe:
+These labels partition the trading **venue axis** (older terminology: “market category”):
 
-| Category | Value               | Description                                                      |
-| -------- | ------------------- | ---------------------------------------------------------------- |
-| CEFI     | `cefi` (in paths)   | Centralized crypto exchanges + on-chain CLOBs                    |
-| TRADFI   | `tradfi` (in paths) | Traditional finance (equities, futures, FX)                      |
-| DEFI     | `defi` (in paths)   | Decentralized protocols (AMM, lending, LST)                      |
-| SPORTS   | `sports` (in paths) | Betting exchanges and bookmakers (Betfair, Pinnacle, Polymarket) |
+| Asset group | Path / bucket token | Description                                                      |
+| ----------- | ------------------- | ---------------------------------------------------------------- |
+| CEFI        | `cefi`              | Centralized crypto exchanges + on-chain CLOBs                    |
+| TRADFI      | `tradfi`            | Traditional finance (equities, futures, FX)                      |
+| DEFI        | `defi`              | Decentralized protocols (AMM, lending, LST)                      |
+| SPORTS      | `sports`            | Betting exchanges and bookmakers (Betfair, Pinnacle, Polymarket) |
 
-Category mapping is defined in `dependencies.yaml`:
+Mapping is defined in `dependencies.yaml` (keys may still say `category` in legacy YAML — values are venue asset
+groups):
 
 ```yaml
 category_domain_mapping:

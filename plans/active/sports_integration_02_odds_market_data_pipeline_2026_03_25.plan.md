@@ -7,7 +7,7 @@ reconciliation_date: 2026-04-25
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |
-  MTDS --category SPORTS produces historical odds with human-readable instrument IDs
+  MTDS --asset-group SPORTS produces historical odds with human-readable instrument IDs
   and multi-horizon time buckets (T-24h, T-6h, T-1h, T-0). Pinnacle sharp odds via
   Odds API (pinnacle is a bookmaker key, no separate API needed). MTDS owns betting
   market instrument ID generation (documented exception to instruments-service SSOT).

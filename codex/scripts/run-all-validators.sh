@@ -20,12 +20,12 @@ run_pm_validators() {
 
 main() {
     # base-service.sh / base-library.sh call:
-    #   run-all-validators.sh --category all --failed-only
+    #   run-all-validators.sh --asset-group all --failed-only
     # Historically also:  run-all-validators.sh all
     local category="all"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --category)
+            --asset-group)
                 category="${2:-all}"
                 shift 2
                 ;;

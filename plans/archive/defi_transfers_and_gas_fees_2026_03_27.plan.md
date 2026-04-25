@@ -137,7 +137,7 @@ todos:
   - id: mtds-gas-fee-collection
     content: |
       - [x] [AGENT] P1. Add gas fee collection to market-tick-data-service
-      New operation in MTDS CLI: `--operation collect-gas-fees --category defi`
+      New operation in MTDS CLI: `--operation collect-gas-fees --asset-group defi`
       - Fetches `eth_feeHistory` for configured chains at configurable interval (default: every 100 blocks)
       - Writes BlockGasFee records to GCS as parquet: `gs://{bucket}/gas_fees/{chain_id}/{date}/gas_fees_{block_range}.parquet`
       - Parquet schema: chain_id (int), block_number (int), timestamp (datetime), base_fee_gwei (decimal), priority_fee_p25/p50/p75_gwei (decimal), gas_used_ratio (float)

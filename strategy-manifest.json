@@ -5,7 +5,7 @@
     {
       "strategy_id": "CEFI_MOMENTUM_BTC_5M",
       "display_name": "CeFi BTC Momentum (5M)",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -56,7 +56,7 @@
     {
       "strategy_id": "CEFI_MOMENTUM_ETH_5M",
       "display_name": "CeFi ETH Momentum (5M)",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -107,7 +107,7 @@
     {
       "strategy_id": "CEFI_MOMENTUM_SOL_5M",
       "display_name": "CeFi SOL Momentum (5M)",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -158,7 +158,7 @@
     {
       "strategy_id": "TRADFI_MOMENTUM_SPY_5M",
       "display_name": "TradFi SPY Momentum (5M)",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "MOMENTUM",
       "domain": "tradfi",
       "asset_groupes": ["EQUITY"],
@@ -209,7 +209,7 @@
     {
       "strategy_id": "DEFI_LENDING_AAVE_1H",
       "display_name": "DeFi AAVE Lending (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "LENDING",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -260,7 +260,7 @@
     {
       "strategy_id": "DEFI_BASIS_ETH_1H",
       "display_name": "DeFi ETH Basis Trade (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "BASIS",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL"],
@@ -311,7 +311,7 @@
     {
       "strategy_id": "DEFI_STAKED_BASIS_ETH_1H",
       "display_name": "DeFi Staked Basis ETH (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "STAKED_BASIS",
       "domain": "defi",
       "asset_groupes": ["LST", "PERPETUAL"],
@@ -362,7 +362,7 @@
     {
       "strategy_id": "DEFI_RECURSIVE_BASIS_ETH_1H",
       "display_name": "DeFi Recursive Staked Basis ETH (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "RECURSIVE_STAKED_BASIS",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN", "DEBT_TOKEN", "PERPETUAL"],
@@ -417,7 +417,7 @@
     {
       "strategy_id": "SPORTS_ARBITRAGE_CROSS_BOOK",
       "display_name": "Sports Arbitrage (Cross-Bookmaker)",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "ARBITRAGE",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -468,7 +468,7 @@
     {
       "strategy_id": "SPORTS_VALUE_BETTING",
       "display_name": "Sports Value Betting",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "VALUE",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -519,7 +519,7 @@
     {
       "strategy_id": "SPORTS_KELLY_CRITERION",
       "display_name": "Sports Kelly Criterion",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "KELLY",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -570,7 +570,7 @@
     {
       "strategy_id": "SPORTS_ML_PREDICTION",
       "display_name": "Sports ML Prediction",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "ML_SPORTS",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -621,7 +621,7 @@
     {
       "strategy_id": "SPORTS_MARKET_MAKING",
       "display_name": "Sports Exchange Market Making",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "MARKET_MAKING",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -672,7 +672,7 @@
     {
       "strategy_id": "QUANT_STAT_ARB_BTC_ETH",
       "display_name": "Quant Stat Arb BTC/ETH",
-      "category": "QUANT",
+      "asset_group": "QUANT",
       "subcategory": "STAT_ARB",
       "domain": "cefi",
       "asset_groupes": ["SPOT_PAIR"],
@@ -723,7 +723,7 @@
     {
       "strategy_id": "QUANT_REL_VOL_BTC_ETH",
       "display_name": "Quant Relative Volatility BTC/ETH",
-      "category": "QUANT",
+      "asset_group": "QUANT",
       "subcategory": "REL_VOL",
       "domain": "cefi",
       "asset_groupes": ["SPOT_PAIR"],
@@ -774,7 +774,7 @@
     {
       "strategy_id": "QUANT_CROSS_EXCHANGE_BTC",
       "display_name": "Quant Cross-Exchange BTC (Binance/Kraken)",
-      "category": "QUANT",
+      "asset_group": "QUANT",
       "subcategory": "CROSS_EXCHANGE",
       "domain": "cefi",
       "asset_groupes": ["SPOT_PAIR"],
@@ -825,7 +825,7 @@
     {
       "strategy_id": "QUANT_PREDICTION_ARB_BTC",
       "display_name": "Quant Prediction Market Arb",
-      "category": "QUANT",
+      "asset_group": "QUANT",
       "subcategory": "PREDICTION_ARB",
       "domain": "prediction",
       "asset_groupes": ["PREDICTION_MARKET"],
@@ -876,7 +876,7 @@
     {
       "strategy_id": "QUANT_VOL_SURFACE_BTC",
       "display_name": "Quant Vol Surface BTC (Deribit)",
-      "category": "QUANT",
+      "asset_group": "QUANT",
       "subcategory": "VOL_SURFACE",
       "domain": "cefi",
       "asset_groupes": ["OPTION", "PERPETUAL"],
@@ -927,7 +927,7 @@
     {
       "strategy_id": "TRADFI_MEAN_REV_SPY_1D",
       "display_name": "TradFi SPY Mean Reversion",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "tradfi",
       "asset_groupes": ["EQUITY"],
@@ -978,7 +978,7 @@
     {
       "strategy_id": "CEFI_MEAN_REV_BTC_1D",
       "display_name": "CeFi BTC Mean Reversion",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -1029,7 +1029,7 @@
     {
       "strategy_id": "CEFI_MEAN_REV_ETH_1D",
       "display_name": "CeFi ETH Mean Reversion",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -1080,7 +1080,7 @@
     {
       "strategy_id": "CEFI_MEAN_REV_SOL_1D",
       "display_name": "CeFi SOL Mean Reversion",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -1131,7 +1131,7 @@
     {
       "strategy_id": "TRADFI_MEAN_REV_FX_1D",
       "display_name": "TradFi FX Mean Reversion",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "tradfi",
       "asset_groupes": ["CURRENCY"],
@@ -1182,7 +1182,7 @@
     {
       "strategy_id": "TRADFI_MEAN_REV_OIL_1D",
       "display_name": "TradFi Oil Mean Reversion",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "MEAN_REVERSION",
       "domain": "tradfi",
       "asset_groupes": ["COMMODITY"],
@@ -1233,7 +1233,7 @@
     {
       "strategy_id": "TRADFI_ML_SPY_5M",
       "display_name": "TradFi SPY ML Swing",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "ML_SWING",
       "domain": "tradfi",
       "asset_groupes": ["EQUITY"],
@@ -1284,7 +1284,7 @@
     {
       "strategy_id": "TRADFI_ML_FX_5M",
       "display_name": "TradFi FX ML Swing",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "ML_SWING",
       "domain": "tradfi",
       "asset_groupes": ["CURRENCY"],
@@ -1335,7 +1335,7 @@
     {
       "strategy_id": "TRADFI_ML_OIL_5M",
       "display_name": "TradFi Oil ML Swing",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "ML_SWING",
       "domain": "tradfi",
       "asset_groupes": ["COMMODITY"],
@@ -1386,7 +1386,7 @@
     {
       "strategy_id": "OPTIONS_STRIKE_ML_BTC_DERIBIT",
       "display_name": "Options Strike Selection ML BTC",
-      "category": "OPTIONS",
+      "asset_group": "OPTIONS",
       "subcategory": "STRIKE_SELECTION",
       "domain": "cefi",
       "asset_groupes": ["OPTION"],
@@ -1437,7 +1437,7 @@
     {
       "strategy_id": "OPTIONS_DELTA_ML_SPY_CBOE",
       "display_name": "Options Delta Conversion ML SPY",
-      "category": "OPTIONS",
+      "asset_group": "OPTIONS",
       "subcategory": "DELTA_CONVERSION",
       "domain": "tradfi",
       "asset_groupes": ["OPTION"],
@@ -1488,7 +1488,7 @@
     {
       "strategy_id": "OPTIONS_VOL_ML_ETH_DERIBIT",
       "display_name": "Options Vol Combo ML ETH",
-      "category": "OPTIONS",
+      "asset_group": "OPTIONS",
       "subcategory": "VOLATILITY_COMBO",
       "domain": "cefi",
       "asset_groupes": ["OPTION"],
@@ -1539,7 +1539,7 @@
     {
       "strategy_id": "OPTIONS_DELTA_ML_BTC_DERIBIT",
       "display_name": "Options Delta Conversion ML BTC",
-      "category": "OPTIONS",
+      "asset_group": "OPTIONS",
       "subcategory": "DELTA_CONVERSION",
       "domain": "cefi",
       "asset_groupes": ["OPTION"],
@@ -1590,7 +1590,7 @@
     {
       "strategy_id": "SPORTS_HALFTIME_ML_FOOTBALL",
       "display_name": "Sports Halftime ML Football",
-      "category": "SPORTS",
+      "asset_group": "SPORTS",
       "subcategory": "HALFTIME_ML",
       "domain": "sports",
       "asset_groupes": ["FIXED_ODDS"],
@@ -1641,7 +1641,7 @@
     {
       "strategy_id": "DEFI_BTC_BASIS_1H",
       "display_name": "DeFi BTC Basis Trade (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "BTC_BASIS",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL"],
@@ -1692,7 +1692,7 @@
     {
       "strategy_id": "DEFI_BTC_LENDING_1H",
       "display_name": "DeFi BTC Lending (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "BTC_LENDING",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -1743,7 +1743,7 @@
     {
       "strategy_id": "DEFI_STAKED_BASIS_SOL_1H",
       "display_name": "DeFi SOL Staked Basis (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "SOL_STAKED_BASIS",
       "domain": "defi",
       "asset_groupes": ["LST", "PERPETUAL"],
@@ -1794,7 +1794,7 @@
     {
       "strategy_id": "DEFI_SOL_BASIS_1H",
       "display_name": "DeFi SOL Basis Trade (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "SOL_BASIS",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL"],
@@ -1845,7 +1845,7 @@
     {
       "strategy_id": "DEFI_SOL_LENDING_KAMINO_1H",
       "display_name": "DeFi SOL Lending Kamino (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "SOL_LENDING",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -1896,7 +1896,7 @@
     {
       "strategy_id": "DEFI_SOL_CONCENTRATED_LP_1H",
       "display_name": "DeFi SOL Concentrated LP (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "CONCENTRATED_LP",
       "domain": "defi",
       "asset_groupes": ["LP_TOKEN"],
@@ -1947,7 +1947,7 @@
     {
       "strategy_id": "DEFI_AMM_LP_ETH_USDC",
       "display_name": "DeFi AMM LP ETH/USDC",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "AMM_LP",
       "domain": "defi",
       "asset_groupes": ["LP_TOKEN"],
@@ -1998,7 +1998,7 @@
     {
       "strategy_id": "DEFI_ACTIVE_LP_ETH_USDC",
       "display_name": "DeFi Active LP ETH/USDC",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "ACTIVE_LP",
       "domain": "defi",
       "asset_groupes": ["LP_TOKEN"],
@@ -2049,7 +2049,7 @@
     {
       "strategy_id": "DEFI_ENHANCED_BASIS_ETH_1H",
       "display_name": "DeFi Enhanced Basis Trade ETH (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "ENHANCED_BASIS",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL", "LST"],
@@ -2100,7 +2100,7 @@
     {
       "strategy_id": "DEFI_ETHENA_BENCHMARK_1H",
       "display_name": "DeFi Ethena Benchmark (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "ETHENA_BENCHMARK",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET"],
@@ -2151,7 +2151,7 @@
     {
       "strategy_id": "DEFI_L2_BASIS_ARB_1H",
       "display_name": "DeFi L2 Basis Arb (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "L2_BASIS",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL"],
@@ -2202,7 +2202,7 @@
     {
       "strategy_id": "DEFI_LENDING_ARB_ETH_1H",
       "display_name": "DeFi Lending Protocol Arb ETH (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "LENDING_ARB",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -2253,7 +2253,7 @@
     {
       "strategy_id": "DEFI_MULTICHAIN_LENDING_1H",
       "display_name": "DeFi Multi-Chain Lending (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "MULTI_CHAIN_LENDING",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -2304,7 +2304,7 @@
     {
       "strategy_id": "DEFI_CROSS_CHAIN_SOR_1H",
       "display_name": "DeFi Cross-Chain SOR (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "CROSS_CHAIN_SOR",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET"],
@@ -2355,7 +2355,7 @@
     {
       "strategy_id": "DEFI_CROSS_CHAIN_YIELD_ARB_1H",
       "display_name": "DeFi Cross-Chain Yield Arb (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "CROSS_CHAIN_YIELD_ARB",
       "domain": "defi",
       "asset_groupes": ["A_TOKEN"],
@@ -2406,7 +2406,7 @@
     {
       "strategy_id": "DEFI_OMNICHAIN_TRANSFER_1H",
       "display_name": "DeFi Omnichain Transfer (1H)",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "OMNICHAIN_TRANSFER",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET"],
@@ -2457,7 +2457,7 @@
     {
       "strategy_id": "DEFI_LIQUIDATION_CAPTURE_ETH",
       "display_name": "DeFi Liquidation Capture ETH",
-      "category": "DEFI",
+      "asset_group": "DEFI",
       "subcategory": "LIQUIDATION_CAPTURE",
       "domain": "defi",
       "asset_groupes": ["SPOT_ASSET", "PERPETUAL"],
@@ -2508,7 +2508,7 @@
     {
       "strategy_id": "CEFI_MARKET_MAKING_BTC",
       "display_name": "CeFi BTC Market Making",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "MARKET_MAKING",
       "domain": "cefi",
       "asset_groupes": ["SPOT_PAIR", "PERPETUAL"],
@@ -2559,7 +2559,7 @@
     {
       "strategy_id": "CEFI_ML_DIRECTIONAL_BTC",
       "display_name": "CeFi ML Directional BTC",
-      "category": "CEFI",
+      "asset_group": "CEFI",
       "subcategory": "ML_DIRECTIONAL",
       "domain": "cefi",
       "asset_groupes": ["PERPETUAL"],
@@ -2610,7 +2610,7 @@
     {
       "strategy_id": "OPTIONS_MM_BTC_DERIBIT",
       "display_name": "Options Market Making BTC Deribit",
-      "category": "OPTIONS",
+      "asset_group": "OPTIONS",
       "subcategory": "OPTIONS_MM",
       "domain": "cefi",
       "asset_groupes": ["OPTION", "PERPETUAL"],
@@ -2661,7 +2661,7 @@
     {
       "strategy_id": "TRADFI_COMMODITY_REGIME_OIL",
       "display_name": "TradFi Commodity Regime Oil",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "COMMODITY_REGIME",
       "domain": "tradfi",
       "asset_groupes": ["COMMODITY"],
@@ -2712,7 +2712,7 @@
     {
       "strategy_id": "TRADFI_EVENT_MACRO_CRYPTO",
       "display_name": "TradFi Event-Driven Macro Crypto",
-      "category": "TRADFI",
+      "asset_group": "TRADFI",
       "subcategory": "EVENT_MACRO",
       "domain": "tradfi",
       "asset_groupes": ["PERPETUAL", "EQUITY"],

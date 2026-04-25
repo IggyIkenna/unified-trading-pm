@@ -516,7 +516,7 @@ todos:
 
   - id: p12-run-pipeline-via-cli
     content: |
-      - [ ] [AGENT] P1. Run DeFi pipeline end-to-end via actual service CLIs: (1) instruments-service --category DEFI, (2) market-tick-data-service --mode download --category DEFI, (3) features-onchain-service --operation compute --mode batch --category DEFI --feature-group ALL. Verify data lands in canonical GCS paths.
+      - [ ] [AGENT] P1. Run DeFi pipeline end-to-end via actual service CLIs: (1) instruments-service --asset-group DEFI, (2) market-tick-data-service --mode download --asset-group DEFI, (3) features-onchain-service --operation compute --mode batch --asset-group DEFI --feature-group ALL. Verify data lands in canonical GCS paths.
     status: todo
     note: "Depends on p12-instruments-config-harden and p12-market-tick-config-harden completing first."
 

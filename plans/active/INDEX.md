@@ -1,8 +1,25 @@
 # Active Plans Index
 
-**Last Updated:** 2026-04-22
+**Last Updated:** 2026-04-25 (shard dimension SSOT plan added)
 
 This is the canonical index of all active plans. Plans are organized by domain.
+
+---
+
+## Cross-cutting SSOT (priority — data plane + agents)
+
+**Read first** when touching venue routing, buckets, or market-data category maps:
+
+- [venue_axis_asset_group_vocabulary_2026_04_25.plan.md](venue_axis_asset_group_vocabulary_2026_04_25.plan.md) — Trading
+  **venue axis** vocabulary (**asset group**): UAC aliases (`VENUES_BY_ASSET_GROUP`, …), UTL bucket helper, MDPS
+  `MarketAssetGroup`, MTDS `VENUE_TO_ASSET_GROUP` / `get_tick_data_bucket(..., asset_group=...)`. Waves A–B done; Waves
+  C–E (features, execution consumers, deployment/SIT) pending. Agent copy: `unified-trading-pm/cursor-configs/CLAUDE.md`
+  (symlinked from unified-trading-api, UTL, instruments-service, market-tick-data-service, and other services).
+- [shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md](shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md)
+  — **Global SSOT** pass: service shard config dimension `category` → `asset_group` + deployment-api/UI/SIT (GCS
+  `category=` path segments out of scope). **Decision record:**
+  `codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md`. Depends on venue-axis
+  vocabulary plan.
 
 ---
 

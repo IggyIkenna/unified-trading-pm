@@ -67,14 +67,14 @@ analytics API reads. In real mode (Tier 2), the API reads from the actual GCS ou
 
 ## Known Issues to Audit (from instruments-service)
 
-| Issue                               | Audit check                                                        | How to verify                                                            |
-| ----------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| #1 `load_dotenv(override=True)`     | Check `cli/main.py` for `override=True`                            | `rg "load_dotenv.*override" --type py`                                   |
-| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes                      | Run with `--dry-run`, check no GCS files created                         |
-| #6 Asyncio nesting                  | Check ComputeHandler/ComputeLiveHandler for nested `asyncio.run()` | Run and check for event loop errors                                      |
-| #8 PREDICTION category fallthrough  | Check category routing with unknown category                       | `--category PREDICTION` should be rejected by parser (not in CATEGORIES) |
-| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                                  | Remove if present, use UCI `get_bucket_name()`                           |
-| #7 Raw API keys in `.env`           | Check for plaintext API keys                                       | Only SM reference names allowed                                          |
+| Issue                               | Audit check                                                        | How to verify                                                               |
+| ----------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| #1 `load_dotenv(override=True)`     | Check `cli/main.py` for `override=True`                            | `rg "load_dotenv.*override" --type py`                                      |
+| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes                      | Run with `--dry-run`, check no GCS files created                            |
+| #6 Asyncio nesting                  | Check ComputeHandler/ComputeLiveHandler for nested `asyncio.run()` | Run and check for event loop errors                                         |
+| #8 PREDICTION category fallthrough  | Check category routing with unknown category                       | `--asset-group PREDICTION` should be rejected by parser (not in CATEGORIES) |
+| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                                  | Remove if present, use UCI `get_bucket_name()`                              |
+| #7 Raw API keys in `.env`           | Check for plaintext API keys                                       | Only SM reference names allowed                                             |
 
 ## Test Matrix
 
@@ -128,13 +128,13 @@ TRADFI-specific groups (`futures_basis`, `volume_flow`) must reject CEFI/DEFI. V
 
 This service's live mode (`compute-live`) subscribes to Pub/Sub candle events and computes features on each new candle.
 
-| #   | What                                                                                        | Expected                                                      | Status |
-| --- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------ |
-| 5.1 | `--operation compute-live --mode live --category CEFI --feature-group technical_indicators` | Subscribes to candle events, computes features per candle     |        |
-| 5.2 | PubSub transport (live mode)                                                                | Features published to downstream PubSub topics                |        |
-| 5.3 | Graceful shutdown on Ctrl-C                                                                 | Clean exit, LiveHandler.cleanup() called, no partial writes   |        |
-| 5.4 | Event logging                                                                               | UEI events: STARTED, per-instrument COMPLETED/FAILED, STOPPED |        |
-| 5.5 | Circuit breaker on processing failure                                                       | Single instrument failure doesn't crash others                |        |
+| #   | What                                                                                           | Expected                                                      | Status |
+| --- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------ |
+| 5.1 | `--operation compute-live --mode live --asset-group CEFI --feature-group technical_indicators` | Subscribes to candle events, computes features per candle     |        |
+| 5.2 | PubSub transport (live mode)                                                                   | Features published to downstream PubSub topics                |        |
+| 5.3 | Graceful shutdown on Ctrl-C                                                                    | Clean exit, LiveHandler.cleanup() called, no partial writes   |        |
+| 5.4 | Event logging                                                                                  | UEI events: STARTED, per-instrument COMPLETED/FAILED, STOPPED |        |
+| 5.5 | Circuit breaker on processing failure                                                          | Single instrument failure doesn't crash others                |        |
 
 ### Phase 5b: Mock vs Real A/B Testing
 
@@ -151,16 +151,16 @@ structure regardless.
 
 ### Phase 6: Mock Mode (local, no credentials)
 
-| #   | Scenario                         | What it tests                                  | Expected                                                         | Status |
-| --- | -------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------- | ------ |
-| 6.1 | `--scenario default`             | Normal mock feature computation                | Mock data generated via `run_mock_pipeline()`, local sink        |        |
-| 6.2 | `--scenario stress`              | High cardinality instruments (10x normal)      | Service handles memory, writes succeed                           |        |
-| 6.3 | Missing upstream candles         | No processed_candles_ohlcv for date range      | Service logs "no upstream data", exits 0 or warns                |        |
-| 6.4 | Stale upstream data              | Candles from 7+ days ago only                  | Service warns about staleness, continues                         |        |
-| 6.5 | Invalid feature group + category | `--feature-group funding_oi --category TRADFI` | `validate_args()` raises ValueError, clean exit                  |        |
-| 6.6 | Preflight only                   | `--preflight-only`                             | Lookback candle count validated, no processing                   |        |
-| 6.7 | Skip dependency check            | `--skip-dependency-check`                      | Warning logged, processing continues without upstream validation |        |
-| 6.8 | AWS cloud provider               | `CLOUD_PROVIDER=aws CLOUD_MOCK_MODE=true`      | Uses S3 sink (mocked), same output format                        |        |
+| #   | Scenario                         | What it tests                                     | Expected                                                         | Status |
+| --- | -------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| 6.1 | `--scenario default`             | Normal mock feature computation                   | Mock data generated via `run_mock_pipeline()`, local sink        |        |
+| 6.2 | `--scenario stress`              | High cardinality instruments (10x normal)         | Service handles memory, writes succeed                           |        |
+| 6.3 | Missing upstream candles         | No processed_candles_ohlcv for date range         | Service logs "no upstream data", exits 0 or warns                |        |
+| 6.4 | Stale upstream data              | Candles from 7+ days ago only                     | Service warns about staleness, continues                         |        |
+| 6.5 | Invalid feature group + category | `--feature-group funding_oi --asset-group TRADFI` | `validate_args()` raises ValueError, clean exit                  |        |
+| 6.6 | Preflight only                   | `--preflight-only`                                | Lookback candle count validated, no processing                   |        |
+| 6.7 | Skip dependency check            | `--skip-dependency-check`                         | Warning logged, processing continues without upstream validation |        |
+| 6.8 | AWS cloud provider               | `CLOUD_PROVIDER=aws CLOUD_MOCK_MODE=true`         | Uses S3 sink (mocked), same output format                        |        |
 
 ### Phase 7: Observability
 

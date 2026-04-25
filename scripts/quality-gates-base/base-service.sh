@@ -1248,7 +1248,7 @@ log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
 if [ -f "$VSCRIPT" ]; then
-    if ! "$VSCRIPT" --category all --failed-only; then
+    if ! "$VSCRIPT" --asset-group all --failed-only; then
         log_fail "Production readiness validators FAILED — fix unified-trading-pm/workspace-manifest.json and plans/active/*.plan.md (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
         exit 1
     fi

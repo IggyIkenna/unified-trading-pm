@@ -16,7 +16,7 @@ alert topics from multiple upstream services and can issue circuit breaker comma
 
 - **NOT ServiceCLI-based** -- uses argparse directly with `--mode batch/live`
 - **No `--operation`** -- single responsibility (subscribe + route alerts)
-- **No `--category`** -- processes all alerts regardless of category
+- **No `--asset-group`** -- processes all alerts regardless of category
 - **Modes:** `batch`, `live`
 - **Mock mode:** `CLOUD_MOCK_MODE=true` triggers `run_mock_pipeline()` before argparse (early exit)
 
@@ -115,8 +115,8 @@ Not applicable in the traditional sense. Alerting-service writes to:
 
 ### Phase 4: Category Sweep
 
-**Not applicable.** Alerting-service does not use `--category`. It processes all alerts regardless of domain origin. The
-routing is event-name-based (fnmatch), not category-based.
+**Not applicable.** Alerting-service does not use `--asset-group`. It processes all alerts regardless of domain origin.
+The routing is event-name-based (fnmatch), not category-based.
 
 However, verify that alerts from ALL categories are routed correctly:
 

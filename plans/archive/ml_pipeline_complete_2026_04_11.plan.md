@@ -198,8 +198,8 @@ todos:
 
       In cli/parser.py:
         - Add --family arg (optional, choices from SportsMLPresets family names)
-        - When --category SPORTS: --family is required
-        - When --category CEFI/TRADFI: --family is ignored (uses target_types)
+        - When --asset-group SPORTS: --family is required
+        - When --asset-group CEFI/TRADFI: --family is ignored (uses target_types)
 
       In cli/handlers/__init__.py:
         - _MLTrainingModeHandler.run(): if category=SPORTS, use FamilyRouter
@@ -230,7 +230,7 @@ todos:
         - --family arg parsing and validation
         - Sports grid config total_variants computation
         - TradFi grid config creation
-        - Handler dispatch with --category SPORTS --family pregame_xg_family
+        - Handler dispatch with --asset-group SPORTS --family pregame_xg_family
         - Grid config serialization round-trip
     status: done
 

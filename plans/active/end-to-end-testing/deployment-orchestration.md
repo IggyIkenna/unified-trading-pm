@@ -46,7 +46,7 @@ python -m deployment_service batch run \
 python -m deployment_service batch run \
   --service instruments-service \
   --operation download \
-  --category DEFI \
+  --asset-group DEFI \
   --as-of-date 2026-03-21
 ```
 

@@ -39,7 +39,7 @@ instruments-service:
     # CEFI venues - dates are ACTUAL Tardis data availability, NOT venue launch dates
     # Source: https://docs.tardis.dev/historical-data-details/*
     # Using 2019-03-30 as category start (earliest Tardis CEFI data)
-    category_start: "2019-03-30"
+    asset_group_start: "2019-03-30"
     venues:
       # Tardis.dev actual data availability (NOT venue launch dates)
       BINANCE-SPOT: "2019-03-30" # Tardis: high caps since 2019-03-30, all since 2021-03-05
@@ -59,7 +59,7 @@ instruments-service:
 
   TRADFI:
     # Databento data availability (varies by dataset and instrument type)
-    category_start: "2020-01-01"
+    asset_group_start: "2020-01-01"
     venues:
       CME: "2020-01-01" # Databento GLBX.MDP3 - Futures & Options
       CBOE: "2020-01-01" # Databento BARCHART - VIX Futures & Options
@@ -74,7 +74,7 @@ instruments-service:
   DEFI:
     # Earliest DEFI protocol is Uniswap V2 (launched 2020-05-18)
     # NOTE: HYPERLIQUID and ASTER removed - reclassified as CEFI (on-chain CLOBs)
-    category_start: "2020-05-18"
+    asset_group_start: "2020-05-18"
     venues:
       # DEX protocols (earliest)
       UNISWAPV2-ETHEREUM: "2020-05-18" # Uniswap V2 launch - EARLIEST DEFI protocol
@@ -103,14 +103,14 @@ instruments-service:
   # Champions League + 2 more) all have reliable data from 2020-08-01 (UEFA
   # Covid season restart). Earlier seasons are partially missing odds/xG.
   SPORTS:
-    category_start: "2020-08-01"
+    asset_group_start: "2020-08-01"
 
   # Prediction markets (Polymarket CLOB). Polymarket launched June 2020; we
   # only began ingesting 2025-03-14. Using the ingestion start as the
   # category anchor so coverage % reflects our own data, not Polymarket's
   # full history.
   PREDICTION:
-    category_start: "2025-03-14"
+    asset_group_start: "2025-03-14"
 
 # =============================================================================
 # CORPORATE ACTIONS
@@ -119,7 +119,7 @@ instruments-service:
 # Data sourced from yfinance (free API).
 corporate-actions:
   TRADFI:
-    category_start: "2020-01-01"
+    asset_group_start: "2020-01-01"
     # Corporate actions use instruments-service tickers, aligned with TRADFI start
 
 # =============================================================================
@@ -129,7 +129,7 @@ market-tick-data-service:
   CEFI:
     # ACTUAL Tardis data availability (NOT venue launch dates)
     # Source: https://docs.tardis.dev/historical-data-details/*
-    category_start: "2019-03-30"
+    asset_group_start: "2019-03-30"
     venues:
       # Tardis.dev actual data availability
       BINANCE-SPOT: "2019-03-30" # Tardis: high caps since 2019-03-30
@@ -182,7 +182,7 @@ market-tick-data-service:
         liquidations: "2024-10-01" # Via /allForceOrders endpoint (untested)
 
   TRADFI:
-    category_start: "2020-01-01"
+    asset_group_start: "2020-01-01"
     venues:
       CME: "2020-01-01"
       CBOE: "2020-01-01"
@@ -206,7 +206,7 @@ market-tick-data-service:
 
   DEFI:
     # Earliest DEFI protocol is Uniswap V2 (launched 2020-05-18)
-    category_start: "2020-05-18"
+    asset_group_start: "2020-05-18"
     venues:
       # NOTE: HYPERLIQUID and ASTER have been reclassified as CEFI (on-chain CLOBs)
       # DeFi protocols - must match venues.yaml
@@ -231,7 +231,7 @@ market-tick-data-service:
 # Both names are used in the codebase; keep them in sync.
 market-tick-data-handler:
   CEFI:
-    category_start: "2019-03-30"
+    asset_group_start: "2019-03-30"
     venues:
       BINANCE-SPOT: "2019-03-30"
       BINANCE-FUTURES: "2019-11-17"
@@ -262,7 +262,7 @@ market-tick-data-handler:
         liquidations: "2024-10-01"
 
   TRADFI:
-    category_start: "2020-01-01"
+    asset_group_start: "2020-01-01"
     venues:
       CME: "2020-01-01"
       CBOE: "2020-01-01"
@@ -275,7 +275,7 @@ market-tick-data-handler:
         ohlcv_15m: "2020-01-02"
 
   DEFI:
-    category_start: "2020-05-18"
+    asset_group_start: "2020-05-18"
     venues:
       UNISWAPV2-ETHEREUM: "2020-05-18"
       UNISWAPV3-ETHEREUM: "2021-05-05"
@@ -294,11 +294,11 @@ market-tick-data-handler:
 market-data-processing-service:
   # Based on ACTUAL data provider availability (Tardis, Databento, The Graph)
   CEFI:
-    category_start: "2019-03-30" # Actual Tardis data start
+    asset_group_start: "2019-03-30" # Actual Tardis data start
   TRADFI:
-    category_start: "2020-01-01" # Databento availability
+    asset_group_start: "2020-01-01" # Databento availability
   DEFI:
-    category_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi protocol)
+    asset_group_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi protocol)
 
 # =============================================================================
 # FEATURES SERVICES
@@ -306,7 +306,7 @@ market-data-processing-service:
 features-delta-one-service:
   CEFI:
     # Based on ACTUAL Tardis data availability (NOT venue launch dates)
-    category_start: "2019-03-30"
+    asset_group_start: "2019-03-30"
     # Per-venue earliest valid feature dates (tardis_start + max_lookback)
     # Use these to skip processing for dates with insufficient lookback
     venues_24h:
@@ -330,7 +330,7 @@ features-delta-one-service:
       HYPERLIQUID: "2023-05-10" # 2023-05-01 + 9 days
       ASTER: "2021-09-08" # 2021-08-30 + 9 days
   TRADFI:
-    category_start: "2020-01-01"
+    asset_group_start: "2020-01-01"
     venues_24h:
       CME: "2020-07-19" # 2020-01-01 + 200 days
       CBOE: "2020-07-19" # 2020-01-01 + 200 days
@@ -347,7 +347,7 @@ features-delta-one-service:
       FX: "2020-01-10" # 2020-01-01 + 9 days
   DEFI:
     # Earliest DEFI: Uniswap V2 (2020-05-18). Features need lookback period.
-    category_start: "2020-05-18"
+    asset_group_start: "2020-05-18"
     venues_24h:
       UNISWAPV2-ETHEREUM: "2020-12-04" # 2020-05-18 + 200 days - EARLIEST DEFI features
       UNISWAPV3-ETHEREUM: "2021-11-21" # 2021-05-05 + 200 days
@@ -373,26 +373,26 @@ features-volatility-service:
   # Note: DEFI not supported (no options data) per sharding config
   # Based on ACTUAL data provider availability
   CEFI:
-    category_start: "2019-03-30" # Actual Tardis data start
+    asset_group_start: "2019-03-30" # Actual Tardis data start
   TRADFI:
-    category_start: "2020-01-01" # Databento availability
+    asset_group_start: "2020-01-01" # Databento availability
 
 features-onchain-service:
   # Note: TRADFI not supported (no on-chain data) per sharding config
   # Based on ACTUAL data provider availability
   CEFI:
-    category_start: "2019-03-30" # Actual Tardis data start
+    asset_group_start: "2019-03-30" # Actual Tardis data start
   DEFI:
-    category_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi)
+    asset_group_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi)
 
 features-calendar-service:
   # Based on ACTUAL data provider availability
   CEFI:
-    category_start: "2019-03-30" # Actual Tardis data start
+    asset_group_start: "2019-03-30" # Actual Tardis data start
   TRADFI:
-    category_start: "2020-01-01" # Databento availability
+    asset_group_start: "2020-01-01" # Databento availability
   DEFI:
-    category_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi)
+    asset_group_start: "2020-05-18" # Uniswap V2 launch (earliest DeFi)
 
 # =============================================================================
 # FEATURE LOOKBACK REQUIREMENTS
@@ -474,7 +474,7 @@ ml-training-service:
   # ML models typically need 30-90 days of feature history for training
   # earliest_valid_ml = earliest_valid_features + ml_training_window
   default:
-    category_start: "2024-01-01"
+    asset_group_start: "2024-01-01"
 
   # ML-specific lookback (days of features needed for training)
   ml_training_window_days: 90
@@ -496,7 +496,7 @@ ml-inference-service:
   # Depends on trained models, not raw data
   # Start date is when we first trained models
   default:
-    category_start: "2024-01-01"
+    asset_group_start: "2024-01-01"
 
 # =============================================================================
 # STRATEGY SERVICE
@@ -505,7 +505,7 @@ strategy-service:
   # Strategies depend on features and optionally ML predictions
   # Uses GCS dynamic configs
   default:
-    category_start: "2024-01-01"
+    asset_group_start: "2024-01-01"
 
 # =============================================================================
 # EXECUTION SERVICES
@@ -514,7 +514,7 @@ execution-service:
   # Backtesting depends on tick data and strategy signals
   # Uses GCS dynamic configs
   default:
-    category_start: "2023-05-23" # Updated to match test periods
+    asset_group_start: "2023-05-23" # Updated to match test periods
 
   # Test periods for validation
   test_periods:
@@ -590,7 +590,7 @@ features-sports-service:
   SPORTS:
     # Earliest reliable fixture + odds + xG data across all 8 leagues.
     # 2020-08-01 aligns with the restart of European football after Covid.
-    category_start: "2020-08-01"
+    asset_group_start: "2020-08-01"
     leagues:
       EPL: "2020-08-01" # English Premier League — Season 2020-21 start
       LA_LIGA: "2020-08-01" # Spanish La Liga — Season 2020-21 start

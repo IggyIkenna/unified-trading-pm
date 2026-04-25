@@ -32,7 +32,7 @@ STRATEGY_SERVICE_ROOT = WORKSPACE_ROOT / "strategy-service"
 REQUIRED_FIELDS = {
     "strategy_id",
     "display_name",
-    "category",
+    "asset_group",
     "domain",
     "asset_groupes",
     "venues",
@@ -40,7 +40,7 @@ REQUIRED_FIELDS = {
     "maturity",
 }
 
-VALID_CATEGORIES = {"CEFI", "TRADFI", "DEFI", "SPORTS", "QUANT", "OPTIONS"}
+VALID_STRATEGY_ASSET_GROUPS = {"CEFI", "TRADFI", "DEFI", "SPORTS", "QUANT", "OPTIONS"}
 VALID_DOMAINS = {"cefi", "tradfi", "defi", "sports", "quant", "options", "prediction"}
 
 # Maturity sub-objects and their required boolean/string fields
@@ -124,10 +124,10 @@ def validate_required_fields(strategies: list[dict[str, object]]) -> list[str]:
         if missing:
             errors.append(f"{sid}: missing required fields: {sorted(missing)}")
 
-        # Validate category is known
-        category = strat.get("category")
-        if category is not None and str(category) not in VALID_CATEGORIES:
-            errors.append(f"{sid}: unknown category '{category}' (valid: {sorted(VALID_CATEGORIES)})")
+        # Validate venue asset group (strategy axis) is known
+        asset_group = strat.get("asset_group")
+        if asset_group is not None and str(asset_group) not in VALID_STRATEGY_ASSET_GROUPS:
+            errors.append(f"{sid}: unknown asset_group '{asset_group}' (valid: {sorted(VALID_STRATEGY_ASSET_GROUPS)})")
 
         # Validate domain is known
         domain = strat.get("domain")
@@ -411,15 +411,15 @@ def main() -> int:
     all_warnings.extend(matrix_warnings)
 
     # Print compact matrix
-    categories: dict[str, int] = {}
+    asset_group_counts: dict[str, int] = {}
     for strat in strategies:
-        cat = str(strat.get("category", "UNKNOWN"))
-        categories[cat] = categories.get(cat, 0) + 1
+        ag = str(strat.get("asset_group", "UNKNOWN"))
+        asset_group_counts[ag] = asset_group_counts.get(ag, 0) + 1
 
     print(f"  Total matrix entries: {len(matrix_rows)}")
-    print("  By category:")
-    for cat, count in sorted(categories.items()):
-        print(f"    {cat}: {count}")
+    print("  By asset group:")
+    for ag, count in sorted(asset_group_counts.items()):
+        print(f"    {ag}: {count}")
 
     if matrix_warnings:
         for warn in matrix_warnings:

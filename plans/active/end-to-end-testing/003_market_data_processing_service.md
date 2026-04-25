@@ -46,7 +46,7 @@ directly into all 7 feature services and the strategy service.
 | #1 `load_dotenv(override=True)` | Check entry point                            | `rg "load_dotenv.*override" --type py`  |
 | #2 `--dry-run` not enforced     | Run with `--dry-run`, check no writes        | Verify "UCI dry-run mode ACTIVE" logged |
 | #6 Asyncio nesting              | Check if candle processing nests event loops | Run batch, watch for RuntimeError       |
-| #8 Category fallthrough         | `--category PREDICTION`                      | Should skip gracefully                  |
+| #8 Category fallthrough         | `--asset-group PREDICTION`                   | Should skip gracefully                  |
 | #3 Hardcoded bucket names       | Check `.env`                                 | Remove `*_GCS_BUCKET_*` vars            |
 
 ## Test Matrix
@@ -92,13 +92,13 @@ directly into all 7 feature services and the strategy service.
 
 Live mode processes incoming ticks into candles in real-time, triggered by PubSub subscription.
 
-| #   | What                           | Expected                                          | Status |
-| --- | ------------------------------ | ------------------------------------------------- | ------ |
-| 5.1 | `--mode live --category cefi`  | Subscribes to PubSub, processes incoming ticks    |        |
-| 5.2 | Timer alignment                | Candles close at aligned intervals (1m, 5m, etc.) |        |
-| 5.3 | PubSub transport active        | "Subscribed to topic" logged                      |        |
-| 5.4 | Graceful shutdown              | Ctrl-C → flush partial candle, clean exit         |        |
-| 5.5 | Co-located in_memory transport | When on same VM as MTDS, uses in_memory transport |        |
+| #   | What                             | Expected                                          | Status |
+| --- | -------------------------------- | ------------------------------------------------- | ------ |
+| 5.1 | `--mode live --asset-group cefi` | Subscribes to PubSub, processes incoming ticks    |        |
+| 5.2 | Timer alignment                  | Candles close at aligned intervals (1m, 5m, etc.) |        |
+| 5.3 | PubSub transport active          | "Subscribed to topic" logged                      |        |
+| 5.4 | Graceful shutdown                | Ctrl-C → flush partial candle, clean exit         |        |
+| 5.5 | Co-located in_memory transport   | When on same VM as MTDS, uses in_memory transport |        |
 
 ### Phase 5b: Mock vs Real A/B Testing
 

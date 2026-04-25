@@ -40,7 +40,7 @@ MOD = _load_module()
 
 def _make_strategy(
     strategy_id: str = "TEST_STRAT",
-    category: str = "CEFI",
+    asset_group: str = "CEFI",
     venues: list[str] | None = None,
     asset_groupes: list[str] | None = None,
     instruments: list[str] | None = None,
@@ -53,7 +53,7 @@ def _make_strategy(
         instruments = ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"]
     return {
         "strategy_id": strategy_id,
-        "category": category,
+        "asset_group": asset_group,
         "venues": venues,
         "asset_groupes": asset_groupes,
         "instruments": instruments,
@@ -212,20 +212,20 @@ class TestInstrumentToStrategiesMap:
 
 
 class TestInstrumentConflicts:
-    def test_no_conflict_same_category(self) -> None:
+    def test_no_conflict_same_asset_group(self) -> None:
         instrument_map = {"BTC-PERP": ["A", "B"]}
         strategies_by_id = {
-            "A": {"strategy_id": "A", "category": "CEFI"},
-            "B": {"strategy_id": "B", "category": "CEFI"},
+            "A": {"strategy_id": "A", "asset_group": "CEFI"},
+            "B": {"strategy_id": "B", "asset_group": "CEFI"},
         }
         warnings = MOD.detect_instrument_conflicts(instrument_map, strategies_by_id)
         assert not warnings
 
-    def test_conflict_different_categories(self) -> None:
+    def test_conflict_different_asset_groups(self) -> None:
         instrument_map = {"BTC-PERP": ["A", "B"]}
         strategies_by_id = {
-            "A": {"strategy_id": "A", "category": "CEFI"},
-            "B": {"strategy_id": "B", "category": "DEFI"},
+            "A": {"strategy_id": "A", "asset_group": "CEFI"},
+            "B": {"strategy_id": "B", "asset_group": "DEFI"},
         }
         warnings = MOD.detect_instrument_conflicts(instrument_map, strategies_by_id)
         assert len(warnings) == 1
@@ -235,8 +235,8 @@ class TestInstrumentConflicts:
     def test_single_strategy_per_instrument_no_conflict(self) -> None:
         instrument_map = {"BTC-PERP": ["A"], "ETH-PERP": ["B"]}
         strategies_by_id = {
-            "A": {"strategy_id": "A", "category": "CEFI"},
-            "B": {"strategy_id": "B", "category": "DEFI"},
+            "A": {"strategy_id": "A", "asset_group": "CEFI"},
+            "B": {"strategy_id": "B", "asset_group": "DEFI"},
         }
         warnings = MOD.detect_instrument_conflicts(instrument_map, strategies_by_id)
         assert not warnings
@@ -251,7 +251,7 @@ class TestBuildMatrix:
         rows = MOD.build_matrix(strategies)
         assert len(rows) == 1
         assert rows[0]["strategy_id"] == "TEST_STRAT"
-        assert rows[0]["category"] == "CEFI"
+        assert rows[0]["asset_group"] == "CEFI"
 
     def test_matrix_preserves_instruments(self) -> None:
         strategies = [
@@ -349,7 +349,7 @@ class TestPrintMatrixTable:
         rows: list[dict[str, str | list[str]]] = [
             {
                 "strategy_id": "TEST_STRAT",
-                "category": "CEFI",
+                "asset_group": "CEFI",
                 "venues": ["BINANCE-FUTURES"],
                 "asset_groupes": ["PERPETUAL"],
                 "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
@@ -364,7 +364,7 @@ class TestPrintMatrixTable:
         rows: list[dict[str, str | list[str]]] = [
             {
                 "strategy_id": "TEST_STRAT",
-                "category": "CEFI",
+                "asset_group": "CEFI",
                 "venues": ["VENUE_" + str(i) for i in range(20)],
                 "asset_groupes": ["PERPETUAL"],
                 "instruments": ["VENUE_" + str(i) + ":PERPETUAL:BTC-USDT@LIN" for i in range(20)],
@@ -378,7 +378,7 @@ class TestPrintMatrixTable:
         rows: list[dict[str, str | list[str]]] = [
             {
                 "strategy_id": "TEST_STRAT",
-                "category": "CEFI",
+                "asset_group": "CEFI",
                 "venues": [],
                 "asset_groupes": [],
                 "instruments": [],
@@ -407,34 +407,34 @@ class TestMainFunction:
             result = MOD.main()
         assert result == 0
 
-    def test_main_category_filter(self, tmp_path: Path) -> None:
+    def test_main_asset_group_filter(self, tmp_path: Path) -> None:
         manifest = tmp_path / "strategy-manifest.json"
         manifest.write_text(
             json.dumps(
                 {
                     "strategies": [
-                        _make_strategy(strategy_id="CEFI_1", category="CEFI"),
-                        _make_strategy(strategy_id="DEFI_1", category="DEFI"),
+                        _make_strategy(strategy_id="CEFI_1", asset_group="CEFI"),
+                        _make_strategy(strategy_id="DEFI_1", asset_group="DEFI"),
                     ]
                 }
             )
         )
-        with patch.object(sys, "argv", ["prog", "--category", "CEFI", "--manifest", str(manifest)]):
+        with patch.object(sys, "argv", ["prog", "--asset-group", "CEFI", "--manifest", str(manifest)]):
             result = MOD.main()
         assert result == 0
 
-    def test_main_category_filter_no_match(self, tmp_path: Path) -> None:
+    def test_main_asset_group_filter_no_match(self, tmp_path: Path) -> None:
         manifest = tmp_path / "strategy-manifest.json"
         manifest.write_text(
             json.dumps(
                 {
                     "strategies": [
-                        _make_strategy(strategy_id="CEFI_1", category="CEFI"),
+                        _make_strategy(strategy_id="CEFI_1", asset_group="CEFI"),
                     ]
                 }
             )
         )
-        with patch.object(sys, "argv", ["prog", "--category", "SPORTS", "--manifest", str(manifest)]):
+        with patch.object(sys, "argv", ["prog", "--asset-group", "SPORTS", "--manifest", str(manifest)]):
             result = MOD.main()
         assert result == 1  # No strategies found
 
@@ -450,12 +450,12 @@ class TestMainFunction:
         manifest = tmp_path / "strategy-manifest.json"
         strat_a = _make_strategy(
             strategy_id="A",
-            category="CEFI",
+            asset_group="CEFI",
             instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
         )
         strat_b = _make_strategy(
             strategy_id="B",
-            category="DEFI",
+            asset_group="DEFI",
             instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
         )
         manifest.write_text(json.dumps({"strategies": [strat_a, strat_b]}))

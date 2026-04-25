@@ -36,7 +36,7 @@ Single operation, dual mode:
 | Argument                      | Type        | Default              | Notes                                                           |
 | ----------------------------- | ----------- | -------------------- | --------------------------------------------------------------- |
 | `--start-date` / `--end-date` | date        | --                   | Required for batch mode only                                    |
-| `--category`                  | multi       | from MarketCategory  | `CEFI`, `TRADFI`, `DEFI`, `PREDICTION`, `ALL` (excludes SPORTS) |
+| `--asset-group`               | multi       | from MarketCategory  | `CEFI`, `TRADFI`, `DEFI`, `PREDICTION`, `ALL` (excludes SPORTS) |
 | `--instrument-ids`            | list        | default per category | `BTC ETH SOL SPY` (shortcuts) or full IDs                       |
 | `--timeframes`                | list        | `1h 4h`              | Timeframes to run inference on                                  |
 | `--target-types`              | choice list | `ALL`                | `swing_high`, `swing_low`, `ALL`                                |
@@ -123,16 +123,16 @@ ml-inference-service supports live mode. In live mode it:
 4. Publishes predictions to PubSub for strategy-service
 5. `ModelPromotionSubscriber` listens for model promotion events (hot-reload)
 
-| #   | What                                            | Expected                                                         | Status |
-| --- | ----------------------------------------------- | ---------------------------------------------------------------- | ------ |
-| 5.1 | `--operation infer --mode live --category CEFI` | Subscribes to PubSub, loads models, waits for features           |        |
-| 5.2 | Model loading                                   | Latest model version loaded from GCS model registry              |        |
-| 5.3 | PubSub subscription                             | Feature subscription established, logs "subscribed"              |        |
-| 5.4 | Event logging                                   | UEI events: STARTED, VALIDATION_STARTED/COMPLETED, per-inference |        |
-| 5.5 | Graceful shutdown                               | Ctrl-C -> STOPPED event, clean PubSub unsubscribe                |        |
-| 5.6 | Model hot-reload                                | `ModelPromotionSubscriber` active, logs "subscriber started"     |        |
-| 5.7 | GracefulShutdownHandler                         | Registered, handles SIGTERM/SIGINT                               |        |
-| 5.8 | Pre-crash checkpoint                            | `register_pre_crash_handlers()` called                           |        |
+| #   | What                                               | Expected                                                         | Status |
+| --- | -------------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| 5.1 | `--operation infer --mode live --asset-group CEFI` | Subscribes to PubSub, loads models, waits for features           |        |
+| 5.2 | Model loading                                      | Latest model version loaded from GCS model registry              |        |
+| 5.3 | PubSub subscription                                | Feature subscription established, logs "subscribed"              |        |
+| 5.4 | Event logging                                      | UEI events: STARTED, VALIDATION_STARTED/COMPLETED, per-inference |        |
+| 5.5 | Graceful shutdown                                  | Ctrl-C -> STOPPED event, clean PubSub unsubscribe                |        |
+| 5.6 | Model hot-reload                                   | `ModelPromotionSubscriber` active, logs "subscriber started"     |        |
+| 5.7 | GracefulShutdownHandler                            | Registered, handles SIGTERM/SIGINT                               |        |
+| 5.8 | Pre-crash checkpoint                               | `register_pre_crash_handlers()` called                           |        |
 
 #### Phase 5b: Mock/Real A/B Comparison
 

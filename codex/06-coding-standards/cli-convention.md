@@ -28,10 +28,10 @@ Every service CLI MUST use these orthogonal axes. Each axis controls one concern
 - live = PubSub/SQS streaming, event-driven, real-time
 - The service code should be mode-agnostic where possible — UTL handles the infrastructure switching
 
-### Axis 3: `--category` (WHAT market domain)
+### Axis 3: `--asset-group` (WHAT market domain)
 
 - Values: `CEFI`, `TRADFI`, `DEFI`, `SPORTS`
-- nargs="+" to allow multiple: `--category CEFI TRADFI`
+- nargs="+" to allow multiple: `--asset-group CEFI TRADFI`
 - Documented exception: execution-service omits this — it routes based on instruction content (cross-category execution
   like HL basis trades)
 

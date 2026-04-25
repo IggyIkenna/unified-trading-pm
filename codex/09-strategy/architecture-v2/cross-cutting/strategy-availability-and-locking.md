@@ -96,8 +96,8 @@ Sees the full universe (all lock states). Can operate on `PUBLIC` and `INVESTMEN
 - **Reversible.** `CLIENT_EXCLUSIVE` → `PUBLIC` at contract end. `INVESTMENT_MANAGEMENT_RESERVED` → `PUBLIC` at fund
   wind-down. Clean transitions without re-engineering.
 - **Regulatory umbrella orthogonality.** Regulation applies equally to both sides (same custody models, same risk
-  controls — see [`../../README.md#regulatory-quick-reference-by-strategy-family--category`](../README.md)). Lock state
-  is a business axis, not a regulatory axis.
+  controls — see [`../../README.md#regulatory-quick-reference-by-strategy-family--asset-group`](../README.md)). Lock
+  state is a business axis, not a regulatory axis.
 
 ## Strategy combinatorics — bounded growth, unbounded diversity
 
@@ -267,7 +267,7 @@ Used on all of `/coverage`, `/families`, `/catalog`, `/investment-management/*`.
 
 - **Lock state is orthogonal to regulatory state.** A `CLIENT_EXCLUSIVE` SaaS-mode strategy still runs under the same
   SMA / fund regulatory framework as `PUBLIC`. See
-  [`../README.md#regulatory-quick-reference-by-strategy-family--category`](../README.md).
+  [`../README.md#regulatory-quick-reference-by-strategy-family--asset-group`](../README.md).
 - **Lock state is orthogonal to roll state.** A `-dated-` rolling-future strategy can be PUBLIC or IM_RESERVED; the roll
   mechanism is the same.
 - **Lock state is orthogonal to deploy state.** A locked slot can still be in shadow, paper, or prod env. Env is a

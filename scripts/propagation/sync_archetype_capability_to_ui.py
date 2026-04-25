@@ -77,7 +77,7 @@ export type RollMode = "rolling" | "fixed" | "both" | "n/a";
 
 export interface CoverageCell {
   archetype: StrategyArchetype;
-  category: VenueCategoryV2;
+  assetGroup: VenueCategoryV2;
   instrumentType: InstrumentTypeV2;
   status: CoverageStatus;
   representativeVenueIds: readonly string[];
@@ -112,9 +112,12 @@ def _ts_string_array(values: list[str]) -> str:
 
 
 def _render_cell(archetype_id: str, cell: dict[str, object]) -> str:
+    raw_group = cell.get("asset_group") or cell.get("category")
+    if raw_group is None:
+        raise KeyError("cell missing asset_group (and legacy category)")
     fields = [
         f"      archetype: {_ts_string_literal(archetype_id)}",
-        f"      category: {_ts_string_literal(str(cell['category']))}",
+        f"      assetGroup: {_ts_string_literal(str(raw_group))}",
         f"      instrumentType: {_ts_string_literal(str(cell['instrument_type']))}",
         f"      status: {_ts_string_literal(str(cell['status']))}",
         f"      representativeVenueIds: {_ts_string_array(list(cell['venue_ids']))}",  # type: ignore[arg-type]

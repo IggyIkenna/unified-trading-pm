@@ -37,9 +37,9 @@ Follows `procedure.md`. Pipeline position: #16 (L6 monitoring layer).
 .venv/bin/python -m pnl_attribution_service --serve
 ```
 
-**Note:** No `--category` argument. This service processes all fills/orders from execution-service regardless of market
-category. No `--dry-run` flag in the parser — dry-run behavior must be verified at the framework level (ServiceRuntime /
-UCI).
+**Note:** No `--asset-group` argument. This service processes all fills/orders from execution-service regardless of
+market category. No `--dry-run` flag in the parser — dry-run behavior must be verified at the framework level
+(ServiceRuntime / UCI).
 
 ## Frontend Surface
 
@@ -132,7 +132,7 @@ for b in blobs[:5]:
 
 ### Phase 4: Category Sweep
 
-This service does NOT accept a `--category` argument. It processes all fills from execution-service across all
+This service does NOT accept a `--asset-group` argument. It processes all fills from execution-service across all
 categories. The category sweep validates that fills from different market categories are correctly attributed.
 
 | #   | Input data category | Expected                                                        | Status |
@@ -144,8 +144,8 @@ categories. The category sweep validates that fills from different market catego
 | 4.5 | PREDICTION fills    | Service handles gracefully if no prediction fills exist         |        |
 | 4.6 | Mixed fills         | Single run attributes across all categories correctly           |        |
 
-**Verification:** Since there is no `--category` flag, run a single batch compute over a date range that contains fills
-from multiple categories. Inspect the output to confirm per-category attribution is present.
+**Verification:** Since there is no `--asset-group` flag, run a single batch compute over a date range that contains
+fills from multiple categories. Inspect the output to confirm per-category attribution is present.
 
 ### Phase 5: Live Mode
 

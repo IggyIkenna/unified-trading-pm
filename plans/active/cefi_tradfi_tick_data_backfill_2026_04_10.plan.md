@@ -238,7 +238,7 @@ similar.
 
 - [x] [SCRIPT] P0. Edit `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh:160` — heavy profile e2-highmem-4
       → e2-standard-2 (already done: both heavy+light set to e2-standard-2 per P2.B comment in script)
-- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
+- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`
       (tarball refreshed 2026-04-23T13:47:33Z — covers MTDS 1364211 P2.B fix)
 - [x] [SCRIPT] P0. `DRY_RUN=1 bash scripts/vm/launch-cefi-sharded-backfill.sh` — confirmed 95 VMs, metadata correct
 - [x] [SCRIPT] P0. Full launch (~95 VMs) — launched 2026-04-23 ~14:43 UTC; 95/95 RUNNING confirmed

@@ -85,7 +85,7 @@ integration-tested with emulators.
 ## 3. ServiceBootstrap Entry Point (~50 Lines)
 
 The CLI entry point is a thin `ServiceBootstrap` call. Standard args (`--mode`, `--start-date`, `--end-date`,
-`--category`, `--log-level`) come from `ServiceCLI` inside UTL. The service adds only its own extra args.
+`--asset-group`, `--log-level`) come from `ServiceCLI` inside UTL. The service adds only its own extra args.
 
 ```python
 def main_service_cli() -> None:

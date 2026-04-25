@@ -278,7 +278,7 @@ Phase 10 (PARALLEL — Cleanup + UAT Prep)
 
 - [ ] [HUMAN] P0. Verify shard preview shows correct CLI command:
   ```
-  instruments-service --operation instruments --mode batch --category CEFI --start-date 2026-03-31
+  instruments-service --operation instruments --mode batch --asset-group CEFI --start-date 2026-03-31
   ```
 - [ ] [HUMAN] P0. Verify shard count matches expected (1 shard for single date+category)
 

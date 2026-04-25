@@ -104,7 +104,7 @@ todos:
   - id: es-sports-batch-cli
     content: |
       - [ ] [AGENT] P1. Execution-service: Wire sports batch mode into CLI
-        `--operation execute --mode batch --category SPORTS`. Handler reads BetOrder instructions
+        `--operation execute --mode batch --asset-group SPORTS`. Handler reads BetOrder instructions
         from GCS (strategy-service output), runs through SportsMatchingEngine, writes
         CanonicalSportsFill to GCS for downstream consumption by PBMS and PnL-attribution.
     status: todo
@@ -155,7 +155,7 @@ todos:
   - id: ss-backtest-cli-integration
     content: |
       - [ ] [AGENT] P1. Strategy-service: Integrate sports backtest into CLI
-        `--operation backtest --mode batch --category SPORTS`. Handler orchestrates:
+        `--operation backtest --mode batch --asset-group SPORTS`. Handler orchestrates:
         load features → generate signals → send BetOrders to execution-service → receive fills →
         update PBMS → compute risk → compute PnL. Same code path as live, different fill source.
     status: todo

@@ -17,7 +17,7 @@ repo_gates:
 ## Context
 
 **Instruments-service SPORTS category** fetches reference data — team names, player names, referees, stadiums, fixtures,
-seasons, country codes — not derived data. When running `--category SPORTS --date 2026-03-22`, the orchestrator asks
+seasons, country codes — not derived data. When running `--asset-group SPORTS --date 2026-03-22`, the orchestrator asks
 instruments-service reference_data for instruments. It calls `api_football` and `betfair` adapters. The output should be
 `InstrumentRecord[]` where each record represents a betting market / fixture available to trade.
 

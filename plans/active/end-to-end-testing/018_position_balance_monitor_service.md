@@ -49,7 +49,7 @@ Single operation, two modes:
 
 ## Uniqueness Notes
 
-- **No `--category` flag** -- monitors all positions across all venues. Not category-partitioned.
+- **No `--asset-group` flag** -- monitors all positions across all venues. Not category-partitioned.
 - **Startup reconciliation** (Stream A): live mode runs `StartupReconciler` before accepting new data. Queries exchange
   REST for current positions + balances. If critical discrepancies found, logs warning but starts in degraded state
   (does not block). Skip with `--skip-startup-recon`.
@@ -92,7 +92,7 @@ Single operation, two modes:
 
 ### Phase 4: Category Sweep
 
-**Not applicable.** This service has no `--category` flag. It monitors all positions across all venues regardless of
+**Not applicable.** This service has no `--asset-group` flag. It monitors all positions across all venues regardless of
 category. The relevant sweep is venue-level:
 
 | #   | Venue scope        | Expected                                                     | Status |

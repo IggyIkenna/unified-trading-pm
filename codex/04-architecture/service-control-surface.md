@@ -11,7 +11,7 @@ No redundant env vars.
 
 | Channel      | Type                 | What it controls                                    | Examples                                                                             |
 | ------------ | -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| **CLI**      | Cold, sharding       | Domain work, time range, venue/instrument selection | `--operation`, `--mode`, `--category`, `--scenario`                                  |
+| **CLI**      | Cold, sharding       | Domain work, time range, venue/instrument selection | `--operation`, `--mode`, `--asset-group`, `--scenario`                               |
 | **Env vars** | Cold, infrastructure | Cloud target, project, environment, data mode       | `CLOUD_PROVIDER`, `GCP_PROJECT_ID`, `ENVIRONMENT`, `CLOUD_MOCK_MODE`, `TESTNET_MODE` |
 | **Config**   | Hot, reloadable      | Domain params, tuning, feature flags                | GCS/local YAML files via config reloader                                             |
 
@@ -23,7 +23,7 @@ No redundant env vars.
 | **Cloud provider** | `UIC.CloudProvider`    | `gcp`, `aws`, `local`                            | Env: `CLOUD_PROVIDER`  |
 | **Runtime mode**   | `UIC.RuntimeMode`      | `batch`, `live`                                  | CLI: `--mode`          |
 | **Data mode**      | `UIC.DataMode`         | `real`, `mock`                                   | Env: `CLOUD_MOCK_MODE` |
-| **Category**       | `UIC.MarketCategory`   | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION` | CLI: `--category`      |
+| **Category**       | `UIC.MarketCategory`   | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION` | CLI: `--asset-group`   |
 | **Testnet mode**   | `UIC.TestnetMode`      | `mainnet`, `testnet`                             | Env: `TESTNET_MODE`    |
 | **Operation**      | Per-service (manifest) | Service-specific                                 | CLI: `--operation`     |
 | **Scenario**       | `UIC.MockScenario`     | `default`, `stress`, `empty`, ...                | CLI: `--scenario`      |
@@ -88,7 +88,7 @@ about specific testnet URLs.
 ## The Flow
 
 ```
-Service CLI (--operation compute --mode batch --category DEFI --scenario default)
+Service CLI (--operation compute --mode batch --asset-group DEFI --scenario default)
   + Env (CLOUD_PROVIDER=gcp GCP_PROJECT_ID=xxx ENVIRONMENT=dev CLOUD_MOCK_MODE=false TESTNET_MODE=testnet)
     → ServiceCLI validates all inputs against UIC schemas (StartupValidationError on invalid)
     → ServiceCLI constructs ServiceRuntime from CLI args + env vars
@@ -107,7 +107,7 @@ Invalid control surface input → standardised error from UTL:
 STARTUP_VALIDATION_FAILED: Invalid CLOUD_PROVIDER='azure'. Valid: gcp, aws, local.
 STARTUP_VALIDATION_FAILED: Invalid --mode='stream'. Valid: batch, live.
 STARTUP_VALIDATION_FAILED: TESTNET_MODE=true but venue BINANCE has no testnet endpoints in UAC.
-STARTUP_VALIDATION_FAILED: --category PREDICTION not supported by instruments-service. Valid: CEFI, TRADFI, DEFI, SPORTS.
+STARTUP_VALIDATION_FAILED: --asset-group PREDICTION not supported by instruments-service. Valid: CEFI, TRADFI, DEFI, SPORTS.
 ```
 
 One error code (`STARTUP_VALIDATION_FAILED`), one library (UTL), clear message. Every service gets this for free via

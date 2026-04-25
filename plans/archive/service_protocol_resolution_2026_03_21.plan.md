@@ -18,7 +18,7 @@ Every service in the system is driven by exactly three input channels:
 
 | Channel      | Type                 | What it controls                                    | Examples                                                     |
 | ------------ | -------------------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| **CLI**      | Cold, sharding       | Domain work, time range, venue/instrument selection | --operation, --mode, --category, --scenario                  |
+| **CLI**      | Cold, sharding       | Domain work, time range, venue/instrument selection | --operation, --mode, --asset-group, --scenario               |
 | **Env vars** | Cold, infrastructure | Cloud target, project, environment, data mode       | CLOUD_PROVIDER, GCP_PROJECT_ID, ENVIRONMENT, CLOUD_MOCK_MODE |
 | **Config**   | Hot, reloadable      | Domain params, tuning, feature flags                | GCS/local YAML files via config reloader                     |
 
@@ -33,7 +33,7 @@ these three channels via UTL.
 | **Cloud provider** | UIC `CloudProvider`                  | `gcp`, `aws`                                     | Env: `CLOUD_PROVIDER`  |
 | **Runtime mode**   | UIC `RuntimeMode`                    | `batch`, `live`                                  | CLI: `--mode`          |
 | **Data mode**      | UIC `DataMode`                       | `real`, `mock`                                   | Env: `CLOUD_MOCK_MODE` |
-| **Category**       | UIC `MarketCategory`                 | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION` | CLI: `--category`      |
+| **Category**       | UIC `MarketCategory`                 | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION` | CLI: `--asset-group`   |
 | **Testnet mode**   | UAC per-venue                        | `mainnet`, `testnet` (venue-specific endpoints)  | Env: `TESTNET_MODE`    |
 | **Operation**      | Per-service (registered in manifest) | Service-specific                                 | CLI: `--operation`     |
 | **Scenario**       | UIC `MockScenario`                   | `default`, `stress`, `empty`, custom             | CLI: `--scenario`      |
@@ -67,7 +67,7 @@ When `TESTNET_MODE=true`, interfaces resolve to testnet endpoints + testnet API 
 ## The Flow
 
 ```
-Service CLI (--operation compute --mode batch --category DEFI --scenario default)
+Service CLI (--operation compute --mode batch --asset-group DEFI --scenario default)
   + Env (CLOUD_PROVIDER=gcp GCP_PROJECT_ID=xxx ENVIRONMENT=dev CLOUD_MOCK_MODE=false TESTNET_MODE=true)
     → Service validates all inputs against UIC/UAC schemas (fail loud on invalid)
     → Service passes to UTL ServiceRuntime(mode, provider, environment, data_mode, testnet)
@@ -104,7 +104,7 @@ Invalid control surface input → standardised error from UTL:
 STARTUP_VALIDATION_FAILED: Invalid CLOUD_PROVIDER='azure'. Valid: gcp, aws.
 STARTUP_VALIDATION_FAILED: Invalid --mode='stream'. Valid: batch, live.
 STARTUP_VALIDATION_FAILED: TESTNET_MODE=true but venue BINANCE has no testnet endpoints in UAC.
-STARTUP_VALIDATION_FAILED: --category PREDICTION not supported by instruments-service. Valid: CEFI, TRADFI, DEFI, SPORTS.
+STARTUP_VALIDATION_FAILED: --asset-group PREDICTION not supported by instruments-service. Valid: CEFI, TRADFI, DEFI, SPORTS.
 ```
 
 One error code, one library (UTL), clear message. Every service gets this for free via ServiceCLI.

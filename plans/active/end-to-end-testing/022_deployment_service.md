@@ -13,7 +13,8 @@ data, so many standard test axes (mode batch/live, category sweep, testnet) do n
 
 ## Architecture Overview
 
-- **CLI**: Click-based (`@click.group()` with subcommands), NOT ServiceCLI. No `--operation`/`--mode`/`--category` axes.
+- **CLI**: Click-based (`@click.group()` with subcommands), NOT ServiceCLI. No `--operation`/`--mode`/`--asset-group`
+  axes.
 - **Command groups**: `calculation` (active: `calculate`, `list-services`, `info`, `venues`), `data-status` (active),
   `deployment` (stub), `management` (stub), `analysis` (stub), `validation` (stub), `reporting` (stub).
 - **Config**: `DeploymentConfig` extends `UnifiedCloudConfig` (Pydantic). ~60 fields covering GCP/AWS regions,
@@ -66,7 +67,7 @@ computation from YAML configs.
 | 2.1  | `calculate -s instruments-service --start-date 2024-01-01 --end-date 2024-01-03 --dry-run`                              | Shards shown, "DRY RUN" message                 |        |
 | 2.2  | `calculate -s instruments-service --start-date 2024-01-01 --end-date 2024-01-03 -o json`                                | Valid JSON with summary + shards array          |        |
 | 2.3  | `calculate -s instruments-service --start-date 2024-01-01 --end-date 2024-01-03 -o commands`                            | CLI commands per shard printed                  |        |
-| 2.4  | `calculate -s market-tick-data-service --category CEFI --start-date 2024-01-01 --end-date 2024-01-01`                   | CEFI-only shards                                |        |
+| 2.4  | `calculate -s market-tick-data-service --asset-group CEFI --start-date 2024-01-01 --end-date 2024-01-01`                | CEFI-only shards                                |        |
 | 2.5  | `calculate -s instruments-service --max-shards 5 --start-date 2024-01-01 --end-date 2024-12-31`                         | ShardLimitExceeded error (>5 shards)            |        |
 | 2.6  | `calculate -s nonexistent-service --start-date 2024-01-01 --end-date 2024-01-01`                                        | FileNotFoundError for missing config            |        |
 | 2.7  | `calculate -s execution-service --cloud-config-path gs://bucket/configs/ --start-date 2024-01-01 --end-date 2024-01-01` | Dynamic GCS discovery (requires GCS access)     |        |

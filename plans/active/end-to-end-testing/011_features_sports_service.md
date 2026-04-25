@@ -59,8 +59,9 @@ Feeds sports analytics dashboards, match prediction panels, betting insight UIs,
 --run-tag <tag>           GCS prefix tag (default: batch; t1-recon for reconciliation)
 ```
 
-**Note:** No `--operation` or `--category` flags. The service is SPORTS-only by design. Mode is required (no default).
-Date validation rejects future dates in batch mode. No `--dry-run` flag in parser (potential gap vs procedure).
+**Note:** No `--operation` or `--asset-group` flags. The service is SPORTS-only by design. Mode is required (no
+default). Date validation rejects future dates in batch mode. No `--dry-run` flag in parser (potential gap vs
+procedure).
 
 ## Test Matrix
 
@@ -100,7 +101,7 @@ how the service behaves without it.
 
 ### Phase 4: Category Sweep
 
-**Note:** This service is SPORTS-only. No `--category` flag exists. The sweep tests how the service responds to
+**Note:** This service is SPORTS-only. No `--asset-group` flag exists. The sweep tests how the service responds to
 non-sports contexts and validates that SPORTS data flows correctly.
 
 | #   | Category context | Expected behaviour                                                                                                                          | Status |
@@ -164,8 +165,8 @@ Live mode subscribes to a PubSub subscription and publishes computed features.
 | #   | What to check                        | Why                                                                                                                                         | Status |
 | --- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | K.1 | No `--dry-run` flag                  | Parser does not define `--dry-run`. Every other service in the procedure uses it. Compliance gap.                                           |        |
-| K.2 | No `--operation` flag                | CLI uses `--mode` only, not the standardised `--operation/--mode/--category` axes from `cli-convention.md`.                                 |        |
-| K.3 | No `--category` flag                 | Service is SPORTS-only. Acceptable if documented, but breaks the universal category sweep pattern.                                          |        |
+| K.2 | No `--operation` flag                | CLI uses `--mode` only, not the standardised `--operation/--mode/--asset-group` axes from `cli-convention.md`.                              |        |
+| K.3 | No `--asset-group` flag              | Service is SPORTS-only. Acceptable if documented, but breaks the universal category sweep pattern.                                          |        |
 | K.4 | `--mode` is required (no default)    | Unlike features-commodity-service which defaults to `live`, this service requires explicit `--mode`. Inconsistency across feature services. |        |
 | K.5 | Future date validation only in batch | `validate_args()` rejects future dates for batch. Live mode has no date validation (correct -- live is real-time).                          |        |
 | K.6 | `load_dotenv` location               | Need to verify `load_dotenv(override=False)` is used (not visible in parser.py, check main.py).                                             |        |

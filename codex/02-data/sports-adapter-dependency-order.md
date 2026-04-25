@@ -169,7 +169,7 @@ instruments-store-sports-central-element-323112
  sports_reference/by_date/day=2026-04-14/entity=fixtures/fixtures.parquet).
 Run this first:
   python -m instruments_service --operation instruments --mode batch \
-    --category SPORTS --sports-provider API_FOOTBALL \
+    --asset-group SPORTS --sports-provider API_FOOTBALL \
     --start-date 2026-04-14 --end-date 2026-04-14
 ```
 

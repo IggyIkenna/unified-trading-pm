@@ -307,7 +307,7 @@ The orchestrator watches:
 Every sub-agent that launches a VM must, in their plan's execution:
 
 1. Pass 1 QG on every repo the VM runs code from
-2. Refresh tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh --category <CAT>`
+2. Refresh tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group <CAT>`
 3. Use a launch-\*-vm.sh script (never raw gcloud)
 
 Orchestrator auditor checks that sub-agents did this before dispatching any VM. If skipped, the VM would run stale code

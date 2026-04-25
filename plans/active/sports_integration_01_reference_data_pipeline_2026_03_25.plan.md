@@ -7,7 +7,7 @@ reconciliation_date: 2026-04-25
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |
-  instruments-service --category SPORTS produces ALL reference data with cross-provider
+  instruments-service --asset-group SPORTS produces ALL reference data with cross-provider
   mapping tables in GCS hive format. Fixes European league season param, adds standings,
   injuries, fixture details, and cross-provider TeamMapping/FixtureMapping tables.
   Downstream services (FSS, ML) use these mappings to resolve provider-specific IDs.

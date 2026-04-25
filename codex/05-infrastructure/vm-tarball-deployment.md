@@ -63,7 +63,7 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    tarball per repo. VMs download the tarballs they need based on `VM_SERVICE`.
 4. **CORE always present, services opt-in**: `unified-api-contracts`, `unified-trading-library`,
    `market-tick-data-service` (aliased as `mtds-code.tar.gz`), `deployment-service` are always re-tarred. Service repos
-   (instruments-service, MDPS, features-\*, etc.) are opt-in via `--category` / `--include` / `--all` flags on
+   (instruments-service, MDPS, features-\*, etc.) are opt-in via `--asset-group` / `--include` / `--all` flags on
    `create-code-tarballs.sh`.
 5. **Python 3.13 mandated**: UAC requires `>=3.13`. Ubuntu 24.04 ships 3.12. The setup script installs 3.13 via
    `deadsnakes` PPA + `python3.13-dev` + `build-essential` (C extensions: `ckzg`, `lru-dict` for web3).
@@ -87,13 +87,13 @@ Violating any of these means you're doing something off-pattern — document why
 
 `create-code-tarballs.sh` supports four mutually-compatible scopes:
 
-| Flag                                                | Scope                                              | Typical use                                                |
-| --------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
-| (none)                                              | CORE only — UAC / UTL / MTDS / deployment-service  | UTL-only changes, CORE-only smoke                          |
-| `--all`                                             | CORE + every service repo (14+)                    | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
-| `--category CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos              | Category-specific rollout                                  |
-| `--ml-training`                                     | CORE + ml-training-service + features-\* consumers | ML training runs (any category)                            |
-| `--include <repo>`                                  | CORE + the named repo (repeatable)                 | Surgical addition                                          |
+| Flag                                                   | Scope                                              | Typical use                                                |
+| ------------------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------------- |
+| (none)                                                 | CORE only — UAC / UTL / MTDS / deployment-service  | UTL-only changes, CORE-only smoke                          |
+| `--all`                                                | CORE + every service repo (14+)                    | Multi-repo feature rollouts (e.g. honest-coverage Phase B) |
+| `--asset-group CEFI\|TRADFI\|DEFI\|SPORTS\|PREDICTION` | CORE + that category's pipeline repos              | Category-specific rollout                                  |
+| `--ml-training`                                        | CORE + ml-training-service + features-\* consumers | ML training runs (any category)                            |
+| `--include <repo>`                                     | CORE + the named repo (repeatable)                 | Surgical addition                                          |
 
 **Category-to-repo mappings** are in `create-code-tarballs.sh` as bash arrays (`CEFI_REPOS`, `TRADFI_REPOS`,
 `DEFI_REPOS`, `SPORTS_REPOS`, `PREDICTION_REPOS`). Edit the script if you add a new service repo to a category.
@@ -168,7 +168,7 @@ Typical CME S&P 500 ML Tier 1 MVP invocation (once Phase B stitches the continuo
 
 ```bash
 bash launch-ml-training-vm.sh \
-  --category TRADFI --instruments ES_FRONT \
+  --asset-group TRADFI --instruments ES_FRONT \
   --target-types 'swing_high;swing_low' --timeframes 1m \
   --start-date 2022-01-01 --end-date 2025-12-31 \
   --machine high

@@ -6,7 +6,7 @@ Exit 0 on success, exit 1 if manifest cannot be loaded.
 
 Usage:
     python3 scripts/manifest/check-strategy-maturity.py
-    python3 scripts/manifest/check-strategy-maturity.py --category CEFI
+    python3 scripts/manifest/check-strategy-maturity.py --asset-group CEFI
     python3 scripts/manifest/check-strategy-maturity.py --summary
 """
 
@@ -58,14 +58,14 @@ def print_strategy_report(strategy: dict[str, object]) -> None:
 def print_summary(strategies: list[dict[str, object]]) -> None:
     """Print summary statistics across all strategies."""
     total = len(strategies)
-    categories: dict[str, int] = {}
+    asset_group_counts: dict[str, int] = {}
     code_merged = 0
     deploy_smoke = 0
     biz_backtest = 0
 
     for s in strategies:
-        cat = str(s["category"])
-        categories[cat] = categories.get(cat, 0) + 1
+        ag = str(s["asset_group"])
+        asset_group_counts[ag] = asset_group_counts.get(ag, 0) + 1
         maturity = s["maturity"]  # type: ignore[index]
         if maturity["code"]["merged"]:  # type: ignore[index]
             code_merged += 1
@@ -78,9 +78,9 @@ def print_summary(strategies: list[dict[str, object]]) -> None:
     print("STRATEGY MANIFEST SUMMARY")
     print(f"{'=' * 60}")
     print(f"Total strategies: {total}")
-    print("By category:")
-    for cat, count in sorted(categories.items()):
-        print(f"  {cat}: {count}")
+    print("By asset group:")
+    for ag, count in sorted(asset_group_counts.items()):
+        print(f"  {ag}: {count}")
     print("\nMaturity gates passed:")
     print(f"  Code merged:          {code_merged}/{total}")
     print(f"  Deployment smoke:     {deploy_smoke}/{total}")
@@ -90,10 +90,11 @@ def print_summary(strategies: list[dict[str, object]]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Strategy maturity report card")
     parser.add_argument(
-        "--category",
+        "--asset-group",
         type=str,
         default=None,
-        help="Filter by category (CEFI, TRADFI, DEFI, SPORTS, QUANT)",
+        dest="asset_group",
+        help="Filter by venue asset group (CEFI, TRADFI, DEFI, SPORTS, QUANT, OPTIONS)",
     )
     parser.add_argument(
         "--summary",
@@ -119,8 +120,9 @@ def main() -> int:
 
     strategies: list[dict[str, object]] = manifest["strategies"]
 
-    if args.category:
-        strategies = [s for s in strategies if str(s["category"]).upper() == args.category.upper()]
+    if args.asset_group:
+        want = str(args.asset_group).upper()
+        strategies = [s for s in strategies if str(s["asset_group"]).upper() == want]
 
     if not strategies:
         print("No strategies found matching filter.", file=sys.stderr)

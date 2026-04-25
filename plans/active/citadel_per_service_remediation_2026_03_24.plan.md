@@ -133,7 +133,7 @@ changed), model load failure, inference timeout.
       open_meteo, yahoo_finance)
 - [ ] [AGENT] P0. Create `engine/orchestrator.py` from `app/engine/signal_composer.py` orchestration logic
 - [ ] [AGENT] P0. Flatten `app/` namespace: `app/engine/` → `engine/`, `app/factors/` → `engine/factors/`
-- [ ] [AGENT] P0. Consider adding `--category COMMODITY` as fixed default (currently `add_category_arg=False`)
+- [ ] [AGENT] P0. Consider adding `--asset-group COMMODITY` as fixed default (currently `add_category_arg=False`)
 - [ ] [AGENT] P0. Run QG
 
 **Mock scenario semantics:** EIA/CFTC API downtime, stale commodity data (weekends/holidays), extreme price moves (oil

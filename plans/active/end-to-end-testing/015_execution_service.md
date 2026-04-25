@@ -70,7 +70,7 @@ python -m execution_service benchmark-compare --config ... --start ... --end ...
 
 - **CRITICAL SERVICE -- handles real money.** Testnet mode MANDATORY for live testing. Never use mainnet in E2E testing.
   Always `TESTNET_MODE=testnet` for `live_execution`.
-- **No `--category`** -- routing is based on instruction content. CeFi orders route to UTEI adapters, DeFi operations
+- **No `--asset-group`** -- routing is based on instruction content. CeFi orders route to UTEI adapters, DeFi operations
   (SWAP, LEND, BORROW, STAKE, UNSTAKE) route to UDEI connectors, Sports operations (BET, CANCEL_BET) route to USEI
   adapters.
 - **Backtest uses matching-engine-library** -- no exchange connection needed. Simulates fills internally.
@@ -145,8 +145,8 @@ python -m execution_service benchmark-compare --config ... --start ... --end ...
 
 ### Phase 4: Category Sweep (instruction-based routing)
 
-execution-service has no `--category` flag. Routing is based on the instruction content in the trade signals. This phase
-tests that each instruction type routes to the correct adapter.
+execution-service has no `--asset-group` flag. Routing is based on the instruction content in the trade signals. This
+phase tests that each instruction type routes to the correct adapter.
 
 | #   | Instruction type  | Expected adapter | Expected behavior                          | Status |
 | --- | ----------------- | ---------------- | ------------------------------------------ | ------ |
@@ -275,7 +275,7 @@ applies realistic DeFi assumptions.
 | Pattern                      | What to check                                                 | Status |
 | ---------------------------- | ------------------------------------------------------------- | ------ |
 | `load_dotenv(override=True)` | `.env.mock` uses `override=False` -- confirmed in main.py     |        |
-| No `--category` flag         | `add_category_arg=False` -- documented exception, verify      |        |
+| No `--asset-group` flag      | `add_category_arg=False` -- documented exception, verify      |        |
 | asyncio nesting              | `asyncio.run(handler.run())` -- handler must not nest asyncio |        |
 | Order recovery failure       | Non-fatal (`logger.warning`) -- does not block startup        |        |
 | Mainnet guard                | `TESTNET_MODE=mainnet` + `live_execution` must warn/block     |        |

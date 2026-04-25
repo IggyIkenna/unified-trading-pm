@@ -235,7 +235,7 @@ Three tiers of "runnable":
                                        ▼
   ┌──────────────────────────────────────────────────────────────────────────────────┐
   │ E. Run strategy-service Group B backtest via batch_handler CLI:                  │
-  │      strategy-service --operation backtest --mode batch --category tradfi        │
+  │      strategy-service --operation backtest --mode batch --asset-group tradfi        │
   │      --archetype ML_DIRECTIONAL_CONTINUOUS --slot cme-es-dated-1m-usd-prod       │
   │    Feed CME:CONTINUOUS:ES ohlcv_1m + inferenced MLPredictions per tick.          │
   │    Output: GroupBBacktestResult (Sharpe, P&L curve, win rate, max_dd).           │
@@ -346,10 +346,11 @@ Three tiers of "runnable":
 - [ ] [AGENT] P0. Write strategy-service slot registration for `ML_DIRECTIONAL_CONTINUOUS@cme-es-dated-1m-usd-prod` in
       `strategy_service/engine/strategies/v2/target_universe/catalog.py`.
 - [ ] [AGENT] P0. Run `strategy-service` batch-handler CLI on a 1-3 year window:
-      `strategy-service --operation backtest --mode batch --category tradfi  --archetype ML_DIRECTIONAL_CONTINUOUS --slot cme-es-dated-1m-usd-prod  --start-date 2023-01-01 --end-date 2025-12-31`.
+      `strategy-service --operation backtest --mode batch --asset-group tradfi  --archetype ML_DIRECTIONAL_CONTINUOUS --slot cme-es-dated-1m-usd-prod  --start-date 2023-01-01 --end-date 2025-12-31`.
       Verify `GroupBBacktestResult` emits with expected columns + non-zero fill count.
 - [ ] [AGENT] P0. Persist result summary (`sharpe_ratio`, `total_pnl`, `max_drawdown`, `num_trades`, `win_rate`) + P&L
       curve png as backtest artefact under GCS.
-- [ ] [AGENT] P1. Refresh VM tarballs: `bash deployment-service/scripts/vm/ create-code-tarballs.sh --category TRADFI`.
+- [ ] [AGENT] P1. Refresh VM tarballs:
+      `bash deployment-service/scripts/vm/ create-code-tarballs.sh --asset-group TRADFI`.
 - [ ] [AGENT] P2. Add a "Realised instances" row to
       `codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md`.

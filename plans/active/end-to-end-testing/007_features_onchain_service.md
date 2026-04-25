@@ -32,7 +32,7 @@ Uses `ServiceCLI` from unified-trading-library with custom `_extra_args`:
 
 - `--operation compute` (only operation, required)
 - `--mode batch|live` (required; `incremental` accepted as deprecated alias for `live`)
-- `--category CEFI|DEFI` (required, single-value)
+- `--asset-group CEFI|DEFI` (required, single-value)
 - `--feature-group` (required): `macro_sentiment`, `lending_rates`, `lst_yields`, `aave_lending_rates`,
   `aave_utilization`, `aave_risk_params`, `lst_staking_yields`, `protocol_rewards`, `flash_loan_availability`, `ALL`
 - `--start-date`, `--end-date` (required, YYYY-MM-DD)
@@ -114,12 +114,12 @@ for b in blobs[:5]:
 
 The parser accepts `live` mode (and `incremental` as deprecated alias). Verify live mode behavior.
 
-| #   | What                                                                                                                | Expected                                        | Status |
-| --- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------ |
-| 5.1 | `--operation compute --mode live --category DEFI --feature-group ALL --start-date 2026-03-22 --end-date 2026-03-22` | Live handler invoked                            |        |
-| 5.2 | `--mode incremental`                                                                                                | Deprecated alias accepted, normalized to `live` |        |
-| 5.3 | Event logging                                                                                                       | UEI events: STARTED, per-group COMPLETED/FAILED |        |
-| 5.4 | Graceful shutdown                                                                                                   | Ctrl-C -> cleanup callback runs                 |        |
+| #   | What                                                                                                                   | Expected                                        | Status |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------ |
+| 5.1 | `--operation compute --mode live --asset-group DEFI --feature-group ALL --start-date 2026-03-22 --end-date 2026-03-22` | Live handler invoked                            |        |
+| 5.2 | `--mode incremental`                                                                                                   | Deprecated alias accepted, normalized to `live` |        |
+| 5.3 | Event logging                                                                                                          | UEI events: STARTED, per-group COMPLETED/FAILED |        |
+| 5.4 | Graceful shutdown                                                                                                      | Ctrl-C -> cleanup callback runs                 |        |
 
 #### Phase 5b: Mock/Real A/B
 

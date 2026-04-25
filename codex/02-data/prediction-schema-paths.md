@@ -93,11 +93,11 @@ EPL and Bundesliga teams already covered by `api_football/team_mappings.py`.
 ## Pipeline Flow
 
 ```
-instruments-service --category PREDICTION
+instruments-service --asset-group PREDICTION
   └─ URDI PolymarketReferenceDataAdapter → Gamma API → InstrumentRecord[]
        └─ Writes to: instruments-store-prediction-{project}/by_date/day={date}/
 
-market-tick-data-service --category PREDICTION
+market-tick-data-service --asset-group PREDICTION
   └─ UMI PolymarketAdapter → Data API + CLOB API → trade fills
        └─ Writes to: market-data-tick-prediction-{project}/by_date/day={date}/
 ```

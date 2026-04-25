@@ -12,7 +12,7 @@ cloud_run_job_name: features-volatility-service-job
 
 # Sharding dimensions (order defines hierarchy - most decisive first)
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, TRADFI] # DEFI not supported (no options data)
     description: Market category to process
@@ -33,7 +33,7 @@ dimensions:
 
 # CLI argument mappings
 cli_args:
-  category: --category
+  asset_group: --asset-group
   feature_group: --feature-group
   start_date: --start-date
   end_date: --end-date

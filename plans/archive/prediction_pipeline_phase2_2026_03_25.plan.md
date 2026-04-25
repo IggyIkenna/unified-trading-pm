@@ -244,10 +244,10 @@ todos:
         Date range: 2026-03-19 to 2026-03-25 (7 days)
 
         For each date:
-        1. instruments-service --category PREDICTION --date {date}
+        1. instruments-service --asset-group PREDICTION --date {date}
            → Verify: BTC/ETH/SOL up/down, SPX markets, soccer fixtures discovered
            → Verify: fixture_id cross-referenced with API-Football where possible
-        2. market-tick-data-service --category PREDICTION --date {date}
+        2. market-tick-data-service --asset-group PREDICTION --date {date}
            → Verify: Trades fetched for discovered markets
            → Verify: Data type = prediction_trades
         3. Check GCS hive partitions:

@@ -43,7 +43,7 @@ MOD = _load_validator()
 def _make_strategy(
     strategy_id: str = "TEST_STRATEGY_1",
     display_name: str = "Test Strategy",
-    category: str = "CEFI",
+    asset_group: str = "CEFI",
     domain: str = "cefi",
     asset_groupes: list[str] | None = None,
     venues: list[str] | None = None,
@@ -81,7 +81,7 @@ def _make_strategy(
     return {
         "strategy_id": strategy_id,
         "display_name": display_name,
-        "category": category,
+        "asset_group": asset_group,
         "domain": domain,
         "asset_groupes": asset_groupes,
         "venues": venues,
@@ -193,11 +193,11 @@ class TestValidateRequiredFields:
         assert len(errors) == 1
         assert "display_name" in errors[0]
 
-    def test_invalid_category(self) -> None:
-        strat = _make_strategy(category="INVALID_CAT")
+    def test_invalid_asset_group(self) -> None:
+        strat = _make_strategy(asset_group="INVALID_CAT")
         errors = MOD.validate_required_fields([strat])
         assert len(errors) == 1
-        assert "unknown category" in errors[0]
+        assert "unknown asset_group" in errors[0]
 
     def test_invalid_domain(self) -> None:
         strat = _make_strategy(domain="invalid_domain")
@@ -260,8 +260,8 @@ class TestValidateRequiredFields:
         errors = MOD.validate_required_fields([strat])
         assert any("maturity.code missing fields" in e for e in errors)
 
-    def test_valid_categories_accepted(self) -> None:
-        for cat, dom in [
+    def test_valid_asset_groups_accepted(self) -> None:
+        for ag, dom in [
             ("CEFI", "cefi"),
             ("TRADFI", "tradfi"),
             ("DEFI", "defi"),
@@ -269,8 +269,8 @@ class TestValidateRequiredFields:
             ("QUANT", "quant"),
             ("OPTIONS", "options"),
         ]:
-            errors = MOD.validate_required_fields([_make_strategy(category=cat, domain=dom)])
-            assert not errors, f"Category {cat} / domain {dom} should be valid"
+            errors = MOD.validate_required_fields([_make_strategy(asset_group=ag, domain=dom)])
+            assert not errors, f"asset_group {ag} / domain {dom} should be valid"
 
 
 # ── Tests: validate_class_paths ──────────────────────────────────────────────

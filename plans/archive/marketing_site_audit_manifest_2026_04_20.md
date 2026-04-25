@@ -2,8 +2,6 @@
 title: "Marketing site — Phase 1 pre-audit manifest (tone / glossary / depth)"
 status: active
 companion_to: marketing_site_restructure_2026_04_20.plan.md
-locked_by: live-defi-rollout
-locked_since: 2026-04-20
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

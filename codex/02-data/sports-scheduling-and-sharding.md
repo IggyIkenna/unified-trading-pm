@@ -493,7 +493,7 @@ VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in eac
   todos flipped 2026-04-22 crediting `5f2cae3` (Phase 1-2) + `d194288` (Phase 2 XG test inversion).
 - **Plan 11** (transfermarkt + SFI team-mapping cache + drift detection) — code shipped 2026-04-22 across 4 repos (UAC
   `36bed50` + UTL `bf7ad8d1` + instruments-service `9bf23d8` + FSS `1bdf58d`); 20/22 todos flipped. Only 2 polish items
-  remain (tarball refresh `--category SPORTS` + cache-speedup validation VM run + plan unlock).
+  remain (tarball refresh `--asset-group SPORTS` + cache-speedup validation VM run + plan unlock).
 - **Plans 12 + 13** (deployment-service Dockerfile repair + UTL base image rebuild) — authored 2026-04-22 after wave-2
   crisis recovery surfaced Cloud Build infra rot. Gate Plan 5 Cloud Run path + Plan 6 features-sports Cloud Build.
 
@@ -593,8 +593,8 @@ launcher:
 1. **Pass 1 QG** on every repo the VM runs code from: `cd <repo> && bash scripts/quality-gates.sh`. Establishes that the
    local venv's deps resolve + tests pass.
 2. **Tarball refresh** matching the repos above:
-   `bash deployment-service/scripts/vm/create-code-tarballs.sh --category <CAT>` (or `--all` for multi-repo features, or
-   `--include <repo>` for one-offs). Tarballs are built from the same venvs that just passed QG — so VM deps = local
+   `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group <CAT>` (or `--all` for multi-repo features,
+   or `--include <repo>` for one-offs). Tarballs are built from the same venvs that just passed QG — so VM deps = local
    deps.
 3. **Use a launcher, never raw gcloud**. Every `launch-*-vm.sh` script inherits observability from today's fixes
    (`cc07649` + `beaa2e5`):

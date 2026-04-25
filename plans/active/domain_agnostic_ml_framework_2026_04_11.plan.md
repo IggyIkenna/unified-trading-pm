@@ -42,7 +42,7 @@ context: |
   - Layer 1 (UAC): Domain-agnostic schemas (TargetSpec, ModelFamilyConfig, SignalPackage, etc.)
   - Layer 2 (UTL): Domain-agnostic engines (target_registry, split_builder, signal_builder, etc.)
   - Layer 3 (UTL config_interface): Domain presets (SportsMLPresets extensions)
-  - Layer 4 (ML-svc): Service wiring (--category sports --family X)
+  - Layer 4 (ML-svc): Service wiring (--asset-group sports --family X)
 
   ## Dependency DAG
   ```
@@ -288,7 +288,7 @@ todos:
         - Feature groups: derived features + odds features
         - Merge logic: join on fixture_id
 
-      Wire into the pipeline so --category sports loads from FSS output.
+      Wire into the pipeline so --asset-group sports loads from FSS output.
     status: todo
 
   - id: p4-cli-wiring
@@ -297,7 +297,7 @@ todos:
 
       Done:
         - "SPORTS" added to CATEGORIES in cli/parser.py
-        - FamilyRouter routes --category sports to SportsMLPresets (app/core/family_router.py)
+        - FamilyRouter routes --asset-group sports to SportsMLPresets (app/core/family_router.py)
 
       Remaining (requires sports data pipeline):
         - Add --family arg (pregame_xg, pregame_clv, ht_xg, ht_clv, meta)

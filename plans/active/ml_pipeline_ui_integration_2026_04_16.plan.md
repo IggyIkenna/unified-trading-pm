@@ -169,7 +169,7 @@ todos:
     content: |
       - [x] [AGENT] P0. Verify ml-inference-service reads from ml-models-store and produces predictions. Check:
         1. ml-inference-service model_loader.py — does it read from ml-models-store-{project_id}/models/{model_id}/? Verify path matches what training writes.
-        2. Run ml-inference-service --mode batch --category CEFI --start-date 2023-01-01 --end-date 2023-01-02 with the model we just trained (CEFI_BTC_swing-high_LIGHTGBM_1m_V20260416134938). Does it load the model and produce predictions?
+        2. Run ml-inference-service --mode batch --asset-group CEFI --start-date 2023-01-01 --end-date 2023-01-02 with the model we just trained (CEFI_BTC_swing-high_LIGHTGBM_1m_V20260416134938). Does it load the model and produce predictions?
         3. Where does inference write predictions? Verify: ml-predictions-store-{project_id}/predictions/by_date/day={date}/
         4. In mock mode: does inference generate mock predictions? Where does it read mock models from?
         Files: ml_inference_service/engine/model_loader.py, ml_inference_service/cli/handlers/batch_handler.py
@@ -244,7 +244,7 @@ todos:
         6. Create training run from UI → verify it triggers training
         7. View run analysis → verify SHAP plots and metrics display
     status: todo
-    note: "Code paths verified. Run: 1) cd ml-training-service && python -m ml_training_service --operation train --mode batch --category CEFI --use-mock-data --skip-dependency-check  2) cd unified-trading-system-ui && bash scripts/dev-tiers.sh --tier 1  3) Open http://localhost:3000/services/research/ml and verify pages render."
+    note: "Code paths verified. Run: 1) cd ml-training-service && python -m ml_training_service --operation train --mode batch --asset-group CEFI --use-mock-data --skip-dependency-check  2) cd unified-trading-system-ui && bash scripts/dev-tiers.sh --tier 1  3) Open http://localhost:3000/services/research/ml and verify pages render."
 
   - id: p7-e2e-real-pipeline
     content: |

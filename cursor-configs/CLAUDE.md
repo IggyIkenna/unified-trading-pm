@@ -29,6 +29,13 @@ Read these before making ANY code changes:
 4. `unified-trading-pm/codex/06-coding-standards/README.md` — coding standards
 5. `unified-trading-pm/plans/PLAN_FORMAT.md` — plan format; **Cursor checkboxes** (`- [x]` / `- [ ]`) required on every
    todo
+6. **Asset-group vocabulary** — the venue axis is **`asset_group`** (not `category`). Use `asset_group` everywhere new
+   code touches it: CLI flag `--asset-group`, env vars `VM_ASSET_GROUP` / `MDPS_ASSET_GROUP`, Python symbols
+   `VENUES_BY_ASSET_GROUP` / `DATA_TYPES_BY_ASSET_GROUP` / `VENUE_TO_ASSET_GROUP` / `MarketAssetGroup` /
+   `get_bucket_for_asset_group`. **Two intentional exceptions**: dict KEYS stay lowercase (`cefi` / `defi` / `tradfi` /
+   `sports` / `prediction`), and GCS path segments stay literal (`category=cefi/...` blob prefixes — wire-format SSOT).
+   Plan: `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (Waves A/B/E shipped;
+   C/D = features-\* + execution-service consumer keys).
 
 ## Key Rules (Quick Reference)
 
@@ -79,7 +86,7 @@ Read these before making ANY code changes:
 - **Bandit B108 / temp paths** — Never hardcode `"/tmp"` in Python. Use `tempfile.gettempdir()` (POSIX `TMPDIR`, macOS
   temp under `/var/folders/...`). For disk-usage probes, default to root + `gettempdir()` + `Path.home()` and skip
   missing paths. SSOT: `unified-trading-pm/codex/06-coding-standards/quality-gates.md` (Bandit B108 section).
-- Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
+- Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--asset-group` (domain). See
   `codex/06-coding-standards/cli-convention.md`.
 - **Availability manifest v5 (honest-coverage)** — `ManifestWriter` writes proper shard columns (venue, chain,
   data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id,
@@ -91,8 +98,8 @@ Read these before making ANY code changes:
 - **VM tarball deployment** — Backfill / migration / smoke / forward-poll VMs boot via
   `gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` and pull tarballs from `gs://deployment-scripts-.../code/`.
   Refresh tarballs after every code change with `bash deployment-service/scripts/vm/create-code-tarballs.sh <flag>`:
-  `--all` (safest for any multi-repo feature), `--category SPORTS|CEFI|TRADFI|DEFI|PREDICTION` (scoped to a category's
-  pipeline), `--include <repo>` (one-off addition). **Bare invocation only re-tars CORE**
+  `--all` (safest for any multi-repo feature), `--asset-group SPORTS|CEFI|TRADFI|DEFI|PREDICTION` (scoped to an
+  asset_group's pipeline), `--include <repo>` (one-off addition). **Bare invocation only re-tars CORE**
   (UAC/UTL/MTDS/deployment-service) — forgetting the flag silently runs stale code. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **Singleton-locked launchers** — Adapters with shared API keys / per-IP rate limits use a singleton-lock pattern in
@@ -324,7 +331,7 @@ from workspace root — always run per-repo with timeout.
 ## Batch = Live: Unified Pipeline Architecture (CRITICAL)
 
 Batch and live use the **SAME code path, same component interactions**. The ONLY difference is execution fills. This
-applies to ALL categories — sports, DeFi, CeFi, TradFi. There is NO such thing as a "live-only strategy" or a
+applies to ALL asset_groups — sports, DeFi, CeFi, TradFi. There is NO such thing as a "live-only strategy" or a
 "batch-only strategy."
 
 **Strategy P&L backtest (strategy alpha):** Strategy-service interacts with position-balance-monitor,
@@ -341,7 +348,7 @@ Execution alpha = live fills P&L - simulated fills P&L. Saved for execution opti
 - Build standalone backtest engines that settle inline (e.g., `returned = stake * odds if won else 0`)
 - Treat batch mode as "just replay data" — it must exercise the full service mesh
 - Distinguish "live strategies" from "batch strategies" — there is no such distinction
-- Build category-specific backtest engines that bypass the unified pipeline
+- Build asset-group-specific backtest engines that bypass the unified pipeline
 
 99% of the code path is identical between batch and live. The only seam that differs is the execution fill source
 (matching engine vs real venue).

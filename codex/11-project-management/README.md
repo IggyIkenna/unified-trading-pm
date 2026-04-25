@@ -24,9 +24,10 @@ Boundary rule: See `unified-trading-codex/13-codex-governance/SSOT-BOUNDARY.md`
 
 ## Architecture Decision Records
 
-| File                                         | Decision                                 |
-| -------------------------------------------- | ---------------------------------------- |
-| `decisions/config-consolidation-option-b.md` | Config consolidation — Option B selected |
+| File                                                                | Decision                                                                                                                                                                     |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `decisions/config-consolidation-option-b.md`                        | Config consolidation — Option B selected                                                                                                                                     |
+| `decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` | Deployment API: general deploy uses `category`, deploy-missing uses `asset_group`; GCS `category=` segments unchanged; global shard-dimension rename is a separate SSOT plan |
 
 ---
 

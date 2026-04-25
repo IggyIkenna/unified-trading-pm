@@ -52,7 +52,7 @@ tests remain green); all three are raw-layer coverage or cross-ref issues.
   ([`deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh`](../../../deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh))
   — singleton-locked (shared API key, ~1 req/sec pacing), accepts explicit historical date ranges, routes via
   `setup-data-pipeline-vm.sh` →
-  `python -m instruments_service --operation instruments --mode batch --category SPORTS --sports-provider TRANSFERMARKT --start-date ... --end-date ...`.
+  `python -m instruments_service --operation instruments --mode batch --asset-group SPORTS --sports-provider TRANSFERMARKT --start-date ... --end-date ...`.
 - **No new code** needed here. Just tarball refresh + fire.
 
 ### Track B — SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS` backfill (new launcher + operator run + codex fix)
@@ -172,7 +172,7 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 ### Track A — Transfermarkt backfill 2020-2026 [OPERATOR, PARALLEL]
 
 - [x] [HUMAN] P1. Refresh SPORTS category tarball:
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`.
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`.
 
 - [x] [HUMAN] P1. Fire Transfermarkt backfill VM:
       `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2020-01-01 2026-04-21`.
@@ -207,7 +207,7 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
       reference to SFI standings; redirect to the API-Football proxy.
 
 - [x] [HUMAN] P1. Refresh SPORTS category tarball post-launcher-merge:
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS`.
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`.
 
 - [x] [HUMAN] P1. Fire SFI backfill VM:
       `bash deployment-service/scripts/vm/launch-sfi-backfill-vm.sh 2020-01-01 2026-04-21`. ETA: ~12-24h. Track via
@@ -272,7 +272,7 @@ Tracks A / B / C are entirely independent and can run in parallel (different rep
 - SFI endpoint reality: `instruments-service/engine/orchestrator.py` L4365-4367 comment + `_want_sfi_standings = False`.
 - Canonical venue ids: `unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py`
   `build_venue_id`.
-- Tarball refresh SSOT: `deployment-service/scripts/vm/create-code-tarballs.sh` (`--category SPORTS` flag).
+- Tarball refresh SSOT: `deployment-service/scripts/vm/create-code-tarballs.sh` (`--asset-group SPORTS` flag).
 - Singleton-lock pattern: `launch-sfi-forward-poll.sh` + `launch-transfermarkt-backfill-vm.sh` +
   `launch-mtds-prediction-backfill-vm.sh`.
 

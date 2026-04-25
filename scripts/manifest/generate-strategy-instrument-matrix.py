@@ -17,7 +17,7 @@ Exit codes:
 Usage:
     python3 scripts/manifest/generate-strategy-instrument-matrix.py
     python3 scripts/manifest/generate-strategy-instrument-matrix.py --json
-    python3 scripts/manifest/generate-strategy-instrument-matrix.py --category CEFI
+    python3 scripts/manifest/generate-strategy-instrument-matrix.py --asset-group CEFI
 """
 
 from __future__ import annotations
@@ -160,12 +160,12 @@ def build_matrix(
     """Build the strategy-instrument matrix as a list of row dicts.
 
     Each row contains:
-        strategy_id, category, venue, asset_group, instruments, live_capable, batch_capable
+        strategy_id, asset_group (venue axis), venues, asset_groupes, instruments, live_capable, batch_capable
     """
     rows: list[dict[str, str | list[str]]] = []
     for strategy in strategies:
         sid = str(strategy.get("strategy_id", "UNKNOWN"))
-        category = str(strategy.get("category", "UNKNOWN"))
+        venue_axis = str(strategy.get("asset_group", "UNKNOWN"))
         venues_raw = strategy.get("venues")
         asset_groupes_raw = strategy.get("asset_groupes")
         instruments_raw = strategy.get("instruments")
@@ -179,7 +179,7 @@ def build_matrix(
         rows.append(
             {
                 "strategy_id": sid,
-                "category": category,
+                "asset_group": venue_axis,
                 "venues": venues,
                 "asset_groupes": asset_groupes,
                 "instruments": instruments,
@@ -197,27 +197,27 @@ def detect_instrument_conflicts(
     """Detect instruments claimed by strategies with conflicting directions.
 
     This is a soft check -- it warns when the same instrument is used by multiple
-    strategies that have different categories (e.g., CEFI and DEFI on the same perp).
+    strategies that have different venue asset groups (e.g., CEFI and DEFI on the same perp).
     """
     warnings: list[str] = []
     for instrument_id, strategy_ids in instrument_map.items():
         if len(strategy_ids) <= 1:
             continue
-        categories: set[str] = set()
+        asset_groups: set[str] = set()
         for sid in strategy_ids:
             strat = strategies_by_id.get(sid, {})
-            categories.add(str(strat.get("category", "UNKNOWN")))
-        if len(categories) > 1:
+            asset_groups.add(str(strat.get("asset_group", "UNKNOWN")))
+        if len(asset_groups) > 1:
             warnings.append(
-                f"Instrument '{instrument_id}' shared across categories "
-                f"{sorted(categories)} by strategies: {strategy_ids}"
+                f"Instrument '{instrument_id}' shared across asset groups "
+                f"{sorted(asset_groups)} by strategies: {strategy_ids}"
             )
     return warnings
 
 
 def print_matrix_table(rows: list[dict[str, str | list[str]]]) -> None:
     """Print the strategy-instrument matrix as a formatted table."""
-    print(f"\n{'Strategy':<45} {'Category':<10} {'Venues':<30} {'Instruments'}")
+    print(f"\n{'Strategy':<45} {'AssetGroup':<10} {'Venues':<30} {'Instruments'}")
     print("-" * 130)
     for row in rows:
         venues_str = ", ".join(row["venues"]) if isinstance(row["venues"], list) else str(row["venues"])
@@ -229,7 +229,7 @@ def print_matrix_table(rows: list[dict[str, str | list[str]]]) -> None:
             instr_str = instr_str[:47] + "..."
         if len(venues_str) > 28:
             venues_str = venues_str[:25] + "..."
-        print(f"{row['strategy_id']:<45} {row['category']:<10} {venues_str:<30} {instr_str}")
+        print(f"{row['strategy_id']:<45} {row['asset_group']:<10} {venues_str:<30} {instr_str}")
 
 
 def main() -> int:
@@ -241,10 +241,11 @@ def main() -> int:
         help="Output matrix as JSON instead of table",
     )
     parser.add_argument(
-        "--category",
+        "--asset-group",
         type=str,
         default=None,
-        help="Filter by category (CEFI, TRADFI, DEFI, SPORTS, QUANT)",
+        dest="asset_group",
+        help="Filter by venue asset group (CEFI, TRADFI, DEFI, SPORTS, QUANT, OPTIONS)",
     )
     parser.add_argument(
         "--manifest",
@@ -259,12 +260,9 @@ def main() -> int:
     strategies_raw = data.get("strategies")
     strategies: list[dict[str, object]] = strategies_raw if isinstance(strategies_raw, list) else []
 
-    if args.category:
-        strategies = [
-            s
-            for s in strategies
-            if (cat := s.get("category")) is not None and str(cat).upper() == args.category.upper()
-        ]
+    if args.asset_group:
+        want = str(args.asset_group).upper()
+        strategies = [s for s in strategies if str(s.get("asset_group", "")).upper() == want]
 
     if not strategies:
         print("No strategies found.", file=sys.stderr)

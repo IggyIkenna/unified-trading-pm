@@ -22,6 +22,10 @@ Multi-repo workspace (~62 independent git repos). Key locations:
 - `unified-trading-pm/` — plans, scripts, cursor rules, workspace manifest (SSOT)
 - `unified-trading-pm/workspace-manifest.json` — all repos, deps, versions, merge order
 - `unified-trading-pm/plans/active/INDEX.md` — canonical plan registry
+- **Venue axis (trading / asset group)** — SSOT and waves:
+  [venue_axis_asset_group_vocabulary_2026_04_25.plan.md](plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md);
+  quick rules in `unified-trading-pm/cursor-configs/CLAUDE.md` (“Venue axis (trading) SSOT”). Applies across UAC, UTL,
+  MDPS, MTDS, and downstream consumers; touch UAC first for registry changes.
 
 ---
 

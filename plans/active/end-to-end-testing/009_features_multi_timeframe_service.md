@@ -27,7 +27,7 @@ This service reads delta-one features computed at a base timeframe and re-aggreg
 features-multi-timeframe
   --operation OP        compute | info [required]
   --mode MODE           batch | live [required]
-  --category CAT        Asset category (default: crypto)
+  --asset-group CAT        Asset category (default: crypto)
   --date DATE           Date partition (YYYY-MM-DD, defaults to today)
   --verbose / -v        Enable DEBUG logging
   --run-tag TAG         GCS output prefix (default: batch; use t1-recon for T+1 reconciliation)
@@ -84,7 +84,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=dev CLOUD_MOCK_MODE=false TESTNET_MODE=mainnet \
   .venv/bin/python -c "
 from features_multi_timeframe_service.cli.main import main
 import sys
-sys.argv = ['features-multi-timeframe', '--operation', 'info', '--mode', 'batch', '--category', 'crypto']
+sys.argv = ['features-multi-timeframe', '--operation', 'info', '--mode', 'batch', '--asset-group', 'crypto']
 main()
 "
 ```
@@ -109,7 +109,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false \
 from features_multi_timeframe_service.cli.main import main
 import sys
 sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'batch', \
-            '--category', 'crypto', '--date', '2026-03-22']
+            '--asset-group', 'crypto', '--date', '2026-03-22']
 main()
 "
 
@@ -132,7 +132,7 @@ for b in blobs[:5]:
 
 ### Phase 4: Category Sweep
 
-The CLI accepts free-text `--category` (no argparse restriction). Test how the service handles each value:
+The CLI accepts free-text `--asset-group` (no argparse restriction). Test how the service handles each value:
 
 | #   | Category   | Expected                                                                    | Status |
 | --- | ---------- | --------------------------------------------------------------------------- | ------ |
@@ -144,8 +144,8 @@ The CLI accepts free-text `--category` (no argparse restriction). Test how the s
 | 4.6 | SPORTS     | Not applicable — should handle gracefully, return empty                     |        |
 | 4.7 | PREDICTION | Not applicable — should handle gracefully, return empty                     |        |
 
-**Key question:** Does `--category crypto` correctly resolve to the right GCS paths for CEFI and DEFI features? Or does
-it only read from a `crypto/` prefix? This is a potential routing bug — log the actual GCS read paths.
+**Key question:** Does `--asset-group crypto` correctly resolve to the right GCS paths for CEFI and DEFI features? Or
+does it only read from a `crypto/` prefix? This is a potential routing bug — log the actual GCS read paths.
 
 ```bash
 for cat in crypto forex CEFI TRADFI DEFI SPORTS PREDICTION; do
@@ -155,7 +155,7 @@ for cat in crypto forex CEFI TRADFI DEFI SPORTS PREDICTION; do
 from features_multi_timeframe_service.cli.main import main
 import sys
 sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'batch', \
-            '--category', '$cat', '--date', '2026-03-22']
+            '--asset-group', '$cat', '--date', '2026-03-22']
 main()
 " 2>&1 | tail -10
 done
@@ -165,19 +165,19 @@ done
 
 Live mode subscribes to `features-delta-one-ready` events and processes MTF features as upstream data arrives.
 
-| #   | What                                                | Expected                                                    | Status |
-| --- | --------------------------------------------------- | ----------------------------------------------------------- | ------ |
-| 5.1 | `--operation compute --mode live --category crypto` | LiveHandler starts, subscribes to delta-one-ready           |        |
-| 5.2 | Event subscription                                  | PubSub subscription established (or mock equivalent)        |        |
-| 5.3 | Incremental processing                              | New delta-one features trigger MTF recompute                |        |
-| 5.4 | Graceful shutdown                                   | Ctrl-C → clean exit via `svc.shutdown()`, no partial writes |        |
+| #   | What                                                   | Expected                                                    | Status |
+| --- | ------------------------------------------------------ | ----------------------------------------------------------- | ------ |
+| 5.1 | `--operation compute --mode live --asset-group crypto` | LiveHandler starts, subscribes to delta-one-ready           |        |
+| 5.2 | Event subscription                                     | PubSub subscription established (or mock equivalent)        |        |
+| 5.3 | Incremental processing                                 | New delta-one features trigger MTF recompute                |        |
+| 5.4 | Graceful shutdown                                      | Ctrl-C → clean exit via `svc.shutdown()`, no partial writes |        |
 
 ```bash
 CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false TESTNET_MODE=mainnet \
   .venv/bin/python -c "
 from features_multi_timeframe_service.cli.main import main
 import sys
-sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'live', '--category', 'crypto']
+sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'live', '--asset-group', 'crypto']
 main()
 "
 ```
@@ -202,7 +202,7 @@ CLOUD_PROVIDER=local ENVIRONMENT=dev CLOUD_MOCK_MODE=true \
 from features_multi_timeframe_service.cli.main import main
 import sys
 sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'batch', \
-            '--category', 'crypto', '--date', '2026-03-22']
+            '--asset-group', 'crypto', '--date', '2026-03-22']
 main()
 "
 
@@ -213,7 +213,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false \
 from features_multi_timeframe_service.cli.main import main
 import sys
 sys.argv = ['features-multi-timeframe', '--operation', 'compute', '--mode', 'batch', \
-            '--category', 'crypto', '--date', '2026-03-22']
+            '--asset-group', 'crypto', '--date', '2026-03-22']
 main()
 "
 

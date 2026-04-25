@@ -145,7 +145,7 @@ todos:
         Current code: get_venues_for_categories("SPORTS") -> ["API_FOOTBALL"]
         This calls instruments-service reference_data -> api_football adapter -> InstrumentRecord[]
         Test: cd instruments-service && python -m instruments_service.service \
-          --operation fetch --category SPORTS --date 2026-03-22
+          --operation fetch --asset-group SPORTS --date 2026-03-22
         Verify: InstrumentRecord[] written to GCS in hive format.
         If no code changes needed, just verify and mark done.
     status: pending
@@ -198,7 +198,7 @@ todos:
     content: |
       - [ ] [AGENT] P1. Test MTDS SPORTS pipeline end-to-end.
         Test: cd market-tick-data-service && python -m market_tick_data_service.service \
-          --operation download --category SPORTS --date 2026-03-22
+          --operation download --asset-group SPORTS --date 2026-03-22
         Verify: Odds parquet written to:
           gs://market-data-tick-sports-{project}/raw_tick_data/by_date/day=2026-03-22/
             data_type=odds/venue=ODDS_API/odds.parquet
@@ -286,8 +286,8 @@ todos:
       - [ ] [HUMAN+AGENT] P0. Run full 1-day pipeline validation.
         Date: 2026-03-22 (Saturday, full fixture slate)
         Steps:
-          1. instruments-service --category SPORTS --date 2026-03-22
-          2. market-tick-data-service --category SPORTS --date 2026-03-22
+          1. instruments-service --asset-group SPORTS --date 2026-03-22
+          2. market-tick-data-service --asset-group SPORTS --date 2026-03-22
           3. features-sports-service --mode batch --date 2026-03-22
         Validate:
           - Fixtures for 20+ leagues in instruments output
@@ -453,12 +453,12 @@ P7 (cleanup) ──────── P7a: QG sweep all repos
 
 ### Phase 2
 
-- instruments-service --category SPORTS produces InstrumentRecord[] for 20+ leagues
+- instruments-service --asset-group SPORTS produces InstrumentRecord[] for 20+ leagues
 - Canonical fixture IDs match API Football format
 
 ### Phase 3
 
-- MTDS --category SPORTS writes odds parquet with canonical instrument IDs
+- MTDS --asset-group SPORTS writes odds parquet with canonical instrument IDs
 - Quota tracking logs x-requests-remaining on each Odds API call
 
 ### Phase 4

@@ -15,8 +15,8 @@ ssot:
 services:
   instruments-service:
     batch:
-      dimensions: [category, venue, date]
-      category_values: [cefi, defi, tradfi, sports]
+      dimensions: [asset_group, venue, date]
+      asset_group_values: [cefi, defi, tradfi, sports]
       sports_notes: >-
         Sports instruments: league, fixture, and team instruments following InstrumentId conventions. category=sports;
         venue = bookmaker key or "api_football" for metadata.
@@ -56,8 +56,8 @@ services:
 
   market-tick-data-service:
     batch:
-      dimensions: [category, venue, instrument_type, data_type, date]
-      category_values: [cefi, defi, tradfi, sports]
+      dimensions: [asset_group, venue, instrument_type, data_type, date]
+      asset_group_values: [cefi, defi, tradfi, sports]
       instrument_type_values: [spot, perpetual, future, option, odds]
       data_type_values:
         [
@@ -82,8 +82,8 @@ services:
 
   market-data-processing-service:
     batch:
-      dimensions: [category, venue, instrument_type, date, timeframe]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, venue, instrument_type, date, timeframe]
+      asset_group_values: [cefi, defi, tradfi]
       timeframe_values: [15s, 1min, 5min, 15min, 1h, 4h, 1d]
     live:
       dimensions: [venue, instrument_type]
@@ -91,15 +91,15 @@ services:
 
   features-calendar-service:
     batch:
-      dimensions: [category, date]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, date]
+      asset_group_values: [cefi, defi, tradfi]
     live: null
     notes: Batch only, calendar data changes infrequently
 
   features-delta-one-service:
     batch:
-      dimensions: [category, venue, feature_category, date]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, venue, feature_category, date]
+      asset_group_values: [cefi, defi, tradfi]
       feature_category_values:
         [
           technical_indicators,
@@ -125,8 +125,8 @@ services:
 
   features-volatility-service:
     batch:
-      dimensions: [category, venue, feature_category, date]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, venue, feature_category, date]
+      asset_group_values: [cefi, defi, tradfi]
       feature_category_values: [options_volatility, futures_basis, tradfi_vol_surface]
     live:
       dimensions: [venue, feature_category]
@@ -142,8 +142,8 @@ services:
 
   features-cross-instrument-service:
     batch:
-      dimensions: [category, feature_category, date]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, feature_category, date]
+      asset_group_values: [cefi, defi, tradfi]
       feature_category_values: [regime, cross_venue_spread, realized_vs_implied, cross_asset_correlation]
     live:
       dimensions: [feature_category]
@@ -151,8 +151,8 @@ services:
 
   features-multi-timeframe-service:
     batch:
-      dimensions: [category, feature_category, date]
-      category_values: [cefi, defi, tradfi]
+      dimensions: [asset_group, feature_category, date]
+      asset_group_values: [cefi, defi, tradfi]
       feature_category_values: [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]
     live:
       dimensions: [feature_category]

@@ -84,7 +84,7 @@ three.
 | Component                | Location                                                              | Reuse                                                |
 | ------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------- |
 | ML batch inference CLI   | `ml-inference-service/ml_inference_service/cli/`                      | `--mode batch --date`                                |
-| Strategy batch CLI       | `strategy-service/strategy_service/`                                  | `strategy-service batch --category --date`           |
+| Strategy batch CLI       | `strategy-service/strategy_service/`                                  | `strategy-service batch --asset-group --date`        |
 | Execution batch backtest | `execution-service/execution_service/cli/batch_backtest.py`           | NautilusTrader replay                                |
 | GCS config loader        | `execution-service/execution_service/cli/config_loader.py`            | `get_gcs_config_path()`                              |
 | Domain config reloader   | `execution-service/execution_service/`                                | `DomainConfigReloader`                               |

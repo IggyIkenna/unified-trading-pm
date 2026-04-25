@@ -713,7 +713,7 @@ fi
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
 if [ -f "$VSCRIPT" ]; then
-    if ! "$VSCRIPT" --category all --failed-only; then
+    if ! "$VSCRIPT" --asset-group all --failed-only; then
         log_fail "Production readiness validators FAILED — fix workspace-manifest.json / plans (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
         exit 1
     fi

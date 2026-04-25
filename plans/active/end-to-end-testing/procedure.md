@@ -18,7 +18,7 @@ Every service is tested across these dimensions:
 | **Data mode**      | `mock` (true), `real` (false)                      | `CLOUD_MOCK_MODE`     |
 | **Environment**    | `dev`, `staging` (never `prod` in local testing)   | `ENVIRONMENT`         |
 | **Testnet**        | `mainnet`, `testnet`                               | `TESTNET_MODE`        |
-| **Category**       | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION`   | `--category`          |
+| **Category**       | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION`   | `--asset-group`       |
 | **Dry-run**        | on/off                                             | `--dry-run`           |
 | **Scenario**       | `default`, `stress`                                | `--scenario`          |
 | **CSV sampling**   | on/off                                             | `ENABLE_CSV_SAMPLING` |
@@ -77,7 +77,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=dev CLOUD_MOCK_MODE=false TESTNET_MODE=mainnet \
 from <service>.cli.main import main_service_cli
 import sys
 sys.argv = ['<service>', '--operation', '<op>', '--mode', 'batch', \
-            '--category', 'CEFI', '--start-date', '2025-01-01', \
+            '--asset-group', 'CEFI', '--start-date', '2025-01-01', \
             '--end-date', '2025-01-01', '--dry-run']
 main_service_cli()
 "
@@ -94,7 +94,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false \
 from <service>.cli.main import main_service_cli
 import sys
 sys.argv = ['<service>', '--operation', '<op>', '--mode', 'batch', \
-            '--category', 'CEFI', '--start-date', '2025-01-01', \
+            '--asset-group', 'CEFI', '--start-date', '2025-01-01', \
             '--end-date', '2025-01-01']
 main_service_cli()
 "
@@ -126,7 +126,7 @@ for cat in CEFI TRADFI DEFI SPORTS PREDICTION; do
 from <service>.cli.main import main_service_cli
 import sys
 sys.argv = ['<service>', '--operation', '<op>', '--mode', 'batch', \
-            '--category', '$cat', '--start-date', '2026-03-21', \
+            '--asset-group', '$cat', '--start-date', '2026-03-21', \
             '--end-date', '2026-03-21', '--force']
 main_service_cli()
 " 2>&1 | tail -10
@@ -157,7 +157,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false TESTNET_MODE=te
   .venv/bin/python -c "
 from <service>.cli.main import main_service_cli
 import sys
-sys.argv = ['<service>', '--operation', 'live', '--mode', 'live', '--category', 'CEFI']
+sys.argv = ['<service>', '--operation', 'live', '--mode', 'live', '--asset-group', 'CEFI']
 main_service_cli()
 "
 ```
@@ -180,7 +180,7 @@ CLOUD_PROVIDER=local ENVIRONMENT=dev CLOUD_MOCK_MODE=true \
 from <service>.cli.main import main_service_cli
 import sys
 sys.argv = ['<service>', '--operation', '<op>', '--mode', 'batch', \
-            '--category', 'CEFI', '--start-date', '2025-01-01', \
+            '--asset-group', 'CEFI', '--start-date', '2025-01-01', \
             '--end-date', '2025-01-01', '--scenario', 'stress']
 main_service_cli()
 "
@@ -306,7 +306,7 @@ find . -name "*.tmp" -not -path "./.venv*" -delete
 
 - Live mode: order execution via UTEI adapters
 - Testnet: CRITICAL — must use testnet to avoid real money
-- No `--category` (routing based on instruction content)
+- No `--asset-group` (routing based on instruction content)
 - Backtest mode: uses matching-engine-library internally
 
 ### strategy-service

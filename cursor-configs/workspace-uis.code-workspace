@@ -21,10 +21,6 @@
       "name": "E2E Testing"
     },
     {
-      "path": "unified-internal-contracts",
-      "name": "🤝 Internal Contracts",
-    },
-    {
       "path": "deployment-ui",
       "name": "Deployment UI"
     },

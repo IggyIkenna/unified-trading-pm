@@ -402,14 +402,14 @@ tarball-refresh window may pull either old OR new code depending on timing. Alwa
 
 ```bash
 # Refresh FIRST, wait for completion
-bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI
+bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI
 # Verify timestamps
 gsutil ls -l gs://deployment-scripts-.../code/mtds-code.tar.gz
 # THEN launch
 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh
 ```
 
-Use `--all` instead of `--category` if multi-repo changes are in flight. Bare invocation only re-tars CORE
+Use `--all` instead of `--asset-group` if multi-repo changes are in flight. Bare invocation only re-tars CORE
 (UAC/UTL/MTDS/ deployment-service) — other categories stale.
 
 ### L9. Launch staggering: 3s per-VM + 10s per-15 batch is enough for e2-standard-2

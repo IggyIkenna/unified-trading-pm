@@ -2,7 +2,7 @@
 scope: [engineer, admin, sales]
 ---
 
-# Playbook 2c — Research & Docs: Regulatory Umbrella
+# Playbook 2c — Deep Dive: Regulatory Umbrella
 
 > **Layer:** Implementation. Narrative lives in
 > [experience/regulatory-umbrella-briefing.md](../experience/regulatory-umbrella-briefing.md).
@@ -15,8 +15,10 @@ a deeper briefing on how the umbrella works before committing to a demo.
 
 ## Pre-req state
 
-- Prospect signed in via briefings gate (pb2)
-- Selected the Regulatory Umbrella pillar from the briefings hub
+- Prospect has unlocked the Deep Dive section via the brief questionnaire on the lock screen OR a per-path access code
+  (see [02-research-and-documentation.md](02-research-and-documentation.md) and
+  [../authentication/light-auth-briefings.md](../authentication/light-auth-briefings.md))
+- Selected the Regulatory Umbrella pillar from the briefings hub OR landed here directly via a sales-sent link
 
 ## Route
 

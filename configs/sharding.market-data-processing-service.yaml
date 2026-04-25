@@ -19,14 +19,14 @@ cloud_run_job_name: market-data-processing-service-job
 # This maximizes parallelism and isolates venue failures
 # =============================================================================
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, TRADFI, DEFI]
     description: Market category to process
 
   - name: venue
     type: hierarchical
-    parent: category
+    parent: asset_group
     source: venues.yaml
     description: Venue within category (from venues.yaml)
 

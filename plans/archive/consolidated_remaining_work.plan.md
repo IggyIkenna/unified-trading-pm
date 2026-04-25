@@ -1433,7 +1433,7 @@ diagrams, unit tests. This section handles everything that requires live infrast
   OPRA, CME options, incremental_book_L2 adapters. Use quickmerge on staging branch for each." status: pending
 - id: hft-feature-backfill-2024 content: "Run batch mode backfill for 2024 data after successful deploy: (1) MDPS batch
   --start-date 2024-01-01 --end-date 2024-12-31 per venue; (2) features-cross-instrument-service batch --start-date
-  2024-01-01 --end-date 2024-12-31 --category cefi." status: pending
+  2024-01-01 --end-date 2024-12-31 --asset-group cefi." status: pending
 - id: hft-feature-verify-lifecycle-events content: "Verify lifecycle events for features-cross-instrument-service after
   first live run: gsutil ls gs://{project}-events/features-cross-instrument-service/. Check for STARTED,
   VALIDATION_STARTED, VALIDATION_COMPLETED, PROCESSING_STARTED, PROCESSING_COMPLETED, PERSISTENCE_STARTED,
@@ -1442,7 +1442,7 @@ diagrams, unit tests. This section handles everything that requires live infrast
   to 2024-12-31. Check NaN/inf counts, feature distributions, no missing dates. Acceptable NaN threshold: <1% per
   feature column." status: pending
 - id: hft-feature-live-smoke-test content: "Live mode smoke test for features-cross-instrument-service: start with
-  --mode live --category cefi --feature-category regime. Verify PubSub messages on features-cross-instrument-regime
+  --mode live --asset-group cefi --feature-category regime. Verify PubSub messages on features-cross-instrument-regime
   topic within 60s. Verify GCS persistence at features/cross_instrument/regime/date=TODAY/. No errors in Cloud Logging.
   Stop service after verification." status: pending
 
@@ -1475,7 +1475,7 @@ _(Gated on master plan completion of scaffold, calculators, and unit tests)_
   Terraform from unified-trading-deployment-v3/terraform/services/features-multi-timeframe-service/gcp/. First
   deployment — run terraform plan then terraform apply." status: pending
 - id: fmts-backfill content: "Run batch backfill for features-multi-timeframe-service: --start-date 2024-01-01
-  --end-date 2024-12-31 --category cefi. Verify GCS output at features/multi_timeframe/{feature_category}/date=\*/"
+  --end-date 2024-12-31 --asset-group cefi. Verify GCS output at features/multi_timeframe/{feature_category}/date=\*/"
   status: pending
 - id: fmts-live-smoke-test content: "Live mode smoke test: start features-multi-timeframe-service --mode live. Verify
   PubSub messages on features-multi-timeframe-tf_momentum_alignment and features-multi-timeframe-tf_structure_context

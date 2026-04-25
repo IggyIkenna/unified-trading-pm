@@ -64,6 +64,8 @@ required: true
 shape:
   instrument_id: string          # unambiguous reference to instruments-service catalogue
   venue: string                  # venue id per 02-venues/venue-registry-reference.md
+  asset_group: enum              # CEFI | DEFI | TRADFI | SPORTS | PREDICTION | CROSS_CATEGORY (canonical JSON key)
+  # Legacy wire compat: clients may still send the same enum under the key `category` — UAC maps both to one field.
   chain:
     type: string
     optional: true               # DeFi only
@@ -72,7 +74,7 @@ shape:
 validation:
   - instrument_id must resolve in instruments-service
   - venue must be in supported_venues for instrument_type
-  - chain must be populated when category == DEFI
+  - chain must be populated when asset_group == DEFI
 ```
 
 ### 2.2 `intended_action`

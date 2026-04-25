@@ -45,7 +45,7 @@ subscription config: 50+ strategies via config expansion (13 archetypes x 5 asse
 
 ```
 --mode batch                          # REQUIRED (only choice currently)
---category CEFI|TRADFI|DEFI|ALL       # default: ALL (resolves default instruments/strategies)
+--asset-group CEFI|TRADFI|DEFI|ALL       # default: ALL (resolves default instruments/strategies)
 --instruments BTC ETH SOL SPY         # shortcuts or full canonical IDs
 --strategies MOM_MACD AAVE_LENDING    # strategy types
 --timeframes 5m 15m 1h               # default: 5m
@@ -70,8 +70,8 @@ subscription config: 50+ strategies via config expansion (13 archetypes x 5 asse
 ## Service-Specific Notes
 
 - **No `--operation` flag** -- strategy-service uses `--mode` only (`batch`). It does not use ServiceCLI dispatch.
-- **No `--category` as a routing axis** -- `--category` exists but only selects default instruments/strategies. It does
-  not route to different handler classes or pipelines. CEFI/TRADFI resolve to MOM_MACD, DEFI resolves to
+- **No `--asset-group` as a routing axis** -- `--asset-group` exists but only selects default instruments/strategies. It
+  does not route to different handler classes or pipelines. CEFI/TRADFI resolve to MOM_MACD, DEFI resolves to
   AAVE_LENDING/BASIS_TRADE/STAKED_BASIS/RECURSIVE_STAKED_BASIS.
 - **Mock mode redirect** -- when `CLOUD_MOCK_MODE=true`, the service immediately redirects to `run_mock_pipeline()` and
   returns `{"status": "ok", "mock_mode": True}`. The normal CLI path is skipped entirely.
@@ -133,7 +133,7 @@ subscription config: 50+ strategies via config expansion (13 archetypes x 5 asse
 
 ### Phase 4: Category Sweep
 
-**Note**: `--category` in strategy-service selects default instruments and strategies, not routing pipelines. All
+**Note**: `--asset-group` in strategy-service selects default instruments and strategies, not routing pipelines. All
 categories still go through the same strategy engine. The purpose here is to verify each category resolves to the
 correct instruments and strategies.
 
@@ -240,15 +240,15 @@ Compare mock pipeline output vs real pipeline output to verify mock data fidelit
 
 Check these patterns from prior services:
 
-| Pattern                           | What to check                                         | Status |
-| --------------------------------- | ----------------------------------------------------- | ------ |
-| `load_dotenv(override=True)`      | Must be `override=False` -- confirmed in main.py      |        |
-| Hardcoded bucket names            | `strategy-store-{project_id}` -- derived, not env var |        |
-| asyncio nesting                   | Handler uses sync path (no asyncio.run inside)        |        |
-| Category routing fallthrough      | DEFI returns empty instruments (intended)             |        |
-| SPORTS/PREDICTION in `--category` | Not in CATEGORIES choices -- verify argparse rejects  |        |
-| `--dry-run` enforcement           | Skips `_validate_startup`, check no GCS writes happen |        |
-| Mock mode bypass                  | `is_mock_mode()` skips entire CLI path                |        |
+| Pattern                              | What to check                                         | Status |
+| ------------------------------------ | ----------------------------------------------------- | ------ |
+| `load_dotenv(override=True)`         | Must be `override=False` -- confirmed in main.py      |        |
+| Hardcoded bucket names               | `strategy-store-{project_id}` -- derived, not env var |        |
+| asyncio nesting                      | Handler uses sync path (no asyncio.run inside)        |        |
+| Category routing fallthrough         | DEFI returns empty instruments (intended)             |        |
+| SPORTS/PREDICTION in `--asset-group` | Not in CATEGORIES choices -- verify argparse rejects  |        |
+| `--dry-run` enforcement              | Skips `_validate_startup`, check no GCS writes happen |        |
+| Mock mode bypass                     | `is_mock_mode()` skips entire CLI path                |        |
 
 ## AWS Testing
 

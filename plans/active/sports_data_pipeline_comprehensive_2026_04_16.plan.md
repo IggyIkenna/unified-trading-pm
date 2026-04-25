@@ -75,7 +75,7 @@ Phase 3 + Phase 4 + Phase 5 ──→ Phase 9 (Validation)
 - [ ] [AGENT] P0. Run QG on instruments-service (\_fetch_footystats_odds, get_fixture_odds_snapshot adapter method, odds
       wiring in short-circuit + full flow)
 - [ ] [SCRIPT] P0. Create code tarballs:
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh --category SPORTS --include deployment-service`
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS --include deployment-service`
 - [ ] [SCRIPT] P0. Upload tarballs to GCS:
       `gsutil -m cp /tmp/*.tar.gz gs://deployment-scripts-central-element-323112/code/`
 - [ ] [SCRIPT] P0. Re-run FootyStats VM with updated code (adds odds extraction — same /todays-matches endpoint, no

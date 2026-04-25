@@ -50,21 +50,24 @@ Services sub-routes (public descriptor pages under `/services/`):
 | Platform           | `/services/platform`    | `/platform` umbrella (services strip)                     |
 | Regulatory         | `/services/regulatory`  | `/regulatory` (services strip)                            |
 
-### pb2 — Briefings Hub ([`../experience/briefings-hub.md`](../experience/briefings-hub.md))
+### pb2 — Deep Dive ([`../experience/briefings-hub.md`](../experience/briefings-hub.md))
 
 Light-auth gate (Tier 1 — see [`../authentication/light-auth-briefings.md`](../authentication/light-auth-briefings.md)).
-Six pillars, one per commercial path plus the DART umbrella.
+Six briefing pillars + developer docs + founder long-form + FAQ. One unlock covers all routes in this section.
 
-| Walkthrough section            | Route                                       | Inbound link path                         |
-| ------------------------------ | ------------------------------------------- | ----------------------------------------- |
-| Hub landing                    | `/briefings` (gated)                        | Email from sales contact (no public link) |
-| DART umbrella briefing         | `/briefings/platform`                       | `/briefings` hub card                     |
-| DART Signals-In briefing       | `/briefings/dart-signals-in`                | `/briefings` hub card + platform pillar   |
-| DART Full briefing             | `/briefings/dart-full`                      | `/briefings` hub card + platform pillar   |
-| Odum Signals briefing          | `/briefings/signals-out`                    | `/briefings` hub card                     |
-| Investment Management briefing | `/briefings/investment-management`          | `/briefings` hub card                     |
-| Regulatory briefing            | `/briefings/regulatory`                     | `/briefings` hub card                     |
-| Second-call booking            | Calendar iframe embedded on briefing footer | n/a                                       |
+| Walkthrough section            | Route                                             | Inbound link path                                        |
+| ------------------------------ | ------------------------------------------------- | -------------------------------------------------------- |
+| Hub landing                    | `/briefings` (gated)                              | Side-nav Deep Dive item OR direct URL                    |
+| DART umbrella briefing         | `/briefings/platform`                             | `/briefings` hub card + side-nav                         |
+| DART Signals-In briefing       | `/briefings/dart-signals-in`                      | `/briefings` hub card + platform pillar + side-nav       |
+| DART Full briefing             | `/briefings/dart-full`                            | `/briefings` hub card + platform pillar + side-nav       |
+| Odum Signals briefing          | `/briefings/signals-out`                          | `/briefings` hub card + side-nav                         |
+| Investment Management briefing | `/briefings/investment-management`                | `/briefings` hub card + side-nav                         |
+| Regulatory briefing            | `/briefings/regulatory`                           | `/briefings` hub card + side-nav                         |
+| Developer documentation        | `/docs` (gated)                                   | Side-nav Deep Dive item                                  |
+| Founder long-form story        | `/our-story` (gated; timeline `/story` is public) | Side-nav Deep Dive item                                  |
+| FAQ                            | `/faq` (gated)                                    | Side-nav Deep Dive item                                  |
+| Calendly CTA (post-read)       | `https://calendly.com/odum-ikenna`                | `/briefings` "Next steps" CTA + post-questionnaire email |
 
 ### pb2a — IM Decision Journey ([`../experience/im-decision-journey.md`](../experience/im-decision-journey.md))
 

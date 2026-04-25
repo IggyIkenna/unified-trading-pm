@@ -122,7 +122,7 @@ data type, or category. **Not a gate** — SIT is the gate.
 
 ```bash
 cd <service>
-IS_TEST_RUN=true python scripts/smoke_matrix.py --execute --category CEFI \
+IS_TEST_RUN=true python scripts/smoke_matrix.py --execute --asset-group CEFI \
     --report /tmp/smoke.json
 ```
 
@@ -132,7 +132,7 @@ Enumerate without running:
 python scripts/smoke_matrix.py  # defaults to dry enumeration
 ```
 
-All scripts support `--category X`, most support `--venue Y` and `--data-type Z`. Read the script's `--help` for the
+All scripts support `--asset-group X`, most support `--venue Y` and `--data-type Z`. Read the script's `--help` for the
 service-specific shape.
 
 ### 3.3 What `IS_TEST_RUN=true` does

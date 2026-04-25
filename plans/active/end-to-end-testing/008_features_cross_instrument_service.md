@@ -29,7 +29,7 @@ output. In mock mode, pre-generated seed data bypasses upstream dependencies.
 ```
 features-cross-instrument-service
   --date DATE           Processing date (YYYY-MM-DD) [required]
-  --category CATEGORY   CEFI | DEFI | TRADFI [required]
+  --asset-group CATEGORY   CEFI | DEFI | TRADFI [required]
   --mode MODE           batch | live [default: batch]
   --feature-groups GRP  Feature groups to calculate (default: all)
   --dry-run             Validate setup only, no writes
@@ -93,7 +93,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false \
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', 'CEFI', '--mode', 'batch']
+            '--asset-group', 'CEFI', '--mode', 'batch']
 main()
 "
 ```
@@ -131,7 +131,7 @@ for cat in CEFI TRADFI DEFI; do
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', '$cat', '--mode', 'batch']
+            '--asset-group', '$cat', '--mode', 'batch']
 main()
 " 2>&1 | tail -10
 done
@@ -144,7 +144,7 @@ Verify SPORTS/PREDICTION rejection:
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', 'SPORTS', '--mode', 'batch']
+            '--asset-group', 'SPORTS', '--mode', 'batch']
 main()
 " 2>&1 | tail -5
 # Expected: argparse error "invalid choice: 'SPORTS'"
@@ -154,12 +154,12 @@ main()
 
 Live mode subscribes to upstream feature-ready events and computes cross-instrument features incrementally.
 
-| #   | What                          | Expected                                                         | Status |
-| --- | ----------------------------- | ---------------------------------------------------------------- | ------ |
-| 5.1 | `--mode live --category CEFI` | LiveHandler starts, subscribes to upstream events                |        |
-| 5.2 | Feature group filtering       | `--feature-groups cross_venue_spreads` limits live computation   |        |
-| 5.3 | Event logging                 | UEI events: STARTED, per-group COMPLETED/FAILED, final COMPLETED |        |
-| 5.4 | Graceful shutdown             | Ctrl-C → clean exit, no partial writes                           |        |
+| #   | What                             | Expected                                                         | Status |
+| --- | -------------------------------- | ---------------------------------------------------------------- | ------ |
+| 5.1 | `--mode live --asset-group CEFI` | LiveHandler starts, subscribes to upstream events                |        |
+| 5.2 | Feature group filtering          | `--feature-groups cross_venue_spreads` limits live computation   |        |
+| 5.3 | Event logging                    | UEI events: STARTED, per-group COMPLETED/FAILED, final COMPLETED |        |
+| 5.4 | Graceful shutdown                | Ctrl-C → clean exit, no partial writes                           |        |
 
 ```bash
 CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false TESTNET_MODE=mainnet \
@@ -167,7 +167,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false TESTNET_MODE=ma
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', 'CEFI', '--mode', 'live']
+            '--asset-group', 'CEFI', '--mode', 'live']
 main()
 "
 ```
@@ -191,7 +191,7 @@ CLOUD_PROVIDER=local ENVIRONMENT=dev CLOUD_MOCK_MODE=true \
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', 'CEFI', '--mode', 'batch']
+            '--asset-group', 'CEFI', '--mode', 'batch']
 main()
 "
 
@@ -202,7 +202,7 @@ CLOUD_PROVIDER=gcp ENVIRONMENT=development CLOUD_MOCK_MODE=false \
 from features_cross_instrument_service.cli.main import main
 import sys
 sys.argv = ['features-cross-instrument', '--date', '2026-03-22', \
-            '--category', 'CEFI', '--mode', 'batch']
+            '--asset-group', 'CEFI', '--mode', 'batch']
 main()
 "
 

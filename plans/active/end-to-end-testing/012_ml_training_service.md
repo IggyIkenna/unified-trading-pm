@@ -37,7 +37,7 @@ Follows `procedure.md`. Pipeline position: #12 (L4 ML layer). **BATCH ONLY** -- 
 | Argument                             | Type       | Default          | Notes                                                |
 | ------------------------------------ | ---------- | ---------------- | ---------------------------------------------------- |
 | `--start-date` / `--end-date`        | date (req) | --               | Training window (YYYY-MM-DD), both required          |
-| `--category`                         | choice     | `ALL`            | `CEFI`, `TRADFI`, `ALL`                              |
+| `--asset-group`                      | choice     | `ALL`            | `CEFI`, `TRADFI`, `ALL`                              |
 | `--stage`                            | choice     | `full`           | `feature-selection`, `hyperparameter-tuning`, `full` |
 | `--instruments`                      | list       | all per category | `BTC ETH SOL SPY` (shortcuts)                        |
 | `--timeframes`                       | list       | `1h 4h`          | `1m 5m 15m 1h 4h 1d`                                 |

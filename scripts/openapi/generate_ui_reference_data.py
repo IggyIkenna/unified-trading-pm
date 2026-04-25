@@ -336,7 +336,7 @@ def extract_strategy_configs(workspace_root: Path) -> list[dict[str, object]]:
             {
                 "strategy_id": s.get("strategy_id", ""),
                 "display_name": s.get("display_name", ""),
-                "category": s.get("category", ""),
+                "asset_group": s.get("asset_group", ""),
                 "subcategory": s.get("subcategory", ""),
                 "domain": s.get("domain", ""),
                 "asset_groupes": s.get("asset_groupes", []),
@@ -470,7 +470,7 @@ def extract_venue_data_availability() -> dict[str, dict[str, object]]:
         for venue_name, entry in VENUE_DATA_AVAILABILITY.items():
             availability[venue_name] = {
                 "venue_name": entry.venue_name,
-                "category": str(entry.category),
+                "asset_group": str(entry.asset_group),
                 "availability_lag_hours": entry.availability_lag_hours,
                 "available_after_utc_hour": entry.available_after_utc_hour,
                 "is_t_plus_one": entry.is_t_plus_one,

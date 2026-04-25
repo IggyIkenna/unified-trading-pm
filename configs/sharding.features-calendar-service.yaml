@@ -33,8 +33,8 @@ dimensions:
     description: Date range split into monthly chunks (calendar features are lightweight)
 
 # CLI argument mappings
-# NOTE: Service CLI accepts --category but bucket is SHARED (no category suffix)
-# The --category arg is ignored for bucket routing but may be used for logging/metadata
+# NOTE: Service CLI accepts --asset-group but bucket is SHARED (no category suffix)
+# The --asset-group arg is ignored for bucket routing but may be used for logging/metadata
 cli_args:
   feature_group: --feature-group
   start_date: --start-date

@@ -196,17 +196,17 @@ def test_data_types() -> None:
     logger.info("=" * 60)
 
     from unified_api_contracts.registry.market_data_categories import (
-        DATA_TYPES_BY_CATEGORY,
-        VENUES_BY_CATEGORY,
+        DATA_TYPES_BY_ASSET_GROUP,
+        VENUES_BY_ASSET_GROUP,
     )
 
-    assert "prediction" in VENUES_BY_CATEGORY, "PREDICTION missing from VENUES_BY_CATEGORY"
-    assert "POLYMARKET" in VENUES_BY_CATEGORY["prediction"]
-    assert "KALSHI" in VENUES_BY_CATEGORY["prediction"]
-    logger.info("  VENUES_BY_CATEGORY[prediction]: %s", VENUES_BY_CATEGORY["prediction"])
+    assert "prediction" in VENUES_BY_ASSET_GROUP, "PREDICTION missing from VENUES_BY_ASSET_GROUP"
+    assert "POLYMARKET" in VENUES_BY_ASSET_GROUP["prediction"]
+    assert "KALSHI" in VENUES_BY_ASSET_GROUP["prediction"]
+    logger.info("  VENUES_BY_ASSET_GROUP[prediction]: %s", VENUES_BY_ASSET_GROUP["prediction"])
 
-    assert "prediction" in DATA_TYPES_BY_CATEGORY, "prediction missing from DATA_TYPES_BY_CATEGORY"
-    logger.info("  DATA_TYPES: %s", DATA_TYPES_BY_CATEGORY["prediction"])
+    assert "prediction" in DATA_TYPES_BY_ASSET_GROUP, "prediction missing from DATA_TYPES_BY_ASSET_GROUP"
+    logger.info("  DATA_TYPES: %s", DATA_TYPES_BY_ASSET_GROUP["prediction"])
 
     # Validate prediction domain exists in canonical schemas
     from unified_api_contracts import (

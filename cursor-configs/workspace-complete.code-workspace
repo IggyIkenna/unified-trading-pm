@@ -127,6 +127,10 @@
     {
       "path": "unified-trading-system-ui",
       "name": "🎨 UI"
+    },
+    {
+      "path": "e2e-testing",
+      "name": "🧪 E2E Testing"
     }
   ],
   "settings": {

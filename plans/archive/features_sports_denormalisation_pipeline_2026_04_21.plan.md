@@ -290,7 +290,7 @@ Missing inputs:
 ### Phase 3: Orchestrator CLI integration [SEQUENTIAL, depends on Phase 2]
 
 - [x] [AGENT] P0. Add a `--operation fixture-features` (or extend existing) on the features-sports-service CLI. Must
-      accept `--start-date`, `--end-date`, `--category SPORTS`, `--league-id L` (optional filter).
+      accept `--start-date`, `--end-date`, `--asset-group SPORTS`, `--league-id L` (optional filter).
 
 - [x] [AGENT] P0. Batch runner iterates dates, calls `compute_fixture_features` per date, writes outputs.
 

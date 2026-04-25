@@ -313,7 +313,7 @@ target:
   args:
     --operation: batch
     --mode: batch
-    --category: defi
+    --asset-group: defi
     --strategy-id: DEFI_ETH_BASIS
     --client-id: odum
     --date: yesterday

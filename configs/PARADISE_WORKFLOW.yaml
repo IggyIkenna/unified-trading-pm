@@ -221,7 +221,7 @@ workflow:
       example: |
         # market-tick-data-service example
         python -m market_tick_data_service --mode download \
-          --category TRADFI --venues NASDAQ \
+          --asset-group TRADFI --venues NASDAQ \
           --start-date 2025-01-01 --end-date 2025-01-01 \
           --log-level DEBUG --max-results 5
 

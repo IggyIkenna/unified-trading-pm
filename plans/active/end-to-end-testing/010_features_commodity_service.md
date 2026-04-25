@@ -53,7 +53,7 @@ signal panels).
 --verbose / -v         DEBUG logging
 ```
 
-**Note:** No `--operation` or `--category` flags. The service is commodity-domain-only. Category is implicitly TRADFI
+**Note:** No `--operation` or `--asset-group` flags. The service is commodity-domain-only. Category is implicitly TRADFI
 (energy, metals, agriculture) with possible CEFI overlap (gold-backed tokens). Mock mode is detected via
 `config.is_mock_mode()` and redirects to `run_mock_pipeline()`.
 
@@ -91,7 +91,7 @@ signal panels).
 
 ### Phase 4: Category Sweep
 
-**Note:** This service does not have a `--category` flag. It is implicitly commodity-domain (TRADFI). The sweep tests
+**Note:** This service does not have a `--asset-group` flag. It is implicitly commodity-domain (TRADFI). The sweep tests
 how the service behaves when upstream instruments from different categories are present.
 
 | #   | Category context                                                                     | Expected behaviour                                                                                       | Status |
@@ -152,9 +152,9 @@ Live is the default mode. The service iterates over `enabled_commodities` from c
 | #   | What to check                                            | Why                                                                                                                                                          | Status |
 | --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
 | K.1 | `load_dotenv(override=False)`                            | Line 24: confirmed `override=False` -- shell env vars win. PASS.                                                                                             |        |
-| K.2 | No `--operation` flag                                    | CLI does not follow standardised `--operation/--mode/--category` axes from `cli-convention.md`. Uses `--commodity` instead. Potential compliance issue.      |        |
+| K.2 | No `--operation` flag                                    | CLI does not follow standardised `--operation/--mode/--asset-group` axes from `cli-convention.md`. Uses `--commodity` instead. Potential compliance issue.   |        |
 | K.3 | `os.environ.get("LOG_LEVEL")` in `_validate_log_level()` | Line 217: uses `os.environ.get()` directly, not `UnifiedCloudConfig`. Tagged `# config-bootstrap: pre-UCC init` -- this is the approved bootstrap exception. |        |
-| K.4 | No `--category` flag                                     | Service is commodity-only, no MarketCategory routing. If CEFI gold-backed tokens need processing, how are they routed?                                       |        |
+| K.4 | No `--asset-group` flag                                  | Service is commodity-only, no MarketCategory routing. If CEFI gold-backed tokens need processing, how are they routed?                                       |        |
 | K.5 | Mock mode short-circuits before `setup_events`           | Lines 246-252: mock mode returns before `setup_events()` is called (line 254). No UEI events in mock mode.                                                   |        |
 | K.6 | Broad exception catch in commodity loop                  | Lines 294-296: catches `(ValueError, OSError, RuntimeError, KeyError)` -- adequate but may miss other exception types.                                       |        |
 | K.7 | `SignalPublisher` topic resolution                       | Verify `config.signal_topic_template` resolves correctly in dev/staging environments.                                                                        |        |

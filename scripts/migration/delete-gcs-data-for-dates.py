@@ -170,7 +170,7 @@ def main() -> None:
         help="Skip confirmation prompt (use with --execute for non-interactive).",
     )
     parser.add_argument(
-        "--category-only",
+        "--asset-group-only",
         type=str,
         choices=("CEFI", "TRADFI", "DEFI"),
         help="Only delete from this category (e.g. CEFI for market-data-tick-cefi).",

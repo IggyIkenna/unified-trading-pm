@@ -119,7 +119,7 @@ todos:
     note: ""
   - id: p1-mdps-cli-standardize
     content: |
-      - [x] [AGENT] P1. Standardize MDPS CLI — added --category arg bridging in _build_legacy_argv() to read from ServiceBootstrap args.category, with MDPS_CATEGORY env var as fallback for backwards compatibility
+      - [x] [AGENT] P1. Standardize MDPS CLI — added --asset-group arg bridging in _build_legacy_argv() to read from ServiceBootstrap args.category, with MDPS_CATEGORY env var as fallback for backwards compatibility
     status: done
     note: "MDPS still uses add_category_arg=False but now bridges categories from args"
 
@@ -224,7 +224,7 @@ todos:
     note: ""
   - id: p4-sports-live-discrete-jobs
     content: |
-      - [x] [AGENT] P1. Sports discrete live jobs wired — trigger scheduler builds CLI commands as `python -m <service> --mode batch --category SPORTS --start-date today --end-date today --run-tag live` with per-trigger extra args (--sports-entity, etc.). Same CLI, same service, just triggered by fixture proximity.
+      - [x] [AGENT] P1. Sports discrete live jobs wired — trigger scheduler builds CLI commands as `python -m <service> --mode batch --asset-group SPORTS --start-date today --end-date today --run-tag live` with per-trigger extra args (--sports-entity, etc.). Same CLI, same service, just triggered by fixture proximity.
     status: done
     note: "CLI command construction done. Backend dispatch in p4-sports-trigger-backend-dispatch."
   - id: p4-sports-streaming-viz
@@ -336,7 +336,7 @@ todos:
     content: |
       - [ ] [HUMAN+AGENT] P0. E2E test: CEFI cluster — 3 sub-tests:
         (a) T+1 single day: `bash deployment-service/scripts/vm/backfill-cluster.sh --cluster cefi --start-date $(date -v-1d +%Y-%m-%d) --end-date $(date -v-1d +%Y-%m-%d)` — verify instruments writes to GCS, MTDS downloads tick data, MDPS produces candles, features compute, ML inference produces predictions. Check each service's GCS output bucket exists and has data for yesterday.
-        (b) Live 1h: start instruments-service --mode live --category CEFI, MTDS --mode live --category CEFI, MDPS --mode live. Verify live/ partition gets data, WebSocket in unified-trading-api shows market-data channel updates.
+        (b) Live 1h: start instruments-service --mode live --asset-group CEFI, MTDS --mode live --asset-group CEFI, MDPS --mode live. Verify live/ partition gets data, WebSocket in unified-trading-api shows market-data channel updates.
         (c) Reconciliation: after (a) and (b), run batch-live-reconciliation-service for yesterday. Verify it reads both batch and live/ partitions and produces a comparison report.
         Commands: all via service CLIs from within each repo's .venv. API keys must be in Secret Manager (Tardis for CeFi tick data).
     status: todo
@@ -398,7 +398,7 @@ todos:
         1. Read strategy_service/cli/service_entry.py — what's the current entry point pattern?
         2. If it uses ServiceBootstrap: just needs a main.py wrapper that imports and calls it
         3. If it doesn't use ServiceBootstrap: refactor to use it (same pattern as instruments-service, features-sports-service)
-        4. Verify strategy-service has standard --operation, --mode, --category, --start-date, --end-date flags
+        4. Verify strategy-service has standard --operation, --mode, --asset-group, --start-date, --end-date flags
         Files: strategy_service/cli/service_entry.py, strategy_service/cli/ (check for grid_generator.py, resolvers.py which are also in cli/)
     status: done
     note: "Already uses ServiceBootstrap with --operation backtest|trade, --mode batch|live. No changes needed."

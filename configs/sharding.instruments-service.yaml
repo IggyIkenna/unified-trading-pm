@@ -19,14 +19,14 @@ cloud_run_job_name: instruments-service
 # This enables precise reprocessing of individual venue+date combinations
 # =============================================================================
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, TRADFI, DEFI]
     description: Market category to process
 
   - name: venue
     type: hierarchical
-    parent: category
+    parent: asset_group
     source: venues.yaml
     description: Venue within category (from venues.yaml)
 
@@ -48,7 +48,7 @@ cli_flags:
 # Mapping: dimension name -> CLI argument
 # These are populated from shard dimensions
 cli_args:
-  category: --category
+  asset_group: --asset-group
   venue: --venues
   # Date dimension expands to start_date + end_date using these mappings
   start_date: --start-date

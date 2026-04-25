@@ -8,7 +8,7 @@ Usage:
     python3 unified-trading-pm/scripts/catalogue/sync-to-mock.py \
         --name stress \
         --service market-tick-data-service \
-        --category CEFI \
+        --asset-group CEFI \
         --from-env prod \
         --start-date 2026-01-01 \
         --end-date 2026-01-31
@@ -16,7 +16,7 @@ Usage:
     python3 unified-trading-pm/scripts/catalogue/sync-to-mock.py \
         --name eth-backtest \
         --services instruments-service,market-tick-data-service \
-        --category DEFI \
+        --asset-group DEFI \
         --from-env prod \
         --start-date 2025-06-01 \
         --end-date 2025-06-30 \
@@ -235,7 +235,7 @@ def main() -> None:
     svc_group = parser.add_mutually_exclusive_group(required=True)
     svc_group.add_argument("--service", help="Single service name")
     svc_group.add_argument("--services", help="Comma-separated service names")
-    parser.add_argument("--category", required=True, help="Category (CEFI, TRADFI, DEFI)")
+    parser.add_argument("--asset-group", required=True, help="Category (CEFI, TRADFI, DEFI)")
     parser.add_argument("--from-env", required=True, help="Source environment (prod, dev)")
     parser.add_argument("--start-date", required=True, help="Start date YYYY-MM-DD")
     parser.add_argument("--end-date", required=True, help="End date YYYY-MM-DD")

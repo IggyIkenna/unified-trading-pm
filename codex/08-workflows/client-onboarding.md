@@ -46,28 +46,33 @@ Partnership / request access code" sends to `/contact`. See
 [`feedback_marketing_cta_routing_calendly_vs_contact.md`](../../../.claude/projects/…/memory/feedback_marketing_cta_routing_calendly_vs_contact.md)
 (memory; duplicated here for completeness).
 
-### Step 2 — Briefings review
+### Step 2 — Deep Dive review (briefings + docs + Our Story + FAQ)
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                      |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | Based on the initial conversation, sends 1-3 briefing links tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **Emerging manager / AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. |
-| Client | Reads the briefing(s). If unsure, requests an access code (light-auth gated briefings use `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`; see [`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md)).                                                                                                                      |
-| System | `BriefingAccessGate` writes `odum-briefing-session` to `localStorage` on successful unlock, so `/questionnaire`, `/briefings/*`, and `/docs` share one session.                                                                                                                                                                                                             |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | (Channel B / warm hand-off only) Sends 1-3 briefing links + per-path access code tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. Channel A skips this.                                                              |
+| Client | Lands on a Deep Dive route (`/briefings/*`, `/docs`, `/our-story`, `/faq`). Sees `<BriefingAccessGate>` with the brief questionnaire embedded inline. Either fills it (cold inbound, channel A) or expands "I already have an access code" disclosure and pastes the code Ikenna sent (warm hand-off, channel B).                                                                                                                                                |
+| System | `<BriefingAccessGate>` embeds `<QuestionnaireForm compact returnPath={pathname} />`. On submit OR correct code paste: `setBriefingSessionActive()` → `odum-briefing-session = "1"` in `localStorage`. Same session covers every Deep Dive route. Email-back fires with code + Next-steps block + Calendly + Strategy Evaluation pointer. See [`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md). |
 
-Not every prospect needs briefings — warm inbound often skips to step 3. But briefings are cheap reading material that
-resolves 80% of "is this the right shape?" questions before burning a call.
+The questionnaire-on-the-gate flow means most prospects now combine Steps 2 + 3 in a single submission — they fill the
+brief questionnaire to get into the Deep Dive, which IS the qualification step.
 
-### Step 3 — Questionnaire
+### Step 3 — Questionnaire (combined with Step 2 in channel A)
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                 |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | Sends the `/questionnaire` URL (or it's linked from the briefing the prospect just read). Access code is the same as briefings.                                                                                                                                                                                        |
-| Client | Fills 11 axes (6 base required + 5 strategy-preference optional; 7 Reg-Umbrella optional if `service_family ∈ {RegUmbrella, combo}`). Takes ~5 minutes. Submits.                                                                                                                                                       |
-| System | Writes `QuestionnaireResponse` to Firestore `/questionnaires/{id}` (staging/prod) or `localStorage` (dev/mock). Envelope `{email, firm_name, access_code_fingerprint}` stored alongside. After submit, `router.push("/services/strategy-catalogue?tab=explore&from=questionnaire&${filterQs}")` — step 4 is automatic. |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | (Channel A only) No direct action. The questionnaire is filled by the prospect on the Deep Dive lock screen during Step 2. Ikenna picks up the Firestore submission via `/admin/questionnaires` and follows up.                                                                                                                                                                                                                              |
+| Client | Fills 11 axes (6 base required + 5 strategy-preference optional; 7 Reg-Umbrella optional if `service_family ∈ {RegUmbrella, combo}`). Takes ~5 minutes. Submits. Two valid entry points: (a) embedded on the Deep Dive lock screen (most common), (b) standalone `/questionnaire` page (linked from marketing CTAs).                                                                                                                         |
+| System | Writes `QuestionnaireResponse` to Firestore `/questionnaires/{id}` (staging/prod) or `localStorage` (dev/mock). Envelope `{email, firm_name, access_code_fingerprint}` stored alongside. `setBriefingSessionActive()` activates the Deep Dive session. `POST /api/questionnaire/email` fires with code + Next-steps block + Calendly + Strategy Eval pointer. `router.push(returnPath)` — back to the Deep Dive route they were heading for. |
 
 SSOT schema: [`strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
-(derivation) + [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) (admin playback + docs flow) +
-[`../02-data/questionnaire-axes.md`](../02-data/questionnaire-axes.md) (full axis catalogue).
+(derivation) + [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) (admin playback + email-back funnel
+framing) + [`../02-data/questionnaire-axes.md`](../02-data/questionnaire-axes.md) (full axis catalogue).
+
+Reusable form component:
+[`components/questionnaire/questionnaire-form.tsx`](unified-trading-system-ui/components/questionnaire/questionnaire-form.tsx)
+with `returnPath?` + `compact?` props. Mounted in two places (standalone page + lock-screen gate); never
+inline-duplicate.
 
 ### Step 4 — Strategy universe exploration
 
@@ -80,7 +85,7 @@ SSOT schema: [`strategy-questionnaire-mapping.md`](../09-strategy/architecture-v
 Explore tab is discovery + subscription surface only. Detailed P&L / returns always link out to the reporting service
 (`/services/reports/strategy/{instanceId}`); FOMO cards never duplicate charts.
 
-### Step 5 — Strategy evaluation pack (optional)
+### Step 5 — Strategy Evaluation pack (mandatory before Sandbox demo)
 
 | Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -102,8 +107,14 @@ Architecture notes:
 - Confirmation emails route via Resend from `hello@mail.odum-research.com` (prod) / `hello@mail.uat.odum-research.com`
   (uat) / `onboarding@resend.dev` (dev).
 
-Skip this step when the prospect is purely interested in Odum-catalogue strategies (majority of DART Full, IM, Reg
-Umbrella cases).
+**Mandatory before Sandbox demo provisioning** (Tier 2 staging Firebase). The Strategy Evaluation submission is the
+second hard-gate after the brief Deep Dive questionnaire — it gives Ikenna the depth needed to curate a Sandbox
+walkthrough that's tailored to the prospect's actual stack and strategy. Prospects can submit before or after the Step 6
+call; doing it before sharpens the call agenda. The post-Step-3 email explicitly directs the prospect to
+`/strategy-evaluation` as the next step.
+
+For prospects purely interested in Odum-catalogue strategies (no proprietary strategy to evaluate), Ikenna may waive
+this step on a case-by-case basis at Step 6 — but the default is "fill it before Sandbox provisioning".
 
 ### Step 6 — Phone / video call
 

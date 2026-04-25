@@ -188,7 +188,7 @@ correct counts via `partition_writer.record_shard_count()`.
 ### Phase 4 — QG + tarball + smoke (SEQUENTIAL after Phase 3)
 
 - [x] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` — all gates passed (185s)
-- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
+- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`
       (tarball refreshed 2026-04-23T15:59:12Z)
 - [x] [SCRIPT] P0. Commit + push to `live-defi-rollout` (MTDS `81f0fa4`)
 - [x] [SCRIPT] P0. Launch `cefi-smoke-p2a-20260423-222152` on e2-standard-2, DERIBIT 2026-04-17, options_chain+trades —

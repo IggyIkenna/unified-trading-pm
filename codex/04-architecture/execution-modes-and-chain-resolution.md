@@ -69,7 +69,7 @@ error — not a silent skip.
 ### 2. Instruments-Service Discovers What Exists
 
 ```
-instruments-service --operation instruments --category DEFI --start-date 2026-03-01
+instruments-service --operation instruments --asset-group DEFI --start-date 2026-03-01
   └── Per venue adapter:
       ├── Uniswap V3 subgraph → pools with BOTH sides major, $100k TVL
       ├── Aave V3 subgraph → lending markets for major assets
@@ -376,13 +376,13 @@ the execution provider is pluggable.
 
 ### Pipeline Scripts
 
-| Pipeline                                                   | Status                                                                  |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `run-data-prep.sh` (instruments, ticks, process, features) | **Working** — positional subcommands for each pipeline stage            |
-| `run-batch.sh` (historical replay)                         | **Working** — `--strategy`, `--strategies`, `--category`, `--skip-data` |
-| `run-paper.sh` (real-time on Tenderly fork)                | **Working** — creates Tenderly fork, uses `local-paper.env`             |
-| `run-live.sh` (real-time on mainnet)                       | **Working** — Copper custody, interactive safety confirmation           |
-| `colocated_engine.py` (shared memory, 44 strategies)       | **Working** — async GCS sink, shared-memory architecture                |
+| Pipeline                                                   | Status                                                                     |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `run-data-prep.sh` (instruments, ticks, process, features) | **Working** — positional subcommands for each pipeline stage               |
+| `run-batch.sh` (historical replay)                         | **Working** — `--strategy`, `--strategies`, `--asset-group`, `--skip-data` |
+| `run-paper.sh` (real-time on Tenderly fork)                | **Working** — creates Tenderly fork, uses `local-paper.env`                |
+| `run-live.sh` (real-time on mainnet)                       | **Working** — Copper custody, interactive safety confirmation              |
+| `colocated_engine.py` (shared memory, 44 strategies)       | **Working** — async GCS sink, shared-memory architecture                   |
 
 ### Config Layer
 

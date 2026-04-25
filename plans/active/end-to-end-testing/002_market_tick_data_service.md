@@ -44,14 +44,14 @@ into MockStateStore. In real mode (Tier 2), the API reads from the actual GCS ou
 
 ## Known Issues to Audit (from instruments-service)
 
-| Issue                               | Audit check                                          | How to verify                                    |
-| ----------------------------------- | ---------------------------------------------------- | ------------------------------------------------ |
-| #1 `load_dotenv(override=True)`     | Check `cli/main.py` for `override=True`              | `rg "load_dotenv.*override" --type py`           |
-| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes        | Run with `--dry-run`, check no GCS files created |
-| #6 Asyncio nesting                  | Check `DownloadOperation` for nested `asyncio.run()` | Known issue — uses `run_in_executor`             |
-| #8 PREDICTION category fallthrough  | Check category routing with unknown category         | `--category PREDICTION` should skip gracefully   |
-| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                    | Remove if present, use UCI `get_bucket_name()`   |
-| #7 Raw API keys in `.env`           | Check for plaintext API keys                         | Only SM reference names allowed                  |
+| Issue                               | Audit check                                          | How to verify                                     |
+| ----------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
+| #1 `load_dotenv(override=True)`     | Check `cli/main.py` for `override=True`              | `rg "load_dotenv.*override" --type py`            |
+| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes        | Run with `--dry-run`, check no GCS files created  |
+| #6 Asyncio nesting                  | Check `DownloadOperation` for nested `asyncio.run()` | Known issue — uses `run_in_executor`              |
+| #8 PREDICTION category fallthrough  | Check category routing with unknown category         | `--asset-group PREDICTION` should skip gracefully |
+| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                    | Remove if present, use UCI `get_bucket_name()`    |
+| #7 Raw API keys in `.env`           | Check for plaintext API keys                         | Only SM reference names allowed                   |
 
 ## Test Matrix
 
@@ -102,14 +102,14 @@ into MockStateStore. In real mode (Tier 2), the API reads from the actual GCS ou
 
 This service's live mode is the REAL live mode — persistent WebSocket connections to exchanges.
 
-| #   | What                                               | Expected                                                     | Status |
-| --- | -------------------------------------------------- | ------------------------------------------------------------ | ------ |
-| 5.1 | `--operation download --mode live --category CEFI` | WebSocket connections to Binance, OKX, etc. via UMI adapters |        |
-| 5.2 | Testnet WebSocket connections                      | Connect to Binance testnet WS, OKX testnet                   |        |
-| 5.3 | PubSub transport (live mode)                       | Tick data published to PubSub topics                         |        |
-| 5.4 | Graceful shutdown on Ctrl-C                        | All WS connections closed, no partial writes                 |        |
-| 5.5 | Circuit breaker on connection failure              | Single venue disconnect doesn't crash others                 |        |
-| 5.6 | Reconnection with exponential backoff              | After disconnect, auto-reconnects                            |        |
+| #   | What                                                  | Expected                                                     | Status |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------ | ------ |
+| 5.1 | `--operation download --mode live --asset-group CEFI` | WebSocket connections to Binance, OKX, etc. via UMI adapters |        |
+| 5.2 | Testnet WebSocket connections                         | Connect to Binance testnet WS, OKX testnet                   |        |
+| 5.3 | PubSub transport (live mode)                          | Tick data published to PubSub topics                         |        |
+| 5.4 | Graceful shutdown on Ctrl-C                           | All WS connections closed, no partial writes                 |        |
+| 5.5 | Circuit breaker on connection failure                 | Single venue disconnect doesn't crash others                 |        |
+| 5.6 | Reconnection with exponential backoff                 | After disconnect, auto-reconnects                            |        |
 
 ### Phase 5b: Mock vs Real A/B Testing
 

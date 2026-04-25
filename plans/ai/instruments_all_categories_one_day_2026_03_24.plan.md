@@ -19,7 +19,7 @@ repo_gates:
 
 Get all 5 instrument categories (DEFI, CEFI, TRADFI, SPORTS, PREDICTION) writing correct instrument records to their
 respective GCS buckets for a single requested date. Target:
-`instruments_service --operation instruments --mode batch --category {X} --date 2026-03-22` produces correct,
+`instruments_service --operation instruments --mode batch --asset-group {X} --date 2026-03-22` produces correct,
 date-filtered instrument records with no data quality issues.
 
 ## Status per Category (as of 2026-03-24 live run)

@@ -93,14 +93,22 @@ signals-in or full). Book the Odum Signals scoping call. Book the Reg Umbrella s
 visitor straight to a calendar. No email capture wall, no newsletter, no gated PDF. A visitor who is not ready to book
 leaves without friction; a visitor who is ready books in under ninety seconds.
 
-## Post-first-call path — briefings gate
+## Deep Dive — light-auth gate (questionnaire IS the access path since 2026-04-25)
 
-After a prospect has booked and run the first thirty-minute call, the sales contact sends an access code that unlocks
-`/briefings` — a light-auth layer (password gate, not Firebase — see
-[`../authentication/light-auth-briefings.md`](../authentication/light-auth-briefings.md)). Behind the gate live six
-briefing pillars — one per commercial path plus the DART umbrella — each with schema detail, custody mechanics,
-onboarding workstreams, and strategy-family catalogue material deliberately held back from the public pages. This is the
-mid-funnel experience that used to live in a PDF; now it lives in the same UI the prospect will use post-demo.
+Any prospect who clicks a Deep Dive item from the side-nav (Briefings, Developer docs, FAQ, founder long-form story, or
+one of the six briefing pillars) hits a light-auth gate. The gate **embeds the brief 6-axis questionnaire inline** —
+filling it auto-activates the session and emails the prospect the access code (for return visits) plus a "Next steps"
+block (read briefings → book Calendly → submit Strategy Evaluation DDQ). A secondary "I already have an access code"
+disclosure supports warm hand-offs where sales has sent a per-path code in advance.
+
+This means there's no longer a hard pre-req of "had a first call before getting briefings access" — the questionnaire
+serves as the qualification step, generating the Firestore record sales pivots from. See
+[`../authentication/light-auth-briefings.md`](../authentication/light-auth-briefings.md) for the full mechanism.
+
+Behind the gate live six briefing pillars — one per commercial path plus the DART umbrella — each with schema detail,
+custody mechanics, onboarding workstreams, and strategy-family catalogue material deliberately held back from the public
+pages. Plus developer docs, founder long-form, and FAQ. This is the mid-funnel experience that used to live in a PDF;
+now it lives in the same UI the prospect will use post-Sandbox-demo.
 
 ## Key messages
 
@@ -169,8 +177,15 @@ expression of the combined-shape advantage; the competitor set informs calibrati
 
 ## Desired next step
 
-Book the thirty-minute intro call on the service path that matches the visitor's intent. After the call, the sales
-contact issues a briefings access code for deeper material.
+Two equally valid next steps from the public site:
+
+1. **Click any Deep Dive item** (Briefings, Developer docs, FAQ, founder story) — fills the brief questionnaire on the
+   lock screen, gets emailed the access code plus a "Next steps" framing.
+2. **Book the thirty-minute intro call** on Calendly — for prospects who'd rather talk first. The call lands them in the
+   same funnel; sales sends per-path code post-call so they can use the warm hand-off path.
+
+Either route converges on: read briefings → book Calendly call (if not already booked) → submit Strategy Evaluation DDQ
+→ get curated Sandbox demo.
 
 ## Internal handoff
 

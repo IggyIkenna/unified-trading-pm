@@ -27,9 +27,6 @@
     },
     {
       "path": "ibkr-gateway-infra"
-    },
-    {
-      "path": "alerting-service"
     }
   ],
   "settings": {

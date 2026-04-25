@@ -16,7 +16,7 @@ cloud_run_job_name: features-onchain-service-job
 
 # Sharding dimensions (order defines hierarchy - most decisive first)
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, DEFI] # TRADFI not supported (no on-chain data)
     description: Market category to process
@@ -27,7 +27,7 @@ dimensions:
       - macro_sentiment
       - lending_rates
       - lst_yields
-      # NOTE: onchain_perps is DEPRECATED - use features-delta-one-service with --category CEFI --feature-group funding_oi instead
+      # NOTE: onchain_perps is DEPRECATED - use features-delta-one-service with --asset-group CEFI --feature-group funding_oi instead
     description: On-chain feature group to generate
 
   - name: date
@@ -37,7 +37,7 @@ dimensions:
 
 # CLI argument mappings
 cli_args:
-  category: --category
+  asset_group: --asset-group
   feature_group: --feature-group
   start_date: --start-date
   end_date: --end-date

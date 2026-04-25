@@ -128,7 +128,7 @@ class StrategyEntry:
     slot: str
     name: str
     family_v2: str
-    category: str
+    asset_group: str
     archetype_v2: str
     coverage_status: str
 
@@ -145,7 +145,7 @@ def _load_registry(workspace: Path) -> list[StrategyEntry]:
                 slot=s.strategy_id,
                 name=s.name,
                 family_v2=s.family.value,
-                category=s.category.value,
+                asset_group=s.asset_group.value,
                 archetype_v2=s.archetype.value,
                 coverage_status=s.coverage_status.value,
             )
@@ -229,12 +229,12 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     lines.append("// SSOT: unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py")
     lines.append("// Do NOT edit by hand. 99 entries derived from the v2 ARCHETYPE_CAPABILITY_REGISTRY.")
     lines.append("")
-    lines.append('export type StrategyCategory = "DEFI" | "CEFI" | "TRADFI" | "SPORTS" | "PREDICTION";')
+    lines.append('export type StrategyVenueAssetGroup = "DEFI" | "CEFI" | "TRADFI" | "SPORTS" | "PREDICTION";')
     lines.append('export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";')
     lines.append('export type ReadinessStatus = "RESEARCH" | "BACKTEST" | "PAPER" | "STAGING" | "LIVE" | "SUSPENDED";')
     lines.append("")
     # Color maps preserved from the previous fixture
-    lines.append("export const CATEGORY_COLORS: Record<StrategyCategory, string> = {")
+    lines.append("export const ASSET_GROUP_COLORS: Record<StrategyVenueAssetGroup, string> = {")
     lines.append('  DEFI: "bg-purple-500/15 text-purple-400 border-purple-500/30",')
     lines.append('  CEFI: "bg-blue-500/15 text-blue-400 border-blue-500/30",')
     lines.append('  TRADFI: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",')
@@ -258,11 +258,11 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     lines.append('  SUSPENDED: "bg-red-500/15 text-red-400 border-red-500/30",')
     lines.append("};")
     lines.append("")
-    # Lean interface — v2-canonical family/category, the rest for dashboard UI
+    # Lean interface — v2-canonical family + venue asset group, the rest for dashboard UI
     lines.append("export interface StrategyCatalogEntry {")
     lines.append("  strategy_id: string;")
     lines.append("  name: string;")
-    lines.append("  category: StrategyCategory;")
+    lines.append("  assetGroup: StrategyVenueAssetGroup;")
     lines.append("  family: string; // v2 StrategyFamily value")
     lines.append("  archetype: string; // v2 StrategyArchetype value")
     lines.append("  subcategory: string;")
@@ -342,7 +342,7 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     for e in entries:
         readiness_status, _ = _readiness_for(e.coverage_status)
         _arch_prefix, body = _parse_slot(e.slot)
-        venues = _derive_venues(body, e.category)
+        venues = _derive_venues(body, e.asset_group)
         underlying = _derive_underlying(body)
         timeframe = _FAMILY_TIMEFRAME.get(e.family_v2, "1H")
         apy_lo = round(_rand_float(e.slot + "apy_lo", 4.0, 12.0), 1)
@@ -364,7 +364,7 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
         exec_mode = "LIVE" if readiness_status == "LIVE" else "BOTH"
         desc = (
             f"{_ARCHETYPE_TO_FAMILY_V1_NAME[e.archetype_v2]} strategy on "
-            f"{_CATEGORY_TO_asset_group[e.category]} "
+            f"{_CATEGORY_TO_asset_group[e.asset_group]} "
             f"venue{'s' if len(venues) > 1 else ''} {', '.join(venues)}."
             + (f" Underlying: {underlying}." if underlying else "")
         )
@@ -380,11 +380,11 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
             else ("ARBITRUM" if "arbitrum" in body else ("SOLANA" if "solana" in body else ""))
         )
         chains = [chain] if chain else []
-        subcategory = underlying or e.category
+        subcategory = underlying or e.asset_group
         lines.append("  {")
         lines.append(f'    strategy_id: "{_ts_escape(e.slot)}",')
         lines.append(f'    name: "{_ts_escape(e.name)}",')
-        lines.append(f'    category: "{e.category}",')
+        lines.append(f'    assetGroup: "{e.asset_group}",')
         lines.append(f'    family: "{e.family_v2}",')
         lines.append(f'    archetype: "{e.archetype_v2}",')
         lines.append(f'    subcategory: "{_ts_escape(subcategory)}",')
@@ -471,8 +471,10 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     lines.append("// Helper functions (same signatures as the pre-v2 fixture)")
     lines.append("// ---------------------------------------------------------------------------")
     lines.append("")
-    lines.append("export function getStrategiesByCategory(category: StrategyCategory): StrategyCatalogEntry[] {")
-    lines.append("  return STRATEGY_CATALOG.filter((s) => s.category === category);")
+    lines.append(
+        "export function getStrategiesByAssetGroup(assetGroup: StrategyVenueAssetGroup): StrategyCatalogEntry[] {"
+    )
+    lines.append("  return STRATEGY_CATALOG.filter((s) => s.assetGroup === assetGroup);")
     lines.append("}")
     lines.append("")
     lines.append("export function getStrategiesByFamily(family: string): StrategyCatalogEntry[] {")
@@ -493,19 +495,19 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     lines.append("")
     lines.append("export function getCatalogSummary(): {")
     lines.append("  total: number;")
-    lines.append("  byCategory: Record<string, number>;")
+    lines.append("  byAssetGroup: Record<string, number>;")
     lines.append("  byStatus: Record<string, number>;")
     lines.append("  byRiskLevel: Record<string, number>;")
     lines.append("  liveCount: number;")
     lines.append("  totalTargetCapital: number;")
     lines.append("} {")
-    lines.append("  const byCategory: Record<string, number> = {};")
+    lines.append("  const byAssetGroup: Record<string, number> = {};")
     lines.append("  const byStatus: Record<string, number> = {};")
     lines.append("  const byRiskLevel: Record<string, number> = {};")
     lines.append("  let liveCount = 0;")
     lines.append("  let totalTargetCapital = 0;")
     lines.append("  for (const s of STRATEGY_CATALOG) {")
-    lines.append("    byCategory[s.category] = (byCategory[s.category] || 0) + 1;")
+    lines.append("    byAssetGroup[s.assetGroup] = (byAssetGroup[s.assetGroup] || 0) + 1;")
     lines.append("    byStatus[s.readiness.status] = (byStatus[s.readiness.status] || 0) + 1;")
     lines.append("    byRiskLevel[s.risk.risk_level] = (byRiskLevel[s.risk.risk_level] || 0) + 1;")
     lines.append('    if (s.readiness.status === "LIVE") liveCount++;')
@@ -513,7 +515,7 @@ def _generate_catalog(entries: list[StrategyEntry]) -> str:
     lines.append("  }")
     lines.append("  return {")
     lines.append("    total: STRATEGY_CATALOG.length,")
-    lines.append("    byCategory,")
+    lines.append("    byAssetGroup,")
     lines.append("    byStatus,")
     lines.append("    byRiskLevel,")
     lines.append("    liveCount,")
@@ -695,11 +697,11 @@ def _generate_instances(entries: list[StrategyEntry]) -> str:
     for e in entries:
         readiness_status, status = _readiness_for(e.coverage_status)
         arch_prefix, body = _parse_slot(e.slot)
-        venues = _derive_venues(body, e.category)
+        venues = _derive_venues(body, e.asset_group)
         underlying = _derive_underlying(body)
         exec_mode = _ARCHETYPE_EXEC_MODE[e.archetype_v2]
-        asset_group = _CATEGORY_TO_asset_group[e.category]
-        client = _CATEGORY_DEFAULT_CLIENT[e.category]
+        asset_group = _CATEGORY_TO_asset_group[e.asset_group]
+        client = _CATEGORY_DEFAULT_CLIENT[e.asset_group]
         net_exposure = _rand_int(e.slot + "netexp", 500_000, 15_000_000)
         sharpe = round(_rand_float(e.slot + "sharpe", 1.2, 2.6), 2)
         max_dd = round(_rand_float(e.slot + "dd", 2.0, 12.0), 1)

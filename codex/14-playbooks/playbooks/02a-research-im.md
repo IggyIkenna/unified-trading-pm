@@ -2,7 +2,7 @@
 scope: [engineer, admin, sales]
 ---
 
-# Playbook 2a — Research & Docs: Investment Management
+# Playbook 2a — Deep Dive: Investment Management
 
 > **Layer:** Implementation. Narrative lives in
 > [experience/im-decision-journey.md](../experience/im-decision-journey.md).
@@ -14,8 +14,10 @@ deeper briefing on the IM proposition before committing to a demo.
 
 ## Pre-req state
 
-- Prospect signed in via briefings gate (pb2)
-- Selected the Investment Management pillar from the briefings hub
+- Prospect has unlocked the Deep Dive section via the brief questionnaire on the lock screen OR a per-path access code
+  (see [02-research-and-documentation.md](02-research-and-documentation.md) and
+  [../authentication/light-auth-briefings.md](../authentication/light-auth-briefings.md))
+- Selected the Investment Management pillar from the briefings hub OR landed here directly via a sales-sent link
 
 ## Route
 
@@ -55,7 +57,8 @@ Deep-briefing content covering:
 
 ## Visibility slicing
 
-pb2a sits inside the briefings gate. No further slicing — once through the gate, the prospect sees the full IM briefing.
+pb2a sits inside the Deep Dive gate. No further slicing — once through the gate, the prospect sees the full IM briefing.
+The next slicing boundary is at Strategy Evaluation DDQ → Sandbox demo (pb3b).
 
 ## Related codex references
 

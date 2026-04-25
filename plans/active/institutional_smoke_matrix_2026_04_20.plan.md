@@ -129,7 +129,7 @@ todos:
              `_index/availability_index.parquet` and assert a row with the shard
              tuple AND `capture_status` in {captured, empty_confirmed}.
              `empty_confirmed` is a PASS not a SKIP.
-        Sub-CLI: `python scripts/smoke_matrix.py [--category X] [--venue Y]
+        Sub-CLI: `python scripts/smoke_matrix.py [--asset-group X] [--venue Y]
         [--data-type Z] [--execute] [--report path.json]`. Returns rc=0 on
         all-pass, rc=1 on any-fail, 0 on dry-run. Enumerates 510 cells total.
         Phase 3 DependencyError for T1-without-T0 surfaces as `status=skipped
@@ -220,7 +220,7 @@ todos:
         ASSUMING the data is there. Add a pre-flight check + DependencyError with
         actionable message: "api-football reference data missing for date X.
         Run: python -m instruments_service --operation instruments --mode batch
-        --category SPORTS --sports-provider API_FOOTBALL --start-date X --end-date X".
+        --asset-group SPORTS --sports-provider API_FOOTBALL --start-date X --end-date X".
         Document in `codex/02-data/sports-adapter-dependency-order.md` (NEW).
     status: done
     note: |
@@ -302,7 +302,7 @@ todos:
       - [x] [AGENT] P0. Smoke orchestrator CLI:
         - `--service X` — smoke only one service (skips deps, logs an
           actionable note if the user did not also pass `--no-deps`)
-        - `--category Y` — limit to one category (CEFI/TRADFI/DEFI/SPORTS/PREDICTION)
+        - `--asset-group Y` — limit to one category (CEFI/TRADFI/DEFI/SPORTS/PREDICTION)
         - `--venue Z` — limit to one venue
         - `--data-type W` — limit to one data type
         - `--no-deps` — skip the dep cascade (assumes prior state in TEST buckets)
@@ -499,7 +499,7 @@ Phase 3 (sports dependency enforcement — SEQUENTIAL with Phase 2)
        ▼
 Phase 4 (workspace orchestrator — SEQUENTIAL with Phase 2+3)
   ├── dep-graph reader
-  └── CLI flags (--service, --category, --venue, --data-type)
+  └── CLI flags (--service, --asset-group, --venue, --data-type)
        │
        │  one command runs the full matrix or a slice
        ▼

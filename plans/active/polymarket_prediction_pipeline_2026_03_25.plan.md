@@ -326,7 +326,7 @@ todos:
         Add to get_venues_for_categories():
           "PREDICTION" → ["POLYMARKET"]
 
-        This routes instruments-service --category PREDICTION to call
+        This routes instruments-service --asset-group PREDICTION to call
         URDI PolymarketReferenceAdapter → InstrumentRecord[] → hive Parquet.
 
         GCS output path:
@@ -334,7 +334,7 @@ todos:
             by_date/day={date}/venue=POLYMARKET/instruments.parquet
 
         Test: cd instruments-service && python -m instruments_service.service \
-          --operation fetch --category PREDICTION --date 2026-03-25
+          --operation fetch --asset-group PREDICTION --date 2026-03-25
     status: done
     note: "get_venues_for_categories PREDICTION → POLYMARKET, KALSHI in orchestrator.py"
 
@@ -346,7 +346,7 @@ todos:
         Add to get_venues_for_categories():
           "PREDICTION" → ["POLYMARKET"]
 
-        This routes market-tick-data-service --category PREDICTION to call
+        This routes market-tick-data-service --asset-group PREDICTION to call
         UMI PolymarketTickAdapter → DataFrame → hive Parquet.
 
         GCS output path:
@@ -357,7 +357,7 @@ todos:
               sub_category=football/trades.parquet
 
         Test: cd market-tick-data-service && python -m market_tick_data_service.service \
-          --operation download --category PREDICTION --date 2026-03-25
+          --operation download --asset-group PREDICTION --date 2026-03-25
     status: done
     note: "get_venues_for_categories PREDICTION → POLYMARKET in mtds/orchestrator.py"
 
@@ -412,9 +412,9 @@ todos:
   - id: p6a-crypto-validation
     content: |
       - [ ] [HUMAN+AGENT] P0. Validate crypto up/down pipeline end-to-end.
-        1. instruments-service --category PREDICTION --date 2026-03-25
+        1. instruments-service --asset-group PREDICTION --date 2026-03-25
            → Verify: BTC/ETH/SOL 5m+15m+1h markets discovered for today
-        2. market-tick-data-service --category PREDICTION --date 2026-03-25
+        2. market-tick-data-service --asset-group PREDICTION --date 2026-03-25
            → Verify: Trade data fetched for discovered markets
         3. Check canonical instrument IDs match format spec
         4. Check GCS output in hive paths
@@ -424,11 +424,11 @@ todos:
   - id: p6b-soccer-validation
     content: |
       - [ ] [HUMAN+AGENT] P0. Validate soccer fixture pipeline end-to-end.
-        1. instruments-service --category PREDICTION --date 2026-03-25
+        1. instruments-service --asset-group PREDICTION --date 2026-03-25
            → Verify: Soccer fixtures from Premier League, La Liga, etc. discovered
            → Verify: Polymarket team names resolved to canonical team IDs
            → Verify: Cross-reference with API-Football fixture_ids where possible
-        2. market-tick-data-service --category PREDICTION --date 2026-03-25
+        2. market-tick-data-service --asset-group PREDICTION --date 2026-03-25
            → Verify: Trade data for soccer markets fetched
         3. Check canonical instrument IDs include fixture_id from API-Football
     status: pending
@@ -681,8 +681,8 @@ P7 (QG sweep) ────────────────── P7a: All re
 
 ### Phase 4
 
-- `instruments-service --category PREDICTION` produces InstrumentRecord[]
-- `market-tick-data-service --category PREDICTION` writes tick data to GCS
+- `instruments-service --asset-group PREDICTION` produces InstrumentRecord[]
+- `market-tick-data-service --asset-group PREDICTION` writes tick data to GCS
 - Canonical instrument IDs consistent across both services
 
 ### Phase 6
@@ -736,8 +736,8 @@ cd market-tick-data-service && bash scripts/quality-gates.sh
 
 # Phase 6: end-to-end
 # Crypto
-python -m instruments_service.service --operation fetch --category PREDICTION --date 2026-03-25
-python -m market_tick_data_service.service --operation download --category PREDICTION --date 2026-03-25
+python -m instruments_service.service --operation fetch --asset-group PREDICTION --date 2026-03-25
+python -m market_tick_data_service.service --operation download --asset-group PREDICTION --date 2026-03-25
 gsutil ls gs://instruments-store-prediction-*/instrument_availability/by_date/day=2026-03-25/
 gsutil ls gs://market-data-tick-prediction-*/raw_tick_data/by_date/day=2026-03-25/
 ```

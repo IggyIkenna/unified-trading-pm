@@ -47,19 +47,19 @@ position-balance-monitor-service
 
 ### Phase 1: Instruments → Tick Data Handoff
 
-| #   | Step                                                                                         | Verify                                                                                            | Status |
-| --- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
-| 1.1 | Run instruments-service `--category DEFI --start-date 2026-03-20 --end-date 2026-03-20`      | Parquet written to `instruments-store-defi-*` (not cefi — see Issue #11)                          |        |
-| 1.2 | Inspect instrument schema                                                                    | Columns: `symbol`, `venue`, `instrument_type`, `protocol`, `chain_id`, `contract_address` present |        |
-| 1.3 | Run market-tick-data-service `--category DEFI --start-date 2026-03-20 --end-date 2026-03-20` | Reads instruments from 1.1, fetches tick data, writes to `market-tick-data-store-defi-*`          |        |
-| 1.4 | Tick data references valid instruments                                                       | Every `symbol` in tick data exists in instruments output from 1.1                                 |        |
-| 1.5 | Empty instrument handling                                                                    | If instruments returns 0 for a protocol, tick-data skips that protocol gracefully                 |        |
+| #   | Step                                                                                            | Verify                                                                                            | Status |
+| --- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
+| 1.1 | Run instruments-service `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20`      | Parquet written to `instruments-store-defi-*` (not cefi — see Issue #11)                          |        |
+| 1.2 | Inspect instrument schema                                                                       | Columns: `symbol`, `venue`, `instrument_type`, `protocol`, `chain_id`, `contract_address` present |        |
+| 1.3 | Run market-tick-data-service `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20` | Reads instruments from 1.1, fetches tick data, writes to `market-tick-data-store-defi-*`          |        |
+| 1.4 | Tick data references valid instruments                                                          | Every `symbol` in tick data exists in instruments output from 1.1                                 |        |
+| 1.5 | Empty instrument handling                                                                       | If instruments returns 0 for a protocol, tick-data skips that protocol gracefully                 |        |
 
 ### Phase 2: Tick Data → Processed Market Data → Features Handoff
 
 | #   | Step                                                                         | Verify                                                                                                                       | Status |
 | --- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 2.1 | Run MDPS `--category DEFI --start-date 2026-03-20 --end-date 2026-03-20`     | Reads tick data from 1.3, produces candles/processed data                                                                    |        |
+| 2.1 | Run MDPS `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20`  | Reads tick data from 1.3, produces candles/processed data                                                                    |        |
 | 2.2 | Processed data schema                                                        | Candle schema: `open`, `high`, `low`, `close`, `volume`, `timestamp` + DeFi fields (`tvl`, `pool_fee_tier` where applicable) |        |
 | 2.3 | Run features-onchain-service `--start-date 2026-03-20 --end-date 2026-03-20` | Reads processed market data + on-chain sources, writes features                                                              |        |
 | 2.4 | Feature completeness                                                         | Features written for: lending (Aave rates, utilization), TVL (DefiLlama), staking (LST rates), protocol rewards              |        |
@@ -67,14 +67,14 @@ position-balance-monitor-service
 
 ### Phase 3: Features → Strategy Backtest Handoff
 
-| #   | Step                                                                                 | Verify                                                                                                                           | Status |
-| --- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 3.1 | Run strategy-service `--category DEFI --start-date 2026-03-20 --end-date 2026-03-20` | Reads features from 2.3, runs DeFi strategies                                                                                    |        |
-| 3.2 | Strategy types executed                                                              | AAVE_LENDING, BASIS_TRADE, STAKED_BASIS, RECURSIVE_STAKED_BASIS all produce results                                              |        |
-| 3.3 | Strategy output schema                                                               | Each result has: `strategy_id`, `instrument`, `signals`, `pnl_series`, `metrics`                                                 |        |
-| 3.4 | StrategyInstruction generation                                                       | Strategy outputs include `StrategyInstruction` artifacts for execution-service                                                   |        |
-| 3.5 | Instruction schema                                                                   | Instructions contain: `instruction_type` (SWAP/LEND/BORROW/STAKE), `instrument`, `quantity`, `price`, `timestamp`, `strategy_id` |        |
-| 3.6 | Feature dependency validation                                                        | `--skip-dependency-check` not needed — features from 2.3 are found                                                               |        |
+| #   | Step                                                                                    | Verify                                                                                                                           | Status |
+| --- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 3.1 | Run strategy-service `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20` | Reads features from 2.3, runs DeFi strategies                                                                                    |        |
+| 3.2 | Strategy types executed                                                                 | AAVE_LENDING, BASIS_TRADE, STAKED_BASIS, RECURSIVE_STAKED_BASIS all produce results                                              |        |
+| 3.3 | Strategy output schema                                                                  | Each result has: `strategy_id`, `instrument`, `signals`, `pnl_series`, `metrics`                                                 |        |
+| 3.4 | StrategyInstruction generation                                                          | Strategy outputs include `StrategyInstruction` artifacts for execution-service                                                   |        |
+| 3.5 | Instruction schema                                                                      | Instructions contain: `instruction_type` (SWAP/LEND/BORROW/STAKE), `instrument`, `quantity`, `price`, `timestamp`, `strategy_id` |        |
+| 3.6 | Feature dependency validation                                                           | `--skip-dependency-check` not needed — features from 2.3 are found                                                               |        |
 
 ### Phase 4: Strategy Instructions → Execution Backtest Handoff
 

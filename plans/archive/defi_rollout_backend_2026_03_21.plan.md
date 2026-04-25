@@ -242,7 +242,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. ServiceCLI constructs ServiceRuntime from parsed args + env vars.
       Source: service_protocol_resolution Phase 3.
-      ServiceCLI reads --mode, --category, --operation, CLOUD_PROVIDER, TESTNET_MODE, constructs ServiceRuntime.
+      ServiceCLI reads --mode, --asset-group, --operation, CLOUD_PROVIDER, TESTNET_MODE, constructs ServiceRuntime.
     status: todo
 
   # --- UIC (unified-internal-contracts) ---
@@ -675,7 +675,7 @@ todos:
   - id: t4-defi-pipeline-e2e
     content: |
       - [ ] [AGENT] P0. Run DeFi pipeline end-to-end via service CLIs:
-      instruments-service --category DEFI -> market-tick-data-service --category DEFI -> features-onchain-service --category DEFI.
+      instruments-service --asset-group DEFI -> market-tick-data-service --asset-group DEFI -> features-onchain-service --asset-group DEFI.
       Source: defi_operation_capability_and_pipeline (item 95/96).
     status: todo
   - id: t4-qg-sweep-30-repos

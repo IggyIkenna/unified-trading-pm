@@ -96,7 +96,7 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
 - [x] [AGENT] P0. Ensure features-sports-service image builds with
       `python -m features_sports_service compute --operation fixture-features     --start-date X --end-date Y` (exact
       flag names per Plan 3 Phase 3). ✅ CLI shape validated — the actual invocation is
-      `python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features     --start-date X --end-date Y`
+      `python -m features_sports_service --operation compute --mode batch --asset-group SPORTS --tables fixture_features     --start-date X --end-date Y`
       (fixture*features is a \_table* within the `compute` operation; there is no `fixture-features` operation in
       cli/main.py `_OPERATIONS`). Plan wording was speculative — the real shape is used in the daily workflow + backfill
       launcher.
@@ -106,7 +106,7 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       backfill + forward horizon). ✅ Implemented in `terraform/services/features-sports-service/gcp/main.tf` using
       Cloud Workflows `sys.now()` arithmetic to compute `start_date = yesterday` and `end_date = +7 days`. Container
       args wired to
-      `--operation compute --mode batch --category SPORTS --tables fixture_features --start-date     {start_date} --end-date {end_date}`.
+      `--operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date     {start_date} --end-date {end_date}`.
       Commit: deployment-service `35f18c7`.
 
 ### Phase 2: Cloud Scheduler + Cloud Run (D1 → D2) [SEQUENTIAL]
@@ -183,13 +183,13 @@ Like Plan F, this plan has mostly-unknown concrete surfaces until execution. Pha
       `launch-api-football-backfill-vm.sh`. Singleton-lock prefix `fs-backfill-`. Entity not applicable (the pipeline is
       entity-agnostic). ✅ Shipped in deployment-service `35f18c7`. e2-standard-4 / 100GB boot; singleton-locked on
       `fs-backfill-*`; `VM_TASK=features-backfill` so `setup-data-pipeline-vm.sh` BACKFILL_CMD branch carries the full
-      `python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features     --start-date X --end-date Y`
+      `python -m features_sports_service --operation compute --mode batch --asset-group SPORTS --tables fixture_features     --start-date X --end-date Y`
       invocation. `--skip-existing` + `--force` flags both wired.
 
 - [x] [AGENT] P0. Launch backfill VM for 2018-01-01..2026-04-20. Expect long run (per-fixture join over 7 years of
       data). Monitor for completion + self-delete. ✅ `fs-backfill-20260422-013719` launched in `asia-northeast1-c`
       2026-04-22T01:37:19+09:00 (e2-standard-4 / 100 GB / ubuntu-2404-lts-amd64) with
-      `VM_BACKFILL_CMD="python -m features_sports_service --operation compute --mode batch --category SPORTS --tables fixture_features --start-date 2018-01-01 --end-date 2026-04-20"`.
+      `VM_BACKFILL_CMD="python -m features_sports_service --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date 2018-01-01 --end-date 2026-04-20"`.
       Singleton lock verified (second launch rejected). GCS log:
       `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260422-013719/run.log`. Self-delete on
       completion via `VM_SHUTDOWN_ON_COMPLETION=true`. **Four prior launch attempts failed**: (1) `-010950` self-deleted

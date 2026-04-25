@@ -56,12 +56,29 @@ resolution.
 
 ---
 
-## §3 — The access-code gate
+## §3 — Questionnaire IS the access path (post 2026-04-25)
 
-The questionnaire page at `/questionnaire` is wrapped in the existing `<BriefingAccessGate>` (same access-code session
-as `/briefings/*` and `/docs`). Session keyed by `odum-briefing-session` in localStorage; a prospect who unlocked
-briefings is not re-prompted. Access codes live in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE` (global) or per-path overrides
-declared in `lib/briefings/access-code.ts`.
+**Inverted relationship:** the questionnaire is no longer wrapped in `<BriefingAccessGate>`. The opposite is now true —
+`<BriefingAccessGate>` (which wraps `/briefings/*`, `/docs`, `/our-story`, `/faq`) **embeds** the questionnaire form
+inline as its primary access path. The standalone `/questionnaire` page is public and ungated, mounting the same
+reusable `<QuestionnaireForm />` component.
+
+Mechanics on submit (both standalone-page and embedded-on-gate paths):
+
+1. Firestore `/questionnaires/{id}` write (or localStorage `questionnaire-response-v1` in dev mock mode).
+2. `setBriefingSessionActive()` — writes `localStorage.odum-briefing-session = "1"`. One unlock covers every Deep Dive
+   route in the same browser.
+3. `POST /api/questionnaire/email` — fire-and-forget. To: prospect, BCC: `info@odum-research.com`. Body carries the
+   global access code (for return visits / second device), a numbered "Next steps" block (read briefings → book 30-min
+   Calendly call → submit Strategy Evaluation DDQ to unlock Sandbox demo), Deep Dive tour list, and the questionnaire
+   echo table.
+4. `router.push(returnPath)` after 1.2s. Priority: `returnPath` prop (set by gate) > `?return=` URL param (relative
+   only) > `/briefings`.
+
+The form lives at
+[components/questionnaire/questionnaire-form.tsx](unified-trading-system-ui/components/questionnaire/questionnaire-form.tsx)
+and accepts `returnPath?: string` + `compact?: boolean` props. **Never inline-duplicate this form** — mount the
+component in any new host that needs it.
 
 Each submission carries an envelope:
 
@@ -69,52 +86,83 @@ Each submission carries an envelope:
 interface QuestionnaireEnvelope {
   email: string; // work email (free text)
   firm_name: string; // prospect's firm
-  access_code_fingerprint: string; // hex SHA-256 of the access code
+  access_code_fingerprint: string; // hex SHA-256 of the access code (if any was previously cached)
 }
 ```
 
 The fingerprint is not the code — just a digest, so the admin panel can bucket responses by cohort (e.g. "everyone who
 unlocked with the Q2-investor-demo code") without storing plain codes. If SubtleCrypto is unavailable (older runtime)
-the fingerprint is the empty string and the envelope still identifies the prospect by email + firm.
+the fingerprint is the empty string and the envelope still identifies the prospect by email + firm. **Note:**
+fingerprint will commonly be empty now since most cold-inbound prospects fill the questionnaire BEFORE having a code.
+
+For the canonical mechanism + the secondary "I already have an access code" disclosure path on the gate, see
+[`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md).
 
 ---
 
 ## §4 — The admin playback loop
 
 ```
- ┌──────────────────────────────┐
- │  /questionnaire  (invite-     │
- │  gated public page; optional  │
- │  Reg-Umbrella branch)         │
- └──────────────┬────────────────┘
-                │ submit
-                ▼
- ┌──────────────────────────────┐     ┌──────────────────────────────┐
- │  localStorage (mock/dev):     │     │  Firestore /questionnaires    │
- │  questionnaire-response-v1    │     │  (staging/prod) — response    │
- │  questionnaire-envelope-v1    │     │  doc with submitted_by field  │
- └──────────────┬────────────────┘     └────────────┬─────────────────┘
-                │                                    │
-                └─────────────┬──────────────────────┘
-                              ▼
-         ┌──────────────────────────────────────────────┐
-         │  /admin/questionnaires  (list, all rows)     │
-         │  — sortable, cross-link "View org" per row   │
-         └────────────────┬─────────────────────────────┘
-                          ▼
-         ┌──────────────────────────────────────────────┐
-         │  /admin/organizations/[id]                   │
-         │    · Prospect questionnaire card             │
-         │      (13 axes when Reg-Umbrella)             │
-         │    · Documents card (list + View / Download  │
-         │      / Delete-with-confirm)                  │
-         │    · Members · Venue API keys · Reports      │
-         └──────────────────────────────────────────────┘
+ ┌─────────────────────────────────────────┐    ┌──────────────────────────┐
+ │  Entry channel A — questionnaire on      │    │  Entry channel B —        │
+ │  Deep Dive lock screen:                   │    │  standalone page:         │
+ │  /briefings/* | /docs | /our-story | /faq │    │  /questionnaire           │
+ │  → <BriefingAccessGate> embeds form       │    │  (public, ungated)        │
+ └────────────────┬────────────────────────┘    └────────────┬─────────────┘
+                  │                                            │
+                  └───────────────────┬────────────────────────┘
+                                      │ submit (same QuestionnaireForm component)
+                                      ▼
+            ┌──────────────────────────────────────────────────┐
+            │  Side effects (in order):                          │
+            │  1. Firestore /questionnaires/{id} write           │
+            │     (or localStorage in dev mock mode)             │
+            │  2. setBriefingSessionActive() → localStorage flag │
+            │  3. POST /api/questionnaire/email (fire-and-forget)│
+            │     To: prospect; BCC: info@odum-research.com.     │
+            │     Body: code + Next-steps block + tour list      │
+            │     + questionnaire echo table.                    │
+            │  4. router.push(returnPath) after 1.2s             │
+            └─────────────────────────┬─────────────────────────┘
+                                      ▼
+            ┌──────────────────────────────────────────────────┐
+            │  /admin/questionnaires  (list, all rows)          │
+            │  — sortable, cross-link "View org" per row        │
+            └────────────────┬─────────────────────────────────┘
+                             ▼
+            ┌──────────────────────────────────────────────────┐
+            │  /admin/organizations/[id]                        │
+            │    · Prospect questionnaire card                  │
+            │      (13 axes when Reg-Umbrella)                  │
+            │    · Documents card (list + View / Download       │
+            │      / Delete-with-confirm)                       │
+            │    · Members · Venue API keys · Reports           │
+            └──────────────────────────────────────────────────┘
 ```
 
 Join rule: `OrgQuestionnaireSection` queries Firestore `/questionnaires` filtered by
 `submitted_by.email == org.contact_email` (primary) or `submitted_by.firm_name == org.name` (fallback). Mock mode shows
 a friendly "Firebase not configured" message instead of crashing.
+
+### §4a — Email-back funnel framing (post 2026-04-25)
+
+The post-submit email is the **primary funnel nudge**. It carries (in order):
+
+1. **Greeting + access code** — boxed, copy-pasteable. For return visits / second device.
+2. **Next steps** — numbered block:
+   - Read the Deep Dive (6 briefings + docs + Our Story + FAQ — all unlocked by the same session).
+   - Book a 30-minute walk-through call on Calendly (`https://calendly.com/odum-ikenna`).
+   - Submit the Strategy Evaluation pack at `/strategy-evaluation` — required (before or after the call) to unlock the
+     curated Sandbox demo at Tier 2.
+3. **Deep Dive tour list** — describes what's behind each pillar.
+4. **Questionnaire echo table** — every answer the prospect provided (so they have a record).
+5. **Reply-to** — `info@odum-research.com` for questions.
+
+Subject line: "Your Deep Dive access — {firm} ({service})" when global code is set; falls through to "Your questionnaire
+responses — {firm} ({service})" otherwise.
+
+Sender: `hello@mail.odum-research.com` (prod) / `hello@mail.uat.odum-research.com` (uat) / `onboarding@resend.dev` (dev)
+— see [app/api/questionnaire/email/route.ts](unified-trading-system-ui/app/api/questionnaire/email/route.ts).
 
 ---
 

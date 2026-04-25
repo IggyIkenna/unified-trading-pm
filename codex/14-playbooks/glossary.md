@@ -63,8 +63,11 @@ The Odum platform has **four catalogues**, each an SSOT in service code, UAC, an
 
 - **pb1 / Marketing pre-first-call** — Public homepage + service-category pages + briefings teaser. No auth required
   beyond the optional briefings gate.
-- **pb2 / Research & Documentation** — Post-first-call deep-briefing content, split into IM / DART / Regulatory
-  Umbrella. Gated by light auth.
+- **pb2 / Deep Dive** (formerly "Research & Documentation") — Light-auth-gated section covering six briefing pillars
+  (DART Start Here / DART Signals-In / DART Full / Odum Signals / IM / Regulatory Umbrella) plus developer docs, founder
+  long-form, and FAQ. Primary access path is the brief questionnaire embedded inline on the lock screen (since
+  2026-04-25) — submit auto-activates the session and emails the access code. Secondary path is the "I already have a
+  code" disclosure for warm hand-offs.
 - **pb3 / Warm-prospect demo** — Demo account on staging Firebase. Three flavours: pb3a Reg Umbrella, pb3b IM, pb3c
   DART. Flavours pb3a and pb3b share the same UI walkthrough (client-reporting surface, SMA-vs-Pooled picker) and differ
   only in narrative.

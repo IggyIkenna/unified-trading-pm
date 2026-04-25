@@ -12,7 +12,7 @@ cloud_run_job_name: pnl-attribution-service-job
 
 # Sharding dimensions (order defines hierarchy - most decisive first)
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, TRADFI, DEFI]
     description: Market category to calculate P&L for
@@ -33,7 +33,7 @@ dimensions:
 
 # CLI argument mappings
 cli_args:
-  category: --category
+  asset_group: --asset-group
   venue: --venue
   start_date: --start-date
   end_date: --end-date

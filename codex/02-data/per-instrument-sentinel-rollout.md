@@ -135,7 +135,7 @@ forwarded through to the MTDS CLI inside the tarball.
 python -m market_tick_data_service.cli.main \
   --operation download \
   --mode batch \
-  --category CEFI \
+  --asset-group CEFI \
   --start-date 2026-04-21 \
   --end-date 2026-04-21 \
   --per-instrument-sentinel-cap 50
@@ -144,7 +144,7 @@ python -m market_tick_data_service.cli.main \
 python -m market_tick_data_service.cli.main \
   --operation download \
   --mode batch \
-  --category CEFI \
+  --asset-group CEFI \
   --start-date 2026-04-21 \
   --end-date 2026-04-21 \
   --per-instrument-sentinel-cap 200
@@ -153,7 +153,7 @@ python -m market_tick_data_service.cli.main \
 python -m market_tick_data_service.cli.main \
   --operation download \
   --mode batch \
-  --category CEFI \
+  --asset-group CEFI \
   --start-date 2026-04-21 \
   --end-date 2026-04-21 \
   --per-instrument-sentinel-cap 10000
@@ -162,7 +162,7 @@ python -m market_tick_data_service.cli.main \
 python -m market_tick_data_service.cli.main \
   --operation download \
   --mode batch \
-  --category CEFI \
+  --asset-group CEFI \
   --start-date 2026-04-21 \
   --end-date 2026-04-21 \
   --per-instrument-sentinel-cap 0
@@ -170,8 +170,9 @@ python -m market_tick_data_service.cli.main \
 
 Backfill VMs go via `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` (analogous launcher for CEFI
 exists). Both wrap the CLI invocation in a singleton-locked systemd unit so the cap persists across VM restarts.
-Refreshing tarballs after any code change: `bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
-(see `codex/05-infrastructure/vm-tarball-deployment.md`).
+Refreshing tarballs after any code change:
+`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI` (see
+`codex/05-infrastructure/vm-tarball-deployment.md`).
 
 ## 7. Cross-references
 

@@ -325,7 +325,7 @@ items:
     title: "Sharding config aligned with sharding.{service}.yaml SSOT"
     description: |
       Service's actual sharding implementation matches sharding.{service}.yaml.
-      CLI args (--category, --venue, --date, etc.) match shard_dimensions list.
+      CLI args (--asset-group, --venue, --date, etc.) match shard_dimensions list.
 
       ✅ Pass: Implementation matches SSOT, CLI args aligned, compute recommendations followed
       ❌ Fail: Sharding dimensions mismatch, missing CLI args

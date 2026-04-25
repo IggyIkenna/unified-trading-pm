@@ -68,7 +68,7 @@ There is no CLI, no operations, no modes, no categories, no live mode, no dry-ru
 | ----- | ------------------------------------------------- |
 | 2     | No CLI entry point, no `--dry-run` flag           |
 | 3     | No data writes, no GCS interaction                |
-| 4     | No `--category` flag, no venue routing            |
+| 4     | No `--asset-group` flag, no venue routing         |
 | 5     | No `--mode live`, no WebSocket/PubSub consumption |
 
 ### Phase 6: Mock Mode

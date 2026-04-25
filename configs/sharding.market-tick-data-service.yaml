@@ -19,14 +19,14 @@ cloud_run_job_name: market-tick-data-service
 # This maximizes parallelism for heavy download workloads
 # =============================================================================
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [CEFI, TRADFI, DEFI, SPORTS]
     description: Market category to download (SPORTS = live odds via USEI scrapers/OpticOdds/OddsJam)
 
   - name: venue
     type: hierarchical
-    parent: category
+    parent: asset_group
     source: venues.yaml
     description: Venue within category (from venues.yaml)
 
@@ -58,7 +58,7 @@ cli_flags:
 # Mapping: dimension name -> CLI argument
 # These are populated from shard dimensions
 cli_args:
-  category: --category
+  asset_group: --asset-group
   venue: --venues
   instrument_type: --instrument-types
   data_type: --data-types

@@ -25,7 +25,7 @@ cloud_run_job_name: instruments-service
 # The start-date / end-date are NOT passed to the service CLI.
 # =============================================================================
 dimensions:
-  - name: category
+  - name: asset_group
     type: fixed
     values: [TRADFI]
     description: Market category to process (corporate actions are TRADFI-only)
@@ -76,7 +76,7 @@ cli_flags:
 # Mapping: dimension name -> CLI argument
 # These are populated from shard dimensions
 cli_args:
-  category: --category
+  asset_group: --asset-group
   date: null # granularity=none means no --start-date/--end-date passed
 
 # Optional arguments that can be passed via deploy CLI --extra-args

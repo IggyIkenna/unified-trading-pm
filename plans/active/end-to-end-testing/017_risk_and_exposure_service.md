@@ -40,8 +40,8 @@ Follows `procedure.md`. Pipeline position: #17 (L6 monitoring layer).
   --start-date 2026-03-01 --end-date 2026-03-21 --dry-run
 ```
 
-**Note:** No `--category` argument. Risk is computed across all positions regardless of market category. `--dry-run` IS
-supported (unlike pnl-attribution-service). Batch mode iterates over client IDs from `MONITORED_CLIENT_IDS` env var
+**Note:** No `--asset-group` argument. Risk is computed across all positions regardless of market category. `--dry-run`
+IS supported (unlike pnl-attribution-service). Batch mode iterates over client IDs from `MONITORED_CLIENT_IDS` env var
 union `RiskLimitsClient.list_client_ids()`. Live mode runs two concurrent tasks: risk monitoring loop + FastAPI server.
 
 ## Frontend Surface
@@ -134,9 +134,9 @@ for b in blobs[:5]:
 
 ### Phase 4: Category Sweep
 
-This service does NOT accept a `--category` argument. Risk is computed across all positions for each client, regardless
-of market category. The category sweep validates that positions from different market categories are correctly included
-in risk calculations.
+This service does NOT accept a `--asset-group` argument. Risk is computed across all positions for each client,
+regardless of market category. The category sweep validates that positions from different market categories are
+correctly included in risk calculations.
 
 | #   | Input data category  | Expected                                                          | Status |
 | --- | -------------------- | ----------------------------------------------------------------- | ------ |

@@ -21,20 +21,28 @@ Odum Platform
 │   ├── / (homepage — three-services pitch)
 │   ├── /investment-management (IM service landing)
 │   ├── /platform (DART service landing)
+│   ├── /signals (Odum Signals service landing)
 │   ├── /regulatory (Reg Umbrella service landing)
-│   ├── /firm (who we are)
+│   ├── /who-we-are (firm)
+│   ├── /story (timeline — public; long-form essay /our-story moved into DEEP DIVE 2026-04-25)
 │   ├── /contact (mandate / demo enquiry form)
+│   ├── /questionnaire (standalone brief questionnaire — also embedded inline on DEEP DIVE lock screen)
 │   ├── /demo (book a demo)
-│   ├── /docs (developer documentation)
 │   ├── /privacy, /terms (legal)
 │   ├── /login (Firebase + demo persona sign-in)
 │   └── /signup (mock-signup flow for staging)
 │
-├── BRIEFINGS (light-auth gated — pb2)
-│   ├── /briefings (hub)
+├── DEEP DIVE (light-auth gated — pb2; formerly "Briefings")
+│   ├── /briefings (hub — six pillar tiles + "How to use this page" intro)
 │   ├── /briefings/investment-management (pb2-im)
-│   ├── /briefings/platform (pb2-dart)
-│   └── /briefings/regulatory (pb2-reg)
+│   ├── /briefings/platform (DART Start Here — pb2-dart)
+│   ├── /briefings/dart-signals-in (DART Signals-In path)
+│   ├── /briefings/dart-full (DART Full pipeline)
+│   ├── /briefings/signals-out (Odum Signals — inverse direction)
+│   ├── /briefings/regulatory (pb2-reg)
+│   ├── /docs (developer documentation — moved here from PUBLIC, gated 2026-04-25)
+│   ├── /our-story (long-form founder narrative — moved here from PUBLIC, gated 2026-04-25)
+│   └── /faq (gated 2026-04-25)
 │
 ├── PLATFORM (Firebase-auth gated — pb3 demos + real clients)
 │   ├── /dashboard (post-login landing; role-aware quick-actions)
@@ -63,50 +71,68 @@ Odum Platform
 
 ## Audience-to-route mapping
 
-| Audience                 | Route-group                     | Auth gate                               | Entry point                                         |
-| ------------------------ | ------------------------------- | --------------------------------------- | --------------------------------------------------- |
-| Anonymous visitor        | `(public)`                      | None                                    | `/`                                                 |
-| Post-first-call prospect | `(public)/briefings/*`          | Light auth (briefing access code)       | `/briefings`                                        |
-| Warm prospect (demo)     | `(platform)`                    | Staging Firebase, demo persona          | `/dashboard` → services portal                      |
-| Paying client            | `(platform)`                    | Production Firebase, real persona       | `/dashboard` → services portal (entitlement-sliced) |
-| Odum investor            | `(platform)/investor-relations` | Staging/Prod Firebase, investor persona | `/investor-relations`                               |
-| Odum internal admin      | `(platform)` + `(ops)`          | Production Firebase, admin persona      | `/admin`                                            |
-| Odum internal trader     | `(platform)`                    | Production Firebase, internal persona   | `/dashboard` (services portal, no ops)              |
+| Audience             | Route-group                       | Auth gate                                                                  | Entry point                                         |
+| -------------------- | --------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
+| Anonymous visitor    | `(public)`                        | None                                                                       | `/`                                                 |
+| Deep Dive prospect   | Deep Dive routes (see tree above) | Light auth — questionnaire IS access path; secondary code-entry disclosure | Any `/briefings/*`, `/docs`, `/our-story`, `/faq`   |
+| Warm prospect (demo) | `(platform)`                      | Staging Firebase, demo persona                                             | `/dashboard` → services portal                      |
+| Paying client        | `(platform)`                      | Production Firebase, real persona                                          | `/dashboard` → services portal (entitlement-sliced) |
+| Odum investor        | `(platform)/investor-relations`   | Staging/Prod Firebase, investor persona                                    | `/investor-relations`                               |
+| Odum internal admin  | `(platform)` + `(ops)`            | Production Firebase, admin persona                                         | `/admin`                                            |
+| Odum internal trader | `(platform)`                      | Production Firebase, internal persona                                      | `/dashboard` (services portal, no ops)              |
 
 ## Top-level nav
 
-Single SSOT for the Spaces dropdown (in-app playbook switcher):
+Public marketing nav lives in TWO surfaces (intentionally duplicated — different concerns, different breakpoints):
+
+### Surface 1 — Site-header Sheet drawer (every public page)
+
+Component: [components/shell/site-header.tsx](unified-trading-system-ui/components/shell/site-header.tsx). Click the
+"Menu" pill in the header to open a left-side sheet with the full marketing nav. **Deep Dive collapses behind a single
+toggle button** — click "Deep Dive ▾" to expand inline. Each item shows an amber lock icon when the visitor is
+signed-out and has no cached briefing session. Hardcoded constants `DEEP_DIVE_HEADLINE` + `DEEP_DIVE_BRIEFINGS` in the
+file (NOT shared with `spaces-nav-sections.tsx`).
+
+### Surface 2 — Spaces dropdown (in-app playbook switcher)
+
+Component:
+[components/shell/spaces-nav-sections.tsx](unified-trading-system-ui/components/shell/spaces-nav-sections.tsx). Shown in
+the header on signed-in surfaces.
 
 ```
 Spaces
-├── Marketing (pb1) — public
+├── Overview (pb1) — public
 │   ├── Home /
 │   ├── Investment Management /investment-management
 │   ├── Data Analytics, Research & Trading (DART) /platform
-│   ├── Regulatory Umbrella /regulatory
-│   ├── Who We Are /firm
-│   └── Contact /contact
-├── Research & Documentation (pb2) — briefings-gated
+│   ├── Odum Signals /signals
+│   ├── Regulatory /regulatory
+│   ├── Who We Are /who-we-are
+│   └── Story (timeline) /story
+├── Deep Dive (pb2) — light-auth-gated (questionnaire IS access path)
 │   ├── Briefings Hub /briefings
-│   ├── IM Briefing /briefings/investment-management
-│   ├── DART Briefing /briefings/platform
-│   ├── Regulatory Briefing /briefings/regulatory
-│   └── Developer Documentation /docs
+│   ├── Developer Documentation /docs
+│   ├── FAQ /faq
+│   ├── Investment Management /briefings/investment-management
+│   ├── DART — Start here /briefings/platform
+│   ├── DART — Signals In /briefings/dart-signals-in
+│   ├── DART — Full Pipeline /briefings/dart-full
+│   ├── Odum Signals /briefings/signals-out
+│   ├── Regulatory Umbrella /briefings/regulatory
+│   └── Our Story (long-form essay) /our-story
 ├── Client Access (pb3) — Firebase-gated
-│   ├── Dashboard /dashboard
-│   ├── Services Portal /services/... (entitlement-sliced; see visibility-slicing.md)
+│   ├── Client Reporting /services/reports/overview
+│   ├── DART /dashboard (Research, Trading, Execution)
+│   ├── Odum Signals — Counterparty Dashboard /services/signals/dashboard
+│   ├── Funds (IM) /services/im/funds
+│   ├── Strategy Catalogue (IM) /services/research/strategy/catalog
 │   └── Investor Relations /investor-relations
-└── Admin (Odum-internal only)
-    ├── User Management /admin/users
-    ├── Orgs /admin/organizations
-    ├── Ops /ops/services
-    └── Config /config
+└── Admin (Odum-internal only — visibility-sliced)
 ```
 
-The Spaces dropdown component is
-[components/shell/spaces-nav-sections.tsx](unified-trading-system-ui/components/shell/spaces-nav-sections.tsx). This
-file is the **authoritative top-nav SSOT** — if the IA changes, this file changes first and the codex docs track the
-change.
+The Spaces dropdown is the **authoritative top-nav SSOT for signed-in surfaces** — if the IA changes, this file changes
+first and the codex docs track the change. **When restructuring marketing nav (Deep Dive renames, additions, lock
+indicators), edit BOTH `site-header.tsx` AND `spaces-nav-sections.tsx`** — they don't share code.
 
 ## Per-service nav SSOT
 

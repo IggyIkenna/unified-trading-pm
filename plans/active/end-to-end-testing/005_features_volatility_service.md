@@ -55,14 +55,14 @@ analytics API reads. In real mode (Tier 2), the API reads from the actual GCS ou
 
 ## Known Issues to Audit (from instruments-service)
 
-| Issue                               | Audit check                                               | How to verify                                                            |
-| ----------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
-| #1 `load_dotenv(override=True)`     | Check `cli/service_entry.py` for `override=True`          | `rg "load_dotenv.*override" --type py`                                   |
-| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes             | Run with `--dry-run`, check no GCS files created                         |
-| #6 Asyncio nesting                  | Check VolatilityComputeHandler for nested `asyncio.run()` | Run and check for event loop errors                                      |
-| #8 PREDICTION category fallthrough  | Check category routing with unknown category              | `--category PREDICTION` should be rejected by parser (not in CATEGORIES) |
-| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                         | Remove if present, use UCI `get_bucket_name()`                           |
-| #7 Raw API keys in `.env`           | Check for plaintext API keys                              | Only SM reference names allowed                                          |
+| Issue                               | Audit check                                               | How to verify                                                               |
+| ----------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| #1 `load_dotenv(override=True)`     | Check `cli/service_entry.py` for `override=True`          | `rg "load_dotenv.*override" --type py`                                      |
+| #2 `--dry-run` not enforced         | Check if dry-run actually prevents GCS writes             | Run with `--dry-run`, check no GCS files created                            |
+| #6 Asyncio nesting                  | Check VolatilityComputeHandler for nested `asyncio.run()` | Run and check for event loop errors                                         |
+| #8 PREDICTION category fallthrough  | Check category routing with unknown category              | `--asset-group PREDICTION` should be rejected by parser (not in CATEGORIES) |
+| #3 Hardcoded bucket names in `.env` | Check `.env` for `*_GCS_BUCKET_*`                         | Remove if present, use UCI `get_bucket_name()`                              |
+| #7 Raw API keys in `.env`           | Check for plaintext API keys                              | Only SM reference names allowed                                             |
 
 ## Test Matrix
 
@@ -116,13 +116,13 @@ analytics API reads. In real mode (Tier 2), the API reads from the actual GCS ou
 This service's live mode recomputes volatility features on a periodic interval (default 15 minutes). It uses the same
 `compute` operation with `--mode live`.
 
-| #   | What                                                                                       | Expected                                                      | Status |
-| --- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------ |
-| 5.1 | `--operation compute --mode live --category CEFI --feature-group options_iv --interval 15` | Periodic recomputation every 15 minutes                       |        |
-| 5.2 | Interval alignment                                                                         | Runs on schedule, processes latest candle data                |        |
-| 5.3 | Graceful shutdown on Ctrl-C                                                                | Clean exit, LiveHandler.cleanup() called                      |        |
-| 5.4 | Event logging                                                                              | UEI events: STARTED, per-instrument COMPLETED/FAILED, STOPPED |        |
-| 5.5 | Custom interval                                                                            | `--interval 5` runs every 5 minutes instead of 15             |        |
+| #   | What                                                                                          | Expected                                                      | Status |
+| --- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------ |
+| 5.1 | `--operation compute --mode live --asset-group CEFI --feature-group options_iv --interval 15` | Periodic recomputation every 15 minutes                       |        |
+| 5.2 | Interval alignment                                                                            | Runs on schedule, processes latest candle data                |        |
+| 5.3 | Graceful shutdown on Ctrl-C                                                                   | Clean exit, LiveHandler.cleanup() called                      |        |
+| 5.4 | Event logging                                                                                 | UEI events: STARTED, per-instrument COMPLETED/FAILED, STOPPED |        |
+| 5.5 | Custom interval                                                                               | `--interval 5` runs every 5 minutes instead of 15             |        |
 
 ### Phase 5b: Mock vs Real A/B Testing
 
@@ -139,17 +139,17 @@ structure regardless.
 
 ### Phase 6: Mock Mode (local, no credentials)
 
-| #   | Scenario                         | What it tests                                | Expected                                                         | Status |
-| --- | -------------------------------- | -------------------------------------------- | ---------------------------------------------------------------- | ------ |
-| 6.1 | `--scenario default`             | Normal mock volatility computation           | Mock data generated via `run_mock_pipeline()`, local sink        |        |
-| 6.2 | `--scenario stress`              | High cardinality instruments (10x normal)    | Service handles memory, writes succeed                           |        |
-| 6.3 | Missing upstream candles         | No processed_candles_ohlcv for date range    | Service logs "no upstream data", exits 0 or warns                |        |
-| 6.4 | Stale upstream data              | Candles from 7+ days ago only                | Service warns about staleness, continues                         |        |
-| 6.5 | Invalid feature group + category | `--feature-group options_iv --category DEFI` | `validate_args()` raises ValueError, clean exit                  |        |
-| 6.6 | Deprecated mode: incremental     | `--mode incremental`                         | Normalised to `live` with deprecation warning                    |        |
-| 6.7 | Skip dependency check            | `--skip-dependency-check`                    | Warning logged, processing continues without upstream validation |        |
-| 6.8 | AWS cloud provider               | `CLOUD_PROVIDER=aws CLOUD_MOCK_MODE=true`    | Uses S3 sink (mocked), same output format                        |        |
-| 6.9 | Run tag override                 | `--run-tag t1-recon`                         | GCS output prefix uses `t1-recon/` instead of `batch/`           |        |
+| #   | Scenario                         | What it tests                                   | Expected                                                         | Status |
+| --- | -------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| 6.1 | `--scenario default`             | Normal mock volatility computation              | Mock data generated via `run_mock_pipeline()`, local sink        |        |
+| 6.2 | `--scenario stress`              | High cardinality instruments (10x normal)       | Service handles memory, writes succeed                           |        |
+| 6.3 | Missing upstream candles         | No processed_candles_ohlcv for date range       | Service logs "no upstream data", exits 0 or warns                |        |
+| 6.4 | Stale upstream data              | Candles from 7+ days ago only                   | Service warns about staleness, continues                         |        |
+| 6.5 | Invalid feature group + category | `--feature-group options_iv --asset-group DEFI` | `validate_args()` raises ValueError, clean exit                  |        |
+| 6.6 | Deprecated mode: incremental     | `--mode incremental`                            | Normalised to `live` with deprecation warning                    |        |
+| 6.7 | Skip dependency check            | `--skip-dependency-check`                       | Warning logged, processing continues without upstream validation |        |
+| 6.8 | AWS cloud provider               | `CLOUD_PROVIDER=aws CLOUD_MOCK_MODE=true`       | Uses S3 sink (mocked), same output format                        |        |
+| 6.9 | Run tag override                 | `--run-tag t1-recon`                            | GCS output prefix uses `t1-recon/` instead of `batch/`           |        |
 
 ### Phase 7: Observability
 

@@ -133,7 +133,7 @@ services and stamped out before they reach staging. Pattern-level bugs propagate
 
 - **Found in:** instruments-service category sweep
 - **Severity:** P1
-- **Impact:** `--category PREDICTION` processes all CeFi+TradFi+DeFi instruments instead of PREDICTION-specific
+- **Impact:** `--asset-group PREDICTION` processes all CeFi+TradFi+DeFi instruments instead of PREDICTION-specific
   instruments. The handler uses boolean flags (`cefi=True/False`) and PREDICTION has no corresponding flag, so when none
   are set the service defaults to "process everything".
 - **Root cause:** `_resolve_categories()` maps category strings to lowercase booleans (`config["cefi"] = True`).
@@ -149,9 +149,9 @@ services and stamped out before they reach staging. Pattern-level bugs propagate
 
 - **Found in:** instruments-service category sweep
 - **Severity:** P2
-- **Impact:** `--category SPORTS` produces no instruments. "No API keys required for requested venues" + "Validated API
-  keys for 0 venues". The sports instrument adapters (sportsbook reference data) may not be wired into the instrument
-  handler's venue resolution.
+- **Impact:** `--asset-group SPORTS` produces no instruments. "No API keys required for requested venues" + "Validated
+  API keys for 0 venues". The sports instrument adapters (sportsbook reference data) may not be wired into the
+  instrument handler's venue resolution.
 - **Root cause:** The instruments handler uses Tardis/CCXT venue lists for CeFi and specific TradFi adapters. SPORTS
   venues (Pinnacle, Betfair, etc.) use unified-sports-reference-interface (USRI) which has a separate integration path
   via the `sports` boolean flag, but it may not be routing to any actual data fetch.

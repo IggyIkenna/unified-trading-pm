@@ -44,8 +44,8 @@ This is an operational playbook — _how_ to configure a demo. For the _what_ (c
 The demo auth provider (`lib/auth/demo-provider.ts`) accepts both **persona id** and **email + password** as login
 credentials. Persona lookup uses `getPersonaByEmail(email)` from `lib/auth/personas.ts` — returns the first match.
 
-> **2026-04-25 — DemoPlanToggle no longer swaps personas.** The toggle is now backed by the **tier-override** pattern
-> in [`unified-trading-system-ui/lib/auth/tier-override.ts`](../../../../unified-trading-system-ui/lib/auth/tier-override.ts).
+> **2026-04-25 — DemoPlanToggle no longer swaps personas.** The toggle is now backed by the **tier-override** pattern in
+> [`unified-trading-system-ui/lib/auth/tier-override.ts`](../../../../unified-trading-system-ui/lib/auth/tier-override.ts).
 > Click writes a localStorage flag (`tier-override-v1`) keyed by user email. `useAuth()` reads it via
 > `applyTierOverride()` and replaces the user's entitlements at render time — identity (email, uid, org, displayName,
 > role) stays stable. This decouples the toggle from the auth provider so the same UX works in demo-mode AND real
@@ -77,10 +77,10 @@ A persona entry shape:
 Until 2026-04-25, every demo-client with a plan-toggle pairing had **two persona IDs sharing one email**, and the
 `DemoPlanToggle.TOGGLE_MAP` flipped between them via persona-swap. Live examples kept for backwards compat:
 
-| Shape          | Base tier persona id       | Full tier persona id      |
-| -------------- | -------------------------- | ------------------------- |
-| DART (default) | `desmond-signals-in`       | `desmond-dart-full`       |
-| DeFi-first     | `elysium-defi`             | `elysium-defi-full`       |
+| Shape          | Base tier persona id | Full tier persona id |
+| -------------- | -------------------- | -------------------- |
+| DART (default) | `desmond-signals-in` | `desmond-dart-full`  |
+| DeFi-first     | `elysium-defi`       | `elysium-defi-full`  |
 
 The **new pattern (2026-04-25)** is a single canonical persona per email + a `TierBundle` entry in
 `lib/auth/tier-override.ts` that declares both tiers' entitlements declaratively:
@@ -168,8 +168,8 @@ Edit `lib/auth/tier-override.ts::TIER_BUNDLES` — append an entry keyed by the 
 }
 ```
 
-The bundle is the SSOT for what each tier surfaces. `DemoPlanToggle` renders for any user whose email matches a
-bundle entry — works in demo mode AND real Firebase mode.
+The bundle is the SSOT for what each tier surfaces. `DemoPlanToggle` renders for any user whose email matches a bundle
+entry — works in demo mode AND real Firebase mode.
 
 ### 5.3 Add questionnaire preseed (if pre-scoped)
 

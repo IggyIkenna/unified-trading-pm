@@ -445,7 +445,7 @@ Both batch and live use the same sharding/filtering principle: **only initialize
 ```mermaid
 graph TB
     subgraph BatchShard[Batch Shard]
-        BatchCLI[CLI Args:<br/>--venues BINANCE-FUTURES<br/>--category CEFI]
+        BatchCLI[CLI Args:<br/>--venues BINANCE-FUTURES<br/>--asset-group CEFI]
         BatchInit[Initialize only<br/>BINANCE-FUTURES adapter]
         BatchProcess[Process only<br/>BINANCE instruments]
     end

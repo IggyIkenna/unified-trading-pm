@@ -2,8 +2,6 @@
 title: "Tardis canonical path full streaming — P2.B"
 status: active
 created: 2026-04-22
-locked_by: live-defi-rollout
-locked_since: 2026-04-22
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---
@@ -110,7 +108,7 @@ Two full copies on GCS; two sets of in-memory parquet buffers.
 ### Phase 3 — QG + tarball refresh (SEQUENTIAL after Phase 2)
 
 - [x] [SCRIPT] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
-- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --category CEFI`
+- [x] [SCRIPT] P0. `/opt/homebrew/bin/bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`
       (tarball refreshed at 2026-04-23T13:47:33Z, 24s after P2.B commit 1364211)
 - [x] [SCRIPT] P0. Commit + push to `live-defi-rollout` (commit 1364211 pushed; PM plan update committed below)
 
