@@ -18,6 +18,23 @@ depends_on:
 
 # Refactor G2.6 — Staging Firebase provisioning
 
+> ## Naming-convention reference (read this first)
+>
+> The staging environment uses **5 different names** across infrastructure layers. They all refer to the same thing:
+>
+> | Layer                   | Name in use                     | File / surface                                                       |
+> | ----------------------- | ------------------------------- | -------------------------------------------------------------------- |
+> | Firebase project        | `odum-staging`                  | `.firebaserc` (alias `staging`)                                      |
+> | Firebase hosting target | `uat`                           | `firebase.json` hosting block                                        |
+> | Cloud Run service       | `odum-portal-staging`           | `firebase.json` rewrites + GCP console                               |
+> | Public hostname         | `uat.odum-research.com`         | DNS + auth-allowed-domains                                           |
+> | Runtime env label       | `staging` (uppercase `STAGING`) | `lib/runtime/environment.ts → getDeploymentEnv()` (hostname-derived) |
+> | Build-time env file     | `docker-build.env.uat`          | `unified-trading-system-ui/config/`                                  |
+> | Mail domain             | `mail.uat.odum-research.com`    | Resend / DNS                                                         |
+>
+> If you read "the UAT bundle", "the staging deployment", or "odum-portal-staging Cloud Run" in any doc, all three mean
+> the same thing. Use this table to disambiguate before flagging a "missing" piece.
+
 ## Context
 
 Stage 3E §2.6 ships a staging Firebase project so warm-prospect demos at `odum-research.co.uk` can hand out real-auth
@@ -77,16 +94,49 @@ Dev (`localhost:3000` tier-1 mock-auth) and staging (`odum-research.co.uk` real-
 path. The switch is an env var (`NEXT_PUBLIC_USE_FIREBASE_AUTH`) + Firebase config values — no code-fork. Playwright
 specs run identically against both (staging uses the Firebase emulator for CI).
 
+## Status update 2026-04-25
+
+Operator confirmed `odum-staging` Firebase project is **provisioned** — alias `staging` already in `.firebaserc`, `uat`
+deploy target maps to Cloud Run `odum-portal-staging`, mail domain `mail.uat.odum-research.com` configured, storage
+rules separate from Firestore. Phase A is **DONE** (operator side); the remainder of this plan is the agent-side wiring
+(Phases B–E).
+
+**Blocker on naively flipping UAT to Firebase**: `DemoPlanToggle` (Desmond DART Full ⇄ Signals-In, Elysium DeFi ⇄ DeFi
+Full) calls `loginByEmail(pairedPersonaId, "")` — an empty-password persona swap that only works against the demo
+provider's local `PERSONAS` table. Real Firebase rejects empty passwords. The toggle is the FOMO/upgrade-preview
+narrative for prospect demos and is core to the staging walkthrough.
+
+**Migration path** (additive — does not block Phase B–E):
+
+1. Refactor `DemoPlanToggle` from a persona-swap to a **tier-override** flag in localStorage. The auth context reads the
+   override on top of the real Firebase user and merges entitlements at render time. The UI keeps the toggle UX
+   identical (button still flips Full ⇄ Signals-In) but the underlying data flow is "real user + entitlement overlay"
+   instead of "swap personas".
+2. Or: provision two real Firebase users per prospect (`desmond+full@…` / `desmond+signals@…`), wire the toggle to
+   `signOut` + `signIn`. More invasive, less smooth UX.
+
+Recommendation: **keep UAT in demo mode until tier-override refactor lands**; demo-mode advisor accounts on
+`@odum-research.co.uk` continue working client-side via the per-prospect redirect in
+`lib/auth/personas.ts::DEMO_PERSONA_EMAILS`. Real-Firebase advisor login is a follow-up after toggle refactor.
+
+SSOT cross-ref:
+[`../../codex/08-workflows/environment-mode-philosophy.md`](../../codex/08-workflows/environment-mode-philosophy.md)
+§Axis 2.
+
 ## Phase breakdown
 
 ### Phase A — Firebase project provisioning (operator + agent)
 
-- [ ] [OPERATOR] P0. Create `odum-staging` Firebase project via Firebase console. Enable Auth, Firestore, Hosting. Note
-      the project ID + all 6 `FIREBASE_*` config values.
-- [ ] [OPERATOR] P0. Add `odum-research.co.uk` to authorized domains in Firebase Auth.
+- [x] [OPERATOR] P0. Create `odum-staging` Firebase project via Firebase console. Enable Auth, Firestore, Hosting. Note
+      the project ID + all 6 `FIREBASE_*` config values. **Done — confirmed 2026-04-25 (operator). `.firebaserc` alias
+      `staging` → `odum-staging`. UAT deploy target wired in `firebase.json` hosting block.**
+- [x] [OPERATOR] P0. Add `odum-research.co.uk` to authorized domains in Firebase Auth. **Done — confirmed 2026-04-25.
+      Mail domain `mail.uat.odum-research.com` (commit `0d2966fe`) confirms domain authorization is in place.**
 - [ ] [OPERATOR] P0. Generate Admin SDK service-account key; upload to GCP Secret Manager as `firebase-admin-staging`
-      (project `odum-research` or the workspace-canonical SM project).
-- [ ] [OPERATOR] P0. Configure Firebase Auth sign-in methods (email/password + Google OAuth at minimum).
+      (project `odum-research` or the workspace-canonical SM project). **Status unconfirmed — verify with operator
+      before Phase B.**
+- [ ] [OPERATOR] P0. Configure Firebase Auth sign-in methods (email/password + Google OAuth at minimum). **Status
+      unconfirmed — verify with operator before Phase B.**
 
 ### Phase B — Env-var + config surface
 
