@@ -49,7 +49,7 @@ gateways validate them. User management routes are in unified-trading-api. The s
 **Backfill / migration / smoke / forward-poll VMs** are a separate deployment pattern from T3-T6 (which are long-lived
 Cloud Run services). They use the **tarball-from-GCS** path: `setup-data-pipeline-vm.sh` startup script + per-repo
 tarballs at `gs://deployment-scripts-.../code/`. See `vm-tarball-deployment.md` for the architecture, invariants,
-refresh flags (`--all` / `--category` / `--include`), singleton-lock pattern, debug recipe, and **Observability &
+refresh flags (`--all` / `--asset-group` / `--include`), singleton-lock pattern, debug recipe, and **Observability &
 Lifecycle** (streaming GCS log, `/api/vm-deployments`, self-delete — `deployment-service` `cc07649` + `beaa2e5`).
 
 ### Startup
@@ -186,3 +186,64 @@ Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STA
 
 **SSOT:** `unified-trading-pm/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`. Schemas:
 `unified_api_contracts.internal.domain.deployment_service.RuntimeProfile` / `RuntimeProfileSpec`.
+
+---
+
+## Deployed-environment topology (prod / uat) — provisioned 2026-04-25
+
+Orthogonal to the local-tier and runtime-profile axes above. Once code reaches a deployed environment:
+
+### Frontend portal (`unified-trading-system-ui`)
+
+| Env  | Public URL                      | Cloud Run service     | Compute project          | Firebase project (Auth + Firestore + Storage) | Regions                                                   |
+| ---- | ------------------------------- | --------------------- | ------------------------ | --------------------------------------------- | --------------------------------------------------------- |
+| prod | `https://www.odum-research.com` | `odum-portal`         | `central-element-323112` | `central-element-323112`                      | europe-west4 + us-central1 + asia-northeast1 (LB-fronted) |
+| uat  | `https://uat.odum-research.com` | `odum-portal-staging` | `central-element-323112` | **`odum-staging`** (isolated)                 | europe-west4                                              |
+
+**UAT data layer is fully isolated from prod** — separate Auth user pool, Firestore, and Storage on `odum-staging`. UAT
+compute is still on `central-element-323112` because the Cloud Build / Artifact Registry / GHA deploy SA pipeline is
+wired there. Moving UAT compute to `odum-staging` is a separate plan, not done today. The data isolation is the
+meaningful guarantee: admin / owner on `odum-staging` does **not** grant any permission on `central-element-323112`.
+
+⚠️ **Multi-region prod gotcha:** `scripts/deploy-cloud-run.sh --env=prod` only updates europe-west4. us-central1 and
+asia-northeast1 are refreshed by a separate workflow. Verify with `gcloud run services list --region=…` after a prod
+deploy that needs to reach all customer regions.
+
+### Sibling backend services (each in its own repo)
+
+| Repo                   | Cloud Run service      | Region(s)      | Purpose                                |
+| ---------------------- | ---------------------- | -------------- | -------------------------------------- |
+| `unified-trading-api`  | `unified-trading-api`  | varies per env | Main trading backend                   |
+| `user-management-api`  | `user-management-api`  | us-central1    | Auth / role / entitlement `/authorize` |
+| `client-reporting-api` | `client-reporting-api` | us-central1    | Client-facing reports                  |
+| `deployment-api`       | `deployment-api`       | us-central1    | Deployment automation                  |
+
+The portal calls these via `NEXT_PUBLIC_*_URL` env vars baked at build time. **They are NOT inside the UI repo.** UAT
+today runs `NEXT_PUBLIC_MOCK_API=true` and never calls them. When UAT flips to `MOCK_API=false`, the API auth
+middlewares will need to dual-verify Firebase ID tokens (`['central-element-323112', 'odum-staging']`) — the
+cross-project IAM is already in place; only a small middleware change is needed. **Do NOT deploy a parallel
+`user-management-api` on `odum-staging`** — dual-verify is much smaller.
+
+### IAM admin matrix (humans only)
+
+| Project                  | Owners (`roles/owner`) | Firebase admin (`roles/firebase.admin`) |
+| ------------------------ | ---------------------- | --------------------------------------- |
+| `central-element-323112` | `ikenna@`, `femi@`     | (implicit via owner — no direct grants) |
+| `odum-staging`           | `ikenna@` (creator)    | `femi@`, `harshkantariya@`              |
+
+`harshkantariya@odum-research.com` is staging-only by operator decree. Never grant `firebase.admin` on prod. Mirror
+script at `unified-trading-system-ui/scripts/admin/grant-harsh-iam.sh` grants 14 prod operational roles + staging
+firebase.admin and explicitly excludes prod firebase.admin.
+
+### Mail (Resend)
+
+- prod: `hello@mail.odum-research.com` — DKIM + SPF verified.
+- uat: `hello@mail.uat.odum-research.com` ⚠️ subdomain not yet DNS-verified. Either set up the staging subdomain in
+  Resend (4 DKIM + 1 SPF DNS records) or temporarily point the uat branch in `lib/email/resend.ts` `getMailDomain()` at
+  the prod-domain sender.
+
+### Full per-env reference
+
+`unified-trading-system-ui/docs/core/DEPLOYMENT.md` is the SSOT for the portal-side build/deploy contract — local
+Firebase Emulator Suite setup, Resend domain caveats, the exact `gcloud run` / `firebase deploy` commands per env, and
+the API token-verification seam.
