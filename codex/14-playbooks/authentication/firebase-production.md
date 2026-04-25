@@ -7,6 +7,10 @@ scope: [engineer, admin]
 Production Firebase auth. Real clients, real money, real reporting. **High-risk tier** — all provisioning flows must
 preserve client isolation, audit trail, and regulatory compliance.
 
+> **Sibling docs:** [firebase-local.md](firebase-local.md) (emulator on dev machines),
+> [firebase-staging.md](firebase-staging.md) (`odum-staging` GCP project). Same Admin SDK code path runs against all
+> three — only the project ID differs.
+
 ## Current state (2026-04-19) — ✅ live
 
 - Firebase project id: `central-element-323112`
