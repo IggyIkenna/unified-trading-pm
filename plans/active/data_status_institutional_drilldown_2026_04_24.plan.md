@@ -4,7 +4,13 @@ status: active
 created: 2026-04-24
 locked_by: live-defi-rollout
 locked_since: 2026-04-24
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 29/29 checkboxes done; codex
+> SSOT data-status-drilldown.md shipped. Ready for [unlock-plan] + archive. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Data Status institutional-grade drilldown — schema backfill, write-time validation, unified shard-detail
 

@@ -1,6 +1,9 @@
 ---
 name: Instruments Service Template Refactor
 remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
+superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   Refactor instruments-service from ~104 files/12,000+ lines to ~18-20 files/~1,800 lines by making URDI the sole
   external API path, removing all service-level infrastructure, canonicalization, aggregation, and validation logic, and
@@ -185,6 +188,12 @@ todos:
     status: in_progress
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_operational_validation_2026_04_15.plan.md](./consolidated_operational_validation_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # Instruments-Service Template Refactor
 

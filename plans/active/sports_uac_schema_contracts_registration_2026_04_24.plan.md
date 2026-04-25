@@ -44,7 +44,13 @@ repo_gates:
     business: none
 depends_on: []
 isProject: false
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 20/20 checkboxes done;
+> frontmatter has `completed: 2026-04-25`. UAC 4810ced, cbd8047, a7eb167, cf79d54. Ready for archive. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 ## Context
 

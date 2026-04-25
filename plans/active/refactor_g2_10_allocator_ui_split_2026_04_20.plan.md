@@ -14,7 +14,14 @@ depends_on:
 # Wave G2-β — sequential after G2-α. Parallel with G2.2, G2.7.
 # ROUTE-GROUP AMENDMENT 2026-04-22: Next.js app router uses `(platform)` route group for authenticated surfaces.
 # All `app/services/...` paths below should read `app/(platform)/services/...`. Public pages stay in `(public)`.
+supersedes: [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](./platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md).
+> platform_strategy_families was folded into G2.10 per depends_on (folded) marker See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Refactor G2.10 — Phase 10.7 portfolio-allocator UI split
 

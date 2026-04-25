@@ -1,3 +1,14 @@
+---
+orphan_candidate: true
+orphan_reason:
+  "Pure agent dispatch prompt for ml_pipeline_ui_integration plan. Not a tracked work plan; companion runbook only."
+reconciliation_date: 2026-04-25
+---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Pure agent dispatch prompt for
+> ml_pipeline_ui_integration plan. Not a tracked work plan; companion runbook only. See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
+
 # Agent Prompt: ML Pipeline UI E2E Browser Validation
 
 Copy this prompt to a Claude Code session with MCP browser access.

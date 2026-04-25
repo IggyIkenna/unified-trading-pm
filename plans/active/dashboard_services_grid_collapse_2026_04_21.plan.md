@@ -5,6 +5,9 @@ name: dashboard-services-grid-collapse-2026-04-21 overview: Collapse /dashboard 
 each tile, and add a family/archetype filter strip above the grid that propagates selection into DART sub-tabs + Reports
 via URL params. Sibling to the Phase-11 lifecycle-nav 8→4 collapse; closes the dashboard-side of the same ask. type:
 mixed epic: epic-code-completion status: active locked_by: live-defi-rollout locked_since: 2026-04-21
+reconciliation_status: shipped_substantive reconciliation_date: 2026-04-25 reconciliation_note: 23/26 (88%) done; 3
+minor follow-ups remain. Evidence: PM b428117d, ed1f4a2d, 28e96f21, 5bd01b9b, 85c43998. Ready for [unlock-plan] +
+archive once final 3 todos land. See `_reconciliation_evidence_map_2026_04_25.md`.
 
 completion_gates: code: C2 deployment: D0 business: none
 

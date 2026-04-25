@@ -6,7 +6,14 @@ created: 2026-03-27
 updated: 2026-03-27
 locked_by: live-defi-rollout
 locked_since: 2026-03-27
+supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [sports_batch_pipeline_end_to_end_2026_03_25.plan.md](./sports_batch_pipeline_end_to_end_2026_03_25.plan.md).
+> sports_e2e_validation supersedes the MTDS adapter portion of sports_batch_pipeline per its body text See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Sports E2E Validation + Arb Pipeline
 

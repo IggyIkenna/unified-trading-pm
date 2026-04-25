@@ -281,7 +281,15 @@ todos:
     status: todo
 
 isProject: false
+superseded_by: [strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md](./strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md).**
+> Phase 10 of strategy-arch-v2 covers the canonical batch=live pattern (a7b63ce, aa3c6c0, 2d05e58) Original scope
+> retained for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 ## Context
 

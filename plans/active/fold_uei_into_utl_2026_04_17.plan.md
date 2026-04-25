@@ -289,7 +289,13 @@ todos:
     note: ""
 
 isProject: false
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. UTL events sub-package shipped;
+> UEI repo absent from workspace; CLAUDE.md has canonical import path; consumer cleanup confirmed across MTDS/FSS
+> pyproject. Ready for [unlock-plan] + archive. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 ## Context
 

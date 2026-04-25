@@ -138,7 +138,7 @@ Phase 0 (operator)
 
 **Goal:** `lib/email/resend.ts` — single source of truth for Resend calls and env-aware sender addresses.
 
-- [ ] [AGENT] P1. Create `lib/email/resend.ts` with:
+- [x] [AGENT] P1. Create `lib/email/resend.ts` with:
   - `getResendApiKey(): string | null` — returns `RESEND_API_KEY` (server-only, never `NEXT_PUBLIC_*`)
   - `getSenderFor(type: "hello" | "auth"): string` — returns env-aware `from` address:
     - dev/no-key → `onboarding@resend.dev`
@@ -163,7 +163,7 @@ Both existing routes have the wrong sender address and `.co.uk` typo. Fix them t
 
 ### Phase 2a — Fix contact route (PARALLEL with 2b)
 
-- [ ] [AGENT] P2a. Update `app/api/contact/route.ts`:
+- [x] [AGENT] P2a. Update `app/api/contact/route.ts`:
   - Import `sendEmail`, `getSenderFor` from `@/lib/email/resend`
   - Change `FROM_ADDRESS` from `website@mail.odum-research.com` → use `getSenderFor("hello")`
   - Change `TO_ADDRESS` from `info@odum-research.co.uk` → `info@odum-research.com`
@@ -172,7 +172,7 @@ Both existing routes have the wrong sender address and `.co.uk` typo. Fix them t
 
 ### Phase 2b — Fix confirm-email route (PARALLEL with 2a)
 
-- [ ] [AGENT] P2b. Update `app/api/onboarding/confirm-email/route.ts`:
+- [x] [AGENT] P2b. Update `app/api/onboarding/confirm-email/route.ts`:
   - Change `FROM_ADDRESS` from `onboarding@mail.odum-research.com` → use `getSenderFor("auth")`
   - Fix `info@odum-research.co.uk` → `info@odum-research.com` in the email body
   - Replace the inline `fetch` with `sendEmail({...})`
@@ -182,7 +182,7 @@ Both existing routes have the wrong sender address and `.co.uk` typo. Fix them t
 The questionnaire page at `/questionnaire` submits to Firestore but sends no email today. After a successful Firestore
 write, the page should fire a POST to a new API route.
 
-- [ ] [AGENT] P2c. Create `app/api/questionnaire/email/route.ts`:
+- [x] [AGENT] P2c. Create `app/api/questionnaire/email/route.ts`:
   - `POST { email?: string; firmName?: string; serviceFamily?: string; submissionId?: string }`
   - If `email` present: send acknowledgement to user (From: `hello@`, Reply-To: `info@odum-research.com`)
     - Subject: `"Thanks for submitting your questionnaire — Odum"`
@@ -194,7 +194,7 @@ write, the page should fire a POST to a new API route.
     - Body: table of submitted axes (service family, categories, fund structure)
   - Graceful no-key fallback (same pattern as other routes)
 
-- [ ] [AGENT] P2c-wire. Update `app/(public)/questionnaire/page.tsx` `onSubmit`:
+- [x] [AGENT] P2c-wire. Update `app/(public)/questionnaire/page.tsx` `onSubmit`:
   - After `submitQuestionnaire()` returns `{ success: true }`, fire:
     ```ts
     fetch("/api/questionnaire/email", {
@@ -242,7 +242,7 @@ intake record and the questionnaire is not needed.
 
 **Sections Q-S (Odum internal review):** NOT shown on the public form — internal use only.
 
-- [ ] [AGENT] P2d-page. Create `app/(public)/strategy-evaluation/page.tsx`:
+- [x] [AGENT] P2d-page. Create `app/(public)/strategy-evaluation/page.tsx`:
   - Multi-section form matching sections A-P
   - Sections J/K/L conditionally rendered based on selected commercial path (radio B)
   - Progress indicator showing current section (1-of-16 style, or section name breadcrumb)
@@ -253,7 +253,7 @@ intake record and the questionnaire is not needed.
   - Page title: "Strategy Evaluation — Odum" with subtitle explaining the 3 commercial paths briefly
   - Footer: "This form is confidential. Odum Capital Ltd — FCA authorised · FRN 975797"
 
-- [ ] [AGENT] P2d-api. Create `app/api/strategy-evaluation/submit/route.ts`:
+- [x] [AGENT] P2d-api. Create `app/api/strategy-evaluation/submit/route.ts`:
   - `POST { sections: A-P data, email?: string, strategyName?: string }`
   - Persist to Firestore collection `strategy_evaluations` with `submittedAt: serverTimestamp()`
   - If `email` present: send acknowledgement (From: `hello@`, Reply-To: `info@odum-research.com`)
@@ -269,7 +269,7 @@ intake record and the questionnaire is not needed.
   - Graceful no-key fallback
   - Dev: localStorage only (same as questionnaire)
 
-- [ ] [AGENT] P2d-nav. Add `/strategy-evaluation` to the site navigation (footer or relevant marketing pages):
+- [x] [AGENT] P2d-nav. Add `/strategy-evaluation` to the site navigation (footer or relevant marketing pages):
   - Add to `/briefings` page: "Download the strategy evaluation form" → "or complete it online at /strategy-evaluation"
   - Add to `/investment-management` page and `/platform` page: CTA "Submit a strategy for evaluation"
   - No access gate on the route itself — the URL is the access control
@@ -285,7 +285,7 @@ Firebase validates the `oobCode` → redirects to our custom handler page.
 
 ### Phase 3a — Send-verification route (PARALLEL with 3b)
 
-- [ ] [AGENT] P3a. Create `app/api/auth/send-verification/route.ts`:
+- [x] [AGENT] P3a. Create `app/api/auth/send-verification/route.ts`:
 
 ```typescript
 // POST /api/auth/send-verification
@@ -304,7 +304,7 @@ Firebase validates the `oobCode` → redirects to our custom handler page.
 
 ### Phase 3b — Send-reset route (PARALLEL with 3a)
 
-- [ ] [AGENT] P3b. Create `app/api/auth/send-reset/route.ts`:
+- [x] [AGENT] P3b. Create `app/api/auth/send-reset/route.ts`:
 
 ```typescript
 // POST /api/auth/send-reset
@@ -319,7 +319,7 @@ Firebase validates the `oobCode` → redirects to our custom handler page.
 
 ### Phase 3c — Update login page forgot-password (SEQUENTIAL after 3b)
 
-- [ ] [AGENT] P3c. Update `app/(public)/login/page.tsx` `handleForgotPassword`:
+- [x] [AGENT] P3c. Update `app/(public)/login/page.tsx` `handleForgotPassword`:
   - Replace direct `sendPasswordResetEmail(auth, email)` Firebase call with
     `fetch("/api/auth/send-reset", { method: "POST", body: JSON.stringify({ email }) })`
   - Keep the demo/mock guard (already there: shows toast and returns early in demo/mock mode)
@@ -335,7 +335,7 @@ Firebase redirects `oobCode` + `mode` to our pages after the user clicks the ema
 
 ### Phase 4a — Verify-email page (PARALLEL with 4b)
 
-- [ ] [AGENT] P4a. Create `app/(public)/auth/verify-email/page.tsx`:
+- [x] [AGENT] P4a. Create `app/(public)/auth/verify-email/page.tsx`:
   - Read `?oobCode=` + `?mode=verifyEmail` from URL params
   - If `mode !== "verifyEmail"` or `oobCode` missing → show error state
   - On mount: call `applyActionCode(auth, oobCode)` from `firebase/auth` (client-side SDK)
@@ -346,7 +346,7 @@ Firebase redirects `oobCode` + `mode` to our pages after the user clicks the ema
 
 ### Phase 4b — Reset-password page (PARALLEL with 4a)
 
-- [ ] [AGENT] P4b. Create `app/(public)/auth/reset-password/page.tsx`:
+- [x] [AGENT] P4b. Create `app/(public)/auth/reset-password/page.tsx`:
   - Read `?oobCode=` + `?mode=resetPassword` + `?continueUrl=` from URL params
   - On mount: call `verifyPasswordResetCode(auth, oobCode)` to get the associated email, display it
   - Form: new password input + confirm password input

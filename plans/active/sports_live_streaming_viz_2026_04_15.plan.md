@@ -364,7 +364,16 @@ todos:
     note: ""
 
 isProject: false
+orphan_candidate: true
+orphan_reason:
+  "0 checkboxes, no `locked_by`, no concrete commit evidence. Plan structure incomplete. Either restructure with
+  checkboxes or archive."
+reconciliation_date: 2026-04-25
 ---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: 0 checkboxes, no `locked_by`,
+> no concrete commit evidence. Plan structure incomplete. Either restructure with checkboxes or archive. See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
 
 # Sports Live Streaming Visualization + Execution
 

@@ -14,7 +14,14 @@ depends_on:
     2026-04-20)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.8, 2.9, 2.11. Gates G2-β (2.2, 2.7, 2.10).
 # PATH AMENDMENT 2026-04-22: user-management-ui archived; Firebase config lives at unified-trading-system-ui/lib/admin/firebase.ts + lib/auth/firebase-config.ts.
+supersedes: [deployment_topology_and_client_isolation_2026_04_17.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [deployment_topology_and_client_isolation_2026_04_17.plan.md](./deployment_topology_and_client_isolation_2026_04_17.plan.md).
+> deployment_topology was folded into G2.6 per amendment 2026-04-22 See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence anchors.
 
 # Refactor G2.6 — Staging Firebase provisioning
 
@@ -101,10 +108,10 @@ This plan was originally scoped to provision a separate `odum-staging` Firebase 
 actually matches the deployed infrastructure:
 
 - **UAT IS staging.** The `uat.odum-research.com` hostname + `odum-portal-staging` Cloud Run service + `uat` hosting
-  target are the staging environment. They're served via the same Firebase project as prod
-  (`central-element-323112`) — separated by hostname + hosting target only, not by Firebase project boundary.
-- The `.firebaserc` alias `staging: odum-staging` is **leftover misdirection** from this plan's original direction.
-  No `odum-staging` project was ever created, and none is needed.
+  target are the staging environment. They're served via the same Firebase project as prod (`central-element-323112`) —
+  separated by hostname + hosting target only, not by Firebase project boundary.
+- The `.firebaserc` alias `staging: odum-staging` is **leftover misdirection** from this plan's original direction. No
+  `odum-staging` project was ever created, and none is needed.
 - The `firebase.json` `uat` hosting target lives under `targets.central-element-323112.hosting` — confirming the
   shared-project model.
 
@@ -138,27 +145,23 @@ SSOT cross-ref:
 > reversed — UAT shares the prod Firebase project (`central-element-323112`), separated only by hostname + hosting
 > target. Phase A scope is now (1) domain authorization, (2) demo-user provisioning. Both are operator-side.
 
-- [ ] [OPERATOR] P0. Confirm `uat.odum-research.com` is in **Firebase console → Authentication → Settings →
-      Authorized domains** for project `central-element-323112`. Add it if missing (Firebase rejects sign-ins from
-      domains not on this list with `auth/unauthorized-domain`). Email/password + Google OAuth sign-in methods are
-      already enabled on the shared project (used by prod) — no separate sign-in-method config needed.
-- [ ] [OPERATOR] P0. Provision real Firebase users for every demo email currently in `lib/auth/personas.ts`. The
-      demo provider authenticates these client-side; FirebaseAuthProvider does not — it calls
-      `signInWithEmailAndPassword` against the real pool. Until each email has a Firebase user record, switching
-      UAT to firebase auth will break login (`auth/user-not-found`). Required emails:
-      - `admin@odum-research.co.uk` (admin)
-      - `investor@odum-research.co.uk`, `advisor@odum-research.co.uk`
-      - `desmondhw@gmail.com` (Desmond — paired-tier demo)
-      - `patrick@bankelysium.com` (Patrick / Elysium — paired-tier demo)
-      - `demo-signals@odum-research.co.uk`, `demo-im@odum-research.co.uk`
-      - `prospect-im@odum-research.com`, `prospect-dart-full@odum-research.com`,
-        `prospect-dart-signals-in@odum-research.com`, `prospect-odum-signals@odum-research.com`,
-        `prospect-regulatory@odum-research.com`
-      Use the same passwords as `PERSONAS` for consistency. Provision via Firebase console → Authentication → Add
-      user, or scripted via `firebase-admin` `createUser()`.
-- [ ] [OPERATOR] P0. Confirm user-management-api `/authorize` returns the right role + entitlements + org for each
-      demo email after sign-in. The endpoint keys off email; demo emails need to be seeded into whatever Firestore
-      collection or admin-DB it reads.
+- [ ] [OPERATOR] P0. Confirm `uat.odum-research.com` is in **Firebase console → Authentication → Settings → Authorized
+      domains** for project `central-element-323112`. Add it if missing (Firebase rejects sign-ins from domains not on
+      this list with `auth/unauthorized-domain`). Email/password + Google OAuth sign-in methods are already enabled on
+      the shared project (used by prod) — no separate sign-in-method config needed.
+- [ ] [OPERATOR] P0. Provision real Firebase users for every demo email currently in `lib/auth/personas.ts`. The demo
+      provider authenticates these client-side; FirebaseAuthProvider does not — it calls `signInWithEmailAndPassword`
+      against the real pool. Until each email has a Firebase user record, switching UAT to firebase auth will break
+      login (`auth/user-not-found`). Required emails: - `admin@odum-research.co.uk` (admin) -
+      `investor@odum-research.co.uk`, `advisor@odum-research.co.uk` - `desmondhw@gmail.com` (Desmond — paired-tier
+      demo) - `patrick@bankelysium.com` (Patrick / Elysium — paired-tier demo) - `demo-signals@odum-research.co.uk`,
+      `demo-im@odum-research.co.uk` - `prospect-im@odum-research.com`, `prospect-dart-full@odum-research.com`,
+      `prospect-dart-signals-in@odum-research.com`, `prospect-odum-signals@odum-research.com`,
+      `prospect-regulatory@odum-research.com` Use the same passwords as `PERSONAS` for consistency. Provision via
+      Firebase console → Authentication → Add user, or scripted via `firebase-admin` `createUser()`.
+- [ ] [OPERATOR] P0. Confirm user-management-api `/authorize` returns the right role + entitlements + org for each demo
+      email after sign-in. The endpoint keys off email; demo emails need to be seeded into whatever Firestore collection
+      or admin-DB it reads.
 
 ### Phase B — Env-var + config surface
 

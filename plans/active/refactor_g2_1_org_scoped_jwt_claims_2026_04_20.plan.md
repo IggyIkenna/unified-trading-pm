@@ -15,7 +15,14 @@ depends_on:
 # Wave G2-α — parallel with G2-α peers 2.6, 2.8, 2.9, 2.11. Downstream Wave G2-β: 2.2, 2.7, 2.10.
 # PATH AMENDMENT 2026-04-22: user-management-ui archived; admin surfaces now live at
 #   unified-trading-system-ui/app/(ops)/admin/* + lib/admin/* + server/admin/*.
+supersedes: [user_management_merge_2026_03_23.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [user_management_merge_2026_03_23.plan.md](./user_management_merge_2026_03_23.plan.md). user_management_merge folded
+> into G2.1 (and consumers via UTSU (ops)/admin/\*) See `_reconciliation_evidence_map_2026_04_25.md` for evidence
+> anchors.
 
 # Refactor G2.1 — Org-scoped JWT claims
 

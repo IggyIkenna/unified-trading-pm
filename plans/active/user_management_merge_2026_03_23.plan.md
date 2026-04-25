@@ -17,7 +17,14 @@ affects:
   - user-management-ui
   - unified-trading-pm
   - unified-trading-pm (codex/ subdir)
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. user-management-ui repo
+> archived (only ARCHIVED.md + Dockerfile remain); 14+ admin pages live in UTSU (ops)/admin/\*. 49/5 (91%) done. Ready
+> for [unlock-plan] + archive after 5 polish items flip. See `_reconciliation_evidence_map_2026_04_25.md` for evidence
+> anchors.
 
 # User Management Merge — Frontend into UTSU, Backend into auth-api
 

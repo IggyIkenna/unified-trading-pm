@@ -1,3 +1,14 @@
+---
+orphan_candidate: true
+orphan_reason:
+  "Quickstart guide (301 lines, 0 checkboxes, no frontmatter). Belongs in codex/08-workflows/ as onboarding doc."
+reconciliation_date: 2026-04-25
+---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Quickstart guide (301 lines, 0
+> checkboxes, no frontmatter). Belongs in codex/08-workflows/ as onboarding doc. See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
+
 # DeFi Strategy Testing - Quick Start Guide
 
 **Complete automation for testing any DeFi strategy: UI verification + E2E test generation + regression protection.**

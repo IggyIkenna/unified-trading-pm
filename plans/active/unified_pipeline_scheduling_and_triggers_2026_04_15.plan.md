@@ -1,6 +1,9 @@
 ---
 name: unified-pipeline-scheduling-and-triggers
 remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
+superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   End-to-end pipeline readiness — backfill, T+1, thermal, live — across all 6 clusters with sports trigger scheduling
 type: mixed
@@ -402,6 +405,12 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_operational_validation_2026_04_15.plan.md](./consolidated_operational_validation_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # Unified Pipeline Scheduling & Triggers
 

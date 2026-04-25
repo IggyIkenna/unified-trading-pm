@@ -1,6 +1,9 @@
 ---
 name: defi-instrument-pipeline-and-rewards
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
+superseded_by: [consolidated_defi_data_pipeline_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   "End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability"
 type: code
@@ -125,6 +128,12 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_defi_data_pipeline_2026_04_15.plan.md](./consolidated_defi_data_pipeline_2026_04_15.plan.md).** Original
+> scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # DeFi Instrument Pipeline & Reward Lifecycle
 

@@ -108,7 +108,22 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-13
 todos: []
 isProject: false
+superseded_by:
+  [
+    manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md,
+    data_status_institutional_drilldown_2026_04_24.plan.md,
+    honest_coverage_metrics_2026_04_19.plan.md,
+  ]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md](./manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md),
+> [data_status_institutional_drilldown_2026_04_24.plan.md](./data_status_institutional_drilldown_2026_04_24.plan.md),
+> [honest_coverage_metrics_2026_04_19.plan.md](./honest_coverage_metrics_2026_04_19.plan.md).** Schema progressed past
+> v4 (now v6); data-status drilldown shipped via dedicated 2026-04-24 plan Original scope retained for history. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Availability Manifest v4 & Data Status Overhaul
 

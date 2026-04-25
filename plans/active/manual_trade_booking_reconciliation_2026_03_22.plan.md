@@ -1,6 +1,9 @@
 ---
 name: manual-trade-booking-reconciliation
 remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
+superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   Citadel-grade manual trade booking across all instrument types (CeFi, DeFi, TradFi, Sports, Prediction) with two UI
   surfaces (back-office + in-context), record-only fills for OTC/missed trades, reconciliation accept/reject workflow,
@@ -364,6 +367,12 @@ todos:
     note: "FINAL GATE — plan archivable when all pass."
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_operational_validation_2026_04_15.plan.md](./consolidated_operational_validation_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # Manual Trade Booking + Reconciliation Resolution
 

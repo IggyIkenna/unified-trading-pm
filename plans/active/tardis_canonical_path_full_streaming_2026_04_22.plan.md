@@ -4,7 +4,13 @@ status: active
 created: 2026-04-22
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 18/18 checkboxes done. MTDS
+> 5ec195f; PM a3501b13 [unlock-plan] already given. Ready for archive. See `_reconciliation_evidence_map_2026_04_25.md`
+> for evidence anchors.
 
 # Tardis canonical path full streaming — P2.B
 

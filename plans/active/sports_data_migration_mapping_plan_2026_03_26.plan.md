@@ -17,7 +17,15 @@ depends_on:
   - sports-batch-pipeline-end-to-end
 
 isProject: false
+superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_sports_prediction_pipeline_2026_04_15.plan.md](./consolidated_sports_prediction_pipeline_2026_04_15.plan.md).**
+> Deps (sports_integration_01/02 + sports_batch_pipeline) all consolidated; not in §12.0 register Original scope
+> retained for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Sports Data Migration & Mapping Plan
 

@@ -1,3 +1,14 @@
+---
+superseded_by: [five_space_ia_execution_child_plan_2026_04_17.md]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
+---
+
+> **SUPERSEDED 2026-04-25 by
+> [five_space_ia_execution_child_plan_2026_04_17.md](./five_space_ia_execution_child_plan_2026_04_17.md).** Audit-matrix
+> is input worksheet to the child execution plan; child is the canonical delivery plan Original scope retained for
+> history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
+
 # Five-space IA — Phase 0 audit matrix (dev | staging | prod)
 
 This worksheet captures **five engagement spaces** × **environment** for CI/CD, Firebase, mock vs real data, and

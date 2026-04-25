@@ -9,7 +9,16 @@ type: meta
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
+orphan_candidate: true
+orphan_reason:
+  "Pure agent dispatch prompt; work largely shipped via parent fund-administration-service plan + CRA backfill
+  (8caae477)."
+reconciliation_date: 2026-04-25
 ---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Pure agent dispatch prompt;
+> work largely shipped via parent fund-administration-service plan + CRA backfill (8caae477). See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
 
 # Finisher dispatch prompt
 

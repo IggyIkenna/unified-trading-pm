@@ -1,6 +1,9 @@
 ---
 name: mtds-defi-data-normalization
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
+superseded_by: [consolidated_defi_data_pipeline_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   Complete pipeline-wide per-instrument sharding (MTDS→MDPS→Features), DeFi normalization, data quality fixes, data
   status, multi-chain expansion, GCS migration — 55 items across 11 repos
@@ -927,6 +930,12 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_defi_data_pipeline_2026_04_15.plan.md](./consolidated_defi_data_pipeline_2026_04_15.plan.md).** Original
+> scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 ## Execution DAG
 

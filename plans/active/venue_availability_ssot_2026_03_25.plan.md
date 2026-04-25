@@ -6,7 +6,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-03-25
 priority: P0
 depends_on: [instrument-schema-cohesion-and-market-hours]
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 22/3 (88%) done. UAC 68afe6e +
+> 1515f98 + instruments-service 2587a26 land most of SSOT. 3 polish items remain: venue_start_dates delete + dashboard
+> SSOT + Subgraph TVL snapshot. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Venue Availability SSOT + Historical Instrument Accuracy
 

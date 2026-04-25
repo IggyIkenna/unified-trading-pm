@@ -12,7 +12,14 @@ depends_on:
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gaps #6, #11 consumers)
   - refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md (absorbed)
 # Wave G2-γ — parallel with G2.3, G2.5. Absorbs G1.5 ML stubs.
+supersedes: [refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md](./refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md).
+> G1.5 was absorbed into G2.4 per depends_on amendment 2026-04-22 See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence anchors.
 
 # Refactor G2.4 — ML Model Catalogue refactor
 

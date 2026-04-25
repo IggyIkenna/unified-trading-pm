@@ -29,7 +29,17 @@ repo_gates:
     code: C0
     deployment: none
     business: none
+superseded_by:
+  [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md, manifest_429_per_vm_sharding_2026_04_25.plan.md]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md](./manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md),
+> [manifest_429_per_vm_sharding_2026_04_25.plan.md](./manifest_429_per_vm_sharding_2026_04_25.plan.md).** Parent
+> umbrella; the two newer plans carved out the actual work (UTL d8d5f22c, 7c6f155a, c95480de) Original scope retained
+> for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # MTDS Multi-Dimensional Shard Architecture
 

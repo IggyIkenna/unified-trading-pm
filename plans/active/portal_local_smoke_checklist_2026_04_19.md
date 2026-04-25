@@ -1,3 +1,15 @@
+---
+orphan_candidate: true
+orphan_reason:
+  "Repeatable smoke-test checklist using ☐/☑ glyphs (not Cursor `- [ ]` format). Belongs in codex/14-playbooks/ or
+  scripts/."
+reconciliation_date: 2026-04-25
+---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Repeatable smoke-test checklist
+> using ☐/☑ glyphs (not Cursor `- [ ]` format). Belongs in codex/14-playbooks/ or scripts/. See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
+
 # Portal — local smoke checklist (public → platform)
 
 Use this after IA / auth / marketing refactors. **Always start Next from `unified-trading-system-ui`**

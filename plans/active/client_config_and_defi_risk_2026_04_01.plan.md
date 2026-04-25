@@ -1,6 +1,9 @@
 ---
 name: client-config-and-defi-risk
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
+superseded_by: [consolidated_strategy_and_ui_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   "Per-client strategy config overrides (venue restrictions, feature gating) + DeFi risk enhancements (sub-1H HF, depeg,
   rebalance costs)"
@@ -107,6 +110,11 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_strategy_and_ui_2026_04_15.plan.md](./consolidated_strategy_and_ui_2026_04_15.plan.md).** Original scope
+> retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit formalises it
+> as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Per-Client Strategy Config & DeFi Risk Enhancements
 

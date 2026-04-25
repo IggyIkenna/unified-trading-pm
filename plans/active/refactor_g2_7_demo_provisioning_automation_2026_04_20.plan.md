@@ -16,7 +16,13 @@ depends_on:
     2026-04-20)
 # Wave G2-β — sequential after G2-α. Parallel with G2.2, G2.10.
 # PATH AMENDMENT 2026-04-22: admin surfaces live at unified-trading-system-ui/app/(ops)/admin/demos/*.
+supersedes: [defi_demo_e2e_workflow_2026_03_30.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [defi_demo_e2e_workflow_2026_03_30.plan.md](./defi_demo_e2e_workflow_2026_03_30.plan.md). defi_demo_e2e was folded
+> into G2.7 per amendment 2026-04-22 See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Refactor G2.7 — Demo-provisioning automation
 

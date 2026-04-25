@@ -2,7 +2,13 @@
 title: "Tardis iter_chunked HTTP streaming — P2.A"
 status: complete
 created: 2026-04-23
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. frontmatter status=complete
+> already; 9/2 checkboxes (test stragglers). PM a6bc816e [unlock-plan] already given. Ready for archive. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Tardis iter_chunked HTTP streaming — P2.A
 

@@ -1,3 +1,15 @@
+---
+orphan_candidate: true
+orphan_reason:
+  "Workflow/process guide (446 lines, 0 checkboxes, no frontmatter). Belongs in codex/14-playbooks/ or
+  codex/08-workflows/, not plans/active/."
+reconciliation_date: 2026-04-25
+---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Workflow/process guide (446
+> lines, 0 checkboxes, no frontmatter). Belongs in codex/14-playbooks/ or codex/08-workflows/, not plans/active/. See
+> `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
+
 # DeFi Strategy E2E Testing Automation
 
 **Objective:** Complete automation pipeline for DeFi strategy UI verification → E2E test generation → test execution →

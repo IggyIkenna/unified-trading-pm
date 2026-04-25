@@ -1,4 +1,14 @@
 ---
+superseded_by: [universe_ssot_fix_2026_04_20.plan.md]
+reconciliation_status: superseded
+reconciliation_date: 2026-04-25
+---
+
+> **SUPERSEDED 2026-04-25 by [universe_ssot_fix_2026_04_20.plan.md](./universe_ssot_fix_2026_04_20.plan.md).** Phase A
+> bucket-naming fixes shipped; Phase B universe-SSOT was carved out into universe_ssot_fix Original scope retained for
+> history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
+
+---
 
 name: smoke-dep-chain-tactical-fixes overview: Phase A tactical fixes surfaced by 2026-04-20 institutional smoke canary.
 Bucket naming convention (mostly shipped), SIT manifest filter Tier-0 vs Tier-1 semantics, path-layout SSOT

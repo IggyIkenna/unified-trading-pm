@@ -9,7 +9,14 @@ depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.8
   - plans/active/share_class_architecture_2026_04_01.plan.md (folded)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.9, 2.11. Gates G2.10 (allocator split).
+supersedes: [share_class_architecture_2026_04_01.plan.md]
+reconciliation_supersedes_added: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** This plan absorbs
+> [share_class_architecture_2026_04_01.plan.md](./share_class_architecture_2026_04_01.plan.md). share_class_architecture
+> was folded into G2.8 (Phases A+B shipped per UAC 48bf6ee) See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence anchors.
 
 # Refactor G2.8 — Fund + business_unit + reserving_business_unit_id registry
 

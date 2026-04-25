@@ -124,7 +124,7 @@ parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../code
 >   mixable)
 
 - [x] [MASTER] P0. Pre-draft `_ssot-rules/_source-v1-feedback.md` + rules 03, 04, 08 (done this session).
-- [ ] [AGENT] P0. Verify the 4 pre-drafted files exist and are well-formed. DO NOT overwrite; if you find inconsistency
+- [x] [AGENT] P0. Verify the 4 pre-drafted files exist and are well-formed. DO NOT overwrite; if you find inconsistency
       with the 2026-04-19 decisions table above, flag in the report rather than editing.
 
 ### Phase 1.1 — Extract rule files from v1
@@ -132,10 +132,10 @@ parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../code
 Extract each rule into its own short, focused file (target 80–200 lines each). Every file opens with a 1-line purpose +
 cites the v1 source by line range.
 
-- [ ] [AGENT] P0. `_ssot-rules/README.md` — dir map, ordering, how to cite rules, relationship to experience/ layer.
-- [ ] [AGENT] P0. `_ssot-rules/01-grammar.md` — the 9 sections every experience playbook has. Include the canonical
+- [x] [AGENT] P0. `_ssot-rules/README.md` — dir map, ordering, how to cite rules, relationship to experience/ layer.
+- [x] [AGENT] P0. `_ssot-rules/01-grammar.md` — the 9 sections every experience playbook has. Include the canonical
       ordering and a 1-line purpose per section.
-- [ ] [AGENT] P0. `_ssot-rules/02-tone-and-posture.md` — calm/specific/credible/non-desperate; Axis.to + podlabs.xyz
+- [x] [AGENT] P0. `_ssot-rules/02-tone-and-posture.md` — calm/specific/credible/non-desperate; Axis.to + podlabs.xyz
       benchmark notes (what to borrow, what not to borrow); anti-AI-tone guardrails; common phrasing to avoid (waitlist
       energy, conversion pressure, generic "revolutionary" language).
 - [x] [MASTER] P0. `_ssot-rules/03-same-system-principle.md` — **PRE-DRAFTED 2026-04-19**. 5 sub-claims: partitioned
@@ -143,24 +143,24 @@ cites the v1 source by line range.
       Phase orthogonal to maturity. Agent verifies; does not overwrite.
 - [x] [MASTER] P0. `_ssot-rules/04-dart-commercial-axes.md` — **PRE-DRAFTED 2026-04-19**. 2-axis matrix (strategy origin
       × stack depth) + 3 practical paths + worked examples. Agent verifies; does not overwrite.
-- [ ] [AGENT] P0. `_ssot-rules/05-building-block-dimensions.md` — 13 building blocks (reporting core, regulatory
+- [x] [AGENT] P0. `_ssot-rules/05-building-block-dimensions.md` — 13 building blocks (reporting core, regulatory
       umbrella reporting, IM allocator reporting, strategy-service entry, instructions integration, research/promote
       pipeline, execution layer, venue packs, chain packs, instrument-type packs, analytics packs,
       exclusivity/non-compete premium, custom solution premium). These become the columns in Stage 2's pricing doc and
       the dimensions in Stage 3B's UAC combo rules.
-- [ ] [AGENT] P0. `_ssot-rules/06-show-dont-show-discipline.md` — the "what to show first" / "what not to show unless
+- [x] [AGENT] P0. `_ssot-rules/06-show-dont-show-discipline.md` — the "what to show first" / "what not to show unless
       asked" rule. Every experience playbook must have both sections. Include DART demo-mode variants (broader platform
       vs turbo).
-- [ ] [AGENT] P0. `_ssot-rules/07-data-licensing-boundaries.md` — DART is enriched services, not raw-data resale.
+- [x] [AGENT] P0. `_ssot-rules/07-data-licensing-boundaries.md` — DART is enriched services, not raw-data resale.
       Internal pricing may use data-sensitive blocks; external framing must be enriched services. Cite UAC licensing
       tier dimension.
 - [x] [MASTER] P0. `_ssot-rules/08-pricing-principles.md` — **PRE-DRAFTED 2026-04-19**. 2-tier external model (Tier A
       cost-plus / Tier B fixed upfront+monthly), 12mo min, internal cost codex-private, per-block tier mixable,
       exclusivity/custom premiums Tier B only. No numbers (Stage 2 populates). Agent verifies; does not overwrite.
-- [ ] [AGENT] P0. `_ssot-rules/09-internal-commercial-oneliners.md` — the 3 user-provided one-liners (DART / IM / Reg
+- [x] [AGENT] P0. `_ssot-rules/09-internal-commercial-oneliners.md` — the 3 user-provided one-liners (DART / IM / Reg
       Umbrella) as internal sales shorthand. Every public-facing doc expands these into a calm paragraph; internal docs
       can use them directly.
-- [ ] [AGENT] P0. `_ssot-rules/10-strategy-instruction-schema-principles.md` — **ADDED 2026-04-19**. The fit-check layer
+- [x] [AGENT] P0. `_ssot-rules/10-strategy-instruction-schema-principles.md` — **ADDED 2026-04-19**. The fit-check layer
       for the `(Client, downstream-integration)` DART path (rule 04). Defines: what Odum execution needs
       (instrument+venue context, intended action, size/target exposure, timeframe/urgency, order constraints,
       strategy/instruction id, lifecycle updates/replace/cancel behavior, essential risk+allocation constraints); what
@@ -172,18 +172,18 @@ cites the v1 source by line range.
 
 ### Phase 1.2 — Write IM Decision Journey reference template
 
-- [ ] [AGENT] P0. Create `codex/14-playbooks/experience/` dir.
-- [ ] [AGENT] P0. Write `experience/TEMPLATE.md` — empty 9-section skeleton with 1-line guidance per section, marked as
+- [x] [AGENT] P0. Create `codex/14-playbooks/experience/` dir.
+- [x] [AGENT] P0. Write `experience/TEMPLATE.md` — empty 9-section skeleton with 1-line guidance per section, marked as
       the authoritative template. Cite rules 01–09.
-- [ ] [AGENT] P0. Write `experience/im-decision-journey.md` — the full reference playbook using the template. Content
+- [x] [AGENT] P0. Write `experience/im-decision-journey.md` — the full reference playbook using the template. Content
       comes verbatim from the v1 agent feedback (Playbook 2a — Investment Management briefing section), adapted to sit
       cleanly in this format. This is the PATTERN that Stage 2 replicates for the other 8 playbooks.
-- [ ] [AGENT] P0. `experience/README.md` — what lives in this dir, grammar enforcement rule, test-coverage expectation
+- [x] [AGENT] P0. `experience/README.md` — what lives in this dir, grammar enforcement rule, test-coverage expectation
       (every experience playbook has a matching Playwright spec), how it relates to impl-layer docs.
 
 ### Phase 1.3 — Signal the layered structure
 
-- [ ] [AGENT] P0. Update `codex/14-playbooks/README.md` — add a `## Layered structure` section explaining: experience
+- [x] [AGENT] P0. Update `codex/14-playbooks/README.md` — add a `## Layered structure` section explaining: experience
       layer (narrative, sales-owned) on top; impl layer (current playbooks/, authentication/, environments/,
       cross-cutting/, page-triage/, testing/, roadmap/) underneath; rules in `_ssot-rules/`. Include a "start here"
       reader-path per role (sales → experience/; engineer → playbooks/ + cross-cutting/; admin → all).

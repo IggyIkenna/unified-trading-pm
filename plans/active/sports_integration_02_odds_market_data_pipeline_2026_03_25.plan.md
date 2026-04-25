@@ -1,6 +1,9 @@
 ---
 name: sports-integration-02-odds-market-data-pipeline
 remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
+superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 locked_by: live-defi-rollout
 locked_since: 2026-03-25
 overview: |
@@ -289,6 +292,12 @@ todos:
         VM1 covered 2020-06-01→2020-10-31 (old schema). VM2 had old code too.
     status: in_progress
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_sports_prediction_pipeline_2026_04_15.plan.md](./consolidated_sports_prediction_pipeline_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # Sports Integration Plan 2: Odds & Market Data Pipeline
 

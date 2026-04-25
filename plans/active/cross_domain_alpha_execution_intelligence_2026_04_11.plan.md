@@ -1,6 +1,9 @@
 ---
 name: cross-domain-alpha-execution-intelligence
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
+superseded_by: [consolidated_strategy_and_ui_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   Cross-domain feature blending, microstructure features, DeFi alpha, execution cost prediction, unified SOR, feature
   freshness SLA, data quality scoring
@@ -226,6 +229,11 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_strategy_and_ui_2026_04_15.plan.md](./consolidated_strategy_and_ui_2026_04_15.plan.md).** Original scope
+> retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit formalises it
+> as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Cross-Domain Alpha & Execution Intelligence
 

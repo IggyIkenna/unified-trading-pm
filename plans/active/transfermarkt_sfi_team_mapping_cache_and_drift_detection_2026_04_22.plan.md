@@ -37,7 +37,13 @@ depends_on:
     features_sports_upstream_coverage_gaps_2026_04_21,
   ]
 isProject: false
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 20/2 (91%) done.
+> instruments-service 9bf23d8 + UAC 36bed50 + UTL bf7ad8d1 + FSS 1bdf58d shipped 4 tracks across 4 repos. Ready for
+> archive after 2 polish items + plan unlock. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 ## Context
 

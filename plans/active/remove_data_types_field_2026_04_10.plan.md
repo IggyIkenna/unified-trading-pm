@@ -1,6 +1,9 @@
 ---
 name: remove-data-types-field
 remaining_todos_consolidated_into: consolidated_operational_validation_2026_04_15
+superseded_by: [consolidated_operational_validation_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   Remove deprecated data_types field from InstrumentDefinition and all consumers — PROTOCOL_CAPABILITIES in UAC is the
   SSOT
@@ -125,6 +128,12 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_operational_validation_2026_04_15.plan.md](./consolidated_operational_validation_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # Remove `data_types` Field from InstrumentDefinition
 

@@ -4,7 +4,13 @@ status: active
 companion_to: marketing_site_restructure_2026_04_20.plan.md
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. Companion manifest to
+> marketing_site_restructure_2026_04_20 (parent already unlocked d2aa8c42). Ready for archive. See
+> `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Pre-audit manifest — marketing site tone + glossary + briefing depth
 

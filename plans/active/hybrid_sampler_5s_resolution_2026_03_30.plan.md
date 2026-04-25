@@ -4,7 +4,16 @@ priority: P1
 status: active
 owner: agent
 created: 2026-03-30
+orphan_candidate: true
+orphan_reason:
+  "Stalled since 2026-03-30. P1, no lock, no recent commits matching sampler/oddspapi scope. Sports work pivoted to
+  manifest+rescan via §12.0 register."
+reconciliation_date: 2026-04-25
 ---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Stalled since 2026-03-30. P1,
+> no lock, no recent commits matching sampler/oddspapi scope. Sports work pivoted to manifest+rescan via §12.0 register.
+> See `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
 
 ## Context
 

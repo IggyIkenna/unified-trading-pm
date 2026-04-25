@@ -1,3 +1,12 @@
+---
+orphan_candidate: true
+orphan_reason: "Pure agent dispatch prompt for parent plan. Not a tracked work plan."
+reconciliation_date: 2026-04-25
+---
+
+> **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: Pure agent dispatch prompt for
+> parent plan. Not a tracked work plan. See `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
+
 # Agent Prompt: ML Pipeline → UI Integration
 
 Copy this entire prompt to start a new Claude Code session.

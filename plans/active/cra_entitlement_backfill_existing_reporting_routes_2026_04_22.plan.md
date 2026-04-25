@@ -24,7 +24,13 @@ repo_gates:
 
 depends_on:
   - fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md
+reconciliation_status: shipped_substantive
+reconciliation_date: 2026-04-25
 ---
+
+> **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 6/7 checkboxes done; 1 open
+> codex-doc todo deferred. client-reporting-api 5132588 + PM 8caae477. Ready for [unlock-plan] + archive once codex todo
+> lands. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.
 
 # Context
 

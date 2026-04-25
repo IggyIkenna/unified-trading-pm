@@ -1,6 +1,9 @@
 ---
 name: ml-pipeline-revolution
 remaining_todos_consolidated_into: consolidated_ml_advanced_pipeline_2026_04_15
+superseded_by: [consolidated_ml_advanced_pipeline_2026_04_15.plan.md]
+reconciliation_status: superseded_by_consolidator
+reconciliation_date: 2026-04-25
 overview:
   P&L-aware training, confidence calibration, incremental learning, transfer learning, neural nets, multi-task training,
   hierarchical models, feature importance feedback, Bayesian optimization
@@ -294,6 +297,12 @@ todos:
 
 isProject: false
 ---
+
+> **SUPERSEDED 2026-04-25 by
+> [consolidated_ml_advanced_pipeline_2026_04_15.plan.md](./consolidated_ml_advanced_pipeline_2026_04_15.plan.md).**
+> Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
+> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
+> evidence.
 
 # ML Pipeline Revolution
 
