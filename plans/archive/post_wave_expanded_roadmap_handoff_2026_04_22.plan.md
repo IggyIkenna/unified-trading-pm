@@ -1,11 +1,10 @@
 ---
 title: "Post-wave expanded roadmap — handoff for next-session Claude"
 priority: P0
-status: active
+status: archived
 owner: human + agent
 created: 2026-04-22
-locked_by: live-defi-rollout
-locked_since: 2026-04-22
+archived: 2026-04-24
 type: mixed
 epic: none
 completion_gates:
