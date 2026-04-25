@@ -1,0 +1,16 @@
+persona_id: elysium-defi-full
+base_audience: trading_platform_subscriber
+description: >-
+  Patrick / Elysium DeFi Full upgrade-preview persona. Same universe access as the base elysium-defi persona but with
+  strategy-full + ml-full entitlements unlocked so research + promote + customisation tiles are visible. Toggle from
+  elysium-defi via DemoPlanToggle.
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: unlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

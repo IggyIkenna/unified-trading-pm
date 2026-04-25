@@ -26,7 +26,7 @@ PROFILES_REL = Path("unified-trading-pm/codex/14-playbooks/demo-ops/profiles")
 UI_MIRROR_REL = Path("unified-trading-system-ui/lib/architecture-v2/restriction-profiles.ts")
 
 
-_HEADER = """\
+_HEADER_PREFIX = """\
 // AUTO-GENERATED from PM demo-ops/profiles/*.yaml.
 // Do not edit by hand. Re-run:
 //   bash unified-trading-pm/scripts/propagation/sync-restriction-profiles-to-ui.sh --write
@@ -36,14 +36,9 @@ _HEADER = """\
 
 import type { TileLockState } from "../visibility/tile-lock-state";
 
-export type PersonaId =
-  | "admin"
-  | "anon"
-  | "client-full"
-  | "prospect-dart"
-  | "prospect-im"
-  | "prospect-regulatory";
+"""
 
+_HEADER_SUFFIX = """\
 export type DemoFlavour = "broader_platform" | "turbo" | "deep_dive" | "sales_pitch";
 
 export type TileId =
@@ -139,7 +134,20 @@ def _load_profiles(pm_root: Path) -> list[dict[str, object]]:
         if not isinstance(raw, dict):
             raise SystemExit(f"ERROR: {yaml_path.name} top-level must be a mapping")
         # Translate YAML tile states → UI vocabulary at the sync boundary.
-        translated: dict[str, object] = dict(raw)  # pyright: ignore[reportUnknownArgumentType]
+        # Whitelist only the fields that match RestrictionProfileYaml interface;
+        # YAMLs may carry extra documentation fields (display_name, email,
+        # questionnaire_response, walkthrough_hints, etc.) that the TS schema
+        # does not accept. Drop them at the sync boundary.
+        ALLOWED_FIELDS = {"persona_id", "base_audience", "description", "tiles", "flavour_overrides"}
+        translated: dict[str, object] = {  # pyright: ignore[reportUnknownArgumentType]
+            k: v
+            for k, v in raw.items()
+            if k in ALLOWED_FIELDS  # pyright: ignore[reportUnknownVariableType]
+        }
+        # ``description`` is required by the TS schema — fall back to a stub if
+        # the YAML omits it (older profiles use ``notes`` for free-text).
+        if "description" not in translated:
+            translated["description"] = ""
         translated["tiles"] = _translate_tiles(raw.get("tiles"))  # pyright: ignore[reportUnknownMemberType]
         flavour_overrides_raw: object = raw.get("flavour_overrides", {})  # pyright: ignore[reportUnknownMemberType]
         translated_overrides: dict[str, dict[str, str]] = {}
@@ -157,6 +165,14 @@ def _render_ts(profiles: list[dict[str, object]]) -> str:
     # Deterministic ordering = sorted by persona_id
     sorted_profiles = sorted(profiles, key=lambda p: str(p.get("persona_id", "")))
 
+    # Derive PersonaId union dynamically from YAML files so adding a new profile
+    # does not require editing this script. The TS union must include every
+    # persona_id that has a YAML — otherwise the TS compiler rejects the
+    # generated Record<PersonaId, ...> entry.
+    persona_ids = sorted({str(p.get("persona_id", "")) for p in sorted_profiles if p.get("persona_id")})
+    persona_id_union = "\n".join([f'  | "{pid}"' for pid in persona_ids])
+    persona_id_block = f"export type PersonaId =\n{persona_id_union};\n\n"
+
     body_lines: list[str] = [
         "export const RESTRICTION_PROFILES: Readonly<Record<PersonaId, RestrictionProfileYaml>> = {"
     ]
@@ -165,7 +181,7 @@ def _render_ts(profiles: list[dict[str, object]]) -> str:
         body_lines.append(f'  "{persona_id}": {json.dumps(profile, sort_keys=True, indent=4)},'.replace("\n", "\n  "))
     body_lines.append("} as const;")
     body_lines.append("")
-    return _HEADER + "\n".join(body_lines) + _FOOTER
+    return _HEADER_PREFIX + persona_id_block + _HEADER_SUFFIX + "\n".join(body_lines) + _FOOTER
 
 
 def _resolve_paths(workspace_root: Path) -> tuple[Path, Path]:

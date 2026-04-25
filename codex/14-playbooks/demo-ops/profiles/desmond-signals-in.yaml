@@ -44,8 +44,8 @@ questionnaire_response:
 # promote render but link to /services/dart/locked.
 tiles:
   data: unlocked
-  research: locked-redirect # -> /services/dart/locked?from=research
-  promote: locked-redirect # -> /services/dart/locked?from=promote
+  research: padlocked # -> /services/dart/locked?from=research
+  promote: padlocked # -> /services/dart/locked?from=promote
   trading: unlocked
   observe: unlocked
   reports: unlocked

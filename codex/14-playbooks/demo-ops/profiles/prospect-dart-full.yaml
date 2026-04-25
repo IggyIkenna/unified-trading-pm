@@ -1,0 +1,15 @@
+persona_id: prospect-dart-full
+base_audience: trading_platform_subscriber
+description: >-
+  Generic DART Full prospect demo persona — equivalent to client-full but used in prospect demos where the org isn't a
+  paying client yet. All Research → Promote → Trading → Observe lifecycle tiles unlocked.
+tiles:
+  data: unlocked
+  research: unlocked
+  promote: unlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

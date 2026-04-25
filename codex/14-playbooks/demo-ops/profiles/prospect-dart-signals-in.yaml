@@ -1,0 +1,15 @@
+persona_id: prospect-dart-signals-in
+base_audience: trading_platform_subscriber
+description: >-
+  Generic DART Signals-In prospect demo persona. Trading + signal-intake + observe + reports unlocked; research +
+  promote padlocked (kept visible to signal upgrade path). Strategy catalogue visible (read-only universe).
+tiles:
+  data: unlocked
+  research: padlocked
+  promote: padlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}

@@ -1,0 +1,15 @@
+persona_id: prospect-perp-funding
+base_audience: trading_platform_subscriber
+description: >-
+  Reg-Umbrella + DART Signals-In prospect operating cross-exchange perp-funding arbitrage (CeFi + DeFi). Trading +
+  signal-intake + reports + observe unlocked; research + promote padlocked.
+tiles:
+  data: unlocked
+  research: padlocked
+  promote: padlocked
+  trading: unlocked
+  observe: unlocked
+  reports: unlocked
+  investor-relations: hidden
+  admin: hidden
+flavour_overrides: {}
