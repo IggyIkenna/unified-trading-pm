@@ -1,18 +1,32 @@
 ---
 title: DART UI — Strategy Dimension Filtering, Permission Tiers, Client Onboarding & Codex Integration
 branch: live-defi-rollout
-locked_by: live-defi-rollout
-locked_since: 2026-04-24
 repos_affected:
   - unified-trading-system-ui
   - unified-api-contracts
   - unified-trading-pm
-status: in_progress
-current_readiness: C0
+status: superseded
+superseded_by: marketing_site_three_route_consolidation_2026_04_26.plan.md
+superseded_on: 2026-04-26
+current_readiness: C2
 target_readiness: C5
 ---
 
 # DART UI — Strategy Dimension Filtering, Permission Tiers, Client Onboarding & Codex Integration
+
+> **Status note (2026-04-26): SUPERSEDED.** Phases 1–3 of this plan (UAC restriction-profile axes, UI types,
+> questionnaire form, seed mapper, catalogue hydration) shipped via the Funnel Coherence rollout — see
+> `marketing_site_three_route_consolidation_2026_04_26.plan.md` Workstream E (commits `029ab371` + `c132421d`, plus the
+> seed-mapper extension that landed alongside this supersedure tag).
+>
+> Phase 4 (Desmond demo persona + email handoff) is operator-driven and tracked via the demo-ops profile YAMLs under
+> `codex/14-playbooks/demo-ops/profiles/`.
+>
+> Phase 5 (DemoPlanToggle component), Phase 6 (FOMO tier badges + upgrade preview), Phase 7 (onboarding website polish —
+> bulk absorbed into the funnel-coherence rollout), and Phase 8 (codex docs) remain open as smaller polish tasks. They
+> do NOT block the funnel — documenting here so the work isn't lost. New work picks them up opportunistically.
+>
+> `[unlock-plan]` tag carried in the supersedure commit so this plan can be archived by plan agents.
 
 ## Context
 
@@ -818,7 +832,7 @@ must be lifted into the UAC manifest alongside the archetype split (Phase 9.1).
 
 **Per-category venue universe** also mocked in `scripts/enumerate_envelope.py` — wider than the currently-integrated
 `venue_ids` in the manifest. CEFI spot/perp uses a 10-venue list
-(Binance/OKX/Bybit/Hyperliquid/Deribit/Coinbase/Kraken/Bitget/Gate/ KuCoin); DEFI expands per protocol × chain; TRADFI
+(Binance/OKX/Bybit/Hyperliquid/Deribit/Coinbase/Bybit/Bitget/Gate/ KuCoin); DEFI expands per protocol × chain; TRADFI
 covers IBKR/CME/ICE/CBOE/Saxo/LMAX/ Eurex/NYSE/NASDAQ; SPORTS covers
 Unity/Betfair/Smarkets/Sporttrade/Sportradar/FanDuel/ DraftKings; PREDICTION covers Polymarket/Kalshi/Unity/Manifold.
 
