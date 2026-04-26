@@ -24,6 +24,13 @@ entity jurisdiction, operating currencies, 3mo/1yr/2yr business targets). Before
 axes; Reg-Umbrella prospects had to finish the questionnaire and then schedule a call to relay everything else. The call
 has now been folded into the form.
 
+> **Naming convention (added 2026-04-26):** the `service_family` enum values (`IM` / `DART` / `RegUmbrella` / `combo`)
+> are code-level identifiers and stay unchanged. The marketing display labels surfaced to prospects on public pages and
+> questionnaire copy are: `IM` → **Odum-Managed Strategies**, `DART` → **DART Trading Infrastructure**, `RegUmbrella` →
+> **Regulated Operating Models**. Public-facing questionnaire copy must use the marketing labels; admin / signup /
+> contract surfaces continue to use the legal labels (Investment Management / DART / Regulatory Umbrella). See
+> `signup-signin-workflow.md` §2.7.2 for the full mapping.
+
 Once signed up, every prospect uploads regulatory / legal / compliance documents. Those previously wrote to local disk
 in both mock and prod (the handler ignored environment) — clearly wrong for staging + prod, where we need durable cloud
 storage + an admin-visible per-org list + a sensible delete path.
