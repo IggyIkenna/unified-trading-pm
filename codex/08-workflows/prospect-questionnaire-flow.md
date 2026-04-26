@@ -31,6 +31,14 @@ has now been folded into the form.
 > contract surfaces continue to use the legal labels (Investment Management / DART / Regulatory Umbrella). See
 > `signup-signin-workflow.md` §2.7.2 for the full mapping.
 
+> **Access context (added 2026-04-26 late):** the questionnaire lives in the **public / gated education** context — the
+> first of three contexts in the prospect-to-client journey (public → controlled demo/UAT → production). On submit, the
+> form writes its envelope + computes a `catalogue_seed` (Funnel Coherence plan Workstream E5), persists both to
+> Firestore and localStorage, and redirects the prospect to `/briefings`. **The questionnaire submit MUST NOT redirect
+> public users to `/services/*`** — signed-in / demo-UAT surfaces are reached only after Strategy Review issues a
+> demo-session magic link or after signup. See `signup-signin-workflow.md` §1 (three-context access model) and
+> `platform-walkthrough-and-demo-context.md` for the demo/UAT entry-point.
+
 Once signed up, every prospect uploads regulatory / legal / compliance documents. Those previously wrote to local disk
 in both mock and prod (the handler ignored environment) — clearly wrong for staging + prod, where we need durable cloud
 storage + an admin-visible per-org list + a sensible delete path.

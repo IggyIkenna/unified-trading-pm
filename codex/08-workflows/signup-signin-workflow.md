@@ -97,6 +97,18 @@ Key properties:
 - **The ~2,500-combination catalogue opens at the Commercial Tailoring stage**, not earlier. It's not coy — it's how
   trust is built, and it protects clients who have already locked off their piece. Strategy Review surfaces only curated
   examples (a small handful), never the full catalogue.
+- **Three-context access model.** The same DART / Reports / Strategy Catalogue component stack renders in three distinct
+  contexts depending on where the prospect/client is in the funnel:
+  1. **Public / gated education** (§2.1–§2.4b): public pages + briefings + Strategy Evaluation + Strategy Review. NO
+     `/services/*` redirects from public submissions.
+  2. **Controlled demo / UAT** (§2.5 Platform walkthrough): admin-issued demo-session entitlements unlock selected
+     `/services/*` surfaces in mock-data mode, with clear demo labelling, no production credentials, no destructive
+     actions, no withdrawal capability.
+  3. **Production signed-in client** (§2.7 Signup → §2.8 Signin): real entitlements, real data, own-account reporting,
+     approved account permissions.
+
+  The same components are reused across demo and production wherever possible. Access context controls data source,
+  entitlements, labels, and available actions.
 
 ---
 
@@ -174,16 +186,31 @@ Key properties:
   pre-demo position with a reframed scope (pre-demo prep pack, not post-demo synthesis). The two reorder entries in §4
   record the journey honestly.
 
-### 2.5 Platform walkthrough stage
+### 2.5 Platform walkthrough stage (controlled demo / UAT context)
 
-- **Not a UI write** (platform provisioning at this stage is always an operator-side affair; account + keys come later
-  at signup).
+- **Demo / UAT access context** — admin issues a demo-session entitlement (mirrors `/admin/strategy-reviews` shape; new
+  `/admin/demo-sessions` tooling). The token unlocks selected `/services/*` surfaces in **demo/UAT mode**, NOT
+  production: mock or illustrative data, no production credentials, no destructive actions, no withdrawal capability.
+  Every demo surface carries a persistent "Demo / UAT — illustrative data only" banner.
 - Two halves: (1) guided walkthrough where an Odum operator drives the UI against the prospect's Strategy-Evaluation
   shape and the curated agenda from Strategy Review, (2) self-serve exploration where the prospect runs the platform
-  themselves and forms a value judgement on fit vs reality.
-- **The catalogue does not open at the walkthrough.** It opens at Commercial Tailoring (§2.6) only if the fit is
-  confirmed through the walkthrough.
-- **Naming history:** previously called "Tailored demo"; renamed 2026-04-26.
+  themselves (in demo/UAT mode) and forms a value judgement on fit vs reality.
+- **Surfaces opened in demo/UAT** (per persona):
+  - DART persona: relevant research / execution / observe / reporting modules depending on demo entitlement (Signals-In
+    subset or Full).
+  - IM allocator: Reports tile + Strategy Catalogue Reality + Explore views.
+  - Odum Signals counterparty: counterparty surface (mock signal stream + delivery health).
+  - Investor (LP): Investor Relations + Reports tiles (already-client personas may skip the demo entirely).
+- **Strategy Catalogue in demo/UAT:** hydrates `catalogue_seed` from the questionnaire / Strategy Evaluation into the
+  Reality view; the Explore view shows broader available scope using mock data, framed as "available under broader
+  scope" not "FOMO" (`FomoTearsheetCard.tsx` is an internal component name; product copy says Explore).
+- **Demo-to-production continuity (binding):** demo and production share the same component stack. The `accessContext`
+  (`public` / `briefing` / `strategy_review` / `demo_uat` / `production`) controls data source, entitlements, labels,
+  and available actions. Do NOT fork the UI into separate demo-only pages unless unavoidable.
+- **The catalogue does not open in production form at the walkthrough.** Pricing, contracts, and bespoke options open at
+  Commercial Tailoring (§2.6) only if the fit is confirmed through the walkthrough.
+- **Naming history:** previously called "Tailored demo"; renamed 2026-04-26 to "Platform walkthrough" to make the
+  controlled-demo / UAT framing explicit.
 
 ### 2.6 Commercial Tailoring stage (was 'Bespoke tailoring' until 2026-04-26)
 
@@ -340,4 +367,5 @@ Gaps remaining:
 | 2026-04-25 | Funnel revised from 6 to 8 stages. Questionnaire is now the primary briefings access-code gate (deep dives moved AFTER questionnaire); Strategy Evaluation inserted as a new on-the-record DDQ stage between the initial call and the tailored demo; signup go-live timing reframed as "within a month of go-ahead", anchored on the affiliate network (custodian, fund administrator, AIFM partner, repeatable provisioning modules). Signup sub-sections renumbered §2.5.x → §2.7.x. Public FAQ updated to match.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | _(this commit)_           |
 | 2026-04-26 | Funnel revised from 8 to 9 stages. New §2.4b Strategy Review stage inserted between Strategy Evaluation (§2.4) and Tailored demo (§2.5) — per-prospect magic-link surface at `/strategy-review` showing proposed operating model, DART config options, regulatory pathway, demo prep, and next steps. §2.7.2 service-path table gains a "Marketing label" column (Odum-Managed Strategies / DART Trading Infrastructure / Regulated Operating Models) — public marketing collapses Odum Signals into DART; legal/contract/signup labels stay unchanged. URL slugs unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | _(this commit)_           |
 | 2026-04-26 | Walkthrough/Review reorder. §2.4b ("Strategy Review") and §2.5 ("Tailored demo") swapped positions and renamed: §2.4b is now "Platform walkthrough" (was "Tailored demo") and §2.5 is now "Strategy Review" (was §2.4b). Rationale: a tailored demo is more useful AFTER the DDQ has scoped the prospect (so the walkthrough hits the right components) and BEFORE the Strategy Review (so synthesis is grounded in fit observations rather than a theoretical operating-model deck). Stage count unchanged at 9. Public homepage rail bumped from 6 to 7 visible steps; engagement-route process strips bumped from 5 to 6. Strategy Review's "demo preparation" section reframed as "walkthrough follow-up".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | _(this commit)_           |
+| 2026-04-26 | Three-context access model added (Funnel Coherence plan, Workstream H). The same DART / Reports / Strategy Catalogue component stack now renders in three contexts: (1) **public / gated education** (§2.1–§2.4b — no `/services/*` redirects from public submissions), (2) **controlled demo / UAT** (§2.5 — admin issues demo-session entitlements that unlock selected `/services/*` surfaces in mock-data mode with clear demo labelling), (3) **production signed-in client** (§2.7 onward — real entitlements + real data). §2.5 Platform walkthrough reframed as the demo/UAT context entry-point: surfaces opened depend on persona (DART research/execution/observe/reporting; IM allocator Reports + Strategy Catalogue Reality+Explore; Odum Signals counterparty surface; LP Investor Relations + Reports). New supporting concepts: `accessContext` enum, `lib/auth/demo-session.ts`, `/admin/demo-sessions` admin tooling, `<DemoBanner>`. `FomoTearsheetCard.tsx` keeps its internal name; product copy says "Explore" not "FOMO".                                                                                                                                                                                                                                                                                                                                                                  | _(this commit)_           |
 | 2026-04-26 | Walkthrough/Review reorder ROLLBACK + Commercial Tailoring rename (Funnel Coherence plan, Workstream G). §2.4b is back to "Strategy Review" (pre-§2.5 walkthrough); §2.5 is back to "Platform walkthrough" (kept the rename from "Tailored demo"); §2.6 renamed from "Bespoke tailoring" to "Commercial Tailoring". Strategy Review scope **reframed** to a pre-demo prep pack — proposed route hypothesis, briefing excerpts, demo agenda, workflows likely to be shown, curated examples, missing-info checklist, route-specific risks. NOT a final commercial proposal (that's Commercial Tailoring at §2.6). Rationale: Strategy Review delivered AFTER the demo was awkward because the prospect had already seen the platform — Strategy Review is more useful as a tailored prep pack that sets up a relevant walkthrough. Public homepage rail stays 7 stages but now reads Q → Briefings → Initial → Eval → Review → Walkthrough → Commercial Tailoring (Onboarding implicit, off the rail). Engagement-route process strips on `/investment-management`, `/platform`, `/regulatory` mirror the same 7 stages. Strategy Review `_client.tsx` section schema added 7 new optional fields (proposedRouteHypothesis · briefingExcerpts · demoAgenda · workflowsShown · curatedExamples · missingInformation · routeRisks); legacy fields kept as fallbacks for backwards compat. Stage count unchanged at 9. | _(this commit)_           |
