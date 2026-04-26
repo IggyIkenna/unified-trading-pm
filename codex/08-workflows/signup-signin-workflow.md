@@ -50,17 +50,19 @@ Strategy Evaluation (specifics on the record)
        │    (assets, venues, risk, structure preferences, capital — what we
        │     tailor against from this point)
        ▼
+Platform walkthrough (guided → self-serve)
+       │    (operator walkthrough against the prospect's strategy-evaluation
+       │     shape; then prospect drives it themselves and forms a value
+       │     judgement on fit. Was 'Tailored demo'; renamed 2026-04-26
+       │     and moved BEFORE Strategy Review so synthesis happens after
+       │     the prospect has seen the platform, not before.)
+       ▼
 Strategy Review (per-prospect tailored review surface)
        │    → Firestore /strategy-reviews/{id}
        │    → admin issues per-prospect magic link with expiry + revoke
        │    (proposed operating model, DART config options, regulatory
-       │     pathway, demo prep, next steps. Replaces no-UI gap that
-       │     previously existed between Strategy Evaluation and the demo.)
-       ▼
-Tailored demo (guided → self-serve)
-       │    (operator walkthrough against the prospect's strategy-evaluation
-       │     shape; then prospect drives it themselves and forms a value
-       │     judgement)
+       │     pathway, walkthrough follow-up, next steps. Synthesises
+       │     the DDQ + walkthrough observations into a tailored proposal.)
        ▼
 Bespoke tailoring
        │    (catalogue opens here: ~2,500 combinations. Customise strategies,
@@ -88,8 +90,8 @@ Key properties:
 - **Strategy Evaluation is on-the-record specifics.** It runs _after_ the initial call so the conversation focuses on
   which products fit; the DDQ then captures concrete assets / venues / risk / structure / capital that we tailor
   against.
-- **Signup sits near the end of the funnel, not the start.** Short-circuiting to signup before the tailored demo would
-  mean provisioning blind; the sequencing above exists so we don't.
+- **Signup sits near the end of the funnel, not the start.** Short-circuiting to signup before the platform walkthrough
+  and Strategy Review would mean provisioning blind; the sequencing above exists so we don't.
 - **The ~2,500-combination catalogue opens at the bespoke-tailoring stage**, not earlier. It's not coy — it's how trust
   is built, and it protects clients who have already locked off their piece.
 
@@ -136,30 +138,37 @@ Key properties:
   fundraising posture, fee preferences. This is the artefact we tailor the demo and the bespoke conversation against.
 - **No catalogue access yet.** The catalogue still opens only at bespoke tailoring (§2.6).
 
-### 2.4b Strategy Review stage (NEW — added 2026-04-26)
-
-- **UI surface:** `/strategy-review?token=<magicToken>` — server-component, force-dynamic, prospect-specific render.
-  Read-only display of: proposed operating model · DART configuration options · regulatory pathway · risk review · demo
-  preparation · next steps.
-- **Sink:** Firestore `/strategy-reviews/{id}` with `magicToken`, `expiresAt` (default 30 days), `revokedAt`.
-- **Gating:** per-prospect magic link, NOT a shared access code. Token additionally unlocks the briefings session
-  (one-token-two-doors via `lib/briefings/session.ts`) so prospects don't have to re-enter codes during their review
-  window.
-- **Issuance:** admin-only, via `/admin/strategy-reviews` after the Strategy Evaluation submission has been reviewed.
-  Endpoint `POST /api/strategy-review/issue-link`. Email sent via existing Resend pipeline.
-- **Verification:** `GET /api/strategy-review/verify?token=...` checks not-expired AND not-revoked.
-- **Catalogue exposure:** Strategy Review v1 does NOT show the catalogue. The full ~2,500-combination catalogue still
-  opens at bespoke tailoring (§2.6). v2 (deferred) will show a curated subset relevant to this prospect's evaluation.
-- Purpose: closes the no-UI gap that previously existed between Strategy Evaluation submission and the Tailored Demo.
-  Gives the prospect a tailored, controlled artefact to review before committing to the demo.
-
-### 2.5 Tailored demo stage
+### 2.4b Platform walkthrough stage
 
 - **Not a UI write** (platform provisioning at this stage is always an operator-side affair; account + keys come later
   at signup).
 - Two halves: (1) guided walkthrough where an Odum operator drives the UI against the prospect's Strategy-Evaluation
-  shape, (2) self-serve exploration where the prospect runs the platform themselves and forms a value judgement.
-- **The catalogue does not open at the demo.** It opens at bespoke tailoring (§2.6) only if the fit is confirmed here.
+  shape, (2) self-serve exploration where the prospect runs the platform themselves and forms a value judgement on fit
+  vs reality.
+- **The catalogue does not open at the walkthrough.** It opens at bespoke tailoring (§2.6) only if the fit is confirmed
+  through the Strategy Review.
+- **Naming history:** previously called "Tailored demo" and sequenced AFTER §2.4b Strategy Review (introduced
+  2026-04-26). Reordered 2026-04-26 (later same day) so the walkthrough happens FIRST — the prospect has seen the
+  product before the synthesis step, so the Strategy Review is grounded in real fit observations rather than a
+  theoretical operating-model deck.
+
+### 2.5 Strategy Review stage (was §2.4b — moved 2026-04-26)
+
+- **UI surface:** `/strategy-review?token=<magicToken>` — server-component, force-dynamic, prospect-specific render.
+  Read-only display of: proposed operating model · DART configuration options · regulatory pathway · risk review ·
+  walkthrough follow-up · next steps.
+- **Sink:** Firestore `/strategy-reviews/{id}` with `magicToken`, `expiresAt` (default 30 days), `revokedAt`.
+- **Gating:** per-prospect magic link, NOT a shared access code. Token additionally unlocks the briefings session
+  (one-token-two-doors via `lib/briefings/session.ts`) so prospects don't have to re-enter codes during their review
+  window.
+- **Issuance:** admin-only, via `/admin/strategy-reviews` after the Strategy Evaluation submission **AND** the platform
+  walkthrough have both happened. Endpoint `POST /api/strategy-review/issue-link`. Email sent via existing Resend
+  pipeline.
+- **Verification:** `GET /api/strategy-review/verify?token=...` checks not-expired AND not-revoked.
+- **Catalogue exposure:** Strategy Review v1 does NOT show the catalogue. The full ~2,500-combination catalogue still
+  opens at bespoke tailoring (§2.6). v2 (deferred) will show a curated subset relevant to this prospect's evaluation.
+- Purpose: synthesise the DDQ specifics + walkthrough observations into a tailored proposed operating model. The
+  prospect reacts to a concrete, demo-grounded proposal rather than a pre-demo theoretical document.
 
 ### 2.6 Bespoke tailoring stage
 
@@ -286,13 +295,14 @@ Gaps remaining:
 - [ ] Real user-management-api implementation of the §2.7.4 attachment paths + Firebase admin-SDK email-verification
       link generation. The UI + mock surfaces are in place; production wiring lives outside this workspace and is the
       remaining handoff.
-- [ ] Strategy Evaluation → demo input handover: the operator-side admin view should surface the most recent
-      `/strategy-evaluations/{id}` for the prospect when they reach the tailored-demo stage, so the operator drives the
-      demo against their declared shape.
+- [ ] Strategy Evaluation → walkthrough input handover: the operator-side admin view should surface the most recent
+      `/strategy-evaluations/{id}` for the prospect when they reach the platform-walkthrough stage, so the operator
+      drives the walkthrough against their declared shape.
 - [ ] Wire stale §2.3.2 / §2.3.4 references in `app/(public)/signup/components/signup/onboarding-wizard.tsx` and
       `lib/api/mock-provisioning-state.ts` to the renumbered §2.7.2 / §2.7.4 anchors.
-- [ ] **Strategy Review (§2.4b)** — new gated route at `/strategy-review` + admin tooling at `/admin/strategy-reviews`.
-      Tracked under `marketing_site_three_route_consolidation_2026_04_26.plan.md`.
+- [ ] **Strategy Review (§2.5)** — gated route at `/strategy-review` + admin tooling at `/admin/strategy-reviews`.
+      Tracked under `marketing_site_three_route_consolidation_2026_04_26.plan.md`. (Stage was §2.4b until the 2026-04-26
+      walkthrough/review reorder.)
 - [ ] **Three-route marketing collapse** — homepage / nav / engagement-route pages consolidated to three public routes
       (Odum-Managed Strategies / DART Trading Infrastructure / Regulated Operating Models). Service paths in §2.7.2
       remain four; see naming-convention paragraph for the marketing↔legal mapping.
@@ -304,9 +314,10 @@ Gaps remaining:
 
 ## 4. Change log
 
-| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Commit                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| 2026-04-22 | Initial playbook. Questionnaire gate + service-list refresh landed in unified-trading-system-ui.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | _(see live-defi-rollout)_ |
-| 2026-04-22 | §2.5.4 + Gaps remaining sweep: slim Regulatory step 3 (no-upload contract-summary panel), drop the IM doc-blocker on submit + the redundant duplicate `submitSignup` in step 4, persist `submissionId` on the questionnaire envelope, mock signup attaches the questionnaire by id-or-email lookup and records the email-verify intent, post-demo provisioning callout on DART / Signals path. Real user-management-api implementation remains as a follow-up.                                                                                                               | _(see live-defi-rollout)_ |
-| 2026-04-25 | Funnel revised from 6 to 8 stages. Questionnaire is now the primary briefings access-code gate (deep dives moved AFTER questionnaire); Strategy Evaluation inserted as a new on-the-record DDQ stage between the initial call and the tailored demo; signup go-live timing reframed as "within a month of go-ahead", anchored on the affiliate network (custodian, fund administrator, AIFM partner, repeatable provisioning modules). Signup sub-sections renumbered §2.5.x → §2.7.x. Public FAQ updated to match.                                                          | _(this commit)_           |
-| 2026-04-26 | Funnel revised from 8 to 9 stages. New §2.4b Strategy Review stage inserted between Strategy Evaluation (§2.4) and Tailored demo (§2.5) — per-prospect magic-link surface at `/strategy-review` showing proposed operating model, DART config options, regulatory pathway, demo prep, and next steps. §2.7.2 service-path table gains a "Marketing label" column (Odum-Managed Strategies / DART Trading Infrastructure / Regulated Operating Models) — public marketing collapses Odum Signals into DART; legal/contract/signup labels stay unchanged. URL slugs unchanged. | _(this commit)_           |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Commit                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 2026-04-22 | Initial playbook. Questionnaire gate + service-list refresh landed in unified-trading-system-ui.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | _(see live-defi-rollout)_ |
+| 2026-04-22 | §2.5.4 + Gaps remaining sweep: slim Regulatory step 3 (no-upload contract-summary panel), drop the IM doc-blocker on submit + the redundant duplicate `submitSignup` in step 4, persist `submissionId` on the questionnaire envelope, mock signup attaches the questionnaire by id-or-email lookup and records the email-verify intent, post-demo provisioning callout on DART / Signals path. Real user-management-api implementation remains as a follow-up.                                                                                                                                                                                                                                                 | _(see live-defi-rollout)_ |
+| 2026-04-25 | Funnel revised from 6 to 8 stages. Questionnaire is now the primary briefings access-code gate (deep dives moved AFTER questionnaire); Strategy Evaluation inserted as a new on-the-record DDQ stage between the initial call and the tailored demo; signup go-live timing reframed as "within a month of go-ahead", anchored on the affiliate network (custodian, fund administrator, AIFM partner, repeatable provisioning modules). Signup sub-sections renumbered §2.5.x → §2.7.x. Public FAQ updated to match.                                                                                                                                                                                            | _(this commit)_           |
+| 2026-04-26 | Funnel revised from 8 to 9 stages. New §2.4b Strategy Review stage inserted between Strategy Evaluation (§2.4) and Tailored demo (§2.5) — per-prospect magic-link surface at `/strategy-review` showing proposed operating model, DART config options, regulatory pathway, demo prep, and next steps. §2.7.2 service-path table gains a "Marketing label" column (Odum-Managed Strategies / DART Trading Infrastructure / Regulated Operating Models) — public marketing collapses Odum Signals into DART; legal/contract/signup labels stay unchanged. URL slugs unchanged.                                                                                                                                   | _(this commit)_           |
+| 2026-04-26 | Walkthrough/Review reorder. §2.4b ("Strategy Review") and §2.5 ("Tailored demo") swapped positions and renamed: §2.4b is now "Platform walkthrough" (was "Tailored demo") and §2.5 is now "Strategy Review" (was §2.4b). Rationale: a tailored demo is more useful AFTER the DDQ has scoped the prospect (so the walkthrough hits the right components) and BEFORE the Strategy Review (so synthesis is grounded in fit observations rather than a theoretical operating-model deck). Stage count unchanged at 9. Public homepage rail bumped from 6 to 7 visible steps; engagement-route process strips bumped from 5 to 6. Strategy Review's "demo preparation" section reframed as "walkthrough follow-up". | _(this commit)_           |
