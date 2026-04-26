@@ -61,17 +61,23 @@ half-renamed state would look worse than the current state.
 | 3   | Regulatory label                                  | Dual-layer (softer). Marketing shows "Regulated Operating Models"; existing legal/admin may retain "Regulatory Umbrella" for backwards compat. New legal drafting prefers specific structure name. TODO: post-refactor compliance review. |
 | 4   | Catalogue exposure                                | Curated subset at Strategy Review (deferred to v2); full catalogue at Bespoke Tailoring per codex SSOT §2.6. Strategy Review v1 ships without catalogue.                                                                                  |
 | 5   | Story trio                                        | `/who-we-are` + `/story` + `/our-story` left as-is.                                                                                                                                                                                       |
-| 6   | Risk-and-Governance + Working-with-Odum briefings | Scaffold-but-don't-expose. No "Coming soon" pages. Content folds into existing pillars + `/briefings` index.                                                                                                                              |
+| 6   | Risk-and-Governance + Working-with-Odum briefings | Do NOT expose dedicated pages. If route scaffolds are required by tooling they must immediately call `notFound()` and not appear in nav/cards/links. No "Coming soon". Content folds into existing pillars + `/briefings` index.          |
 | 7   | `/contact` placement                              | Keep in primary nav. Restructure page: primary CTA = Start Your Review; four contact tracks (General · Existing client · Press · Advisor); Calendly behind "Prefer to speak first?" sub-section.                                          |
 | 8   | Route slugs                                       | All canonical URL slugs unchanged. `/platform` stays canonical for DART (do NOT create `/dart`). `/regulatory` stays canonical (display "Regulated Operating Models").                                                                    |
 | 9   | DART briefing canonical slug                      | `/briefings/dart-trading-infrastructure`. Redirects from `/briefings/{platform,dart,dart-full,dart-signals-in,signals-out}` → new slug.                                                                                                   |
 
 ## Release Rule (binding)
 
-Do NOT ship a half-refactored public state. Phases 1 → 4 must merge together as one release train. A release where the
-homepage shows new positioning but the nav still exposes the old five-path model (or vice versa) is forbidden. Phases 0
-(codex), 5 (Strategy Review), 6 (visual + contact), 7 (IR), 8 (signed-in depth) may be sequenced separately, but 1–4 are
-atomic.
+Do NOT ship a half-refactored public state. **Release sequencing:**
+
+- Phases 1–4 must merge together or behind one feature branch (atomic).
+- Phase 5 (Strategy Review) can ship in the same train OR as a feature-gated follow-up if not ready in time.
+- Phase 6 (visual + contact pass) should ship with the public release.
+- Phases 7–8 (IR materials + signed-in platform depth) are alignment passes that follow the same naming rules but should
+  NOT block the core public refactor unless those surfaces are currently visible to prospects/advisors.
+
+A release where the homepage shows new positioning but the nav still exposes the old five-path model (or vice versa) is
+forbidden.
 
 ## Pre-audit manifest
 
@@ -344,8 +350,11 @@ changing routes.
 
 - [ ] [AGENT] P0. **Regression suite (must pass).** Questionnaire submission end-to-end (Firestore write + Resend
       email + auto-unlock + redirect). Strategy Evaluation submit + magic-link refile. Signup wizard for
-      `?service=investment`, `?service=platform`, `?service=regulatory`. Admin tooling on `/admin/questionnaires`,
-      `/admin/strategy-evaluations`, `/admin/strategy-reviews`.
+      `?service=investment` (renders "Investment Management" legal label), `?service=platform` (renders "DART"),
+      `?service=regulatory` (renders an approved legal/service label — Regulatory Umbrella for backwards-compat,
+      Regulatory / Structuring Review, or Regulated Operating Models if compliance-approved; do NOT hard-require any
+      single phrase, but do NOT introduce new public-facing "Regulatory Umbrella" copy). Admin tooling on
+      `/admin/questionnaires`, `/admin/strategy-evaluations`, `/admin/strategy-reviews`.
 - [ ] [AGENT] P0. **Cold-prospect Playwright flow.** Navigate `/` → confirm three engagement-route cards + Start Your
       Review/Contact Odum CTAs. Click Start Your Review → context page → Begin Questionnaire → fill 6 axes → submit →
       redirect to `/briefings` (three pillars).
@@ -379,6 +388,28 @@ changing routes.
   separate workstreams.
 - Permanent "Regulatory Umbrella" → "Regulated Operating Models" rename on legal/admin/contract surfaces — gated on
   compliance review (TODO tracked in this plan's Decisions table).
+
+## Final consistency patch (binding — overrides any conflicting wording above)
+
+1. **Regulatory signup verification must accept the currently approved legal/service label.** Do NOT hard-require
+   "Regulatory Umbrella" if the implementation has moved to "Regulatory / Structuring Review" or another
+   compliance-approved label. Public marketing surfaces must still use "Regulated Operating Models".
+
+2. **Risk-and-Governance and Working-with-Odum dedicated pages are not required for this release.** Do NOT create
+   visible pages. If route scaffolds are created for tooling reasons, they must immediately call `notFound()` and must
+   be excluded from nav/cards/links.
+
+3. **Release sequencing recap:**
+   - Phases 1–4 must ship together or behind one feature branch.
+   - Phase 5 Strategy Review can ship in the same train or as a feature-gated follow-up.
+   - Phase 6 visual / contact pass should ship with the public release.
+   - Phases 7–8 are alignment passes for IR and signed-in depth. Same naming rules; should not block the core public
+     refactor unless those surfaces are currently visible to prospects/advisors.
+
+4. **Final framing instruction to the implementing agent:** Do not treat this as a rebrand. Treat it as **reducing
+   noise, controlling depth, and making the buyer journey feel institutional**.
+
+---
 
 ## Already correct — explicitly do not touch
 
