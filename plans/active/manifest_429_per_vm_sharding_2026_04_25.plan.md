@@ -265,34 +265,47 @@ Remaining phases are subsequent sessions.
       path correctness.
 - [x] [AGENT] P0. `test_manifest_reader_fallback.py`: stale-consolidated triggers fallback; fresh-consolidated does not.
 
-### Phase 2 — Consolidator (next session)
+### Phase 2 — Consolidator
 
-- [ ] [AGENT] P0. Author `unified_trading_library/manifest_consolidator.py` with `consolidate(bucket)` entrypoint.
-- [ ] [AGENT] P0. Emit `MANIFEST_CONSOLIDATED` lifecycle event (UTL events registry).
-- [ ] [AGENT] P0. Add `tests/unit/test_manifest_consolidator.py` (deduplication, malformed-shard handling, idempotency).
-- [ ] [AGENT] P0. Author `deployment-service/cloud-run-jobs/manifest-consolidator/Dockerfile` + entrypoint.
-- [ ] [AGENT] P0. Add Cloud Scheduler cron triggers per category bucket in
-      `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`.
+- [x] [AGENT] P0. Author `unified_trading_library/manifest_consolidator.py` with `consolidate(bucket)` entrypoint. (UTL
+      `d06a11d0`)
+- [x] [AGENT] P0. Emit `MANIFEST_CONSOLIDATED` lifecycle event (UTL events registry). (UTL `d06a11d0`)
+- [x] [AGENT] P0. Add `tests/unit/test_manifest_consolidator.py` (deduplication, malformed-shard handling, idempotency).
+      (UTL `d06a11d0`)
+- [x] [AGENT] P0. Author `deployment-service/cloud-run-jobs/manifest-consolidator/Dockerfile` + entrypoint.
+      (deployment-service `1f8e29a`)
+- [x] [AGENT] P0. Add Cloud Scheduler cron triggers per category bucket in
+      `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`. (deployment-service `1f8e29a`)
+- [x] [AGENT] P0. **Phase 7 hardening**: consolidator sentinel-blob soft lock prevents same-bucket concurrent cycles
+      (90s TTL stale-recovery; `ConsolidationReport.no_op_lock`). UTL `9d7962ce` — 3 new tests `test_acquire_lock_*`.
 
-### Phase 4 — Migration (next session)
+### Phase 4 — Migration
 
 - [ ] [AGENT] P0. Per-bucket `gsutil cp` script: copy current consolidated blob → `_index/per_vm/_legacy_seed.parquet`.
-- [ ] [AGENT] P0. deployment-service VM/Cloud Run env injection: set `MANIFEST_PER_VM_SHARDS=true` for the chosen
-      rollout cohort.
+- [x] [AGENT] P0. deployment-service VM/Cloud Run env injection: set `MANIFEST_PER_VM_SHARDS=true` for the chosen
+      rollout cohort. (deployment-service `1f8e29a` — flag default true in `setup-data-pipeline-vm.sh`)
+- [x] [AGENT] P0. **Phase 7 hardening**: tarballs + setup script pushed to GCS so VM launches pull current code.
+      Verified `gs://deployment-scripts-central-element-323112/code/unified-trading-library-code.tar.gz` contains
+      `manifest_consolidator.py`; `setup-data-pipeline-vm.sh` exports `MANIFEST_PER_VM_SHARDS=true`. (2026-04-27 ops)
 
-### Phase 6 — Rollout (next session)
+### Phase 6 — Rollout (operator-gated)
 
-- [ ] [AGENT] P0. Quickmerge UTL with feature flag default `false`; semver bump propagates.
-- [ ] [AGENT] P0. PM rollout PR: lift UTL version floor across 25 consumer repos.
+- [ ] [OPERATOR] P0. Quickmerge UTL with feature flag default `false`; semver bump propagates. (UTL `c95480de` +
+      `d06a11d0` + `9d7962ce` + `80b32121` on `live-defi-rollout`; live-defi-rollout → staging merge will fire
+      semver-agent — UTL 0.3.167 → 0.4.x bump expected from `feat:` commits.)
+- [ ] [OPERATOR] P0. PM rollout PR: lift UTL version floor across 25 consumer repos. (Auto via
+      `update-dependency-version.yml` after UTL ships new minor; manual dispatch fallback documented.)
 - [ ] [AGENT] P0. Per-bucket cutover (CeFi → DeFi → Sports → TradFi → Prediction).
 - [ ] [AGENT] P0. After last bucket: delete `_write_with_generation_match` legacy path, delete feature flag, clean
       break.
 
-### Phase 7 — Validation (next session)
+### Phase 7 — Validation (operator-gated)
 
-- [ ] [AGENT] P0. 50-VM smoke against test bucket; assert 0 × PreconditionFailed.
-- [ ] [AGENT] P0. Add Cloud Monitoring panel "ManifestWriter generation conflicts" — must read 0 post-rollout.
-- [ ] [AGENT] P0. 7-day production observation; deployment-api data-status freshness < 5min P99.
+- [x] [AGENT] P0. **Reader self-shard merge** — writer-then-read sees its own writes within seconds without waiting for
+      next consolidator cycle. UTL `80b32121` — 3 new + 1 updated test in `test_manifest_writer_per_vm.py`.
+- [ ] [OPERATOR] P0. 50-VM smoke against test bucket; assert 0 × PreconditionFailed.
+- [ ] [OPERATOR] P0. Add Cloud Monitoring panel "ManifestWriter generation conflicts" — must read 0 post-rollout.
+- [ ] [OPERATOR] P0. 7-day production observation; deployment-api data-status freshness < 5min P99.
 
 ## Success criteria
 
