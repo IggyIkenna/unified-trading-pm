@@ -145,3 +145,25 @@ original decision date.
 **Rule 6:** Canonical scripts (`quality-gates.sh`, `quickmerge.sh`, propagation scripts) live in PM. Reference templates
 (e.g., `06-coding-standards/quality-gates-template.sh`) may exist in codex for documentation purposes only and must be
 clearly labelled as templates, not the canonical source.
+
+---
+
+## Renames in Flight
+
+Tracks JSON / CLI / gRPC field renames currently mid-deprecation across the workspace. Each row lists the surface, the
+canonical (new) key, the legacy key (kept as `validation_alias` or coalesce-fallback), and the ADR / plan that pinned
+the rename. Remove rows from this table after the deprecation window closes and the legacy alias is dropped.
+
+Legend: **migrate** = legacy alias kept for one release; **document** = legacy literal grandfathered (wire-format pin).
+
+| Surface (file:line)                                                                                         | Canonical key | Legacy key                | Decision       | ADR / pin                                                           |
+| ----------------------------------------------------------------------------------------------------------- | ------------- | ------------------------- | -------------- | ------------------------------------------------------------------- |
+| `execution-service/execution_service/api/manual_schemas.py:65` (`ManualInstructionRequest`)                 | `asset_group` | `category`                | migrate        | `decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` |
+| `execution-service/execution_service/cli/backtest_checks.py:206` (preflight structured log)                 | `category`    | n/a (preflight bucket)    | document       | `decisions/adr-2026-04-25-...` (not asset_group axis)               |
+| `strategy-service/strategy_service/cli/handlers/batch_handler.py:861` (`_build_backtest_result`)            | `asset_group` | `category`                | migrate        | `decisions/adr-2026-04-25-...`                                      |
+| `strategy-service/strategy_service/cli/grid_generator.py:223` (`generate_strategy_id`)                      | `asset_group` | `category`                | migrate (read) | `decisions/adr-2026-04-25-...`                                      |
+| `strategy-service/strategy_service/config.py:715` (`build_sports_strategy_config`)                          | `asset_group` | `category`                | migrate        | `decisions/adr-2026-04-25-...`                                      |
+| `strategy-service/strategy_service/engine/core/config_loader.py:200` (`set_domain_from_category`)           | `asset_group` | `category`                | migrate (read) | `decisions/adr-2026-04-25-...`                                      |
+| `strategy-service/strategy_service/models/output_schemas.py:33,128,...` (parquet `dimension_keys`)          | `category`    | n/a (parquet column)      | document       | `decisions/adr-2026-04-25-...` §3 (GCS / parquet pin)               |
+| `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py:429` (Polymarket params) | `category`    | n/a (Polymarket topic)    | document       | `decisions/adr-2026-04-25-...` (not asset_group axis)               |
+| `position-balance-monitor-service/.../adapters/bybit.py:97,136` (Bybit v5 API)                              | `category`    | n/a (Bybit contract axis) | document       | `decisions/adr-2026-04-25-...` (Bybit wire format)                  |
