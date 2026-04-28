@@ -773,13 +773,13 @@
     },
     {
       "strategy_id": "QUANT_CROSS_EXCHANGE_BTC",
-      "display_name": "Quant Cross-Exchange BTC (Binance/Kraken)",
+      "display_name": "Quant Cross-Exchange BTC (Binance/Bybit)",
       "asset_group": "QUANT",
       "subcategory": "CROSS_EXCHANGE",
       "domain": "cefi",
       "asset_groupes": ["SPOT_PAIR"],
-      "venues": ["BINANCE", "KRAKEN"],
-      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "KRAKEN:SPOT_PAIR:BTCUSD"],
+      "venues": ["BINANCE", "BYBIT"],
+      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "BYBIT:SPOT_PAIR:BTC-USDT"],
       "data_sources": {
         "features": ["features-delta-one-service"],
         "market_data_processed": true,
