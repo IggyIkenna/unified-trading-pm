@@ -155,16 +155,15 @@ Child books (8 confirmed + 2 TBD):
 
 Do NOT re-introduce:
 
-| Venue     | Why removed                                           |
-| --------- | ----------------------------------------------------- |
-| Kraken    | Not in our stack; was a hallucination in earlier docs |
-| LSE       | UK equities route via IBKR                            |
-| TSX       | Canadian equities route via IBKR                      |
-| Elysium   | Removed per earlier architecture decisions            |
-| Arkham    | Removed; not a data source we use                     |
-| Bloxroute | Removed from MEV provider list                        |
-| Pyth      | Not a price oracle source in our stack                |
-| Infura    | Not an RPC provider we use (via UCI templates)        |
+| Venue     | Why removed                                    |
+| --------- | ---------------------------------------------- |
+| LSE       | UK equities route via IBKR                     |
+| TSX       | Canadian equities route via IBKR               |
+| Elysium   | Removed per earlier architecture decisions     |
+| Arkham    | Removed; not a data source we use              |
+| Bloxroute | Removed from MEV provider list                 |
+| Pyth      | Not a price oracle source in our stack         |
+| Infura    | Not an RPC provider we use (via UCI templates) |
 
 ## Capability registry
 

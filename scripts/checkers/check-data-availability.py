@@ -93,7 +93,6 @@ def _find_venues(repo_path: Path) -> list[str]:
         "binance",
         "bybit",
         "okx",
-        "kraken",
         "deribit",
         "coinbase",
         "aave",

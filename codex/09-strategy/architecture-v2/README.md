@@ -682,7 +682,7 @@ No old doc is discarded without an explicit mapping. No existing functionality i
 
 See [../../plans/active/](../../../plans/active/) for the active week-to-live implementation plan. Key phases:
 
-1. **Wave 1 (Day 1-2)**: Codex v2 docs + UAC schemas + Kraken purge
+1. **Wave 1 (Day 1-2)**: Codex v2 docs + UAC schemas + retired CeFi venue cleanup
 2. **Wave 2 (Day 3-4)**: strategy-service family engines + execution-service polymorphic orchestrator +
    portfolio-allocator-service + Unity adapter
 3. **Wave 3 (Day 5)**: PBMS venue-account projection + R&E pre-flight + feature/ML versioning

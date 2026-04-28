@@ -14,8 +14,8 @@ locked_since: 2026-04-17
 ## Status
 
 - **Phase 1 (docs)** — DONE (~60 docs, see parent plan).
-- **Phase 2 (UAC schemas)** — DONE (commit `4bc83bc` on `live-defi-rollout`). Kraken removed from UAC itself (external/
-  mocks retained per cassette parity); downstream Kraken removal still TODO.
+- **Phase 2 (UAC schemas)** — DONE (commit `4bc83bc` on `live-defi-rollout`). Bybit removed from UAC itself (external/
+  mocks retained per cassette parity); downstream Bybit removal still TODO.
 - **Phases 3-11 (service implementation)** — PLANNED, not yet started. This doc is the handoff.
 
 ## Context for executing agents
@@ -272,11 +272,11 @@ Repos: `strategy-service`, `ml-training-service`, `execution-service`.
 - [ ] [CODE] P2. Fill remaining target universe (~70-100 additional instances): paper-trade → promote on positive Group
       B Sharpe
 
-## Phase 12 — Kraken downstream sweep
+## Phase 12 — Bybit downstream sweep
 
 Workspace-wide.
 
-- [ ] [CODE] P1. grep for `kraken|KRAKEN|Kraken` outside UAC external mocks; remove from:
+- [ ] [CODE] P1. grep for `bybit|BYBIT|Bybit` outside UAC external mocks; remove from:
   - execution-service adapters
   - market-tick-data-service adapters
   - instruments-service reference data
@@ -307,7 +307,7 @@ Phases 3-8 must all be in place before:
     └──► Phase 9 (UI refactor, consumes all services)
     └──► Phase 10 (backtest runners — depend on strategy+execution)
     └──► Phase 11 (strategy migration — depends on strategy+execution+allocator+PBMS+risk)
-    └──► Phase 12 (Kraken sweep — parallelizable with all phases)
+    └──► Phase 12 (Bybit sweep — parallelizable with all phases)
     └──► Phase 13 (Unity final — requires user action to unblock)
 ```
 
@@ -319,7 +319,7 @@ Phases 3-8 must all be in place before:
 - Allocator emits its first live `AllocationDirective` to a shadow instance
 - Unity TCP adapter passes integration test against Unity UAT
 - First end-to-end fill with full identity tuple tagged from tick → instruction → fill → PBMS → allocator
-- Kraken grep returns zero matches outside UAC external-provider cassettes
+- Bybit grep returns zero matches outside UAC external-provider cassettes
 
 ## Quickmerge convention
 

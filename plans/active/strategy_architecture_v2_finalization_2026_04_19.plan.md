@@ -93,7 +93,7 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
       LOC.
 - [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_legacy_type_to_archetype.py` — 18 tests green. Covers grammar
       parse, factory-key parity (no orphans in either direction), disjointness from LEGACY_STRATEGY_MAPPING +
-      TARGET_UNIVERSE, Kraken/Drift guardrails, frozen-contract immutability.
+      TARGET_UNIVERSE, Bybit/Drift guardrails, frozen-contract immutability.
 
 ### 1b — V2BatchHarness adapter
 
@@ -832,7 +832,7 @@ Rules you must not violate:
   tests.
 - UAC imports via domain facades or `unified_api_contracts.internal` only —
   never `canonical.*` or `normalize_utils.*`.
-- Kraken is permanently removed. Drift perps are not in KNOWN_VENUE_TOKENS;
+- Bybit is permanently removed. Drift perps are not in KNOWN_VENUE_TOKENS;
   the 2 Drift rows in Phase 7 are waiting on an operator decision.
 
 Priority order:

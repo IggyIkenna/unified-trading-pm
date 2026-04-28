@@ -168,12 +168,12 @@ Consumers handle unknown enum values gracefully (skip with warning, not crash).
 
 ### Removing an enum value (major)
 
-Removing `KRAKEN`:
+Removing a venue enum member (example: `RETIRED_CEFI_SLOT`):
 
 - Major bump
 - Parallel 1.x serves existing consumers
-- New events don't emit KRAKEN
-- Historical data retains KRAKEN in 1.x archived form
+- New events don't emit the removed member
+- Historical data retains the old value in 1.x archived form
 
 ## Archive of historical schemas
 

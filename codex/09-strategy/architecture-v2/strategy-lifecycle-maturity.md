@@ -101,12 +101,12 @@ VenueSetVariant(
 
 The Elysium DeFi basis archetype ships as four variants so IM + DART clients can scale through pricing tiers:
 
-| Variant id               | Venues                                         | Instruments    | Tier       | Target client                      |
-| ------------------------ | ---------------------------------------------- | -------------- | ---------- | ---------------------------------- |
-| `ely_base_3cex`          | `OKX, BINANCE, BYBIT`                          | PERP, SPOT     | `base`     | New DART / IM client, small ticket |
-| `ely_premium_6cex`       | `OKX, BINANCE, BYBIT, KRAKEN, DERIBIT, BITGET` | PERP, SPOT     | `premium`  | Upsell tier 2                      |
-| `ely_multi_evm`          | 6 CEX + `UNISWAP_V3, AAVE_V3`                  | PERP, SPOT, LP | `top_tier` | EVM-native DeFi allocator          |
-| `ely_multi_evm_plus_sol` | 6 CEX + EVM + `JUPITER, RAYDIUM`               | PERP, SPOT, LP | `apex`     | Cross-chain allocator, highest fee |
+| Variant id               | Venues                                           | Instruments    | Tier       | Target client                      |
+| ------------------------ | ------------------------------------------------ | -------------- | ---------- | ---------------------------------- |
+| `ely_base_3cex`          | `OKX, BINANCE, BYBIT`                            | PERP, SPOT     | `base`     | New DART / IM client, small ticket |
+| `ely_premium_6cex`       | `OKX, BINANCE, BYBIT, COINBASE, DERIBIT, BITGET` | PERP, SPOT     | `premium`  | Upsell tier 2                      |
+| `ely_multi_evm`          | 6 CEX + `UNISWAP_V3, AAVE_V3`                    | PERP, SPOT, LP | `top_tier` | EVM-native DeFi allocator          |
+| `ely_multi_evm_plus_sol` | 6 CEX + EVM + `JUPITER, RAYDIUM`                 | PERP, SPOT, LP | `apex`     | Cross-chain allocator, highest fee |
 
 Each variant is a distinct `StrategyInstance` row with its own `instance_id`, its own `odum-paper` P&L series, and its
 own maturity phase. Clients upgrading from `base` to `premium` are subscribing to a **different instance**, not an

@@ -31,7 +31,7 @@ depends_on:
 
 # Current drift (as of 2026-04-20 canary):
 
-# \* CEFI/Tardis venues → CORRECT (BINANCE-FUTURES/Kraken/etc. read via URDI)
+# \* CEFI/Tardis venues → CORRECT (BINANCE-FUTURES/Bybit/etc. read via URDI)
 
 # \* TradFi/Databento (CME, NASDAQ) → DRIFTED: MTDS reads UAC registry inline
 

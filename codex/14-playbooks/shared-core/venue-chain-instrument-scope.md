@@ -35,7 +35,7 @@ Three venue-pack units, two chain-pack units, two instrument-type-pack units. Pr
 
 Odum's venue coverage aligns with [`../../02-venues/`](../../02-venues/). Sub-scope granularity varies:
 
-- **Individual venue.** Binance-spot, Coinbase, Kraken — each is one venue pack unit.
+- **Individual venue.** Binance-spot, Coinbase, Bybit — each is one venue pack unit.
 - **Venue group.** A bundled set (e.g. "tier-2 DEX pack" covering several smaller-cap DEXs) priced as one unit.
 
 Per venue pack, Odum provides: connectivity, credentials handling, reference-data coverage, execution integration,
@@ -54,7 +54,7 @@ Snapshot of the actual venue scope Odum operates on in 2026, matching the concre
 | Binance-spot | Live              | STAT_ARB_PAIRS_FIXED (PUBLIC) + BTC ML directional (IM_RESERVED, Jun 2026). |
 | Binance-perp | Live              | BTC ML perp companion (IM_RESERVED) + Desmond perp-arb scope.               |
 | Coinbase     | Live              | Mean-rev + BTC ML spot.                                                     |
-| Kraken       | Live              | Mean-rev (PUBLIC).                                                          |
+| Bybit        | Live              | Cross-venue + perp scope.                                                   |
 | Hyperliquid  | Live              | BTC perp + Desmond perp-arb scope.                                          |
 | CME-futures  | Sept 2026 go-live | S&P futures for ML directional (IM_RESERVED co-invest mandate).             |
 | NSE-options  | Oct 2026 go-live  | India Options delta trading (IM_RESERVED, gated on S&P signal).             |

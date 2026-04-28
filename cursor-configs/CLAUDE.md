@@ -263,14 +263,21 @@ marked `@pytest.mark.allow_network`. Skipped if SM credentials unavailable.
 
 ## Local Development
 
-Start the full stack locally with mock mode (no credentials needed):
+Tier 0 is the canonical local-dev mode — Firebase Emulator Suite layered with `NEXT_PUBLIC_MOCK_API=true` so widgets
+render against in-repo fixtures while sign-in / Firestore / Storage hit a local emulator pool seeded with the demo
+personas. Same Firebase code path as staging and prod (only project ID + emulator hosts change). The two layers are
+orthogonal: Firebase SDK paths bypass mock-handler, mock-handler doesn't intercept Firebase. Pre-2026-04-28 the
+firebase-local handoff bypassed the mock-API flag and produced "Failed to load market data" on every API-driven widget;
+commit `31ffa5d2` integrated them by default.
 
 ```bash
 # Tier-based startup (preferred — unified-trading-system-ui)
 cd unified-trading-system-ui
-bash scripts/dev-tiers.sh --tier 1                     # UI + 3 API gateways (demo-ready)
-bash scripts/dev-tiers.sh --tier 2                     # UI + APIs + all services (full fleet)
-bash scripts/dev-tiers.sh --tier 0                     # UI-only (no Python)
+bash scripts/dev-tiers.sh --tier 0                     # Firebase emulators + Next dev + auto-seed (DEFAULT)
+bash scripts/dev-tiers.sh --tier 1                     # Tier 0 + 2 API gateways (when NEXT_PUBLIC_MOCK_API=false needed)
+bash scripts/dev-tiers.sh --tier 2                     # Tier 1 + downstream Python services (full fleet)
+bash scripts/dev-tiers.sh --tier 0 --no-mock-api       # Firebase emulator only, no widget fixtures (auth-flow testing)
+bash scripts/dev-tiers.sh --tier 0 --no-firebase-local # talk to a real Firebase project (rare; reproduce staging bug)
 bash scripts/dev-tiers.sh --stop                       # stop all
 bash scripts/dev-tiers.sh --status                     # check what's running
 
@@ -280,9 +287,12 @@ bash unified-trading-pm/scripts/dev/dev-stop.sh                       # stop all
 bash unified-trading-pm/scripts/dev/dev-status.sh                     # check status
 ```
 
-Health page: `http://localhost:3000/health` — auto-detects tier, checks all connectors.
+Dev server on `http://localhost:3000`. Emulator UI on `http://localhost:4000` (Auth pool / Firestore docs). Health page:
+`http://localhost:3000/health` — auto-detects tier, checks all connectors. Demo personas auto-seed on first boot;
+re-seed manually with `npm run emulators:seed`.
 
-Runtime tiers documented in `unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md`.
+Runtime tiers documented in `unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md` and
+`unified-trading-pm/codex/14-playbooks/authentication/firebase-local.md`.
 
 ### 5 Mode Axes
 

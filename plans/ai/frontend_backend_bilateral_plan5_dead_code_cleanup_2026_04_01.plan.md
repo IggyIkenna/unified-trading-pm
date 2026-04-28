@@ -47,7 +47,7 @@ todos:
     status: todo
   - id: p5-2-removed-provider-types
     content: |
-      - [ ] [AGENT] P0. Delete types from removed providers (per CLAUDE.md: Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC). If any types referencing these providers survived the earlier cleanup, delete them now. Also check for: Bitstamp, Kraken (removed from UAC per memory).
+      - [ ] [AGENT] P0. Delete types from removed providers (per CLAUDE.md: Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC). If any types referencing these providers survived the earlier cleanup, delete them now. Also check for: Bitstamp, Bybit (removed from UAC per memory).
     status: todo
   - id: p5-3-deprecated-constants
     content: |
@@ -156,7 +156,7 @@ Plan 4 task p4-0 produces a disposition manifest. This plan consumes that manife
 1. **CCXT abstraction** (8 types) — all dead, replaced by venue-specific adapters
 2. **Kalshi/Manifold** (6 types) — prediction markets removed/never launched
 3. **Data vendors** (8 types) — Tardis, Polygon, Databento integrations abandoned
-4. **Removed providers** — Elysium, Arkham, Bloxroute, Pyth, Infura, Bitstamp, Kraken
+4. **Removed providers** — Elysium, Arkham, Bloxroute, Pyth, Infura, Bitstamp, Bybit
 5. **Deprecated config constants** — replaced by registry pattern or Pydantic configs
 6. **Speculative infra types** — never implemented cloud resource types
 

@@ -136,7 +136,7 @@ Derived from `signing_scheme` + `sports_venue_type` + `venue_category`:
 | Scheme           | Description                                   | Venues                                |
 | ---------------- | --------------------------------------------- | ------------------------------------- |
 | `hmac_sha256`    | HMAC-SHA256 on request params                 | Binance, Bybit, OKX, Coinbase, Kalshi |
-| `hmac_sha512`    | HMAC-SHA512                                   | Kraken                                |
+| `hmac_sha512`    | HMAC-SHA512                                   | Some CeFi REST APIs                   |
 | `l1_action`      | Hyperliquid phantom agent (msgpack + EIP-712) | Hyperliquid orders/cancels            |
 | `user_signed`    | Hyperliquid user-signed (EIP-712 direct)      | Hyperliquid transfers/withdrawals     |
 | `eip712`         | EIP-712 typed data signing                    | Polymarket, dYdX, MEV/Flashbots       |

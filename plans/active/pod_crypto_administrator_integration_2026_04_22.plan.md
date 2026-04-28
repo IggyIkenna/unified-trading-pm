@@ -49,7 +49,7 @@ file-drop if that's POD's integration mode).
 **SCOPE: CRYPTO-ONLY.** POD administers crypto-denominated pooled funds. This plan covers BOTH crypto tracks:
 
 - **Crypto-spot fund** — BTC / ETH / major-cap tokens held at the custodian (Copper reference); no leverage; venue set
-  is spot exchanges (Coinbase, Binance spot, Kraken spot) + on-chain wallets. Subscription accepts fiat or stablecoins;
+  is spot exchanges (Coinbase, Binance spot, Bybit spot) + on-chain wallets. Subscription accepts fiat or stablecoins;
   NAV-strike cadence typically daily.
 - **Crypto-derivatives fund** — BTC / ETH perpetuals and dated futures on CeFi venues (Binance USDM, Hyperliquid, Bybit,
   OKX) and on-chain perps; leverage capped per mandate; the custodian holds margin in a segregated collateral wallet and

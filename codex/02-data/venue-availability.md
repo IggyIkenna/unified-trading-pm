@@ -99,7 +99,6 @@ The following venues were removed from UAC and all adapters:
 | Removed                                  | Reason                                  |
 | ---------------------------------------- | --------------------------------------- |
 | Bitstamp                                 | Low volume, removed from strategy scope |
-| Kraken                                   | Removed from strategy scope             |
 | Elysium, Arkham, Bloxroute, Pyth, Infura | Deleted providers                       |
 
 Do not add these back to any adapter or venue mapping.

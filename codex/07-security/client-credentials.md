@@ -17,19 +17,19 @@ Exchange API credentials are stored per client and per venue in GCP Secret Manag
 | --------------- | ------------------- | ----------------------------------------- |
 | `-api-key`      | Exchange API key    | All venues                                |
 | `-api-secret`   | Exchange API secret | Most venues (Binance, Deribit, OKX, etc.) |
-| `-passphrase`   | Exchange passphrase | Some venues (e.g. Coinbase, Kraken)       |
+| `-passphrase`   | Exchange passphrase | Some venues (e.g. Coinbase, KuCoin)       |
 
 ## Examples
 
-| Secret Name                       | Used For                           |
-| --------------------------------- | ---------------------------------- |
-| `client-alpha-binance-api-key`    | Binance API key for client-alpha   |
-| `client-alpha-binance-api-secret` | Binance API secret                 |
-| `client-alpha-deribit-api-key`    | Deribit API key                    |
-| `client-alpha-deribit-api-secret` | Deribit API secret                 |
-| `client-alpha-kraken-api-key`     | Kraken API key                     |
-| `client-alpha-kraken-api-secret`  | Kraken API secret                  |
-| `client-alpha-kraken-passphrase`  | Kraken passphrase (if 2FA enabled) |
+| Secret Name                       | Used For                         |
+| --------------------------------- | -------------------------------- |
+| `client-alpha-binance-api-key`    | Binance API key for client-alpha |
+| `client-alpha-binance-api-secret` | Binance API secret               |
+| `client-alpha-deribit-api-key`    | Deribit API key                  |
+| `client-alpha-deribit-api-secret` | Deribit API secret               |
+| `client-alpha-kucoin-api-key`     | KuCoin API key                   |
+| `client-alpha-kucoin-api-secret`  | KuCoin API secret                |
+| `client-alpha-kucoin-passphrase`  | KuCoin passphrase / API key note |
 
 ## Access Pattern
 

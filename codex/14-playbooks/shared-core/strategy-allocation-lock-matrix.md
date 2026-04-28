@@ -36,7 +36,7 @@ grants them access (similar to CLIENT_EXCLUSIVE semantics but without the lock-o
 
 | Archetype            | Category | Instrument | Representative venues     | Notes                                                                  |
 | -------------------- | -------- | ---------- | ------------------------- | ---------------------------------------------------------------------- |
-| STAT_ARB_PAIRS_FIXED | CEFI     | spot       | Binance, Coinbase, Kraken | Crypto mean-reversion — existing IM, 1yr+ live. No exclusivity signed. |
+| STAT_ARB_PAIRS_FIXED | CEFI     | spot       | Binance, Coinbase, Bybit  | Crypto mean-reversion — existing IM, 1yr+ live. No exclusivity signed. |
 | STAT_ARB_PAIRS_FIXED | CEFI     | perp       | Binance-perp, Hyperliquid | Same strategy family on perps.                                         |
 
 ### IM_RESERVED cells — currently running for own IM
