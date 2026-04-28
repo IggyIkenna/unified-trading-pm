@@ -124,14 +124,36 @@ Phase 0 (pre-audit) ──► Phase 1 (mapper) ──► Phase 2 (parity tests)
 
 ## Todos
 
-### Phase 0 — Pre-audit (this session)
+### Phase 0 — Pre-audit (DONE 2026-04-28)
 
-- [ ] [AGENT] P0. Scan every `entity=fixtures/fixtures.parquet` under `sports_reference/by_date/` and record schema
-      (`af_league_id` present? row count? legacy struct columns present?). Output:
-      `instruments-service/scripts/sports_legacy_schema_audit.json` keyed by `day=YYYY-MM-DD`. ~3,627 reads (parallelize
-      via gsutil cp + multiprocessing).
-- [ ] [AGENT] P0. Spot-check 10 LEGACY days: row count + verify all expected columns present (corners, xG, possession,
-      etc.).
+- [x] [AGENT] P0. Scan every day partition under `sports_reference/by_date/` via entity-set signature (legacy = no
+      `entity=fixture_stats/`). Output: `instruments-service/scripts/sports_legacy_schema_audit.json` keyed by
+      `day=YYYY-MM-DD`. 124s wall-clock for 3,627 days. (Initial pyarrow `read_metadata` approach was too slow / hung at
+      ~600 reads after 18 min — switched to delimiter-based listing.)
+- [x] [AGENT] P0. Sanity-check confirmed 2018-04-01 LEGACY (`league` struct, 402 rows), 2024-08-17 NEW (14 entities),
+      2026-04-15 LEGACY (276 rows, real legacy schema not just missing partition).
+- [x] [AGENT] P0. Audit summary: NEW 2,459 / LEGACY 594 / MISSING 574.
+
+### Phase 0.5 — Writer regression fix (NEW — discovered by audit)
+
+**Audit finding**: 112 LEGACY days are in 2026, including current dates (e.g. 2026-04-15). The fixtures-writer is still
+emitting legacy schema concurrently with newer per-entity writers (`progressive_stats`, `sfi_leagues`, `footystats_*`).
+Without fixing the writer, any one-shot rewrite would be re-polluted by the next adapter run.
+
+LEGACY-by-year breakdown from audit: 2018=364, 2019=27, 2020=58, 2021=2, 2022=7, 2023=4, 2024=8, 2025=12, **2026=112** ←
+active regression.
+
+- [ ] [AGENT] P0. Locate the writer in `instruments-service/instruments_service/sports/` that emits
+      `entity=fixtures/fixtures.parquet` with the legacy nested-struct schema. Likely a fall-back or older code path.
+- [ ] [AGENT] P0. Either fix the writer to emit the new flat schema, or delete it if a sibling writer already emits the
+      new schema (audit shows fixture_stats is missing on these days — so probably the legacy writer is the ONLY one
+      running, not a duplicate).
+- [ ] [AGENT] P0. Per-VM smoke: write one date with the fixed writer, verify `af_league_id` column present + `league`
+      struct gone + `entity=fixture_stats/` partition created.
+
+### Phase 0.6 — Verification (after writer fix lands)
+
+- [ ] [AGENT] P0. Re-run audit; confirm post-fix days all NEW. Re-write `sports_legacy_schema_audit.json`.
 - [ ] [AGENT] P0. Identify any LEGACY day with `af_league_id` PARTIAL population (some rows have it, others don't) —
       document as edge case for the mapper.
 
