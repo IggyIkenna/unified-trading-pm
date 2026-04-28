@@ -143,13 +143,22 @@ Without fixing the writer, any one-shot rewrite would be re-polluted by the next
 LEGACY-by-year breakdown from audit: 2018=364, 2019=27, 2020=58, 2021=2, 2022=7, 2023=4, 2024=8, 2025=12, **2026=112** ←
 active regression.
 
-- [ ] [AGENT] P0. Locate the writer in `instruments-service/instruments_service/sports/` that emits
-      `entity=fixtures/fixtures.parquet` with the legacy nested-struct schema. Likely a fall-back or older code path.
-- [ ] [AGENT] P0. Either fix the writer to emit the new flat schema, or delete it if a sibling writer already emits the
-      new schema (audit shows fixture_stats is missing on these days — so probably the legacy writer is the ONLY one
-      running, not a duplicate).
-- [ ] [AGENT] P0. Per-VM smoke: write one date with the fixed writer, verify `af_league_id` column present + `league`
-      struct gone + `entity=fixture_stats/` partition created.
+- [x] [AGENT] P0. Locate the writer. **Found**: `instruments-service/instruments_service/engine/orchestrator.py` lines
+      3126 + 3187 (post-fix; pre-fix lines ~3011 + ~3072). Two `pd.DataFrame([fx.model_dump() for fx in fixtures])`
+      patterns where `CanonicalFixture` keeps nested `league` / `home_team` / `away_team` / `venue` Pydantic structs;
+      `model_dump()` preserves them as parquet struct cells = the legacy schema. No separate "legacy writer" exists —
+      this IS the live orchestrator and has always emitted nested structs; what changed in 2024 is sibling writers
+      (`fixture_stats`, `progressive_stats`, `footystats_*`) showed up alongside it on more days.
+- [x] [AGENT] P0. Fix shipped: instruments-service `90a0940` introduces `_flatten_canonical_fixture_for_disk(fx, day)`
+      that maps CanonicalFixture → 32 flat columns matching `SPORTS_FIXTURES` SchemaContract. Both write call-sites
+      flipped; per-league groupby uses `af_league_id`. PIT `data_available_at` derives from `timestamp` (new field)
+      instead of `kickoff_utc` (legacy field).
+- [x] [AGENT] P0. Unit tests: `tests/unit/test_orchestrator_fixture_flattener.py` (13 cases) — column-set guarantee,
+      no-nested-cell, af_id resolution, winner_id derivation, default-null on ET / penalty / period, DataFrame assembly.
+      All passing.
+- [ ] [OPERATOR] P0. **Smoke (deferred)**: refresh tarballs, launch one sports VM for a recent date (e.g. today), re-run
+      the audit script, confirm the new day's parquet has `af_league_id` column + no `league` struct. Tarball + VM steps
+      from `unified-trading-pm/codex/05-infrastructure/vm-tarball-deployment.md`.
 
 ### Phase 0.6 — Verification (after writer fix lands)
 
