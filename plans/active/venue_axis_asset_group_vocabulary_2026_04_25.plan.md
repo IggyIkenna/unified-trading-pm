@@ -81,16 +81,16 @@ isProject: false
 
 ### Remaining (Waves C–D — follow-on)
 
-- [ ] [AGENT] Wave C: features-\* services — align local names / imports to `VENUE_TO_ASSET_GROUP` and asset-group
-      language where the trading venue axis applies; keep on-disk / JSON keys stable where required. **Status
-      (2026-04-27)**: blocked. Audit across 8 services (`features-cross-instrument-service`,
-      `features-delta-one-service`, `features-onchain-service`, `features-sports-service`,
-      `features-volatility-service`, `features-multi-timeframe-service`, `features-commodity-service`,
-      `features-calendar-service`) showed all 8 already contain extensive uncommitted Wave C work in their dirty trees
-      (operator-authored manual rename, ~1800 lines across 212 files). Wave C ship blocked on Wave A (UAC `__init__.py`,
-      87 files dirty) + Wave B (UTL `service_cli.py` + `service_framework/bootstrap.py`, 68 files dirty) landing first —
-      pushing Wave C to `origin/live-defi-rollout` against unmerged Wave A/B would CI-red the consumers. Operator must
-      commit Wave A/B before Wave C can run.
+- [x] [AGENT] Wave C: features-\* services — align local names / imports to `VENUE_TO_ASSET_GROUP` and asset-group
+      language where the trading venue axis applies; keep on-disk / JSON keys stable where required. **Shipped
+      2026-04-28** in dependency order: Wave A (UAC `068ce07` — clean break of `VENUE_TO_CATEGORY` /
+      `VENUES_BY_CATEGORY` / `DATA_TYPES_BY_CATEGORY` / `VALID_CATEGORIES`); Wave B (UTL `d3c8880d` — `ServiceCLI` kwarg
+      flip `categories=` → `asset_group_choices=`, F821 leftover fixed); Wave C across 8 services in parallel:
+      features-cross-instrument-service `7ded56e`, features-delta-one-service `818375e`, features-onchain-service
+      `95f8adb`, features-sports-service `2889de3`, features-volatility-service `1797f32`+`a2032ca`,
+      features-multi-timeframe-service `5daba09e`, features-commodity-service `2625996`, features-calendar-service
+      `9930b60`+`efce89f`. PM follow-up: `generate_ui_reference_data.py` flipped `VALID_CATEGORIES` →
+      `VALID_ASSET_GROUPS`.
 - [x] [AGENT] Wave D: execution-service / consumers — grid and CLI JSON keys: document vs migrate per
       `no-backward-compat` policy and coordinated UAC SemVer. (5 migrated + 4 documented; below 5-consumer escalation
       threshold so per-consumer migration was correct. execution-service `46dd6f67`, strategy-service `335b666`,

@@ -216,8 +216,8 @@ def extract_config_schema_universe() -> dict[str, object]:
     try:
         from unified_api_contracts import (
             VALID_ALGORITHMS,
+            VALID_ASSET_GROUPS,
             VALID_BOOK_TYPES,
-            VALID_CATEGORIES,
             VALID_INSTRUCTION_TYPES,
             VALID_MODES,
             VALID_TIMEFRAMES,
@@ -227,9 +227,9 @@ def extract_config_schema_universe() -> dict[str, object]:
             "valid_algorithms": VALID_ALGORITHMS
             if isinstance(VALID_ALGORITHMS, (list, dict))
             else str(VALID_ALGORITHMS),
-            "valid_categories": list(VALID_CATEGORIES)
-            if hasattr(VALID_CATEGORIES, "__iter__")
-            else str(VALID_CATEGORIES),
+            "valid_asset_groups": list(VALID_ASSET_GROUPS)
+            if hasattr(VALID_ASSET_GROUPS, "__iter__")
+            else str(VALID_ASSET_GROUPS),
             "valid_modes": list(VALID_MODES) if hasattr(VALID_MODES, "__iter__") else str(VALID_MODES),
             "valid_timeframes": list(VALID_TIMEFRAMES)
             if hasattr(VALID_TIMEFRAMES, "__iter__")
