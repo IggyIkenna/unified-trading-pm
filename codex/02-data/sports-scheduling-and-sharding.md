@@ -313,8 +313,8 @@ denormalised onto fixtures by features-sports-service:
 Raw shards                                   Denormalised per-fixture table
 -----------                                  ------------------------------
 sports_reference/
-  by_date/day={D}/entity=fixtures/           fixture_id
-     fixtures.parquet           ─┐           ├─ kickoff_utc, league_id, home, away
+  by_date/day={D}/entity=fixtures/           af_fixture_id
+     fixtures.parquet           ─┐           ├─ timestamp, af_league_id, af_home_id/name, af_away_id/name
                                  │           ├─ home_standing_position_pre (from SFI)
   by_date/day={D}/entity=         │           ├─ away_standing_position_pre (from SFI)
     standings/standings.parquet ─┤           ├─ home_team_value_as_of (from Transfermarkt)
@@ -326,6 +326,15 @@ sports_reference/
     venue={V}/day={D}/           │
     weather.parquet             ─┘
 ```
+
+> **Schema note (2026-04-28)**: `entity=fixtures/fixtures.parquet` is the 32-column flat `SPORTS_FIXTURES`
+> SchemaContract — `af_fixture_id`, `af_league_id`, `af_home_id`, `af_home_name`, `af_away_id`, `af_away_name`,
+> `af_winner_id`, `timestamp`, `date`, score breakdowns, etc. Match-stats (xG, possession, corners, …) live in the
+> sibling `entity=fixture_stats/fixture_stats.parquet` partition. The pre-2024 nested-struct schema (`league = {…}`,
+> `home_team = {…}`, `kickoff_utc`, inline match-stats) was retired by the
+> [sports_fixtures_legacy_schema_migration_2026_04_28](../../plans/active/sports_fixtures_legacy_schema_migration_2026_04_28.plan.md)
+> migration; archived legacy parquets are at `gs://instruments-store-sports-{pid}/sports_reference_v1_archive/` until
+> 2026-05-05 then deleted.
 
 The denormalisation happens at feature-compute time (features-sports-service), not at ingestion. The raw shards stay
 normalised (single source of truth per data class); the feature pipeline owns the join + as-of discipline.
