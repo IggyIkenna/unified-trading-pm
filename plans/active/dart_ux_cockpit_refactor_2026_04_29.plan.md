@@ -45,14 +45,24 @@ supersedes:
       paper-fill simulation in replicate engagement). `freeze=true` honoured across both engagements.
 - [ ] [AGENT] P0. **Phase 9** — Route collapse and cleanup (LAST). Per-page redirects for `/services/trading/**` +
       `/services/observe/**` to cockpit modes; Strategy Catalogue stays distinct.
-- [ ] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
-      `{ visibility, reason, cta, coverageQualifier }`. Every cockpit surface consumes it; raw scope-match is never the
-      visibility decision.
-- [ ] [AGENT] P0. **Phase 1B foundational primitive — Configuration Lifecycle** (§4.8). Ship `StrategyReleaseBundle`
-      (immutable promotion artifact) + `RuntimeOverride` (typed, audited, expiring) + `ExternalSignalStrategyVersion`
-      (Signals-In path) + 12-config-object ownership table + treasury policy/operational split +
-      `AccountConnectivityConfig` layer. Pilot stage added to maturity taxonomy. Lands BEFORE Phase 5 widget metadata
-      (Phase 5 widgets need to know which config object they bind to).
+- [x] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
+      `{ visibility, reason, cta, coverageQualifier }`. Shipped UI commit `aeb16db7` (foundation) alongside the unified
+      `WorkspaceScope`. 18 unit tests passing in
+      `tests/unit/lib/architecture-v2/strategy-availability-resolver.test.ts` cover the eight persona classes (admin /
+      internal-trader / im-desk-operator / dart-full / signals-in / im-client / regulatory / prospect).
+- [x] [AGENT] P0. **Phase 1B foundational primitive — Configuration Lifecycle** (§4.8). Shipped UI commit `a4c990e8`
+      (re-pushed `24a193a8` post-rebase). Five typed primitives + state-machine helpers + guardrail validators:
+      `StrategyReleaseBundle` (immutable promotion artifact, `draft → candidate → approved_for_paper → paper →
+      approved_for_pilot → pilot → approved_for_live → live → monitor → retired` state machine), `RuntimeOverride`
+      (typed discriminated union of 8 override types — `size_multiplier / venue_disable / execution_preset /
+      risk_limit_tightening / treasury_route / pause_entries / exit_only / kill_switch` — with typed guardrail
+      rejection codes), `ExternalSignalStrategyVersion` (Signals-In path with its own state machine + idempotency-by-
+      version-tag helper), `TreasuryPolicyConfig` (versioned, bundles into release bundle) + `TreasuryOperationalConfig`
+      (audited, unversioned), `AccountConnectivityConfig` (CeFi accounts + DeFi wallets + signer profiles + outbound
+      endpoints + `hasCefiAccountsForVenues` / `hasDefiWalletsForProtocols` Promote validation gates). Added `pilot` +
+      `monitor` to `StrategyMaturityPhase`; updated `allowsAllocationCta` to include both. 6 new spec files / 77 tests
+      passing; full vitest sweep 234 files / 2218 tests pass / 2 skipped. 0 typecheck errors. Stubs only — UI lands in
+      Phase 5 / 6 / 7.
 - [ ] [AGENT] P0. **Phase 5 widget vocabulary SSOT** (§4.9). Every `DartWidgetMeta.id` maps 1:1 to a canonical surface
       name from `unified-trading-system-ui/docs/reference/common-tools.md` (30 manual surfaces) or
       `automation-common-tools.md` (18 automated surfaces). Phase 5 ships with a `canonicalSurfaceName` field; v2
