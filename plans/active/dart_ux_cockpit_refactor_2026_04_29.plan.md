@@ -15,8 +15,13 @@ supersedes:
 
 ## Plan-of-record todos (Cursor checkboxes — 9-phase programme)
 
-- [ ] [AGENT] P0. **Phase 1** — Unified workspace scope (`WorkspaceScopeStore` + URL contract + `linkWithScope` + bridge
-      → deprecate → delete legacy stores in 1A/B/C/D). See §17 + §23.
+- [x] [AGENT] P0. **Phase 1** — Unified workspace scope (`WorkspaceScopeStore` + URL contract + `linkWithScope` +
+      legacy-store deletion). Foundation primitives shipped UI commit `aeb16db7`; consumer migration + final deletion
+      shipped `8773a6b6` (75 files / 780 insertions / 1189 deletions). Verified: 0 typecheck errors, 228 vitest files /
+      2141 tests pass, 0 active imports of the deleted modules. New e2e spec at
+      `tests/e2e/playbooks/dart-cockpit/phase-1a-scope-foundation.spec.ts` covers URL hydration + reload persistence +
+      cross-tab restore + §4.3 live-stream safety contract. Live Playwright + MCP Tier-0 walkthrough deferred — they
+      need `npm run dev:mock` which conflicts with the in-flight Tier-0 Firebase dev server. See §17 + §23.
 - [ ] [AGENT] P0. **Phase 2** — Shared `DartScopeBar` rendered on Dashboard, Terminal, Research, Catalogue, Reports,
       Signals; Surface · TerminalMode/ResearchStage · Engagement · ExecutionStream + Share Class chip in primary row.
 - [ ] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·
