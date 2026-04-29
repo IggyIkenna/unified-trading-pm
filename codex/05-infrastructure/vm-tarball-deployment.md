@@ -181,16 +181,32 @@ bash launch-ml-training-vm.sh \
 ```
 1. gcloud compute instances list --filter='name~"<vm-name-prefix>"' --format='table(name,status,creationTimestamp.date())'
 
-2. gsutil cat gs://deployment-scripts-.../vm-logs/<vm-name>/run.log | tail -50
+2. gsutil cat gs://deployment-scripts-.../vm-logs/<vm-name>/EXIT_STATUS
+   (one-line file: "[vm-exec] command exited rc=<N>". Absent ⇒ VM still running OR crashed before
+   vm-exec-with-gcs-tee captured rc. See "Exit codes" below for rc semantics.)
+
+3. gsutil cat gs://deployment-scripts-.../vm-logs/<vm-name>/run.log | tail -50
    (if the GCS log is empty, VM crashed before vm-exec-with-gcs-tee started — check serial console)
 
-3. gcloud compute instances get-serial-port-output <vm-name> --zone=<zone> | tail -100
+4. gcloud compute instances get-serial-port-output <vm-name> --zone=<zone> | tail -100
    (startup-script boot output; look for apt / uv pip install errors, metadata parsing issues)
 
-4. gcloud compute ssh <vm-name> --zone=<zone> --command="tail -50 /home/ikennaigboaka/logs/backfill.log"
-   (local log when GCS log is blocked by IAM)
+5. gcloud compute instances describe <vm-name> --zone=<zone> --format='yaml(metadata.items)'
+   (resolve VM name → workload: VM_START_DATE / VM_END_DATE / VM_TASK / VM_OPERATION /
+   VM_ASSET_GROUP. The launcher injects these; they are the SSOT for what the VM was assigned.)
 
-5. Manifest check (for ingestion VMs):
+6. Kernel-side OOM signal (rc=137 root cause):
+   gcloud logging read 'resource.type="gce_instance"
+       AND labels."compute.googleapis.com/resource_name"=~"<vm-name-prefix>"
+       AND textPayload=~"OOM"' --limit=20 --freshness=4h
+   (systemd OOM-killer messages are kernel-level — they do NOT appear in run.log because
+   atexit / signal handlers don't fire on SIGKILL. Cloud Logging is the only place to see them.)
+
+7. gcloud compute ssh <vm-name> --zone=<zone> --command="tail -50 /home/ikennaigboaka/logs/backfill.log"
+   (local log when GCS log is blocked by IAM, or VM has VM_SHUTDOWN_ON_COMPLETION=false for
+   post-mortem SSH)
+
+8. Manifest check (for ingestion VMs):
    gsutil cp gs://<bucket>/_index/availability_index.parquet /tmp/p.parquet
    python -c "import pandas as pd; df = pd.read_parquet('/tmp/p.parquet'); print(df['capture_status'].value_counts())"
 ```
@@ -198,6 +214,23 @@ bash launch-ml-training-vm.sh \
 Honest-coverage schema v5 (see `02-data/availability-manifest-and-data-status.md`) means every attempted shard has a
 manifest row: `captured` (data written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted,
 raised — with `error_reason` populated).
+
+### Exit codes
+
+The `EXIT_STATUS` file written by `vm-exec-with-gcs-tee.sh` carries the workload's return code. Standard POSIX rc
+semantics — useful subset for diagnosing CeFi / TradFi backfill VMs:
+
+| `rc=` | Cause                                                                                                                                                                                                | Where to look                                                                                                                             |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`   | Clean exit. Workload returned successfully (real backfill done OR future-week skip OR full skip-existing).                                                                                           | `run.log` last 30 lines + `DEPLOYMENT_COMPLETED` event                                                                                    |
+| `1`   | Generic Python exception that escaped the orchestrator.                                                                                                                                              | `run.log` traceback                                                                                                                       |
+| `130` | SIGINT (operator Ctrl-C or `gcloud compute instances stop`).                                                                                                                                         | Operator action — usually intentional                                                                                                     |
+| `137` | **SIGKILL — almost always systemd OOM-killer.** The Python process never gets a signal handler chance, so `atexit` flush + `DEPLOYMENT_FAILED` archive **do NOT fire**. `run.log` ends mid-sentence. | Step 6 above (kernel logs). Then size the next VM via `market_tick_data_service/engine/shard_memory_profile.py::recommended_machine_type` |
+| `143` | SIGTERM (`gcloud compute instances delete` or shutdown initiated).                                                                                                                                   | Cloud Logging instance lifecycle                                                                                                          |
+| `124` | Timeout (script-side `timeout` wrapper exceeded).                                                                                                                                                    | Bump timeout or split shard                                                                                                               |
+
+A rc=137 with no `OOM` line in `run.log` and no `DEPLOYMENT_FAILED` event in the deployment registry is the canonical
+signature of a memory-blown shard — diagnose via kernel logs, not the workload log.
 
 ---
 
@@ -211,19 +244,44 @@ wrapper — not per-launcher one-offs.
 
 ### Three guarantees
 
-1. **Streaming GCS log** — The heartbeat daemon uploads the task log under `/home/ikennaigboaka/logs/<task>.log` to
-   `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log` on a ~30s cadence. Operators inspect
-   progress by re-fetching the object (GCS is not a live `tail -f` stream — diff successive `gsutil cat` pulls).
-   Example: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -50`
+1. **Streaming GCS log + EXIT_STATUS** — The heartbeat daemon uploads the task log under
+   `/home/ikennaigboaka/logs/<task>.log` to `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log`
+   on a ~30s cadence. Operators inspect progress by re-fetching the object (GCS is not a live `tail -f` — diff
+   successive `gsutil cat` pulls). On workload exit, `vm-exec-with-gcs-tee.sh` writes a sibling
+   `gs://.../vm-logs/<vm-name>/EXIT_STATUS` containing one line `[vm-exec] command exited rc=<N>` — the cheapest way to
+   bulk-classify completed VMs without reading every full log. Note: rc=137 (SIGKILL/OOM) **does not produce an
+   EXIT_STATUS file** — the Python process is killed before the wrapper captures rc. Absent EXIT_STATUS + truncated
+   run.log = OOM signature.
 
 2. **Deployment registry** — At boot, the heartbeat CLI emits a REGISTER event; heartbeats every ~60s keep
-   `status=running`; exit archives `DEPLOYMENT_COMPLETED` or `DEPLOYMENT_FAILED`. Query entries via deployment-api:
-   [`vm_deployments.py`](../../../deployment-api/deployment_api/routes/vm_deployments.py) — e.g.
-   `curl -sS 'https://<deployment-api-host>/api/vm-deployments?status=running' | jq`
+   `status=running`; exit archives `DEPLOYMENT_COMPLETED` or `DEPLOYMENT_FAILED`. The registry lives in GCS at
+   `gs://deployment-scripts-central-element-323112/deployments/active/<deployment_id>.json` (live VMs) and
+   `deployments/archive/<YYYY-MM-DD>/<deployment_id>.json` (terminated). Query via deployment-api route
+   [`vm_deployments.py`](../../../deployment-api/deployment_api/routes/vm_deployments.py): e.g.
+   `curl -sS 'https://<deployment-api-host>/api/vm-deployments?status=running' | jq` — the API surface IS the
+   programmatic canonical. The raw GCS JSONs are inspectable but the API is what dashboards consume.
 
 3. **Self-delete on completion** — VM metadata `VM_SHUTDOWN_ON_COMPLETION=true` triggers
    `gcloud compute instances delete --self --delete-disks=all` in a detached subshell after the workload return code is
    captured. Launchers set this by default; omit it only for post-mortem SSH (rare).
+
+### Workload identity — VM metadata keys
+
+The launcher injects identity via GCE instance metadata (visible to the VM as
+`/computeMetadata/v1/instance/attributes/`, visible to operators via
+`gcloud compute instances describe ... --format='yaml(metadata.items)'`). For ingestion VMs:
+
+| Key                             | Meaning                                                 | Example                                                                  |
+| ------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `VM_TASK`                       | Workload identifier — drives setup-script branching     | `cefi-backfill`, `tradfi-backfill`, `mdps-backfill`, `mtds-forward-poll` |
+| `VM_OPERATION`                  | Service CLI `--operation` value                         | `download`, `process`, `forward-poll`                                    |
+| `VM_ASSET_GROUP`                | Service CLI `--asset-group` value (uppercase canonical) | `CEFI`, `TRADFI`, `DEFI`, `SPORTS`, `PREDICTION`                         |
+| `VM_START_DATE` / `VM_END_DATE` | Date range (ISO format) the VM was assigned             | `2020-01-06` / `2020-01-12`                                              |
+| `VM_SHUTDOWN_ON_COMPLETION`     | If `true`, self-delete after rc captured                | `true` (default) / `false` (post-mortem mode)                            |
+| `MANIFEST_PER_VM_SHARDS`        | Legacy flag — should be `true` for all new launchers    | `true`                                                                   |
+
+These metadata keys are the SSOT for "what was this VM assigned to do" — the run.log can be inspected for what it
+_actually_ did, but the metadata says what it was _supposed_ to do.
 
 ### How it works
 
