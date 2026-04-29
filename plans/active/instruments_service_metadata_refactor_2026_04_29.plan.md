@@ -87,16 +87,50 @@ todos:
     status: todo
     blocked_by: phase-1-uac-schema-extension
 
+  - id: phase-2-5-historical-backfill-migration
+    content: |
+      - [ ] [AGENT] P0. Migration script — backfill new DeFi fields onto historical parquets
+        - Files: instruments-service/scripts/migrations/backfill_defi_metadata_2026_04_29.py
+        - Why: Phase 2a/2b adapters emit the new fields going forward, but historical parquets in `gs://instruments-store-defi-{pid}/{venue}/{chain}/date=*/instruments.parquet` were written with all-NULL DeFi metadata columns. MTDS Phase 3 handlers can't consume metadata that doesn't exist. Token decimals, pool fee tiers, pool addresses, contract addresses don't change over time, so a single subgraph snapshot today + a stamper suffices (no need for a full historical instruments-service rerun).
+        - Approach
+          1. Per (venue, chain) pair declared in UAC `SUBGRAPH_IDS`, fetch a single recent subgraph snapshot of the full instrument set with ALL the metadata fields (pool_address / fee_tier / token_a/b_* / atoken / debt_token).
+          2. Build a per-venue lookup map keyed on `instrument_key` -> dict of new field values.
+          3. List every historical parquet under `gs://instruments-store-defi-{pid}/{venue}/{chain}/date=*/instruments.parquet` (use UCS list_objects).
+          4. For each parquet: open as pandas DataFrame, left-merge in the new columns from the lookup map (preserving existing NULL-fill semantics for instruments not in current snapshot — those are delisted), re-upload with same path. Idempotent: re-running is safe.
+          5. Skip parquets that already have the new fields populated (cheap check — read first row's `pool_address` IS NOT NULL).
+        - Constraints
+          - Read-only against subgraph (rate-limit-aware, reuse UAC `get_subgraph_id`).
+          - Write atomically per parquet (download + rewrite + upload; old parquet remains until rewrite completes).
+          - Dry-run flag (`--dry-run`) emits diff summary without uploading.
+          - Per-venue toggle (`--venues UNISWAPV3-ETHEREUM,AAVEV3-ETHEREUM,...`) so we can validate one venue before fanning out.
+        - Tests
+          - Unit: mock subgraph response + mock GCS list/read/write; verify the merge fills the new columns and no other columns are touched.
+          - Integration (operator-cost): dry-run against `central-element-323112` for a single venue (UNISWAPV3-ETHEREUM, 30-day window); diff before/after parquet column NULL-fraction.
+        - Forward verification (separate todo)
+          - After tarball refresh, the next scheduled instruments-service run should write parquets with the new fields populated. Run a one-shot validator that pulls today's parquet and asserts new columns are NOT NULL for at least one row.
+    status: todo
+    blocked_by: phase-2b-uniswap-balancer-curve-adapters
+
+  - id: phase-2-5-forward-verification
+    content: |
+      - [ ] [AGENT] P0. Forward verification — confirm new instruments-service runs write the fields cleanly
+        - File: instruments-service/scripts/migrations/verify_defi_metadata_forward.py
+        - Reads gs://instruments-store-defi-{pid}/{venue}/{chain}/date=YYYY-MM-DD/instruments.parquet for the most recent date, asserts the new fields (pool_address / pool_fee_tier / base_asset_contract_address / base_asset_decimals / base_asset_symbol_onchain / quote_asset_* / atoken_address / debt_token_address) are NOT NULL for at least one row per (venue, chain).
+        - Per-venue scope: `--venues` flag.
+        - Run order: tarball refresh -> wait for next instruments-service scheduled run -> verifier passes -> green-light Phase 3.
+    status: todo
+    blocked_by: phase-2-5-historical-backfill-migration
+
   - id: phase-3-mtds-handler-refactor-dex
     content: |
       - [ ] [AGENT] P0. Refactor dex_pools_handler + dex_swaps_handler to consume instruments-store-defi
         - Files: market-tick-data-service/market_tick_data_service/cli/handlers/{dex_pools,dex_swaps}_handler.py
         - Add `_load_pool_metadata_from_instruments(venue, chain, date)` helper that reads gs://instruments-store-defi-{pid}/{venue}/{chain}/date={D}/instruments.parquet
-        - Use the loaded pool_address + token0/1 + fee_bps for the time-series subgraph query (drop the dynamic discovery part)
+        - Use the loaded pool_address + base_asset/quote_asset_* for the time-series subgraph query (drop the dynamic discovery part)
         - Fallback to subgraph re-query if instruments parquet missing for date (graceful degradation, log warning)
         - Tests: mock GCS read returns N pools, handler queries subgraph time-series only with those addresses
     status: todo
-    blocked_by: phase-2b-uniswap-balancer-curve-adapters
+    blocked_by: phase-2-5-forward-verification
 
   - id: phase-3-mtds-handler-refactor-lending
     content: |
@@ -105,7 +139,7 @@ todos:
         - Same pattern as dex handler refactor
         - Tests: mock GCS read returns N reserves, handler queries indices/liquidation time-series only
     status: todo
-    blocked_by: phase-2a-aave-v3-adapter
+    blocked_by: phase-2-5-forward-verification
 
   - id: phase-4-cohesion-validation
     content: |
@@ -174,11 +208,15 @@ and refactors 4 MTDS handlers (dex_pools, dex_swaps, lending_indices, liquidatio
 ```
 Phase 1 (UAC schema)
     │
-    ├─→ Phase 2a (Aave V3 / Compound V3 / Spark / Morpho adapters) ─┐
+    ├─→ Phase 2a (Aave V3 / Compound V3 / Morpho adapters) ─────────┐
     │                                                                 │
-    ├─→ Phase 2b (Uniswap V2/V3/V4 / Balancer / Curve adapters)  ───┤
+    ├─→ Phase 2b (Uniswap V2/V3/V4 / Balancer / Curve adapters) ────┤
     │                                                                 │
-    └─→ Phase 2c (EigenLayer adapter, P1)                            │
+    └─→ Phase 2c (EigenLayer adapter, P1)                           │
+                                                                      │
+                              Phase 2.5 (migration script — backfill historical parquets)
+                                                                      │
+                              Phase 2.5 (forward verification — confirm next scheduled run writes the fields)
                                                                       │
                                           Phase 3 (MTDS handler refactor — dex + lending)
                                                                       │
@@ -188,6 +226,10 @@ Phase 1 (UAC schema)
                                                                       │
                                                                 Phase 8 (Workspace QG)
 ```
+
+Phase 2.5 is the bridge: Phase 2 adapters emit the new fields going forward, but historical parquets are all-NULL on
+those columns. A migration script (one subgraph snapshot per venue + multi-day stamper) backfills cheaply; without it,
+Phase 3 MTDS handlers would have to fall back to subgraph re-query for any historical date, defeating the refactor.
 
 Phase 6 (oracle_prices / lst_rates skip) and Phase 7 (Phase-2 handlers deferred) run out-of-band — no blocker on this
 plan's main path.
