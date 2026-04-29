@@ -147,7 +147,7 @@ todos:
 
   - id: p0-4-coverage-start-registry
     content: |
-      - [ ] [SCRIPT] P0. Generalise `canonical/domain/sports/league_data.py::SOURCE_COVERAGE_START` pattern
+      - [x] [SCRIPT] P0. Generalise `canonical/domain/sports/league_data.py::SOURCE_COVERAGE_START` pattern
             across asset groups. Per-asset-group `coverage_starts.py` with venue → first-data-date map.
             Seed values to verify against prod manifest min(date) per venue:
               - CeFi: Coinbase 2014-12-08, Kraken 2013-09-10, Binance 2017-08-17, OKX 2017-05-31,
@@ -161,7 +161,7 @@ todos:
 
   - id: p0-5-data-type-capability-registry
     content: |
-      - [ ] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/data_type_capability.py`
+      - [x] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/data_type_capability.py`
             with `DataTypeCapability` dataclass:
               ```
               asset_group: AssetGroup
@@ -183,7 +183,7 @@ todos:
 
   - id: p0-6-schema-spec-registry
     content: |
-      - [ ] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/schema_spec.py`
+      - [x] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/schema_spec.py`
             mapping `(asset_group, data_type) -> SchemaSpec` where `SchemaSpec = list[ColumnSpec]` and
             `ColumnSpec = (name, dtype, nullable, unit, description)`.
             Derive from existing UAC canonical models via reflection (Pydantic `model_fields`).
@@ -197,7 +197,7 @@ todos:
 
   - id: p0-7-qg
     content: |
-      - [ ] [SCRIPT] P0. Per-repo QG green:
+      - [x] [SCRIPT] P0. Per-repo QG green:
               - `cd unified-api-contracts && bash scripts/quality-gates.sh`.
               - `cd market-tick-data-service && bash scripts/quality-gates.sh` (DeFi import shifted to UAC).
               - `cd market-data-processing-service && bash scripts/quality-gates.sh`.
@@ -209,7 +209,7 @@ todos:
 
   - id: p1-1-generator-script
     content: |
-      - [ ] [SCRIPT] P1. Create `unified-api-contracts/scripts/generate_instrument_catalogue.py`. For every
+      - [x] [SCRIPT] P1. Create `unified-api-contracts/scripts/generate_instrument_catalogue.py`. For every
             tuple in `DATA_TYPE_CAPABILITY_REGISTRY`:
               - Read manifest via UTL `read_availability_index(bucket)` (120s freshness fallback baked in).
               - Filter to (venue, data_type, instrument_type, ...) for that tuple.
@@ -240,7 +240,7 @@ todos:
 
   - id: p1-3-wire-into-regen
     content: |
-      - [ ] [SCRIPT] P1. Extend `unified-trading-pm/scripts/dev/regen-catalogue.sh` with a fourth step that
+      - [x] [SCRIPT] P1. Extend `unified-trading-pm/scripts/dev/regen-catalogue.sh` with a fourth step that
             runs the new generator. Upload outputs to
             `gs://strategy-store-cefi-{project_id}/catalogue/instrument/`
             (reuses existing IAM + UI proxy auth path).
@@ -252,7 +252,7 @@ todos:
 
   - id: p2-1-cloud-scheduler
     content: |
-      - [ ] [SCRIPT] P2. Add Cloud Scheduler nightly TF at
+      - [x] [SCRIPT] P2. Add Cloud Scheduler nightly TF at
             `deployment-service/terraform/gcp/instrument_catalogue_scheduler.tf`, mirroring
             `manifest_consolidator_scheduler.tf`. Cadence: `0 2 * * *` (02:00 UTC). Job invokes the
             generator as a Cloud Run Job.
@@ -270,7 +270,7 @@ todos:
 
   - id: p3-1-ui-proxy-client
     content: |
-      - [ ] [SCRIPT] P3. Add `unified-trading-system-ui/app/api/catalogue/instrument/route.ts`
+      - [x] [SCRIPT] P3. Add `unified-trading-system-ui/app/api/catalogue/instrument/route.ts`
             mirroring existing `app/api/catalogue/envelope/route.ts` (5-min server cache, ADC).
             Accepts `?file=instrument-catalogue.json|shard-dynamics.json|instrument-catalogue.md`.
             Add `unified-trading-system-ui/lib/api/instrument-catalogue-client.ts` typed wrapper
@@ -279,7 +279,7 @@ todos:
 
   - id: p3-2-matrix-widget
     content: |
-      - [ ] [SCRIPT] P3. Add primitive `components/widgets/_primitives/coverage-matrix.tsx` extending the
+      - [x] [SCRIPT] P3. Add primitive `components/widgets/_primitives/coverage-matrix.tsx` extending the
             existing FreshnessHeatmap pattern from
             `components/ops/deployment/data-status/build-heatmap-data.ts` with coverage-band shading
             + live-ready / batch-ready badges per cell.
