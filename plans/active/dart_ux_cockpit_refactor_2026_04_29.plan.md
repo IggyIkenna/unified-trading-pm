@@ -37,8 +37,14 @@ supersedes:
       layouts (signals layout NEW). 30 unit tests + 10 e2e tests on dev:mock all pass; 17/17 dart-cockpit e2e
       regression-clean. Chip-editing affordance for asset_group / family / archetype deferred to Phase 5 (current
       bar reads-only).
-- [ ] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·
-      Explain · Ops). Old routes preserved as deep links.
+- [x] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·
+      Explain · Ops). Shipped UI commit `8c6e84af`. New primitives at `lib/cockpit/terminal-modes.ts` (mode enumeration
+      + `terminalModeForPath` longest-prefix resolver + `defaultTerminalMode`) and
+      `components/cockpit/terminal-mode-tabs.tsx` (5-tab primary nav with route-driven active-mode resolution +
+      route → scope auto-sync). Mounted above the existing TradingVerticalNav in `services/trading/layout.tsx` and
+      above OBSERVE_TABS in `services/observe/layout.tsx`. Old routes preserved as deep links — the legacy
+      TRADING_TABS sprawl still renders below the new mode-tabs. 26 unit tests + 6 e2e tests pass; 23/23
+      dart-cockpit e2e regression-clean. Phase 9 retires the legacy per-route pages with redirects.
 - [ ] [AGENT] P0. **Phase 4** — Research IA simplification → six journey stages (Discover · Build · Train · Validate ·
       Allocate · Promote).
 - [ ] [AGENT] P0. **Phase 5** — Scope-reactive widgets via `ScopedDataProvider` + `useScopedData()` + `DartWidgetMeta` +
