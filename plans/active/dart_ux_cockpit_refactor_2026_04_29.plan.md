@@ -38,9 +38,25 @@ supersedes:
 - [ ] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
       `{ visibility, reason, cta, coverageQualifier }`. Every cockpit surface consumes it; raw scope-match is never the
       visibility decision.
+- [ ] [AGENT] P0. **Phase 1B foundational primitive — Configuration Lifecycle** (§4.8). Ship `StrategyReleaseBundle`
+      (immutable promotion artifact) + `RuntimeOverride` (typed, audited, expiring) + `ExternalSignalStrategyVersion`
+      (Signals-In path) + 12-config-object ownership table + treasury policy/operational split +
+      `AccountConnectivityConfig` layer. Pilot stage added to maturity taxonomy. Lands BEFORE Phase 5 widget metadata
+      (Phase 5 widgets need to know which config object they bind to).
+- [ ] [AGENT] P0. **Phase 5 widget vocabulary SSOT** (§4.9). Every `DartWidgetMeta.id` maps 1:1 to a canonical surface
+      name from `unified-trading-system-ui/docs/reference/common-tools.md` (30 manual surfaces) or
+      `automation-common-tools.md` (18 automated surfaces). Phase 5 ships with a `canonicalSurfaceName` field; v2
+      archetype expansion reuses widgets without rename churn.
+- [ ] [AGENT] P0. **Cross-cutting widget conventions** (§4.11). Ten conventions propagated as `DartWidgetMeta`
+      extensions (`freshnessSla`, `nativeUnit`, `drilldownScope`, hotkey contract, audit-on-mutate, replay-time-binding,
+      etc.). Lands alongside Phase 5.
 - [ ] [AGENT] P0. **Layer 2 minimum proof signals** — six irreducible badges (data-freshness pill, last-update
       timestamp, maturity badge, visibility-state badge, demo-data badge, report/reconciliation placeholder link). Built
-      alongside Phases 7-8.
+      alongside Phases 7-8. Add **two more** post-§4.8: **release-bundle audit pill** (current strategy version + active
+      runtime overrides count) and **reproducibility pill** (training data hash known / unknown).
+- [ ] [HUMAN] P1. **v2 archetype-expansion roadmap** (§4.10). Honest framing: v1 = 8 presets covering 6 archetype
+      clusters; v2 names 7 missing archetype presets (Market-Making · Equity LS · Rates · Macro · FX · Energy ·
+      Event-Driven) + Firm-Risk Aggregate Console for David. Not blocking v1.
 - [ ] [HUMAN] P0. **Doc alignment** (§25.A.7) — propagate vocabulary into PM codex (`14-playbooks/dart`,
       `14-playbooks/audiences-and-journeys`, `09-strategy/architecture-v2/*`, `08-workflows/*`, `02-data/*`,
       `GLOSSARY.md`, `00-SSOT-INDEX.md`) + UI-repo docs (`context/AGENT_UI_STRUCTURE.md`, `context/CONTEXT_GUIDE.md`,
@@ -574,6 +590,610 @@ rule:
   - `surface=ops` = the Admin/Ops surface — incidents · audit · deployment · permission management. Lives in `app/(ops)`
     route group. When ambiguous, prefer the Terminal-mode form during demos (most demo personas don't have admin
     entitlement). The `surface=ops` form is reserved for admin / internal-trader / im-desk-operator personas.
+
+### 4.8 Configuration lifecycle — Admin · Research · Promotion · Terminal
+
+DART separates four concerns that the prior plan accidentally collapsed:
+
+- **Scope** decides relevance — what the user is looking at (§4).
+- **`StrategyAvailabilityResolver`** decides visibility — what the user is allowed to see or request (§4.5).
+- **Configuration lifecycle** decides what can be changed, versioned, promoted, accepted, overridden, audited, and
+  reported (this section).
+- **Runtime state** describes what is currently running, paused, failing, overridden, or being explained.
+
+Without §4.8, "promote a strategy to live" remains a config-versions hand-wave; auditors and risk-committee questions
+("what got promoted, when, by whom, with what evidence?") have no answer surface.
+
+**The operating rule (DART Full):**
+
+> If you're in DART Full, the assumption is that you have the full prompt work cycle — research pipeline → version bump
+> on promote → live accepts versioned bundles. You're not changing strategy logic on the fly. The only things that
+> change live without a version bump are operational config (API keys, account setup) and policy-bounded dynamic config
+> (treasury routing, size multiplier, venue disable, execution preset) — and those are typed, audited, and bounded by
+> guardrails set in the bundle.
+
+**The operating rule (Signals-In):**
+
+> Signals-In does not use DART Research to build the strategy — the client has their own research. DART's job is to
+> register external strategy versions, validate signal/instruction compatibility, attach execution / risk / reporting
+> configs, and monitor versioned performance. The client tags their strategy with their own version so new-version
+> performance is comparable across releases (idempotency by version tag).
+
+#### 4.8.1 Twelve configuration object types
+
+Configuration is not one thing. The plan splits it into twelve typed objects, each with a clear owner, version
+discipline, and override scope:
+
+| #   | Config object                 | Example payload                                                                                              | Owner                                                              | Versioned?          | Live override?                                 | Strategy-major-version bump?                  |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------- | ---------------------------------------------- | --------------------------------------------- |
+| 1   | **WorkspaceConfig**           | Which preset / widgets / scope a demo persona sees                                                           | Admin (per-persona)                                                | Lightly versioned   | Yes (the user's own workspace)                 | No                                            |
+| 2   | **PlatformBaselineConfig**    | Venue registry, supported markets, default risk policy, routing defaults                                     | Admin / Ops                                                        | Yes                 | Controlled (admin-only)                        | Usually no                                    |
+| 3   | **AccountConnectivityConfig** | API keys, exchange accounts, wallets, custody, sub-accounts, signers                                         | Admin / Ops + Onboarding                                           | Yes (audited)       | Yes (rotation, no version bump)                | No, unless it changes executable universe     |
+| 4   | **ResearchExperimentConfig**  | Dataset version, feature set, lookback, labels, train/val splits                                             | DART Research                                                      | Yes                 | No (ephemeral until promoted)                  | Yes if promoted                               |
+| 5   | **MLExperimentConfig**        | Model version, hyperparameters, training set hash, feature versions                                          | DART Research / ML                                                 | Yes (semver + hash) | No                                             | Yes if attached to a live strategy            |
+| 6   | **StrategyExperimentConfig**  | Strategy family, archetype, signal logic version, thresholds, universe                                       | DART Research                                                      | Yes                 | No (only via approved override presets)        | Yes                                           |
+| 7   | **ExecutionExperimentConfig** | Algo, order type, slicing, venue routing, slippage assumptions                                               | Research Validate / Execution                                      | Yes                 | Only via approved `execution_preset` overrides | Sometimes                                     |
+| 8   | **RiskConfig**                | Daily-loss limit, drawdown limit, position-size cap, concentration cap                                       | Admin baseline + Research per-experiment                           | Yes                 | Tightening allowed; loosening forbidden live   | Loosening yes; tightening no                  |
+| 9   | **TreasuryPolicyConfig**      | Collateral asset, rebalance threshold, hedge asset, target LTV, share class, yield rotation policy           | Research Allocate + Terminal Command (within guardrails)           | Yes                 | Some parts yes (within bundle guardrails)      | Material policy change yes; bounded change no |
+| 10  | **TreasuryOperationalConfig** | Wallet address, exchange account, custody account, signer permissions, withdrawal limits, settlement account | Admin / Ops                                                        | Yes (audited)       | Yes                                            | No                                            |
+| 11  | **StrategyReleaseBundle**     | Immutable promotion artifact (see §4.8.2)                                                                    | Research Promote (creates) + Approver (signs) + Terminal (accepts) | Immutable snapshot  | No (it IS the release)                         | Each bundle = one strategy version            |
+| 12  | **RuntimeOverride**           | Audited live mutation on top of a running release bundle (see §4.8.3)                                        | Terminal (creates) + Approver (signs if material)                  | Audited, expiring   | Yes (that's the point)                         | Never; overrides do not rewrite the bundle    |
+
+**Critical separation rules:**
+
+- `TreasuryPolicyConfig` (collateral asset, hedge ratio, share class) is **strategy-attached** — it travels in the
+  release bundle, and material changes require a new bundle. Bounded changes (rebalance threshold within bundle-declared
+  range) are `RuntimeOverride`s.
+- `TreasuryOperationalConfig` (wallet address, custody account, withdrawal limits) is **operational** — it never causes
+  a strategy version bump. Rotating an exchange account is an audited admin action, not a research promotion.
+- API key rotation is an `AccountConnectivityConfig` change. Never a strategy version bump.
+
+**Baseline vs ephemeral configuration:**
+
+The 12 config types split orthogonally into two persistence regimes:
+
+- **Baseline configuration** is persistent and reusable. It defines default platform behaviour and is owned mostly by
+  Admin/Ops + Research-setup. Examples: standard execution settings, default venue routing, supported instruments,
+  default risk limits, default treasury policy, share-class defaults, standard slippage model, default report templates,
+  account/connectivity setup.
+- **Ephemeral configuration** is temporary and experiment-specific. It is used inside DART Research but does not become
+  durable unless saved as a named version or included in a `StrategyReleaseBundle`. Examples: testing a 15-min rebalance
+  instead of 5-min, trying a different feature subset, using model v17 instead of v16, simulating passive-only
+  execution, changing a spread threshold for one run, running with Deribit only vs Deribit + CME.
+
+> **Rule:** Ephemeral configs can produce experiment results, but they only become durable when saved as a named config
+> version or included in a release bundle.
+
+This is the discipline that prevents "configuration chaos" — Research can iterate freely on ephemeral configs; nothing
+reaches Terminal until a bundle is built.
+
+#### 4.8.2 `StrategyReleaseBundle` — the immutable promotion artifact
+
+A release bundle is the single thing that flows from Research / Promote → Terminal / Strategies. It packages every
+versioned object that defines what the strategy will do in production, plus the validation evidence that justifies
+promoting it. Live cannot run anything that isn't a bundle.
+
+```ts
+// lib/architecture-v2/strategy-release-bundle.ts (NEW, Phase 1B)
+
+type StrategyReleaseBundle = {
+  releaseId: string; // e.g. "rb-arbitrage-cefi-defi-v3.2.1"
+  strategyId: string;
+  strategyVersion: string; // semver
+
+  // Version pins — every dimension that affects strategy behaviour
+  researchConfigVersion: string;
+  featureSetVersion?: string; // optional for rules-based (non-ML) strategies
+  modelVersion?: string; // optional for rules-based
+  executionConfigVersion: string;
+  riskConfigVersion: string;
+  treasuryPolicyConfigVersion?: string; // optional for non-treasury strategies
+  venueSetVersion: string;
+  instrumentUniverseVersion: string;
+  dataAssumptionVersion: string; // slippage curves, fee schedules, latency model
+  signalSchemaVersion?: string; // for strategies emitting external signals
+  instructionSchemaVersion: string; // wire format strategy → execution-service
+
+  // Routing context — affects which mandate / share class the bundle binds to
+  shareClass?: string;
+  accountOrMandateId?: string;
+
+  // Execution-aware validation evidence (REQUIRED — see §4.8.4)
+  validationRunIds: readonly string[]; // walk-forward, ablation, robustness
+  backtestRunIds: readonly string[]; // execution-aware backtest with this exact bundle
+  paperRunIds?: readonly string[]; // paper run IDs if Pilot stage reached
+  pilotRunIds?: readonly string[]; // pilot run IDs if Live stage reached
+
+  // Promotion lifecycle (aligned with maturity stages: research→paper→pilot→live→monitor→retired)
+  promotionStatus:
+    | "draft"
+    | "candidate"
+    | "approved_for_paper"
+    | "approved_for_pilot"
+    | "approved_for_live"
+    | "live"
+    | "paused"
+    | "monitor"
+    | "retired"
+    | "rolled_back";
+
+  // Override guardrails — explicitly declared at bundle-creation time. Runtime
+  // overrides outside these bounds require re-promotion, not a runtime mutation.
+  runtimeOverrideGuardrails: {
+    sizeMultiplierRange: [number, number]; // e.g. [0.0, 1.0] — can scale down to zero, never up
+    treasuryRebalanceThresholdRange?: [number, number];
+    venueDisableAllowed: boolean;
+    executionPresets: readonly string[]; // approved presets only
+    riskTighteningAllowed: boolean; // always true; loosening always false
+    pauseEntriesAllowed: boolean;
+    exitOnlyAllowed: boolean;
+    treasuryRouteOverridesAllowed: boolean; // route within bundle-declared wallet whitelist
+  };
+
+  // Audit + lineage
+  createdBy: string;
+  createdAt: string; // ISO 8601
+  approvedBy?: string; // for approved_for_* states
+  approvedAt?: string;
+  acceptedByTerminal?: string; // who accepted into Terminal — distinct from approver
+  acceptedAt?: string;
+  retiredBy?: string;
+  retiredAt?: string;
+  rolledBackFromReleaseId?: string; // if this is a rollback target
+
+  // Reproducibility
+  contentHash: string; // hash of all version pins + guardrails
+  lineageHash: string; // hash of upstream data + features + model lineage
+};
+```
+
+**Properties:**
+
+- **Immutable.** Once created, never mutated. State transitions (draft → candidate → approved_for_paper → ...) are
+  separate audit entries, not bundle edits.
+- **Bit-identical reproducibility.** Every version pin is content-hashed; rerun-from-bundle produces the same backtest,
+  the same paper run, the same model.
+- **One bundle = one strategy version.** Promoting a model retrain creates a new bundle. Promoting a feature-set upgrade
+  creates a new bundle. Promoting an execution-config tweak creates a new bundle.
+- **Signals-In bundles use a sibling shape** (see §4.8.5).
+
+#### 4.8.3 `RuntimeOverride` — typed, audited, bounded live mutations
+
+DART Full users do not change strategy logic on the fly. They DO sometimes need to: pause a venue, scale to 50% size,
+switch to a more conservative execution preset, widen hedge tolerance, route treasury from wallet A to wallet B, or flip
+exit-only during a regime event. Those are `RuntimeOverride`s — typed, audited, bounded by the bundle's
+`runtimeOverrideGuardrails`, and never silent.
+
+```ts
+// lib/architecture-v2/runtime-override.ts (NEW, Phase 1B)
+
+type RuntimeOverrideType =
+  | "size_multiplier" // scale strategy size in [0.0, guardrail max]
+  | "venue_disable" // disable a single venue/protocol; bundle re-routes
+  | "execution_preset" // switch to an approved preset (passive / aggressive / conservative)
+  | "risk_limit_tightening" // tighten loss / drawdown / concentration limits
+  | "treasury_route" // route treasury actions to a different whitelisted wallet
+  | "pause_entries" // existing positions hold, no new entries
+  | "exit_only" // existing positions exit on signal flip / time, no new entries
+  | "kill_switch"; // immediate flatten + halt — never bounded; always audited
+
+type RuntimeOverride = {
+  overrideId: string;
+  releaseId: string; // which bundle this override sits on top of
+  scope: WorkspaceScope; // the scope at time of override (for analytics)
+
+  overrideType: RuntimeOverrideType;
+  value: unknown; // typed per overrideType (size: number; venue: string; preset: string; etc.)
+  reason: string; // mandatory free-text reason
+
+  createdBy: string;
+  createdAt: string; // ISO 8601
+  expiresAt?: string; // optional; some overrides auto-revert (e.g. event-window pause)
+
+  requiresApproval: boolean; // true for material overrides (size > 50% reduction, treasury route changes)
+  approvedBy?: string;
+  approvedAt?: string;
+
+  // Audit-pre/post — what the live state was before and after the override
+  preOverrideState: Record<string, unknown>;
+  postOverrideState: Record<string, unknown>;
+  auditEventId: string; // event-sink reference for downstream queries
+};
+```
+
+**Examples (each with strategy-version-bump column for the rule-of-thumb summary):**
+
+| Override                | Meaning                                      |         Strategy version bump?         |
+| ----------------------- | -------------------------------------------- | :------------------------------------: |
+| `size_multiplier`       | Reduce strategy to 50% size                  |                   No                   |
+| `venue_disable`         | Disable Binance or Aave temporarily          |                   No                   |
+| `execution_preset`      | Switch from aggressive to passive execution  | No (preset must be approved on bundle) |
+| `risk_limit_tightening` | Reduce exposure or drawdown limits           |                   No                   |
+| `treasury_route`        | Use approved alternate treasury route        |                   No                   |
+| `pause_entries`         | Stop new entries, allow exits                |                   No                   |
+| `exit_only`             | Allow position reduction only                |                   No                   |
+| `kill_switch`           | Stop strategy immediately, flatten positions |                   No                   |
+
+**Rules:**
+
+- `RuntimeOverride` never rewrites the underlying release bundle. The bundle stays the source of truth; overrides are an
+  additive layer.
+- Explain mode and Reports MUST show both the approved release bundle AND any runtime overrides active during the
+  reporting period. Performance attribution that hides overrides is forbidden.
+- Overrides that exceed bundle guardrails are rejected at write time with the message _"This change exceeds the bundle's
+  override guardrails. Promote a new bundle or contact risk."_
+- `kill_switch` is always allowed regardless of guardrails. Always audited.
+
+#### 4.8.4 Execution-aware validation gate (mandatory before promotion)
+
+> Execution backtest is the natural completion of the chain. At that point you know which algorithms are attached to
+> which instructions, which versions of them, which strategies are being used to generate the instructions, and which ML
+> models (if any) are attached.
+
+That's exactly the bundle. So the promotion gate is:
+
+> **No `StrategyReleaseBundle` can transition to `approved_for_paper` (or any later state) unless the bundle's strategy
+> version, model version, execution config, risk config, treasury policy, venue set, and instruction schema have been
+> validated together in an execution-aware backtest or paper run.**
+
+The validation must know:
+
+- Which signal instruction schema the strategy emits.
+- Which strategy version generates the instruction.
+- Which model version (if any) generates the signal.
+- Which execution algo receives the instruction.
+- Which venue / router handles the order.
+- Which account or paper account is used.
+- What slippage / fill / latency assumptions apply.
+- What risk gates are active.
+- What treasury policy applies (collateral, hedge, share class).
+
+If any of those is unknown or unpinned, the validation cannot be execution-aware and the gate fails.
+
+#### 4.8.5 Signals-In path — `ExternalSignalStrategyVersion`
+
+Signals-In clients bring their own research. DART does not train their models, does not own their feature library, does
+not run their backtests. What DART provides:
+
+- Registers the external strategy with a typed version object.
+- Validates the client's signal payload schema.
+- Maps client instructions onto DART execution / risk / reporting configs.
+- Tags every fill and report with the external version so the client can compare new-version performance to
+  prior-version performance (idempotency by version tag).
+
+```ts
+// lib/architecture-v2/external-signal-strategy-version.ts (NEW, Phase 1B)
+
+type ExternalSignalStrategyVersion = {
+  externalStrategyId: string; // client's identifier
+  externalVersion: string; // client's version tag (semver, hash, or arbitrary string)
+  clientId: string;
+
+  // DART-side schema + mapping versions (assigned by DART, not the client)
+  signalSchemaVersion: string; // DART-assigned schema the client conforms to
+  instructionMappingVersion: string; // how external instructions map to DART execution
+
+  // DART-side configs attached to this external version
+  executionConfigVersion: string;
+  riskConfigVersion: string;
+  treasuryPolicyConfigVersion?: string; // if external strategy uses DART treasury policy
+  reportingTagSetVersion: string; // tags propagated through reports
+
+  // Routing context
+  accountOrMandateId?: string;
+  shareClass?: string;
+
+  // Validation evidence (Signals-In equivalent of bundle validation)
+  validationRunIds: readonly string[]; // schema validation, instruction-mapping verification
+  paperRunIds?: readonly string[]; // paper runs against this external version
+
+  // Lifecycle status — Signals-In needs its own state machine because there is
+  // no Discover/Build/Train. Registration is the entry point, paper validates
+  // schema/mapping, live runs real money. Retirement is explicit.
+  status:
+    | "registered" // client declared a new external version; awaiting validation
+    | "validating" // schema + mapping under validation
+    | "paper" // running on paper to confirm fills + reporting alignment
+    | "approved_for_live"
+    | "live"
+    | "paused"
+    | "retired";
+
+  // Audit
+  registeredBy: string;
+  registeredAt: string;
+  retiredBy?: string;
+  retiredAt?: string;
+};
+```
+
+**Properties:**
+
+- A Signals-In client uploads / declares a new external version → DART creates a new `ExternalSignalStrategyVersion`
+  registration → execution / risk / reporting configs auto-attach (or are explicitly assigned in admin) → fills tag
+  `externalVersion` for downstream attribution.
+- The client never edits their own external version registration through the cockpit. New version = new registration.
+  This is the idempotency / comparability rule.
+- Catalogue does NOT show external strategies in Discover (they are client-private). They DO show in the client's
+  Reality view in Strategies mode.
+
+#### 4.8.6 Configuration ownership by surface
+
+| Config object                 | Admin / Ops               | Research          | Promote               | Terminal                          | Reports                |
+| ----------------------------- | ------------------------- | ----------------- | --------------------- | --------------------------------- | ---------------------- |
+| WorkspaceConfig               | owner                     | reads             | —                     | reads + edits own                 | —                      |
+| PlatformBaselineConfig        | owner                     | reads / defaults  | reads                 | reads                             | reads                  |
+| AccountConnectivityConfig     | owner                     | reads eligibility | validates             | uses                              | audit only             |
+| ResearchExperimentConfig      | —                         | owner             | snapshots into bundle | reads (lineage)                   | lineage                |
+| MLExperimentConfig            | —                         | owner             | snapshots into bundle | reads if live                     | lineage                |
+| StrategyExperimentConfig      | —                         | owner             | snapshots into bundle | runs                              | attribution            |
+| ExecutionExperimentConfig     | baseline owner            | experiment owner  | snapshots into bundle | runs / runtime preset overrides   | TCA                    |
+| RiskConfig                    | baseline owner            | experiment owner  | snapshots into bundle | enforces / tighter overrides only | reports                |
+| TreasuryPolicyConfig          | baseline owner            | experiment owner  | snapshots into bundle | runs / bounded overrides          | reports                |
+| TreasuryOperationalConfig     | owner                     | eligibility only  | validates             | uses                              | audit                  |
+| StrategyReleaseBundle         | audit visibility          | creates candidate | approves              | accepts / runs / rolls back       | reports + lineage      |
+| RuntimeOverride               | policy owner (guardrails) | —                 | —                     | owner                             | shown alongside bundle |
+| ExternalSignalStrategyVersion | owner (registration)      | —                 | validates             | runs                              | tags fills + reports   |
+
+**Reading the table:**
+
+- Research is the only surface that creates promotable bundles. Terminal accepts them.
+- Admin owns demo-workspace, account/connectivity, baseline platform, treasury operational, and the release-bundle
+  approval queue. Admin does not author research configs.
+- Promote (the Research stage) is where bundles are signed. Approval is a typed event, not a chat conversation.
+- Terminal authors `RuntimeOverride`s but never mutates the bundle.
+- Reports must surface bundle + override layer side-by-side; performance attribution that hides overrides is forbidden.
+
+#### 4.8.7 Lifecycle stages — Pilot stage added
+
+The plan's prior stage list (Discover → Build → Train → Validate → Allocate → Promote → Live → Monitor) maps cleanly
+onto the docs' canonical maturity taxonomy with one addition: **Pilot** sits between Paper and Live.
+
+Updated maturity stages (these are `StrategyReleaseBundle.promotionStatus` transitions):
+
+```
+draft → candidate → approved_for_paper → paper → approved_for_pilot → pilot → approved_for_live → live → monitor → retired
+                                                                                                              ↘ rolled_back
+```
+
+- **Paper** — runs on real data, simulated fills only. In-distribution sanity check.
+- **Pilot** — real money, capped at 1–5% of target size. Real slippage / fees / partial fills / venue quirks.
+- **Live** — at full target capital.
+- **Monitor** — running but capped, decay being measured.
+- **Retired** — code archived, bundle non-deployable. Always retrievable via release-bundle registry.
+
+Strategy-architecture maturity-phase taxonomy
+(`smoke / backtest_30d / paper_1d / paper_14d / pilot / live_stable / monitor / retired`) maps onto these states; the
+resolver in §4.5 already keys off it.
+
+**Where each lifecycle stage lives in the cockpit:**
+
+| Lifecycle stage | DART surface(s)                                |
+| --------------- | ---------------------------------------------- |
+| Research        | Research / Discover · Build · Train · Validate |
+| Paper           | Research / Validate + Terminal / Strategies    |
+| Pilot           | Research / Promote + Terminal / Command        |
+| Live            | Terminal / Command · Strategies · Markets      |
+| Monitor         | Terminal / Command · Explain · Ops             |
+| Retired         | Terminal / Strategies + Reports                |
+
+This keeps the plan aligned with the ComsicTrader docs' canonical lifecycle while preserving the existing DART
+research-stage names.
+
+#### 4.8.8 Surface mapping — where each config gets configured
+
+| Surface                            | Config responsibilities                                                                                                                                                                                                                |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Admin / Ops** (`surface=ops`)    | Demo workspace config · persona defaults · entitlements · account / API key setup · venue & protocol registry · baseline risk · baseline execution · treasury operational config · release-bundle approval queue · audit & permissions |
+| **DART Research / Discover**       | Strategy universe browse · candidate strategy selection · data availability                                                                                                                                                            |
+| **DART Research / Build**          | Data config · feature config · instrument-universe scope · dataset versions                                                                                                                                                            |
+| **DART Research / Train**          | ML experiment config · model versions · feature sets · hyperparameter sweeps                                                                                                                                                           |
+| **DART Research / Validate**       | Backtest config · execution-aware simulation config · execution experiment config · drift checks                                                                                                                                       |
+| **DART Research / Allocate**       | Capital · risk · treasury policy · share class · mandate fit · capacity headroom                                                                                                                                                       |
+| **DART Research / Promote**        | Release bundle creation · approval · paper / pilot / live candidate selection · rollback                                                                                                                                               |
+| **DART Terminal / Strategies**     | Accept release bundle · run / pause / promote / roll back                                                                                                                                                                              |
+| **DART Terminal / Command**        | Runtime supervision · `RuntimeOverride` authoring · kill switches                                                                                                                                                                      |
+| **DART Terminal / Explain**        | Compare live vs bundle assumptions · attribution · drift · execution leakage · bundle + active-overrides view                                                                                                                          |
+| **Reports**                        | Client-safe reporting of release · performance · attribution · bundle + override layer · external-version tagging (Signals-In)                                                                                                         |
+| **Signals-In** (`surface=signals`) | External strategy version registration · signal schema validation · instruction mapping · paper / live mapping · versioned performance attribution                                                                                     |
+
+This is the missing config map that turns the cockpit from "nice navigation" into "auditable operating system."
+
+#### 4.8.9 Implementation sequencing
+
+1. **Phase 1B (alongside 1A — `StrategyAvailabilityResolver`):** Ship typed objects for all 12 config layers, the
+   bundle, the override union, the external-version registration. Stub registries in `lib/architecture-v2/`. No UI yet.
+2. **Phase 5:** Widget metadata declares which config object the widget binds to (read or mutate). Mutation widgets
+   require explicit override-permission props.
+3. **Phase 6:** Wizard step 0 (System map) explains the config-lifecycle in one paragraph (no table — the
+   `/help/system-map` page carries the full table).
+4. **Phase 7:** Locked-preview copy tied to bundle approval gates ("Promotion gate locked: needs execution-aware
+   validation evidence").
+5. **Phase 8:** Mock liveness creates fake bundles + fake overrides so demo prospects can see the audit trail populate
+   live.
+6. **Phase 9:** Route collapse moves bundle approval queue to `surface=ops` admin route group; live override authoring
+   stays in Terminal Command.
+
+### 4.9 Widget vocabulary SSOT — canonical surface names
+
+Phase 5 widgets must adopt canonical names from the new ideal-world reference docs at
+[unified-trading-system-ui/docs/reference/](unified-trading-system-ui/docs/reference/) — specifically
+[common-tools.md](unified-trading-system-ui/docs/reference/common-tools.md) (30 manual surfaces) and
+[automation-common-tools.md](unified-trading-system-ui/docs/reference/automation-common-tools.md) (18 automated
+surfaces). Adopting the canonical names now prevents v2 archetype expansion (§4.10) from triggering a widget-rename
+churn.
+
+**Rule:** every `DartWidgetMeta.id` maps 1:1 to a canonical surface name and carries an explicit `canonicalSurfaceName`
+string. Buyer-facing label is free copy; engineering ID is locked to the yardstick.
+
+```ts
+// components/widgets/_registry.ts (Phase 5 extension)
+
+type DartWidgetMeta = {
+  id: string; // matches canonicalSurfaceName by convention
+  canonicalSurfaceName: string; // e.g. "Multi-Timeframe Charting", "Pre-Trade Risk Preview"
+  buyerLabel: string; // e.g. "Live Spreads", "Pre-Trade Check"
+  // ... existing scopePredicate / surfaces / engagements / etc.
+};
+```
+
+**Examples:**
+
+| Plan widget concept           | Canonical surface name (docs)                | Source doc anchor              |
+| ----------------------------- | -------------------------------------------- | ------------------------------ |
+| Chart widget                  | Multi-Timeframe Charting                     | common-tools.md §1             |
+| Order entry / trade builder   | Order Entry Ticket Framework                 | common-tools.md §2             |
+| Pre-trade risk widget         | Pre-Trade Risk Preview                       | common-tools.md §3             |
+| Execution algo selector       | Execution Algos Library                      | common-tools.md §4             |
+| Smart router widget           | Smart Order Router / Multi-Venue Aggregation | common-tools.md §5             |
+| Positions widget              | Positions Blotter                            | common-tools.md §7             |
+| Working orders widget         | Working Orders Blotter                       | common-tools.md §8             |
+| Live P&L widget               | Live PnL Panel                               | common-tools.md §9             |
+| Risk panel                    | Risk Panel (Multi-Axis)                      | common-tools.md §10            |
+| Stress / scenario widget      | Stress / Scenario Panel                      | common-tools.md §11            |
+| Calendar widget               | Catalyst / Event Calendar                    | common-tools.md §12            |
+| Alerts widget                 | Alerts Engine                                | common-tools.md §14            |
+| Heatmap widget                | Heatmap of Own Book                          | common-tools.md §16            |
+| Latency / connectivity widget | Latency / Connectivity / Infra Panel         | common-tools.md §18            |
+| Kill switch                   | Kill Switches (Granular)                     | common-tools.md §19            |
+| Replay widget                 | Replay Tool                                  | common-tools.md §20            |
+| Trade history                 | Trade History / Blotter (Historical)         | common-tools.md §21            |
+| P&L attribution               | PnL Attribution (Multi-Axis)                 | common-tools.md §22            |
+| Equity curve                  | Equity Curve                                 | common-tools.md §24            |
+| Slippage / TCA                | Execution Quality / TCA                      | common-tools.md §25            |
+| Strategy fleet board          | Live Fleet Supervision Console               | automation-common-tools.md §11 |
+| Intervention console          | Intervention Console (incl. manual trading)  | automation-common-tools.md §12 |
+| Promotion gate UI             | Promotion Gates & Lifecycle                  | automation-common-tools.md §9  |
+| Capital allocation widget     | Capital Allocation Engine                    | automation-common-tools.md §10 |
+| Decay tracker                 | Post-Trade & Decay Tracking                  | automation-common-tools.md §13 |
+| Data catalog widget           | Data Layer (catalog / quality / lineage)     | automation-common-tools.md §3  |
+| Feature library widget        | Feature Library                              | automation-common-tools.md §4  |
+| Model registry widget         | Model Registry                               | automation-common-tools.md §6  |
+| Experiment tracker widget     | Experiment Tracker                           | automation-common-tools.md §7  |
+
+**Phase 5 widget catalog must reference these names.** Drift detection in code review: if a new widget uses an ad-hoc
+name not in the docs, reviewer asks "which canonical surface is this? Is it really new, or is it a sub-mode of an
+existing surface?"
+
+### 4.10 v2 archetype-expansion roadmap
+
+The plan's eight v1 presets (Executive Overview · Live Trading Desk · Arbitrage Command · DeFi Yield & Risk · Volatility
+Research Lab · Sports / Prediction Desk · Signals-In Monitor · Research-to-Live Pipeline) cover roughly six of the
+fifteen archetype clusters in [docs/reference/](unified-trading-system-ui/docs/reference/). That is honest v1 scope. v2
+names the remaining seven archetype-cluster presets so marketing, Phase 5 widget metadata, and Phase 6
+PRESET_ARCHETYPE_MAP have a future-target to plan against.
+
+| v2 preset (proposed)            | Archetype cluster     | Doc anchor                                                                                                                          | Strategy backing                                                        | Venue / data prerequisites                                                                     |
+| ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Market-Making Desk**          | Mira (CeFi MM)        | [trader-archetype-mira-market-maker.md](unified-trading-system-ui/docs/reference/trader-archetype-mira-market-maker.md)             | quote engines, adverse-selection monitor, queue position estimator      | sub-100ms feeds; per-venue RTT; quote-engine parameter library                                 |
+| **Equity Long-Short Desk**      | Henry (TradFi equity) | [trader-archetype-henry-equity-long-short.md](unified-trading-system-ui/docs/reference/trader-archetype-henry-equity-long-short.md) | factor models · earnings track records · pair-trade signals             | Refinitiv / Compustat / FactSet; earnings transcripts; insider filings; short-interest archive |
+| **Rates Desk**                  | Ingrid (TradFi rates) | [trader-archetype-ingrid-rates.md](unified-trading-system-ui/docs/reference/trader-archetype-ingrid-rates.md)                       | curve / DV01 / spread / auction                                         | sovereigns + swaps + OIS + repo + auction history; primary-dealer survey                       |
+| **Macro Desk**                  | Rafael (multi-asset)  | [trader-archetype-rafael-global-macro.md](unified-trading-system-ui/docs/reference/trader-archetype-rafael-global-macro.md)         | themes · scenario PnL grids · expression comparison                     | cross-asset feeds; theme-tag system; scenario engine                                           |
+| **FX Desk**                     | Yuki (TradFi FX)      | [trader-archetype-yuki-fx.md](unified-trading-system-ui/docs/reference/trader-archetype-yuki-fx.md)                                 | carry · cross-vol · fixings · NDF · session-aware                       | G10 + EM feeds; CB-meeting calendar; fixing-window markers                                     |
+| **Energy Desk**                 | Theo (TradFi energy)  | [trader-archetype-theo-energy.md](unified-trading-system-ui/docs/reference/trader-archetype-theo-energy.md)                         | calendar spreads · weather · inventory · OPEC                           | EIA / DOE / IEA archives; weather feeds; refinery utilisation; sanctioned-flow tracking        |
+| **Event-Driven Desk**           | Naomi (merger-arb)    | [trader-archetype-naomi-event-driven.md](unified-trading-system-ui/docs/reference/trader-archetype-naomi-event-driven.md)           | deal-as-object · regulatory tracking · NLP-classified merger agreements | SEC EDGAR; court dockets; antitrust precedents; deal corpus                                    |
+| **Firm-Risk Aggregate Console** | David (PM/Risk)       | [trader-archetype-david-pm-risk.md](unified-trading-system-ui/docs/reference/trader-archetype-david-pm-risk.md)                     | cross-trader-fleet aggregation · firm systematic risk                   | reads from all desks' bundles + overrides; firm-level risk budget                              |
+
+**Rule:** v1 ships 8 presets. v2 ships these 7 + a refined Executive Overview that splits into "Allocator" (Elena) +
+"Firm-Risk" (David). Marketing must NOT claim v1 covers all fifteen.
+
+### 4.11 Cross-cutting widget conventions (from docs INDEX)
+
+The new ideal-world docs converge on ten cross-cutting principles every widget should respect. Phase 5 metadata picks
+these up as `DartWidgetMeta` extensions so the cockpit feels like a serious trader terminal, not a webby SaaS dashboard.
+
+| #   | Principle (docs INDEX)                                                            | Convention applied to `DartWidgetMeta`                                                                                                                     | Phase    |
+| --- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 1   | Information density vs. clarity (no decorative chrome)                            | Widget meta declares `defaultDensity: "high" \| "medium" \| "low"`; Replicate engagement defaults higher density than Monitor for the same widget.         | 5        |
+| 2   | Latency-of-glance (<1s for "what's my PnL right now?")                            | `freshnessSla: { decide: "1s", enter: "100ms", learn: "60s" }` per widget; cockpit header surfaces worst-of-row.                                           | 5        |
+| 3   | Spatial memory (persistent layouts, never auto-rearranging)                       | Layout positions saved per `(workspaceId, scope hash, engagement)`; toggling Monitor↔Replicate preserves positions per §4.1.                              | 6        |
+| 4   | Phase-appropriate freshness (Decide=1s; Enter+Hold=sub-100ms; Learn=min)          | `freshnessSla` per phase (above); widgets with miss-SLA freshness render an amber freshness pill.                                                          | 5        |
+| 5   | One source of truth for state (positions on chart = blotter = risk)               | Mutation widgets emit `ScopeChangeEvent` + read-only views of mutating widgets share the same selector hook.                                               | 5        |
+| 6   | Hotkeys for action; mouse for analysis                                            | Cockpit declares `KeyboardContract` per preset; replicate engagement assigns defaults; conflicts surface in `/help/system-map`.                            | 6        |
+| 7   | First-class tagging at order time (strategy / theme / deal / pair / parent-trade) | Replicate order-pad widgets reject submission unless `bundleId` (DART Full) or `externalVersion` (Signals-In) is attached.                                 | 6 / §4.8 |
+| 8   | Multi-leg native execution (atomic-or-nothing)                                    | `executionStream` toggle wraps multi-leg in atomic semantics; partial-fill behaviour declared per leg in widget meta.                                      | 8        |
+| 9   | Risk in trader-native units                                                       | Every risk-class widget declares `nativeUnit: "DV01" \| "delta" \| "vega" \| "fx_basket" \| "notional" \| "stake"`; cockpit refuses unitless risk widgets. | 5        |
+| 10  | Calendar dominates planning                                                       | `Catalyst / Event Calendar` widget is foveal in Markets mode for every preset; event overlays appear inline on charts.                                     | 5        |
+| 11  | Replay capability (single most valuable post-trade tool)                          | `Replay Tool` widget is first-class in Explain mode; binds to scope's `asOfTs`; works in mock + live.                                                      | 8        |
+| 12  | Audit trails non-negotiable                                                       | Every widget that mutates state (creates RuntimeOverride, accepts bundle, etc.) calls `recordAudit()` with pre/post state.                                 | §4.8     |
+| 13  | Aggregation must drill down (no blackbox roll-ups)                                | KPI widgets expose `.drilldown(scope)` returning sub-scope; "click to drill" affordance on every aggregated number.                                        | 5        |
+| 14  | Compliance / counterparty / venue / borrow inline (not sidecar)                   | `Pre-Trade Risk Preview` widget embeds entitlement, venue, and borrow checks inline; sidecar tools forbidden.                                              | 6        |
+
+These conventions land in the `DartWidgetMeta` interface alongside the existing `scopePredicate` / `surfaces` /
+`engagements` / `executionStreams` fields. Phase 5 PR review enforces them.
+
+**Typed metadata extension (Phase 5):**
+
+```ts
+// components/widgets/_registry.ts (Phase 5 extension)
+
+type FreshnessSla = {
+  decide?: "1s" | "5s" | "60s" | "t+1";
+  enter?: "100ms" | "1s" | "5s";
+  hold?: "1s" | "5s" | "60s";
+  learn?: "60s" | "t+1";
+};
+
+type WidgetNativeUnit =
+  | "DV01"
+  | "delta"
+  | "vega"
+  | "gamma"
+  | "fx_basket"
+  | "notional"
+  | "ltv"
+  | "pnl"
+  | "bps"
+  | "stake";
+
+type DartWidgetMeta = {
+  // Identity (§4.9)
+  id: string;
+  canonicalSurfaceName: string;
+  buyerLabel: string;
+  description: string;
+
+  // Surface + foreground mode/stage gating
+  surfaces: Array<"terminal" | "research" | "reports" | "signals" | "ops">;
+  terminalModes?: Array<"command" | "markets" | "strategies" | "explain" | "ops">;
+  researchStages?: Array<"discover" | "build" | "train" | "validate" | "allocate" | "promote">;
+
+  // Engagement + execution gating
+  engagements?: Array<"monitor" | "replicate">;
+  executionStreams?: Array<"paper" | "live">;
+
+  // Filter axes
+  assetGroups?: string[];
+  instrumentTypes?: string[];
+  families?: string[];
+  archetypes?: string[];
+  entitlements?: string[];
+
+  recommendedForPresets?: string[];
+  importance?: "primary" | "secondary" | "supporting";
+  scopePredicate?: (scope: WorkspaceScope) => boolean;
+
+  // §4.11 cross-cutting conventions
+  freshnessSla?: FreshnessSla;
+  nativeUnit?: WidgetNativeUnit;
+  defaultDensity?: "high" | "medium" | "low";
+  supportsReplay?: boolean;
+  supportsDrilldown?: boolean;
+  requiresOrderTags?: boolean; // mutating widgets must have bundle/external-version tag
+  atomicity?: "atomic" | "best_effort" | "legged";
+  hotkeyScope?: string; // e.g. "arbitrage-command", "vol-lab"
+
+  // §4.8 binding — which config object the widget reads/mutates
+  configBinding?: {
+    reads?: readonly string[]; // config object type names
+    mutates?: readonly string[]; // mutation widgets must declare what they mutate
+    requiresOverridePermission?: boolean;
+  };
+};
+```
+
+Phase 5 PR review rejects any widget meta missing `canonicalSurfaceName`. Widgets that mutate state must declare
+`configBinding.mutates`.
 
 ---
 
