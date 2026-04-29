@@ -27,8 +27,16 @@ supersedes:
       (`filterHashBucket` via `lib/utils/filter-hash.ts`), scope survives navigation into `/services/trading/overview`,
       `?stream=live` silently downgrades to `paper` for `client-data-only`, zero console errors across 4 navigations.
       See §17 + §23.
-- [ ] [AGENT] P0. **Phase 2** — Shared `DartScopeBar` rendered on Dashboard, Terminal, Research, Catalogue, Reports,
-      Signals; Surface · TerminalMode/ResearchStage · Engagement · ExecutionStream + Share Class chip in primary row.
+- [x] [AGENT] P0. **Phase 2** — Shared `DartScopeBar` rendered on Dashboard, Terminal, Research, Catalogue, Reports,
+      Signals. Shipped UI commit `769df754`. Component at `components/shell/dart-scope-bar.tsx` + summary helper at
+      `components/shell/dart-scope-bar-summary.ts`. Compact mode = one-line §6 summary; expanded mode = Surface dial
+      (cascades into TerminalMode when surface=terminal / ResearchStage when surface=research) + Engagement +
+      ExecutionStream toggles + active-filter chip readout + Reset button. §4.3 Live confirm dialog fires on
+      Paper → Live for entitled personas; Cancel keeps paper; persona without `execution-full` sees Live as
+      `aria-disabled` with tooltip "Live execution is unavailable on demo accounts." Mounted on dashboard + 6 service
+      layouts (signals layout NEW). 30 unit tests + 10 e2e tests on dev:mock all pass; 17/17 dart-cockpit e2e
+      regression-clean. Chip-editing affordance for asset_group / family / archetype deferred to Phase 5 (current
+      bar reads-only).
 - [ ] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·
       Explain · Ops). Old routes preserved as deep links.
 - [ ] [AGENT] P0. **Phase 4** — Research IA simplification → six journey stages (Discover · Build · Train · Validate ·
