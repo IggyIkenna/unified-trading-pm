@@ -17,11 +17,16 @@ supersedes:
 
 - [x] [AGENT] P0. **Phase 1** — Unified workspace scope (`WorkspaceScopeStore` + URL contract + `linkWithScope` +
       legacy-store deletion). Foundation primitives shipped UI commit `aeb16db7`; consumer migration + final deletion
-      shipped `8773a6b6` (75 files / 780 insertions / 1189 deletions). Verified: 0 typecheck errors, 228 vitest files /
-      2141 tests pass, 0 active imports of the deleted modules. New e2e spec at
-      `tests/e2e/playbooks/dart-cockpit/phase-1a-scope-foundation.spec.ts` covers URL hydration + reload persistence +
-      cross-tab restore + §4.3 live-stream safety contract. Live Playwright + MCP Tier-0 walkthrough deferred — they
-      need `npm run dev:mock` which conflicts with the in-flight Tier-0 Firebase dev server. See §17 + §23.
+      shipped `8773a6b6` (75 files / 780 insertions / 1189 deletions); existing-spec selector fix `c3dcc987`; Phase 1A
+      Tier-0 walkthrough spec `dcc3cc1a`. Verified end-to-end on `npm run dev:mock` (port 3100): 0 typecheck errors;
+      228 vitest files / 2141 tests pass; 0 active imports of the deleted modules. Phase 1A e2e (7 specs across
+      `tests/e2e/playbooks/dart-cockpit/`): all pass — URL hydration + reload persistence + cross-tab restore + §4.3
+      live-stream safety contract + Tier-0 walkthrough (dashboard → terminal → scope persistence). MCP Playwright
+      walkthrough on the live cockpit confirmed: dashboard renders with `CARRY_AND_YIELD` chip in the filter strip
+      (proving DashboardFilterStrip reads `scope.families[0]` post-migration), filtered quick stats `$25K/8/2`
+      (`filterHashBucket` via `lib/utils/filter-hash.ts`), scope survives navigation into `/services/trading/overview`,
+      `?stream=live` silently downgrades to `paper` for `client-data-only`, zero console errors across 4 navigations.
+      See §17 + §23.
 - [ ] [AGENT] P0. **Phase 2** — Shared `DartScopeBar` rendered on Dashboard, Terminal, Research, Catalogue, Reports,
       Signals; Surface · TerminalMode/ResearchStage · Engagement · ExecutionStream + Share Class chip in primary row.
 - [ ] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·

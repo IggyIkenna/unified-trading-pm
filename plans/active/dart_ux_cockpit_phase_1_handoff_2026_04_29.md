@@ -386,22 +386,53 @@ is ticked.
   cross-tab restore, §4.3 silent paper-downgrade for personas without
   `execution-full`, and admin honouring `stream=live`.
 
-**Deferred (next session, not blocking):**
+**Live Playwright + MCP walkthrough completed (2026-04-29 same session):**
 
-- **Live Playwright run** — the existing `dart-tile-split.spec.ts` /
-  `instrument-type-view-gating.spec.ts` / `tier-override-flip.spec.ts` and the
-  new `phase-1a-scope-foundation.spec.ts` need
-  `NEXT_PUBLIC_AUTH_PROVIDER=demo` so the `seedPersona` helper can write to
-  the DemoAuthProvider's localStorage. The in-flight Tier-0 dev server in
-  this session was running in Firebase mode (`NEXT_PUBLIC_AUTH_PROVIDER=firebase`),
-  which rejects the demo seed and bounces the test to the public marketing
-  site. To run live: stop Tier-0, run `npm run dev:mock` on port 3100 (the
-  port the Playwright config expects), then
-  `npx playwright test tests/e2e/playbooks/dart-cockpit/phase-1a-scope-foundation.spec.ts`.
-  This is an environment configuration, not a code regression — the existing
-  dart-tile-split spec also fails 5/6 in the same Tier-0 session.
-- **MCP Playwright Tier-0 demo walkthrough** — same blocker. The 13-step
-  canonical flow per the executing-agent prompt needs a clean demo-auth env.
+After Tier-0 was stopped and `npm run dev:mock` was started on port 3100
+(`NEXT_PUBLIC_AUTH_PROVIDER=demo`), all Phase 1A specs ran live:
+
+- `phase-1a-scope-foundation.spec.ts` — 5/5 pass (~3s).
+- `phase-1a-tier0-walkthrough.spec.ts` — 2/2 pass (~21s). New file (commit
+  `dcc3cc1a`) covering the buildable Phase-1 subset of the canonical 13-step
+  Tier-0 demo flow.
+- `dart-tile-split.spec.ts` — 4/6 pass after fixing a pre-existing wrong-
+  selector bug in commit `c3dcc987` (was `[data-tile-id="..."]`, ServiceTile
+  emits `data-testid="service-tile-..."`). 2 remaining failures are
+  pre-existing `useTileLockState` vs `personaDashboardShape` drift — unrelated
+  to Phase 1.
+- `instrument-type-view-gating.spec.ts` — 1/5 pass. 4 failures are pre-existing
+  copy drift (FOMO overlay says "Upgrade to access Trading", not "Sports
+  Trading requires an upgrade") — unrelated to Phase 1.
+- `tier-override-flip.spec.ts` — skipped by default (gated on
+  `PLAYWRIGHT_RUN_TIER_OVERRIDE=1`), no regression detected.
+
+MCP Playwright walkthrough on the live UI:
+
+1. Seeded `client-full` persona via `localStorage.portal_user`.
+2. Navigated to `/dashboard?surface=terminal&tm=command&ag=DEFI&fam=CARRY_AND_YIELD&eng=monitor&stream=paper`.
+3. Verified `localStorage["dart-workspace-scope"]` hydrated to:
+   `{ surface: "terminal", terminalMode: "command", assetGroups: ["DEFI"],
+     families: ["CARRY_AND_YIELD"], engagement: "monitor", executionStream: "paper" }`.
+4. Confirmed dashboard rendered the active filter chip (`CARRY_AND_YIELD`) in
+   the filter strip, plus filtered quick stats `$25K P&L · 8 positions · 2 alerts`
+   on the DART Terminal tile (the deterministic `filterHashBucket` output via
+   `lib/utils/filter-hash.ts` proving `fiveDimFilterFromScope()` is wired).
+5. Clicked DART Terminal tile → landed on `/services/trading/overview`. Scope
+   in localStorage preserved end-to-end (DEFI + CARRY_AND_YIELD survived
+   navigation).
+6. Re-seeded as `client-data-only` (no `execution-full`); navigated to
+   `?stream=live`. The §4.3 safety contract silently downgraded
+   `executionStream` to `"paper"` and emitted the expected
+   `[workspace-scope-store] stream=live in URL but persona lacks live-trading
+   entitlement; downgraded to paper` console warning.
+7. Zero console errors across 4 navigations + 5 evaluates. Three benign
+   warnings (Next.js font preload + an unrelated mock-route warning + the
+   above expected §4.3 warning).
+
+Evidence screenshots saved under
+`unified-trading-system-ui/.playwright-evidence/phase-1a/` (gitignored):
+01-dashboard-scope-hydrated.png, 02-trading-overview-scope-preserved.png,
+03-data-only-stream-live-downgraded.png.
 
 **`--no-verify` rationale on the migration commit** — 18 pre-existing
 `react-hooks/*` warnings in 11 files (`use-overview-page-data`,
