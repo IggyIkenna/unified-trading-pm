@@ -1,6 +1,6 @@
 # Active Plans Index
 
-**Last Updated:** 2026-04-25 (shard dimension SSOT plan added)
+**Last Updated:** 2026-04-29 (instrument catalogue + availability matrix plan added)
 
 This is the canonical index of all active plans. Plans are organized by domain.
 
@@ -20,6 +20,13 @@ This is the canonical index of all active plans. Plans are organized by domain.
   `category=` path segments out of scope). **Decision record:**
   `codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md`. Depends on venue-axis
   vocabulary plan.
+- [instrument_catalogue_availability_matrix_2026_04_29.plan.md](instrument_catalogue_availability_matrix_2026_04_29.plan.md)
+  — Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
+  live/batch capability per `(asset_group × data_type × venue × instrument_type)`) with **live availability-manifest
+  aggregation** (capture_status → coverage %). Publishes `instrument-catalogue.{json,md}` + `shard-dynamics.json`
+  nightly to `gs://strategy-store-cefi-{pid}/catalogue/instrument/`. New UI matrix widget cross-links existing
+  data-status drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC
+  (sports already SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
 
 ---
 

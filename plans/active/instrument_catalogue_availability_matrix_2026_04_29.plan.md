@@ -1,0 +1,388 @@
+---
+name: instrument-catalogue-availability-matrix
+overview:
+  Single artefact (instrument-catalogue.json + shard-dynamics.json + instrument-catalogue.md) joining static
+  shard-dynamics SSOT (bucket → partition layout → schema → coverage-start → retention/cutoff → live/batch capability)
+  with live availability-manifest aggregation (capture_status counts → coverage %) per (asset_group × data_type × venue
+  × instrument_type) tuple. Published nightly to GCS catalogue prefix; consumed by a new UI matrix widget that
+  cross-links existing data-status drilldown.
+type: mixed
+epic: epic-code-completion
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-04-29
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+repo_gates:
+  - repo: unified-api-contracts
+    code: C0
+    deployment: none
+    business: none
+  - repo: market-tick-data-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: market-data-processing-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+  - repo: deployment-service
+    code: C0
+    deployment: D0
+    business: none
+  - repo: unified-trading-system-ui
+    code: C0
+    deployment: none
+    business: none
+
+depends_on:
+  # Sports gcs_paths.py + league_data SOURCE_COVERAGE_START — referenced as the SSOT template; if the
+  # shard-dimension naming SSOT lands first, P0.2 picks up the canonical AssetGroup type from there.
+  - shard_dimension_naming_asset_group_ssot_2026_04_25
+  - venue_axis_asset_group_vocabulary_2026_04_25
+
+todos:
+  # ──────────────────────────────────────────────────────────────────────
+  # PHASE 0 — UAC SSOT unification (SEQUENTIAL — blocks P1+)
+  # ──────────────────────────────────────────────────────────────────────
+
+  - id: p0-1-pm-active-plan
+    content: |
+      - [x] [SCRIPT] P0. Create this PM active plan file at
+            `unified-trading-pm/plans/active/instrument_catalogue_availability_matrix_2026_04_29.plan.md`,
+            mirroring the Claude plan at `~/.claude/plans/i-guess-we-can-jazzy-eagle.md`. Add link to
+            `plans/active/INDEX.md` under "Cross-cutting SSOT" section.
+    status: done
+
+  - id: p0-2-bucket-naming-ssot
+    content: |
+      - [x] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/canonical/gcs_paths.py` +
+            facade `unified_api_contracts/gcs_paths.py` exporting:
+              - `BUCKET_TEMPLATES_BY_ASSET_GROUP_KIND: dict[(AssetGroup, BucketKind), str | None]` —
+                covering all 5 asset_groups × 2 kinds.
+                Wire-format SSOT verified against
+                `deployment-service/terraform/gcp/main.tf` lines 308-471:
+                  - instruments: `instruments-store-{ag_lower}-{pid}` (TRADFI = None).
+                  - market_data: `market-data-tick-{ag_lower}-{pid}`.
+              - `bucket_name(asset_group, project_id, kind="instruments", test_mode=False)` immediate resolver.
+              - `bucket_template(asset_group, kind="instruments", test_mode=False)` lazy-template resolver
+                (keeps `{project_id}` placeholder for callers like MDPS dependency_checker that resolve
+                at lookup time).
+              - `strategy_store_bucket(project_id)` for catalogue artefacts (single bucket regardless of ag).
+              - `sports_bucket_name` parity wrapper.
+            Update consumers (1 of 2 done — see follow-up below):
+              - `unified-api-contracts/scripts/enumerate_strategy_instruments.py` lines 53-61 →
+                import from new module, drop the duplicated dict. **DONE 2026-04-29**.
+            Coverage: `tests/unit/test_gcs_paths_facade.py` — 7 cases including TRADFI-None
+            exception, test_mode suffix splice, lazy-template placeholder preservation.
+    status: done
+
+  - id: p0-2b-mdps-bucket-import-followup
+    content: |
+      - [ ] [SCRIPT] P0.2 follow-up. Migrate `market-data-processing-service/.../app/core/dependency_checker.py`
+            to import from `unified_api_contracts.gcs_paths`. Three dict ClassVars to convert:
+              - `OUTPUT_BUCKETS` / `OUTPUT_BUCKETS_TEST` → derive via `bucket_template(ag, kind=MARKET_DATA, test_mode=...)`.
+              - `UPSTREAM_DEPS_BY_CATEGORY` / `UPSTREAM_DEPS_BY_CATEGORY_TEST` (sports/prediction overrides) →
+                same shape derivation.
+              - `UPSTREAM_DEPS` / `UPSTREAM_DEPS_TEST` use a generic `{asset_group_lower}` placeholder for
+                lazy-resolve by the BaseDependencyChecker framework — these stay literal strings (or UAC
+                exposes a generic-shape template helper if we want zero duplication; defer the API design).
+            Skipped from initial P0.2 because MDPS has ~20 unrelated in-flight files from concurrent agents
+            (live-defi-rollout, 2026-04-29) and isolate-commit hygiene was the priority.
+    status: todo
+
+  - id: p0-3-partition-layout-ssots
+    content: |
+      - [ ] [SCRIPT] P0. Per-asset-group partition layout SSOTs in UAC, mirroring the existing
+            `canonical/domain/sports/gcs_paths.py` shape (`SportsPathLayout` enum + layout dict +
+            `candidate_parquet_paths` builder):
+              - Create `canonical/domain/cefi/gcs_paths.py` — source layout patterns from MTDS adapters at
+                `market_tick_data_service/market_interface/adapters/{binance,deribit,...}/`.
+              - Move `build_defi_partition_path` from
+                `market-tick-data-service/.../adapters/defi/canonical_write.py` (lines 71-91) into
+                `canonical/domain/defi/gcs_paths.py`. Same signature, same key ordering
+                (`day` / `asset_group=defi` / `venue` / `chain` / `instrument_type` / `data_type`).
+                Update MTDS to import from UAC.
+              - Create `canonical/domain/tradfi/gcs_paths.py` — sourced from
+                `fred_adapter.py`, `databento_opra_converter.py`, `tardis_adapter.py`. Note: TradFi has
+                no instruments bucket today; market_data layout only.
+              - Create `canonical/domain/prediction/gcs_paths.py` — `condition_id` partition convention
+                from MTDS prediction adapters.
+              - Surface a unified facade `unified_api_contracts.gcs_paths` re-exporting per-asset-group
+                helpers + `candidate_parquet_paths(asset_group, data_type, day, **kwargs)` dispatcher.
+    status: todo
+
+  - id: p0-4-coverage-start-registry
+    content: |
+      - [ ] [SCRIPT] P0. Generalise `canonical/domain/sports/league_data.py::SOURCE_COVERAGE_START` pattern
+            across asset groups. Per-asset-group `coverage_starts.py` with venue → first-data-date map.
+            Seed values to verify against prod manifest min(date) per venue:
+              - CeFi: Coinbase 2014-12-08, Kraken 2013-09-10, Binance 2017-08-17, OKX 2017-05-31,
+                Bybit 2018-11-21, Deribit 2016-06-13, Hyperliquid 2023-06-29, Bitfinex 2013-04-30.
+              - DeFi: Uniswap V2 2020-05-04, V3 2021-05-05, Aave V2 2020-12-01, V3 2022-03-16,
+                Curve 2020-01-19, Balancer 2021-05-13.
+              - TradFi: FRED DGS series 1962-01-02, OPRA 2003-01-13.
+              - Prediction: Polymarket 2020-06-12, Kalshi 2021-07-19, Manifold 2022-01-01.
+            Add `coverage_start(asset_group, source_key) -> date | None` lookup to UAC root facade.
+    status: todo
+
+  - id: p0-5-data-type-capability-registry
+    content: |
+      - [ ] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/data_type_capability.py`
+            with `DataTypeCapability` dataclass:
+              ```
+              asset_group: AssetGroup
+              data_type: str
+              venue: str
+              instrument_type: str | None
+              live_capable: bool          # WS feed exists
+              batch_capable: bool         # REST / parquet snapshot exists
+              streaming_protocol: str | None  # "ws" | "fix" | "sse" | None
+              requires_credentials: bool
+              ttm_cutoff_days: int | None       # options: ignore expiries beyond this
+              liquidity_cutoff_usd: float | None  # ignore instruments below this 24h volume
+              retention_days: int | None        # rolling-window cutoff
+              notes: str | None
+              ```
+            Populate from MTDS adapter capability properties + features-derivatives-service cutoff defs.
+            Each entry carries a `# source:` comment with the file the row was sourced from.
+    status: todo
+
+  - id: p0-6-schema-spec-registry
+    content: |
+      - [ ] [SCRIPT] P0. Create `unified-api-contracts/unified_api_contracts/registry/schema_spec.py`
+            mapping `(asset_group, data_type) -> SchemaSpec` where `SchemaSpec = list[ColumnSpec]` and
+            `ColumnSpec = (name, dtype, nullable, unit, description)`.
+            Derive from existing UAC canonical models via reflection (Pydantic `model_fields`).
+            Hand-write where models are too dynamic. Sources:
+              - `CanonicalTicker`, `CanonicalTrade`, `CanonicalOrderBook`, `CanonicalFundingRate`,
+                `CanonicalLiquidation`, `CanonicalDerivativeTicker`, `CanonicalOraclePrice`,
+                `CanonicalStakingRate`.
+              - Sports: `Fixture`, `Event`, `Odds`, `ArbitrageRow`.
+              - Prediction: `Market`, `Outcome`.
+    status: todo
+
+  - id: p0-7-qg
+    content: |
+      - [ ] [SCRIPT] P0. Per-repo QG green:
+              - `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+              - `cd market-tick-data-service && bash scripts/quality-gates.sh` (DeFi import shifted to UAC).
+              - `cd market-data-processing-service && bash scripts/quality-gates.sh`.
+    status: todo
+
+  # ──────────────────────────────────────────────────────────────────────
+  # PHASE 1 — Catalogue generator (depends on P0)
+  # ──────────────────────────────────────────────────────────────────────
+
+  - id: p1-1-generator-script
+    content: |
+      - [ ] [SCRIPT] P1. Create `unified-api-contracts/scripts/generate_instrument_catalogue.py`. For every
+            tuple in `DATA_TYPE_CAPABILITY_REGISTRY`:
+              - Read manifest via UTL `read_availability_index(bucket)` (120s freshness fallback baked in).
+              - Filter to (venue, data_type, instrument_type, ...) for that tuple.
+              - Compute expected denominator (generalised sports clip): `coverage_start(...)` to today,
+                clipping pre-launch dates.
+              - Compute coverage_pct = (captured + empty_confirmed) / expected_dates (honest-coverage).
+              - latest_captured = max(date) where capture_status == captured.
+              - live_ready = capability.live_capable AND latest_captured >= today - 1d.
+              - batch_ready = capability.batch_capable AND coverage_pct >= 0.9.
+              - retry_needed = any capture_status == attempted_failed.
+            Emit 3 outputs:
+              - `instrument-catalogue.json` — drilldown-friendly, keyed by canonical tuple.
+              - `shard-dynamics.json` — pure static spec; deterministic from UAC (no manifest data).
+              - `instrument-catalogue.md` — human matrix grouped by asset_group → data_type → venue with
+                🟢 ≥90% / 🟡 50–90% / 🔴 <50% / ⚪ no-data band emoji + live-ready / batch-ready badges.
+    status: todo
+
+  - id: p1-2-tests
+    content: |
+      - [ ] [SCRIPT] P1. Create `unified-api-contracts/tests/test_instrument_catalogue_generator.py` with
+            3 manifest fixture cases:
+              - FULL coverage tuple (every expected day captured) → coverage_pct == 1.0; readiness bools
+                True if capability says so.
+              - PARTIAL tuple (mix of captured + empty_confirmed + attempted_failed) → coverage clipped
+                at expected denominator; retry_needed=True.
+              - All-attempted_failed tuple → coverage_pct == 0.0; both readiness bools False.
+    status: todo
+
+  - id: p1-3-wire-into-regen
+    content: |
+      - [ ] [SCRIPT] P1. Extend `unified-trading-pm/scripts/dev/regen-catalogue.sh` with a fourth step that
+            runs the new generator. Upload outputs to
+            `gs://strategy-store-cefi-{project_id}/catalogue/instrument/`
+            (reuses existing IAM + UI proxy auth path).
+    status: todo
+
+  # ──────────────────────────────────────────────────────────────────────
+  # PHASE 2 — Refresh job
+  # ──────────────────────────────────────────────────────────────────────
+
+  - id: p2-1-cloud-scheduler
+    content: |
+      - [ ] [SCRIPT] P2. Add Cloud Scheduler nightly TF at
+            `deployment-service/terraform/gcp/instrument_catalogue_scheduler.tf`, mirroring
+            `manifest_consolidator_scheduler.tf`. Cadence: `0 2 * * *` (02:00 UTC). Job invokes the
+            generator as a Cloud Run Job.
+            IAM bindings:
+              - generator SA: `roles/storage.objectViewer` on every `instruments-store-{ag}-*` and
+                `market-tick-data-{ag}-*` bucket.
+              - generator SA: `roles/storage.objectCreator` on `strategy-store-cefi-*`.
+            Operator note: cron simpler; alternative is to extend `manifest-consolidator-daemon` to
+            regenerate every 60 minutes after the manifest pass. Default cron unless freshness <24h needed.
+    status: todo
+
+  # ──────────────────────────────────────────────────────────────────────
+  # PHASE 3 — UI consumer
+  # ──────────────────────────────────────────────────────────────────────
+
+  - id: p3-1-ui-proxy-client
+    content: |
+      - [ ] [SCRIPT] P3. Add `unified-trading-system-ui/app/api/catalogue/instrument/route.ts`
+            mirroring existing `app/api/catalogue/envelope/route.ts` (5-min server cache, ADC).
+            Accepts `?file=instrument-catalogue.json|shard-dynamics.json|instrument-catalogue.md`.
+            Add `unified-trading-system-ui/lib/api/instrument-catalogue-client.ts` typed wrapper
+            exporting TS types matching the JSON envelope.
+    status: todo
+
+  - id: p3-2-matrix-widget
+    content: |
+      - [ ] [SCRIPT] P3. Add primitive `components/widgets/_primitives/coverage-matrix.tsx` extending the
+            existing FreshnessHeatmap pattern from
+            `components/ops/deployment/data-status/build-heatmap-data.ts` with coverage-band shading
+            + live-ready / batch-ready badges per cell.
+            Add widget `components/widgets/data-quality/instrument-catalogue-widget.tsx` consuming the
+            primitive + the API client. Register in:
+              - DART terminal default preset layout (no-orphan rule).
+              - Ops admin data-status page.
+            Cross-link existing FreshnessHeatmap onto the new matrix widget (drilldown).
+    status: todo
+
+  - id: p3-3-tests-smoke
+    content: |
+      - [ ] [SCRIPT] P3. Vitest harness for the new widget: mock-mode renders all 5 asset_group rows;
+            coverage bands display correctly; live/batch badges render.
+            Mock fixtures in `lib/api/mock-handler.ts` for `/api/catalogue/instrument`.
+            Playwright: ops admin → data-status page → widget renders; click a tuple → drill-down to
+            existing data-status routes round-trips.
+    status: todo
+
+isProject: false
+---
+
+# Instrument Catalogue + Availability Matrix SSOT
+
+## Why this change
+
+The Unified Trading System has manifest infrastructure that knows what every VM has actually written
+(`_index/availability_index.parquet` per asset_group bucket, daemon-refreshed every 60s, with `capture_status` ∈
+`{captured, empty_confirmed, attempted_failed}`). It has a strategy catalogue (DART envelope.{md,json}) generated
+nightly. What it does NOT have is a single artefact that joins **what the system can capture in principle** (static
+shard-dynamics: bucket → partition layout → file grouping → schema columns → coverage-start dates → retention/cutoff
+rules → live-vs-batch capability) with **what it has captured in practice** (manifest aggregation: % backfilled per
+tuple).
+
+The need surfaced asking "for any asset group × data type × venue, where is the data, what's its shape, how complete is
+it, and is it live-ready?" — there is no human-readable matrix or AI-consumable JSON answering that.
+
+## What ships
+
+A catalogue artefact set published nightly to GCS:
+
+- `instrument-catalogue.json` — keyed by
+  `(asset_group, data_type, venue, instrument_type, [league_id|chain|condition_id])` tuple; per-tuple: bucket path,
+  partition layout, schema column list, coverage %, captured-day-count, empty-confirmed-day-count,
+  attempted-failed-day-count, latest-captured-day, live-ready bool, batch-ready bool, expected-denominator (clipped to
+  `coverage_start`).
+- `shard-dynamics.json` — pure static spec dump (no manifest data; deterministic from UAC). Useful for adapter authors +
+  AI agents reasoning about layout without GCS access.
+- `instrument-catalogue.md` — human matrix grouped by asset_group → data_type → venue with ≥90% / 50–90% / <50% colour
+  bands and live-ready / batch-ready badges.
+
+## Hard constraints
+
+1. **Static spec lives in UAC** — not MTDS, not deployment-api scripts. Sports already does this
+   (`canonical/domain/sports/gcs_paths.py` + `league_data.py::SOURCE_COVERAGE_START`); other asset groups mirror that
+   pattern.
+2. **Generator reuses existing manifest reader** (`read_availability_index` from UTL with 120s freshness fallback to
+   per-VM shards). No new manifest infra.
+3. **Refresh piggybacks on existing patterns** — Cloud Scheduler nightly mirroring DART catalogue regen TF. Operator may
+   instead extend the manifest-consolidator daemon; cron is simpler default.
+4. **Output published to existing strategy-store catalogue bucket** at
+   `gs://strategy-store-cefi-{pid}/catalogue/instrument/` (reuses existing IAM + UI proxy auth).
+5. **No orphans** — new UI widget registers in DART terminal preset layout AND ops admin data-status page; cross-links
+   from existing `FreshnessHeatmap`.
+6. **Sports + TradFi keying exception** — sports uses single-bucket-many-leagues; TradFi has no instruments bucket today
+   (UAC universe registry). Generator handles per-asset-group keying differences explicitly.
+
+## Audit summary (Phase 1 explores, 2026-04-29)
+
+| Component                        | State today                                                                                                                         | Action                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Bucket naming                    | Sports has UAC SSOT (`sports_bucket_name`); others duplicated in `enumerate_strategy_instruments.py` + MDPS `dependency_checker.py` | Centralise in UAC `canonical/gcs_paths.py`     |
+| Partition layout                 | Sports SSOT; DeFi in MTDS (`canonical_write.py::build_defi_partition_path`); CeFi/TradFi/Prediction inline-hardcoded                | Per-asset-group `gcs_paths.py` modules in UAC  |
+| Schema columns                   | UAC `canonical/domain/` Pydantic / dataclass models                                                                                 | New `registry/schema_spec.py` reflecting these |
+| Coverage start dates             | Sports SSOT (`SOURCE_COVERAGE_START`); zero coverage for crypto / tradfi / prediction                                               | Per-asset-group `coverage_starts.py` modules   |
+| Live-vs-batch capability         | Framework exists (`registry/capability.py::OperationDetail`), no `(data_type × venue)` matrix                                       | New `registry/data_type_capability.py`         |
+| Manifest reader                  | Solid — `read_availability_index(bucket)` with 120s freshness fallback                                                              | Reuse as-is                                    |
+| Manifest consolidator daemon     | Solid — Cloud Run Job at `*/1 * * * *` per bucket (10 buckets total)                                                                | Reuse as-is                                    |
+| Strategy catalogue regen pattern | Solid — `regen-catalogue.sh` → 4 files → GCS → UI `/api/catalogue/envelope` proxy                                                   | Extend, don't fork                             |
+| Data-status routes               | 4 routes in `deployment-api/.../routes/data_status.py`                                                                              | Cross-link from new widget; do not duplicate   |
+| Coverage % computation           | Sports: `clip_dates_to_source_coverage` + `_sports_expected_dates_for_league`; non-sports: raw calendar                             | Generalise in generator                        |
+| Existing UI heatmap              | `components/ops/deployment/data-status/build-heatmap-data.ts` (FreshnessHeatmap)                                                    | Cross-link drilldown                           |
+
+## Execution DAG
+
+```
+P0 (UAC SSOT unification — SEQUENTIAL)
+  └─> P1 (generator — depends on P0)
+        ├─> P2 (refresh job)
+        └─> P3 (UI consumer)
+```
+
+P0 is the lift; everything after is mechanical once the spec lands. P2 and P3 may run in parallel after P1.
+
+## Verification
+
+1. Per-repo QG green for: UAC, MTDS, MDPS, deployment-api, deployment-service, unified-trading-system-ui.
+2. Generator deterministic on fixed manifest fixture; coverage % matches hand computation.
+3. Tier-2 boot consumes real GCS catalogue; matrix renders; live/batch badges respect capability registry.
+4. Spot-check known tuples: `(CEFI, klines, BINANCE, perpetual)` → 🟢 + live-ready + batch-ready;
+   `(CEFI, exchange_flows, *)` → ⚪ + no badges.
+5. No-orphan audit: widget appears in ≥1 preset layout + ≥1 ops route.
+6. Workspace QG sweep across all touched repos before quickmerge.
+
+## Critical files
+
+- Manifest reader (120s freshness fallback): `unified-trading-library/unified_trading_library/manifest_reader.py`
+  (`read_availability_index`).
+- Manifest writer: `unified-trading-library/unified_trading_library/manifest_writer.py`.
+- Manifest consolidator: `unified-trading-library/unified_trading_library/manifest_consolidator.py`.
+- Sports SSOT (template): `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py`
+  - `league_data.py`.
+- DeFi partition (to be moved to UAC): `market-tick-data-service/.../adapters/defi/canonical_write.py` lines 71-91.
+- Existing capability framework: `unified-api-contracts/unified_api_contracts/registry/capability.py`.
+- Strategy catalogue regen (extend): `unified-trading-pm/scripts/dev/regen-catalogue.sh`.
+- Catalogue UI proxy (template): `unified-trading-system-ui/app/api/catalogue/envelope/route.ts`.
+- FreshnessHeatmap (extend / cross-link):
+  `unified-trading-system-ui/components/ops/deployment/data-status/build-heatmap-data.ts`.
+- Data-status routes (cross-link): `deployment-api/deployment_api/routes/data_status.py`.
+- Data-status drilldown service (`_sports_expected_dates_for_league`):
+  `deployment-api/deployment_api/services/data_status_service.py` lines 272-299.
+
+## Reused infrastructure (no net-new)
+
+- Manifest writer / reader / consolidator (UTL).
+- Manifest consolidator daemon VM (60s polling already running).
+- Strategy-catalogue regen script + GCS upload pattern (PM).
+- UI GCS proxy + 5-min cache pattern.
+- FreshnessHeatmap component (extend, do not duplicate).
+- DART `gs://strategy-store-cefi-{pid}/catalogue/` bucket + IAM (reuse with `instrument/` subprefix).
+- `read_availability_index` 120s freshness fallback (per-VM shard merge).
+- Sports `clip_dates_to_source_coverage` pattern (generalise).
+- Existing data-status routes (cross-link from new widget; do not re-implement).
