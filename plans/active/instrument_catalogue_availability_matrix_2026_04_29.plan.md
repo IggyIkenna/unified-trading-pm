@@ -99,23 +99,50 @@ todos:
 
   - id: p0-3-partition-layout-ssots
     content: |
-      - [ ] [SCRIPT] P0. Per-asset-group partition layout SSOTs in UAC, mirroring the existing
-            `canonical/domain/sports/gcs_paths.py` shape (`SportsPathLayout` enum + layout dict +
-            `candidate_parquet_paths` builder):
-              - Create `canonical/domain/cefi/gcs_paths.py` — source layout patterns from MTDS adapters at
-                `market_tick_data_service/market_interface/adapters/{binance,deribit,...}/`.
-              - Move `build_defi_partition_path` from
-                `market-tick-data-service/.../adapters/defi/canonical_write.py` (lines 71-91) into
-                `canonical/domain/defi/gcs_paths.py`. Same signature, same key ordering
-                (`day` / `asset_group=defi` / `venue` / `chain` / `instrument_type` / `data_type`).
-                Update MTDS to import from UAC.
-              - Create `canonical/domain/tradfi/gcs_paths.py` — sourced from
-                `fred_adapter.py`, `databento_opra_converter.py`, `tardis_adapter.py`. Note: TradFi has
-                no instruments bucket today; market_data layout only.
-              - Create `canonical/domain/prediction/gcs_paths.py` — `condition_id` partition convention
-                from MTDS prediction adapters.
-              - Surface a unified facade `unified_api_contracts.gcs_paths` re-exporting per-asset-group
-                helpers + `candidate_parquet_paths(asset_group, data_type, day, **kwargs)` dispatcher.
+      - [x] [SCRIPT] P0. Per-asset-group partition layout SSOTs in UAC. Decision: rather than 4
+            new subpackages (`canonical/domain/{cefi,defi,tradfi,prediction}/gcs_paths.py`), put all
+            non-sports asset-group builders in a single `canonical/partition_paths.py` module —
+            sports keeps its existing domain-co-located SSOT (tied to fixture/league semantics).
+              - `build_defi_partition_path` moved from MTDS
+                `adapters/defi/canonical_write.py` to UAC. MTDS now re-exports for back-compat.
+                Wire format unchanged: `day={D}/asset_group=defi/venue={V}/chain={C}/
+                instrument_type={IT}/data_type={DT}/{file}`.
+              - `build_cefi_partition_path` added. Wire format verified against MTDS
+                `cefi/tardis_shared.py::build_partition_path` v5 layout. v6 CHAIN-bundle extension
+                (`underlying`/`quote`/`margin` axes) parked as a follow-up.
+              - `build_tradfi_partition_path` added. Wire format verified against MTDS
+                `tradfi/tradfi_shared.py`.
+              - `build_prediction_partition_path` added with `condition_id` axis. Marked VERIFY
+                in docstring — MTDS prediction adapters construct paths inline rather than via a
+                shared helper, so the wire format here is an SSOT proposal pending audit against
+                actual production writes.
+              - `candidate_parquet_paths(asset_group, data_type, day, **kwargs)` dispatcher
+                surfaces all 5 asset_groups (sports delegates to its domain module).
+              - Facade `unified_api_contracts.gcs_paths` re-exports everything.
+            Coverage: `tests/unit/test_partition_paths.py` — 11 cases. Existing MTDS DeFi test suite
+            (17 cases) re-runs green against the UAC re-export. **DONE 2026-04-29.**
+    status: done
+
+  - id: p0-3-followup-cefi-v6-axes
+    content: |
+      - [ ] [SCRIPT] P0.3 follow-up. Surface CeFi v6 CHAIN-bundle extension axes
+            (`underlying={U}/quote={Q}/margin={M}/` segments before `data_type`) in
+            `unified_api_contracts.canonical.partition_paths.build_cefi_partition_path`. The
+            v5 layout there today is correct for single-symbol shards. v6 segments are present
+            in MTDS `cefi/tardis_shared.py::build_partition_path` and require importing the
+            `CHAIN_INSTRUMENT_TYPES` / `SINGLE_INSTRUMENT_TYPES` validation logic from MTDS or
+            redeclaring it in UAC. Defer until catalogue generator (P1.1) actually needs to
+            probe v6 paths.
+    status: todo
+
+  - id: p0-3-followup-prediction-verify
+    content: |
+      - [ ] [SCRIPT] P0.3 follow-up. Verify the Prediction wire format in
+            `unified_api_contracts.canonical.partition_paths.build_prediction_partition_path`
+            against the actual GCS writes by Polymarket / Kalshi / Manifold adapters. The shape
+            is currently SSOT-proposed but not adapter-confirmed. Either backfill verification
+            tests, or migrate the adapters to use the SSOT (preferred — matches the DeFi
+            pattern).
     status: todo
 
   - id: p0-4-coverage-start-registry
