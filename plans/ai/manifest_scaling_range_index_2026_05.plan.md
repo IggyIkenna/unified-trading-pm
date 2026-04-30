@@ -12,14 +12,42 @@ sibling_plans:
   - plans/active/instrument_catalogue_availability_matrix_2026_04_29.plan.md
   - plans/active/instrument_schema_cohesion_and_market_hours_2026_03_31.plan.md
   - plans/active/data_catalogue_cleanup_2026_04_24.plan.md
+  - plans/active/combo_bundle_aggregation_2026_04_30.plan.md
+  - plans/active/defi_e2e_pipeline_2026_04_30.plan.md
   - price_chart_gcs_delivery_2026_04_29.plan.md
 prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
 ---
 
 ## Relationship to existing plans
 
-This plan was written without realising three plans already cover
-adjacent surface. To avoid duplication:
+**Most important:** this plan is an **extension** of the existing
+catalogue plan, not a replacement or rival. They compose:
+
+```
+┌─ Layer (this plan changes) ─────────────────┐
+│  manifest_writer.py / range_index.parquet   │
+│  Per-range rows. O(1) per-instrument lookup.│
+│  Hot path readable. Holiday-aware.          │
+└─────────────┬───────────────────────────────┘
+              │  read by
+              ▼
+┌─ Layer (existing catalogue plan owns) ──────┐
+│  instrument-catalogue.json + .md            │
+│  Tuple-keyed (asset_group × data_type ×     │
+│  venue × instrument_type) coverage matrix.  │
+│  Nightly cron. Operator-facing report.      │
+└─────────────────────────────────────────────┘
+```
+
+Without this plan: the catalogue's coverage % calculation walks N
+manifest rows per tuple. At full backfill that's O(millions) per
+nightly regen. With this plan: catalogue computes coverage % from a
+single range row's `(covered_from, covered_to, gap_dates)` —
+constant work per tuple, regardless of date range.
+
+The catalogue plan **does not need to know** this plan landed — it
+just queries `read_availability_index()` as before; UTL surfaces
+range rows transparently after v7 ships. (Reader compat, see Unit D.)
 
 **`instrument_catalogue_availability_matrix_2026_04_29`** (active,
 locked_by `live-defi-rollout`) ships a *catalogue artifact* —
