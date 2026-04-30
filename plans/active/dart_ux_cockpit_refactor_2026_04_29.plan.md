@@ -98,6 +98,34 @@ supersedes:
       `/services/observe/risk → /services/workspace?surface=terminal&tm=explain`; size_multiplier 1.5× blocked with
       `size_multiplier_above_one`; size_multiplier 0.5× + reason ≥8 chars allowed with submit enabled. Strategy
       Catalogue NOT collapsed — stays universe surface.
+- [x] [AGENT] P0. **Configuration lifecycle UI surfaces — Promote / Explain / Admin** (§4.8 buyer-facing). Shipped UI
+      commit `64fd8db7`. Closes the lifecycle visibility loop: a buyer sees the typed primitives end-to-end as Promote
+      (research → bundle creation) → Bundle (immutable, read-only) → Override authoring (live, audited,
+      guardrail-validated) → Explain attribution (bundle + override deltas → realised) → Admin Operational config
+      (Treasury routing + Connectivity). Components: `components/cockpit/promote-bundle-form.tsx` (Research/Promote — 12
+      version pins + validation evidence + guardrail toggles + 3 live pre-flight gates using
+      `hasCefiAccountsForVenues` + `hasDefiWalletsForProtocols`); `components/cockpit/explain-attribution-panel.tsx`
+      (Terminal/Explain — three-column side-by-side bundle + overrides + realised, implements §4.8.3 rule 2 forbidding
+      hidden overrides); `components/cockpit/admin-operational-config-panel.tsx` (Terminal/Ops + surface=ops —
+      `TreasuryOperationalConfig` + `AccountConnectivityConfig` with status-coloured badges across CeFi accounts / DeFi
+      wallets / signer profiles / outbound endpoints). Demo fixtures (`lib/cockpit/demo-bundle.ts`):
+      `DEMO_TREASURY_OPERATIONAL` (3 wallets + binance settlement venue) + `DEMO_CONNECTIVITY` (3 CeFi accounts incl.
+      okx degraded, 3 DeFi wallets, 2 signer profiles, 1 Signals-Out endpoint). MCP-validated: Promote gates
+      cefiOk/defiOk/evidenceOk all green → submit enabled; Explain attribution bundle +$18.4K + overrides −$10.1K =
+      realised +$8.4K with 2 itemised override rows; Admin renders 3/3 CeFi (1 degraded), 3 DeFi wallets, 2 signers, 1
+      outbound.
+- [x] [AGENT] P0. **Persona-walkthrough Playwright matrix** — 6 personas validated, distinct cockpit configurations
+      captured. Switched via demo provider's `localStorage.portal_user` shape: (1) prospect-dart-full @ Terminal/Command
+      on CeFi+DeFi/Arbitrage/PriceDispersion → 12 primary widgets, RuntimeOverrideAuthoring rendered
+      (`persona-1-prospect-dart-full-arbitrage-command.png`). (2) prospect-dart-signals-in @ surface=signals → cockpit
+      shell renders empty-state widget grid (no widgets tagged `surfaces:["signals"]` yet — incremental dartMeta
+      annotation deferred) (`persona-2-signals-in.png`). (3) investor @ Reports → 12 widgets / 72 out of scope
+      (`persona-3-investor-reports.png`). (4) prospect-im @ Research/Allocate → ResearchJourneyRail with Allocate stage
+      active, **Live stream toggle shows lock icon** because IM persona lacks `execution-full` entitlement (§4.3 safety
+      contract enforced) (`persona-4-im-prospect-allocate.png`). (5) prospect-regulatory @ Reports → Live stream
+      lock-icon enforced; cockpit-shell renders normally (`persona-5-regulatory-reports.png`). (6) admin @ surface=ops →
+      AdminOperationalConfigPanel renders with full 3 CeFi + 3 DeFi + 2 signers + 1 outbound; Live stream NOT locked
+      (admin entitlement = ["*"]) (`persona-6-admin-ops-surface.png`).
 - [x] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
       `{ visibility, reason, cta, coverageQualifier }`. Shipped UI commit `aeb16db7` (foundation) alongside the unified
       `WorkspaceScope`. 18 unit tests passing in `tests/unit/lib/architecture-v2/strategy-availability-resolver.test.ts`
