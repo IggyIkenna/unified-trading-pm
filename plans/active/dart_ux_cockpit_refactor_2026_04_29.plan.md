@@ -1115,7 +1115,149 @@ This is the missing config map that turns the cockpit from "nice navigation" int
 6. **Phase 9:** Route collapse moves bundle approval queue to `surface=ops` admin route group; live override authoring
    stays in Terminal Command.
 
-### 4.9 Widget vocabulary SSOT — canonical surface names
+### 4.9 Assumption Stack — the Odum backtest-to-live USP
+
+DART's core product advantage is not just that strategies can move from research to live. It is that they move through
+the lifecycle with the same operating assumptions that determine whether a strategy works in production.
+
+A normal backtest usually answers:
+
+> Did the signal make money on historical prices?
+
+DART must answer:
+
+> Would this strategy still work after execution costs, gas fees, treasury movement, portfolio rebalancing, liquidation
+> risk, client deposits and withdrawals, venue constraints, routing rules, risk limits, and reporting assumptions are
+> applied?
+
+This is the seamlessness Odum needs to show. The platform exposes an `AssumptionStack` attached to every strategy
+candidate, experiment, simulation, paper run, release bundle, and live deployment.
+
+```ts
+type AssumptionStack = {
+  id: string;
+  version: string;
+  hash: string;
+
+  strategyId: string;
+  strategyVersion: string;
+
+  modelVersionIds?: string[];
+  featureSetVersionIds: string[];
+
+  executionAssumptions: ExecutionAssumptionConfig;
+  gasFeeAssumptions?: GasFeeAssumptionConfig;
+  treasuryPolicy: TreasuryPolicyAssumptionConfig;
+  depositWithdrawalAssumptions?: ClientFlowAssumptionConfig;
+  liquidationAssumptions?: LiquidationAssumptionConfig;
+  portfolioRebalanceAssumptions?: PortfolioRebalanceAssumptionConfig;
+  venueRoutingAssumptions: VenueRoutingAssumptionConfig;
+  riskAssumptions: RiskAssumptionConfig;
+  reportingAssumptions: ReportingAssumptionConfig;
+
+  createdBy: string;
+  createdAt: string;
+  notes?: string;
+};
+```
+
+The assumption stack is versioned and content-hashed. Changing assumptions that affect strategy behaviour creates a new
+assumption-stack version and, when promoted, a new `StrategyReleaseBundle`. Operational changes that do not alter
+strategic behaviour — API keys, wallet addresses, signer permissions, account connectivity — remain in Admin/Ops
+configuration and do not trigger a strategy version bump.
+
+#### Nine layers, one stack
+
+| Layer                           | Required? | Captures                                                                              |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------------- |
+| `executionAssumptions`          | required  | Slippage model + bps, commission, latency, queue position, approved presets           |
+| `treasuryPolicy`                | required  | Share class, approved collateral, hedge ratio range, leverage caps, auto-rebalance    |
+| `venueRoutingAssumptions`       | required  | Routing mode (SOR / strategy-picked / meta-broker), approved venues, bias             |
+| `riskAssumptions`               | required  | Max drawdown, concentration, gross/net exposure, USD loss ceiling                     |
+| `reportingAssumptions`          | required  | P&L basis (realised / MTM / blended), mark source, NAV cadence, settlement lag        |
+| `gasFeeAssumptions`             | DeFi only | Base + priority gwei, stress multipliers, per-tx gas units, MEV protection            |
+| `depositWithdrawalAssumptions`  | optional  | Avg daily flow %, redemption stress (e.g. 30% in 5d), notice period, liquidity buffer |
+| `liquidationAssumptions`        | optional  | Initial + maintenance margin, collateral haircuts, max LTV, force-rebalance LTV       |
+| `portfolioRebalanceAssumptions` | optional  | Allocation method, vol target, cadence, drift threshold, max single weight            |
+
+A `SimulationReadinessReport` aggregates the per-layer status into a 0..100 score. Required layers weight 70% of the
+headline; optional layers weight 30%. The Promote stage refuses to advance the bundle past `candidate` while any
+required layer is `missing` or `partial`.
+
+#### UI rule
+
+Every research, simulation, promotion, and live cockpit surface MUST expose the active assumption stack.
+
+- **Research/Validate** — author / edit assumptions before promotion. `<AssumptionStackPanel />` +
+  `<BacktestVsOperatingPanel />` rendered alongside the standard widget grid. The user sees the 9-layer status
+  - the cost-of-reality attribution (signal-only vs operating-adjusted P&L per layer).
+- **Research/Promote** — frozen stack inside the candidate `StrategyReleaseBundle`. The PromoteBundleForm's pre-flight
+  gates include a `simulationReadinessScore >= 95` requirement.
+- **Terminal/Strategies** — the running strategy's bundle pin renders the active stack so the trader can answer "what
+  assumptions are governing this position?" in one glance.
+- **Terminal/Explain** — assumption stack + per-layer **drift** (realised vs simulated).
+  `<AssumptionStackPanel drift={...} />` colour-codes layers where live behaviour exceeds the simulated envelope; the
+  headline `adherenceScore` answers "is live tracking the simulation?". Drift > threshold opens an alert path.
+
+#### Wizard "What do you want to prove?" step
+
+The four-step onboarding wizard adds a proof-goal step (between preset and scope). Choosing a goal emphasises the
+relevant assumption layers in the resulting workspace:
+
+| Proof goal                             | Layers emphasised          |
+| -------------------------------------- | -------------------------- |
+| Signal performance                     | execution                  |
+| Execution feasibility                  | execution + venue_routing  |
+| Gas / chain-cost sensitivity           | gas_fees + execution       |
+| Liquidation resilience                 | liquidation + treasury     |
+| Treasury & collateral movement         | treasury + venue_routing   |
+| Portfolio allocation across strategies | portfolio_rebalance + risk |
+| Client deposits / withdrawals          | client_flows + treasury    |
+| Full promotion readiness               | all 9 layers               |
+
+The wizard stays buyer-friendly. Internally it produces a structured `AssumptionStack` — externally it feels like guided
+institutional simulation. The buyer says _"I want to test a DeFi yield strategy under 30% withdrawal stress, higher gas,
+and collateral drawdown"_, and DART produces the matching stack + simulation run + promotion-evidence path.
+
+#### Positioning copy
+
+Use these claims on the DART page, IR deck, and signed-in workspace:
+
+> **Backtest-to-live continuity with real operating assumptions.** DART does not just test price signals. It simulates
+> the full strategy operating environment: execution, gas, treasury flows, liquidation risk, client deposits and
+> withdrawals, portfolio rebalancing, routing, risk limits, and reporting — then promotes the same configuration into
+> paper or live trading.
+
+> **A strategy is not ready because the chart looks good.** It is ready when the signal, model, execution assumptions,
+> gas costs, treasury flows, liquidation risk, client flows, risk limits, and reporting basis survive the same promotion
+> path used in live trading.
+
+> **Odum is not only cross-asset. It is assumption-complete.**
+
+#### Phase mapping
+
+The assumption stack threads back through the existing 9-phase programme:
+
+- **Phase 5A** — Assumption-aware widgets (`<AssumptionStackPanel />`).
+- **Phase 5B** — Backtest vs operating simulation widgets (`<BacktestVsOperatingPanel />`).
+- **Phase 6A** — Preset assumption stacks: each `WorkspacePreset` declares a default `AssumptionStack` template so the
+  wizard can hydrate from a familiar shape.
+- **Phase 6B** — Wizard "What do you want to prove?" step.
+- **Phase 7A** — Locked previews show assumption depth (Vol Lab locked → "you would unlock vol-surface assumption
+  layers"; DeFi Yield locked → "you would unlock liquidation + recursive-collateral assumptions").
+- **Phase 8A** — Mock liveness includes gas, treasury, liquidation, deposit/withdrawal flows so the demo shows live
+  drift in real time.
+- **Phase 8B** — Explain shows simulated vs realised drift per layer (already shipped via
+  `<AssumptionStackPanel drift />`).
+
+Required SSOT files:
+
+- `lib/architecture-v2/assumption-stack.ts` — typed schema + `evaluateSimulationReadiness()` helper.
+- `components/cockpit/assumption-stack-panel.tsx` — the 9-layer panel with readiness + drift.
+- `components/cockpit/backtest-vs-operating-panel.tsx` — three-column comparison + cost-of-reality attribution.
+- `lib/cockpit/demo-bundle.ts` — `DEMO_ASSUMPTION_STACK` + `DEMO_DRIFT_REPORT` fixtures.
+
+### 4.10 Widget vocabulary SSOT — canonical surface names
 
 Phase 5 widgets must adopt canonical names from the new ideal-world reference docs at
 [unified-trading-system-ui/docs/reference/](unified-trading-system-ui/docs/reference/) — specifically
