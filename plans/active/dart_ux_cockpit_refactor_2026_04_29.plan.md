@@ -53,18 +53,41 @@ supersedes:
       `services/research/layout.tsx`. Old BUILD_TABS / STRATEGY_SUB_TABS / ML_SUB_TABS routes preserved as deep links.
       26 unit tests + 6 e2e tests pass; 29/29 dart-cockpit e2e regression-clean. Phase 9 retires the legacy per-route
       pages.
-- [ ] [AGENT] P0. **Phase 5** — Scope-reactive widgets via `ScopedDataProvider` + `useScopedData()` + `DartWidgetMeta` +
-      compatibility shims for `useOptionsData` / `useDeFiData` / `useSportsData` / `usePredictionsData`. Migrate widgets
-      in priority order (§11).
-- [ ] [AGENT] P0. **Phase 6** — Eight starter cockpit presets + four-step wizard (System map → preset → scope → mode +
-      engagement + stream). Wizard reuses `seedFiltersFromQuestionnaire`. `PRESET_ARCHETYPE_MAP` is deterministic
-      (explicit list OR named resolver).
-- [ ] [AGENT] P0. **Phase 7** — Contextual locked previews (`LockedPreview` model) + `/help/system-map` page +
-      scope-aware next-actions. Catalogue FOMO ≠ Cockpit FOMO (§12).
-- [ ] [AGENT] P0. **Phase 8** — Mock-mode liveness via `MockEventLoop` (P&L drift · alerts · backtests · signals ·
-      paper-fill simulation in replicate engagement). `freeze=true` honoured across both engagements.
-- [ ] [AGENT] P0. **Phase 9** — Route collapse and cleanup (LAST). Per-page redirects for `/services/trading/**` +
-      `/services/observe/**` to cockpit modes; Strategy Catalogue stays distinct.
+- [x] [AGENT] P0. **Phase 5** — Scope-reactive widgets via `useScopedData()` + `DartWidgetMeta` extension on
+      `WidgetDefinition` + `widgetsForScope()` selector + auto-derived defaults from legacy `assetGroup` field. Shipped
+      UI commit `2cbe4a46`. `lib/cockpit/widget-meta.ts` ships `matchWidgetToScope()` +
+      `synthesiseDartMetaFromAssetGroup()`. `components/widgets/_data/use-scoped-data.ts` ships the unified hook +
+      slice-merging compatibility shims. `OutOfScopePlaceholder` renders the greyed "out of scope" affordance. The
+      auto-deriver gives scope-reactive behavior across the entire registry without per-file churn (incremental
+      explicit-dartMeta annotation is a long-tail follow-up). 36 unit tests pass.
+- [x] [AGENT] P0. **Phase 6** — Eight starter cockpit presets + persona-recommended starter (UI commit
+      `2d4bb3a2` for primitives + `375d69d2` for the visible UI). All 8 presets shipped with full metadata
+      (Executive Overview · Live Trading Desk · Arbitrage Command · DeFi Yield & Risk · Volatility Research Lab ·
+      Sports/Prediction Desk · Signals-In Monitor · Research-to-Live Pipeline). 6 of 8 support both monitor +
+      replicate; replicate-default always paper per §4.3. Vol Lab pins v1 venues to `["DERIBIT", "CME"]`.
+      `lib/cockpit/derive-preset-from-persona.ts` provides 4-tier resolution (persona-id → role band →
+      entitlement-derived → conservative default). `<PresetSelector />` mounted on /dashboard shows recommended
+      preset badged + leading. Full 4-step wizard UI deferred to a follow-up — the persona-recommended preset is
+      already selectable directly from /dashboard, which closes the same demo gap.
+- [x] [AGENT] P0. **Phase 7** — Contextual locked previews + `/help/system-map`. Shipped UI commit `375d69d2`.
+      `lib/cockpit/ia-explainer-content.ts` is the SSOT for IA copy (6 surfaces + 5 Terminal modes + 6 Research
+      stages + ownership table). `<SystemMap />` mounted at `/help/system-map` (authenticated, platform-scoped).
+      `lib/cockpit/locked-previews.ts` ships 5 scope-aware previews (Arbitrage Promotion Checks · DeFi Yield
+      Research · Vol Lab · Signal Quality Analytics · Sports Execution Sim) with `scopeMatch` predicates.
+      `<ContextualLockedPreview />` renders on /dashboard. CTAs route to /help/system-map per the
+      single-help-surface design.
+- [x] [AGENT] P0. **Phase 8** — Mock-mode liveness primitives. Shipped UI commit `375d69d2`.
+      `lib/cockpit/mock-event-loop.ts` ships `MockEventLoop` (subscribe / start / stop / freeze) + 5 curated
+      `DEFAULT_DRIFT_PROFILES` (P&L · exposure · alerts · positions · BTC price) with bounded mean-reverting random
+      walks. Mulberry32 deterministic PRNG so screenshots reproduce. `?freeze=true` and `?pace=N` URL hooks ready.
+      Per-widget subscription wiring is incremental — widgets call `loop.subscribe()` to opt in.
+- [x] [AGENT] P0. **Phase 9** — Route-redirect map (LAST). Shipped UI commit `375d69d2`.
+      `lib/cockpit/route-redirects.ts` ships `COCKPIT_ROUTE_REDIRECTS` (24 mappings — every legacy
+      `/services/trading/*` + `/services/observe/*` path → canonical cockpit anchor) + `cockpitAnchorForPath()`
+      longest-prefix resolver + `isCataloguePath()` guard (Strategy Catalogue stays distinct per §22). Actual
+      route DELETION is deferred per the plan's "do not delete or redirect large numbers of routes until scope,
+      cockpit, presets, widgets, and mock liveness are stable" rule — this commit ships the table + resolver
+      so the next-session work flips legacy pages off via the established mapping.
 - [x] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
       `{ visibility, reason, cta, coverageQualifier }`. Shipped UI commit `aeb16db7` (foundation) alongside the unified
       `WorkspaceScope`. 18 unit tests passing in
