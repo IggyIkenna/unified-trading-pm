@@ -1,7 +1,7 @@
 ---
 title: Watchlist — Populate from instruments-service GCS catalogue
 id: watchlist_from_instruments_2026_04_29
-status: ready
+status: in_progress
 created: 2026-04-29
 last_updated: 2026-04-30
 audience: backend engineers, frontend engineers
@@ -16,7 +16,154 @@ prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
 working_branch: feat/price-chart-gcs-delivery
 ---
 
-## Status update — 2026-04-30
+## Progress log — 2026-04-30 (updated end of day)
+
+### What shipped today
+
+**Backend (`unified-trading-api`)**
+- `services/instruments_reader.py` — extended with manifest pruning
+  (`list_venues_for_date`, `latest_date_with_data`), parallel multi-venue
+  fan-out (`get_instruments_multi_venue`, 16-worker `ThreadPoolExecutor`),
+  `INSTRUMENTS_BUCKET_VARIANT=prod|test` env, urllib3 pool tune (32),
+  fix for the `build_bucket(category=)` → `asset_group=` SDK kwarg rename.
+- `services/live_service.py` — same `category=` → `asset_group=` fix
+  (was crashing `/positions/active?mode=live` with TypeError).
+- `routes/instruments.py` — new `GET /instruments/live-universe?asset_group=`
+  endpoint. Server-side dedupe by `instrument_key` for the Tardis
+  multi-fiat-rail collapse (see findings doc). Existing `/list` route
+  fans out across venues when only `asset_group` is given.
+- `routes/calendar.py` — added `/market-structure` and `/holidays`
+  stub endpoints (UI was 404'ing on these in real mode).
+
+**Frontend (`unified-trading-system-ui`)**
+- `hooks/api/use-instruments.ts` — new `useLiveUniverse(asset_group)`
+  hook. localStorage cache keyed by `(asset_group, fetch_date_utc)`,
+  `LIVE_UNIVERSE_SCHEMA_VERSION` constant for cache-bust on shape
+  changes (currently v2 — bumped after dedupe addition), 1h refresh
+  via stale-while-revalidate, `NEXT_PUBLIC_INSTRUMENTS_REFRESH_INTERVAL_MS`
+  configurable.
+- `hooks/api/use-calendar.ts` — fixed `/economic-events` → `/economic-results`
+  path mismatch.
+- `components/widgets/terminal/use-terminal-page-data.ts` — three lazy
+  `useLiveUniverse` calls (cefi/tradfi/defi), merged into the watchlist.
+  Mock-mode short-circuit removed; both modes go through the same path.
+- `components/trading/watchlist-panel.tsx` — added venue-tag badge per
+  row, extended search filter to match venue text.
+- `lib/api/mock-handler.ts` — new `/api/instruments/live-universe`
+  route serving real GCS-downloaded fixtures.
+- `lib/mocks/fixtures/live-universe/{cefi,tradfi,defi}.json` — 18 MB of
+  real-data fixtures captured 2026-04-30 from a Tier-1-real boot.
+
+**Instruments-service (write-side dedupe)**
+- `reference_data/catalogue/catalogue_builder.py` — dedupe by
+  `instrument_key` in `build_category_async` so the next parquet
+  rebuild emits unique keys. Branched onto `feat/price-chart-gcs-delivery`.
+
+**Documentation**
+- `unified-trading-pm/findings/` — new folder per project convention
+  (codex is for design SSOT; findings/ is for bugs/quirks).
+- `findings/instruments_tardis_duplicate_keys_2026_04_30.md` — full
+  write-up of the Tardis vendor quirk (multi-fiat-rail collapse →
+  duplicate canonical IDs), three-mitigation strategy, deferred
+  URDI root fix.
+- `findings/README.md` — convention for the folder.
+- `lib/mocks/fixtures/live-universe/README.md` — refresh instructions
+  for the static fixtures.
+
+**Verified working** (mock mode, Tier 0, 2026-04-30):
+- Watchlist populates with all three asset groups.
+- React key warnings cleared (server-side dedupe + v2 cache key).
+- 21,365 instruments total (CEFI 3,690 / TRADFI 14,202 / DEFI 3,473).
+
+### What we discovered along the way
+
+- **Real-mode dev-proxy choke on large payloads.** The 12 MB tradfi
+  response from `:8030 → :3000` proxy intermittently hangs with
+  "socket hang up". Not blocking — mock mode unblocks the watchlist
+  work. Real-mode fix is a separate follow-up (paginate the
+  live-universe response, or tune Next dev proxy buffering).
+- **Static fixtures > real backend during UI development.** Once
+  the schema stabilises, mock mode keeps the inner loop tight. Refresh
+  fixtures monthly (or on schema bump). README in the fixtures dir.
+
+### What's next — open scope (decided 2026-04-30 evening)
+
+The watchlist currently shows the *full universe* in each tab —
+3,690 / 14,202 / 3,473 instruments per tab. That's not how trading
+platforms render watchlists. Pivoting the UX to a TradingView /
+Bloomberg pattern:
+
+| Layer | Where | Refresh |
+|---|---|---|
+| **Universe** (full catalogue) | localStorage `live-universe:v{N}:{group}:{date}` (already exists) | 1h, daily date rollover |
+| **System watchlists** (curated by us) | Static JSON in `lib/mocks/fixtures/system-watchlists/*.json` | Bumps with code releases |
+| **User watchlists** (user-created, ≤ 50 symbols each) | localStorage `user-watchlists:{userId}` for now; **migrate to Firestore later** when other user state lands there | Per user action |
+
+**System watchlists shipping today** (10 each, chart-tested-6 first
+plus filler from the live universe):
+- **Crypto Majors** — BTC/ETH/SOL across major CEFI venues
+- **US Stocks** — AAPL/MSFT/GOOGL/JPM + 6 more from NASDAQ/NYSE
+- **DeFi Blue Chips** — Uniswap V3 USDC-WETH pool + Aave/Lido top markets
+
+**Watchlist UX rules**:
+- 50-symbol cap per user list. At cap, "+ Add" disabled with tooltip.
+- System lists read-only.
+- Dropdown shows: System lists → separator → User lists → "+ Create new watchlist" footer.
+- Per-row hover × removes from user list.
+- Empty user list shows "Search instruments and add them here. (0/50)".
+- Three-dot menu on user-list rows: Rename, Delete. (Duplicate skipped for MVP.)
+- Price/change columns show 0/0 when ticker is missing (signal for
+  instrument↔market-data misalignment, not hidden).
+
+**Source for "+ Add"** — typeahead modal sourced from the in-memory
+live-universe index (cefi+tradfi+defi merged, ~21K rows, fuzzy match).
+No new endpoint needed.
+
+### File plan for this scope
+
+```
+lib/mocks/fixtures/system-watchlists/
+├── crypto-majors.json           # 10 instrument_keys
+├── us-stocks.json               # 10
+├── defi-blue-chips.json         # 10
+└── README.md                    # refresh + add-list instructions
+
+lib/api/system-watchlists.ts     # static-import + typed exports
+hooks/use-user-watchlists.ts     # CRUD against localStorage
+                                 #   list(), create(name), rename(id, name)
+                                 #   delete(id), addSymbol(id, key)
+                                 #   removeSymbol(id, key)
+                                 # Firestore-shaped API for one-file swap later
+
+components/trading/watchlist-instrument-picker.tsx   # NEW typeahead modal
+components/trading/watchlist-panel.tsx               # extend:
+                                                     #   read-only flag for system lists
+                                                     #   per-row × on hover (user lists)
+                                                     #   "+ Add" button with cap
+                                                     #   "+ Create new watchlist" footer
+                                                     #   inline create input
+                                                     #   three-dot menu (Rename/Delete)
+components/widgets/terminal/terminal-watchlist-widget.tsx  # merge system+user lists,
+                                                            # pass read-only flag,
+                                                            # wire CRUD callbacks
+```
+
+### Open follow-ups beyond this MVP
+
+1. **Firestore migration for user watchlists** — when other user state
+   moves to Firestore. The `use-user-watchlists.ts` hook is shaped so
+   the swap is a one-file change.
+2. **Unit G (instrument search + chain picker + presets)** — see
+   §"Unit G" above. The "+ Add" modal in this MVP is a precursor;
+   Unit G generalises it (option-chain drilldown, batch-mode `as_of`,
+   server-side search for huge windows).
+3. **Real-mode dev-proxy large-payload fix.** Out of scope today.
+4. **URDI Tardis adapter root fix** — see findings doc; multi-week
+   cross-team work.
+
+---
+
+## (Original plan content below — pre-2026-04-30-evening pivot to system+user watchlists)
 
 The chart plan (`price_chart_gcs_delivery_2026_04_29.plan.md`) has
 shipped on branch `feat/price-chart-gcs-delivery` across
@@ -264,14 +411,44 @@ this plan):
 | DEFI pools / lending (~2K) | Flat virtualized list filtered by `instrument_type` |
 | SPORTS / PREDICTION | Out of scope (project-wide) |
 
-**For this plan (Units A–F)**: watchlist tabs (CeFi/TradFi/DeFi)
-populate with their full instrument lists. The existing
-client-side `includes(query)` filter handles within-tab search
-acceptably for ~600 TradFi or ~120 CEFI-non-option entries.
-**Deribit options are explicitly NOT shown in the watchlist for
-this plan** — they need the chain picker (Unit G), not a flat
-list. The watchlist's instrument-type filter excludes
-`instrument_type IN ('OPTION', 'COMBO')` until Unit G ships.
+**Live vs batch mode — this is the load-bearing distinction:**
+
+| Mode | Universe | Architecture |
+|---|---|---|
+| **Live** | only currently-tradeable instruments (no expired options/futures) | **Client-side index.** Backend ships the full live-universe parquet on watchlist mount (~8.7K rows after universe filters, ~few MB compressed). Frontend builds the search index in memory. No round-trips for filter/sort/typeahead. |
+| **Batch** (user picked an `asOfDate`) | includes instruments that were tradeable on that date but have since expired (options that expired 2024-09-20, futures that rolled, etc.) | **Server-side per-request.** Universe grows unboundedly with history (every Friday's expired Deribit weekly options accumulate). Frontend queries `/instruments/search?as_of=…&q=…` per keystroke (debounced) and `/instruments/option-chain?underlying=…&as_of=…` for the chain picker. |
+
+The split is forced by the data: live universe stays small forever
+(today's listings), batch universe grows linearly with calendar
+time. Same `instrument_availability/by_date/day=YYYY-MM-DD/`
+parquets feed both — different access pattern.
+
+**For this plan (Units A–F)**: watchlist tabs (CeFi / TradFi /
+DeFi) populate with their full **live-mode** instrument lists.
+The existing client-side `includes(query)` filter handles
+within-tab search acceptably for ~600 TradFi or ~120 CEFI
+spot/perp entries.
+
+**Backend completeness, not UX selectivity**: this plan finishes
+the engineering — backend serves the *full* live universe (spot,
+perp, future, **option**, combo, pool, lending, …) for all three
+asset_groups in a single payload per group. UX questions about
+how to render 3,002 Deribit options live in Unit G's plan and
+don't gate this one. The frontend in Units B/C consumes whatever
+the backend ships — if today's `WatchlistPanel` can't usefully
+render OPTION rows, that's a UI problem for Unit G, not a reason
+to filter at the API.
+
+**Refresh cadence**: live-universe payload is fetched once per
+session, cached in `localStorage` keyed by
+`(asset_group, fetch_date_utc)`, scheduled refresh every 1h
+(default; configurable env-var). Stale-while-revalidate via
+React Query — UI never blocks on a refresh, the new payload
+swaps in when ready.
+
+**Three separate fetches per asset_group** — CEFI, TRADFI, DEFI.
+A user who only opens TradFi never pays for CEFI's 6K+ rows.
+Each cached independently in localStorage.
 
 ### 7. Frontend changes are minimal
 
@@ -589,27 +766,103 @@ After A + B land:
 ### Unit G — instrument search + drilldown + presets (separate plan)
 
 **Out of scope for this plan**, but seeded here so it doesn't get
-forgotten. Write `instrument_search_2026_05_XX.plan.md` covering:
+forgotten. Write `instrument_search_2026_05_XX.plan.md` covering
+the three layers below.
 
-- `/instruments/search` endpoint with in-memory index per
-  (asset_group, day), 1h refresh aligned with `InstrumentsReader._cache`.
-- `/instruments/option-chain?underlying=&venue=` — projects
-  instruments-service OPTION rows for one underlying into a
-  chain shape (expiries, strikes, call/put grid). Replace mock
-  `/api/derivatives/options-chain`.
-- `/instruments/preset-lists` — serves UAC SSOT presets.
-  Add presets to `unified_api_contracts/registry/preset_watchlists/`:
+#### G.1 — Live-mode client-side index
+
+- New endpoint `GET /instruments/live-universe?asset_group=cefi`
+  (one call per asset_group — three total: cefi, tradfi, defi).
+  Server reads today's `instrument_availability/` partition,
+  filters `available_to_datetime IS NULL OR > now`, projects to
+  the columns the search needs (`instrument_key`, `venue`,
+  `symbol`, `instrument_type`, `asset_class`, `base_asset`,
+  `quote_asset`, `underlying`, `expiry`, `strike`, `option_type`).
+  Compressed JSON ≈ few hundred KB per asset_group.
+- UI fetches per-asset_group lazily (a user who never opens TradFi
+  never pays for it). Cached in `localStorage` keyed by
+  `(asset_group, fetch_date_utc)`. Scheduled refresh every 1h
+  via stale-while-revalidate — configurable env-var
+  `NEXT_PUBLIC_INSTRUMENTS_REFRESH_INTERVAL_MS` (default 3600000).
+- Frontend builds in-memory index (`Map<symbol, …>`,
+  `Map<base_asset, …>`, fuzzy-match via `fuse.js` or a 50-line
+  hand-rolled trigram match — pick after measurement).
+- All filter / sort / typeahead happens client-side. Zero
+  round-trips on keystroke.
+- UX shape (chain picker for options/futures, flat list for
+  spot/perp/equity, etc.) decided when Unit G's UI work
+  happens. Backend ships the data; frontend chooses the
+  rendering. TradingView-style chain picker + flat virtualized
+  list is the working assumption.
+
+#### G.2 — Batch-mode server-side search
+
+- `GET /instruments/search?q=&asset_groups=&types=&venue=&as_of=YYYY-MM-DD&limit=50`
+  reads the `as_of` partition (which includes expired-as-of-that-date
+  options and futures), builds an index, returns ranked top-N.
+  Index built once per `(asset_group, as_of)` and cached 1h.
+- Frontend uses this only when batch-mode `asOfDate` is set.
+  Live mode keeps the client-side path from G.1.
+
+#### G.3 — Option / future chain picker
+
+- `GET /instruments/option-chain?underlying=&venue=&as_of=`
+  projects OPTION rows for one underlying (e.g. BTC on DERIBIT)
+  into a chain shape: expiries × strikes × call/put. Returns the
+  grid in a single response. Live mode = today's chain only;
+  batch mode = chain as of `as_of` (includes expired strikes for
+  historical analysis).
+- `GET /instruments/future-chain?root=&venue=&as_of=` similar
+  for dated futures (ES front+back+next, ZN quarterly ladder, etc.).
+- Replaces the mock `/api/derivatives/options-chain` /
+  `/vol-surface` endpoints with instruments-service-backed reads.
+- UI: option-chain drawer opens from the watchlist's "+ Add
+  options" button. Pick underlying → grid renders → click a
+  cell to add to watchlist (live) or chart (batch).
+
+#### G.4 — Prebuilt watchlists (presets)
+
+- Stored as JSON in
+  `unified_api_contracts/registry/preset_watchlists/`:
   `nasdaq_100.json`, `sp_500.json`, `top_20_crypto.json`,
   `tradfi_major_futures.json`, `defi_blue_chips.json`.
-- UI: replace `WatchlistPanel`'s flat-list search with a typeahead
-  fed by `/instruments/search`; add option-chain drawer for
-  Deribit options; add preset selector to the watchlist picker.
+- **Persistence model**: each preset is a literal frozen list
+  of `instrument_key` strings representing today's membership.
+  When the exchange reconstitutes (NASDAQ-100 quarterly,
+  S&P 500 ad-hoc), we update the JSON manually. **Historical
+  snapshots are explicitly out of scope** — "NASDAQ-100 as of
+  2024-Q1" is a separate feature that doesn't ship with this.
+- Backend: `GET /instruments/presets` lists available presets
+  with metadata; `GET /instruments/presets/{id}?as_of=` joins
+  the preset's `instrument_key` list against the chosen day's
+  `instrument_availability/` to fill in name/venue/price/etc.
+  (In live mode, `as_of` defaults to today. In batch mode the
+  user's `asOfDate` flows through; instruments not present on
+  that day are hidden gracefully — e.g. NASDAQ-100 includes a
+  ticker that wasn't yet listed back then.)
+- UI: preset selector appears in the watchlist's list-picker
+  dropdown alongside user-defined lists.
+
+#### G.5 — User-defined watchlists
+
+- Stored in **Firestore** per-user. Schema:
+  `{ id, owner_uid, name, instrument_keys: string[], created_at,
+  updated_at }`. CRUD endpoints under `/users/me/watchlists`.
+- **Open question flagged**: should this also have a GCS-bucket
+  storage path (matching how strategy / position user-data is
+  modelled)? Firestore is simpler and matches the rest of the
+  app's user-state. GCS would unify with backend-owned data but
+  is overkill for ~10 watchlist rows per user. Default:
+  Firestore. Revisit only if a "user-data unification" plan
+  explicitly absorbs this.
 
 **Why split**: this plan delivers "watchlist shows real data".
-Unit G delivers "watchlist is usable at scale". They're
-separable: Unit G presupposes Units A–F are done, and Unit G's
-work is roughly twice the size of A–F combined (UI components,
-typeahead, chain picker, preset registry).
+Unit G delivers "watchlist is usable at scale, supports options
+and futures, supports presets, supports user-defined lists".
+They're separable: Unit G presupposes Units A–F are done, and
+Unit G is roughly twice the size of A–F combined (3 endpoints,
+chain-picker UI, typeahead UI, preset registry, Firestore
+schema, batch-mode wiring).
 
 ### Unit D — documentation
 
