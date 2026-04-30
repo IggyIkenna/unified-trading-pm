@@ -140,9 +140,13 @@ with empty state).
   `~/.cache/firebase/emulators/` on first run. If your network is flaky, run `firebase setup:emulators:firestore` and
   `firebase setup:emulators:storage` once with a good connection before booting dev-tiers.
 - **Port 9099 / 8080 / 9199 / 4000 / 4400 collisions** — Other dev tools (Adminer, Hadoop UI, another Next.js process)
-  sometimes camp these. `lsof -ti:9099,8080,9199,4000,4400 | xargs -r kill` clears them. Re-runs of dev-tiers do not
-  auto-kill these.
+  sometimes camp these. `bash scripts/dev-tiers.sh --stop` sweeps emulator ports as of 2026-04-30 (process-group kill +
+  expanded port list); for foreign holders unrelated to dev-tiers, `lsof -ti:9099,8080,9199,4000,4400 | xargs -r kill`
+  still works.
 - **Java missing** — emulators die with `Process java -version exited with code 1`. Install via brew (see above); the
   dev-tiers script auto-locates after install.
+- **macOS: `setsid` missing** — `dev-tiers.sh` uses process groups to reap the emulator's java children on `--stop`.
+  Linux ships `setsid` in util-linux; macOS does not. The script falls back to a `python3` polyfill automatically, so
+  no action is needed — but if you'd rather have the real binary, `brew install util-linux` provides it.
 - **"emulator hub on port 4400"** warning — benign; means a previous boot didn't shut down cleanly. Falls back to 4401
   and recovers.

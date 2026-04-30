@@ -6,9 +6,14 @@ scope: [engineer, admin]
 
 ## Canonical source of truth
 
-**The canonical local-dev doc is [../../08-workflows/local-dev.md](../../08-workflows/local-dev.md).** Do not duplicate
-its contents here — read that doc for the full tier model (Tier 0/1/2/static), mode axes (`VITE_MOCK_API`,
-`VITE_SKIP_AUTH`, `CLOUD_MOCK_MODE`, etc.), and presets.
+For the **consolidated portal** (Next.js, the only UI we ship today): the SSOT is
+[../../05-infrastructure/runtime-tiers-and-deployment.md](../../05-infrastructure/runtime-tiers-and-deployment.md) —
+tier model (static/T0/T1/T2), boot flags (`--real`, `--firebase-local`), and the unified `dev-tiers.sh` script.
+
+For **standalone backend service work** outside the dev-tiers T1/T2 set: see
+[../../08-workflows/local-dev.md](../../08-workflows/local-dev.md) — its frontend sections are stale (pre-UI
+consolidation, 10+ Vite apps), but its backend orchestration via `dev-start.sh` / `dev-stop.sh` / `dev-status.sh`
+and the API port registry (8004-8016) are still in use. Read the banner at the top of that doc.
 
 This doc captures ONLY what's specific to the playbook context.
 
