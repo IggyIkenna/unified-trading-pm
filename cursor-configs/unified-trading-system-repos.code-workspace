@@ -5,10 +5,6 @@
       "name": "📁 Workspace Root"
     },
     {
-      "path": ".cursor",
-      "name": "⚙️ Cursor Config"
-    },
-    {
       "path": "unified-trading-api"
     },
     {
@@ -38,10 +34,10 @@
       "path": "deployment-ui"
     },
     {
-      "path": "execution-algo-library"
+      "path": "execution-service"
     },
     {
-      "path": "execution-service"
+      "path": "alerting-service"
     },
     {
       "path": "features-calendar-service"
@@ -80,9 +76,6 @@
       "path": "market-tick-data-service"
     },
     {
-      "path": "matching-engine-library"
-    },
-    {
       "path": "ml-inference-service"
     },
     {
@@ -110,34 +103,20 @@
       "path": "unified-api-contracts"
     },
     {
-      "path": "unified-feature-calculator-library"
-    },
-    {
-      "path": "unified-feature-orchestration-library"
-    },
-    {
-      "path": "unified-features-interface"
-    },
-    {
-      "path": "unified-market-interface"
-    },
-    {
-      "path": "unified-ml-interface"
-    },
-    {
       "path": "e2e-testing",
       "name": "🧪 E2E Testing"
     },
     {
-      "path": ".venv-workspace",
-      "name": "🐍 Venv"
-    },
+      "path": "new-sports-batting-services"
+    }
   ],
   "settings": {
     "terminal.integrated.env.osx": {
       "UNIFIED_TRADING_WORKSPACE_ROOT": "${workspaceFolder}"
     },
     "scm.repositories.visible": 100,
+    "scm.alwaysShowRepositories": true,
+    "git.autoRepositoryDetection": "subFolders",
     "git.maxRepositoryCount": 100,
     "git.repositoryScanMaxDepth": 2,
     "git.detectSubmodules": true,
@@ -147,9 +126,11 @@
     "git.fetchOnPull": true,
     "git.pruneOnFetch": true,
     "git.showProgress": true,
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
+    "python.defaultInterpreterPath": "/home/hk/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.venvPath": "/home/hk/unified-trading-system-repos",
+    "python.venvFolders": [".venv-workspace"],
     "python.terminal.activateEnvironment": true,
-    "python.envFile": "${workspaceFolder}/.env",
+    "python.envFile": "/home/hk/unified-trading-system-repos/.env",
     "python.languageServer": "None",
     "mypy-type-checker.enabled": false,
     "ms-python.black-formatter.enabled": false,
@@ -194,7 +175,7 @@
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
-    "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
+    "ruff.path": "/home/hk/unified-trading-system-repos/.venv-workspace/bin/ruff",
     "ruff.format.args": [
       "--line-length",
       "120"
@@ -205,8 +186,10 @@
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
+      "**/.venv-workspace": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
+      "**/.extra": true,
       "**/uv.lock": false
     },
     "files.watcherExclude": {
@@ -237,6 +220,8 @@
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
+      "**/.venv-workspace": true,
+      "**/.extra": true,
       "**/uv.lock": false
     },
     "editor.insertSpaces": true,

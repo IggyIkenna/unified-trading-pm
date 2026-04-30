@@ -21,7 +21,7 @@ switching providers requires only a new `CustodyProvider` implementation, no str
 CLIENT                CUSTODIAN TREASURY WALLET       CUSTODIAN TRADING WALLETS (per strategy, any chain)
                       (per share class)
                                                       ┌─ AAVE_LENDING (ETH chain)
-USDC ──────────>  Treasury-USDC  ──── fund ────>       ├─ BASIS_TRADE (ETH chain)
+USDC ──────────>  Treasury-USDC  ──── fund ────>      ├─ BASIS_TRADE (ETH chain)
 (on ETH/ARB)      (share class: USDC, lives on ETH)   └─ L2_BASIS (Arbitrum — strategy bridges internally)
                                     <── rebalance ──
 
@@ -298,12 +298,12 @@ remain the same.
 | Service                       | Responsibility                                                                                                                     |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **position-balance-monitor**  | Read balances per wallet per chain. Detect deposits. Track treasury vs hot wallet split. Emit TREASURY_LOW / TREASURY_HIGH events. |
-| **strategy-service**          | Capital allocation decisions. Emit TRANSFER instructions for treasury↔hot wallet. Reduce positions when treasury needs funding.   |
+| **strategy-service**          | Capital allocation decisions. Emit TRANSFER instructions for treasury↔hot wallet. Reduce positions when treasury needs funding.    |
 | **execution-service**         | Execute transfers via Copper signing. Handle bridge instructions for cross-chain. CeFi sub-account transfers via exchange API.     |
 | **risk-and-exposure-service** | Aggregate exposure across all wallets (treasury + hot + in-flight). Per-strategy risk includes wallet isolation.                   |
 | **pnl-attribution-service**   | Track P&L per hot wallet. Transfer costs (gas, bridge fees) as realized costs.                                                     |
 | **alerting-service**          | Treasury threshold alerts. Large deposit/withdrawal notifications. Bridge completion tracking.                                     |
-| **UAC**                       | Wallet config schemas. Chain↔wallet mappings. Copper integration types.                                                           |
+| **UAC**                       | Wallet config schemas. Chain↔wallet mappings. Copper integration types.                                                            |
 
 ## What Exists vs What Needs Building
 
@@ -322,7 +322,7 @@ remain the same.
 | MockCustodyProvider               | **Working**        | execution-service `custody/mock.py`                     |
 | Custody factory                   | **Working**        | execution-service `custody/factory.py`                  |
 | Treasury threshold monitoring     | **Needs building** | position-balance-monitor or alerting                    |
-| Auto-rebalance treasury↔hot      | **Needs building** | strategy-service (meta-strategy or hook)                |
+| Auto-rebalance treasury↔hot       | **Needs building** | strategy-service (meta-strategy or hook)                |
 | Per-client AUM tracking           | **Needs building** | position-balance-monitor / IBOR                         |
 | Deposit detection events          | **Partially**      | position-balance-monitor                                |
 | Cross-wallet exposure aggregation | **Needs building** | risk-and-exposure-service                               |

@@ -3,7 +3,7 @@ title: Watchlist — Populate from instruments-service GCS catalogue
 id: watchlist_from_instruments_2026_04_29
 status: in_progress
 created: 2026-04-29
-last_updated: 2026-04-30
+last_updated: 2026-05-01
 audience: backend engineers, frontend engineers
 parent_reference: market_data_delivery_architecture_2026_04_27.md
 sibling_plan: price_chart_gcs_delivery_2026_04_29.plan.md
@@ -160,6 +160,149 @@ components/widgets/terminal/terminal-watchlist-widget.tsx  # merge system+user l
 3. **Real-mode dev-proxy large-payload fix.** Out of scope today.
 4. **URDI Tardis adapter root fix** — see findings doc; multi-week
    cross-team work.
+
+---
+
+## Progress log — 2026-05-01 (test coverage + schema parity)
+
+### Scope
+
+After the system+user watchlist ship, two gaps surface:
+
+1. **No test for `/instruments/live-universe`** — neither the backend
+   route, nor the multi-venue reader, nor the UI hook + mock-handler
+   route, nor the user-watchlist hook.
+2. **No schema-parity safety net** — three places return a
+   "live-universe response" today (real backend reading GCS, mock-
+   mode backend reading the seed store, UI mock-handler reading
+   static JSON). Drift between them only surfaces when something
+   breaks in the UI. Bitten us already on TRADFI's `data_type=ohlcv_1m`
+   vs CEFI's `data_type=trades`.
+
+This work lands the test coverage + a schema-drift detector, with a
+strict policy: **tests don't hit GCS on every run.** Bench scripts
+exist (`bench_instruments_reads.py`) for manual / scheduled runs;
+unit tests use the static `*.sample.json` fixtures we already have
+in `lib/mocks/fixtures/live-universe/`.
+
+### Schema source-of-truth — option (iii): both
+
+Two complementary sources, both used in tests:
+
+1. **`*.sample.json` fixtures** — captured from real GCS via the
+   backend route on 2026-04-30. Used as the **canonical real-world
+   shape** for fast, deterministic tests. When real GCS schema
+   changes, these regen (one-liner in
+   `lib/mocks/fixtures/live-universe/README.md`) and the diff is
+   loud — a regen with shape changes lights up every test that
+   asserts shape.
+2. **UAC `InstrumentRecord` Pydantic model** — the **authoritative
+   contract**. Anything the platform reads or writes for instruments
+   should validate against this. Catches drift on either side: if
+   GCS starts emitting a new field, the test fails until UAC is
+   updated. If UAC adds a field that GCS doesn't yet emit, the same
+   test fails until the regen step runs. Loud either way, exactly
+   the user requirement.
+
+### Sequencing
+
+**A — verify Tier 1 + `--real` end-to-end works.** No code change
+yet. Boot, hit `/instruments/live-universe?asset_group=tradfi` via
+UI proxy, confirm the 12 MB response doesn't choke (we saw "socket
+hang up" earlier). If real-mode is broken, fix or shrink the
+response before testing the wrong thing.
+
+**B — schema-parity test.** New file
+`unified-trading-api/tests/integration/test_live_universe_schema.py`.
+
+- Loads the captured `*.sample.json` fixture (cefi/tradfi/defi).
+- Asserts every row in each fixture validates against UAC
+  `InstrumentRecord`. (Catches "GCS started emitting a new field"
+  AND "UAC added a required field GCS doesn't fill".)
+- Asserts the route's *mock-mode* response (backend with
+  `CLOUD_MOCK_MODE=true`) returns the same column set as the
+  fixture, modulo expected nulls. Real-mode is asserted via the
+  scheduled bench script (next item) — unit tests don't hit GCS.
+- Marker: regular pytest run includes this file. Fast (<2 s).
+
+**C — backend route tests.** New
+`unified-trading-api/tests/unit/test_routes_instruments_live_universe.py`.
+
+- Patches `get_storage_client` (same pattern as
+  `test_batch_candles.py`). No real GCS reads.
+- Cases: 200 with `asset_group=cefi`, 400 missing asset_group, dedupe
+  count matches expected, mock-mode returns mock seed unchanged,
+  `INSTRUMENTS_BUCKET_VARIANT=test` resolves to `*-test-*` bucket
+  name.
+
+**D — multi-venue reader tests.** Extend
+`unified-trading-api/tests/unit/test_instruments_reader.py`.
+
+- Mock the manifest with `read_availability_index` patch.
+- Test `list_venues_for_date` with manifest having + missing entries.
+- Test `latest_date_with_data` returns max date / None when manifest
+  empty.
+- Test `get_instruments_multi_venue` parallel fan-out (mock storage
+  returns different bytes per venue, assert merge ordering).
+
+**E — UI tests.** Three files:
+
+- `tests/hooks/use-instruments-live-universe.test.tsx` — versioned
+  cache key (v1 entries evict on v2 write), 1h TTL, schema-version
+  bump.
+- `tests/hooks/use-user-watchlists.test.tsx` — full CRUD lifecycle,
+  50-cap enforcement, cross-tab sync via `storage` event,
+  AuthContext-missing fallback.
+- `tests/lib/mock-handler-live-universe.test.ts` — `/api/instruments/live-universe`
+  serves correct fixture per asset_group, 400 on bad param.
+
+**F — schema-drift detector (manual / scheduled).** New
+`unified-trading-api/scripts/check_live_universe_schema.py`.
+
+- Hits real GCS via the route, captures the response.
+- Compares to the `*.sample.json` fixtures in the UI repo.
+- Compares to the UAC `InstrumentRecord` schema.
+- Diff-prints any drift. Exits non-zero on drift.
+- **Not in CI.** Run manually before a release or on a weekly cron.
+  Output goes to `plans/ai/reports/live_universe_schema_drift_<date>.md`.
+
+### Test policy — never hit GCS on `pytest`
+
+All of B/C/D/E run against fixtures. Storage clients are patched.
+The `pytest` invocation that gates merges runs in seconds and never
+makes a network call.
+
+The **only** path that hits GCS is:
+
+- `bench_instruments_reads.py` (manual, capture latency)
+- `check_live_universe_schema.py` (manual / weekly, capture drift)
+
+Both gated behind explicit invocation, never on default `pytest`.
+Mirrors the chart side's `bench_candle_reads.py` pattern.
+
+### Files this scope adds
+
+```
+unified-trading-api/tests/integration/test_live_universe_schema.py    NEW (Unit B)
+unified-trading-api/tests/unit/test_routes_instruments_live_universe.py NEW (Unit C)
+unified-trading-api/tests/unit/test_instruments_reader.py             EXTEND (Unit D)
+unified-trading-api/scripts/check_live_universe_schema.py             NEW (Unit F)
+
+unified-trading-system-ui/tests/hooks/use-instruments-live-universe.test.tsx NEW (Unit E)
+unified-trading-system-ui/tests/hooks/use-user-watchlists.test.tsx           NEW (Unit E)
+unified-trading-system-ui/tests/lib/mock-handler-live-universe.test.ts       NEW (Unit E)
+```
+
+### Acceptance
+
+- All new tests pass on first run, no flakes.
+- `pytest` completes in <10 s without network access.
+- `npm test -- --run tests/hooks tests/widgets/terminal` passes <10 s.
+- A deliberate schema-drift simulation (e.g. delete a field from the
+  sample fixture) makes Unit B fail with a clear message.
+- `check_live_universe_schema.py` runs against a real GCS-backed
+  backend without errors and produces a drift report (zero drift if
+  fixtures are current).
 
 ---
 
