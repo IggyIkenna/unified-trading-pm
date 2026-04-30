@@ -18,8 +18,8 @@ supersedes:
 - [x] [AGENT] P0. **Phase 1** — Unified workspace scope (`WorkspaceScopeStore` + URL contract + `linkWithScope` +
       legacy-store deletion). Foundation primitives shipped UI commit `aeb16db7`; consumer migration + final deletion
       shipped `8773a6b6` (75 files / 780 insertions / 1189 deletions); existing-spec selector fix `c3dcc987`; Phase 1A
-      Tier-0 walkthrough spec `dcc3cc1a`. Verified end-to-end on `npm run dev:mock` (port 3100): 0 typecheck errors;
-      228 vitest files / 2141 tests pass; 0 active imports of the deleted modules. Phase 1A e2e (7 specs across
+      Tier-0 walkthrough spec `dcc3cc1a`. Verified end-to-end on `npm run dev:mock` (port 3100): 0 typecheck errors; 228
+      vitest files / 2141 tests pass; 0 active imports of the deleted modules. Phase 1A e2e (7 specs across
       `tests/e2e/playbooks/dart-cockpit/`): all pass — URL hydration + reload persistence + cross-tab restore + §4.3
       live-stream safety contract + Tier-0 walkthrough (dashboard → terminal → scope persistence). MCP Playwright
       walkthrough on the live cockpit confirmed: dashboard renders with `CARRY_AND_YIELD` chip in the filter strip
@@ -31,20 +31,19 @@ supersedes:
       Signals. Shipped UI commit `769df754`. Component at `components/shell/dart-scope-bar.tsx` + summary helper at
       `components/shell/dart-scope-bar-summary.ts`. Compact mode = one-line §6 summary; expanded mode = Surface dial
       (cascades into TerminalMode when surface=terminal / ResearchStage when surface=research) + Engagement +
-      ExecutionStream toggles + active-filter chip readout + Reset button. §4.3 Live confirm dialog fires on
-      Paper → Live for entitled personas; Cancel keeps paper; persona without `execution-full` sees Live as
-      `aria-disabled` with tooltip "Live execution is unavailable on demo accounts." Mounted on dashboard + 6 service
-      layouts (signals layout NEW). 30 unit tests + 10 e2e tests on dev:mock all pass; 17/17 dart-cockpit e2e
-      regression-clean. Chip-editing affordance for asset_group / family / archetype deferred to Phase 5 (current
-      bar reads-only).
+      ExecutionStream toggles + active-filter chip readout + Reset button. §4.3 Live confirm dialog fires on Paper →
+      Live for entitled personas; Cancel keeps paper; persona without `execution-full` sees Live as `aria-disabled` with
+      tooltip "Live execution is unavailable on demo accounts." Mounted on dashboard + 6 service layouts (signals layout
+      NEW). 30 unit tests + 10 e2e tests on dev:mock all pass; 17/17 dart-cockpit e2e regression-clean. Chip-editing
+      affordance for asset_group / family / archetype deferred to Phase 5 (current bar reads-only).
 - [x] [AGENT] P0. **Phase 3** — Terminal IA simplification → five buyer-facing modes (Command · Markets · Strategies ·
-      Explain · Ops). Shipped UI commit `8c6e84af`. New primitives at `lib/cockpit/terminal-modes.ts` (mode enumeration
-      + `terminalModeForPath` longest-prefix resolver + `defaultTerminalMode`) and
-      `components/cockpit/terminal-mode-tabs.tsx` (5-tab primary nav with route-driven active-mode resolution +
-      route → scope auto-sync). Mounted above the existing TradingVerticalNav in `services/trading/layout.tsx` and
-      above OBSERVE_TABS in `services/observe/layout.tsx`. Old routes preserved as deep links — the legacy
-      TRADING_TABS sprawl still renders below the new mode-tabs. 26 unit tests + 6 e2e tests pass; 23/23
-      dart-cockpit e2e regression-clean. Phase 9 retires the legacy per-route pages with redirects.
+      Explain · Ops). Shipped UI commit `8c6e84af`. New primitives at `lib/cockpit/terminal-modes.ts` (mode
+      enumeration + `terminalModeForPath` longest-prefix resolver + `defaultTerminalMode`) and
+      `components/cockpit/terminal-mode-tabs.tsx` (5-tab primary nav with route-driven active-mode resolution + route →
+      scope auto-sync). Mounted above the existing TradingVerticalNav in `services/trading/layout.tsx` and above
+      OBSERVE_TABS in `services/observe/layout.tsx`. Old routes preserved as deep links — the legacy TRADING_TABS sprawl
+      still renders below the new mode-tabs. 26 unit tests + 6 e2e tests pass; 23/23 dart-cockpit e2e regression-clean.
+      Phase 9 retires the legacy per-route pages with redirects.
 - [x] [AGENT] P0. **Phase 4** — Research IA simplification → six journey stages (Discover · Build · Train · Validate ·
       Allocate · Promote). Shipped UI commit `85300c46`. New primitives at `lib/cockpit/research-stages.ts` (stage
       enumeration + `researchStageForPath` longest-prefix resolver + `defaultResearchStage`) and
@@ -60,52 +59,63 @@ supersedes:
       slice-merging compatibility shims. `OutOfScopePlaceholder` renders the greyed "out of scope" affordance. The
       auto-deriver gives scope-reactive behavior across the entire registry without per-file churn (incremental
       explicit-dartMeta annotation is a long-tail follow-up). 36 unit tests pass.
-- [x] [AGENT] P0. **Phase 6** — Eight starter cockpit presets + persona-recommended starter (UI commit
-      `2d4bb3a2` for primitives + `375d69d2` for the visible UI). All 8 presets shipped with full metadata
-      (Executive Overview · Live Trading Desk · Arbitrage Command · DeFi Yield & Risk · Volatility Research Lab ·
-      Sports/Prediction Desk · Signals-In Monitor · Research-to-Live Pipeline). 6 of 8 support both monitor +
-      replicate; replicate-default always paper per §4.3. Vol Lab pins v1 venues to `["DERIBIT", "CME"]`.
-      `lib/cockpit/derive-preset-from-persona.ts` provides 4-tier resolution (persona-id → role band →
-      entitlement-derived → conservative default). `<PresetSelector />` mounted on /dashboard shows recommended
-      preset badged + leading. Full 4-step wizard UI deferred to a follow-up — the persona-recommended preset is
-      already selectable directly from /dashboard, which closes the same demo gap.
+- [x] [AGENT] P0. **Phase 6** — Eight starter cockpit presets + persona-recommended starter (UI commit `2d4bb3a2` for
+      primitives + `375d69d2` for the visible UI). All 8 presets shipped with full metadata (Executive Overview · Live
+      Trading Desk · Arbitrage Command · DeFi Yield & Risk · Volatility Research Lab · Sports/Prediction Desk ·
+      Signals-In Monitor · Research-to-Live Pipeline). 6 of 8 support both monitor + replicate; replicate-default always
+      paper per §4.3. Vol Lab pins v1 venues to `["DERIBIT", "CME"]`. `lib/cockpit/derive-preset-from-persona.ts`
+      provides 4-tier resolution (persona-id → role band → entitlement-derived → conservative default).
+      `<PresetSelector />` mounted on /dashboard shows recommended preset badged + leading. Full 4-step wizard UI
+      deferred to a follow-up — the persona-recommended preset is already selectable directly from /dashboard, which
+      closes the same demo gap.
 - [x] [AGENT] P0. **Phase 7** — Contextual locked previews + `/help/system-map`. Shipped UI commit `375d69d2`.
-      `lib/cockpit/ia-explainer-content.ts` is the SSOT for IA copy (6 surfaces + 5 Terminal modes + 6 Research
-      stages + ownership table). `<SystemMap />` mounted at `/help/system-map` (authenticated, platform-scoped).
-      `lib/cockpit/locked-previews.ts` ships 5 scope-aware previews (Arbitrage Promotion Checks · DeFi Yield
-      Research · Vol Lab · Signal Quality Analytics · Sports Execution Sim) with `scopeMatch` predicates.
-      `<ContextualLockedPreview />` renders on /dashboard. CTAs route to /help/system-map per the
-      single-help-surface design.
+      `lib/cockpit/ia-explainer-content.ts` is the SSOT for IA copy (6 surfaces + 5 Terminal modes + 6 Research stages +
+      ownership table). `<SystemMap />` mounted at `/help/system-map` (authenticated, platform-scoped).
+      `lib/cockpit/locked-previews.ts` ships 5 scope-aware previews (Arbitrage Promotion Checks · DeFi Yield Research ·
+      Vol Lab · Signal Quality Analytics · Sports Execution Sim) with `scopeMatch` predicates.
+      `<ContextualLockedPreview />` renders on /dashboard. CTAs route to /help/system-map per the single-help-surface
+      design.
 - [x] [AGENT] P0. **Phase 8** — Mock-mode liveness primitives. Shipped UI commit `375d69d2`.
       `lib/cockpit/mock-event-loop.ts` ships `MockEventLoop` (subscribe / start / stop / freeze) + 5 curated
       `DEFAULT_DRIFT_PROFILES` (P&L · exposure · alerts · positions · BTC price) with bounded mean-reverting random
       walks. Mulberry32 deterministic PRNG so screenshots reproduce. `?freeze=true` and `?pace=N` URL hooks ready.
       Per-widget subscription wiring is incremental — widgets call `loop.subscribe()` to opt in.
-- [x] [AGENT] P0. **Phase 9** — Route-redirect map (LAST). Shipped UI commit `375d69d2`.
-      `lib/cockpit/route-redirects.ts` ships `COCKPIT_ROUTE_REDIRECTS` (24 mappings — every legacy
-      `/services/trading/*` + `/services/observe/*` path → canonical cockpit anchor) + `cockpitAnchorForPath()`
-      longest-prefix resolver + `isCataloguePath()` guard (Strategy Catalogue stays distinct per §22). Actual
-      route DELETION is deferred per the plan's "do not delete or redirect large numbers of routes until scope,
-      cockpit, presets, widgets, and mock liveness are stable" rule — this commit ships the table + resolver
-      so the next-session work flips legacy pages off via the established mapping.
+- [x] [AGENT] P0. **Phase 9** — Route-redirect map + unified workspace shell (LAST). Shipped UI commits `375d69d2`
+      (route-redirect table SSOT), `f6922b8f` (unified `/services/workspace` shell + ReleaseBundlePanel +
+      CockpitWidgetGrid + dashboard tile redirects), `5abf8182` (RuntimeOverride authoring + 8 next.config observe
+      redirects). `lib/cockpit/route-redirects.ts` ships `COCKPIT_ROUTE_REDIRECTS` (24 mappings) +
+      `cockpitAnchorForPath()` longest-prefix resolver + `isCataloguePath()` guard (Strategy Catalogue stays distinct
+      per §22). Dashboard tiles now route directly into the cockpit shell:
+      `dart-terminal → /services/workspace?surface=terminal&tm=command`,
+      `dart-research → /services/workspace?surface=research&rs=discover`. The cockpit shell renders DartScopeBar +
+      surface-contextual primary nav (TerminalModeTabs / ResearchJourneyRail) + scope-summary header + CockpitWidgetGrid
+      (`widgetsForScope().primary` 12-tile bucket) + ReleaseBundlePanel (immutable bundle visualisation on Strategies /
+      Explain / Promote — DEMO_BUNDLE = ARBITRAGE_PRICE_DISPERSION v3.2.1 with 9 version pins, 4 validation-evidence
+      badges, 6 guardrail flags, 2 active runtime overrides) + RuntimeOverrideAuthoring (8-type discriminated form on
+      Command / Strategies with live `validateOverrideAgainstGuardrails` keystroke feedback + 8 typed rejection-code
+      messages). Phase 9 `next.config.mjs` ships 8 observe-route redirects (risk/scenarios/position-recon → tm=explain;
+      alerts → tm=command; strategy-health → tm=strategies; system-health/event-audit/recovery → tm=ops). MCP validated:
+      `/services/observe/risk → /services/workspace?surface=terminal&tm=explain`; size_multiplier 1.5× blocked with
+      `size_multiplier_above_one`; size_multiplier 0.5× + reason ≥8 chars allowed with submit enabled. Strategy
+      Catalogue NOT collapsed — stays universe surface.
 - [x] [AGENT] P0. **Phase 1A foundational primitive** — `StrategyAvailabilityResolver` (§4.5). Returns
       `{ visibility, reason, cta, coverageQualifier }`. Shipped UI commit `aeb16db7` (foundation) alongside the unified
-      `WorkspaceScope`. 18 unit tests passing in
-      `tests/unit/lib/architecture-v2/strategy-availability-resolver.test.ts` cover the eight persona classes (admin /
-      internal-trader / im-desk-operator / dart-full / signals-in / im-client / regulatory / prospect).
+      `WorkspaceScope`. 18 unit tests passing in `tests/unit/lib/architecture-v2/strategy-availability-resolver.test.ts`
+      cover the eight persona classes (admin / internal-trader / im-desk-operator / dart-full / signals-in / im-client /
+      regulatory / prospect).
 - [x] [AGENT] P0. **Phase 1B foundational primitive — Configuration Lifecycle** (§4.8). Shipped UI commit `a4c990e8`
       (re-pushed `24a193a8` post-rebase). Five typed primitives + state-machine helpers + guardrail validators:
-      `StrategyReleaseBundle` (immutable promotion artifact, `draft → candidate → approved_for_paper → paper →
-      approved_for_pilot → pilot → approved_for_live → live → monitor → retired` state machine), `RuntimeOverride`
-      (typed discriminated union of 8 override types — `size_multiplier / venue_disable / execution_preset /
-      risk_limit_tightening / treasury_route / pause_entries / exit_only / kill_switch` — with typed guardrail
-      rejection codes), `ExternalSignalStrategyVersion` (Signals-In path with its own state machine + idempotency-by-
-      version-tag helper), `TreasuryPolicyConfig` (versioned, bundles into release bundle) + `TreasuryOperationalConfig`
-      (audited, unversioned), `AccountConnectivityConfig` (CeFi accounts + DeFi wallets + signer profiles + outbound
-      endpoints + `hasCefiAccountsForVenues` / `hasDefiWalletsForProtocols` Promote validation gates). Added `pilot` +
-      `monitor` to `StrategyMaturityPhase`; updated `allowsAllocationCta` to include both. 6 new spec files / 77 tests
-      passing; full vitest sweep 234 files / 2218 tests pass / 2 skipped. 0 typecheck errors. Stubs only — UI lands in
-      Phase 5 / 6 / 7.
+      `StrategyReleaseBundle` (immutable promotion artifact,
+      `draft → candidate → approved_for_paper → paper →     approved_for_pilot → pilot → approved_for_live → live → monitor → retired`
+      state machine), `RuntimeOverride` (typed discriminated union of 8 override types —
+      `size_multiplier / venue_disable / execution_preset /     risk_limit_tightening / treasury_route / pause_entries / exit_only / kill_switch`
+      — with typed guardrail rejection codes), `ExternalSignalStrategyVersion` (Signals-In path with its own state
+      machine + idempotency-by- version-tag helper), `TreasuryPolicyConfig` (versioned, bundles into release bundle) +
+      `TreasuryOperationalConfig` (audited, unversioned), `AccountConnectivityConfig` (CeFi accounts + DeFi wallets +
+      signer profiles + outbound endpoints + `hasCefiAccountsForVenues` / `hasDefiWalletsForProtocols` Promote
+      validation gates). Added `pilot` + `monitor` to `StrategyMaturityPhase`; updated `allowsAllocationCta` to include
+      both. 6 new spec files / 77 tests passing; full vitest sweep 234 files / 2218 tests pass / 2 skipped. 0 typecheck
+      errors. Stubs only — UI lands in Phase 5 / 6 / 7.
 - [ ] [AGENT] P0. **Phase 5 widget vocabulary SSOT** (§4.9). Every `DartWidgetMeta.id` maps 1:1 to a canonical surface
       name from `unified-trading-system-ui/docs/reference/common-tools.md` (30 manual surfaces) or
       `automation-common-tools.md` (18 automated surfaces). Phase 5 ships with a `canonicalSurfaceName` field; v2
