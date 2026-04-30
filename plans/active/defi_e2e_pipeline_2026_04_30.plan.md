@@ -159,6 +159,55 @@ Phase 5  — Hardening
 - Multi-client allocation + per-client margin-pool accounting (next iteration after one client / one archetype proves
   out).
 
+## Phase 0+1 progress log (2026-04-30 — full day)
+
+### Late-day fixes shipped (after the 02:30 cascade)
+
+- **features-onchain `cda2ab2`** — same projection-mistake pattern fix across 5 more daily-feature calculators that had
+  the utilization bug shipped in `3671b06`: perps, rewards, risk_params, flash_loan, health_factor, liquidation. Each
+  one called `rate_data.select(self._base_cols(rate_data))` (keeping only timestamp + instrument_id) then referenced
+  `pl.col("X")` for columns that had been projected away. Same fix: include the referenced columns in the .select()
+  projection up-front.
+- **features-onchain `fc2333e`** — bumped `WriteGateConfig.nan_threshold` from 0.5 → 0.95 so DeFi feature_groups whose
+  upstream MTDS feed is index-heavy (lending_indices) can write partial parquets. Strategies do their own None-guard;
+  fail-closed semantics preserved.
+- **features-onchain `012c975`** — added `variable_borrow_rate` to the borrow-APY rename-map. Real Aave V3
+  lending_indices parquet schema for ETHEREUM uses `variable_borrow_rate` (not `borrow_rate`/`borrow_apy`), so before
+  this fix `aave_borrow_apy` came out >95% NaN and CARRY_RECURSIVE_STAKED + CARRY_STAKED_BASIS strategies saw no
+  borrow_apy_bps. Verified probing real 2025-06-15 ETH parquet (1000 rows, USDT example: variable_borrow_rate=0.049225).
+
+### Empirical pipeline progress
+
+- **Strategy-service backtest 7/7 dates successful** for DEFI 2025-06-15..21. Two real DeFi v2 archetype instances
+  initialized:
+  - `DEFI_ETH_STAKED_BASIS_HYPERLIQUID_SCE_1H` (CARRY_STAKED_BASIS, ETHERFI weETH + Hyperliquid perp)
+  - `DEFI_ETH_RECURSIVE_HEDGED_ALL_HYPERLIQUID_HUF_1H` (CARRY_RECURSIVE_STAKED, target_leverage=2.5,
+    flash_provider=MORPHO)
+- **`gs://strategy-store-central-element-323112/strategy_instructions/client_id=/strategy_id=*/day=2025-06-15/instructions.parquet`**
+  — empty parquets (0 instructions) because strategies need both `staking_apy_bps` (have via lst_yields) AND
+  `borrow_apy_bps` (now fixed via lending_rates path, populating).
+- **lst_yields** populated for all 7 days (2025-06-15..21, 6 rows/day).
+- **lending_rates 7-day population in progress** with the variable_borrow_rate fix applied.
+
+### Remaining bugs surfaced but not yet fixed
+
+- **PBM `FillEventConsumer.subscription_path` AttributeError** —
+  `position-balance-monitor-service/.../core/fill_event_consumer.py:150` calls `self.subscriber.subscription_path(...)`
+  but `PubSubQueueClient` has no such attribute. PBM batch-mode crashes immediately. Either add the missing method to
+  `PubSubQueueClient` (UTL) or change the consumer to use a different path-resolution approach.
+- **features-onchain multi-day `--start-date X --end-date Y` only iterates 1 day** — workaround is per-day invocation.
+  Needs root-cause investigation in date-range handling.
+- **WriteGate threshold may need further tuning** — even at 0.95 some feeds rejected. Long-term fix: derive missing APY
+  columns from cumulative indices (per-second rate × seconds-in-year) instead of leaving them NaN.
+
+### CLI mode discrepancy (CLAUDE.md aspirational?)
+
+CLAUDE.md says "Strategy-service interacts with position-balance-monitor, risk-and-exposure-service, execution-service —
+all CO-LOCATED" in batch mode. Empirically, the strategy-service `batch_handler` ONLY writes `instructions.parquet` — it
+does NOT run an in-process matching engine, position tracker, or PnL attribution. Fills + positions + PnL are produced
+by separate downstream services (execution-service.batch_backtest, PBM batch, pnl-attribution batch) reading the
+strategy parquets. Either CLAUDE.md is aspirational or there's a separate orchestration we haven't discovered.
+
 ## Phase 0 progress log (2026-04-30 ~02:30)
 
 ### Shipped this session
