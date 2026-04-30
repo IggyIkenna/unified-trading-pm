@@ -3,7 +3,7 @@ title: Watchlist — Populate from instruments-service GCS catalogue
 id: watchlist_from_instruments_2026_04_29
 status: ready
 created: 2026-04-29
-last_updated: 2026-04-29
+last_updated: 2026-04-30
 audience: backend engineers, frontend engineers
 parent_reference: market_data_delivery_architecture_2026_04_27.md
 sibling_plan: price_chart_gcs_delivery_2026_04_29.plan.md
@@ -13,6 +13,65 @@ codex_refs:
   - codex/02-data/subscription-model.md
   - codex/02-data/data-status-drilldown.md
 prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
+working_branch: feat/price-chart-gcs-delivery
+---
+
+## Status update — 2026-04-30
+
+The chart plan (`price_chart_gcs_delivery_2026_04_29.plan.md`) has
+shipped on branch `feat/price-chart-gcs-delivery` across
+`unified-trading-api`, `unified-trading-system-ui`,
+`unified-api-contracts`, `market-data-processing-service`. The chart
+now reads real GCS candles end-to-end. Plan status:
+`implemented`.
+
+**Patterns established by the chart implementation that this plan
+adopts**:
+
+- **Reader stays in-API, not delegated to UTL domain client.**
+  The chart implementation kept `BatchCandleReader` in
+  `unified-trading-api/services/batch_candles.py` and added
+  manifest-prune logic to it, instead of routing through
+  `MarketCandleDataDomainClient`. Pragmatic — the codex domain-
+  client refactor was scope-creep on top of "make the chart work."
+  We mirror that decision: keep `InstrumentsReader` in-API, add
+  manifest pruning, defer the domain-client refactor.
+- **Manifest backfill is a per-service script.** MDPS landed
+  `scripts/rebuild_processed_candles_manifest.py` that emits
+  per-symbol manifest rows (`date, venue, data_type, timeframe,
+  instrument_id`). instruments-service already publishes correct
+  `(date, venue)` rows, so we don't need an analogous backfill
+  script — but if we discover gaps in Unit C, we know the playbook.
+- **`*_BUCKET_VARIANT=prod|test` env toggle.** Chart shipped
+  `MARKET_DATA_BUCKET_VARIANT`; we ship `INSTRUMENTS_BUCKET_VARIANT`
+  in the same shape.
+- **Connection-pool tuning bonus.** The chart commit bumped
+  urllib3 pool_maxsize 10→32 on the storage client to match the
+  16-worker `ThreadPoolExecutor`. Apply the same to the
+  instruments-store client — same parallelism shape.
+- **Benchmark exists, output doc missing.** Chart shipped
+  `scripts/bench_candle_reads.py` but the
+  `plans/ai/reports/price_chart_gcs_benchmark_2026_04_29.md`
+  referenced in the chart plan's frontmatter doesn't exist on disk
+  yet. We follow the same benchmark pattern; we **also** write the
+  report file so the convention sticks.
+
+**What's already done that this plan can drop**:
+
+- ✗ `MDPS underfilling manifest, per-symbol pruning blocked` —
+  resolved by chart branch's MDPS backfill script (per-symbol
+  granularity).
+- ✗ Bench-script tooling boilerplate — copy structure from
+  `unified-trading-api/scripts/bench_candle_reads.py`.
+
+**What's NOT done that this plan still owns**:
+
+- All instruments-side work. `InstrumentsReader` exists from a
+  pre-branch commit (`292f4d8`) but bypasses the manifest. Route
+  uses it directly. UTL domain-client refactor still untouched.
+  Frontend silent fallback to `DEFAULT_INSTRUMENTS` still in place.
+- `INSTRUMENTS_BUCKET_VARIANT` env not wired.
+
 ---
 
 # Watchlist — Populate from instruments-service GCS
@@ -74,26 +133,26 @@ pattern, same manifest-prune pattern, same lifecycle.
 These mirror the chart plan §"Architectural decisions". Same
 reasoning, abbreviated; see chart plan for citations.
 
-### 1. Read path = UTL `InstrumentsDomainClient`
+### 1. Read path = keep `InstrumentsReader` in-API, add manifest prune
 
-Codex SSOT (`subscription-model.md` §"InstrumentsDomainClient"):
+**Original plan said**: delete `InstrumentsReader`, route through UTL
+`InstrumentsDomainClient`.
 
-```python
-from unified_domain_client import create_instruments_client
-client = create_instruments_client()
-instruments = client.get_instruments_for_date(
-    date='2026-04-14',
-    venue='NASDAQ',
-    instrument_type='SPOT_PAIR',
-)
-```
+**Revised after chart-plan precedent**: keep `InstrumentsReader` in
+`unified-trading-api/services/instruments_reader.py`, add
+manifest-prune helper to it, mirror the chart's `BatchCandleReader`
+shape. The domain-client refactor stays a separate plan.
 
-The current
-`unified-trading-api/services/instruments_reader.py` does direct
-`get_storage_client + pyarrow` with manual hive path construction —
-duplicated work. **Delete `InstrumentsReader`, route the API
-endpoints through UTL.** Same swap-point benefit as the chart plan:
-storage-backend changes happen in UTL, not in every consumer.
+Why the change: the chart plan landed by adding manifest pruning
+to the existing in-API reader instead of replacing it with the UTL
+client. Same decision pays here — less code churn, same swap-point
+later when the domain-client refactor becomes its own plan, faster
+path to a working watchlist.
+
+Codex SSOT for the long-term shape is still
+`subscription-model.md` §"InstrumentsDomainClient" — when the
+domain-client refactor lands, it touches both readers in one shot.
+For now: read directly, prune via manifest.
 
 ### 2. Manifest first, GCS second
 
@@ -130,6 +189,89 @@ layout is identical across variants per codex.
 Same resolution chain: UTL `UnifiedCloudConfig.project_id`
 (Secret-Manager-backed) → `GCP_PROJECT_ID` env fallback → 503 if
 both fail.
+
+### 8. Search and instrument navigation — **open problem, deferred to Unit G**
+
+**This plan does NOT solve search.** The current `WatchlistPanel.tsx`
+has a plain `Array.filter(s.symbol.includes(query))` over the active
+list — fine for the 9 hardcoded `DEFAULT_INSTRUMENTS` it sees today,
+useless for the ~10K instruments instruments-service publishes per
+day. The right shape is sketched here so the plan doesn't pretend
+it's solved; **implementation lives in a follow-up plan
+(`instrument_search_2026_05_XX.plan.md` — to be written)**.
+
+**Real volume** (verified 2026-04-29 listing GCS):
+
+| Bucket | Total/day | Dominant shape |
+|---|---:|---|
+| CEFI | ~6,170 | DERIBIT alone: 3,002 OPTION + 561 COMBO + 74 FUTURE + 16 PERPETUAL + 8 SPOT |
+| TRADFI | ~600 | NASDAQ + NYSE equities (~600), CME futures (~150), ICE/CBOE/FX trivial |
+| DEFI | ~2K | Uniswap V3/V4 pools dominant |
+| **Total in scope** | **~8.7K** | (sports/prediction excluded per scope) |
+
+The "150K" number people quote is the **pre-filter** universe.
+UAC's three universe whitelists
+(`cefi_instrument_universe.py`, `tradfi_instrument_universe.py`,
+`defi_major_assets.py`) cut it ~15× at ingestion time. We're
+searching ~10K, not 150K. Still too big for a flat list.
+
+**Catalogue refresh cadence**: daily, per
+`instruments-service/docs/instrument-catalogue.md` —
+`--operation refresh-catalogue` writes one parquet per
+`(category, venue, day)`. Not 15min. The 1h-TTL
+`InstrumentsReader._cache` is the right window for the API; we
+don't need to refresh more aggressively than the source.
+
+**Three-layer proposal** (committed to in Unit G's planning, not
+this plan):
+
+1. **Server-side `/instruments/search` endpoint.** Build an
+   in-memory index per (asset_group, day) — keys: `symbol`,
+   `base_asset`, `quote_asset`, `raw_symbol`, `instrument_key`.
+   At ~10K rows × 5 fields × ~12 bytes ≈ 600 KB total. Trivial.
+   Filter by `q`, `asset_groups[]`, `types[]`, `venue`, return
+   ranked top N. Doesn't need Postgres FTS / Elasticsearch /
+   Algolia at this size.
+2. **Type-aware drilldown for high-cardinality types.** Options
+   and dated futures don't fit a flat list. Pattern: pick
+   underlying → server returns chain (expiries × strikes × C/P)
+   → user clicks cells to add. Backend already has
+   `/api/derivatives/options-chain` and `/vol-surface` (mock
+   today); point them at instruments-service parquet. Same
+   data, different projection.
+3. **Prebuilt watchlists (presets) shipped as UAC SSOT.** JSON
+   under `unified_api_contracts/registry/preset_watchlists/`:
+   `nasdaq_100.json`, `sp_500.json`, `top_20_crypto.json`,
+   `defi_blue_chips.json`, `tradfi_major_futures.json`. Most
+   already exist as universe whitelists in UAC — wrap them as
+   user-facing watchlist definitions. Backend serves via
+   `GET /instruments/presets`; UI joins each preset's
+   `instrument_key` list against today's
+   `instrument_availability/` to fill in name/venue/price.
+   Updates: rare. NASDAQ-100 changes ~1×/quarter — maintain
+   manually in UAC.
+
+**Per-category UX summary** (Unit G implements):
+
+| Category × type | UX shape |
+|---|---|
+| CEFI spot/perp (~120) | Flat virtualized list, default sort = market cap |
+| CEFI options (~3,002 Deribit) | Chain picker — never flat list |
+| CEFI dated futures (~74) | Flat list, default sort = expiry |
+| TRADFI equities (~600) | Flat virtualized list, sortable by venue |
+| TRADFI futures (~50 roots × few expiries) | Flat list grouped by root |
+| TRADFI options | Disabled today (5,990/day per docs); chain picker when enabled |
+| DEFI pools / lending (~2K) | Flat virtualized list filtered by `instrument_type` |
+| SPORTS / PREDICTION | Out of scope (project-wide) |
+
+**For this plan (Units A–F)**: watchlist tabs (CeFi/TradFi/DeFi)
+populate with their full instrument lists. The existing
+client-side `includes(query)` filter handles within-tab search
+acceptably for ~600 TradFi or ~120 CEFI-non-option entries.
+**Deribit options are explicitly NOT shown in the watchlist for
+this plan** — they need the chain picker (Unit G), not a flat
+list. The watchlist's instrument-type filter excludes
+`instrument_type IN ('OPTION', 'COMBO')` until Unit G ships.
 
 ### 7. Frontend changes are minimal
 
@@ -316,8 +458,11 @@ unexpected divergences.
    `read_availability_index(bucket)`, derive the venue list for
    the target date, fetch only those. Compare to scenario 3.
 
-**Output**: append to
-`unified-trading-pm/plans/ai/benchmarks/instruments_gcs_2026_04_29.md`.
+**Output**: write to
+`unified-trading-pm/plans/ai/reports/watchlist_instruments_benchmark_2026_04_30.md`
+(directory pattern matches chart plan's frontmatter convention,
+even though the chart's report file isn't on disk yet —
+**we make sure ours lands**).
 
 **Numbers to look for**:
 
@@ -331,28 +476,34 @@ unexpected divergences.
 **No code merges.** Benchmark against current `InstrumentsReader`
 code path. Re-run after Unit A so we have before/after numbers.
 
-### Unit A — backend route swaps to UTL `InstrumentsDomainClient`
+### Unit A — extend `InstrumentsReader` with manifest prune + bucket variant
+
+**Mirrors what `BatchCandleReader` got in
+`unified-trading-api` commit `2672e8f`.** Keep the file, extend the
+class.
 
 **Files:**
 
-- `unified-trading-api/unified_trading_api/routes/instruments.py`
-  — rewrite `GET /instruments/list`'s real branch.
 - `unified-trading-api/unified_trading_api/services/instruments_reader.py`
-  → **delete**.
-- New: `unified-trading-api/unified_trading_api/services/instruments_query.py`
-  — thin orchestrator that:
-  1. Resolves bucket from `(category, project_id, variant)`.
-  2. Loads `read_availability_index(bucket)`, cached, filters for
-     `service_name=="instruments-service"` rows.
-  3. If `as_of` not provided: pick the most recent date with at
-     least one shard from the manifest.
-  4. If `venue` provided: fetch one shard via UTL
-     `InstrumentsDomainClient`. Else: fan out across all venues
-     present in the manifest for that date.
-  5. Concat + paginate. Project to UI-friendly rows
-     (`instrument_key`, `venue`, `symbol`, `instrument_type`,
-     `asset_class`, `base_asset`, `quote_asset`, plus
-     `category` derived from bucket).
+  — add `_prune_dates_via_manifest`, `_resolve_bucket` (with
+  variant), `_tune_connection_pool`. Keep
+  `_normalise_row` and the existing 1h-TTL row cache as-is.
+- `unified-trading-api/unified_trading_api/routes/instruments.py`
+  — extend `GET /instruments/list`'s real branch:
+  1. Use the new `_resolve_bucket(category, project_id, variant)`
+     helper.
+  2. If `as_of` not provided: read manifest, pick the most recent
+     date with `service_name=="instruments-service"` and the
+     requested venue (or any venue if filter omitted).
+  3. If `venue` provided: fetch the one shard via existing
+     `InstrumentsReader.get_instruments`.
+  4. If `venue` omitted: list venues from manifest for the chosen
+     date, fetch each in parallel via
+     `ThreadPoolExecutor(max_workers=min(16, n_venues))`.
+  5. Concat. Pagination unchanged.
+- `unified-trading-api/unified_trading_api/routes/instruments.py`
+  — `/catalogue` and `/registry` real branches: same pattern,
+  smaller surface (no pagination on `/catalogue`).
 
 **Route behavior** (`/instruments/list`):
 
@@ -435,6 +586,31 @@ After A + B land:
    re-fetch. Manifest read piggybacks on the first call; doesn't
    show as a separate request from the UI's perspective.
 
+### Unit G — instrument search + drilldown + presets (separate plan)
+
+**Out of scope for this plan**, but seeded here so it doesn't get
+forgotten. Write `instrument_search_2026_05_XX.plan.md` covering:
+
+- `/instruments/search` endpoint with in-memory index per
+  (asset_group, day), 1h refresh aligned with `InstrumentsReader._cache`.
+- `/instruments/option-chain?underlying=&venue=` — projects
+  instruments-service OPTION rows for one underlying into a
+  chain shape (expiries, strikes, call/put grid). Replace mock
+  `/api/derivatives/options-chain`.
+- `/instruments/preset-lists` — serves UAC SSOT presets.
+  Add presets to `unified_api_contracts/registry/preset_watchlists/`:
+  `nasdaq_100.json`, `sp_500.json`, `top_20_crypto.json`,
+  `tradfi_major_futures.json`, `defi_blue_chips.json`.
+- UI: replace `WatchlistPanel`'s flat-list search with a typeahead
+  fed by `/instruments/search`; add option-chain drawer for
+  Deribit options; add preset selector to the watchlist picker.
+
+**Why split**: this plan delivers "watchlist shows real data".
+Unit G delivers "watchlist is usable at scale". They're
+separable: Unit G presupposes Units A–F are done, and Unit G's
+work is roughly twice the size of A–F combined (UI components,
+typeahead, chain picker, preset registry).
+
 ### Unit D — documentation
 
 - This plan: mark Units A/B/C complete with date.
@@ -501,8 +677,14 @@ F. Backend benchmarks documented:
    - 6-shard parallel p99
    - Manifest-prune win delta
 
-G. `services/instruments_reader.py` deleted; route calls UTL
-   client directly.
+G. `services/instruments_reader.py` extended with manifest prune
+   + bucket variant + connection-pool tune. **Not deleted** —
+   matches chart plan's `BatchCandleReader` precedent.
+
+H. Benchmark report file lands at
+   `plans/ai/reports/watchlist_instruments_benchmark_2026_04_30.md`
+   with before/after numbers (single-shard + 6-shard parallel +
+   manifest-pruned).
 
 ---
 
