@@ -45,8 +45,14 @@ supersedes:
       above OBSERVE_TABS in `services/observe/layout.tsx`. Old routes preserved as deep links — the legacy
       TRADING_TABS sprawl still renders below the new mode-tabs. 26 unit tests + 6 e2e tests pass; 23/23
       dart-cockpit e2e regression-clean. Phase 9 retires the legacy per-route pages with redirects.
-- [ ] [AGENT] P0. **Phase 4** — Research IA simplification → six journey stages (Discover · Build · Train · Validate ·
-      Allocate · Promote).
+- [x] [AGENT] P0. **Phase 4** — Research IA simplification → six journey stages (Discover · Build · Train · Validate ·
+      Allocate · Promote). Shipped UI commit `85300c46`. New primitives at `lib/cockpit/research-stages.ts` (stage
+      enumeration + `researchStageForPath` longest-prefix resolver + `defaultResearchStage`) and
+      `components/cockpit/research-journey-rail.tsx` (horizontal journey rail with numbered chips connected by progress
+      arrows so the user reads the lifecycle as a left-to-right narrative). Mounted above the existing BUILD_TABS in
+      `services/research/layout.tsx`. Old BUILD_TABS / STRATEGY_SUB_TABS / ML_SUB_TABS routes preserved as deep links.
+      26 unit tests + 6 e2e tests pass; 29/29 dart-cockpit e2e regression-clean. Phase 9 retires the legacy per-route
+      pages.
 - [ ] [AGENT] P0. **Phase 5** — Scope-reactive widgets via `ScopedDataProvider` + `useScopedData()` + `DartWidgetMeta` +
       compatibility shims for `useOptionsData` / `useDeFiData` / `useSportsData` / `usePredictionsData`. Migrate widgets
       in priority order (§11).
