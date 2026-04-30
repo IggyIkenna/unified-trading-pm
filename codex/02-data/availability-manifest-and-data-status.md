@@ -8,6 +8,9 @@ scope: [engineer, admin]
 > per service, how the data status page works, how availability % is calculated, and the integrity principles that make
 > it trustworthy. All other docs, CLAUDE.md, cursor rules, and memory files cross-reference this document.
 
+> **Reading this for chart debugging?** See also `chart-candle-delivery-flow.md` for the end-to-end flow from the
+> price-chart widget through the manifest to the GCS parquets.
+
 ## What Is the Availability Manifest?
 
 Every GCS data bucket has an `_index/availability_index.parquet` file. This parquet file is the **index of what data
