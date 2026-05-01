@@ -136,7 +136,8 @@ verify shards, can't iterate.
       `/data-status/schema`. The user reports it's not working. Verify the endpoint actually returns the registered
       `SchemaDefinition` for the queried data type — likely a backend gap where unregistered shards return 404 or empty.
       Confirm `SchemaDefinition` registry is loaded for ALL data types being queried (instruments, market-tick,
-      market-data-processing). Cross-check with [02-data/schema-governance.md](../codex/02-data/schema-governance.md).
+      market-data-processing). Cross-check with
+      [02-data/schema-governance.md](../../codex/02-data/schema-governance.md).
 
 ## Phase 0.5 — Verify in-flight sports work has settled
 

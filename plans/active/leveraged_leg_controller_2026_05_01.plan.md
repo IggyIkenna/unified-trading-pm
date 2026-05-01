@@ -126,18 +126,29 @@ Phase 6 — Hardening (final)
 
 ### Code gates
 
-- [x] UAC `quality-gates.sh` passes — exit=0 (2026-05-01 late evening sweep)
-- [x] execution-service `quality-gates.sh` passes — exit=0
+- [x] UAC `quality-gates.sh` passes — exit=0 after the cross-repo workspace-validator unblock (broken markdown link in a
+      sibling plan was failing the shared production-readiness validator step 6/6 across 3 repos; one-line fix committed
+      separately, then UAC re-ran clean: "ALL QUALITY GATES PASSED (164s)").
+- [ ] execution-service `quality-gates.sh` — exit=1 with **3 pre-existing failures unrelated to this work**:
+      `tests/unit/adapters/test_storage.py::TestBuildGcsPath::test_build_path_with_suffix` +
+      `test_build_path_without_suffix` both call `StorageAdapter.build_gcs_path(category=...)` but the API is mid-rename
+      to `asset_group=...` per the workspace-wide `category` → `asset_group` vocabulary plan
+      (`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`, waves C/D = features-\* + execution-service consumer keys
+      still queued).
+      `tests/unit/test_audit_instrument_factory.py::TestCreateTradfiFromConfig::     test_future_creation_golden_path`
+      fails on a separate `factory_tradfi.py` regression also unrelated to this session. 5690 of 5693 tests pass; the
+      new 9-test `leveraged_leg_controller` suite + 9-test `dust_conversion_router` suite are fully green. Not a blocker
+      for this plan.
 - [ ] strategy-service `quality-gates.sh` — exit=1 with **2 pre-existing failures unrelated to this work**:
       `tests/unit/test_service_startup.py::TestCLIParserBuilds::test_parse_args_batch_mode` +
       `test_parse_args_live_mode` both fail because UTL `ServiceCLI.__init__()` removed the `categories` keyword
       argument upstream — strategy-service's `service_entry.py` still passes it. 2052 of 2054 tests pass; the new
       252-test v2 suite is fully green. Tracked as a follow-up in memory; not a blocker for this plan.
-- [x] position-balance-monitor-service `quality-gates.sh` passes — exit=0
-- [x] risk-and-exposure-service `quality-gates.sh` passes — exit=0
-- [x] basedpyright clean across all modified repos — UAC + execution-service + PBM + risk pass type-check phase cleanly
-      (exit=0 covers all 6 QG steps including basedpyright). strategy-service basedpyright also clean — the only
-      failures there are pytest, not type-check.
+- [x] position-balance-monitor-service `quality-gates.sh` passes — exit=0 after the same workspace-validator unblock.
+- [x] risk-and-exposure-service `quality-gates.sh` passes — exit=0 after the same workspace-validator unblock ("ALL
+      QUALITY GATES PASSED (129s)").
+- [x] basedpyright clean across all modified repos — every QG sweep (passing or failing) cleared step 4/6 (TYPE CHECK).
+      The exit=1 on execution-service + strategy-service is pytest-only, not type-check.
 
 ### Test gates
 
