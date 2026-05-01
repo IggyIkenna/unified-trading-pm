@@ -38,15 +38,24 @@ ledger:
     owner: ikenna
     replaces_what: "v1 strategy implementations (~63 files / ~18k LoC)"
     delete_condition: >
-      Production STRATEGY_DISPATCH_MODE flipped to v2_prod and observed stable for >= 1 week. v2 supersession audit
-      confirms zero external callers across the 67-repo workspace.
+      V1-RETIRE Phase 2 surgical refactor (8 steps; see notes). Phase 1 already shipped (strategy-service 8035162) so
+      legacy mode is already rejected at startup; production runs on v2_prod default. Phase 2 deletes the source files
+      and migrates v2_shadow callers off create_strategy_instance.
     known_import_count: 147
     replacement: strategy_service/engine/strategies/v2/
-    target_wave: V1-RETIRE (workspace audit 2026-05-01)
-    ready_to_delete: false
+    target_wave: V1-RETIRE Phase 2 (workspace audit 2026-05-01)
+    ready_to_delete: true
     notes: >
-      Supersession proven on 2026-05-01: all 62 v1 factory keys mapped to v2 archetypes via LEGACY_TYPE_TO_SLOT, all 13
-      v2 archetypes implemented, parity tests green. Sole blocker is the prod dispatch- mode flip -- not a code blocker.
+      READY FOR EXECUTION 2026-05-01. Supersession proven: all 62 v1 factory keys mapped, all 13 v2 archetypes
+      implemented, zero external callers across 67-repo workspace, parity tests green. Phase 2 surgery (focused session,
+      ~2-3 hours): (1) drop "v2_shadow" from Literal in config.py + batch_utils.py (only "v2_prod" remains); (2) delete
+      _archived_pre_v2/ directory; (3) delete legacy_type_to_archetype.py; (4) strip 145-symbol re-exports from
+      engine/strategies/__init__.py; (5) replace batch_utils.create_strategy_instance with hard-raise OR remove + remove
+      call sites; (6) strip 5 inline _archived_pre_v2 imports from batch_handler.py (lines 601, 1250, 1265, 1276, 1287);
+      (7) delete tests/unit/test_prediction_mapping.py + test_legacy_type_to_archetype.py; (8) update
+      tests/unit/cli/handlers/test_strategy_dispatch.py to assert v2_shadow rejected. Per the "if v2 tests pass, just
+      delete the old stuff" directive, gating is now zero-touch -- the surgery is mechanical and test-suite verifiable
+      end-to-end.
 
   - id: strategy_legacy_type_to_archetype
     component: strategy_service/engine/strategies/v2/legacy_type_to_archetype.py
