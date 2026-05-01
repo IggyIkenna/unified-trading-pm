@@ -486,6 +486,51 @@ UAC schema (shipped 2026-05-01 commit `473af9d`): `unified_api_contracts.interna
 - Per-asset reserve_factor refinement in Aave APY synthesis (cosmetic — already documented as a follow-up in
   features-onchain `d586215`)
 
+## Phase 6 hardening follow-on (2026-05-01 night session)
+
+After the prior session closed Phase 6's main pipeline (UAC + features-onchain + strategy-service + execution-service +
+pnl-attribution-service all green), five operator-asked items shipped in a single follow-on session:
+
+- [x] **Phase A** — Per-archetype `holding_wallet` schema. UAC `StrategyInstanceDefinition` + `StrategyInstanceIdentity`
+      gain a `holding_wallet: str | None` field; `V2EngineOrchestrator.register_instance` copies definition → identity
+      with `params['holding_wallet']` taking override precedence; `lst_holding_wallet_from_params` resolver in
+      features-onchain `parquet_dust_loader.py` checks `engine.identity.holding_wallet` first then falls through to
+      `params['holding_wallet']`. Removes the v0 fallback hardcode and lets the persisted `StrategyInstanceDefinition`
+      be the single source of truth for which wallet a strategy claims rewards from.
+- [x] **Phase B** — Solana inner-instruction walking. features-onchain `chain_event_scanners.py` replaces the
+      single-transfer extractor with `_extract_spl_transfers` that walks `meta.innerInstructions[*].instructions[*]` for
+      SPL Token program transfers (both `transferChecked` and legacy `transfer`), filtered by source/authority matching
+      the registered distributor. Closes the Jupiter-style multi-hop blind spot — previously the scanner only saw the
+      outermost instruction, so any reward conversion routed through Jupiter / Orca multi-hop swaps was missed. Two-pass
+      fallback to post-balance diff retained.
+- [x] **Phase C** — L2 book shape support in `MtdsBookDataProvider` (execution-service). Schema detection via
+      `bid_px_00`/`ask_px_00` column presence: when MTDS canonical parquet uses the Databento `mbp_10` shape, the
+      provider walks `bid_px_NN`/`bid_sz_NN`/`ask_px_NN`/`ask_sz_NN` up to `l2_levels` (capped by what the schema
+      actually has) and returns `{"bids": [(px, qty), ...], "asks": [...]}` matching `BookType.L2_MBP` matcher kwargs.
+      Falls back to L0_TOB shape when only `best_bid`/`best_offer` present (the `tbbo` parquet shape). Tighter slippage
+      simulation for larger conversion sizes — single-level top-of-book was masking impact on $100k+ EIGEN/ETHFI
+      realisations.
+- [x] **Phase D** — Live scheduler wiring. `deployment-service/terraform/gcp/lst_seasonal_rewards_scheduler.tf` declares
+      a Cloud Run Job (`${env_prefix}-features-onchain-collect-lst-seasonal-rewards`, 2 CPU / 4GiB / 2400s timeout,
+      image pulled from features-onchain-service Artifact Registry) + Cloud Scheduler cron (`25 2 * * *` UTC, fires
+      before the features-onchain T+1 recon at 02:30 UTC). Reuses the existing `t1_batch_sa` for run.invoker; the
+      runtime SA `unified_trading` already has the secretmanager + storage roles. Wrapper command computes
+      `--date $(yesterday-utc)` at runtime so the job always picks up the just-closed UTC day.
+- [x] **Phase E** — Production smoke runbook.
+      `unified-trading-pm/codex/14-playbooks/cross-cutting/lst-seasonal-rewards-smoke.md` walks through Secret Manager
+      key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet audit, ad-hoc
+      `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the credential-free
+      SIT, cron enable + 24h first-fire monitoring, and rollback (`gcloud scheduler jobs pause`).
+
+Outstanding (not shipped this session — not load-bearing):
+
+- [ ] Phase A/B/C tests — formal unit tests pinning the holding_wallet override precedence, Solana inner-instruction
+      walk schema invariants, L2 book shape projection. Currently smoke-tested via the surrounding chain. Recommended
+      next session.
+- [ ] features-onchain-service Docker image rebuild — Cloud Build needs to emit a new `:latest` tag containing the Phase
+      B inner-instruction walker before the cron is enabled, otherwise the Cloud Run Job pulls a stale image.
+      Operator-side; not a code change.
+
 ## Notes for resumption across sessions
 
 - Active feature branch: `live-defi-rollout`
