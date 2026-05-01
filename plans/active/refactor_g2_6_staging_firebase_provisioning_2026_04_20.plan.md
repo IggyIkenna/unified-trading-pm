@@ -256,11 +256,11 @@ baseline; the Preservation requirements gate is the sign-off contract on top of 
 > reversed — UAT shares the prod Firebase project (`central-element-323112`), separated only by hostname + hosting
 > target. Phase A scope is now (1) domain authorization, (2) demo-user provisioning. Both are operator-side.
 
-- [ ] [OPERATOR] P0. Confirm `uat.odum-research.com` is in **Firebase console → Authentication → Settings → Authorized
-      domains** for project `central-element-323112`. Add it if missing (Firebase rejects sign-ins from domains not on
-      this list with `auth/unauthorized-domain`). Email/password + Google OAuth sign-in methods are already enabled on
-      the shared project (used by prod) — no separate sign-in-method config needed.
-- [ ] [OPERATOR] P0. Provision real Firebase users for every demo email currently in `lib/auth/personas.ts`. The demo
+- [x] [OPERATOR] P0. Confirm `uat.odum-research.com` is in **Firebase console → Authentication → Settings → Authorized
+      domains** for project `odum-staging` (NOT central-element-323112 — corrected per 2026-05-01 audit). Verified
+      2026-05-01 via Identity Toolkit REST: `localhost`, `odum-staging.firebaseapp.com`, `odum-staging.web.app`,
+      `uat.odum-research.com` all in `authorizedDomains`.
+- [x] [OPERATOR] P0. Provision real Firebase users for every demo email currently in `lib/auth/personas.ts`. The demo
       provider authenticates these client-side; FirebaseAuthProvider does not — it calls `signInWithEmailAndPassword`
       against the real pool. Until each email has a Firebase user record, switching UAT to firebase auth will break
       login (`auth/user-not-found`). Required emails: - `admin@odum-research.co.uk` (admin) -
@@ -270,18 +270,24 @@ baseline; the Preservation requirements gate is the sign-off contract on top of 
       `prospect-dart-signals-in@odum-research.com`, `prospect-odum-signals@odum-research.com`,
       `prospect-regulatory@odum-research.com` Use the same passwords as `PERSONAS` for consistency. Provision via
       Firebase console → Authentication → Add user, or scripted via `firebase-admin` `createUser()`.
-- [ ] [OPERATOR] P0. Confirm user-management-api `/authorize` returns the right role + entitlements + org for each demo
+- [x] [OPERATOR] P0. Confirm user-management-api `/authorize` returns the right role + entitlements + org for each demo
       email after sign-in. The endpoint keys off email; demo emails need to be seeded into whatever Firestore collection
       or admin-DB it reads.
 
 ### Phase B — Env-var + config surface
 
-- [ ] [AGENT] P0. Add `NEXT_PUBLIC_FIREBASE_API_KEY_STAGING`, `AUTH_DOMAIN_STAGING`, `PROJECT_ID_STAGING`,
-      `STORAGE_BUCKET_STAGING`, `MESSAGING_SENDER_ID_STAGING`, `APP_ID_STAGING` to `.env.example` in both UIs.
-- [ ] [AGENT] P0. `unified-trading-system-ui/lib/admin/firebase.ts` + `lib/auth/firebase-config.ts` — extend config
-      switcher to read `_STAGING`-suffixed vars when `NEXT_PUBLIC_ENV=staging`. Default to prod vars when unset.
-- [ ] [AGENT] P0. Add `firebase.json` + `.firebaserc` entries for the staging project (keeps multi-project CLI config
-      working).
+- [x] [AGENT] P0. ~~Add `NEXT_PUBLIC_FIREBASE_API_KEY_STAGING`, `AUTH_DOMAIN_STAGING`, `PROJECT_ID_STAGING`,
+      `STORAGE_BUCKET_STAGING`, `MESSAGING_SENDER_ID_STAGING`, `APP_ID_STAGING` to `.env.example` in both UIs.~~
+      **Different mechanism shipped:** rather than runtime suffix-switching, the build-time `BUILD_ENV_FILE` arg in the
+      Dockerfile picks `config/docker-build.env.uat` (for UAT) vs `config/docker-build.env.production` (for prod). The 6
+      NEXT*PUBLIC_FIREBASE*\* are inlined at Docker build time, not runtime-switched. Same outcome, simpler mental
+      model.
+- [x] [AGENT] P0. ~~`unified-trading-system-ui/lib/admin/firebase.ts` + `lib/auth/firebase-config.ts` — extend config
+      switcher~~ **Not needed: build-time inlining (above) means runtime config has a single set of values per image. No
+      code-level switcher.**
+- [x] [AGENT] P0. Add `firebase.json` + `.firebaserc` entries for the staging project. **Done:** `.firebaserc` has
+      `"staging": "odum-staging"` alias; `firebase.json` has `uat` hosting target → Cloud Run `odum-portal-staging` in
+      `targets.central-element-323112.hosting`.
 
 ### Phase C — Firestore security rules
 

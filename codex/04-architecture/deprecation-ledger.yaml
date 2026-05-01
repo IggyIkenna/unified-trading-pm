@@ -1,0 +1,224 @@
+# Deprecation Ledger — workspace-wide retirement tracker
+#
+# Workspace audit P4.8 (2026-05-01). Single grep-discoverable file
+# tracking every shim, archived path, parallel implementation, or
+# transitional config that's intentionally still alive but should retire
+# under a known condition. Prevents "temporary shim forever" syndrome.
+#
+# Update protocol:
+#   - Add an entry whenever you ship a shim, dual-path, or `_archived_*`
+#     directory that consumers must keep importing for a while.
+#   - When deletion lands, remove the entry from this file in the same
+#     commit (do not just mark "deleted" -- the ledger lists what's still
+#     on the chopping block).
+#   - When a target_wave or delete_condition flips to satisfied, leave
+#     the entry but set ``ready_to_delete: true``.
+#
+# Schema:
+#   - id:                short slug for cross-referencing
+#     component:         path or fully-qualified module name
+#     repo:              owning repo
+#     status:            shim | archived | parallel | transitional_config
+#     owner:             github handle or team
+#     replaces_what:     short description of the system it succeeds
+#     delete_condition:  one-line predicate that must be true before delete
+#     known_import_count: 0  # populated by grep at audit time
+#     replacement:       path of the new thing (if any)
+#     target_wave:       P-tag from a workspace audit / plan
+#     ready_to_delete:   false  # flip when delete_condition is met
+#     notes:             freeform context
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+ledger:
+  - id: strategy_archived_pre_v2
+    component: strategy_service/engine/strategies/_archived_pre_v2/
+    repo: strategy-service
+    status: archived
+    owner: ikenna
+    replaces_what: "v1 strategy implementations (~63 files / ~18k LoC)"
+    delete_condition: >
+      Production STRATEGY_DISPATCH_MODE flipped to v2_prod and observed stable for >= 1 week. v2 supersession audit
+      confirms zero external callers across the 67-repo workspace.
+    known_import_count: 147
+    replacement: strategy_service/engine/strategies/v2/
+    target_wave: V1-RETIRE (workspace audit 2026-05-01)
+    ready_to_delete: false
+    notes: >
+      Supersession proven on 2026-05-01: all 62 v1 factory keys mapped to v2 archetypes via LEGACY_TYPE_TO_SLOT, all 13
+      v2 archetypes implemented, parity tests green. Sole blocker is the prod dispatch- mode flip -- not a code blocker.
+
+  - id: strategy_legacy_type_to_archetype
+    component: strategy_service/engine/strategies/v2/legacy_type_to_archetype.py
+    repo: strategy-service
+    status: shim
+    owner: ikenna
+    replaces_what: "v1 strategy_type strings -> v2 archetype slot mapping"
+    delete_condition: >
+      Same as strategy_archived_pre_v2 -- this shim is the bridge that keeps callers importing v1 names while routing to
+      v2 archetypes. Deletion follows V1-RETIRE.
+    known_import_count: 1
+    replacement: direct v2 archetype imports
+    target_wave: V1-RETIRE
+    ready_to_delete: false
+
+  - id: strategy_dispatch_mode_legacy
+    component: strategy_dispatch_mode = "legacy" # config value
+    repo: strategy-service
+    status: transitional_config
+    owner: ikenna
+    replaces_what: "fallback that routes through v1 strategy factory"
+    delete_condition: >
+      Prod flipped to v2_prod and observed stable. After delete, the Literal type collapses from ["legacy", "v2_shadow",
+      "v2_prod"] to ["v2_shadow", "v2_prod"]. Setting STRATEGY_DISPATCH_MODE=legacy after this point should raise
+      loudly.
+    known_import_count: 0
+    replacement: dispatch_mode in {v2_shadow, v2_prod}
+    target_wave: V1-RETIRE
+    ready_to_delete: false
+
+  - id: strategy_engine_backtest
+    component: strategy_service/engine/backtest/
+    repo: strategy-service
+    status: archived
+    owner: ikenna
+    replaces_what: "(none) -- shared backtest infrastructure, not v1 strategy code"
+    delete_condition: never -- this is RETAINED indefinitely
+    known_import_count: 0
+    replacement: n/a
+    target_wave: P3.3 (RETAIN comment landed; no deletion ever)
+    ready_to_delete: false
+    notes: >
+      Originally tagged for deletion in the workspace audit; deep audit 2026-05-01 corrected: this is shared backtest
+      infrastructure (replay loops, benchmark fills, runner) used by Group B backtesting. v2 has no replacement -- this
+      is orthogonal to strategy architecture and stays. Listed here so future agents do not re-flag it.
+
+  - id: risk_v2_orchestrator
+    component: risk_and_exposure_service/v2/
+    repo: risk-and-exposure-service
+    status: parallel
+    owner: ikenna
+    replaces_what: "(forward path) -- 4-layer pre-trade gate orchestrator"
+    delete_condition: never -- RETAIN as forward path
+    known_import_count: 0
+    replacement: n/a
+    target_wave: C2 (RETAIN marker landed 2026-05-01)
+    ready_to_delete: false
+    notes: >
+      v2/ is the future of pre-trade gating (consumes v2 instructions + VenueCapabilityV2 from UAC). v1 core/ +
+      pre_trade/ stays for metrics-computation. Complementary, not competing. Not a retirement candidate -- listed here
+      to short-circuit future re-litigation.
+
+  - id: pubsub_margin_warnings_legacy_topic
+    component: MARGIN_WARNINGS pubsub topic (zero publishers)
+    repo: cross-repo
+    status: shim
+    owner: ikenna
+    replaces_what: "scattered service-local margin warnings"
+    delete_condition: >
+      PBM canonical MarginEvent emitter (Wave C1) lands and all consumers migrate to the margin-events topic via UAC
+      EVENT_TOPIC_REGISTRY. Then the legacy topic name can be removed from pubsub.py declarations.
+    known_import_count: 0
+    replacement: margin-events (UAC EVENT_TOPIC_REGISTRY)
+    target_wave: C1 (PBM emitter)
+    ready_to_delete: false
+
+  - id: alerting_inline_hf_thresholds
+    component: alerting_service/rules/defi_rules.py:_HEALTH_FACTOR_CRITICAL_THRESHOLD
+    repo: alerting-service
+    status: shim
+    owner: ikenna
+    replaces_what: "inlined Aave HF thresholds (1.2 / 1.05)"
+    delete_condition: ALREADY DELETED 2026-05-01 (Wave C4 commit f4c308f)
+    known_import_count: 0
+    replacement: UAC LIQUIDATION_PARAMS_REGISTRY[AAVE_V3]
+    target_wave: C4
+    ready_to_delete: true
+    notes: Listed for audit-trail completeness; removed in C4.
+
+  - id: risk_inline_hf_thresholds
+    component: risk_and_exposure_service/engine/risk_metrics.py:Decimal("1.5"|"1.3"|"1.1")
+    repo: risk-and-exposure-service
+    status: shim
+    owner: ikenna
+    replaces_what: "inlined Aave HF thresholds (1.5 / 1.3 / 1.1)"
+    delete_condition: ALREADY DELETED 2026-05-01 (Wave C2 commit 6c86129)
+    known_import_count: 0
+    replacement: UAC LIQUIDATION_PARAMS_REGISTRY[margin_model]
+    target_wave: C2
+    ready_to_delete: true
+
+  - id: pbm_lightweight_hf_route
+    component: position_balance_monitor_service/api/routes/risk.py:97-100
+    repo: position-balance-monitor-service
+    status: shim
+    owner: ikenna
+    replaces_what: "lightweight local HF computation in PBM API route"
+    delete_condition: >
+      Wave C1 lands -- PBM becomes the canonical MarginEvent producer via UTL LiquidationMonitor, and the local
+      computation in this route is replaced with a snapshot read.
+    known_import_count: 1
+    replacement: UTL LiquidationMonitor.assess() + MarginEvent emission
+    target_wave: C1
+    ready_to_delete: false
+
+  - id: strategy_grid_generator_orphan
+    component: strategy_service/cli/grid_generator.py
+    repo: strategy-service
+    status: archived
+    owner: ikenna
+    replaces_what: "obsolete UI fixture, zero workspace imports"
+    delete_condition: >
+      Confirmed zero callers (already verified). Delete bundled with Wave C5 strategy cleanup once DeFi pipeline plan
+      ships.
+    known_import_count: 0
+    replacement: n/a
+    target_wave: C5 (P3.6)
+    ready_to_delete: true
+    notes: Deferred until DeFi-pipeline-extension waves ship to avoid concurrent-edit collision.
+
+  - id: strategy_portfolio_allocator_archetypes_stub
+    component: strategy_service/portfolio_allocator/archetypes.py:get_allocator_archetype_engine
+    repo: strategy-service
+    status: shim
+    owner: ikenna
+    replaces_what: "(unused stub raising NotImplementedError)"
+    delete_condition: zero callers verified
+    known_import_count: 0
+    replacement: n/a
+    target_wave: C5 (P3.7)
+    ready_to_delete: true
+
+  - id: pbm_defi_adapter_stubs
+    component: position_balance_monitor_service/position_interface/adapters/{uniswap,morpho,aave,betfair,polymarket}.py
+    repo: position-balance-monitor-service
+    status: shim
+    owner: ikenna
+    replaces_what: "(planned implementation slots) -- 12 NotImplementedError adapter methods"
+    delete_condition: >
+      Per-adapter implementation lands as part of asset_group rollout (Q2-2026 schedule). Each NotImplementedError must
+      be replaced with a real adapter method backed by the venue's API or RPC.
+    known_import_count: 12
+    replacement: real adapter implementations
+    target_wave: P4.3
+    ready_to_delete: false
+    notes: Intentional slot placeholders, not architectural debt -- but blocks "every asset_group works overnight."
+
+# Audit-trail entries (not active retirements, just recorded for history).
+audit_trail:
+  - date: 2026-05-01
+    wave: V1-RETIRE supersession audit
+    finding: >
+      Confirmed: all 62 v1 factory keys mapped to v2 archetypes; all 13 v2 archetypes implemented (~9.8k LoC); zero
+      external callers workspace-wide; parity tests green. Deletion gated only on prod dispatch-mode flip + 1-week
+      observation.
+  - date: 2026-05-01
+    wave: P3.3 correction
+    finding: >
+      engine/backtest/ is shared backtest infrastructure, NOT v1 strategy code. Original audit recommendation to delete
+      was wrong; RETAIN comment added to engine/backtest/__init__.py.
+  - date: 2026-05-01
+    wave: P4.2 risk /v2/ decision
+    finding: >
+      risk-and-exposure-service/v2/ is the forward path for the 4-layer pre-trade gate orchestrator, not a deprecation
+      candidate. RETAIN marker added to v2/__init__.py.
