@@ -126,12 +126,18 @@ Phase 6 — Hardening (final)
 
 ### Code gates
 
-- [ ] UAC `quality-gates.sh` passes
-- [ ] execution-service `quality-gates.sh` passes
-- [ ] strategy-service `quality-gates.sh` passes
-- [ ] position-balance-monitor-service `quality-gates.sh` passes
-- [ ] risk-and-exposure-service `quality-gates.sh` passes
-- [ ] basedpyright clean across all modified repos
+- [x] UAC `quality-gates.sh` passes — exit=0 (2026-05-01 late evening sweep)
+- [x] execution-service `quality-gates.sh` passes — exit=0
+- [ ] strategy-service `quality-gates.sh` — exit=1 with **2 pre-existing failures unrelated to this work**:
+      `tests/unit/test_service_startup.py::TestCLIParserBuilds::test_parse_args_batch_mode` +
+      `test_parse_args_live_mode` both fail because UTL `ServiceCLI.__init__()` removed the `categories` keyword
+      argument upstream — strategy-service's `service_entry.py` still passes it. 2052 of 2054 tests pass; the new
+      252-test v2 suite is fully green. Tracked as a follow-up in memory; not a blocker for this plan.
+- [x] position-balance-monitor-service `quality-gates.sh` passes — exit=0
+- [x] risk-and-exposure-service `quality-gates.sh` passes — exit=0
+- [x] basedpyright clean across all modified repos — UAC + execution-service + PBM + risk pass type-check phase cleanly
+      (exit=0 covers all 6 QG steps including basedpyright). strategy-service basedpyright also clean — the only
+      failures there are pytest, not type-check.
 
 ### Test gates
 
@@ -274,10 +280,24 @@ over-levered short pre-rebalance, full-chain at-target produces zero rebalance +
   row capturing measured execution cost. 6 unit tests verify the 3-layer factor distinction, slippage math,
   held/deferred no-emit, unknown-layer fallback.
 
-**Phase 6 rewards — features-onchain collector deferred**: the remaining piece (`lst_seasonal_rewards` Transfer event
-scanner per LST_REWARD_STREAMS) requires real Web3 RPC code with on-chain integration concerns. Captured in memory as a
-follow-up; doesn't block Phase 6 hardening since the dust conversion + attribution layers can be exercised by the
-matching-engine quote source in batch mode without live RPC.
+**Phase 6 rewards — features-onchain collector shipped** (UAC `1aa13f5` + features-onchain `8ab8009` + `2634361`):
+
+- UAC: `LstSeasonalRewardRow` schema for the per-distribution row shape (block / tx / chain / lst_symbol / issuer /
+  layer / reward_token + amount + recipient + distributor metadata).
+- features-onchain `8ab8009`: pure transform `extract_seasonal_rewards(events, registry, decimals)` filters Transfer
+  events by registered distributor in `LST_REWARD_STREAMS`, drops CARRY_BASE/exchange-rate streams (no Transfer event),
+  case-insensitive address comparison, decimals adjustment per token, multi-LST routing. Same code path runs in batch
+  (replay parquet) and live (poll RPC) per the workspace Batch=Live invariant. 12 unit tests against synthetic fixtures.
+- features-onchain `2634361`: live RPC wrapper `LiveTransferEventStream` — Web3 instance constructor-injected (runner
+  resolves URL via UAC `resolve_rpc_url(chain, env, alchemy_api_key)`); ERC20 Transfer filter via `eth_getLogs` with
+  `topics=[Transfer_topic, [distributor_addresses], None]`; cursor advances past highest seen block; unknown token
+  contracts dropped with warning; malformed logs dropped without crash. Tests use stub Web3 stand-in — credential-free
+  per workspace testing infrastructure. 13 unit tests cover topic-padding, distributor-topic computation, filter shape,
+  single + multi-log polls, cursor advancement, cursor-hold-on-empty, malformed-log handling, iterator form, hex-amount
+  decoding, topic-to-address round-trip.
+
+Operator-side wiring still required for live mode: pick an RPC provider (Alchemy / Infura), inject credentials via
+Secret Manager, populate token_resolver from instruments-service. All deployment-time concerns; no remaining code work.
 
 ## Phase 4 closeout (2026-05-01 evening — corrected scope shipped in full)
 
