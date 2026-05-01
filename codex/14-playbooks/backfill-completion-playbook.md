@@ -227,7 +227,7 @@ These have bitten previous sessions. They fail quietly — no stack trace, just 
 | CeFi        | **2019-01-01**          | Tardis/Binance/etc. coverage good from 2019                                                                                       |
 | TradFi      | **2019-01-01**          | Databento equities/futures back to 2003+, but no need before 2019 for our strategies                                              |
 | Prediction  | source-launch date      | POLYMARKET 2020-06-12, KALSHI 2021-07-19 (per `unified_api_contracts.canonical.coverage_starts.PREDICTION_SOURCE_COVERAGE_START`) |
-| DeFi        | per-protocol launch     | Aave V3 2022-03-16, Uniswap V3 2021-05-05, etc. — `DEFI_SOURCE_COVERAGE_START` SSOT                                               |
+| DeFi        | per-protocol launch     | Aave V3 2022-03-16, Uniswap V3 2021-05-05, etc. —`DEFI_SOURCE_COVERAGE_START` SSOT                                                |
 
 ### Secondary (shard-level — was data even possible)
 

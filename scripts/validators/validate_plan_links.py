@@ -40,17 +40,23 @@ def main() -> int:
                 continue
             if link in _PLACEHOLDER_TAIL:
                 continue
+            # Strip GitHub-style line anchors (#L42, #L42-L51) before path resolution —
+            # these are display hints, the file path is what's checked.
+            link_path = link.split("#", 1)[0]
+            if not link_path:
+                # Pure anchor like #section — already filtered above, defensive guard.
+                continue
             target: Path
-            if link.startswith(".cursor/") or link.startswith("deployment-service/"):
-                target = ws_root / link
-            elif "/" in link and not link.startswith("."):
-                target = ws_root / link.split("/")[0]
+            if link_path.startswith(".cursor/") or link_path.startswith("deployment-service/"):
+                target = ws_root / link_path
+            elif "/" in link_path and not link_path.startswith("."):
+                target = ws_root / link_path.split("/")[0]
             else:
-                target = (plans_dir / link).resolve()
+                target = (plans_dir / link_path).resolve()
                 if not target.exists():
                     archive_dir: Path = plans_dir.parent / "archive"
                     if archive_dir.is_dir():
-                        target = (archive_dir / link).resolve()
+                        target = (archive_dir / link_path).resolve()
             if not target.exists():
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

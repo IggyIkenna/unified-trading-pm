@@ -426,6 +426,7 @@ start_api() {
     "CLOUD_MOCK_MODE=${DEV_CLOUD_MOCK_MODE}"
     "RUNTIME_MODE=${DEV_RUNTIME_MODE}"
     "PORT=${api_port}"
+    "GCP_PROJECT_ID=${GCP_PROJECT_ID:-central-element-323112}"
   )
   if [ -n "$DEV_DISABLE_AUTH" ]; then
     env_args+=("DISABLE_AUTH=${DEV_DISABLE_AUTH}")

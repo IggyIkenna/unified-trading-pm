@@ -241,7 +241,7 @@ Most of the work landed 2026-04-30; remaining items are gap-fill + verification.
 | instruments-service            | `scripts/reconcile_phantom_manifest_rows.py` (extend per-asset-group flag if not already there) | 1-5   |
 | market-tick-data-service       | per-asset-group adapter health checks                                                           | 1-5   |
 | market-data-processing-service | candle generation gap-fill                                                                      | 2     |
-| unified-trading-pm             | this plan + `codex/14-playbooks/backfill-completion-playbook.md`                                | 6     |
+| unified-trading-pm             | this plan +`codex/14-playbooks/backfill-completion-playbook.md`                                 | 6     |
 
 ## Success criteria
 
