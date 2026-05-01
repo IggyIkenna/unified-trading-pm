@@ -22,9 +22,9 @@ solves both allocator gates (regulated wrapper **and** verifiable, fully-attribu
   [`codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../../codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md),
   archetype index:
   [`codex/09-strategy/architecture-v2/archetypes/`](../../codex/09-strategy/architecture-v2/archetypes/).
-- **9-factor PnL attribution** that decomposes carry into CARRY_BASE / CARRY_AVS_CONTINUOUS / CARRY_ISSUER_SEASONAL /
+- **9-factor PnL attribution** that decomposes carry into CARRY*BASE / CARRY_AVS_CONTINUOUS / CARRY_ISSUER_SEASONAL /
   REWARD_REALISATION_SLIPPAGE etc., with matching-engine-simulated execution-alpha separated from strategy-alpha so
-  allocators see _why_ the NAV moved, not just _what_ it moved to. SSOT:
+  allocators see \_why* the NAV moved, not just _what_ it moved to. SSOT:
   [`codex/09-strategy/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/cross-cutting/pnl-attribution.md).
   Restaking economics SSOT:
   [`codex/09-strategy/cross-cutting/restaking-reward-economics.md`](../../codex/09-strategy/cross-cutting/restaking-reward-economics.md).
