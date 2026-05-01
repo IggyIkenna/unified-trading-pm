@@ -56,9 +56,9 @@
   <text x="95" y="224" text-anchor="middle" class="level-label">L0</text>
   <text x="150" y="224" class="desc">Project management — manifest, templates, scripts, cursor rules. (1 repos)</text>
   <rect x="70" y="247" width="146" height="38" class="devops" />
-  <rect x="70" y="247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="143" y="265" text-anchor="middle" class="label">unified-trading-pm</text>
-  <circle cx="206" cy="255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="206" cy="255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="143" y="277" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Foundation contracts (Tier 0) — present clone set. (1 repos) -->
   <rect x="40" y="319" width="2320" height="107" class="level-bg" />
@@ -86,9 +86,9 @@
   <text x="95" y="581" text-anchor="middle" class="level-label">L3</text>
   <text x="150" y="581" class="desc">Instrument registry — depends on UAC + UTL. (1 repos)</text>
   <rect x="70" y="604" width="153" height="38" class="svc" />
-  <rect x="70" y="604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="146" y="622" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="146" y="634" text-anchor="middle" class="ver">0.1.22</text>
   <!-- L4: Core services (batch + live) — parallel within tier. (18 repos) -->
   <rect x="40" y="676" width="2320" height="155" class="level-bg" />
@@ -151,9 +151,9 @@
   <circle cx="2312" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="2217" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="70" y="771" width="230" height="38" class="svc" />
-  <rect x="70" y="771" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="771" width="4" height="38" fill="#facc15" rx="2" />
   <text x="185" y="789" text-anchor="middle" class="label">market-data-processing-service</text>
-  <circle cx="290" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="290" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="185" y="801" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="310" y="771" width="188" height="38" class="svc" />
   <rect x="310" y="771" width="4" height="38" fill="#ef4444" rx="2" />
@@ -176,9 +176,9 @@
   <circle cx="1012" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="931" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1032" y="771" width="132" height="38" class="svc" />
-  <rect x="1032" y="771" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1032" y="771" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1098" y="789" text-anchor="middle" class="label">strategy-service</text>
-  <circle cx="1154" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1154" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1098" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1174" y="771" width="167" height="38" class="svc" />
   <rect x="1174" y="771" width="4" height="38" fill="#facc15" rx="2" />
@@ -241,9 +241,9 @@
   <circle cx="190" cy="1136" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="135" y="1158" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1128" width="195" height="38" class="ui-box" />
-  <rect x="210" y="1128" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="210" y="1128" width="4" height="38" fill="#facc15" rx="2" />
   <text x="307" y="1146" text-anchor="middle" class="label">unified-trading-system-ui</text>
-  <circle cx="395" cy="1136" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="395" cy="1136" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="307" y="1158" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L8: IaC + post-deploy validation (last). (2 repos) -->
   <rect x="40" y="1200" width="2320" height="107" class="level-bg" />
@@ -256,9 +256,9 @@
   <circle cx="206" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="143" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="226" y="1247" width="188" height="38" class="test" />
-  <rect x="226" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="226" y="1247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="320" y="1265" text-anchor="middle" class="label">system-integration-tests</text>
-  <circle cx="404" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="404" cy="1255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="320" y="1277" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="40" y="1339" width="2320" height="90" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="8" />
   <text x="60" y="1364" class="section">Versioning + Summary</text>

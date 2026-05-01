@@ -1,8 +1,7 @@
 # Instruments Audit — GCS Buckets → API → UI List
 
-**Date:** 2026-04-25
-**Scope:** How instrument data flows from GCS to the instruments list page in the UI. What exists, what is wired, and
-what needs to change.
+**Date:** 2026-04-25 **Scope:** How instrument data flows from GCS to the instruments list page in the UI. What exists,
+what is wired, and what needs to change.
 
 ---
 
@@ -110,10 +109,9 @@ sports (sports data lives in `sports_reference/`). The snapshot generator would 
 
 **What:** The instruments finder page (`/services/data/instruments`) uses `MOCK_INSTRUMENTS` from `data-service.ts`. The
 live hooks (`useInstruments`, `useCatalogue`) and the real snapshot (`ALL_INSTRUMENTS`) are imported in other places but
-NOT wired to the finder.
-**Impact:** The instruments list shows a small fabricated subset, not the real ~32K instruments.
-**Fix path:** Wire `ALL_INSTRUMENTS` from the snapshot into the finder, or call `/instruments/registry` with server-side
-pagination (preferred for scale).
+NOT wired to the finder. **Impact:** The instruments list shows a small fabricated subset, not the real ~32K
+instruments. **Fix path:** Wire `ALL_INSTRUMENTS` from the snapshot into the finder, or call `/instruments/registry`
+with server-side pagination (preferred for scale).
 
 ### G2 — Two instrument schemas with incompatible shapes
 
@@ -126,8 +124,7 @@ pagination (preferred for scale).
   `dataTypes`, category handled via `asset_class` enum or API filter param
 
 **Impact:** Dropping `MOCK_INSTRUMENTS` and using real data requires either: (a) adapting `InstrumentEntry` to match
-`CanonicalInstrument`, or
- (b) writing a transform function `CanonicalInstrument → InstrumentEntry`
+`CanonicalInstrument`, or (b) writing a transform function `CanonicalInstrument → InstrumentEntry`
 
 Option (b) is safer short-term (no sweeping type changes); option (a) is cleaner long-term.
 
@@ -165,10 +162,8 @@ keys. This will break cross-referencing between instruments and positions/orders
 
 **What:** Sports data in GCS lives under `sports_reference/` (fixtures, teams, odds) — not in the standard
 `instrument_availability/` Parquet format that represents tradeable instruments. The snapshot generator doesn't handle
-this path variant.
-**Impact:** Clicking "Sports" in the finder shows only mock data (`api_football`, `footystats` venues with fabricated
-instruments).
-**Fix options:** (a) Add sports-specific read to snapshot generator (reads
+this path variant. **Impact:** Clicking "Sports" in the finder shows only mock data (`api_football`, `footystats` venues
+with fabricated instruments). **Fix options:** (a) Add sports-specific read to snapshot generator (reads
 `sports_reference/by_date/.../fixtures.parquet`, maps to fixture-as-instrument representation) (b) Accept that sports
 isn't a standard instrument list — show league/fixture browser instead (different UX model)
 
@@ -177,18 +172,16 @@ CeFi/TradFi sense.
 
 ### G6 — Snapshot staleness (29 days)
 
-**What:** `instruments-snapshot.json` was generated 2026-03-27. No CI/CD job regenerates it.
-**Impact:** New instruments added in the last month (especially DeFi pools, prediction markets) are absent from the UI's
-reference data.
-**Fix:** Add a scheduled job (PM automation or CI) that runs `generate_instrument_snapshot.py` weekly and commits the
-updated file. The script already exists at `unified-trading-pm/scripts/openapi/generate_instrument_snapshot.py`.
+**What:** `instruments-snapshot.json` was generated 2026-03-27. No CI/CD job regenerates it. **Impact:** New instruments
+added in the last month (especially DeFi pools, prediction markets) are absent from the UI's reference data. **Fix:**
+Add a scheduled job (PM automation or CI) that runs `generate_instrument_snapshot.py` weekly and commits the updated
+file. The script already exists at `unified-trading-pm/scripts/openapi/generate_instrument_snapshot.py`.
 
 ### G7 — No server-side pagination wired
 
 **What:** `/instruments/registry` and `/instruments/list` support `page` + `page_size`. `useInstruments()` calls
-`/instruments/list` but passes no page param. `useCatalogue()` has no pagination at all.
-**Impact:** At 32K+ instruments, loading them all at once is not viable. The finder needs virtualization + server-side
-page loading.
+`/instruments/list` but passes no page param. `useCatalogue()` has no pagination at all. **Impact:** At 32K+
+instruments, loading them all at once is not viable. The finder needs virtualization + server-side page loading.
 **Fix:** The finder already has a `paginate: true` flag on the instrument column. Wire it to call
 `/instruments/registry?page=N&page_size=50` as the user scrolls/pages.
 
@@ -208,24 +201,23 @@ page loading.
 
 ## 7. Implementation sequence (for future work)
 
-**Step 1 — Create adapter function** (no breaking changes)
-`lib/api/adapters/instrument-adapter.ts`: `CanonicalInstrument → InstrumentEntry` transform. Unit-testable.
+**Step 1 — Create adapter function** (no breaking changes) `lib/api/adapters/instrument-adapter.ts`:
+`CanonicalInstrument → InstrumentEntry` transform. Unit-testable.
 
-**Step 2 — Wire `useInstruments`/`useInstrumentRegistry` to finder**
-Replace `MOCK_INSTRUMENTS` in `instruments-finder-config.tsx` with real data from `useInstrumentRegistry` hook.
-Keep mock as fallback when `NEXT_PUBLIC_MOCK_API=true`.
+**Step 2 — Wire `useInstruments`/`useInstrumentRegistry` to finder** Replace `MOCK_INSTRUMENTS` in
+`instruments-finder-config.tsx` with real data from `useInstrumentRegistry` hook. Keep mock as fallback when
+`NEXT_PUBLIC_MOCK_API=true`.
 
-**Step 3 — Category mapping table**
-Add `UI_CATEGORY_TO_BACKEND` mapping, pass correct `category` param to registry endpoint.
+**Step 3 — Category mapping table** Add `UI_CATEGORY_TO_BACKEND` mapping, pass correct `category` param to registry
+endpoint.
 
-**Step 4 — Pagination**
-Wire finder's `paginate: true` to API page calls. The finder already supports it structurally.
+**Step 4 — Pagination** Wire finder's `paginate: true` to API page calls. The finder already supports it structurally.
 
-**Step 5 — Snapshot refresh CI job**
-Scheduled weekly via PM automation. Output committed to `lib/registry/instruments-snapshot.json`.
+**Step 5 — Snapshot refresh CI job** Scheduled weekly via PM automation. Output committed to
+`lib/registry/instruments-snapshot.json`.
 
-**Step 6 — Sports UX (separate)**
-Replace sports instrument list with fixture/league browser reading `sports_reference/` data via a dedicated API route.
+**Step 6 — Sports UX (separate)** Replace sports instrument list with fixture/league browser reading `sports_reference/`
+data via a dedicated API route.
 
 ---
 
