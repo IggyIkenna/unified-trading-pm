@@ -79,10 +79,60 @@ What to check before kicking off Phase 1 sports work:
   [02-data/sports-adapter-dependency-order.md](../02-data/sports-adapter-dependency-order.md).
 - **DeFi data type catalog** — [02-data/defi-data-types-catalog.md](../02-data/defi-data-types-catalog.md).
 - **Prediction venues + sub-categories** — [02-data/prediction-schema-paths.md](../02-data/prediction-schema-paths.md).
-- **TradFi backfill session notes (2026-04-30, multi-year)** — operator memory at
-  `~/.claude/projects/.../memory/project_tradfi_backfill_session_2026_04_30.md` — 14 commits + 5 pre-existing pipeline
-  bugs fixed; ETF venue/dataset routing unblocked (XNAS.ITCH / ARCX.PILLAR / BATS.PITCH); VIX migrated; combo bundling
-  shipped + ~13M legacy per-combo parquets compacted.
+
+### TradFi session learnings (2026-04-30, in-line summary)
+
+The 2026-04-30 multi-year TradFi backfill session shipped 14 commits and resolved five pre-existing pipeline bugs. All
+fixes are live in code on `live-defi-rollout`; this section is for "why does X work that way" context.
+
+- **VM_VENUE=DATABENTO routed to nothing** — the orchestrator filters by canonical venue (CME / NYSE / NASDAQ / CBOE),
+  not by data-source. Fixed by routing per-root: BTC/ETH/ES futures → CME, ETFs → NYSE, VIX index → CBOE. See
+  `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` `VM_VENUE` block.
+- **Canonical instrument IDs treated as raw_symbols** — the Databento adapter must check the `.FUT` / `.OPT` suffix to
+  switch to `stype_in=parent`; otherwise it sends `BTC.FUT` as a raw symbol and gets zero rows. Fixed in
+  `market-tick-data-service/.../tradfi/databento_adapter.py`.
+- **`--force` parsed but not threaded** — the CLI handler stored `self._force` but never passed it through to
+  `process_ticks`, so `--force` re-runs silently no-op'd. Fixed in `cli/handlers/tick_data_handler.py`.
+- **VM name underscores rejected by GCP** — the launcher built names like `tradfi-bf-es_opt-...` which GCE rejects.
+  Normalised `_` → `-` in the launcher.
+- **DBEQ.BASIC + NYSE/NASDAQ returned 0 records for ETFs** — Databento's consolidated equities feed doesn't surface
+  newer spot-ETF tickers. Fixed via per-listing-exchange dataset routing in UAC `tradfi_instrument_universe.py`:
+  IBIT/ETHA → `XNAS.ITCH`, GBTC/BITO/ETHE → `ARCX.PILLAR`, FBTC/FETH/ARKB → `BATS.PITCH`.
+
+Other shipped state: VIX index migrated to canonical
+`asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet` (1,585 days; legacy path wiped);
+combo bundling collapsed ~13M legacy per-combo parquets into ~36k bundled per-underlying `ticks.parquet` files via 5
+year-sharded GCE migration VMs (~170× file reduction); TradFi data-types canonical set is `{ohlcv_1m, trades, tbbo}`
+(mbp_10 + quotes both dropped); phantom recon flipped ~8,300 stale `captured` rows to `attempted_failed` across 3
+passes.
+
+## Known gotchas (silent failures the dev should watch for)
+
+These have bitten previous sessions. They fail quietly — no stack trace, just empty output or a missing field.
+
+- **`validate_api_keys_for_venues` expects canonical venue names, not data-source slugs.** Pass `UNISWAPV3-ETHEREUM`,
+  `AAVEV3-ETHEREUM`, etc. — NOT `thegraph` / `databento`. Returns an empty dict silently when given the wrong shape, so
+  downstream adapters look like they're missing keys when they actually got nothing. Fixed in instruments-service
+  `96867e8` for the DeFi side; reapplied the same pattern.
+- **CeFi VM `rc=137` (OOM-kill) does NOT write `EXIT_STATUS`.** `atexit` handlers don't fire on `SIGKILL`, so the
+  startup-script wrapper never logs the failure code. Symptom: VM ends, no `EXIT_STATUS` line in `run.log`, manifest
+  shows nothing for the half-completed shard. Diagnose by checking `dmesg | grep -i kill` on the VM (if still alive) or
+  via Cloud Logging `kernel: ... oom` queries. Bump machine type or shard year-by-year.
+- **Tardis bulk grouped `FUTURES` request returns empty.** The Tardis bulk endpoint silently returns nothing for the
+  `FUTURES` group; you must enumerate per-instrument and fan out. The CeFi launcher already does this but if you write a
+  new adapter, don't trust the grouped path.
+- **Concurrent VM boots can race on the deadsnakes PPA.** Symptom: ~3 of N parallel VMs hang at `python3.13` install.
+  Mitigation: kill the hung VMs and relaunch one-at-a-time, or stagger boots ≥30 s apart. The setup script already
+  serialises within a single VM.
+- **GCS sentinel-lock needs proactive stale cleanup.** `if_generation_match=0` deadlocks against any preexisting blob,
+  so the freshness check MUST `blob.delete()` before falling through to acquire — otherwise stale-recovery is
+  unreachable and the consolidator (or any other singleton) silently stops working. Fixed in UTL `9d7962ce`; flag if you
+  copy the pattern elsewhere.
+- **Tarball install pins the VM to local `pyproject.toml` floors.** VM tarball install runs
+  `uv pip install --no-sources -e <local-dir>`, so version floors in dependent repos' `pyproject.toml` are irrelevant
+  for VM-deployed services. Cloud Run Jobs (consolidator, DeFi collection, deployment-api) use the MTDS Docker image
+  with a `unified-trading-library:latest` base — those need a Docker rebuild after a UTL change, not a tarball refresh.
+  Tarball refresh: `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` (or `--asset-group <X>`).
 
 ## Cutoffs
 
