@@ -49,6 +49,21 @@ fix landed and ~13M legacy per-combo parquets were compacted via 5 year-sharded 
 - Sub-60% data types: `FIXTURE_FEATURES` (0%), `MATCHES` (18%), `PLAYER_VALUES` (2%), `SFI_LEAGUES` (14%),
   `SFI_PROGRESSIVE_STATS` (15%), `TRANSFERMARKT_LEAGUES` (50%).
 
+**In flight (separate agent, sports instruments-service)** — check status before launching new sports VMs:
+
+- L2 GCS rename pass — 108,969 ops, ~25 ops/sec local network, ~60 min wall clock. Renames on-disk paths to match the
+  canonical `league_id` already in the manifest (single SSOT — canonical IDs in both manifest and on disk).
+- 4 backfill VMs running: `af` (api-football), `tm` (transfermarkt), `sfi` (soccer_football_info), `fs` (footystats).
+  Per-league writes with canonical IDs via orchestrator helper `_canonical_league_id`. Bare-path fallback removed.
+- Consolidator daemon merging `_index/per_vm/*.parquet` → canonical every ~60s.
+- Headline trajectory: 74.43% → 83.10% (band-aid) → 75.49% (no fallback) → 79.97% (L1 rename) → expected ~80%+ post-L2 +
+  post-backfills.
+- Verification gate before Phase 1 starts: confirm those four VMs are no longer RUNNING and L2 rename is complete.
+
+**Credentials policy**: all venue / data-source API keys live in GCP Secret Manager. `ApiKeyReloader` (UTL) fetches them
+at runtime. No local `.env` files, no inline constants, no checked-in config paths. If a backfill fails with "missing
+key", check the secret exists in `central-element-323112` first; ask Ikenna if it needs to be provisioned or rotated.
+
 ## Cutoffs (decisions baked into this plan)
 
 **Global** (upper bound on history attempted):
@@ -122,6 +137,21 @@ verify shards, can't iterate.
       `SchemaDefinition` for the queried data type — likely a backend gap where unregistered shards return 404 or empty.
       Confirm `SchemaDefinition` registry is loaded for ALL data types being queried (instruments, market-tick,
       market-data-processing). Cross-check with [02-data/schema-governance.md](../codex/02-data/schema-governance.md).
+
+## Phase 0.5 — Verify in-flight sports work has settled
+
+Sports already has work running (other agent). New launches WILL collide if af/tm/sfi/fs are still active because they
+share league partitions. Block until they're done.
+
+- [ ] [HUMAN] P0.
+      `gcloud compute instances list --filter='name~"^(af|tm|sfi|fs|manifest-consolidator)-"' --format='table(name,status,zone)'`
+      — should be empty (or only manifest-consolidator).
+- [ ] [HUMAN] P0. Re-snapshot deployment-ui sports drilldown headline — confirm ≥80% captured (the L2 rename pass is
+      manifest-neutral so % may stay at 79.97%; the change is on-disk path canonicality, not manifest claims).
+- [ ] [AGENT] P0. `instruments-service/scripts/reconcile_phantom_manifest_rows.py --asset-group sports --dry-run` —
+      should report zero phantoms post-L2.
+- [ ] [AGENT] P1. Spot-check 5 random `(captured, sports, day, league_id, data_type)` rows: follow each to the canonical
+      GCS path and confirm the parquet exists. Validates L2 rename completion.
 
 ## Phase 1 — Sports priorities (worst-coverage first)
 

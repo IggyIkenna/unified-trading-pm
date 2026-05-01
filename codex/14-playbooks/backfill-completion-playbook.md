@@ -14,6 +14,51 @@ Goal: every asset group at 100% honest coverage for the instrument & market-data
 This playbook is operational — it tells you **what to run, in what order, with which cutoffs**. It does not re-derive
 the architecture; for that, follow the linked SSOT docs.
 
+## Credentials policy
+
+**All venue / data-source API keys live in GCP Secret Manager.** Adapters fetch them via `ApiKeyReloader` (UTL) at
+runtime. Nothing local — no `.env` files with API keys, no `~/.config/...` paths checked into the repo, no inline
+constants in code. When you hit a "missing key" error, the secret name is logged; double-check the secret exists in
+`central-element-323112` (or the appropriate project) before assuming it's an adapter bug. Ask Ikenna if a secret needs
+to be provisioned or rotated.
+
+## Currently in flight (sports — check on these before launching new work)
+
+A separate agent is mid-stream on the sports instruments-service work. Confirm progress before starting Phase 1
+backfills so they don't collide.
+
+- **L2 GCS rename pass** — renames on-disk parquet paths to match the canonical `league_id` already in the manifest.
+  Rough scope: 108,969 ops, ~25 ops/sec on local network → ~60 min wall clock once started. The manifest itself doesn't
+  change — this just makes per-league downstream readers (FSS, ML feature joins) find the file at the league partition
+  the manifest claims. Verify by sampling: pick a captured row from `_index/availability_index.parquet`, follow its
+  `(date, league_id, data_type)` to GCS, confirm the parquet exists.
+- **4 backfill VMs running** — `af` (api-football), `tm` (transfermarkt), `sfi` (soccer_football_info), `fs`
+  (footystats). All write per-league with canonical IDs via the orchestrator helper `_canonical_league_id` so paths
+  cannot regress to numeric IDs at write time. List with
+  `gcloud compute instances list --filter='name~"^(af|tm|sfi|fs)-"' --format='table(name,status,zone)'`.
+- **Consolidator daemon** — merges `_index/per_vm/<vm>.parquet` shards into the canonical
+  `_index/availability_index.parquet` every ~60s. If the headline coverage % isn't moving, check the consolidator VM is
+  alive (`gcloud compute instances list --filter='name~"^manifest-consolidator"'`).
+- **Headline trajectory observed this session**: 74.43% → 83.10% (band-aid) → 75.49% (band-aid removed, bare-path
+  fallback gone) → 79.97% (L1 rename complete). Expected post-L2 + post-backfills: ~80%+ — the L2 doesn't change the
+  manifest, only the on-disk paths, so the % may not move; what changes is per-league downstream readability.
+- **Architectural state achieved**:
+  - Single SSOT — canonical league_ids in BOTH manifest and on disk.
+  - Orchestrator helper `_canonical_league_id` enforces normalisation at every partition write.
+  - Bare-path fallback removed (no more numeric-path compatibility shim).
+  - 4 active backfills filling residual gaps under the new canonical layout.
+
+What to check before kicking off Phase 1 sports work:
+
+1. `gcloud compute instances list --filter='name~"^(af|tm|sfi|fs|manifest-consolidator)-"' --format='value(name,status)'`
+   — if any of those is still `RUNNING`, let them finish (or coordinate with the running agent) before launching new
+   sports backfill VMs. Multiple concurrent VMs writing to the same league partitions can race.
+2. Re-snapshot the SPORTS headline coverage in deployment-ui drilldown — if you see ≥80% captured for sports overall,
+   the L2 + 4-VM run has likely completed.
+3. Sample a few `(captured, sports, day, league_id, data_type)` rows from the manifest and verify parquets exist at the
+   canonical path (use `instruments-service/scripts/reconcile_phantom_manifest_rows.py --asset-group sports --dry-run`
+   to bulk-verify in ~5 min).
+
 ## Reference SSOT docs (read these once)
 
 - **Manifest semantics + 3-state capture_status** —
