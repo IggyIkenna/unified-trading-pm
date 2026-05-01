@@ -1170,6 +1170,53 @@ else
     log_success "STEP 5.36: No bare Settings() outside config module"
 fi
 
+# ============================================================
+# STEP 5.37 — No inline HF / LTV / margin thresholds (P1.0e — workspace audit 2026-05-01)
+# Margin thresholds belong in UAC LIQUIDATION_PARAMS_REGISTRY. Inlining
+# them in service code is what produced the 1.5/1.3/1.1 vs 1.2 vs 1.2
+# Aave HF threshold drift incident -- three services disagreeing on the
+# same protocol's liquidation band. Allowed in tests + opt-out lines.
+# ============================================================
+INLINE_THRESHOLDS=$(rg 'Decimal\("(1\.05|1\.10?|1\.15|1\.20?|1\.30?|1\.50?)"\)|liquidation_threshold\s*=|maintenance_margin_pct\s*=|maintenance_margin\s*=\s*Decimal' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v 'noqa: qg-inline-threshold' \
+    || :)
+if [ -n "$INLINE_THRESHOLDS" ]; then
+    log_fail "STEP 5.37: Inline HF/LTV/margin thresholds found — use UAC LIQUIDATION_PARAMS_REGISTRY (see workspace audit C2/C4/C1):"
+    echo "$INLINE_THRESHOLDS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.37: No inline HF/LTV/margin thresholds (UAC LIQUIDATION_PARAMS_REGISTRY)"
+fi
+
+# ============================================================
+# STEP 5.38 — No local domain Event/Snapshot/Alert/Trigger/Fill BaseModel
+# (P1.0e — workspace audit 2026-05-01). Inter-service event schemas live
+# in unified_api_contracts.internal.inter_service_events. Local definitions
+# fragment the wire-format contract. Allowed only with # CORRECT-LOCAL on
+# the line above (extends the existing convention used elsewhere).
+# ============================================================
+LOCAL_EVENT_MODELS=$(rg '^class \w*(Event|Snapshot|Alert|Trigger|Fill)\(BaseModel\):' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    -B 1 \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -B0 -A0 '^class' \
+    | grep -v '# CORRECT-LOCAL' \
+    || :)
+if [ -n "$LOCAL_EVENT_MODELS" ]; then
+    log_fail "STEP 5.38: Local Event/Snapshot/Alert/Trigger/Fill BaseModel found — import from unified_api_contracts.internal:"
+    echo "$LOCAL_EVENT_MODELS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.38: No local domain event models (use UAC inter_service_events)"
+fi
+
 # CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
 # The goal is to ratchet this down to 0 over time.
 _max_v=${CODEX_MAX_VIOLATIONS:-0}
