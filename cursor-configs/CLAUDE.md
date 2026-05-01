@@ -32,10 +32,15 @@ Read these before making ANY code changes:
 6. **Asset-group vocabulary** — the venue axis is **`asset_group`** (not `category`). Use `asset_group` everywhere new
    code touches it: CLI flag `--asset-group`, env vars `VM_ASSET_GROUP` / `MDPS_ASSET_GROUP`, Python symbols
    `VENUES_BY_ASSET_GROUP` / `DATA_TYPES_BY_ASSET_GROUP` / `VENUE_TO_ASSET_GROUP` / `MarketAssetGroup` /
-   `get_bucket_for_asset_group`. **Two intentional exceptions**: dict KEYS stay lowercase (`cefi` / `defi` / `tradfi` /
-   `sports` / `prediction`), and GCS path segments stay literal (`category=cefi/...` blob prefixes — wire-format SSOT).
-   Plan: `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (Waves A/B/E shipped;
-   C/D = features-\* + execution-service consumer keys).
+   `get_bucket_for_asset_group`. **One intentional exception**: dict KEYS stay lowercase (`cefi` / `defi` / `tradfi` /
+   `sports` / `prediction`). GCS hive-partition keys: `asset_group=` is **canonical** for new writes (per
+   `market_tick_data_service/raw_tick_hive.py` SSOT — `RAW_TICK_ASSET_GROUP_HIVE_KEY = "asset_group"`); `category=` is
+   the **legacy** form (`RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY`) preserved on disk without re-keying. Readers must try
+   canonical first then fall back to legacy (`reader.py` does this; the data-status reconciler regex must match both:
+   `(?:category|asset_group)=`). Manifest pre-flight is hive-key-agnostic — it indexes by `(venue, data_type, date)`
+   only, so legacy `category=` data on disk is correctly skipped iff the manifest has a captured row for it. Plan:
+   `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (Waves A/B/E shipped; C/D =
+   features-\* + execution-service consumer keys).
 
 ## Key Rules (Quick Reference)
 
