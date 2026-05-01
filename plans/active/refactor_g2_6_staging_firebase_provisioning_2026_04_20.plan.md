@@ -101,6 +101,98 @@ Dev (`localhost:3000` tier-1 mock-auth) and staging (`odum-research.co.uk` real-
 path. The switch is an env var (`NEXT_PUBLIC_USE_FIREBASE_AUTH`) + Firebase config values — no code-fork. Playwright
 specs run identically against both (staging uses the Firebase emulator for CI).
 
+## Preservation requirements — DO NOT regress (audited 2026-04-24)
+
+Multiple agents across multiple sessions have built up sophisticated persona/demo/visibility infrastructure on top of
+the existing demo provider. **Any agent executing Phases B-E MUST preserve every item below. Failure to preserve any of
+these is a hard rejection of the PR — not a follow-up.**
+
+### Persona richness inventory (live state 2026-04-24)
+
+| Asset                           | Location                                                                                                                            | Size                                                                                                                                                                                                                                               | Why it matters                                                                                                                                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Persona library                 | `unified-trading-system-ui/lib/auth/personas.ts`                                                                                    | 537 LOC, **65 personas**                                                                                                                                                                                                                           | SSOT for who-can-access-what across all UI surfaces. Includes role + entitlements + audiences (G1.9 follow-up) + email + org.                                      |
+| Restriction-profile YAMLs       | `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/`                                                                          | **14 files** (admin / anon / client-full / desmond-dart-full / desmond-signals-in / elysium-defi-full / demo-im-reports-only / demo-signals-client / prospect-dart-{,full,signals-in} / prospect-im / prospect-perp-funding / prospect-regulatory) | G1.7 RestrictionProfile engine consumes these per-persona to drive padlocked-vs-hidden tile state.                                                                 |
+| Visibility-slicing matrix       | `unified-trading-system-ui/tests/unit/lib/architecture-v2/visibility-slicing-matrix.test.ts` + 546-cell Playwright matrix from G3.6 | 171 LOC unit + 349 e2e                                                                                                                                                                                                                             | Asserts persona × route × flavour visibility. Hard regression gate.                                                                                                |
+| Audience field (G1.9 follow-up) | `lib/auth/audiences.ts` (NEW per `g1_9_followup_codex_docs_application_surface_2026_04_24.plan.md`)                                 | 5-audience enum threaded through `personas.ts`                                                                                                                                                                                                     | Codex doc filtering at `/docs/[...slug]`.                                                                                                                          |
+| `/seed-demo` flow               | `unified-trading-system-ui/app/(ops)/seed-demo/page.tsx` + `app/api/demo-session/{issue-link,verify,revoke}/route.ts`               | route + 3 API handlers                                                                                                                                                                                                                             | Per-prospect magic-link issuance + UAT-resident demo accounts. Resend integration at `lib/email/resend.ts`.                                                        |
+| Email-pattern dual-domain       | `personas.ts` line ~14 comment block                                                                                                | —                                                                                                                                                                                                                                                  | `@odum-research.co.uk` = internal advisors / investors; `@odum-research.com` = external prospects. The flip MUST keep both working.                                |
+| Firebase claims merge           | `unified-trading-system-ui/lib/auth/firebase-provider.ts::enrichUserFromBackend()` lines 94–209                                     | ~115 LOC                                                                                                                                                                                                                                           | Existing path that merges Firebase identity + custom claims (`role`, `entitlements`, 1KB cap) into the same `AuthUser` shape personas use.                         |
+| Admin claims emitter            | `app/api/admin/set-claims/route.ts`                                                                                                 | —                                                                                                                                                                                                                                                  | Admin SDK endpoint that writes `role` + `entitlements` claims to a Firebase user. Wave G2.1 extends this.                                                          |
+| `DemoPlanToggle`                | `components/demo/DemoPlanToggle.tsx`                                                                                                | —                                                                                                                                                                                                                                                  | Full ⇄ Signals-In, DeFi Full ⇄ DeFi Signals UX. Currently does empty-password persona swap; must convert to tier-override overlay (see §Status update 2026-04-25). |
+
+### What the Firebase flip MUST preserve
+
+1. **`personas.ts` remains SSOT.** Real Firebase staging users get matched to persona records by email. Don't delete or
+   demote `personas.ts`. Real Firebase users are an _index_ into the persona table, not a replacement for it.
+2. **65 personas remain drivable on UAT.** Provision a corresponding Firebase staging user for every persona in
+   `personas.ts` (auto-script on persona-add), with the persona's existing email address. `enrichUserFromBackend()` then
+   reads custom claims to reconstruct the same `AuthUser` shape the demo provider built today.
+3. **Custom claims schema must carry enough to reconstruct the persona.** At minimum: `role`, `entitlements`,
+   `personaId` (new — references the persona record by ID, lets `enrichUserFromBackend` short-circuit to
+   `getPersonaById(claims.personaId)` for the rich record without bloating the 1KB claim payload).
+4. **Admin "act as <persona>" capability.** Admins demoing prospects need to render the UI as any persona without
+   logging out. Mechanism: admin-only API writes a transient claim `actAs: "<persona-id>"`; UI reads it and renders the
+   target persona's entitlements server-side. Replaces the `loginByEmail(other, "")` empty-password swap.
+5. **`DemoPlanToggle` UX is preserved exactly.** User refactor: button still flips Full ⇄ Signals-In, but the underlying
+   mechanism is a localStorage `tier-override: "<persona-id>"` flag that the auth context overlays on top of the real
+   Firebase user's entitlements at render time. Zero visual regression.
+6. **All 14 restriction-profile YAMLs continue to drive UI tiles.** G1.7 RestrictionProfile engine signature unchanged;
+   the input persona-id can come from either the demo provider or `actAs` claim or `tier-override` localStorage.
+7. **G3.6 visibility-slicing matrix test stays green.** The 546-cell Playwright matrix asserts persona × route × flavour
+   visibility — must pass identically against demo and Firebase paths.
+8. **G1.9 follow-up audience filter works for Firebase users.** `viewer.audiences` resolved from claims-based persona
+   record on UAT, from demo persona on dev. Codex doc 404 logic identical across paths.
+9. **`/seed-demo` flow keeps working.** Magic-link issuance via Resend stays in place. Generated demo accounts now
+   resolve to real Firebase staging users (not localStorage personas) — but the operator UX (form, magic link, demo
+   email creds) is unchanged.
+10. **Email pattern dual-domain stays.** Real Firebase staging users use the exact same email addresses already listed
+    in `personas.ts` (`@odum-research.co.uk` for advisors/investors; `@odum-research.com` for prospects). Domain-driven
+    routing logic in `personas.ts::DEMO_PERSONA_EMAILS` keeps working unchanged.
+11. **Localhost dev stays demo-only.** Tier-1 dev (`localhost:3000`) does NOT flip to Firebase. The hostname-derived
+    switch (`getDeploymentEnv()` returns `"dev"` for localhost) ensures `lib/auth/firebase-provider.ts` is never
+    activated on localhost. Demo provider remains the dev path.
+12. **Prod Firebase project untouched.** `central-element-323112` stays as today. The flip only touches the UAT bundle
+    (`docker-build.env.uat`) reading `_STAGING`-suffixed config values pointing at `odum-staging`.
+
+### Hard NO list (any of these is grounds for revert)
+
+- Deleting `personas.ts` or any persona record from it.
+- Removing `DemoPlanToggle` (refactor it; don't delete).
+- Removing `/seed-demo` or any demo-session API route.
+- Touching `central-element-323112` Firebase project config.
+- Forking the auth code path (`if Firebase else demo`) into two divergent files. The path is shared; only the provider
+  injection differs. Per the existing dev/staging parity rule.
+- Hard-coding `NEXT_PUBLIC_AUTH_PROVIDER=firebase` in localhost `.env*` files (would break dev).
+- Bypassing `enrichUserFromBackend()` to skip the persona-record merge.
+- Skipping the `actAs` admin-acting-as-persona capability — without it, demo walkthroughs break.
+
+### Audit-on-merge gate (mandatory)
+
+Before merging Phase B-E commits, the agent MUST run + report:
+
+- `cd unified-trading-system-ui && CI=true npm test -- --run lib/auth lib/architecture-v2 components/demo` — every
+  persona-related unit test green.
+- `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — full pass.
+- Playwright spec list: `tests/e2e/playbooks/refactor/` filtering on `g1-7|g1-9|g3-6` — all green.
+- Manual screenshot pass: load UAT (or Firebase emulator) as 5 representative personas (admin, prospect-im,
+  desmond-dart-full, desmond-signals-in, elysium-defi-full) — confirm visible tiles match restriction-profile YAMLs.
+- DemoPlanToggle smoke: click Full ⇄ Signals-In, confirm tier-override overlay applies (visible tile diff matches the
+  paired persona's restriction profile).
+
+### Cross-references for the executing agent
+
+- Firebase provider entry point: `unified-trading-system-ui/lib/auth/firebase-provider.ts`
+- Demo provider entry point: `unified-trading-system-ui/lib/auth/demo-provider.ts`
+- Persona table: `unified-trading-system-ui/lib/auth/personas.ts`
+- Restriction-profile engine:
+  `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` (Option X — UAC hosts
+  the logic, see `feedback_option_x_uac_hosts_pure_logic.md`)
+- Restriction-profile YAMLs: `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/*.yaml`
+- Visibility-slicing test: `unified-trading-system-ui/tests/unit/lib/architecture-v2/visibility-slicing-matrix.test.ts`
+- Audience system (post G1.9 follow-up): `unified-trading-system-ui/lib/auth/audiences.ts` (NEW per
+  `g1_9_followup_codex_docs_application_surface_2026_04_24.plan.md`)
+
 ## Status update 2026-04-25 — RETARGETED: UAT IS staging
 
 This plan was originally scoped to provision a separate `odum-staging` Firebase project (per the locked decision
