@@ -41,9 +41,9 @@ isProject: false
 
 Phase 1 ships immediately (Tardis additions are pure data — no adapter code). Phase 2 ships DEX-perp adapters following
 the existing Hyperliquid + Aster pattern in
-[umi_tick_provider.py](../../market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py). Phase 3
-(Opinion.trade) is gated on a research spike — its API surface and market schema differ enough from Polymarket/Kalshi to
-warrant a dedicated plan.
+[umi_tick_provider.py](../../../market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py). Phase
+3 (Opinion.trade) is gated on a research spike — its API surface and market schema differ enough from Polymarket/Kalshi
+to warrant a dedicated plan.
 
 Manifest data-status integration: each new venue gets a row in UAC `VENUES_BY_ASSET_GROUP['cefi']` (or `prediction` for
 Opinion.trade) plus a `coverage_starts.py` entry. The data-status check loops `VENUES_BY_ASSET_GROUP` so adding the
