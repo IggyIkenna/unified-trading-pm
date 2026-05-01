@@ -86,47 +86,54 @@ list_stacks() {
 ENV_MODE="mock"  # default
 
 resolve_env_vars() {
+  # Use ``: "${VAR:=default}"`` semantics so callers can override individual
+  # axes by pre-exporting ``DEV_UI_MOCK`` / ``DEV_DISABLE_AUTH`` etc. Useful
+  # for tier wrappers (e.g. deployment-ui's dev-tiers.sh T2) that need a
+  # combination not covered by the four named modes — UI off-mock + auth
+  # disabled + cloud reads, for instance.
   case "$ENV_MODE" in
     mock)
-      export DEV_UI_MOCK="true"
-      export DEV_UI_SKIP_AUTH="true"
-      export DEV_CLOUD_PROVIDER="local"
-      export DEV_CLOUD_MOCK_MODE="true"
-      export DEV_RUNTIME_MODE="local"
-      export DEV_DISABLE_AUTH="true"
-      export DEV_MOCK_STATE_MODE="interactive"
+      : "${DEV_UI_MOCK:=true}"
+      : "${DEV_UI_SKIP_AUTH:=true}"
+      : "${DEV_CLOUD_PROVIDER:=local}"
+      : "${DEV_CLOUD_MOCK_MODE:=true}"
+      : "${DEV_RUNTIME_MODE:=local}"
+      : "${DEV_DISABLE_AUTH:=true}"
+      : "${DEV_MOCK_STATE_MODE:=interactive}"
       ;;
     ci)
-      export DEV_UI_MOCK="true"
-      export DEV_UI_SKIP_AUTH="true"
-      export DEV_CLOUD_PROVIDER="local"
-      export DEV_CLOUD_MOCK_MODE="true"
-      export DEV_RUNTIME_MODE="local"
-      export DEV_DISABLE_AUTH="true"
-      export DEV_MOCK_STATE_MODE="deterministic"
+      : "${DEV_UI_MOCK:=true}"
+      : "${DEV_UI_SKIP_AUTH:=true}"
+      : "${DEV_CLOUD_PROVIDER:=local}"
+      : "${DEV_CLOUD_MOCK_MODE:=true}"
+      : "${DEV_RUNTIME_MODE:=local}"
+      : "${DEV_DISABLE_AUTH:=true}"
+      : "${DEV_MOCK_STATE_MODE:=deterministic}"
       ;;
     api-real)
-      export DEV_UI_MOCK="true"
-      export DEV_UI_SKIP_AUTH="true"
-      export DEV_CLOUD_PROVIDER="${CLOUD_PROVIDER:-gcp}"
-      export DEV_CLOUD_MOCK_MODE="false"
-      export DEV_RUNTIME_MODE="local"
-      export DEV_DISABLE_AUTH="true"
-      export DEV_MOCK_STATE_MODE=""
+      : "${DEV_UI_MOCK:=true}"
+      : "${DEV_UI_SKIP_AUTH:=true}"
+      : "${DEV_CLOUD_PROVIDER:=${CLOUD_PROVIDER:-gcp}}"
+      : "${DEV_CLOUD_MOCK_MODE:=false}"
+      : "${DEV_RUNTIME_MODE:=local}"
+      : "${DEV_DISABLE_AUTH:=true}"
+      : "${DEV_MOCK_STATE_MODE:=}"
       ;;
     real)
-      export DEV_UI_MOCK="false"
-      export DEV_UI_SKIP_AUTH="false"
-      export DEV_CLOUD_PROVIDER="${CLOUD_PROVIDER:-gcp}"
-      export DEV_CLOUD_MOCK_MODE="false"
-      export DEV_RUNTIME_MODE="${RUNTIME_MODE:-production}"
-      export DEV_DISABLE_AUTH=""
-      export DEV_MOCK_STATE_MODE=""
+      : "${DEV_UI_MOCK:=false}"
+      : "${DEV_UI_SKIP_AUTH:=false}"
+      : "${DEV_CLOUD_PROVIDER:=${CLOUD_PROVIDER:-gcp}}"
+      : "${DEV_CLOUD_MOCK_MODE:=false}"
+      : "${DEV_RUNTIME_MODE:=${RUNTIME_MODE:-production}}"
+      : "${DEV_DISABLE_AUTH:=}"
+      : "${DEV_MOCK_STATE_MODE:=}"
       ;;
     *)
       die "Unknown --mode: $ENV_MODE (expected mock, ci, api-real, or real)"
       ;;
   esac
+  export DEV_UI_MOCK DEV_UI_SKIP_AUTH DEV_CLOUD_PROVIDER DEV_CLOUD_MOCK_MODE
+  export DEV_RUNTIME_MODE DEV_DISABLE_AUTH DEV_MOCK_STATE_MODE
 
   # Persist mode info for dev-status.sh
   mkdir -p "$PID_DIR"
