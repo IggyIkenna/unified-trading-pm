@@ -153,6 +153,42 @@ Phase 6 — Hardening (final)
 - [ ] Risk-and-exposure-service emits LEVERAGE_BREACH alert in integration test when one leg drifts beyond tight
       threshold
 
+## Phase 4 progress log (2026-05-01)
+
+The literal "collapse hand-rolled `_build_legs`" item from the original DAG turned out to be over-stated. Empirical
+audit of the call sites:
+
+- **`staked_basis._build_legs`** is a multi-action atomic ENTRY chain (`STAKE` on ETHERFI → `LEND` on AAVE_V3 → `TRADE`
+  SHORT on HYPERLIQUID). LeveragedLegController is TRADE-only and covers ongoing PnL drift, not entry composition.
+  Different concerns; entry chain stays as-is.
+- **`recursive_staked` entry path** is the geometric-series leg-sizing on Aave borrow-restake loops. Same shape:
+  multi-action atomic ENTRY. Stays as-is.
+- **`sports_arb_engine._build_legs`** produces `SportsArbLeg` (a DETECTION-output schema with `BACK|LAY` side + stake +
+  odds + commission_rate), not `AtomicLeg`. Different abstraction layer entirely — sports arb is a scanner, not a
+  position-sizer. Doesn't migrate.
+- **arbitrage tracer cross-venue funding** hand-rolled allocator: also a research/decision tool, not a live archetype
+  consumer. Could be refactored to call the controller for consistency but it's not on the critical path.
+
+What Phase 4 actually delivered (shipped 2026-05-01):
+
+- **execution-service `488a2ed0`** — 9-test LeveragedLegController unit suite covering drift detection, cash-sweep
+  equalisation, position sizing, instruction emission, venue clamping, and edge cases. Concrete value check: 4× LONG
+  weETH / 4× SHORT ETH-PERP under ETH +8% emits `SELL 118.5185 weETH` + `BUY 118.5185 ETH-PERP`, post-rebalance net
+  delta = 0.
+- **strategy-service `39896d7`** — Entry-chain shape locks for `CarryStakedBasisEngine` + `CarryRecursiveStakedEngine`.
+  Pins the multi-action atomic AtomicInstruction wire format so future refactors can't silently change it.
+- **position-balance-monitor-service `93002ca`** — Direct parity lock for `SportsArbEngine._build_legs` BACK/LAY shape
+  (3 tests covering venue ordering, commission accounting, missing-rate fallthrough).
+
+**Hard prerequisite for the live integration step**: PBM extension exposing per-leg `current_leverage` +
+`equity_per_leg` in the position snapshot (Phase 3, queued). Without that, the controller has no observation source —
+strategies can't call `compute_drift(state, snapshots)` because `LegSnapshot` has no upstream feed today. Until PBM
+ships per-leg snapshot fields, the controller stands as a tested-but-not-yet-consumed primitive.
+
+**Next session**: PBM per-leg snapshot wiring → strategy-service per-tick rebalance hook on `BaseArchetypeEngineV2`
+(opt-in via `LegPortfolioState`) → first archetype (CARRY_STAKED_BASIS) opts in → live integration test in
+`system-integration-tests`.
+
 ## Out of scope
 
 - Greeks-aware delta management for OPTIONS (gamma/vega controller is a v2; v1 treats option legs as size-only)
