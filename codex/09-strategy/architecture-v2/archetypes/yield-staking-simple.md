@@ -30,6 +30,19 @@ leg, no leverage, no directional view. Just held-to-earn-yield.
 
 2. HOLD: LST balance grows via rebase (stETH) or exchange rate increase (rETH, JitoSOL, mSOL)
 
+   For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx; jitoSOL, mSOL when held in Solayer/etc.) the realised
+   yield comes from THREE on-chain-discoverable layers (see
+   [restaking-reward-economics.md](../../cross-cutting/restaking-reward-economics.md)):
+     - CARRY_BASE              — exchange_rate appreciation (continuous, in target denomination)
+     - CARRY_AVS_CONTINUOUS    — EigenLayer/Karak per-token rewards (claimed periodically; EIGEN, KARAK, AVS-specific)
+     - CARRY_ISSUER_SEASONAL   — issuer-side episodic distributions (Ether.fi quarterly Seasons via Merkle distributor;
+                                 Puffer / Ankr / Stader / Karak; for SOL: Jito JTO drops, Marinade MNDE)
+
+   Layers 2 + 3 produce non-target-denomination tokens which the strategy realises via `ConvertDustInstruction` through
+   the dust-conversion router — actual swap simulation through the matching engine on Binance / Uniswap / Jupiter tick
+   data. Pre-TGE points (KING, MILES, KARAK pre-launch, CARROT) are tracked but unrealisable until TGE — pnl-attribution
+   emits CARRY_ISSUER_SEASONAL rows with `value_eth=0` and `points_pending=true` until pricing materialises.
+
 3. EXIT: unstake
    - Lido: swap stETH → ETH on DEX OR use Lido withdrawal queue (slow)
    - Rocket Pool: swap rETH → ETH on DEX OR use Rocket withdrawal

@@ -39,7 +39,22 @@ Loop 2:
 
 After N loops, total stETH ≈ 1 / (1 − 0.60) = 2.5 (at effective LTV 0.6)
 Total staking yield earned on 2.5 ETH vs 1 ETH of capital = 2.5x nominal
-Net yield = 2.5 × staking_yield − 1.5 × borrow_rate − fees − depeg_risk_provision
+Net yield = 2.5 × total_lst_yield − 1.5 × borrow_rate − fees − depeg_risk_provision
+
+For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx) `total_lst_yield` is itself the SUM of THREE
+on-chain-discoverable layers (see [restaking-reward-economics.md](../../cross-cutting/restaking-reward-economics.md)):
+
+  total_lst_yield = CARRY_BASE                       (exchange_rate appreciation)
+                  + CARRY_AVS_CONTINUOUS_realised    (EigenLayer/Karak/Symbiotic per-token, dust-converted to ETH)
+                  + CARRY_ISSUER_SEASONAL_realised   (Ether.fi/Puffer/Ankr/Stader episodic, dust-converted to ETH)
+
+The realisation step uses `ConvertDustInstruction` through the dust-conversion router — actual swap simulation through
+matching engine on stored Binance/Uniswap/Jupiter tick data, not a hardcoded haircut. realised - mark = the
+`REWARD_REALISATION_SLIPPAGE` PnL factor.
+
+Leverage amplifies all three layers: at LTV 0.85 (effective leverage 6.67x) the EigenLayer aggregate APY of 0.65%
+becomes ~4.3pp net-APR uplift on the restaking-eligible cohort, which can flip pufETH from base-loss to net-profit
+(verified empirically 2025-06-15..21).
 
 Unwinding:
   Reverse loops. Each loop: REPAY → UNPLEDGE → UNSTAKE (respecting unbonding period on Lido).

@@ -45,36 +45,67 @@ Batch P&L (official):
 
 ```
 Total P&L
-├── DELTA          — P&L from directional price movement
-├── FUNDING        — P&L from perpetual funding rate payments
-├── BASIS          — P&L from basis convergence/divergence
-├── CARRY          — P&L from yield / interest rate differential
-├── GREEKS         — P&L from options sensitivities (gamma, vega, theta)
-├── FEES           — P&L impact from transaction fees (exchange, gas, protocol)
-├── SLIPPAGE       — P&L impact from execution vs benchmark price
-├── SETTLEMENT     — P&L from contract expiry / sports event settlement
-├── LIQUIDATION    — P&L impact from liquidation events (penalty, bonus)
-├── REBATE         — P&L from maker rebates, referral bonuses
-├── FX             — P&L from currency conversion (non-USD denominated venues)
-└── RESIDUAL       — Unexplained P&L (must be < 1% of total, else investigate)
+├── DELTA                          — P&L from directional price movement
+├── FUNDING                        — P&L from perpetual funding rate payments
+├── BASIS                          — P&L from basis convergence/divergence
+├── CARRY                          — P&L from yield / interest rate differential
+│   ├── CARRY_BASE                 — exchange_rate appreciation of staked LST (lst-rates parquet)
+│   ├── CARRY_AVS_CONTINUOUS       — EigenLayer/Karak/Symbiotic continuous rewards per token (eigenlayer_rewards parquet)
+│   └── CARRY_ISSUER_SEASONAL      — LST-issuer episodic distributions (Ether.fi quarterly, Puffer / Ankr / Stader / Karak; lst_seasonal_rewards parquet)
+├── REWARD_REALISATION_SLIPPAGE    — slippage from converting reward dust tokens to target denomination
+├── GREEKS                         — P&L from options sensitivities (gamma, vega, theta)
+├── FEES                           — P&L impact from transaction fees (exchange, gas, protocol)
+├── SLIPPAGE                       — P&L impact from execution vs benchmark price
+├── SETTLEMENT                     — P&L from contract expiry / sports event settlement
+├── LIQUIDATION                    — P&L impact from liquidation events (penalty, bonus)
+├── REBATE                         — P&L from maker rebates, referral bonuses
+├── FX                             — P&L from currency conversion (non-USD denominated venues)
+└── RESIDUAL                       — Unexplained P&L (must be < 1% of total, else investigate)
 ```
+
+### CARRY decomposition for restaking-eligible LSTs
+
+For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx; jitoSOL, mSOL on Solana) the CARRY parent factor is
+decomposed into three sub-factors, each tagged via `RewardPnLLayer` from
+`unified_api_contracts.internal.architecture_v2.restaking_rewards`:
+
+| Sub-factor                | Source data                    | Cadence    | Reward tokens (per LST)                                                                                                         |
+| ------------------------- | ------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **CARRY_BASE**            | `lst-rates` parquet            | Continuous | LST's quote asset (ETH for ETH-side, SOL for Solana-side, USDe for sUSDe)                                                       |
+| **CARRY_AVS_CONTINUOUS**  | `eigenlayer_rewards` parquet   | Continuous | EIGEN, KARAK, ARPA, AVS-specific tokens                                                                                         |
+| **CARRY_ISSUER_SEASONAL** | `lst_seasonal_rewards` parquet | Episodic   | weETH: ETHFI quarterly seasons; pufETH: PUFFER/CARROT ad-hoc; ankrETH: ANKR monthly; ETHx: SD monthly; jitoSOL: JTO; mSOL: MNDE |
+
+The `LST_REWARD_STREAMS` registry in UAC names every (LST, layer, reward token, distributor) tuple. features-onchain
+indexes `Transfer(from=registered_distributor)` events to populate `lst_seasonal_rewards` parquets daily.
+
+`REWARD_REALISATION_SLIPPAGE` is a separate top-level factor that captures the cost of converting reward dust into the
+target denomination (ETH / SOL / USDC). Computed by the dust-conversion router (see
+[restaking-reward-economics.md](./restaking-reward-economics.md)) by simulating each token's conversion route through
+the matching engine on stored Binance / Uniswap / Jupiter tick data, NOT by applying a hardcoded haircut.
+realised_amount
+
+- mark_at_receipt_amount = REWARD_REALISATION_SLIPPAGE.
 
 ### Factor Definitions
 
-| Factor      | Computation                                                    | Sign Convention                 |
-| ----------- | -------------------------------------------------------------- | ------------------------------- |
-| DELTA       | `sum(position_qty × (price_now - price_prev))` per instrument  | Positive = profitable direction |
-| FUNDING     | `sum(position_qty × funding_rate × funding_interval)` per perp | Positive = received funding     |
-| BASIS       | `spot_pnl + perp_pnl` for basis trades (captures convergence)  | Positive = basis moved in favor |
-| CARRY       | `sum(collateral × apy × time_fraction)` for lending/staking    | Positive = yield earned         |
-| GREEKS      | `delta_pnl + gamma_pnl + vega_pnl + theta_pnl` for options     | Per-greek decomposition         |
-| FEES        | `-sum(fee_amount)` for all trades in period                    | Always negative (cost)          |
-| SLIPPAGE    | `sum(fill_price - benchmark_price) × quantity × side_sign`     | Negative = worse than benchmark |
-| SETTLEMENT  | `settlement_value - mark_value` at expiry/event resolution     | Positive = favorable settlement |
-| LIQUIDATION | `liquidation_penalty` or `liquidation_bonus`                   | Negative for penalized party    |
-| REBATE      | `sum(rebate_amount)` for maker fills and referral credits      | Always positive (income)        |
-| FX          | `pnl_local × (fx_rate_now - fx_rate_trade)` for non-USD venues | Positive = favorable FX move    |
-| RESIDUAL    | `total_pnl - sum(all_attributed_factors)`                      | Should be near zero             |
+| Factor                      | Computation                                                                                   | Sign Convention                            |
+| --------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| DELTA                       | `sum(position_qty × (price_now - price_prev))` per instrument                                 | Positive = profitable direction            |
+| FUNDING                     | `sum(position_qty × funding_rate × funding_interval)` per perp                                | Positive = received funding                |
+| BASIS                       | `spot_pnl + perp_pnl` for basis trades (captures convergence)                                 | Positive = basis moved in favor            |
+| CARRY                       | `sum(collateral × apy × time_fraction)` for lending/staking                                   | Positive = yield earned                    |
+| CARRY_BASE                  | `holding × (exchange_rate_now / exchange_rate_prev - 1)` for LST                              | Positive = exchange-rate accreted          |
+| CARRY_AVS_CONTINUOUS        | `sum_per_token(claimed_amount × token_eth_price)` from eigenlayer_rewards                     | Positive = AVS rewards earned              |
+| CARRY_ISSUER_SEASONAL       | `sum_per_distributor(transfer_amount × token_eth_price_at_receipt)` from lst_seasonal_rewards | Positive = issuer epoch reward received    |
+| REWARD_REALISATION_SLIPPAGE | `realised_amount_target - mark_at_receipt_target` from dust-conversion router                 | Negative when reward token sells below mid |
+| GREEKS                      | `delta_pnl + gamma_pnl + vega_pnl + theta_pnl` for options                                    | Per-greek decomposition                    |
+| FEES                        | `-sum(fee_amount)` for all trades in period                                                   | Always negative (cost)                     |
+| SLIPPAGE                    | `sum(fill_price - benchmark_price) × quantity × side_sign`                                    | Negative = worse than benchmark            |
+| SETTLEMENT                  | `settlement_value - mark_value` at expiry/event resolution                                    | Positive = favorable settlement            |
+| LIQUIDATION                 | `liquidation_penalty` or `liquidation_bonus`                                                  | Negative for penalized party               |
+| REBATE                      | `sum(rebate_amount)` for maker fills and referral credits                                     | Always positive (income)                   |
+| FX                          | `pnl_local × (fx_rate_now - fx_rate_trade)` for non-USD venues                                | Positive = favorable FX move               |
+| RESIDUAL                    | `total_pnl - sum(all_attributed_factors)`                                                     | Should be near zero                        |
 
 ## Strategy-Specific Factor Profiles
 

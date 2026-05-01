@@ -36,8 +36,23 @@ capital.
    Position sized to match the stETH notional (delta-neutral).
    Earning funding rate.
 
-5. NET CARRY: staking yield + funding rate − borrow cost − fees.
+5. NET CARRY: total_lst_yield + funding rate − borrow cost − fees.
    Breakeven when carry > costs + haircut risk provision.
+
+   For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx) `total_lst_yield` is the sum of THREE
+   on-chain-discoverable layers (see
+   [restaking-reward-economics.md](../../cross-cutting/restaking-reward-economics.md)):
+     - CARRY_BASE              (exchange_rate appreciation)
+     - CARRY_AVS_CONTINUOUS    (EigenLayer/Karak per-token rewards, dust-converted to ETH via simulated swap)
+     - CARRY_ISSUER_SEASONAL   (Ether.fi quarterly / Puffer / Ankr / Stader episodic, dust-converted to ETH)
+
+   Each layer has its own pnl-attribution row + a paired REWARD_REALISATION_SLIPPAGE row capturing the dust-conversion
+   cost. Strategy may choose to HOLD vesting tokens (e.g. EIGEN with 4-yr cliff) via the
+   `ConvertDustInstruction.hold_until_vested_tokens` field rather than realise immediately.
+
+   Both legs (LST stake + perp short) carry their own target_leverage and target_net_delta; the LeveragedLegController
+   maintains them across PnL drift via cash-sweep auto-rebalancing. Standard configuration is target_net_delta=0
+   (delta-neutral) with each leg at the same target_leverage (e.g. 4x4x → gross 8x exposure, zero net ETH delta).
 
 6. REBALANCE triggers:
    - Health factor drift → either add collateral or reduce borrow

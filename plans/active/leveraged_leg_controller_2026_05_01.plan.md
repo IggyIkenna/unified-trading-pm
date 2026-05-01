@@ -189,6 +189,38 @@ ships per-leg snapshot fields, the controller stands as a tested-but-not-yet-con
 (opt-in via `LegPortfolioState`) → first archetype (CARRY_STAKED_BASIS) opts in → live integration test in
 `system-integration-tests`.
 
+## Phase 6 — Reward realisation feedback into LegPortfolioState equity
+
+After Phase 4 backports land, integrate reward realisation as an equity inflow to the LegPortfolioState so the
+cash-sweep step naturally redistributes claimed/converted rewards across legs along with PnL drift.
+
+```
+Phase 6 (after Phase 4)
+   ├─ 6.1 features-onchain: new lst_seasonal_rewards collector (Transfer event scan per LST_REWARD_STREAMS distributor)
+   ├─ 6.2 execution-service: algo_library/dust_conversion_router.py — consumes ConvertDustInstruction +
+   │      REWARD_TOKEN_ECONOMICS, simulates swap routes through matching engine on Binance / Uniswap / Jupiter tick
+   │      data, returns DustConversionResult
+   ├─ 6.3 strategy-service: archetypes that hold restaking-eligible LSTs emit ConvertDustInstruction once per epoch
+   │      (or hold via hold_until_vested_tokens) with the freshly-claimed token basket
+   ├─ 6.4 LegPortfolioController: realised target_amount feeds back as an equity inflow on the LST leg before
+   │      compute_drift; cash-sweep step then naturally redistributes the realised rewards across legs along with PnL
+   ├─ 6.5 pnl-attribution-service: tags each row with RewardPnLLayer (CARRY_BASE / CARRY_AVS_CONTINUOUS /
+   │      CARRY_ISSUER_SEASONAL); emits paired REWARD_REALISATION_SLIPPAGE row per converted token
+   └─ 6.6 GATE — full Fork 2 batch e2e for one restaking-eligible archetype produces per-strategy PnL series with
+            CARRY decomposed into the 3 sub-factors + REWARD_REALISATION_SLIPPAGE; verify_net_delta passes after
+            reward realisation feedback applied.
+```
+
+Codex SSOT:
+[`codex/09-strategy/cross-cutting/restaking-reward-economics.md`](../../codex/09-strategy/cross-cutting/restaking-reward-economics.md)
+
+- updates to
+  [`codex/09-strategy/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/cross-cutting/pnl-attribution.md).
+
+UAC schema (shipped 2026-05-01 commit `473af9d`): `unified_api_contracts.internal.architecture_v2.restaking_rewards` —
+`LSTRewardStream`, `LST_REWARD_STREAMS`, `RewardTokenEconomics`, `REWARD_TOKEN_ECONOMICS`, `RewardPnLLayer`,
+`ConvertDustInstruction`, `DustToken`, `DustConversionResult`, `ConvertedTokenLeg`, `DeferredTokenLeg`.
+
 ## Out of scope
 
 - Greeks-aware delta management for OPTIONS (gamma/vega controller is a v2; v1 treats option legs as size-only)
