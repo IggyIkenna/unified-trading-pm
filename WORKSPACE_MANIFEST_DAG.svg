@@ -136,9 +136,9 @@
   <circle cx="1683" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1599" y="753" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1703" y="723" width="181" height="38" class="svc" />
-  <rect x="1703" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1703" y="723" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1793" y="741" text-anchor="middle" class="label">features-sports-service</text>
-  <circle cx="1874" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1874" cy="731" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1793" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1894" y="723" width="209" height="38" class="svc" />
   <rect x="1894" y="723" width="4" height="38" fill="#facc15" rx="2" />
