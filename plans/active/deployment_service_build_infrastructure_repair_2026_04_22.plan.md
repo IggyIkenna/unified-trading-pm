@@ -80,9 +80,9 @@ Phase 0 (archaeology, SEQUENTIAL — gate for everything)
 ### Phase 0 — Archaeology [SOLO]
 
 - [x] [AGENT] P0. (`p0-archaeology`) Phase 0 archaeological audit — fact-find the blast radius BEFORE touching the
-      Dockerfile. SEQUENTIAL — all later phases depend on this. **2026-04-25 sub-agent confirmation:**
-      `ui/`, `api/`, `backends/`, `deployment/` directories DO NOT EXIST at deployment-service repo root (verified via
-      `ls -d`). `deployment_service/{api,backends,deployment}/` subpackages all exist; `configs/` exists at repo root.
+      Dockerfile. SEQUENTIAL — all later phases depend on this. **2026-04-25 sub-agent confirmation:** `ui/`, `api/`,
+      `backends/`, `deployment/` directories DO NOT EXIST at deployment-service repo root (verified via `ls -d`).
+      `deployment_service/{api,backends,deployment}/` subpackages all exist; `configs/` exists at repo root.
       `deployment_service/api/main.py` defines `app = create_app()` at line 43 (factory pattern — gunicorn imports the
       module and grabs the `app` attribute, which is fine). `deployment-api/gunicorn.conf.py` exists in sibling repo;
       `deployment_service/api/gunicorn.conf.py` was already vendored at commit `d19a969 chore: sync workspace changes`.
@@ -90,19 +90,18 @@ Phase 0 (archaeology, SEQUENTIAL — gate for everything)
 ### Phase 1 — Dockerfile repair [PARALLEL with Phase 2]
 
 - [x] [AGENT] P1. (`p1-dockerfile-repair`) Phase 1 — Repair the Dockerfile. Blocked on Phase 0. **2026-04-25 commit
-      `3f09f52` on `live-defi-rollout` (deployment-service):**
-      BUG-1a (drop `ui-builder` Stage 1) ✓; BUG-1b (drop `COPY --from=ui-builder`) ✓; BUG-2 (`uv sync --system` →
-      `uv pip install --system --no-deps -e .` on both `api` and `api-dev` stages) ✓; BUG-3 (drop
-      `COPY api/ backends/ deployment/`, keep `COPY configs/`) ✓; BUG-4 (CMD →
+      `3f09f52` on `live-defi-rollout` (deployment-service):** BUG-1a (drop `ui-builder` Stage 1) ✓; BUG-1b (drop
+      `COPY --from=ui-builder`) ✓; BUG-2 (`uv sync --system` → `uv pip install --system --no-deps -e .` on both `api`
+      and `api-dev` stages) ✓; BUG-3 (drop `COPY api/ backends/ deployment/`, keep `COPY configs/`) ✓; BUG-4 (CMD →
       `gunicorn deployment_service.api.main:app -c /app/deployment_service/api/gunicorn.conf.py`) ✓; BUG-5 (no
-      keyrings.* references survive — UTL base image carries UAC + UTL + transitive deps) ✓. 3 stages intact:
-      `base` → `api` → `api-dev` → `sports-scheduler`. Dockerfile diffstat 49 lines changed (15 ins / 34 del).
+      keyrings.\* references survive — UTL base image carries UAC + UTL + transitive deps) ✓. 3 stages intact: `base` →
+      `api` → `api-dev` → `sports-scheduler`. Dockerfile diffstat 49 lines changed (15 ins / 34 del).
 
 ### Phase 2 — cloudbuild.yaml repair [PARALLEL with Phase 1]
 
 - [x] [AGENT] P2. (`p2-cloudbuild-repair`) Phase 2 — Repair cloudbuild.yaml. Blocked on Phase 0, PARALLEL with Phase 1.
-      **2026-04-25 commit `3f09f52` on `live-defi-rollout` (deployment-service):**
-      BUG-6 (heredoc `$IMAGE`/`$RESULT`/`$i` → `$$IMAGE`/`$$RESULT`/`$$i`; replaced `UNKNOWN/UNKNOWN` placeholder with
+      **2026-04-25 commit `3f09f52` on `live-defi-rollout` (deployment-service):** BUG-6 (heredoc
+      `$IMAGE`/`$RESULT`/`$i` → `$$IMAGE`/`$$RESULT`/`$$i`; replaced `UNKNOWN/UNKNOWN` placeholder with
       `${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/${_SERVICE_NAME}:${COMMIT_SHA}`) ✓. BUG-7
       (`configure-docker` already on `gcr.io/cloud-builders/gcloud` — correct, no change) ✓. BUG-8 (`deploy` step on
       `gcr.io/google.com/cloudsdktool/cloud-sdk` — correct, no change) ✓. `images:` list unchanged (4 tags). cloudbuild
@@ -119,12 +118,12 @@ Phase 0 (archaeology, SEQUENTIAL — gate for everything)
 
 ### Phase 3b — deployment-service QG [PARALLEL with Phase 3]
 
-- [x] [AGENT] P3b. (`p3b-qg`) Phase 3b — deployment-service Pass 1 quality gates. Blocked on Phase 1.
-      **2026-04-25:** Ran `bash scripts/quality-gates.sh`. cloudbuild.yaml structure (STEP 5.17) PASSED.
-      Pre-existing failures NOT caused by Phase 1+2 changes: STEP 5.10 (`gcp_instance_lister.py` direct cloud SDK
-      import — pre-existing), pip-audit vulnerabilities (pre-existing), codex-compliance count exceeded (7 vs max 4 —
-      pre-existing). Commit landed via `--no-verify` with `[QG-BYPASS: pre-existing-violations]` per the explicit
-      instruction in `p3b-qg`. Surgical scope: 2 files (Dockerfile + cloudbuild.yaml).
+- [x] [AGENT] P3b. (`p3b-qg`) Phase 3b — deployment-service Pass 1 quality gates. Blocked on Phase 1. **2026-04-25:**
+      Ran `bash scripts/quality-gates.sh`. cloudbuild.yaml structure (STEP 5.17) PASSED. Pre-existing failures NOT
+      caused by Phase 1+2 changes: STEP 5.10 (`gcp_instance_lister.py` direct cloud SDK import — pre-existing),
+      pip-audit vulnerabilities (pre-existing), codex-compliance count exceeded (7 vs max 4 — pre-existing). Commit
+      landed via `--no-verify` with `[QG-BYPASS: pre-existing-violations]` per the explicit instruction in `p3b-qg`.
+      Surgical scope: 2 files (Dockerfile + cloudbuild.yaml).
 
 ### Phase 4 — Cloud Build smoke [OPERATOR-GATED]
 
@@ -132,8 +131,8 @@ Phase 0 (archaeology, SEQUENTIAL — gate for everything)
       SEQUENTIAL. **OPERATOR-GATED.** Sub-agent does NOT submit Cloud Build. Operator command (after Plan 13 Phase 2
       ships a fresh UTL base image):
       `cd deployment-service && gcloud builds submit --config=cloudbuild.yaml --region=asia-northeast1 --project=central-element-323112 .`
-      Expected: STATUS=SUCCESS; fresh `deployment-dashboard:${COMMIT_SHA}` + `sports-scheduler:${COMMIT_SHA}` tags in AR;
-      Cloud Run revision Ready.
+      Expected: STATUS=SUCCESS; fresh `deployment-dashboard:${COMMIT_SHA}` + `sports-scheduler:${COMMIT_SHA}` tags in
+      AR; Cloud Run revision Ready.
 
 ### Phase 5 — Plan 3 unblock (terraform + scheduler) [OPERATOR-GATED]
 
@@ -145,8 +144,9 @@ Phase 0 (archaeology, SEQUENTIAL — gate for everything)
 ### Phase 6 — Plan 6 build-rot check [PARALLEL with Phase 5]
 
 - [ ] [AGENT] P6. (`p6-plan6-check`) Phase 6 — Check whether Plan 6 (features-sports-service deployment) has the same
-      build rot. Blocked on Phase 4. PARALLEL with Phase 5. Re-audit `features-sports-service/{Dockerfile,cloudbuild.yaml}`
-      against the same 6 bug classes; if clean, flip and note "no repair required."
+      build rot. Blocked on Phase 4. PARALLEL with Phase 5. Re-audit
+      `features-sports-service/{Dockerfile,cloudbuild.yaml}` against the same 6 bug classes; if clean, flip and note "no
+      repair required."
 
 ### Phase 7 — Workspace-wide success criteria [FINAL GATE]
 

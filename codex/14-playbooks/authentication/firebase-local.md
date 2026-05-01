@@ -146,7 +146,7 @@ with empty state).
 - **Java missing** — emulators die with `Process java -version exited with code 1`. Install via brew (see above); the
   dev-tiers script auto-locates after install.
 - **macOS: `setsid` missing** — `dev-tiers.sh` uses process groups to reap the emulator's java children on `--stop`.
-  Linux ships `setsid` in util-linux; macOS does not. The script falls back to a `python3` polyfill automatically, so
-  no action is needed — but if you'd rather have the real binary, `brew install util-linux` provides it.
+  Linux ships `setsid` in util-linux; macOS does not. The script falls back to a `python3` polyfill automatically, so no
+  action is needed — but if you'd rather have the real binary, `brew install util-linux` provides it.
 - **"emulator hub on port 4400"** warning — benign; means a previous boot didn't shut down cleanly. Falls back to 4401
   and recovers.

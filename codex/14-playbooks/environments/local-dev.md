@@ -12,8 +12,8 @@ tier model (static/T0/T1/T2), boot flags (`--real`, `--firebase-local`), and the
 
 For **standalone backend service work** outside the dev-tiers T1/T2 set: see
 [../../08-workflows/local-dev.md](../../08-workflows/local-dev.md) — its frontend sections are stale (pre-UI
-consolidation, 10+ Vite apps), but its backend orchestration via `dev-start.sh` / `dev-stop.sh` / `dev-status.sh`
-and the API port registry (8004-8016) are still in use. Read the banner at the top of that doc.
+consolidation, 10+ Vite apps), but its backend orchestration via `dev-start.sh` / `dev-stop.sh` / `dev-status.sh` and
+the API port registry (8004-8016) are still in use. Read the banner at the top of that doc.
 
 This doc captures ONLY what's specific to the playbook context.
 

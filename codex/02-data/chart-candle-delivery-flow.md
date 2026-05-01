@@ -4,19 +4,18 @@ scope: [engineer, frontend, backend]
 
 # Chart Candle Delivery — End-to-End Flow
 
-> **This document is the single source of truth** for how a candle bar travels
-> from a GCS parquet shard to a pixel on the price-chart widget. Engineers
-> debugging "why isn't my chart loading" should start here, walk the path,
-> and identify which layer is silent / broken.
+> **This document is the single source of truth** for how a candle bar travels from a GCS parquet shard to a pixel on
+> the price-chart widget. Engineers debugging "why isn't my chart loading" should start here, walk the path, and
+> identify which layer is silent / broken.
 
-**Status**: canonical (since 2026-04-30, after price-chart GCS delivery
-shipped on `feat/price-chart-gcs-delivery` across 4 repos).
+**Status**: canonical (since 2026-04-30, after price-chart GCS delivery shipped on `feat/price-chart-gcs-delivery`
+across 4 repos).
 
-**Scope**: historical candle delivery only. Live tick / WebSocket bar deltas
-are deferred — see `market_data_delivery_architecture_2026_04_27.md`
-§Phase 4 for the planned shape.
+**Scope**: historical candle delivery only. Live tick / WebSocket bar deltas are deferred — see
+`market_data_delivery_architecture_2026_04_27.md` §Phase 4 for the planned shape.
 
 **Cross-refs**:
+
 - `availability-manifest-and-data-status.md` — manifest schema + lifecycle
 - `per-category-bucket-layouts.md` — actual GCS hive paths per asset group
 - `subscription-model.md` — domain client architecture
@@ -150,94 +149,91 @@ are deferred — see `market_data_delivery_architecture_2026_04_27.md`
 
 ### 1. Frontend widget
 
-| Component | Path |
-|---|---|
-| Chart widget (consumer) | `unified-trading-system-ui/components/widgets/terminal/price-chart-widget.tsx` |
-| Data hook | `unified-trading-system-ui/components/widgets/terminal/use-terminal-page-data.ts` |
-| API hook (initial paint) | `unified-trading-system-ui/hooks/api/use-market-data.ts` — `useCandles(...)` |
-| Static instrument list | `use-terminal-page-data.ts` — `DEFAULT_INSTRUMENTS` (until watchlist follow-up plan replaces it) |
+| Component                | Path                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------ |
+| Chart widget (consumer)  | `unified-trading-system-ui/components/widgets/terminal/price-chart-widget.tsx`                   |
+| Data hook                | `unified-trading-system-ui/components/widgets/terminal/use-terminal-page-data.ts`                |
+| API hook (initial paint) | `unified-trading-system-ui/hooks/api/use-market-data.ts` — `useCandles(...)`                     |
+| Static instrument list   | `use-terminal-page-data.ts` — `DEFAULT_INSTRUMENTS` (until watchlist follow-up plan replaces it) |
 
 **Mode toggle**: `NEXT_PUBLIC_MOCK_API` env var.
+
 - `true` → in-browser fixtures via `lib/api/mock-handler.ts`. Backend never hit.
 - `false` → real API call through Next.js rewrite.
 
 **Scroll-back contract**:
+
 - Window: `SCROLLBACK_WINDOW_DAYS = 7` calendar days per fetch.
 - History cap: `MAX_HISTORY_DAYS = 90` from initial as-of.
 - One in-flight fetch at a time (`inflightRef`).
-- Pointer (`earliestLoadedRef`) advances even on empty windows so consecutive
-  empty days don't stall scroll-back.
+- Pointer (`earliestLoadedRef`) advances even on empty windows so consecutive empty days don't stall scroll-back.
 
 ### 2. Next.js proxy
 
-| Component | Path |
-|---|---|
-| Rewrite config | `unified-trading-system-ui/next.config.mjs` |
+| Component       | Path                                                            |
+| --------------- | --------------------------------------------------------------- |
+| Rewrite config  | `unified-trading-system-ui/next.config.mjs`                     |
 | Backend URL env | `NEXT_PUBLIC_UNIFIED_API_URL` (default `http://localhost:8030`) |
 
-Maps `/api/market-data/*` → `${NEXT_PUBLIC_UNIFIED_API_URL}/market-data/*`.
-Browser-side path stays under `/api/...`; backend has no `/api` prefix.
+Maps `/api/market-data/*` → `${NEXT_PUBLIC_UNIFIED_API_URL}/market-data/*`. Browser-side path stays under `/api/...`;
+backend has no `/api` prefix.
 
 ### 3. unified-trading-api route
 
-| Component | Path |
-|---|---|
-| Route handler | `unified-trading-api/unified_trading_api/routes/market_data.py` — `GET /market-data/candles` |
-| Reader | `unified-trading-api/unified_trading_api/services/batch_candles.py` — `BatchCandleReader` |
-| Per-symbol config | `unified-trading-api/unified_trading_api/config/curated_symbols.py` |
+| Component         | Path                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| Route handler     | `unified-trading-api/unified_trading_api/routes/market_data.py` — `GET /market-data/candles` |
+| Reader            | `unified-trading-api/unified_trading_api/services/batch_candles.py` — `BatchCandleReader`    |
+| Per-symbol config | `unified-trading-api/unified_trading_api/config/curated_symbols.py`                          |
 
 **Mode toggle**: `CLOUD_MOCK_MODE` env var.
+
 - `true` → seed candles from in-memory `MockStateStore`.
 - `false` → real GCS read via `BatchCandleReader`.
 
 **Required env for real mode**:
+
 - `CLOUD_PROVIDER=gcp`
 - `GCP_PROJECT_ID=...` (or resolved via `UnifiedCloudConfig` → Secret Manager)
 - `MARKET_DATA_BUCKET_VARIANT=prod|test` (default `prod`)
 - ADC credentials for GCS
 
 **Loud failure modes**:
+
 - `venue` query param missing → 200 + `warning="venue required"` + empty data
 - `project_id` unresolvable → 503 `{ "error": "project_id_unresolved" }`
 
 ### 4. Manifest layer
 
-Full lifecycle is documented in `availability-manifest-and-data-status.md`.
-Quick recap as it pertains to the chart route:
+Full lifecycle is documented in `availability-manifest-and-data-status.md`. Quick recap as it pertains to the chart
+route:
 
-| Step | Component | Path |
-|---|---|---|
-| Read | UTL `read_availability_index(bucket)` | `unified-trading-library/unified_trading_library/manifest_writer.py:1764` |
-| Cache | In-process LRU (per process) | TTL 60 s, key=bucket |
-| Reader fallback | Consolidated → per-VM merge → self-shard | Same module |
-| Write (per shard) | UTL `ManifestWriter.add(...)` + `.write()` | Same module |
-| Consolidate | `manifest-consolidator` Cloud Run Job | `*/1 * * * *` cron, deployment-service Terraform |
-| Rebuild from GCS | `rebuild_processed_candles_manifest.py` | `market-data-processing-service/scripts/` |
+| Step              | Component                                  | Path                                                                      |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
+| Read              | UTL `read_availability_index(bucket)`      | `unified-trading-library/unified_trading_library/manifest_writer.py:1764` |
+| Cache             | In-process LRU (per process)               | TTL 60 s, key=bucket                                                      |
+| Reader fallback   | Consolidated → per-VM merge → self-shard   | Same module                                                               |
+| Write (per shard) | UTL `ManifestWriter.add(...)` + `.write()` | Same module                                                               |
+| Consolidate       | `manifest-consolidator` Cloud Run Job      | `*/1 * * * *` cron, deployment-service Terraform                          |
+| Rebuild from GCS  | `rebuild_processed_candles_manifest.py`    | `market-data-processing-service/scripts/`                                 |
 
 **Read path used by the chart route** (`BatchCandleReader._prune_dates_via_manifest`):
 
-1. `read_availability_index(bucket)` — first call cold-downloads, subsequent
-   60 s window → memory hit.
-2. Filter to MDPS-owned rows for the exact `(data_type, timeframe, venue,
-   instrument_id, available=True)` shard tuple.
+1. `read_availability_index(bucket)` — first call cold-downloads, subsequent 60 s window → memory hit.
+2. Filter to MDPS-owned rows for the exact `(data_type, timeframe, venue, instrument_id, available=True)` shard tuple.
 3. Set of present dates → intersect with the requested window.
 4. Empty manifest → no pruning (fall through; GCS is final source of truth).
-5. No matching rows → no pruning (per-symbol manifest underfill is a known
-   gap; covered in `availability-manifest-and-data-status.md` §Per-Service
-   Shard Dimension Matrix).
+5. No matching rows → no pruning (per-symbol manifest underfill is a known gap; covered in
+   `availability-manifest-and-data-status.md` §Per-Service Shard Dimension Matrix).
 
-**Critical invariant** (learned 2026-04-29): manifest writes MUST go through
-`ManifestWriter.add()` → per-VM shard. Direct writes to
-`_index/availability_index.parquet` are silently overwritten by the next
-`manifest-consolidator` cron cycle. The rebuild script honors this; the
-plan-doc §3a section explains why.
+**Critical invariant** (learned 2026-04-29): manifest writes MUST go through `ManifestWriter.add()` → per-VM shard.
+Direct writes to `_index/availability_index.parquet` are silently overwritten by the next `manifest-consolidator` cron
+cycle. The rebuild script honors this; the plan-doc §3a section explains why.
 
-**Critical UTL fix** (also 2026-04-29, commit `7af5a4e` in
-unified-trading-library): the reader now always merges per-VM shards
-regardless of feature flag, and `_read_and_merge_per_vm_shards` correctly
-handles `BlobMetadata` objects (was `isinstance(p, str)` which silently
-dropped every shard). Without that fix our rebuild script's writes would
-land on disk but never appear in `read_availability_index` output.
+**Critical UTL fix** (also 2026-04-29, commit `7af5a4e` in unified-trading-library): the reader now always merges per-VM
+shards regardless of feature flag, and `_read_and_merge_per_vm_shards` correctly handles `BlobMetadata` objects (was
+`isinstance(p, str)` which silently dropped every shard). Without that fix our rebuild script's writes would land on
+disk but never appear in `read_availability_index` output.
 
 ### 5. GCS data layer
 
@@ -255,37 +251,34 @@ gs://market-data-tick-{cefi|tradfi|defi}-{[test-]project_id}/
             {SYMBOL}.parquet
 ```
 
-**Filename is the bare symbol**, not the canonical `venue:type:symbol`
-instrument-key. Per-category divergence:
+**Filename is the bare symbol**, not the canonical `venue:type:symbol` instrument-key. Per-category divergence:
 
-| Category | `data_type` segment value used by MDPS |
-|---|---|
-| CEFI | `trades` (e.g. BINANCE-FUTURES) |
-| TRADFI | `ohlcv_1m` (e.g. NASDAQ, NYSE — pre-aggregated upstream) |
-| DEFI | varies by data_type — see `defi-data-types-catalog.md` |
+| Category | `data_type` segment value used by MDPS                   |
+| -------- | -------------------------------------------------------- |
+| CEFI     | `trades` (e.g. BINANCE-FUTURES)                          |
+| TRADFI   | `ohlcv_1m` (e.g. NASDAQ, NYSE — pre-aggregated upstream) |
+| DEFI     | varies by data_type — see `defi-data-types-catalog.md`   |
 
-A reader that hardcodes `data_type=trades` for everything will silently
-return zero bars for all TRADFI symbols. The chart route dispatches
-correctly via `curated_symbols.py`.
+A reader that hardcodes `data_type=trades` for everything will silently return zero bars for all TRADFI symbols. The
+chart route dispatches correctly via `curated_symbols.py`.
 
 ### 6. Parquet schema
 
 Set by `market-data-processing-service` `canonical_writer.py`. Columns:
 
-| Column | Type | Notes |
-|---|---|---|
-| `timestamp` | `datetime64[ns]` | Bar open time (UTC) |
-| `timestamp_out` | `int64` | Sequence id |
-| `venue`, `symbol`, `instrument_id` | `string` | Identity |
-| `open`, `high`, `low`, `close` | `float64` | OHLC |
-| `volume` | `float64` | Trading volume |
-| `trade_count`, `buy_trade_count`, `sell_trade_count` | `int64` | |
-| `buy_volume`, `sell_volume` | `float64` | |
-| `delay_*_ms` | `float64` | Pipeline lag stats |
+| Column                                               | Type             | Notes               |
+| ---------------------------------------------------- | ---------------- | ------------------- |
+| `timestamp`                                          | `datetime64[ns]` | Bar open time (UTC) |
+| `timestamp_out`                                      | `int64`          | Sequence id         |
+| `venue`, `symbol`, `instrument_id`                   | `string`         | Identity            |
+| `open`, `high`, `low`, `close`                       | `float64`        | OHLC                |
+| `volume`                                             | `float64`        | Trading volume      |
+| `trade_count`, `buy_trade_count`, `sell_trade_count` | `int64`          |                     |
+| `buy_volume`, `sell_volume`                          | `float64`        |                     |
+| `delay_*_ms`                                         | `float64`        | Pipeline lag stats  |
 
-Reader projects to chart-friendly `{time, open, high, low, close, volume}`
-where `time` is unix seconds. NaN OHLC rows are dropped (TRADFI shards have
-NaN rows for outside-RTH minutes; chart never receives those).
+Reader projects to chart-friendly `{time, open, high, low, close, volume}` where `time` is unix seconds. NaN OHLC rows
+are dropped (TRADFI shards have NaN rows for outside-RTH minutes; chart never receives those).
 
 ---
 
@@ -293,46 +286,41 @@ NaN rows for outside-RTH minutes; chart never receives those).
 
 What flag controls what at each layer:
 
-| Layer | Env var / config | Effect |
-|---|---|---|
-| Browser | `NEXT_PUBLIC_MOCK_API` | `true` = browser fixtures, `false` = call backend |
-| Browser | `NEXT_PUBLIC_UNIFIED_API_URL` | Backend URL for the rewrite (default `localhost:8030`) |
-| Backend | `CLOUD_MOCK_MODE` | `true` = seed candles, `false` = real GCS |
-| Backend | `CLOUD_PROVIDER=gcp` | Required when real |
-| Backend | `GCP_PROJECT_ID` | Required when real (or via `UnifiedCloudConfig`) |
-| Backend | `MARKET_DATA_BUCKET_VARIANT=prod\|test` | Bucket suffix toggle (default prod) |
-| Backend | `DISABLE_AUTH=true` | Local dev only — skip API key check |
+| Layer   | Env var / config                        | Effect                                                 |
+| ------- | --------------------------------------- | ------------------------------------------------------ |
+| Browser | `NEXT_PUBLIC_MOCK_API`                  | `true` = browser fixtures, `false` = call backend      |
+| Browser | `NEXT_PUBLIC_UNIFIED_API_URL`           | Backend URL for the rewrite (default `localhost:8030`) |
+| Backend | `CLOUD_MOCK_MODE`                       | `true` = seed candles, `false` = real GCS              |
+| Backend | `CLOUD_PROVIDER=gcp`                    | Required when real                                     |
+| Backend | `GCP_PROJECT_ID`                        | Required when real (or via `UnifiedCloudConfig`)       |
+| Backend | `MARKET_DATA_BUCKET_VARIANT=prod\|test` | Bucket suffix toggle (default prod)                    |
+| Backend | `DISABLE_AUTH=true`                     | Local dev only — skip API key check                    |
 
 ---
 
 ## Performance shape (current, 2026-04-30)
 
-| Scenario | Workstation p50 | Co-located backend (estimated) |
-|---|---|---|
-| Single day, 1m | ~1100 ms | 50–100 ms |
-| 7-day window, 1m | ~1240 ms | ~200 ms |
-| 30-day window, 1m | ~2150 ms | 300–400 ms |
+| Scenario          | Workstation p50 | Co-located backend (estimated) |
+| ----------------- | --------------- | ------------------------------ |
+| Single day, 1m    | ~1100 ms        | 50–100 ms                      |
+| 7-day window, 1m  | ~1240 ms        | ~200 ms                        |
+| 30-day window, 1m | ~2150 ms        | 300–400 ms                     |
 
-Single-file timing breakdown: **97 % download (HTTP RTT), 0.2 % parse,
-1.4 % project**. Bottleneck is round-trip, not CPU.
+Single-file timing breakdown: **97 % download (HTTP RTT), 0.2 % parse, 1.4 % project**. Bottleneck is round-trip, not
+CPU.
 
-Parallel speedup: **8.0×** for 10-day vs sequential, after the
-`urllib3 pool_maxsize=32` fix in `BatchCandleReader._tune_connection_pool`.
-Pre-fix the pool was the default 10; concurrent requests past that point
-re-handshook TLS and the parallel scenario fell to ~4× single-day
-instead of 1×.
+Parallel speedup: **8.0×** for 10-day vs sequential, after the `urllib3 pool_maxsize=32` fix in
+`BatchCandleReader._tune_connection_pool`. Pre-fix the pool was the default 10; concurrent requests past that point
+re-handshook TLS and the parallel scenario fell to ~4× single-day instead of 1×.
 
 Numbers from `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29*.md`.
 
-**Future-leverage moves** (covered in
-`market_data_delivery_architecture_2026_04_27.md` §Phases):
+**Future-leverage moves** (covered in `market_data_delivery_architecture_2026_04_27.md` §Phases):
 
-- Phase 1: per-month parquet rollups → 22× round-trip reduction for typical
-  1-month chart windows.
-- Phase 2: time-range addressing (`from_ts` / `to_ts` instead of
-  `from_date` / `to_date`) + count-based fetches (`(end_ts, count)`).
-- Phase 3: client-side BarStore — chart asks for visible-range, store
-  decides what to fetch.
+- Phase 1: per-month parquet rollups → 22× round-trip reduction for typical 1-month chart windows.
+- Phase 2: time-range addressing (`from_ts` / `to_ts` instead of `from_date` / `to_date`) + count-based fetches
+  (`(end_ts, count)`).
+- Phase 3: client-side BarStore — chart asks for visible-range, store decides what to fetch.
 - Phase 4: WebSocket bar deltas for live updates.
 
 ---
@@ -341,35 +329,29 @@ Numbers from `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29*.m
 
 Walk the layers in order:
 
-1. **Is real mode actually on?** Check `NEXT_PUBLIC_MOCK_API` in the browser
-   process env. If `true`, the route is never hit.
-2. **Does the backend boot?** `curl http://localhost:8030/health`. If not,
-   check `CLOUD_PROVIDER`, `GCP_PROJECT_ID`, and ADC creds.
-3. **Does the route return 200 with bars?** `curl
-   ":8030/market-data/candles?venue=NASDAQ&instrument=AAPL&timeframe=1m
-   &count=10&mode=batch&as_of=<recent-date>"`. If `data` is empty, check:
+1. **Is real mode actually on?** Check `NEXT_PUBLIC_MOCK_API` in the browser process env. If `true`, the route is never
+   hit.
+2. **Does the backend boot?** `curl http://localhost:8030/health`. If not, check `CLOUD_PROVIDER`, `GCP_PROJECT_ID`, and
+   ADC creds.
+3. **Does the route return 200 with bars?**
+   `curl ":8030/market-data/candles?venue=NASDAQ&instrument=AAPL&timeframe=1m &count=10&mode=batch&as_of=<recent-date>"`.
+   If `data` is empty, check:
    - Is the symbol in `curated_symbols.py` with the right `data_type`?
    - Does the GCS shard actually exist?
      `gcloud storage ls "gs://market-data-tick-tradfi-{project}/processed_candles/by_date/day=YYYY-MM-DD/timeframe=1m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"`
-   - Did manifest pruning eat the dates? Check
-     `read_availability_index({bucket})` — see
+   - Did manifest pruning eat the dates? Check `read_availability_index({bucket})` — see
      `availability-manifest-and-data-status.md` for inspection commands.
-4. **Does the UI proxy forward correctly?** `curl
-   "http://localhost:3000/api/market-data/candles?..."`. Should return
+4. **Does the UI proxy forward correctly?** `curl "http://localhost:3000/api/market-data/candles?..."`. Should return
    identical JSON to the backend direct call.
-5. **Does `loadMoreCandles` silently break?** Check that response field
-   name is `data` not `candles` (historical bug — fixed
-   `feat/price-chart-gcs-delivery` in commit `252c7141`).
+5. **Does `loadMoreCandles` silently break?** Check that response field name is `data` not `candles` (historical bug —
+   fixed `feat/price-chart-gcs-delivery` in commit `252c7141`).
 
 ---
 
 ## Related decisions
 
-- Why GCS via UTL, not BigQuery, for read path:
-  `market_data_delivery_architecture_2026_04_27.md` (parent reference) +
+- Why GCS via UTL, not BigQuery, for read path: `market_data_delivery_architecture_2026_04_27.md` (parent reference) +
   `price_chart_gcs_delivery_2026_04_29.plan.md` §Why GCS via UTL, not BQ.
-- Why not commit a local `BarStore` yet:
-  `market_data_delivery_architecture_2026_04_27.md` §Phase 3.
-- Why scroll-back is chunked windows (7 days) and not bar-count-based:
-  `price_chart_gcs_delivery_2026_04_29.plan.md` §Out of scope (defers to
-  parent-doc Phase 2).
+- Why not commit a local `BarStore` yet: `market_data_delivery_architecture_2026_04_27.md` §Phase 3.
+- Why scroll-back is chunked windows (7 days) and not bar-count-based: `price_chart_gcs_delivery_2026_04_29.plan.md`
+  §Out of scope (defers to parent-doc Phase 2).

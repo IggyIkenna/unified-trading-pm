@@ -86,9 +86,9 @@
   <text x="95" y="581" text-anchor="middle" class="level-label">L3</text>
   <text x="150" y="581" class="desc">Instrument registry — depends on UAC + UTL. (1 repos)</text>
   <rect x="70" y="604" width="153" height="38" class="svc" />
-  <rect x="70" y="604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="146" y="622" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="146" y="634" text-anchor="middle" class="ver">0.1.22</text>
   <!-- L4: Core services (batch + live) — parallel within tier. (18 repos) -->
   <rect x="40" y="676" width="2320" height="155" class="level-bg" />
@@ -151,14 +151,14 @@
   <circle cx="2312" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="2217" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="70" y="771" width="230" height="38" class="svc" />
-  <rect x="70" y="771" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="771" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="185" y="789" text-anchor="middle" class="label">market-data-processing-service</text>
-  <circle cx="290" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="290" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="185" y="801" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="310" y="771" width="188" height="38" class="svc" />
-  <rect x="310" y="771" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="310" y="771" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="404" y="789" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="488" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="488" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="404" y="801" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="508" y="771" width="160" height="38" class="svc" />
   <rect x="508" y="771" width="4" height="38" fill="#facc15" rx="2" />
@@ -196,9 +196,9 @@
   <circle cx="220" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="150" y="920" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="240" y="890" width="244" height="38" class="svc" />
-  <rect x="240" y="890" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="240" y="890" width="4" height="38" fill="#facc15" rx="2" />
   <text x="362" y="908" text-anchor="middle" class="label">position-balance-monitor-service</text>
-  <circle cx="474" cy="898" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="474" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="362" y="920" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="494" y="890" width="195" height="38" class="svc" />
   <rect x="494" y="890" width="4" height="38" fill="#facc15" rx="2" />

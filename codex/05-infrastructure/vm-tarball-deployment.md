@@ -322,6 +322,70 @@ tail
 
 ---
 
+## Manifest consolidator daemon (2026-04-29)
+
+**Launcher:**
+[`deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh`](../../../deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh)
+
+A long-lived `e2-small` daemon (~$12/mo) that polls the UTL manifest consolidator on every asset_group bucket every 60s.
+Purpose: keep `_index/availability_index.parquet` fresh in each `instruments-store-*` bucket so the UTL reader's 120s
+freshness fallback doesn't truncate readers (deployment-api data-status, FSS reader, downstream services) to a
+per-VM-shards-only view.
+
+**Architecture (manifest-429 phase 6/7):**
+
+- VMs writing to the manifest write to `_index/per_vm/<vm_name>.parquet` shards (avoids canonical write contention).
+- A consolidator periodically reads canonical + all per_vm shards, dedups on the row-key tuple, writes back to
+  canonical.
+- The UTL reader has a 120s freshness threshold — if canonical is stale, falls back to per_vm shards only. So if the
+  consolidator stops running, readers see a partial view.
+
+**Why VM not Cloud Run Job:** Plans 12 + 13 blockers on deployment-service image build + UTL base image. VM uses the
+tarball infra (UAC + UTL + deployment-service already on GCS) and runs the consolidator's CLI in a bash poll loop.
+
+**In-VM command shape** (assembled by `setup-data-pipeline-vm.sh` from `VM_TASK=manifest-consolidator-poll`):
+
+```bash
+while true; do
+  for bucket in $BUCKETS; do
+    python -m unified_trading_library.manifest_consolidator --bucket $bucket --once
+  done
+  sleep $POLL_INTERVAL
+done
+```
+
+Default buckets: `instruments-store-{sports,cefi,defi,tradfi,prediction}-PROJECT_ID`. Default poll: 60s.
+
+**Singleton lock:** the launcher refuses to start if any `manifest-consolidator-*` VM is RUNNING in the zone (multiple
+would race on the consolidator's sentinel-lock and waste API calls). One daemon per zone is sufficient.
+
+**Metadata encoding gotcha:** the launcher encodes the buckets list with `:` separator (not `,`) because gcloud's
+`--metadata=KEY=VAL,KEY2=VAL2` parser splits top-level pairs on commas. The setup script converts `:` back to spaces for
+the bash loop.
+
+**UTL bug fix prerequisite (2026-04-29):** the consolidator had a `BlobMetadata` filter bug in `_read_per_vm_shards`
+(filtered with `isinstance(p, str)` against `list_blobs` results which are `BlobMetadata` objects) → silently reported
+`shards_scanned: 0`. Fixed in `unified-trading-library/unified_trading_library/manifest_consolidator.py` — extract
+`.name` attribute from BlobMetadata before path filter. The daemon needs the post-fix UTL tarball to actually do work.
+
+**Operations:**
+
+```bash
+bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh                    # all 5 asset_group buckets, 60s poll
+bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh --interval 30      # 30s poll
+bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh --buckets BUCKET1,BUCKET2  # custom subset
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/manifest-consolidator-<TS>/run.log  # tail logs
+gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast1-c --quiet  # stop
+```
+
+**SSOT cross-refs:**
+
+- [`02-data/sports-schema-paths.md`](../02-data/sports-schema-paths.md) "Manifest consolidator + per_vm shard merge
+  mechanics"
+- UTL CLI: `python -m unified_trading_library.manifest_consolidator --bucket <X> --once`
+
+---
+
 ## Cross-references
 
 - Operational howto: [`deployment-service/scripts/vm/README.md`](../../../deployment-service/scripts/vm/README.md)

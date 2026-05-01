@@ -95,6 +95,39 @@ Read these before making ANY code changes:
   `record_empty(row_key=..., attempted_at=...)` for legitimately-zero-rows,
   `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions. **Never overload
   `venue`** with non-venue data. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+- **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
+  `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
+  The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead
+  of `entity=footystats_odds/`) is the canonical reason this SSOT exists.
+  `candidate_parquet_paths(data_type, day, league_id)` returns the ordered list of GCS paths to probe — caller checks
+  each, first hit wins. Layout: per-league subpartition first (`entity={F}/league={L}/{F}.parquet`), bare path fallback
+  (`entity={F}/{F}.parquet`), flat for singletons like VENUES (`{F}/{F}.parquet`). Module:
+  `unified_api_contracts/canonical/domain/sports/gcs_paths.py`.
+- **Sports source coverage windows** — Sources have launch dates; data-status must clip pre-launch dates from expected
+  denominators or those days falsely render as `missing`. SSOT: `SOURCE_COVERAGE_START` dict in UAC
+  `unified_api_contracts.sports` (api_football=2018-01-01, footystats=2019-01-01, understat=2015-01-16,
+  transfermarkt=2019-01-01, soccer_football_info=2019-01-01, open_meteo=2019-03-02, **odds_api=2020-06-06**,
+  mdps_odds_horizon_bucket=2020-06-06). Use `clip_dates_to_source_coverage(source, start, end)` and pass `source_key=`
+  through helpers like `_sports_expected_dates_for_league` so the clip propagates. **Per-(source, data_type) overrides**
+  live in `DATA_TYPE_COVERAGE_START` for entities with later coverage than the source-wide value:
+  `("soccer_football_info", "SFI_PROGRESSIVE_STATS")` = 2020-01-01 (probed 2026-04-30: SFI's progressive endpoint
+  returns empty for every match before this date), and
+  `("api_football", "FIXTURE_EVENTS"|"FIXTURE_LINEUPS"| "FIXTURE_STATS"|"PLAYER_STATS")` = 2020-06-06 (api_football
+  endpoints have data back to 2017-10 per live probes 2026-05-01 but our backfill never captured 2018-2020 due to
+  pre-flight skips, and downstream odds_api also starts 2020-06-06 so pre-cutoff per-fixture data has no trading value).
+  Pass `data_type=` through `clip_dates_to_source_coverage` / `get_source_coverage_start` to apply the override.
+  Documented date-range gaps (provider outages, paused leagues) go in `KNOWN_COVERAGE_GAPS` (currently empty) and are
+  filtered by `is_in_known_gap(source, data_type, iso_date)` — data-status drops them from the denominator and the
+  orchestrator pre-skips them so VMs don't waste rate-limit quota grinding through known-empty range.
+- **Manifest phantom audit** — Manifest can drift if adapters record `captured` for a shard but the parquet doesn't
+  exist at the canonical path (stale rescan output, schema migration churn, broken denorm). The orchestrator's
+  `_should_skip_shard` trusts the manifest, so phantoms cause permanent skip. Periodic audit:
+  `instruments-service/scripts/reconcile_phantom_manifest_rows.py --dry-run` — uses `candidate_parquet_paths` SSOT to
+  bulk-list all parquets per day, set-membership check vs each captured row, flips phantoms to `attempted_failed` so VMs
+  auto-retry. Bulk-list pattern (one GCS list per day) = ~5 min for 600k rows; per-row `exists()` would take 16h.
+  Critical: do NOT write empty placeholder parquets to mask phantoms — that's fudging data quality.
+  `record_empty(row_key=...)` is for legitimately-empty source responses only (we tried, API returned 200+empty).
+  Reconciliation incident: 2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up.
 - **VM tarball deployment** — Backfill / migration / smoke / forward-poll VMs boot via
   `gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` and pull tarballs from `gs://deployment-scripts-.../code/`.
   Refresh tarballs after every code change with `bash deployment-service/scripts/vm/create-code-tarballs.sh <flag>`:

@@ -9,11 +9,11 @@ revised: 2026-04-25 (end-of-day — corrected mental model)
 
 > **Use this when** the operator has confirmed (a) `seed-firebase-users.mjs --env=staging` has been run on
 > `odum-staging`, (b) `uat.odum-research.com` is in `odum-staging` Authorized Domains, (c) user-management-api
-> `/authorize` Firestore store on `odum-staging` is seeded for the demo emails. Then paste the prompt below into
-> a fresh Claude Code session.
+> `/authorize` Firestore store on `odum-staging` is seeded for the demo emails. Then paste the prompt below into a fresh
+> Claude Code session.
 
-> **Important context for the next agent:** the env-file flip is ALREADY committed (UI commit `b5c1c757`). What
-> remains is operator-side user seeding + agent-side QG + redeploy + smoke. Don't re-flip the env file.
+> **Important context for the next agent:** the env-file flip is ALREADY committed (UI commit `b5c1c757`). What remains
+> is operator-side user seeding + agent-side QG + redeploy + smoke. Don't re-flip the env file.
 
 ---
 
@@ -166,8 +166,7 @@ Files to read for context:
 - Tile shapes + YAML profiles + restriction-profiles sync for the 2 new personas.
 - 6-persona end-to-end smoke verified on UAT in demo mode.
 - `seed-firebase-users.mjs` STAGING_USERS list with `demo`→`demo123` password bump.
-- Cross-project IAM: prod compute SA has `datastore.user` + `storage.admin` + `firebaseauth.admin` on
-  `odum-staging`.
+- Cross-project IAM: prod compute SA has `datastore.user` + `storage.admin` + `firebaseauth.admin` on `odum-staging`.
 
 ## Reference: what's still pending
 
@@ -176,6 +175,6 @@ Files to read for context:
 
 ## Reference: deferred follow-on (when MOCK_API flips to false)
 
-- `unified-trading-api` Firebase ID token verification needs to handle `odum-staging`-issued tokens. Two paths:
-  (a) deploy a separate API instance on `odum-staging`, (b) dual-verify on the existing API. Out of scope until
-  the day MOCK_API is flipped.
+- `unified-trading-api` Firebase ID token verification needs to handle `odum-staging`-issued tokens. Two paths: (a)
+  deploy a separate API instance on `odum-staging`, (b) dual-verify on the existing API. Out of scope until the day
+  MOCK_API is flipped.

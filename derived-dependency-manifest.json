@@ -825,6 +825,7 @@
         "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
         "cryptography": ["cryptography>=46.0.7,<47.0.0"],
         "gcloud-aio-storage": ["gcloud-aio-storage>=9.0.0,<10.0.0"],
+        "google-cloud-firestore": ["google-cloud-firestore>=2.19.0,<3.0.0"],
         "matplotlib<4.0.0,": ["matplotlib<4.0.0,>=3.9.0"],
         "numba": ["numba>=0.62.1,<1.0.0"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
@@ -861,7 +862,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 2,
-      "external_count": 40
+      "external_count": 41
     },
     "trading-agent-service": {
       "internal_deps": {

@@ -7,24 +7,26 @@ status: PARTIALLY-STALE (frontend sections obsolete; backend orchestration still
 
 > **⚠️ Read this banner before following any instruction below.**
 >
-> The **frontend** parts of this doc describe the pre-consolidation workspace where the portal was split across 10+
-> Vite UIs (deployment-ui, strategy-ui, settlement-ui, etc.) on ports 5173-5183. **All those UIs were merged into
+> The **frontend** parts of this doc describe the pre-consolidation workspace where the portal was split across 10+ Vite
+> UIs (deployment-ui, strategy-ui, settlement-ui, etc.) on ports 5173-5183. **All those UIs were merged into
 > `unified-trading-system-ui`** and are no longer started via `dev-start.sh`.
 >
 > **For the frontend / consolidated portal**, use:
 >
-> - Tier model + boot script: [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md)
+> - Tier model + boot script:
+>   [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md)
 > - Boot command: `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static|0|1|2}`
-> - Firebase emulator setup: [`codex/14-playbooks/authentication/firebase-local.md`](../14-playbooks/authentication/firebase-local.md)
+> - Firebase emulator setup:
+>   [`codex/14-playbooks/authentication/firebase-local.md`](../14-playbooks/authentication/firebase-local.md)
 >
-> Frontend axes that are obsolete: `VITE_MOCK_API`, `VITE_SKIP_AUTH`, the 5173-5183 port registry, the per-UI rows
-> in the port table.
+> Frontend axes that are obsolete: `VITE_MOCK_API`, `VITE_SKIP_AUTH`, the 5173-5183 port registry, the per-UI rows in
+> the port table.
 >
 > **For backend services / APIs**, the `dev-start.sh` / `dev-stop.sh` / `dev-status.sh` scripts in
 > `unified-trading-pm/scripts/dev/` are **still in use** for orchestrating Python services that aren't part of
-> dev-tiers.sh's T1/T2 set (e.g. ad-hoc API spin-up, the 8004-8016 backend port range, MockStateStore semantics for
-> APIs that wire it). The mode-axis matrix below (`CLOUD_MOCK_MODE`, `DISABLE_AUTH`, `MOCK_STATE_MODE`) and the
-> backend port registry remain accurate for those workflows.
+> dev-tiers.sh's T1/T2 set (e.g. ad-hoc API spin-up, the 8004-8016 backend port range, MockStateStore semantics for APIs
+> that wire it). The mode-axis matrix below (`CLOUD_MOCK_MODE`, `DISABLE_AUTH`, `MOCK_STATE_MODE`) and the backend port
+> registry remain accurate for those workflows.
 >
 > When in doubt: portal/UI → dev-tiers.sh; standalone backend service work → dev-start.sh.
 

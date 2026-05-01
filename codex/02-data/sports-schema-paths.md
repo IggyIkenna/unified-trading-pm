@@ -103,11 +103,99 @@ copy where possible; delete old paths only after verification.
 
 ---
 
+## SSOT — UAC `unified_api_contracts.sports.gcs_paths`
+
+**Never hardcode `sports_reference/by_date/day=...` paths inline.** Every consumer (rescan / backfill / audit / FSS
+reader / data-status / migration) must import from UAC:
+
+```python
+from unified_api_contracts.sports import (
+    candidate_parquet_paths,        # data_type, day, league_id → ordered list of GCS paths
+    candidate_parquet_uris,         # same but full gs:// URIs
+    SPORTS_DATA_TYPE_TO_FOLDER,     # canonical data_type → entity folder name
+    SPORTS_DATA_TYPE_LAYOUT,        # canonical data_type → SportsPathLayout enum
+    SportsPathLayout,               # PER_DAY_PER_LEAGUE | PER_DAY_BARE | FLAT
+    sports_bucket_name,             # project_id → instruments-store-sports-{project_id}
+)
+```
+
+**Why this is mandatory:** the 2026-04-29 phantom-row audit incident — the audit script probed `entity=odds/`,
+`entity=predictions/`, `entity=matches/` (lowercased data_type) and falsely reported 22-26% phantom rates because the
+actual folder names are `entity=footystats_odds/`, `entity=footystats_predictions/`, `entity=footystats_matches/`. Each
+script that constructs paths inline is one rename / migration / typo away from drifting. Single SSOT eliminates that.
+
+**Path candidates returned by `candidate_parquet_paths(data_type, day, league_id)`:**
+
+1. Per-league subpartition (modern layout — try first):
+   `sports_reference/by_date/day={D}/entity={folder}/league={L}/{folder}.parquet`
+2. Bare path (legacy + single-file-per-day entities — fallback):
+   `sports_reference/by_date/day={D}/entity={folder}/{folder}.parquet`
+3. Flat (singletons like VENUES — separate branch): `sports_reference/{folder}/{folder}.parquet`
+
+`include_legacy_archive=True` adds `sports_reference_v1_archive/...` paths for migrations.
+
+## Source coverage windows — `SOURCE_COVERAGE_START`
+
+Sources have launch dates. Pre-launch dates must NOT count toward `expected_shards` denominators or they render as
+`missing` forever. SSOT in same UAC module:
+
+```python
+from unified_api_contracts.sports import (
+    SOURCE_COVERAGE_START,          # source_key → date
+    get_source_coverage_start,
+    clip_dates_to_source_coverage,  # source_key, start, end → (clipped_start, clipped_end)
+)
+```
+
+| Source                     | Launch date |
+| -------------------------- | ----------- |
+| `api_football`             | 2018-01-01  |
+| `footystats`               | 2019-01-01  |
+| `understat`                | 2015-01-16  |
+| `transfermarkt`            | 2019-01-01  |
+| `soccer_football_info`     | 2019-01-01  |
+| `open_meteo`               | 2019-03-02  |
+| `odds_api`                 | 2020-06-06  |
+| `mdps_odds_horizon_bucket` | 2020-06-06  |
+
+The data-status reader's `_sports_expected_dates_for_league` accepts `source_key=` to apply the clip per shard.
+
+## Manifest phantom audit + reconciliation
+
+A "phantom" row says `capture_status=captured` but no parquet exists at any candidate path. Causes: stale rescan output,
+schema migration churn, fake denorm rows from a fudge. The orchestrator's `_should_skip_shard` trusts the manifest —
+phantoms cause permanent skip.
+
+**Audit:**
+
+```bash
+cd instruments-service
+.venv/bin/python scripts/reconcile_phantom_manifest_rows.py --dry-run
+```
+
+Uses `candidate_parquet_paths` SSOT + bulk-list pattern (one GCS list per day, in-memory set membership check) — 5 min
+for ~600k rows. Per-row `exists()` would take 16h.
+
+**Live flip:** drop `--dry-run` flag → flips phantom captured rows to `attempted_failed` so VMs auto-retry on next
+`_should_skip_shard` pass. Use `--data-types` to scope.
+
+**Critical rule:** do NOT write empty placeholder parquets to mask phantoms — that's fudging data quality. The
+`record_empty(row_key=...)` API is for **legitimately-empty source responses only** (we tried, API returned 200 +
+empty). Writing empty parquets at paths the orchestrator never attempted is dishonest: it overwrites the source-of-truth
+distinction between "no data exists upstream" and "we never asked".
+
+Reconciliation incident: 2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up across ODDS /
+PREDICTIONS / MATCHES / PLAYER_STATS / TEAMS / XG / SFI_PROGRESSIVE_STATS / STANDINGS / WEATHER / FIXTURE_EVENTS /
+FIXTURE_LINEUPS / FIXTURE_STATS.
+
+---
+
 ## Related
 
 - [schema-governance.md](./schema-governance.md) — Schema definition, validation, NaN handling
 - [hive-schema-compatibility.md](./hive-schema-compatibility.md) — Hive partitioning rationale
 - [sports-data-migration.md](./sports-data-migration.md) — Broader sports bucket refactoring
+- [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) — Honest-coverage v5 model
 
 ---
 

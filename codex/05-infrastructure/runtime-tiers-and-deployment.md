@@ -25,9 +25,9 @@ Replace `CLOUD_MOCK_MODE=true` with `CLOUD_MOCK_MODE=false` at ANY tier to switc
 | **T1**     | UI + API gateways    | UI + `unified-trading-api` + `client-reporting-api` | UI → HTTP → API. API uses MockStateStore internally. Auth is Firebase (VITE_SKIP_AUTH in mock). | 3000 |
 | **T2**     | UI + APIs + Services | UI + APIs + all service processes                   | UI → HTTP → API → HTTP → Services. Full engine parity.                                          | 3000 |
 
-> **Missing-venv tolerance:** any Python service whose `.venv` isn't built is skipped with a warning instead of
-> failing the tier. T1 boots fine without `client-reporting-api`'s venv (reports tab unavailable); T2 boots whatever
-> service venvs exist. To build all venvs at once:
+> **Missing-venv tolerance:** any Python service whose `.venv` isn't built is skipped with a warning instead of failing
+> the tier. T1 boots fine without `client-reporting-api`'s venv (reports tab unavailable); T2 boots whatever service
+> venvs exist. To build all venvs at once:
 > `for d in $(find . -maxdepth 2 -name uv.lock -not -path "*/.extra/*" | xargs -n1 dirname); do (cd "$d" && rm -rf .venv && uv sync --frozen); done`
 
 **T-static** is for offline demos, screenshots, and visual regression. No API calls possible. Run:
@@ -71,9 +71,9 @@ bash scripts/dev-tiers.sh --stop          # Stop everything (process-group kill,
 bash scripts/dev-tiers.sh --status        # What's running
 ```
 
-`--real` runs an ADC pre-flight before launching anything; the script exits with a remediation hint if `gcloud auth
-application-default print-access-token` fails. `GCP_PROJECT_ID` defaults to `central-element-323112` (the data lake);
-override at the shell to point elsewhere.
+`--real` runs an ADC pre-flight before launching anything; the script exits with a remediation hint if
+`gcloud auth application-default print-access-token` fails. `GCP_PROJECT_ID` defaults to `central-element-323112` (the
+data lake); override at the shell to point elsewhere.
 
 ### Health Page
 

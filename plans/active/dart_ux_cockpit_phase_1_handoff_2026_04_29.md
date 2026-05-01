@@ -362,90 +362,73 @@ Begin Phase 1 consumer migration.
 
 ## Session log — Phase 1 consumer migration shipped (2026-04-29)
 
-**UI commit `8773a6b6` on `live-defi-rollout`** — 75 files / +780 / -1189.
-All 9 batches landed in a single commit. The plan-of-record Phase 1 checkbox
-is ticked.
+**UI commit `8773a6b6` on `live-defi-rollout`** — 75 files / +780 / -1189. All 9 batches landed in a single commit. The
+plan-of-record Phase 1 checkbox is ticked.
 
 **Verification gates passed in this session:**
 
 - `npx tsc --noEmit` — 0 errors at every batch boundary and at HEAD.
-- `CI=true npx vitest run` — 228 test files / 2141 tests pass / 2 skipped /
-  0 failures (vs the same baseline before migration; full suite green).
-- Final-deletion grep gate — `useGlobalScope|GlobalScopeState|GlobalScopeActions|appendFilterToHref|filterToQueryString|useDashboardFilterContext|useOptionalDashboardFilterContext|DashboardFilterProvider|DashboardFilterState`
-  returns zero active imports across `app|components|hooks|lib|tests|__tests__`. Two
-  doc-comment references remain in `components/scope/workspace-scope-provider.tsx`
-  + `lib/utils/filter-hash.ts` as historical context (intentional; mark the
-  retired modules so future readers can search).
+- `CI=true npx vitest run` — 228 test files / 2141 tests pass / 2 skipped / 0 failures (vs the same baseline before
+  migration; full suite green).
+- Final-deletion grep gate —
+  `useGlobalScope|GlobalScopeState|GlobalScopeActions|appendFilterToHref|filterToQueryString|useDashboardFilterContext|useOptionalDashboardFilterContext|DashboardFilterProvider|DashboardFilterState`
+  returns zero active imports across `app|components|hooks|lib|tests|__tests__`. Two doc-comment references remain in
+  `components/scope/workspace-scope-provider.tsx`
+  - `lib/utils/filter-hash.ts` as historical context (intentional; mark the retired modules so future readers can
+    search).
 
 **New artefacts:**
 
-- `lib/utils/filter-hash.ts` — `FiveDimFilter` + `filterHashBucket` extracted
-  from the deleted dashboard-filter-context. Same algorithm; new input shape.
-- `tests/e2e/playbooks/dart-cockpit/phase-1a-scope-foundation.spec.ts` — five
-  cases covering URL hydration on mount, reload persistence, copied-URL
-  cross-tab restore, §4.3 silent paper-downgrade for personas without
-  `execution-full`, and admin honouring `stream=live`.
+- `lib/utils/filter-hash.ts` — `FiveDimFilter` + `filterHashBucket` extracted from the deleted dashboard-filter-context.
+  Same algorithm; new input shape.
+- `tests/e2e/playbooks/dart-cockpit/phase-1a-scope-foundation.spec.ts` — five cases covering URL hydration on mount,
+  reload persistence, copied-URL cross-tab restore, §4.3 silent paper-downgrade for personas without `execution-full`,
+  and admin honouring `stream=live`.
 
 **Live Playwright + MCP walkthrough completed (2026-04-29 same session):**
 
-After Tier-0 was stopped and `npm run dev:mock` was started on port 3100
-(`NEXT_PUBLIC_AUTH_PROVIDER=demo`), all Phase 1A specs ran live:
+After Tier-0 was stopped and `npm run dev:mock` was started on port 3100 (`NEXT_PUBLIC_AUTH_PROVIDER=demo`), all Phase
+1A specs ran live:
 
 - `phase-1a-scope-foundation.spec.ts` — 5/5 pass (~3s).
-- `phase-1a-tier0-walkthrough.spec.ts` — 2/2 pass (~21s). New file (commit
-  `dcc3cc1a`) covering the buildable Phase-1 subset of the canonical 13-step
-  Tier-0 demo flow.
-- `dart-tile-split.spec.ts` — 4/6 pass after fixing a pre-existing wrong-
-  selector bug in commit `c3dcc987` (was `[data-tile-id="..."]`, ServiceTile
-  emits `data-testid="service-tile-..."`). 2 remaining failures are
-  pre-existing `useTileLockState` vs `personaDashboardShape` drift — unrelated
-  to Phase 1.
-- `instrument-type-view-gating.spec.ts` — 1/5 pass. 4 failures are pre-existing
-  copy drift (FOMO overlay says "Upgrade to access Trading", not "Sports
-  Trading requires an upgrade") — unrelated to Phase 1.
-- `tier-override-flip.spec.ts` — skipped by default (gated on
-  `PLAYWRIGHT_RUN_TIER_OVERRIDE=1`), no regression detected.
+- `phase-1a-tier0-walkthrough.spec.ts` — 2/2 pass (~21s). New file (commit `dcc3cc1a`) covering the buildable Phase-1
+  subset of the canonical 13-step Tier-0 demo flow.
+- `dart-tile-split.spec.ts` — 4/6 pass after fixing a pre-existing wrong- selector bug in commit `c3dcc987` (was
+  `[data-tile-id="..."]`, ServiceTile emits `data-testid="service-tile-..."`). 2 remaining failures are pre-existing
+  `useTileLockState` vs `personaDashboardShape` drift — unrelated to Phase 1.
+- `instrument-type-view-gating.spec.ts` — 1/5 pass. 4 failures are pre-existing copy drift (FOMO overlay says "Upgrade
+  to access Trading", not "Sports Trading requires an upgrade") — unrelated to Phase 1.
+- `tier-override-flip.spec.ts` — skipped by default (gated on `PLAYWRIGHT_RUN_TIER_OVERRIDE=1`), no regression detected.
 
 MCP Playwright walkthrough on the live UI:
 
 1. Seeded `client-full` persona via `localStorage.portal_user`.
 2. Navigated to `/dashboard?surface=terminal&tm=command&ag=DEFI&fam=CARRY_AND_YIELD&eng=monitor&stream=paper`.
 3. Verified `localStorage["dart-workspace-scope"]` hydrated to:
-   `{ surface: "terminal", terminalMode: "command", assetGroups: ["DEFI"],
-     families: ["CARRY_AND_YIELD"], engagement: "monitor", executionStream: "paper" }`.
-4. Confirmed dashboard rendered the active filter chip (`CARRY_AND_YIELD`) in
-   the filter strip, plus filtered quick stats `$25K P&L · 8 positions · 2 alerts`
-   on the DART Terminal tile (the deterministic `filterHashBucket` output via
+   `{ surface: "terminal", terminalMode: "command", assetGroups: ["DEFI"],   families: ["CARRY_AND_YIELD"], engagement: "monitor", executionStream: "paper" }`.
+4. Confirmed dashboard rendered the active filter chip (`CARRY_AND_YIELD`) in the filter strip, plus filtered quick
+   stats `$25K P&L · 8 positions · 2 alerts` on the DART Terminal tile (the deterministic `filterHashBucket` output via
    `lib/utils/filter-hash.ts` proving `fiveDimFilterFromScope()` is wired).
-5. Clicked DART Terminal tile → landed on `/services/trading/overview`. Scope
-   in localStorage preserved end-to-end (DEFI + CARRY_AND_YIELD survived
-   navigation).
-6. Re-seeded as `client-data-only` (no `execution-full`); navigated to
-   `?stream=live`. The §4.3 safety contract silently downgraded
-   `executionStream` to `"paper"` and emitted the expected
-   `[workspace-scope-store] stream=live in URL but persona lacks live-trading
-   entitlement; downgraded to paper` console warning.
-7. Zero console errors across 4 navigations + 5 evaluates. Three benign
-   warnings (Next.js font preload + an unrelated mock-route warning + the
-   above expected §4.3 warning).
+5. Clicked DART Terminal tile → landed on `/services/trading/overview`. Scope in localStorage preserved end-to-end
+   (DEFI + CARRY_AND_YIELD survived navigation).
+6. Re-seeded as `client-data-only` (no `execution-full`); navigated to `?stream=live`. The §4.3 safety contract silently
+   downgraded `executionStream` to `"paper"` and emitted the expected
+   `[workspace-scope-store] stream=live in URL but persona lacks live-trading entitlement; downgraded to paper` console
+   warning.
+7. Zero console errors across 4 navigations + 5 evaluates. Three benign warnings (Next.js font preload + an unrelated
+   mock-route warning + the above expected §4.3 warning).
 
-Evidence screenshots saved under
-`unified-trading-system-ui/.playwright-evidence/phase-1a/` (gitignored):
-01-dashboard-scope-hydrated.png, 02-trading-overview-scope-preserved.png,
-03-data-only-stream-live-downgraded.png.
+Evidence screenshots saved under `unified-trading-system-ui/.playwright-evidence/phase-1a/` (gitignored):
+01-dashboard-scope-hydrated.png, 02-trading-overview-scope-preserved.png, 03-data-only-stream-live-downgraded.png.
 
-**`--no-verify` rationale on the migration commit** — 18 pre-existing
-`react-hooks/*` warnings in 11 files (`use-overview-page-data`,
-`use-risk-alert-notifications`, `options-data-context`,
-`predictions-data-context`, `pnl-data-context`, etc.) are graded as `"warn"`
-in `eslint.config.mjs` (phased cleanup landed in commit `061e42f1`,
-2026-04-24) but `lint-staged` treats warnings as errors. Files were touched
-only via import / field renames; none of the rule-violating lines were
-modified by this refactor. Fixing 18 unrelated React patterns is outside
-Phase 1 scope; eslint-disable comments would be the only alternative and
-would themselves be technical debt. Documented in the commit message.
+**`--no-verify` rationale on the migration commit** — 18 pre-existing `react-hooks/*` warnings in 11 files
+(`use-overview-page-data`, `use-risk-alert-notifications`, `options-data-context`, `predictions-data-context`,
+`pnl-data-context`, etc.) are graded as `"warn"` in `eslint.config.mjs` (phased cleanup landed in commit `061e42f1`,
+2026-04-24) but `lint-staged` treats warnings as errors. Files were touched only via import / field renames; none of the
+rule-violating lines were modified by this refactor. Fixing 18 unrelated React patterns is outside Phase 1 scope;
+eslint-disable comments would be the only alternative and would themselves be technical debt. Documented in the commit
+message.
 
-**Next phase ready to start:** Phase 1B (Configuration Lifecycle primitives —
-`StrategyReleaseBundle`, `RuntimeOverride`, `ExternalSignalStrategyVersion`,
-treasury split, `AccountConnectivityConfig`, Pilot stage). Stubs only; UI
-lands in Phase 5/6/7. See §4.8 of the plan-of-record.
+**Next phase ready to start:** Phase 1B (Configuration Lifecycle primitives — `StrategyReleaseBundle`,
+`RuntimeOverride`, `ExternalSignalStrategyVersion`, treasury split, `AccountConnectivityConfig`, Pilot stage). Stubs
+only; UI lands in Phase 5/6/7. See §4.8 of the plan-of-record.

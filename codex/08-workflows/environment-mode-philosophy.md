@@ -29,14 +29,14 @@ a build-time env var for this — it cannot be trusted to match where the app is
 
 _Which user database is auth backed by?_
 
-| Auth mode | When                                                 | Firebase / GCP project                                                                  |
-| --------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **local** | `NEXT_PUBLIC_AUTH_PROVIDER=demo`, localhost only     | None — localStorage personas                                                            |
-| **uat**   | UAT build — served at `uat.odum-research.com`        | Same as prod (`central-element-323112`), accessed via the `uat` hosting target        |
-| **prod**  | Production build — served at `www.odum-research.com` | `central-element-323112`, accessed via the `prod` hosting target                       |
+| Auth mode | When                                                 | Firebase / GCP project                                                         |
+| --------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **local** | `NEXT_PUBLIC_AUTH_PROVIDER=demo`, localhost only     | None — localStorage personas                                                   |
+| **uat**   | UAT build — served at `uat.odum-research.com`        | Same as prod (`central-element-323112`), accessed via the `uat` hosting target |
+| **prod**  | Production build — served at `www.odum-research.com` | `central-element-323112`, accessed via the `prod` hosting target               |
 
-**Current state (2026-04-25, corrected):** UAT and prod **share the same Firebase project**
-(`central-element-323112`) and therefore the same auth user pool, Firestore, and storage. They are separated only by:
+**Current state (2026-04-25, corrected):** UAT and prod **share the same Firebase project** (`central-element-323112`)
+and therefore the same auth user pool, Firestore, and storage. They are separated only by:
 
 - Hostname: `uat.odum-research.com` vs `www.odum-research.com`
 - Cloud Run service: `odum-portal-staging` vs `odum-portal`
@@ -44,29 +44,28 @@ _Which user database is auth backed by?_
 - Build-time env file: `docker-build.env.uat` vs `docker-build.env.production`
 
 The `.firebaserc` alias `staging: odum-staging` is **leftover misdirection** from an earlier design that anticipated a
-separate staging Firebase project. That project was never created and is not needed — UAT IS staging, just on the
-same Firebase project. Plan G2.6, originally scoped to provision a separate `odum-staging`, was retargeted 2026-04-25
-to "UAT auth wiring on the shared project".
+separate staging Firebase project. That project was never created and is not needed — UAT IS staging, just on the same
+Firebase project. Plan G2.6, originally scoped to provision a separate `odum-staging`, was retargeted 2026-04-25 to "UAT
+auth wiring on the shared project".
 
-**The `DemoPlanToggle` blocker is fixed** as of 2026-04-25 by the tier-override refactor in
-`lib/auth/tier-override.ts`. The toggle writes a localStorage flag that overlays entitlements on top of the raw
-authenticated user — provider-agnostic. Identity (email, uid, org) stays stable; only entitlements flip. Verified
-across 6 personas (Desmond + Patrick toggles, Investor, Admin, demo-signals-client, demo-im-reports-only) via
-end-to-end smoke test on UAT.
+**The `DemoPlanToggle` blocker is fixed** as of 2026-04-25 by the tier-override refactor in `lib/auth/tier-override.ts`.
+The toggle writes a localStorage flag that overlays entitlements on top of the raw authenticated user —
+provider-agnostic. Identity (email, uid, org) stays stable; only entitlements flip. Verified across 6 personas
+(Desmond + Patrick toggles, Investor, Admin, demo-signals-client, demo-im-reports-only) via end-to-end smoke test on
+UAT.
 
 **Migration path to flip UAT to real Firebase** (operator-gated):
 
 1. Operator: confirm `uat.odum-research.com` is in **Authorized domains** in Firebase console → Authentication →
    Settings (project `central-element-323112`). Add it if not.
-2. **Operator: provision real Firebase users for every demo email** (`desmondhw@gmail.com`,
-   `patrick@bankelysium.com`, `advisor@odum-research.co.uk`, `investor@odum-research.co.uk`,
-   `demo-signals@odum-research.co.uk`, `demo-im@odum-research.co.uk`, `admin@odum-research.co.uk`, etc.). The demo
-   personas in `lib/auth/personas.ts` only authenticate against the demo provider's local table —
-   `FirebaseAuthProvider.login()` calls `signInWithEmailAndPassword` against the real user pool, so every demo email
-   needs a corresponding Firebase user with the right password. Use Firebase console → Authentication → Add user, or
-   scripted via `firebase-admin createUser()`.
-3. Operator: confirm user-management-api `/authorize` returns the right role + entitlements + org for each demo
-   email (it already keys off email; just needs the demo emails seeded into whatever backend store it reads).
+2. **Operator: provision real Firebase users for every demo email** (`desmondhw@gmail.com`, `patrick@bankelysium.com`,
+   `advisor@odum-research.co.uk`, `investor@odum-research.co.uk`, `demo-signals@odum-research.co.uk`,
+   `demo-im@odum-research.co.uk`, `admin@odum-research.co.uk`, etc.). The demo personas in `lib/auth/personas.ts` only
+   authenticate against the demo provider's local table — `FirebaseAuthProvider.login()` calls
+   `signInWithEmailAndPassword` against the real user pool, so every demo email needs a corresponding Firebase user with
+   the right password. Use Firebase console → Authentication → Add user, or scripted via `firebase-admin createUser()`.
+3. Operator: confirm user-management-api `/authorize` returns the right role + entitlements + org for each demo email
+   (it already keys off email; just needs the demo emails seeded into whatever backend store it reads).
 4. Agent: copy the 6 `NEXT_PUBLIC_FIREBASE_*` values from `docker-build.env.production` to `docker-build.env.uat`.
 5. Agent: change `NEXT_PUBLIC_AUTH_PROVIDER=demo` → `firebase` in `docker-build.env.uat`.
 6. Agent: redeploy UAT. Smoke-test sign-in with one of the demo emails. The DemoPlanToggle keeps working unchanged
