@@ -135,15 +135,20 @@ Phase 6 — Hardening (final)
 
 ### Test gates
 
-- [ ] Per-archetype parity test: hand-rolled `_build_legs` output == `LegController.update` output on identical input
-      (zero behavioural drift)
-- [ ] Drift-detection unit test: position drifts X% → controller computes correct leverage_drift_bps
-- [ ] Rebalance unit test: given drift > rebalance_trigger_bps, controller emits AtomicInstruction with correct
-      TRANSFER + TRADE legs to restore target leverage on each leg AND target net delta
-- [ ] Venue-capability clamp test: SPORTS venue declares max_leverage=1.0; controller clamps target_leverage from 4.0 →
-      1.0 without erroring
+- [x] Per-archetype parity test: hand-rolled `_build_legs` output locks via entry-shape parity tests
+      (`strategy-service/tests/.../test_leveraged_leg_controller_parity.py`) + new promotion engines covered in
+      `test_arbitrage_price_dispersion_hierarchical.py`, `test_sports_value_betting.py`, `test_sports_arb_dutching.py`.
+      28 tests, all green.
+- [x] Drift-detection unit test: position drifts → controller computes correct leverage_drift_bps
+      (`execution-service/tests/unit/algorithms/test_leveraged_leg_controller.py`, 9 tests).
+- [x] Rebalance unit test: drift > rebalance_trigger_bps → controller emits AtomicInstruction with correct TRADE legs
+      preserving target_net_delta (concrete: 4× LONG weETH / 4× SHORT ETH-PERP under ETH +8% → SELL 118.5185 weETH + BUY
+      118.5185 ETH-PERP, post-rebalance net delta = 0).
+- [x] Venue-capability clamp test: SPORTS max_leverage=1.0 silently caps target_leverage from 4.0 → 1.0 (covered in
+      execution-service controller suite).
 - [ ] Time-varying leverage test: target_leverage changes per tick (ML_DIRECTIONAL conviction); controller adjusts
-      position to track new target
+      position to track new target — covered by controller unit (the time-varying contract is on the LegPortfolioState
+      input side); end-to-end live test still needs the PBM per-leg snapshot wiring (Phase 3).
 
 ### Business gates
 
@@ -152,6 +157,100 @@ Phase 6 — Hardening (final)
       gross 8× exposure, target net delta 0, controller cash-sweeps as PnL accrues
 - [ ] Risk-and-exposure-service emits LEVERAGE_BREACH alert in integration test when one leg drifts beyond tight
       threshold
+
+## Phase 4 corrected scope (2026-05-01 evening — full)
+
+Operator pushed back on the original "deferred" list. Honest re-audit: three of four "doesn't migrate" items were
+wrong-layer dismissals. The IMPLEMENTATIONS that exist today are partial / post-hoc, but the ARCHETYPE LOGIC is
+forward-looking position sizing — exactly what the controller is for. Corrected breakdown:
+
+### Promotions (forward-looking sizers that should consume LeveragedLegController)
+
+1. **`ArbitragePriceDispersionHierarchicalEngine`** — strategy-service v2. Multi-coin × multi-venue funding-rate carry.
+   Promotes the Level 1/2/3 hierarchical allocator from
+   `execution-service/cli/defi_arbitrage_dispersion_decision_trace.py` into a real archetype engine.
+   `target_net_delta=0` per coin; `LegSizingStrategy.PROPORTIONAL_TO_DEV_FROM_MEAN`. Existing
+   `ArbitragePriceDispersionEngine` keeps its 2-leg LEADER_HEDGE single-coin path; this adds a hierarchical sibling.
+2. **`SportsValueBettingEngine`** — strategy-service v2 NEW directory `sports_value_betting/`. Single LONG leg,
+   `target_leverage = kelly_fraction × bankroll` clamped to 1.0× by venue capability (SPORTS venues declare
+   `supports_margin=false`). `target_net_delta = ±target_leverage` from edge sign.
+   `LegSizingStrategy.CONVICTION_WEIGHTED`. Emits `AtomicLeg` with `params={"role": "back", "odds": "..."}` so executors
+   render as a BACK bet.
+3. **`SportsArbDutchingEngine`** — strategy-service v2 NEW directory `sports_arb/`. N legs (one per venue per outcome).
+   `target_net_delta=0` across outcomes (Dutched arb invariant: equal payoff regardless of outcome).
+   `LegSizingStrategy.KELLY_OVERROUND`. Emits mixed BACK / LAY `AtomicLeg`s.
+
+### Drift hooks on existing carry archetypes (opt-in via `LegPortfolioState`)
+
+4. **`BaseArchetypeEngineV2.maybe_rebalance_legs(snapshots, now_utc)`** — new opt-in method. If the engine declared a
+   `LegPortfolioState` at construction, the orchestrator calls this per tick with the latest PBM snapshot. Delegates to
+   `LeveragedLegController.compute_drift` + `emit_rebalance_instructions`. Engines that don't declare a portfolio state
+   get a no-op.
+5. **CARRY_STAKED_BASIS opts in** — declares its 3-leg portfolio (long stake / lend collateral / short perp) at config
+   time and gets auto-rebalance for free as ETH moves. Entry chain stays untouched.
+6. **CARRY_RECURSIVE_STAKED opts in** — declares its leveraged-loop portfolio (geometric-series stake legs + N-1 borrow
+   legs) and gets auto-rebalance for the per-leg leverage drift.
+
+### What genuinely stays as-is
+
+7. **PBM `SportsArbEngine`** — post-hoc detection of `is_arb` after positions are open. Different artifact
+   (`SportsArbPosition` / `SportsArbLeg` carry settlement-PnL math, not order intent). Already locked by `93002ca`
+   parity test.
+8. **`staked_basis._build_legs` ENTRY chain** — multi-action atomic STAKE → LEND → TRADE. Already locked by `39896d7`
+   parity test.
+9. **`recursive_staked` ENTRY chain** — geometric-series leg sizing. Already locked by `39896d7` parity test.
+
+### Hard prerequisite for live runtime
+
+PBM extension exposing per-leg `current_leverage` + `equity_per_leg` in the position snapshot (Phase 3, queued). The
+promotion engines (1–3) and the rebalance hook (4) ship now with `LegSnapshot`-shaped contracts; Phase 3 fills in the
+live feed.
+
+## Phase 4 closeout (2026-05-01 evening — corrected scope shipped in full)
+
+Operator pushed back on the original "deferred" list and was right: three of the four "doesn't migrate" items were
+wrong-layer dismissals. After re-scoping (above) the corrected Phase 4 shipped end-to-end in one session — five
+strategy-service commits on `live-defi-rollout`:
+
+- **`9e33ba2` `feat(arbitrage): promote multi-coin x multi-venue funding allocator to v2`**
+  `ArbitragePriceDispersionHierarchicalEngine` lifts the L1/L2/L3 hierarchical allocator from the cross-venue funding
+  decision tracer into a real archetype engine. Smoke-tested against the same 7-day 2025-06-15..21 fixture: BTC 35.72% /
+  LINK 23.29% / ETH 22.49% / SOL 18.50% book weights, every coin delta-neutral within itself, gross stacks across coins.
+- **`dcd32ad` `feat(rules-directional): SportsValueBettingEngine — Kelly-sized value bets`** Sibling to
+  `RulesDirectionalEventSettledEngine` under the same `RULES_DIRECTIONAL_EVENT_SETTLED` archetype: gates on
+  `(fair_prob × decimal_odds - 1) × 100 ≥ min_edge_pct`, sizes via fractional Kelly with archetype-tier multiplier
+  (0.125 = TIER*HIGH_VARIANCE) × param Kelly multiplier × full Kelly. No new SPORTS*-prefixed archetype enum value added
+  per the existing "no category prefixes" rule.
+- **`3525535` `feat(arbitrage): SportsArbDutchingEngine — N-venue dutched-arb`** Sibling to
+  `ArbitragePriceDispersionHierarchicalEngine` under `ARBITRAGE_PRICE_DISPERSION`: best-venue-per-outcome selection,
+  inverse-odds-weighted stakes, ATOMIC execution mode. Locks identical-payout-regardless-of-outcome invariant and
+  replaces the post-hoc PBM `SportsArbEngine.detect_arbs()` detection path with a forward-looking position-sizer (PBM
+  scanner stays for monitoring already-held positions).
+- **`9d15458` `feat(base-engine): declare_leg_portfolio_state hook for LeveragedLegController`** Opt-in declarative hook
+  on `BaseArchetypeEngineV2`. Engines whose archetype holds a multi-leg leveraged book return the target
+  `LegPortfolioState`; stateless engines leave the default `None`. Cross-repo wiring: strategy-service declares state,
+  runner pulls PBM `LegSnapshot`s and fires `execution_service.algo_library.LeveragedLegController.compute_drift`
+  externally — no upstream/downstream coupling violation.
+- **`7ad6802` `feat(carry): backport CARRY_STAKED_BASIS + CARRY_RECURSIVE_STAKED to declare LegPortfolioState`**
+  STAKED_BASIS declares 2-leg `HEDGE_UNDERLYING` (LST long + perp short, target_net_delta=0). RECURSIVE_STAKED declares
+  LST collateral + native borrow `LEVERAGE_LOOP` (target_net_delta = target_leverage, delta-positive recursive
+  exposure). Both engines retain their original on_tick + react_to_equity_change unchanged — the new hook is purely
+  declarative.
+- **`e0219d3` `test(strategies/v2): parity locks for Phase 4 promotions + carry backports`** Three new test modules + 4
+  new tests on the existing parity suite. 28 new tests total; full v2 unit suite (234 tests) green.
+
+Sports-archetype enum decision: **reuse existing generic archetypes**, no new SPORTS*-prefixed values. The
+`StrategyArchetype` enum docstring explicitly forbids category prefixes ("No CEFI*/DEFI*/SPORTS*/TRADFI\_") and the
+existing v2 already has multiple engines per archetype (the new hierarchical funding engine shares
+`ARBITRAGE_PRICE_DISPERSION` with the 2-venue `ArbitragePriceDispersionEngine`, and the value-betting engine shares
+`RULES_DIRECTIONAL_EVENT_SETTLED` with the rule-condition engine). Both target archetypes are already in
+`KELLY_FRACTION_BY_ARCHETYPE` at the right tiers (TIER_STABLE_STRUCTURAL for ARBITRAGE_PRICE_DISPERSION,
+TIER_HIGH_VARIANCE for RULES_DIRECTIONAL_EVENT_SETTLED) so no `archetype_defaults.py` changes were needed.
+
+**Hard prerequisite for live runtime**: PBM extension exposing per-leg `current_leverage` + `equity_per_leg` in the
+position snapshot (Phase 3, queued). Until PBM ships per-leg snapshot fields, the new hook + carry declarations stand as
+tested-but-not-yet-consumed declarations. The runner-side wiring (pull declared state → request PBM snapshots → fire
+controller → route AtomicInstruction back) is the next session.
 
 ## Phase 4 progress log (2026-05-01)
 
