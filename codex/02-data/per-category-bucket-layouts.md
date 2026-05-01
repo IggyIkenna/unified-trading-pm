@@ -2,17 +2,26 @@
 scope: [engineer, admin]
 ---
 
-# Per-Category Bucket & Path Layouts — SSOT
+# Per-Asset-Group Bucket & Path Layouts — SSOT
 
-**Purpose**: canonical reference for every upstream/downstream GCS path layout per market category. Written 2026-04-20
-after the SPORTS smoke incident where MDPS + instruments-service + MTDS each had different implicit assumptions about
-SPORTS path shape and the mismatch surfaced as `list_files_in_bucket: string index out of range` +
+**Purpose**: canonical reference for every upstream/downstream GCS path layout per market asset_group (formerly
+"category"). Written 2026-04-20 after the SPORTS smoke incident where MDPS + instruments-service + MTDS each had
+different implicit assumptions about SPORTS path shape and the mismatch surfaced as
+`list_files_in_bucket: string index out of range` +
 `get_instruments_for_date: 404 instrument_availability/instruments.parquet` + MDPS dep-checker silently mis-firing.
 
-**Status**: canonical. Any new service that reads or writes data partitioned by category MUST consult this doc before
-assuming a single-shape layout works across all categories.
+**Status**: canonical. Any new service that reads or writes data partitioned by asset_group MUST consult this doc before
+assuming a single-shape layout works across all groups.
 
-**Key insight**: category-specific path divergences are REAL and have been a source of recurring bugs. SPORTS in
+**Asset-group hive vocabulary (2026-05-01 update)**: `asset_group=` is **canonical** for new MTDS writes (per
+`market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_GROUP_HIVE_KEY`). `category=` is the **legacy** form
+(`RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY`) preserved on disk without a re-keying migration. Both coexist in production GCS
+— readers must try canonical first then fall back to legacy (`market_tick_data_service.reader` already does this;
+`deployment-api/utils/storage_facade.list_objects` transparently fans out to both vocabularies). Manifest pre-flight is
+hive-key-agnostic — it indexes by `(date, venue, chain, instrument_type, data_type)` only, so legacy `category=` data on
+disk is correctly skipped iff the manifest has a captured row for it.
+
+**Key insight**: asset-group-specific path divergences are REAL and have been a source of recurring bugs. SPORTS in
 particular does NOT follow the same layout as CEFI/TRADFI/DEFI/PREDICTION.
 
 ---
