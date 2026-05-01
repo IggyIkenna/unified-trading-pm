@@ -88,6 +88,24 @@ All API keys in GCP Secret Manager (`central-element-323112`). `ApiKeyReloader` 
 `.env` files, no inline keys. If a backfill fails with "missing key", check the secret exists in Secret Manager first;
 if it's missing or stale, ping Ikenna — don't go hunting for a local copy.
 
+### One-time GCP setup (do this first, before any backfill)
+
+ADC is fine; the only outstanding access bits are Pub/Sub. The deployment-api emits events to `deployment-api-events`
+and your account needs `pubsub.topics.publish`. Ikenna will run these as project owner:
+
+```bash
+# 1. Create the missing topic
+gcloud pubsub topics create deployment-api-events --project=central-element-323112
+
+# 2. Grant your account Pub/Sub publisher role
+gcloud projects add-iam-policy-binding central-element-323112 \
+  --member="user:harshkantariya@odum-research.com" \
+  --role="roles/pubsub.publisher"
+```
+
+After those run, `bash scripts/dev-tiers.sh --tier 2` should boot cleanly with backend events flowing. If you see
+`PERMISSION_DENIED ... pubsub.topics.publish`, those two commands haven't been run yet — ping Ikenna.
+
 ## How to start
 
 1. Run the playbook's "What to check before kicking off Phase 1 sports work" checklist (3 commands).
