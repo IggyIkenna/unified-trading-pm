@@ -504,9 +504,12 @@ INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob 
 ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"
 
-# Untyped API responses — response.json() must go through model_validate(), not raw dict access
+# Untyped API responses — response.json() must go through model_validate(), not raw dict access.
+# Honour `# noqa: qg-raw-json` per-line opt-out (matches base-library.sh) for explicit
+# protocol-layer / dynamic-schema cases where Pydantic validation is intentionally deferred.
 RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v 'model_validate\|cast(dict' || :)
+    | grep -v 'model_validate\|cast(dict' \
+    | grep -v "# noqa:.*qg-raw-json\|# noqa: qg-raw-json" || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
 EMPTY_STR_EXTRA=()
