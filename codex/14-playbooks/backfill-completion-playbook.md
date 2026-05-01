@@ -14,6 +14,88 @@ Goal: every asset group at 100% honest coverage for the instrument & market-data
 This playbook is operational — it tells you **what to run, in what order, with which cutoffs**. It does not re-derive
 the architecture; for that, follow the linked SSOT docs.
 
+## Scope (read this before anything else)
+
+**Batch only.** Live ingestion is the next milestone after this work, not part of it. Anything you read in MTDS / MDPS
+about live forward-poll, websockets, or streaming is out of scope here — focus on backfill + processing of historical
+windows.
+
+**Sports is parallel side work.** The 4 sports backfill VMs (`af` / `tm` / `sfi` / `fs`) and the L2 GCS rename run in
+the background; they should not block C5 progress. The goal for sports is "drive 80% → 100% under the secondary-cutoff
+denominator" — most of what's missing is already-downloaded odds-API data that just needs processing through MDPS, not
+fresh fetches.
+
+## MVP target (C5 — the dataset Harsh is shooting for)
+
+The MVP universe at [11-project-management/mvp-universe.yaml](../11-project-management/mvp-universe.yaml) is partly
+stale (it was authored before BTC futures + Deribit combos + TradFi options were added). The current shooting target:
+
+**CeFi — top ~20–25 assets (BTC, ETH, SOL, BNB, XRP, ADA, AVAX, DOGE, LINK, DOT, MATIC, LTC, BCH, ATOM, NEAR, APT, ARB,
+OP, INJ, SEI, TIA, SUI, RNDR, PYTH, JUP — adjust to current top by 30d notional).** Across each asset, every variant the
+venue lists:
+
+- **Spot + Futures + Perps** on `BINANCE-SPOT`, `BINANCE-FUTURES`, `OKX`, `UPBIT`, `BYBIT`, `HYPERLIQUID`. (Bybit IS in
+  scope — supersedes the older mvp-universe.yaml `excluded` list.)
+- **Options on `DERIBIT`** — combos only (multi-leg spreads). Single-leg per-strike is downstream / out of scope for C5.
+- Data types per CeFi venue: `trades`, `book_snapshot_5`, `derivative_ticker` (perps/futures only), `liquidations`
+  (perps/futures only). OHLCV downsamples come out of MDPS, not the raw fetch.
+
+**TradFi — CME core + BTC/ETH cash exposure + vol:**
+
+- **CME ES futures + ES options chain** (the full options chain, not single strikes). Combo bundling required.
+- **BTC futures (CME)** + **BTC spot ETFs** (`IBIT`, `FBTC`, `GBTC`, `BITO`, `ARKB`) and **ETH spot ETFs** (`ETHA`,
+  `FETH`, `ETHE`).
+- **VIX index** — special provenance, see "Special cases" below.
+- Data types per TradFi instrument: `ohlcv_1m`, `trades`, `tbbo`. Most TradFi data flows through MDPS to downsample —
+  raw ticks are processed into 1m / 5m / 15m / 4h / 24h bundles, not consumed at tick granularity by features.
+
+**Prediction — combos for up/down markets:** TradFi instruments routed through prediction-style combo schemas (the
+"will-X-close-above-Y" markets). Same bundling discipline as CeFi/TradFi options — single bundled per-underlying file
+per day, not per-contract files.
+
+**Sports — drive to 100% (parallel work):** primary lift is processing the already-fetched odds-API data through MDPS
+into the canonical paths. Fetch-side gaps tracked in active plan Phase 1.
+
+## Schema + bundling invariants (do not violate)
+
+These are the rules that prevent the pipeline from forking into multiple "sources of truth" over time. If you find
+yourself wanting to bend any of them, stop and surface it to Ikenna first — the cost of bending these later is
+re-migrating the entire dataset.
+
+- **Single bundled file per (day × underlying × data_type).** Options chains, futures combos, features chains all land
+  as one parquet keyed by underlying — never per-contract or per-strike. Concretely:
+  `instrument_type=combo/data_type=ohlcv_1m/underlying=ES/ticks.parquet` (one file holds all ES options for that day).
+  Reference: combo bundling shipped 2026-04-30 + 5 year-sharded migration VMs that compacted ~13M legacy per-combo
+  parquets into ~36k bundled files.
+- **Today's code on today's data must reproduce historical output byte-for-byte (modulo timestamps).** If you change a
+  schema, you backfill or migrate the whole window — you do NOT leave old files in the old shape and write new files in
+  the new shape and call it done. The `availability_index.parquet` reader should never need to know which schema version
+  a row was written under.
+- **No duplicate schemas for the same logical data.** If you find two parquets that both claim to be "trades for ES on
+  2024-06-15" but have different columns, one is wrong — pick the canonical shape, migrate the other, delete the loser.
+  Don't paper over it with a reader that supports both.
+- **Data-status denominator clipped to "data was actually possible".** Pre-launch dates per ticker
+  (`TRADFI_TICKER_COVERAGE_START`), pre-listing dates per option (option chain start = first listing day per chain),
+  pre-source-launch dates per sports source (`SOURCE_COVERAGE_START`), per-protocol-per-chain inception for DeFi.
+  Legitimately-empty days go through `record_empty(row_key=...)` so they show as `empty_confirmed` in the manifest, not
+  `attempted_failed`.
+- **Schema governance is write-time, not read-time.** Adapters validate output against the registered `SchemaDefinition`
+  BEFORE writing the parquet. If validation fails, the row goes to `record_failed`, not the bucket. Reference:
+  [02-data/schema-governance.md](../02-data/schema-governance.md).
+
+## Special cases (data provenance you would not guess from code)
+
+- **VIX index** — already complete, no fetch action needed. Provenance: fixed 15-minute bundles from Barchart cover the
+  bulk of the window (`asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet`); the most
+  recent ~90 days come from a Yahoo Finance backfiller. Migrated 2026-04-30; legacy path wiped. If a strategy needs
+  intraday VIX < 15m granularity, that's a separate sourcing question — flag to Ikenna.
+- **VIX futures (full-tick chain)** — deferred. UAC `_CBOE_INSTRUMENTS = []` is intentional; needs declarative VX
+  contract calendar (XCBF.PITCH dataset, `raw_symbol` stype). Separate plan if/when needed; index-level data above is
+  enough for current strategies.
+- **Sports odds-API data** — a large fraction of the missing manifest rows for `ODDS_HORIZON_BUCKET` and similar are
+  already fetched into raw GCS but not yet processed through MDPS into the canonical per-league partitions. The lift is
+  mostly MDPS-side, not fetch-side. Verify by sampling raw bucket vs canonical path before launching new fetch VMs.
+
 ## Credentials policy
 
 **All venue / data-source API keys live in GCP Secret Manager.** Adapters fetch them via `ApiKeyReloader` (UTL) at
