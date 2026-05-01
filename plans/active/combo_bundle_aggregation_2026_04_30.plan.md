@@ -62,9 +62,9 @@ Compare to `instrument_type=futures_chain` which already bundles: one `ticks.par
 - [ ] [AGENT] P0. Locate the writer code path that decides per-symbol vs bundled file for `instrument_type=combo`.
       Likely candidates: `PartitionedTickWriter._resolve_path`, `databento_adapter` post-classification routing.
 - [ ] [AGENT] P0. Confirm `_BUNDLED_INSTRUMENT_TYPES` (currently
-      `frozenset({"options_chain", "futures_chain", "combo"})` per
-      [`_migrate_tradfi_classifier.py:81`](../../market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_classifier.py#L81))
-      is honored at write time. The set is consulted by the migration script; the live writer may use different logic.
+      `frozenset({"options_chain", "futures_chain", "combo"})` per `_migrate_tradfi_classifier.py` (search for
+      `_BUNDLED_INSTRUMENT_TYPES`)) is honored at write time. The set is consulted by the migration script; the live
+      writer may use different logic.
 - [ ] [AGENT] P0. Decide underlying convention for `UD_1V_*` combos:
   - Option A — look up via Databento `definition.parquet` per day and resolve `underlying_root`
   - Option B — catch-all `underlying=UD/` per day (cheaper, slightly less queryable)
