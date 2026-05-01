@@ -34,57 +34,51 @@ ledger:
   - id: strategy_archived_pre_v2
     component: strategy_service/engine/strategies/_archived_pre_v2/
     repo: strategy-service
-    status: archived
+    status: deleted
     owner: ikenna
     replaces_what: "v1 strategy implementations (~63 files / ~18k LoC)"
-    delete_condition: >
-      V1-RETIRE Phase 2 surgical refactor (8 steps; see notes). Phase 1 already shipped (strategy-service 8035162) so
-      legacy mode is already rejected at startup; production runs on v2_prod default. Phase 2 deletes the source files
-      and migrates v2_shadow callers off create_strategy_instance.
-    known_import_count: 147
+    delete_condition: ALREADY DELETED 2026-05-01 (V1-RETIRE Phase 2 commit a7f6f79)
+    known_import_count: 0
     replacement: strategy_service/engine/strategies/v2/
-    target_wave: V1-RETIRE Phase 2 (workspace audit 2026-05-01)
+    target_wave: V1-RETIRE Phase 2
     ready_to_delete: true
     notes: >
-      READY FOR EXECUTION 2026-05-01. Supersession proven: all 62 v1 factory keys mapped, all 13 v2 archetypes
-      implemented, zero external callers across 67-repo workspace, parity tests green. Phase 2 surgery (focused session,
-      ~2-3 hours): (1) drop "v2_shadow" from Literal in config.py + batch_utils.py (only "v2_prod" remains); (2) delete
-      _archived_pre_v2/ directory; (3) delete legacy_type_to_archetype.py; (4) strip 145-symbol re-exports from
-      engine/strategies/__init__.py; (5) replace batch_utils.create_strategy_instance with hard-raise OR remove + remove
-      call sites; (6) strip 5 inline _archived_pre_v2 imports from batch_handler.py (lines 601, 1250, 1265, 1276, 1287);
-      (7) delete tests/unit/test_prediction_mapping.py + test_legacy_type_to_archetype.py; (8) update
-      tests/unit/cli/handlers/test_strategy_dispatch.py to assert v2_shadow rejected. Per the "if v2 tests pass, just
-      delete the old stuff" directive, gating is now zero-touch -- the surgery is mechanical and test-suite verifiable
-      end-to-end.
+      DELETED 2026-05-01 in commit strategy-service a7f6f79 (V1-RETIRE Phase 2). Total surface area removed: 63 v1
+      source files + 38 v1 test files + 145-symbol re-export block in engine/strategies/__init__.py + 5 inline imports
+      in batch_handler.py + create_strategy_instance factory body + v2_shadow dispatch mode. 1414 tests pass
+      post-deletion. Pre-deletion state recoverable at git tag v1-removal-phase2-pre-delete-2026-05-01. Listed for
+      audit-trail completeness; safe to remove from ledger in a future cleanup pass.
 
   - id: strategy_legacy_type_to_archetype
     component: strategy_service/engine/strategies/v2/legacy_type_to_archetype.py
     repo: strategy-service
-    status: shim
+    status: kept_renamed_pending
     owner: ikenna
     replaces_what: "v1 strategy_type strings -> v2 archetype slot mapping"
     delete_condition: >
-      Same as strategy_archived_pre_v2 -- this shim is the bridge that keeps callers importing v1 names while routing to
-      v2 archetypes. Deletion follows V1-RETIRE.
-    known_import_count: 1
-    replacement: direct v2 archetype imports
-    target_wave: V1-RETIRE
+      KEEP -- not actually a v1 shim despite the name. V2BatchHarness.__init__ uses resolve_legacy_type() to map
+      v1-style strategy_type strings (AAVE_LENDING etc.) to v2 archetype + slot identity. This is the live
+      archetype-slot resolver. Phase 3 work: rename to archetype_slot_resolver.py and migrate every caller from v1
+      strategy_type strings to direct StrategyArchetype + slot.
+    known_import_count: 4
+    replacement: archetype_slot_resolver (rename) + caller migration to StrategyArchetype
+    target_wave: V1-RETIRE Phase 3 (rename + caller migration)
     ready_to_delete: false
 
   - id: strategy_dispatch_mode_legacy
-    component: strategy_dispatch_mode = "legacy" # config value
+    component: strategy_dispatch_mode = "legacy" / "v2_shadow" config values
     repo: strategy-service
-    status: transitional_config
+    status: deleted
     owner: ikenna
-    replaces_what: "fallback that routes through v1 strategy factory"
-    delete_condition: >
-      Prod flipped to v2_prod and observed stable. After delete, the Literal type collapses from ["legacy", "v2_shadow",
-      "v2_prod"] to ["v2_shadow", "v2_prod"]. Setting STRATEGY_DISPATCH_MODE=legacy after this point should raise
-      loudly.
+    replaces_what: "fallback that routes through v1 strategy factory + shadow comparison mode"
+    delete_condition: ALREADY DELETED 2026-05-01 (V1-RETIRE Phase 1 + Phase 2)
     known_import_count: 0
-    replacement: dispatch_mode in {v2_shadow, v2_prod}
+    replacement: dispatch_mode = "v2_prod" (the only valid value)
     target_wave: V1-RETIRE
-    ready_to_delete: false
+    ready_to_delete: true
+    notes: >
+      Both retired modes now raise ValueError on startup (Phase 1 retired "legacy" in commit 8035162; Phase 2 retired
+      "v2_shadow" in commit a7f6f79). Literal collapsed from ["legacy", "v2_shadow", "v2_prod"] to ["v2_prod"].
 
   - id: strategy_engine_backtest
     component: strategy_service/engine/backtest/
