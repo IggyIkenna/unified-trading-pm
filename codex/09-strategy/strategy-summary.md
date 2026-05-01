@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # Strategy Architecture v2 — Summary
 
 **What it is:** The canonical, clean-start architecture (dated 2026-04-17) for every trading strategy in the Unified

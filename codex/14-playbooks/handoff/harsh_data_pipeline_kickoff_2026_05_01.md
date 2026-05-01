@@ -4,6 +4,7 @@ audience: Harsh
 created: 2026-05-01
 status: active
 owner: Ikenna
+scope: [engineer, admin]
 ---
 
 # Harsh — data-pipeline-completion kickoff

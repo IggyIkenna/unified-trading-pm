@@ -3,6 +3,7 @@ title: Backfill completion playbook — instruments-service + market-tick-data +
 status: active
 audience: dev / operator
 last_updated: 2026-05-01
+scope: [engineer, admin]
 ---
 
 # Backfill completion playbook

@@ -1,5 +1,5 @@
 ---
-scope: [engineer, frontend, backend]
+scope: [engineer]
 ---
 
 # Chart Candle Delivery — End-to-End Flow

@@ -1,5 +1,5 @@
 ---
-scope: [engineer, ops]
+scope: [engineer, admin]
 ---
 
 # Data-status drilldown — `/api/data-status/shard-detail`

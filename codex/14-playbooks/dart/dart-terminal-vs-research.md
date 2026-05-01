@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
 
 **Status:** Active (2026-04-28) **Implementation plan:**

@@ -34,6 +34,11 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/generate_config_registry.py"
     "!**/generate_ui_reference_data.py"
     "!**/generate_instrument_snapshot.py"
+    "!**/prune_removed_repositories.py"
+    "!**/generate-strategy-instrument-matrix.py"
+    "!**/_align_workspace_manifest.py"
+    "!**/rollout-quality-gates-unified.py"
+    "!**/sync_restriction_profiles_to_ui.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -61,6 +66,15 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/validate-import-deps.py"
     "!**/generate_ui_reference_data.py"
     "!**/generate_instrument_snapshot.py"
+    "!**/check-cross-plan-gates.py"
+    "!**/check-integration-dep-coverage.py"
+    "!**/check_schema_provenance.py"
+    "!**/check_manifest_import_alignment.py"
+    "!**/add-cloudbuild-deploy-via-dispatch.py"
+    "!**/rollout-buildspec.py"
+    "!**/rollout-cloudbuild.py"
+    "!**/rollout-quality-gates-unified.py"
+    "!**/sync_restriction_profiles_to_ui.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
