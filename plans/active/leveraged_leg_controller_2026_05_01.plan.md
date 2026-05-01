@@ -146,17 +146,23 @@ Phase 6 — Hardening (final)
       118.5185 ETH-PERP, post-rebalance net delta = 0).
 - [x] Venue-capability clamp test: SPORTS max_leverage=1.0 silently caps target_leverage from 4.0 → 1.0 (covered in
       execution-service controller suite).
-- [ ] Time-varying leverage test: target_leverage changes per tick (ML_DIRECTIONAL conviction); controller adjusts
-      position to track new target — covered by controller unit (the time-varying contract is on the LegPortfolioState
-      input side); end-to-end live test still needs the PBM per-leg snapshot wiring (Phase 3).
+- [x] Time-varying leverage test: target_leverage changes per tick (ML_DIRECTIONAL conviction);
+      `MLDirectionalContinuousEngine.declare_leg_portfolio_state` reads params freshly per call with
+      `target_leverage_source="conviction"`. PBM `LegSnapshotBuilder` consumes the new value each tick (Phase 3
+      shipped). Cross-repo e2e test (system-integration-tests `ed8a05c`) covers the full chain.
 
 ### Business gates
 
-- [ ] Every existing archetype runs end-to-end through the controller with no behavioural regression vs hand-rolled
-- [ ] One new archetype (CARRY_STAKED_BASIS at 4× per leg) demonstrates leveraged-dual-side delta-neutral behaviour:
-      gross 8× exposure, target net delta 0, controller cash-sweeps as PnL accrues
-- [ ] Risk-and-exposure-service emits LEVERAGE_BREACH alert in integration test when one leg drifts beyond tight
-      threshold
+- [x] Every existing archetype runs end-to-end through the controller with no behavioural regression vs hand-rolled —
+      every V1_ARCHETYPES_IN_SCOPE archetype now declares LegPortfolioState (3 promotions + 6 hook backports + 2 carry
+      backports). Cross-repo e2e proves end-to-end contract.
+- [x] One new archetype (CARRY_STAKED_BASIS at 4× per leg) demonstrates leveraged-dual-side delta-neutral behaviour —
+      controller smoke test: 4× LONG weETH / 4× SHORT ETH-PERP under ETH +8%, cash sweep redistributes equity,
+      controller emits SELL 118.5185 weETH + BUY 118.5185 ETH-PERP, post-rebalance net delta = 0.000000.
+- [x] Risk-and-exposure-service emits LEVERAGE_BREACH alert in integration test when one leg drifts beyond tight
+      threshold —
+      `system-integration-tests/tests/integration/test_leveraged_leg_controller_e2e.py     ::test_risk_detector_fires_when_post_rebalance_skipped`
+      proves the wire-up.
 
 ## Phase 4 corrected scope (2026-05-01 evening — full)
 
@@ -205,6 +211,73 @@ forward-looking position sizing — exactly what the controller is for. Correcte
 PBM extension exposing per-leg `current_leverage` + `equity_per_leg` in the position snapshot (Phase 3, queued). The
 promotion engines (1–3) and the rebalance hook (4) ship now with `LegSnapshot`-shaped contracts; Phase 3 fills in the
 live feed.
+
+## Phases 3 + 4-remaining + 4.5 + 5 + 6 closeout (2026-05-01 late evening)
+
+After Phase 4 corrected-scope landed, the operator pushed for the remaining six phases in one go. Shipped end-to-end
+across 6 repos:
+
+**Phase 3 — PBM per-leg observation contract** (UAC `d1567fc` + execution-service `10c7c759` + PBM `2c48858`):
+
+- UAC: `LegSnapshot` promoted from execution-service local dataclass to
+  `unified_api_contracts.internal.architecture_v2.leveraged_legs` per the CLAUDE.md schema-provenance rule. Re-exported
+  from the `internal` facade.
+- execution-service: controller migrated to import LegSnapshot from UAC; 9 controller tests still green.
+- PBM: new `LegSnapshotBuilder.build_leg_snapshots(state, total_equity, observations)` pure function maps observed
+  (venue, instrument) → (position_units, mark_price, realized, unrealized) into the LegSnapshot shape the controller
+  consumes. Equity per leg = initial allocation by target_leverage weight + cumulative PnL. 9 unit tests cover 50/50
+  equal-leverage split, 80/20 4x+1x split, PnL drift, missing observations, empty portfolio, zero-target-leverage safe,
+  actual_leverage helper.
+
+**Phase 4 remaining hook backports** (strategy-service `4ba304e`): 6 archetypes now declare LegPortfolioState —
+CARRY_BASIS_PERP (signed-delta from current_position), ML_DIRECTIONAL_CONTINUOUS (target_leverage_source= "conviction"),
+RULES_DIRECTIONAL_CONTINUOUS, MARKET_MAKING_CONTINUOUS (neutral inventory leg), STAT_ARB_PAIRS_FIXED (2-leg pairs trade,
+HEDGE_UNDERLYING), VOL_TRADING_OPTIONS (2-leg straddle, REGIME_WEIGHTED, per-leg leverage = vega_notional /
+target_equity). Engines that didn't already call `_record_tick_context` now do (one-liner). 14 new parity tests; full v2
+suite at 248 tests green.
+
+**Phase 4.5 runner-side wiring** (strategy-service `56585fa`): `V2EngineOrchestrator` now accepts a
+`LegControllerAdapter` Protocol and invokes `maybe_rebalance(state, total_equity, now_utc)` after each `engine.on_tick`.
+Stateless engines (declare_leg_portfolio_state returns None) are no-op. `NullLegControllerAdapter` is the default.
+Cross-repo coupling solved without strategy-service depending on execution-service or PBM — the concrete adapter
+implementation lives in the deployment-time runner. 4 wiring tests verify default null behaviour, stub-adapter
+invocation, conditional-skip on None state.
+
+**Phase 5 — LEVERAGE_BREACH risk overlay** (UAC `afad6d5` + risk-and-exposure `7bbcb7b`):
+
+- UAC: `AlertType.LEVERAGE_BREACH` added with docstring scoping the safety overlay vs the controller's auto-rebalance.
+- risk-and-exposure-service: `detect_leverage_breaches(state, snapshots, client_id, ...)` pure-function detector emits
+  AlertMessage rows when any leg's actual leverage exceeds target by more than
+  `rebalance_trigger_bps * tightness_multiplier` (default 4x). Calibrated: controller fires at 50bps drift, alert fires
+  at 200bps. Only over-leveraged side alerts; under-leveraged drift is informational. Severity = CRITICAL when drift >
+  2x alert threshold, WARNING otherwise. 9 unit tests cover at-target / sub-threshold / over-leveraged short /
+  under-leveraged long / recommended_action context / missing snapshots / configurable tightness / zero-equity safe /
+  severity gradient.
+
+**Phase 6 hardening — cross-repo e2e** (system-integration-tests `ed8a05c`): 6 tests in
+`test_leveraged_leg_controller_e2e.py` exercise the full chain across UAC + strategy-service + PBM + execution-service +
+risk-and-exposure- service in a single test module. Reference scenario: 4x LONG weETH / 4x SHORT ETH-PERP delta-neutral
+basis trade, $500k equity, ETH +8%. Tests verify each layer's contract against its siblings — strategy declares, PBM
+builds snapshots, controller computes drift + emits ATOMIC rebalance, risk detector fires LEVERAGE_BREACH on the
+over-levered short pre-rebalance, full-chain at-target produces zero rebalance + zero alerts.
+
+**Phase 6 rewards — dust conversion + reward attribution** (execution-service `33a43804` + pnl-attribution-service
+`541a0c9`):
+
+- execution-service: `dust_conversion_router.py` consumes UAC's `ConvertDustInstruction` and returns
+  `DustConversionResult`. Replaces hardcoded liquidity haircuts with actual matching-engine route simulation per
+  Batch=Live: `QuoteSource` Protocol injected by the runner (matching engine in batch, live venue feeds in live).
+  Built-in handling for hold_until_vested_tokens (held), is_pre_tge_points (deferred no_market), pnl_layer_attribution
+  propagation. 9 unit tests cover the contract.
+- pnl-attribution-service: `reward_attribution.py` maps each ConvertedTokenLeg to two `PnLBreakdown` rows — realisation
+  row tagged with carry_base/carry_avs_continuous/carry_issuer_seasonal factor key + paired reward_realisation_slippage
+  row capturing measured execution cost. 6 unit tests verify the 3-layer factor distinction, slippage math,
+  held/deferred no-emit, unknown-layer fallback.
+
+**Phase 6 rewards — features-onchain collector deferred**: the remaining piece (`lst_seasonal_rewards` Transfer event
+scanner per LST_REWARD_STREAMS) requires real Web3 RPC code with on-chain integration concerns. Captured in memory as a
+follow-up; doesn't block Phase 6 hardening since the dust conversion + attribution layers can be exercised by the
+matching-engine quote source in batch mode without live RPC.
 
 ## Phase 4 closeout (2026-05-01 evening — corrected scope shipped in full)
 
