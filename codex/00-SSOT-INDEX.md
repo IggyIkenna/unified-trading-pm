@@ -312,8 +312,11 @@ marketing / PR competitive positioning.** Six layers of market fragmentation (da
 automation, regulatory), Odum's combined shape across the layers, Tier A/B/C comp firms + separate Umbrella/IM comp set,
 PR tone references (DART-side institutional-infra voice vs fund-services voice). Rule 02 line 74 forbids competitor
 names on external surfaces; this doc is internal-only. Referenced by `experience/marketing-journey.md`
-(internal-positioning section) and `_ssot-rules/09-internal-commercial-oneliners.md` (per-path comp table). | | Signal
-broadcast architecture (outbound counterparty emission for Signal Leasing) |
+(internal-positioning section) and `_ssot-rules/09-internal-commercial-oneliners.md` (per-path comp table). Codex scope
+registry (per-audience documentation surface — G1.9): `_ssot-rules/11-codex-scope-registry.md` declares the 5-audience
+scope enum (sales / engineer / admin / prospect / investor) consumed by `_tools/build-scope-manifest.sh` →
+`_generated/scope-manifest.json`; CI gate `_tools/check-scope-coverage.sh` enforces every codex doc has a `scope:`
+frontmatter array. | | Signal broadcast architecture (outbound counterparty emission for Signal Leasing) |
 `14-playbooks/shared-core/signal-broadcast-architecture.md` | unified-trading-pm (codex/) | Implementation map (UAC
 `signal_broadcast/` → UTL events → strategy-service `signal_broadcast/` sub-package → deployment-service Cloud Run +
 Secret Manager → UI dashboard + admin surface), D1–D10 decision matrix, failure isolation pattern (shard-level +
