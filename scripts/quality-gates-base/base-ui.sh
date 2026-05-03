@@ -92,7 +92,14 @@ _qg_kill_tree() {
     kill -TERM "$pid" 2>/dev/null || true
 }
 _qg_kill_children() {
-    _qg_kill_tree $$
+    # Walk descendants but never kill $$. _qg_kill_tree $$ would SIGTERM self at
+    # the end → INT/TERM/HUP trap → exit 130 even on success, silently aborting
+    # set -e callers like quickmerge.sh after Phase 1.
+    local children
+    children=$(pgrep -P $$ 2>/dev/null) || true
+    for child in $children; do
+        _qg_kill_tree "$child"
+    done
     sleep 0.3
     # Force-kill any survivors (node can ignore SIGTERM during I/O)
     local stragglers
