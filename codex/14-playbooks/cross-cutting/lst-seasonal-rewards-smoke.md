@@ -1,3 +1,7 @@
+---
+scope: [engineer]
+---
+
 # LST Seasonal Rewards — Production Smoke Runbook
 
 Phase 6 of the leveraged-leg-controller plan. This runbook walks through validating the daily LST seasonal-rewards
