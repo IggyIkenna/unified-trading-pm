@@ -340,7 +340,37 @@ if breaches 80 GB kill heaviest sports providers.
 - New chunks DONE since resume: cefi 3, tradfi 5, defi 1 (will accelerate)
 - 0 swap thrashing, no rate-limit hits, no OOM
 
-### Health snapshot (2026-05-04 14:30 IST)
+### Health snapshot (2026-05-04 14:31 IST)
+
+10 min after sports fan-out, 16 min after CEFI/TRADFI/DEFI resume:
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 58 GB / 80 GB cap | ✅ 22 GB headroom (under 65 GB threshold) |
+| RAM trend (5 min) | 53→58 GB (~1.25 GB/min slow climb) | ✅ stable, will plateau as chunks cycle |
+| Swap | 0.7 GB | ✅ idle (was 6.7 GB at OOM) |
+| OOM kills | 0 | ✅ |
+| Rate-limit hits | 0 (real signatures) | ✅ |
+| Concurrent procs | 46 | — |
+| Checkpoints | 408 (+32 since OOM resume start) | ✅ |
+| Errors last 5min | 53 (51 = known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500; 1 URDI zero-records) | ✅ within expected bounds |
+
+Progress per AG:
+- CEFI: 200 chunks done
+- TRADFI: 171 chunks done (fastest velocity)
+- DEFI: 37 chunks done
+- Sports chunked progress (window-1-then-cycle pattern):
+  - API_FOOTBALL: 6 chunks done, on chunk 7 (2020-11-28)
+  - FOOTYSTATS: 2 chunks done, on chunk 3
+  - UNDERSTAT: 1 chunk done, on chunk 2
+  - OPEN_METEO: 0 chunks done, on chunk 1 (started 14:26)
+  - TRANSFERMARKT: 0 chunks done, on chunk 1 since 14:15 (47 min — Transfermarkt's
+    ~1 req/sec rate-limit pacing makes a 30-day chunk slow but it's not stalled)
+
+Decision per the wakeup rule: RAM is at 58 GB (<65 GB threshold) and stable.
+**Holding course, no scaling changes.** Next wakeup at ~14:36 to reassess.
+
+### Earlier health snapshot (2026-05-04 14:30 IST — superseded)
 
 5 min after sports fan-out:
 
