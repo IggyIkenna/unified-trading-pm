@@ -85,12 +85,27 @@ todos:
       - [x] [AGENT] P0. features-onchain `b1245b1`. Refactored `_process_lst_yields` orchestrator method to compute on-chain-derived staking APY (same calculation as the tracer) and emit it as `staking_apy_bps` in the `lst_yields` feature group. The live engine's calculator now reads MTDS `lst_rates` rate-diff per day, not DefiLlama vendor APY. **Batch = live consistency** holds — tracer + engine both consume the same upstream truth. 7 new tests cover the rate-diff math + empty/missing fallbacks + end-to-end `_process_lst_yields` output. 627 unit tests + Pass 1 QG green.
     status: done
     note: "Scope-add discovered during Phase 4a: the live engine reads `lst_yields` feature group, which had been DefiLlama-backed. Without this fix the engine would have seen vendor APY while the tracer saw on-chain truth — batch ≠ live. Now both honest."
-  - id: phase-4b-tracer-run
+  - id: phase-4b-upstream-mtds-perp-data
     content: |
-      - [ ] [HUMAN+AGENT] P1. Run the tracer over a 30-day window (e.g. 2026-04-04 → 2026-05-03). Compare net USDC APY by (LST, perp, f) for each combo and publish the winning slot per pair. Acceptance: every (lst, perp) pair has at least one f-value with `net_apy_bps > 0` OR the pair is documented as currently uneconomic (e.g. funding inverted for the period). Operator-side execution.
+      - [ ] [HUMAN+AGENT] P0. **MTDS perp data backfill — full history, not 30 days.** The tracer's first run (2026-05-04, strategy-service `3972648`) found that MTDS does not yet capture HYPERLIQUID, DERIBIT, or ASTER perp `derivative_ticker` for any date. Only Bitfinex/Bitget/Kraken-FUTURES are present under `gs://market-data-tick-cefi-{pid}/raw_tick_data/`. Backfill scope per user instruction: instruments + market data + features should be **full history**, not gated on the 30-day strategy window. Action: enable HYPERLIQUID + DERIBIT + ASTER in MTDS CeFi venue universe (cefi_venue_universe_expansion plan reference) and backfill `derivative_ticker` from venue genesis to today. SOL-PERP equivalent for HYPERLIQUID.
     status: todo
     blocked_by: phase-4a-5-calculator-on-chain-apy
-    note: "Tracer + calculator both ready. Run depends on features-delta-one `funding_oi` being backfilled for HYPERLIQUID/DERIBIT/ASTER ETH-PERP + HYPERLIQUID SOL-PERP over the target window. lst_rates already backfilled (verified 2026-04-09 has all expected EVM tokens)."
+  - id: phase-4b-upstream-funding-oi-calculator
+    content: |
+      - [ ] [HUMAN+AGENT] P0. **features-delta-one funding_oi backfill — full history.** The `funding_oi` calculator at `features-delta-one-service/.../calculators/funding_oi.py` exists but has not been run for any asset_group. Recursive scan of `gs://features-delta-one-{cefi,defi}-{pid}/by_date/` shows only technical-indicator feature groups (candlestick_patterns, momentum, oscillators, etc.). After Phase 4b-mtds completes, run the calculator over full history for HYPERLIQUID/DERIBIT/ASTER ETH-PERP + HYPERLIQUID SOL-PERP. Output schema must include `funding_rate_annualized` per the calculator's contract.
+    status: todo
+    blocked_by: phase-4b-upstream-mtds-perp-data
+  - id: phase-4b-upstream-lst-rates-gaps
+    content: |
+      - [ ] [HUMAN+AGENT] P1. **lst_rates handler coverage gaps — full history.** Verified gaps in `gs://lst-rates-{pid}/lst_rates/`: weETH (etherfi) absent from 2026-04-09 snapshot despite being in the handler's `_LST_TOKENS` registry — likely contract-method failure or historical-state RPC issue. Solana LSTs (mSOL/JitoSOL) only fetched via REST = current state only, no historical series. Action: (a) debug weETH `getRate` flow + backfill historical weETH from Alchemy archival, (b) for Solana LSTs, design a daily-checkpoint handler that captures noon-UTC rate forward-only (historical reconstruction is not feasible without Solana archive node). The Phase 4a tracer skips slots cleanly when an LST is missing — no fabricated data — so this is a coverage problem, not a correctness problem.
+    status: todo
+    blocked_by: phase-4a-5-calculator-on-chain-apy
+  - id: phase-4b-tracer-run
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Run the tracer over a 30-day window (e.g. last 30 calendar days). Compare net USDC APY by (LST, perp, f) for each combo and publish the winning slot per pair. Acceptance: every (lst, perp) pair has at least one f-value with `net_apy_bps > 0` OR the pair is documented as currently uneconomic (e.g. funding inverted for the period). Operator-side execution. Will produce 0 results until Phase 4b-mtds + Phase 4b-funding-oi land.
+    status: blocked
+    blocked_by: phase-4b-upstream-funding-oi-calculator
+    note: "Tracer signature bug fixed in strategy-service 3972648 (FeaturesDeltaOneDomainClient.get_features now called with instrument_id). The remaining block is upstream backfill — captured as phase-4b-upstream-* todos above."
   - id: phase-5-pm-doc-update
     content: |
       - [x] [AGENT] P2. unified-trading-pm. Rewrote `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (existing path; not the speculated `03-strategies/`) to capture (a) USDC-share-class market-neutral framing, (b) two structures (LST_AS_MARGIN / SPLIT_STAKE) with formulas, (c) eligibility derivation from VENUE_COLLATERAL_MATRIX, (d) on-chain APY derivation (real, not vendor), (e) tracer protocol, (f) why COLLATERAL_BORROW was deleted (basis erosion). Cross-references plan + venue_collateral.py + tracer + lst_rates_handler.
