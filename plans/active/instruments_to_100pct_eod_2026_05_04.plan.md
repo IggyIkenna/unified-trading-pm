@@ -839,6 +839,59 @@ Sports:
 Decision: **monitor 3-min cadence**. If RAM breaches 80 GB again with API_FOOTBALL
 already restarted, must escalate DERIBIT decision to user.
 
+### Health snapshot (2026-05-04 15:40 IST) — flagging DERIBIT growth rate
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 6 ticks | 74 GB / 80 GB cap | ⚠️ 6 GB headroom, but DERIBIT growing |
+| RAM current | 74 GB | ⚠️ |
+| Trend | 71→72→73→69→73→74 (slow climb) | ⚠️ |
+| Swap | 0.6 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Concurrent procs | 43 | — |
+| Checkpoints | 547 (+9 in 6 min) | ✅ |
+
+#### DERIBIT growth rate quantified
+
+| Time | Chunk 2019-05-01 | Chunk 2019-05-31 | Combined |
+|---|---:|---:|---:|
+| 15:21 | 1.8 GB | 1.8 GB | 3.6 GB |
+| 15:27 | 4.6 GB | 4.1 GB | 8.7 GB |
+| 15:34 | 9.4 GB | 8.9 GB | 18.3 GB |
+| **15:40** | **11.1 GB** | **10.0 GB** | **21.1 GB** |
+
+**Growth rate: ~0.5 GB/min combined.** Linear unbounded growth — same pattern as the
+2019-04-01 chunk that hit 17 GB earlier. **Projected**:
+- 12 min from now: combined ~27 GB → total RAM ~80 GB cap breach
+- 20 min from now: combined ~31 GB → systemd-oomd very likely fires
+
+This is the **same memory leak** in instruments-service's DeFi-on-Tardis options
+adapter that we identified earlier (process-death-reclaims-cache pattern). Each
+DERIBIT chunk leaks until it dies. Killing one chunk frees its growth; the wrapper
+will spawn the next chunk fresh at 1-2 GB.
+
+Deltas since 15:34:
+- CEFI: 244→247 (+3)
+- TRADFI: 224→227 (+3)
+- DEFI: 70→73 (+3)
+
+Sports — all 5 providers running, no further kills:
+- API_FOOTBALL: restarted, fast-forwarding (no done count yet)
+- FOOTYSTATS: chunk 11 in flight, 3.8 GB
+- TRANSFERMARKT: chunk 1 in flight, 3.5 GB
+- UNDERSTAT: chunk 24 in flight, 3.4 GB
+- OPEN_METEO: chunk 2 in flight, 3.0 GB
+
+#### 🚨 Awaiting user decision
+
+Per `feedback_just_execute_dont_ask` rule: scope-changing kill = ask.
+At 15:34 I asked about (a/b/c) on DERIBIT — no response received yet.
+
+**Per current wakeup rule explicit instruction: do NOT kill DERIBIT, do NOT kill anything
+else (sports already on minimum), just flag urgently and report.**
+
+ETA to cap breach: ~12 min at current DERIBIT growth rate. Awaiting user.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
