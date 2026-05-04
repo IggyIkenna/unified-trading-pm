@@ -18,6 +18,30 @@ depends_on:
 isProject: false
 ---
 
+## Status snapshot (2026-05-04 13:15 IST — end of session)
+
+**Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
+**Phase 1 (flip phantoms) — DONE for cefi/tradfi/sports.**
+- cefi: 12,540 phantoms flipped to `attempted_failed`
+- tradfi: 2,726 phantoms flipped
+- sports: 41,223 phantoms flipped (SFI excluded)
+- prediction: 11,848 phantoms found but **out of scope** (POLYMARKET/`trades` is MTDS data)
+- defi: 597 phantoms found, deferred (low priority)
+
+**Phase 2 (backfill) — NOT DONE, two blockers:**
+
+1. **Local cefi/tradfi backfill via `run_vm_backfill_e2e.sh` failed silently** — runner
+   doesn't export `GCP_PROJECT_ID`, so every chunk aborts at bootstrap. Re-fire commands
+   with corrected env are in the "Pending work" section below. ~Easy fix.
+2. **Sports VM launches blocked on IAM** — `harshkantariya@odum-research.com` lacks
+   `roles/iam.serviceAccountUser` on the Compute SA. Ikenna needs to grant. Fallback:
+   run sports adapters locally too (same Python CLI; needs `GCP_PROJECT_ID` env). Singleton
+   lock would be bypassed — risk of API thrash if other agents launch sports VMs in parallel.
+
+**Net**: nothing's been actually backfilled today. Manifests are honest now (phantoms
+flipped → orchestrator will retry on next launch), but the launches haven't happened.
+Resume tomorrow once the env-var fix is applied + IAM grant lands.
+
 ## Context
 
 Scope of *this* plan is narrower than the parent epic
@@ -413,27 +437,166 @@ one specific shard or after a code-fix that requires re-running known-bad data.
   instruments-service procs). No IAM issue — runs on this machine.
 - **12:57 IST**: Phase 2 CEFI backfill fired locally for the 9 active CEFI venues
   (9 × 4 = 36 concurrent procs).
-- **12:57 IST**: Phase 2 SPORTS af + tm VM launches **BLOCKED** with:
-  `User does not have access to service account 1060025368044-compute@developer.gserviceaccount.com.
-  Ask a project owner to grant you the iam.serviceAccountUser role.`
-  Pinged Ikenna (or pending). Until granted, the 41k flipped sports phantoms can't be
-  retried — sports VMs are required (they pull from rate-limited APIs that need shared keys
-  in Secret Manager which only runs on a service account).
-
-  **Unblock command for Ikenna:**
-  ```bash
-  gcloud iam service-accounts add-iam-policy-binding \
-    1060025368044-compute@developer.gserviceaccount.com \
-    --member="user:harshkantariya@odum-research.com" \
-    --role="roles/iam.serviceAccountUser" \
-    --project=central-element-323112
+- **12:57 IST**: Phase 2 SPORTS af + tm VM launches blocked: `User does not have access to
+  service account 1060025368044-compute@developer.gserviceaccount.com. Ask a project owner
+  to grant the iam.serviceAccountUser role.`
+- **13:10 IST**: Discovered cefi+tradfi local backfills had been silently failing every
+  chunk on `GCP_PROJECT_ID must be set in environment` — `run_vm_backfill_e2e.sh` doesn't
+  export the env. All 90 chunks per venue × 15 venues showed "START" but never "DONE",
+  produced zero checkpoints, wrote nothing to GCS. Killed all in-flight procs, cleaned
+  checkpoints + logs.
+- **13:08 IST**: Investigation found that the `setup-data-pipeline-vm.sh` script (line 596+)
+  for `VM_TASK=sports-backfill` just runs:
   ```
-
-  Once granted, fire:
-  ```bash
-  bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh 2020-06-01 2026-05-04
-  bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-06-01 2026-05-04
+  python -m instruments_service --operation instruments --mode batch \
+    --asset-group SPORTS --sports-provider {API_FOOTBALL|TRANSFERMARKT|...} \
+    --sports-entity <ENTITY> --start-date <X> --end-date <Y>
   ```
+  **The IAM block is NOT a hard blocker — same CLI runs locally** like cefi/tradfi.
+  Smoke test confirmed: `.venv/bin/python -m instruments_service ...` accepts the same
+  args; only requires `GCP_PROJECT_ID=central-element-323112` env. Can fire all sports
+  retries on this laptop without VM access. (Whether this is *desirable* — singleton
+  rate-limit lock exists for a reason; running locally bypasses it — see Risks section.)
+
+## Pending work — what to launch when permissions / decisions land
+
+### CEFI / TRADFI — local backfill failed silently, must re-fire with env vars
+
+**Status (2026-05-04 13:10 IST)**: First run of `run_vm_backfill_e2e.sh` for cefi+tradfi
+failed on every chunk — the runner doesn't export `GCP_PROJECT_ID` and the
+`instruments-service` CLI bootstrap aborts at `log_event("STARTED")` with
+`ValueError: GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment`. All chunks
+showed "START" but no "DONE", produced no checkpoints, and wrote nothing to GCS.
+**Killed and cleaned** — `.backfill-checkpoints/` and `logs/recon-fill-*` removed so
+reruns start fresh.
+
+**Re-fire command (must export env first)**:
+```bash
+cd ~/unified-trading-system-repos/instruments-service
+export GCP_PROJECT_ID=central-element-323112
+export CLOUD_PROVIDER=gcp
+export CLOUD_MOCK_MODE=false
+
+TODAY=$(date -u +%Y-%m-%d)
+
+# CEFI — 9 venues
+for venue in BINANCE-SPOT BINANCE-FUTURES DERIBIT BYBIT OKX UPBIT COINBASE HYPERLIQUID ASTER; do
+  bash scripts/run_vm_backfill_e2e.sh \
+    --venue "$venue" --asset-group CEFI \
+    --start-date 2019-01-01 --end-date "$TODAY" \
+    --chunk-days 30 --parallel 4 \
+    --log-dir "logs/recon-fill-cefi-$venue" > "/tmp/backfill-cefi-$venue.log" 2>&1 &
+done
+
+# TRADFI — 6 venues
+for venue in CME CBOE NASDAQ NYSE ICE FX; do
+  bash scripts/run_vm_backfill_e2e.sh \
+    --venue "$venue" --asset-group TRADFI \
+    --start-date 2019-01-01 --end-date "$TODAY" \
+    --chunk-days 30 --parallel 4 \
+    --log-dir "logs/recon-fill-tradfi-$venue" > "/tmp/backfill-tradfi-$venue.log" 2>&1 &
+done
+wait
+```
+
+Resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. Cumulative ~60 concurrent
+`instruments-service` procs. Smoke-test one chunk first to confirm env propagates:
+```bash
+GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp \
+  .venv/bin/instruments-service --operation instruments --mode batch \
+  --asset-group CEFI --venues DERIBIT --start-date 2019-01-01 --end-date 2019-01-03
+```
+Expected: real progress past the bootstrap log lines (currently it dies at log_event("STARTED")).
+
+**Follow-up bug to file**: `run_vm_backfill_e2e.sh` should export `GCP_PROJECT_ID` /
+`CLOUD_PROVIDER` for child invocations, OR at minimum check that they're set before
+spawning chunks. Silent fail across 90 chunks per venue with no visible error in the
+top-level log was a data quality risk. Tracking under
+`instruments-service` (no plan slug yet — Harsh to follow up tomorrow).
+
+### SPORTS — choose one path
+
+**Path 1 (preferred, requires IAM grant) — VM launchers, singleton-locked:**
+
+Ikenna runs as project owner:
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+  1060025368044-compute@developer.gserviceaccount.com \
+  --member="user:harshkantariya@odum-research.com" \
+  --role="roles/iam.serviceAccountUser" \
+  --project=central-element-323112
+```
+
+Then fire:
+```bash
+bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh 2020-06-01 2026-05-04
+bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-06-01 2026-05-04
+# (sfi excluded — other agent's VM in flight)
+# Optional, if recon shows phantoms in their data types:
+bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2020-06-01 2026-05-04
+bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2020-06-01 2026-05-04
+bash deployment-service/scripts/vm/launch-openmeteo-backfill-vm.sh 2020-06-01 2026-05-04
+```
+Singleton-lock prevents thundering herd against shared API keys. **This is the canonical
+path** per the playbook — same pattern your teammate's existing 31 VMs use.
+
+**Path 2 (fallback, no IAM grant needed) — local CLI, manually paced:**
+
+If the IAM grant doesn't land in time, run sports adapters locally one-at-a-time:
+```bash
+cd ~/unified-trading-system-repos/instruments-service
+export GCP_PROJECT_ID=central-element-323112
+export CLOUD_PROVIDER=gcp
+
+# api-football — sequential per entity to mimic the singleton lock behavior
+for entity in FIXTURES STANDINGS INJURIES PLAYER_STATS FIXTURE_LINEUPS FIXTURE_STATS FIXTURE_EVENTS TEAMS LEAGUES; do
+  .venv/bin/python -m instruments_service \
+    --operation instruments --mode batch \
+    --asset-group SPORTS --sports-provider API_FOOTBALL --sports-entity $entity \
+    --start-date 2020-06-01 --end-date 2026-05-04 \
+    > /tmp/sports-af-$entity.log 2>&1
+done
+
+# transfermarkt — PLAYER_VALUES is the big one (8,647 phantoms)
+for entity in PLAYER_VALUES TRANSFERMARKT_LEAGUES TEAM_SQUAD; do
+  .venv/bin/python -m instruments_service \
+    --operation instruments --mode batch \
+    --asset-group SPORTS --sports-provider TRANSFERMARKT --sports-entity $entity \
+    --start-date 2020-06-01 --end-date 2026-05-04 \
+    > /tmp/sports-tm-$entity.log 2>&1
+done
+```
+
+⚠️ **Caveat**: this bypasses the singleton lock. If another sports VM (or your
+teammate's SFI VM) is hitting the same shared API key, you'll thrash. Before firing
+Path 2 confirm `gcloud compute instances list --filter='name~"^(af|tm|fs|understat|openmeteo)-"'`
+is empty.
+
+### PREDICTION — out of scope
+
+Phase 0 dry-run found 11,848 phantoms but they're all on POLYMARKET / `trades` data type.
+That's MTDS data (market-tick), not `instruments-service` reference data. Either the
+prediction manifest is conflating MTDS writes with instruments writes, or the writers are
+mis-attributing the asset group. **Flag for Ikenna separately**, do not flip in this plan.
+
+### DEFI — optional cleanup
+
+597 phantoms, all on EIGENLAYER / `rewards`. Not core instruments data. Two choices:
+- Skip (0.2% of defi manifest, won't move the headline percentage).
+- Flip with `reconcile_phantom_manifest_rows_all.py --asset-group defi` (~5 min,
+  no backfill needed, just clears the phantoms so the headline is honest).
+
+## Verification after backfills complete
+
+For each AG:
+```bash
+cd ~/unified-trading-system-repos/instruments-service
+.venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run
+```
+Expected: "No phantoms found. Manifest is clean." If non-zero, the orchestrator's
+`_should_skip_shard` skipped some shards as `attempted_failed` → `attempted_failed`
+(real failure, not phantom). Check the new `error_reason` distribution to decide
+whether to retry, fix the adapter, or accept as legitimate API failure.
 
 ## Risks / blockers
 
