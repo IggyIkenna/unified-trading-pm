@@ -489,7 +489,55 @@ GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false \
 The Phase 2 backfill should proceed for the 7 working venues; OKX + COINBASE need a fix
 in either UAC `venue_to_tardis` map or the sharding YAML before they can run.
 
-### TRADFI / DEFI / SPORTS smoke results
+#### OKX + COINBASE root cause (deeper)
+
+Followed the trail across three SSOTs that disagree:
+
+1. **PM `unified-trading-pm/configs/venues.yaml`** (used by deployment-api shard calculator):
+   ```yaml
+   CEFI: { venues: [..., OKX, COINBASE, ...], venue_to_tardis: { OKX: [okex,okex-futures,okex-swap], COINBASE: coinbase } }
+   ```
+   Canonical names: **unsuffixed** `OKX` / `COINBASE`.
+
+2. **UAC `unified_api_contracts/registry/venue_mapping.py` `tardis_to_venue`**:
+   ```python
+   "okex": "OKX-SPOT", "okex-swap": "OKX-SWAP", "okex-futures": "OKX-FUTURES",
+   "coinbase": "COINBASE-SPOT"
+   ```
+   Canonical names: **suffixed** `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES` / `COINBASE-SPOT`.
+
+3. **UAC venue registry** (CeFi / TradFi / DeFi / sports membership for validation):
+   Rejects BOTH unsuffixed (`OKX`, `COINBASE`) AND suffixed (`OKX-SPOT`, `COINBASE-SPOT`)
+   forms. Per smoke test: `--venues OKX-SPOT` runs through Tardis fine (fetches 112
+   instruments), then `Instrument validation: 112 rejected — unknown venue 'OKX-SPOT' —
+   not in CeFi, TradFi, DeFi, or sports registries`.
+
+So **all three** of `OKX`, `OKX-SPOT`, `OKX-SWAP`, `OKX-FUTURES`, `COINBASE`,
+`COINBASE-SPOT` fail somewhere in the pipeline. There's no working canonical name today.
+
+**Fix scope**: this is a multi-repo alignment problem (PM venues.yaml ↔ UAC tardis_to_venue
+↔ UAC venue registry). Out of scope for an EOD push. **Action for tomorrow**: file a
+separate plan to align the three SSOTs on one canonical naming convention. For today's
+"100% by EOD" goal, accept that OKX + COINBASE remain at their current coverage and
+proceed with the 7 healthy CEFI venues.
+
+### TRADFI smoke results (2026-05-04 13:26 IST)
+
+| Venue        | Status | Records / Fetched         | Notes                                                                                                                                                          |
+| ------------ | :----: | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CME          |   ✅   | 14,794 / 16,394           | Databento, healthy. Includes futures + options chain.                                                                                                          |
+| CBOE         |   ✅   | 1 / 1                     | VIX index (Barchart). Single-record SSOT, expected.                                                                                                            |
+| NASDAQ       |   ✅   | 43 / 258                  | Databento equities, healthy.                                                                                                                                   |
+| NYSE         |   ✅   | 215 / 256                 |                                                                                                                                                                |
+| ICE          |   ✅   | 2,067 / 2,069             |                                                                                                                                                                |
+| FX           |   ✅   | 1 / 1                     | KRW/USD via Yahoo Finance, single instrument.                                                                                                                  |
+| **POLYGON**  |   ❌   | —                         | `URDI[POLYGON]: ADAPTER_ERROR (permanent): api_key required — service must fetch polygon-api-key from Secret Manager`. Either secret is missing in SM or `ApiKeyReloader` isn't picking it up. **Needs SM check.** |
+| **FRED**     |   ❌   | 0 records                 | `URDI returned zero records for date=2026-05-01`. 2026-05-01 was a Friday — FRED should have data. Not yet root-caused; possibly adapter bug or cutoff issue.   |
+
+**6 of 8 TRADFI venues healthy.** POLYGON + FRED fail. Both need separate investigation;
+do not block the 6 healthy venues from Phase 2 backfill.
+
+### DEFI / SPORTS smoke results
 
 (In progress — will fill in as each matrix completes.)
 
