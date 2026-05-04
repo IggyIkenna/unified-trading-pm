@@ -76,6 +76,34 @@ correctly (the silent-fail bug from earlier today is fixed).
 **ETA estimate**: CEFI/TRADFI ~18-25 min per venue (89 chunks × ~50s / 4 parallel),
 DEFI faster (smaller date ranges, fewer pools), SPORTS depends on rate-limit pacing.
 
+### Rate-limit watchdog (2026-05-04 13:46 IST)
+
+Concern raised mid-run: 85 concurrent procs may hit provider API rate limits. Set up
+`/tmp/rate-limit-watchdog.sh` (PID 443611, also tails to `/tmp/rate-limit-watch.log`)
+that scans every 60s for these signatures across all chunk logs:
+
+- HTTP 429 / status 429 / "429 Too Many"
+- RateLimitError / RateLimitException
+- retry-after / Retry-After headers
+- quota_exceeded / QuotaExceeded
+- "throttled by API" / Tardis-specific throttling
+
+**Initial regex was too loose** — caught timestamp-millisecond `:42:43,429` as fake
+matches; tightened to require word-boundary context ("HTTP 429", "status 429",
+"429 Too Many"). Re-scanned with the precise regex → **0 real rate-limit hits**
+across all 85 procs.
+
+**Why we're holding up**: most providers we hit at scale are paid feeds (Tardis,
+Databento) with high quotas, and adapters bake in per-venue pacing internally.
+Sports providers (api-football, transfermarkt, footystats, understat, openmeteo)
+each run as a single process, not chunked, so they self-pace.
+
+**Only real concurrency warning seen**: 9× `ManifestWriter: generation conflict after 15
+retries, falling back to unconditional write` — expected under heavy concurrent
+manifest writes (85 procs all updating `_index/availability_index.parquet`). The
+unconditional-write fallback is safe (manifest is upsert-keyed); not a data-loss bug,
+just GCS optimistic-concurrency noise. Will quiet down as venues finish.
+
 ## Status snapshot (2026-05-04 13:15 IST — end of session)
 
 **Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
