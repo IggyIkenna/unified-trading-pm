@@ -471,18 +471,30 @@ GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false \
   --start-date 2026-05-01 --end-date 2026-05-01
 ```
 
+### Column meanings
+
+- **Active@day** — instruments that were **actually written to GCS** for the queried date
+  (after applying per-instrument launch/delisting filtering). This is the captured count.
+- **Universe** — instruments the adapter received from the upstream source AFTER symbol-level
+  filtering (majors + x-coins, not the entire venue universe). Tells us the adapter is
+  talking to the API. `Universe ≥ Active@day` always; the gap = instruments that exist in
+  the venue's history but aren't tradeable on the queried day.
+- A healthy smoke = `Active@day > 0`. A zero `Universe` means the adapter never reached the
+  API. A non-zero `Universe` with zero `Active@day` means date-filter / validation rejected
+  everything (config bug, not API bug).
+
 ### CEFI smoke results (2026-05-04 13:20 IST)
 
-| Venue            | Status | Records / Fetched      | Notes                                                                                                                                                                                                                                                              |
+| Venue            | Status | Active@day / Universe  | Notes                                                                                                                                                                                                                                                              |
 | ---------------- | :----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| BINANCE-SPOT     |   ✅   | 48 / 51                | Tardis `binance` endpoint, healthy.                                                                                                                                                                                                                                |
+| BINANCE-SPOT     |   ✅   | 48 / 51                | Tardis `binance` endpoint, healthy. 3 instruments delisted before 2026-05-01.                                                                                                                                                                                       |
 | BINANCE-FUTURES  |   ✅   | 33 / 37                | Tardis `binance-futures` endpoint, healthy.                                                                                                                                                                                                                        |
-| DERIBIT          |   ✅   | 3,720 / 200,312        | Tardis returns full options chain — 200k symbols filtered to 3.7k (BTC/ETH options + perps).                                                                                                                                                                       |
-| BYBIT            |   ✅   | 32 / 291               | Tardis `bybit` endpoint, healthy.                                                                                                                                                                                                                                  |
-| **OKX**          |   ❌   | —                      | `URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'`. Config bug — UAC `venue_to_tardis` mapping missing for canonical name `OKX`. Sharding config lists `OKX`, but adapter expects `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES`. **Not geo-block.** |
+| DERIBIT          |   ✅   | 3,720 / 200,312        | Tardis returns full historical options chain (200k symbols across all expiries we ever saw); 3.7k active for 2026-05-01.                                                                                                                                            |
+| BYBIT            |   ✅   | 32 / 291               | Tardis `bybit` + `bybit-spot`, healthy.                                                                                                                                                                                                                            |
+| **OKX**          |   ❌   | adapter never ran      | `URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'`. Config bug — UAC `venue_to_tardis` mapping missing for canonical name `OKX`. Sharding config lists `OKX`, but adapter expects `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES`. **Not geo-block.** |
 | UPBIT            |   ✅   | 12 / 13                |                                                                                                                                                                                                                                                                    |
-| **COINBASE**     |   ❌   | 0 records             | `URDI returned zero records for date=2026-05-01 asset_groups=['CEFI']`. Adapter ran but got nothing back. Either bare `COINBASE` is also a sharding-vs-adapter mismatch (canonical might be `COINBASE-SPOT`), or transient API issue. Needs further investigation.   |
-| HYPERLIQUID      |   ✅   | 21 / 21                | On-chain CLOB, native API.                                                                                                                                                                                                                                          |
+| **COINBASE**     |   ❌   | adapter ran, 0 written | `URDI returned zero records for date=2026-05-01 asset_groups=['CEFI']`. Adapter ran but got nothing back. Either bare `COINBASE` is also a sharding-vs-adapter mismatch (canonical might be `COINBASE-SPOT`), or transient API issue.                                |
+| HYPERLIQUID      |   ✅   | 21 / 21                | On-chain CLOB, native API. No history-vs-active gap.                                                                                                                                                                                                                |
 | ASTER            |   ✅   | 19 / 19                |                                                                                                                                                                                                                                                                    |
 
 **7 of 9 CEFI venues healthy. OKX + COINBASE blocked on canonical-venue-name mismatches.**
@@ -523,16 +535,16 @@ proceed with the 7 healthy CEFI venues.
 
 ### TRADFI smoke results (2026-05-04 13:26 IST)
 
-| Venue        | Status | Records / Fetched         | Notes                                                                                                                                                          |
+| Venue        | Status | Active@day / Universe     | Notes                                                                                                                                                          |
 | ------------ | :----: | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CME          |   ✅   | 14,794 / 16,394           | Databento, healthy. Includes futures + options chain.                                                                                                          |
+| CME          |   ✅   | 14,794 / 16,394           | Databento, healthy. Includes futures + options chain. 1.6k gap = expired or future-dated quarterlies.                                                          |
 | CBOE         |   ✅   | 1 / 1                     | VIX index (Barchart). Single-record SSOT, expected.                                                                                                            |
-| NASDAQ       |   ✅   | 43 / 258                  | Databento equities, healthy.                                                                                                                                   |
+| NASDAQ       |   ✅   | 43 / 258                  | Databento equities (BTC/ETH ETFs only — universe is 258 symbols we ever cared about; 43 active for 2026-05-01).                                                |
 | NYSE         |   ✅   | 215 / 256                 |                                                                                                                                                                |
 | ICE          |   ✅   | 2,067 / 2,069             |                                                                                                                                                                |
 | FX           |   ✅   | 1 / 1                     | KRW/USD via Yahoo Finance, single instrument.                                                                                                                  |
-| **POLYGON**  |   ❌   | —                         | `URDI[POLYGON]: ADAPTER_ERROR (permanent): api_key required — service must fetch polygon-api-key from Secret Manager`. Either secret is missing in SM or `ApiKeyReloader` isn't picking it up. **Needs SM check.** |
-| **FRED**     |   ❌   | 0 records                 | `URDI returned zero records for date=2026-05-01`. 2026-05-01 was a Friday — FRED should have data. Not yet root-caused; possibly adapter bug or cutoff issue.   |
+| **POLYGON**  |   ❌   | adapter never ran         | `URDI[POLYGON]: ADAPTER_ERROR (permanent): api_key required — service must fetch polygon-api-key from Secret Manager`. Either secret is missing in SM or `ApiKeyReloader` isn't picking it up. **Needs SM check.** |
+| **FRED**     |   ❌   | adapter ran, 0 written    | `URDI returned zero records for date=2026-05-01`. 2026-05-01 was a Friday — FRED should have data. Not yet root-caused; possibly adapter bug or cutoff issue.   |
 
 **6 of 8 TRADFI venues healthy.** POLYGON + FRED fail. Both need separate investigation;
 do not block the 6 healthy venues from Phase 2 backfill.
