@@ -370,7 +370,54 @@ Progress per AG:
 Decision per the wakeup rule: RAM is at 58 GB (<65 GB threshold) and stable.
 **Holding course, no scaling changes.** Next wakeup at ~14:36 to reassess.
 
-### Earlier health snapshot (2026-05-04 14:30 IST — superseded)
+### Health snapshot (2026-05-04 14:37 IST)
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 68 GB / 80 GB cap | ⚠️ on 65 GB boundary, no further fan-out |
+| RAM trend (5 min) | 58→67→65→68 GB | ✅ plateauing around 65, not climbing |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Rate-limit hits (real) | 0 | ✅ |
+| Concurrent procs | 47 | — |
+| Checkpoints | 415 (+7 since 14:31) | ✅ progressing |
+| Errors last 5min | 75 (74 known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500) | ✅ within bounds |
+
+CEFI/TRADFI/DEFI deltas since 14:31:
+- CEFI: 200→204 (+4)
+- TRADFI: 171→173 (+2)
+- DEFI: 37→38 (+1)
+
+Sports chunked progress (was 6+2+1+0+0):
+- API_FOOTBALL: 6→10 chunks (+4) — fastest
+- UNDERSTAT: 1→3 chunks (+2)
+- FOOTYSTATS: 2→2 chunks (+0 — investigate? prob just slow on chunk 3)
+- OPEN_METEO: 0→0 (still chunk 1, started 14:26 = 11 min in)
+- **TRANSFERMARKT: 0→0** (still chunk 1, started 14:15 = 22 min in)
+
+#### TRANSFERMARKT chunk 1 — root cause identified
+
+Not stalled, **bottlenecked on ManifestWriter generation-conflict** retry loop. Log shows
+sequential GCS optimistic-concurrency-control conflicts up to attempt 11/15:
+
+```
+14:29:22 generation conflict (attempt 2/15), retrying in 1.0s
+14:30:41 generation conflict (attempt 4/15), retrying in 2.0s
+...
+14:36:31 generation conflict (attempt 11/15), retrying in 5.5s
+```
+
+47 concurrent writers competing for the same `_index/availability_index.parquet` blob.
+Each conflict waits, retries, gets clobbered again. Will eventually fall through to
+unconditional write at attempt 15. **Not blocking — just slow under high concurrency.**
+
+This is the same `ManifestWriter: generation conflict, falling back to unconditional
+write` warning we saw at the original 85-proc fan-out, just amplified now because
+TRANSFERMARKT happens to fetch slowly enough that other procs win the manifest race
+every time.
+
+Decision per wakeup rule: **plateau holding around 65 GB, no further fan-out.** Not
+killing anything (cap not breached). Will continue monitoring at 14:42.
 
 5 min after sports fan-out:
 
