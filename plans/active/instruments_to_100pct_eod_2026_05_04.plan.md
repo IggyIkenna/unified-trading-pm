@@ -340,6 +340,27 @@ if breaches 80 GB kill heaviest sports providers.
 - New chunks DONE since resume: cefi 3, tradfi 5, defi 1 (will accelerate)
 - 0 swap thrashing, no rate-limit hits, no OOM
 
+### Health snapshot (2026-05-04 14:30 IST)
+
+5 min after sports fan-out:
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 52 GB / 80 GB cap | ✅ 28 GB headroom |
+| RAM trend (5 min) | 46→52 GB | ✅ stable, slow climb |
+| Swap | 0.7 GB | ✅ idle (was 6.7 GB at OOM, now drained) |
+| OOM kills | 0 | ✅ |
+| Rate-limit hits | 0 | ✅ (watchdog re-armed PID 621482) |
+| Procs | 43 | — |
+| Checkpoints | 399 (+23 since resume) | ✅ |
+
+Progress per AG:
+- CEFI: 199 chunks (+7 since resume)
+- TRADFI: 166 chunks (+21 since resume; fastest)
+- DEFI: 34 chunks (+7 since resume)
+- SPORTS chunked: API_FOOTBALL 3 chunks, FOOTYSTATS 1, others on chunk 1
+  - TRANSFERMARKT still on chunk 1 since 14:15 (15 min/chunk — internal rate-limit at ~1 req/sec is the real-world pace; not stuck, just paced)
+
 ### Real adapter errors observed (not rate-limit)
 
 - **9× Databento NASDAQ `XNAS.ITCH symbols=2: 422 symbology_invalid_request`** — adapter
