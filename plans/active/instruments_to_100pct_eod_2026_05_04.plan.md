@@ -1094,8 +1094,48 @@ double-write conflict. **Sequential = safer.**
 #### Pre-existing bug found in rebuild_cefi_manifest.py
 
 Script uses `args.category` but argparse defines `--asset-group` → `args.asset_group`.
-`AttributeError: 'Namespace' object has no attribute 'category'`. Fixed inline (not
-yet committed since we may roll up other fixes). Will commit before running.
+`AttributeError: 'Namespace' object has no attribute 'category'`. Fixed in commit
+`0dd6e82` (instruments-service).
+
+### 16:04 IST — CEFI rebuild dry-run complete
+
+```
+2026-05-04 16:03:34 INFO Scanning GCS blobs under instruments-store-cefi.../instrument_availability/by_date/ ...
+2026-05-04 16:04:21 INFO rebuild_manifest: discovered 34 (date, venue) shards missing from manifest
+2026-05-04 16:04:21 INFO Result: 21989 total entries (+34 new), 2593 unique dates, 16 venues
+```
+
+**Reassuring numbers** — only 34 missing manifest rows out of ~22k entries. That's
+a 0.15% CAS-fallback leak rate. Most writes survived the conflict loop. Recovery
+is small.
+
+Note: 16 venues > 9 declared CEFI venues. That includes data left over from
+2026-04-29 366-VM rollout (legacy venue names like BITFINEX-SPOT, KRAKEN-FUTURES,
+BITGET-* from earlier sweep) + today's writes.
+
+#### Investigating DERIBIT leak (interim — partial findings)
+
+Looked for module-level caches in `tardis.py` and `orchestrator.py`. Found:
+- `_DERIBIT_MONTHS` module-level dict (small, just expiry-month codes, not data)
+- `_defi_universe_cache` only kicks in for DeFi venues (DERIBIT is CEFI, doesn't apply)
+- `ManifestWriter._records` accumulates but `manifest.close()` IS called per-date
+  at orchestrator.py:1976, clearing the buffer
+
+**Hypothesis remaining**: aiohttp ClientSession holds connection-pool / response-body
+data in the long-lived options-chain fetch. 200k InstrumentRecord pydantic v2 models
+× ~7 KB each = ~1.4 GB just for one fetch's results. Across 30 days, possibly
+multiple concurrent in-flight responses + cache layers. Without a memory profiler
+(tracemalloc), hard to pinpoint the exact leak.
+
+**Pragmatic mitigation**: chunk-cycling already bounds the leak. The 17 GB peak was
+the 2019-04 chunk's full-month accumulation; subsequent chunks at 1-2 GB then growing
+to ~5 GB before next cycle. **Per-chunk RAM bound = 5-17 GB depending on month**.
+
+**Follow-up plan**: instrument the orchestrator with `tracemalloc.snapshot()` at
+chunk-end, log top allocators. Or run a single DERIBIT chunk under
+`memray run -o leak.bin .venv/bin/instruments-service ...`. Defer to tomorrow.
+
+### 16:05 IST — TRADFI rebuild dry-run started (sequentially)
 
 5 min after sports fan-out:
 
