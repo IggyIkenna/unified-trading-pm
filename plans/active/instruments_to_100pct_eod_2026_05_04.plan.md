@@ -419,6 +419,49 @@ every time.
 Decision per wakeup rule: **plateau holding around 65 GB, no further fan-out.** Not
 killing anything (cap not breached). Will continue monitoring at 14:42.
 
+### Health snapshot (2026-05-04 14:43 IST)
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 67 GB / 80 GB cap | ⚠️ 13 GB headroom, holding plateau |
+| RAM trend (5 min) | 62–69 GB oscillating around 65 | ✅ stable, not climbing |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Rate-limit hits (real) | 0 | ✅ |
+| Concurrent procs | 46 | — |
+| Checkpoints | 426 (+11 in 5 min) | ✅ progressing |
+| Errors (last 5 min) | 102 (100 known Databento, 1 Tardis transient, 1 URDI zero-records) | ✅ within bounds |
+
+CEFI/TRADFI/DEFI deltas since 14:37 (was 415):
+- CEFI: 204→208 (+4)
+- TRADFI: 173→179 (+6, fastest)
+- DEFI: 38→39 (+1)
+
+Sports chunked deltas since 14:37 (was 10+2+0+0+3):
+- API_FOOTBALL: 10→10 (slow chunk in flight)
+- FOOTYSTATS: 2→5 (+3)
+- UNDERSTAT: 3→5 (+2)
+- OPEN_METEO: 0→0 (still chunk 1 — paced)
+- TRANSFERMARKT: 0→0 (still chunk 1 — but **past the manifest conflict** and now actively
+  fetching teams per league: DK1, NL1, MEXA, FR1 at ~30-40s/league)
+
+#### TRANSFERMARKT broke through
+
+Earlier 14:37 snapshot showed TRANSFERMARKT stuck on attempt 11/15 of ManifestWriter
+generation conflicts. Current log shows it past the bottleneck:
+
+```
+14:41:25 RapidAPI: fetched 14 clubs for league DK1 season 2019
+14:42:32 RapidAPI: fetched 19 clubs for league MEXA season 2019
+14:43:13 RapidAPI: fetched 20 clubs for league FR1 season 2019
+```
+
+Transfermarkt's internal ~1 req/sec pacing + 32 leagues × pagination = ~45 min/chunk
+expected. Slow but progressing. Not stuck.
+
+Decision: **holding course**. RAM stable at boundary, not breaching 75 GB hold-threshold
+or 80 GB kill-threshold. No new fan-out, no kills.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
