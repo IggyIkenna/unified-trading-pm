@@ -127,12 +127,19 @@ Read these before making ANY code changes:
 - **Manifest phantom audit** — Manifest can drift if adapters record `captured` for a shard but the parquet doesn't
   exist at the canonical path (stale rescan output, schema migration churn, broken denorm). The orchestrator's
   `_should_skip_shard` trusts the manifest, so phantoms cause permanent skip. Periodic audit:
-  `instruments-service/scripts/reconcile_phantom_manifest_rows.py --dry-run` — uses `candidate_parquet_paths` SSOT to
-  bulk-list all parquets per day, set-membership check vs each captured row, flips phantoms to `attempted_failed` so VMs
-  auto-retry. Bulk-list pattern (one GCS list per day) = ~5 min for 600k rows; per-row `exists()` would take 16h.
+  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run`
+  (multi-asset-group; `reconcile_phantom_manifest_rows.py` is sports-only and being phased out). Five drift axes the
+  audit handles: (1) hive-vocab `category=` vs `asset_group=`, (2) instrument_type casing PERPETUAL vs perpetual,
+  (3) empty schema-4 instrument_type, (4) path-prefix drift `day=*/` vs `raw_tick_data/by_date/day=*/`, (5) chain-bundle
+  equivalence `option`↔`options_chain` / `future`↔`futures_chain`. Plus: HTTP pool tuned to `2*workers` (default 10
+  silently truncates `list_blobs()` under 64-worker concurrency). **Always run on a same-region GCE VM** —
+  cross-region listing is 18× slower (~12 prefixes/sec from laptop vs 222/sec on `asia-northeast1-c`). Recipe:
+  `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe".
   Critical: do NOT write empty placeholder parquets to mask phantoms — that's fudging data quality.
   `record_empty(row_key=...)` is for legitimately-empty source responses only (we tried, API returned 200+empty).
-  Reconciliation incident: 2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up.
+  Reconciliation incidents: 2026-04-29 — 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms cleaned up;
+  2026-05-04 — 130,897 false-positive phantoms across CeFi diagnosed as path-prefix + chain-bundle drift, audit
+  hardened, real residual = 354 (99.7% reduction).
 - **VM tarball deployment** — Backfill / migration / smoke / forward-poll VMs boot via
   `gs://deployment-scripts-.../vm/setup-data-pipeline-vm.sh` and pull tarballs from `gs://deployment-scripts-.../code/`.
   Refresh tarballs after every code change with `bash deployment-service/scripts/vm/create-code-tarballs.sh <flag>`:
