@@ -458,6 +458,41 @@ one specific shard or after a code-fix that requires re-running known-bad data.
   retries on this laptop without VM access. (Whether this is *desirable* — singleton
   rate-limit lock exists for a reason; running locally bypasses it — see Risks section.)
 
+## Adapter smoke matrix (1 day per venue, 2026-05-01)
+
+Run before any fan-out — confirms the adapter+API+GCS+manifest path is wired per venue.
+Command pattern:
+```bash
+cd ~/unified-trading-system-repos/instruments-service
+GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false \
+  .venv/bin/instruments-service \
+  --operation instruments --mode batch \
+  --asset-group <AG> --venues <VENUE> \
+  --start-date 2026-05-01 --end-date 2026-05-01
+```
+
+### CEFI smoke results (2026-05-04 13:20 IST)
+
+| Venue            | Status | Records / Fetched      | Notes                                                                                                                                                                                                                                                              |
+| ---------------- | :----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| BINANCE-SPOT     |   ✅   | 48 / 51                | Tardis `binance` endpoint, healthy.                                                                                                                                                                                                                                |
+| BINANCE-FUTURES  |   ✅   | 33 / 37                | Tardis `binance-futures` endpoint, healthy.                                                                                                                                                                                                                        |
+| DERIBIT          |   ✅   | 3,720 / 200,312        | Tardis returns full options chain — 200k symbols filtered to 3.7k (BTC/ETH options + perps).                                                                                                                                                                       |
+| BYBIT            |   ✅   | 32 / 291               | Tardis `bybit` endpoint, healthy.                                                                                                                                                                                                                                  |
+| **OKX**          |   ❌   | —                      | `URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'`. Config bug — UAC `venue_to_tardis` mapping missing for canonical name `OKX`. Sharding config lists `OKX`, but adapter expects `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES`. **Not geo-block.** |
+| UPBIT            |   ✅   | 12 / 13                |                                                                                                                                                                                                                                                                    |
+| **COINBASE**     |   ❌   | 0 records             | `URDI returned zero records for date=2026-05-01 asset_groups=['CEFI']`. Adapter ran but got nothing back. Either bare `COINBASE` is also a sharding-vs-adapter mismatch (canonical might be `COINBASE-SPOT`), or transient API issue. Needs further investigation.   |
+| HYPERLIQUID      |   ✅   | 21 / 21                | On-chain CLOB, native API.                                                                                                                                                                                                                                          |
+| ASTER            |   ✅   | 19 / 19                |                                                                                                                                                                                                                                                                    |
+
+**7 of 9 CEFI venues healthy. OKX + COINBASE blocked on canonical-venue-name mismatches.**
+The Phase 2 backfill should proceed for the 7 working venues; OKX + COINBASE need a fix
+in either UAC `venue_to_tardis` map or the sharding YAML before they can run.
+
+### TRADFI / DEFI / SPORTS smoke results
+
+(In progress — will fill in as each matrix completes.)
+
 ## Pending work — what to launch when permissions / decisions land
 
 ### CEFI / TRADFI — local backfill failed silently, must re-fire with env vars
