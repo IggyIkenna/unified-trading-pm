@@ -30,40 +30,77 @@ The deployment-ui renders it as the data status page.
 | API that serves data status                   | `deployment-api/deployment_api/services/data_status_service.py`                                       |
 | UI that renders data status                   | `deployment-ui/src/components/DataStatusTab.tsx`                                                      |
 
-## Schema v4
+## Schema v6 (current)
+
+The schema has evolved through three published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
+(quote_margin_combo plan, 2026-04-23). The current SSOT lives in
+`unified-trading-library/unified_trading_library/manifest_writer.py` — `MANIFEST_SCHEMA_VERSION = 6` and the
+`AvailabilityRecord` dataclass.
 
 ```python
-MANIFEST_SCHEMA_VERSION = 4
+MANIFEST_SCHEMA_VERSION = 6
 
 @dataclass
 class AvailabilityRecord:
+    # ─────────────────────────────────────────────────────────────────────
     # Universal (always populated)
+    # ─────────────────────────────────────────────────────────────────────
     date: str                       # YYYY-MM-DD — the date this shard covers
+    venue: str                      # tradeable venue/protocol: BINANCE-SPOT, AAVE_V3, PINNACLE
+    instrument_count: int           # number of rows/instruments in the shard
     service_name: str               # "instruments-service", "market-tick-data-service", etc.
     written_at: str                 # ISO timestamp — when this manifest entry was written
-    schema_version: int = 4
-    instrument_count: int = 0       # number of rows/instruments in the shard
+    schema_version: int = MANIFEST_SCHEMA_VERSION
 
+    # ─────────────────────────────────────────────────────────────────────
     # Market data dimensions (populated by instruments-service, MTDS, MDPS)
-    venue: str = ""                 # tradeable venue or protocol: BINANCE-SPOT, AAVE_V3, PINNACLE
-    chain: str = ""                 # DeFi only: ETHEREUM, ARBITRUM, BASE, SOLANA, etc.
+    # ─────────────────────────────────────────────────────────────────────
     data_type: str = ""             # trades, book_snapshot_5, odds, swaps, liquidity, etc.
-    instrument_type: str = ""       # spot, perpetuals, equity, pool, lending, prediction_market
-    league_id: str = ""             # SPORTS only: EPL, BUNDESLIGA, LA_LIGA, etc.
-
-    # Processing dimensions (populated by MDPS, feature services)
     timeframe: str = ""             # MDPS: 15s, 1m, 5m, 15m, 1h, 4h, 24h, T-24h..T-0
                                     # Features: 1m, 5m, 1h, T-24h..HT (sports horizons)
+    league_id: str = ""             # SPORTS only: EPL, BUNDESLIGA, LA_LIGA, etc.
+    chain: str = ""                 # DeFi only: ETHEREUM, ARBITRUM, BASE, SOLANA, etc.
+    instrument_type: str = ""       # spot, perpetuals, equity, pool, lending, prediction_market
+    underlying: str = ""            # Options/futures: BTC, ETH, ES, NQ — base for per-underlying shards
 
+    # ─────────────────────────────────────────────────────────────────────
     # Feature/ML dimensions
+    # ─────────────────────────────────────────────────────────────────────
     feature_group: str = ""         # Feature services: momentum, fixture_stats, macro_sentiment, etc.
     model_family: str = ""          # ML: pregame_xg, CEFI_BTC_swing-high_LIGHTGBM_1h_V1, etc.
     training_period: str = ""       # ML walk-forward: "2024-01" (month) or "2024" (season)
 
+    # ─────────────────────────────────────────────────────────────────────
     # Downstream dimensions
+    # ─────────────────────────────────────────────────────────────────────
     strategy_id: str = ""           # strategy, execution, PnL services
     client_id: str = ""             # risk-and-exposure service
     instruction_type: str = ""      # execution: TRADE, SWAP, LEND, BORROW, STAKE
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Per-instrument identification (Phase 1.9 — zero-fill + canonical IDs)
+    # ─────────────────────────────────────────────────────────────────────
+    instrument_id: str = ""         # canonical instrument id (matches InstrumentRecord.instrument_key)
+    expected: bool = True           # True = shard was expected on this date
+    available: bool = True          # False only for zero-fill rows that have no data
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v5 — honest-coverage Phase A (2026-04-19)
+    # Distinguishes "tried + got nothing" from "tried + failed" from "didn't try".
+    # ─────────────────────────────────────────────────────────────────────
+    capture_status: str = "captured"    # one of: captured / empty_confirmed / attempted_failed
+    error_reason: str = ""              # classified failure code for attempted_failed rows
+    attempted_at: str = ""              # ISO-8601 UTC start-of-attempt; "" = legacy unknown
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v6 — quote_margin_combo plan (2026-04-23)
+    # Disambiguates DERIBIT inverse vs linear (BTC-PERPETUAL vs BTC_USDC-PERPETUAL)
+    # on the same underlying, and carries multi-leg synthetic instrument metadata.
+    # ─────────────────────────────────────────────────────────────────────
+    quote_asset: str = ""           # "USD", "USDT", "USDC", "BTC", "ETH", "KRW"
+    margin_type: str = ""           # "inverse" (coin-margined) | "linear" (stable-margined) | ""
+    combo_type: str = ""            # "call_spread", "iron_condor", "butterfly", "" = non-combo
+    leg_weights: str = ""           # JSON: [{"instrument_id": "...", "qty": 1|-1|...}]; "" = non-combo
 ```
 
 ### Column Rules
@@ -74,11 +111,21 @@ class AvailabilityRecord:
 - **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
 - **No `data_source` column.** Track what the data IS (transfers, injuries, odds), not where it came from
   (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
+- **`capture_status` is canonical** for shard state — `captured` (real data on disk), `empty_confirmed` (source returned
+  200 + zero rows; counts in denominator only), `attempted_failed` (exception during fetch; classified via
+  `error_reason`).
+- **`underlying` vs `instrument_id`** for derivatives: bundled chain shards (options_chain / futures_chain) populate
+  `underlying` with the base asset (BTC, ETH) and leave `instrument_id` empty. Per-symbol shards populate
+  `instrument_id` and leave `underlying` empty.
+- **`quote_asset` + `margin_type`** are required for DERIBIT v6 chain shards (and any future inverse/linear-split venue)
+  so the (date, venue, instrument_type, data_type, underlying) primary key extends to (..., quote_asset, margin_type)
+  without colliding inverse/linear bundles. Leave both empty for non-derivative or single-margin venues.
 
 ### Backward Compatibility
 
-`read_availability_index()` handles v3 indexes transparently — missing v4 columns are backfilled with `""`. No migration
-needed for reads. Writes produce v4 entries that coexist with older v3 entries until re-scanned.
+`read_availability_index()` handles older index versions transparently — missing v5/v6 columns are backfilled with their
+defaults (`captured` for capture*status, `""` for the rest). No migration needed for reads. Writes produce v6 entries
+that coexist with older entries until re-scanned by a `rebuild*\*\_manifest.py` pass.
 
 ## Per-Service Shard Dimension Matrix
 
@@ -267,16 +314,24 @@ The data status page supports an `as_of_timestamp` parameter for point-in-time v
 
 ### Expected-Empty vs Missing Shards (Phase 1.9)
 
-The v4 schema carries three columns that together encode the three distinct states a shard can be in on a given day:
+The v6 schema carries enough columns to encode the four distinct states a shard can be in on a given day. The
+`capture_status` column (added in v5, honest-coverage Phase A) is the canonical source — `expected` / `available` /
+`instrument_count` are kept for backward compat but `capture_status` is what the data-status UI + phantom audit read
+first.
 
-| State              | Manifest row? | `instrument_count` | `expected` | `available` | Meaning                                                                                                                                                                                                   |
-| ------------------ | ------------- | ------------------ | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ingested**       | yes           | `> 0`              | `True`     | `True`      | Data present — counts toward numerator of availability %.                                                                                                                                                 |
-| **Expected-empty** | yes           | `= 0`              | `True`     | `False`     | Shard was expected on this day but the source had no data (e.g. a dated future that has not yet started trading, a lending market that saw no activity). Counts in the denominator but not the numerator. |
-| **Missing**        | no row        | —                  | —          | —           | Shard was never ingested — pipeline gap. Counts in the denominator; triggers alerts.                                                                                                                      |
+| State                | Manifest row? | `capture_status`   | `instrument_count` | Meaning                                                                                                                                                                                               |
+| -------------------- | ------------- | ------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**         | yes           | `captured`         | `> 0`              | Real parquet on disk at the canonical path. Counts toward numerator.                                                                                                                                  |
+| **Expected-empty**   | yes           | `empty_confirmed`  | `= 0`              | Source returned 200 + zero rows on this date (paused league, dated future not yet trading, lending market with no activity). Counts in denominator only.                                              |
+| **Attempted-failed** | yes           | `attempted_failed` | `0`                | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. The orchestrator's `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run. |
+| **Missing**          | no row        | —                  | —                  | Never attempted — pipeline gap. Counts in denominator; triggers alerts. The phantom audit flips manifest rows whose `captured` claim has no matching parquet on disk to `attempted_failed`.           |
 
-Before Phase 1.9 we could not distinguish the last two cases — any day without a manifest entry looked identical whether
-the source was silent or the pipeline had never run. `write_with_zero_fill` closes that gap.
+Before Phase 1.9 + Phase A we could not distinguish empty-vs-failed-vs-missing — any day without a manifest entry looked
+identical whether the source was silent or the pipeline had never run. `write_with_zero_fill`
+
+- `capture_status` together close that gap. The phantom audit
+  (`instruments-service/scripts/reconcile_phantom_manifest_rows.py`) is the inverse process: scans canonical GCS paths,
+  compares vs `captured` rows, flips drift to `attempted_failed`.
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 
@@ -387,7 +442,9 @@ venues and they must not appear in UAC registry functions or expected-shard calc
 | BETFAIR_SB   | Sportsbook variant  | No                                |
 | UNIBET_UK    | Audited             | No                                |
 
-## Migration: v3 → v4
+## Migration history
+
+### v3 → v4 (Phase 1 — venue/chain/instrument_type/league_id columns)
 
 - **No data re-downloads.** All data already exists in GCS. The manifest is just an index.
 - **GCS paths do NOT need to change.** The manifest is an abstraction layer over GCS paths. Old data stays at old paths
@@ -396,6 +453,48 @@ venues and they must not appear in UAC registry functions or expected-shard calc
   migration requirement.
 - **Backward compat in reader:** `read_availability_index()` backfills missing v4 columns with `""`.
 - **v4 writes coexist with v3 entries** until re-scanned.
-- **Re-scan existing data:** Run manifest rebuild scripts per service. Scans existing GCS paths, extracts new columns
-  from path structure (instrument_type from hive path, chain from folder names), writes v4 index.
+- **Re-scan existing data:** Run `rebuild_*_manifest.py` scripts per service. Scans existing GCS paths, extracts new
+  columns from path structure (instrument_type from hive path, chain from folder names), writes v4 index.
 - **Dedup on write:** v4 entries supersede v3 entries for the same shard.
+
+### v4 → v5 (honest-coverage Phase A, 2026-04-19)
+
+- Adds `capture_status` (`captured` / `empty_confirmed` / `attempted_failed`), `error_reason`, `attempted_at`.
+- Adapters MUST distinguish empty-vs-failed: `record_empty(row_key=...)` for legitimately-zero-rows,
+  `record_failed(row_key=..., error=classify_venue_error(exc))` for exceptions.
+- Reader backfills missing columns: `capture_status="captured"` (preserves old semantics where presence of a row implied
+  success), `error_reason=""`, `attempted_at=""`.
+
+### v5 → v6 (quote_margin_combo plan, 2026-04-23)
+
+- Adds `quote_asset`, `margin_type`, `combo_type`, `leg_weights`.
+- The v5 primary key `(date, venue, instrument_type, data_type, underlying)` collided DERIBIT inverse and linear bundles
+  into the same parquet (BTC-PERPETUAL vs BTC_USDC-PERPETUAL on the same underlying = BTC). v6 extends the key to
+  `(..., quote_asset, margin_type)` so the bundles stay separate.
+- Reader backfills `quote_asset=""`, `margin_type=""`, `combo_type=""`, `leg_weights=""` for v4/v5 rows.
+
+## Per-VM shard layout (Phase 1, manifest_429_per_vm_sharding plan)
+
+When `UnifiedCloudConfig.manifest_per_vm_shards` is True (env var `MANIFEST_PER_VM_SHARDS=true`), or when a writer is
+constructed with `ManifestWriter(per_vm_shards=True, ...)` — the explicit kwarg added 2026-05-03 — `ManifestWriter`
+writes to `_index/per_vm/{instance}.parquet` instead of CAS-writing the canonical `_index/availability_index.parquet`.
+The `manifest_consolidator` daemon (Cloud Scheduler `*/1 * * * *`) merges per-VM shards into the canonical view; readers
+fall back to a live shard-merge when the canonical blob is older than `MANIFEST_CONSOLIDATED_STALENESS_SEC` (default
+120s).
+
+**When to use:**
+
+- Backfill VM fleets with 10+ writers per bucket (eliminates 429 thundering-herd on the canonical CAS path).
+- One-off `rebuild_*_manifest.py` scripts: pass `per_vm_shards=True` to skip CAS contention with concurrent rebuilds /
+  the consolidator daemon. Without this, OCC `generation_match` retries can re-merge stale views and drop most of the
+  rebuild's output (observed 2026-05-02 on DeFi: 80k mid-run rows compacted to 12k canonical).
+- Local multi-process rebuilds where every process inherits the same `HOSTNAME` — set a unique `VM_NAME` per chunk
+  worker so they each get their own per-VM shard (not a shared one).
+
+**Force-merge after a rebuild:**
+
+```bash
+python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-{ag}-{pid}
+```
+
+Idempotent + safe to run concurrently with the scheduled cycle.
