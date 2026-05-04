@@ -162,21 +162,100 @@ systemd-oomd watches cgroup memory pressure and intervenes before kernel OOM. It
 - Sports near-zero progress: api_football 0, open_meteo 2 dates, understat 0, footystats 0,
   transfermarkt 3 dates
 
-### Real RC of sports memory bloat (corrected)
+### Real RC of sports memory bloat (corrected, with code citation)
 
-Sports providers were 4-5 GB each. Earlier I called this "expected for sports" — wrong.
-The real cause: sports adapters are invoked with **`--start-date 2020-06-01 --end-date
-2026-05-04` in a single proc**, no chunking. The orchestrator iterates day-by-day across
-~1,800 days, accumulating per-day state (fixtures cache, leagues cache, manifest builder
-buffers) in memory without flushing per-window. RAM scales linearly with date-range size.
+Found the actual bug at
+[`instruments-service/instruments_service/engine/orchestrator.py:369-374`](../../../instruments-service/instruments_service/engine/orchestrator.py#L369):
 
-CEFI/TRADFI/DEFI don't have this problem because `run_vm_backfill_e2e.sh` chunks at
-30-days-per-proc, capping per-proc RAM at ~1 GB.
+```python
+# Sports reference core entity caches — leagues/teams/standings are the same
+# across all dates within a batch run. Fetched once, written to every date partition.
+_cached_leagues_df: pd.DataFrame | None = None
+_cached_teams_df: pd.DataFrame | None = None
+_cached_standings_df: pd.DataFrame | None = None
+_cached_prediction_league_ids: list[int] = []
+```
 
-**Sports needs the same chunking pattern.** Either wrap sports in
-`run_vm_backfill_e2e.sh` (it does support sports per its arg parser, but the sports CLI
-takes `--sports-provider` not `--venues`, so the runner needs an extension), or pre-split
-the date range and spawn one proc per chunk manually.
+These are **module-level pandas DataFrames** that hold the full sports reference dataset
+(1,228 leagues + 618 teams + standings rows from the API_FOOTBALL smoke earlier). They're
+populated via `_set_cached_leagues / _teams / _standings` and **never cleared** for the
+duration of the proc.
+
+There's a `clear_defi_universe_cache()` for the DeFi equivalent, but **no
+`clear_sports_caches()`** function exists. So when sports runs with
+`--start-date 2020-06-01 --end-date 2026-05-04` in a single proc, those DFs stay resident
+through ~1,800 days of iteration, plus per-day intermediate state (fixtures, oddslike
+buffers, etc.) accumulates inside the orchestrator's loop without per-day flushes.
+
+User intuition correct: **once data is uploaded to GCS, it should be cleared from memory.**
+The orchestrator does write to GCS per-day, but doesn't `del` the dataframes / call gc
+afterwards. RAM grows monotonically until the process dies (or systemd-oomd kills it).
+
+**Verified — the cache is intentional, NOT used for any aggregate calculation:**
+
+Confirmed across the entire `instruments-service` repo:
+- `_cached_leagues_df / _teams_df / _standings_df / _prediction_league_ids` are referenced
+  **only inside `orchestrator.py`** — 3 setter sites + 4 reader sites, all within the
+  per-date sports loop.
+- **No other module imports them.** Verified `grep -rn "_cached_leagues_df" instruments-service/`
+  → only orchestrator.py + tests.
+- **No finalize / wrap-up / aggregate / post-loop function** uses the accumulated DFs.
+  No "compute season-summary from full cache" logic anywhere. The cache is purely a
+  per-batch-run API-call optimization.
+- **Data is durable in GCS per-date** via `_gated_sink_write(... entity="leagues" ...)`.
+  Clearing the memory copy after each date's write is safe — nothing downstream consumes
+  the in-memory copy.
+- **Read sites verify**: every read (lines 2912, 2942, 2978, 3012) is to write the same
+  DF to a different date's GCS partition. Not used for any joins, computations, or
+  cross-date aggregations.
+
+**Conclusion**: cache is intentional for the "skip 67 API calls per date" optimization,
+but NOT used for any calculation. It can be cleared at any point (per-date, per-chunk,
+per-N-dates) without losing data — just adds API call cost where cleared. This makes
+fixing it safe and low-risk.
+
+
+
+After tracing read sites in `orchestrator.py:2912, 2942, 2978, 3012` — the cached DFs
+are read on every subsequent date in the loop. The original-author comment says it
+saves **~67 API calls per date** (1 leagues + 33 teams + 33 standings = 67 calls, all
+slow-moving). Without the cache, a 1,800-date sports backfill would do 120,600
+API calls just for reference data — would hit api-football's daily quota many times
+over and fail.
+
+Code-flow verification:
+- Lines 2917-2918: fetch leagues → `_set_cached_leagues(df)`
+- Lines 2931-2938: same df ALSO written to GCS via `_gated_sink_write(... entity="leagues" ...)`
+  (so persistent copy lives in GCS too)
+- Lines 2942-2944: next date reads `teams_df = _cached_teams_df` first; only fetches if `None`
+- Same pattern for standings (line 3012) and prediction_league_ids (line 2978)
+
+So the cache is **intentional, downstream-consumed, and cost-saving**. It's NOT a stale
+artifact never read again. Decision-trade-off:
+
+| Approach | API call cost | RAM cost | Process restart cost |
+|---|---|---|---|
+| Cache held forever (current) | 67 calls / batch run | Grows with batch (problem) | None |
+| Clear cache per date | 67 × N dates | Bounded ~50 MB | None |
+| No cache, refetch per date | 67 × N dates | Tiny | None |
+| **Chunk processes (workaround)** | 67 × N chunks | Bounded per proc | Process restart between chunks |
+
+Original design assumed sports runs as **VM-per-source** (one VM, one source, runs
+till done in ~hours, then VM dies → cache cleared by VM termination). Today's
+local-driver pattern runs sports as a **single 6-year proc** which violates that
+assumption and OOMs.
+
+**Two paths to fix**:
+
+1. **Proper fix (follow-up plan)**: add a `clear_sports_caches()` function (mirroring
+   `clear_defi_universe_cache()`) and invoke it at smaller intervals — e.g. every 30
+   days, or per-season. Re-fetches at the boundary cost ~67 API calls but bounds RAM.
+2. **Workaround for today's EOD push**: chunk sports the same way CEFI/TRADFI/DEFI are
+   chunked. Each 30-day proc starts fresh, fetches reference once for the chunk, writes
+   per-date GCS partitions, dies. No code change required, just wrapper script edit.
+
+For VMs in the cloud: the existing pattern (VM-per-source, runs to completion, dies)
+already works correctly because VM lifetime ≈ batch lifetime. **The fix is local-only.**
 
 ### Local-vs-VM optimisation note (2026-05-04 13:55 IST)
 
