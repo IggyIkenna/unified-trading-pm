@@ -36,6 +36,46 @@ POLYGON, FRED) are out-of-scope for today's EOD push — they need separate plan
 
 The 26 healthy adapters can all proceed to Phase 2 backfill.
 
+## Phase 2 fan-out (2026-05-04 13:40 IST)
+
+After confirming all 26 healthy adapters via 1-day smoke, fanned out the full backfill.
+
+**Machine sizing**: AMD Ryzen 9 7900X, 24 cores, 93 GB RAM. At full fan-out: 85 concurrent
+`instruments-service` procs, load avg ~41, mem 54 GB used / 38 GB free. Comfortable
+headroom; can sustain.
+
+**Backfills running** (all via `run_vm_backfill_e2e.sh` for CEFI/TRADFI/DEFI, direct CLI for
+SPORTS):
+
+- **DEFI 7 venues** — per-protocol cutoff dates from `DEFI_SOURCE_COVERAGE_START` in UAC
+  - AAVEV3-ETHEREUM: 2022-03-16 → today
+  - UNISWAPV3-ETHEREUM: 2021-05-05 → today
+  - UNISWAPV2-ETHEREUM: 2020-05-04 → today
+  - CURVE-ETHEREUM: 2020-01-19 → today
+  - LIDO-ETHEREUM: 2020-12-19 → today
+  - BALANCER-ETHEREUM: 2021-05-13 → today
+  - EIGENLAYER-ETHEREUM: 2023-06-15 → today
+- **CEFI 7 venues** — 2019-01-01 → today (per-venue inception clipped by adapter)
+  - BINANCE-SPOT, BINANCE-FUTURES, DERIBIT, BYBIT, UPBIT, HYPERLIQUID, ASTER
+  - **OKX + COINBASE excluded** (3-SSOT canonical name disagreement)
+- **TRADFI 6 venues** — 2019-01-01 → today
+  - CME, CBOE, NASDAQ, NYSE, ICE, FX
+  - **POLYGON + FRED excluded** (api_key + zero-records bugs)
+- **SPORTS** — 2020-06-01 → today
+  - API_FOOTBALL (primary)
+  - OPEN_METEO, UNDERSTAT, FOOTYSTATS, TRANSFERMARKT (enrichment, parallel)
+  - **SOCCER_FOOTBALL_INFO excluded** (other agent's VM in flight)
+
+All chunks resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. CEFI/TRADFI use
+30-day chunks × 4 parallel workers per venue.
+
+**Confirmed healthy**: chunks completing — first `DONE` lines visible by 13:41:36 IST
+(CEFI BINANCE-SPOT 2019-01-01..2019-01-30 + 2019-03-02..2019-03-31). Env vars propagating
+correctly (the silent-fail bug from earlier today is fixed).
+
+**ETA estimate**: CEFI/TRADFI ~18-25 min per venue (89 chunks × ~50s / 4 parallel),
+DEFI faster (smaller date ranges, fewer pools), SPORTS depends on rate-limit pacing.
+
 ## Status snapshot (2026-05-04 13:15 IST — end of session)
 
 **Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
