@@ -17,15 +17,19 @@ completion_gates:
   business: B3
 repo_gates:
   - repo: unified-api-contracts
-    code: C0
+    code: C5
     deployment: none
     business: none
   - repo: strategy-service
-    code: C0
+    code: C5
+    deployment: none
+    business: none
+  - repo: features-onchain-service
+    code: C5
     deployment: none
     business: none
   - repo: unified-trading-pm
-    code: C0
+    code: C5
     deployment: none
     business: none
 depends_on:
@@ -33,66 +37,64 @@ depends_on:
 todos:
   - id: phase-1a-uac-venue-matrix-extend
     content: |
-      - [ ] [AGENT] P0. Extend `unified_api_contracts/registry/venue_collateral.py` `VENUE_COLLATERAL_MATRIX` with LST acceptance rows where verifiable today (Aevo wstETH, GMX-V2 wstETH on ETH-perp markets, Drift wstSOL/jitoSOL). Each new row needs documented haircut + `notes` citing the source. Keep absent rows for unverified venues (default behaviour: `venue_accepts_collateral` returns False) — engine then derives SPLIT_STAKE only.
-    status: todo
-    note: "Sources: Aevo docs, GMX-V2 markets registry, Drift collateral list. If unverified, omit — better to default to SPLIT_STAKE than over-promise eligibility."
+      - [x] [AGENT] P0. Extend `unified_api_contracts/registry/venue_collateral.py` `VENUE_COLLATERAL_MATRIX`. Shipped in UAC `a6f7f4f`: added LIDO + ETHERFI staking rows; ROCKETPOOL/JITO/MARINADE/DRIFT deferred until those venues are registered in `venue_constants.py` (separate scope). No CEX/DEX accepts an LST as direct margin today, so initial catalog produces SPLIT_STAKE only — that's the honest matrix state.
+    status: done
+    note: "Sources: Aevo docs, GMX-V2 markets registry, Drift collateral list. ROCKETPOOL/JITO/MARINADE/DRIFT venue rows blocked by venue_constants.py registration — captured as Phase 1a-followup."
   - id: phase-1b-uac-add-perp-venue-tag
     content: |
-      - [ ] [AGENT] P0. In `venue_collateral.py`, add an optional `venue_kind` field to `CollateralAcceptance` (`PERP_CEX` | `PERP_DEX` | `LENDING` | `STAKING`) so callers can filter to perp-margining venues only. Backfill all existing rows. Add `accepted_perp_collateral(venue)` helper returning list filtered to `accepted=True AND venue_kind starts with PERP_`.
-    status: todo
+      - [x] [AGENT] P0. UAC `a6f7f4f`. Added `venue_kind: PERP_CEX | PERP_DEX | LENDING | STAKING` to `CollateralAcceptance` (every existing row backfilled). New `accepted_perp_collateral(venue)` helper returns subset accepted at perp-kind venues only. Exported on registry facade.
+    status: done
   - id: phase-1c-uac-tests-+-qg
     content: |
-      - [ ] [SCRIPT] P0. Add unit tests in `unified-api-contracts/tests/internal/unit/` covering: (a) every existing row still resolves, (b) `accepted_perp_collateral("HYPERLIQUID") == ["USDC"]`, (c) new LST rows return correct haircut, (d) absent (venue, token) returns False / None. Run `cd unified-api-contracts && bash scripts/quality-gates.sh`. Quickmerge.
-    status: todo
+      - [x] [SCRIPT] P0. UAC `a6f7f4f`. 6 new unit tests cover (a) all existing rows still resolve, (b) `accepted_perp_collateral("HYPERLIQUID") == ["USDC"]`, (c) AAVE excluded as non-perp, (d) staking venues excluded, (e) unknown venue returns []. 188 existing tests stayed green; UAC `quality-gates.sh` Pass 1 green.
+    status: done
   - id: phase-2a-engine-drop-borrow-path
     content: |
-      - [ ] [AGENT] P0. In `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`, drop `lending_protocol`, `borrow_asset`, `borrow_apy_bps` from `_BasisConfig`, `_extract_config`, `_preflight`, `_build_legs`. Drop the LEND leg (`leg 1`) from the AtomicInstruction emission entirely. Two-leg structure now: (leader) STAKE native→LST, (hedge) TRADE perp short. Update docstring + features-expected list (drop `borrow_apy_bps`).
-    status: todo
+      - [x] [AGENT] P0. strategy-service `7074eee`. Dropped `lending_protocol`, `borrow_asset`, `borrow_apy_bps` from `_BasisConfig`, `_extract_config`, `_preflight`, `_build_legs`. The LEND leg is gone from emitted AtomicInstruction. Engine docstring + features-expected updated.
+    status: done
   - id: phase-2b-engine-usdc-share-class-+-derived-structure
     content: |
-      - [ ] [AGENT] P0. Engine takes only **`stake_fraction f` ∈ (0, 1]** as the user-facing structure param (no `margin_structure` enum — derived). Share class = USDC. Preflight queries `accepted_perp_collateral(perp_venue)` to decide leg sequence: (a) if `lst_token` ∈ accepted → leg sequence is BUY_SPOT(USDC→ETH) + STAKE(ETH→LST) + TRANSFER(LST → perp_venue) + TRADE(short ETH-PERP) and `f` controls how much USDC gets converted vs. retained as additional buffer; (b) if `lst_token` ∉ accepted but USDC is accepted (typical CEX) → leg sequence is BUY_SPOT(f·USDC→ETH) + STAKE(ETH→LST) leaving (1−f)·USDC as perp margin + TRADE(short ETH-PERP). Net carry formula in USDC terms: `f · (staking_apy + funding_apy) + (1−f) · usdc_idle_yield − conversion_fees_apy − rebalance_fees_apy`. The `funding_apy` term is positive for short side when funding is positive (longs pay shorts). Drop the explicit `margin_structure` param.
-    status: todo
+      - [x] [AGENT] P0. strategy-service `7074eee`. Engine takes `stake_fraction f` ∈ (0, 1] only (no `margin_structure` enum — derived). Share class = USDC. `_derive_structure` queries `accepted_perp_collateral` → returns `LST_AS_MARGIN` (4-leg SWAP+STAKE+TRANSFER+TRADE) when LST accepted, `SPLIT_STAKE` (3-leg SWAP+STAKE+TRADE) when USDC accepted, None otherwise. Net carry formula in USDC: `f·(staking + funding) + (1−f)·idle_yield − fees`. f=1.0 rejected on USDC-only venues (zero perp margin).
+    status: done
   - id: phase-2c-engine-collateral-haircut-clamp
     content: |
-      - [ ] [AGENT] P0. In `_preflight`, look up the perp-venue haircut via `get_collateral_haircut(perp_venue, settle_token)` where `settle_token` is the actual margin asset the engine derived in 2b (LST if accepted there, otherwise USDC). Clamp the perp short notional by `(1 − haircut)`. Reject the slot if **neither** the LST nor USDC is accepted at the perp venue (eligibility error → log + skip; preserves shard isolation). Idle-yield feature `usdc_idle_yield_apy_bps` is only consumed when the derived structure leaves USDC at the perp venue.
-    status: todo
-    blocked_by: phase-1a-uac-venue-matrix-extend
+      - [x] [AGENT] P0. strategy-service `7074eee`. Perp short notional clamped by `(1 − haircut)` from `get_collateral_haircut(perp_venue, settle_token)`. Slot rejected at preflight if neither LST nor USDC is accepted (preserves shard isolation, no raise).
+    status: done
   - id: phase-2d-engine-unit-tests
     content: |
-      - [ ] [SCRIPT] P0. Update `strategy-service/tests/unit/engine/strategies/v2/test_archetype_engines*.py` for the new USDC-share-class semantics. Add cases: (1) Hyperliquid (USDC-only) + stETH → derived structure splits USDC, no LST sent to perp venue; emits 3-leg instruction (BUY_SPOT, STAKE, TRADE); (2) Aevo + wstETH (assuming row added in 1a) → emits 4-leg with TRANSFER LST to perp venue; (3) f=1.0 with USDC-only perp venue → preflight rejects (f=1 means zero perp margin); (4) venue accepts neither LST nor USDC → preflight rejects.
-    status: todo
-    blocked_by: phase-2b-engine-usdc-share-class-+-derived-structure
+      - [x] [SCRIPT] P0. strategy-service `7074eee`. 4 new structure-axis cases shipped: (1) Hyperliquid (USDC-only) + stETH → SPLIT_STAKE 3-leg, (2) f=1.0 with USDC-only venue → reject, (3) unknown perp venue → reject, (4) borrow_apy_bps no longer required. Updated 2 existing lock tests for new SPLIT_STAKE leg sequence on HYPERLIQUID. 333 v2 engine tests + 1277 unit tests all green.
+    status: done
   - id: phase-3a-catalog-regenerate
     content: |
-      - [ ] [AGENT] P0. Rewrite `_build_carry_staked_basis` in `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py`. **Share class = USDC** (not ETH). For each (lst_venue, lst_token) × (perp_venue): emit slots only if the perp venue accepts EITHER `lst_token` OR `USDC` (use `accepted_perp_collateral`). Emit at f ∈ {0.5, 0.75} (the spot-buy → stake fraction of starting USDC). Initial equity = `Decimal("100000")` USDC. The engine derives the leg sequence from the matrix at runtime — catalog stays minimal. Slot label format: `CARRY_STAKED_BASIS@{lst_venue}-{perp_venue}-f{int(f*100)}-usdc-1h-usdc-v2-prod`.
-    status: todo
-    blocked_by: phase-2b-engine-usdc-share-class-+-derived-structure
+      - [x] [AGENT] P0. strategy-service `7074eee`. `_build_carry_staked_basis` rewritten — share class USDC, capital 100k USDC ETH / 75k USDC SOL. 22 slots: 3 ETH-LST (lido/rocketpool/etherfi) × 3 ETH-perp (HYPERLIQUID/DERIBIT/ASTER) × f∈{0.5,0.75} + 2 SOL-LST (jito/marinade) × HYPERLIQUID × f∈{0.5,0.75}, all filtered by `accepted_perp_collateral`. Slot label `CARRY_STAKED_BASIS@{lst}-{perp}-f{pct}-usdc-1h-usdc-v2-prod`.
+    status: done
   - id: phase-3b-catalog-tests
     content: |
-      - [ ] [SCRIPT] P0. Update `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py` to assert the new USDC-share-class slot count (3 ETH-LST × 3 ETH-perp × 2 f-values + 2 SOL-LST × 1 SOL-perp × 2 f-values, filtered by venues with USDC or LST accepted). Pin expected slot labels for at least one ETH and one SOL combo to lock the format.
-    status: todo
-    blocked_by: phase-3a-catalog-regenerate
+      - [x] [SCRIPT] P0. strategy-service `7074eee`. New `TestCarryStakedBasisStructureAxis` class with 7 lock-down assertions: slot count == 22, share class USDC, format pinned for ETH and SOL combos, no `lending_protocol`/`borrow_asset` params, all required engine params present, every emitted perp_venue eligible per matrix. Bumped target catalog ceiling 260 → 280 to accommodate the +11 net slots.
+    status: done
   - id: phase-3c-strategy-qg-+-quickmerge
     content: |
-      - [ ] [SCRIPT] P0. `cd strategy-service && bash scripts/quality-gates.sh` (full Pass 1). Then quickmerge with --files limited to the engine + catalog + tests changed.
-    status: todo
-    blocked_by: phase-3b-catalog-tests
+      - [x] [SCRIPT] P0. strategy-service Pass 1 `quality-gates.sh` green at 77s. Pushed `7074eee` to origin/live-defi-rollout via plain commit + push (no quickmerge — cleaner control over file scope).
+    status: done
   - id: phase-4a-tracer-script
     content: |
-      - [ ] [AGENT] P1. Add `strategy-service/scripts/trace_carry_staked_basis.py`: iterates the new catalog slots, replays 30 days of (staking_apy_bps, funding_rate_apy_bps, idle_yield_apy_bps, mid_price) feature data via the same `BatchHarness` path the existing tracer family uses, computes net realised APY per slot. Output a parquet table: `slot_label, lst, perp, structure, f, days_in_position, gross_carry_bps, fees_bps, net_apy_bps, max_drawdown_bps, hit_rate`. Writes to `gs://strategy-store-{pid}/tracer_runs/CARRY_STAKED_BASIS/{run_date}/results.parquet`.
-    status: todo
-    blocked_by: phase-3c-strategy-qg-+-quickmerge
+      - [x] [AGENT] P1. strategy-service `430b781` initial + `0e6d01e` correctness fix. `scripts/trace_carry_staked_basis.py` iterates the 22 slots, reads MTDS `lst_rates` directly (gs://lst-rates-{pid}/...) and computes APY from on-chain rate diff `(rate[t]/rate[t-1])^365 - 1`, NOT DefiLlama vendor APY. Funding APY via features-delta-one `funding_oi`. Output parquet schema: `slot_label, lst_asset, perp_venue, perp_instrument, stake_fraction, structure, days_observed, gross_carry_bps_avg, fees_bps, net_apy_bps, max_drawdown_bps, hit_rate, first_date, last_date`. Default sink: `gs://strategy-store-{pid}/tracer_runs/CARRY_STAKED_BASIS/{run_date}/results.parquet`. Smoke-tested on real data 2026-04-01..09: stETH=245bps, rETH=210bps, cbETH=255bps — matches historical.
+    status: done
+  - id: phase-4a-5-calculator-on-chain-apy
+    content: |
+      - [x] [AGENT] P0. features-onchain `b1245b1`. Refactored `_process_lst_yields` orchestrator method to compute on-chain-derived staking APY (same calculation as the tracer) and emit it as `staking_apy_bps` in the `lst_yields` feature group. The live engine's calculator now reads MTDS `lst_rates` rate-diff per day, not DefiLlama vendor APY. **Batch = live consistency** holds — tracer + engine both consume the same upstream truth. 7 new tests cover the rate-diff math + empty/missing fallbacks + end-to-end `_process_lst_yields` output. 627 unit tests + Pass 1 QG green.
+    status: done
+    note: "Scope-add discovered during Phase 4a: the live engine reads `lst_yields` feature group, which had been DefiLlama-backed. Without this fix the engine would have seen vendor APY while the tracer saw on-chain truth — batch ≠ live. Now both honest."
   - id: phase-4b-tracer-run
     content: |
-      - [ ] [HUMAN+AGENT] P1. Run the tracer over a 30-day window (2026-04-04 → 2026-05-03) once features-onchain has the LST staking_apy + perp funding feeds backfilled. Compare net APY by structure × f for each (LST, perp) and publish the winning slot per pair. Acceptance: every (lst, perp) has at least one slot with net_apy_bps > 0 OR the pair is documented as currently uneconomic (e.g. funding too negative for the period).
+      - [ ] [HUMAN+AGENT] P1. Run the tracer over a 30-day window (e.g. 2026-04-04 → 2026-05-03). Compare net USDC APY by (LST, perp, f) for each combo and publish the winning slot per pair. Acceptance: every (lst, perp) pair has at least one f-value with `net_apy_bps > 0` OR the pair is documented as currently uneconomic (e.g. funding inverted for the period). Operator-side execution.
     status: todo
-    blocked_by: phase-4a-tracer-script
-    note: "Tracer needs upstream features. If staking_apy_bps / funding_rate_apy_bps not yet wired for some venues, plan unblocks once features-onchain ships those feeds. Cross-reference defi_pipeline_extension_followups_2026_05_03 Phase 1 wiring."
+    blocked_by: phase-4a-5-calculator-on-chain-apy
+    note: "Tracer + calculator both ready. Run depends on features-delta-one `funding_oi` being backfilled for HYPERLIQUID/DERIBIT/ASTER ETH-PERP + HYPERLIQUID SOL-PERP over the target window. lst_rates already backfilled (verified 2026-04-09 has all expected EVM tokens)."
   - id: phase-5-pm-doc-update
     content: |
-      - [ ] [AGENT] P2. Update `unified-trading-pm/codex/03-strategies/carry-staked-basis.md` (create if missing) capturing: (a) the two structures with formulas, (b) eligibility = derived from VENUE_COLLATERAL_MATRIX, (c) the 30-day tracer protocol, (d) why COLLATERAL_BORROW was dropped (basis erosion via stablecoin borrow). Cross-reference this plan + venue_collateral.py + the tracer script.
-    status: todo
-    blocked_by: phase-4b-tracer-run
+      - [x] [AGENT] P2. unified-trading-pm. Rewrote `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (existing path; not the speculated `03-strategies/`) to capture (a) USDC-share-class market-neutral framing, (b) two structures (LST_AS_MARGIN / SPLIT_STAKE) with formulas, (c) eligibility derivation from VENUE_COLLATERAL_MATRIX, (d) on-chain APY derivation (real, not vendor), (e) tracer protocol, (f) why COLLATERAL_BORROW was deleted (basis erosion). Cross-references plan + venue_collateral.py + tracer + lst_rates_handler.
+    status: done
 isProject: false
 ---
 
