@@ -782,6 +782,63 @@ Sports:
 Decision: **holding course**. RAM in middle zone (above healthy threshold but below
 hold threshold). Will continue 5-min cadence.
 
+### Health snapshot (2026-05-04 15:34 IST) — RAM cap breach + API_FOOTBALL kill
+
+**RAM hit 81 GB at point of check, peak 79 GB in the 10-tick window.** Cap breached.
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM at check time | 81 GB | ❌ over 80 cap |
+| RAM peak last 10 ticks | 79 GB | ❌ |
+| Trend | 71→78→79→76 (climbing then settling) | ⚠️ |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 (no time to fire yet) | ✅ |
+| Concurrent procs | 42 | — |
+| Checkpoints | 538 (+15 in 7 min) | ✅ |
+
+#### Action taken: killed API_FOOTBALL Python worker (heaviest sports)
+
+Per established rule, kill heaviest sports at 80 GB. DERIBIT NOT killed (user
+constraint). Heaviest sports was API_FOOTBALL chunk 11 (5.0 GB).
+
+This time **only PID 652121** (Python child) was killed via specific PID — no `pkill -f`
+wildcard. But the bash wrapper STILL exited because:
+- Killing the Python child caused `timeout 3600 ...` (its parent) to exit non-zero.
+- Bash wrapper had `set -euo pipefail`, so the wrapper exited too.
+
+Restarted API_FOOTBALL wrapper at 15:35 (PID 876466). Orchestrator skip will
+fast-forward through chunks 1-10 (already in manifest as captured). Lost chunk 11
+in-flight day-progress (was ~day 17/30).
+
+**This is the 3rd time the wrapper script has died on its child's death.** The
+`set -euo pipefail` in `sports_chunked_backfill.sh` is the culprit — should
+remove `pipefail` (or guard with `|| true` per chunk) to make the wrapper
+resilient to child-kill. Tracking as follow-up code fix.
+
+#### DERIBIT growing again — same memory leak pattern
+
+Two DERIBIT chunks now: 9.4 GB + 8.9 GB = 18.3 GB combined. Started small at
+1.8 GB each, grew over time. Same per-chunk options-chain accumulation that hit
+17 GB on the 2019-04 chunk earlier. **DERIBIT chunks have a real memory leak**
+that grows monotonically with wall-clock time, not just per-day data volume.
+
+Constraint: user has explicitly forbidden killing DERIBIT chunks autonomously.
+
+Deltas since 15:27:
+- CEFI: 239→244 (+5)
+- TRADFI: 218→224 (+6)
+- DEFI: 66→70 (+4)
+
+Sports:
+- API_FOOTBALL: 10 (killed + restarted)
+- FOOTYSTATS: 7→10 (+3, caught up to chunk 11)
+- OPEN_METEO: 1
+- TRANSFERMARKT: 0 (restarted at 15:28, now on date 2020-06-05 of chunk 1)
+- UNDERSTAT: 20→22 (+2)
+
+Decision: **monitor 3-min cadence**. If RAM breaches 80 GB again with API_FOOTBALL
+already restarted, must escalate DERIBIT decision to user.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
