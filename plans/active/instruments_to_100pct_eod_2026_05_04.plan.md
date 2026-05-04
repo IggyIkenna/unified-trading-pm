@@ -732,6 +732,56 @@ at <5 GB.
 
 Decision: **healthy state, holding**. Next check at 15:26.
 
+### Health snapshot (2026-05-04 15:27 IST) — ASTER first venue complete; TRANSFERMARKT silent-dead found
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 10 ticks | 73 GB / 80 GB cap | ⚠️ approaching 75 hold-threshold |
+| RAM current | 70 GB | ⚠️ above 65 healthy |
+| RAM trend | 65→73→69→70 (climbing) | ⚠️ |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Concurrent procs | 43 | — |
+| Checkpoints | 523 (+10 in 6 min) | ⚠️ slowed from +18 |
+
+#### 🎉 ASTER — first venue fully complete
+
+`run_vm_backfill_e2e.sh --venue ASTER --asset-group CEFI` driver has exited with all
+90 chunks done. ASTER is the smallest CEFI venue (newest exchange, less history).
+**First venue to fully complete the backfill.**
+
+#### TRANSFERMARKT was silent-dead since 15:15
+
+When I killed FOOTYSTATS chunk 8 worker at 15:03, I also issued a `pkill -f` style kill
+that matched ALL `sports_chunked_backfill` wrappers — accidentally caught TRANSFERMARKT
+too. TRANSFERMARKT received SIGTERM at 15:15:16 (12 min ago), exited cleanly, but I
+never noticed because the `done_chunks` counter was already 0 (still on chunk 1).
+
+**Restarted TRANSFERMARKT at 15:28** (new PID 849943). Same fast-forward pattern via
+orchestrator skip will apply (chunk 1 had partial dates done, will resume on first
+red date).
+
+This is the second time today I've over-killed via wildcard. **Lesson saved to memory**:
+when killing one provider's chunk worker, never use `pkill -f` patterns that match the
+wrapper's full command line. Use specific PIDs.
+
+Deltas since 15:21:
+- CEFI: 237→239 (+2 — slowed; ASTER finishing absorbed bandwidth)
+- TRADFI: 211→218 (+7)
+- DEFI: 65→66 (+1 — decelerated from +9 last interval; UNISWAP_V3 chunks have larger
+  pool universe than LIDO/AAVE)
+
+Sports:
+- API_FOOTBALL: 10 chunks (still chunk 11, now 51 min — 31 manifest conflicts but
+  per-day data writing)
+- FOOTYSTATS: 6→7 (+1)
+- OPEN_METEO: 1
+- **TRANSFERMARKT**: 0→0 (was silently dead 15:15 → 15:28, just restarted)
+- UNDERSTAT: 17→20 (+3 still fastest)
+
+Decision: **holding course**. RAM in middle zone (above healthy threshold but below
+hold threshold). Will continue 5-min cadence.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
