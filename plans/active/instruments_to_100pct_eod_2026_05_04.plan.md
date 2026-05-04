@@ -892,6 +892,61 @@ else (sports already on minimum), just flag urgently and report.**
 
 ETA to cap breach: ~12 min at current DERIBIT growth rate. Awaiting user.
 
+### 15:42 IST — RAM hit 86GB, user authorised DERIBIT kill
+
+User instruction: "kill the deribit shard first we are already at 86gb mark.
+I think we should kill one of the deribit and then find out the reason of this memory
+leak before starting new worker for deribit, we can keep one worker running."
+
+**Action taken**:
+1. Killed Python worker PID 786030 (DERIBIT 2019-05-01 chunk, 11.1 GB at moment of kill).
+   Used specific PID, not `pkill -f`.
+2. Killed the DERIBIT bash wrapper (PIDs 564185 + 786023) so no new chunks spawn.
+3. Left PID 786031 (DERIBIT 2019-05-31 chunk, 10.0 GB) running — orphaned (re-parented
+   to init), will run to completion writing its data, then no successor.
+
+**Result**: RAM dropped 81 → 65 GB. 16 GB freed.
+
+### Manifest consolidator architecture — answer to user question
+
+**Yes, the system DOES use a manifest consolidator.** Architecture per
+`unified_trading_library/manifest_consolidator.py`:
+
+- Each backfill writer creates per-writer shards at
+  `gs://{ag_bucket}/_index/per_vm/{instance_id}.parquet` — replaces single-blob CAS
+  hot-path that produced 429 thundering-herd.
+- Consolidator (Cloud Run Job + the long-running VM `manifest-consolidator-20260429-162442`)
+  reads all per-VM shards every minute, dedup-merges by manifest key (last-attempted-write
+  wins), writes back to canonical `_index/availability_index.parquet`.
+- Reader-fallback staleness threshold = 120s, so consolidator running every 60s leaves
+  ample margin even if a cycle skips.
+
+**Instance ID resolution** in `ManifestWriter._resolve_instance_id()`:
+1. `$VM_NAME` (set by deployment-service VM launchers) — used in cloud
+2. `$HOSTNAME` fallback — **on this machine = `hk`**
+3. `local-{pid}-{rand4}` synthesized — only if neither env var set
+
+**Critical issue for our local runs**: all 47 procs on this machine share
+`HOSTNAME=hk` and **none have `$VM_NAME`** (it's only set by VM launchers).
+**They're all racing for the same `hk.parquet` per-VM shard** — that's why we see
+the `ManifestWriter: generation conflict (attempt N/15)` retry loops and the
+slowness in TRANSFERMARKT chunk 1.
+
+The intended design is one writer per per-VM shard. We're violating it.
+
+**Fix would be**: set a unique `VM_NAME` env var per chunk-worker. Wrap each
+spawned `instruments-service` invocation with:
+```bash
+VM_NAME="local-${VENUE}-${CHUNK_START}-$$" .venv/bin/instruments-service ...
+```
+Then each proc writes to its own per-VM shard, consolidator merges them all.
+**No code change needed** — just env-var injection in `run_vm_backfill_e2e.sh`
+and `sports_chunked_backfill.sh`. Tracking as follow-up.
+
+In the meantime: existing manifest writes are still consistent (the 15-retry CAS
+backoff handles the conflicts), just slow. Consolidator merges per-VM shards
+correctly even when only `hk.parquet` is being updated by all writers.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
