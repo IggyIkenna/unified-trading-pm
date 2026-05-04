@@ -947,6 +947,82 @@ In the meantime: existing manifest writes are still consistent (the 15-retry CAS
 backoff handles the conflicts), just slow. Consolidator merges per-VM shards
 correctly even when only `hk.parquet` is being updated by all writers.
 
+### 15:50 IST — INDEX ALIGNMENT issue identified (user-flagged + verified)
+
+User flagged the concern: with 47 procs racing on the same per-VM shard, what
+happens to writes from procs that lose the CAS race? Investigation:
+
+#### What's actually happening (verified by GCS inspection)
+
+1. **`MANIFEST_PER_VM_SHARDS` is False by default** in
+   `_resolve_per_vm_shards()` at `manifest_writer.py:172-196`. Our local procs
+   never set this env var.
+2. **GCS evidence**: `_index/per_vm/` for all 4 AGs only contains shards from
+   2026-05-01/02 VM runs. **No `hk.parquet` exists** — our local procs aren't
+   writing per-VM shards at all.
+3. So our 47 procs are using the **legacy CAS path** writing directly to canonical
+   `_index/availability_index.parquet`. Each proc:
+   - reads with generation G_n
+   - merges its updates
+   - CAS writes with G_n
+   - if generation moved (peer wrote first), retry with G_n+1
+   - **15 retries cap** → fall back to **unconditional write** that ignores
+     concurrent peer writes (clobbers their rows)
+
+We observed 9× unconditional-write fallbacks earlier today. Each could have lost
+manifest rows from peer procs writing in the conflict window.
+
+#### Risk: per-day parquets safe, but manifest rows may be missing
+
+- **GCS per-day parquets** (the actual instrument data): each writes to its own
+  unique path `instrument_availability/by_date/day=X/venue=Y/instruments.parquet`.
+  No collision risk.
+- **Manifest rows** (`_index/availability_index.parquet`): high collision under
+  47-way concurrency. CAS-fallback potentially lost rows from peer procs.
+- **Result**: orchestrator's `_should_skip_shard` may **redundantly redo** shards
+  whose manifest row got clobbered → wasted API calls but no data loss.
+
+#### Two-part fix (committed 2026-05-04 15:53 IST)
+
+**Part 1: Patch scripts to use per-VM shards going forward** — instruments-service
+commit `00f6352`. Both runner scripts now inject:
+- `VM_NAME=hk_${ag_or_provider}_${chunk-start}_${random6}` — unique per chunk
+- `MANIFEST_PER_VM_SHARDS=true` — switches to per-VM shard write path
+
+This means every future-spawned chunk writer hits its own
+`_index/per_vm/{unique_name}.parquet`. The consolidator (running every 60s in
+`manifest-consolidator-20260429-162442` VM) merges them all into the canonical
+index. **No more cross-writer CAS contention.**
+
+**Part 2: Recovery for manifest rows already lost** — there's a tool for this:
+[`instruments-service/scripts/rebuild_cefi_manifest.py`](../../../instruments-service/scripts/rebuild_cefi_manifest.py)
+(supports all asset_groups via `--asset-group` flag despite the name). It scans
+actual GCS parquets and **adds missing manifest rows** for `(date, venue)` shards
+that have data on disk but no manifest entry. **Reverse phantom reconciler.**
+
+To run after current procs settle:
+```bash
+cd ~/unified-trading-system-repos/instruments-service
+.venv/bin/python scripts/rebuild_cefi_manifest.py --dry-run                     # preview
+.venv/bin/python scripts/rebuild_cefi_manifest.py --asset-group CEFI --dry-run
+.venv/bin/python scripts/rebuild_cefi_manifest.py --asset-group TRADFI --dry-run
+.venv/bin/python scripts/rebuild_cefi_manifest.py --asset-group DEFI --dry-run
+.venv/bin/python scripts/rebuild_cefi_manifest.py --asset-group SPORTS --dry-run
+```
+
+#### What this means for in-flight procs
+
+User instruction: **don't kill in-flight workers, but don't spawn new ones with
+old code**. The script patches only affect **future** wrapper invocations:
+- In-flight Python workers (already loaded the old config) keep using the legacy
+  CAS path.
+- Their child wrappers (bash) re-read the script for the next chunk, so once a
+  current chunk finishes the wrapper picks up the patched code on the next
+  iteration.
+
+**Result**: ~next 30-90 min of in-flight chunks still hit the CAS path; after that
+all new chunks use per-VM shards. Recovery tool runs after everything settles.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
