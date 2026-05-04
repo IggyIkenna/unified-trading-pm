@@ -401,6 +401,40 @@ one specific shard or after a code-fix that requires re-running known-bad data.
   its VM is running).
 - Drilldown spot-check: 5 random captured rows per AG resolve to actual parquets in GCS.
 
+## Execution log (2026-05-04 EOD push)
+
+- **12:33–12:48 IST**: Phase 0 dry-runs for cefi/tradfi/sports/prediction/defi (parallel after
+  the `tempfile` patch). Sports first attempt timed out on GCS list under 5x parallel load;
+  retry with `--workers 16` succeeded.
+- **12:46–12:57 IST**: Phase 1 phantom flips for cefi (12,540), tradfi (2,726), sports
+  (41,223 SFI-excluded). All wrote manifest back successfully.
+- **12:55 IST**: Phase 2 TRADFI backfill fired locally via `run_vm_backfill_e2e.sh` for
+  CME/CBOE/NASDAQ/NYSE/ICE/FX (6 venues × 4 chunk-workers = 24 concurrent
+  instruments-service procs). No IAM issue — runs on this machine.
+- **12:57 IST**: Phase 2 CEFI backfill fired locally for the 9 active CEFI venues
+  (9 × 4 = 36 concurrent procs).
+- **12:57 IST**: Phase 2 SPORTS af + tm VM launches **BLOCKED** with:
+  `User does not have access to service account 1060025368044-compute@developer.gserviceaccount.com.
+  Ask a project owner to grant you the iam.serviceAccountUser role.`
+  Pinged Ikenna (or pending). Until granted, the 41k flipped sports phantoms can't be
+  retried — sports VMs are required (they pull from rate-limited APIs that need shared keys
+  in Secret Manager which only runs on a service account).
+
+  **Unblock command for Ikenna:**
+  ```bash
+  gcloud iam service-accounts add-iam-policy-binding \
+    1060025368044-compute@developer.gserviceaccount.com \
+    --member="user:harshkantariya@odum-research.com" \
+    --role="roles/iam.serviceAccountUser" \
+    --project=central-element-323112
+  ```
+
+  Once granted, fire:
+  ```bash
+  bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh 2020-06-01 2026-05-04
+  bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-06-01 2026-05-04
+  ```
+
 ## Risks / blockers
 
 - **SFI VM in flight**: while the single SFI instruments VM is running, do NOT touch
