@@ -2040,3 +2040,171 @@ whether to retry, fix the adapter, or accept as legitimate API failure.
 | sports | YES — 41,223 phantoms (SFI excluded) | YES — after flip | Use `launch-{api-football,transfermarkt}-backfill-vm.sh` for affected data types. SFI launchers stay off. |
 | prediction | NO | NO | Out of plan scope; `trades` rows are MTDS not instruments. Flag for Ikenna. |
 | defi | OPTIONAL — 597 phantoms | NO | EIGENLAYER `rewards` only, not strict instruments. Skip or flip-and-leave. |
+
+---
+
+## Phase 2 execution — VM fanout (2026-05-04 18:11 IST onwards)
+
+### What landed before fanout
+
+1. **Pulled 3 incoming commits on `live-defi-rollout` (instruments-service)**:
+   - `e077b35` phantom-audit: probe legacy `venue=PROTOCOL-CHAIN/` overload for DeFi rows (597 EIGENLAYER false-positives → 0)
+   - `faf5466` Tardis URDI: use full 50+ fiat quote-currency set (BTC-TRY/BRL/AUD/AED/SAR/IDR no longer collapse to BTC-USD on OKX-SPOT) + phantom audit 5-axis hardening (130,897 → 354 phantoms, 99.7% reduction)
+   - `2c207e2` chore: drop unused noqa marker
+2. **Pulled 4 incoming commits on `live-defi-rollout` (unified-trading-pm)**:
+   - `4c718ac` codex doc availability-manifest-and-data-status v4 → v6
+   - `1bd189b` workspace-manifest formatting drift
+   - `65f67e0` phantom audit 5-axis docs + re-runnable VM recipe
+   - `ada3367` cursor-configs/CLAUDE.md mirror
+3. **Rebuilt CEFI tarballs** (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`) — UTC 12:28:24, includes the Tardis fiat-quote fix.
+
+### New launcher script created
+
+- **`deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh`** (new file, modeled after `launch-cefi-forward-poll.sh`).
+  - Targets `instruments_service` (not MTDS). Sets `VM_SERVICE=instruments_service`, `VM_OPERATION=download`, `VM_TASK=cefi-instruments-backfill`.
+  - **NO `IS_TEST_RUN`** → writes to production buckets.
+  - Per-VM shard isolation already handled by `setup-data-pipeline-vm.sh` (line 358 exports `MANIFEST_PER_VM_SHARDS=true` by default; line 390/445 sets `VM_NAME` to GCE instance name).
+  - Singleton-lock on `^cefi-instr-` prefix; `--force` bypass for multi-venue fanout.
+  - Singleton-lock `--force` is **separate** from instruments-service CLI `--force`. The launcher's `--force` only allows multiple VMs of the same prefix to run; it does NOT pass `VM_FORCE=true` metadata, so the python CLI runs without `--force` and pre-flight skip works as intended (CAPTURED shards are skipped).
+
+### Smoke test before fanout
+
+- Smoke VM `cefi-instr-binance-spot-20260504-175849` for BINANCE-SPOT 2026-05-02:
+  - 12:28:51 UTC: VM created
+  - 12:32:29 UTC: setup script complete (~4 min boot)
+  - 12:32:57 UTC: data parquet (24,229 bytes) + per-VM shard (13,596 bytes, schema_v6, instrument_count=48 [intentionally filtered], capture_status=captured) both written
+  - 12:36:27 UTC: consolidator merged per-VM shard into canonical (cycle interval ~6 min for instruments-store-cefi bucket)
+  - 12:36:27 UTC: canonical row written: `{date: 2026-05-02, venue: BINANCE-SPOT, instrument_count: 48, schema_version: 6, capture_status: captured, expected: True, available: True}`
+  - **End-to-end pipeline verified**: VM boot → fetch → per-VM shard → consolidator merge → canonical updated.
+
+### Phase 2a: 14 CEFI VMs launched (all RUNNING, asia-northeast1-c)
+
+Window: **2018-01-01 → 2026-05-04** (full history). Pre-flight skip ensures CAPTURED dates are not re-fetched.
+
+| Venue | VM name |
+| --- | --- |
+| ASTER | `cefi-instr-aster-20260504-181140` |
+| BINANCE-FUTURES | `cefi-instr-binance-futures-20260504-181152` |
+| BINANCE-SPOT | `cefi-instr-binance-spot-20260504-181202` |
+| BITFINEX-SPOT | `cefi-instr-bitfinex-spot-20260504-181215` |
+| BITGET-FUTURES | `cefi-instr-bitget-futures-20260504-181226` |
+| BITGET-SPOT | `cefi-instr-bitget-spot-20260504-181238` |
+| BYBIT | `cefi-instr-bybit-20260504-181250` |
+| COINBASE-SPOT | `cefi-instr-coinbase-spot-20260504-181302` |
+| DERIBIT | `cefi-instr-deribit-20260504-181316` |
+| HYPERLIQUID | `cefi-instr-hyperliquid-20260504-181333` |
+| OKX-FUTURES | `cefi-instr-okx-futures-20260504-181350` |
+| OKX-SPOT | `cefi-instr-okx-spot-20260504-181426` |
+| OKX-SWAP | `cefi-instr-okx-swap-20260504-181441` |
+| UPBIT | `cefi-instr-upbit-20260504-181458` |
+
+Expected per-venue runtime: ~5–10 min for low-gap venues; **BITFINEX-SPOT (~2,315 missing dates)** and **BITGET-SPOT/FUTURES (~542 each)** will run hours.
+
+### Phase 2b: 4 SPORTS VMs launched (all RUNNING)
+
+Each sports launcher enforces its own singleton-lock per shared API key.
+
+| Provider | VM name | Range |
+| --- | --- | --- |
+| api_football | `af-backfill-20260504-181544` | 2018-01-01 → 2026-05-04 |
+| footystats | `fs-backfill-20260504-181600` | 2019-01-01 → 2026-05-04 |
+| understat | `us-backfill-20260504-181616` | 2015-01-16 → 2026-05-04 |
+| sfi (soccer_football_info) | `sfi-backfill-20260504-181631` | 2019-01-01 → 2026-05-04 |
+
+Note: **transfermarkt** intentionally not launched (its launcher `launch-transfermarkt-backfill-vm.sh` doesn't exist in this repo — only `launch-tradfi-backfill-vm.sh` and the four sports providers above). May need to revisit.
+
+### Bystander VMs (someone else launched)
+
+Spotted at 12:45:08 UTC: `instr-bitfinex-futures-20260504-134505` — likely Ikenna or another agent. Distinct prefix, not interfering.
+
+### Total fleet
+
+**18 launches today** (14 CEFI + 4 SPORTS). All `asia-northeast1-c`.
+
+### What to watch / acceptance criteria
+
+1. **Per-VM shards appear in `_index/per_vm/`** (each VM writes its own; existence proves VM made it through bootstrap + first capture)
+2. **Consolidator merges into canonical**: instruments-store-cefi bucket merge cycle is ~6 min; sports buckets vary (footystats much heavier — could be 60–90s per cycle).
+3. **`_index/availability_index.parquet` row count grows** for both CEFI and SPORTS canonicals.
+4. **Coverage % climbs** in deployment-ui Data Status tab.
+5. **VMs auto-shutdown** when their range completes (`VM_SHUTDOWN_ON_COMPLETION=true` on launcher metadata for cefi-instr-*; sports launchers handle their own shutdown).
+
+### Known issues to revisit
+
+- **Manifest clobber from rebuild_*_manifest.py** earlier today (~50–100 CEFI rows lost in the 11:54 UTC consolidator merge that pulled stale snapshot before our rebuild's per-VM shard arrived). Recoverable from GCS generation `1777895583506752` (CEFI) and `1777895614776416` (TRADFI). NOT yet restored — the running fleet will recapture most of those gaps naturally.
+- **DERIBIT memory leak** identified earlier (~570 MB/day chunk growth, smoke profiler showed bootstrap alone eats 2 GB). Workaround: chunk-cycling in `run_vm_backfill_e2e.sh`. The VM workers each handle one venue → bounded RAM, so this should not bite the running fleet.
+- **deployment-api turbo endpoint per-venue numbers were unreliable** at full-history scale (returning 0 for every venue). Use `deploy-missing` POST endpoint as ground truth.
+
+### Tomorrow / continuation
+
+- **TRADFI**: ~3,683 missing shards (~9 venues, ~400/year). Use new launcher pattern, 1 VM per venue, 2018-01-01 → today.
+- **DEFI**: 307k canonical rows but EIGENLAYER restaking `rewards` (597 rows) is the only meaningful gap. Out of scope for this plan as MTDS-territory.
+- **PREDICTION**: 14k rows with 83% phantom rate but data_type is `trades` (MTDS, not instruments-service). Out of plan scope.
+
+---
+
+## Phase 2 corrections after reading handoff doc + backfill playbook (18:21 IST)
+
+After Harsh shared the handoff doc and I followed the references, found 4 things I should have done differently. **Do not repeat these in tomorrow's launches.**
+
+### Corrections applied
+
+1. **Added 2 missing sports VMs.** Playbook line 287 lists 6 sports launchers, I'd only launched 4. Added:
+   - `tm-backfill-20260504-182121` (transfermarkt) — range 2020-06-01 → 2026-05-04
+   - `weather-backfill-20260504-182144` (openmeteo) — range 2020-06-01 → 2026-05-04
+   - **New total: 14 CEFI + 6 SPORTS = 20 VMs**
+
+### Things I got wrong but didn't fix (low risk, just wasteful)
+
+2. **CEFI start date was 2018-01-01, playbook says 2019-01-01.** Pre-2019 dates have no Tardis coverage, so the orchestrator returns empty for them. Pre-flight skip means it's not catastrophic — just adds wasted attempts on the VM. Don't re-launch; let them run.
+
+3. **Sports start dates per launcher defaults** (2018-01-01 for api_football, 2019-01-01 for footystats, etc.) are too early. Playbook says **sports cutoff is 2020-06-01** (because odds_api data only starts 2020-06-06 and pre-odds data has no trading value). Same wastage situation — don't re-launch. The 2 new VMs (tm, weather) used the correct 2020-06-01 start.
+
+### Important gotchas from the playbook (must monitor)
+
+4. **Concurrent VM boot race on deadsnakes PPA.** Playbook line 207-209: "~3 of N parallel VMs hang at python3.13 install. Mitigation: kill the hung VMs and relaunch one-at-a-time, or stagger boots ≥30s apart." I launched 14 CEFI VMs at once (~12s spacing). **As of 18:21 IST, all 14 still in bootstrap (no run.log yet) — within normal range, but if any are still pre-log past T+8min from launch, those are likely PPA-hung.** Diagnose: `gcloud compute ssh <vm> --command='ps aux | grep python3.13'`.
+
+5. **CeFi VM `rc=137` (OOM) does NOT write `EXIT_STATUS`.** `atexit` doesn't fire on `SIGKILL`. Symptom: VM ends, no EXIT_STATUS in run.log, manifest empty for half-completed shard. **BITFINEX-SPOT (~2,315 dates), BITGET-SPOT/FUTURES (~542 each)** are the OOM risks. Diagnose via `dmesg | grep -i kill` on the VM (if alive) or Cloud Logging `kernel: ... oom`. Mitigation: bump machine type or shard year-by-year.
+
+6. **Tarball pins to local pyproject.toml floors via `--no-sources -e <local-dir>`.** VM-deployed services don't see version floors of dependent repos. Cloud Run jobs (consolidator, defi-collection, deployment-api) use the MTDS Docker image and need a Docker rebuild after a UTL change, NOT a tarball refresh.
+
+### What the playbook says about priority order — re-evaluate tomorrow
+
+The playbook lists sports priority by data_type completion %, not by source. Worst-covered first:
+
+1. **FIXTURE_FEATURES (0%)** — never captured. P0.
+2. **PLAYER_VALUES (2%)** — Transfermarkt; per-player. P0.
+3. **SFI_LEAGUES (14%)** — soccer_football_info reference. P0.
+4. **SFI_PROGRESSIVE_STATS (15%)** — 2020-01-01 cutoff. P1.
+5. **MATCHES (18%)** — API_FOOTBALL match endpoint. P0.
+6. **TRANSFERMARKT_LEAGUES (50%)** — P1.
+7. **PLAYER_STATS (78%)** — P2 gap-fill.
+
+My current sports VM launches are PROVIDER-level (one VM per provider, all data_types). The playbook implies we should be running DATA_TYPE-level VMs to chase the worst-covered first. The launchers DO have `--entity` filters for this. **Tomorrow:** use `--entity FIXTURE_FEATURES`, `--entity PLAYER_VALUES`, `--entity SFI_LEAGUES` etc. for targeted backfill.
+
+### Architectural learnings
+
+7. **Reference-vs-prediction league filter.** For non-prediction leagues (40 reference leagues), only attempt FIXTURES + FIXTURE_EVENTS + STANDINGS. Don't push for FIXTURE_FEATURES / PLAYER_VALUES / SFI_* / understat — those endpoints expect prediction-level depth (33 prediction leagues). My current launches don't apply this filter; orchestrator should handle it via existing per-league logic, but worth verifying in the run.log.
+
+8. **DeFi uses different CLI** — `collect-evm-defi` / `collect-dex-swaps`, NOT `--operation download`. So `launch-cefi-instruments-backfill.sh` cannot be reused for DeFi. Need a separate launcher pattern for DeFi tomorrow.
+
+9. **TradFi is mostly complete already** per `project_tradfi_backfill_session_2026_04_30.md` memory. Outstanding only: VIX futures full-tick chain (separate plan), MBP_10 deep book (if microstructure strategy needs). Tomorrow's TradFi work is mostly verification, not fanout.
+
+10. **Bystander VM `instr-bitfinex-futures-20260504-134505`** spotted earlier — this might be Ikenna catching what the playbook lists at "MVP CeFi → top assets on … BYBIT, HYPERLIQUID; Deribit options combos". BITFINEX-FUTURES wasn't in my fanout (not in the 14-venue list — probably should have been). Tomorrow: cross-check the venue list against UAC `_CEFI_VENUES`.
+
+### Verification command set (run periodically)
+
+```bash
+# Fleet status
+gcloud compute instances list --filter="(name~'^cefi-instr-' OR name~'^(af|fs|us|sfi|tm|weather)-backfill') AND status=RUNNING" --project=central-element-323112 --format="table(name,status,zone)"
+
+# Per-VM shards landing in GCS (= VMs writing manifest entries)
+gsutil ls -l gs://instruments-store-cefi-central-element-323112/_index/per_vm/ | tail -20
+gsutil ls -l gs://instruments-store-sports-central-element-323112/_index/per_vm/ | tail -20
+
+# Consolidator catching up (cycle ~6 min for instruments-store-cefi)
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/manifest-consolidator-20260429-162442/run.log | grep "instruments-store-cefi" | tail -3
+
+# Coverage delta vs morning baseline
+curl -s "http://localhost:8004/api/data-status/turbo?service=instruments-service&start_date=2019-01-01&end_date=2026-05-04&asset_group=CEFI" | python3 -c "import sys,json; r=json.load(sys.stdin); print('CEFI completion=', r.get('overall_completion_pct'), 'shards=', r.get('overall_shards_found'),'/',r.get('overall_shards_expected'))"
+```
