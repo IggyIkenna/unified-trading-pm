@@ -462,6 +462,49 @@ expected. Slow but progressing. Not stuck.
 Decision: **holding course**. RAM stable at boundary, not breaching 75 GB hold-threshold
 or 80 GB kill-threshold. No new fan-out, no kills.
 
+### Health snapshot (2026-05-04 14:50 IST)
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 67 GB / 80 GB cap | ✅ 13 GB headroom, plateau holding |
+| RAM trend (5 min) | 64-68 GB oscillating around 65-66 | ✅ stable, not climbing |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Rate-limit hits (real) | 0 | ✅ |
+| Concurrent procs | 42 | — (was 46, normal cycling) |
+| Checkpoints | 448 (+22 in 7 min) | ✅ healthy pace |
+| Errors total | 124 (+22, all same Databento NASDAQ) | ✅ no new categories |
+
+Deltas since 14:43:
+- CEFI: 208→214 (+6)
+- TRADFI: 179→188 (+9, fastest)
+- DEFI: 39→46 (+7, accelerating — was +1 last interval)
+
+Sports chunked deltas since 14:43 (was 10+5+0+0+5):
+- API_FOOTBALL: 10→10 (chunk 11 still in flight)
+- FOOTYSTATS: 5→6 (+1)
+- UNDERSTAT: 5→8 (+3)
+- OPEN_METEO: 0→0 (still chunk 1 — paced)
+- TRANSFERMARKT: 0→0 (still chunk 1 — see below)
+
+#### TRANSFERMARKT chunk 1 — data written, manifest write in conflict loop
+
+Important nuance: log at 14:44:52-53 shows the **chunk's real data IS written to GCS**:
+- "RapidAPI: fetched 10 clubs for league C1 season 2019" → done fetching
+- "Transfermarkt teams → player_values: 131 rows written" → wrote 131 player_values to GCS
+- "Transfermarkt team mapping cache: 131 rows written for season=2019" → cache written
+
+Then 14:45:45 onwards, back into ManifestWriter generation-conflict loop (attempt 1→6/15
+as of last log read). This is **only the index-manifest write** stuck — the actual data
+is durably in GCS. The chunk will mark itself `captured` whenever attempt N succeeds (or
+attempt 15 unconditional fallback fires).
+
+So TRANSFERMARKT chunk 1's data is safe; the checkpoint file just hasn't been written
+yet. Resume-safe regardless.
+
+Decision: **holding course**. RAM stable, real work happening (+22 checkpoints in 7 min,
+DEFI accelerating). No changes.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
