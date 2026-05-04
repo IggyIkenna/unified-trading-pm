@@ -304,6 +304,42 @@ instead of growing to 5 GB across the full window. Run 5 providers in parallel
 
 **Step 5**: post-resume dry-run reconciler again to confirm headline coverage moved.
 
+### Resume status (2026-05-04 14:25 IST)
+
+**Recon results (post-OOM phantom counts) — phantom drift from OOM is minimal:**
+
+| AG | Pre-OOM | Post-OOM | Delta | Status |
+|---|---:|---:|---:|---|
+| CEFI | 12,540 | 12,557 | +17 | dry-run done, not yet flipped |
+| TRADFI | 2,726 | 2,734 | +8 | dry-run done, not yet flipped |
+| DEFI | 597 | 645 | +48 | dry-run done, not yet flipped |
+| SPORTS | 41,223 | timed out (GCS list) | TBD | needs retry with `--workers 16` later |
+
+**Resume drivers all firing correctly**: each runner's summary log shows `SKIP ...
+(checkpoint exists)` for the 376 done chunks then `START` for the next un-checkpointed
+chunk. Resume strategy working as designed.
+
+**Sports chunked launcher**: committed to
+[`instruments-service/scripts/sports_chunked_backfill.sh`](../../../instruments-service/scripts/sports_chunked_backfill.sh)
+(commit `619a32e`). Each invocation chunks the date range into 30-day windows; per-chunk
+proc dies + reclaims the leagues/teams/standings DataFrame caches between windows.
+RAM-safe because no single proc holds 6 years of accumulated DFs.
+
+**5 sports providers fired chunked** (TRANSFERMARKT first as smoke test, then API_FOOTBALL
++ FOOTYSTATS + UNDERSTAT + OPEN_METEO after RAM headroom confirmed). SFI excluded as
+designed.
+
+**Resource cap**: Harsh set hard cap at 80 GB RAM used (out of 93 GB). Currently at
+~48 GB used / 40 GB free, comfortably under cap. RAM monitor PID 571212 logging to
+`/tmp/ram-monitor.log`. Wakeup at 14:31 will check trend; if approaching 75 GB hold,
+if breaches 80 GB kill heaviest sports providers.
+
+**System state at 14:25 IST**:
+- 42 concurrent `instruments-service` procs
+- 376 chunks durable (durable from pre-OOM run + early new completions)
+- New chunks DONE since resume: cefi 3, tradfi 5, defi 1 (will accelerate)
+- 0 swap thrashing, no rate-limit hits, no OOM
+
 ### Real adapter errors observed (not rate-limit)
 
 - **9× Databento NASDAQ `XNAS.ITCH symbols=2: 422 symbology_invalid_request`** — adapter
