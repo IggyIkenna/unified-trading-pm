@@ -128,9 +128,85 @@ Memory got tight at peak — 90 GB RAM used / 1 GB free, 7 GB swapped. Top consu
 - Sports providers: 2.8-4.7 GB each, 5 providers = ~18 GB total
 - DEFI/CEFI/TRADFI chunks: ~1 GB each, 60+ procs
 
-**No OOM kills, no chunk failures.** vmstat shows kernel parked cold pages but isn't
-thrashing (si/so back to 0). System is busy but stable. Will drain as venues finish
-(86% chunks done already at 13:50 — 375/436).
+**At 13:50 I incorrectly claimed "no OOM, system stable".** That was wrong — see correction
+below.
+
+### OOM kill at 13:55:21 (correction to earlier "no OOM" call)
+
+**`systemd-oomd` killed the entire `app.slice` cgroup at 13:55:21 IST.** I missed this on
+first scan because systemd-oomd sends SIGTERM (with 20s grace period) before SIGKILL,
+which produces "graceful shutdown" log lines that look like external termination, not OOM.
+Reading journalctl correctly:
+
+```
+May 04 13:55:21 hk systemd[2009]: app-org.chromium.Chromium-6423.scope:
+                                   A process of this unit has been killed by the OOM killer.
+May 04 13:55:24 hk systemd[2009]: app.slice:
+                                   A process of this unit has been killed by the OOM killer.
+May 04 13:55:47 hk systemd[2009]: app-org.chromium.Chromium-6423.scope: Failed with result 'oom-kill'.
+```
+
+systemd-oomd watches cgroup memory pressure and intervenes before kernel OOM. It killed:
+- VS Code chromium electron procs (the editor)
+- All 85 instruments-service procs (they were children of the same `app.slice`)
+- The rate-limit watchdog
+- Anything else in the user's app.slice
+
+**What survived (durable):**
+- 376 chunk `.done` files in `.backfill-checkpoints/` — these resume cleanly
+- All parquet writes already in GCS (376 chunks worth: cefi 192, tradfi 157, defi 27)
+- Manifest rows for those captured shards
+
+**What was lost (in-flight only):**
+- 60 in-flight chunks at moment of kill — checkpoints not yet written, will redo on resume
+- Sports near-zero progress: api_football 0, open_meteo 2 dates, understat 0, footystats 0,
+  transfermarkt 3 dates
+
+### Real RC of sports memory bloat (corrected)
+
+Sports providers were 4-5 GB each. Earlier I called this "expected for sports" — wrong.
+The real cause: sports adapters are invoked with **`--start-date 2020-06-01 --end-date
+2026-05-04` in a single proc**, no chunking. The orchestrator iterates day-by-day across
+~1,800 days, accumulating per-day state (fixtures cache, leagues cache, manifest builder
+buffers) in memory without flushing per-window. RAM scales linearly with date-range size.
+
+CEFI/TRADFI/DEFI don't have this problem because `run_vm_backfill_e2e.sh` chunks at
+30-days-per-proc, capping per-proc RAM at ~1 GB.
+
+**Sports needs the same chunking pattern.** Either wrap sports in
+`run_vm_backfill_e2e.sh` (it does support sports per its arg parser, but the sports CLI
+takes `--sports-provider` not `--venues`, so the runner needs an extension), or pre-split
+the date range and spawn one proc per chunk manually.
+
+### Local-vs-VM optimisation note (2026-05-04 13:55 IST)
+
+**Decisions about parallelism / chunking made today are LOCAL-ONLY.** The cloud VM
+launchers (`launch-{api-football,transfermarkt,...}-backfill-vm.sh`) spawn one VM per
+source with much smaller machine types (e2-standard-2 = 2 vCPU / 8 GB RAM, not 24 vCPU /
+93 GB). VMs do NOT run different sources in parallel — singleton-locked launchers explicitly
+forbid it. So:
+
+- **Don't carry over `--parallel 4` to VM launches** — VMs only have 2 vCPU; chunking
+  parallelism that high will thrash. VM-appropriate value is `--parallel 1` or `2`.
+- **Don't run multiple sources concurrently on a single VM** — each VM should run ONE
+  source over a date range, no fan-out within the VM.
+- **Don't size SPORTS RAM expectations off this run** — on a VM, sports must be chunked
+  too (the 5 GB single-proc memory load would OOM the e2-standard-2's 8 GB).
+- **Local IP rate-limits** are different from VM static-IP rate-limits — Tardis whitelists
+  the cloud-VM egress IPs but treats laptop IP differently. What works locally may 429 in
+  cloud and vice versa.
+
+When IAM grant lands and we move sports to VM launchers, remember: lower parallelism, no
+inter-source fan-out, and chunk sports just like CEFI/TRADFI/DEFI.
+
+### Resume strategy (2026-05-04 13:58 IST)
+
+Checkpoints survived. Re-running CEFI/TRADFI/DEFI will skip the 376 already-done chunks
+and resume on the 60 in-flight ones. To avoid re-OOMing:
+
+- Drop `--parallel 4 → 2` per venue (halves RAM).
+- Run **sports separately, one provider at a time, in 90-day chunks** (not 6-year single-proc).
+- Watch memory: throttle further if `free` drops below 10 GB.
 
 ### Real adapter errors observed (not rate-limit)
 
