@@ -1023,6 +1023,80 @@ old code**. The script patches only affect **future** wrapper invocations:
 **Result**: ~next 30-90 min of in-flight chunks still hit the CAS path; after that
 all new chunks use per-VM shards. Recovery tool runs after everything settles.
 
+### 16:00 IST — Full reset per user instruction
+
+User: "kill all the tasks and then do the alignment and then start the processes after we
+do this otherwise we are going to be downloading the same data again and again."
+
+**Killed all 44 in-flight workers** + bash wrappers (specific PIDs, not pkill -f). Result:
+- 0 instruments-service procs running
+- 575 chunks durable in `.backfill-checkpoints/`
+- RAM 76 → 15 GB (61 GB freed)
+- All per-day parquets in GCS preserved (no data loss)
+
+### Pre-recovery analysis (consolidator nuances)
+
+User asked: "are we doing this right way, you should also check how the consolidator VM
+is doing it to take the nuances".
+
+Checked `unified_trading_library/manifest_consolidator.py`. Two-tool model:
+
+**Consolidator** (Cloud Run Job + the running VM `manifest-consolidator-20260429-162442`):
+- Runs every 60s with 90s soft-lock TTL via `_index/consolidator.lock`
+- Lightweight: only lists `_index/per_vm/*.parquet` (tens of shards)
+- Merges via `_merge_shard_frames` (last-write-wins dedup by manifest key)
+- Single CAS write to canonical `_index/availability_index.parquet`
+- **Doesn't crawl actual instrument data parquets** — assumes per-VM shards have
+  authoritative manifest rows.
+
+**rebuild_manifest** (heavyweight, what `rebuild_cefi_manifest.py` calls):
+- Lists ALL `instrument_availability/by_date/day=*/venue=*/*.parquet` (millions)
+- Parses partition paths to extract `(date, venue)` tuples
+- Reads each parquet to count rows
+- Adds **missing** manifest rows (preserves existing — does NOT overwrite)
+- CAS-writes back to canonical `_index/availability_index.parquet`
+
+**Difference**: consolidator merges already-summarized per-VM shards. rebuild_manifest
+goes back to ground truth (the actual instrument parquets) and emits missing manifest
+rows. **Both are needed today.**
+
+#### Today's failure mode (verified by GCS inspection)
+
+- Canonical `_index/availability_index.parquet` per-AG: `metageneration: 1` →
+  **never updated since creation at ~10:23 UTC today**. Our 47 local procs were
+  reading + CAS-writing it but `metageneration: 1` would imply none of those
+  CAS writes succeeded? Or the CAS-write path doesn't bump metageneration.
+- More likely: every CAS write generated a NEW generation (the writer wrote a
+  fresh blob) instead of bumping metageneration (which is for metadata-only
+  changes). So generations could be high but metageneration stays at 1.
+- Either way, post-OOM and post-many-CAS-fallbacks, the canonical manifest is
+  **likely missing rows** for shards whose writers got clobbered.
+
+#### Right recovery path: sequential, not parallel
+
+**Q on parallel rebuild_cefi_manifest.py**: yes, parallel hits GCS list-API rate
+limits (we already saw this earlier when 5 reconcilers ran parallel). Plus each
+rebuild's CAS write to canonical races with consolidator's CAS writes →
+double-write conflict. **Sequential = safer.**
+
+**Recovery plan**:
+1. Run `rebuild_cefi_manifest.py --dry-run` per AG **sequentially**, ~5 min each
+   (~20 min total). Preview what's missing.
+2. If counts look reasonable (not surprisingly large), run without `--dry-run`
+   per AG sequentially to write recovery rows.
+3. After all 4 rebuilds: run `reconcile_phantom_manifest_rows_all.py --dry-run`
+   per AG to check for any remaining phantoms (forward-direction: manifest says
+   captured but parquet doesn't exist).
+4. Then look at DERIBIT memory leak before restarting CEFI.
+5. Then restart CEFI/TRADFI/DEFI/SPORTS with patched scripts (per-VM shards now
+   active per `00f6352`).
+
+#### Pre-existing bug found in rebuild_cefi_manifest.py
+
+Script uses `args.category` but argparse defines `--asset-group` → `args.asset_group`.
+`AttributeError: 'Namespace' object has no attribute 'category'`. Fixed inline (not
+yet committed since we may roll up other fixes). Will commit before running.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
