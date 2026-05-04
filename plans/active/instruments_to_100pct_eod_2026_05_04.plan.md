@@ -692,6 +692,46 @@ Self-resolving as the chunk-cycling pattern broke through the 2019-04 DERIBIT bo
 
 Decision: **continue holding course**. Next check at 15:20.
 
+### Health snapshot (2026-05-04 15:21 IST) — sweet spot
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 10 ticks | 64 GB / 80 GB cap | ✅ JUST under healthy 65 GB threshold |
+| RAM current | 66 GB | ✅ |
+| RAM trend | tight 60-64 GB band | ✅ stabilised |
+| Swap | 0.7 GB | ✅ idle |
+| OOM in journalctl last 5 min | 0 | ✅ |
+| Concurrent procs | 45 | — |
+| Checkpoints | 513 (+18 in 5 min) | ✅ healthy pace |
+
+Deltas since 15:15:
+- CEFI: 231→237 (+6)
+- TRADFI: 208→211 (+3)
+- DEFI: 56→65 (+9 — **accelerating**, smaller universes per chunk)
+
+Sports chunks (FOOTYSTATS shows post-restart fast-forward via orchestrator skip):
+- API_FOOTBALL: 10 chunks (still on chunk 11, 45 min in — per-day iter writing data)
+- FOOTYSTATS: 6 chunks (was 2 post-restart, +4 from skip-fast-forward)
+- OPEN_METEO: 1 chunk (chunk 2 in flight)
+- TRANSFERMARKT: 0 chunks (chunk 1, 66 min — slow per-league fetch but progressing)
+- UNDERSTAT: 17 chunks (was 13 → **+4** — fastest sports)
+
+Top RAM consumers (no single >6 GB now):
+```
+OPEN_METEO chunk 2:    5.3 GB
+API_FOOTBALL ch 11:    4.8 GB
+DERIBIT 2019-06:       4.6 GB
+DERIBIT 2019-05:       4.1 GB
+FOOTYSTATS ch 7:       2.6 GB
+UNDERSTAT ch 18:       2.6 GB
+```
+
+Healthy distribution. The DERIBIT 2019-04 17 GB outlier was a one-time historical
+peak (peak Deribit options chain growth period). Subsequent DERIBIT chunks bounded
+at <5 GB.
+
+Decision: **healthy state, holding**. Next check at 15:26.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
