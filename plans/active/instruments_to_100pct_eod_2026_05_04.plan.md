@@ -104,6 +104,42 @@ manifest writes (85 procs all updating `_index/availability_index.parquet`). The
 unconditional-write fallback is safe (manifest is upsert-keyed); not a data-loss bug,
 just GCS optimistic-concurrency noise. Will quiet down as venues finish.
 
+### Force-flag verification (2026-05-04 13:48 IST)
+
+Confirmed: **no `--force` flag anywhere** in this run.
+
+- Inspected all 85 running cmdlines: 0 procs have `--force`.
+- `run_vm_backfill_e2e.sh` source line 131 hardcodes the chunk command with no
+  `--force`: `instruments-service --operation instruments --mode batch --asset-group X
+  --venues Y --start-date A --end-date B`.
+- Sports CLI invocations were also fired without `--force`.
+
+Implication: the orchestrator's `_should_skip_shard` is doing its job — for any
+`(asset_group, venue, day)` whose manifest row is `captured` or `empty_confirmed`, the
+adapter returns immediately. Only `attempted_failed` (the 56,489 phantoms we flipped
++ any pre-existing real failures) and missing rows get re-attempted. **Massive cost
+savings** vs `--force` which would re-pay every shard. Tardis/Databento quotas
+preserved.
+
+### System resource pressure (2026-05-04 13:50 IST)
+
+Memory got tight at peak — 90 GB RAM used / 1 GB free, 7 GB swapped. Top consumers:
+- DERIBIT chunk: 4.8 GB (options chain — 200k symbol filter cost)
+- Sports providers: 2.8-4.7 GB each, 5 providers = ~18 GB total
+- DEFI/CEFI/TRADFI chunks: ~1 GB each, 60+ procs
+
+**No OOM kills, no chunk failures.** vmstat shows kernel parked cold pages but isn't
+thrashing (si/so back to 0). System is busy but stable. Will drain as venues finish
+(86% chunks done already at 13:50 — 375/436).
+
+### Real adapter errors observed (not rate-limit)
+
+- **9× Databento NASDAQ `XNAS.ITCH symbols=2: 422 symbology_invalid_request`** — adapter
+  sending invalid symbol format for some early dates (likely BTC/ETH ETF tickers that
+  don't exist pre-listing; `TRADFI_TICKER_COVERAGE_START` should clip but apparently
+  isn't always). Lands as `attempted_failed` rows; not blocking. Follow-up: investigate
+  why the ticker cutoff isn't applying for these specific cases.
+
 ## Status snapshot (2026-05-04 13:15 IST — end of session)
 
 **Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
