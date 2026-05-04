@@ -607,6 +607,44 @@ Restarted. Next watch in 4 min; if RAM breaches 78 GB again with FOOTYSTATS alre
 restarted → escalate to user, do NOT kill DERIBIT autonomously (it's a real CEFI work
 chunk, scope-impacting).
 
+### Health snapshot (2026-05-04 15:10 IST) — holding pattern
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 6 ticks | 77 GB / 80 GB cap | ⚠️ in danger zone, but under 78 GB autonomous-kill |
+| RAM current | 77 GB | ⚠️ |
+| RAM trend | 73→71→69→77→75→76 (oscillating 75-77) | ⚠️ stable but high |
+| Swap | 0.7 GB | ✅ idle |
+| OOM in journalctl last 5 min | 0 | ✅ |
+| Concurrent procs | 47 | — |
+| Checkpoints | 483 (+13 in 7 min) | ✅ progressing |
+| **DERIBIT chunk RSS** | **17.1 GB** (was 13.5→16→17.1, climbing) | ⚠️ unbounded grow |
+
+Deltas since 14:56 (was 461):
+- CEFI: 223→228 (+5)
+- TRADFI: 195→202 (+7, fastest)
+- DEFI: 52→53 (+1)
+
+Sports chunked deltas:
+- API_FOOTBALL: 10→10 (chunk 11 still iterating per-day, 18 manifest conflicts so far)
+- FOOTYSTATS: restarted, fast-forwarding through done dates via orchestrator skip
+- OPEN_METEO: 0→1 (chunk 1 finally done; on chunk 2)
+- TRANSFERMARKT: 0→0 (still chunk 1 — slow but real per-day work)
+- UNDERSTAT: 11→13 (+2, fastest sports)
+
+#### Awaiting user decision on (a/b/c/d) for RAM mitigation
+
+Per 15:03 commit, raised question with user about which kill-strategy if RAM
+breaches further:
+- (a) Kill DERIBIT chunk (frees 16-17 GB; loses CEFI options-chain progress)
+- (b) Kill another sports provider (frees ~4 GB; smaller impact, less effective)
+- (c) Throttle CEFI/TRADFI/DEFI to --parallel 1 (more disruptive, slower forward)
+- (d) Hold (60% chance OOM, 40% self-stabilising)
+
+No user response yet. Per "ask on important things" feedback rule, **I am NOT acting
+autonomously on DERIBIT.** Will hold + monitor at 3-min cadence. If RAM peaks ≥78 GB
+again, will flag urgently rather than kill.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
