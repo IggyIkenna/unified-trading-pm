@@ -430,12 +430,30 @@ one specific shard or after a code-fix that requires re-running known-bad data.
 - VIX futures full-tick chain (parent-epic Phase 3, P2 deferred).
 - mbp_10 deep-book for tradfi (parent-epic Phase 3, P2 deferred).
 
-## Notes (filled in as Phase 0 results come in)
+## Notes — Phase 0 dry-run results (2026-05-04 12:33–12:45 IST)
 
-| Asset group | Total rows | Phantoms | Real captured | Real failed | Decision |
-| ----------- | ---------- | -------- | ------------- | ----------- | -------- |
-| cefi        | TBD        | TBD      | TBD           | TBD         | TBD      |
-| tradfi      | TBD        | TBD      | TBD           | TBD         | TBD      |
-| sports      | TBD        | TBD      | TBD           | TBD         | TBD      |
-| prediction  | TBD        | TBD      | TBD           | TBD         | TBD      |
-| defi        | TBD        | TBD      | TBD           | TBD         | TBD      |
+| Asset group | Manifest rows | Captured-in-scope | Real captured | Phantoms | % phantom | Top concentration |
+| ----------- | ------------: | ----------------: | ------------: | -------: | --------: | ----------------- |
+| cefi        | 1,343,892     | 188,684           | 176,144       | **12,540** | 6.6%   | DERIBIT 3,070; BYBIT 1,834; BINANCE-FUTURES 1,763; OKX-SWAP 1,740; UPBIT 1,352. By data_type: empty=9,757 (schema-4 legacy rows), `trades` 2,501 |
+| tradfi      | 32,345        | 26,594            | 23,866        | **2,728**  | 10%    | CBOE 657; ICE 379; CME 373; NASDAQ/NYSE 368 each; FX 330. By data_type: empty=2,472 (schema-4), `ohlcv_*`+`trades`+`tbbo` <70 each |
+| sports      | 2,401,547     | 758,465           | (running)     | (running)  | —      | retrying after first attempt timed out on GCS list (5 parallel jobs hit rate limit) |
+| prediction  | 14,369        | 14,328            | 2,480         | **11,848** | 83%    | POLYMARKET / `trades` 11,831 of 11,848. Almost all phantom — but `trades` is MTDS data, not strict instruments-service |
+| defi        | 307,341       | 307,341           | 306,744       | **597**    | 0.2%   | EIGENLAYER / `rewards` (all 597). Effectively clean for instruments. |
+
+### Read of the data
+
+- **cefi**: 12,540 phantoms is real work but tractable — they're spread across the 9 active venues and the 9,757 empty-data_type rows are likely schema-4 legacy that need the same flip-to-`attempted_failed` treatment. Once flipped, the orchestrator will retry. Reasonable target for EOD.
+- **tradfi**: 2,728 phantoms, similar shape to cefi. The 2,472 empty-data_type rows are again schema-4 legacy. Should be quick.
+- **prediction**: 83% phantom rate is alarming but **the data_type is `trades`** — that's market-tick (MTDS) territory, not `instruments-service` reference data. Almost certainly the prediction manifest is conflating MTDS writes with instruments writes. **Out of scope for this plan**, flag for Ikenna separately.
+- **defi**: essentially clean. The 597 EIGENLAYER `rewards` phantoms aren't core instruments either. Could leave as-is or flip in 2 seconds.
+- **sports**: still running, will refresh when it completes.
+
+### Decisions
+
+| AG | Phase 1 (flip)? | Phase 2 (launch)? | Notes |
+| --- | --- | --- | --- |
+| cefi | YES — 12,540 phantoms | YES — after flip | Use `run_vm_backfill_e2e.sh` per venue |
+| tradfi | YES — 2,728 phantoms | YES — after flip | Same pattern |
+| sports | TBD | TBD (SFI excluded) | Pending retry |
+| prediction | NO | NO | Out of plan scope; `trades` rows are MTDS not instruments. Flag for Ikenna. |
+| defi | OPTIONAL — 597 phantoms | NO | EIGENLAYER `rewards` only, not strict instruments. Skip or flip-and-leave. |
