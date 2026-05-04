@@ -1161,6 +1161,76 @@ logic in `_merge_shard_frames`.
 
 ### 16:07 IST — DEFI rebuild dry-run started (sequentially)
 
+### 16:20 IST — Distance-to-100% assessment + canonical state audit
+
+User asked for a baseline-vs-now summary. **Important correction first**:
+
+**My earlier "morning baseline" was the WRONG bucket.** The 12:33 IST recon dry-run
+read from `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet`
+— that's the **MTDS (market-tick-data) bucket**, not instruments-service. The
+1,343,892 rows / 188,684 captured were MTDS phantoms, not instruments-service work.
+
+For **instruments-service** (what we've been backfilling all day), the buckets are:
+
+| AG | Bucket | Morning rows | Current rows | Schema | Capture_status state |
+|---|---|---:|---:|---|---|
+| CEFI | `instruments-store-cefi-central-element-323112` | 21,955 | **21,958** (+3) | v4 mostly, 3 v6 | 21,952 blank (legacy v4 — coerced to "captured" by reader); 3 properly v6-captured |
+| TRADFI | `instruments-store-tradfi-central-element-323112` | ~11,518 | **11,735** (+217) | v4 mostly, 217 v6 | 11,301 blank (legacy v4); 217 v6-captured |
+| DEFI | `instruments-store-defi-central-element-323112` | 69,674 | **69,674** (no change) | older — no `capture_status` column at all | unknown (column missing) |
+| SPORTS | `instruments-store-sports-central-element-323112` | 2,401,547 | **2,404,882** (+3,335) | v5/v6 properly populated | 831,965 captured / 1,561,176 empty_confirmed / 11,741 attempted_failed |
+
+#### Today's contribution to instruments-service manifests = SMALL
+
+Despite 575 chunks completing on disk (per `.backfill-checkpoints/`), **only ~3,500
+manifest rows durably committed**:
+- CEFI: +3 rows out of (575 × 30 days × ~7 venues = ~17k expected) = **0.02%**
+- TRADFI: +217 rows
+- SPORTS: +3,335 rows (the SFI VM + our work)
+- DEFI: 0 rows (no v5/v6 writes — schema didn't migrate)
+
+**Most of the work didn't land in manifests** because of the CAS-fallback contention
+we identified. The actual instrument data parquets ARE on disk in
+`instrument_availability/by_date/day=X/venue=Y/instruments.parquet` (rebuild_manifest
+finds them), they just don't have manifest entries yet.
+
+#### Schema progression
+
+- **v4** (2026-04-04): no capture_status; reader coerces blank to "captured"
+- **v5** (2026-04-19): adds capture_status, error_reason, attempted_at — honest-coverage
+- **v6** (2026-04-23 — current): adds quote_asset, margin_type, combo_type, leg_weights
+  for DERIBIT inverse-vs-linear disambiguation
+- Codex doc `availability-manifest-and-data-status.md` is OUT OF DATE — says v4
+
+#### Distance-to-100% — what does "100%" actually mean here?
+
+Three possible interpretations:
+1. **Manifest 100% captured + empty_confirmed** under expected-shards denominator. If
+   we count the v4-blank-coerced-to-captured rows, CEFI/TRADFI are nearly fully
+   "captured" already (just legacy coverage from 2026-05-01). Our 575 chunks would
+   add fresh v6 rows on top.
+2. **Per-day parquet coverage** — every (asset_group, venue, day) in the cutoff
+   window has a parquet on disk. CEFI: 575 chunks × 30 days × 7 venues / total
+   expected = ~10-20% of needed dates have fresh parquets from today.
+3. **All adapters running cleanly** — done for 4/5 AGs (sports + 3 instruments),
+   missing PREDICTION (out-of-scope) and ADAPTER bugs for OKX, COINBASE, POLYGON,
+   FRED.
+
+For **interpretation (1)**: we're effectively still at the 2026-05-01 state per
+the canonical manifest. Today's work hasn't durably moved the needle YET — but
+recovery via rebuild_cefi_manifest.py + per-VM-shards-from-now-on will fix this.
+
+For **interpretation (2)**: we're closer than the manifests suggest because the
+parquets exist, the manifest just doesn't index them.
+
+#### Recovery plan to actually move the index forward
+
+1. Wait for all 4 rebuild_cefi_manifest.py dry-runs to complete (DEFI in flight,
+   SPORTS queued).
+2. Review counts. If reasonable (no surprise high), run write-mode per AG sequentially.
+3. Restart workers with patched scripts (per-VM shards + unique VM_NAME).
+4. Investigate DERIBIT memory leak before re-enabling DERIBIT chunk-2.
+5. Periodic reconciler dry-run to verify alignment as work progresses.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
