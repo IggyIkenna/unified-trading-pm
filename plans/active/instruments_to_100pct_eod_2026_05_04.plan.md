@@ -505,6 +505,57 @@ yet. Resume-safe regardless.
 Decision: **holding course**. RAM stable, real work happening (+22 checkpoints in 7 min,
 DEFI accelerating). No changes.
 
+### Health snapshot (2026-05-04 14:56 IST)
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM used | 74 GB / 80 GB cap | ⚠️ 6 GB headroom, **at 75 GB hold-threshold** |
+| RAM trend (5 min) | 69→74 GB, slowly climbing | ⚠️ plateau breaking |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Concurrent procs | 43 | — |
+| Checkpoints | 461 (+13 in 6 min) | ✅ |
+| Errors total | 151 (+27, all same Databento) | ✅ |
+
+Deltas since 14:50 (was 448):
+- CEFI: 214→219 (+5)
+- TRADFI: 188→191 (+3)
+- DEFI: 46→51 (+5)
+
+#### Key insight: sports `done_chunks` counter is misleading
+
+My `grep -c "rc=0"` only counts whole-chunk completions. Inside each chunk, individual
+DATES are completing — log inspection shows:
+
+- **OPEN_METEO chunk 1**: at day 30/30 (2020-06-29 done, 2020-06-30 in flight). About
+  to wrap chunk 1.
+- **API_FOOTBALL chunk 11**: wrote 3,434 records for 2021-04-06; iterating through
+  remaining days.
+- **TRANSFERMARKT chunk 1**: at day 10/30 (date 2020-06-09 done, 2020-06-10 active).
+  Each day fetches 32 leagues + ~131 teams.
+
+**All sports providers ARE writing data per-day to GCS**. The chunk-level counter just
+doesn't reflect that. Real progress is happening; chunks finishing will accelerate as
+they wrap.
+
+#### Top RAM consumers (kill candidates if we breach 78 GB)
+
+```
+DERIBIT chunk:    13.5 GB  (2019-04-01 → 2019-04-30, options chain — known heavy)
+FOOTYSTATS:        5.8 GB  (2020-11-28 → 2020-12-27)
+TRANSFERMARKT:     5.0 GB  (2020-06-01 → 2020-06-30)
+API_FOOTBALL:      4.3 GB  (2021-03-28 → 2021-04-26)
+OPEN_METEO:        3.5 GB  (2020-06-01 → 2020-06-30)
+UNDERSTAT:         2.7 GB
+```
+
+DERIBIT is doing real CEFI work — won't kill that even though it's heaviest. If forced
+to kill, would target FOOTYSTATS (smallest impact: only 1 chunk done so far + the data
+within chunk is small per-day).
+
+Decision: **holding, but tightening monitor cadence** (4 min instead of 5). If RAM
+breaches 78 GB, kill the heaviest sports provider (FOOTYSTATS) to bring under 75 GB.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
