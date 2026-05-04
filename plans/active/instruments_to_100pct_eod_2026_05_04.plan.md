@@ -645,6 +645,53 @@ No user response yet. Per "ask on important things" feedback rule, **I am NOT ac
 autonomously on DERIBIT.** Will hold + monitor at 3-min cadence. If RAM peaks ≥78 GB
 again, will flag urgently rather than kill.
 
+### Health snapshot (2026-05-04 15:15 IST) — RAM stabilised, DERIBIT cycled
+
+**RAM dropped from 77→60 GB** in the 5 min between checks. Per the wakeup rule
+(<72 GB consistently → stabilising, report).
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 6 ticks | 63 GB / 80 GB cap | ✅ 17 GB headroom |
+| RAM current | 60 GB | ✅ healthy |
+| RAM trend | 62→63→60→62→61→60 (steady ~60-63) | ✅ stabilised |
+| Swap | 0.7 GB | ✅ idle |
+| OOM in journalctl last 3 min | 0 | ✅ |
+| Concurrent procs | 45 | — |
+| Checkpoints | 495 (+12 in 5 min) | ✅ |
+
+#### What changed: DERIBIT chunk cycled
+
+The 17.1 GB DERIBIT chunk (2019-04-01 → 2019-04-30) **finished and died, reclaiming all
+17 GB**. Next DERIBIT chunks are now running small:
+- 2019-05-01 → 2019-05-30: 1.8 GB
+- 2019-05-31 → 2019-06-29: 1.8 GB
+
+Process-death-reclaims-cache pattern worked exactly as designed. The 2019-04 chunk
+was probably the worst — Deribit's options chain was rapidly expanding then. Future
+chunks will likely stay smaller.
+
+TRANSFERMARKT chunk 1 also appears to have completed (no longer in proc list); will
+now move to chunk 2 with a fresh (smaller) cache.
+
+Deltas since 15:10:
+- CEFI: 228→231 (+3)
+- TRADFI: 202→208 (+6)
+- DEFI: 53→56 (+3)
+
+**Top RAM consumers now (no single proc over 5 GB)**:
+```
+API_FOOTBALL chunk 11:    4.6 GB
+OPEN_METEO chunk 2:       4.5 GB
+UNDERSTAT chunk 16:       2.6 GB
+DERIBIT chunks (×2):      1.8 GB each
+```
+
+**Question (a/b/c/d) for user is moot**: RAM stabilised on its own without intervention.
+Self-resolving as the chunk-cycling pattern broke through the 2019-04 DERIBIT bottleneck.
+
+Decision: **continue holding course**. Next check at 15:20.
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
