@@ -1137,6 +1137,30 @@ chunk-end, log top allocators. Or run a single DERIBIT chunk under
 
 ### 16:05 IST — TRADFI rebuild dry-run started (sequentially)
 
+### 16:06 IST — TRADFI rebuild dry-run complete
+
+```
+2026-05-04 16:05:29 INFO Scanning GCS blobs under instruments-store-tradfi.../instrument_availability/by_date/ ...
+2026-05-04 16:05:50 INFO rebuild_manifest: discovered 9 (date, venue) shards missing from manifest
+2026-05-04 16:05:50 INFO Result: 11527 total entries (+9 new), 2314 unique dates, 6 venues
+```
+
+**Even smaller leak: 9 missing rows / 11,527 total = 0.08%.**
+
+| AG | Total | Missing | Leak rate |
+|---|---:|---:|---:|
+| CEFI | 21,989 | 34 | 0.15% |
+| TRADFI | 11,527 | 9 | 0.08% |
+| DEFI | TBD | TBD | TBD |
+| SPORTS | TBD | TBD | TBD |
+
+Pattern so far: leak rate is small. The CAS retry loop survived most contention.
+Probably most of the 9 unconditional-write fallbacks earlier today happened on
+small-row peer writes that got safely re-merged by later writers via the dedup
+logic in `_merge_shard_frames`.
+
+### 16:07 IST — DEFI rebuild dry-run started (sequentially)
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
