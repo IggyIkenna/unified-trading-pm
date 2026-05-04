@@ -278,14 +278,31 @@ forbid it. So:
 When IAM grant lands and we move sports to VM launchers, remember: lower parallelism, no
 inter-source fan-out, and chunk sports just like CEFI/TRADFI/DEFI.
 
-### Resume strategy (2026-05-04 13:58 IST)
+### Resume strategy (2026-05-04 14:05 IST)
 
-Checkpoints survived. Re-running CEFI/TRADFI/DEFI will skip the 376 already-done chunks
-and resume on the 60 in-flight ones. To avoid re-OOMing:
+Checkpoints survived: 192 cefi + 145 tradfi + 27 defi = 364 chunks durably done. The
+~12-chunk discrepancy from earlier "376" count is from chunks that wrote parquets to
+GCS but didn't get checkpoint files written before the OOM SIGTERM hit. Recon will
+classify those correctly.
 
-- Drop `--parallel 4 → 2` per venue (halves RAM).
-- Run **sports separately, one provider at a time, in 90-day chunks** (not 6-year single-proc).
-- Watch memory: throttle further if `free` drops below 10 GB.
+**Step 1 (in flight)**: realign manifest with reality post-OOM via per-AG dry-run
+reconciler. Goal: see how many manifest rows are now phantom (claimed-captured but
+parquet was never actually written because the proc was killed mid-write).
+
+**Step 2 (after recon completes)**: flip any new phantoms (no `--dry-run`) so the
+orchestrator's `_should_skip_shard` will retry them on resume.
+
+**Step 3 (CEFI/TRADFI/DEFI resume)**: re-fire with `--parallel 2` (was 4). Checkpoints
+skip the 364 already-done chunks. Only mid-flight + post-OOM-phantom chunks get
+re-attempted. Lower parallelism halves peak RAM.
+
+**Step 4 (SPORTS via chunked launcher)**: use `/tmp/sports-chunked-backfill.sh PROVIDER`
+which chunks the 6-year window into 30-day procs. Each proc dies after its window,
+reclaiming the leagues/teams/standings DataFrames. RAM bounded to ~500 MB per chunk
+instead of growing to 5 GB across the full window. Run 5 providers in parallel
+(API_FOOTBALL, TRANSFERMARKT, FOOTYSTATS, UNDERSTAT, OPEN_METEO; SFI excluded).
+
+**Step 5**: post-resume dry-run reconciler again to confirm headline coverage moved.
 
 ### Real adapter errors observed (not rate-limit)
 
