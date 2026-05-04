@@ -556,6 +556,57 @@ within chunk is small per-day).
 Decision: **holding, but tightening monitor cadence** (4 min instead of 5). If RAM
 breaches 78 GB, kill the heaviest sports provider (FOOTYSTATS) to bring under 75 GB.
 
+### Health snapshot (2026-05-04 15:03 IST) — RAM breached, killed + restarted FOOTYSTATS
+
+**RAM peaked 79 GB** during the last 8 ticks (one tick away from 80 GB cap). Per the
+wakeup rule I killed the FOOTYSTATS chunk-8 worker (PID 742647).
+
+| Metric | Value | Status |
+|---|---|---|
+| RAM peak last 8 ticks | 79 GB / 80 GB cap | ❌ breached 78 GB threshold |
+| RAM after kill | 74 GB | ⚠️ back at threshold |
+| Swap | 0.7 GB | ✅ idle |
+| OOM kills | 0 | ✅ |
+| Concurrent procs | 46 | — |
+| Checkpoints | 470 (+9 in 7 min) | ✅ slowing slightly |
+
+#### Mistake during kill — full FOOTYSTATS wrapper died, restarted
+
+I killed PID 742647 (Python worker) AND PID 742646 (timeout wrapper). The bash wrapper
+script (PID 607671) had `set -euo pipefail`, so when its `timeout` child exited
+abnormally, the wrapper exited too. **All FOOTYSTATS work stopped, not just the
+in-flight chunk.**
+
+Restarted FOOTYSTATS wrapper at 15:04 (new PID 755950). It restarts at chunk 1, but the
+orchestrator's `_should_skip_shard` will fast-forward through already-captured dates
+(chunks 1-7 are durably done). Net cost: ~30s of skip-checks per already-done chunk +
+loss of in-flight chunk 8 progress (small, will redo).
+
+**Lesson (saved as feedback memory)**: when killing a wrapped process, `set -e` in the
+parent shell can propagate exit through the wrapper. Next time, kill ONLY the
+`instruments-service` Python child (not the `timeout` parent or the bash wrapper).
+
+#### DERIBIT is the actual RAM hog — flagging for future
+
+```
+DERIBIT chunk:    16 GB  ← biggest single consumer, growing (was 13.5 → 16 over 6 min)
+FOOTYSTATS:        4.5 GB (now killed)
+API_FOOTBALL:      3.9 GB
+UNDERSTAT:         3.9 GB
+TRANSFERMARKT:     3.5 GB
+OPEN_METEO:        2.4 GB
+```
+
+Killing FOOTYSTATS only freed 4.5 GB, while DERIBIT keeps growing. The RAM pressure is
+DERIBIT-dominated. DERIBIT has the 200k-symbol options chain — known heavy. If RAM
+breaches 78 GB again, DERIBIT chunk is the bigger lever (CEFI cost vs sports cost
+trade-off — would need user call).
+
+Decision per rule: kill executed (FOOTYSTATS, accidentally full-killed not just chunk).
+Restarted. Next watch in 4 min; if RAM breaches 78 GB again with FOOTYSTATS already
+restarted → escalate to user, do NOT kill DERIBIT autonomously (it's a real CEFI work
+chunk, scope-impacting).
+
 5 min after sports fan-out:
 
 | Metric | Value | Status |
