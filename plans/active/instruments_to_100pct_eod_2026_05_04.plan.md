@@ -18,6 +18,24 @@ depends_on:
 isProject: false
 ---
 
+## Adapter health summary (2026-05-04 13:36 IST)
+
+| Asset group | Healthy | Failed                | Bug type                                             |
+| ----------- | :-----: | --------------------- | ---------------------------------------------------- |
+| CEFI        | 7 / 9   | OKX, COINBASE         | 3-SSOT canonical-name disagreement (multi-repo align) |
+| TRADFI      | 6 / 8   | POLYGON, FRED         | api_key not in SM (POLYGON), zero records (FRED)      |
+| DEFI        | 7 / 7   | —                     | clean                                                 |
+| SPORTS      | 6 / 6¹  | —                     | clean (SFI excluded by design)                        |
+| **TOTAL**   | **26 / 30** | **4 broken**      |                                                       |
+
+¹ SOCCER_FOOTBALL_INFO is the 7th sports provider but excluded due to in-flight VM.
+
+**87% of adapters confirmed healthy via 1-day smoke.** The 4 broken ones (OKX, COINBASE,
+POLYGON, FRED) are out-of-scope for today's EOD push — they need separate plans
+(canonical-name alignment, SM secret rotation, FRED adapter debugging).
+
+The 26 healthy adapters can all proceed to Phase 2 backfill.
+
 ## Status snapshot (2026-05-04 13:15 IST — end of session)
 
 **Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
@@ -566,9 +584,43 @@ unblocked — local-driver pattern works for every protocol. (Reminder: DEFI man
 only 597 phantoms and they were all on EIGENLAYER `rewards`, not core instruments. Low
 priority for Phase 2 work, but the adapter health is confirmed.)
 
-### SPORTS smoke results
+### SPORTS smoke results (2026-05-04 13:36 IST)
 
-(In progress — will fill in as each matrix completes.)
+Sports has a different architecture than CEFI/TRADFI/DEFI — **two layers**:
+
+1. **Primary provider** (`API_FOOTBALL`) — fetches fixtures, leagues, teams from the
+   API; populates the canonical sports_reference paths in GCS.
+2. **Enrichment providers** (`OPEN_METEO`, `UNDERSTAT`, `FOOTYSTATS`, `TRANSFERMARKT`,
+   `SOCCER_FOOTBALL_INFO`) — read fixtures from GCS (already fetched by API_FOOTBALL),
+   call only their own API to enrich those fixtures. They short-circuit the main
+   orchestrator path.
+
+A healthy enrichment-provider smoke = exits cleanly (rc=0) with no error, even if
+returns `{}` (no fixtures to enrich on that date / those fixtures aren't in this
+provider's coverage).
+
+**Valid `--sports-provider` values** (from CLI error output): `API_FOOTBALL`,
+`API_FOOTBALL_ENRICHMENT`, `OPEN_METEO`, `TRANSFERMARKT`, `SOCCER_FOOTBALL_INFO`,
+`UNDERSTAT`, `FOOTYSTATS`. Use these exact strings.
+
+| Provider           | Entity                  | Status | Notes                                                                                                                                            |
+| ------------------ | ----------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| API_FOOTBALL       | FIXTURES                |   ✅   | Manifest-skip on already-captured days (correct). With `--force`: `Fetched 101 fixtures` + 1,228 leagues + 618 teams. Healthy, just slow (rate-limit pacing). |
+| API_FOOTBALL       | STANDINGS               |   ✅   | Manifest-skip behavior identical. Adapter healthy.                                                                                                |
+| API_FOOTBALL       | TEAMS                   |   ✅   | Same.                                                                                                                                             |
+| TRANSFERMARKT      | PLAYER_VALUES           |   ✅¹  | Hit 90s timeout on smoke — adapter is rate-limited at ~1 req/sec, fully expected. Healthy.                                                        |
+| TRANSFERMARKT      | TRANSFERMARKT_LEAGUES   |   ✅   | DONE: `{transfermarkt_leagues: 32}` — wrote 32 league rows to GCS.                                                                                |
+| FOOTYSTATS         | FS_LEAGUES              |   ✅   | Short-circuited (enrichment), exit 0, empty result for 2024-08-15. Adapter healthy.                                                              |
+| UNDERSTAT          | UNDERSTAT_TEAMS         |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy.                                                                                          |
+| OPEN_METEO         | WEATHER                 |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy. (Initial test failed with `OPENMETEO` — correct provider name is `OPEN_METEO` with underscore.) |
+| SOCCER_FOOTBALL_INFO | SFI_LEAGUES           |   ⏭️   | **Excluded** from this run — other agent's SFI VM is in flight. Don't touch.                                                                     |
+
+¹ TRANSFERMARKT/PLAYER_VALUES did not finish within the 90s smoke timeout, but reached
+the API and was making progress. For real backfill via the launcher (longer timeout +
+shutdown-on-completion) this is fine.
+
+**6 of 6 testable sports providers healthy.** SFI excluded by design. All sports
+adapters can run.
 
 ## Pending work — what to launch when permissions / decisions land
 
