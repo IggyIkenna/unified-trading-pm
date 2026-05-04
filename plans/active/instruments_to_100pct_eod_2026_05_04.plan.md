@@ -436,7 +436,7 @@ one specific shard or after a code-fix that requires re-running known-bad data.
 | ----------- | ------------: | ----------------: | ------------: | -------: | --------: | ----------------- |
 | cefi        | 1,343,892     | 188,684           | 176,144       | **12,540** | 6.6%   | DERIBIT 3,070; BYBIT 1,834; BINANCE-FUTURES 1,763; OKX-SWAP 1,740; UPBIT 1,352. By data_type: empty=9,757 (schema-4 legacy rows), `trades` 2,501 |
 | tradfi      | 32,345        | 26,594            | 23,866        | **2,728**  | 10%    | CBOE 657; ICE 379; CME 373; NASDAQ/NYSE 368 each; FX 330. By data_type: empty=2,472 (schema-4), `ohlcv_*`+`trades`+`tbbo` <70 each |
-| sports      | 2,401,547     | 758,465           | (running)     | (running)  | —      | retrying after first attempt timed out on GCS list (5 parallel jobs hit rate limit) |
+| sports      | 2,401,547     | 758,465           | 717,242       | **41,223** | 5.4%   | STANDINGS 13,022; INJURIES 9,872; PLAYER_VALUES 8,647; PLAYER_STATS 3,057; FIXTURE_{LINEUPS,STATS} ~2.7k each. SFI excluded (other agent's VM). All venue=`""` (sports keys on league_id, not venue). |
 | prediction  | 14,369        | 14,328            | 2,480         | **11,848** | 83%    | POLYMARKET / `trades` 11,831 of 11,848. Almost all phantom — but `trades` is MTDS data, not strict instruments-service |
 | defi        | 307,341       | 307,341           | 306,744       | **597**    | 0.2%   | EIGENLAYER / `rewards` (all 597). Effectively clean for instruments. |
 
@@ -454,6 +454,6 @@ one specific shard or after a code-fix that requires re-running known-bad data.
 | --- | --- | --- | --- |
 | cefi | YES — 12,540 phantoms | YES — after flip | Use `run_vm_backfill_e2e.sh` per venue |
 | tradfi | YES — 2,728 phantoms | YES — after flip | Same pattern |
-| sports | TBD | TBD (SFI excluded) | Pending retry |
+| sports | YES — 41,223 phantoms (SFI excluded) | YES — after flip | Use `launch-{api-football,transfermarkt}-backfill-vm.sh` for affected data types. SFI launchers stay off. |
 | prediction | NO | NO | Out of plan scope; `trades` rows are MTDS not instruments. Flag for Ikenna. |
 | defi | OPTIONAL — 597 phantoms | NO | EIGENLAYER `rewards` only, not strict instruments. Skip or flip-and-leave. |
