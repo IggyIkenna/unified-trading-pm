@@ -484,6 +484,41 @@ rejected them (no real data → empty parquet → fails Schema Definition contra
 - Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
 - Action: leave in place; FIX-6 manifest rebuild will overwrite them.
 
+### F29 — UTL `rebuild_manifest_from_canonical_paths` skips `_migrated_*` files
+
+Found in `unified-trading-library/unified_trading_library/manifest_writer.py:2905`:
+
+```python
+if not name.endswith(".parquet") or "_migrated_" in name:
+    continue
+```
+
+The `_migrated_*` exclusion was likely added to avoid double-counting during the 2026-04-18 migration that created
+files with names like `ticks_migrated_20260418T132205Z.parquet`. But many of these files are the only copy of the
+data (the migration didn't delete the source — it only copied + renamed).
+
+Combined with F16: the DeFi `venue=AAVEV3-ETHEREUM/ticks_migrated_*.parquet` files are real data on disk. UTL
+rebuild silently drops them.
+
+**Severity**: HIGH — UTL rebuild will under-count DeFi by ~5-7% (the F16 axis-6 venue-overload population, all
+named `_migrated_*`).
+
+Action: review the `_migrated_*` filter condition. Either:
+1. Remove the filter (treat migrated files as canonical disk truth).
+2. Match `_migrated_*` only when there's a non-migrated sibling (i.e. dedup not exclude).
+
+Logged for FIX-6 design — do NOT run rebuild before resolving this.
+
+### Other UTL rebuild gaps surfaced during audit
+
+`rebuild_manifest_from_canonical_paths` requires both `day=` and `venue=` segments to match (regex `.search`).
+Won't match:
+- **Axis 11 (sports pre-pre-old)** — has neither `category=` nor `venue=`. Silently skipped.
+- **F25 (TRADFI dash format)** — uses `day-` not `day=`. day_pat regex fails.
+
+For full rebuild correctness, UTL helper needs the same PATH_RE_VARIANTS that recon now uses. Logged in
+FIX-6 design.
+
 ### F28 — SPORTS pre-pre-old path layout (axis 11)
 
 Discovered when sports legacy-paths re-run after FIX-12 still reported 3,818 unknowns. Sample:
