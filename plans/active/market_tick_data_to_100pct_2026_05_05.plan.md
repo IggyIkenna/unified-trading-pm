@@ -831,7 +831,29 @@ Net plan now has 3 prongs:
 - **FIX-5 design call**: disk migration vs reader-side multi-layout vs canonical+suffix (Q&A 1).
 - **FIX-6 design call**: rebuild scope/order, error_reason preservation (Q&A 2 + design section below).
 
-### Recon outcome per AG (TBD — fill in when full-range audits complete)
+### Empty-itype-captured-rows per AG (the v4 schema residue)
+
+These are manifest rows with `capture_status='captured'` AND `instrument_type=''`. They cause phantom noise
+in recon comparison because disk has proper `instrument_type=spot_pair` etc. — manifest tuple keyed at
+empty itype, disk keyed at populated itype, no match.
+
+| AG | Total manifest rows | Empty-itype captured | % v4-residue |
+| -- | ------------------- | -------------------- | ------------ |
+| CEFI | 2,229,282 | 13,046 | 0.6% |
+| TRADFI | 73,316 | 5,545 | 7.6% |
+| DEFI | 313,365 | 169 | 0.05% |
+| SPORTS | 21,055 | **17,289** | **82%** |
+| PREDICTION | 14,369 | 433 | 3.0% |
+| **Total** | 2,651,387 | **36,482** | 1.4% |
+
+**Reading**: Sports is dominantly v4 (F1 confirmed). CEFI's 13k predicted CEFI recon's actual 14k phantoms
+(F2-CEFI confirmed). DEFI is clean — only 169 v4-residue rows. PREDICTION + TRADFI are minor.
+
+These rows DON'T need re-fetching. They need either:
+- (a) FIX-7 normaliser-side empty-as-wildcard match (recon does this already; data-status UI doesn't).
+- (b) FIX-6 manifest rebuild with proper itype reconstructed from disk paths.
+
+### Recon outcome per AG (filled-in)
 
 | AG | Manifest rows | Disk blobs (raw_tick_data) | Match rate | Forward phantoms | Missing rows | True gap days | Notes |
 | -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
