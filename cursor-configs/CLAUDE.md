@@ -170,6 +170,32 @@ Read these before making ANY code changes:
   Documented date-range gaps (provider outages, paused leagues) go in `KNOWN_COVERAGE_GAPS` (currently empty) and are
   filtered by `is_in_known_gap(source, data_type, iso_date)` — data-status drops them from the denominator and the
   orchestrator pre-skips them so VMs don't waste rate-limit quota grinding through known-empty range.
+- **Manifest concurrency principle (workspace-wide)** — Any script that consumes the availability manifest as a "to-do
+  list" (instruments-service backfills, MTDS gapfills, MDPS reprocessors, features-\* recomputes, strategy-service
+  archetype runs, execution-service event replays, deployment-service backfill VMs, end-to-end test suites) MUST follow
+  the **read-once + per-date freshness check + write-time CAS** pattern when concurrent workers may operate on the same
+  manifest:
+  1. **Startup**: bulk-read the canonical manifest ONCE, cache the skip-set (`captured` / `empty_confirmed` /
+     `attempted_failed`) and derive the missing list. Trust this cached view for the work-selection decision.
+  2. **Mid-run** (per-date / per-shard): before firing the expensive remote call (Databento, Tardis, web scrape, etc.),
+     do a **TTL-refreshed targeted lookup** of just THIS row_key in the canonical manifest. The TTL is 60s by default —
+     enough to amortise the GCS read across 6-10 fetches without burning a full re-read per item. If the row is now
+     `captured` → skip (a concurrent worker beat us; their parquet is on disk and the manifest is honest).
+  3. **Write-time**: `ManifestWriter.record_captured` writes to the per-VM shard with CAS semantics; the consolidator
+     daemon merges per-VM shards into the canonical manifest with dedup (last-writer-wins on identical row_key). This is
+     the only safe race-resolution point for the actual write.
+  4. **What NOT to do**: (a) per-date full-manifest re-reads — burns ~30MB GCS read per fetch, more expensive than the
+     duplicate fetch we'd avoid; (b) blind iteration with no freshness check — concurrent workers' progress is wasted;
+     (c) aggressive cache TTL (<30s) — hammers GCS for marginal gain. The TTL is a tuneable knob; 60s is the default.
+  5. **Reference incident 2026-05-05**: TradFi MBT/MET full backfill — launched 2 originals (chronological from
+     2022-01-01) + 2 helpers (`--clip-after 2025-01-01`). Without the per-date check, originals would have wasted ~336
+     Databento fetches per root re-doing helpers' work when chronological iteration reached the helpers' range. With the
+     principle baked in, originals naturally skip helper-captured dates; helpers finish the late slice 2 hours before
+     originals reach it. Saves ~1.5 hours wall-clock + ~672 wasted Databento calls.
+  6. **Reference impl**: `/tmp/fill_missing_ohlcv.py` (`_refresh_captured_cache` + `_is_now_captured` helpers) is the
+     canonical pattern. Future scripts should mirror this shape — `_TTL_SECONDS=60`, in-memory `(root, date)` set,
+     refresh-on-demand at fetch time. New backfill scripts MUST include this pattern; refactor existing scripts that run
+     multi-VM (instruments-service per-source backfills, MTDS per-venue VMs, MDPS reprocess pipelines) to add it.
 - **Manifest phantom audit** — Manifest can drift if adapters record `captured` for a shard but the parquet doesn't
   exist at the canonical path (stale rescan output, schema migration churn, broken denorm). The orchestrator's
   `_should_skip_shard` trusts the manifest, so phantoms cause permanent skip. Periodic audit:
