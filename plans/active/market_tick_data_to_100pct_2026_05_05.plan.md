@@ -19,6 +19,50 @@ depends_on:
 isProject: false
 ---
 
+## Session summary (2026-05-05 — TL;DR for when Harsh is back)
+
+**14 commits to MTDS scripts** + **15+ commits to plan doc** + **28 distinct findings** captured. No backfill VMs
+launched. No production manifest writes. Full audit-tooling pass — recon + legacy-paths now correctly handle
+the layout zoo across all 5 asset groups.
+
+### Big-picture outcome
+
+Confirmed Ikenna's 2026-05-05 hypothesis at scale: **most "missing" coverage on the data-status UI is reader
+blindness, not real data gaps**. Audit found:
+- 6+ distinct on-disk path shapes coexisting across the 5 buckets (canonical, hive vocab variants, DeFi
+  venue-overload, prediction 10-segment, 4 sports layouts, TRADFI dash one-off).
+- Schema-v4 manifest residue causing reader misclassification (sports 100% v4, prediction 99.5% v4, tradfi 23% v4).
+- Per-AG-specific quirks (F19 case mismatch, F20 venue-key mismatch, F26 coverage_start mismatch).
+
+The audit-tooling (recon + legacy-paths) is now the system-of-record for actual coverage. **Before any backfill
+VM launches, that tooling is the truth.**
+
+### Audit scripts hardened
+
+- `scripts/reconcile_market_tick_manifest.py` — 6 path-shape variants + per-day prefix listing (~100x speedup)
+  + sports/defi case-insensitive normaliser + DeFi venue-key collapse + chain= optional in canonical.
+- `scripts/audit_legacy_paths.py` — 6 axis patterns + raw_tick_data/ prefix scope + companion CSV findings.
+- `scripts/audit_structural_checks.py` — 6 cross-cutting checks (schema-version, written_at chronology,
+  bucket drift, per-VM staleness, schema parity stub, empty-vs-failed accuracy).
+
+### Open decisions for Harsh
+
+See **Questions for Harsh** section above (9 items). Most consequential:
+- **FIX-5 design**: disk migration vs reader-side multi-layout vs canonical+suffix (Q&A 1).
+- **FIX-6 design**: rebuild scope, error_reason preservation (Q&A 2 + design section).
+- **F26 PREDICTION coverage_start mismatch**: UAC says 2020-06-12, disk has 2025-03-14+ (Q&A 9).
+- **F25 TRADFI 100k non-hive blobs**: migrate or archive (Q&A 7).
+
+### Next moves (queued, not started — pending design calls)
+
+1. Wait for full-range recons to finish (in flight; ETA <30 min). Per-AG match/phantom/missing/gap numbers go into
+   the per-AG result table.
+2. After Q&A: implement FIX-5 decision (likely Option B reader-side multi-layout).
+3. After Q&A: implement FIX-6 manifest rebuild — order PREDICTION → SPORTS → DEFI → TRADFI → CEFI, with
+   regex-based rebuild_mtds_manifest.py rewrite per FIX-6 design section.
+4. Re-run audits to confirm <1% phantom + <1% missing-row across all AGs.
+5. Only THEN evaluate genuine remaining gaps and launch any paid backfills.
+
 ## Questions for Harsh (Q&A queue — will discuss when you're back)
 
 1. **FIX-5 design decision** — disk migration vs reader-side multi-layout vs canonical+suffix? See section
