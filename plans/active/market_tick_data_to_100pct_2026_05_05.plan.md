@@ -32,8 +32,11 @@ this log is the ground truth.
 | 2026-05-05 | DISCOVERY-2 | **Found existing audit script — `market-tick-data-service/scripts/reconcile_market_tick_manifest.py`** does forward+inverse phantom detection. Approach pivots: USE this script, don't write a new one. Add a companion probe for drift axes its PATH_RE doesn't cover. | done | finding below |
 | 2026-05-05 | DISCOVERY-3 | Build companion legacy-path probe + structural-checks scripts | done | commits `8ca5e67`, `d04941e` |
 | 2026-05-05 | DISCOVERY-4 | Run 6 structural cross-cutting checks across 4 AGs (CEFI still running) | done | findings F1-F9 below |
-| 2026-05-05 | DISCOVERY-5 | Smoke `reconcile_market_tick_manifest.py` on DERIBIT + legacy-paths on PREDICTION | in_progress | TBD |
-| 2026-05-05 | DISCOVERY-6 | Fan out background agents for venue×data_type matrix | pending | TBD |
+| 2026-05-05 | DISCOVERY-5 | Smoke recon on PREDICTION/DERIBIT — found scaling bug (full-bucket list) | done | finding F14 |
+| 2026-05-05 | FIX-1 | Patch recon: per-day prefix listing — 100x speedup | done | commit `24b38ed` |
+| 2026-05-05 | FIX-2 | Patch recon: add SPORTS to ASSET_GROUP_BUCKETS dict (was missing) | done | finding F15, commit pending |
+| 2026-05-05 | DISCOVERY-6 | Re-run patched recon across all 5 AGs in parallel | in_progress | TBD |
+| 2026-05-05 | DISCOVERY-7 | Fan out background agents for venue×data_type matrix | pending | TBD |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
 
@@ -190,6 +193,43 @@ Same severity + fix.
   `reconcile_market_tick_manifest.py --commit` run.
 - Other 16 are `StreamingParquetWriter pre-write validation failed`.
 - Severity: **NONE** — expected, recon working correctly. Documents the prior recon run.
+
+### F14 — PREDICTION axis-4 phantoms (schema-v4 instrument_type empty)
+
+Surfaced by smoke run of patched recon on PREDICTION 2025-12-01..2025-12-07.
+
+- 14 forward phantoms across 7 days. Pattern: every day has the same 2 row shapes claiming `captured` with no
+  parquet on disk:
+  - `('YYYY-MM-DD', 'POLYMARKET', '', 'trades')` — empty `instrument_type` (schema-v4 vestige)
+  - `('YYYY-MM-DD', 'POLYMARKET', 'prediction_market', 'trades')` — canonical
+- Disk has the same shape captured at canonical path; manifest **double-counts** because of the schema-v4
+  empty-instrument-type axis 4.
+- Reading: schema-v4 sentinel rows from older runs are now phantoms. Phase 1.5 manifest rebuild will eliminate
+  them by re-keying canonically.
+- Severity: **MEDIUM** — confirms the F1/F7 schema-mix problem is producing reader-visible phantoms.
+- This is exactly the failure mode Ikenna described: "data exists but the manifest claims missing/wrong because
+  schema mixed."
+
+### F15 — `reconcile_market_tick_manifest.py` doesn't support SPORTS
+
+- `ASSET_GROUP_BUCKETS` dict has CEFI/TRADFI/DEFI/PREDICTION but **omits SPORTS**.
+- `--asset-group SPORTS` raises `argparse error: invalid choice`.
+- Combined with F1 (sports manifest 100% schema-v4) and F9 (sports stuck per-VM shard), sports has been
+  invisible to the reconciler since it was added.
+- Severity: **MEDIUM** — gap in tooling coverage. Quick fix landing in same patch as FIX-1.
+- Fix: add `"SPORTS": f"market-data-tick-sports-{PROJECT_ID}"` to the dict.
+
+## Fix manifest (live tracking — landed + pending)
+
+| # | Fix | Repo | File | Drift axis closed | Commit | PR | Status |
+| - | --- | ---- | ---- | ----------------- | ------ | -- | ------ |
+| FIX-1 | Per-day prefix listing in recon (~100x speedup) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | enables laptop audit | 24b38ed | n/a (feature branch) | LANDED |
+| FIX-2 | Add SPORTS to ASSET_GROUP_BUCKETS | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F15 — sports unauditable | pending | n/a | LANDED (uncommitted) |
+| (TBD) | DeFi 0% attempted_failed root cause + fix | market-tick-data-service | TBD | F6 | — | — | INVESTIGATING |
+| (TBD) | Schema-validation reject breakdown + adapter fix | market-tick-data-service | TBD | F11 | — | — | INVESTIGATING |
+| (TBD) | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | — | PENDING |
+| (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | — | PENDING |
+| (TBD) | F3 disambiguation (write tooling) | tooling | analysis script | F3 | — | — | PENDING |
 
 ### Findings table (live — fixes pending)
 
