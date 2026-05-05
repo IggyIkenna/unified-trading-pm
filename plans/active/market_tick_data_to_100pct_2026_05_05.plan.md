@@ -704,6 +704,32 @@ After Option B (reader-side multi-layout) lands, the manifest should be rebuilt 
 - Writes a per-VM shard with `capture_status="captured"` rows
 - Consolidator merges within ~60s
 
+### Rebuild script limitations (audit-discovered 2026-05-05)
+
+`rebuild_mtds_manifest.py` does NOT use a regex; it does prefix-walk:
+1. List `day=*` prefixes.
+2. For each day, list `category=*/venue=*/...` subdirectories.
+3. Walk `instrument_type=*/data_type=*/`.
+
+This means it CANNOT discover paths at:
+- **F22 (prediction 10-segment)**: uses `data_source=` after `category=`, not `venue=`.
+- **F23 (sports 8-segment)**: same `data_source=` first.
+- **F25 (TRADFI dash format)**: uses `day-` not `day=`, so the first `list_blobs(prefix="day=")` misses these
+  100k blobs entirely (NEARLINE storage, one-off bulk import — see F25).
+- **F28 (sports pre-pre-old)**: uses `source=` directly under `day=`, no `category=` segment.
+
+So FIX-6 manifest rebuild as currently written **will NOT cover sports / prediction / TRADFI-dash properly**.
+Two paths:
+
+**(a) Rewrite rebuild_mtds_manifest.py to use PATH_RE_VARIANTS like recon does** — list every parquet under
+`raw_tick_data/by_date/`, regex-classify, emit per-axis. Slower because no early-pruning but more correct.
+
+**(b) Add per-AG specialised walkers** — keep the prefix-walk for canonical/CeFi/TradFi, add separate prefix
+walkers for prediction (`data_source=*`), sports (multiple), TRADFI-dash (skip — leave for archive).
+
+Recommended: **(a)**. The regex-classify approach already works in recon; reuse it. The prefix-walk
+optimisation matters less here since rebuilds are batch jobs, not interactive.
+
 ### What needs to change for FIX-6
 
 The existing rebuild script uses **only canonical PATH_RE** — same root cause as the recon issues we just fixed.
