@@ -2356,3 +2356,84 @@ If a gap *does* re-appear, the right fix is in `instruments-service/instruments_
 - Rate limit: shared base default (0.1s) — no documented per-second cap
 
 **Future optimization** (not blocking today): wrap the orchestrator's per-league loop in `asyncio.gather(Semaphore(4))`. The base throttle still serializes underlying HTTP, so this hides upstream latency rather than stacking req/sec. Estimated 4× wall-time speedup. File: `instruments-service/instruments_service/engine/orchestrator.py:4740-4804`.
+
+---
+
+## Day 2 (2026-05-05) — PREDICTION (Polymarket) cursor-sharding fix
+
+### The problem
+
+PREDICTION coverage stuck at **89.05%** (2,821/3,168 shards). 137 unique dates missing across 12 data_types (DJIA, NDX, SPX, SOL, GOLD, SILVER, XRP, CRUDE_OIL, FOOTBALL, DOGE, BNB, ETH).
+
+Initial fanout (2026-05-05 13:30 UTC, PARALLEL=10) hit hard wall:
+- 0 successful completions in 14 min
+- 3 timeout-FAILs (each ~10 min wallclock, 0 records written)
+- Aborted; killed remaining workers cleanly
+
+**Root cause:** Polymarket CLOB API has no per-date filter. Adapter scans up to 1000 pages × 1000 markets each (~860K markets total) for EVERY date, filtering client-side by `end_date_iso`. At PARALLEL=10 from one IP (shared NAT egress) the API silently times out individual requests around page 200-500. Not a 429 issue (zero observed) — request-level timeouts in deep pagination.
+
+### The cursor-sharding solution
+
+CLOB cursors are base64-encoded ASCII offsets:
+- `cursor=""` → page 0 (offset 0)
+- `next_cursor=MTAwMDAw` → offset 100,000 (decoded: "100000")
+- Verified via direct probe 2026-05-05 13:38 UTC
+
+Probing every 25K offset shows CLOB is **roughly chronologically sorted** by `end_date_iso` (oldest first), with some inversions at month boundaries:
+
+| Cursor offset | end_date_iso |
+|---|---|
+| 0 | 2023-03-15 |
+| 50K | 2025-05-18 |
+| 100K | 2025-09-24 |
+| 200K | 2026-01-13 |
+| 400K | 2026-02-09 |
+| 600K | 2026-03-15 |
+| 800K | 2026-04-08 |
+| 870K | 2026-05-12 |
+
+This means each missing date can be assigned a **narrow cursor band** (~100-250 pages) instead of scanning all 1000.
+
+### Adapter patch — instruments-service@<pending push>
+
+Backward-compatible env-var control added to `_fetch_clob_markets` in `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py`:
+
+- `POLYMARKET_START_CURSOR` — base64-encoded offset to start at (defaults `""` = page 0)
+- `POLYMARKET_END_CURSOR` — base64-encoded offset to stop at (defaults unset = full scan to natural EOF)
+
+If unset, behavior is identical to legacy. If set, worker scans only the requested cursor slice. Live mode (no `date` param) uses Gamma API and is unaffected.
+
+**Smoke test (2026-05-05 13:53 UTC):**
+- date=2026-04-08, cursor slice 800,000..810,000 (10 pages)
+- Result: 3,584 records written in **18 seconds** (vs 10-15 min full-scan)
+- ~50× speedup, zero timeouts
+
+### Cursor band assignments per (year, month)
+
+| Year-Month | Cursor band | Pages |
+|---|---|---|
+| 2025-03 to 2025-04 | 0..130,000 | 130 |
+| 2025-05 to 2025-06 | 40K..140K | 90-100 |
+| 2025-07 to 2025-09 | 90K..200K | 110 |
+| 2025-10 | 110K..220K | 110 |
+| 2025-11 | 140K..250K | 110 |
+| 2025-12 | 170K..330K | 160 |
+| 2026-01 | 180K..380K | 200 |
+| 2026-02 | 300K..500K | 200 |
+| 2026-03 | 450K..700K | 250 |
+| 2026-04 to 2026-05 | 650K..880K | 230 |
+
+Bands have **deliberate overlap and ±50K padding** to absorb CLOB inversions. Overshoot is cheap (extra pages = a few seconds), missing data is not.
+
+### Runner design (this doc)
+
+- Per-date workers, max **PARALLEL=5** (gentle on Polymarket per-IP rate limit)
+- Each worker: `POLYMARKET_START_CURSOR=<band_start> POLYMARKET_END_CURSOR=<band_end> instruments-service --venues POLYMARKET --start-date X --end-date X`
+- Per-VM shard isolation: unique `VM_NAME=local_predict_{date}_{rand}`
+- Working **backward from newest** (per user request 2026-05-05) — most missing dates are recent
+- Estimated wallclock: ~1.5-2 hr for all 137 dates
+
+### Open follow-up for Ikenna
+
+If this pattern works, the longer-term improvement is to make the orchestrator **batch missing-date queries by cursor band** so one process scan fills many dates simultaneously. Today's adapter still does one scan per date — even with narrow slices, that's 137 process bootstraps. A cursor-sweep mode that fills any (date, data_type) shard whose target falls within the scanned window would reduce 137 process invocations to ~10.
+
