@@ -47,6 +47,15 @@ isProject: false
    F11 (3236 schema-validation rejects). BUG-X2 fix from your prerequisite section covers NEW failures, but old
    rows persist. Manifest rebuild (FIX-6) will overwrite them. Confirm we leave them as-is until rebuild?
 
+7. **F25 — TRADFI 100k blobs at non-hive `day-data_type-...` layout** — pre-hive writer or active multi-source?
+   Need to identify which adapter writes this shape and decide migrate-or-add-pattern. Real files, 4-5KB, written
+   2026-02. Currently invisible to canonical recon.
+
+8. **F18+F19+F20+F22+F23+F24 cluster — which writer is in scope for the canonical SSOT?** The audit found 6 distinct
+   writers across MTDS each emitting different on-disk shapes. Shipping a write-time normaliser at UTL-level (one
+   layer down from individual adapters) might unify the layout zoo without rewriting 30+ DeFi handlers + sports +
+   prediction adapters. Worth designing.
+
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
 This section is the operating surface. Every audit run, finding, fix decision, and background-agent dispatch lands here
@@ -353,6 +362,41 @@ underlying, market_type, resolution_period) as path segments.
 - Fix: added `_PREDICTION_DEEP_PATH_RE` to recon variants. After fix:
   PREDICTION 1-day smoke went from 8 matched / 2 phantom to 9 matched /
   1 phantom (most blobs now visible).
+
+### F25 — TRADFI has ~100k blobs at NON-HIVE layout with `day-` separator (NEW finding 2026-05-05)
+
+Sampled at TRADFI legacy-paths audit run. 100,698 of ~600k blobs are at:
+
+```
+raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/NYSE:EQUITY:ABBV-USD.parquet
+                       ^^^         ^^^         ^^^^^^^^^^                     ^                
+                       dash         dash         no-hive-vocab                colon-separated id
+```
+
+Notable shape differences:
+- `day-` (dash) instead of `day=` (equals) — not hive-partitioned at all.
+- `data_type-` (dash).
+- No `category=` / `asset_group=` segment.
+- Sub-folders `equities/`, `etf/`, `futures_chain/` instead of `instrument_type=*` hive segment.
+- Filename uses colon-separated canonical instrument_id format.
+
+Real files (sampled `NYSE:EQUITY:ABBV-USD.parquet`: 4251 bytes, written 2026-02-17). Active data, not stale.
+
+Hypotheses:
+- **(a) Pre-hive writer** — an older TradFi adapter version used dash-separators before the codebase standardised
+  on hive `=` notation. Never migrated.
+- **(b) Different writer class** — perhaps Yahoo Finance / Barchart adapter uses this shape while Databento uses
+  canonical.
+
+Severity: **MEDIUM** — 100k blobs of real TradFi data invisible to canonical recon, manifest, and downstream readers
+(unless they handle this layout specifically).
+
+Investigation needed: (i) which adapter writes this? (ii) is the manifest tracking these or are they all phantoms?
+(iii) is downstream reading them or ignoring them?
+
+NOT adding a regex pattern to recon/audit yet — needs Ikenna's input on whether to:
+- Treat as legacy and migrate to hive layout.
+- Add a third path-shape variant for active multi-source TradFi.
 
 ### F23 — SPORTS uses 8-segment path layout (NEW axis discovered 2026-05-05)
 
