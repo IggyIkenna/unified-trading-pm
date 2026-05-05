@@ -2705,3 +2705,112 @@ The actual bug — substring matching in 12 lines of `_match_crypto_asset` — c
 
 4. **Pre-audit is non-negotiable for destructive ops.** This run shipped without breaking the canonical because Harsh insisted on it. A different agent (or different user) skipping the audit would have catastrophically corrupted the data.
 
+
+---
+
+## Day 2 (2026-05-05) — CEFI/DEFI manifest rebuild + HYPERLIQUID config mismatch finding
+
+### Context: user flagged "phantom missing shards"
+
+UI was showing missing shards across BITGET-FUTURES (6 dates), BITGET-SPOT (5), DERIBIT (12), HYPERLIQUID (200), and DEFI (~24 dates × 25 venues). User correctly noted: *"cefi and defi should not have any gap, they are 24*7*365 markets"*.
+
+### Investigation pattern: ALWAYS check GCS before declaring a real gap
+
+For each "missing" date, probed GCS at `instrument_availability/by_date/day=YYYY-MM-DD/venue=<V>/instruments.parquet`:
+
+| Venue | Sampled missing dates | GCS reality |
+|---|---|---|
+| BITGET-FUTURES | 5 dates | All 5 have parquet on GCS ✓ |
+| BITGET-SPOT | 3 dates | All 3 have parquet on GCS ✓ |
+| DERIBIT (11 of 12) | 5 dates | All 5 have parquet on GCS ✓ |
+| DERIBIT (12th = 2026-05-04) | 1 date | Genuinely missing — never captured |
+| HYPERLIQUID | 5 dates from 2023-04..10 | NO parquets on GCS ✗ |
+| DEFI per-chain venues | many | All have parquets, just under different venue names |
+
+**Two distinct phenomena:**
+
+1. **Manifest staleness**: GCS parquets exist but canonical manifest doesn't have the row → `rebuild_cefi_manifest.py` fixes this.
+2. **Phantom expected dates**: data was never captured because the upstream API can't return it → not fixable by backfill.
+
+### Action 1: CEFI manifest rebuild (instruments-service/scripts/rebuild_cefi_manifest.py)
+
+```bash
+GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp \
+  MANIFEST_PER_VM_SHARDS=true VM_NAME=local_rebuild_cefi_<ts> \
+  .venv/bin/python scripts/rebuild_cefi_manifest.py --asset-group CEFI
+```
+
+Output:
+```
+Current manifest: 27935 entries, 2593 unique dates
+Scanning GCS blobs...
+rebuild_manifest: discovered 22 (date, venue) shards missing from manifest
+rebuild_manifest: wrote 27957 entries (22 new) to instruments-store-cefi-...
+```
+
+Result: CEFI 99.21% → **99.29%**. BITGET-FUTURES + BITGET-SPOT now 100%, DERIBIT 12-missing → 1-missing.
+
+### Action 2: DERIBIT 2026-05-04 backfill
+
+The only actual missing date in CEFI after the manifest rebuild. Captured 3,563 records via single-process instruments-service run.
+
+### Action 3: DEFI manifest rebuild (dry-run)
+
+```
+Current manifest: 128342 entries, 2296 unique dates
+Scanning GCS blobs...
+rebuild_manifest: all 64505 blobs already in manifest (128342 entries)
+Result: 128342 total entries (+0 new), 2296 unique dates, 77 venues
+```
+
+**Zero new entries** — DEFI canonical is already complete. The "24 dates missing × 25 venues" UI display is a separate issue: **legacy aggregate venue names** (`UNISWAP_V3`, `MORPHO`, `JITO`) stopped being written on 2026-04-11 when the adapter switched to **per-chain venue names** (`UNISWAPV3-ETHEREUM`, `MORPHO-ETHEREUM`, `MORPHO-BASE`, `JITO-SOLANA`). Both naming sets exist in the canonical with overlapping date coverage, but the data-status service treats them as independent venues.
+
+This is a UI/data-status display issue, not a data gap. Out of scope for instruments-service; needs a deployment-api change to alias `UNISWAP_V3` ⇒ `UNISWAPV3-*` (sum across per-chain rows).
+
+### Action 4: HYPERLIQUID 200 phantom missing dates — config mismatch found
+
+Three sources disagree on Hyperliquid's start date:
+
+| Source | Date | Stated rationale |
+|---|---|---|
+| `unified-api-contracts/canonical/coverage_starts.py:49` | 2023-06-29 | (no comment) |
+| `unified-api-contracts/registry/venue_mapping.py:224` | 2023-04-15 | "earliest = book_snapshot_5 S3 archive" (market-data perspective) |
+| `instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py:30` | 2023-11-01 | hardcoded `_HYPERLIQUID_LAUNCH_DATE` for `available_from_datetime` |
+| **GCS reality (canonical earliest captured)** | **2023-11-01** | matches the adapter |
+
+The Hyperliquid REST API (`https://api.hyperliquid.xyz`) returns 21 instruments total, with `available_from_datetime` hardcoded to 2023-11-01 by the adapter. **No instrument is visible on dates < 2023-11-01.** Probed 2023-05-01, 2023-06-15, 2023-08-01, 2023-09-15: all return 21 instruments fetched, 0 active after date filter.
+
+**The 200 missing dates aren't backfillable** — the upstream API doesn't expose historical instrument-listing snapshots. They're phantom missing because UAC's `venue_start_date=2023-04-15` (set for market-data purposes) is being used as the instruments-service expected-window start.
+
+#### Per the new "honest absence" CLAUDE.md rule
+
+This falls into Category 1 (expected upstream-source gap): the source genuinely doesn't provide data. Action should be `record_empty(row_key=..., attempted_at=...)` — but the orchestrator currently treats 0-records as a fatal failure and bails before any manifest write happens.
+
+#### Proposed fix (UAC config, needs Ikenna's call)
+
+Two options:
+
+**Option A — Per-(venue, service) start dates.** Extend `VENUE_REFERENCE_DATA_CAPABILITIES` to include venue-level instruments-service starts:
+
+```python
+VENUE_REFERENCE_DATA_CAPABILITIES: dict[str, dict[str, str]] = {
+    "HYPERLIQUID": {"": "2023-11-01"},  # instruments-service start (vs market-data 2023-04-15)
+}
+```
+
+`get_venue_data_type_start_date("HYPERLIQUID", "")` would then return `2023-11-01` for instruments-service queries while market-data services keep getting `2023-04-15` from `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]["book_snapshot_5"]`.
+
+**Option B — Adapter-side `record_empty` for date-filtered-empty results.** Adapter detects "we fetched instruments but all are post-target-date" → calls `record_empty(...)` with a clear `error_reason="all_instruments_post_target_date"`. UI then shows `empty_confirmed` (honest gap) instead of `missing`.
+
+Option A is cleaner (no code change in adapters) and matches the existing `VENUE_REFERENCE_DATA_CAPABILITIES` infrastructure. Option B is more honest in the manifest (records the attempt) but requires per-adapter changes.
+
+### Final state post-rebuild
+
+| Asset Group | Coverage | Real gap | Notes |
+|---|---|---|---|
+| CEFI | 99.29% | 1 date (DERIBIT 2026-05-04, just captured awaiting consolidator) + 200 phantom (HYPERLIQUID config) | Effectively 100% real |
+| TRADFI | 100% | none | ✓ |
+| DEFI | 98.12% (UI) | 0 real | UI venue-aliasing issue. Canonical complete. |
+| PREDICTION | 88.66% | 0 real | per-(date, data_type) accounting + UAC start_date config |
+| SPORTS | 100% (top-level) | varies per source | ongoing batch backfill |
+
