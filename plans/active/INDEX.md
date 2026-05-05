@@ -67,14 +67,12 @@ examples for testing any DeFi strategy
   (C) Weather venue-id SCREAMING_SNAKE fallback shipped (115/170 fixtures now weather-populated vs 0/170 before). Tracks
   B+C code shipped 2026-04-21 (FSS `d21e49f` + deployment-service `885131e` + PM `77e7512c`); VMs fired 2026-04-21
   23:18Z.
-- transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md — Fourth follow-up: (1) cache
-  Transfermarkt team mappings to `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` and
-  skip API calls on non-trigger dates within staleness window (cuts ~80% of per-league-iteration wall-clock on repeated
-  runs); (2) UAC `LeagueDefinition.expected_team_count_per_season` + `ADAPTER_FETCH_ANOMALY` emit when
-  `|got - expected| / expected > 10%` catches silent partial writes (e.g. API returns 17 teams for EPL when we expect
-  20); (3) same shape for SFI leagues with 24h staleness. 3 tracks, 4 repos (UAC + instruments-service +
-  features-sports-service + PM). **Phase 1+2 already partially shipped by semver-rollout-bot commit `9bf23d8` in
-  instruments-service (cache helpers + drift_emit + 24 tests); my season-derivation fix `cdded95` is complementary.**
+- sports_predictions_e2e_2026_05_05.plan.md — Drives sports predictions running end-to-end: feature-service-sports →
+  ml-training (Model 2A walk-forward) → strategy-service paper trade (ArbitrageStrategy + MLSportsStrategy) →
+  execution-service paper fills + matching-engine for execution alpha → upcoming-fixtures-ui shows predictions. Folds
+  `sports_e2e_validation_2026_03_27` Phases 2/3/5 (MTDS Tier 2 1-week validation, arb backtest, live pipeline). Phase 4
+  (207M-credit Tier 1 + Tier 2 expansion) deferred to operator. Depends on master roadmap Phase 6, UTL base-image
+  rebuild, and features_sports_honest_coverage_2026_05_05.
 - sfi_chunk_parallel_backfill_2026_04_22.plan.md — Cut SFI backfill wall-clock from ~68 days (single-VM observed
   2026-04-22 @ ~1.4 dates/hour) to ~3-5 days via chunk-safe multi-VM pattern. Clones
   `rescan_sports_fixtures_canonical.py` 3-mode shape (single / worker / coordinator). Phase 0 measures the real SFI
@@ -93,7 +91,6 @@ examples for testing any DeFi strategy
 
 - agent6_mock_data_quality_2026_03_22.plan.md — Mock data quality
 - agent8_e2e_tests_quality_2026_03_22.plan.md — E2E testing
-- sports_e2e_validation_2026_03_27.plan.md — Sports E2E validation
 - ui_full_site_link_crawler_e2e_2026_04_22.plan.md — Full-site Playwright link crawler in `unified-trading-system-ui`
   (bounded BFS, shadow-DOM link harvest, nav flyouts, tier0 registry fill, optional external HEAD/GET probes); harden
   `webServer` for Tier 0 (`PLAYWRIGHT_SKIP_API_WEBSERVER`, `/login` readiness); document wall-clock presets + optional

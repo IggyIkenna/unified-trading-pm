@@ -4,8 +4,6 @@ status: active
 priority: P0
 created: 2026-03-27
 updated: 2026-03-27
-locked_by: live-defi-rollout
-locked_since: 2026-03-27
 supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
 reconciliation_supersedes_added: 2026-04-25
 ---
