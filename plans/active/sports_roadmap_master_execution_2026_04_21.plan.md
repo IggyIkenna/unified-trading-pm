@@ -247,9 +247,9 @@ creation + cron activation. They need a real GCP session, not just code.
 
 - [ ] [AGENT] **P0.** Monitor first automated fires: 6h wait for Tier-1, 24h for Tier-2. These may span sessions —
       checkpoint plan state at shutdown and resume. — **Deferred to operator.** Monitoring is multi-session (6h+24h+168h
-      fires) and blocked on terraform apply above. INJURIES backfill VM `af-backfill-20260421-214057` was RUNNING at
-      wave end (launched 21:41Z, still running at ~00:30Z, ~3h elapsed vs 1–2h estimate — operator should verify
-      completion + self-delete behaviour as a first post-wave check).
+      fires) and blocked on terraform apply above. INJURIES backfill VM `af-backfill-20260421-214057` — **VERIFIED-GONE
+      2026-05-05** via `gcloud compute instances list`; self-deleted as expected. Today's `af-backfill-20260505-105528`
+      is a separate fresh launch by another agent's flow.
 
 ### Phase 7 — final report [SEQUENTIAL]
 

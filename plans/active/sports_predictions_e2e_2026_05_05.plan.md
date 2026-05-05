@@ -76,15 +76,33 @@ sports_scheduler_cron_activation, utl_base_image_rebuild_and_workflow_unblock).
 
 What was missing: a single plan that drives sports predictions from raw data → features → ML → strategy → execution →
 UI. This plan is that driver. It folds sports_e2e_validation_2026_03_27 Phases 2/3/5 (which were the closest thing to an
-e2e plan but scoped only to MTDS arb validation), drops the 207M-credit Phase 4 backfill expansion (operator decision,
-not on the predictions critical path with sports already at 100%), and adds explicit ML-training and UI-verification
-gates.
+e2e plan but scoped only to MTDS arb validation), and adds explicit ML-training and UI-verification gates.
+
+**On the existing 288M Odds-API rows.** MTDS already holds ~288M historical odds rows at
+`gs://market-data-tick-sports-{pid}/...source=ODDS_API`. The sports_e2e_validation Phase 4 cost plan (Tier 1 = 126M
+credits / 5.8yr + Tier 2 = 103M credits / 1yr = 207M total) was a **re-collection** budget, not net-new coverage. Phase
+1 of that plan discovered the existing 288M rows were collected with a buggy `OddsApiAdapter` that used fixed UTC
+timestamps instead of per-fixture kickoff-relative timestamps; the fixed adapter shipped + adds `bm_time`,
+`minutes_to_kickoff`, `staleness_seconds`, `fetch_utc`. Those columns can't be **derived** from existing rows — the
+ground-truth bm_time is gone. So:
+
+- **Use existing 288M rows for ML training and coarse-grained features** — no re-collection needed. Migrate path
+  `venue=ODDS_API` → `source=ODDS_API` is a free re-key, no API calls.
+- **Re-collect only if fine-grain arb scanning at T-10m/T-30m/T-60m/T-120m is in scope.** That's the 103M-credit Tier 2
+  layer. Coarser horizons work fine on existing data.
+- **Tier 1 (126M / 5.8yr)** is ML-training-depth nice-to-have — defer indefinitely.
+
+This plan defaults to using existing data and treats Tier 2 re-collection as a downstream decision triggered only if
+Group D's arb-decay analysis (T-4h vs T-2h vs T-30m vs T-10m) shows arb opportunity at fine horizons that the existing
+288M rows can't quantify. If the 4-horizon arb scan can be done from existing rows with their coarser bm_time proxy
+(e.g. derive an approximate kickoff-relative timestamp from `fetch_utc` + fixture kickoff), the re-collect is
+unnecessary.
 
 The fold targets:
 
-- **sports_e2e_validation_2026_03_27** (status active, 23 open todos, last updated 2026-04-25): Phases 2/3/5 fold here;
-  Phase 4 (cost plan + Tier 1/2 expansion) deferred to operator. Plan archived in the same commit as this plan's first
-  push.
+- **sports_e2e_validation_2026_03_27** (status active, 23 open todos, last updated 2026-04-25): Phases 2/3/5 fold here.
+  Phase 4 (cost plan + Tier 1/2 re-collect) is **dropped**, not deferred — see the rationale above. Plan archived in the
+  same commit as this plan's first push.
 
 This plan does **not** swallow:
 
@@ -131,12 +149,18 @@ PARALLEL run concurrently.
 Goal: feature-service-sports produces non-NULL features for the trained universe at the volume + quality the strategy
 needs.
 
-Folded from sports_e2e_validation Phase 2 (MTDS Tier 2 1-week validation) plus FSS-specific gates.
+Folded from sports_e2e_validation Phase 2 (MTDS Tier 2 1-week validation) plus FSS-specific gates. Default mode: **use
+the existing 288M Odds-API rows**. Only re-collect (Tier 2, 103M credits) if the fine-grain arb scan below proves the
+existing data is too coarse to detect the opportunities — see Context.
 
-- [ ] [SCRIPT] P0. Run MTDS Tier 2 (57 buckets) for 1 recent week — all leagues. Verify output to
+- [ ] [SCRIPT] P0. Inventory existing 288M Odds-API rows in MTDS bucket — confirm path, partitions, columns. Decide
+      whether the existing `fetch_utc + kickoff` proxy is enough for fine-grain bm_time arb scan, or whether Tier 2
+      re-collect is required.
+- [ ] [SCRIPT] P0. (CONDITIONAL — only if inventory shows existing rows are unusable for arb at T-30m/T-60m) Run MTDS
+      Tier 2 (57 buckets) for 1 recent week — all leagues. Verify output to
       `gs://market-data-tick-sports-{pid}/raw_tick_data/by_date/day=*/`. Reference: codex §12 register.
-- [ ] [ANALYSIS] P0. Verify bm_time freshness: ≥18 bookmakers within ±60s at T-10m, T-30m, T-60m, T-120m. Acceptance
-      gate before strategy backtest.
+- [ ] [ANALYSIS] P0. Verify bm_time freshness on whichever dataset Group D uses: ≥18 bookmakers within ±60s at T-10m,
+      T-30m, T-60m, T-120m. Acceptance gate before strategy backtest.
 - [ ] [ANALYSIS] P0. Arb scan: cross-bookmaker arb opportunities (bm_time ±60s, implied prob > 100%). Quantify count +
       average size.
 - [ ] [ANALYSIS] P0. Arb decay by horizon: T-4h vs T-2h vs T-30m vs T-10m. Drives Group F window selection.
@@ -210,9 +234,10 @@ Folded from sports_e2e_validation Phase 5 (MTDS/MDPS/FSS/strategy live mode).
 
 ## Out of scope
 
-- **Cost-driven backfill expansion** — sports_e2e_validation Phase 4 (Tier 1 + Tier 2 = 207M Odds API credits) is
-  operator/budget decision; not predictions critical-path now that coverage is reportedly at 100%. Re-open as a separate
-  plan if Group D shows undercoverage gaps.
+- **Tier 1 ML-training-depth re-collect (126M credits / 5.8yr)** — pure nice-to-have for longer ML history. Drop unless
+  Model 2A walk-forward in Group E shows the existing ~1-yr window is too short to converge.
+- **Tier 2 fine-grain arb re-collect (103M credits / 1yr)** — only triggered by Group D's CONDITIONAL todo if existing
+  288M rows can't support T-30m/T-60m arb scan. If triggered, it's a follow-up plan, not part of this one.
 - **Live (non-paper) sports execution** — Group F caps at execution-service paper mode. Live execution gated on operator
   sign-off.
 - **New ML models beyond Model 2A** — model R&D after baseline.
