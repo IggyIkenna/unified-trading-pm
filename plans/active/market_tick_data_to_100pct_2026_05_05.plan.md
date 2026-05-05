@@ -484,6 +484,58 @@ rejected them (no real data → empty parquet → fails Schema Definition contra
 - Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
 - Action: leave in place; FIX-6 manifest rebuild will overwrite them.
 
+### PREDICTION recon DONE (2026-05-05 21:05)
+
+```
+matched (manifest+disk both have it): 2,804
+PHANTOMS (manifest captured, disk empty): 420
+MISSING ROWS (disk has, manifest doesn't): 26
+TRUE GAP DAYS (no capture either way): 1,752 / 2,154 expected days
+```
+
+**Reading**:
+- 81% of expected days are true gaps (1,752 of 2,154) — entirely consistent with F26: disk starts 2025-03-14,
+  manifest tracks back to 2020-06-12 per UAC. The "true gap" days are pre-fetch.
+- 420 phantoms — manifest claims captured but disk empty. Sample includes `(2025-03-14, '', '', 'trades')`
+  (BLANK venue!) and `(2025-03-13, POLYMARKET, '', 'trades')` (real day-before-launch phantom).
+- **26 missing rows** — disk has data, manifest doesn't claim it. These are F30.
+
+### F30 — PREDICTION has a SECOND on-disk layout AND blank-venue phantoms
+
+Two distinct findings from PREDICTION recon:
+
+**(a) Two parallel disk layouts on the same day for prediction**:
+
+```
+day=2025-03-27/category=prediction/data_source=POLYMARKET_CLOB/...     (axis-8 deep, ~hundreds of thousands)
+day=2025-03-27/category=prediction/venue=POLYMARKET/instrument_type={BTC|ETH|OTHER}/data_type=prediction_trades/ticks_migrated_*.parquet  (canonical with semantic-wrong itype, 26 rows)
+```
+
+The second layout uses **`instrument_type=BTC` etc. — but BTC is the underlying asset, NOT the
+instrument_type**. Semantically wrong field usage. Files are `_migrated_*` named (2026-04-19 migration). 26
+parquets total.
+
+These match my canonical PATH_RE (technically valid hive layout). Manifest doesn't have rows for these tuples
+because manifest uses different keys (no per-underlying instrument_type).
+
+Severity: **MEDIUM** — 26 small-volume parquets, but indicates a migration step that put underlyings into the
+itype slot and never reconciled with manifest.
+
+**(b) Blank-venue manifest phantoms**:
+
+```
+sample phantoms: ('2025-03-14', '', '', 'trades') — venue is BLANK string, not 'POLYMARKET'
+                 ('2025-03-14', 'POLYMARKET', '', '') — data_type is BLANK
+                 ('2025-03-14', 'UNKNOWN', '', 'trades') — venue literally 'UNKNOWN'
+```
+
+Manifest has rows with empty venue, empty data_type, and venue literal `UNKNOWN`. These are **schema-validation
+failures or pre-write sentinel rows that leaked into manifest**. Probably the BUG-X1 / BUG-X2 cluster
+extension to PREDICTION.
+
+Severity: **LOW-MEDIUM** — small population (≤20 rows), but confirms the sentinel-row leak pattern is
+cross-AG, not just CeFi.
+
 ### F29 — UTL `rebuild_manifest_from_canonical_paths` skips `_migrated_*` files
 
 Found in `unified-trading-library/unified_trading_library/manifest_writer.py:2905`:
@@ -753,7 +805,7 @@ Net plan now has 3 prongs:
 
 | AG | Manifest rows | Disk blobs (raw_tick_data) | Match rate | Forward phantoms | Missing rows | True gap days | Notes |
 | -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
-| PREDICTION | 14,369 | TBD | TBD | TBD | TBD | TBD | Disk starts 2025-03-14 (F26) |
+| PREDICTION | 14,369 | 573,451 raw_tick_data + 26 canonical-with-BTC-itype | 81% of expected days TRUE GAP (F26) | 420 (some blank-venue F30b) | 26 (F30a — _migrated_* second layout) | 1,752 / 2,154 (pre-fetch) | Disk starts 2025-03-14 (F26); F30 finds new layout |
 | SPORTS | 17,288 | 21k matches + 91 axis-9 + 15k axis-10 | 86% match | **603** (mostly 2020-06-01..05 — F27) | **0** | 37 (recent — forward-poll lapse) | 100% v4 manifest (F1) |
 | TRADFI | 72,380 | ~600k canonical + ~100k F25 (unmatched) | TBD | TBD | TBD | TBD | F25 non-hive layout |
 | DEFI | 313,365 | 312k canonical + 5,332 axis-6 | TBD | TBD | TBD | TBD | F16 → 1.7% legacy after FIX-11 |
