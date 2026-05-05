@@ -27,7 +27,12 @@ this log is the ground truth.
 
 | Timestamp (UTC) | Phase | What | Status | Output / link |
 | --------------- | ----- | ---- | ------ | ------------- |
-| 2026-05-05 ~current | DISCOVERY-0 | Plan restructure to live-ops format + audit cell enumeration starting | in_progress | this doc |
+| 2026-05-05 | DISCOVERY-0 | Plan restructure to live-ops format | done | commit `41ace8c` |
+| 2026-05-05 | DISCOVERY-1 | UAC registry survey — VENUES_BY_ASSET_GROUP, DATA_TYPES_BY_ASSET_GROUP, VENUE_DATA_TYPE_CAPABILITIES, partition_paths.py, raw_tick_hive | done | see "Registry SSOT cheatsheet" below |
+| 2026-05-05 | DISCOVERY-2 | **Found existing audit script — `market-tick-data-service/scripts/reconcile_market_tick_manifest.py`** does forward+inverse phantom detection. Approach pivots: USE this script, don't write a new one. Add a companion probe for drift axes its PATH_RE doesn't cover. | done | finding below |
+| 2026-05-05 | DISCOVERY-3 | Build companion legacy-path probe + companion script (drift axes 2,3,4 not covered by canonical PATH_RE) | next | TBD |
+| 2026-05-05 | DISCOVERY-4 | Smoke `reconcile_market_tick_manifest.py` on DERIBIT (highest-signal cell from BUG-X1 cluster) | pending | TBD |
+| 2026-05-05 | DISCOVERY-5 | Fan out 10-15 background agents across the matrix | pending | TBD |
 
 ## Discovery audit — 2026-05-05+ (the actual current work)
 
@@ -80,14 +85,104 @@ Each background-agent prompt includes: the goal of the audit, the 8 known drift 
 script path + invocation, the "if you find a new path shape NOT matching any known axis, STOP and report it" rule,
 and a write-only-to-CSV-do-not-modify-anything restriction. Agents return CSVs; main session aggregates.
 
-### Cell enumeration (TBD — fill in next)
+### Registry SSOT cheatsheet (2026-05-05 discovery)
 
-To be populated after Step 1 of approach. Will list:
+All registries live in UAC + UTL + MTDS. Audit scripts and background agents source from here, never hard-code.
 
-- Total cell count.
-- Per-AG breakdown.
-- JSON file path under `/tmp/mtds-audit-cells.json` (gitignored — just for the audit run).
-- Representative instrument chosen per cell (canonical from UAC).
+| What | File | Symbol |
+| ---- | ---- | ------ |
+| Venues per AG | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:155-214` | `VENUES_BY_ASSET_GROUP` |
+| Data_types per AG | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:96-152` | `DATA_TYPES_BY_ASSET_GROUP` |
+| Per-venue capability matrix (which data_types each venue actually publishes + start dates) | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:422-611` | `VENUE_DATA_TYPE_CAPABILITIES` |
+| MVP seed instruments (canonical IDs per (venue, data_type)) | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:744-942` | `_SPOT_MVP_SEED_INSTRUMENTS`, `_PERP_MVP_SEED_INSTRUMENTS`, `_OPTION_FUTURE_MVP_SEED_UNDERLYINGS`, `get_expected_instruments_for_venue()` |
+| GCS bucket naming | `unified-trading-library/unified_trading_library/core/cloud_constants.py:173-212` | `get_bucket_name(domain, asset_group, project_id)` → `market-data-tick-{ag}-{pid}` |
+| Canonical partition paths | `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py` | `build_cefi_partition_path()`, `build_defi_partition_path()`, `build_tradfi_partition_path()` |
+| Hive key SSOT (canonical vs legacy) | `market-tick-data-service/market_tick_data_service/raw_tick_hive.py` | `RAW_TICK_ASSET_GROUP_HIVE_KEY = "asset_group"` (canonical), `..._LEGACY = "category"` |
+| Instrument types per AG | `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md:136-142` | doc table — no code-level enum |
+
+**Canonical MTDS write path** (from `partition_paths.py`):
+```
+raw_tick_data/by_date/day={YYYY-MM-DD}/asset_group={AG}/venue={V}/instrument_type={IT}/data_type={DT}/{SYMBOL}.parquet
+```
+DeFi adds `/chain={C}/` between venue and instrument_type. Chain bundles use `/underlying={U}/ticks.parquet`.
+
+### Finding 1 (DISCOVERY-2): existing recon script already does most of the audit
+
+`market-tick-data-service/scripts/reconcile_market_tick_manifest.py` (343 lines) already implements forward + inverse
+phantom detection:
+
+- **Forward phantoms**: manifest says `captured`, no parquet on disk → flips to `attempted_failed`.
+- **Missing rows (inverse phantoms)**: parquet on disk, no manifest row → adds `captured` row.
+- **True gaps**: neither manifest nor disk has data on a date → real backfill candidate.
+- Writes per-VM shard (`MANIFEST_PER_VM_SHARDS=true`-equivalent path) so the consolidator merges correctly.
+- `--dry-run` for read-only audit; `--commit` to actually write the per-VM shard.
+
+**What it does NOT do** (the gaps we still need to cover):
+
+The script's `PATH_RE` only matches the canonical layout:
+```python
+r"raw_tick_data/by_date/day=(?P<day>\d{4}-\d{2}-\d{2})/"
+r"(?:category|asset_group)=(?P<ag>[^/]+)/"  # ✅ axis 1: hive vocab handled
+r"venue=(?P<venue>[^/]+)/"
+r"instrument_type=(?P<itype>[^/]+)/"
+r"data_type=(?P<dtype>[^/]+)/"
+r"(?:underlying=(?P<underlying>[^/]+)/)?"  # ✅ axis 5: chain bundles handled
+r"(?P<filename>[^/]+\.parquet)$"
+```
+
+Drift axes the canonical PATH_RE won't catch:
+
+- **Axis 2 (path prefix)**: legacy top-level `day=YYYY-MM-DD/...` (no `raw_tick_data/by_date/` prefix). Per
+  CLAUDE.md, UAC `77abd56` + MTDS `2a479ef` standardised this; pre-existing rogue data was supposed to be relocated
+  by `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py`. **Need to confirm migration completed**
+  for MTDS bucket, and probe both shapes if not.
+- **Axis 3 (instrument_type casing)**: manifest may hold `PERPETUAL` / `perpetual`; disk only has lowercase. PATH_RE
+  is case-sensitive, will only match disk casing. The mismatch is on the manifest side — when `_filter_manifest`
+  filters by user-provided `instrument_type`, case mismatches drop the manifest row from the slice. **Need to
+  confirm this comparison is case-insensitive or normalize before comparing.**
+- **Axis 4 (empty `instrument_type`)**: schema-v4 manifest rows omit the segment. PATH_RE requires
+  `instrument_type=` to match. **Manifest rows with empty `instrument_type` will be in `manifest captured`
+  but no disk match exists** (because disk paths always have a non-empty segment) → falsely classified as
+  forward phantom.
+- **Axis 6 (DeFi venue overload)**: legacy `venue=PROTOCOL-CHAIN/` (no chain= segment). PATH_RE expects
+  canonical `venue=PROTOCOL/chain=CHAIN/...` for DeFi. **DeFi-specific finding — need to verify which form on disk.**
+- **Axis 7 (DeFi no-asset-group hive segment)**: legacy DeFi paths that omit the AG segment entirely.
+  Canonical PATH_RE requires `(?:category|asset_group)=`.
+- **Axis 8 (Polymarket 9-segment layout)**: prediction layout has `sub_category=` and `market=` segments
+  PATH_RE doesn't expect.
+
+**Approach pivot**: instead of writing a brand-new audit script, run `reconcile_market_tick_manifest.py --dry-run`
+across the full matrix AND write a small companion `audit_legacy_paths.py` that probes the 5 missing drift axes
+(2, 3, 4, 6, 7, 8) on a sample of "missing" rows from the recon output.
+
+**Companion script spec**:
+- Input: a sample of `(asset_group, venue, data_type, day)` tuples that the canonical recon flagged as `true_gaps`.
+- For each tuple, probe GCS at all 5 missing-axis path shapes.
+- Output: per-tuple classification (`legacy_axis_2_top_level_prefix` / `legacy_axis_4_empty_itype` / `genuine_gap`).
+- Writes findings to CSV — never modifies anything.
+
+**Other small fixes spotted in `reconcile_market_tick_manifest.py`**:
+- Schema version hard-coded as 5 (line 307, 323). Manifest is now v6 (per UTL `manifest_writer.py`
+  `MANIFEST_SCHEMA_VERSION = 6`). New rows written by the recon script will be v5 → coexist with v6 rows but
+  miss `quote_asset` / `margin_type` / `combo_type` / `leg_weights` columns. **Fix candidate** — bump to 6 and
+  populate the new columns where applicable (DERIBIT inverse vs linear esp.).
+
+### Cell enumeration
+
+Total cells (denominator for matrix audit, after `VENUE_DATA_TYPE_CAPABILITIES` filtering):
+
+| AG | Venues | Data_types | Cells (venue × data_type, capability-filtered) |
+| -- | ------ | ---------- | ---------------------------------------------- |
+| CEFI | ~20 | 6 | ~60-80 (varies — many spot venues lack derivative_ticker/liquidations/options/futures) |
+| TRADFI | ~8 | 5 | ~30 |
+| DEFI | ~30 protocols × ~11 chains | ~20 | ~150-200 (most protocols only on 1-3 chains) |
+| SPORTS | ~6 bookmakers (per MTDS layer 2) | ~4 | ~20 |
+| PREDICTION | 2 | 1 (canonical) | 2 |
+| **Total** | | | **~260-330 cells** |
+
+For each cell we audit a sample of 15 dates (5 captured + 5 missing + 5 attempted_failed in the manifest),
+total ~4-5k probes. At ~12 prefixes/sec from laptop = ~7 min minimum if perfectly serial, more like 20-30 min
+parallel. **Will not need a GCE VM** at this scale — laptop-side is fine.
 
 ### Findings table (per drift axis — fill in as audit completes)
 
