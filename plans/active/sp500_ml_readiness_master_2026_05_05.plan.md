@@ -273,8 +273,137 @@ These are deliberately deferred. Each has a gating condition; do not add to MVP 
 
 Decisions Iggy needs to make before Phase 4 kicks off:
 
-1. **Continuous-series stitcher**: contract-roll method — back-adjust / panama-canal / volume-weighted / ratio-adjusted?
+1. **Continuous-series stitcher**: contract-roll method — **DECIDED 2026-05-05: back-adjust (Panama Canal)**. At each
+   roll, compute spread = `front_new_close − front_old_close`, subtract that spread from ALL historical front_old
+   prices. Returns/log-returns/vol calcs stay correct; level becomes hypothetical. Industry standard.
 2. **Train/test split**: walk-forward with monthly rebalance, or single 80/20?
 3. **Target variable**: next-1m return, next-15m return, or next-day directional?
 4. **Acceptable feature lag**: 1 bar (1m) or larger (5m / 15m) to reduce noise?
 5. **Universe**: ES alone, ES + MES (cross-contract beta), or ES + IBIT + VIX (mixed-instrument feature blend)?
+
+## 8. Q4 — How does this work LIVE? (architecture)
+
+Answers the "how do we account for the roll, sustainably for live + backtest" question. The architecture has FOUR layers
+cleanly separated; the roll is handled at the strategy translation layer, not in the ML signal.
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│ LAYER A — TRAINING / SIGNAL (offline + live)                              │
+│   Input:   continuous_es.parquet (back-adjusted, derived from MDPS)       │
+│   Output:  generic signal — "long/short S&P exposure"                     │
+│   Knows:   nothing about specific contracts                                │
+│   Owner:   ml-training-service (offline) + ml-inference-service (live)    │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ LAYER B — STRATEGY-SERVICE (translation)                                  │
+│   Maps "long S&P" → "long {current front-month ES contract}"              │
+│   Reads SSOT: `processed_candles/_continuous/ES/_meta/active_contracts`    │
+│       — date → (active_contract_id, roll_spread, prev_contract_id)        │
+│   Emits FuturesRollInstruction on roll boundaries                         │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ LAYER C — EXECUTION-SERVICE                                               │
+│   Live:     real fills on ACTUAL contract (e.g. ESM6)                     │
+│   Backtest: matching engine reads ACTUAL contract OHLCV (NOT adjusted)    │
+│   On FUTURES_ROLL: close old + open new = calendar-spread trade           │
+│       Real cost: ~1-3 ticks slippage on the spread × $12.50/tick × Nlots  │
+│   Same code path for batch + live (CLAUDE.md "Batch = Live" rule)         │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ LAYER D — POSITION-BALANCE-MONITOR                                        │
+│   Tracks per-CONTRACT positions: ESH6: +5, ESM6: 0                        │
+│   After roll: ESH6: 0, ESM6: +5; reconciles with broker                   │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+**Where back-adjust lives**: NOT in MDPS (MDPS is a per-contract candle generator), NOT in features-\* (those consume
+continuous data). Cleanest fit: extend MDPS with a `--operation build-continuous` mode that runs AFTER standard candle
+generation. Output at canonical path:
+
+```
+processed_candles/by_date/day={D}/timeframe={tf}/data_type={dt}/
+    instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet
+```
+
+Plus a sidecar mapping `(date → active_contract_id, roll_spread, prev_contract_id)` at:
+
+```
+processed_candles/_continuous/{ROOT}/_meta/active_contracts.parquet
+```
+
+This SSOT is read by both strategy-service (to translate signals to actual contracts) AND execution-service's matching
+engine (to charge the calendar-spread roll cost on the right dates).
+
+**Three failure modes if this is wired wrong** (must be guarded by tests):
+
+| Failure mode                                                                                           | Test that catches it                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backtest uses back-adjusted price for fills (P&L is fictional, includes phantom roll spread as profit) | matching-engine integration test: simulate a 6-month strategy across one roll, assert backtest P&L matches sum-of-contract P&L within 1bp                           |
+| Backtest forgets calendar-spread roll cost (strategy looks ~10-30bp/yr more profitable than reality)   | matching-engine unit test: on FUTURES_ROLL, assert at least N ticks slippage on the spread leg                                                                      |
+| Live system uses back-adjusted price as execution reference (orders fill at wrong levels)              | strategy-service integration test: mock continuous series + active_contracts SSOT, assert order venue/symbol = active_contract_id, not the continuous-series symbol |
+
+**What's done vs pending**:
+
+| Component                                                       | Status                                  | Where                                                                       |
+| --------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `FuturesRollInstruction` schema in UAC                          | ✅ exists                               | `unified_api_contracts/internal/domain/strategy_service/instruction.py:803` |
+| `FUTURES_ROLL` enum in InstructionType                          | ✅ exists                               | `unified_api_contracts/canonical/domain/reference/__init__.py:28`           |
+| Continuous-series builder (back-adjust) + active_contracts SSOT | ❌ Phase 1.6 todo (this plan)           |                                                                             |
+| MDPS `--operation build-continuous` mode                        | ❌ Phase 1.6 todo (this plan)           |                                                                             |
+| Strategy-service emits FUTURES_ROLL on roll                     | ❌ Phase 2.3 todo                       |                                                                             |
+| Execution-service matching engine charges roll cost             | ❓ Phase 1.7 audit todo (this plan)     |                                                                             |
+| Position-balance-monitor per-contract tracking                  | ✅ already does this for crypto futures | structurally same for ES                                                    |
+
+## 9. New Phase 1 todos (back-adjust + chain-bundle + tests + migrations)
+
+Surfaced from Q4 architecture review and operator request 2026-05-05. All gated on Phase 0 completion (which is done)
+but parallel-able among themselves.
+
+- [ ] [AGENT] **P1.5 ES options chain-bundle MDPS output** — Currently
+      `market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py`
+      `_build_candle_output_path` writes ONE file per `instrument_id` for ALL instrument types. For options chain that's
+      one file per strike → thousands of small files per day per timeframe. Required for IV / skew / put-call-ratio
+      features. Fix: - When `instrument_type == "options_chain"`, group rows by chain root (extracted from
+      `instrument_id`) and write ONE bundled `ticks.parquet` per (date, root) at
+      `…/instrument_type=options_chain/data_type={dt}/underlying={ROOT}/ticks.parquet`. - Schema: add `strike` (float) +
+      `put_call` (str) + keep existing `instrument_id` columns so downstream readers can slice by strike. - Unit test:
+      synthetic input with 5 strikes × 2 expiries → assert single output parquet has `5 × 2 × bars_per_day` rows with
+      correct `strike` / `put_call` / `instrument_id` per row.
+- [ ] [AGENT] **P1.5b Migrate existing per-strike processed_candles to chain-bundle** — After P1.5 lands, write
+      `instruments-service/scripts/aggregate_processed_options_to_chain_bundle.py` that walks
+      `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
+      groups by chain root + (date, timeframe, data_type), writes bundled at canonical path, `record_captured` via
+      ManifestWriter. Idempotent. Same skip-if-exists pattern as the raw-tick aggregator.
+- [ ] [AGENT] **P1.5c Re-launch MDPS tradfi backfill with chain-bundle fix** — Once P1.5 ships + tarball refreshed, kill
+      the in-flight `mdps-tradfi-{2020..2026}-20260505-203928` VMs and relaunch. Old VMs produced per-strike candles
+      using the pre-fix code; their output will be migrated by P1.5b but cleaner to re-run with the fixed code.
+      Decision-gate: if P1.5b proves cheap (<1h compute), let MDPS finish and migrate; if MDPS is still <50% done when
+      P1.5 lands, kill-and-relaunch is faster.
+- [ ] [AGENT] **P1.6 Continuous-series builder (back-adjust)** — Add MDPS `--operation build-continuous` mode that reads
+      per-contract processed_candles + roll calendar from `instruments-service`, applies Panama-canal back-adjust,
+      writes: -
+      `processed_candles/by_date/day={D}/timeframe={tf}/data_type={dt}/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet` -
+      sidecar SSOT `processed_candles/_continuous/ES/_meta/active_contracts.parquet` mapping
+      `(date →       active_contract_id, roll_spread, prev_contract_id)` - Same shape for MES. - Unit tests: (a) two
+      contracts with known cross-day spread → assert post-adjust returns are continuous, no jump on roll day; (b)
+      `roll_spread` correctly computed and persisted; (c) idempotent — re-running on same data produces byte-identical
+      output.
+- [ ] [AGENT] **P1.7 Matching-engine roll-cost audit** — Read `execution-service` matching engine for current behaviour
+      on `FuturesRollInstruction`. Probe with: synthetic 1-year backtest spanning one roll, assert (a) fills come from
+      ACTUAL contract OHLCV (not back-adjusted), (b) roll generates a calendar-spread fill with at least 1 tick slippage
+      cost. If either is missing: fix + add integration test before Phase 4 backtest. Otherwise: green and add
+      regression test.
+- [ ] [AGENT] **P1.8 Tests for the FUTURES_ROLL emission path (Phase 2.3 prereq)** — Strategy-service ML engine
+      integration test: feed it a continuous-series price series spanning one roll boundary; assert it emits exactly ONE
+      `FuturesRollInstruction` on the boundary date with `prev_contract_id` + `new_contract_id` correctly populated from
+      the active_contracts SSOT.
+- [ ] [AGENT] **P1.9 Workspace-wide QG sweep after P1.5-P1.8 land** — Per CLAUDE.md Citadel Standards #5: every affected
+      repo passes `bash scripts/quality-gates.sh`. Repos touched: `market-data-processing-service` (P1.5, P1.6),
+      `instruments-service` (P1.5b), `execution-service` (P1.7), `strategy-service` (P1.8). Plus `unified-trading-pm`
+      (this plan).
