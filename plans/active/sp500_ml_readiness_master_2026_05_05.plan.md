@@ -123,10 +123,12 @@ Triggered conditionally on Phase 0 findings; sub-tasks within Phase 1 have no in
   for manifest reconciliation.
 - [~] [AGENT] P1. Tradfi phantom-audit + manifest-rebuild. Port the CeFi 2026-05-04 pattern: invoke
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` first; surface
-  uncatalogued legacy `category=tradfi` rows. Then a non-dry-run pass. Goal: drift < 1%. **Started 2026-05-05 20:31Z
-  from laptop**: process PID 9490 still running at 28+ min elapsed. Cross-region listing is 18× slower than same-region
-  per CLAUDE.md, so this dry-run pass will take ~30-60 min total. Outcome will determine the size of the non-dry-run
-  reconciliation pass. Future runs should be on a same-region VM.
+  uncatalogued legacy `category=tradfi` rows. Then a non-dry-run pass. Goal: drift < 1%. **Laptop run killed 2026-05-05
+  20:49Z** after DNS resolution failures + 18× slow cross-region listing per CLAUDE.md. **Relaunched 2026-05-05 20:43Z
+  on same-region VM**: `tradfi-audit-aggregate-20260505-204345` in asia-northeast1-c, e2-standard-8, custom startup
+  script. Bundled task: phantom-audit dry-run + aggregate_legacy_es_opt_trades.py dry-run smoke (5 days) + full
+  2020-2022 aggregation. Auto-shutdown on completion. Watchdog dict updated (deployment-service a682e23) with
+  `tradfi-audit-aggregate-` prefix. VM emitting events at hour=20.
 - [x] [AGENT] P1. Launcher hardening — make `VM_FORCE_WINDOW` configurable in
       `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` (currently hardcoded ~line 196). Add a
       `--no-force-window` flag and a top-of-file comment block pointing at this plan. **Shipped 2026-05-05**
@@ -173,9 +175,15 @@ These three items must land in order — continuous-series stitcher feeds ML CLI
 Four independent feature streams; run as four parallel sub-agents. Each stream emits manifest rows with
 `capture_status=captured` and validates via sample-read.
 
-- [ ] [AGENT] P3. Run `features-calendar-service` for tradfi over 2020-01-01 → 2026-05-05. Asset-group-agnostic — no
-      candle dependency. Output: temporal + economic_events (NFP / CPI / FOMC). Validate: at least one row per RTH day
-      with non-empty `event_type` set.
+- [~] [AGENT] P3. Run `features-calendar-service` for tradfi over 2020-01-01 → 2026-05-05. Asset-group-agnostic — no
+  candle dependency. Output: temporal + economic_events (NFP / CPI / FOMC). Validate: at least one row per RTH day with
+  non-empty `event_type` set. **Launched 2026-05-05** (3rd attempt): VMs v1 + v2
+  (`features-calendar-tradfi-backfill-2026050{5-213713,5-214105}`) crashed with FRED API 500 on `release_id=10` (CPI)
+  because the FRED retry/fallback had a bug — `httpx.HTTPStatusError` was not in the catch-tuple, so 5xx propagated
+  unhandled. Fixed by features-calendar-service `5e5aa05`: 3-retry exponential backoff in `_request_fred_release` +
+  `httpx.HTTPError` added to outer except so service falls back to schedule-based dates on persistent FRED failure. VM
+  v3 `features-calendar-tradfi-backfill-20260505-215632` RUNNING with `PROCESSING_STARTED` on `time_features` calculator
+  at 20:58:56Z — past the FRED step. Tarball refreshed pre-launch.
 - [ ] [AGENT] P3. Run `features-delta-one-service` for tradfi/ES across all 36 calculators (TechnicalIndicators,
       MovingAverages, Oscillators, Momentum, VWAP, Returns, MarketStructure, FuturesBasis, etc.). Validate: each
       calculator's output parquet sample-read shows populated values, not NaN-everywhere.
