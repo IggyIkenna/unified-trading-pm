@@ -56,6 +56,12 @@ isProject: false
    layer down from individual adapters) might unify the layout zoo without rewriting 30+ DeFi handlers + sports +
    prediction adapters. Worth designing.
 
+9. **F26 — PREDICTION coverage_start mismatch**. UAC says POLYMARKET data should go back to 2020-06-12. Disk only
+   has data from 2025-03-14. ~5 years of "missing" days that were never actually fetched. Should we:
+   (a) update UAC to actual MTDS backfill start (loses provenance about when Polymarket protocol launched), or
+   (b) keep UAC aspirational + plan deferred backfill back to 2020-06-12 (Phase 2 budget impact).
+   Affects denominator for PREDICTION coverage % on data-status UI.
+
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
 This section is the operating surface. Every audit run, finding, fix decision, and background-agent dispatch lands here
@@ -412,6 +418,30 @@ rejected them (no real data → empty parquet → fails Schema Definition contra
 
 - Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
 - Action: leave in place; FIX-6 manifest rebuild will overwrite them.
+
+### F26 — PREDICTION coverage_start in UAC vs disk reality
+
+UAC `PREDICTION_SOURCE_COVERAGE_START` declares:
+
+```
+POLYMARKET: 2020-06-12
+KALSHI: 2021-07-19
+MANIFOLD: 2022-01-01
+```
+
+But disk has zero PREDICTION raw_tick_data before **2025-03-14**. The manifest agrees — 14,368 of 14,369 rows are
+on or after 2025-03-14 (only 1 row at 2025-03-13).
+
+This means the data-status UI is inflating the PREDICTION "missing" count by including 4+ years of pre-fetch
+days where data was never captured. The denominator from UAC says we should have data going back to 2020-06-12;
+reality says we don't.
+
+Two options:
+1. **Update UAC** to reflect actual MTDS backfill start (~2025-03-14 for POLYMARKET).
+2. **Document as deferred backfill** — we'll go back to 2020-06-12 later via VM-driven backfills, keep UAC
+   aspirational.
+
+Severity: **MEDIUM** — affects coverage % on UI and Phase 2 backfill scope. Needs Ikenna call.
 
 ### F25 — TRADFI has ~100k blobs at NON-HIVE layout with `day-` separator (NEW finding 2026-05-05)
 
