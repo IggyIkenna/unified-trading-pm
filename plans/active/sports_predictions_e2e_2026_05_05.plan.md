@@ -78,31 +78,42 @@ What was missing: a single plan that drives sports predictions from raw data →
 UI. This plan is that driver. It folds sports_e2e_validation_2026_03_27 Phases 2/3/5 (which were the closest thing to an
 e2e plan but scoped only to MTDS arb validation), and adds explicit ML-training and UI-verification gates.
 
-**On the existing 288M Odds-API rows.** MTDS already holds ~288M historical odds rows at
-`gs://market-data-tick-sports-{pid}/...source=ODDS_API`. The sports_e2e_validation Phase 4 cost plan (Tier 1 = 126M
-credits / 5.8yr + Tier 2 = 103M credits / 1yr = 207M total) was a **re-collection** budget, not net-new coverage. Phase
-1 of that plan discovered the existing 288M rows were collected with a buggy `OddsApiAdapter` that used fixed UTC
-timestamps instead of per-fixture kickoff-relative timestamps; the fixed adapter shipped + adds `bm_time`,
-`minutes_to_kickoff`, `staleness_seconds`, `fetch_utc`. Those columns can't be **derived** from existing rows — the
-ground-truth bm_time is gone. So:
+**On the existing 288M Odds-API rows and bucketing.** MTDS already holds ~288M historical odds rows under
+`gs://market-data-tick-sports-{pid}/...venue=ODDS_API/...` (legacy layout). The MDPS bucketing infrastructure for
+predictions **already exists** — `SportsBucketAssignmentAdapter` in
+[`market-data-processing-service/.../sports/bucket_assignment_adapter.py`](../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)
+implements an **8-bucket Tier 1 ML horizon grid** (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0) with
+graduated staleness caps (60 / 45 / 30 / 20 / 15 / 10 / 5 / 5 minutes). It pivots long → wide odds (h2h →
+home/draw/away, spreads → handicap, totals → over/under, btts → yes/no) and dedups per (fixture, bookmaker, bucket)
+keeping freshest snapshot. **This is what predictions need — not the 57-bucket "Tier 2" arb-grade grid that was sketched
+in sports_e2e_validation but never built.**
 
-- **Use existing 288M rows for ML training and coarse-grained features** — no re-collection needed. Migrate path
-  `venue=ODDS_API` → `source=ODDS_API` is a free re-key, no API calls.
-- **Re-collect only if fine-grain arb scanning at T-10m/T-30m/T-60m/T-120m is in scope.** That's the 103M-credit Tier 2
-  layer. Coarser horizons work fine on existing data.
-- **Tier 1 (126M / 5.8yr)** is ML-training-depth nice-to-have — defer indefinitely.
+The sports_e2e_validation Phase 4 cost plan (Tier 1 ML 126M / 5.8yr + Tier 2 arb 103M / 1yr = 207M credits) was framed
+through the arb lens. For predictions, the path is much cheaper:
 
-This plan defaults to using existing data and treats Tier 2 re-collection as a downstream decision triggered only if
-Group D's arb-decay analysis (T-4h vs T-2h vs T-30m vs T-10m) shows arb opportunity at fine horizons that the existing
-288M rows can't quantify. If the 4-horizon arb scan can be done from existing rows with their coarser bm_time proxy
-(e.g. derive an approximate kickoff-relative timestamp from `fetch_utc` + fixture kickoff), the re-collect is
-unnecessary.
+- **Re-key existing 288M rows** from legacy `venue=ODDS_API` to canonical `data_source=ODDS_API/venue={BOOKMAKER}/...`
+  via the idempotent script
+  [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py).
+  Pure GCS rewrite, **no API credits**.
+- **Run MDPS `SportsBucketAssignmentAdapter`** on the migrated rows — assigns each row to one of the 8 horizon buckets
+  using `bm_minutes_to_kickoff`. **No API credits.** This produces the cleaned bucketed odds dataset that FSS feeds on.
+- **The N10-era reference** at
+  [`archive/new-sports-batting-services/scripts/arbitrage/analyze_all_markets.py`](../../archive/new-sports-batting-services/scripts/arbitrage/analyze_all_markets.py)
+  is the historical arb-style analyzer; the bucketing pattern there matches what `bucket_assignment_adapter.py` now
+  bakes in. Predictions consume the bucketed output, not the analyzer.
+
+The 207M-credit re-collection plan is **dropped**, not deferred. It's the wrong tool for predictions — we want clean
+data with a sense of temporal evolution, not arb-grade bucket fidelity.
+
+The only Group D unknown is whether the legacy 288M rows carry a usable `bm_time` (or any bookmaker timestamp). The
+adapter expects `bm_minutes_to_kickoff = (kickoff - bm_time) / 60`. If legacy rows lack `bm_time`, MDPS can derive an
+approximation from `(kickoff - fetch_utc)` (whatever timestamp column the legacy adapter wrote) — that's still
+predictions-grade. Group D first todo confirms which column we have.
 
 The fold targets:
 
 - **sports_e2e_validation_2026_03_27** (status active, 23 open todos, last updated 2026-04-25): Phases 2/3/5 fold here.
-  Phase 4 (cost plan + Tier 1/2 re-collect) is **dropped**, not deferred — see the rationale above. Plan archived in the
-  same commit as this plan's first push.
+  Phase 4 (cost plan + Tier 1/2 re-collect) is dropped — see above.
 
 This plan does **not** swallow:
 
@@ -149,29 +160,34 @@ PARALLEL run concurrently.
 Goal: feature-service-sports produces non-NULL features for the trained universe at the volume + quality the strategy
 needs.
 
-Folded from sports_e2e_validation Phase 2 (MTDS Tier 2 1-week validation) plus FSS-specific gates. Default mode: **use
-the existing 288M Odds-API rows**. Only re-collect (Tier 2, 103M credits) if the fine-grain arb scan below proves the
-existing data is too coarse to detect the opportunities — see Context.
+Default mode: **use the existing 288M Odds-API rows**. Path: re-key (free) → MDPS 8-bucket Tier 1 horizon assignment
+(free) → FSS feature compute → ML-ready feature matrix.
 
-- [ ] [SCRIPT] P0. Inventory existing 288M Odds-API rows in MTDS bucket — confirm path, partitions, columns. Decide
-      whether the existing `fetch_utc + kickoff` proxy is enough for fine-grain bm_time arb scan, or whether Tier 2
-      re-collect is required.
-- [ ] [SCRIPT] P0. (CONDITIONAL — only if inventory shows existing rows are unusable for arb at T-30m/T-60m) Run MTDS
-      Tier 2 (57 buckets) for 1 recent week — all leagues. Verify output to
-      `gs://market-data-tick-sports-{pid}/raw_tick_data/by_date/day=*/`. Reference: codex §12 register.
-- [ ] [ANALYSIS] P0. Verify bm_time freshness on whichever dataset Group D uses: ≥18 bookmakers within ±60s at T-10m,
-      T-30m, T-60m, T-120m. Acceptance gate before strategy backtest.
-- [ ] [ANALYSIS] P0. Arb scan: cross-bookmaker arb opportunities (bm_time ±60s, implied prob > 100%). Quantify count +
-      average size.
-- [ ] [ANALYSIS] P0. Arb decay by horizon: T-4h vs T-2h vs T-30m vs T-10m. Drives Group F window selection.
-- [ ] [ANALYSIS] P0. Arb by league: identify most/least efficient markets. Drives Group F universe filter.
-- [ ] [SCRIPT] P1. Run MDPS cleaning pass — filter by bm_time freshness, add buckets per codex §12.
-- [ ] [SCRIPT] P1. Run FSS on cleaned data — verify odds features (velocity, CLV, steam) populate at >95% non-NULL for
-      in-coverage windows.
-- [ ] [SCRIPT] P1. Verify feature matrix is ML-ready (one row per fixture, all features as columns, no NaN where
-      coverage says captured).
-- [ ] [GATE] P0. Block Group E until FSS produces ≥95% non-NULL features for the trained universe (per
-      features_sports_honest_coverage acceptance).
+- [ ] [SCRIPT] P0. Inventory existing 288M legacy `venue=ODDS_API` rows: probe one parquet to confirm columns. We need a
+      usable timestamp (`bm_time` if present, else `fetch_utc` / `last_update` / `timestamp` as a proxy). Records the
+      column name to use in the next todo.
+- [ ] [SCRIPT] P0. Run
+      [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py)
+      end-to-end on the legacy 288M rows. Idempotent re-key from `venue=ODDS_API/...` to canonical
+      `data_source=ODDS_API/venue={BOOKMAKER}/league_id=L/instrument_type=odds/data_type=trades/`. Confirm row counts
+      match (288M ± migration drops).
+- [ ] [SCRIPT] P0. Run MDPS `SportsBucketAssignmentAdapter` on the migrated rows for 1 recent week as a smoke pass — all
+      leagues. If `bm_minutes_to_kickoff` is missing on legacy rows, derive it in MDPS from
+      `(fixture.kickoff - row_timestamp) / 60` (instruments-service has fixture kickoff times); land that derivation
+      either inline in MDPS or as a tiny pre-pass.
+- [ ] [ANALYSIS] P0. Bucket-coverage check on the 1-week pass: how many fixtures have ≥1 row per (fixture, bookmaker,
+      bucket) for the 8 Tier 1 horizons? At least the closer-to-KO buckets (T-2h, T-1h, T-10m, T-0) should be densely
+      populated. Surfaces whether existing data has enough temporal evolution signal.
+- [ ] [ANALYSIS] P1. Bucket-distribution by league: identify leagues with sparse late-horizon coverage (predictions in
+      those leagues will lean on earlier-horizon features only).
+- [ ] [SCRIPT] P0. Backfill MDPS bucketing across the full historical window (5+ years) on the migrated rows — pure
+      compute, no API. Output is the canonical bucketed odds_snapshot dataset.
+- [ ] [SCRIPT] P1. Run FSS on the bucketed dataset — verify odds features (velocity, CLV, steam, late-money) populate
+      at >95% non-NULL for fixtures where the underlying buckets are present.
+- [ ] [SCRIPT] P1. Verify feature matrix is ML-ready (one row per fixture × bucket, features as columns, NaN only where
+      bucket has no underlying snapshot).
+- [ ] [GATE] P0. Block Group E until FSS produces ≥95% non-NULL features for the trained universe at the buckets the
+      model relies on (per features_sports_honest_coverage acceptance).
 
 ## Group E — ML training validation (Model 2A walk-forward)
 
@@ -234,10 +250,12 @@ Folded from sports_e2e_validation Phase 5 (MTDS/MDPS/FSS/strategy live mode).
 
 ## Out of scope
 
-- **Tier 1 ML-training-depth re-collect (126M credits / 5.8yr)** — pure nice-to-have for longer ML history. Drop unless
-  Model 2A walk-forward in Group E shows the existing ~1-yr window is too short to converge.
-- **Tier 2 fine-grain arb re-collect (103M credits / 1yr)** — only triggered by Group D's CONDITIONAL todo if existing
-  288M rows can't support T-30m/T-60m arb scan. If triggered, it's a follow-up plan, not part of this one.
+- **207M-credit re-collection (Tier 1 ML 126M + Tier 2 arb 103M)** — dropped. Predictions don't need fine-grain arb
+  bucketing, and the 8-bucket Tier 1 ML grid already exists in MDPS (`SportsBucketAssignmentAdapter`) and runs on the
+  re-keyed existing 288M rows. Re-open separately only if a future arb push wants T-30m/T-60m bucket fidelity that the
+  existing rows can't approximate from `(kickoff - timestamp)`.
+- **Arb-style cross-bookmaker scanning** (implied prob > 100%) — out of this plan's predictions scope. Reference: N10
+  archive `analyze_all_markets.py` if revived later.
 - **Live (non-paper) sports execution** — Group F caps at execution-service paper mode. Live execution gated on operator
   sign-off.
 - **New ML models beyond Model 2A** — model R&D after baseline.
