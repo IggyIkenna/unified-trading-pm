@@ -317,6 +317,53 @@ feature can have other features as upstreams.
   NOT `attempted_failed`.
 - Backfill VMs picking up failed-only shards don't waste cycles re-fetching in-coverage successful shards.
 
+## Phase 0.5 — wire SFI progressive_stats + footystats_predictions (2026-05-05)
+
+Two genuine wiring gaps identified in Phase 0 follow-up. Both upstreams were captured but no calculator consumed them.
+Implemented before Phase 1 because it changes the inventory the upstream-requirements registry will encode.
+
+- [x] Add `progressive_stats` to REFERENCE_ENTITY_TYPES (gcs_reader.py).
+- [x] Create `sfi_progressive_calculator.py` — 31 features (30 + ht_detection_method).
+- [x] Create `footystats_predictions_calculator.py` — 27 features (`fs_*` prefix).
+- [x] Wire both into `_run_new_calculators` dispatcher (Group 21 + Group 22).
+- [x] Update `feature_catalog.py` (DERIVED_FEATURE_COUNT: 912 → 986).
+- [x] Regenerate `feature_definitions.yaml` from runtime catalog (1,142 features, 32 calculators).
+- [x] Halftime-detection algorithm — derived from snapshot stream, NOT from SFI's `ht_start_timer` field (which is a
+      constant 2550 across every match).
+
+### Halftime detection algorithm (derive ht_start / ht_end from snapshot freeze)
+
+SFI's `ht_start_timer` field is a STATIC constant (2550s = 42:30) across every fixture, NOT a per-match marker.
+`ht_end_timer` is 100% null. Real halftime is rarely exactly 45+15 — drifts to 47-65+ minutes from late kickoffs,
+stoppage, VAR, etc. So the calculator derives halftime from the per-30s snapshot stream.
+
+**Two signals (preferred order):**
+
+1. **xG-NaN region** — strongest. SFI nulls `xg_home` + `xg_away` during halftime for leagues that DO emit live xG. Find
+   the contiguous NaN run within the plausible window with valid duration.
+2. **Counter freeze** — fallback for leagues without live xG. Find a run where `attacks_dangerous` +
+   `attacks_dangerous_away` + `shots_*` + `corners` are ALL unchanged across consecutive snapshots.
+
+**Bounds (rejects spurious freezes + late-game lulls):**
+
+- Plausible HT window: `timer_seconds ∈ [2280, 3900]` (38-65 min from kickoff).
+- Valid HT duration: `[300, 1500]` seconds (5-25 min — anything shorter is noise, anything longer is data drop or
+  late-game-lull misclassification).
+- Earliest qualifying run wins (real HT always precedes any second-half lull within the same window).
+
+**Output column `ht_detection_method`** tags how confident the detection was: `"xg_nan"` (strongest), `"counter_freeze"`
+(fallback), or `"unavailable"` (no clear signal — all timing features NaN). Aligns with the workspace "honest absence vs
+fake placeholders" rule: better to mark NaN than fabricate a number downstream features would treat as authoritative.
+
+**Validation (27 fixtures, 2024-06-01 mixed leagues):** 7 confident detections (range 38-56 min start, 5-6.5 min
+duration), 20 unavailable. Detection rate is league-dependent — works best where SFI emits xG.
+
+**Why this is feature-side only:** the calculator reads the existing SFI progressive parquets in
+`sports_reference/by_date/.../entity=progressive_stats/`. No raw-data rebackfill needed — everything is in the on-disk
+dataset already. The 96.5% capture coverage is the real constraint.
+
+---
+
 ## Phase 0 inventory output (2026-05-05) — CORRECTED
 
 > **Initial pass via the YAML registry (`feature_definitions.yaml`) found only 142 features and was misleading.** The
