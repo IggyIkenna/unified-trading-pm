@@ -24,20 +24,22 @@ isProject: false
 **Total commits this session**: 14 to MTDS scripts + 30+ to plan doc.
 
 **Audit script work shipped**:
-- `reconcile_market_tick_manifest.py` — patches FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8, FIX-11, FIX-12.
-  6 path-shape variants + per-day prefix listing + case-insensitive comparison + DeFi venue-key normaliser
-  + chain= optional in canonical + axis-4 both forms.
-- `audit_legacy_paths.py` — created from scratch with FIX-9, FIX-10, FIX-12, FIX-axis-6, FIX-axis-11.
-  6 axis patterns (4, 6, 8, 9, 10, 11) + raw_tick_data/ prefix scope.
-- `audit_structural_checks.py` — created from scratch. 6 cross-cutting checks (schema_version,
-  written_at chronology, bucket drift, per-VM staleness, schema parity stub, empty/failed accuracy).
+
+- `reconcile_market_tick_manifest.py` — patches FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8, FIX-11, FIX-12. 6 path-shape
+  variants + per-day prefix listing + case-insensitive comparison + DeFi venue-key normaliser
+  - chain= optional in canonical + axis-4 both forms.
+- `audit_legacy_paths.py` — created from scratch with FIX-9, FIX-10, FIX-12, FIX-axis-6, FIX-axis-11. 6 axis patterns
+  (4, 6, 8, 9, 10, 11) + raw_tick_data/ prefix scope.
+- `audit_structural_checks.py` — created from scratch. 6 cross-cutting checks (schema_version, written_at chronology,
+  bucket drift, per-VM staleness, schema parity stub, empty/failed accuracy).
 
 **Total findings**: 30 distinct (F1-F30 + F2-CEFI + F3-disambiguation + F11-detail + F30a/b).
 
-**Closed as benign / handled by FIX-6 rebuild / closed as recon-bug-not-data**:
-F3, F6, F11, F11-detail, F13, F14, F18, F19, F20 (recon-side fix), F21.
+**Closed as benign / handled by FIX-6 rebuild / closed as recon-bug-not-data**: F3, F6, F11, F11-detail, F13, F14, F18,
+F19, F20 (recon-side fix), F21.
 
 **Open / needs action**:
+
 - 9 Q&A items for Ikenna (top of doc).
 - F1, F2, F2-CEFI, F7 — schema-v4 residue (FIX-6 rebuild closes).
 - F4, F5 — stale test buckets retire.
@@ -47,52 +49,54 @@ F3, F6, F11, F11-detail, F13, F14, F18, F19, F20 (recon-side fix), F21.
 - F8, F8', F9 — per-VM shard backlog (consolidator throughput, not blocking).
 - F26 — PREDICTION coverage_start mismatch.
 - F27 — sports pre-coverage-start phantoms.
-- F29 — UTL rebuild_manifest_from_canonical_paths skips _migrated_* files.
+- F29 — UTL rebuild*manifest_from_canonical_paths skips \_migrated*\* files.
 - F30 — prediction second layout + blank-venue phantoms.
 
 **Per-AG audit results** (DRY-RUN, no production manifest writes):
 
-| AG | Manifest rows | Matched | Forward Phantoms | Missing Rows | True Gap Days |
-| -- | -------------:| -------:| ----------------:| ------------:| -------------:|
-| PREDICTION | 14,369 | 2,804 | 420 | 26 | 1,752/2,154 (81%) |
-| SPORTS | 17,288 | 3,649 | 603 | 0 | 37/2,165 (1.7%) |
-| DEFI | 313,365 | 21,487 | 0 ✅ | 278 | 1,295/2,317 |
-| CEFI | 2,229,282 | 105,723 | 14,131 (mostly v4 mix) | 452 | 89/2,682 (3.3%) |
-| TRADFI | 73,316 | 21,424 | 5,562 | 1,735 | 368/2,682 (13.7%) |
+| AG         | Manifest rows | Matched |       Forward Phantoms | Missing Rows |     True Gap Days |
+| ---------- | ------------: | ------: | ---------------------: | -----------: | ----------------: |
+| PREDICTION |        14,369 |   2,804 |                    420 |           26 | 1,752/2,154 (81%) |
+| SPORTS     |        17,288 |   3,649 |                    603 |            0 |   37/2,165 (1.7%) |
+| DEFI       |       313,365 |  21,487 |                   0 ✅ |          278 |       1,295/2,317 |
+| CEFI       |     2,229,282 | 105,723 | 14,131 (mostly v4 mix) |          452 |   89/2,682 (3.3%) |
+| TRADFI     |        73,316 |  21,424 |                  5,562 |        1,735 | 368/2,682 (13.7%) |
 
-**Critical insight**: Most "missing" coverage is reader blindness, not real data gaps. Disk migration
-scripts (`migrate_*_canonical.py`) already exist in MTDS — running them collapses F16/F17/F22/F23/F24/F25
-and reduces phantoms to near-zero.
+**Critical insight**: Most "missing" coverage is reader blindness, not real data gaps. Disk migration scripts
+(`migrate_*_canonical.py`) already exist in MTDS — running them collapses F16/F17/F22/F23/F24/F25 and reduces phantoms
+to near-zero.
 
 ## Session summary (2026-05-05 — TL;DR for when Harsh is back)
 
 **14 commits to MTDS scripts** + **15+ commits to plan doc** + **28 distinct findings** captured. No backfill VMs
-launched. No production manifest writes. Full audit-tooling pass — recon + legacy-paths now correctly handle
-the layout zoo across all 5 asset groups.
+launched. No production manifest writes. Full audit-tooling pass — recon + legacy-paths now correctly handle the layout
+zoo across all 5 asset groups.
 
 ### Big-picture outcome
 
-Confirmed Ikenna's 2026-05-05 hypothesis at scale: **most "missing" coverage on the data-status UI is reader
-blindness, not real data gaps**. Audit found:
-- 6+ distinct on-disk path shapes coexisting across the 5 buckets (canonical, hive vocab variants, DeFi
-  venue-overload, prediction 10-segment, 4 sports layouts, TRADFI dash one-off).
+Confirmed Ikenna's 2026-05-05 hypothesis at scale: **most "missing" coverage on the data-status UI is reader blindness,
+not real data gaps**. Audit found:
+
+- 6+ distinct on-disk path shapes coexisting across the 5 buckets (canonical, hive vocab variants, DeFi venue-overload,
+  prediction 10-segment, 4 sports layouts, TRADFI dash one-off).
 - Schema-v4 manifest residue causing reader misclassification (sports 100% v4, prediction 99.5% v4, tradfi 23% v4).
 - Per-AG-specific quirks (F19 case mismatch, F20 venue-key mismatch, F26 coverage_start mismatch).
 
-The audit-tooling (recon + legacy-paths) is now the system-of-record for actual coverage. **Before any backfill
-VM launches, that tooling is the truth.**
+The audit-tooling (recon + legacy-paths) is now the system-of-record for actual coverage. **Before any backfill VM
+launches, that tooling is the truth.**
 
 ### Audit scripts hardened
 
 - `scripts/reconcile_market_tick_manifest.py` — 6 path-shape variants + per-day prefix listing (~100x speedup)
-  + sports/defi case-insensitive normaliser + DeFi venue-key collapse + chain= optional in canonical.
+  - sports/defi case-insensitive normaliser + DeFi venue-key collapse + chain= optional in canonical.
 - `scripts/audit_legacy_paths.py` — 6 axis patterns + raw_tick_data/ prefix scope + companion CSV findings.
-- `scripts/audit_structural_checks.py` — 6 cross-cutting checks (schema-version, written_at chronology,
-  bucket drift, per-VM staleness, schema parity stub, empty-vs-failed accuracy).
+- `scripts/audit_structural_checks.py` — 6 cross-cutting checks (schema-version, written_at chronology, bucket drift,
+  per-VM staleness, schema parity stub, empty-vs-failed accuracy).
 
 ### Open decisions for Harsh
 
 See **Questions for Harsh** section above (9 items). Most consequential:
+
 - **FIX-5 design**: disk migration vs reader-side multi-layout vs canonical+suffix (Q&A 1).
 - **FIX-6 design**: rebuild scope, error_reason preservation (Q&A 2 + design section).
 - **F26 PREDICTION coverage_start mismatch**: UAC says 2020-06-12, disk has 2025-03-14+ (Q&A 9).
@@ -100,25 +104,26 @@ See **Questions for Harsh** section above (9 items). Most consequential:
 
 ### Next moves (queued, not started — pending design calls)
 
-1. Wait for full-range recons to finish (in flight; ETA <30 min). Per-AG match/phantom/missing/gap numbers go into
-   the per-AG result table.
+1. Wait for full-range recons to finish (in flight; ETA <30 min). Per-AG match/phantom/missing/gap numbers go into the
+   per-AG result table.
 2. After Q&A: implement FIX-5 decision (likely Option B reader-side multi-layout).
-3. After Q&A: implement FIX-6 manifest rebuild — order PREDICTION → SPORTS → DEFI → TRADFI → CEFI, with
-   regex-based rebuild_mtds_manifest.py rewrite per FIX-6 design section.
+3. After Q&A: implement FIX-6 manifest rebuild — order PREDICTION → SPORTS → DEFI → TRADFI → CEFI, with regex-based
+   rebuild_mtds_manifest.py rewrite per FIX-6 design section.
 4. Re-run audits to confirm <1% phantom + <1% missing-row across all AGs.
 5. Only THEN evaluate genuine remaining gaps and launch any paid backfills.
 
 ## Questions for Harsh (Q&A queue — will discuss when you're back)
 
-1. **FIX-5 design decision** — disk migration vs reader-side multi-layout vs canonical+suffix? See section
-   "FIX-5 design — disk migration vs reader-side multi-layout (decision pending — needs Ikenna)" below for
-   3 options with trade-offs. **Recommended: Option B (reader-side multi-layout) for now**, unblock FIX-6
-   manifest rebuild, schedule Option C as a longer-term plan if needed.
+1. **FIX-5 design decision — RESOLVED 2026-05-05 Q&A: Option A (disk migration to canonical + writer lock to UAC
+   `build_*_partition_path`).** See updated `## FIX-5 — disk migration to canonical + writer lock to UAC SSOT` section
+   below for the executable Phase 1.5 sub-section (pre-flight → migrate → audit returns 0 non-canonical → writer
+   lock-down → drop migration scripts). Option B / C kept in the section as the audit trail of rejected alternatives. No
+   Q&A needed; this item is closed.
 
 2. **Manifest rebuild — proceed with what data?** F1 (sports manifest 100% schema-v4) and F7 (prediction 99.5% v4)
-   suggest a rebuild from disk truth is needed. But the audit just found ~1M+ axis-8 PREDICTION rows on disk
-   (much larger than the 14k in current manifest). Rebuild would expand the prediction manifest by ~70x. Is
-   that the intended outcome or do we want a stricter inclusion filter?
+   suggest a rebuild from disk truth is needed. But the audit just found ~1M+ axis-8 PREDICTION rows on disk (much
+   larger than the 14k in current manifest). Rebuild would expand the prediction manifest by ~70x. Is that the intended
+   outcome or do we want a stricter inclusion filter?
 
 3. **F20 (DeFi venue-key mismatch)** — manifest claims `venue=AAVE_V3, instrument_type=a_token, data_type=oracle_prices`
    but disk has bundled `venue=AAVEV3-ETHEREUM/<file>`. The bundle parquet contains MULTIPLE logical shards. Should
@@ -129,68 +134,68 @@ See **Questions for Harsh** section above (9 items). Most consequential:
    disk has `venue=MORPHO-ETHEREUM/` and `venue=MORPHO_VAULTS/` separately. Are these venue-name aliases or genuinely
    different protocols? Affects rebuild correctness.
 
-5. **F4/F5 — stale test buckets** (`market-data-tick-test-tradfi-*` and `market-data-tick-test-defi-*` legacy
-   convention vs canonical `*-test-*`). Confirm safe to retire? Empty? Want me to spot-check.
+5. **F4/F5 — stale test buckets** (`market-data-tick-test-tradfi-*` and `market-data-tick-test-defi-*` legacy convention
+   vs canonical `*-test-*`). Confirm safe to retire? Empty? Want me to spot-check.
 
-6. **Bug deeper than path-shape** — F10 (29k Tardis "Response payload not completed" leaked into error_reason) and
-   F11 (3236 schema-validation rejects). BUG-X2 fix from your prerequisite section covers NEW failures, but old
-   rows persist. Manifest rebuild (FIX-6) will overwrite them. Confirm we leave them as-is until rebuild?
+6. **Bug deeper than path-shape** — F10 (29k Tardis "Response payload not completed" leaked into error_reason) and F11
+   (3236 schema-validation rejects). BUG-X2 fix from your prerequisite section covers NEW failures, but old rows
+   persist. Manifest rebuild (FIX-6) will overwrite them. Confirm we leave them as-is until rebuild?
 
-7. **F25 — TRADFI 100k blobs at non-hive `day-data_type-...` layout** — pre-hive writer or active multi-source?
-   Need to identify which adapter writes this shape and decide migrate-or-add-pattern. Real files, 4-5KB, written
-   2026-02. Currently invisible to canonical recon.
+7. **F25 — TRADFI 100k blobs at non-hive `day-data_type-...` layout** — pre-hive writer or active multi-source? Need to
+   identify which adapter writes this shape and decide migrate-or-add-pattern. Real files, 4-5KB, written 2026-02.
+   Currently invisible to canonical recon.
 
 8. **F18+F19+F20+F22+F23+F24 cluster — which writer is in scope for the canonical SSOT?** The audit found 6 distinct
-   writers across MTDS each emitting different on-disk shapes. Shipping a write-time normaliser at UTL-level (one
-   layer down from individual adapters) might unify the layout zoo without rewriting 30+ DeFi handlers + sports +
-   prediction adapters. Worth designing.
+   writers across MTDS each emitting different on-disk shapes. Shipping a write-time normaliser at UTL-level (one layer
+   down from individual adapters) might unify the layout zoo without rewriting 30+ DeFi handlers + sports + prediction
+   adapters. Worth designing.
 
-9. **F26 — PREDICTION coverage_start mismatch**. UAC says POLYMARKET data should go back to 2020-06-12. Disk only
-   has data from 2025-03-14. ~5 years of "missing" days that were never actually fetched. Should we:
-   (a) update UAC to actual MTDS backfill start (loses provenance about when Polymarket protocol launched), or
-   (b) keep UAC aspirational + plan deferred backfill back to 2020-06-12 (Phase 2 budget impact).
-   Affects denominator for PREDICTION coverage % on data-status UI.
+9. **F26 — PREDICTION coverage_start mismatch**. UAC says POLYMARKET data should go back to 2020-06-12. Disk only has
+   data from 2025-03-14. ~5 years of "missing" days that were never actually fetched. Should we: (a) update UAC to
+   actual MTDS backfill start (loses provenance about when Polymarket protocol launched), or (b) keep UAC aspirational +
+   plan deferred backfill back to 2020-06-12 (Phase 2 budget impact). Affects denominator for PREDICTION coverage % on
+   data-status UI.
 
-10. **MAJOR — disk migration scripts already exist (2026-04-18)**. Found 4 scripts:
-    `migrate_sports_canonical.py`, `migrate_polymarket_canonical.py`, `migrate_tradfi_canonical.py`,
-    `migrate_defi_canonical.py` plus `launch-canonical-migration-vm.sh`. Audit evidence suggests migrations
-    have NOT yet run at scale (legacy data still on disk). **Have these been run? When are they scheduled?**
-    If they run, F16/F17/F22/F23/F24/F25 all close. **This is the cheapest path to fixing the layout zoo.**
-    Recommendation: prioritise running these over implementing FIX-5 Option B reader-side multi-layout.
+10. **MAJOR — disk migration scripts already exist (2026-04-18)**. Found 4 scripts: `migrate_sports_canonical.py`,
+    `migrate_polymarket_canonical.py`, `migrate_tradfi_canonical.py`, `migrate_defi_canonical.py` plus
+    `launch-canonical-migration-vm.sh`. Audit evidence suggests migrations have NOT yet run at scale (legacy data still
+    on disk). **Have these been run? When are they scheduled?** If they run, F16/F17/F22/F23/F24/F25 all close. **This
+    is the cheapest path to fixing the layout zoo.** Recommendation: prioritise running these over implementing FIX-5
+    Option B reader-side multi-layout.
 
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
 This section is the operating surface. Every audit run, finding, fix decision, and background-agent dispatch lands here
-with timestamp + status. If you're checking on the work, start here. The phase scaffolding below is the framework;
-this log is the ground truth.
+with timestamp + status. If you're checking on the work, start here. The phase scaffolding below is the framework; this
+log is the ground truth.
 
-| Timestamp (UTC) | Phase | What | Status | Output / link |
-| --------------- | ----- | ---- | ------ | ------------- |
-| 2026-05-05 | DISCOVERY-0 | Plan restructure to live-ops format | done | commit `41ace8c` |
-| 2026-05-05 | DISCOVERY-1 | UAC registry survey — VENUES_BY_ASSET_GROUP, DATA_TYPES_BY_ASSET_GROUP, VENUE_DATA_TYPE_CAPABILITIES, partition_paths.py, raw_tick_hive | done | see "Registry SSOT cheatsheet" below |
-| 2026-05-05 | DISCOVERY-2 | **Found existing audit script — `market-tick-data-service/scripts/reconcile_market_tick_manifest.py`** does forward+inverse phantom detection. Approach pivots: USE this script, don't write a new one. Add a companion probe for drift axes its PATH_RE doesn't cover. | done | finding below |
-| 2026-05-05 | DISCOVERY-3 | Build companion legacy-path probe + structural-checks scripts | done | commits `8ca5e67`, `d04941e` |
-| 2026-05-05 | DISCOVERY-4 | Run 6 structural cross-cutting checks across 4 AGs (CEFI still running) | done | findings F1-F9 below |
-| 2026-05-05 | DISCOVERY-5 | Smoke recon on PREDICTION/DERIBIT — found scaling bug (full-bucket list) | done | finding F14 |
-| 2026-05-05 | FIX-1 | Patch recon: per-day prefix listing — 100x speedup | done | commit `24b38ed` |
-| 2026-05-05 | FIX-2 | Patch recon: add SPORTS to ASSET_GROUP_BUCKETS dict (was missing) | done | finding F15, commit pending |
-| 2026-05-05 | DISCOVERY-6 | Spot-check real DeFi/Sports paths during full-range recon → CRITICAL findings F16+F17 | done | findings F16, F17 |
-| 2026-05-05 | DISCOVERY-7 | F6 DeFi 0% attempted_failed closed as observation (wiring is correct) | done | F6 closed |
-| 2026-05-05 | FIX-3+4+F18 | Extend recon PATH_RE for DeFi/Sports layouts + handle schema-v4 manifests | done | commit `6b1a2f5` |
-| 2026-05-05 | DISCOVERY-8 | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key mismatch) | done | findings F19, F20 |
-| 2026-05-05 | NEXT | FIX-7: case-insensitive comparison in recon (covers F19) | next | TBD |
-| 2026-05-05 | NEXT | FIX-8: DeFi venue-key normaliser in recon (covers F20) | next | TBD |
-| 2026-05-05 | DISCOVERY-9 | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key) | done | findings F19, F20 |
-| 2026-05-05 | FIX-7+8 | Case-insensitive compare + DeFi venue-key normaliser | done | commit `c335eba` |
-| 2026-05-05 | FIX-10 | audit_legacy_paths: scope to raw_tick_data/ prefix only | done | commit `b159b1b` |
-| 2026-05-05 | DISCOVERY-10 | Spot-check during prediction legacy-paths → F22 (10-segment) + F23 (8-segment sports) | done | findings F22, F23 |
-| 2026-05-05 | FIX-9 | Add F22 + F23 path patterns to recon + audit_legacy_paths | done | commit `e096185` |
-| 2026-05-05 | FIX-11 | _CANONICAL_PATH_RE allows optional `chain=` for DeFi (98% of DeFi disk is canonical+chain) | done | commit `37d78f2` |
-| 2026-05-05 | F11-detail | All 3220 CEFI schema-validation rejects are ASTER (BUG-X1 stale sentinels) | done | committed |
-| 2026-05-05 | F25 | TRADFI ~100k blobs at non-hive `day-data_type-` layout (NEW finding) | logged | needs Ikenna call |
-| 2026-05-05 | FIX-12 | AXIS4 regex matches BOTH literal-empty (`instrument_type=/`) and absent-segment forms | done | commits `d2ec7e8` + `f50d5ac` |
-| 2026-05-05 | NOW | Full-range recon + legacy-paths audit running across all 5 AGs (9 parallel via wrapper scripts) | in_progress | TBD |
-| 2026-05-05 | NEXT | Aggregate findings + design FIX-5 / FIX-6 from results | pending | TBD |
+| Timestamp (UTC) | Phase        | What                                                                                                                                                                                                                                                                    | Status      | Output / link                        |
+| --------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------ |
+| 2026-05-05      | DISCOVERY-0  | Plan restructure to live-ops format                                                                                                                                                                                                                                     | done        | commit `41ace8c`                     |
+| 2026-05-05      | DISCOVERY-1  | UAC registry survey — VENUES_BY_ASSET_GROUP, DATA_TYPES_BY_ASSET_GROUP, VENUE_DATA_TYPE_CAPABILITIES, partition_paths.py, raw_tick_hive                                                                                                                                 | done        | see "Registry SSOT cheatsheet" below |
+| 2026-05-05      | DISCOVERY-2  | **Found existing audit script — `market-tick-data-service/scripts/reconcile_market_tick_manifest.py`** does forward+inverse phantom detection. Approach pivots: USE this script, don't write a new one. Add a companion probe for drift axes its PATH_RE doesn't cover. | done        | finding below                        |
+| 2026-05-05      | DISCOVERY-3  | Build companion legacy-path probe + structural-checks scripts                                                                                                                                                                                                           | done        | commits `8ca5e67`, `d04941e`         |
+| 2026-05-05      | DISCOVERY-4  | Run 6 structural cross-cutting checks across 4 AGs (CEFI still running)                                                                                                                                                                                                 | done        | findings F1-F9 below                 |
+| 2026-05-05      | DISCOVERY-5  | Smoke recon on PREDICTION/DERIBIT — found scaling bug (full-bucket list)                                                                                                                                                                                                | done        | finding F14                          |
+| 2026-05-05      | FIX-1        | Patch recon: per-day prefix listing — 100x speedup                                                                                                                                                                                                                      | done        | commit `24b38ed`                     |
+| 2026-05-05      | FIX-2        | Patch recon: add SPORTS to ASSET_GROUP_BUCKETS dict (was missing)                                                                                                                                                                                                       | done        | finding F15, commit pending          |
+| 2026-05-05      | DISCOVERY-6  | Spot-check real DeFi/Sports paths during full-range recon → CRITICAL findings F16+F17                                                                                                                                                                                   | done        | findings F16, F17                    |
+| 2026-05-05      | DISCOVERY-7  | F6 DeFi 0% attempted_failed closed as observation (wiring is correct)                                                                                                                                                                                                   | done        | F6 closed                            |
+| 2026-05-05      | FIX-3+4+F18  | Extend recon PATH_RE for DeFi/Sports layouts + handle schema-v4 manifests                                                                                                                                                                                               | done        | commit `6b1a2f5`                     |
+| 2026-05-05      | DISCOVERY-8  | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key mismatch)                                                                                                                                                                                        | done        | findings F19, F20                    |
+| 2026-05-05      | NEXT         | FIX-7: case-insensitive comparison in recon (covers F19)                                                                                                                                                                                                                | next        | TBD                                  |
+| 2026-05-05      | NEXT         | FIX-8: DeFi venue-key normaliser in recon (covers F20)                                                                                                                                                                                                                  | next        | TBD                                  |
+| 2026-05-05      | DISCOVERY-9  | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key)                                                                                                                                                                                                 | done        | findings F19, F20                    |
+| 2026-05-05      | FIX-7+8      | Case-insensitive compare + DeFi venue-key normaliser                                                                                                                                                                                                                    | done        | commit `c335eba`                     |
+| 2026-05-05      | FIX-10       | audit_legacy_paths: scope to raw_tick_data/ prefix only                                                                                                                                                                                                                 | done        | commit `b159b1b`                     |
+| 2026-05-05      | DISCOVERY-10 | Spot-check during prediction legacy-paths → F22 (10-segment) + F23 (8-segment sports)                                                                                                                                                                                   | done        | findings F22, F23                    |
+| 2026-05-05      | FIX-9        | Add F22 + F23 path patterns to recon + audit_legacy_paths                                                                                                                                                                                                               | done        | commit `e096185`                     |
+| 2026-05-05      | FIX-11       | \_CANONICAL_PATH_RE allows optional `chain=` for DeFi (98% of DeFi disk is canonical+chain)                                                                                                                                                                             | done        | commit `37d78f2`                     |
+| 2026-05-05      | F11-detail   | All 3220 CEFI schema-validation rejects are ASTER (BUG-X1 stale sentinels)                                                                                                                                                                                              | done        | committed                            |
+| 2026-05-05      | F25          | TRADFI ~100k blobs at non-hive `day-data_type-` layout (NEW finding)                                                                                                                                                                                                    | logged      | needs Ikenna call                    |
+| 2026-05-05      | FIX-12       | AXIS4 regex matches BOTH literal-empty (`instrument_type=/`) and absent-segment forms                                                                                                                                                                                   | done        | commits `d2ec7e8` + `f50d5ac`        |
+| 2026-05-05      | NOW          | Full-range recon + legacy-paths audit running across all 5 AGs (9 parallel via wrapper scripts)                                                                                                                                                                         | in_progress | TBD                                  |
+| 2026-05-05      | NEXT         | Aggregate findings + design FIX-5 / FIX-6 from results                                                                                                                                                                                                                  | pending     | TBD                                  |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
 
@@ -199,10 +204,10 @@ Output: `/tmp/mtds-audit/structural/check{1-6}-{ag}.csv` + `SUMMARY.txt`.
 ### F1 — SPORTS manifest is fully schema-v4
 
 - 17,288 rows, **all `schema_version=4`**. Manifest is now v6 (per UTL `MANIFEST_SCHEMA_VERSION`).
-- Manifest **lacks `capture_status`, `error_reason`, `attempted_at` columns** — readers backfill them as
-  `captured` / `""` / `""` for any v4 row.
-- Implication: **every sports row currently looks "captured" to data-status readers**, even those that genuinely
-  failed or were empty. We literally cannot tell honest coverage for sports without a rebuild to v5+.
+- Manifest **lacks `capture_status`, `error_reason`, `attempted_at` columns** — readers backfill them as `captured` /
+  `""` / `""` for any v4 row.
+- Implication: **every sports row currently looks "captured" to data-status readers**, even those that genuinely failed
+  or were empty. We literally cannot tell honest coverage for sports without a rebuild to v5+.
 - Root cause: sports MTDS writers either haven't been updated to v5+ (or never were the path) OR no rebuild has run
   since the v4→v5 migration.
 - Severity: **HIGH** — blocks honest-coverage measurement for sports.
@@ -226,17 +231,16 @@ BINANCE-SPOT   spot_pair  trades             47,773  (v6)
 BINANCE-SPOT   spot_pair  book_snapshot_5    46,609  (v6)
 ```
 
-So **same venue (BINANCE-SPOT) has BOTH v6 rows (with itype=spot_pair) AND v4 rows (with empty itype)**. That's
-the 16,224 v4 rows from F2 distributed across multiple venues. Recon should be matching these because the
-canonical PATH_RE accepts empty itype (after FIX-12 / d2ec7e8). But these manifest rows also need to be tied
-to disk via tuple comparison — and disk has `instrument_type=spot_pair` not empty.
+So **same venue (BINANCE-SPOT) has BOTH v6 rows (with itype=spot_pair) AND v4 rows (with empty itype)**. That's the
+16,224 v4 rows from F2 distributed across multiple venues. Recon should be matching these because the canonical PATH_RE
+accepts empty itype (after FIX-12 / d2ec7e8). But these manifest rows also need to be tied to disk via tuple comparison
+— and disk has `instrument_type=spot_pair` not empty.
 
-**This means recon on CEFI WILL show false phantoms** for the v4 rows: manifest claims captured with empty
-itype, disk has captured at `spot_pair`. Same shape, different itype field. Will be ~16k phantoms.
+**This means recon on CEFI WILL show false phantoms** for the v4 rows: manifest claims captured with empty itype, disk
+has captured at `spot_pair`. Same shape, different itype field. Will be ~16k phantoms.
 
-The fix is recon's `_normalise_key` for CEFI — collapse instrument_type to "" so v4-vs-v6 matches.
-Currently the normaliser only does this for DEFI. **Adding TBD as FIX-13** for after CEFI recon completes
-and confirms the impact.
+The fix is recon's `_normalise_key` for CEFI — collapse instrument_type to "" so v4-vs-v6 matches. Currently the
+normaliser only does this for DEFI. **Adding TBD as FIX-13** for after CEFI recon completes and confirms the impact.
 
 ### F2 — TRADFI manifest mixes v4 + v6 schemas (23% v4)
 
@@ -248,40 +252,37 @@ and confirms the impact.
 
 ### F3 — Chronology: 53-81% of rows have `written_at` 365+ days AFTER data date
 
-| AG | 365+ days "suspicious" | % of total rows |
-| -- | ---------------------: | --------------: |
-| SPORTS | 14,072 / 17,288 | **81%** |
-| TRADFI | 54,175 / 72,380 | **75%** |
-| DEFI | 164,612 / 313,365 | **53%** |
-| PREDICTION | 681 / 14,369 | **5%** |
+| AG         | 365+ days "suspicious" | % of total rows |
+| ---------- | ---------------------: | --------------: |
+| SPORTS     |        14,072 / 17,288 |         **81%** |
+| TRADFI     |        54,175 / 72,380 |         **75%** |
+| DEFI       |      164,612 / 313,365 |         **53%** |
+| PREDICTION |           681 / 14,369 |          **5%** |
 
 - Three possible interpretations to disambiguate:
-  - (a) **Benign** — recent rebuild scripts overwrote `written_at` to the rebuild time. Sports rebuild logic copies
-    a fresh `written_at`. Verify by checking if `written_at` clusters around a rebuild date.
-  - (b) **Late real-time write** — adapter wrote the row long after the data date. Means the orchestrator was
-    catching up on a backlog, not a bug.
-  - (c) **Manifest written for data that doesn't exist** — drift bug. Cross-check against capture_status: a
-    `captured` row with no parquet on disk is a phantom (already detected by `reconcile_market_tick_manifest.py`).
+  - (a) **Benign** — recent rebuild scripts overwrote `written_at` to the rebuild time. Sports rebuild logic copies a
+    fresh `written_at`. Verify by checking if `written_at` clusters around a rebuild date.
+  - (b) **Late real-time write** — adapter wrote the row long after the data date. Means the orchestrator was catching
+    up on a backlog, not a bug.
+  - (c) **Manifest written for data that doesn't exist** — drift bug. Cross-check against capture_status: a `captured`
+    row with no parquet on disk is a phantom (already detected by `reconcile_market_tick_manifest.py`).
 - Severity: **MEDIUM** — observability concern, not necessarily a bug. Need disambiguation.
-- Fix candidate: spot-check 20 random "365+" rows per AG: compare `written_at` cluster vs GCS object creation
-  timestamp; if `written_at >> ctime`, that's a rebuild signature (benign-ish). If `written_at < ctime`,
-  manifest is lying.
+- Fix candidate: spot-check 20 random "365+" rows per AG: compare `written_at` cluster vs GCS object creation timestamp;
+  if `written_at >> ctime`, that's a rebuild signature (benign-ish). If `written_at < ctime`, manifest is lying.
 
 ### F4 — TRADFI has 3 buckets (canonical + 2 test-name variants)
 
 - `market-data-tick-tradfi-central-element-323112` (canonical)
 - `market-data-tick-test-tradfi-central-element-323112` (legacy test naming `test-{ag}`)
 - `market-data-tick-tradfi-test-central-element-323112` (canonical test naming `{ag}-test`)
-- Root cause: bucket-naming convention drifted from `test-{ag}` to `{ag}-test`; the legacy bucket was never
-  cleaned up.
+- Root cause: bucket-naming convention drifted from `test-{ag}` to `{ag}-test`; the legacy bucket was never cleaned up.
 - Severity: **LOW** for the legacy test bucket (probably empty / unused), but worth confirming + retiring.
-- Fix candidate: `gsutil ls -l gs://market-data-tick-test-tradfi-central-element-323112/` to confirm empty;
-  if so, retire it. Same drift on DeFi (`market-data-tick-test-defi-` vs `market-data-tick-defi-test-`).
+- Fix candidate: `gsutil ls -l gs://market-data-tick-test-tradfi-central-element-323112/` to confirm empty; if so,
+  retire it. Same drift on DeFi (`market-data-tick-test-defi-` vs `market-data-tick-defi-test-`).
 
 ### F5 — DEFI test bucket drift mirrors F4
 
-Same drift: `market-data-tick-defi-test-` (canonical) + `market-data-tick-test-defi-` (legacy).
-Same severity + fix.
+Same drift: `market-data-tick-defi-test-` (canonical) + `market-data-tick-test-defi-` (legacy). Same severity + fix.
 
 ### F6 — DEFI manifest has 0% attempted_failed and 0.2% empty_confirmed
 
@@ -333,23 +334,23 @@ Same severity + fix.
 #### F3 disambiguation result (2026-05-05) — BENIGN rebuild signature, NOT a bug
 
 Sampled 1.83M CEFI late rows. The `written_at` distribution clusters around very recent dates:
+
 - 2026-05-04: 951k rows (52%)
 - 2026-04-29: 530k rows (29%)
 - 2026-05-01: 181k rows
 - 2026-04-30: 51k rows
 - 2026-05-05: 41k rows
 
-The data dates these rows reference span 2019-2024. So the writers ran in late April / early May 2026 and
-wrote manifest rows for years-old data. That's **the 2026-04-29 366-VM rollout** + **2026-05-04 backfill VMs**
-populating the manifest from disk truth (or from a fresh fetch).
+The data dates these rows reference span 2019-2024. So the writers ran in late April / early May 2026 and wrote manifest
+rows for years-old data. That's **the 2026-04-29 366-VM rollout** + **2026-05-04 backfill VMs** populating the manifest
+from disk truth (or from a fresh fetch).
 
-**Conclusion**: F3 is the rebuild-write timestamp signature, not phantom rows or a writing-without-data bug.
-The data IS captured (recon shows 99.7% match rate for CEFI). The high "365+ day" count just means the
-rebuild stamped `written_at = rebuild_time` on rows that originally referred to data from years ago.
+**Conclusion**: F3 is the rebuild-write timestamp signature, not phantom rows or a writing-without-data bug. The data IS
+captured (recon shows 99.7% match rate for CEFI). The high "365+ day" count just means the rebuild stamped
+`written_at = rebuild_time` on rows that originally referred to data from years ago.
 
-**Closed as observed-and-explained**, not actionable. If we want a "true ingest time" later, we'd need to
-preserve the original write timestamp — which would require a writer change. Not worth doing for the audit
-purpose.
+**Closed as observed-and-explained**, not actionable. If we want a "true ingest time" later, we'd need to preserve the
+original write timestamp — which would require a writer change. Not worth doing for the audit purpose.
 
 #### F6' — CEFI capture_status distribution
 
@@ -367,27 +368,27 @@ purpose.
 #### F10 — CEFI: 29,513 rows of `Response payload is not completed` error
 
 - Tardis/HTTP transport error. Distinct from BUG-X1 — these are real fetch failures.
-- BUG-X2 fix in MTDS `fe5cc2c` writes generic `VENUE_FETCH_FAILED` for new failures, but **these old rows still
-  have the raw exception text** in `error_reason`.
-- Severity: **MEDIUM** — these are real failed shards that should be re-attempted. Do NOT need a code fix; a
-  manifest rebuild will overwrite them with fresh error classifications. Or: backfill VMs will retry them.
+- BUG-X2 fix in MTDS `fe5cc2c` writes generic `VENUE_FETCH_FAILED` for new failures, but **these old rows still have the
+  raw exception text** in `error_reason`.
+- Severity: **MEDIUM** — these are real failed shards that should be re-attempted. Do NOT need a code fix; a manifest
+  rebuild will overwrite them with fresh error classifications. Or: backfill VMs will retry them.
 - Fix candidate: leave in place; phase 2 backfill will retry them via `_should_skip_shard` doing the right thing.
 
 #### F11 — CEFI: 3,220 rows of `StreamingParquetWriter pre-write validation failed`
 
 - Write-time schema validation rejected the parquet. The writer was called but the row data didn't conform to the
   registered SchemaDefinition.
-- This is the **schema-validation-before-write** invariant correctly firing — caught bad rows, didn't write
-  bad data to disk.
-- Severity: **MEDIUM** — need to break down which (venue, data_type) is producing rejected rows. If it's a
-  consistent pattern (e.g. one venue's adapter producing bad shape), that's a fix at the adapter level.
+- This is the **schema-validation-before-write** invariant correctly firing — caught bad rows, didn't write bad data to
+  disk.
+- Severity: **MEDIUM** — need to break down which (venue, data_type) is producing rejected rows. If it's a consistent
+  pattern (e.g. one venue's adapter producing bad shape), that's a fix at the adapter level.
 - Fix candidate: query CEFI manifest where `error_reason LIKE 'StreamingParquetWriter%'` group by (venue, data_type).
   Document the breakdown, then fix the adapter producing bad rows.
 
 #### F12 — CEFI: ~7,000 rows leaking raw CSV-column error text (`In CSV column #N`)
 
-- Tardis CSV parser hit bad rows, raised `pyarrow` (or pandas) exception, exception text leaked into
-  `error_reason`. Same BUG-X2 pattern as the original DERIBIT cluster.
+- Tardis CSV parser hit bad rows, raised `pyarrow` (or pandas) exception, exception text leaked into `error_reason`.
+  Same BUG-X2 pattern as the original DERIBIT cluster.
 - BUG-X2 fix in `fe5cc2c` covers this for NEW failures but the old rows persist.
 - Severity: **LOW** — manifest carries verbose error strings instead of a clean classification.
 - Fix candidate: rebuild manifest to overwrite, OR confirm `classify_venue_error()` now catches these (BUG-X2 patch).
@@ -403,24 +404,24 @@ purpose.
 
 Surfaced by smoke run of patched recon on PREDICTION 2025-12-01..2025-12-07.
 
-- 14 forward phantoms across 7 days. Pattern: every day has the same 2 row shapes claiming `captured` with no
-  parquet on disk:
+- 14 forward phantoms across 7 days. Pattern: every day has the same 2 row shapes claiming `captured` with no parquet on
+  disk:
   - `('YYYY-MM-DD', 'POLYMARKET', '', 'trades')` — empty `instrument_type` (schema-v4 vestige)
   - `('YYYY-MM-DD', 'POLYMARKET', 'prediction_market', 'trades')` — canonical
 - Disk has the same shape captured at canonical path; manifest **double-counts** because of the schema-v4
   empty-instrument-type axis 4.
-- Reading: schema-v4 sentinel rows from older runs are now phantoms. Phase 1.5 manifest rebuild will eliminate
-  them by re-keying canonically.
+- Reading: schema-v4 sentinel rows from older runs are now phantoms. Phase 1.5 manifest rebuild will eliminate them by
+  re-keying canonically.
 - Severity: **MEDIUM** — confirms the F1/F7 schema-mix problem is producing reader-visible phantoms.
-- This is exactly the failure mode Ikenna described: "data exists but the manifest claims missing/wrong because
-  schema mixed."
+- This is exactly the failure mode Ikenna described: "data exists but the manifest claims missing/wrong because schema
+  mixed."
 
 ### F15 — `reconcile_market_tick_manifest.py` doesn't support SPORTS
 
 - `ASSET_GROUP_BUCKETS` dict has CEFI/TRADFI/DEFI/PREDICTION but **omits SPORTS**.
 - `--asset-group SPORTS` raises `argparse error: invalid choice`.
-- Combined with F1 (sports manifest 100% schema-v4) and F9 (sports stuck per-VM shard), sports has been
-  invisible to the reconciler since it was added.
+- Combined with F1 (sports manifest 100% schema-v4) and F9 (sports stuck per-VM shard), sports has been invisible to the
+  reconciler since it was added.
 - Severity: **MEDIUM** — gap in tooling coverage. Quick fix landing in same patch as FIX-1.
 - Fix: add `"SPORTS": f"market-data-tick-sports-{PROJECT_ID}"` to the dict. **LANDED commit `9005917`.**
 
@@ -433,6 +434,7 @@ gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2024
 ```
 
 The DeFi disk layout has:
+
 - `asset_group=defi` ✅
 - `venue=AAVEV3-ETHEREUM` ❌ (legacy venue overload — chain baked in, no separate `chain=` segment — axis 6)
 - ❌ NO `instrument_type=` segment at all
@@ -440,6 +442,7 @@ The DeFi disk layout has:
 - File is `ticks_migrated_<TIMESTAMP>.parquet` (suggests last-touched-by-migration provenance)
 
 **Implications**:
+
 - Recon canonical PATH_RE needs `instrument_type=` AND `data_type=` AND chain= (or via venue overload). DeFi disk
   matches **none of those** — the entire DeFi bucket is invisible to recon.
 - Manifest claims for DeFi go through bucket-write but disk is at a non-canonical path → **manifest forward-phantom
@@ -459,24 +462,25 @@ gs://market-data-tick-sports-central-element-323112/raw_tick_data/by_date/day=20
 
 - `category=sports` ❌ (legacy hive vocab — should be `asset_group=sports`, axis 1)
 - `instrument_type=` literally empty ❌ (axis 4 — empty segment between `=` and next `/`)
-- The PATH_RE uses `instrument_type=(?P<itype>[^/]+)/` which requires NON-EMPTY content between `=` and `/`. **An
-  empty segment matches NEITHER** the canonical PATH_RE nor any of audit_legacy_paths.py's drift-axis regexes —
-  this is in fact a **NEW axis (axis 4 variant) we haven't fully encoded**.
+- The PATH_RE uses `instrument_type=(?P<itype>[^/]+)/` which requires NON-EMPTY content between `=` and `/`. **An empty
+  segment matches NEITHER** the canonical PATH_RE nor any of audit_legacy_paths.py's drift-axis regexes — this is in
+  fact a **NEW axis (axis 4 variant) we haven't fully encoded**.
 
 **Implications**:
+
 - 100% of SPORTS disk data is invisible to the canonical recon PATH_RE.
-- F1 (sports manifest 100% schema-v4) is consistent with F17: writers wrote both empty-instrument_type rows and
-  legacy `category=` paths, never updated to v5+.
+- F1 (sports manifest 100% schema-v4) is consistent with F17: writers wrote both empty-instrument_type rows and legacy
+  `category=` paths, never updated to v5+.
 - Severity: **CRITICAL** — sports audit/recon fundamentally broken.
-- **Confirms Ikenna's hypothesis from 2026-05-05**: data IS on disk but manifest/UI can't see it because of
-  schema/path drift.
+- **Confirms Ikenna's hypothesis from 2026-05-05**: data IS on disk but manifest/UI can't see it because of schema/path
+  drift.
 
 ### F18 — recon crashes on schema-v4 manifests (KeyError: 'capture_status')
 
 - Recon `main()` did `df_slice[df_slice["capture_status"] == "captured"]` unconditionally.
 - Sports manifest is schema-v4 (F1) — no `capture_status` column → KeyError.
-- **Fix landed in `6b1a2f5`**: if column missing, treat all rows as `captured` (matches UTL
-  `read_availability_index` backfill behaviour).
+- **Fix landed in `6b1a2f5`**: if column missing, treat all rows as `captured` (matches UTL `read_availability_index`
+  backfill behaviour).
 
 ### F19 — Sports `data_type` case mismatch (manifest UPPERCASE vs disk lowercase)
 
@@ -486,12 +490,12 @@ Surfaced by smoke run of patched recon on SPORTS 2024-06-15:
 - Disk truth: `('2024-06-15', 'ODDS_API', '', 'odds')` — **lowercase `odds`**
 
 Same shape as the known instrument_type-casing axis (axis 3) but on `data_type`. Recon's tuple-key compare is
-case-sensitive → manifest claim and disk truth never match. Result: every captured shard becomes BOTH a
-phantom AND a missing_row simultaneously.
+case-sensitive → manifest claim and disk truth never match. Result: every captured shard becomes BOTH a phantom AND a
+missing_row simultaneously.
 
 - Severity: **MEDIUM** — inflates phantom + missing-row counts equally on sports.
-- Fix candidate: add case-insensitive comparison on data_type AND instrument_type when reconciling.
-  Better: write-time normalisation — UTL ManifestWriter should lowercase before persisting.
+- Fix candidate: add case-insensitive comparison on data_type AND instrument_type when reconciling. Better: write-time
+  normalisation — UTL ManifestWriter should lowercase before persisting.
 
 ### F22 — PREDICTION uses 10-segment path layout (NEW axis discovered 2026-05-05)
 
@@ -509,21 +513,18 @@ raw_tick_data/by_date/day=2025-03-14/
   0x796f....parquet
 ```
 
-10 segments instead of canonical 6. Discovered when audit_legacy_paths
-reported 39,235 of 40,000 raw_tick_data blobs as UNKNOWN axis. Adapter is
-emitting prediction-specific dimensions (data_source, market_category,
-underlying, market_type, resolution_period) as path segments.
+10 segments instead of canonical 6. Discovered when audit_legacy_paths reported 39,235 of 40,000 raw_tick_data blobs as
+UNKNOWN axis. Adapter is emitting prediction-specific dimensions (data_source, market_category, underlying, market_type,
+resolution_period) as path segments.
 
-- Severity: **CRITICAL** — entire PREDICTION raw_tick_data layer is
-  invisible to recon's canonical PATH_RE.
-- Fix: added `_PREDICTION_DEEP_PATH_RE` to recon variants. After fix:
-  PREDICTION 1-day smoke went from 8 matched / 2 phantom to 9 matched /
-  1 phantom (most blobs now visible).
+- Severity: **CRITICAL** — entire PREDICTION raw_tick_data layer is invisible to recon's canonical PATH_RE.
+- Fix: added `_PREDICTION_DEEP_PATH_RE` to recon variants. After fix: PREDICTION 1-day smoke went from 8 matched / 2
+  phantom to 9 matched / 1 phantom (most blobs now visible).
 
 ### F21 — RESOLVED — DEFI vault_share_price residual phantoms were a recon bug, not a data issue
 
-Earlier DEFI 1-day smoke (2024-06-15, before FIX-11 landed) reported 4 phantoms:
-`FRAX, MAKER, MORPHO_VAULTS, YEARN_V3` × `vault_share_price`.
+Earlier DEFI 1-day smoke (2024-06-15, before FIX-11 landed) reported 4 phantoms: `FRAX, MAKER, MORPHO_VAULTS, YEARN_V3`
+× `vault_share_price`.
 
 After FIX-11 (`_CANONICAL_PATH_RE` allows optional `chain=`):
 
@@ -534,10 +535,9 @@ By chain:   ETHEREUM=5036
 capture_status: captured=4469, empty_confirmed=567, attempted_failed=0
 ```
 
-All 5 venues are valid DeFi protocols on Ethereum chain. Manifest tracks them
-correctly. The earlier "phantom" classification was caused by recon's
-canonical PATH_RE not allowing the `chain=` segment, so it failed to match
-the disk paths even though the data was there.
+All 5 venues are valid DeFi protocols on Ethereum chain. Manifest tracks them correctly. The earlier "phantom"
+classification was caused by recon's canonical PATH_RE not allowing the `chain=` segment, so it failed to match the disk
+paths even though the data was there.
 
 **F21 closed as false alarm. Bug was in recon, not in data.** FIX-11 resolved it.
 
@@ -556,12 +556,12 @@ ASTER  liquidations         460
 100% ASTER. 7 rows/day across 4 data_types.
 
 **Cross-reference with BUG-X1 prerequisite section**: ASTER doesn't have `book_snapshot_5` capability per UAC's
-`VENUE_DATA_TYPE_CAPABILITIES`. Per the section: "ASTER (no book_snapshot_5 capability) seeded book sentinels
-anyway, creating 14 false-miss rows per day." That matches the pattern here perfectly.
+`VENUE_DATA_TYPE_CAPABILITIES`. Per the section: "ASTER (no book_snapshot_5 capability) seeded book sentinels anyway,
+creating 14 false-miss rows per day." That matches the pattern here perfectly.
 
 **Reading**: these 3220 rows are **stale sentinel artefacts** from before the BUG-X1 fix landed. The Tier-3 sentinel
-fan-out was emitting per-instrument rows for capabilities ASTER doesn't have. Pre-write validation correctly
-rejected them (no real data → empty parquet → fails Schema Definition contract).
+fan-out was emitting per-instrument rows for capabilities ASTER doesn't have. Pre-write validation correctly rejected
+them (no real data → empty parquet → fails Schema Definition contract).
 
 - Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
 - Action: leave in place; FIX-6 manifest rebuild will overwrite them.
@@ -576,10 +576,11 @@ TRUE GAP DAYS (no capture either way): 1,752 / 2,154 expected days
 ```
 
 **Reading**:
-- 81% of expected days are true gaps (1,752 of 2,154) — entirely consistent with F26: disk starts 2025-03-14,
-  manifest tracks back to 2020-06-12 per UAC. The "true gap" days are pre-fetch.
-- 420 phantoms — manifest claims captured but disk empty. Sample includes `(2025-03-14, '', '', 'trades')`
-  (BLANK venue!) and `(2025-03-13, POLYMARKET, '', 'trades')` (real day-before-launch phantom).
+
+- 81% of expected days are true gaps (1,752 of 2,154) — entirely consistent with F26: disk starts 2025-03-14, manifest
+  tracks back to 2020-06-12 per UAC. The "true gap" days are pre-fetch.
+- 420 phantoms — manifest claims captured but disk empty. Sample includes `(2025-03-14, '', '', 'trades')` (BLANK
+  venue!) and `(2025-03-13, POLYMARKET, '', 'trades')` (real day-before-launch phantom).
 - **26 missing rows** — disk has data, manifest doesn't claim it. These are F30.
 
 ### F30 — PREDICTION has a SECOND on-disk layout AND blank-venue phantoms
@@ -593,15 +594,14 @@ day=2025-03-27/category=prediction/data_source=POLYMARKET_CLOB/...     (axis-8 d
 day=2025-03-27/category=prediction/venue=POLYMARKET/instrument_type={BTC|ETH|OTHER}/data_type=prediction_trades/ticks_migrated_*.parquet  (canonical with semantic-wrong itype, 26 rows)
 ```
 
-The second layout uses **`instrument_type=BTC` etc. — but BTC is the underlying asset, NOT the
-instrument_type**. Semantically wrong field usage. Files are `_migrated_*` named (2026-04-19 migration). 26
-parquets total.
+The second layout uses **`instrument_type=BTC` etc. — but BTC is the underlying asset, NOT the instrument_type**.
+Semantically wrong field usage. Files are `_migrated_*` named (2026-04-19 migration). 26 parquets total.
 
-These match my canonical PATH_RE (technically valid hive layout). Manifest doesn't have rows for these tuples
-because manifest uses different keys (no per-underlying instrument_type).
+These match my canonical PATH_RE (technically valid hive layout). Manifest doesn't have rows for these tuples because
+manifest uses different keys (no per-underlying instrument_type).
 
-Severity: **MEDIUM** — 26 small-volume parquets, but indicates a migration step that put underlyings into the
-itype slot and never reconciled with manifest.
+Severity: **MEDIUM** — 26 small-volume parquets, but indicates a migration step that put underlyings into the itype slot
+and never reconciled with manifest.
 
 **(b) Blank-venue manifest phantoms**:
 
@@ -611,12 +611,11 @@ sample phantoms: ('2025-03-14', '', '', 'trades') — venue is BLANK string, not
                  ('2025-03-14', 'UNKNOWN', '', 'trades') — venue literally 'UNKNOWN'
 ```
 
-Manifest has rows with empty venue, empty data_type, and venue literal `UNKNOWN`. These are **schema-validation
-failures or pre-write sentinel rows that leaked into manifest**. Probably the BUG-X1 / BUG-X2 cluster
-extension to PREDICTION.
+Manifest has rows with empty venue, empty data_type, and venue literal `UNKNOWN`. These are **schema-validation failures
+or pre-write sentinel rows that leaked into manifest**. Probably the BUG-X1 / BUG-X2 cluster extension to PREDICTION.
 
-Severity: **LOW-MEDIUM** — small population (≤20 rows), but confirms the sentinel-row leak pattern is
-cross-AG, not just CeFi.
+Severity: **LOW-MEDIUM** — small population (≤20 rows), but confirms the sentinel-row leak pattern is cross-AG, not just
+CeFi.
 
 ### F29 — UTL `rebuild_manifest_from_canonical_paths` skips `_migrated_*` files
 
@@ -627,17 +626,18 @@ if not name.endswith(".parquet") or "_migrated_" in name:
     continue
 ```
 
-The `_migrated_*` exclusion was likely added to avoid double-counting during the 2026-04-18 migration that created
-files with names like `ticks_migrated_20260418T132205Z.parquet`. But many of these files are the only copy of the
-data (the migration didn't delete the source — it only copied + renamed).
+The `_migrated_*` exclusion was likely added to avoid double-counting during the 2026-04-18 migration that created files
+with names like `ticks_migrated_20260418T132205Z.parquet`. But many of these files are the only copy of the data (the
+migration didn't delete the source — it only copied + renamed).
 
-Combined with F16: the DeFi `venue=AAVEV3-ETHEREUM/ticks_migrated_*.parquet` files are real data on disk. UTL
-rebuild silently drops them.
+Combined with F16: the DeFi `venue=AAVEV3-ETHEREUM/ticks_migrated_*.parquet` files are real data on disk. UTL rebuild
+silently drops them.
 
-**Severity**: HIGH — UTL rebuild will under-count DeFi by ~5-7% (the F16 axis-6 venue-overload population, all
-named `_migrated_*`).
+**Severity**: HIGH — UTL rebuild will under-count DeFi by ~5-7% (the F16 axis-6 venue-overload population, all named
+`_migrated_*`).
 
 Action: review the `_migrated_*` filter condition. Either:
+
 1. Remove the filter (treat migrated files as canonical disk truth).
 2. Match `_migrated_*` only when there's a non-migrated sibling (i.e. dedup not exclude).
 
@@ -645,13 +645,13 @@ Logged for FIX-6 design — do NOT run rebuild before resolving this.
 
 ### Other UTL rebuild gaps surfaced during audit
 
-`rebuild_manifest_from_canonical_paths` requires both `day=` and `venue=` segments to match (regex `.search`).
-Won't match:
+`rebuild_manifest_from_canonical_paths` requires both `day=` and `venue=` segments to match (regex `.search`). Won't
+match:
+
 - **Axis 11 (sports pre-pre-old)** — has neither `category=` nor `venue=`. Silently skipped.
 - **F25 (TRADFI dash format)** — uses `day-` not `day=`. day_pat regex fails.
 
-For full rebuild correctness, UTL helper needs the same PATH_RE_VARIANTS that recon now uses. Logged in
-FIX-6 design.
+For full rebuild correctness, UTL helper needs the same PATH_RE_VARIANTS that recon now uses. Logged in FIX-6 design.
 
 ### F28 — SPORTS pre-pre-old path layout (axis 11)
 
@@ -659,33 +659,33 @@ Discovered when sports legacy-paths re-run after FIX-12 still reported 3,818 unk
 
 ```
 raw_tick_data/by_date/day=2022-03-07/source=ODDS_API/league=LA_LIGA/ticks.parquet
-                                     ^^^^^^^                  ^^^^^^                
+                                     ^^^^^^^                  ^^^^^^
                                      no category=/asset_group= no venue=
 ```
 
-NO `category=`/`asset_group=` segment, NO `venue=` segment. Just `source=` and `league=`. Earliest sports
-adapter version, predates the hive-vocab introduction.
+NO `category=`/`asset_group=` segment, NO `venue=` segment. Just `source=` and `league=`. Earliest sports adapter
+version, predates the hive-vocab introduction.
 
 Sports now has **4 distinct disk layouts** coexisting:
+
 - axis-4 (empty instrument_type, no league)
 - axis-9 (8-segment per-bookmaker per-league)
 - axis-10 (old per-league with venue=ODDS_API + empty itype)
 - axis-11 (pre-pre-old, no venue, no category)
 
-Severity: **MEDIUM** — adds to layout zoo. FIX-5 design call (Q&A 1) needs to address all 4 sports shapes.
-Action: added to audit_legacy_paths.py axis-11 (commit `c103ec6`); recon comparison logic needs same axis-11
-pattern if we want full sports recon coverage.
+Severity: **MEDIUM** — adds to layout zoo. FIX-5 design call (Q&A 1) needs to address all 4 sports shapes. Action: added
+to audit_legacy_paths.py axis-11 (commit `c103ec6`); recon comparison logic needs same axis-11 pattern if we want full
+sports recon coverage.
 
 ### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
 
-Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims
-captured but disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
-`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped
-out of the manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
+Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims captured but
+disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
+`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped out of the
+manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
 
-Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`.
-Action: leave for FIX-6 rebuild to overwrite, OR run sports recon with `--commit` to flip these
-to attempted_failed (mark them honest).
+Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`. Action: leave for FIX-6
+rebuild to overwrite, OR run sports recon with `--commit` to flip these to attempted_failed (mark them honest).
 
 ### F26 — PREDICTION coverage_start in UAC vs disk reality
 
@@ -697,17 +697,17 @@ KALSHI: 2021-07-19
 MANIFOLD: 2022-01-01
 ```
 
-But disk has zero PREDICTION raw_tick_data before **2025-03-14**. The manifest agrees — 14,368 of 14,369 rows are
-on or after 2025-03-14 (only 1 row at 2025-03-13).
+But disk has zero PREDICTION raw_tick_data before **2025-03-14**. The manifest agrees — 14,368 of 14,369 rows are on or
+after 2025-03-14 (only 1 row at 2025-03-13).
 
-This means the data-status UI is inflating the PREDICTION "missing" count by including 4+ years of pre-fetch
-days where data was never captured. The denominator from UAC says we should have data going back to 2020-06-12;
-reality says we don't.
+This means the data-status UI is inflating the PREDICTION "missing" count by including 4+ years of pre-fetch days where
+data was never captured. The denominator from UAC says we should have data going back to 2020-06-12; reality says we
+don't.
 
 Two options:
+
 1. **Update UAC** to reflect actual MTDS backfill start (~2025-03-14 for POLYMARKET).
-2. **Document as deferred backfill** — we'll go back to 2020-06-12 later via VM-driven backfills, keep UAC
-   aspirational.
+2. **Document as deferred backfill** — we'll go back to 2020-06-12 later via VM-driven backfills, keep UAC aspirational.
 
 Severity: **MEDIUM** — affects coverage % on UI and Phase 2 backfill scope. Needs Ikenna call.
 
@@ -717,11 +717,12 @@ Sampled at TRADFI legacy-paths audit run. 100,698 of ~600k blobs are at:
 
 ```
 raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/NYSE:EQUITY:ABBV-USD.parquet
-                       ^^^         ^^^         ^^^^^^^^^^                     ^                
+                       ^^^         ^^^         ^^^^^^^^^^                     ^
                        dash         dash         no-hive-vocab                colon-separated id
 ```
 
 Notable shape differences:
+
 - `day-` (dash) instead of `day=` (equals) — not hive-partitioned at all.
 - `data_type-` (dash).
 - No `category=` / `asset_group=` segment.
@@ -731,20 +732,22 @@ Notable shape differences:
 Real files (sampled `NYSE:EQUITY:ABBV-USD.parquet`: 4251 bytes, written 2026-02-17). Active data, not stale.
 
 Hypotheses (refined 2026-05-05 after spot-check):
-- **(a) One-off bulk import — confirmed**. Top-level prefixes show only 3 days: `day-2025-11-02`,
-  `day-2025-11-08`, `day-2026-01-01`. Each holds ~33k parquets. Storage class is **NEARLINE** (cold storage).
-  Sample creation time: 2026-02-17 12:49:43Z. Pattern fits a one-time Yahoo Finance / Barchart bulk-import that
-  used an older path convention and was never migrated to the canonical hive layout.
-- **(b) Not active**: NO new files written since 2026-02-17. Live TradFi adapters (Databento) write canonical
-  hive paths.
 
-Severity: **LOW-MEDIUM** — 100k blobs are real but isolated (only 3 days, NEARLINE cold storage). Not blocking
-audit progress. Easy to migrate or document-as-archived.
+- **(a) One-off bulk import — confirmed**. Top-level prefixes show only 3 days: `day-2025-11-02`, `day-2025-11-08`,
+  `day-2026-01-01`. Each holds ~33k parquets. Storage class is **NEARLINE** (cold storage). Sample creation time:
+  2026-02-17 12:49:43Z. Pattern fits a one-time Yahoo Finance / Barchart bulk-import that used an older path convention
+  and was never migrated to the canonical hive layout.
+- **(b) Not active**: NO new files written since 2026-02-17. Live TradFi adapters (Databento) write canonical hive
+  paths.
 
-Investigation needed: (i) which adapter writes this? (ii) is the manifest tracking these or are they all phantoms?
-(iii) is downstream reading them or ignoring them?
+Severity: **LOW-MEDIUM** — 100k blobs are real but isolated (only 3 days, NEARLINE cold storage). Not blocking audit
+progress. Easy to migrate or document-as-archived.
+
+Investigation needed: (i) which adapter writes this? (ii) is the manifest tracking these or are they all phantoms? (iii)
+is downstream reading them or ignoring them?
 
 NOT adding a regex pattern to recon/audit yet — needs Ikenna's input on whether to:
+
 - Treat as legacy and migrate to hive layout.
 - Add a third path-shape variant for active multi-source TradFi.
 
@@ -761,97 +764,99 @@ raw_tick_data/by_date/day=2024-06-15/
   ticks.parquet
 ```
 
-8 segments. Audit-legacy reported 20,876 of 20,876 sports blobs as UNKNOWN
-axis. Sports adapter is emitting `data_source=` AND `league_id=` segments
-between venue and instrument_type.
+8 segments. Audit-legacy reported 20,876 of 20,876 sports blobs as UNKNOWN axis. Sports adapter is emitting
+`data_source=` AND `league_id=` segments between venue and instrument_type.
 
 - Severity: **CRITICAL** — entire SPORTS raw_tick_data layer is invisible.
-- Fix: added `_SPORTS_LEAGUE_PATH_RE` to recon variants. After fix:
-  SPORTS 1-day smoke went from 1 matched / 0 phantom to 23 matched / 0
-  phantom (full per-bookmaker per-league bundles now visible).
+- Fix: added `_SPORTS_LEAGUE_PATH_RE` to recon variants. After fix: SPORTS 1-day smoke went from 1 matched / 0 phantom
+  to 23 matched / 0 phantom (full per-bookmaker per-league bundles now visible).
 
 ### F20 — DeFi manifest-vs-disk venue-keying mismatch (CRITICAL)
 
 Surfaced by smoke run of patched recon on DEFI 2024-06-15:
 
 - Manifest claims (sample, 20 phantoms): `('2024-06-15', 'AAVE_V3', 'a_token', 'oracle_prices')`,
-  `('2024-06-15', 'CURVE', 'pool', 'dex_pool_state')`, etc. — **canonical split** form (venue=PROTOCOL,
-  instrument_type populated, data_type populated).
+  `('2024-06-15', 'CURVE', 'pool', 'dex_pool_state')`, etc. — **canonical split** form (venue=PROTOCOL, instrument_type
+  populated, data_type populated).
 - Disk truth (sample, 8 missing-rows): `('2024-06-15', 'AAVEV3-ETHEREUM', '', '')`,
-  `('2024-06-15', 'CURVE-ETHEREUM', '', '')`, etc. — **overload** form (venue=PROTOCOL-CHAIN, no
-  instrument_type, no data_type).
+  `('2024-06-15', 'CURVE-ETHEREUM', '', '')`, etc. — **overload** form (venue=PROTOCOL-CHAIN, no instrument_type, no
+  data_type).
 
 **The manifest writer and the on-disk path writer disagree about how to identify a DeFi shard.**
 
 This is fundamentally different from the path-shape axes:
+
 - Path-shape axes are about WHERE the file lives.
 - F20 is about HOW the shard is keyed in the manifest.
 
-A canonical-form manifest claim CANNOT match an overload-form disk row by tuple equality — the venue,
-instrument_type, data_type columns all differ. This means even after FIX-3+4 made both forms VISIBLE to recon,
-the comparison stage still produces "phantom" + "missing" pairs for the SAME logical shard.
+A canonical-form manifest claim CANNOT match an overload-form disk row by tuple equality — the venue, instrument_type,
+data_type columns all differ. This means even after FIX-3+4 made both forms VISIBLE to recon, the comparison stage still
+produces "phantom" + "missing" pairs for the SAME logical shard.
 
-- Severity: **CRITICAL** — DeFi manifest has 313k captured rows (per F6 structural check); if the writer-vs-disk
-  key mismatch is universal, the entire DeFi manifest is unreconcilable until normalised.
-- Fix candidate: add a `_normalise_defi_shard_key(venue, instrument_type, data_type) -> tuple` helper that
-  collapses both forms to a canonical key. Applied symmetrically to manifest rows and disk rows before
-  comparison. The "right" form depends on which side we declare canonical (see fix-5 design decision).
+- Severity: **CRITICAL** — DeFi manifest has 313k captured rows (per F6 structural check); if the writer-vs-disk key
+  mismatch is universal, the entire DeFi manifest is unreconcilable until normalised.
+- Fix candidate: add a `_normalise_defi_shard_key(venue, instrument_type, data_type) -> tuple` helper that collapses
+  both forms to a canonical key. Applied symmetrically to manifest rows and disk rows before comparison. The "right"
+  form depends on which side we declare canonical (see fix-5 design decision).
 
 ### F6 closure — DeFi recorder wiring is correct
 
-After investigation: every DeFi handler (bridge, dex_pools, dex_swaps, eigenlayer_rewards, evm_defi,
-flash_loan_events, gas_fee, governance_events, lending_indices, liquidation_events, liquidations, lst_rates,
-mev_events, oracle_prices, perp_funding, position_data, solana_defi, staking_yields, token_transfers,
-vault_share_price) uses `DefiManifestRecorder` and calls all three of `record_captured` / `record_empty` /
-`record_failed`. The recorder delegates to `ManifestWriter._record_status` correctly.
+After investigation: every DeFi handler (bridge, dex_pools, dex_swaps, eigenlayer_rewards, evm_defi, flash_loan_events,
+gas_fee, governance_events, lending_indices, liquidation_events, liquidations, lst_rates, mev_events, oracle_prices,
+perp_funding, position_data, solana_defi, staking_yields, token_transfers, vault_share_price) uses
+`DefiManifestRecorder` and calls all three of `record_captured` / `record_empty` / `record_failed`. The recorder
+delegates to `ManifestWriter._record_status` correctly.
 
-The 0% `attempted_failed` count for DeFi is real: DeFi adapters genuinely don't fail at scale (RPC + TheGraph
-are robust, plus orchestrator pre-skip clips most pre-launch dates as `empty_confirmed`). Combined with F16
-(DeFi paths non-canonical), there's a subtler concern: DeFi rows might be written to manifest under a different
-key shape than the disk layout, but the recorder code path looks structurally correct.
+The 0% `attempted_failed` count for DeFi is real: DeFi adapters genuinely don't fail at scale (RPC + TheGraph are
+robust, plus orchestrator pre-skip clips most pre-launch dates as `empty_confirmed`). Combined with F16 (DeFi paths
+non-canonical), there's a subtler concern: DeFi rows might be written to manifest under a different key shape than the
+disk layout, but the recorder code path looks structurally correct.
 
 **Status**: closed as **observation**, not bug. Could reopen if a DeFi VM run shows manifest writes succeeding for
 captured shards but failing silently for the failure path — needs runtime telemetry, not static analysis.
 
 ## Fix manifest (live tracking — landed + pending)
 
-| # | Fix | Repo | File | Drift axis closed | Commit | Status |
-| - | --- | ---- | ---- | ----------------- | ------ | ------ |
-| FIX-1 | Per-day prefix listing in recon (~100x speedup) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | enables laptop audit | `24b38ed` | LANDED |
-| FIX-2 | Add SPORTS to ASSET_GROUP_BUCKETS | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F15 | `9005917` | LANDED |
-| FIX-3 | Recon PATH_RE supports DeFi venue-overload layout (no itype/dtype segments) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F16 | `6b1a2f5` | LANDED |
-| FIX-4 | Recon PATH_RE accepts `instrument_type=` empty segment | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F17 | `6b1a2f5` | LANDED |
-| F18-fix | Recon handles schema-v4 manifests (no capture_status column) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F18 | `6b1a2f5` | LANDED |
-| FIX-5 | Sports/DeFi disk-layout migration vs reader-side multi-layout — DESIGN call | TBD (UTL writer or MTDS adapters or migration script) | TBD | F16, F17, F19, F20 root cause | — | DESIGN |
-| FIX-7 | Case-insensitive comparison in recon (data_type + instrument_type) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F19 | — | NEXT |
-| FIX-8 | DeFi venue-key normaliser in recon (collapse overload+canonical to common key) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F20 | — | NEXT |
-| FIX-9 | Add SPORTS axis-9 + PREDICTION axis-8 path layouts to recon + audit | market-tick-data-service | scripts/reconcile_market_tick_manifest.py + scripts/audit_legacy_paths.py | F22, F23 | `e096185` | LANDED |
-| FIX-10 | audit_legacy_paths: scope to raw_tick_data/ prefix (skip processed_candles) | market-tick-data-service | scripts/audit_legacy_paths.py | scope correctness | `b159b1b` | LANDED |
-| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after full audit) |
-| (skip) | F6 DeFi 0% attempted_failed | — | — | — | — | CLOSED — wiring correct, observation only |
-| (TBD) | Schema-validation reject breakdown by (venue, data_type) | market-tick-data-service | analysis | F11 | — | INVESTIGATING |
-| (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | PENDING |
-| (TBD) | F3 disambiguation (rebuild signature vs real bug) | tooling | analysis script | F3 | — | PENDING |
+| #       | Fix                                                                            | Repo                                                  | File                                                                      | Drift axis closed             | Commit    | Status                                    |
+| ------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------- | --------- | ----------------------------------------- |
+| FIX-1   | Per-day prefix listing in recon (~100x speedup)                                | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | enables laptop audit          | `24b38ed` | LANDED                                    |
+| FIX-2   | Add SPORTS to ASSET_GROUP_BUCKETS                                              | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F15                           | `9005917` | LANDED                                    |
+| FIX-3   | Recon PATH_RE supports DeFi venue-overload layout (no itype/dtype segments)    | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F16                           | `6b1a2f5` | LANDED                                    |
+| FIX-4   | Recon PATH_RE accepts `instrument_type=` empty segment                         | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F17                           | `6b1a2f5` | LANDED                                    |
+| F18-fix | Recon handles schema-v4 manifests (no capture_status column)                   | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F18                           | `6b1a2f5` | LANDED                                    |
+| FIX-5   | Sports/DeFi disk-layout migration vs reader-side multi-layout — DESIGN call    | TBD (UTL writer or MTDS adapters or migration script) | TBD                                                                       | F16, F17, F19, F20 root cause | —         | DESIGN                                    |
+| FIX-7   | Case-insensitive comparison in recon (data_type + instrument_type)             | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F19                           | —         | NEXT                                      |
+| FIX-8   | DeFi venue-key normaliser in recon (collapse overload+canonical to common key) | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py                                 | F20                           | —         | NEXT                                      |
+| FIX-9   | Add SPORTS axis-9 + PREDICTION axis-8 path layouts to recon + audit            | market-tick-data-service                              | scripts/reconcile_market_tick_manifest.py + scripts/audit_legacy_paths.py | F22, F23                      | `e096185` | LANDED                                    |
+| FIX-10  | audit_legacy_paths: scope to raw_tick_data/ prefix (skip processed_candles)    | market-tick-data-service                              | scripts/audit_legacy_paths.py                                             | scope correctness             | `b159b1b` | LANDED                                    |
+| FIX-6   | Manifest rebuild for sports/prediction (v4 → v6)                               | market-tick-data-service                              | scripts/rebuild_mtds_manifest.py                                          | F1, F7, F14                   | —         | PENDING (after full audit)                |
+| (skip)  | F6 DeFi 0% attempted_failed                                                    | —                                                     | —                                                                         | —                             | —         | CLOSED — wiring correct, observation only |
+| (TBD)   | Schema-validation reject breakdown by (venue, data_type)                       | market-tick-data-service                              | analysis                                                                  | F11                           | —         | INVESTIGATING                             |
+| (TBD)   | Stale test-bucket retirement                                                   | deployment-service                                    | scripts/cleanup-test-buckets.sh                                           | F4, F5                        | —         | PENDING                                   |
+| (TBD)   | F3 disambiguation (rebuild signature vs real bug)                              | tooling                                               | analysis script                                                           | F3                            | —         | PENDING                                   |
 
 ## Critical insight (2026-05-05 19:50 IST audit reveals)
 
 **Ikenna's 2026-05-05 hypothesis is confirmed.** Data exists on disk, but manifest+UI can't see it because:
 
-1. **DeFi (F16)**: disk uses `venue=PROTOCOL-CHAIN` venue-overload + NO `instrument_type=` / `data_type=` segments.
-   The 2026-04-18 migration tagged files as `_migrated_<TS>` but didn't restructure the path layout.
+1. **DeFi (F16)**: disk uses `venue=PROTOCOL-CHAIN` venue-overload + NO `instrument_type=` / `data_type=` segments. The
+   2026-04-18 migration tagged files as `_migrated_<TS>` but didn't restructure the path layout.
 2. **Sports (F17)**: disk uses `category=sports` (legacy hive vocab) AND `instrument_type=` literal-empty.
 3. **Prediction (F14)**: schema-v4 manifest rows persist with empty `instrument_type` claiming captured.
-4. **All AGs (F3)**: 53-82% of manifest rows have written_at 365+ days after data date — the 2026-04 migrations
-   ran but did NOT canonicalise everything.
+4. **All AGs (F3)**: 53-82% of manifest rows have written_at 365+ days after data date — the 2026-04 migrations ran but
+   did NOT canonicalise everything.
 
-**This is exactly the failure mode "the manifest can't read its own canonical layout because writers and readers
-have diverged"**. Re-running backfill VMs would burn quota fetching data that's already on disk at non-canonical
-paths. **The fix is path-layout reconciliation, not redownload.**
+**This is exactly the failure mode "the manifest can't read its own canonical layout because writers and readers have
+diverged"**. Re-running backfill VMs would burn quota fetching data that's already on disk at non-canonical paths. **The
+fix is path-layout reconciliation, not redownload.**
 
 Net plan now has 3 prongs:
+
 - **Audit tooling** (FIX-3/4): teach recon to find data at all known disk shapes.
-- **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
-- **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is honest.
+- **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream
+  services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
+- **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is
+  honest.
 
 ## Post-audit summary (will be filled in once full-range recons complete — partial now)
 
@@ -879,57 +884,58 @@ Net plan now has 3 prongs:
 ### Open (need Ikenna call)
 
 - **F25**: TRADFI ~100k blobs at non-hive `day-data_type-` layout → migrate vs add-pattern (Q&A 7).
-- **F26**: PREDICTION coverage_start (UAC says 2020-06-12, disk has 2025-03-14+) → update UAC vs deferred backfill (Q&A 9).
+- **F26**: PREDICTION coverage_start (UAC says 2020-06-12, disk has 2025-03-14+) → update UAC vs deferred backfill (Q&A
+  9).
 - **FIX-5 design call**: disk migration vs reader-side multi-layout vs canonical+suffix (Q&A 1).
 - **FIX-6 design call**: rebuild scope/order, error_reason preservation (Q&A 2 + design section below).
 
 ### Empty-itype-captured-rows per AG (the v4 schema residue)
 
-These are manifest rows with `capture_status='captured'` AND `instrument_type=''`. They cause phantom noise
-in recon comparison because disk has proper `instrument_type=spot_pair` etc. — manifest tuple keyed at
-empty itype, disk keyed at populated itype, no match.
+These are manifest rows with `capture_status='captured'` AND `instrument_type=''`. They cause phantom noise in recon
+comparison because disk has proper `instrument_type=spot_pair` etc. — manifest tuple keyed at empty itype, disk keyed at
+populated itype, no match.
 
-| AG | Total manifest rows | Empty-itype captured | % v4-residue |
-| -- | ------------------- | -------------------- | ------------ |
-| CEFI | 2,229,282 | 13,046 | 0.6% |
-| TRADFI | 73,316 | 5,545 | 7.6% |
-| DEFI | 313,365 | 169 | 0.05% |
-| SPORTS | 21,055 | **17,289** | **82%** |
-| PREDICTION | 14,369 | 433 | 3.0% |
-| **Total** | 2,651,387 | **36,482** | 1.4% |
+| AG         | Total manifest rows | Empty-itype captured | % v4-residue |
+| ---------- | ------------------- | -------------------- | ------------ |
+| CEFI       | 2,229,282           | 13,046               | 0.6%         |
+| TRADFI     | 73,316              | 5,545                | 7.6%         |
+| DEFI       | 313,365             | 169                  | 0.05%        |
+| SPORTS     | 21,055              | **17,289**           | **82%**      |
+| PREDICTION | 14,369              | 433                  | 3.0%         |
+| **Total**  | 2,651,387           | **36,482**           | 1.4%         |
 
-**Reading**: Sports is dominantly v4 (F1 confirmed). CEFI's 13k predicted CEFI recon's actual 14k phantoms
-(F2-CEFI confirmed). DEFI is clean — only 169 v4-residue rows. PREDICTION + TRADFI are minor.
+**Reading**: Sports is dominantly v4 (F1 confirmed). CEFI's 13k predicted CEFI recon's actual 14k phantoms (F2-CEFI
+confirmed). DEFI is clean — only 169 v4-residue rows. PREDICTION + TRADFI are minor.
 
 These rows DON'T need re-fetching. They need either:
+
 - (a) FIX-7 normaliser-side empty-as-wildcard match (recon does this already; data-status UI doesn't).
 - (b) FIX-6 manifest rebuild with proper itype reconstructed from disk paths.
 
 ### Recon outcome per AG (filled-in)
 
-| AG | Manifest rows | Disk blobs (raw_tick_data) | Match rate | Forward phantoms | Missing rows | True gap days | Notes |
-| -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
-| PREDICTION | 14,369 | 573,451 raw_tick_data + 26 canonical-with-BTC-itype | 81% of expected days TRUE GAP (F26) | 420 (some blank-venue F30b) | 26 (F30a — _migrated_* second layout) | 1,752 / 2,154 (pre-fetch) | Disk starts 2025-03-14 (F26); F30 finds new layout |
-| SPORTS | 17,288 | 25,709 raw_tick_data: 15,155 axis-10 + 4,921 axis-9 + 1,815 axis-4 + 3,818 axis-11 unmatched (F28); recon matched 3,649 / phantoms 603 / missing 0 / true-gap 37 days | 86% match | **603** (mostly 2020-06-01..05 — F27) | **0** | 37 (recent — forward-poll lapse) | 100% v4 manifest (F1); 4 distinct disk layouts (axis-4/9/10/11) |
-| TRADFI | 73,316 | 1,786,848 raw_tick_data: 1,478,899 canonical + 206,141 axis-4 + 101,808 F25 dash | matched=21,424 (29% of manifest) | **5,562** (empty-itype v4 mix — F2-TRADFI) | 1,735 (disk-has-canonical, manifest-has-v4) | 368/2682 (13.7%) | F25 dash + axis-4 disk-side both present. Migration scripts exist (Q&A 10) |
-| DEFI | 313,365 | 312k canonical + 5,332 axis-6 | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0** | 278 | 1,295 / 2,317 | F16 → 1.7% legacy. Missing rows include UNISWAPV4-ETHEREUM with empty itype |
-| CEFI | 2,226,631 | 1,224,121 raw_tick_data (1,217,195 canonical / 65,066 unique tuples) | 99.4% disk match | **14,131** (mostly empty-itype empty-dtype v4 — F2-CEFI confirmed) | 452 (BITFINEX/KRAKEN-FUTURES — manifest didn't track) | 89/2682 (3.3% — CEFI well-covered) | Mostly canonical; 14k phantoms = v4 schema mix predicted |
+| AG         | Manifest rows | Disk blobs (raw_tick_data)                                                                                                                                            | Match rate                                                                                      | Forward phantoms                                                   | Missing rows                                          | True gap days                      | Notes                                                                       |
+| ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| PREDICTION | 14,369        | 573,451 raw_tick_data + 26 canonical-with-BTC-itype                                                                                                                   | 81% of expected days TRUE GAP (F26)                                                             | 420 (some blank-venue F30b)                                        | 26 (F30a — _migrated_\* second layout)                | 1,752 / 2,154 (pre-fetch)          | Disk starts 2025-03-14 (F26); F30 finds new layout                          |
+| SPORTS     | 17,288        | 25,709 raw_tick_data: 15,155 axis-10 + 4,921 axis-9 + 1,815 axis-4 + 3,818 axis-11 unmatched (F28); recon matched 3,649 / phantoms 603 / missing 0 / true-gap 37 days | 86% match                                                                                       | **603** (mostly 2020-06-01..05 — F27)                              | **0**                                                 | 37 (recent — forward-poll lapse)   | 100% v4 manifest (F1); 4 distinct disk layouts (axis-4/9/10/11)             |
+| TRADFI     | 73,316        | 1,786,848 raw_tick_data: 1,478,899 canonical + 206,141 axis-4 + 101,808 F25 dash                                                                                      | matched=21,424 (29% of manifest)                                                                | **5,562** (empty-itype v4 mix — F2-TRADFI)                         | 1,735 (disk-has-canonical, manifest-has-v4)           | 368/2682 (13.7%)                   | F25 dash + axis-4 disk-side both present. Migration scripts exist (Q&A 10)  |
+| DEFI       | 313,365       | 312k canonical + 5,332 axis-6                                                                                                                                         | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0**                                                              | 278                                                   | 1,295 / 2,317                      | F16 → 1.7% legacy. Missing rows include UNISWAPV4-ETHEREUM with empty itype |
+| CEFI       | 2,226,631     | 1,224,121 raw_tick_data (1,217,195 canonical / 65,066 unique tuples)                                                                                                  | 99.4% disk match                                                                                | **14,131** (mostly empty-itype empty-dtype v4 — F2-CEFI confirmed) | 452 (BITFINEX/KRAKEN-FUTURES — manifest didn't track) | 89/2682 (3.3% — CEFI well-covered) | Mostly canonical; 14k phantoms = v4 schema mix predicted                    |
 
 ### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
 
-Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims
-captured but disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
-`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped
-out of the manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
+Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims captured but
+disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
+`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped out of the
+manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
 
-Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`.
-Action: leave for FIX-6 rebuild to overwrite, OR run sports recon with `--commit` to flip these
-to attempted_failed (mark them honest).
+Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`. Action: leave for FIX-6
+rebuild to overwrite, OR run sports recon with `--commit` to flip these to attempted_failed (mark them honest).
 
 ## MAJOR DISCOVERY (2026-05-05 21:15) — disk migration scripts already exist!
 
-While waiting for TRADFI recon, fetched MTDS and discovered FOUR canonical
-migration scripts already in the repo (since 2026-04-18, `78657fd`):
+While waiting for TRADFI recon, fetched MTDS and discovered FOUR canonical migration scripts already in the repo (since
+2026-04-18, `78657fd`):
 
 ```
 market_tick_data_service/scripts/migrate_sports_canonical.py        — sports OLD per-league → 8-segment
@@ -940,42 +946,44 @@ market_tick_data_service/scripts/migrate_defi_canonical.py          — DeFi ven
 
 Plus `launch-canonical-migration-vm.sh` already supports `prediction`, `sports`, `tradfi`, `defi`, and `all` flags.
 
-**This changes the FIX-5 design call entirely.** Option A (disk migration) infrastructure is already
-built — Ikenna's team has been preparing for this. Latest sports migration commit was today (`ce9b069`,
-2026-05-05), suggesting these scripts are being prepped for production execution.
+**This changes the FIX-5 design call entirely.** Option A (disk migration) infrastructure is already built — Ikenna's
+team has been preparing for this. Latest sports migration commit was today (`ce9b069`, 2026-05-05), suggesting these
+scripts are being prepped for production execution.
 
 ### Implication for FIX-5
 
-The design conversation shifts from "do we migrate or not?" to "have these migrations been RUN against
-production buckets?":
+The design conversation shifts from "do we migrate or not?" to "have these migrations been RUN against production
+buckets?":
 
-- If **NO**: schedule the run. The audit findings F16/F17/F22/F23/F24/F25 will all collapse once these
-  migrations execute. Most of the layout zoo evaporates.
-- If **PARTIALLY** (e.g. sports migrated but tradfi pending): document which buckets are clean and which
-  aren't. Run the remaining ones.
-- If **YES**: the legacy paths the audit found are residual leftovers — the migrations didn't catch every
-  blob. Investigate why.
+- If **NO**: schedule the run. The audit findings F16/F17/F22/F23/F24/F25 will all collapse once these migrations
+  execute. Most of the layout zoo evaporates.
+- If **PARTIALLY** (e.g. sports migrated but tradfi pending): document which buckets are clean and which aren't. Run the
+  remaining ones.
+- If **YES**: the legacy paths the audit found are residual leftovers — the migrations didn't catch every blob.
+  Investigate why.
 
 Audit evidence suggests **migrations have NOT been run yet at scale**:
+
 - F16: 5,332 axis-6 venue-overload blobs still on disk in DeFi (would be 0 if migrated).
 - F17/F23/F24: ~25k sports blobs at 4 different shapes (would converge to canonical if migrated).
 - F22: 573k prediction axis-8 deep blobs on disk (would be canonical if migrated).
 - F25: 100k TRADFI dash-format blobs (would be canonical if migrated).
 
-Recommendation: **prioritise running these existing migration scripts** over implementing FIX-5 Option B
-(reader-side multi-layout). Talk to Ikenna about scheduling the migrations. They're a one-time cost; FIX-5
-Option B is permanent reader-side complexity.
+Recommendation: **prioritise running these existing migration scripts** over implementing FIX-5 Option B (reader-side
+multi-layout). Talk to Ikenna about scheduling the migrations. They're a one-time cost; FIX-5 Option B is permanent
+reader-side complexity.
 
 Documented as Q&A item 10.
 
 ## FIX-6 design — manifest rebuild approach (after FIX-7+8+11+12 + reader updates)
 
-After Option B (reader-side multi-layout) lands, the manifest should be rebuilt from disk truth so that
-`capture_status` is honest for every shard.
+After Option B (reader-side multi-layout) lands, the manifest should be rebuilt from disk truth so that `capture_status`
+is honest for every shard.
 
 ### Existing rebuild infrastructure
 
 `market-tick-data-service/scripts/rebuild_mtds_manifest.py` already exists. It:
+
 - Lists `raw_tick_data/by_date/` per AG
 - Parses `(date, venue, instrument_type, data_type)` from canonical paths
 - Writes a per-VM shard with `capture_status="captured"` rows
@@ -984,43 +992,44 @@ After Option B (reader-side multi-layout) lands, the manifest should be rebuilt 
 ### Rebuild script limitations (audit-discovered 2026-05-05)
 
 `rebuild_mtds_manifest.py` does NOT use a regex; it does prefix-walk:
+
 1. List `day=*` prefixes.
 2. For each day, list `category=*/venue=*/...` subdirectories.
 3. Walk `instrument_type=*/data_type=*/`.
 
 This means it CANNOT discover paths at:
+
 - **F22 (prediction 10-segment)**: uses `data_source=` after `category=`, not `venue=`.
 - **F23 (sports 8-segment)**: same `data_source=` first.
-- **F25 (TRADFI dash format)**: uses `day-` not `day=`, so the first `list_blobs(prefix="day=")` misses these
-  100k blobs entirely (NEARLINE storage, one-off bulk import — see F25).
+- **F25 (TRADFI dash format)**: uses `day-` not `day=`, so the first `list_blobs(prefix="day=")` misses these 100k blobs
+  entirely (NEARLINE storage, one-off bulk import — see F25).
 - **F28 (sports pre-pre-old)**: uses `source=` directly under `day=`, no `category=` segment.
 
-So FIX-6 manifest rebuild as currently written **will NOT cover sports / prediction / TRADFI-dash properly**.
-Two paths:
+So FIX-6 manifest rebuild as currently written **will NOT cover sports / prediction / TRADFI-dash properly**. Two paths:
 
 **(a) Rewrite rebuild_mtds_manifest.py to use PATH_RE_VARIANTS like recon does** — list every parquet under
 `raw_tick_data/by_date/`, regex-classify, emit per-axis. Slower because no early-pruning but more correct.
 
-**(b) Add per-AG specialised walkers** — keep the prefix-walk for canonical/CeFi/TradFi, add separate prefix
-walkers for prediction (`data_source=*`), sports (multiple), TRADFI-dash (skip — leave for archive).
+**(b) Add per-AG specialised walkers** — keep the prefix-walk for canonical/CeFi/TradFi, add separate prefix walkers for
+prediction (`data_source=*`), sports (multiple), TRADFI-dash (skip — leave for archive).
 
-Recommended: **(a)**. The regex-classify approach already works in recon; reuse it. The prefix-walk
-optimisation matters less here since rebuilds are batch jobs, not interactive.
+Recommended: **(a)**. The regex-classify approach already works in recon; reuse it. The prefix-walk optimisation matters
+less here since rebuilds are batch jobs, not interactive.
 
 ### What needs to change for FIX-6
 
-The existing rebuild script uses **only canonical PATH_RE** — same root cause as the recon issues we just fixed.
-For FIX-6 to land correctly:
+The existing rebuild script uses **only canonical PATH_RE** — same root cause as the recon issues we just fixed. For
+FIX-6 to land correctly:
 
-1. **Update rebuild_mtds_manifest.py** to use the same `PATH_RE_VARIANTS` list as recon (adapter would be to expose
-   it as a shared module, but for now copy-paste is acceptable per workspace rules — small surface, single
-   reader, easy to keep in sync).
+1. **Update rebuild_mtds_manifest.py** to use the same `PATH_RE_VARIANTS` list as recon (adapter would be to expose it
+   as a shared module, but for now copy-paste is acceptable per workspace rules — small surface, single reader, easy to
+   keep in sync).
 2. **Decide instrument_type/data_type mapping for non-canonical paths**:
-   - axis-6 (DeFi venue-overload, no itype/dtype on disk): rebuild has no info to fill these. Either drop the
-     row or leave itype/dtype empty. Empty matches the existing manifest shape for these venues; recommended.
+   - axis-6 (DeFi venue-overload, no itype/dtype on disk): rebuild has no info to fill these. Either drop the row or
+     leave itype/dtype empty. Empty matches the existing manifest shape for these venues; recommended.
    - axis-9 (sports new): full info available, populate canonically.
-   - axis-10 (sports old per-league): no instrument_type info on disk; populate empty. The `league` segment
-     becomes `league_id` column.
+   - axis-10 (sports old per-league): no instrument_type info on disk; populate empty. The `league` segment becomes
+     `league_id` column.
    - axis-8 (prediction deep): full info, populate canonically.
 3. **Run rebuild PER AG with `MANIFEST_PER_VM_SHARDS=true`** to avoid CAS contention with the consolidator.
 4. **Force-merge** after each rebuild via `python -m unified_trading_library.manifest_consolidator --bucket ...`.
@@ -1036,132 +1045,149 @@ For FIX-6 to land correctly:
 
 ### Risks
 
-- **Loss of error_reason** — rebuild from disk truth doesn't know historical failures. Existing
-  `attempted_failed` rows from BUG-X1 / BUG-X2 / Tardis transport errors get overwritten with `captured`.
-  We LOSE the failure history. Option: rebuild only writes `captured` rows; leave `attempted_failed` rows
-  untouched. The reader-side merge handles the union.
-- **Rebuild capacity vs disk reality** — rebuild can only emit what's on disk. If disk is missing genuine days
-  (e.g. PREDICTION pre-2025-03-14 per F26), rebuild won't fix that. Those still need a fetch backfill.
-- **Consolidator races** — must use `MANIFEST_PER_VM_SHARDS=true` per UTL/SSOT or `manifest_consolidator` will
-  drop our writes (see prior 2026-05-02 incident: 80k rows lost during a rebuild without per_vm shards).
+- **Loss of error_reason** — rebuild from disk truth doesn't know historical failures. Existing `attempted_failed` rows
+  from BUG-X1 / BUG-X2 / Tardis transport errors get overwritten with `captured`. We LOSE the failure history. Option:
+  rebuild only writes `captured` rows; leave `attempted_failed` rows untouched. The reader-side merge handles the union.
+- **Rebuild capacity vs disk reality** — rebuild can only emit what's on disk. If disk is missing genuine days (e.g.
+  PREDICTION pre-2025-03-14 per F26), rebuild won't fix that. Those still need a fetch backfill.
+- **Consolidator races** — must use `MANIFEST_PER_VM_SHARDS=true` per UTL/SSOT or `manifest_consolidator` will drop our
+  writes (see prior 2026-05-02 incident: 80k rows lost during a rebuild without per_vm shards).
 
-## FIX-5 design — disk migration vs reader-side multi-layout (decision pending — needs Ikenna)
+## FIX-5 — disk migration to canonical + writer lock to UAC SSOT (Option A, Q&A-confirmed 2026-05-05)
 
 The audit found **6 distinct on-disk path shapes** for raw_tick_data across the 5 asset groups, all coexisting:
 
-| Axis | Layout | AGs affected | Rough rows | Status of writers |
-| ---- | ------ | ------------ | ---------- | ----------------- |
-| 1 (canonical) | `asset_group=*/venue=*/instrument_type=*/data_type=*/...` | all 5 (ideal) | majority of CeFi/TradFi | current SSOT shape |
-| 2 (rogue root) | `day=*/...` (no `raw_tick_data/by_date/` prefix) | ? | should be 0 post 2026-04-18 migration | migration script exists |
-| 4/17 (empty itype) | `instrument_type=/data_type=*/...` | sports OLD adapter | minor | adapter retired? |
-| 6/16 (defi venue overload) | `venue=PROTOCOL-CHAIN/<file>.parquet` (no itype/dtype) | DeFi | ~313k manifest rows | live writer |
-| 8/22 (prediction 10-segment) | `data_source/venue/chain/market_category/underlying/market_type/resolution_period/data_type/...` | PREDICTION | ~99% of raw_tick_data | live writer |
-| 9/23 (sports 8-segment) | `data_source/venue/league_id/instrument_type/data_type/...` | SPORTS new | ~91 sample blobs | live writer |
-| 10/24 (sports old per-league) | `venue=ODDS_API/instrument_type=/data_type=*/league=*/...` | SPORTS old | ~99% of raw_tick_data | adapter retired? |
+| Axis                          | Layout                                                                                           | AGs affected       | Rough rows                            | Status of writers       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ | ------------------ | ------------------------------------- | ----------------------- |
+| 1 (canonical)                 | `raw_tick_data/by_date/asset_group=*/venue=*/instrument_type=*/data_type=*/day=YYYY-MM-DD/...`   | all 5 (target)     | majority of CeFi/TradFi               | current SSOT shape      |
+| 2 (rogue root)                | `day=*/...` (no `raw_tick_data/by_date/` prefix)                                                 | DeFi (historical)  | should be 0 post 2026-04-18 migration | migration script exists |
+| 4/17 (empty itype)            | `instrument_type=/data_type=*/...`                                                               | sports OLD adapter | minor                                 | adapter retired?        |
+| 6/16 (defi venue overload)    | `venue=PROTOCOL-CHAIN/<file>.parquet` (no itype/dtype)                                           | DeFi               | ~313k manifest rows                   | live writer             |
+| 8/22 (prediction 10-segment)  | `data_source/venue/chain/market_category/underlying/market_type/resolution_period/data_type/...` | PREDICTION         | ~99% of raw_tick_data                 | live writer             |
+| 9/23 (sports 8-segment)       | `data_source/venue/league_id/instrument_type/data_type/...`                                      | SPORTS new         | ~91 sample blobs                      | live writer             |
+| 10/24 (sports old per-league) | `venue=ODDS_API/instrument_type=/data_type=*/league=*/...`                                       | SPORTS old         | ~99% of raw_tick_data                 | adapter retired?        |
 
-### Option A: Disk migration to single canonical layout
+**Decision (2026-05-05 Q&A confirmed): Option A — disk migration to canonical + writer lock to UAC SSOT.**
 
-Move every parquet on disk to a single canonical shape. Update writers to emit canonical only.
+Rejected alternatives (kept here as the audit trail):
 
-**Pros**:
-- One layout to read, one to maintain. Reader code becomes simple.
-- Makes manifest unambiguous: one (date, venue, itype, dtype) tuple → one parquet path.
-- Easier to add new readers without dragging the layout zoo into them.
+- **Option B (reader-side multi-layout)** would have left writers free to keep producing variant shapes — reader
+  complexity grows unbounded with every adapter drift. Violates one-location SSOT. Audit-script polish cannot substitute
+  for a single canonical write path.
+- **Option C (canonical 4-segment + flexible suffix)** still requires one-time migration to populate the canonical
+  prefix on every parquet, and still needs writers to be locked to the new shape. Adding a per-AG suffix dimension
+  doesn't materially reduce the migration cost; we'd still pay it AND keep some layout drift in the suffix space.
 
-**Cons**:
-- Heavy migration work. DeFi has ~313k parquets, sports ~21k, prediction unknown but ≥hundreds of thousands. Each
-  needs a server-side `copy_blob` + delete.
-- Migrations have caused real bugs before (the `_migrated_<TS>.parquet` filename suffix on DeFi shows a prior pass).
-  Risk of further drift if half-completed.
-- Some shapes carry MORE information than canonical (sports league_id, prediction market_category etc.) — would need
-  to either lose that or extend canonical layout.
-- Writers in `live-defi-rollout` would need to emit the new shape too. Coordinating writer-update + disk-migration
-  + reader-update across 30+ DeFi handlers + sports + prediction adapters is a multi-week project.
+### Why Option A is achievable now (not a multi-week project)
 
-### Option B: Reader-side multi-layout + canonical for new writes
+Migration scripts already exist in MTDS — discovery surfaced this 2026-05-05:
 
-Keep all existing on-disk parquets where they are. Update every reader (manifest writer, recon, audit, deployment-api,
-deployment-ui, downstream services) to know about all layouts. Update writers to start emitting canonical going
-forward. Old data stays at the legacy shape; new data uses canonical; readers accept both.
+- `market_tick_data_service/scripts/migrate_defi_canonical.py`
+- `market_tick_data_service/scripts/migrate_sports_canonical.py`
+- `market_tick_data_service/scripts/migrate_polymarket_canonical.py`
+- `market_tick_data_service/scripts/migrate_tradfi_canonical.py` — F25 hyphen → equals rewrite
+- `market_tick_data_service/scripts/migrate_rogue_root_to_raw_tick_data.py` (proof: 604 of 604 DeFi rogue parquets
+  relocated server-side 2026-05-02 with 0 failures, captured in project memory
+  `project_partition_path_full_prefix_2026_05_02.md`).
+- `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py` for cefi (proof: 2,314 rogue day folders + 75
+  residual parquets relocated via `gsutil mv` 2026-05-04, captured in `feedback_phantom_audit_five_drift_axes.md`).
 
-**Pros**:
-- Zero disk migration cost. ~600k parquets across the audit population stay put.
-- New writes go to canonical immediately. Layouts drift smaller over time (legacy shapes get archived).
-- Failures are localized — adding a new reader means teaching it ONE module about layouts, not migrating data.
-- Recoverable: a layout regex bug in reader X doesn't corrupt data, just makes that reader miss rows. Manifest +
-  audit tools catch the discrepancy.
+The launcher `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` already supports
+`--asset-group prediction|sports|tradfi|defi|all`. Migration is a one-time GCS list+server-side-copy cost — bounded by
+disk-size of each AG, NOT by API quota.
 
-**Cons**:
-- Multi-layout reader code is more complex. The PATH_RE_VARIANTS list has to be maintained as new shapes appear.
-- Writers AND readers need synchronised update. If a writer is added emitting a new shape and the reader
-  doesn't know, audit will (correctly) flag a `NEW_AXIS` finding — but until that's added, downstream is blind.
-- The AG-specific dimensions (sports league_id, prediction market_category, DeFi chain) aren't reflected in the
-  canonical (date, venue, itype, dtype) tuple — readers that need the full key have to consult the path layout
-  rather than the manifest tuple. Awkward.
+UAC `build_*_partition_path` already returns the FULL bucket-relative canonical prefix (post-2026-05-02
+`partition_path_full_prefix` work — UAC commits `77abd56` + MTDS `2a479ef` + instruments-service `df36829`). Writers
+just need to consume `from unified_api_contracts.market import build_cefi_partition_path` etc. — no new SSOT to build.
 
-### Option C (compromise): canonicalise the dimensions, allow flexible suffix
+### Phase 1.5 sub-section — Disk migrate + writer lock-down (replaces deferred decision)
 
-Define the canonical layout as `asset_group=*/venue=*/instrument_type=*/data_type=*/<arbitrary-suffix>/<file>.parquet`.
-The suffix is AG-specific and can carry per-AG dimensions (chain= for DeFi, league_id= for sports, market_category=
-for prediction, underlying= for chain bundles).
+The work splits into three SEQUENTIAL sub-steps. Each AG runs through all three before that AG's Phase-2 launches.
 
-Writers ALWAYS produce the four canonical segments first, in fixed order. Readers parse the first four segments and
-treat the suffix as opaque metadata they can re-parse if needed.
+**Pre-flight (run once, on a same-region GCE VM in `asia-northeast1-c`)**:
 
-**Migration**: existing layouts get rewritten to canonical+suffix. DeFi `venue=AAVEV3-ETHEREUM/` →
-`venue=AAVE_V3/instrument_type=pool/data_type=swaps/chain=ETHEREUM/<file>` (still need to derive itype/dtype from the
-parquet contents or filename). Sports old `venue=ODDS_API/instrument_type=/data_type=odds/league=BUNDESLIGA/` →
-`venue=BETFAIR_EX_EU/instrument_type=odds/data_type=trades/league_id=BUNDESLIGA/` (need bookmaker derivation from
-parquet).
+- [ ] [HUMAN] P0. Per-AG dry-run of the existing migration scripts to size the work and surface any pre-migration drift
+      not yet covered: `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh --asset-group all --dry-run`
+      Reports per-AG: parquets at canonical / parquets at each variant axis / candidates needing copy. Cross-check
+      against the F16/F17/F22/F23/F24/F25 row-counts in this plan's "Findings table" so the migration size matches.
 
-**Pros**: clean canonical first 4 segments make manifest tuple unambiguous; AG-specific dims preserved.
-**Cons**: still requires a one-time migration; writers all need synchronised update.
+**Sub-step (a) — disk-migrate to canonical**:
 
-### Recommendation (for Ikenna's input)
+- [ ] [SCRIPT] P0. Run the migrations per AG (sequential to avoid GCS-write contention on the manifest):
+      `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh --asset-group prediction` →
+      `--asset-group sports` → `--asset-group tradfi` → `--asset-group defi` → `--asset-group cefi`. Order: smallest
+      first so failures surface quickly without weeks of disk-copy in flight. **Pair every launch with event-stream
+      verification** (see CLAUDE.md "no fire-and-forget VM launches"; the migration VMs use the `mtds-migrate-` prefix
+      already in `VM_PREFIX_TO_BUCKET`).
 
-**Option B for now** — reader-side multi-layout. We've already implemented it for recon + audit_legacy_paths.
-Cost is small per reader, recovery is easy, and it lets us proceed to FIX-6 (manifest rebuild) without blocking
-on a multi-week disk migration project. Risk: layout zoo grows over time as adapters drift.
+**Sub-step (b) — audit returns 0 non-canonical**:
 
-**Option C as the longer-term fix** if the layout zoo becomes a maintenance burden. Schedule it as a separate
-multi-repo plan once Option B unblocks the immediate audit + rebuild work.
+- [ ] [SCRIPT] P0. Per-AG: `python3 market-tick-data-service/scripts/audit_legacy_paths.py --asset-group <AG>` — assert
+      axis-counts at non-canonical layouts (axis 6 / 8 / 9 / 10 / 16 / 17 / 22 / 23 / 24 / F25-dash) all drop to 0.
+      Anything residual is a migration-script bug — fix the script, re-run, do not paper over with reader-side
+      multi-layout.
 
-**Option A only if** Ikenna decides the layout zoo is unsustainable enough to justify the migration cost.
+**Sub-step (c) — writer lock-down to UAC SSOT (one-time enforcement, prevents re-drift)**:
 
-— please confirm Option B is the right immediate path before I proceed to FIX-6 (manifest rebuild for sports +
-prediction). Will document as a question for the Q&A session.
+- [ ] [AGENT] P0. Add a QG check: any new MTDS adapter or rebuild script writing a raw-tick parquet path that does NOT
+      come from a UAC `build_*_partition_path` call is a QG fail. The check is a `rg -n` for inline path construction
+      patterns in `market-tick-data-service/market_tick_data_service/` (excluding tests + scripts/ that already use
+      UAC). Pre-audit shows the surfaces are: `market_interface/adapters/{cefi,tradfi,defi,prediction,sports}/*.py` plus
+      `engine/orchestrator.py` `PartitionedTickWriter` dispatch (cefi already uses `build_cefi_partition_path`; tradfi +
+      prediction emit byte-equivalent paths inline as a known temporary; defi/prediction handlers had double-prepend
+      bugs that got fixed by `migrate_defi_canonical.py` precedent). The writer-side cleanup is the forcing function —
+      without it, FIX-5 turns into a treadmill.
+- [ ] [AGENT] P0. Update `tradfi/tradfi_shared.py` + `defi/*_handler.py` + `prediction/polymarket_*` writers to consume
+      `unified_api_contracts.market.build_{tradfi,defi,prediction}_partition_path` directly (drop the inline
+      byte-equivalent code paths). Mirror the cefi pattern. Add a unit test per writer asserting the emitted path
+      matches `build_*_partition_path` output for a fixed input.
+- [ ] [AGENT] P0. Once (a)+(b)+(c) green, delete the migration scripts from MTDS `scripts/` (they were one-shot tools;
+      keeping them around invites accidental re-runs that write to the legacy shapes again). Document in
+      `codex/02-data/availability-manifest-and-data-status.md` § "Path layout history" as the closure record.
+
+**Why this sequencing**: writer lock-down without disk migration leaves the legacy parquets stranded (correct, they just
+stop accumulating new drift). Disk migration without writer lock-down is the treadmill. The audit-loop
+`audit_legacy_paths` is the gate between (a) and (c) — it tells us whether the writers really stopped emitting variant
+shapes after the lock.
+
+### Cleanup once Option A lands
+
+The audit-script multi-layout reader code in `reconcile_market_tick_manifest.py` (FIX-1 through FIX-12 worked around the
+layout zoo) becomes redundant once disk is canonical. Schedule a follow-up to collapse `PATH_RE_VARIANTS` to just the
+canonical regex, leaving the legacy variants as a comment-only ledger. Rebuild script's `PATH_RE_VARIANTS` similarly
+collapses, closing the FIX-6 rebuild-vs-recon regex-drift gap (F29).
 
 ### Findings table (live — fixes pending)
 
-| Axis | Description | Known/New | AGs affected | Rows affected | Severity | Root-cause repo | Fix dependency | Status |
-| ---- | ----------- | --------- | ------------ | ------------- | -------- | --------------- | -------------- | ------ |
-| Schema-mix | Manifest v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known | sports (100%), prediction (99.5%), tradfi (23%), cefi (0.7%) | ~48k v4 rows | HIGH | UTL writer + rebuild scripts | rebuild per AG | DIAGNOSED |
-| Late writes | 53-82% rows have written_at 365+ days after data date | new (severity) | all 5 AGs | ~2M rows | MED (observability) | TBD | Disambiguate vs rebuild_at | DIAGNOSED |
-| Bucket drift | Two test-bucket name conventions coexist | known | tradfi, defi, cefi | 3 stale buckets | LOW | deployment-service / cloud_constants | retire stale | DIAGNOSED |
-| DeFi 0% failed | DeFi has 0 attempted_failed across 313k rows | new | defi | ~313k | MED-HI | MTDS DeFi adapters | grep record_failed/empty | DIAGNOSED |
-| Per-VM stuck shard | Sports 1 unmerged shard | new | sports | 1 | MED | UTL consolidator | check consolidator logs | DIAGNOSED |
-| Per-VM backlog | CEFI 1,249 shards in queue (1d-7d age) | new | cefi | 1,249 shards | LOW | UTL consolidator throughput | investigate | DIAGNOSED |
-| Tardis transport errors | 29,513 rows leak `Response payload is not completed` | new | cefi | 29,513 | MED | MTDS Tardis adapter (BUG-X2 fixed for new) | rebuild + retry | DIAGNOSED |
-| Schema validation rejects | StreamingParquetWriter rejected ~3,236 writes | new | cefi (3,220) + tradfi (16) | ~3,236 | MED | adapter producing bad rows | breakdown by (venue, data_type) | DIAGNOSED |
-| CSV parse error leak | ~7,000 rows leak `In CSV column #N` | new | cefi | ~7,000 | LOW | MTDS CSV parser | BUG-X2 patch covers new | DIAGNOSED |
-| Recon-flipped phantoms | TRADFI 254 phantoms flipped previously | none | tradfi | 254 | NONE | recon working | — | EXPECTED |
+| Axis                      | Description                                                    | Known/New      | AGs affected                                                 | Rows affected   | Severity            | Root-cause repo                            | Fix dependency                  | Status    |
+| ------------------------- | -------------------------------------------------------------- | -------------- | ------------------------------------------------------------ | --------------- | ------------------- | ------------------------------------------ | ------------------------------- | --------- |
+| Schema-mix                | Manifest v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known          | sports (100%), prediction (99.5%), tradfi (23%), cefi (0.7%) | ~48k v4 rows    | HIGH                | UTL writer + rebuild scripts               | rebuild per AG                  | DIAGNOSED |
+| Late writes               | 53-82% rows have written_at 365+ days after data date          | new (severity) | all 5 AGs                                                    | ~2M rows        | MED (observability) | TBD                                        | Disambiguate vs rebuild_at      | DIAGNOSED |
+| Bucket drift              | Two test-bucket name conventions coexist                       | known          | tradfi, defi, cefi                                           | 3 stale buckets | LOW                 | deployment-service / cloud_constants       | retire stale                    | DIAGNOSED |
+| DeFi 0% failed            | DeFi has 0 attempted_failed across 313k rows                   | new            | defi                                                         | ~313k           | MED-HI              | MTDS DeFi adapters                         | grep record_failed/empty        | DIAGNOSED |
+| Per-VM stuck shard        | Sports 1 unmerged shard                                        | new            | sports                                                       | 1               | MED                 | UTL consolidator                           | check consolidator logs         | DIAGNOSED |
+| Per-VM backlog            | CEFI 1,249 shards in queue (1d-7d age)                         | new            | cefi                                                         | 1,249 shards    | LOW                 | UTL consolidator throughput                | investigate                     | DIAGNOSED |
+| Tardis transport errors   | 29,513 rows leak `Response payload is not completed`           | new            | cefi                                                         | 29,513          | MED                 | MTDS Tardis adapter (BUG-X2 fixed for new) | rebuild + retry                 | DIAGNOSED |
+| Schema validation rejects | StreamingParquetWriter rejected ~3,236 writes                  | new            | cefi (3,220) + tradfi (16)                                   | ~3,236          | MED                 | adapter producing bad rows                 | breakdown by (venue, data_type) | DIAGNOSED |
+| CSV parse error leak      | ~7,000 rows leak `In CSV column #N`                            | new            | cefi                                                         | ~7,000          | LOW                 | MTDS CSV parser                            | BUG-X2 patch covers new         | DIAGNOSED |
+| Recon-flipped phantoms    | TRADFI 254 phantoms flipped previously                         | none           | tradfi                                                       | 254             | NONE                | recon working                              | —                               | EXPECTED  |
 
 ### Findings table (live — fixes pending)
 
-| Axis | Description | Known/New | AGs affected | Rows affected | Severity | Root-cause repo | Fix dependency | Status |
-| ---- | ----------- | --------- | ------------ | ------------- | -------- | --------------- | -------------- | ------ |
-| Schema-mix | Manifest holds v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known | sports (100%), prediction (99.5%), tradfi (23%) | ~48k v4 rows total | HIGH | UTL writer + rebuild scripts | — | DIAGNOSED |
-| Late writes | 53-81% of rows have written_at 365+ days after data date | new (severity) | sports, tradfi, defi | ~233k rows | MED (observability) | TBD | Disambiguate vs rebuild_at | DIAGNOSED |
-| Bucket drift | Two test-bucket name conventions coexist | known | tradfi, defi | ~3 buckets | LOW | deployment-service / cloud_constants | — | DIAGNOSED |
-| Empty/Failed accuracy | DeFi has 0 attempted_failed across 313k rows | new | defi | ~313k | MED-HI | MTDS DeFi adapters | grep record_empty/record_failed | DIAGNOSED |
-| Per-VM stuck shard | Sports has 1 unmerged per-VM shard | new | sports | 1 | MED | UTL consolidator | check consolidator logs | DIAGNOSED |
+| Axis                  | Description                                                          | Known/New      | AGs affected                                    | Rows affected      | Severity            | Root-cause repo                      | Fix dependency                  | Status    |
+| --------------------- | -------------------------------------------------------------------- | -------------- | ----------------------------------------------- | ------------------ | ------------------- | ------------------------------------ | ------------------------------- | --------- |
+| Schema-mix            | Manifest holds v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known          | sports (100%), prediction (99.5%), tradfi (23%) | ~48k v4 rows total | HIGH                | UTL writer + rebuild scripts         | —                               | DIAGNOSED |
+| Late writes           | 53-81% of rows have written_at 365+ days after data date             | new (severity) | sports, tradfi, defi                            | ~233k rows         | MED (observability) | TBD                                  | Disambiguate vs rebuild_at      | DIAGNOSED |
+| Bucket drift          | Two test-bucket name conventions coexist                             | known          | tradfi, defi                                    | ~3 buckets         | LOW                 | deployment-service / cloud_constants | —                               | DIAGNOSED |
+| Empty/Failed accuracy | DeFi has 0 attempted_failed across 313k rows                         | new            | defi                                            | ~313k              | MED-HI              | MTDS DeFi adapters                   | grep record_empty/record_failed | DIAGNOSED |
+| Per-VM stuck shard    | Sports has 1 unmerged per-VM shard                                   | new            | sports                                          | 1                  | MED                 | UTL consolidator                     | check consolidator logs         | DIAGNOSED |
 
 ## Discovery audit — 2026-05-05+ (the actual current work)
 
 **Why this exists**: Ikenna's 2026-05-05 callout (manifest/UI/GCS three-layer disagreement) + Harsh's instruction to
-treat this as a **systematic discovery exercise across the whole MTDS surface** — find every disagreement, not just
-the ones we already know about. The phases below (0 → 4) describe an idealised flow; this section captures what we
-are actually doing day-by-day.
+treat this as a **systematic discovery exercise across the whole MTDS surface** — find every disagreement, not just the
+ones we already know about. The phases below (0 → 4) describe an idealised flow; this section captures what we are
+actually doing day-by-day.
 
 ### Goal
 
@@ -1171,12 +1197,12 @@ root, then rebuild manifests, then (and only then) launch paid backfills for gen
 
 ### Approach (overview)
 
-1. **Enumerate the audit matrix** — every cell from UAC's `VENUES_BY_ASSET_GROUP × DATA_TYPES_BY_ASSET_GROUP ×
-   instrument_types`, with a representative instrument per cell. Output: a JSON cell list consumed by the audit
-   script.
+1. **Enumerate the audit matrix** — every cell from UAC's
+   `VENUES_BY_ASSET_GROUP × DATA_TYPES_BY_ASSET_GROUP × instrument_types`, with a representative instrument per cell.
+   Output: a JSON cell list consumed by the audit script.
 2. **Build the cell-probe audit script** — for one cell + one date, query the manifest (what API/manifest say), then
    probe GCS at every known legacy path shape (the 8 drift axes), record what's on disk, classify the disagreement.
-   **Critically**: flag any path it finds that doesn't match a known axis — that's a *new* drift axis we don't know
+   **Critically**: flag any path it finds that doesn't match a known axis — that's a _new_ drift axis we don't know
    about.
 3. **Smoke the script** on 1-2 cells manually before fanning out, to verify the probing logic.
 4. **Fan out 10-15 background agents in parallel** (Opus 4.6 first while we calibrate, then Sonnet/Opus per workload).
@@ -1187,8 +1213,8 @@ root, then rebuild manifests, then (and only then) launch paid backfills for gen
    catch failure modes that don't show up as per-cell GCS path mismatches.
 6. **Aggregate findings here** — drift axes (known + new) with severity, AGs affected, root-cause repo, fix
    dependencies.
-7. **Land fixes in dependency order** across UTL / UAC / MTDS / deployment-api / deployment-ui / recon script /
-   rebuild scripts. Quickmerge `--agent` per repo. Cross-repo fixes get aligned commits so we don't leave the stack
+7. **Land fixes in dependency order** across UTL / UAC / MTDS / deployment-api / deployment-ui / recon script / rebuild
+   scripts. Quickmerge `--agent` per repo. Cross-repo fixes get aligned commits so we don't leave the stack
    half-migrated.
 8. **Re-run audit matrix** to confirm inverse-phantom rate <1% per cell and the data-status UI stops lying. Only then
    evaluate genuine gaps and launch paid backfills.
@@ -1197,35 +1223,37 @@ root, then rebuild manifests, then (and only then) launch paid backfills for gen
 
 We're dispatching 10-15 parallel agents. Three rate-limit ceilings to respect:
 
-| Ceiling | Limit | Mitigation |
-| ------- | ----- | ---------- |
-| GCS list ops | ~1000 list_blobs/sec per project | Each agent runs `list_blobs(prefix=...)` not full bucket scans; cap workers per agent at 4. |
-| Anthropic API | per-org tokens/min | Stagger agent dispatch in waves of 5; Opus 4.6 first wave for calibration, then scale. |
-| Tardis/Databento | paid quotas | **Audit phase is read-only against GCS + manifest only — no venue API calls.** |
+| Ceiling          | Limit                            | Mitigation                                                                                  |
+| ---------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
+| GCS list ops     | ~1000 list_blobs/sec per project | Each agent runs `list_blobs(prefix=...)` not full bucket scans; cap workers per agent at 4. |
+| Anthropic API    | per-org tokens/min               | Stagger agent dispatch in waves of 5; Opus 4.6 first wave for calibration, then scale.      |
+| Tardis/Databento | paid quotas                      | **Audit phase is read-only against GCS + manifest only — no venue API calls.**              |
 
 Each background-agent prompt includes: the goal of the audit, the 8 known drift axes with provenance, the cell-probe
-script path + invocation, the "if you find a new path shape NOT matching any known axis, STOP and report it" rule,
-and a write-only-to-CSV-do-not-modify-anything restriction. Agents return CSVs; main session aggregates.
+script path + invocation, the "if you find a new path shape NOT matching any known axis, STOP and report it" rule, and a
+write-only-to-CSV-do-not-modify-anything restriction. Agents return CSVs; main session aggregates.
 
 ### Registry SSOT cheatsheet (2026-05-05 discovery)
 
 All registries live in UAC + UTL + MTDS. Audit scripts and background agents source from here, never hard-code.
 
-| What | File | Symbol |
-| ---- | ---- | ------ |
-| Venues per AG | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:155-214` | `VENUES_BY_ASSET_GROUP` |
-| Data_types per AG | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:96-152` | `DATA_TYPES_BY_ASSET_GROUP` |
-| Per-venue capability matrix (which data_types each venue actually publishes + start dates) | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:422-611` | `VENUE_DATA_TYPE_CAPABILITIES` |
-| MVP seed instruments (canonical IDs per (venue, data_type)) | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:744-942` | `_SPOT_MVP_SEED_INSTRUMENTS`, `_PERP_MVP_SEED_INSTRUMENTS`, `_OPTION_FUTURE_MVP_SEED_UNDERLYINGS`, `get_expected_instruments_for_venue()` |
-| GCS bucket naming | `unified-trading-library/unified_trading_library/core/cloud_constants.py:173-212` | `get_bucket_name(domain, asset_group, project_id)` → `market-data-tick-{ag}-{pid}` |
-| Canonical partition paths | `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py` | `build_cefi_partition_path()`, `build_defi_partition_path()`, `build_tradfi_partition_path()` |
-| Hive key SSOT (canonical vs legacy) | `market-tick-data-service/market_tick_data_service/raw_tick_hive.py` | `RAW_TICK_ASSET_GROUP_HIVE_KEY = "asset_group"` (canonical), `..._LEGACY = "category"` |
-| Instrument types per AG | `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md:136-142` | doc table — no code-level enum |
+| What                                                                                       | File                                                                                     | Symbol                                                                                                                                    |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Venues per AG                                                                              | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:155-214` | `VENUES_BY_ASSET_GROUP`                                                                                                                   |
+| Data_types per AG                                                                          | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:96-152`  | `DATA_TYPES_BY_ASSET_GROUP`                                                                                                               |
+| Per-venue capability matrix (which data_types each venue actually publishes + start dates) | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:422-611` | `VENUE_DATA_TYPE_CAPABILITIES`                                                                                                            |
+| MVP seed instruments (canonical IDs per (venue, data_type))                                | `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:744-942` | `_SPOT_MVP_SEED_INSTRUMENTS`, `_PERP_MVP_SEED_INSTRUMENTS`, `_OPTION_FUTURE_MVP_SEED_UNDERLYINGS`, `get_expected_instruments_for_venue()` |
+| GCS bucket naming                                                                          | `unified-trading-library/unified_trading_library/core/cloud_constants.py:173-212`        | `get_bucket_name(domain, asset_group, project_id)` → `market-data-tick-{ag}-{pid}`                                                        |
+| Canonical partition paths                                                                  | `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`               | `build_cefi_partition_path()`, `build_defi_partition_path()`, `build_tradfi_partition_path()`                                             |
+| Hive key SSOT (canonical vs legacy)                                                        | `market-tick-data-service/market_tick_data_service/raw_tick_hive.py`                     | `RAW_TICK_ASSET_GROUP_HIVE_KEY = "asset_group"` (canonical), `..._LEGACY = "category"`                                                    |
+| Instrument types per AG                                                                    | `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md:136-142`      | doc table — no code-level enum                                                                                                            |
 
 **Canonical MTDS write path** (from `partition_paths.py`):
+
 ```
 raw_tick_data/by_date/day={YYYY-MM-DD}/asset_group={AG}/venue={V}/instrument_type={IT}/data_type={DT}/{SYMBOL}.parquet
 ```
+
 DeFi adds `/chain={C}/` between venue and instrument_type. Chain bundles use `/underlying={U}/ticks.parquet`.
 
 ### Finding 1 (DISCOVERY-2): existing recon script already does most of the audit
@@ -1242,6 +1270,7 @@ phantom detection:
 **What it does NOT do** (the gaps we still need to cover):
 
 The script's `PATH_RE` only matches the canonical layout:
+
 ```python
 r"raw_tick_data/by_date/day=(?P<day>\d{4}-\d{2}-\d{2})/"
 r"(?:category|asset_group)=(?P<ag>[^/]+)/"  # ✅ axis 1: hive vocab handled
@@ -1254,94 +1283,95 @@ r"(?P<filename>[^/]+\.parquet)$"
 
 Drift axes the canonical PATH_RE won't catch:
 
-- **Axis 2 (path prefix)**: legacy top-level `day=YYYY-MM-DD/...` (no `raw_tick_data/by_date/` prefix). Per
-  CLAUDE.md, UAC `77abd56` + MTDS `2a479ef` standardised this; pre-existing rogue data was supposed to be relocated
-  by `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py`. **Need to confirm migration completed**
-  for MTDS bucket, and probe both shapes if not.
-- **Axis 3 (instrument_type casing)**: manifest may hold `PERPETUAL` / `perpetual`; disk only has lowercase. PATH_RE
-  is case-sensitive, will only match disk casing. The mismatch is on the manifest side — when `_filter_manifest`
-  filters by user-provided `instrument_type`, case mismatches drop the manifest row from the slice. **Need to
-  confirm this comparison is case-insensitive or normalize before comparing.**
-- **Axis 4 (empty `instrument_type`)**: schema-v4 manifest rows omit the segment. PATH_RE requires
-  `instrument_type=` to match. **Manifest rows with empty `instrument_type` will be in `manifest captured`
-  but no disk match exists** (because disk paths always have a non-empty segment) → falsely classified as
-  forward phantom.
-- **Axis 6 (DeFi venue overload)**: legacy `venue=PROTOCOL-CHAIN/` (no chain= segment). PATH_RE expects
-  canonical `venue=PROTOCOL/chain=CHAIN/...` for DeFi. **DeFi-specific finding — need to verify which form on disk.**
-- **Axis 7 (DeFi no-asset-group hive segment)**: legacy DeFi paths that omit the AG segment entirely.
-  Canonical PATH_RE requires `(?:category|asset_group)=`.
-- **Axis 8 (Polymarket 9-segment layout)**: prediction layout has `sub_category=` and `market=` segments
-  PATH_RE doesn't expect.
+- **Axis 2 (path prefix)**: legacy top-level `day=YYYY-MM-DD/...` (no `raw_tick_data/by_date/` prefix). Per CLAUDE.md,
+  UAC `77abd56` + MTDS `2a479ef` standardised this; pre-existing rogue data was supposed to be relocated by
+  `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py`. **Need to confirm migration completed** for MTDS
+  bucket, and probe both shapes if not.
+- **Axis 3 (instrument_type casing)**: manifest may hold `PERPETUAL` / `perpetual`; disk only has lowercase. PATH_RE is
+  case-sensitive, will only match disk casing. The mismatch is on the manifest side — when `_filter_manifest` filters by
+  user-provided `instrument_type`, case mismatches drop the manifest row from the slice. **Need to confirm this
+  comparison is case-insensitive or normalize before comparing.**
+- **Axis 4 (empty `instrument_type`)**: schema-v4 manifest rows omit the segment. PATH_RE requires `instrument_type=` to
+  match. **Manifest rows with empty `instrument_type` will be in `manifest captured` but no disk match exists** (because
+  disk paths always have a non-empty segment) → falsely classified as forward phantom.
+- **Axis 6 (DeFi venue overload)**: legacy `venue=PROTOCOL-CHAIN/` (no chain= segment). PATH_RE expects canonical
+  `venue=PROTOCOL/chain=CHAIN/...` for DeFi. **DeFi-specific finding — need to verify which form on disk.**
+- **Axis 7 (DeFi no-asset-group hive segment)**: legacy DeFi paths that omit the AG segment entirely. Canonical PATH_RE
+  requires `(?:category|asset_group)=`.
+- **Axis 8 (Polymarket 9-segment layout)**: prediction layout has `sub_category=` and `market=` segments PATH_RE doesn't
+  expect.
 
 **Approach pivot**: instead of writing a brand-new audit script, run `reconcile_market_tick_manifest.py --dry-run`
-across the full matrix AND write a small companion `audit_legacy_paths.py` that probes the 5 missing drift axes
-(2, 3, 4, 6, 7, 8) on a sample of "missing" rows from the recon output.
+across the full matrix AND write a small companion `audit_legacy_paths.py` that probes the 5 missing drift axes (2, 3,
+4, 6, 7, 8) on a sample of "missing" rows from the recon output.
 
 **Companion script spec**:
+
 - Input: a sample of `(asset_group, venue, data_type, day)` tuples that the canonical recon flagged as `true_gaps`.
 - For each tuple, probe GCS at all 5 missing-axis path shapes.
 - Output: per-tuple classification (`legacy_axis_2_top_level_prefix` / `legacy_axis_4_empty_itype` / `genuine_gap`).
 - Writes findings to CSV — never modifies anything.
 
 **Other small fixes spotted in `reconcile_market_tick_manifest.py`**:
+
 - Schema version hard-coded as 5 (line 307, 323). Manifest is now v6 (per UTL `manifest_writer.py`
-  `MANIFEST_SCHEMA_VERSION = 6`). New rows written by the recon script will be v5 → coexist with v6 rows but
-  miss `quote_asset` / `margin_type` / `combo_type` / `leg_weights` columns. **Fix candidate** — bump to 6 and
-  populate the new columns where applicable (DERIBIT inverse vs linear esp.).
+  `MANIFEST_SCHEMA_VERSION = 6`). New rows written by the recon script will be v5 → coexist with v6 rows but miss
+  `quote_asset` / `margin_type` / `combo_type` / `leg_weights` columns. **Fix candidate** — bump to 6 and populate the
+  new columns where applicable (DERIBIT inverse vs linear esp.).
 
 ### Cell enumeration
 
 Total cells (denominator for matrix audit, after `VENUE_DATA_TYPE_CAPABILITIES` filtering):
 
-| AG | Venues | Data_types | Cells (venue × data_type, capability-filtered) |
-| -- | ------ | ---------- | ---------------------------------------------- |
-| CEFI | ~20 | 6 | ~60-80 (varies — many spot venues lack derivative_ticker/liquidations/options/futures) |
-| TRADFI | ~8 | 5 | ~30 |
-| DEFI | ~30 protocols × ~11 chains | ~20 | ~150-200 (most protocols only on 1-3 chains) |
-| SPORTS | ~6 bookmakers (per MTDS layer 2) | ~4 | ~20 |
-| PREDICTION | 2 | 1 (canonical) | 2 |
-| **Total** | | | **~260-330 cells** |
+| AG         | Venues                           | Data_types    | Cells (venue × data_type, capability-filtered)                                         |
+| ---------- | -------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| CEFI       | ~20                              | 6             | ~60-80 (varies — many spot venues lack derivative_ticker/liquidations/options/futures) |
+| TRADFI     | ~8                               | 5             | ~30                                                                                    |
+| DEFI       | ~30 protocols × ~11 chains       | ~20           | ~150-200 (most protocols only on 1-3 chains)                                           |
+| SPORTS     | ~6 bookmakers (per MTDS layer 2) | ~4            | ~20                                                                                    |
+| PREDICTION | 2                                | 1 (canonical) | 2                                                                                      |
+| **Total**  |                                  |               | **~260-330 cells**                                                                     |
 
-For each cell we audit a sample of 15 dates (5 captured + 5 missing + 5 attempted_failed in the manifest),
-total ~4-5k probes. At ~12 prefixes/sec from laptop = ~7 min minimum if perfectly serial, more like 20-30 min
-parallel. **Will not need a GCE VM** at this scale — laptop-side is fine.
+For each cell we audit a sample of 15 dates (5 captured + 5 missing + 5 attempted_failed in the manifest), total ~4-5k
+probes. At ~12 prefixes/sec from laptop = ~7 min minimum if perfectly serial, more like 20-30 min parallel. **Will not
+need a GCE VM** at this scale — laptop-side is fine.
 
 ### Findings table (per drift axis — fill in as audit completes)
 
-| Axis | Description | Known/New | AGs affected | Rows affected (est.) | Severity | Root-cause repo | Fix dependency | Status |
-| ---- | ----------- | --------- | ------------ | -------------------- | -------- | --------------- | -------------- | ------ |
-| 1 | Hive vocab `category=` ↔ `asset_group=` | known | TBD | TBD | TBD | TBD | — | TBD |
-| 2 | Path prefix top-level vs `raw_tick_data/by_date/` | known | TBD | TBD | TBD | TBD | — | TBD |
-| 3 | `instrument_type` casing | known | TBD | TBD | TBD | TBD | — | TBD |
-| 4 | Empty `instrument_type` (schema-v4 vestige) | known | TBD | TBD | TBD | TBD | — | TBD |
-| 5 | Chain-bundle equivalence (option ↔ options_chain) | known | TBD | TBD | TBD | TBD | — | TBD |
-| 6 | DeFi venue overload `PROTOCOL-CHAIN/` vs split | known | DEFI | TBD | TBD | TBD | — | TBD |
-| 7 | DeFi no-asset-group hive segment | known | DEFI | TBD | TBD | TBD | — | TBD |
-| 8 | Polymarket 9-segment layout vs flat | known | PREDICTION | TBD | TBD | TBD | — | TBD |
-| 9+ | NEW — discovered during this audit | new | TBD | TBD | TBD | TBD | TBD | TBD |
+| Axis | Description                                        | Known/New | AGs affected | Rows affected (est.) | Severity | Root-cause repo | Fix dependency | Status |
+| ---- | -------------------------------------------------- | --------- | ------------ | -------------------- | -------- | --------------- | -------------- | ------ |
+| 1    | Hive vocab `category=` ↔ `asset_group=`           | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 2    | Path prefix top-level vs `raw_tick_data/by_date/`  | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 3    | `instrument_type` casing                           | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 4    | Empty `instrument_type` (schema-v4 vestige)        | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 5    | Chain-bundle equivalence (option ↔ options_chain) | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 6    | DeFi venue overload `PROTOCOL-CHAIN/` vs split     | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
+| 7    | DeFi no-asset-group hive segment                   | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
+| 8    | Polymarket 9-segment layout vs flat                | known     | PREDICTION   | TBD                  | TBD      | TBD             | —              | TBD    |
+| 9+   | NEW — discovered during this audit                 | new       | TBD          | TBD                  | TBD      | TBD             | TBD            | TBD    |
 
 ### Fix manifest (one row per fix that needs to land — fill in as findings drive it)
 
-| # | Fix | Repo | File | Drift axis closed | Commit | PR | Status |
-| - | --- | ---- | ---- | ----------------- | ------ | -- | ------ |
-| — | (TBD — populated after audit) | | | | | | |
+| #   | Fix                           | Repo | File | Drift axis closed | Commit | PR  | Status |
+| --- | ----------------------------- | ---- | ---- | ----------------- | ------ | --- | ------ |
+| —   | (TBD — populated after audit) |      |      |                   |        |     |        |
 
 ### Background-agent dispatch log
 
-| Wave | Time (UTC) | Agents | AGs/venues covered | Model | Result | Notes |
-| ---- | ---------- | ------ | ------------------ | ----- | ------ | ----- |
-| — | (TBD — populated as agents are dispatched) | | | | | |
+| Wave | Time (UTC)                                 | Agents | AGs/venues covered | Model | Result | Notes |
+| ---- | ------------------------------------------ | ------ | ------------------ | ----- | ------ | ----- |
+| —    | (TBD — populated as agents are dispatched) |        |                    |       |        |       |
 
 ### Cross-cutting structural checks
 
-| # | Check | Status | Output / finding |
-| - | ----- | ------ | ---------------- |
-| 1 | Schema-version distribution per AG | TBD | |
-| 2 | `written_at` chronology vs GCS object creation | TBD | |
-| 3 | Bucket name drift (manifest references vs `gsutil ls`) | TBD | |
-| 4 | Per-VM shard staleness (`_index/per_vm/*.parquet` backlog) | TBD | |
-| 5 | Schema columns vs registered SchemaDefinition parity | TBD | |
-| 6 | empty_confirmed/attempted_failed classification accuracy | TBD | |
+| #   | Check                                                      | Status | Output / finding |
+| --- | ---------------------------------------------------------- | ------ | ---------------- |
+| 1   | Schema-version distribution per AG                         | TBD    |                  |
+| 2   | `written_at` chronology vs GCS object creation             | TBD    |                  |
+| 3   | Bucket name drift (manifest references vs `gsutil ls`)     | TBD    |                  |
+| 4   | Per-VM shard staleness (`_index/per_vm/*.parquet` backlog) | TBD    |                  |
+| 5   | Schema columns vs registered SchemaDefinition parity       | TBD    |                  |
+| 6   | empty_confirmed/attempted_failed classification accuracy   | TBD    |                  |
 
 ### Commit cadence
 
@@ -1436,6 +1466,64 @@ validation when in fact one option row in the bundle did. Same pattern in the sp
 **Fix shipped**: MTDS commit `fe5cc2c` (same commit as X1). When `classify_venue_error` cannot bucket the exception, the
 sentinel writes the generic code `VENUE_FETCH_FAILED` instead of leaking exception text. Descriptive message stays in
 logs; manifest stops lying. Applied symmetrically to the CeFi Tier-3 path and the sports Tier-2 fan-out.
+
+### BUG-X3 — Databento per-schema silent-drop (manifest claimed empty, was attempted-and-failed)
+
+**Symptom**: 1004 (root, date) pairs across MES / BTC / ETH / ES in MTDS manifest carried `capture_status=captured` with
+zero ohlcv_1m rows on disk for dates where the bundled `--data-types ohlcv_1m;trades` CME parent symbology run had only
+successfully captured `trades`. The manifest looked clean; downstream feature pipelines computed garbage on empty bars;
+root not surfaced until hand-inspection of the parquet contents on 2026-05-05.
+
+**Root cause**: in `market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py`, `download_batch_df`
+ran `for data_type in data_types: for dataset in by_dataset:` and the per-schema loop body had two silent-drop branches:
+
+```python
+if dbn_store is None:
+    continue                                     # silent — no manifest signal
+...
+except Exception as exc:
+    logger.warning("DatabentoAdapter: %s/%s failed: %s", dataset, data_type, exc)
+    continue                                     # silent — no manifest signal
+```
+
+Concurrent-VM 429 contention on the shared Databento account exhausted the adapter's retry budget for `ohlcv_1m` while
+`trades` succeeded. The `continue` masked the failure; the orchestrator's `_fetch_one_venue` saw the call return
+successfully with the partial-success `trades` DataFrame and never set `failed_shards[venue]`. The sentinel pass at the
+end-of-date pass then iterated `expected_dts` and emitted `record_empty` for the missing `ohlcv_1m` shards (the existing
+code path: "venue did not raise → assume empty is genuine").
+
+**Recovery already done**: `/tmp/fill_missing_ohlcv.py` (serial direct-Databento, 0.5s sleep, exp backoff up to 60s
+on 429) recovered all 1004 silently-dropped (root, date) pairs → all four roots returned to ≥99% ohlcv_1m coverage.
+
+**Fix shipped (2026-05-05, no longer deferred)**:
+
+- **MTDS** `market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py`:
+  - New `_PerSchemaFailure` dataclass + `_classify_databento_exception()` helper (maps `BentoHttpError.http_status` or
+    message text → `429` / `RATE_LIMIT` / `AUTH_FAILURE` / `CONNECTION_RESET` / `NOT_FOUND` / `SERVER_ERROR` /
+    `DATABENTO_FETCH_FAILED`).
+  - `download_batch_df` accepts a new optional `failed_per_dt: dict[str, str]` out-dict. Each silent-drop branch appends
+    a `_PerSchemaFailure`, emits an `ADAPTER_FETCH_FAILED` event with
+    `(venue, data_type, dataset, error_code, error_message)` (per CLAUDE.md adapter-error rule), and continues so
+    partial successes are preserved. After the per-schema loop, any data_type that ended with zero captured rows AND at
+    least one failure is written to `failed_per_dt[dt]` with the most-common error_code.
+- **MTDS** `market_tick_data_service/adapters/umi_tick_provider.py`: `fetch_tick_data_for_venue` accepts and threads
+  `failed_per_dt` through to `db_adapter.download_batch_df`.
+- **MTDS** `market_tick_data_service/engine/orchestrator.py`:
+  - `_fetch_one_venue` accepts `failed_per_dt` and threads it through.
+  - The per-venue caller builds a `failed_per_dt_by_venue: dict[str, dict[str, str]]` and merges per-venue dicts after
+    each `_fetch_one_venue` call. **Partial successes are preserved**: the writer's already-streamed `trades` rows
+    survive into `shard_counts` / `captured_dts_here` exactly as before.
+  - Sentinel pass: when iterating `expected_dts`, `failed_per_dt_by_venue.get(venue, {}).get(dt)` is checked first; a
+    populated entry takes precedence over the venue-wide `failed_reason_raw` so the missing `(venue, data_type)` shard
+    lands as `attempted_failed` with the classified code (not `empty_confirmed`).
+- **Tests** `tests/market_interface/unit/test_databento_adapter_logic.py::TestDatabentoAdapterPerSchemaFailureSurfacing`
+  — 3 cases lock the contract: (a) every dataset attempt 429s → `failed_per_dt = {"ohlcv_1m": "429"}`; (b)
+  `_fetch_timeseries_range` returns None → `failed_per_dt = {"ohlcv_1m": "DATABENTO_NULL_RESPONSE"}`; (c) trades
+  succeeds + ohlcv_1m 429s → trades captured AND `failed_per_dt = {"ohlcv_1m": "RATE_LIMIT"}`.
+
+This makes the bundled `--data-types ohlcv_1m;trades` CME parent symbology run honest: a 429 on one schema flips the
+manifest to `attempted_failed` for that data_type, the deployment-UI gap surfaces immediately, and the next backfill run
+targets only the genuinely-missing window.
 
 ### What this means for execution of this plan
 
@@ -1846,11 +1934,25 @@ regardless of `_should_skip_shard` — billable Tardis/Databento API cost. **Use
 Tardis-backed venues + Hyperliquid/Aster on-chain. The 2026-04-29 366-VM rollout (`run-ts=20260429-154202`) covered most
 of the space; gap-fill is what's left.
 
-- [ ] [HUMAN] P0. Confirm Phase 0 cefi MTDS gap (review `/tmp/mtds-recon-cefi.log`).
+**Singleton lock added 2026-05-05** (`launch-cefi-sharded-backfill.sh` `FORCE=1` env-var bypass): refuses re-launch if
+any prior `^(cefi|tradfi)-.*-(heavy|light)-` sharded VM is RUNNING in the zone. Same shared-account contention class as
+the 2026-05-05 Databento silent-drop incident — Tardis rate-limits per-account and the project egress NAT is shared.
+
+- [ ] [HUMAN] P0. Confirm Phase 0 cefi MTDS gap (review `<tmpdir>/mtds-recon-cefi.log`; tmpdir resolves via
+      `tempfile.gettempdir()` per Bandit B108).
 - [ ] [HUMAN] P0. For any year × venue × instrument_type slice still showing `attempted_failed`, re-launch via:
-      `bash bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh \ --venues BINANCE-SPOT,BINANCE-FUTURES,BYBIT,OKX,DERIBIT,COINBASE,UPBIT,HYPERLIQUID,ASTER \ --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \ --data-types trades,book_snapshot_5,derivative_ticker,liquidations \ --shard-by year `
-      Verify the launcher's flag names by reading the script header before running — flag names drift; `--shard-by` and
-      `--data-types` may be `--shard-strategy` and `--data-type` depending on commit.
+      `bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (defaults shard the configured venue universe
+      across years). The singleton lock will refuse to launch if any prior `cefi-*-heavy-*` / `cefi-*-light-*` /
+      `tradfi-*-heavy-*` / `tradfi-*-light-*` VM is RUNNING. Use `FORCE=1 bash …` only if you've confirmed the prior VMs
+      are genuinely zombied. Verify the launcher's flags by reading the script header before running — flag names drift.
+- [ ] [HUMAN] P0. **Verify event stream after launch (every cefi shard VM)** — within 90s of the launch fan-out, run
+      `gcloud storage ls gs://central-element-323112-events/events/market-tick-data-service/$(date -u +%Y-%m-%d)/cefi-*-*-*/`
+      and confirm each new shard VM has an `hour=*` partition with at least one JSONL line where `event=="STARTED"`.
+      Re-check every 10–15min for new progress events with row counts (`INSTRUMENT_PROCESSED` etc. per CLAUDE.md "no
+      fire-and-forget VM launches"). Stalled shards == silently-broken; kill via
+      `gcloud compute instances delete cefi-<venue>-<year>-<group>-<run-ts> --zone=asia-northeast1-c --quiet` and
+      diagnose via the last event's `metadata.details`. The 2026-05-05 MDPS incident (21 VMs ran clean STARTED + STOPPED
+      but emitted 1440 empty bars/day) is the canonical reason this active-verification step is mandatory.
 - [ ] [HUMAN] P0. **DERIBIT options chain** — bundled per-underlying, not per-strike. Verify by sampling any captured
       day: should be `instrument_type=options_chain/data_type=trades/underlying=BTC/ticks.parquet` (bundled), no
       per-contract files. If you see per-contract files post-2026-04-30, that's a regression — flag to Ikenna.
@@ -1866,16 +1968,51 @@ of the space; gap-fill is what's left.
 
 ### TRADFI
 
-CME futures + ES options + ETFs + VIX index — most of this landed 2026-04-30. Only gap-fill is expected.
+**MVP universe (2026-05-05 scope cut, Q&A-confirmed)** — only the 8 instruments that the date-futures arb archetype
+needs:
 
-- [ ] [HUMAN] P0. Confirm Phase 0 tradfi MTDS gap (review `/tmp/mtds-recon-tradfi.log`).
-- [ ] [HUMAN] P0. For ES options chain or ETF gaps, re-launch via the singleton-locked launcher:
-      `bash bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh \ --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \ --instrument-ids 'CME:FUTURE:ES.FUT;CME:OPTION:ES.OPT;NYSE:ETF:IBIT;...' \ --data-types ohlcv_1m,trades,tbbo `
-      The singleton lock will refuse to launch if any `tradfi-bf-*` VM is RUNNING. Use `--force` only if you've
-      confirmed the prior VM is genuinely zombied.
+| Root        | Venue  | Instrument-id        | Data path                                       | Notes                                              |
+| ----------- | ------ | -------------------- | ----------------------------------------------- | -------------------------------------------------- |
+| ES          | CME    | `CME:FUTURE:ES.FUT`  | Databento                                       | E-mini S&P futures                                 |
+| MES         | CME    | `CME:FUTURE:MES.FUT` | Databento                                       | Micro E-mini S&P futures                           |
+| ES options  | CME    | `CME:OPTION:ES.OPT`  | Databento                                       | Bundled per-underlying options chain               |
+| BTC futures | CME    | `CME:FUTURE:BTC.FUT` | Databento                                       | CME-listed BTC futures                             |
+| ETH futures | CME    | `CME:FUTURE:ETH.FUT` | Databento                                       | CME-listed ETH futures                             |
+| IBIT        | NASDAQ | `NASDAQ:ETF:IBIT`    | Databento (XNAS.ITCH)                           | iShares Bitcoin ETF — most liquid US BTC spot ETF  |
+| ETHA        | NASDAQ | `NASDAQ:ETF:ETHA`    | Databento (XNAS.ITCH)                           | iShares Ethereum ETF — most liquid US ETH spot ETF |
+| VIX index   | CBOE   | `CBOE:INDEX:VIX`     | **NOT Databento** — CBOE direct, ohlcv_15m only | Already captured 1,585 days; do not re-fetch       |
+
+**Dropped (do NOT add back without a follow-up plan)**: FBTC / ARKB / FETH (Cboe BZX = BATS) and GBTC / ETHE / BITO
+(NYSE Arca). The date-futures arb only needs CME futures + Deribit (same last-Friday-of-month expiry); IBIT + ETHA on
+NASDAQ cover spot exposure. Re-adding requires UAC instrument def + ARCA / BATS venue entries +
+`launch-tradfi-backfill-vm.sh` case branches together — the launcher's `valid_roots` regex is currently
+`ES|ES_OPT|MES|BTC|ETH|IBIT|ETHA`. SSOT for the cut: project memory
+`project_tradfi_mvp_etf_scope_reduction_2026_05_05.md`.
+
+- [ ] [HUMAN] P0. Confirm Phase 0 tradfi MTDS gap (review `/tmp/mtds-recon-tradfi.log`). Compare to MVP universe above —
+      anything outside the 8 rows is out-of-scope and should NOT be backfilled in this push.
+- [ ] [HUMAN] P0. For ES / MES futures, ES options chain, BTC / ETH futures, or IBIT / ETHA ETF gaps, re-launch via the
+      singleton-locked launcher (constrained to the MVP universe):
+      `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) --instrument-ids 'CME:FUTURE:ES.FUT;CME:FUTURE:MES.FUT;CME:OPTION:ES.OPT;CME:FUTURE:BTC.FUT;CME:FUTURE:ETH.FUT;NASDAQ:ETF:IBIT;NASDAQ:ETF:ETHA' --data-types ohlcv_1m,trades,tbbo`
+      The singleton lock refuses to launch if any `tradfi-bf-*` VM is RUNNING. Use `--force` only if the prior VM is
+      genuinely zombied. **Per-VM event verification is mandatory** (see paired checkbox below).
+- [ ] [HUMAN] P0. **Verify event stream after launch** — within 90s, run
+      `gcloud storage ls gs://central-element-323112-events/events/market-tick-data-service/$(date -u +%Y-%m-%d)/tradfi-bf-*/`,
+      assert the directory exists with an `hour=*` partition; read the first JSONL and assert `event=="STARTED"`.
+      Re-check every 10–15min for new progress events with row counts (see CLAUDE.md "no fire-and-forget VM launches").
+      Stalled progression == silently-broken; kill via
+      `gcloud compute instances delete tradfi-bf-<run-ts> --zone=asia-northeast1-c --quiet` and diagnose via the last
+      event's `metadata.details`.
+- [ ] [HUMAN] P0. **Post-fix Databento honesty check** — BUG-X3 (silent-drop fix shipped 2026-05-05) means a 429 on
+      `ohlcv_1m` for any (root, date) now writes `attempted_failed` instead of `empty_confirmed`. After the run, query
+      the manifest for
+      `service=market-tick-data-service AND asset_group=tradfi AND error_reason IN ('429','RATE_LIMIT')` — any rows are
+      genuinely-failed Databento attempts that need a serial gap-fill (cf. `/tmp/fill_missing_ohlcv.py` pattern from the
+      2026-05-05 recovery). Pre-fix these would have appeared as zero-row "captured" parquets.
 - [ ] [HUMAN] P1. **VIX index already done** — do not re-fetch. 1,585 days at
-      `asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet`. If a strategy needs <15m
-      granularity, that's a separate sourcing question — flag to Ikenna.
+      `asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet`. **VIX is on CBOE direct,
+      NOT Databento** — does not share the Databento per-account quota. If a strategy needs <15m granularity, that's a
+      separate sourcing question — flag to Ikenna.
 - [ ] [HUMAN] P2. **VIX futures full-tick chain — deferred**. UAC `_CBOE_INSTRUMENTS = []` placeholder. Out of scope for
       this plan; needs separate plan + declarative VX contract calendar.
 
@@ -1884,31 +2021,56 @@ CME futures + ES options + ETFs + VIX index — most of this landed 2026-04-30. 
 Per-protocol-per-chain inception dates from `DEFI_SOURCE_COVERAGE_START`. DeFi MTDS uses `collect-evm-defi` /
 `collect-dex-swaps` CLI handlers (NOT the `download` operation — DeFi venues are in `VENUE_TO_ASSET_GROUP['defi']`).
 
-- [ ] [HUMAN] P0. Confirm Phase 0 defi MTDS gap (review `/tmp/mtds-recon-defi.log`).
+- [ ] [HUMAN] P0. Confirm Phase 0 defi MTDS gap (review `<tmpdir>/mtds-recon-defi.log`).
 - [ ] [HUMAN] P0. **Cloud Run DeFi collection job** is the canonical batch path for swaps/liquidity (NOT a VM). Verify
       it's healthy + re-trigger any failed runs. Cross-check with the consolidated DeFi pipeline plan
       ([`consolidated_defi_data_pipeline_2026_04_15.plan.md`](consolidated_defi_data_pipeline_2026_04_15.plan.md)) for
       the canonical operations workflow.
-- [ ] [HUMAN] P0. Specialised MTDS launchers for the long-tail DeFi data_types:
-      `bash bash deployment-service/scripts/vm/launch-mtds-gas-fees-backfill-vm.sh         --start-date <protocol-launch> bash deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh         --start-date <protocol-launch> bash deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh --start-date <protocol-launch> `
-      One per data_type per protocol — verify launcher flags before running.
+- [ ] [HUMAN] P0. **Cloud Run Jobs `:latest` pin gotcha** — Cloud Run Jobs lock onto an AR digest at create time and
+      ignore subsequent `:latest` pushes. After any MTDS image push, run
+      `gcloud run jobs update <NAME> --image=...:latest --region=...` for each affected job to force the new digest (per
+      project memory `feedback_cloud_run_jobs_latest_pin.md`). Detection: `gcloud run jobs describe <NAME>`'s `image:`
+      field shows `@sha256:...` — compare to AR's current `:latest` updateTime. Without this, the DeFi job can sit on
+      stale image silently for 30+ min after a push.
+- [ ] [HUMAN] P0. Specialised MTDS launchers for the long-tail DeFi data_types (one VM per data_type per protocol — they
+      hit a shared chain RPC pool, so launch SEQUENTIALLY not in parallel; verify launcher flags before running):
+      `bash deployment-service/scripts/vm/launch-mtds-gas-fees-backfill-vm.sh --start-date <protocol-launch>`
+      `bash deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh --start-date <protocol-launch>`
+      `bash deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh --start-date <protocol-launch>`
+- [ ] [HUMAN] P0. **Verify event stream after each DEFI launch** — within 90s, run
+      `gcloud storage ls gs://central-element-323112-events/events/market-tick-data-service/$(date -u +%Y-%m-%d)/mtds-{gas-fees,lst-rates,vault}-*/`
+      and confirm `event=="STARTED"`. Re-check every 10–15min for progress events. Per CLAUDE.md, the launch + monitor
+      pair is ONE todo — launching a `mtds-gas-fees-` VM without scheduling event-tail polling is fire-and-forget.
+- [ ] [AGENT] P0. **Singleton-lock follow-up for the three launchers** — gas-fees / lst-rates / vault-share-price all
+      hit a shared chain RPC pool (Alchemy / Infura per UAC `CHAIN_RPC_TEMPLATES`). The 2026-05-05 silent-drop class
+      argument applies: concurrent VMs hammering the same RPC endpoint exhaust per-key quotas with no per-call manifest
+      signal. Either add the singleton-lock pattern to each (copy from `launch-mtds-prediction-backfill-vm.sh`) or
+      document why each is exempt. Tracked as a P0 follow-up — do NOT run multiple in parallel until landed.
 - [ ] [HUMAN] P1. **`validate_api_keys_for_venues` venue-name gotcha** — passes canonical venue names
-      (`UNISWAPV3-ETHEREUM`, `AAVEV3-ETHEREUM`), NOT data-source slugs (`thegraph`, `databento`). Returns empty dict
-      silently on wrong shape; downstream adapters silently fail. If a DeFi VM logs "missing key" on a venue you know
-      has the secret, suspect this first.
+      (`UNISWAPV3-ETHEREUM`, `AAVEV3-ETHEREUM`), NOT data-source slugs (`thegraph`). Returns empty dict silently on
+      wrong shape; downstream adapters silently fail. If a DeFi VM logs "missing key" on a venue you know has the
+      secret, suspect this first.
 
 ### PREDICTION
 
 POLYMARKET (from 2020-06-12) + KALSHI (from 2021-07-19). Singleton-locked because Polymarket gamma rate-limits per-IP
 and the project egress NAT is shared.
 
-- [ ] [HUMAN] P0. Confirm Phase 0 prediction MTDS gap (review `/tmp/mtds-recon-prediction.log`).
-- [ ] [HUMAN] P0. Launch via the singleton-locked launcher:
-      `bash bash deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh \ --venue POLYMARKET --start-date 2020-06-12 --end-date $(date -u +%Y-%m-%d) \ --data-types prediction_trades,prediction_book_snapshot,prediction_market_metadata bash deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh \ --venue KALSHI --start-date 2021-07-19 --end-date $(date -u +%Y-%m-%d) \ --data-types prediction_trades,prediction_book_snapshot,prediction_market_metadata `
-      Singleton lock will refuse a second VM in the zone — wait for the first to finish before launching the next.
-- [ ] [HUMAN] P1. **Polymarket cursor-sharding** — if instruments-side prediction work surfaced cursor bands per (year,
-      month) (sibling plan Day 2), MTDS may want the same trick if download throughput is timeout-bound. Defer until
-      Phase 0 numbers come in; bare launcher is the first attempt.
+- [ ] [HUMAN] P0. Confirm Phase 0 prediction MTDS gap (review `<tmpdir>/mtds-recon-prediction.log`).
+- [ ] [HUMAN] P0. Launch via the singleton-locked launcher (sequential — Polymarket then Kalshi; the lock refuses a
+      second `mtds-prediction-*` VM in the zone):
+      `bash deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh 2020-06-12 $(date -u +%Y-%m-%d)`
+      (default venue=POLYMARKET / data_types per launcher header). Then for KALSHI run with the venue override
+      documented in the launcher source. Use `bash <launcher> --force <dates>` only if the prior VM is genuinely zombied
+      per the launcher's own ERROR message.
+- [ ] [HUMAN] P0. **Verify event stream after each PREDICTION launch** — within 90s, run
+      `gcloud storage ls gs://central-element-323112-events/events/market-tick-data-service/$(date -u +%Y-%m-%d)/mtds-prediction-*/`
+      and confirm `event=="STARTED"`. Re-check every 10–15min for progress events. POLYMARKET runs are 10–25 min so a
+      single check + completion check is usually enough; KALSHI similar. Stalled progression == kill via
+      `gcloud compute instances delete mtds-prediction-<run-ts> --zone=asia-northeast1-c --quiet`.
+- [ ] [HUMAN] P1. **Polymarket cursor-sharding** — instruments-side cursor bands per (year, month) shipped 2026-05-05
+      (`POLYMARKET_START_CURSOR` / `POLYMARKET_END_CURSOR` env vars per project memory). MTDS may want the same trick if
+      download throughput is timeout-bound. Defer until Phase 0 numbers come in; bare launcher is the first attempt.
 
 ### SPORTS
 
@@ -1916,11 +2078,16 @@ and the project egress NAT is shared.
 `ODDS_HORIZON_BUCKET` and similar are already fetched into raw GCS but not yet processed through MDPS into the canonical
 per-league partitions. The lift is mostly MDPS-side, not fetch-side."
 
-- [ ] [HUMAN] P0. Confirm Phase 0 sports MTDS gap (review `/tmp/mtds-recon-sports.log`). The "venue" axis here is
+- [ ] [HUMAN] P0. Confirm Phase 0 sports MTDS gap (review `<tmpdir>/mtds-recon-sports.log`). The "venue" axis here is
       bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS, …), not source.
 - [ ] [HUMAN] P0. **Sample raw odds-API GCS bucket** for any date the manifest claims missing. If raw data exists, this
       is an MDPS processing gap (out of scope here, separate MDPS plan). If raw data is genuinely missing, then a fresh
       odds-API fetch is needed.
+- [ ] [HUMAN] P0. **If a sports backfill VM IS launched from this plan** (rare — sports is mostly MDPS-side), pair it
+      with event-stream verification within 90s of launch:
+      `gcloud storage ls gs://central-element-323112-events/events/{instruments-service|market-tick-data-service}/$(date -u +%Y-%m-%d)/{af|fs|tm|sfi|us|weather}-backfill-*/`.
+      Sports launchers use source-keyed prefixes (`af-`, `fs-`, `tm-`, `sfi-`, `us-`, `weather-` per CLAUDE.md "VM
+      Naming Convention") — make sure the prefix is the one in `VM_PREFIX_TO_BUCKET` for the chosen launcher.
 - [ ] [HUMAN] P1. For genuine fetch gaps, the odds-API has its own backfill path — coordinate with the sports-side agent
       / sibling plan. **Do not** launch parallel sports VMs while
       [`instruments_to_100pct_eod_2026_05_04.plan.md`](instruments_to_100pct_eod_2026_05_04.plan.md) sports work is

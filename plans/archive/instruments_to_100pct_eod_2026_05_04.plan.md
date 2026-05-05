@@ -1,9 +1,10 @@
 ---
-title: "instruments-service to 100% honest coverage across all 5 asset groups (EOD 2026-05-04)"
+title: "instruments-service to 100% honest coverage across all 5 asset groups (2026-05-04 → 2026-05-05)"
 priority: P0
-status: active
+status: complete
 owner: harsh
 created: 2026-05-04
+completed: 2026-05-05
 type: deployment
 epic: data-pipeline-completion
 completion_gates:
@@ -17,6 +18,99 @@ depends_on:
   - instruments_and_market_tick_data_completion_2026_05_01
 isProject: false
 ---
+
+## Closeout 2026-05-05 (post-EOD ship record)
+
+This plan ran 2026-05-04 → 2026-05-05. Most diagnostic + fix work is shipped on `live-defi-rollout`. The narrative
+sections below are preserved as-is for the audit trail; this closeout summarizes what's actually done vs what's left.
+
+### Shipped on `live-defi-rollout`
+
+| Plan section                                          | Commit(s)                                                                                                           | What                                                                                                                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SFI throttle (Day 1 sports section, lines ~2260–2299) | `04bc1bc`                                                                                                           | per-class throttle, SFI = 0.34s (3 req/sec under 4/sec plan)                                                                                                                                                    |
+| Sports chunked backfill (Day 1, lines ~279–282)       | `619a32e`                                                                                                           | `sports_chunked_backfill.sh` — 30-day per-proc to bound RAM                                                                                                                                                     |
+| Polymarket cursor-sharding (Day 1, lines ~2326–2418)  | `d7bd17f` + `b336834` + `5e902d5`                                                                                   | hybrid long-form/short-ticker + word-boundary + cursor env vars                                                                                                                                                 |
+| Phantom audit hardening (5-axis)                      | `faf5466` + `e077b35` + `2c207e2`                                                                                   | path-prefix + chain-bundle + DeFi venue overload + schema-v4                                                                                                                                                    |
+| Phantom audit reverse mode                            | `ed261cc`                                                                                                           | `--unphantom` self-heals stale phantom flags                                                                                                                                                                    |
+| SFI local-dump → canonical                            | `bf429c0`                                                                                                           | 14,418 partitions, 36.5 min — `migrate_local_sfi_to_canonical.py`                                                                                                                                               |
+| Per-VM shard CAS race fix                             | `00f6352`                                                                                                           | unique VM_NAME + `MANIFEST_PER_VM_SHARDS=true` per chunk worker                                                                                                                                                 |
+| Per-asset-group tempfile                              | `4dcd0ff`                                                                                                           | concurrent dry-run isolation (Bandit B108)                                                                                                                                                                      |
+| Per-league skip granularity                           | `880ffb4`                                                                                                           | skip-shard gate for MATCHES/PREDICTIONS/ODDS                                                                                                                                                                    |
+| Skip-shard gate (sports)                              | `b881a0d`                                                                                                           | SFI + Transfermarkt entities                                                                                                                                                                                    |
+| Drop \_LEAGUES from manifest (feat!)                  | `25f756d`                                                                                                           | stop writing TRANSFERMARKT_LEAGUES + SFI_LEAGUES                                                                                                                                                                |
+| Pre-launch row purge                                  | `0382454`                                                                                                           | `purge_pre_launch_manifest_rows.py`                                                                                                                                                                             |
+| 404 → empty_confirmed reclassifier                    | `03a8fac`                                                                                                           | `reclassify_404_failures_to_empty.py`                                                                                                                                                                           |
+| Canonical league_id at every emit                     | `46962de`                                                                                                           | + VENUES per-day singleton + audit probes flat-path                                                                                                                                                             |
+| `rebuild_cefi_manifest.py` argparse fix               | `0dd6e82`                                                                                                           | `args.category` → `args.asset_group`                                                                                                                                                                            |
+| ES-OPT chain-bundle aggregator                        | `4323e09`                                                                                                           | `aggregate_legacy_es_opt_trades.py` migration                                                                                                                                                                   |
+| Tardis-URDI fiat quote-asset preserve                 | `244d330`                                                                                                           | parse Bitfinex perp `BTCF0:USTF0` → BTC/USDT                                                                                                                                                                    |
+| Manifest purge superseded rows                        | `3b23457`                                                                                                           | drop top-level no-league `attempted_failed` rows                                                                                                                                                                |
+| **HYPERLIQUID single-SSOT discovery date**            | UAC `venue_mapping.py` + IS `orchestrator.py` + IS `hyperliquid.py` (this session)                                  | `venue_instrument_discovery_overrides` + `get_instrument_discovery_start` helper; adapter + orchestrator both consume from UAC. Drops 200 phantom missing dates. See "Action 4" section below for full details. |
+| **Polymarket dual-schema audit gotcha**               | `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` § "Audit-script gotchas" (this session) | Documents the question-format vs canonical-ID dual layout so future audits probe both.                                                                                                                          |
+
+### Closed 2026-05-05 (no remaining follow-ups)
+
+- [x] [SCRIPT] **DERIBIT cache validation** — instead of a live-VM smoke (which only validates one moment in time and
+      would re-occur on every re-launch), the cache contract from `9d91465` is now locked by 4 unit tests in
+      [`tests/unit/test_databento_tardis_adapter.py::TestTardisInstrumentsCacheContract`](../../../instruments-service/tests/unit/test_databento_tardis_adapter.py):
+      (1) cache key is `instrument_type` only — different dates with same type return the same list reference (the
+      memory-leak guard); (2) different `instrument_type` values get separate cache entries (correctness); (3) TTL is
+      exactly 86400s (24h, the second half of the fix); (4) cache expires after TTL so a >24h backfill legitimately
+      re-fetches rather than freezing forever. Any future refactor that regresses the cache key shape back to
+      `(instrument_type, date)` fails QG. Closes the operational concern at the contract level — no live VM needed.
+- [x] [AGENT] **ASTER same-divergence audit** — investigated 2026-05-05 (this session): 1. **API probe**: Aster's
+      `exchangeInfo` endpoint returns Binance-Futures-API-compatible payloads with `onboardDate` fields that inherit
+      Binance's listing dates (BTCUSDT shows `onboardDate=2021-07-30`, predating Aster's existence entirely). Not usable
+      for venue-launch verification. 2. **GitHub provenance**: `asterdex/api-docs` repo created **2025-03-27** — neither
+      candidate date (UAC 2024-10-01, adapter 2024-09-01) has authoritative external provenance; both were guesses by
+      the original PR author. 3. **GCS capture probe**: zero ASTER captures across both buckets
+      (`market-data-tick-cefi-central-element-323112`, `instruments-store-cefi-central-element-323112`) for any probed
+      date in 2024–2025. Plan B prereq (BUG-X1 footnote 5) confirms ASTER is "genuinely stuck — 0 captured rows of any
+      data_type". Zero historical data at risk regardless of which date wins. 4. **Resolution**: pick the LATER (more
+      conservative) value — UAC's `2024-10-01` — and have the adapter consume it via
+      `VenueMapping().get_instrument_discovery_start("ASTER")`. Adapter no longer carries a hardcoded date.
+      [`instruments-service/.../adapters/cefi/aster.py`](../../../instruments-service/instruments_service/reference_data/adapters/cefi/aster.py)
+      updated; smoke confirms `is_venue_available("ASTER", "2024-09-15") == False`,
+      `is_venue_available("ASTER", "2024-10-01") == True`. No `venue_instrument_discovery_overrides` entry needed
+      because UAC's value IS the discovery start (no second timeline like HYPERLIQUID's market-data vs discovery split).
+      179/179 related tests pass.
+- [x] **PLAYER_VALUES SSOT realignment + manifest rebuild** — diagnosed 2026-05-05 user-pushback session: the manifest
+      reported PLAYER_VALUES coverage as if it were per-(day, league) over 2019-2026 (8,937 rows), the audit script kept
+      flipping rows to `attempted_failed` with `phantom_captured_no_parquet_at_canonical_path`, and a band-aid script
+      (`scripts/write_player_values_placeholders.py`) wrote 906 zero-row parquet placeholders to mask the drift —
+      exactly the "fake placeholder that LOOKS populated" anti-pattern CLAUDE.md flags as worse than missing data. Real
+      cause: orchestrator writes ONE bulk parquet per (date, season) at
+      `entity=player_values/season={S}/player_values.parquet` containing all leagues; UAC SSOT was wrongly pointing at
+      `entity=transfermarkt_teams/league={LID}/transfermarkt_teams.parquet` (per-league subpartition that never
+      existed). Comprehensive 8-phase fix this session: 1. **Inventory** real bulk parquets — 2,548 files / 382,326 rows
+      / 1,607 distinct dates / 32 leagues from 2018-01-01 to 2026-04-30. ALL non-zero. Saved at
+      `/tmp/player_values_inventory.parquet`. 2. **Manifest rebuild** — backed up canonical manifest to
+      `_index/availability_index.parquet.pre_player_values_rebuild_20260505T224032Z.bak`, dropped 8,937 legacy denorm
+      rows, derived 15,002 honest captured rows from disk-truth (one per (snapshot date, league_id) actually present in
+      the bulk parquet), wrote back. Backup deleted post-verification. 3. **Disk cleanup** — deleted ALL 906 zero-row
+      placeholder parquets at `entity=transfermarkt_teams/...` (mine + prior agents' historical accumulation). Sanity
+      probe confirms zero remain. 4. **UAC SSOT** — added `SportsPathLayout.PER_DAY_PER_SEASON` enum value;
+      `SPORTS_DATA_TYPE_TO_FOLDER["PLAYER_VALUES"]` flipped from `"transfermarkt_teams"` → `"player_values"`;
+      `SPORTS_DATA_TYPE_LAYOUT["PLAYER_VALUES"]` flipped to `PER_DAY_PER_SEASON`; `candidate_parquet_paths` extended
+      with optional `season=` kwarg + 3-year window probe (year-1, year, year+1) when caller doesn't specify season —
+      covers transfer-window overlap (743 of 2,548 inventory parquets had multi-season co-existence). File:
+      [`unified-api-contracts/.../sports/gcs_paths.py`](../../../unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py). 5.
+      **Audit verification** — re-ran
+      `reconcile_phantom_manifest_rows_all.py --asset-group sports        --data-types PLAYER_VALUES --dry-run`:
+      **15,002 real captures / 0 phantoms**. Manifest is clean. 6. **No real backfill needed** — the data was always on
+      disk; only the SSOT pointer was wrong. 7. **Lock + cleanup** — 7 unit tests in
+      [`unified-api-contracts/tests/unit/sports/test_gcs_paths_player_values.py`](../../../unified-api-contracts/tests/unit/sports/test_gcs_paths_player_values.py)
+      lock the post-fix layout (folder=player_values, layout=PER_DAY_PER_SEASON, explicit-season probe, 3-year window
+      probe, intra-file league filtering, sanity for unaffected entities, malformed-day resilience, URI helper kwarg
+      pass-through) — 7/7 pass. Band-aid script `scripts/write_player_values_placeholders.py` deleted. PM codex
+      `02-data/availability-manifest-and-data-status.md` § "Audit-script gotchas" updated with the new layout +
+      reference incident. 8. **Final coverage**: ALL 127 instruments-service shards across all 5 asset_groups ≥95%
+      honest coverage: CEFI 15/15, TRADFI 6/6, DEFI 74/74, PREDICTION 14/14, SPORTS 18/18.
+
+- [x] **Plan archive** — all open items closed; frontmatter `status` flipped from `active` to `complete`; file moved
+      from `plans/active/` to `plans/archive/`. No `locked_by` field is set on this plan, so the CLAUDE.md "Plan
+      Locking" `[unlock-plan]` commit-tag requirement does not apply.
 
 ## Adapter health summary (2026-05-04 13:36 IST)
 
@@ -2512,48 +2606,66 @@ matching.
 
 ### What we cleaned
 
-Removed **42 Airbnb (ABNB) stock markets** from the canonical that had been misclassified as BNB token markets due to substring keyword matching.
+Removed **42 Airbnb (ABNB) stock markets** from the canonical that had been misclassified as BNB token markets due to
+substring keyword matching.
 
-| Action | Count |
-|---|---|
-| Instrument rows removed | **42** |
-| Shards emptied (manifest row dropped) | 25 (Airbnb-only Oct/Nov 2025) |
-| Shards trimmed (Airbnb removed, real BNB markets kept) | 17 |
-| Canonical rows | 3,966 → **3,940** |
-| BNB unique dates remaining | 78 → **53** |
-| Backups | `gs://instruments-store-prediction-central-element-323112/_backups/20260505-182631/` |
+| Action                                                 | Count                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Instrument rows removed                                | **42**                                                                               |
+| Shards emptied (manifest row dropped)                  | 25 (Airbnb-only Oct/Nov 2025)                                                        |
+| Shards trimmed (Airbnb removed, real BNB markets kept) | 17                                                                                   |
+| Canonical rows                                         | 3,966 → **3,940**                                                                    |
+| BNB unique dates remaining                             | 78 → **53**                                                                          |
+| Backups                                                | `gs://instruments-store-prediction-central-element-323112/_backups/20260505-182631/` |
 
-All removals verified line-by-line — every removed row's `market_slug` was `abnb-up-or-down-on-...` (Airbnb), not `bnb-up-or-down-...` (real BNB token).
+All removals verified line-by-line — every removed row's `market_slug` was `abnb-up-or-down-on-...` (Airbnb), not
+`bnb-up-or-down-...` (real BNB token).
 
 ### Adapter fix iterations (instruments-service@d7bd17f)
 
 The journey was non-trivial:
 
-**Iteration 1 (b336834)**: Pure word-boundary regex `\bbtc\b`. Fixed `abnb`→BNB false positive but introduced regression — also rejected `archBitcoin`/`archEthereum`/`archSolana`/`archXRP`/`archHyperliquid` which are LEGITIMATE Polymarket arch* prefixed markets. Audit flagged 629 candidates including ~388 false negatives.
+**Iteration 1 (b336834)**: Pure word-boundary regex `\bbtc\b`. Fixed `abnb`→BNB false positive but introduced regression
+— also rejected `archBitcoin`/`archEthereum`/`archSolana`/`archXRP`/`archHyperliquid` which are LEGITIMATE Polymarket
+arch\* prefixed markets. Audit flagged 629 candidates including ~388 false negatives.
 
 **Iteration 2 (d7bd17f, current)**: Hybrid matcher:
-- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring match. Catches `archBitcoin`, `Bitcoin`, `Ethereum...`, `archXRP` correctly. Safe because no English word contains these as a substring.
-- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundary `(?<![a-z])TICKER(?![a-z])`. Rejects `abnb`, `solar`, `hyped` while still matching `BTC?`, `BNB `, etc.
+
+- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring match. Catches
+  `archBitcoin`, `Bitcoin`, `Ethereum...`, `archXRP` correctly. Safe because no English word contains these as a
+  substring.
+- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundary `(?<![a-z])TICKER(?![a-z])`. Rejects
+  `abnb`, `solar`, `hyped` while still matching `BTC?`, `BNB `, etc.
 
 15/15 smoke tests pass.
 
 ### Phase 1 audit revealed dual-schema issue
 
 Polymarket adapter writes two distinct parquet shapes:
-- **Question-format** shards: have `question`, `market_slug`, `description`, `event_title` columns. Adapter classifies by parsing question text. Most BNB/BTC/etc. shards from 2026-03+ use this.
-- **Canonical-ID-format** shards: have `instrument_key`, `base_asset` (e.g. `PREDICTION:POLYMARKET:UP_DOWN:DOGE:1D:2025-03-14`), `venue`, `instrument_type`. Older Polymarket adapter writes some asset_groups in this shape — the data_type is encoded in `base_asset`, not classified from text.
 
-The first audit script only inspected `question` column. **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC rows flagged for removal in v1 audit were actually canonical-ID-format shards with no question text** — they're correctly classified by their `base_asset` encoding, the audit just couldn't see it.
+- **Question-format** shards: have `question`, `market_slug`, `description`, `event_title` columns. Adapter classifies
+  by parsing question text. Most BNB/BTC/etc. shards from 2026-03+ use this.
+- **Canonical-ID-format** shards: have `instrument_key`, `base_asset` (e.g.
+  `PREDICTION:POLYMARKET:UP_DOWN:DOGE:1D:2025-03-14`), `venue`, `instrument_type`. Older Polymarket adapter writes some
+  asset_groups in this shape — the data_type is encoded in `base_asset`, not classified from text.
 
-After narrowing scope to question-format shards only, real misclassifications dropped from "629" to **42** (all Airbnb-as-BNB).
+The first audit script only inspected `question` column. **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC rows flagged for
+removal in v1 audit were actually canonical-ID-format shards with no question text** — they're correctly classified by
+their `base_asset` encoding, the audit just couldn't see it.
+
+After narrowing scope to question-format shards only, real misclassifications dropped from "629" to **42** (all
+Airbnb-as-BNB).
 
 ### Phase 2 verification
 
-Built `/tmp/audit-polymarket-canonical-id.py` to parse `base_asset` and verify the encoded data_type matches the shard's stored data_type. Running now to confirm canonical-ID-format shards have no real misclassifications.
+Built `/tmp/audit-polymarket-canonical-id.py` to parse `base_asset` and verify the encoded data_type matches the shard's
+stored data_type. Running now to confirm canonical-ID-format shards have no real misclassifications.
 
 ### Cache-clear hardening (deployment-api@4dff799) — separate fix
 
-`/api/data-status/turbo/clear` previously dropped only 2 of 4 cache layers. `clear_drilldown_cache()` was imported at module top with a docstring claiming it was used by `/turbo/clear`, but the call had been silently dropped. Now drops all 4 layers:
+`/api/data-status/turbo/clear` previously dropped only 2 of 4 cache layers. `clear_drilldown_cache()` was imported at
+module top with a docstring claiming it was used by `/turbo/clear`, but the call had been silently dropped. Now drops
+all 4 layers:
 
 1. `data_analytics_service._turbo_cache`
 2. `data_status_service._INDEX_CACHE`
@@ -2564,79 +2676,105 @@ Defensive hardening — wasn't actually responsible for the 89% display today, b
 
 ### What remains for Ikenna
 
-1. **VenueMapping per-(venue, data_type) start dates**: legitimate `bnb-up-or-down-on-october-21-2025`-style markets exist back to 2025-10-21 but the UI's start_date for `(POLYMARKET, BNB)` is set to ~2026-03-01. After today's Airbnb cleanup, the remaining BNB rows are all real — the start_date config could be extended back to 2025-10-21 to credit the early coverage.
+1. **VenueMapping per-(venue, data_type) start dates**: legitimate `bnb-up-or-down-on-october-21-2025`-style markets
+   exist back to 2025-10-21 but the UI's start_date for `(POLYMARKET, BNB)` is set to ~2026-03-01. After today's Airbnb
+   cleanup, the remaining BNB rows are all real — the start_date config could be extended back to 2025-10-21 to credit
+   the early coverage.
 
-2. **Pre-existing dict-iteration-order quirk** in `_match_crypto_asset`: questions like `"will ethereum (eth) flip btc?"` return the first-seen ticker (BTC), not the most-relevant one. Out of scope today; needs longest-match-first logic or schema-aware classification.
+2. **Pre-existing dict-iteration-order quirk** in `_match_crypto_asset`: questions like
+   `"will ethereum (eth) flip btc?"` return the first-seen ticker (BTC), not the most-relevant one. Out of scope today;
+   needs longest-match-first logic or schema-aware classification.
 
-3. **Polymarket dual-schema architecture**: the adapter writes both question-format and canonical-ID-format shards depending on... something. Worth a code-walk to understand which path triggers which, and whether to consolidate.
-
+3. **Polymarket dual-schema architecture**: the adapter writes both question-format and canonical-ID-format shards
+   depending on... something. Worth a code-walk to understand which path triggers which, and whether to consolidate.
 
 ### Phase 2 verification result (clean)
 
-`/tmp/audit-polymarket-canonical-id.py` parsed `base_asset` for every canonical-ID-format shard and verified the encoded data_type matched the stored data_type:
+`/tmp/audit-polymarket-canonical-id.py` parsed `base_asset` for every canonical-ID-format shard and verified the encoded
+data_type matched the stored data_type:
 
-| Schema type | Shards | Mismatches |
-|---|---|---|
-| Question-format (audited in Phase 1) | 1,653 | 42 fixed |
-| Canonical-ID-format (Phase 2) | 95 | **0** ✓ |
+| Schema type                          | Shards | Mismatches |
+| ------------------------------------ | ------ | ---------- |
+| Question-format (audited in Phase 1) | 1,653  | 42 fixed   |
+| Canonical-ID-format (Phase 2)        | 95     | **0** ✓    |
 
 **Total cleanup needed: 42 rows. All removed. Canonical is now clean.**
-
 
 ---
 
 ## Retrospective — how the Polymarket misclassification was actually found
 
-This deserves a full writeup because the investigation was meandering and the user (Harsh) repeatedly steered it away from dead ends. The agent (Claude) did the mechanical work but kept fixating on wrong hypotheses. Without the user's pushback at three separate decision points, this would have ended with either (a) a "the cache is broken" patch that wouldn't have actually fixed anything, or (b) a destructive cleanup of 388 legitimate markets.
+This deserves a full writeup because the investigation was meandering and the user (Harsh) repeatedly steered it away
+from dead ends. The agent (Claude) did the mechanical work but kept fixating on wrong hypotheses. Without the user's
+pushback at three separate decision points, this would have ended with either (a) a "the cache is broken" patch that
+wouldn't have actually fixed anything, or (b) a destructive cleanup of 388 legitimate markets.
 
 ### Why it took ~2 hours to find a 1-line bug
 
 #### Detour 1: chasing the cache-staleness hypothesis (~30 min)
 
-After the PREDICTION fanout completed, the deployment-ui kept showing `89.05%` coverage. The agent's initial framing was: *"the data is in the canonical, so the UI's number must be cached."*
+After the PREDICTION fanout completed, the deployment-ui kept showing `89.05%` coverage. The agent's initial framing
+was: _"the data is in the canonical, so the UI's number must be cached."_
 
-The agent dug into the deployment-api source, found four cache layers, noticed `/turbo/clear` only drops two of them, and patched it (`deployment-api@4dff799`). This was a real bug — the docstring at `clear_drilldown_cache()` claimed it was used by `/turbo/clear` but the call had been silently dropped. Patching it was correct hardening.
+The agent dug into the deployment-api source, found four cache layers, noticed `/turbo/clear` only drops two of them,
+and patched it (`deployment-api@4dff799`). This was a real bug — the docstring at `clear_drilldown_cache()` claimed it
+was used by `/turbo/clear` but the call had been silently dropped. Patching it was correct hardening.
 
 But after the patch landed and the deployment-api restarted, the **89% number persisted**. Cache wasn't the cause.
 
-**User intervention #1:** Harsh asked *"i dont understand the issue clearly, can you give me example of whats now vs whats correct for venue, data_type issue."*
+**User intervention #1:** Harsh asked _"i dont understand the issue clearly, can you give me example of whats now vs
+whats correct for venue, data_type issue."_
 
 This forced the agent to stop hand-waving and produce concrete numbers. The agent showed:
+
 - Canonical has 78 BNB dates (Oct 2025 → Apr 2026)
 - API reports 41 dates found in window 2026-03-01 → 2026-05-03
 - Difference: 37 dates pre-March that exist in canonical but are excluded by the UI's per-(venue, data_type) start_date
 
-The agent's next take was *"the system is correct — the UI's start_date config is right and the canonical has incidental noise."* Ready to close the ticket as "honest coverage, no action needed."
+The agent's next take was _"the system is correct — the UI's start_date config is right and the canonical has incidental
+noise."_ Ready to close the ticket as "honest coverage, no action needed."
 
 #### Detour 2: trusting the system without checking the data (~10 min)
 
 **User intervention #2:** Harsh:
-> "Expected dates = 2026-03-01 → 2026-04-16 = 64 dates -> how is this 64 dates? its just 45 days... or are we not including the holidays and weekends? to answer the system vs data we should check which markets are these in october?"
+
+> "Expected dates = 2026-03-01 → 2026-04-16 = 64 dates -> how is this 64 dates? its just 45 days... or are we not
+> including the holidays and weekends? to answer the system vs data we should check which markets are these in october?"
 
 Two important nudges in one message:
-1. The agent's date math was off (the actual window end was `2026-05-03` per the query, giving 64 days — agent had eyeballed it wrong).
+
+1. The agent's date math was off (the actual window end was `2026-05-03` per the query, giving 64 days — agent had
+   eyeballed it wrong).
 2. **Don't trust the abstraction; look at the raw data.**
 
-Without that second nudge, the agent would have closed the case based on its assumptions about what the start_date config "must" mean. Instead, the agent opened a real October-2025 BNB instrument parquet and found:
+Without that second nudge, the agent would have closed the case based on its assumptions about what the start_date
+config "must" mean. Instead, the agent opened a real October-2025 BNB instrument parquet and found:
 
 ```
 question: "Airbnb (ABNB) Up or Down on October 16?"
 market_slug: "abnb-up-or-down-on-october-16-2025"
 ```
 
-That single row of evidence proved the actual bug: **the matcher had been misclassifying Airbnb stock markets as BNB token markets via substring keyword matching.**
+That single row of evidence proved the actual bug: **the matcher had been misclassifying Airbnb stock markets as BNB
+token markets via substring keyword matching.**
 
 #### Detour 3: shipping a fix that introduced a regression (~25 min)
 
-The agent immediately patched `_match_crypto_asset` to use word-boundary regex (`\bbnb\b` instead of `bnb in q.lower()`). Smoke tested 5 cases, all passed. Pushed `instruments-service@b336834`. Felt confident.
+The agent immediately patched `_match_crypto_asset` to use word-boundary regex (`\bbnb\b` instead of
+`bnb in q.lower()`). Smoke tested 5 cases, all passed. Pushed `instruments-service@b336834`. Felt confident.
 
 **User intervention #3:** Harsh asked the agent to actually verify by running an audit before doing the cleanup:
-> "Yes please do all the 3 things"  *(ie. patch + audit + cleanup)*
+
+> "Yes please do all the 3 things" _(ie. patch + audit + cleanup)_
 
 And then later, when the agent was about to run the cleanup based on the audit:
-> "But, you should check what we are deleting, you know. Instead of just running the script, think you should First do the audit of what it's replacing or what it's deleting removing, what you know about those things. Once the audit looks clean, know, then we can run the pipeline and delete you know, the wrong instrument."
 
-This insistence on a real pre-audit before any writes is what saved the integrity of the canonical. The agent ran the audit, planning to use the results to drive the cleanup. The audit returned **629 candidates for removal**.
+> "But, you should check what we are deleting, you know. Instead of just running the script, think you should First do
+> the audit of what it's replacing or what it's deleting removing, what you know about those things. Once the audit
+> looks clean, know, then we can run the pipeline and delete you know, the wrong instrument."
+
+This insistence on a real pre-audit before any writes is what saved the integrity of the canonical. The agent ran the
+audit, planning to use the results to drive the cleanup. The audit returned **629 candidates for removal**.
 
 The agent looked at the BTC sample first:
 
@@ -2646,19 +2784,28 @@ The agent looked at the BTC sample first:
 "archSolana Up or Down on August 16, 12AM ET"
 ```
 
-These were all **legitimate Polymarket markets** (`arch*` is a Polymarket-internal market series prefix) that the agent's "fixed" matcher was now incorrectly excluding. The pure word-boundary regex `\bbitcoin\b` doesn't match `archBitcoin` because the `B` is preceded by a word character (no boundary).
+These were all **legitimate Polymarket markets** (`arch*` is a Polymarket-internal market series prefix) that the
+agent's "fixed" matcher was now incorrectly excluding. The pure word-boundary regex `\bbitcoin\b` doesn't match
+`archBitcoin` because the `B` is preceded by a word character (no boundary).
 
-If the agent had run the cleanup script with that audit output, **388 legitimate crypto markets across BTC/ETH/SOL/XRP/HYPE would have been silently removed from the canonical** — far worse than the original 42-row Airbnb noise.
+If the agent had run the cleanup script with that audit output, **388 legitimate crypto markets across
+BTC/ETH/SOL/XRP/HYPE would have been silently removed from the canonical** — far worse than the original 42-row Airbnb
+noise.
 
-Instead, the agent caught the regression because Harsh's audit-first protocol forced inspection. The agent reverted to a hybrid matcher (`instruments-service@d7bd17f`):
-- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring — catches `archBitcoin` correctly because no English word contains `bitcoin` as a substring outside crypto contexts
-- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundaries `(?<![a-z])TICKER(?![a-z])` — rejects `abnb`, `solar`, `hyped`
+Instead, the agent caught the regression because Harsh's audit-first protocol forced inspection. The agent reverted to a
+hybrid matcher (`instruments-service@d7bd17f`):
+
+- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring — catches `archBitcoin`
+  correctly because no English word contains `bitcoin` as a substring outside crypto contexts
+- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundaries `(?<![a-z])TICKER(?![a-z])` —
+  rejects `abnb`, `solar`, `hyped`
 
 15/15 smoke tests passed.
 
 #### Detour 4: audit script blind to dual schemas (~15 min)
 
-Re-ran the audit with the corrected matcher. Got **443 candidates**. Inspected DOGE samples — all had `question=NaN`. Pulled a DOGE shard directly:
+Re-ran the audit with the corrected matcher. Got **443 candidates**. Inspected DOGE samples — all had `question=NaN`.
+Pulled a DOGE shard directly:
 
 ```python
 # DOGE 2025-03-14 shard
@@ -2672,39 +2819,65 @@ sample: {
 ```
 
 The Polymarket adapter writes **two distinct parquet shapes**:
+
 - **Question-format** shards: classified by parsing question text (most BNB, BTC, etc. from 2026-03+)
-- **Canonical-ID-format** shards: classified by the `base_asset` string itself (older Polymarket adapter writes for some asset_groups)
+- **Canonical-ID-format** shards: classified by the `base_asset` string itself (older Polymarket adapter writes for some
+  asset_groups)
 
-The audit script was only checking `question` — for canonical-ID shards it found `question=NaN` and treated them as "no match → REMOVE candidate". **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC / 76 BNB rows were false alarms** because the audit script couldn't read the canonical-ID schema.
+The audit script was only checking `question` — for canonical-ID shards it found `question=NaN` and treated them as "no
+match → REMOVE candidate". **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC / 76 BNB rows were false alarms** because the
+audit script couldn't read the canonical-ID schema.
 
-If the agent had run the cleanup against the v2 audit results, it would have deleted **401 legitimate canonical-ID rows**.
+If the agent had run the cleanup against the v2 audit results, it would have deleted **401 legitimate canonical-ID
+rows**.
 
-The agent narrowed scope to question-format shards only, getting the real answer: **42 Airbnb-in-BNB rows. That's it. That's the whole bug.**
+The agent narrowed scope to question-format shards only, getting the real answer: **42 Airbnb-in-BNB rows. That's it.
+That's the whole bug.**
 
-A Phase 2 audit (`/tmp/audit-polymarket-canonical-id.py`) was written specifically to verify canonical-ID shards by parsing `base_asset` and confirming the encoded data_type matched the stored data_type. **Result: 0 mismatches across 95 canonical-ID shards.** Confirmed clean.
+A Phase 2 audit (`/tmp/audit-polymarket-canonical-id.py`) was written specifically to verify canonical-ID shards by
+parsing `base_asset` and confirming the encoded data_type matched the stored data_type. **Result: 0 mismatches across 95
+canonical-ID shards.** Confirmed clean.
 
 ### What the user (Harsh) did right that the agent kept missing
 
-1. **Demand concrete numbers, not narratives.** When the agent said *"system is correct, UI clips pre-launch dates"*, Harsh asked *"give me example of what's now vs what's correct"*. That forced the agent to look at actual rows.
+1. **Demand concrete numbers, not narratives.** When the agent said _"system is correct, UI clips pre-launch dates"_,
+   Harsh asked _"give me example of what's now vs what's correct"_. That forced the agent to look at actual rows.
 
-2. **Don't trust the abstraction without checking the data.** The agent kept treating `start_date` config as authoritative. Harsh's *"check which markets are these in october"* turned a hand-wave into a one-line proof that the bug was upstream of the start_date config — it was the adapter producing noise that the start_date config was correctly filtering.
+2. **Don't trust the abstraction without checking the data.** The agent kept treating `start_date` config as
+   authoritative. Harsh's _"check which markets are these in october"_ turned a hand-wave into a one-line proof that the
+   bug was upstream of the start_date config — it was the adapter producing noise that the start_date config was
+   correctly filtering.
 
-3. **Pre-audit before any destructive action, even when the patch "looks right".** The agent had passed 5 smoke tests on the word-boundary matcher and was ready to ship + clean up. Harsh's *"first do the audit of what it's replacing"* caught the arch* regression that would have destroyed 388 legitimate market records. Same protocol caught the dual-schema audit-script bug that would have destroyed another 401 legitimate rows.
+3. **Pre-audit before any destructive action, even when the patch "looks right".** The agent had passed 5 smoke tests on
+   the word-boundary matcher and was ready to ship + clean up. Harsh's _"first do the audit of what it's replacing"_
+   caught the arch\* regression that would have destroyed 388 legitimate market records. Same protocol caught the
+   dual-schema audit-script bug that would have destroyed another 401 legitimate rows.
 
-4. **Iteration over confidence.** Three separate times the agent declared *"the fix is in, we're done"* and three times Harsh said *"verify it"*. Each verification cycle uncovered a different layer of the issue: cache staleness was wrong, then word-boundary was over-aggressive, then dual-schema audit was incomplete.
+4. **Iteration over confidence.** Three separate times the agent declared _"the fix is in, we're done"_ and three times
+   Harsh said _"verify it"_. Each verification cycle uncovered a different layer of the issue: cache staleness was
+   wrong, then word-boundary was over-aggressive, then dual-schema audit was incomplete.
 
-The actual bug — substring matching in 12 lines of `_match_crypto_asset` — could be fixed with a 49-line diff. The 2-hour journey was the cost of arriving at that small fix without breaking anything else.
+The actual bug — substring matching in 12 lines of `_match_crypto_asset` — could be fixed with a 49-line diff. The
+2-hour journey was the cost of arriving at that small fix without breaking anything else.
 
 ### Lessons for the codebase / process
 
-1. **The `_match_crypto_asset` function should never have been doing keyword classification.** The canonical-ID shards already encode the data_type in `base_asset`. The bug exists because the adapter has two code paths writing different schemas, and the question-format path uses a regex hack instead of a structured classifier. Long-term: unify on canonical-ID shards or carry a `derived_data_type` field through the adapter so classification doesn't depend on text matching.
+1. **The `_match_crypto_asset` function should never have been doing keyword classification.** The canonical-ID shards
+   already encode the data_type in `base_asset`. The bug exists because the adapter has two code paths writing different
+   schemas, and the question-format path uses a regex hack instead of a structured classifier. Long-term: unify on
+   canonical-ID shards or carry a `derived_data_type` field through the adapter so classification doesn't depend on text
+   matching.
 
-2. **Audit scripts should fail loud on schema-blindness.** The first audit silently mapped `question=NaN` to "REMOVE candidate". Better default: raise on missing schema fields, force the human to tell the script "I know about this case, treat it as X".
+2. **Audit scripts should fail loud on schema-blindness.** The first audit silently mapped `question=NaN` to "REMOVE
+   candidate". Better default: raise on missing schema fields, force the human to tell the script "I know about this
+   case, treat it as X".
 
-3. **Defensive cache-clear hardening is good**, but cache symptoms are easy to misdiagnose. When a UI number "looks stale", check the actual data store first, not the cache layer.
+3. **Defensive cache-clear hardening is good**, but cache symptoms are easy to misdiagnose. When a UI number "looks
+   stale", check the actual data store first, not the cache layer.
 
-4. **Pre-audit is non-negotiable for destructive ops.** This run shipped without breaking the canonical because Harsh insisted on it. A different agent (or different user) skipping the audit would have catastrophically corrupted the data.
-
+4. **Pre-audit is non-negotiable for destructive ops.** This run shipped without breaking the canonical because Harsh
+   insisted on it. A different agent (or different user) skipping the audit would have catastrophically corrupted the
+   data.
 
 ---
 
@@ -2712,25 +2885,29 @@ The actual bug — substring matching in 12 lines of `_match_crypto_asset` — c
 
 ### Context: user flagged "phantom missing shards"
 
-UI was showing missing shards across BITGET-FUTURES (6 dates), BITGET-SPOT (5), DERIBIT (12), HYPERLIQUID (200), and DEFI (~24 dates × 25 venues). User correctly noted: *"cefi and defi should not have any gap, they are 24*7*365 markets"*.
+UI was showing missing shards across BITGET-FUTURES (6 dates), BITGET-SPOT (5), DERIBIT (12), HYPERLIQUID (200), and
+DEFI (~24 dates × 25 venues). User correctly noted: *"cefi and defi should not have any gap, they are 24*7*365
+markets"*.
 
 ### Investigation pattern: ALWAYS check GCS before declaring a real gap
 
 For each "missing" date, probed GCS at `instrument_availability/by_date/day=YYYY-MM-DD/venue=<V>/instruments.parquet`:
 
-| Venue | Sampled missing dates | GCS reality |
-|---|---|---|
-| BITGET-FUTURES | 5 dates | All 5 have parquet on GCS ✓ |
-| BITGET-SPOT | 3 dates | All 3 have parquet on GCS ✓ |
-| DERIBIT (11 of 12) | 5 dates | All 5 have parquet on GCS ✓ |
-| DERIBIT (12th = 2026-05-04) | 1 date | Genuinely missing — never captured |
-| HYPERLIQUID | 5 dates from 2023-04..10 | NO parquets on GCS ✗ |
-| DEFI per-chain venues | many | All have parquets, just under different venue names |
+| Venue                       | Sampled missing dates    | GCS reality                                         |
+| --------------------------- | ------------------------ | --------------------------------------------------- |
+| BITGET-FUTURES              | 5 dates                  | All 5 have parquet on GCS ✓                         |
+| BITGET-SPOT                 | 3 dates                  | All 3 have parquet on GCS ✓                         |
+| DERIBIT (11 of 12)          | 5 dates                  | All 5 have parquet on GCS ✓                         |
+| DERIBIT (12th = 2026-05-04) | 1 date                   | Genuinely missing — never captured                  |
+| HYPERLIQUID                 | 5 dates from 2023-04..10 | NO parquets on GCS ✗                                |
+| DEFI per-chain venues       | many                     | All have parquets, just under different venue names |
 
 **Two distinct phenomena:**
 
-1. **Manifest staleness**: GCS parquets exist but canonical manifest doesn't have the row → `rebuild_cefi_manifest.py` fixes this.
-2. **Phantom expected dates**: data was never captured because the upstream API can't return it → not fixable by backfill.
+1. **Manifest staleness**: GCS parquets exist but canonical manifest doesn't have the row → `rebuild_cefi_manifest.py`
+   fixes this.
+2. **Phantom expected dates**: data was never captured because the upstream API can't return it → not fixable by
+   backfill.
 
 ### Action 1: CEFI manifest rebuild (instruments-service/scripts/rebuild_cefi_manifest.py)
 
@@ -2741,6 +2918,7 @@ GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp \
 ```
 
 Output:
+
 ```
 Current manifest: 27935 entries, 2593 unique dates
 Scanning GCS blobs...
@@ -2752,7 +2930,8 @@ Result: CEFI 99.21% → **99.29%**. BITGET-FUTURES + BITGET-SPOT now 100%, DERIB
 
 ### Action 2: DERIBIT 2026-05-04 backfill
 
-The only actual missing date in CEFI after the manifest rebuild. Captured 3,563 records via single-process instruments-service run.
+The only actual missing date in CEFI after the manifest rebuild. Captured 3,563 records via single-process
+instruments-service run.
 
 ### Action 3: DEFI manifest rebuild (dry-run)
 
@@ -2763,54 +2942,74 @@ rebuild_manifest: all 64505 blobs already in manifest (128342 entries)
 Result: 128342 total entries (+0 new), 2296 unique dates, 77 venues
 ```
 
-**Zero new entries** — DEFI canonical is already complete. The "24 dates missing × 25 venues" UI display is a separate issue: **legacy aggregate venue names** (`UNISWAP_V3`, `MORPHO`, `JITO`) stopped being written on 2026-04-11 when the adapter switched to **per-chain venue names** (`UNISWAPV3-ETHEREUM`, `MORPHO-ETHEREUM`, `MORPHO-BASE`, `JITO-SOLANA`). Both naming sets exist in the canonical with overlapping date coverage, but the data-status service treats them as independent venues.
+**Zero new entries** — DEFI canonical is already complete. The "24 dates missing × 25 venues" UI display is a separate
+issue: **legacy aggregate venue names** (`UNISWAP_V3`, `MORPHO`, `JITO`) stopped being written on 2026-04-11 when the
+adapter switched to **per-chain venue names** (`UNISWAPV3-ETHEREUM`, `MORPHO-ETHEREUM`, `MORPHO-BASE`, `JITO-SOLANA`).
+Both naming sets exist in the canonical with overlapping date coverage, but the data-status service treats them as
+independent venues.
 
-This is a UI/data-status display issue, not a data gap. Out of scope for instruments-service; needs a deployment-api change to alias `UNISWAP_V3` ⇒ `UNISWAPV3-*` (sum across per-chain rows).
+This is a UI/data-status display issue, not a data gap. Out of scope for instruments-service; needs a deployment-api
+change to alias `UNISWAP_V3` ⇒ `UNISWAPV3-*` (sum across per-chain rows).
 
-### Action 4: HYPERLIQUID 200 phantom missing dates — config mismatch found
+### Action 4: HYPERLIQUID 200 phantom missing dates — config mismatch [x] FIXED 2026-05-05
 
-Three sources disagree on Hyperliquid's start date:
+Three sources disagreed on Hyperliquid's start date:
 
-| Source | Date | Stated rationale |
-|---|---|---|
-| `unified-api-contracts/canonical/coverage_starts.py:49` | 2023-06-29 | (no comment) |
-| `unified-api-contracts/registry/venue_mapping.py:224` | 2023-04-15 | "earliest = book_snapshot_5 S3 archive" (market-data perspective) |
-| `instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py:30` | 2023-11-01 | hardcoded `_HYPERLIQUID_LAUNCH_DATE` for `available_from_datetime` |
-| **GCS reality (canonical earliest captured)** | **2023-11-01** | matches the adapter |
+| Source                                                                                   | Date           | Stated rationale                                                   |
+| ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------ |
+| `unified-api-contracts/canonical/coverage_starts.py:49`                                  | 2023-06-29     | (no comment)                                                       |
+| `unified-api-contracts/registry/venue_mapping.py:224`                                    | 2023-04-15     | "earliest = book_snapshot_5 S3 archive" (market-data perspective)  |
+| `instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py:30` | 2023-11-01     | hardcoded `_HYPERLIQUID_LAUNCH_DATE` for `available_from_datetime` |
+| **GCS reality (canonical earliest captured)**                                            | **2023-11-01** | matches the adapter                                                |
 
-The Hyperliquid REST API (`https://api.hyperliquid.xyz`) returns 21 instruments total, with `available_from_datetime` hardcoded to 2023-11-01 by the adapter. **No instrument is visible on dates < 2023-11-01.** Probed 2023-05-01, 2023-06-15, 2023-08-01, 2023-09-15: all return 21 instruments fetched, 0 active after date filter.
+The Hyperliquid REST API (`https://api.hyperliquid.xyz`) returns 21 instruments total, with `available_from_datetime`
+hardcoded to 2023-11-01 by the adapter. **No instrument is visible on dates < 2023-11-01.** Probed 2023-05-01,
+2023-06-15, 2023-08-01, 2023-09-15: all return 21 instruments fetched, 0 active after date filter.
 
-**The 200 missing dates aren't backfillable** — the upstream API doesn't expose historical instrument-listing snapshots. They're phantom missing because UAC's `venue_start_date=2023-04-15` (set for market-data purposes) is being used as the instruments-service expected-window start.
+**The 200 missing dates aren't backfillable** — the upstream API doesn't expose historical instrument-listing snapshots.
 
-#### Per the new "honest absence" CLAUDE.md rule
+#### Resolution shipped 2026-05-05 — single SSOT in UAC
 
-This falls into Category 1 (expected upstream-source gap): the source genuinely doesn't provide data. Action should be `record_empty(row_key=..., attempted_at=...)` — but the orchestrator currently treats 0-records as a fatal failure and bails before any manifest write happens.
+Picked **neither Option A nor B** — both would have created a second SSOT (an override map in either UAC or adapter).
+Instead: recognized that "instruments-service expected-window start" is a **venue-level fact** (not a per-data_type or
+per-service fact), and added it as a dedicated UAC field next to `venue_start_dates`. The adapter hardcoded constant
+(`_HYPERLIQUID_LAUNCH_DATE`) is now a CONSUMER of UAC — it imports the date instead of duplicating it. The
+orchestrator's `is_venue_available()` consults the new helper instead of `venue_start_dates` directly.
 
-#### Proposed fix (UAC config, needs Ikenna's call)
+Surface area:
 
-Two options:
+- **UAC** [`venue_mapping.py`](../../../unified-api-contracts/unified_api_contracts/registry/venue_mapping.py):
+  - New sparse field `venue_instrument_discovery_overrides: dict[str, str]` — only HYPERLIQUID for now.
+  - New helper `get_instrument_discovery_start(venue) -> str | None` — returns override if present, else falls through
+    to `get_venue_start_date(venue)`. Docstring explains the semantic distinction (market-data archive vs
+    instrument-discovery API earliest).
+- **instruments-service**
+  [`engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py):
+  - Removed local `_VENUE_LAUNCH_DATES` dict cache.
+  - `is_venue_available(venue, date)` now calls `_VENUE_MAPPING.get_instrument_discovery_start(venue)`.
+  - `earliest_venue_date(venues)` does the same.
+- **instruments-service**
+  [`reference_data/adapters/cefi/hyperliquid.py`](../../../instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py):
+  - `_HYPERLIQUID_LAUNCH_DATE` is now
+    `datetime.fromisoformat(VenueMapping().get_instrument_discovery_start("HYPERLIQUID")).replace(tzinfo=UTC)` — pulls
+    from UAC at module load. The adapter no longer carries a hardcoded date.
 
-**Option A — Per-(venue, service) start dates.** Extend `VENUE_REFERENCE_DATA_CAPABILITIES` to include venue-level instruments-service starts:
+Verification: smoke run confirms `is_venue_available("HYPERLIQUID", "2023-05-01") == False` (was True pre-fix → 200
+phantoms), `is_venue_available("HYPERLIQUID", "2023-11-01") == True`, and `_HYPERLIQUID_LAUNCH_DATE` matches UAC's value
+at import. 48/48 instruments-service hyperliquid tests pass. UAC: 105 venue-mapping/hyperliquid tests pass (2
+pre-existing failures unrelated to this change — cassette format + freshness config).
 
-```python
-VENUE_REFERENCE_DATA_CAPABILITIES: dict[str, dict[str, str]] = {
-    "HYPERLIQUID": {"": "2023-11-01"},  # instruments-service start (vs market-data 2023-04-15)
-}
-```
-
-`get_venue_data_type_start_date("HYPERLIQUID", "")` would then return `2023-11-01` for instruments-service queries while market-data services keep getting `2023-04-15` from `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]["book_snapshot_5"]`.
-
-**Option B — Adapter-side `record_empty` for date-filtered-empty results.** Adapter detects "we fetched instruments but all are post-target-date" → calls `record_empty(...)` with a clear `error_reason="all_instruments_post_target_date"`. UI then shows `empty_confirmed` (honest gap) instead of `missing`.
-
-Option A is cleaner (no code change in adapters) and matches the existing `VENUE_REFERENCE_DATA_CAPABILITIES` infrastructure. Option B is more honest in the manifest (records the attempt) but requires per-adapter changes.
+**Single SSOT achieved**: HYPERLIQUID's discovery-start date now lives in EXACTLY ONE place
+(`venue_instrument_discovery_overrides["HYPERLIQUID"]`). Adapter + orchestrator both consume from it. Future divergent
+venues (ASTER currently has the same 2-source pattern — UAC says 2024-10-01, adapter says 2024-09-01; flagged as P2
+follow-up below) get a single-line addition to the override dict, not a new code path.
 
 ### Final state post-rebuild
 
-| Asset Group | Coverage | Real gap | Notes |
-|---|---|---|---|
-| CEFI | 99.29% | 1 date (DERIBIT 2026-05-04, just captured awaiting consolidator) + 200 phantom (HYPERLIQUID config) | Effectively 100% real |
-| TRADFI | 100% | none | ✓ |
-| DEFI | 98.12% (UI) | 0 real | UI venue-aliasing issue. Canonical complete. |
-| PREDICTION | 88.66% | 0 real | per-(date, data_type) accounting + UAC start_date config |
-| SPORTS | 100% (top-level) | varies per source | ongoing batch backfill |
-
+| Asset Group | Coverage         | Real gap                                                                                            | Notes                                                    |
+| ----------- | ---------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| CEFI        | 99.29%           | 1 date (DERIBIT 2026-05-04, just captured awaiting consolidator) + 200 phantom (HYPERLIQUID config) | Effectively 100% real                                    |
+| TRADFI      | 100%             | none                                                                                                | ✓                                                        |
+| DEFI        | 98.12% (UI)      | 0 real                                                                                              | UI venue-aliasing issue. Canonical complete.             |
+| PREDICTION  | 88.66%           | 0 real                                                                                              | per-(date, data_type) accounting + UAC start_date config |
+| SPORTS      | 100% (top-level) | varies per source                                                                                   | ongoing batch backfill                                   |

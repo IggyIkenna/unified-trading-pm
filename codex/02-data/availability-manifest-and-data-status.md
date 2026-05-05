@@ -399,6 +399,43 @@ the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_
 **History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) →
 354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry.
 
+### Audit-script gotchas — adapter-specific path duality
+
+Per-adapter quirks future audits MUST handle to avoid false-positive flips destroying real data:
+
+- **Polymarket dual-schema** —
+  `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py` writes parquets at TWO path
+  shapes depending on the adapter code path:
+  1. **Question-format** (legacy): the file_stem is the human-readable question text
+     (`will-bitcoin-cross-100k-by-end-of-2024.parquet`).
+  2. **Canonical-ID format** (current): the file_stem is the Polymarket condition_id hex. Both are valid; the audit
+     script must probe BOTH layouts before flagging a manifest row as phantom. Reference incident (plan
+     `instruments_to_100pct_eod_2026_05_04.plan.md` lines 2540, 2659, 2692): a Phase-1 audit pass that only knew about
+     the question-format would have destroyed 401 legitimate canonical-ID rows. Word-boundary keyword matchers in audit
+     scripts must also handle this — `arch*` was over-aggressive across the question-format text and flagged 388
+     legitimate market records before being narrowed (commit `b336834` word-boundary fix + `d7bd17f` hybrid
+     long-form/short-ticker matcher). Always probe + assert on a sample BEFORE running `--apply`.
+- **Sports per-league subpartition fallback** — `entity={F}/league={L}/{F}.parquet` first, bare `entity={F}/{F}.parquet`
+  fallback (per `unified_api_contracts.sports.candidate_parquet_paths`). Same SSOT, two on-disk shapes; the canonical
+  helper returns the ordered probe list.
+- **PLAYER_VALUES per-day-per-season layout** — Transfermarkt team values land in ONE bulk parquet per (date, season) at
+  `entity=player_values/season={S}/player_values.parquet`, NOT at the per-league-subpartition path. The `season` segment
+  is a real partition dimension because near transfer windows old + new season values legitimately co-exist for the same
+  day. Layout token: `SportsPathLayout.PER_DAY_PER_SEASON`. League filtering happens INTRA-FILE on the
+  `canonical_league` column. **Reference incident 2026-05-05**: pre-fix UAC had
+  `SPORTS_DATA_TYPE_TO_FOLDER["PLAYER_VALUES"] = "transfermarkt_teams"` with `PER_DAY_PER_LEAGUE` — never matched the
+  writer; audit false-flagged every captured row as phantom; a band-aid script (`write_player_values_placeholders.py`,
+  deleted 2026-05-05) wrote 906 zero-row placeholders to mask the drift. Aligned via UAC `gcs_paths.py` change +
+  manifest rebuild (8,937 legacy denorm rows → 15,002 honest captured rows derived from disk truth at
+  `entity=player_values/season=*/`). Lock test:
+  `unified-api-contracts/tests/unit/sports/test_gcs_paths_player_values.py`. The `candidate_parquet_paths` helper probes
+  a 3-year season window when no explicit `season` is passed (covers transfer-window overlap).
+- **DeFi venue-overload + chain-bundle** — already encoded in `reconcile_phantom_manifest_rows_all.py` 5-axis drift
+  handling (path-prefix, chain-bundle equivalence, hive-vocab, instrument_type casing, schema-v4 empty).
+
+When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
+canonical phantom-audit blast radius.
+
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 
 Location: `unified-trading-library/unified_trading_library/manifest_writer.py:329`.
