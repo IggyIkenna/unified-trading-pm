@@ -100,6 +100,34 @@ Read these before making ANY code changes:
   `record_empty(row_key=..., attempted_at=...)` for legitimately-zero-rows,
   `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions. **Never overload
   `venue`** with non-venue data. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+- **Honest absence vs fake placeholders (CRITICAL — applies top-to-bottom across every service)** — when a service runs
+  end-to-end, every output row must reflect REAL work OR a clearly-flagged honest gap. Three categories of "missing",
+  each with a different action — wrong action = silent data corruption.
+  1. **Expected upstream-source gap** — the original data source genuinely doesn't provide data for that key (venue
+     didn't exist on date, instrument delisted, source's coverage start is later than target, sport league paused,
+     pre-genesis days). Action: emit empty parquet (or omit row) and `record_empty(row_key=..., attempted_at=...)` in
+     the manifest. NaN downstream is fine — tree-based ML and rank-based allocators handle 1–10% missing data natively.
+     The crime isn't NaN; the crime is masking absence.
+  2. **Unexpected upstream-pipeline gap** — the upstream SERVICE was supposed to capture/process for that key (raw
+     bucket `capture_status=captured` per manifest, or audit shows it should exist) but the row is missing. Action:
+     STOP. Do not proceed downstream. `DependencyError(fail_fast=True)` is the correct guard at the boundary — resolve
+     by running the upstream backfill for the missing window, NOT by `--skip-dependency-check`. The instruments-service
+     → MTDS → MDPS → features-\* → strategy chain only works if each layer hard-fails when its upstream isn't current.
+  3. **Reader / schema-drift bug** — data IS in the upstream bucket but the service's reader can't find it (wrong path
+     template, stale filename pattern, evolved schema, dropped grouping column). Action: RAISE LOUD, fix the bug. NEVER
+     silently produce empty placeholder rows that LOOK populated. Reference incident **2026-05-05**: MDPS reader
+     expected legacy `ticks.parquet` while MTDS had evolved to per-instrument `{instrument_id}.parquet` files; MDPS
+     silently emitted 1440 empty `open=high=low=close=None` placeholder bars per day per (venue, data_type) for years
+     before being caught by hand-inspecting a sample parquet. Manifest checks said `captured` because the parquet
+     existed; the parquet was 1440 rows of garbage.
+
+  **Principle**: NaN/empty + `empty_confirmed` for honest gaps is fine. Empty placeholders that look populated are worse
+  than missing data because they evade detection — manifest sees `captured`, downstream features compute garbage on
+  garbage, models/strategies trained on empty bars produce confidently-wrong signals. When in doubt, fail loud.
+  Validation-by-output-inspection (read a sample parquet, assert OHLC populated, assert at least one instrument-shard
+  exists per (venue, data_type)) is required at every backfill boundary, not just QG. Counting rows is not validation;
+  populating rows is.
+
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
   The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead
