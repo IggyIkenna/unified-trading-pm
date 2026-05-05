@@ -808,7 +808,7 @@ Net plan now has 3 prongs:
 | PREDICTION | 14,369 | 573,451 raw_tick_data + 26 canonical-with-BTC-itype | 81% of expected days TRUE GAP (F26) | 420 (some blank-venue F30b) | 26 (F30a — _migrated_* second layout) | 1,752 / 2,154 (pre-fetch) | Disk starts 2025-03-14 (F26); F30 finds new layout |
 | SPORTS | 17,288 | 21k matches + 91 axis-9 + 15k axis-10 | 86% match | **603** (mostly 2020-06-01..05 — F27) | **0** | 37 (recent — forward-poll lapse) | 100% v4 manifest (F1) |
 | TRADFI | 72,380 | ~600k canonical + ~100k F25 (unmatched) | TBD | TBD | TBD | TBD | F25 non-hive layout |
-| DEFI | 313,365 | 312k canonical + 5,332 axis-6 | TBD | TBD | TBD | TBD | F16 → 1.7% legacy after FIX-11 |
+| DEFI | 313,365 | 312k canonical + 5,332 axis-6 | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0** | 278 | 1,295 / 2,317 | F16 → 1.7% legacy. Missing rows include UNISWAPV4-ETHEREUM with empty itype |
 | CEFI | 2,226,631 | TBD | TBD | TBD | TBD | TBD | Mostly canonical |
 
 ### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
