@@ -37,8 +37,10 @@ this log is the ground truth.
 | 2026-05-05 | FIX-2 | Patch recon: add SPORTS to ASSET_GROUP_BUCKETS dict (was missing) | done | finding F15, commit pending |
 | 2026-05-05 | DISCOVERY-6 | Spot-check real DeFi/Sports paths during full-range recon → CRITICAL findings F16+F17 | done | findings F16, F17 |
 | 2026-05-05 | DISCOVERY-7 | F6 DeFi 0% attempted_failed closed as observation (wiring is correct) | done | F6 closed |
-| 2026-05-05 | NEXT | FIX-3: extend recon PATH_RE for DeFi layout | next | TBD |
-| 2026-05-05 | NEXT | FIX-4: extend recon PATH_RE for empty instrument_type segment | next | TBD |
+| 2026-05-05 | FIX-3+4+F18 | Extend recon PATH_RE for DeFi/Sports layouts + handle schema-v4 manifests | done | commit `6b1a2f5` |
+| 2026-05-05 | DISCOVERY-8 | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key mismatch) | done | findings F19, F20 |
+| 2026-05-05 | NEXT | FIX-7: case-insensitive comparison in recon (covers F19) | next | TBD |
+| 2026-05-05 | NEXT | FIX-8: DeFi venue-key normaliser in recon (covers F20) | next | TBD |
 | 2026-05-05 | NEXT | FIX-5 design decision — disk migration vs reader-side multi-layout | pending | TBD |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
@@ -269,6 +271,55 @@ gs://market-data-tick-sports-central-element-323112/raw_tick_data/by_date/day=20
 - **Confirms Ikenna's hypothesis from 2026-05-05**: data IS on disk but manifest/UI can't see it because of
   schema/path drift.
 
+### F18 — recon crashes on schema-v4 manifests (KeyError: 'capture_status')
+
+- Recon `main()` did `df_slice[df_slice["capture_status"] == "captured"]` unconditionally.
+- Sports manifest is schema-v4 (F1) — no `capture_status` column → KeyError.
+- **Fix landed in `6b1a2f5`**: if column missing, treat all rows as `captured` (matches UTL
+  `read_availability_index` backfill behaviour).
+
+### F19 — Sports `data_type` case mismatch (manifest UPPERCASE vs disk lowercase)
+
+Surfaced by smoke run of patched recon on SPORTS 2024-06-15:
+
+- Manifest claim: `('2024-06-15', 'ODDS_API', '', 'ODDS')` — **uppercase `ODDS`**
+- Disk truth: `('2024-06-15', 'ODDS_API', '', 'odds')` — **lowercase `odds`**
+
+Same shape as the known instrument_type-casing axis (axis 3) but on `data_type`. Recon's tuple-key compare is
+case-sensitive → manifest claim and disk truth never match. Result: every captured shard becomes BOTH a
+phantom AND a missing_row simultaneously.
+
+- Severity: **MEDIUM** — inflates phantom + missing-row counts equally on sports.
+- Fix candidate: add case-insensitive comparison on data_type AND instrument_type when reconciling.
+  Better: write-time normalisation — UTL ManifestWriter should lowercase before persisting.
+
+### F20 — DeFi manifest-vs-disk venue-keying mismatch (CRITICAL)
+
+Surfaced by smoke run of patched recon on DEFI 2024-06-15:
+
+- Manifest claims (sample, 20 phantoms): `('2024-06-15', 'AAVE_V3', 'a_token', 'oracle_prices')`,
+  `('2024-06-15', 'CURVE', 'pool', 'dex_pool_state')`, etc. — **canonical split** form (venue=PROTOCOL,
+  instrument_type populated, data_type populated).
+- Disk truth (sample, 8 missing-rows): `('2024-06-15', 'AAVEV3-ETHEREUM', '', '')`,
+  `('2024-06-15', 'CURVE-ETHEREUM', '', '')`, etc. — **overload** form (venue=PROTOCOL-CHAIN, no
+  instrument_type, no data_type).
+
+**The manifest writer and the on-disk path writer disagree about how to identify a DeFi shard.**
+
+This is fundamentally different from the path-shape axes:
+- Path-shape axes are about WHERE the file lives.
+- F20 is about HOW the shard is keyed in the manifest.
+
+A canonical-form manifest claim CANNOT match an overload-form disk row by tuple equality — the venue,
+instrument_type, data_type columns all differ. This means even after FIX-3+4 made both forms VISIBLE to recon,
+the comparison stage still produces "phantom" + "missing" pairs for the SAME logical shard.
+
+- Severity: **CRITICAL** — DeFi manifest has 313k captured rows (per F6 structural check); if the writer-vs-disk
+  key mismatch is universal, the entire DeFi manifest is unreconcilable until normalised.
+- Fix candidate: add a `_normalise_defi_shard_key(venue, instrument_type, data_type) -> tuple` helper that
+  collapses both forms to a canonical key. Applied symmetrically to manifest rows and disk rows before
+  comparison. The "right" form depends on which side we declare canonical (see fix-5 design decision).
+
 ### F6 closure — DeFi recorder wiring is correct
 
 After investigation: every DeFi handler (bridge, dex_pools, dex_swaps, eigenlayer_rewards, evm_defi,
@@ -291,10 +342,13 @@ captured shards but failing silently for the failure path — needs runtime tele
 | - | --- | ---- | ---- | ----------------- | ------ | ------ |
 | FIX-1 | Per-day prefix listing in recon (~100x speedup) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | enables laptop audit | `24b38ed` | LANDED |
 | FIX-2 | Add SPORTS to ASSET_GROUP_BUCKETS | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F15 | `9005917` | LANDED |
-| FIX-3 | Recon PATH_RE must support DeFi layout (no instrument_type/data_type segments) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F16 | — | NEXT |
-| FIX-4 | Recon PATH_RE must accept `instrument_type=` empty segment | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F17 | — | NEXT |
-| FIX-5 | Sports/DeFi disk-layout migration to canonical OR adapter rewrite to write canonical | TBD (UTL/MTDS adapters?) | TBD | F16, F17 root cause | — | DESIGN |
-| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after FIX-3,4) |
+| FIX-3 | Recon PATH_RE supports DeFi venue-overload layout (no itype/dtype segments) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F16 | `6b1a2f5` | LANDED |
+| FIX-4 | Recon PATH_RE accepts `instrument_type=` empty segment | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F17 | `6b1a2f5` | LANDED |
+| F18-fix | Recon handles schema-v4 manifests (no capture_status column) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F18 | `6b1a2f5` | LANDED |
+| FIX-5 | Sports/DeFi disk-layout migration vs reader-side multi-layout — DESIGN call | TBD (UTL writer or MTDS adapters or migration script) | TBD | F16, F17, F19, F20 root cause | — | DESIGN |
+| FIX-7 | Case-insensitive comparison in recon (data_type + instrument_type) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F19 | — | NEXT |
+| FIX-8 | DeFi venue-key normaliser in recon (collapse overload+canonical to common key) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F20 | — | NEXT |
+| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after FIX-7,8) |
 | (skip) | F6 DeFi 0% attempted_failed | — | — | — | — | CLOSED — wiring correct, observation only |
 | (TBD) | Schema-validation reject breakdown by (venue, data_type) | market-tick-data-service | analysis | F11 | — | INVESTIGATING |
 | (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | PENDING |
