@@ -129,11 +129,11 @@ Read these before making ANY code changes:
   `_should_skip_shard` trusts the manifest, so phantoms cause permanent skip. Periodic audit:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run`
   (multi-asset-group; `reconcile_phantom_manifest_rows.py` is sports-only and being phased out). Five drift axes the
-  audit handles: (1) hive-vocab `category=` vs `asset_group=`, (2) instrument_type casing PERPETUAL vs perpetual,
-  (3) empty schema-4 instrument_type, (4) path-prefix drift `day=*/` vs `raw_tick_data/by_date/day=*/`, (5) chain-bundle
+  audit handles: (1) hive-vocab `category=` vs `asset_group=`, (2) instrument_type casing PERPETUAL vs perpetual, (3)
+  empty schema-4 instrument_type, (4) path-prefix drift `day=*/` vs `raw_tick_data/by_date/day=*/`, (5) chain-bundle
   equivalence `option`↔`options_chain` / `future`↔`futures_chain`. Plus: HTTP pool tuned to `2*workers` (default 10
-  silently truncates `list_blobs()` under 64-worker concurrency). **Always run on a same-region GCE VM** —
-  cross-region listing is 18× slower (~12 prefixes/sec from laptop vs 222/sec on `asia-northeast1-c`). Recipe:
+  silently truncates `list_blobs()` under 64-worker concurrency). **Always run on a same-region GCE VM** — cross-region
+  listing is 18× slower (~12 prefixes/sec from laptop vs 222/sec on `asia-northeast1-c`). Recipe:
   `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe".
   Critical: do NOT write empty placeholder parquets to mask phantoms — that's fudging data quality.
   `record_empty(row_key=...)` is for legitimately-empty source responses only (we tried, API returned 200+empty).
@@ -151,6 +151,28 @@ Read these before making ANY code changes:
   the launcher (refuses launch if a same-prefix VM is RUNNING in the zone; `--force` bypass). Currently:
   `launch-sfi-forward-poll.sh`, `launch-mtds-prediction-backfill-vm.sh`. New rate-limited adapters should copy the
   pattern. Reference incident: 2026-04-19 SFI thundering herd (10 VMs / 6 hours / ~4 useful writes).
+- **VM Naming Convention** — Every `gcloud compute instances create <NAME>` must use a name whose first segment is a
+  prefix listed in `VM_PREFIX_TO_BUCKET` in
+  [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py). If
+  your launcher needs a new prefix, add it to the dict (with the right shard bucket, or `None` for heartbeat-only) in
+  the same change. **A VM whose prefix is not in the dict is invisible to the zombie watchdog** — it can sit RUNNING
+  forever burning money on a network partition. Patterns:
+  - Asset-group market-data: `{asset_group}-{venue}-{flavor}-{ts}` (e.g.
+    `cefi-bitfinex-spot-2023-heavy-20260504-194158`); `asset_group ∈ {cefi, defi, tradfi, prediction, sports}`.
+  - Forward-poll: `{asset_group}-fwd-{ts}` (e.g. `cefi-fwd-20260504-...`) or `{source}-fwd-{ts}` for sports.
+  - Source-keyed sports backfill: `{source}-backfill-{ts}` where `source ∈ {af, fs, tm, sfi, us, openmeteo}`.
+  - MTDS asset-group-scoped backfill: `mtds-{operation}-{ts}` (e.g. `mtds-perp-funding-`, `mtds-prediction-`,
+    `mtds-gas-fees-`, `mtds-lst-rates-`, `mtds-vault-`).
+  - Singletons / one-offs (instr-discovery, manifest-consolidator, watchdog): bare service prefix is fine
+    (`manifest-consolidator-{ts}`, `vm-zombie-watchdog-{ts}`); never use a name with no timestamp unless it's a true
+    singleton like `mtds-perp-funding-backfill` whose launcher hardcodes the bare name.
+  - Always use `RUN_TS="$(date +%Y%m%d-%H%M%S)"` for the trailing entropy — sortable and greppable. UUIDs are not used
+    and add nothing the watchdog cares about. After editing the dict, **relaunch the watchdog VM**
+    (`gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` then
+    `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`) — the running watchdog only fetches the Python at
+    boot. Reference incident: 2026-05-05 — 5 prefixes (`cefi-bitfinex-`, `cefi-bitget-`, `cefi-kraken-`,
+    `mtds-perp-funding-`, `instr-`) silently zombied because their launchers were added without dict updates. SSOT for
+    the table: the Python file. The launcher comment block is documentation, not the dict.
 
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)
 
