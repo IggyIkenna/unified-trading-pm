@@ -60,8 +60,6 @@ examples for testing any DeFi strategy
 
 ### Sports
 
-- sports_live_streaming_viz_2026_04_15.plan.md — Sports live streaming, ML pipeline UI, promotion structure,
-  frontend-backend parity
 - features_sports_upstream_coverage_gaps_2026_04_21.plan.md — Third follow-up: close raw-layer coverage gaps that
   prevent the fixture-features pipeline from populating. Three tracks: (A) Transfermarkt `player_values` 2020-2026
   backfill — operator fires `launch-transfermarkt-backfill-vm.sh`; (B) SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS`

@@ -1,7 +1,5 @@
 ---
 name: sports-data-migration-mapping-plan
-locked_by: live-defi-rollout
-locked_since: 2026-03-26
 overview: |
   Layered data migration plan for sports pipeline. Maps every data source,
   endpoint, and field to its UTS classification. Migration starts with

@@ -4,8 +4,6 @@ remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-locked_by: live-defi-rollout
-locked_since: 2026-03-25
 overview: |
   Port remaining feature calculators from archived new-sports-batting-services to reach
   1000+ feature target. Audit each of 17 archived calculators vs 21 FSS calculators,

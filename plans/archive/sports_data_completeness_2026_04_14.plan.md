@@ -3,8 +3,6 @@ title: "Sports Data Completeness — Backfill, Denominators, League Breakdowns, 
 status: active
 priority: P0
 created: 2026-04-14
-locked_by: live-defi-rollout
-locked_since: 2026-04-14
 superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.plan.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

@@ -4,8 +4,6 @@ remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-locked_by: live-defi-rollout
-locked_since: 2026-03-25
 overview: |
   Wire the full sports batch pipeline end-to-end: instruments-service (API-Football reference data),
   market-tick-data-service (Odds API tick data with canonical instrument IDs), and features-sports-service

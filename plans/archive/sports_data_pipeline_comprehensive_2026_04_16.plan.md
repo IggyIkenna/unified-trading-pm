@@ -2,8 +2,6 @@
 title: "Sports Data Pipeline — Comprehensive Enrichment, Mapping, Scheduling & Validation"
 created: 2026-04-16
 status: active
-locked_by: live-defi-rollout
-locked_since: 2026-04-16
 priority: P0
 repos:
   - unified-api-contracts
