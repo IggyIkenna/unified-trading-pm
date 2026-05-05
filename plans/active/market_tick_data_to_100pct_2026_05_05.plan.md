@@ -19,6 +19,34 @@ depends_on:
 isProject: false
 ---
 
+## Questions for Harsh (Q&A queue — will discuss when you're back)
+
+1. **FIX-5 design decision** — disk migration vs reader-side multi-layout vs canonical+suffix? See section
+   "FIX-5 design — disk migration vs reader-side multi-layout (decision pending — needs Ikenna)" below for
+   3 options with trade-offs. **Recommended: Option B (reader-side multi-layout) for now**, unblock FIX-6
+   manifest rebuild, schedule Option C as a longer-term plan if needed.
+
+2. **Manifest rebuild — proceed with what data?** F1 (sports manifest 100% schema-v4) and F7 (prediction 99.5% v4)
+   suggest a rebuild from disk truth is needed. But the audit just found ~1M+ axis-8 PREDICTION rows on disk
+   (much larger than the 14k in current manifest). Rebuild would expand the prediction manifest by ~70x. Is
+   that the intended outcome or do we want a stricter inclusion filter?
+
+3. **F20 (DeFi venue-key mismatch)** — manifest claims `venue=AAVE_V3, instrument_type=a_token, data_type=oracle_prices`
+   but disk has bundled `venue=AAVEV3-ETHEREUM/<file>`. The bundle parquet contains MULTIPLE logical shards. Should
+   manifest writers match disk granularity (one row per (date, AAVEV3-ETHEREUM)) OR should disk writers split into
+   per-shard files? Both have downstream cost.
+
+4. **F21 — DeFi vault_share_price residual phantoms** (FRAX/MAKER/MORPHO_VAULTS/YEARN_V3): manifest claims captured,
+   disk has `venue=MORPHO-ETHEREUM/` and `venue=MORPHO_VAULTS/` separately. Are these venue-name aliases or genuinely
+   different protocols? Affects rebuild correctness.
+
+5. **F4/F5 — stale test buckets** (`market-data-tick-test-tradfi-*` and `market-data-tick-test-defi-*` legacy
+   convention vs canonical `*-test-*`). Confirm safe to retire? Empty? Want me to spot-check.
+
+6. **Bug deeper than path-shape** — F10 (29k Tardis "Response payload not completed" leaked into error_reason) and
+   F11 (3236 schema-validation rejects). BUG-X2 fix from your prerequisite section covers NEW failures, but old
+   rows persist. Manifest rebuild (FIX-6) will overwrite them. Confirm we leave them as-is until rebuild?
+
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
 This section is the operating surface. Every audit run, finding, fix decision, and background-agent dispatch lands here
@@ -430,6 +458,92 @@ Net plan now has 3 prongs:
 - **Audit tooling** (FIX-3/4): teach recon to find data at all known disk shapes.
 - **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
 - **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is honest.
+
+## FIX-5 design — disk migration vs reader-side multi-layout (decision pending — needs Ikenna)
+
+The audit found **6 distinct on-disk path shapes** for raw_tick_data across the 5 asset groups, all coexisting:
+
+| Axis | Layout | AGs affected | Rough rows | Status of writers |
+| ---- | ------ | ------------ | ---------- | ----------------- |
+| 1 (canonical) | `asset_group=*/venue=*/instrument_type=*/data_type=*/...` | all 5 (ideal) | majority of CeFi/TradFi | current SSOT shape |
+| 2 (rogue root) | `day=*/...` (no `raw_tick_data/by_date/` prefix) | ? | should be 0 post 2026-04-18 migration | migration script exists |
+| 4/17 (empty itype) | `instrument_type=/data_type=*/...` | sports OLD adapter | minor | adapter retired? |
+| 6/16 (defi venue overload) | `venue=PROTOCOL-CHAIN/<file>.parquet` (no itype/dtype) | DeFi | ~313k manifest rows | live writer |
+| 8/22 (prediction 10-segment) | `data_source/venue/chain/market_category/underlying/market_type/resolution_period/data_type/...` | PREDICTION | ~99% of raw_tick_data | live writer |
+| 9/23 (sports 8-segment) | `data_source/venue/league_id/instrument_type/data_type/...` | SPORTS new | ~91 sample blobs | live writer |
+| 10/24 (sports old per-league) | `venue=ODDS_API/instrument_type=/data_type=*/league=*/...` | SPORTS old | ~99% of raw_tick_data | adapter retired? |
+
+### Option A: Disk migration to single canonical layout
+
+Move every parquet on disk to a single canonical shape. Update writers to emit canonical only.
+
+**Pros**:
+- One layout to read, one to maintain. Reader code becomes simple.
+- Makes manifest unambiguous: one (date, venue, itype, dtype) tuple → one parquet path.
+- Easier to add new readers without dragging the layout zoo into them.
+
+**Cons**:
+- Heavy migration work. DeFi has ~313k parquets, sports ~21k, prediction unknown but ≥hundreds of thousands. Each
+  needs a server-side `copy_blob` + delete.
+- Migrations have caused real bugs before (the `_migrated_<TS>.parquet` filename suffix on DeFi shows a prior pass).
+  Risk of further drift if half-completed.
+- Some shapes carry MORE information than canonical (sports league_id, prediction market_category etc.) — would need
+  to either lose that or extend canonical layout.
+- Writers in `live-defi-rollout` would need to emit the new shape too. Coordinating writer-update + disk-migration
+  + reader-update across 30+ DeFi handlers + sports + prediction adapters is a multi-week project.
+
+### Option B: Reader-side multi-layout + canonical for new writes
+
+Keep all existing on-disk parquets where they are. Update every reader (manifest writer, recon, audit, deployment-api,
+deployment-ui, downstream services) to know about all layouts. Update writers to start emitting canonical going
+forward. Old data stays at the legacy shape; new data uses canonical; readers accept both.
+
+**Pros**:
+- Zero disk migration cost. ~600k parquets across the audit population stay put.
+- New writes go to canonical immediately. Layouts drift smaller over time (legacy shapes get archived).
+- Failures are localized — adding a new reader means teaching it ONE module about layouts, not migrating data.
+- Recoverable: a layout regex bug in reader X doesn't corrupt data, just makes that reader miss rows. Manifest +
+  audit tools catch the discrepancy.
+
+**Cons**:
+- Multi-layout reader code is more complex. The PATH_RE_VARIANTS list has to be maintained as new shapes appear.
+- Writers AND readers need synchronised update. If a writer is added emitting a new shape and the reader
+  doesn't know, audit will (correctly) flag a `NEW_AXIS` finding — but until that's added, downstream is blind.
+- The AG-specific dimensions (sports league_id, prediction market_category, DeFi chain) aren't reflected in the
+  canonical (date, venue, itype, dtype) tuple — readers that need the full key have to consult the path layout
+  rather than the manifest tuple. Awkward.
+
+### Option C (compromise): canonicalise the dimensions, allow flexible suffix
+
+Define the canonical layout as `asset_group=*/venue=*/instrument_type=*/data_type=*/<arbitrary-suffix>/<file>.parquet`.
+The suffix is AG-specific and can carry per-AG dimensions (chain= for DeFi, league_id= for sports, market_category=
+for prediction, underlying= for chain bundles).
+
+Writers ALWAYS produce the four canonical segments first, in fixed order. Readers parse the first four segments and
+treat the suffix as opaque metadata they can re-parse if needed.
+
+**Migration**: existing layouts get rewritten to canonical+suffix. DeFi `venue=AAVEV3-ETHEREUM/` →
+`venue=AAVE_V3/instrument_type=pool/data_type=swaps/chain=ETHEREUM/<file>` (still need to derive itype/dtype from the
+parquet contents or filename). Sports old `venue=ODDS_API/instrument_type=/data_type=odds/league=BUNDESLIGA/` →
+`venue=BETFAIR_EX_EU/instrument_type=odds/data_type=trades/league_id=BUNDESLIGA/` (need bookmaker derivation from
+parquet).
+
+**Pros**: clean canonical first 4 segments make manifest tuple unambiguous; AG-specific dims preserved.
+**Cons**: still requires a one-time migration; writers all need synchronised update.
+
+### Recommendation (for Ikenna's input)
+
+**Option B for now** — reader-side multi-layout. We've already implemented it for recon + audit_legacy_paths.
+Cost is small per reader, recovery is easy, and it lets us proceed to FIX-6 (manifest rebuild) without blocking
+on a multi-week disk migration project. Risk: layout zoo grows over time as adapters drift.
+
+**Option C as the longer-term fix** if the layout zoo becomes a maintenance burden. Schedule it as a separate
+multi-repo plan once Option B unblocks the immediate audit + rebuild work.
+
+**Option A only if** Ikenna decides the layout zoo is unsustainable enough to justify the migration cost.
+
+— please confirm Option B is the right immediate path before I proceed to FIX-6 (manifest rebuild for sports +
+prediction). Will document as a question for the Q&A session.
 
 ### Findings table (live — fixes pending)
 
