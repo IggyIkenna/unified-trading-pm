@@ -154,9 +154,12 @@ Triggered conditionally on Phase 0 findings; sub-tasks within Phase 1 have no in
 These three items must land in order — continuous-series stitcher feeds ML CLI registration which feeds the
 `FUTURES_ROLL` event hook.
 
-- [ ] [AGENT] P2. Register ES + MES + VIX in `ml-training-service` `cli/parser.py`. Currently only SPY is wired (per
+- [x] [AGENT] P2. Register ES + MES + VIX in `ml-training-service` `cli/parser.py`. Currently only SPY is wired (per
       `cme_sp_ml_signal_preaudit_2026_04_20.md` B3). Add CLI `--symbol ES`, `--symbol MES`, `--symbol VIX` and the
-      corresponding reference-data lookups.
+      corresponding reference-data lookups. **Shipped 2026-05-05 (a21e9ed)**: ES + ES_FRONT + SPY were already
+      registered; added MES (`CME:FUTURE:MES-20260619`), MES_FRONT (`CME:CONTINUOUS:MES`), VIX (`CBOE:INDEX:VIX-USD`) to
+      `INSTRUMENTS["TRADFI"]` + `INSTRUMENT_ID_MAP` + `ALL_INSTRUMENTS`. Added `CBOE` prefix to
+      `get_asset_group_for_instrument` so canonical VIX ids resolve to TRADFI. Smoke-tested via in-process import.
 - [ ] [AGENT] P2. Build continuous-series stitcher for ES (rolled futures) at
       `market-tick-data-service/scripts/build_continuous_es.py` plus unit tests. Required for any training window > 90
       days (single contract = ~3 month lifespan). Operator-input gated on the contract-roll method (see §7 Q1). Same
