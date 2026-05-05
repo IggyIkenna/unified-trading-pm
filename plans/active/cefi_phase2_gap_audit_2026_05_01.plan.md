@@ -440,3 +440,107 @@ Per the playbook's "playbook says X, code does Y" rule, the items below need a h
 - 20 in-flight VMs from `launch-cefi-sharded-backfill.sh` 2026-05-01 14:28 UTC: all crashed in 7-13 min on event-bucket
   429 (`run.log` tails confirm rc=1 on 4/4 sampled).
 - UAC venue start dates verified to match instruments-service manifest exactly — no inception-date discrepancy.
+
+## 2026-05-05 re-audit + corrected DERIBIT diagnosis
+
+### Manifest state today (vs 2026-05-01)
+
+| capture_status     | 2026-05-01 |    Today | Δ        |
+| ------------------ | ---------: | -------: | -------- |
+| `captured`         |    180,942 | 1,020,857 | +839,915 |
+| `empty_confirmed`  |    768,659 | 1,117,828 | +349,169 |
+| `attempted_failed` |     90,991 |   86,066 | −4,925   |
+| **Total rows**     |  1,040,592 | 2,224,751 | +1,184,159 |
+| **% failed**       |       8.7% |     3.9% | ↓ 4.8pp  |
+
+Manifest grew 2.1× (date range now extends through 2026-05-04). The 4 CeFi VMs running on 2026-05-05 (bitfinex-spot-2023,
+bitget-spot/futures-2025, coinbase-spot-tbbo) successfully landed ~840k captured rows. `attempted_failed` shrank slightly
+in absolute terms, but the underlying failure shape on DERIBIT is essentially unchanged.
+
+### Phase 2.B initial hypothesis (from 2026-05-01) was WRONG
+
+The 2026-05-01 audit hypothesised that perpetuals were being routed into `futures_chain` / `options_chain` shards
+("`(futures_chain, BTC-PERP)` ghost shards"). **Re-auditing the manifest on 2026-05-05 disproves this.** The actual
+manifest shows:
+
+| `data_type`         | failing `instrument_id`s              | rows  |
+| ------------------- | ------------------------------------- | ----: |
+| `trades`            | **all 10 perps** (BTC-PERP…ARB-PERP)  | 12,470 |
+| `book_snapshot_5`   | **all 10 perps**                       | 12,470 |
+| `derivative_ticker` | **all 10 perps**                       | 12,470 |
+| `futures_chain`     | only BTC, ETH (correct UAC seed)      |    68 |
+| `options_chain`     | only BTC, ETH (correct UAC seed)      |    68 |
+| `liquidations`      | (blank instrument_id)                 |    34 |
+
+Every chain-shard failure is on the legitimate `(BTC, ETH)` underlyings. **There is no perp leak into chain data_types.**
+UAC's `_OPTION_FUTURE_MVP_SEED_UNDERLYINGS = ("BTC", "ETH")` is being respected by the orchestrator.
+
+### Real BUG-1: per-instrument shards are running OPTION schema validation
+
+Every failing perp row on `trades` / `book_snapshot_5` / `derivative_ticker` carries:
+
+- `instrument_type` column = **blank** in the manifest
+- `error_reason` = `"OPTION row requires 'expiry_date', 'strike', and 'option_right' (got expiry=None…)"`
+
+This is a category error inside the schema validator. A `(DERIBIT, BTC-PERP, trades)` shard cannot legitimately produce
+OPTION rows — perps have no expiry. Either:
+
+1. The row-type classifier in the writer pre-validation is mis-classifying perp rows as OPTION, OR
+2. The validator is keying off something other than `data_type` / `instrument_type` (possibly the venue's default
+   `_VENUE_INSTRUMENT_TYPE["DERIBIT"] = "perpetual"`) and falling through to the OPTION branch on rows where the symbol
+   parser couldn't extract canonical fields.
+
+**The "blank instrument_type in manifest" detail is load-bearing.** Manifest row shape suggests the writer's
+pre-write validation path is the entry point — `StreamingParquetWriter pre-write validation failed` (3,220 rows in
+today's manifest, up from 232 on 2026-05-01) is the same failure surfacing at a different layer.
+
+### Updated Phase 2.B work order
+
+The previous Phase 2.B todos (orchestrator-level "filter perps out of chain data_types") are **moot** — that filter would
+do nothing because perps are not in chain shards. New work order:
+
+- [ ] [AGENT] P0. **Locate the schema validator emitting `OPTION row requires 'expiry_date'`.** Likely in
+      `market-tick-data-service/market_tick_data_service/engine/` (writer / pre-write validation) or
+      `market_tick_data_service/market_interface/adapters/cefi/` (Tardis row classifier). Document the exact entry point
+      + row-classification logic.
+- [ ] [AGENT] P0. **Reproduce the failure with real Tardis data.** Pick one failing shard
+      (e.g. `(DERIBIT, BTC-PERP, trades, 2024-01-15)`), download the Tardis CSV directly, run the validator on it, and
+      observe the mis-classification. Captures the input shape that triggers the OPTION branch.
+- [ ] [AGENT] P0. **Identify the misclassification trigger.** Likely candidates: empty `instrument_type` column → falls
+      through to OPTION branch as default; symbol-parser side-effect populating `expiry_date=None` and triggering OPTION
+      schema check; venue-level `_VENUE_INSTRUMENT_TYPE["DERIBIT"] = "perpetual"` getting overridden by a row-level
+      classifier elsewhere.
+- [ ] [AGENT] P0. **Propose minimal fix.** Schema enforcement stays — perp rows on `trades` should validate against the
+      `trades` schema (`timestamp`, `price`, `amount`), never the OPTION schema.
+- [ ] [AGENT] P1. **Investigate `StreamingParquetWriter pre-write validation failed` (3,220 rows, up from 232).** Likely
+      the same bug surfacing at the writer layer; confirm or refute after the row-classifier fix.
+- [ ] [HUMAN] P0. After the fix lands + tarball refreshed, relaunch DERIBIT-only shards that failed BUG-1. Expected
+      recovery: ~37k rows of Cluster B.
+
+### New finding: ASTER venue is 0 captured / 18.2% failed
+
+ASTER (a perpetual-only venue, 2026 onboarding) has **17,681 manifest rows: 0 captured, 14,461 empty_confirmed, 3,220
+attempted_failed**. All three core data_types fail in identical 920-row batches plus 460 liquidations. Symptom matches
+the DERIBIT BUG-1 signature.
+
+- [ ] [AGENT] P1. **Confirm whether Tardis has archive coverage for ASTER.** If yes, ASTER inherits DERIBIT's BUG-1 fix.
+      If no, instruments-service is emitting shards we can't fulfil and the right answer is to mark ASTER's
+      `start_date` correctly in UAC.
+
+### New finding: cluster sizes shifted
+
+| Cluster                                  | 2026-05-01 |  Today | Status |
+| ---------------------------------------- | ---------: | -----: | ------ |
+| A: `Response payload not completed` (transient) | 31,142 | 29,513 | flat — Cluster A retry not run yet |
+| B: `FUTURE/OPTION expiry_date None`             | 46,034 | 39,863 | partial recovery + corrected diagnosis |
+| B': `StreamingParquetWriter pre-write fail`     |    232 |  3,220 | **regression — 14× worse, same root cause** |
+| C: `In CSV column #N` (Tardis schema drift)     |~10,000 | ~10,200 | flat |
+
+### Operational notes (still relevant)
+
+- BUG-3 (event-bucket 429): the 4 currently-running CeFi VMs have been alive for 18-24h without crashing, suggesting
+  either the fix landed or the failure mode is event-rate-dependent and these VMs run quietly. **Defer confirming
+  BUG-3 until next bulk relaunch.**
+- BUG-4 (lifecycle exit-code reporting): unchanged — still reports `exit_code=0` on failure per audit findings. Lower
+  priority than the schema-validator fix because the data-quality impact is observability-only.
+- Phase 2.0 zombie cleanup happened at some point (was 20 zombies on 2026-05-01; 4 healthy VMs today).
