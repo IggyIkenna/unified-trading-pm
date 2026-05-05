@@ -604,6 +604,46 @@ Net plan now has 3 prongs:
 - **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
 - **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is honest.
 
+## Post-audit summary (will be filled in once full-range recons complete — partial now)
+
+### Discovered + closed (no longer blockers)
+
+- **F1, F7**: schema-v4 manifests for sports/prediction → fix is FIX-6 manifest rebuild.
+- **F2**: TRADFI 23% v4 → fix is FIX-6 rebuild.
+- **F3**: 53-82% rows have written_at lag — disambiguated as benign rebuild signature.
+- **F4, F5**: stale test buckets — confirm + retire later.
+- **F6**: DeFi 0% attempted_failed — observation, recorder wiring is correct.
+- **F8, F8'**: per-VM shard backlogs — within tolerance.
+- **F9**: 1 stuck per-VM shard sports — likely consolidator can't merge v4; will resolve when v4→v6 rebuild lands.
+- **F10**: 29k Tardis transport-error leakage — BUG-X2 fix prevents new ones; rebuild overwrites old.
+- **F11/F11-detail**: 3,220 ASTER schema-validation rejects = BUG-X1 stale sentinels.
+- **F12**: 7k CSV-parse-error leakage — BUG-X2 fix.
+- **F13**: TRADFI recon-flipped phantoms — expected, recon working correctly.
+- **F14**: PREDICTION axis-4 phantoms — closed by FIX-12.
+- **F15**: SPORTS missing from recon dict → fixed by FIX-2 (commit `9005917`).
+- **F16, F17, F22, F23, F24**: path-shape drifts → fixed by FIX-3, FIX-4, FIX-9, FIX-10 (recon variants).
+- **F18**: recon crashed on schema-v4 manifests → fixed.
+- **F19**: case-mismatch on data_type → fixed by FIX-7.
+- **F20**: DeFi venue-key mismatch → fixed by FIX-8 normaliser (recon-side compromise; FIX-5 design pending).
+- **F21**: DeFi vault_share_price residual phantoms → recon bug, fixed by FIX-11.
+
+### Open (need Ikenna call)
+
+- **F25**: TRADFI ~100k blobs at non-hive `day-data_type-` layout → migrate vs add-pattern (Q&A 7).
+- **F26**: PREDICTION coverage_start (UAC says 2020-06-12, disk has 2025-03-14+) → update UAC vs deferred backfill (Q&A 9).
+- **FIX-5 design call**: disk migration vs reader-side multi-layout vs canonical+suffix (Q&A 1).
+- **FIX-6 design call**: rebuild scope/order, error_reason preservation (Q&A 2 + design section below).
+
+### Recon outcome per AG (TBD — fill in when full-range audits complete)
+
+| AG | Manifest rows | Disk blobs (raw_tick_data) | Match rate | Forward phantoms | Missing rows | True gap days | Notes |
+| -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
+| PREDICTION | 14,369 | TBD | TBD | TBD | TBD | TBD | Disk starts 2025-03-14 (F26) |
+| SPORTS | 17,288 | ~21k legacy + axis-4 | TBD | TBD | TBD | TBD | 100% v4 manifest (F1) |
+| TRADFI | 72,380 | ~600k canonical + 100k F25 | TBD | TBD | TBD | TBD | F25 non-hive layout |
+| DEFI | 313,365 | 312k canonical + 5k axis-6 | TBD | TBD | TBD | TBD | F16 → 1.7% legacy after FIX-11 |
+| CEFI | 2,226,631 | TBD | TBD | TBD | TBD | TBD | Mostly canonical |
+
 ## FIX-6 design — manifest rebuild approach (after FIX-7+8+11+12 + reader updates)
 
 After Option B (reader-side multi-layout) lands, the manifest should be rebuilt from disk truth so that
