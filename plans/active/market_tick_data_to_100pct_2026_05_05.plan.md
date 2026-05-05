@@ -639,10 +639,21 @@ Net plan now has 3 prongs:
 | AG | Manifest rows | Disk blobs (raw_tick_data) | Match rate | Forward phantoms | Missing rows | True gap days | Notes |
 | -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
 | PREDICTION | 14,369 | TBD | TBD | TBD | TBD | TBD | Disk starts 2025-03-14 (F26) |
-| SPORTS | 17,288 | ~21k legacy + axis-4 | TBD | TBD | TBD | TBD | 100% v4 manifest (F1) |
-| TRADFI | 72,380 | ~600k canonical + 100k F25 | TBD | TBD | TBD | TBD | F25 non-hive layout |
-| DEFI | 313,365 | 312k canonical + 5k axis-6 | TBD | TBD | TBD | TBD | F16 → 1.7% legacy after FIX-11 |
+| SPORTS | 17,288 | 21k matches + 91 axis-9 + 15k axis-10 | 86% match | **603** (mostly 2020-06-01..05 — F27) | **0** | 37 (recent — forward-poll lapse) | 100% v4 manifest (F1) |
+| TRADFI | 72,380 | ~600k canonical + ~100k F25 (unmatched) | TBD | TBD | TBD | TBD | F25 non-hive layout |
+| DEFI | 313,365 | 312k canonical + 5,332 axis-6 | TBD | TBD | TBD | TBD | F16 → 1.7% legacy after FIX-11 |
 | CEFI | 2,226,631 | TBD | TBD | TBD | TBD | TBD | Mostly canonical |
+
+### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
+
+Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims
+captured but disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
+`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped
+out of the manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
+
+Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`.
+Action: leave for FIX-6 rebuild to overwrite, OR run sports recon with `--commit` to flip these
+to attempted_failed (mark them honest).
 
 ## FIX-6 design — manifest rebuild approach (after FIX-7+8+11+12 + reader updates)
 
