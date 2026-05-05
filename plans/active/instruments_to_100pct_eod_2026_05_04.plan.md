@@ -2570,3 +2570,15 @@ Defensive hardening — wasn't actually responsible for the 89% display today, b
 
 3. **Polymarket dual-schema architecture**: the adapter writes both question-format and canonical-ID-format shards depending on... something. Worth a code-walk to understand which path triggers which, and whether to consolidate.
 
+
+### Phase 2 verification result (clean)
+
+`/tmp/audit-polymarket-canonical-id.py` parsed `base_asset` for every canonical-ID-format shard and verified the encoded data_type matched the stored data_type:
+
+| Schema type | Shards | Mismatches |
+|---|---|---|
+| Question-format (audited in Phase 1) | 1,653 | 42 fixed |
+| Canonical-ID-format (Phase 2) | 95 | **0** ✓ |
+
+**Total cleanup needed: 42 rows. All removed. Canonical is now clean.**
+
