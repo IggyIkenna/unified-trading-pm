@@ -317,12 +317,103 @@ feature can have other features as upstreams.
   NOT `attempted_failed`.
 - Backfill VMs picking up failed-only shards don't waste cycles re-fetching in-coverage successful shards.
 
-## Phase 0 inventory output (2026-05-05)
+## Phase 0 inventory output (2026-05-05) — CORRECTED
 
-Source: `features-sports-service/features_sports_service/schemas/feature_definitions.yaml` (declarative SSOT), parsed +
-bucketed by upstream profile.
+> **Initial pass via the YAML registry (`feature_definitions.yaml`) found only 142 features and was misleading.** The
+> YAML is stale operator documentation, not the runtime source of truth. Re-doing Phase 0 against the actual runtime
+> pipeline (`feature_catalog.py` column constants + `derived_features_exporter._run_new_calculators` dispatch) gives the
+> correct picture.
 
-### Headline numbers
+### Headline numbers (corrected)
+
+- **1,104 features** total across 34 calculators (`DERIVED_FEATURE_COUNT=912 + ODDS_FEATURE_COUNT=156`, plus a few
+  pipeline-stage outputs).
+- **11 raw entity keys** read by the pipeline via `ref_data` dict (assembled by `read_all_reference_data(date)` in
+  `data/gcs_reader.py`):
+  `fixtures, fixture_stats, fixture_events, fixture_lineups, ht_stats,  footystats_matches, understat_xg, coaches, injuries, player_values,  transfer_records`.
+- **+ 5 standalone reads**: `read_pre_match_standings`, `read_venues`, `read_odds_data` (footystats),
+  `compute_weather_for_fixtures` (openmeteo), `read_bucketed_odds` (MTDS odds_horizon_bucket).
+
+### YAML drift — Phase 1 input must come from code, not YAML
+
+`feature_definitions.yaml` declares 142 features. Runtime catalog is 1,104. Cannot use the YAML as the input to
+`FEATURE_UPSTREAM_REQUIREMENTS`.
+
+Phase 1 must reverse-engineer per-calculator upstream requirements from the runtime dispatcher + each calculator's
+compute signature.
+
+### Per-calculator inventory (1,104 features, 34 calculators)
+
+| Calculator                    | Cols | Real upstream (from dispatcher)                            | Stage |
+| ----------------------------- | ---: | ---------------------------------------------------------- | ----- |
+| `team_form`                   |   82 | api_football FIXTURES (history)                            | A     |
+| `team_goals`                  |   96 | api_football FIXTURES (history)                            | A     |
+| `team_xg`                     |    8 | understat XG + api_football FIXTURES                       | C     |
+| `multisource_xg`              |   28 | understat XG + footystats MATCHES + (synthetic xG)         | C/D   |
+| `team_derived`                |   26 | derived from team_form/team_goals                          | D     |
+| `season_context`              |   20 | api_football FIXTURES + STANDINGS                          | A     |
+| `goal_timing`                 |   20 | api_football FIXTURE_EVENTS                                | A     |
+| `halftime_calculator`         |   97 | footystats `ht_stats` + fixture_stats                      | C     |
+| `ht_features`                 |   13 | footystats `ht_stats`                                      | A     |
+| `relative_context`            |   60 | FIXTURES + STANDINGS + league aggregates                   | A/D   |
+| `xg_decomposition`            |   20 | api_football FIXTURE_STATS + understat XG + (synthetic xG) | C/D   |
+| `meta_features`               |   12 | derived (other features)                                   | D     |
+| `ml_predictions`              |   10 | derived (other features)                                   | D     |
+| `replacement_model`           |    8 | transfermarkt PLAYER_VALUES + (player_quality model)       | C/D   |
+| `bucketed_features`           |   16 | derived (bucketed expansions)                              | D     |
+| `odds_calculator`             |  153 | footystats ODDS + MTDS odds_horizon_bucket                 | C     |
+| `weather_calculator`          |   10 | openmeteo (compute_weather_for_fixtures)                   | A     |
+| `transfer_window_calculator`  |   38 | transfermarkt PLAYER_VALUES + transfer_records + lineups   | C     |
+| `squad_value_calculator`      |   14 | transfermarkt PLAYER_VALUES + transfer_records             | A     |
+| `manager_calculator`          |   40 | api_football coaches + FIXTURES history                    | A     |
+| `formation_calculator`        |   15 | api_football FIXTURE_LINEUPS + FIXTURES history            | A     |
+| `injury_impact_calculator`    |   10 | api_football INJURIES                                      | A     |
+| `travel_calculator`           |   10 | api_football FIXTURES + venues + history                   | A     |
+| `european_fatigue_calculator` |    8 | api_football FIXTURES (UEFA history)                       | A     |
+| `elo_calculator`              |   10 | api_football FIXTURES (history)                            | A     |
+| `h2h_calculator`              |   42 | api_football FIXTURES (history)                            | A     |
+| `poisson_xg_calculator`       |   16 | xG features (derived)                                      | D     |
+| `player_lineup_calculator`    |   74 | api_football FIXTURE_LINEUPS + transfermarkt PLAYER_VALUES | C     |
+| `advanced_stats_calculator`   |   62 | api_football FIXTURE_STATS + FIXTURES                      | A     |
+| `venue_context`               |   20 | api_football FIXTURES + venues                             | A     |
+| `league_calculator`           |   30 | api_football FIXTURES + STANDINGS                          | A     |
+| `referee_features`            |   20 | api_football FIXTURES (referee field)                      | A     |
+| `bench_sub_calculator`        |   16 | api_football FIXTURE_EVENTS + FIXTURE_LINEUPS              | A     |
+
+### Stage rollup (corrected)
+
+| Stage                      | Calculators |   Features | Notes                                                                                                                                                                                                                                            |
+| -------------------------- | ----------: | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A — Single-source**      |         ~17 |       ~620 | api_football-only families (team_form 82, team_goals 96, h2h 42, manager 40, advanced_stats 62, season_context 20, league 30, etc.) + weather (openmeteo 10) + ht_features (footystats 13) + squad_value (transfermarkt 14) + injury_impact (10) |
+| **C — Cross-source join**  |          ~9 |       ~414 | xg (multisource), odds (footystats + MTDS), halftime (footystats + api_football), transfer_window (api_football + transfermarkt), player_lineup (api_football + transfermarkt), team_xg (understat + api_football), xg_decomposition             |
+| **D — Enriched / derived** |          ~6 |        ~70 | meta_features, ml_predictions, bucketed_features, team_derived, poisson_xg, relative_context                                                                                                                                                     |
+| **Total**                  |      **34** | **~1,104** |                                                                                                                                                                                                                                                  |
+
+### Genuinely missing wiring (decision needed before Phase 4)
+
+1. **SFI_PROGRESSIVE_STATS not consumed** — captured at 96.5% but no calculator reads it. Either (a) add a calculator
+   family for per-match progressive xG / dominance / 30-second-snapshot features, or (b) declare the data as
+   captured-but-unused and remove the manifest pressure to keep capturing it.
+2. **`footystats_predictions` is read by `gcs_reader` but no calculator consumes it.** Same decision: add features or
+   retire from capture.
+
+### Phase 0 follow-ups (BEFORE Phase 1 starts)
+
+- [ ] [DOC] P0.D. Phase 1 must reverse-engineer FEATURE_UPSTREAM_REQUIREMENTS from the dispatcher + per-calculator code,
+      NOT from the YAML.
+- [ ] [DOC] P0.E. Update `feature_definitions.yaml` to actually reflect the 1,104 features the runtime computes — OR
+      delete it and put operator-facing documentation in a different format. The current drift is misleading.
+- [ ] [AGENT] P0.F. Decision on SFI_PROGRESSIVE_STATS — wire features that consume it OR retire from capture. Same for
+      `footystats_predictions`.
+
+---
+
+### LEGACY (incorrect) Phase 0 output below — kept for traceability
+
+> The text below was the first pass against the stale YAML. Numbers are wrong (142 features, 33 profiles) but the
+> bucketing approach is sound. See "corrected" section above for real numbers.
+
+### Headline numbers (LEGACY — yaml-only)
 
 - **142 features** declared in the YAML registry (real column count is higher — ~635+ for derived_features per
   `feature_catalog.py` — because bucketed variants expand at runtime).
