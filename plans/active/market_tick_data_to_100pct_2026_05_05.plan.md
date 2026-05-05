@@ -156,6 +156,36 @@ Output: `/tmp/mtds-audit/structural/check{1-6}-{ag}.csv` + `SUMMARY.txt`.
 - Severity: **HIGH** — blocks honest-coverage measurement for sports.
 - Fix candidate: rebuild sports manifest (Phase 1.5 in this plan) using `rebuild_mtds_manifest.py` with v6 schema.
 
+### F2-CEFI — CEFI manifest also has mixed-itype rows (v4/v6 coexistence)
+
+Sampled CEFI manifest by (venue, instrument_type, data_type):
+
+```
+OKX-SPOT       spot_pair  trades            154,981  (v6 with itype populated)
+OKX-FUTURES    perpetual  trades            105,143  (v6)
+COINBASE-SPOT  spot_pair  trades             90,490  (v6)
+OKX-SWAP       perpetual  trades             65,792  (v6)
+KRAKEN-SPOT    ''         trades             56,411  (v4 — empty itype!)
+KRAKEN-SPOT    ''         book_snapshot_5    56,411  (v4)
+BINANCE-SPOT   ''         trades             51,074  (v4)
+BINANCE-SPOT   ''         book_snapshot_5    50,722  (v4)
+COINBASE-SPOT  ''         book_snapshot_5    48,659  (v4)
+BINANCE-SPOT   spot_pair  trades             47,773  (v6)
+BINANCE-SPOT   spot_pair  book_snapshot_5    46,609  (v6)
+```
+
+So **same venue (BINANCE-SPOT) has BOTH v6 rows (with itype=spot_pair) AND v4 rows (with empty itype)**. That's
+the 16,224 v4 rows from F2 distributed across multiple venues. Recon should be matching these because the
+canonical PATH_RE accepts empty itype (after FIX-12 / d2ec7e8). But these manifest rows also need to be tied
+to disk via tuple comparison — and disk has `instrument_type=spot_pair` not empty.
+
+**This means recon on CEFI WILL show false phantoms** for the v4 rows: manifest claims captured with empty
+itype, disk has captured at `spot_pair`. Same shape, different itype field. Will be ~16k phantoms.
+
+The fix is recon's `_normalise_key` for CEFI — collapse instrument_type to "" so v4-vs-v6 matches.
+Currently the normaliser only does this for DEFI. **Adding TBD as FIX-13** for after CEFI recon completes
+and confirms the impact.
+
 ### F2 — TRADFI manifest mixes v4 + v6 schemas (23% v4)
 
 - Distribution: **v4=16,656 (23%) + v6=55,724 (77%)** of 72,380 rows.
