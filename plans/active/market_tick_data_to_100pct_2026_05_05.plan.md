@@ -866,7 +866,7 @@ These rows DON'T need re-fetching. They need either:
 | -- | ------------- | -------------------------- | ---------- | ---------------- | ------------ | ------------- | ----- |
 | PREDICTION | 14,369 | 573,451 raw_tick_data + 26 canonical-with-BTC-itype | 81% of expected days TRUE GAP (F26) | 420 (some blank-venue F30b) | 26 (F30a — _migrated_* second layout) | 1,752 / 2,154 (pre-fetch) | Disk starts 2025-03-14 (F26); F30 finds new layout |
 | SPORTS | 17,288 | 25,709 raw_tick_data: 15,155 axis-10 + 4,921 axis-9 + 1,815 axis-4 + 3,818 axis-11 unmatched (F28); recon matched 3,649 / phantoms 603 / missing 0 / true-gap 37 days | 86% match | **603** (mostly 2020-06-01..05 — F27) | **0** | 37 (recent — forward-poll lapse) | 100% v4 manifest (F1); 4 distinct disk layouts (axis-4/9/10/11) |
-| TRADFI | 72,380 | ~600k canonical + ~100k F25 (unmatched) | TBD | TBD | TBD | TBD | F25 non-hive layout |
+| TRADFI | 73,316 | 1,786,848 raw_tick_data: 1,478,899 canonical + 206,141 axis-4 empty-itype (CME 140k, NYSE 52k, NASDAQ 13k, FX 829) + 101,808 F25 dash unmatched | (recon TBD) | TBD | TBD | TBD | F25 + 206k axis-4 disk-side. Migration scripts exist (Q&A 10) |
 | DEFI | 313,365 | 312k canonical + 5,332 axis-6 | matched=21,487 (~7% of manifest, but DEFI manifest tracks per-instrument while disk is bundled) | **0** | 278 | 1,295 / 2,317 | F16 → 1.7% legacy. Missing rows include UNISWAPV4-ETHEREUM with empty itype |
 | CEFI | 2,226,631 | 1,224,121 raw_tick_data (1,217,195 canonical / 65,066 unique tuples) | 99.4% disk match | **14,131** (mostly empty-itype empty-dtype v4 — F2-CEFI confirmed) | 452 (BITFINEX/KRAKEN-FUTURES — manifest didn't track) | 89/2682 (3.3% — CEFI well-covered) | Mostly canonical; 14k phantoms = v4 schema mix predicted |
 
