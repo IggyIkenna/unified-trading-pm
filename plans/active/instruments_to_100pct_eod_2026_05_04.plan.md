@@ -2208,3 +2208,151 @@ gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/manifest-conso
 # Coverage delta vs morning baseline
 curl -s "http://localhost:8004/api/data-status/turbo?service=instruments-service&start_date=2019-01-01&end_date=2026-05-04&asset_group=CEFI" | python3 -c "import sys,json; r=json.load(sys.stdin); print('CEFI completion=', r.get('overall_completion_pct'), 'shards=', r.get('overall_shards_found'),'/',r.get('overall_shards_expected'))"
 ```
+
+---
+
+## Day 2 (2026-05-05) — CEFI mixed range+list fanout to close remaining 2,672 gaps
+
+**Scope: CEFI venues only (instruments-service).** DERIBIT excluded per user (memory leak fixed in tardis.py override but not yet validated for multi-day historical sweep — will be tackled via VM with bigger machine separately).
+
+### Why a mixed approach
+
+Yesterday's pure date-list fanout (117 pairs) worked great because each venue had only a few scattered dates. Today's gap is dominated by BITFINEX-FUTURES which needs 2,315 dates from 2020-01-01 → 2026-05-03 (full history since Tardis archive coverage).
+
+If we ran 2,315 single-day processes, each spends ~50s on service bootstrap and ~4s on the actual fetch. **92% of wall-clock would be wasted on bootstrap.** ~90 min total.
+
+Fix: range-launch venues whose missing dates are contiguous (one process amortizes bootstrap across all dates), date-list-launch venues whose missing dates are scattered (no benefit to range since most of the range would be a no-op skip).
+
+### Per-venue strategy decision
+
+| Venue | Missing | Pattern | Strategy |
+|---|---|---|---|
+| BINANCE-FUTURES | 70 | 1 contiguous range 2019-09-08 → 2019-11-16 (pre-Tardis-launch — all skips) | range |
+| BITFINEX-FUTURES | 2,315 | 1 contiguous range 2020-01-01 → 2026-05-03 | range, **chunked** into yearly windows for parallelism |
+| UPBIT | 2 | 1 short range 2021-03-01 → 2021-03-02 | range |
+| BITFINEX-SPOT | 176 | 130 scattered ranges | list |
+| BITGET-FUTURES | 53 | 42 scattered ranges | list |
+| BITGET-SPOT | 56 | 34 scattered ranges | list |
+| **DERIBIT** | (excluded) | n/a | **skipped today** — will run separately on bigger VM after validating the cache-key fix from `instruments-service@9d91465` |
+
+### Launch script
+
+`/tmp/launch-cefi-mixed.sh` (regenerable from this plan):
+- 9 range processes in parallel:
+  - BINANCE-FUTURES 2019-09-08 → 2019-11-16
+  - UPBIT 2021-03-01 → 2021-03-02
+  - BITFINEX-FUTURES × 7 yearly chunks (2020, 2021, 2022, 2023, 2024, 2025, 2026-Jan→May-3)
+- 1 date-list fanout (`local_fill_pairs.sh`, PARALLEL=8) over `/tmp/cefi-scattered.txt` (285 pairs across BITFINEX-SPOT + BITGET-FUTURES + BITGET-SPOT)
+- Total ~17-19 concurrent workers, capped well under Tardis API budget.
+
+Pairs files at:
+- `/tmp/cefi-all-missing-pairs.txt` (full 2,672 list, source of truth)
+- `/tmp/cefi-scattered.txt` (285 list-only pairs)
+
+### Expected timing
+
+- Yearly BITFINEX-FUTURES chunk: 50s bootstrap + 365 × 4s = ~25 min per chunk
+- 7 chunks parallel = **~25 min wallclock for full 2020-2026 BITFINEX-FUTURES**
+- Range chunks (BINANCE-FUTURES, UPBIT) finish in 1-2 min (mostly pre-launch skips / 2 dates)
+- Scattered list at 8 parallel × 54s/pair = ~5 min for 285 scattered pairs
+
+Total wallclock target: **~25 min** (dominated by BITFINEX-FUTURES yearly chunks).
+
+### Pre-launch state (2026-05-05)
+
+- CEFI canonical: 25,332 / 27,954 = 90.62% (full-history window 2019-01-01 → 2026-05-03)
+- UI: 90.6% with BITFINEX-FUTURES at 0% being the biggest visible gap
+- Yesterday's 117-pair fanout already pushed CEFI 30-day window 63.66% → 88.82%
+- Validation regression for OKX-SPOT/FUTURES/SWAP, COINBASE-SPOT was fixed in `unified-api-contracts@41df720` (push-merged)
+
+### Post-launch verification
+
+After the mixed fanout completes, verify:
+1. Canonical row counts grew per venue:
+   ```bash
+   GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false python3 -c "
+   import io, pandas as pd; from google.cloud import storage
+   c = storage.Client(project='central-element-323112').bucket('instruments-store-cefi-central-element-323112').blob('_index/availability_index.parquet')
+   df = pd.read_parquet(io.BytesIO(c.download_as_bytes()))
+   print(df.groupby('venue').size().sort_values(ascending=False))
+   "
+   ```
+2. Coverage % climbed in deployment-api (clear cache first):
+   ```bash
+   curl -s -X POST http://localhost:8004/api/data-status/turbo/clear
+   curl -s "http://localhost:8004/api/data-status/turbo?service=instruments-service&start_date=2018-01-01&end_date=2026-05-03&asset_group=CEFI" | python3 -c "import sys,json; r=json.load(sys.stdin); print(f'CEFI: {r.get(\"overall_completion_pct\")}% ({r.get(\"overall_shards_found\")}/{r.get(\"overall_shards_expected\")})')"
+   ```
+3. Zero failures in summary log:
+   ```bash
+   LOG_DIR=$(ls -td /tmp/cefi-mixed-* | head -1); grep -c FAIL "$LOG_DIR/summary.log"
+   ```
+
+### Lessons documented
+
+- **Bootstrap overhead matters at scale.** 50s/process is fine for 100 pairs (8 min total) but lethal for 2,000+ pairs (~90 min). Always check pair count before deciding range vs list.
+- **"Range" doesn't mean one process per venue's full history** — chunk by year (or quarter for venues with very dense data) to parallelize the long-running ones. 7 chunks × 25 min = 25 min wall vs 1 chunk × 175 min = 175 min wall.
+- **Date-list still wins when dates are scattered** because pre-flight skip across a 6-year range to find 50 missing days wastes per-date GCS round-trips.
+
+---
+
+## Day 2 (2026-05-05) — Sports VM triage + SFI throttle fix
+
+### Sports VMs running 2026-05-04→05 — what each is doing
+
+While CEFI mixed fanout was running locally, four sports VMs were left running from 2026-05-04. Triage:
+
+| VM | Provider | Behavior observed | Action |
+|---|---|---|---|
+| `af-backfill-20260504-232814` | api_football | Captures real fixtures per-date (~30s/date). Will hit daily rate limit. | Leave running. |
+| `sfi-backfill-20260504-183611` | soccer_football_info | **429-thrashing** every minute. ~5 successful fetches per 7-min window. | **Killed; relaunched with throttle fix.** |
+| `tm-backfill-20260504-183629` | transfermarkt | Sequential ~30s/league × 33 leagues × N seasons. RapidAPI upstream slow. | Leave running. Future: parallelize with `asyncio.gather(Semaphore(4))`. |
+| `us-backfill-20260504-232831` | understat | **Already 100% captured.** VM was iterating dates in a manifest pre-flight loop, ~7s/date × 4,124 days = 8 hours of pure noise. | **Killed.** No relaunch needed. |
+
+### SFI rate-limit fix — `instruments-service@04bc1bc`
+
+**Problem.** `BaseSportsReferenceAdapter._MIN_REQUEST_INTERVAL = 0.1` was a module-level constant tuned for api_football Ultra (~900 req/min). SFI plan is RapidAPI Ultra @ **4 req/sec** (provider dashboard screenshot 2026-05-05; 99,999/day). At 0.1s the SFI worker bursts up to 10 req/sec for a few seconds, hits the per-second cap, then 429-thrashes the rest of the minute.
+
+**Fix.** Convert the throttle to a per-class attribute on `BaseSportsReferenceAdapter`:
+
+- `_min_request_interval: float = _MIN_REQUEST_INTERVAL` (default 0.1s — base class)
+- `_throttle()` reads `type(self)._min_request_interval` so subclasses can override
+- `_last_request_time` is now `type(self)._last_request_time` so each adapter paces independently
+
+`SoccerFootballInfoAdapter._min_request_interval = 0.34` → ~3 req/sec, safely under the 4 req/sec cap.
+
+Other adapters (api_football, footystats, transfermarkt, understat, open_meteo) keep the base default — none have evidence of a tighter per-second cap today.
+
+**Files changed (instruments-service):**
+- `instruments_service/reference_data/adapters/sports/adapters/base.py` — class attribute + `_throttle` uses `type(self)`
+- `instruments_service/reference_data/adapters/sports/adapters/soccerfootball_info.py` — override + docstring
+
+**Deployment:**
+- Pushed `instruments-service@04bc1bc` to `live-defi-rollout`
+- Refreshed SPORTS tarball: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`
+- Killed old SFI VM, launched new: `sfi-backfill-20260505-120759` (range 2020-06-01..2026-05-04, single-VM mode)
+
+**Validation criteria.** After ~5 min the new VM's `run.log` should show:
+- Steady ~3 req/sec sustained, no `Rate limited (429)` lines
+- ~180 successful fetches per minute (vs ~14 measured pre-fix)
+- ~12× throughput improvement → 6.3-year backfill (~2,300 dates) wall-time drops from ~68 days single-VM to ~5–6 days
+
+```bash
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/sfi-backfill-20260505-120759/run.log | grep -cE 'Rate limited|429'  # expect 0
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/sfi-backfill-20260505-120759/run.log | grep -cE 'wrote [0-9]+ records'  # should grow steadily
+```
+
+### Understat — no relaunch needed
+
+Understat XG = 100.0% complete (verified via `/api/data-status/turbo`). The "skipping date — all 5 expected leagues per-league captured" log is the system working correctly; the slow part is a `ManifestReader` per-VM shard fallback when the consolidated blob is stale. Cost-benefit: not worth optimizing for an already-complete dataset.
+
+If a gap *does* re-appear, the right fix is in `instruments-service/instruments_service/engine/orchestrator.py` near line 4426 — add a per-(league, season) pre-flight cache so the per-date dispatch short-circuits at O(unique seasons) instead of O(days × leagues). Do NOT add a standalone `local_understat_full_backfill.py` script (violates "System-First Architecture").
+
+### Transfermarkt — leave running, future optimization
+
+- Provider: `transfermarkt-football-data-api.p.rapidapi.com` (NOT scraping)
+- Two endpoints per league: `/competitions/standings` + `/clubs/profile` (1 + N×club calls)
+- Per-league wall-time: ~25-40s, dominated by RapidAPI upstream latency (the API itself scrapes Transfermarkt.com)
+- No bulk endpoint exists
+- Rate limit: shared base default (0.1s) — no documented per-second cap
+
+**Future optimization** (not blocking today): wrap the orchestrator's per-league loop in `asyncio.gather(Semaphore(4))`. The base throttle still serializes underlying HTTP, so this hides upstream latency rather than stacking req/sec. Estimated 4× wall-time speedup. File: `instruments-service/instruments_service/engine/orchestrator.py:4740-4804`.
