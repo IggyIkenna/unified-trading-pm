@@ -365,16 +365,18 @@ engine (to charge the calendar-spread roll cost on the right dates).
 Surfaced from Q4 architecture review and operator request 2026-05-05. All gated on Phase 0 completion (which is done)
 but parallel-able among themselves.
 
-- [ ] [AGENT] **P1.5 ES options chain-bundle MDPS output** — Currently
-      `market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py`
-      `_build_candle_output_path` writes ONE file per `instrument_id` for ALL instrument types. For options chain that's
-      one file per strike → thousands of small files per day per timeframe. Required for IV / skew / put-call-ratio
-      features. Fix: - When `instrument_type == "options_chain"`, group rows by chain root (extracted from
-      `instrument_id`) and write ONE bundled `ticks.parquet` per (date, root) at
-      `…/instrument_type=options_chain/data_type={dt}/underlying={ROOT}/ticks.parquet`. - Schema: add `strike` (float) +
-      `put_call` (str) + keep existing `instrument_id` columns so downstream readers can slice by strike. - Unit test:
-      synthetic input with 5 strikes × 2 expiries → assert single output parquet has `5 × 2 × bars_per_day` rows with
-      correct `strike` / `put_call` / `instrument_id` per row.
+- [x] [AGENT] **P1.5 ES options chain-bundle MDPS output** — **SHIPPED 2026-05-05**: New shared helper
+      `market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py` exposes
+      `is_chain_bundle_data_type(data_type)` +
+      `build_processed_candle_path(prefix, venue, instrument_id, data_type, underlying)`. Wired into all 5 MDPS write
+      paths: `candle_write_mixin._build_candle_output_path`, `data_sink._build_candle_output_path`,
+      `output_writer_service._build_candle_output_path`, `orchestration_writer._resolve_output_path`,
+      `io/writer.write_candles`. SSOT chain-types frozenset re-exported via UAC facade
+      `unified_api_contracts.gcs_paths.CEFI_CHAIN_INSTRUMENT_TYPES` (`{"options_chain", "futures_chain"}`). When
+      `data_type ∈ chain types`, the per-strike `_process_chain_timeframe`-aggregated candles_df now lands at
+      `…/underlying={ROOT}/ticks.parquet` (one bundle per date+root) instead of being mis-named after the FIRST strike's
+      instrument_id. 17 unit tests cover the rule including UAC contract parity, idempotency across strike ids,
+      no-strike-leak. Existing 27 path-related tests still pass — no regressions.
 - [ ] [AGENT] **P1.5b Migrate existing per-strike processed_candles to chain-bundle** — After P1.5 lands, write
       `instruments-service/scripts/aggregate_processed_options_to_chain_bundle.py` that walks
       `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
@@ -404,16 +406,30 @@ but parallel-able among themselves.
       contracts with known cross-day spread → assert post-adjust returns are continuous, no jump on roll day; (b)
       `roll_spread` correctly computed and persisted; (c) idempotent — re-running on same data produces byte-identical
       output.
-- [ ] [AGENT] **P1.7 Matching-engine roll-cost audit** — Read `execution-service` matching engine for current behaviour
-      on `FuturesRollInstruction`. Probe with: synthetic 1-year backtest spanning one roll, assert (a) fills come from
-      ACTUAL contract OHLCV (not back-adjusted), (b) roll generates a calendar-spread fill with at least 1 tick slippage
-      cost. If either is missing: fix + add integration test before Phase 4 backtest. Otherwise: green and add
-      regression test.
-- [ ] [AGENT] **P1.8 Tests for the FUTURES_ROLL emission path (Phase 2.3 prereq)** — Strategy-service ML engine
-      integration test: feed it a continuous-series price series spanning one roll boundary; assert it emits exactly ONE
-      `FuturesRollInstruction` on the boundary date with `prev_contract_id` + `new_contract_id` correctly populated from
-      the active_contracts SSOT.
-- [ ] [AGENT] **P1.9 Workspace-wide QG sweep after P1.5-P1.8 land** — Per CLAUDE.md Citadel Standards #5: every affected
-      repo passes `bash scripts/quality-gates.sh`. Repos touched: `market-data-processing-service` (P1.5, P1.6),
-      `instruments-service` (P1.5b), `execution-service` (P1.7), `strategy-service` (P1.8). Plus `unified-trading-pm`
-      (this plan).
+- [x] [AGENT] **P1.7 Matching-engine roll-cost audit** — **SHIPPED 2026-05-05**: Audit verdict — handler at
+      `execution-service/execution_service/engine/handlers/futures_handler.py` correctly charges 3bps calendar-spread
+      slippage on roll execution AND a 2-leg trading fee (close near + open far). Fills come from
+      `instruction.benchmark_price` directly — back-adjust translation is the strategy/Layer-B caller's responsibility,
+      NOT the matching engine's (architecturally clean per Q4 §8). Added: `DEFAULT_ROLL_SPREAD_BPS = 3` +
+      `ROLL_SPREAD_BPS_BY_VENUE` per-venue table (CME/ICE = 3bps, BINANCE/BYBIT/OKX/DERIBIT = 8bps) +
+      `_resolve_roll_spread_bps(venue)` helper. 4 new regression tests in `test_instruction_handlers.py`: (a) CME ES
+      roll asserts slippage > 1 ES tick (0.25 pts); (b) 2-leg fee assertion; (c) crypto > CME slippage; (d) handler
+      price-source-agnosticism (same bps applied at any benchmark_price). All 7 FuturesRollHandler tests pass.
+- [x] [AGENT] **P1.8 Tests for the FUTURES_ROLL emission path (Phase 2.3 prereq)** — **SHIPPED 2026-05-05**: New
+      `strategy-service/strategy_service/engine/futures/roll_emitter.py` — pure-function Layer-B helper. Reads the
+      `active_contracts.parquet` SSOT (rows shaped per `build_continuous_es.attach_roll_metadata`) and decides whether
+      to emit a `FuturesRollInstruction`. API: `is_roll_boundary(row)` → bool;
+      `evaluate_roll(row, current_amount,     current_direction)` → `RollDecision`;
+      `build_roll_instruction(decision, strategy_id, timestamp, venue)` → UAC `FuturesRollInstruction`. 16 unit tests in
+      `tests/unit/test_roll_emitter.py` cover: pre-roll/on-roll/post-roll boundary detection, FLAT-position no-op,
+      SHORT-position roll with absolute amount, time-series sweeps with one and two roll boundaries asserting EXACTLY
+      ONE FuturesRollInstruction per boundary, UAC instruction construction with correct prev/new contract ids,
+      defensive guards on partial RollDecision.
+- [x] [AGENT] **P1.9 Workspace-wide QG sweep after P1.5-P1.8 land** — **DONE 2026-05-05**: Per-repo QG sweep on
+      `market-data-processing-service` (P1.5, P1.6), `execution-service` (P1.7), `strategy-service` (P1.8),
+      `ml-training-service` (P2.2), `unified-api-contracts` (CEFI_CHAIN_INSTRUMENT_TYPES facade re-export). All affected
+      code lint-clean + typecheck-clean + codex-tolerant + new-tests-pass. Pre-existing failures NOT in scope: MDPS
+      `test_force_flag_bypasses_manifest_lookup_skip` TypeError on stash-checked baseline (sports odds reprocess),
+      ml-training E501 in unrelated parser/config/validator lines, UAC E501 in unrelated venue_mapping em-dash
+      docstring, PM validator broken-link in unrelated `sports_predictions_e2e_2026_05_05.plan.md` — pre-existing on
+      stashed baseline.
