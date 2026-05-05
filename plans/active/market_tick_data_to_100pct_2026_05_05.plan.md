@@ -83,7 +83,11 @@ this log is the ground truth.
 | 2026-05-05 | FIX-10 | audit_legacy_paths: scope to raw_tick_data/ prefix only | done | commit `b159b1b` |
 | 2026-05-05 | DISCOVERY-10 | Spot-check during prediction legacy-paths → F22 (10-segment) + F23 (8-segment sports) | done | findings F22, F23 |
 | 2026-05-05 | FIX-9 | Add F22 + F23 path patterns to recon + audit_legacy_paths | done | commit `e096185` |
-| 2026-05-05 | NOW | Full-range recon + legacy-paths audit running across all 5 AGs (9 parallel tasks) | in_progress | TBD |
+| 2026-05-05 | FIX-11 | _CANONICAL_PATH_RE allows optional `chain=` for DeFi (98% of DeFi disk is canonical+chain) | done | commit `37d78f2` |
+| 2026-05-05 | F11-detail | All 3220 CEFI schema-validation rejects are ASTER (BUG-X1 stale sentinels) | done | committed |
+| 2026-05-05 | F25 | TRADFI ~100k blobs at non-hive `day-data_type-` layout (NEW finding) | logged | needs Ikenna call |
+| 2026-05-05 | FIX-12 | AXIS4 regex matches BOTH literal-empty (`instrument_type=/`) and absent-segment forms | done | commits `d2ec7e8` + `f50d5ac` |
+| 2026-05-05 | NOW | Full-range recon + legacy-paths audit running across all 5 AGs (9 parallel via wrapper scripts) | in_progress | TBD |
 | 2026-05-05 | NEXT | Aggregate findings + design FIX-5 / FIX-6 from results | pending | TBD |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
