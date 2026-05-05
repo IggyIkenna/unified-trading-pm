@@ -128,6 +128,24 @@ Read these before making ANY code changes:
   exists per (venue, data_type)) is required at every backfill boundary, not just QG. Counting rows is not validation;
   populating rows is.
 
+- **No fire-and-forget VM launches (CRITICAL — production observability)** — every VM launch MUST be paired with active
+  verification that the VM is emitting structured events. Events stream to
+  `gs://{pid}-events/events/{service}/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` (JSONL, schema:
+  `{event, service, timestamp, metadata: {service_name, severity, details: {correlation_id, ...}}}`). Required events
+  at minimum: `STARTED` within 60s of launch, at least one progress event per hour while running, and `STOPPED` or
+  `FAILED` at exit. Verification protocol after every launch: (1) wait 90s, `gcloud storage ls
+  gs://{pid}-events/events/{service}/{today}/{vm-name}/` — directory exists with `hour=*` partition; (2) read first
+  JSONL, assert `event=="STARTED"`; (3) every 10–15min recheck for new events — stalled progression == silently-broken,
+  kill and diagnose via the last event's `metadata.details`; (4) on auto-shutdown verify `event in ("STOPPED","FAILED")`
+  with non-empty metadata. `STATUS=RUNNING` from gcloud only means VM is alive — NOT that workload is making progress.
+  SSH-tailing logs is a dev crutch; production runs through `unified-events-interface` UI. When this Claude session
+  launches VMs, the launch-and-monitor pair is ONE todo: launching without scheduling event-verification is fire-and-
+  forget. Reference incident **2026-05-05**: 21 MDPS VMs launched, 6 cefi shards emitted STARTED + STOPPED cleanly but
+  output was 1440 empty placeholder bars per day — events told the truth, but absence of intermediate progress events
+  with row counts (e.g. `INSTRUMENT_PROCESSED`) should have been the silent-success signal. Adapters MUST emit
+  per-instrument progress events with row counts so silent-success-with-zero-output is detectable from the event
+  stream alone.
+
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
   The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead
