@@ -19,6 +19,51 @@ depends_on:
 isProject: false
 ---
 
+## Final session summary (2026-05-05 — comprehensive audit complete)
+
+**Total commits this session**: 14 to MTDS scripts + 30+ to plan doc.
+
+**Audit script work shipped**:
+- `reconcile_market_tick_manifest.py` — patches FIX-1, FIX-2, FIX-3, FIX-4, FIX-7, FIX-8, FIX-11, FIX-12.
+  6 path-shape variants + per-day prefix listing + case-insensitive comparison + DeFi venue-key normaliser
+  + chain= optional in canonical + axis-4 both forms.
+- `audit_legacy_paths.py` — created from scratch with FIX-9, FIX-10, FIX-12, FIX-axis-6, FIX-axis-11.
+  6 axis patterns (4, 6, 8, 9, 10, 11) + raw_tick_data/ prefix scope.
+- `audit_structural_checks.py` — created from scratch. 6 cross-cutting checks (schema_version,
+  written_at chronology, bucket drift, per-VM staleness, schema parity stub, empty/failed accuracy).
+
+**Total findings**: 30 distinct (F1-F30 + F2-CEFI + F3-disambiguation + F11-detail + F30a/b).
+
+**Closed as benign / handled by FIX-6 rebuild / closed as recon-bug-not-data**:
+F3, F6, F11, F11-detail, F13, F14, F18, F19, F20 (recon-side fix), F21.
+
+**Open / needs action**:
+- 9 Q&A items for Ikenna (top of doc).
+- F1, F2, F2-CEFI, F7 — schema-v4 residue (FIX-6 rebuild closes).
+- F4, F5 — stale test buckets retire.
+- F10, F12 — leaked-text rows (rebuild overwrites).
+- F15 — sports recon support (FIX-2 LANDED).
+- F16, F17, F22, F23, F24, F25, F28 — disk-layout drift. **Migration scripts already exist** (Q&A 10).
+- F8, F8', F9 — per-VM shard backlog (consolidator throughput, not blocking).
+- F26 — PREDICTION coverage_start mismatch.
+- F27 — sports pre-coverage-start phantoms.
+- F29 — UTL rebuild_manifest_from_canonical_paths skips _migrated_* files.
+- F30 — prediction second layout + blank-venue phantoms.
+
+**Per-AG audit results** (DRY-RUN, no production manifest writes):
+
+| AG | Manifest rows | Matched | Forward Phantoms | Missing Rows | True Gap Days |
+| -- | -------------:| -------:| ----------------:| ------------:| -------------:|
+| PREDICTION | 14,369 | 2,804 | 420 | 26 | 1,752/2,154 (81%) |
+| SPORTS | 17,288 | 3,649 | 603 | 0 | 37/2,165 (1.7%) |
+| DEFI | 313,365 | 21,487 | 0 ✅ | 278 | 1,295/2,317 |
+| CEFI | 2,229,282 | 105,723 | 14,131 (mostly v4 mix) | 452 | 89/2,682 (3.3%) |
+| TRADFI | 73,316 | TBD | TBD | TBD | TBD |
+
+**Critical insight**: Most "missing" coverage is reader blindness, not real data gaps. Disk migration
+scripts (`migrate_*_canonical.py`) already exist in MTDS — running them collapses F16/F17/F22/F23/F24/F25
+and reduces phantoms to near-zero.
+
 ## Session summary (2026-05-05 — TL;DR for when Harsh is back)
 
 **14 commits to MTDS scripts** + **15+ commits to plan doc** + **28 distinct findings** captured. No backfill VMs
