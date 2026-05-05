@@ -53,10 +53,17 @@ examples for testing any DeFi strategy
 - sports_predictions_e2e_2026_05_05.plan.md — Drives sports predictions running end-to-end: feature-service-sports →
   ml-training (Model 2A walk-forward) → strategy-service paper trade (ArbitrageStrategy + MLSportsStrategy) →
   execution-service paper fills + matching-engine for execution alpha → upcoming-fixtures-ui shows predictions. Path:
-  re-key existing 288M Odds-API rows (`migrate_sports_canonical.py`, idempotent, no API) + MDPS 8-bucket horizon
-  adapter (`SportsBucketAssignmentAdapter`, no API) → FSS feature compute → ML → strategy → UI. Folds
+  re-key existing 288M Odds-API rows (`migrate_sports_canonical.py`, idempotent, no API) + MDPS 8-bucket horizon adapter
+  (`SportsBucketAssignmentAdapter`, no API) → FSS feature compute → ML → strategy → UI. Folds
   `sports_e2e_validation_2026_03_27` Phases 2/3/5; Phase 4 re-collection budget dropped (predictions don't need it).
   Depends on master roadmap Phase 6, UTL base-image rebuild, and features_sports_honest_coverage_2026_05_05.
+- run_lifecycle_events_ssot_2026_05_05.plan.md — Cross-cutting observability fix per the 2026-05-05 CLAUDE.md
+  "No fire-and-forget VM launches" rule. 4 phases: (1) UTL helper `run_lifecycle(service_name, details=...)` context
+  manager + unit tests in `unified_trading_library.events`; (2) audit every long-running entry-point in the workspace;
+  (3) rollout to MTDS migrates / MDPS / instruments-service / deployment-service / FSS / strategy / execution; (4)
+  base-service.sh STEP 5.63 QG enforcement. Closes the gap where 11 audited scripts emit `setup_events` but no
+  RUN_STARTED + terminal RUN_COMPLETED|FAILED. Reference incident: migrate_sports_canonical patched ad-hoc in MTDS
+  ce9b069; this plan rolls the helper into UTL so every script gets the same shape.
 - instruments_service_write_gate_validation_2026_04_22.plan.md — Close the architectural gap where raw-data sinks in
   instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
   `InstrumentsWriteGate.validate_and_write(df, partition, batch_date, mode='strict'|'warn')` asserting
