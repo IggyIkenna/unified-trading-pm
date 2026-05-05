@@ -440,6 +440,40 @@ rejected them (no real data → empty parquet → fails Schema Definition contra
 - Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
 - Action: leave in place; FIX-6 manifest rebuild will overwrite them.
 
+### F28 — SPORTS pre-pre-old path layout (axis 11)
+
+Discovered when sports legacy-paths re-run after FIX-12 still reported 3,818 unknowns. Sample:
+
+```
+raw_tick_data/by_date/day=2022-03-07/source=ODDS_API/league=LA_LIGA/ticks.parquet
+                                     ^^^^^^^                  ^^^^^^                
+                                     no category=/asset_group= no venue=
+```
+
+NO `category=`/`asset_group=` segment, NO `venue=` segment. Just `source=` and `league=`. Earliest sports
+adapter version, predates the hive-vocab introduction.
+
+Sports now has **4 distinct disk layouts** coexisting:
+- axis-4 (empty instrument_type, no league)
+- axis-9 (8-segment per-bookmaker per-league)
+- axis-10 (old per-league with venue=ODDS_API + empty itype)
+- axis-11 (pre-pre-old, no venue, no category)
+
+Severity: **MEDIUM** — adds to layout zoo. FIX-5 design call (Q&A 1) needs to address all 4 sports shapes.
+Action: added to audit_legacy_paths.py axis-11 (commit `c103ec6`); recon comparison logic needs same axis-11
+pattern if we want full sports recon coverage.
+
+### F27 — SPORTS has 603 forward phantoms for dates pre-Jun-06-2020
+
+Recon sample shows `(2020-06-01, ODDS_API, '', 'ODDS')` through `2020-06-05` and similar. Manifest claims
+captured but disk has no parquets at those dates (sports raw_tick_data first day is 2020-06-06). UAC
+`SPORTS_SOURCE_COVERAGE_START['odds_api'] = 2020-06-06`, so dates BEFORE that should have been clipped
+out of the manifest. The 603 phantoms are pre-coverage-start rows the writer somehow emitted anyway.
+
+Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`.
+Action: leave for FIX-6 rebuild to overwrite, OR run sports recon with `--commit` to flip these
+to attempted_failed (mark them honest).
+
 ### F26 — PREDICTION coverage_start in UAC vs disk reality
 
 UAC `PREDICTION_SOURCE_COVERAGE_START` declares:
