@@ -604,6 +604,57 @@ Net plan now has 3 prongs:
 - **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
 - **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is honest.
 
+## FIX-6 design — manifest rebuild approach (after FIX-7+8+11+12 + reader updates)
+
+After Option B (reader-side multi-layout) lands, the manifest should be rebuilt from disk truth so that
+`capture_status` is honest for every shard.
+
+### Existing rebuild infrastructure
+
+`market-tick-data-service/scripts/rebuild_mtds_manifest.py` already exists. It:
+- Lists `raw_tick_data/by_date/` per AG
+- Parses `(date, venue, instrument_type, data_type)` from canonical paths
+- Writes a per-VM shard with `capture_status="captured"` rows
+- Consolidator merges within ~60s
+
+### What needs to change for FIX-6
+
+The existing rebuild script uses **only canonical PATH_RE** — same root cause as the recon issues we just fixed.
+For FIX-6 to land correctly:
+
+1. **Update rebuild_mtds_manifest.py** to use the same `PATH_RE_VARIANTS` list as recon (adapter would be to expose
+   it as a shared module, but for now copy-paste is acceptable per workspace rules — small surface, single
+   reader, easy to keep in sync).
+2. **Decide instrument_type/data_type mapping for non-canonical paths**:
+   - axis-6 (DeFi venue-overload, no itype/dtype on disk): rebuild has no info to fill these. Either drop the
+     row or leave itype/dtype empty. Empty matches the existing manifest shape for these venues; recommended.
+   - axis-9 (sports new): full info available, populate canonically.
+   - axis-10 (sports old per-league): no instrument_type info on disk; populate empty. The `league` segment
+     becomes `league_id` column.
+   - axis-8 (prediction deep): full info, populate canonically.
+3. **Run rebuild PER AG with `MANIFEST_PER_VM_SHARDS=true`** to avoid CAS contention with the consolidator.
+4. **Force-merge** after each rebuild via `python -m unified_trading_library.manifest_consolidator --bucket ...`.
+5. **Re-run recon** to confirm phantom + missing-row counts drop to <1%.
+
+### Rebuild order (smallest first to validate)
+
+1. PREDICTION — only ~14k existing manifest rows + ~250k disk blobs at axis-8. Smallest impact.
+2. SPORTS — ~17k manifest + ~21k disk at axis-9/10/4. Sports manifest is 100% schema-v4 → rebuild lifts it to v6.
+3. DEFI — ~313k manifest + ~317k disk. Mostly canonical, ~5k axis-6 overload.
+4. TRADFI — ~72k manifest + ~600k disk + ~100k axis-F25. Need F25 disposition first (Q&A 7).
+5. CEFI — ~2.2M manifest + ~600k+ disk per CEFI. Largest. Save for last.
+
+### Risks
+
+- **Loss of error_reason** — rebuild from disk truth doesn't know historical failures. Existing
+  `attempted_failed` rows from BUG-X1 / BUG-X2 / Tardis transport errors get overwritten with `captured`.
+  We LOSE the failure history. Option: rebuild only writes `captured` rows; leave `attempted_failed` rows
+  untouched. The reader-side merge handles the union.
+- **Rebuild capacity vs disk reality** — rebuild can only emit what's on disk. If disk is missing genuine days
+  (e.g. PREDICTION pre-2025-03-14 per F26), rebuild won't fix that. Those still need a fetch backfill.
+- **Consolidator races** — must use `MANIFEST_PER_VM_SHARDS=true` per UTL/SSOT or `manifest_consolidator` will
+  drop our writes (see prior 2026-05-02 incident: 80k rows lost during a rebuild without per_vm shards).
+
 ## FIX-5 design — disk migration vs reader-side multi-layout (decision pending — needs Ikenna)
 
 The audit found **6 distinct on-disk path shapes** for raw_tick_data across the 5 asset groups, all coexisting:
