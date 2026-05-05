@@ -30,9 +30,191 @@ this log is the ground truth.
 | 2026-05-05 | DISCOVERY-0 | Plan restructure to live-ops format | done | commit `41ace8c` |
 | 2026-05-05 | DISCOVERY-1 | UAC registry survey — VENUES_BY_ASSET_GROUP, DATA_TYPES_BY_ASSET_GROUP, VENUE_DATA_TYPE_CAPABILITIES, partition_paths.py, raw_tick_hive | done | see "Registry SSOT cheatsheet" below |
 | 2026-05-05 | DISCOVERY-2 | **Found existing audit script — `market-tick-data-service/scripts/reconcile_market_tick_manifest.py`** does forward+inverse phantom detection. Approach pivots: USE this script, don't write a new one. Add a companion probe for drift axes its PATH_RE doesn't cover. | done | finding below |
-| 2026-05-05 | DISCOVERY-3 | Build companion legacy-path probe + companion script (drift axes 2,3,4 not covered by canonical PATH_RE) | next | TBD |
-| 2026-05-05 | DISCOVERY-4 | Smoke `reconcile_market_tick_manifest.py` on DERIBIT (highest-signal cell from BUG-X1 cluster) | pending | TBD |
-| 2026-05-05 | DISCOVERY-5 | Fan out 10-15 background agents across the matrix | pending | TBD |
+| 2026-05-05 | DISCOVERY-3 | Build companion legacy-path probe + structural-checks scripts | done | commits `8ca5e67`, `d04941e` |
+| 2026-05-05 | DISCOVERY-4 | Run 6 structural cross-cutting checks across 4 AGs (CEFI still running) | done | findings F1-F9 below |
+| 2026-05-05 | DISCOVERY-5 | Smoke `reconcile_market_tick_manifest.py` on DERIBIT + legacy-paths on PREDICTION | in_progress | TBD |
+| 2026-05-05 | DISCOVERY-6 | Fan out background agents for venue×data_type matrix | pending | TBD |
+
+## Findings F1-F9 — structural-check audit (2026-05-05)
+
+Output: `/tmp/mtds-audit/structural/check{1-6}-{ag}.csv` + `SUMMARY.txt`.
+
+### F1 — SPORTS manifest is fully schema-v4
+
+- 17,288 rows, **all `schema_version=4`**. Manifest is now v6 (per UTL `MANIFEST_SCHEMA_VERSION`).
+- Manifest **lacks `capture_status`, `error_reason`, `attempted_at` columns** — readers backfill them as
+  `captured` / `""` / `""` for any v4 row.
+- Implication: **every sports row currently looks "captured" to data-status readers**, even those that genuinely
+  failed or were empty. We literally cannot tell honest coverage for sports without a rebuild to v5+.
+- Root cause: sports MTDS writers either haven't been updated to v5+ (or never were the path) OR no rebuild has run
+  since the v4→v5 migration.
+- Severity: **HIGH** — blocks honest-coverage measurement for sports.
+- Fix candidate: rebuild sports manifest (Phase 1.5 in this plan) using `rebuild_mtds_manifest.py` with v6 schema.
+
+### F2 — TRADFI manifest mixes v4 + v6 schemas (23% v4)
+
+- Distribution: **v4=16,656 (23%) + v6=55,724 (77%)** of 72,380 rows.
+- v4 rows lack `capture_status` → readers see them as captured by default.
+- Implication: 23% of TRADFI rows can't be classified honestly — frozen as `captured` even if data is gone.
+- Severity: **MEDIUM** — partial corruption, manageable via rebuild for the v4 slice.
+- Fix candidate: rebuild on `schema_version=4` rows only, OR full TRADFI rebuild.
+
+### F3 — Chronology: 53-81% of rows have `written_at` 365+ days AFTER data date
+
+| AG | 365+ days "suspicious" | % of total rows |
+| -- | ---------------------: | --------------: |
+| SPORTS | 14,072 / 17,288 | **81%** |
+| TRADFI | 54,175 / 72,380 | **75%** |
+| DEFI | 164,612 / 313,365 | **53%** |
+| PREDICTION | 681 / 14,369 | **5%** |
+
+- Three possible interpretations to disambiguate:
+  - (a) **Benign** — recent rebuild scripts overwrote `written_at` to the rebuild time. Sports rebuild logic copies
+    a fresh `written_at`. Verify by checking if `written_at` clusters around a rebuild date.
+  - (b) **Late real-time write** — adapter wrote the row long after the data date. Means the orchestrator was
+    catching up on a backlog, not a bug.
+  - (c) **Manifest written for data that doesn't exist** — drift bug. Cross-check against capture_status: a
+    `captured` row with no parquet on disk is a phantom (already detected by `reconcile_market_tick_manifest.py`).
+- Severity: **MEDIUM** — observability concern, not necessarily a bug. Need disambiguation.
+- Fix candidate: spot-check 20 random "365+" rows per AG: compare `written_at` cluster vs GCS object creation
+  timestamp; if `written_at >> ctime`, that's a rebuild signature (benign-ish). If `written_at < ctime`,
+  manifest is lying.
+
+### F4 — TRADFI has 3 buckets (canonical + 2 test-name variants)
+
+- `market-data-tick-tradfi-central-element-323112` (canonical)
+- `market-data-tick-test-tradfi-central-element-323112` (legacy test naming `test-{ag}`)
+- `market-data-tick-tradfi-test-central-element-323112` (canonical test naming `{ag}-test`)
+- Root cause: bucket-naming convention drifted from `test-{ag}` to `{ag}-test`; the legacy bucket was never
+  cleaned up.
+- Severity: **LOW** for the legacy test bucket (probably empty / unused), but worth confirming + retiring.
+- Fix candidate: `gsutil ls -l gs://market-data-tick-test-tradfi-central-element-323112/` to confirm empty;
+  if so, retire it. Same drift on DeFi (`market-data-tick-test-defi-` vs `market-data-tick-defi-test-`).
+
+### F5 — DEFI test bucket drift mirrors F4
+
+Same drift: `market-data-tick-defi-test-` (canonical) + `market-data-tick-test-defi-` (legacy).
+Same severity + fix.
+
+### F6 — DEFI manifest has 0% attempted_failed and 0.2% empty_confirmed
+
+- 313,365 rows total. **312,680 captured + 685 empty_confirmed + 0 attempted_failed.**
+- For a long-tail of 30 protocols × 11 chains × 20 data_types over multiple years, **expected** to see many
+  legitimately-empty cells (pre-launch dates, paused protocols, chain not yet supported by protocol).
+- 0 `attempted_failed` is suspicious — even healthy adapters hit transient errors at scale.
+- Possibilities:
+  - (a) DeFi adapters don't call `record_empty()` / `record_failed()` correctly.
+  - (b) DeFi adapter wraps every error as a successful empty (lying) — silent failures.
+  - (c) DeFi orchestrator pre-skips most cells via coverage_starts so the writer never gets called.
+- Severity: **MEDIUM-HIGH** — blocks empty-vs-failed accuracy for DeFi.
+- Fix candidate: grep DeFi adapters for `record_empty` and `record_failed` usage; cross-check against the orchestrator
+  pre-skip logic in `coverage_starts.py`.
+
+### F7 — PREDICTION manifest mixes v4/v5/v6 (99.5% v4)
+
+- 14,296 v4 + 2 v5 + 71 v6 of 14,369 rows.
+- Same problem as F1 (sports) but at smaller scale.
+- Severity: **HIGH** — 99.5% of prediction rows can't carry honest-coverage state.
+- Fix candidate: rebuild prediction manifest at v6.
+
+### F8 — TRADFI per-VM shard backlog: 268 shards, none stuck-stale
+
+- Distribution: 95 (1d-7d), 167 (1h-24h), 4 (5m-1h), 2 (<5m). 0 in 30d+.
+- Reading: consolidator IS running, but not aggressively merging. 95 1-day-old shards is a backlog.
+- Severity: **LOW** — readers fall back to per-VM merge after 120s staleness; they'll see fresh data.
+- Verify: check `manifest-consolidator-*` VM is RUNNING in `asia-northeast1-c`.
+
+### F9 — Sports per-VM shard: 1 shard 1-7 days old, never merged
+
+- Single per-VM shard, 1-7 days old. May be a stuck shard the consolidator can't merge (sports manifest is v4 →
+  consolidator may reject v4-to-canonical merges).
+- Severity: **MEDIUM** — could be the why behind F1 (sports stuck at v4).
+- Fix candidate: check consolidator log for sports merge errors.
+
+### CEFI structural-check additions
+
+#### F1' — CEFI mostly v6 (healthy)
+
+- Distribution: **v6=2,179,658 (97.9%) + v5=30,749 (1.4%) + v4=16,224 (0.7%)** of 2,226,631 rows.
+- Much healthier than sports/prediction. Small v4/v5 residue could be cleaned up but not blocking.
+
+#### F3' — CEFI: 82% of rows have written_at 365+ days suspicious
+
+- 1,831,164 / 2,226,631. Consistent with a recent rebuild scenario more than a bug.
+- Same disambiguation needed as F3.
+
+#### F6' — CEFI capture_status distribution
+
+- captured: 1,021,335 (45.9%)
+- empty_confirmed: 1,119,274 (50.3%) — high but explainable via pre-launch / pre-listing date clipping
+- attempted_failed: 86,022 (3.9%) — matches BUG-X1 cluster from prerequisite section
+
+#### F8' — CEFI per-VM shard backlog: 1,249 shards (none stuck-stale)
+
+- 1,156 (1d-7d) + 83 (1h-24h) + 7 (5m-1h) + 3 (<5m). 0 in 30d+.
+- Consolidator running but heavily lagged. Worth investigating why merges queue this deep on CeFi.
+
+### F10-F13 — error_reason cluster analysis (CEFI + TRADFI)
+
+#### F10 — CEFI: 29,513 rows of `Response payload is not completed` error
+
+- Tardis/HTTP transport error. Distinct from BUG-X1 — these are real fetch failures.
+- BUG-X2 fix in MTDS `fe5cc2c` writes generic `VENUE_FETCH_FAILED` for new failures, but **these old rows still
+  have the raw exception text** in `error_reason`.
+- Severity: **MEDIUM** — these are real failed shards that should be re-attempted. Do NOT need a code fix; a
+  manifest rebuild will overwrite them with fresh error classifications. Or: backfill VMs will retry them.
+- Fix candidate: leave in place; phase 2 backfill will retry them via `_should_skip_shard` doing the right thing.
+
+#### F11 — CEFI: 3,220 rows of `StreamingParquetWriter pre-write validation failed`
+
+- Write-time schema validation rejected the parquet. The writer was called but the row data didn't conform to the
+  registered SchemaDefinition.
+- This is the **schema-validation-before-write** invariant correctly firing — caught bad rows, didn't write
+  bad data to disk.
+- Severity: **MEDIUM** — need to break down which (venue, data_type) is producing rejected rows. If it's a
+  consistent pattern (e.g. one venue's adapter producing bad shape), that's a fix at the adapter level.
+- Fix candidate: query CEFI manifest where `error_reason LIKE 'StreamingParquetWriter%'` group by (venue, data_type).
+  Document the breakdown, then fix the adapter producing bad rows.
+
+#### F12 — CEFI: ~7,000 rows leaking raw CSV-column error text (`In CSV column #N`)
+
+- Tardis CSV parser hit bad rows, raised `pyarrow` (or pandas) exception, exception text leaked into
+  `error_reason`. Same BUG-X2 pattern as the original DERIBIT cluster.
+- BUG-X2 fix in `fe5cc2c` covers this for NEW failures but the old rows persist.
+- Severity: **LOW** — manifest carries verbose error strings instead of a clean classification.
+- Fix candidate: rebuild manifest to overwrite, OR confirm `classify_venue_error()` now catches these (BUG-X2 patch).
+
+#### F13 — TRADFI: 94% of attempted_failed rows are recon-script-flipped phantoms
+
+- 254 / 270 have `error_reason=phantom_captured_no_parquet_at_canonical_path`. These were flipped by a prior
+  `reconcile_market_tick_manifest.py --commit` run.
+- Other 16 are `StreamingParquetWriter pre-write validation failed`.
+- Severity: **NONE** — expected, recon working correctly. Documents the prior recon run.
+
+### Findings table (live — fixes pending)
+
+| Axis | Description | Known/New | AGs affected | Rows affected | Severity | Root-cause repo | Fix dependency | Status |
+| ---- | ----------- | --------- | ------------ | ------------- | -------- | --------------- | -------------- | ------ |
+| Schema-mix | Manifest v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known | sports (100%), prediction (99.5%), tradfi (23%), cefi (0.7%) | ~48k v4 rows | HIGH | UTL writer + rebuild scripts | rebuild per AG | DIAGNOSED |
+| Late writes | 53-82% rows have written_at 365+ days after data date | new (severity) | all 5 AGs | ~2M rows | MED (observability) | TBD | Disambiguate vs rebuild_at | DIAGNOSED |
+| Bucket drift | Two test-bucket name conventions coexist | known | tradfi, defi, cefi | 3 stale buckets | LOW | deployment-service / cloud_constants | retire stale | DIAGNOSED |
+| DeFi 0% failed | DeFi has 0 attempted_failed across 313k rows | new | defi | ~313k | MED-HI | MTDS DeFi adapters | grep record_failed/empty | DIAGNOSED |
+| Per-VM stuck shard | Sports 1 unmerged shard | new | sports | 1 | MED | UTL consolidator | check consolidator logs | DIAGNOSED |
+| Per-VM backlog | CEFI 1,249 shards in queue (1d-7d age) | new | cefi | 1,249 shards | LOW | UTL consolidator throughput | investigate | DIAGNOSED |
+| Tardis transport errors | 29,513 rows leak `Response payload is not completed` | new | cefi | 29,513 | MED | MTDS Tardis adapter (BUG-X2 fixed for new) | rebuild + retry | DIAGNOSED |
+| Schema validation rejects | StreamingParquetWriter rejected ~3,236 writes | new | cefi (3,220) + tradfi (16) | ~3,236 | MED | adapter producing bad rows | breakdown by (venue, data_type) | DIAGNOSED |
+| CSV parse error leak | ~7,000 rows leak `In CSV column #N` | new | cefi | ~7,000 | LOW | MTDS CSV parser | BUG-X2 patch covers new | DIAGNOSED |
+| Recon-flipped phantoms | TRADFI 254 phantoms flipped previously | none | tradfi | 254 | NONE | recon working | — | EXPECTED |
+
+### Findings table (live — fixes pending)
+
+| Axis | Description | Known/New | AGs affected | Rows affected | Severity | Root-cause repo | Fix dependency | Status |
+| ---- | ----------- | --------- | ------------ | ------------- | -------- | --------------- | -------------- | ------ |
+| Schema-mix | Manifest holds v3/v4/v5/v6 mixed; v4 rows can't carry capture_status | known | sports (100%), prediction (99.5%), tradfi (23%) | ~48k v4 rows total | HIGH | UTL writer + rebuild scripts | — | DIAGNOSED |
+| Late writes | 53-81% of rows have written_at 365+ days after data date | new (severity) | sports, tradfi, defi | ~233k rows | MED (observability) | TBD | Disambiguate vs rebuild_at | DIAGNOSED |
+| Bucket drift | Two test-bucket name conventions coexist | known | tradfi, defi | ~3 buckets | LOW | deployment-service / cloud_constants | — | DIAGNOSED |
+| Empty/Failed accuracy | DeFi has 0 attempted_failed across 313k rows | new | defi | ~313k | MED-HI | MTDS DeFi adapters | grep record_empty/record_failed | DIAGNOSED |
+| Per-VM stuck shard | Sports has 1 unmerged per-VM shard | new | sports | 1 | MED | UTL consolidator | check consolidator logs | DIAGNOSED |
 
 ## Discovery audit — 2026-05-05+ (the actual current work)
 
