@@ -111,12 +111,22 @@ for tradfi. Phase 1 MDPS backfill todo (P1) is hard-triggered. Phases 2-4 still 
 
 Triggered conditionally on Phase 0 findings; sub-tasks within Phase 1 have no inter-dep and run in parallel.
 
-- [ ] [AGENT] P1. **IF** Phase 0 shows MDPS `processed_candles` missing for tradfi: launch MDPS backfill VM for ES +
-      MES + VIX over 2020-01-01 → 2026-05-05. Pair the launch with active event-stream verification (90s STARTED check,
-      hourly progress-event check, STOPPED on shutdown) per CLAUDE.md no-fire-and-forget rule.
-- [ ] [AGENT] P1. Tradfi phantom-audit + manifest-rebuild. Port the CeFi 2026-05-04 pattern: invoke
-      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` first; surface
-      uncatalogued legacy `category=tradfi` rows. Then a non-dry-run pass. Goal: drift < 1%.
+- [~] [AGENT] P1. **IF** Phase 0 shows MDPS `processed_candles` missing for tradfi: launch MDPS backfill VM for ES +
+  MES + VIX over 2020-01-01 → 2026-05-05. Pair the launch with active event-stream verification (90s STARTED check,
+  hourly progress-event check, STOPPED on shutdown) per CLAUDE.md no-fire-and-forget rule. **Launched 2026-05-05
+  19:39Z**: 7 sharded VMs via `bash launch-mdps-sharded-backfill.sh tradfi` —
+  `mdps-tradfi-{2020,2021,2022,2023,2024,2025,2026}-20260505-203928`, e2-standard-8 each in asia-northeast1-c,
+  auto-shutdown on completion. All 7 verified RUNNING with `hour=19` event partitions emitting STARTED at the 90s check
+  ✓. Each VM ~3-12h wallclock. Re-check at 2026-05-05 22:00Z for hourly progress events and at auto-shutdown for
+  STOPPED + row counts. Post-completion: run
+  `rebuild_manifest_from_canonical_paths('market-data-tick-tradfi-central-element-323112',      service_name='market-data-processing-service', prefix='processed_candles/by_date')`
+  for manifest reconciliation.
+- [~] [AGENT] P1. Tradfi phantom-audit + manifest-rebuild. Port the CeFi 2026-05-04 pattern: invoke
+  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` first; surface
+  uncatalogued legacy `category=tradfi` rows. Then a non-dry-run pass. Goal: drift < 1%. **Started 2026-05-05 20:31Z
+  from laptop**: process PID 9490 still running at 28+ min elapsed. Cross-region listing is 18× slower than same-region
+  per CLAUDE.md, so this dry-run pass will take ~30-60 min total. Outcome will determine the size of the non-dry-run
+  reconciliation pass. Future runs should be on a same-region VM.
 - [x] [AGENT] P1. Launcher hardening — make `VM_FORCE_WINDOW` configurable in
       `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` (currently hardcoded ~line 196). Add a
       `--no-force-window` flag and a top-of-file comment block pointing at this plan. **Shipped 2026-05-05**
