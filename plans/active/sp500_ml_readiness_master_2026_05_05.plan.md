@@ -377,16 +377,20 @@ but parallel-able among themselves.
       `…/underlying={ROOT}/ticks.parquet` (one bundle per date+root) instead of being mis-named after the FIRST strike's
       instrument_id. 17 unit tests cover the rule including UAC contract parity, idempotency across strike ids,
       no-strike-leak. Existing 27 path-related tests still pass — no regressions.
-- [ ] [AGENT] **P1.5b Migrate existing per-strike processed_candles to chain-bundle** — After P1.5 lands, write
-      `instruments-service/scripts/aggregate_processed_options_to_chain_bundle.py` that walks
-      `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
-      groups by chain root + (date, timeframe, data_type), writes bundled at canonical path, `record_captured` via
-      ManifestWriter. Idempotent. Same skip-if-exists pattern as the raw-tick aggregator.
-- [ ] [AGENT] **P1.5c Re-launch MDPS tradfi backfill with chain-bundle fix** — Once P1.5 ships + tarball refreshed, kill
-      the in-flight `mdps-tradfi-{2020..2026}-20260505-203928` VMs and relaunch. Old VMs produced per-strike candles
-      using the pre-fix code; their output will be migrated by P1.5b but cleaner to re-run with the fixed code.
-      Decision-gate: if P1.5b proves cheap (<1h compute), let MDPS finish and migrate; if MDPS is still <50% done when
-      P1.5 lands, kill-and-relaunch is faster.
+- [~] [AGENT] **P1.5b Migrate existing per-strike processed_candles to chain-bundle** — Script ready. After P1.5 lands,
+  write `instruments-service/scripts/aggregate_processed_options_to_chain_bundle.py` that walks
+  `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
+  groups by chain root + (date, timeframe, data_type), writes bundled at canonical path, `record_captured` via
+  ManifestWriter. Idempotent. Same skip-if-exists pattern as the raw-tick aggregator.
+- [x] [AGENT] **P1.5c Re-launch MDPS tradfi backfill with chain-bundle fix** — **DONE 2026-05-06**: 7 zombie
+      `mdps-tradfi-{2020..2026}-20260505-203928` VMs killed (silently zombied 6+h after 2026-05-05 23:06 UTC last event
+      — exactly the no-fire-and-forget pattern from CLAUDE.md). Refreshed tarball
+      `bash scripts/vm/create-code-tarballs.sh --asset-group TRADFI` (used `/opt/homebrew/bin/bash` for bash 5; shipped
+      `mdps`/`mtds`/`uac`/`utl` tarballs at 23:14Z bundling chain-bundle fix e5ee88e). Relaunched 7 fresh sharded VMs
+      `mdps-tradfi-{2020..2026}-20260506-001446` (run-ts=20260506-001446). All 7 RUNNING per
+      `gcloud compute instances list --filter="labels.run-ts=20260506-001446"` at 00:16 UTC. Decision: pre-stalled VMs
+      were <2% done (only 2024 had legacy migrated output, 2020/2026 nothing) — kill-and-relaunch was strictly faster
+      than letting them resume.
 - [x] [AGENT] **P1.6 Continuous-series builder (back-adjust)** — **SHIPPED 2026-05-05 market-tick-data-service
       `133cfb4`**: `scripts/build_continuous_es.py` + `tests/unit/scripts/test_build_continuous_es.py` with 10 passing
       unit tests covering: business-day shift, roll-date pairing, active-contracts table, reverse-walk shift
