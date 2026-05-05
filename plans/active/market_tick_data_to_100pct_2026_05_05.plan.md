@@ -35,8 +35,11 @@ this log is the ground truth.
 | 2026-05-05 | DISCOVERY-5 | Smoke recon on PREDICTION/DERIBIT — found scaling bug (full-bucket list) | done | finding F14 |
 | 2026-05-05 | FIX-1 | Patch recon: per-day prefix listing — 100x speedup | done | commit `24b38ed` |
 | 2026-05-05 | FIX-2 | Patch recon: add SPORTS to ASSET_GROUP_BUCKETS dict (was missing) | done | finding F15, commit pending |
-| 2026-05-05 | DISCOVERY-6 | Re-run patched recon across all 5 AGs in parallel | in_progress | TBD |
-| 2026-05-05 | DISCOVERY-7 | Fan out background agents for venue×data_type matrix | pending | TBD |
+| 2026-05-05 | DISCOVERY-6 | Spot-check real DeFi/Sports paths during full-range recon → CRITICAL findings F16+F17 | done | findings F16, F17 |
+| 2026-05-05 | DISCOVERY-7 | F6 DeFi 0% attempted_failed closed as observation (wiring is correct) | done | F6 closed |
+| 2026-05-05 | NEXT | FIX-3: extend recon PATH_RE for DeFi layout | next | TBD |
+| 2026-05-05 | NEXT | FIX-4: extend recon PATH_RE for empty instrument_type segment | next | TBD |
+| 2026-05-05 | NEXT | FIX-5 design decision — disk migration vs reader-side multi-layout | pending | TBD |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
 
@@ -217,19 +220,105 @@ Surfaced by smoke run of patched recon on PREDICTION 2025-12-01..2025-12-07.
 - Combined with F1 (sports manifest 100% schema-v4) and F9 (sports stuck per-VM shard), sports has been
   invisible to the reconciler since it was added.
 - Severity: **MEDIUM** — gap in tooling coverage. Quick fix landing in same patch as FIX-1.
-- Fix: add `"SPORTS": f"market-data-tick-sports-{PROJECT_ID}"` to the dict.
+- Fix: add `"SPORTS": f"market-data-tick-sports-{PROJECT_ID}"` to the dict. **LANDED commit `9005917`.**
+
+### F16 — DeFi paths skip `instrument_type` + `data_type` segments entirely (CRITICAL)
+
+Surfaced by GCS spot-check during full-range recon:
+
+```
+gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2024-06-15/asset_group=defi/venue=AAVEV3-ETHEREUM/ticks_migrated_20260418T132205Z.parquet
+```
+
+The DeFi disk layout has:
+- `asset_group=defi` ✅
+- `venue=AAVEV3-ETHEREUM` ❌ (legacy venue overload — chain baked in, no separate `chain=` segment — axis 6)
+- ❌ NO `instrument_type=` segment at all
+- ❌ NO `data_type=` segment at all
+- File is `ticks_migrated_<TIMESTAMP>.parquet` (suggests last-touched-by-migration provenance)
+
+**Implications**:
+- Recon canonical PATH_RE needs `instrument_type=` AND `data_type=` AND chain= (or via venue overload). DeFi disk
+  matches **none of those** — the entire DeFi bucket is invisible to recon.
+- Manifest claims for DeFi go through bucket-write but disk is at a non-canonical path → **manifest forward-phantom
+  count is over-reported** (recon thinks all DeFi captured rows have no parquet) AND **reverse phantoms are
+  under-reported** (recon doesn't see DeFi parquets exist) — manifest disagreement is bidirectional.
+- The `_migrated_<TS>` suffix suggests the 2026-04-18 migration ran but didn't fully canonicalise paths.
+- Severity: **CRITICAL** — DeFi audit/recon is fundamentally broken until either disk layout is fixed OR audit script
+  knows about this DeFi-specific shape.
+
+### F17 — SPORTS disk layout uses `category=sports` (legacy hive vocab) AND empty `instrument_type=` (CRITICAL)
+
+Surfaced by GCS spot-check:
+
+```
+gs://market-data-tick-sports-central-element-323112/raw_tick_data/by_date/day=2024-06-15/category=sports/venue=ODDS_API/instrument_type=/data_type=odds/ticks.parquet
+```
+
+- `category=sports` ❌ (legacy hive vocab — should be `asset_group=sports`, axis 1)
+- `instrument_type=` literally empty ❌ (axis 4 — empty segment between `=` and next `/`)
+- The PATH_RE uses `instrument_type=(?P<itype>[^/]+)/` which requires NON-EMPTY content between `=` and `/`. **An
+  empty segment matches NEITHER** the canonical PATH_RE nor any of audit_legacy_paths.py's drift-axis regexes —
+  this is in fact a **NEW axis (axis 4 variant) we haven't fully encoded**.
+
+**Implications**:
+- 100% of SPORTS disk data is invisible to the canonical recon PATH_RE.
+- F1 (sports manifest 100% schema-v4) is consistent with F17: writers wrote both empty-instrument_type rows and
+  legacy `category=` paths, never updated to v5+.
+- Severity: **CRITICAL** — sports audit/recon fundamentally broken.
+- **Confirms Ikenna's hypothesis from 2026-05-05**: data IS on disk but manifest/UI can't see it because of
+  schema/path drift.
+
+### F6 closure — DeFi recorder wiring is correct
+
+After investigation: every DeFi handler (bridge, dex_pools, dex_swaps, eigenlayer_rewards, evm_defi,
+flash_loan_events, gas_fee, governance_events, lending_indices, liquidation_events, liquidations, lst_rates,
+mev_events, oracle_prices, perp_funding, position_data, solana_defi, staking_yields, token_transfers,
+vault_share_price) uses `DefiManifestRecorder` and calls all three of `record_captured` / `record_empty` /
+`record_failed`. The recorder delegates to `ManifestWriter._record_status` correctly.
+
+The 0% `attempted_failed` count for DeFi is real: DeFi adapters genuinely don't fail at scale (RPC + TheGraph
+are robust, plus orchestrator pre-skip clips most pre-launch dates as `empty_confirmed`). Combined with F16
+(DeFi paths non-canonical), there's a subtler concern: DeFi rows might be written to manifest under a different
+key shape than the disk layout, but the recorder code path looks structurally correct.
+
+**Status**: closed as **observation**, not bug. Could reopen if a DeFi VM run shows manifest writes succeeding for
+captured shards but failing silently for the failure path — needs runtime telemetry, not static analysis.
 
 ## Fix manifest (live tracking — landed + pending)
 
-| # | Fix | Repo | File | Drift axis closed | Commit | PR | Status |
-| - | --- | ---- | ---- | ----------------- | ------ | -- | ------ |
-| FIX-1 | Per-day prefix listing in recon (~100x speedup) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | enables laptop audit | 24b38ed | n/a (feature branch) | LANDED |
-| FIX-2 | Add SPORTS to ASSET_GROUP_BUCKETS | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F15 — sports unauditable | pending | n/a | LANDED (uncommitted) |
-| (TBD) | DeFi 0% attempted_failed root cause + fix | market-tick-data-service | TBD | F6 | — | — | INVESTIGATING |
-| (TBD) | Schema-validation reject breakdown + adapter fix | market-tick-data-service | TBD | F11 | — | — | INVESTIGATING |
-| (TBD) | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | — | PENDING |
-| (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | — | PENDING |
-| (TBD) | F3 disambiguation (write tooling) | tooling | analysis script | F3 | — | — | PENDING |
+| # | Fix | Repo | File | Drift axis closed | Commit | Status |
+| - | --- | ---- | ---- | ----------------- | ------ | ------ |
+| FIX-1 | Per-day prefix listing in recon (~100x speedup) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | enables laptop audit | `24b38ed` | LANDED |
+| FIX-2 | Add SPORTS to ASSET_GROUP_BUCKETS | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F15 | `9005917` | LANDED |
+| FIX-3 | Recon PATH_RE must support DeFi layout (no instrument_type/data_type segments) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F16 | — | NEXT |
+| FIX-4 | Recon PATH_RE must accept `instrument_type=` empty segment | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F17 | — | NEXT |
+| FIX-5 | Sports/DeFi disk-layout migration to canonical OR adapter rewrite to write canonical | TBD (UTL/MTDS adapters?) | TBD | F16, F17 root cause | — | DESIGN |
+| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after FIX-3,4) |
+| (skip) | F6 DeFi 0% attempted_failed | — | — | — | — | CLOSED — wiring correct, observation only |
+| (TBD) | Schema-validation reject breakdown by (venue, data_type) | market-tick-data-service | analysis | F11 | — | INVESTIGATING |
+| (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | PENDING |
+| (TBD) | F3 disambiguation (rebuild signature vs real bug) | tooling | analysis script | F3 | — | PENDING |
+
+## Critical insight (2026-05-05 19:50 IST audit reveals)
+
+**Ikenna's 2026-05-05 hypothesis is confirmed.** Data exists on disk, but manifest+UI can't see it because:
+
+1. **DeFi (F16)**: disk uses `venue=PROTOCOL-CHAIN` venue-overload + NO `instrument_type=` / `data_type=` segments.
+   The 2026-04-18 migration tagged files as `_migrated_<TS>` but didn't restructure the path layout.
+2. **Sports (F17)**: disk uses `category=sports` (legacy hive vocab) AND `instrument_type=` literal-empty.
+3. **Prediction (F14)**: schema-v4 manifest rows persist with empty `instrument_type` claiming captured.
+4. **All AGs (F3)**: 53-82% of manifest rows have written_at 365+ days after data date — the 2026-04 migrations
+   ran but did NOT canonicalise everything.
+
+**This is exactly the failure mode "the manifest can't read its own canonical layout because writers and readers
+have diverged"**. Re-running backfill VMs would burn quota fetching data that's already on disk at non-canonical
+paths. **The fix is path-layout reconciliation, not redownload.**
+
+Net plan now has 3 prongs:
+- **Audit tooling** (FIX-3/4): teach recon to find data at all known disk shapes.
+- **Disk reconciliation** (FIX-5): either move data to canonical paths OR teach all readers (manifest, UI, downstream services) to handle multiple layouts. Decision: **teach readers** because moving 313k DeFi parquets is expensive.
+- **Manifest rebuild** (FIX-6): once readers accept all shapes, rebuild manifest from disk truth so capture_status is honest.
 
 ### Findings table (live — fixes pending)
 
