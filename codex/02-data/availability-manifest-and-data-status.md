@@ -342,12 +342,19 @@ identical whether the source was silent or the pipeline had never run. `write_wi
 **Five drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
 
 1. **Hive-vocab drift** — `category=` (legacy) vs `asset_group=` (post-2026-04 rename) coexist on disk; both probed.
-2. **`instrument_type` casing** — manifest holds `PERPETUAL` / `perpetual` interchangeably; disk only has lowercase. Membership check is case-insensitive.
+2. **`instrument_type` casing** — manifest holds `PERPETUAL` / `perpetual` interchangeably; disk only has lowercase.
+   Membership check is case-insensitive.
 3. **Empty `instrument_type`** — schema-4 manifest rows omit the segment; audit accepts any disk `instrument_type`.
-4. **Path-prefix drift** — Tardis/DeFi adapter writes via `build_*_partition_path` historically lived at top-level `day=*/...` while orchestrator-direct writes used `raw_tick_data/by_date/day=*/...`. UAC `77abd56` + MTDS `2a479ef` unified writes to the canonical prefix going forward; the rekeyer `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py` relocates pre-existing rogue data. Audit probes both shapes as a safety net.
-5. **Chain-bundle equivalence** — manifest `instrument_type=option` / `future` (row-level) vs disk `options_chain` / `futures_chain` (writer bundles them per `tardis_shared.finalise_rows_and_path`); audit accepts either form.
+4. **Path-prefix drift** — Tardis/DeFi adapter writes via `build_*_partition_path` historically lived at top-level
+   `day=*/...` while orchestrator-direct writes used `raw_tick_data/by_date/day=*/...`. UAC `77abd56` + MTDS `2a479ef`
+   unified writes to the canonical prefix going forward; the rekeyer
+   `instruments-service/scripts/migrate_rogue_root_to_raw_tick_data.py` relocates pre-existing rogue data. Audit probes
+   both shapes as a safety net.
+5. **Chain-bundle equivalence** — manifest `instrument_type=option` / `future` (row-level) vs disk `options_chain` /
+   `futures_chain` (writer bundles them per `tardis_shared.finalise_rows_and_path`); audit accepts either form.
 
-**Plus**: schema-v4 vestigial empty-data_type rows are filtered out of audit scope (informational pre-v5 markers, not real shards).
+**Plus**: schema-v4 vestigial empty-data_type rows are filtered out of audit scope (informational pre-v5 markers, not
+real shards).
 
 **How to re-run** (must run on a same-region GCE VM — cross-region listing is 18× slower):
 
@@ -378,13 +385,19 @@ python3.13 -m venv .venv
 #    manifest is a no-op.
 ```
 
-**Always **start with `--dry-run`. Compare phantom count vs prior run; investigate distribution by venue/data_type before flipping.
+**Always **start with `--dry-run`. Compare phantom count vs prior run; investigate distribution by venue/data_type
+before flipping.
 
-**Connection-pool warning**: the script bumps the GCS HTTP pool to `2 × workers` (default 10 silently truncates `list_blobs()` results under high concurrency — this caused 9,757 false-positive phantoms in the 2026-05-04 audit before the fix landed).
+**Connection-pool warning**: the script bumps the GCS HTTP pool to `2 × workers` (default 10 silently truncates
+`list_blobs()` results under high concurrency — this caused 9,757 false-positive phantoms in the 2026-05-04 audit before
+the fix landed).
 
-**Asset-group cross-cuts**: the script supports `cefi`, `defi`, `tradfi`, `prediction`, `sports` via `--asset-group`. DeFi has additional drift axes (legacy `venue=PROTOCOL-CHAIN/` overload, no-asset-group hive segment); prediction has the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_tpls`.
+**Asset-group cross-cuts**: the script supports `cefi`, `defi`, `tradfi`, `prediction`, `sports` via `--asset-group`.
+DeFi has additional drift axes (legacy `venue=PROTOCOL-CHAIN/` overload, no-asset-group hive segment); prediction has
+the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_tpls`.
 
-**History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) → 354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry.
+**History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) →
+354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry.
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 

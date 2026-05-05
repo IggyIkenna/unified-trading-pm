@@ -20,19 +20,18 @@ isProject: false
 
 ## Adapter health summary (2026-05-04 13:36 IST)
 
-| Asset group | Healthy | Failed                | Bug type                                             |
-| ----------- | :-----: | --------------------- | ---------------------------------------------------- |
-| CEFI        | 7 / 9   | OKX, COINBASE         | 3-SSOT canonical-name disagreement (multi-repo align) |
-| TRADFI      | 6 / 8   | POLYGON, FRED         | api_key not in SM (POLYGON), zero records (FRED)      |
-| DEFI        | 7 / 7   | —                     | clean                                                 |
-| SPORTS      | 6 / 6¹  | —                     | clean (SFI excluded by design)                        |
-| **TOTAL**   | **26 / 30** | **4 broken**      |                                                       |
+| Asset group |   Healthy   | Failed        | Bug type                                              |
+| ----------- | :---------: | ------------- | ----------------------------------------------------- |
+| CEFI        |    7 / 9    | OKX, COINBASE | 3-SSOT canonical-name disagreement (multi-repo align) |
+| TRADFI      |    6 / 8    | POLYGON, FRED | api_key not in SM (POLYGON), zero records (FRED)      |
+| DEFI        |    7 / 7    | —             | clean                                                 |
+| SPORTS      |   6 / 6¹    | —             | clean (SFI excluded by design)                        |
+| **TOTAL**   | **26 / 30** | **4 broken**  |                                                       |
 
 ¹ SOCCER_FOOTBALL_INFO is the 7th sports provider but excluded due to in-flight VM.
 
-**87% of adapters confirmed healthy via 1-day smoke.** The 4 broken ones (OKX, COINBASE,
-POLYGON, FRED) are out-of-scope for today's EOD push — they need separate plans
-(canonical-name alignment, SM secret rotation, FRED adapter debugging).
+**87% of adapters confirmed healthy via 1-day smoke.** The 4 broken ones (OKX, COINBASE, POLYGON, FRED) are out-of-scope
+for today's EOD push — they need separate plans (canonical-name alignment, SM secret rotation, FRED adapter debugging).
 
 The 26 healthy adapters can all proceed to Phase 2 backfill.
 
@@ -40,12 +39,10 @@ The 26 healthy adapters can all proceed to Phase 2 backfill.
 
 After confirming all 26 healthy adapters via 1-day smoke, fanned out the full backfill.
 
-**Machine sizing**: AMD Ryzen 9 7900X, 24 cores, 93 GB RAM. At full fan-out: 85 concurrent
-`instruments-service` procs, load avg ~41, mem 54 GB used / 38 GB free. Comfortable
-headroom; can sustain.
+**Machine sizing**: AMD Ryzen 9 7900X, 24 cores, 93 GB RAM. At full fan-out: 85 concurrent `instruments-service` procs,
+load avg ~41, mem 54 GB used / 38 GB free. Comfortable headroom; can sustain.
 
-**Backfills running** (all via `run_vm_backfill_e2e.sh` for CEFI/TRADFI/DEFI, direct CLI for
-SPORTS):
+**Backfills running** (all via `run_vm_backfill_e2e.sh` for CEFI/TRADFI/DEFI, direct CLI for SPORTS):
 
 - **DEFI 7 venues** — per-protocol cutoff dates from `DEFI_SOURCE_COVERAGE_START` in UAC
   - AAVEV3-ETHEREUM: 2022-03-16 → today
@@ -66,21 +63,20 @@ SPORTS):
   - OPEN_METEO, UNDERSTAT, FOOTYSTATS, TRANSFERMARKT (enrichment, parallel)
   - **SOCCER_FOOTBALL_INFO excluded** (other agent's VM in flight)
 
-All chunks resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. CEFI/TRADFI use
-30-day chunks × 4 parallel workers per venue.
+All chunks resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. CEFI/TRADFI use 30-day chunks × 4 parallel
+workers per venue.
 
-**Confirmed healthy**: chunks completing — first `DONE` lines visible by 13:41:36 IST
-(CEFI BINANCE-SPOT 2019-01-01..2019-01-30 + 2019-03-02..2019-03-31). Env vars propagating
-correctly (the silent-fail bug from earlier today is fixed).
+**Confirmed healthy**: chunks completing — first `DONE` lines visible by 13:41:36 IST (CEFI BINANCE-SPOT
+2019-01-01..2019-01-30 + 2019-03-02..2019-03-31). Env vars propagating correctly (the silent-fail bug from earlier today
+is fixed).
 
-**ETA estimate**: CEFI/TRADFI ~18-25 min per venue (89 chunks × ~50s / 4 parallel),
-DEFI faster (smaller date ranges, fewer pools), SPORTS depends on rate-limit pacing.
+**ETA estimate**: CEFI/TRADFI ~18-25 min per venue (89 chunks × ~50s / 4 parallel), DEFI faster (smaller date ranges,
+fewer pools), SPORTS depends on rate-limit pacing.
 
 ### Rate-limit watchdog (2026-05-04 13:46 IST)
 
-Concern raised mid-run: 85 concurrent procs may hit provider API rate limits. Set up
-`/tmp/rate-limit-watchdog.sh` (PID 443611, also tails to `/tmp/rate-limit-watch.log`)
-that scans every 60s for these signatures across all chunk logs:
+Concern raised mid-run: 85 concurrent procs may hit provider API rate limits. Set up `/tmp/rate-limit-watchdog.sh` (PID
+443611, also tails to `/tmp/rate-limit-watch.log`) that scans every 60s for these signatures across all chunk logs:
 
 - HTTP 429 / status 429 / "429 Too Many"
 - RateLimitError / RateLimitException
@@ -88,55 +84,51 @@ that scans every 60s for these signatures across all chunk logs:
 - quota_exceeded / QuotaExceeded
 - "throttled by API" / Tardis-specific throttling
 
-**Initial regex was too loose** — caught timestamp-millisecond `:42:43,429` as fake
-matches; tightened to require word-boundary context ("HTTP 429", "status 429",
-"429 Too Many"). Re-scanned with the precise regex → **0 real rate-limit hits**
-across all 85 procs.
+**Initial regex was too loose** — caught timestamp-millisecond `:42:43,429` as fake matches; tightened to require
+word-boundary context ("HTTP 429", "status 429", "429 Too Many"). Re-scanned with the precise regex → **0 real
+rate-limit hits** across all 85 procs.
 
-**Why we're holding up**: most providers we hit at scale are paid feeds (Tardis,
-Databento) with high quotas, and adapters bake in per-venue pacing internally.
-Sports providers (api-football, transfermarkt, footystats, understat, openmeteo)
-each run as a single process, not chunked, so they self-pace.
+**Why we're holding up**: most providers we hit at scale are paid feeds (Tardis, Databento) with high quotas, and
+adapters bake in per-venue pacing internally. Sports providers (api-football, transfermarkt, footystats, understat,
+openmeteo) each run as a single process, not chunked, so they self-pace.
 
-**Only real concurrency warning seen**: 9× `ManifestWriter: generation conflict after 15
-retries, falling back to unconditional write` — expected under heavy concurrent
-manifest writes (85 procs all updating `_index/availability_index.parquet`). The
-unconditional-write fallback is safe (manifest is upsert-keyed); not a data-loss bug,
-just GCS optimistic-concurrency noise. Will quiet down as venues finish.
+**Only real concurrency warning seen**: 9×
+`ManifestWriter: generation conflict after 15 retries, falling back to unconditional write` — expected under heavy
+concurrent manifest writes (85 procs all updating `_index/availability_index.parquet`). The unconditional-write fallback
+is safe (manifest is upsert-keyed); not a data-loss bug, just GCS optimistic-concurrency noise. Will quiet down as
+venues finish.
 
 ### Force-flag verification (2026-05-04 13:48 IST)
 
 Confirmed: **no `--force` flag anywhere** in this run.
 
 - Inspected all 85 running cmdlines: 0 procs have `--force`.
-- `run_vm_backfill_e2e.sh` source line 131 hardcodes the chunk command with no
-  `--force`: `instruments-service --operation instruments --mode batch --asset-group X
-  --venues Y --start-date A --end-date B`.
+- `run_vm_backfill_e2e.sh` source line 131 hardcodes the chunk command with no `--force`:
+  `instruments-service --operation instruments --mode batch --asset-group X --venues Y --start-date A --end-date B`.
 - Sports CLI invocations were also fired without `--force`.
 
-Implication: the orchestrator's `_should_skip_shard` is doing its job — for any
-`(asset_group, venue, day)` whose manifest row is `captured` or `empty_confirmed`, the
-adapter returns immediately. Only `attempted_failed` (the 56,489 phantoms we flipped
-+ any pre-existing real failures) and missing rows get re-attempted. **Massive cost
-savings** vs `--force` which would re-pay every shard. Tardis/Databento quotas
-preserved.
+Implication: the orchestrator's `_should_skip_shard` is doing its job — for any `(asset_group, venue, day)` whose
+manifest row is `captured` or `empty_confirmed`, the adapter returns immediately. Only `attempted_failed` (the 56,489
+phantoms we flipped
+
+- any pre-existing real failures) and missing rows get re-attempted. **Massive cost savings** vs `--force` which would
+  re-pay every shard. Tardis/Databento quotas preserved.
 
 ### System resource pressure (2026-05-04 13:50 IST)
 
 Memory got tight at peak — 90 GB RAM used / 1 GB free, 7 GB swapped. Top consumers:
+
 - DERIBIT chunk: 4.8 GB (options chain — 200k symbol filter cost)
 - Sports providers: 2.8-4.7 GB each, 5 providers = ~18 GB total
 - DEFI/CEFI/TRADFI chunks: ~1 GB each, 60+ procs
 
-**At 13:50 I incorrectly claimed "no OOM, system stable".** That was wrong — see correction
-below.
+**At 13:50 I incorrectly claimed "no OOM, system stable".** That was wrong — see correction below.
 
 ### OOM kill at 13:55:21 (correction to earlier "no OOM" call)
 
-**`systemd-oomd` killed the entire `app.slice` cgroup at 13:55:21 IST.** I missed this on
-first scan because systemd-oomd sends SIGTERM (with 20s grace period) before SIGKILL,
-which produces "graceful shutdown" log lines that look like external termination, not OOM.
-Reading journalctl correctly:
+**`systemd-oomd` killed the entire `app.slice` cgroup at 13:55:21 IST.** I missed this on first scan because
+systemd-oomd sends SIGTERM (with 20s grace period) before SIGKILL, which produces "graceful shutdown" log lines that
+look like external termination, not OOM. Reading journalctl correctly:
 
 ```
 May 04 13:55:21 hk systemd[2009]: app-org.chromium.Chromium-6423.scope:
@@ -147,20 +139,22 @@ May 04 13:55:47 hk systemd[2009]: app-org.chromium.Chromium-6423.scope: Failed w
 ```
 
 systemd-oomd watches cgroup memory pressure and intervenes before kernel OOM. It killed:
+
 - VS Code chromium electron procs (the editor)
 - All 85 instruments-service procs (they were children of the same `app.slice`)
 - The rate-limit watchdog
 - Anything else in the user's app.slice
 
 **What survived (durable):**
+
 - 376 chunk `.done` files in `.backfill-checkpoints/` — these resume cleanly
 - All parquet writes already in GCS (376 chunks worth: cefi 192, tradfi 157, defi 27)
 - Manifest rows for those captured shards
 
 **What was lost (in-flight only):**
+
 - 60 in-flight chunks at moment of kill — checkpoints not yet written, will redo on resume
-- Sports near-zero progress: api_football 0, open_meteo 2 dates, understat 0, footystats 0,
-  transfermarkt 3 dates
+- Sports near-zero progress: api_football 0, open_meteo 2 dates, understat 0, footystats 0, transfermarkt 3 dates
 
 ### Real RC of sports memory bloat (corrected, with code citation)
 
@@ -176,131 +170,116 @@ _cached_standings_df: pd.DataFrame | None = None
 _cached_prediction_league_ids: list[int] = []
 ```
 
-These are **module-level pandas DataFrames** that hold the full sports reference dataset
-(1,228 leagues + 618 teams + standings rows from the API_FOOTBALL smoke earlier). They're
-populated via `_set_cached_leagues / _teams / _standings` and **never cleared** for the
-duration of the proc.
+These are **module-level pandas DataFrames** that hold the full sports reference dataset (1,228 leagues + 618 teams +
+standings rows from the API_FOOTBALL smoke earlier). They're populated via `_set_cached_leagues / _teams / _standings`
+and **never cleared** for the duration of the proc.
 
-There's a `clear_defi_universe_cache()` for the DeFi equivalent, but **no
-`clear_sports_caches()`** function exists. So when sports runs with
-`--start-date 2020-06-01 --end-date 2026-05-04` in a single proc, those DFs stay resident
-through ~1,800 days of iteration, plus per-day intermediate state (fixtures, oddslike
-buffers, etc.) accumulates inside the orchestrator's loop without per-day flushes.
+There's a `clear_defi_universe_cache()` for the DeFi equivalent, but **no `clear_sports_caches()`** function exists. So
+when sports runs with `--start-date 2020-06-01 --end-date 2026-05-04` in a single proc, those DFs stay resident through
+~1,800 days of iteration, plus per-day intermediate state (fixtures, oddslike buffers, etc.) accumulates inside the
+orchestrator's loop without per-day flushes.
 
-User intuition correct: **once data is uploaded to GCS, it should be cleared from memory.**
-The orchestrator does write to GCS per-day, but doesn't `del` the dataframes / call gc
-afterwards. RAM grows monotonically until the process dies (or systemd-oomd kills it).
+User intuition correct: **once data is uploaded to GCS, it should be cleared from memory.** The orchestrator does write
+to GCS per-day, but doesn't `del` the dataframes / call gc afterwards. RAM grows monotonically until the process dies
+(or systemd-oomd kills it).
 
 **Verified — the cache is intentional, NOT used for any aggregate calculation:**
 
 Confirmed across the entire `instruments-service` repo:
-- `_cached_leagues_df / _teams_df / _standings_df / _prediction_league_ids` are referenced
-  **only inside `orchestrator.py`** — 3 setter sites + 4 reader sites, all within the
-  per-date sports loop.
-- **No other module imports them.** Verified `grep -rn "_cached_leagues_df" instruments-service/`
-  → only orchestrator.py + tests.
-- **No finalize / wrap-up / aggregate / post-loop function** uses the accumulated DFs.
-  No "compute season-summary from full cache" logic anywhere. The cache is purely a
-  per-batch-run API-call optimization.
-- **Data is durable in GCS per-date** via `_gated_sink_write(... entity="leagues" ...)`.
-  Clearing the memory copy after each date's write is safe — nothing downstream consumes
-  the in-memory copy.
-- **Read sites verify**: every read (lines 2912, 2942, 2978, 3012) is to write the same
-  DF to a different date's GCS partition. Not used for any joins, computations, or
-  cross-date aggregations.
 
-**Conclusion**: cache is intentional for the "skip 67 API calls per date" optimization,
-but NOT used for any calculation. It can be cleared at any point (per-date, per-chunk,
-per-N-dates) without losing data — just adds API call cost where cleared. This makes
-fixing it safe and low-risk.
+- `_cached_leagues_df / _teams_df / _standings_df / _prediction_league_ids` are referenced **only inside
+  `orchestrator.py`** — 3 setter sites + 4 reader sites, all within the per-date sports loop.
+- **No other module imports them.** Verified `grep -rn "_cached_leagues_df" instruments-service/` → only
+  orchestrator.py + tests.
+- **No finalize / wrap-up / aggregate / post-loop function** uses the accumulated DFs. No "compute season-summary from
+  full cache" logic anywhere. The cache is purely a per-batch-run API-call optimization.
+- **Data is durable in GCS per-date** via `_gated_sink_write(... entity="leagues" ...)`. Clearing the memory copy after
+  each date's write is safe — nothing downstream consumes the in-memory copy.
+- **Read sites verify**: every read (lines 2912, 2942, 2978, 3012) is to write the same DF to a different date's GCS
+  partition. Not used for any joins, computations, or cross-date aggregations.
 
+**Conclusion**: cache is intentional for the "skip 67 API calls per date" optimization, but NOT used for any
+calculation. It can be cleared at any point (per-date, per-chunk, per-N-dates) without losing data — just adds API call
+cost where cleared. This makes fixing it safe and low-risk.
 
-
-After tracing read sites in `orchestrator.py:2912, 2942, 2978, 3012` — the cached DFs
-are read on every subsequent date in the loop. The original-author comment says it
-saves **~67 API calls per date** (1 leagues + 33 teams + 33 standings = 67 calls, all
-slow-moving). Without the cache, a 1,800-date sports backfill would do 120,600
-API calls just for reference data — would hit api-football's daily quota many times
-over and fail.
+After tracing read sites in `orchestrator.py:2912, 2942, 2978, 3012` — the cached DFs are read on every subsequent date
+in the loop. The original-author comment says it saves **~67 API calls per date** (1 leagues + 33 teams + 33 standings =
+67 calls, all slow-moving). Without the cache, a 1,800-date sports backfill would do 120,600 API calls just for
+reference data — would hit api-football's daily quota many times over and fail.
 
 Code-flow verification:
+
 - Lines 2917-2918: fetch leagues → `_set_cached_leagues(df)`
-- Lines 2931-2938: same df ALSO written to GCS via `_gated_sink_write(... entity="leagues" ...)`
-  (so persistent copy lives in GCS too)
+- Lines 2931-2938: same df ALSO written to GCS via `_gated_sink_write(... entity="leagues" ...)` (so persistent copy
+  lives in GCS too)
 - Lines 2942-2944: next date reads `teams_df = _cached_teams_df` first; only fetches if `None`
 - Same pattern for standings (line 3012) and prediction_league_ids (line 2978)
 
-So the cache is **intentional, downstream-consumed, and cost-saving**. It's NOT a stale
-artifact never read again. Decision-trade-off:
+So the cache is **intentional, downstream-consumed, and cost-saving**. It's NOT a stale artifact never read again.
+Decision-trade-off:
 
-| Approach | API call cost | RAM cost | Process restart cost |
-|---|---|---|---|
-| Cache held forever (current) | 67 calls / batch run | Grows with batch (problem) | None |
-| Clear cache per date | 67 × N dates | Bounded ~50 MB | None |
-| No cache, refetch per date | 67 × N dates | Tiny | None |
-| **Chunk processes (workaround)** | 67 × N chunks | Bounded per proc | Process restart between chunks |
+| Approach                         | API call cost        | RAM cost                   | Process restart cost           |
+| -------------------------------- | -------------------- | -------------------------- | ------------------------------ |
+| Cache held forever (current)     | 67 calls / batch run | Grows with batch (problem) | None                           |
+| Clear cache per date             | 67 × N dates         | Bounded ~50 MB             | None                           |
+| No cache, refetch per date       | 67 × N dates         | Tiny                       | None                           |
+| **Chunk processes (workaround)** | 67 × N chunks        | Bounded per proc           | Process restart between chunks |
 
-Original design assumed sports runs as **VM-per-source** (one VM, one source, runs
-till done in ~hours, then VM dies → cache cleared by VM termination). Today's
-local-driver pattern runs sports as a **single 6-year proc** which violates that
-assumption and OOMs.
+Original design assumed sports runs as **VM-per-source** (one VM, one source, runs till done in ~hours, then VM dies →
+cache cleared by VM termination). Today's local-driver pattern runs sports as a **single 6-year proc** which violates
+that assumption and OOMs.
 
 **Two paths to fix**:
 
-1. **Proper fix (follow-up plan)**: add a `clear_sports_caches()` function (mirroring
-   `clear_defi_universe_cache()`) and invoke it at smaller intervals — e.g. every 30
-   days, or per-season. Re-fetches at the boundary cost ~67 API calls but bounds RAM.
-2. **Workaround for today's EOD push**: chunk sports the same way CEFI/TRADFI/DEFI are
-   chunked. Each 30-day proc starts fresh, fetches reference once for the chunk, writes
-   per-date GCS partitions, dies. No code change required, just wrapper script edit.
+1. **Proper fix (follow-up plan)**: add a `clear_sports_caches()` function (mirroring `clear_defi_universe_cache()`) and
+   invoke it at smaller intervals — e.g. every 30 days, or per-season. Re-fetches at the boundary cost ~67 API calls but
+   bounds RAM.
+2. **Workaround for today's EOD push**: chunk sports the same way CEFI/TRADFI/DEFI are chunked. Each 30-day proc starts
+   fresh, fetches reference once for the chunk, writes per-date GCS partitions, dies. No code change required, just
+   wrapper script edit.
 
-For VMs in the cloud: the existing pattern (VM-per-source, runs to completion, dies)
-already works correctly because VM lifetime ≈ batch lifetime. **The fix is local-only.**
+For VMs in the cloud: the existing pattern (VM-per-source, runs to completion, dies) already works correctly because VM
+lifetime ≈ batch lifetime. **The fix is local-only.**
 
 ### Local-vs-VM optimisation note (2026-05-04 13:55 IST)
 
-**Decisions about parallelism / chunking made today are LOCAL-ONLY.** The cloud VM
-launchers (`launch-{api-football,transfermarkt,...}-backfill-vm.sh`) spawn one VM per
-source with much smaller machine types (e2-standard-2 = 2 vCPU / 8 GB RAM, not 24 vCPU /
-93 GB). VMs do NOT run different sources in parallel — singleton-locked launchers explicitly
-forbid it. So:
+**Decisions about parallelism / chunking made today are LOCAL-ONLY.** The cloud VM launchers
+(`launch-{api-football,transfermarkt,...}-backfill-vm.sh`) spawn one VM per source with much smaller machine types
+(e2-standard-2 = 2 vCPU / 8 GB RAM, not 24 vCPU / 93 GB). VMs do NOT run different sources in parallel —
+singleton-locked launchers explicitly forbid it. So:
 
-- **Don't carry over `--parallel 4` to VM launches** — VMs only have 2 vCPU; chunking
-  parallelism that high will thrash. VM-appropriate value is `--parallel 1` or `2`.
-- **Don't run multiple sources concurrently on a single VM** — each VM should run ONE
-  source over a date range, no fan-out within the VM.
-- **Don't size SPORTS RAM expectations off this run** — on a VM, sports must be chunked
-  too (the 5 GB single-proc memory load would OOM the e2-standard-2's 8 GB).
-- **Local IP rate-limits** are different from VM static-IP rate-limits — Tardis whitelists
-  the cloud-VM egress IPs but treats laptop IP differently. What works locally may 429 in
-  cloud and vice versa.
+- **Don't carry over `--parallel 4` to VM launches** — VMs only have 2 vCPU; chunking parallelism that high will thrash.
+  VM-appropriate value is `--parallel 1` or `2`.
+- **Don't run multiple sources concurrently on a single VM** — each VM should run ONE source over a date range, no
+  fan-out within the VM.
+- **Don't size SPORTS RAM expectations off this run** — on a VM, sports must be chunked too (the 5 GB single-proc memory
+  load would OOM the e2-standard-2's 8 GB).
+- **Local IP rate-limits** are different from VM static-IP rate-limits — Tardis whitelists the cloud-VM egress IPs but
+  treats laptop IP differently. What works locally may 429 in cloud and vice versa.
 
-When IAM grant lands and we move sports to VM launchers, remember: lower parallelism, no
-inter-source fan-out, and chunk sports just like CEFI/TRADFI/DEFI.
+When IAM grant lands and we move sports to VM launchers, remember: lower parallelism, no inter-source fan-out, and chunk
+sports just like CEFI/TRADFI/DEFI.
 
 ### Resume strategy (2026-05-04 14:05 IST)
 
-Checkpoints survived: 192 cefi + 145 tradfi + 27 defi = 364 chunks durably done. The
-~12-chunk discrepancy from earlier "376" count is from chunks that wrote parquets to
-GCS but didn't get checkpoint files written before the OOM SIGTERM hit. Recon will
-classify those correctly.
+Checkpoints survived: 192 cefi + 145 tradfi + 27 defi = 364 chunks durably done. The ~12-chunk discrepancy from earlier
+"376" count is from chunks that wrote parquets to GCS but didn't get checkpoint files written before the OOM SIGTERM
+hit. Recon will classify those correctly.
 
-**Step 1 (in flight)**: realign manifest with reality post-OOM via per-AG dry-run
-reconciler. Goal: see how many manifest rows are now phantom (claimed-captured but
-parquet was never actually written because the proc was killed mid-write).
+**Step 1 (in flight)**: realign manifest with reality post-OOM via per-AG dry-run reconciler. Goal: see how many
+manifest rows are now phantom (claimed-captured but parquet was never actually written because the proc was killed
+mid-write).
 
-**Step 2 (after recon completes)**: flip any new phantoms (no `--dry-run`) so the
-orchestrator's `_should_skip_shard` will retry them on resume.
+**Step 2 (after recon completes)**: flip any new phantoms (no `--dry-run`) so the orchestrator's `_should_skip_shard`
+will retry them on resume.
 
-**Step 3 (CEFI/TRADFI/DEFI resume)**: re-fire with `--parallel 2` (was 4). Checkpoints
-skip the 364 already-done chunks. Only mid-flight + post-OOM-phantom chunks get
-re-attempted. Lower parallelism halves peak RAM.
+**Step 3 (CEFI/TRADFI/DEFI resume)**: re-fire with `--parallel 2` (was 4). Checkpoints skip the 364 already-done chunks.
+Only mid-flight + post-OOM-phantom chunks get re-attempted. Lower parallelism halves peak RAM.
 
-**Step 4 (SPORTS via chunked launcher)**: use `/tmp/sports-chunked-backfill.sh PROVIDER`
-which chunks the 6-year window into 30-day procs. Each proc dies after its window,
-reclaiming the leagues/teams/standings DataFrames. RAM bounded to ~500 MB per chunk
-instead of growing to 5 GB across the full window. Run 5 providers in parallel
-(API_FOOTBALL, TRANSFERMARKT, FOOTYSTATS, UNDERSTAT, OPEN_METEO; SFI excluded).
+**Step 4 (SPORTS via chunked launcher)**: use `/tmp/sports-chunked-backfill.sh PROVIDER` which chunks the 6-year window
+into 30-day procs. Each proc dies after its window, reclaiming the leagues/teams/standings DataFrames. RAM bounded to
+~500 MB per chunk instead of growing to 5 GB across the full window. Run 5 providers in parallel (API_FOOTBALL,
+TRANSFERMARKT, FOOTYSTATS, UNDERSTAT, OPEN_METEO; SFI excluded).
 
 **Step 5**: post-resume dry-run reconciler again to confirm headline coverage moved.
 
@@ -308,33 +287,32 @@ instead of growing to 5 GB across the full window. Run 5 providers in parallel
 
 **Recon results (post-OOM phantom counts) — phantom drift from OOM is minimal:**
 
-| AG | Pre-OOM | Post-OOM | Delta | Status |
-|---|---:|---:|---:|---|
-| CEFI | 12,540 | 12,557 | +17 | dry-run done, not yet flipped |
-| TRADFI | 2,726 | 2,734 | +8 | dry-run done, not yet flipped |
-| DEFI | 597 | 645 | +48 | dry-run done, not yet flipped |
-| SPORTS | 41,223 | timed out (GCS list) | TBD | needs retry with `--workers 16` later |
+| AG     | Pre-OOM |             Post-OOM | Delta | Status                                |
+| ------ | ------: | -------------------: | ----: | ------------------------------------- |
+| CEFI   |  12,540 |               12,557 |   +17 | dry-run done, not yet flipped         |
+| TRADFI |   2,726 |                2,734 |    +8 | dry-run done, not yet flipped         |
+| DEFI   |     597 |                  645 |   +48 | dry-run done, not yet flipped         |
+| SPORTS |  41,223 | timed out (GCS list) |   TBD | needs retry with `--workers 16` later |
 
-**Resume drivers all firing correctly**: each runner's summary log shows `SKIP ...
-(checkpoint exists)` for the 376 done chunks then `START` for the next un-checkpointed
-chunk. Resume strategy working as designed.
+**Resume drivers all firing correctly**: each runner's summary log shows `SKIP ... (checkpoint exists)` for the 376 done
+chunks then `START` for the next un-checkpointed chunk. Resume strategy working as designed.
 
 **Sports chunked launcher**: committed to
 [`instruments-service/scripts/sports_chunked_backfill.sh`](../../../instruments-service/scripts/sports_chunked_backfill.sh)
-(commit `619a32e`). Each invocation chunks the date range into 30-day windows; per-chunk
-proc dies + reclaims the leagues/teams/standings DataFrame caches between windows.
-RAM-safe because no single proc holds 6 years of accumulated DFs.
+(commit `619a32e`). Each invocation chunks the date range into 30-day windows; per-chunk proc dies + reclaims the
+leagues/teams/standings DataFrame caches between windows. RAM-safe because no single proc holds 6 years of accumulated
+DFs.
 
 **5 sports providers fired chunked** (TRANSFERMARKT first as smoke test, then API_FOOTBALL
-+ FOOTYSTATS + UNDERSTAT + OPEN_METEO after RAM headroom confirmed). SFI excluded as
-designed.
 
-**Resource cap**: Harsh set hard cap at 80 GB RAM used (out of 93 GB). Currently at
-~48 GB used / 40 GB free, comfortably under cap. RAM monitor PID 571212 logging to
-`/tmp/ram-monitor.log`. Wakeup at 14:31 will check trend; if approaching 75 GB hold,
-if breaches 80 GB kill heaviest sports providers.
+- FOOTYSTATS + UNDERSTAT + OPEN_METEO after RAM headroom confirmed). SFI excluded as designed.
+
+**Resource cap**: Harsh set hard cap at 80 GB RAM used (out of 93 GB). Currently at ~48 GB used / 40 GB free,
+comfortably under cap. RAM monitor PID 571212 logging to `/tmp/ram-monitor.log`. Wakeup at 14:31 will check trend; if
+approaching 75 GB hold, if breaches 80 GB kill heaviest sports providers.
 
 **System state at 14:25 IST**:
+
 - 42 concurrent `instruments-service` procs
 - 376 chunks durable (durable from pre-OOM run + early new completions)
 - New chunks DONE since resume: cefi 3, tradfi 5, defi 1 (will accelerate)
@@ -344,18 +322,19 @@ if breaches 80 GB kill heaviest sports providers.
 
 10 min after sports fan-out, 16 min after CEFI/TRADFI/DEFI resume:
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 58 GB / 80 GB cap | ✅ 22 GB headroom (under 65 GB threshold) |
-| RAM trend (5 min) | 53→58 GB (~1.25 GB/min slow climb) | ✅ stable, will plateau as chunks cycle |
-| Swap | 0.7 GB | ✅ idle (was 6.7 GB at OOM) |
-| OOM kills | 0 | ✅ |
-| Rate-limit hits | 0 (real signatures) | ✅ |
-| Concurrent procs | 46 | — |
-| Checkpoints | 408 (+32 since OOM resume start) | ✅ |
-| Errors last 5min | 53 (51 = known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500; 1 URDI zero-records) | ✅ within expected bounds |
+| Metric            | Value                                                                                                       | Status                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| RAM used          | 58 GB / 80 GB cap                                                                                           | ✅ 22 GB headroom (under 65 GB threshold) |
+| RAM trend (5 min) | 53→58 GB (~1.25 GB/min slow climb)                                                                          | ✅ stable, will plateau as chunks cycle   |
+| Swap              | 0.7 GB                                                                                                      | ✅ idle (was 6.7 GB at OOM)               |
+| OOM kills         | 0                                                                                                           | ✅                                        |
+| Rate-limit hits   | 0 (real signatures)                                                                                         | ✅                                        |
+| Concurrent procs  | 46                                                                                                          | —                                         |
+| Checkpoints       | 408 (+32 since OOM resume start)                                                                            | ✅                                        |
+| Errors last 5min  | 53 (51 = known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500; 1 URDI zero-records) | ✅ within expected bounds                 |
 
 Progress per AG:
+
 - CEFI: 200 chunks done
 - TRADFI: 171 chunks done (fastest velocity)
 - DEFI: 37 chunks done
@@ -364,31 +343,33 @@ Progress per AG:
   - FOOTYSTATS: 2 chunks done, on chunk 3
   - UNDERSTAT: 1 chunk done, on chunk 2
   - OPEN_METEO: 0 chunks done, on chunk 1 (started 14:26)
-  - TRANSFERMARKT: 0 chunks done, on chunk 1 since 14:15 (47 min — Transfermarkt's
-    ~1 req/sec rate-limit pacing makes a 30-day chunk slow but it's not stalled)
+  - TRANSFERMARKT: 0 chunks done, on chunk 1 since 14:15 (47 min — Transfermarkt's ~1 req/sec rate-limit pacing makes a
+    30-day chunk slow but it's not stalled)
 
-Decision per the wakeup rule: RAM is at 58 GB (<65 GB threshold) and stable.
-**Holding course, no scaling changes.** Next wakeup at ~14:36 to reassess.
+Decision per the wakeup rule: RAM is at 58 GB (<65 GB threshold) and stable. **Holding course, no scaling changes.**
+Next wakeup at ~14:36 to reassess.
 
 ### Health snapshot (2026-05-04 14:37 IST)
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 68 GB / 80 GB cap | ⚠️ on 65 GB boundary, no further fan-out |
-| RAM trend (5 min) | 58→67→65→68 GB | ✅ plateauing around 65, not climbing |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Rate-limit hits (real) | 0 | ✅ |
-| Concurrent procs | 47 | — |
-| Checkpoints | 415 (+7 since 14:31) | ✅ progressing |
-| Errors last 5min | 75 (74 known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500) | ✅ within bounds |
+| Metric                 | Value                                                                                | Status                                   |
+| ---------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------- |
+| RAM used               | 68 GB / 80 GB cap                                                                    | ⚠️ on 65 GB boundary, no further fan-out |
+| RAM trend (5 min)      | 58→67→65→68 GB                                                                       | ✅ plateauing around 65, not climbing    |
+| Swap                   | 0.7 GB                                                                               | ✅ idle                                  |
+| OOM kills              | 0                                                                                    | ✅                                       |
+| Rate-limit hits (real) | 0                                                                                    | ✅                                       |
+| Concurrent procs       | 47                                                                                   | —                                        |
+| Checkpoints            | 415 (+7 since 14:31)                                                                 | ✅ progressing                           |
+| Errors last 5min       | 75 (74 known Databento NASDAQ symbology pre-listing tickers; 1 transient Tardis 500) | ✅ within bounds                         |
 
 CEFI/TRADFI/DEFI deltas since 14:31:
+
 - CEFI: 200→204 (+4)
 - TRADFI: 171→173 (+2)
 - DEFI: 37→38 (+1)
 
 Sports chunked progress (was 6+2+1+0+0):
+
 - API_FOOTBALL: 6→10 chunks (+4) — fastest
 - UNDERSTAT: 1→3 chunks (+2)
 - FOOTYSTATS: 2→2 chunks (+0 — investigate? prob just slow on chunk 3)
@@ -397,8 +378,8 @@ Sports chunked progress (was 6+2+1+0+0):
 
 #### TRANSFERMARKT chunk 1 — root cause identified
 
-Not stalled, **bottlenecked on ManifestWriter generation-conflict** retry loop. Log shows
-sequential GCS optimistic-concurrency-control conflicts up to attempt 11/15:
+Not stalled, **bottlenecked on ManifestWriter generation-conflict** retry loop. Log shows sequential GCS
+optimistic-concurrency-control conflicts up to attempt 11/15:
 
 ```
 14:29:22 generation conflict (attempt 2/15), retrying in 1.0s
@@ -407,48 +388,49 @@ sequential GCS optimistic-concurrency-control conflicts up to attempt 11/15:
 14:36:31 generation conflict (attempt 11/15), retrying in 5.5s
 ```
 
-47 concurrent writers competing for the same `_index/availability_index.parquet` blob.
-Each conflict waits, retries, gets clobbered again. Will eventually fall through to
-unconditional write at attempt 15. **Not blocking — just slow under high concurrency.**
+47 concurrent writers competing for the same `_index/availability_index.parquet` blob. Each conflict waits, retries,
+gets clobbered again. Will eventually fall through to unconditional write at attempt 15. **Not blocking — just slow
+under high concurrency.**
 
-This is the same `ManifestWriter: generation conflict, falling back to unconditional
-write` warning we saw at the original 85-proc fan-out, just amplified now because
-TRANSFERMARKT happens to fetch slowly enough that other procs win the manifest race
-every time.
+This is the same `ManifestWriter: generation conflict, falling back to unconditional write` warning we saw at the
+original 85-proc fan-out, just amplified now because TRANSFERMARKT happens to fetch slowly enough that other procs win
+the manifest race every time.
 
-Decision per wakeup rule: **plateau holding around 65 GB, no further fan-out.** Not
-killing anything (cap not breached). Will continue monitoring at 14:42.
+Decision per wakeup rule: **plateau holding around 65 GB, no further fan-out.** Not killing anything (cap not breached).
+Will continue monitoring at 14:42.
 
 ### Health snapshot (2026-05-04 14:43 IST)
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 67 GB / 80 GB cap | ⚠️ 13 GB headroom, holding plateau |
-| RAM trend (5 min) | 62–69 GB oscillating around 65 | ✅ stable, not climbing |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Rate-limit hits (real) | 0 | ✅ |
-| Concurrent procs | 46 | — |
-| Checkpoints | 426 (+11 in 5 min) | ✅ progressing |
-| Errors (last 5 min) | 102 (100 known Databento, 1 Tardis transient, 1 URDI zero-records) | ✅ within bounds |
+| Metric                 | Value                                                              | Status                             |
+| ---------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| RAM used               | 67 GB / 80 GB cap                                                  | ⚠️ 13 GB headroom, holding plateau |
+| RAM trend (5 min)      | 62–69 GB oscillating around 65                                     | ✅ stable, not climbing            |
+| Swap                   | 0.7 GB                                                             | ✅ idle                            |
+| OOM kills              | 0                                                                  | ✅                                 |
+| Rate-limit hits (real) | 0                                                                  | ✅                                 |
+| Concurrent procs       | 46                                                                 | —                                  |
+| Checkpoints            | 426 (+11 in 5 min)                                                 | ✅ progressing                     |
+| Errors (last 5 min)    | 102 (100 known Databento, 1 Tardis transient, 1 URDI zero-records) | ✅ within bounds                   |
 
 CEFI/TRADFI/DEFI deltas since 14:37 (was 415):
+
 - CEFI: 204→208 (+4)
 - TRADFI: 173→179 (+6, fastest)
 - DEFI: 38→39 (+1)
 
 Sports chunked deltas since 14:37 (was 10+2+0+0+3):
+
 - API_FOOTBALL: 10→10 (slow chunk in flight)
 - FOOTYSTATS: 2→5 (+3)
 - UNDERSTAT: 3→5 (+2)
 - OPEN_METEO: 0→0 (still chunk 1 — paced)
-- TRANSFERMARKT: 0→0 (still chunk 1 — but **past the manifest conflict** and now actively
-  fetching teams per league: DK1, NL1, MEXA, FR1 at ~30-40s/league)
+- TRANSFERMARKT: 0→0 (still chunk 1 — but **past the manifest conflict** and now actively fetching teams per league:
+  DK1, NL1, MEXA, FR1 at ~30-40s/league)
 
 #### TRANSFERMARKT broke through
 
-Earlier 14:37 snapshot showed TRANSFERMARKT stuck on attempt 11/15 of ManifestWriter
-generation conflicts. Current log shows it past the bottleneck:
+Earlier 14:37 snapshot showed TRANSFERMARKT stuck on attempt 11/15 of ManifestWriter generation conflicts. Current log
+shows it past the bottleneck:
 
 ```
 14:41:25 RapidAPI: fetched 14 clubs for league DK1 season 2019
@@ -456,31 +438,33 @@ generation conflicts. Current log shows it past the bottleneck:
 14:43:13 RapidAPI: fetched 20 clubs for league FR1 season 2019
 ```
 
-Transfermarkt's internal ~1 req/sec pacing + 32 leagues × pagination = ~45 min/chunk
-expected. Slow but progressing. Not stuck.
+Transfermarkt's internal ~1 req/sec pacing + 32 leagues × pagination = ~45 min/chunk expected. Slow but progressing. Not
+stuck.
 
-Decision: **holding course**. RAM stable at boundary, not breaching 75 GB hold-threshold
-or 80 GB kill-threshold. No new fan-out, no kills.
+Decision: **holding course**. RAM stable at boundary, not breaching 75 GB hold-threshold or 80 GB kill-threshold. No new
+fan-out, no kills.
 
 ### Health snapshot (2026-05-04 14:50 IST)
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 67 GB / 80 GB cap | ✅ 13 GB headroom, plateau holding |
-| RAM trend (5 min) | 64-68 GB oscillating around 65-66 | ✅ stable, not climbing |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Rate-limit hits (real) | 0 | ✅ |
-| Concurrent procs | 42 | — (was 46, normal cycling) |
-| Checkpoints | 448 (+22 in 7 min) | ✅ healthy pace |
-| Errors total | 124 (+22, all same Databento NASDAQ) | ✅ no new categories |
+| Metric                 | Value                                | Status                             |
+| ---------------------- | ------------------------------------ | ---------------------------------- |
+| RAM used               | 67 GB / 80 GB cap                    | ✅ 13 GB headroom, plateau holding |
+| RAM trend (5 min)      | 64-68 GB oscillating around 65-66    | ✅ stable, not climbing            |
+| Swap                   | 0.7 GB                               | ✅ idle                            |
+| OOM kills              | 0                                    | ✅                                 |
+| Rate-limit hits (real) | 0                                    | ✅                                 |
+| Concurrent procs       | 42                                   | — (was 46, normal cycling)         |
+| Checkpoints            | 448 (+22 in 7 min)                   | ✅ healthy pace                    |
+| Errors total           | 124 (+22, all same Databento NASDAQ) | ✅ no new categories               |
 
 Deltas since 14:43:
+
 - CEFI: 208→214 (+6)
 - TRADFI: 179→188 (+9, fastest)
 - DEFI: 39→46 (+7, accelerating — was +1 last interval)
 
 Sports chunked deltas since 14:43 (was 10+5+0+0+5):
+
 - API_FOOTBALL: 10→10 (chunk 11 still in flight)
 - FOOTYSTATS: 5→6 (+1)
 - UNDERSTAT: 5→8 (+3)
@@ -490,53 +474,49 @@ Sports chunked deltas since 14:43 (was 10+5+0+0+5):
 #### TRANSFERMARKT chunk 1 — data written, manifest write in conflict loop
 
 Important nuance: log at 14:44:52-53 shows the **chunk's real data IS written to GCS**:
+
 - "RapidAPI: fetched 10 clubs for league C1 season 2019" → done fetching
 - "Transfermarkt teams → player_values: 131 rows written" → wrote 131 player_values to GCS
 - "Transfermarkt team mapping cache: 131 rows written for season=2019" → cache written
 
-Then 14:45:45 onwards, back into ManifestWriter generation-conflict loop (attempt 1→6/15
-as of last log read). This is **only the index-manifest write** stuck — the actual data
-is durably in GCS. The chunk will mark itself `captured` whenever attempt N succeeds (or
-attempt 15 unconditional fallback fires).
+Then 14:45:45 onwards, back into ManifestWriter generation-conflict loop (attempt 1→6/15 as of last log read). This is
+**only the index-manifest write** stuck — the actual data is durably in GCS. The chunk will mark itself `captured`
+whenever attempt N succeeds (or attempt 15 unconditional fallback fires).
 
-So TRANSFERMARKT chunk 1's data is safe; the checkpoint file just hasn't been written
-yet. Resume-safe regardless.
+So TRANSFERMARKT chunk 1's data is safe; the checkpoint file just hasn't been written yet. Resume-safe regardless.
 
-Decision: **holding course**. RAM stable, real work happening (+22 checkpoints in 7 min,
-DEFI accelerating). No changes.
+Decision: **holding course**. RAM stable, real work happening (+22 checkpoints in 7 min, DEFI accelerating). No changes.
 
 ### Health snapshot (2026-05-04 14:56 IST)
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 74 GB / 80 GB cap | ⚠️ 6 GB headroom, **at 75 GB hold-threshold** |
-| RAM trend (5 min) | 69→74 GB, slowly climbing | ⚠️ plateau breaking |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Concurrent procs | 43 | — |
-| Checkpoints | 461 (+13 in 6 min) | ✅ |
-| Errors total | 151 (+27, all same Databento) | ✅ |
+| Metric            | Value                         | Status                                        |
+| ----------------- | ----------------------------- | --------------------------------------------- |
+| RAM used          | 74 GB / 80 GB cap             | ⚠️ 6 GB headroom, **at 75 GB hold-threshold** |
+| RAM trend (5 min) | 69→74 GB, slowly climbing     | ⚠️ plateau breaking                           |
+| Swap              | 0.7 GB                        | ✅ idle                                       |
+| OOM kills         | 0                             | ✅                                            |
+| Concurrent procs  | 43                            | —                                             |
+| Checkpoints       | 461 (+13 in 6 min)            | ✅                                            |
+| Errors total      | 151 (+27, all same Databento) | ✅                                            |
 
 Deltas since 14:50 (was 448):
+
 - CEFI: 214→219 (+5)
 - TRADFI: 188→191 (+3)
 - DEFI: 46→51 (+5)
 
 #### Key insight: sports `done_chunks` counter is misleading
 
-My `grep -c "rc=0"` only counts whole-chunk completions. Inside each chunk, individual
-DATES are completing — log inspection shows:
+My `grep -c "rc=0"` only counts whole-chunk completions. Inside each chunk, individual DATES are completing — log
+inspection shows:
 
-- **OPEN_METEO chunk 1**: at day 30/30 (2020-06-29 done, 2020-06-30 in flight). About
-  to wrap chunk 1.
-- **API_FOOTBALL chunk 11**: wrote 3,434 records for 2021-04-06; iterating through
-  remaining days.
-- **TRANSFERMARKT chunk 1**: at day 10/30 (date 2020-06-09 done, 2020-06-10 active).
-  Each day fetches 32 leagues + ~131 teams.
+- **OPEN_METEO chunk 1**: at day 30/30 (2020-06-29 done, 2020-06-30 in flight). About to wrap chunk 1.
+- **API_FOOTBALL chunk 11**: wrote 3,434 records for 2021-04-06; iterating through remaining days.
+- **TRANSFERMARKT chunk 1**: at day 10/30 (date 2020-06-09 done, 2020-06-10 active). Each day fetches 32 leagues + ~131
+  teams.
 
-**All sports providers ARE writing data per-day to GCS**. The chunk-level counter just
-doesn't reflect that. Real progress is happening; chunks finishing will accelerate as
-they wrap.
+**All sports providers ARE writing data per-day to GCS**. The chunk-level counter just doesn't reflect that. Real
+progress is happening; chunks finishing will accelerate as they wrap.
 
 #### Top RAM consumers (kill candidates if we breach 78 GB)
 
@@ -549,42 +529,39 @@ OPEN_METEO:        3.5 GB  (2020-06-01 → 2020-06-30)
 UNDERSTAT:         2.7 GB
 ```
 
-DERIBIT is doing real CEFI work — won't kill that even though it's heaviest. If forced
-to kill, would target FOOTYSTATS (smallest impact: only 1 chunk done so far + the data
-within chunk is small per-day).
+DERIBIT is doing real CEFI work — won't kill that even though it's heaviest. If forced to kill, would target FOOTYSTATS
+(smallest impact: only 1 chunk done so far + the data within chunk is small per-day).
 
-Decision: **holding, but tightening monitor cadence** (4 min instead of 5). If RAM
-breaches 78 GB, kill the heaviest sports provider (FOOTYSTATS) to bring under 75 GB.
+Decision: **holding, but tightening monitor cadence** (4 min instead of 5). If RAM breaches 78 GB, kill the heaviest
+sports provider (FOOTYSTATS) to bring under 75 GB.
 
 ### Health snapshot (2026-05-04 15:03 IST) — RAM breached, killed + restarted FOOTYSTATS
 
-**RAM peaked 79 GB** during the last 8 ticks (one tick away from 80 GB cap). Per the
-wakeup rule I killed the FOOTYSTATS chunk-8 worker (PID 742647).
+**RAM peaked 79 GB** during the last 8 ticks (one tick away from 80 GB cap). Per the wakeup rule I killed the FOOTYSTATS
+chunk-8 worker (PID 742647).
 
-| Metric | Value | Status |
-|---|---|---|
+| Metric                | Value             | Status                      |
+| --------------------- | ----------------- | --------------------------- |
 | RAM peak last 8 ticks | 79 GB / 80 GB cap | ❌ breached 78 GB threshold |
-| RAM after kill | 74 GB | ⚠️ back at threshold |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Concurrent procs | 46 | — |
-| Checkpoints | 470 (+9 in 7 min) | ✅ slowing slightly |
+| RAM after kill        | 74 GB             | ⚠️ back at threshold        |
+| Swap                  | 0.7 GB            | ✅ idle                     |
+| OOM kills             | 0                 | ✅                          |
+| Concurrent procs      | 46                | —                           |
+| Checkpoints           | 470 (+9 in 7 min) | ✅ slowing slightly         |
 
 #### Mistake during kill — full FOOTYSTATS wrapper died, restarted
 
-I killed PID 742647 (Python worker) AND PID 742646 (timeout wrapper). The bash wrapper
-script (PID 607671) had `set -euo pipefail`, so when its `timeout` child exited
-abnormally, the wrapper exited too. **All FOOTYSTATS work stopped, not just the
-in-flight chunk.**
+I killed PID 742647 (Python worker) AND PID 742646 (timeout wrapper). The bash wrapper script (PID 607671) had
+`set -euo pipefail`, so when its `timeout` child exited abnormally, the wrapper exited too. **All FOOTYSTATS work
+stopped, not just the in-flight chunk.**
 
-Restarted FOOTYSTATS wrapper at 15:04 (new PID 755950). It restarts at chunk 1, but the
-orchestrator's `_should_skip_shard` will fast-forward through already-captured dates
-(chunks 1-7 are durably done). Net cost: ~30s of skip-checks per already-done chunk +
-loss of in-flight chunk 8 progress (small, will redo).
+Restarted FOOTYSTATS wrapper at 15:04 (new PID 755950). It restarts at chunk 1, but the orchestrator's
+`_should_skip_shard` will fast-forward through already-captured dates (chunks 1-7 are durably done). Net cost: ~30s of
+skip-checks per already-done chunk + loss of in-flight chunk 8 progress (small, will redo).
 
-**Lesson (saved as feedback memory)**: when killing a wrapped process, `set -e` in the
-parent shell can propagate exit through the wrapper. Next time, kill ONLY the
-`instruments-service` Python child (not the `timeout` parent or the bash wrapper).
+**Lesson (saved as feedback memory)**: when killing a wrapped process, `set -e` in the parent shell can propagate exit
+through the wrapper. Next time, kill ONLY the `instruments-service` Python child (not the `timeout` parent or the bash
+wrapper).
 
 #### DERIBIT is the actual RAM hog — flagging for future
 
@@ -597,35 +574,35 @@ TRANSFERMARKT:     3.5 GB
 OPEN_METEO:        2.4 GB
 ```
 
-Killing FOOTYSTATS only freed 4.5 GB, while DERIBIT keeps growing. The RAM pressure is
-DERIBIT-dominated. DERIBIT has the 200k-symbol options chain — known heavy. If RAM
-breaches 78 GB again, DERIBIT chunk is the bigger lever (CEFI cost vs sports cost
-trade-off — would need user call).
+Killing FOOTYSTATS only freed 4.5 GB, while DERIBIT keeps growing. The RAM pressure is DERIBIT-dominated. DERIBIT has
+the 200k-symbol options chain — known heavy. If RAM breaches 78 GB again, DERIBIT chunk is the bigger lever (CEFI cost
+vs sports cost trade-off — would need user call).
 
-Decision per rule: kill executed (FOOTYSTATS, accidentally full-killed not just chunk).
-Restarted. Next watch in 4 min; if RAM breaches 78 GB again with FOOTYSTATS already
-restarted → escalate to user, do NOT kill DERIBIT autonomously (it's a real CEFI work
-chunk, scope-impacting).
+Decision per rule: kill executed (FOOTYSTATS, accidentally full-killed not just chunk). Restarted. Next watch in 4 min;
+if RAM breaches 78 GB again with FOOTYSTATS already restarted → escalate to user, do NOT kill DERIBIT autonomously (it's
+a real CEFI work chunk, scope-impacting).
 
 ### Health snapshot (2026-05-04 15:10 IST) — holding pattern
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM peak last 6 ticks | 77 GB / 80 GB cap | ⚠️ in danger zone, but under 78 GB autonomous-kill |
-| RAM current | 77 GB | ⚠️ |
-| RAM trend | 73→71→69→77→75→76 (oscillating 75-77) | ⚠️ stable but high |
-| Swap | 0.7 GB | ✅ idle |
-| OOM in journalctl last 5 min | 0 | ✅ |
-| Concurrent procs | 47 | — |
-| Checkpoints | 483 (+13 in 7 min) | ✅ progressing |
-| **DERIBIT chunk RSS** | **17.1 GB** (was 13.5→16→17.1, climbing) | ⚠️ unbounded grow |
+| Metric                       | Value                                    | Status                                             |
+| ---------------------------- | ---------------------------------------- | -------------------------------------------------- |
+| RAM peak last 6 ticks        | 77 GB / 80 GB cap                        | ⚠️ in danger zone, but under 78 GB autonomous-kill |
+| RAM current                  | 77 GB                                    | ⚠️                                                 |
+| RAM trend                    | 73→71→69→77→75→76 (oscillating 75-77)    | ⚠️ stable but high                                 |
+| Swap                         | 0.7 GB                                   | ✅ idle                                            |
+| OOM in journalctl last 5 min | 0                                        | ✅                                                 |
+| Concurrent procs             | 47                                       | —                                                  |
+| Checkpoints                  | 483 (+13 in 7 min)                       | ✅ progressing                                     |
+| **DERIBIT chunk RSS**        | **17.1 GB** (was 13.5→16→17.1, climbing) | ⚠️ unbounded grow                                  |
 
 Deltas since 14:56 (was 461):
+
 - CEFI: 223→228 (+5)
 - TRADFI: 195→202 (+7, fastest)
 - DEFI: 52→53 (+1)
 
 Sports chunked deltas:
+
 - API_FOOTBALL: 10→10 (chunk 11 still iterating per-day, 18 manifest conflicts so far)
 - FOOTYSTATS: restarted, fast-forwarding through done dates via orchestrator skip
 - OPEN_METEO: 0→1 (chunk 1 finally done; on chunk 2)
@@ -634,52 +611,53 @@ Sports chunked deltas:
 
 #### Awaiting user decision on (a/b/c/d) for RAM mitigation
 
-Per 15:03 commit, raised question with user about which kill-strategy if RAM
-breaches further:
+Per 15:03 commit, raised question with user about which kill-strategy if RAM breaches further:
+
 - (a) Kill DERIBIT chunk (frees 16-17 GB; loses CEFI options-chain progress)
 - (b) Kill another sports provider (frees ~4 GB; smaller impact, less effective)
 - (c) Throttle CEFI/TRADFI/DEFI to --parallel 1 (more disruptive, slower forward)
 - (d) Hold (60% chance OOM, 40% self-stabilising)
 
-No user response yet. Per "ask on important things" feedback rule, **I am NOT acting
-autonomously on DERIBIT.** Will hold + monitor at 3-min cadence. If RAM peaks ≥78 GB
-again, will flag urgently rather than kill.
+No user response yet. Per "ask on important things" feedback rule, **I am NOT acting autonomously on DERIBIT.** Will
+hold + monitor at 3-min cadence. If RAM peaks ≥78 GB again, will flag urgently rather than kill.
 
 ### Health snapshot (2026-05-04 15:15 IST) — RAM stabilised, DERIBIT cycled
 
-**RAM dropped from 77→60 GB** in the 5 min between checks. Per the wakeup rule
-(<72 GB consistently → stabilising, report).
+**RAM dropped from 77→60 GB** in the 5 min between checks. Per the wakeup rule (<72 GB consistently → stabilising,
+report).
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM peak last 6 ticks | 63 GB / 80 GB cap | ✅ 17 GB headroom |
-| RAM current | 60 GB | ✅ healthy |
-| RAM trend | 62→63→60→62→61→60 (steady ~60-63) | ✅ stabilised |
-| Swap | 0.7 GB | ✅ idle |
-| OOM in journalctl last 3 min | 0 | ✅ |
-| Concurrent procs | 45 | — |
-| Checkpoints | 495 (+12 in 5 min) | ✅ |
+| Metric                       | Value                             | Status            |
+| ---------------------------- | --------------------------------- | ----------------- |
+| RAM peak last 6 ticks        | 63 GB / 80 GB cap                 | ✅ 17 GB headroom |
+| RAM current                  | 60 GB                             | ✅ healthy        |
+| RAM trend                    | 62→63→60→62→61→60 (steady ~60-63) | ✅ stabilised     |
+| Swap                         | 0.7 GB                            | ✅ idle           |
+| OOM in journalctl last 3 min | 0                                 | ✅                |
+| Concurrent procs             | 45                                | —                 |
+| Checkpoints                  | 495 (+12 in 5 min)                | ✅                |
 
 #### What changed: DERIBIT chunk cycled
 
-The 17.1 GB DERIBIT chunk (2019-04-01 → 2019-04-30) **finished and died, reclaiming all
-17 GB**. Next DERIBIT chunks are now running small:
+The 17.1 GB DERIBIT chunk (2019-04-01 → 2019-04-30) **finished and died, reclaiming all 17 GB**. Next DERIBIT chunks are
+now running small:
+
 - 2019-05-01 → 2019-05-30: 1.8 GB
 - 2019-05-31 → 2019-06-29: 1.8 GB
 
-Process-death-reclaims-cache pattern worked exactly as designed. The 2019-04 chunk
-was probably the worst — Deribit's options chain was rapidly expanding then. Future
-chunks will likely stay smaller.
+Process-death-reclaims-cache pattern worked exactly as designed. The 2019-04 chunk was probably the worst — Deribit's
+options chain was rapidly expanding then. Future chunks will likely stay smaller.
 
-TRANSFERMARKT chunk 1 also appears to have completed (no longer in proc list); will
-now move to chunk 2 with a fresh (smaller) cache.
+TRANSFERMARKT chunk 1 also appears to have completed (no longer in proc list); will now move to chunk 2 with a fresh
+(smaller) cache.
 
 Deltas since 15:10:
+
 - CEFI: 228→231 (+3)
 - TRADFI: 202→208 (+6)
 - DEFI: 53→56 (+3)
 
 **Top RAM consumers now (no single proc over 5 GB)**:
+
 ```
 API_FOOTBALL chunk 11:    4.6 GB
 OPEN_METEO chunk 2:       4.5 GB
@@ -687,29 +665,31 @@ UNDERSTAT chunk 16:       2.6 GB
 DERIBIT chunks (×2):      1.8 GB each
 ```
 
-**Question (a/b/c/d) for user is moot**: RAM stabilised on its own without intervention.
-Self-resolving as the chunk-cycling pattern broke through the 2019-04 DERIBIT bottleneck.
+**Question (a/b/c/d) for user is moot**: RAM stabilised on its own without intervention. Self-resolving as the
+chunk-cycling pattern broke through the 2019-04 DERIBIT bottleneck.
 
 Decision: **continue holding course**. Next check at 15:20.
 
 ### Health snapshot (2026-05-04 15:21 IST) — sweet spot
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM peak last 10 ticks | 64 GB / 80 GB cap | ✅ JUST under healthy 65 GB threshold |
-| RAM current | 66 GB | ✅ |
-| RAM trend | tight 60-64 GB band | ✅ stabilised |
-| Swap | 0.7 GB | ✅ idle |
-| OOM in journalctl last 5 min | 0 | ✅ |
-| Concurrent procs | 45 | — |
-| Checkpoints | 513 (+18 in 5 min) | ✅ healthy pace |
+| Metric                       | Value               | Status                                |
+| ---------------------------- | ------------------- | ------------------------------------- |
+| RAM peak last 10 ticks       | 64 GB / 80 GB cap   | ✅ JUST under healthy 65 GB threshold |
+| RAM current                  | 66 GB               | ✅                                    |
+| RAM trend                    | tight 60-64 GB band | ✅ stabilised                         |
+| Swap                         | 0.7 GB              | ✅ idle                               |
+| OOM in journalctl last 5 min | 0                   | ✅                                    |
+| Concurrent procs             | 45                  | —                                     |
+| Checkpoints                  | 513 (+18 in 5 min)  | ✅ healthy pace                       |
 
 Deltas since 15:15:
+
 - CEFI: 231→237 (+6)
 - TRADFI: 208→211 (+3)
 - DEFI: 56→65 (+9 — **accelerating**, smaller universes per chunk)
 
 Sports chunks (FOOTYSTATS shows post-restart fast-forward via orchestrator skip):
+
 - API_FOOTBALL: 10 chunks (still on chunk 11, 45 min in — per-day iter writing data)
 - FOOTYSTATS: 6 chunks (was 2 post-restart, +4 from skip-fast-forward)
 - OPEN_METEO: 1 chunk (chunk 2 in flight)
@@ -717,6 +697,7 @@ Sports chunks (FOOTYSTATS shows post-restart fast-forward via orchestrator skip)
 - UNDERSTAT: 17 chunks (was 13 → **+4** — fastest sports)
 
 Top RAM consumers (no single >6 GB now):
+
 ```
 OPEN_METEO chunk 2:    5.3 GB
 API_FOOTBALL ch 11:    4.8 GB
@@ -726,156 +707,153 @@ FOOTYSTATS ch 7:       2.6 GB
 UNDERSTAT ch 18:       2.6 GB
 ```
 
-Healthy distribution. The DERIBIT 2019-04 17 GB outlier was a one-time historical
-peak (peak Deribit options chain growth period). Subsequent DERIBIT chunks bounded
-at <5 GB.
+Healthy distribution. The DERIBIT 2019-04 17 GB outlier was a one-time historical peak (peak Deribit options chain
+growth period). Subsequent DERIBIT chunks bounded at <5 GB.
 
 Decision: **healthy state, holding**. Next check at 15:26.
 
 ### Health snapshot (2026-05-04 15:27 IST) — ASTER first venue complete; TRANSFERMARKT silent-dead found
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM peak last 10 ticks | 73 GB / 80 GB cap | ⚠️ approaching 75 hold-threshold |
-| RAM current | 70 GB | ⚠️ above 65 healthy |
-| RAM trend | 65→73→69→70 (climbing) | ⚠️ |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Concurrent procs | 43 | — |
-| Checkpoints | 523 (+10 in 6 min) | ⚠️ slowed from +18 |
+| Metric                 | Value                  | Status                           |
+| ---------------------- | ---------------------- | -------------------------------- |
+| RAM peak last 10 ticks | 73 GB / 80 GB cap      | ⚠️ approaching 75 hold-threshold |
+| RAM current            | 70 GB                  | ⚠️ above 65 healthy              |
+| RAM trend              | 65→73→69→70 (climbing) | ⚠️                               |
+| Swap                   | 0.7 GB                 | ✅ idle                          |
+| OOM kills              | 0                      | ✅                               |
+| Concurrent procs       | 43                     | —                                |
+| Checkpoints            | 523 (+10 in 6 min)     | ⚠️ slowed from +18               |
 
 #### 🎉 ASTER — first venue fully complete
 
-`run_vm_backfill_e2e.sh --venue ASTER --asset-group CEFI` driver has exited with all
-90 chunks done. ASTER is the smallest CEFI venue (newest exchange, less history).
-**First venue to fully complete the backfill.**
+`run_vm_backfill_e2e.sh --venue ASTER --asset-group CEFI` driver has exited with all 90 chunks done. ASTER is the
+smallest CEFI venue (newest exchange, less history). **First venue to fully complete the backfill.**
 
 #### TRANSFERMARKT was silent-dead since 15:15
 
-When I killed FOOTYSTATS chunk 8 worker at 15:03, I also issued a `pkill -f` style kill
-that matched ALL `sports_chunked_backfill` wrappers — accidentally caught TRANSFERMARKT
-too. TRANSFERMARKT received SIGTERM at 15:15:16 (12 min ago), exited cleanly, but I
-never noticed because the `done_chunks` counter was already 0 (still on chunk 1).
+When I killed FOOTYSTATS chunk 8 worker at 15:03, I also issued a `pkill -f` style kill that matched ALL
+`sports_chunked_backfill` wrappers — accidentally caught TRANSFERMARKT too. TRANSFERMARKT received SIGTERM at 15:15:16
+(12 min ago), exited cleanly, but I never noticed because the `done_chunks` counter was already 0 (still on chunk 1).
 
-**Restarted TRANSFERMARKT at 15:28** (new PID 849943). Same fast-forward pattern via
-orchestrator skip will apply (chunk 1 had partial dates done, will resume on first
-red date).
+**Restarted TRANSFERMARKT at 15:28** (new PID 849943). Same fast-forward pattern via orchestrator skip will apply (chunk
+1 had partial dates done, will resume on first red date).
 
-This is the second time today I've over-killed via wildcard. **Lesson saved to memory**:
-when killing one provider's chunk worker, never use `pkill -f` patterns that match the
-wrapper's full command line. Use specific PIDs.
+This is the second time today I've over-killed via wildcard. **Lesson saved to memory**: when killing one provider's
+chunk worker, never use `pkill -f` patterns that match the wrapper's full command line. Use specific PIDs.
 
 Deltas since 15:21:
+
 - CEFI: 237→239 (+2 — slowed; ASTER finishing absorbed bandwidth)
 - TRADFI: 211→218 (+7)
-- DEFI: 65→66 (+1 — decelerated from +9 last interval; UNISWAP_V3 chunks have larger
-  pool universe than LIDO/AAVE)
+- DEFI: 65→66 (+1 — decelerated from +9 last interval; UNISWAP_V3 chunks have larger pool universe than LIDO/AAVE)
 
 Sports:
-- API_FOOTBALL: 10 chunks (still chunk 11, now 51 min — 31 manifest conflicts but
-  per-day data writing)
+
+- API_FOOTBALL: 10 chunks (still chunk 11, now 51 min — 31 manifest conflicts but per-day data writing)
 - FOOTYSTATS: 6→7 (+1)
 - OPEN_METEO: 1
 - **TRANSFERMARKT**: 0→0 (was silently dead 15:15 → 15:28, just restarted)
 - UNDERSTAT: 17→20 (+3 still fastest)
 
-Decision: **holding course**. RAM in middle zone (above healthy threshold but below
-hold threshold). Will continue 5-min cadence.
+Decision: **holding course**. RAM in middle zone (above healthy threshold but below hold threshold). Will continue 5-min
+cadence.
 
 ### Health snapshot (2026-05-04 15:34 IST) — RAM cap breach + API_FOOTBALL kill
 
 **RAM hit 81 GB at point of check, peak 79 GB in the 10-tick window.** Cap breached.
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM at check time | 81 GB | ❌ over 80 cap |
-| RAM peak last 10 ticks | 79 GB | ❌ |
-| Trend | 71→78→79→76 (climbing then settling) | ⚠️ |
-| Swap | 0.7 GB | ✅ idle |
-| OOM kills | 0 (no time to fire yet) | ✅ |
-| Concurrent procs | 42 | — |
-| Checkpoints | 538 (+15 in 7 min) | ✅ |
+| Metric                 | Value                                | Status         |
+| ---------------------- | ------------------------------------ | -------------- |
+| RAM at check time      | 81 GB                                | ❌ over 80 cap |
+| RAM peak last 10 ticks | 79 GB                                | ❌             |
+| Trend                  | 71→78→79→76 (climbing then settling) | ⚠️             |
+| Swap                   | 0.7 GB                               | ✅ idle        |
+| OOM kills              | 0 (no time to fire yet)              | ✅             |
+| Concurrent procs       | 42                                   | —              |
+| Checkpoints            | 538 (+15 in 7 min)                   | ✅             |
 
 #### Action taken: killed API_FOOTBALL Python worker (heaviest sports)
 
-Per established rule, kill heaviest sports at 80 GB. DERIBIT NOT killed (user
-constraint). Heaviest sports was API_FOOTBALL chunk 11 (5.0 GB).
+Per established rule, kill heaviest sports at 80 GB. DERIBIT NOT killed (user constraint). Heaviest sports was
+API_FOOTBALL chunk 11 (5.0 GB).
 
-This time **only PID 652121** (Python child) was killed via specific PID — no `pkill -f`
-wildcard. But the bash wrapper STILL exited because:
+This time **only PID 652121** (Python child) was killed via specific PID — no `pkill -f` wildcard. But the bash wrapper
+STILL exited because:
+
 - Killing the Python child caused `timeout 3600 ...` (its parent) to exit non-zero.
 - Bash wrapper had `set -euo pipefail`, so the wrapper exited too.
 
-Restarted API_FOOTBALL wrapper at 15:35 (PID 876466). Orchestrator skip will
-fast-forward through chunks 1-10 (already in manifest as captured). Lost chunk 11
-in-flight day-progress (was ~day 17/30).
+Restarted API_FOOTBALL wrapper at 15:35 (PID 876466). Orchestrator skip will fast-forward through chunks 1-10 (already
+in manifest as captured). Lost chunk 11 in-flight day-progress (was ~day 17/30).
 
-**This is the 3rd time the wrapper script has died on its child's death.** The
-`set -euo pipefail` in `sports_chunked_backfill.sh` is the culprit — should
-remove `pipefail` (or guard with `|| true` per chunk) to make the wrapper
-resilient to child-kill. Tracking as follow-up code fix.
+**This is the 3rd time the wrapper script has died on its child's death.** The `set -euo pipefail` in
+`sports_chunked_backfill.sh` is the culprit — should remove `pipefail` (or guard with `|| true` per chunk) to make the
+wrapper resilient to child-kill. Tracking as follow-up code fix.
 
 #### DERIBIT growing again — same memory leak pattern
 
-Two DERIBIT chunks now: 9.4 GB + 8.9 GB = 18.3 GB combined. Started small at
-1.8 GB each, grew over time. Same per-chunk options-chain accumulation that hit
-17 GB on the 2019-04 chunk earlier. **DERIBIT chunks have a real memory leak**
-that grows monotonically with wall-clock time, not just per-day data volume.
+Two DERIBIT chunks now: 9.4 GB + 8.9 GB = 18.3 GB combined. Started small at 1.8 GB each, grew over time. Same per-chunk
+options-chain accumulation that hit 17 GB on the 2019-04 chunk earlier. **DERIBIT chunks have a real memory leak** that
+grows monotonically with wall-clock time, not just per-day data volume.
 
 Constraint: user has explicitly forbidden killing DERIBIT chunks autonomously.
 
 Deltas since 15:27:
+
 - CEFI: 239→244 (+5)
 - TRADFI: 218→224 (+6)
 - DEFI: 66→70 (+4)
 
 Sports:
+
 - API_FOOTBALL: 10 (killed + restarted)
 - FOOTYSTATS: 7→10 (+3, caught up to chunk 11)
 - OPEN_METEO: 1
 - TRANSFERMARKT: 0 (restarted at 15:28, now on date 2020-06-05 of chunk 1)
 - UNDERSTAT: 20→22 (+2)
 
-Decision: **monitor 3-min cadence**. If RAM breaches 80 GB again with API_FOOTBALL
-already restarted, must escalate DERIBIT decision to user.
+Decision: **monitor 3-min cadence**. If RAM breaches 80 GB again with API_FOOTBALL already restarted, must escalate
+DERIBIT decision to user.
 
 ### Health snapshot (2026-05-04 15:40 IST) — flagging DERIBIT growth rate
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM peak last 6 ticks | 74 GB / 80 GB cap | ⚠️ 6 GB headroom, but DERIBIT growing |
-| RAM current | 74 GB | ⚠️ |
-| Trend | 71→72→73→69→73→74 (slow climb) | ⚠️ |
-| Swap | 0.6 GB | ✅ idle |
-| OOM kills | 0 | ✅ |
-| Concurrent procs | 43 | — |
-| Checkpoints | 547 (+9 in 6 min) | ✅ |
+| Metric                | Value                          | Status                                |
+| --------------------- | ------------------------------ | ------------------------------------- |
+| RAM peak last 6 ticks | 74 GB / 80 GB cap              | ⚠️ 6 GB headroom, but DERIBIT growing |
+| RAM current           | 74 GB                          | ⚠️                                    |
+| Trend                 | 71→72→73→69→73→74 (slow climb) | ⚠️                                    |
+| Swap                  | 0.6 GB                         | ✅ idle                               |
+| OOM kills             | 0                              | ✅                                    |
+| Concurrent procs      | 43                             | —                                     |
+| Checkpoints           | 547 (+9 in 6 min)              | ✅                                    |
 
 #### DERIBIT growth rate quantified
 
-| Time | Chunk 2019-05-01 | Chunk 2019-05-31 | Combined |
-|---|---:|---:|---:|
-| 15:21 | 1.8 GB | 1.8 GB | 3.6 GB |
-| 15:27 | 4.6 GB | 4.1 GB | 8.7 GB |
-| 15:34 | 9.4 GB | 8.9 GB | 18.3 GB |
-| **15:40** | **11.1 GB** | **10.0 GB** | **21.1 GB** |
+| Time      | Chunk 2019-05-01 | Chunk 2019-05-31 |    Combined |
+| --------- | ---------------: | ---------------: | ----------: |
+| 15:21     |           1.8 GB |           1.8 GB |      3.6 GB |
+| 15:27     |           4.6 GB |           4.1 GB |      8.7 GB |
+| 15:34     |           9.4 GB |           8.9 GB |     18.3 GB |
+| **15:40** |      **11.1 GB** |      **10.0 GB** | **21.1 GB** |
 
-**Growth rate: ~0.5 GB/min combined.** Linear unbounded growth — same pattern as the
-2019-04-01 chunk that hit 17 GB earlier. **Projected**:
+**Growth rate: ~0.5 GB/min combined.** Linear unbounded growth — same pattern as the 2019-04-01 chunk that hit 17 GB
+earlier. **Projected**:
+
 - 12 min from now: combined ~27 GB → total RAM ~80 GB cap breach
 - 20 min from now: combined ~31 GB → systemd-oomd very likely fires
 
-This is the **same memory leak** in instruments-service's DeFi-on-Tardis options
-adapter that we identified earlier (process-death-reclaims-cache pattern). Each
-DERIBIT chunk leaks until it dies. Killing one chunk frees its growth; the wrapper
-will spawn the next chunk fresh at 1-2 GB.
+This is the **same memory leak** in instruments-service's DeFi-on-Tardis options adapter that we identified earlier
+(process-death-reclaims-cache pattern). Each DERIBIT chunk leaks until it dies. Killing one chunk frees its growth; the
+wrapper will spawn the next chunk fresh at 1-2 GB.
 
 Deltas since 15:34:
+
 - CEFI: 244→247 (+3)
 - TRADFI: 224→227 (+3)
 - DEFI: 70→73 (+3)
 
 Sports — all 5 providers running, no further kills:
+
 - API_FOOTBALL: restarted, fast-forwarding (no done count yet)
 - FOOTYSTATS: chunk 11 in flight, 3.8 GB
 - TRANSFERMARKT: chunk 1 in flight, 3.5 GB
@@ -884,26 +862,27 @@ Sports — all 5 providers running, no further kills:
 
 #### 🚨 Awaiting user decision
 
-Per `feedback_just_execute_dont_ask` rule: scope-changing kill = ask.
-At 15:34 I asked about (a/b/c) on DERIBIT — no response received yet.
+Per `feedback_just_execute_dont_ask` rule: scope-changing kill = ask. At 15:34 I asked about (a/b/c) on DERIBIT — no
+response received yet.
 
-**Per current wakeup rule explicit instruction: do NOT kill DERIBIT, do NOT kill anything
-else (sports already on minimum), just flag urgently and report.**
+**Per current wakeup rule explicit instruction: do NOT kill DERIBIT, do NOT kill anything else (sports already on
+minimum), just flag urgently and report.**
 
 ETA to cap breach: ~12 min at current DERIBIT growth rate. Awaiting user.
 
 ### 15:42 IST — RAM hit 86GB, user authorised DERIBIT kill
 
-User instruction: "kill the deribit shard first we are already at 86gb mark.
-I think we should kill one of the deribit and then find out the reason of this memory
-leak before starting new worker for deribit, we can keep one worker running."
+User instruction: "kill the deribit shard first we are already at 86gb mark. I think we should kill one of the deribit
+and then find out the reason of this memory leak before starting new worker for deribit, we can keep one worker
+running."
 
 **Action taken**:
-1. Killed Python worker PID 786030 (DERIBIT 2019-05-01 chunk, 11.1 GB at moment of kill).
-   Used specific PID, not `pkill -f`.
+
+1. Killed Python worker PID 786030 (DERIBIT 2019-05-01 chunk, 11.1 GB at moment of kill). Used specific PID, not
+   `pkill -f`.
 2. Killed the DERIBIT bash wrapper (PIDs 564185 + 786023) so no new chunks spawn.
-3. Left PID 786031 (DERIBIT 2019-05-31 chunk, 10.0 GB) running — orphaned (re-parented
-   to init), will run to completion writing its data, then no successor.
+3. Left PID 786031 (DERIBIT 2019-05-31 chunk, 10.0 GB) running — orphaned (re-parented to init), will run to completion
+   writing its data, then no successor.
 
 **Result**: RAM dropped 81 → 65 GB. 16 GB freed.
 
@@ -912,95 +891,89 @@ leak before starting new worker for deribit, we can keep one worker running."
 **Yes, the system DOES use a manifest consolidator.** Architecture per
 `unified_trading_library/manifest_consolidator.py`:
 
-- Each backfill writer creates per-writer shards at
-  `gs://{ag_bucket}/_index/per_vm/{instance_id}.parquet` — replaces single-blob CAS
-  hot-path that produced 429 thundering-herd.
-- Consolidator (Cloud Run Job + the long-running VM `manifest-consolidator-20260429-162442`)
-  reads all per-VM shards every minute, dedup-merges by manifest key (last-attempted-write
-  wins), writes back to canonical `_index/availability_index.parquet`.
-- Reader-fallback staleness threshold = 120s, so consolidator running every 60s leaves
-  ample margin even if a cycle skips.
+- Each backfill writer creates per-writer shards at `gs://{ag_bucket}/_index/per_vm/{instance_id}.parquet` — replaces
+  single-blob CAS hot-path that produced 429 thundering-herd.
+- Consolidator (Cloud Run Job + the long-running VM `manifest-consolidator-20260429-162442`) reads all per-VM shards
+  every minute, dedup-merges by manifest key (last-attempted-write wins), writes back to canonical
+  `_index/availability_index.parquet`.
+- Reader-fallback staleness threshold = 120s, so consolidator running every 60s leaves ample margin even if a cycle
+  skips.
 
 **Instance ID resolution** in `ManifestWriter._resolve_instance_id()`:
+
 1. `$VM_NAME` (set by deployment-service VM launchers) — used in cloud
 2. `$HOSTNAME` fallback — **on this machine = `hk`**
 3. `local-{pid}-{rand4}` synthesized — only if neither env var set
 
-**Critical issue for our local runs**: all 47 procs on this machine share
-`HOSTNAME=hk` and **none have `$VM_NAME`** (it's only set by VM launchers).
-**They're all racing for the same `hk.parquet` per-VM shard** — that's why we see
-the `ManifestWriter: generation conflict (attempt N/15)` retry loops and the
-slowness in TRANSFERMARKT chunk 1.
+**Critical issue for our local runs**: all 47 procs on this machine share `HOSTNAME=hk` and **none have `$VM_NAME`**
+(it's only set by VM launchers). **They're all racing for the same `hk.parquet` per-VM shard** — that's why we see the
+`ManifestWriter: generation conflict (attempt N/15)` retry loops and the slowness in TRANSFERMARKT chunk 1.
 
 The intended design is one writer per per-VM shard. We're violating it.
 
-**Fix would be**: set a unique `VM_NAME` env var per chunk-worker. Wrap each
-spawned `instruments-service` invocation with:
+**Fix would be**: set a unique `VM_NAME` env var per chunk-worker. Wrap each spawned `instruments-service` invocation
+with:
+
 ```bash
 VM_NAME="local-${VENUE}-${CHUNK_START}-$$" .venv/bin/instruments-service ...
 ```
-Then each proc writes to its own per-VM shard, consolidator merges them all.
-**No code change needed** — just env-var injection in `run_vm_backfill_e2e.sh`
-and `sports_chunked_backfill.sh`. Tracking as follow-up.
 
-In the meantime: existing manifest writes are still consistent (the 15-retry CAS
-backoff handles the conflicts), just slow. Consolidator merges per-VM shards
-correctly even when only `hk.parquet` is being updated by all writers.
+Then each proc writes to its own per-VM shard, consolidator merges them all. **No code change needed** — just env-var
+injection in `run_vm_backfill_e2e.sh` and `sports_chunked_backfill.sh`. Tracking as follow-up.
+
+In the meantime: existing manifest writes are still consistent (the 15-retry CAS backoff handles the conflicts), just
+slow. Consolidator merges per-VM shards correctly even when only `hk.parquet` is being updated by all writers.
 
 ### 15:50 IST — INDEX ALIGNMENT issue identified (user-flagged + verified)
 
-User flagged the concern: with 47 procs racing on the same per-VM shard, what
-happens to writes from procs that lose the CAS race? Investigation:
+User flagged the concern: with 47 procs racing on the same per-VM shard, what happens to writes from procs that lose the
+CAS race? Investigation:
 
 #### What's actually happening (verified by GCS inspection)
 
-1. **`MANIFEST_PER_VM_SHARDS` is False by default** in
-   `_resolve_per_vm_shards()` at `manifest_writer.py:172-196`. Our local procs
-   never set this env var.
-2. **GCS evidence**: `_index/per_vm/` for all 4 AGs only contains shards from
-   2026-05-01/02 VM runs. **No `hk.parquet` exists** — our local procs aren't
-   writing per-VM shards at all.
-3. So our 47 procs are using the **legacy CAS path** writing directly to canonical
-   `_index/availability_index.parquet`. Each proc:
+1. **`MANIFEST_PER_VM_SHARDS` is False by default** in `_resolve_per_vm_shards()` at `manifest_writer.py:172-196`. Our
+   local procs never set this env var.
+2. **GCS evidence**: `_index/per_vm/` for all 4 AGs only contains shards from 2026-05-01/02 VM runs. **No `hk.parquet`
+   exists** — our local procs aren't writing per-VM shards at all.
+3. So our 47 procs are using the **legacy CAS path** writing directly to canonical `_index/availability_index.parquet`.
+   Each proc:
    - reads with generation G_n
    - merges its updates
    - CAS writes with G_n
    - if generation moved (peer wrote first), retry with G_n+1
-   - **15 retries cap** → fall back to **unconditional write** that ignores
-     concurrent peer writes (clobbers their rows)
+   - **15 retries cap** → fall back to **unconditional write** that ignores concurrent peer writes (clobbers their rows)
 
-We observed 9× unconditional-write fallbacks earlier today. Each could have lost
-manifest rows from peer procs writing in the conflict window.
+We observed 9× unconditional-write fallbacks earlier today. Each could have lost manifest rows from peer procs writing
+in the conflict window.
 
 #### Risk: per-day parquets safe, but manifest rows may be missing
 
-- **GCS per-day parquets** (the actual instrument data): each writes to its own
-  unique path `instrument_availability/by_date/day=X/venue=Y/instruments.parquet`.
-  No collision risk.
-- **Manifest rows** (`_index/availability_index.parquet`): high collision under
-  47-way concurrency. CAS-fallback potentially lost rows from peer procs.
-- **Result**: orchestrator's `_should_skip_shard` may **redundantly redo** shards
-  whose manifest row got clobbered → wasted API calls but no data loss.
+- **GCS per-day parquets** (the actual instrument data): each writes to its own unique path
+  `instrument_availability/by_date/day=X/venue=Y/instruments.parquet`. No collision risk.
+- **Manifest rows** (`_index/availability_index.parquet`): high collision under 47-way concurrency. CAS-fallback
+  potentially lost rows from peer procs.
+- **Result**: orchestrator's `_should_skip_shard` may **redundantly redo** shards whose manifest row got clobbered →
+  wasted API calls but no data loss.
 
 #### Two-part fix (committed 2026-05-04 15:53 IST)
 
-**Part 1: Patch scripts to use per-VM shards going forward** — instruments-service
-commit `00f6352`. Both runner scripts now inject:
+**Part 1: Patch scripts to use per-VM shards going forward** — instruments-service commit `00f6352`. Both runner scripts
+now inject:
+
 - `VM_NAME=hk_${ag_or_provider}_${chunk-start}_${random6}` — unique per chunk
 - `MANIFEST_PER_VM_SHARDS=true` — switches to per-VM shard write path
 
-This means every future-spawned chunk writer hits its own
-`_index/per_vm/{unique_name}.parquet`. The consolidator (running every 60s in
-`manifest-consolidator-20260429-162442` VM) merges them all into the canonical
-index. **No more cross-writer CAS contention.**
+This means every future-spawned chunk writer hits its own `_index/per_vm/{unique_name}.parquet`. The consolidator
+(running every 60s in `manifest-consolidator-20260429-162442` VM) merges them all into the canonical index. **No more
+cross-writer CAS contention.**
 
 **Part 2: Recovery for manifest rows already lost** — there's a tool for this:
 [`instruments-service/scripts/rebuild_cefi_manifest.py`](../../../instruments-service/scripts/rebuild_cefi_manifest.py)
-(supports all asset_groups via `--asset-group` flag despite the name). It scans
-actual GCS parquets and **adds missing manifest rows** for `(date, venue)` shards
-that have data on disk but no manifest entry. **Reverse phantom reconciler.**
+(supports all asset_groups via `--asset-group` flag despite the name). It scans actual GCS parquets and **adds missing
+manifest rows** for `(date, venue)` shards that have data on disk but no manifest entry. **Reverse phantom reconciler.**
 
 To run after current procs settle:
+
 ```bash
 cd ~/unified-trading-system-repos/instruments-service
 .venv/bin/python scripts/rebuild_cefi_manifest.py --dry-run                     # preview
@@ -1012,23 +985,23 @@ cd ~/unified-trading-system-repos/instruments-service
 
 #### What this means for in-flight procs
 
-User instruction: **don't kill in-flight workers, but don't spawn new ones with
-old code**. The script patches only affect **future** wrapper invocations:
-- In-flight Python workers (already loaded the old config) keep using the legacy
-  CAS path.
-- Their child wrappers (bash) re-read the script for the next chunk, so once a
-  current chunk finishes the wrapper picks up the patched code on the next
-  iteration.
+User instruction: **don't kill in-flight workers, but don't spawn new ones with old code**. The script patches only
+affect **future** wrapper invocations:
 
-**Result**: ~next 30-90 min of in-flight chunks still hit the CAS path; after that
-all new chunks use per-VM shards. Recovery tool runs after everything settles.
+- In-flight Python workers (already loaded the old config) keep using the legacy CAS path.
+- Their child wrappers (bash) re-read the script for the next chunk, so once a current chunk finishes the wrapper picks
+  up the patched code on the next iteration.
+
+**Result**: ~next 30-90 min of in-flight chunks still hit the CAS path; after that all new chunks use per-VM shards.
+Recovery tool runs after everything settles.
 
 ### 16:00 IST — Full reset per user instruction
 
-User: "kill all the tasks and then do the alignment and then start the processes after we
-do this otherwise we are going to be downloading the same data again and again."
+User: "kill all the tasks and then do the alignment and then start the processes after we do this otherwise we are going
+to be downloading the same data again and again."
 
 **Killed all 44 in-flight workers** + bash wrappers (specific PIDs, not pkill -f). Result:
+
 - 0 instruments-service procs running
 - 575 chunks durable in `.backfill-checkpoints/`
 - RAM 76 → 15 GB (61 GB freed)
@@ -1036,66 +1009,61 @@ do this otherwise we are going to be downloading the same data again and again."
 
 ### Pre-recovery analysis (consolidator nuances)
 
-User asked: "are we doing this right way, you should also check how the consolidator VM
-is doing it to take the nuances".
+User asked: "are we doing this right way, you should also check how the consolidator VM is doing it to take the
+nuances".
 
 Checked `unified_trading_library/manifest_consolidator.py`. Two-tool model:
 
 **Consolidator** (Cloud Run Job + the running VM `manifest-consolidator-20260429-162442`):
+
 - Runs every 60s with 90s soft-lock TTL via `_index/consolidator.lock`
 - Lightweight: only lists `_index/per_vm/*.parquet` (tens of shards)
 - Merges via `_merge_shard_frames` (last-write-wins dedup by manifest key)
 - Single CAS write to canonical `_index/availability_index.parquet`
-- **Doesn't crawl actual instrument data parquets** — assumes per-VM shards have
-  authoritative manifest rows.
+- **Doesn't crawl actual instrument data parquets** — assumes per-VM shards have authoritative manifest rows.
 
 **rebuild_manifest** (heavyweight, what `rebuild_cefi_manifest.py` calls):
+
 - Lists ALL `instrument_availability/by_date/day=*/venue=*/*.parquet` (millions)
 - Parses partition paths to extract `(date, venue)` tuples
 - Reads each parquet to count rows
 - Adds **missing** manifest rows (preserves existing — does NOT overwrite)
 - CAS-writes back to canonical `_index/availability_index.parquet`
 
-**Difference**: consolidator merges already-summarized per-VM shards. rebuild_manifest
-goes back to ground truth (the actual instrument parquets) and emits missing manifest
-rows. **Both are needed today.**
+**Difference**: consolidator merges already-summarized per-VM shards. rebuild_manifest goes back to ground truth (the
+actual instrument parquets) and emits missing manifest rows. **Both are needed today.**
 
 #### Today's failure mode (verified by GCS inspection)
 
-- Canonical `_index/availability_index.parquet` per-AG: `metageneration: 1` →
-  **never updated since creation at ~10:23 UTC today**. Our 47 local procs were
-  reading + CAS-writing it but `metageneration: 1` would imply none of those
-  CAS writes succeeded? Or the CAS-write path doesn't bump metageneration.
-- More likely: every CAS write generated a NEW generation (the writer wrote a
-  fresh blob) instead of bumping metageneration (which is for metadata-only
-  changes). So generations could be high but metageneration stays at 1.
-- Either way, post-OOM and post-many-CAS-fallbacks, the canonical manifest is
-  **likely missing rows** for shards whose writers got clobbered.
+- Canonical `_index/availability_index.parquet` per-AG: `metageneration: 1` → **never updated since creation at ~10:23
+  UTC today**. Our 47 local procs were reading + CAS-writing it but `metageneration: 1` would imply none of those CAS
+  writes succeeded? Or the CAS-write path doesn't bump metageneration.
+- More likely: every CAS write generated a NEW generation (the writer wrote a fresh blob) instead of bumping
+  metageneration (which is for metadata-only changes). So generations could be high but metageneration stays at 1.
+- Either way, post-OOM and post-many-CAS-fallbacks, the canonical manifest is **likely missing rows** for shards whose
+  writers got clobbered.
 
 #### Right recovery path: sequential, not parallel
 
-**Q on parallel rebuild_cefi_manifest.py**: yes, parallel hits GCS list-API rate
-limits (we already saw this earlier when 5 reconcilers ran parallel). Plus each
-rebuild's CAS write to canonical races with consolidator's CAS writes →
+**Q on parallel rebuild_cefi_manifest.py**: yes, parallel hits GCS list-API rate limits (we already saw this earlier
+when 5 reconcilers ran parallel). Plus each rebuild's CAS write to canonical races with consolidator's CAS writes →
 double-write conflict. **Sequential = safer.**
 
 **Recovery plan**:
-1. Run `rebuild_cefi_manifest.py --dry-run` per AG **sequentially**, ~5 min each
-   (~20 min total). Preview what's missing.
-2. If counts look reasonable (not surprisingly large), run without `--dry-run`
-   per AG sequentially to write recovery rows.
-3. After all 4 rebuilds: run `reconcile_phantom_manifest_rows_all.py --dry-run`
-   per AG to check for any remaining phantoms (forward-direction: manifest says
-   captured but parquet doesn't exist).
+
+1. Run `rebuild_cefi_manifest.py --dry-run` per AG **sequentially**, ~5 min each (~20 min total). Preview what's
+   missing.
+2. If counts look reasonable (not surprisingly large), run without `--dry-run` per AG sequentially to write recovery
+   rows.
+3. After all 4 rebuilds: run `reconcile_phantom_manifest_rows_all.py --dry-run` per AG to check for any remaining
+   phantoms (forward-direction: manifest says captured but parquet doesn't exist).
 4. Then look at DERIBIT memory leak before restarting CEFI.
-5. Then restart CEFI/TRADFI/DEFI/SPORTS with patched scripts (per-VM shards now
-   active per `00f6352`).
+5. Then restart CEFI/TRADFI/DEFI/SPORTS with patched scripts (per-VM shards now active per `00f6352`).
 
 #### Pre-existing bug found in rebuild_cefi_manifest.py
 
 Script uses `args.category` but argparse defines `--asset-group` → `args.asset_group`.
-`AttributeError: 'Namespace' object has no attribute 'category'`. Fixed in commit
-`0dd6e82` (instruments-service).
+`AttributeError: 'Namespace' object has no attribute 'category'`. Fixed in commit `0dd6e82` (instruments-service).
 
 ### 16:04 IST — CEFI rebuild dry-run complete
 
@@ -1105,35 +1073,32 @@ Script uses `args.category` but argparse defines `--asset-group` → `args.asset
 2026-05-04 16:04:21 INFO Result: 21989 total entries (+34 new), 2593 unique dates, 16 venues
 ```
 
-**Reassuring numbers** — only 34 missing manifest rows out of ~22k entries. That's
-a 0.15% CAS-fallback leak rate. Most writes survived the conflict loop. Recovery
-is small.
+**Reassuring numbers** — only 34 missing manifest rows out of ~22k entries. That's a 0.15% CAS-fallback leak rate. Most
+writes survived the conflict loop. Recovery is small.
 
-Note: 16 venues > 9 declared CEFI venues. That includes data left over from
-2026-04-29 366-VM rollout (legacy venue names like BITFINEX-SPOT, KRAKEN-FUTURES,
-BITGET-* from earlier sweep) + today's writes.
+Note: 16 venues > 9 declared CEFI venues. That includes data left over from 2026-04-29 366-VM rollout (legacy venue
+names like BITFINEX-SPOT, KRAKEN-FUTURES, BITGET-\* from earlier sweep) + today's writes.
 
 #### Investigating DERIBIT leak (interim — partial findings)
 
 Looked for module-level caches in `tardis.py` and `orchestrator.py`. Found:
+
 - `_DERIBIT_MONTHS` module-level dict (small, just expiry-month codes, not data)
 - `_defi_universe_cache` only kicks in for DeFi venues (DERIBIT is CEFI, doesn't apply)
-- `ManifestWriter._records` accumulates but `manifest.close()` IS called per-date
-  at orchestrator.py:1976, clearing the buffer
+- `ManifestWriter._records` accumulates but `manifest.close()` IS called per-date at orchestrator.py:1976, clearing the
+  buffer
 
-**Hypothesis remaining**: aiohttp ClientSession holds connection-pool / response-body
-data in the long-lived options-chain fetch. 200k InstrumentRecord pydantic v2 models
-× ~7 KB each = ~1.4 GB just for one fetch's results. Across 30 days, possibly
-multiple concurrent in-flight responses + cache layers. Without a memory profiler
+**Hypothesis remaining**: aiohttp ClientSession holds connection-pool / response-body data in the long-lived
+options-chain fetch. 200k InstrumentRecord pydantic v2 models × ~7 KB each = ~1.4 GB just for one fetch's results.
+Across 30 days, possibly multiple concurrent in-flight responses + cache layers. Without a memory profiler
 (tracemalloc), hard to pinpoint the exact leak.
 
-**Pragmatic mitigation**: chunk-cycling already bounds the leak. The 17 GB peak was
-the 2019-04 chunk's full-month accumulation; subsequent chunks at 1-2 GB then growing
-to ~5 GB before next cycle. **Per-chunk RAM bound = 5-17 GB depending on month**.
+**Pragmatic mitigation**: chunk-cycling already bounds the leak. The 17 GB peak was the 2019-04 chunk's full-month
+accumulation; subsequent chunks at 1-2 GB then growing to ~5 GB before next cycle. **Per-chunk RAM bound = 5-17 GB
+depending on month**.
 
-**Follow-up plan**: instrument the orchestrator with `tracemalloc.snapshot()` at
-chunk-end, log top allocators. Or run a single DERIBIT chunk under
-`memray run -o leak.bin .venv/bin/instruments-service ...`. Defer to tomorrow.
+**Follow-up plan**: instrument the orchestrator with `tracemalloc.snapshot()` at chunk-end, log top allocators. Or run a
+single DERIBIT chunk under `memray run -o leak.bin .venv/bin/instruments-service ...`. Defer to tomorrow.
 
 ### 16:05 IST — TRADFI rebuild dry-run started (sequentially)
 
@@ -1147,17 +1112,16 @@ chunk-end, log top allocators. Or run a single DERIBIT chunk under
 
 **Even smaller leak: 9 missing rows / 11,527 total = 0.08%.**
 
-| AG | Total | Missing | Leak rate |
-|---|---:|---:|---:|
-| CEFI | 21,989 | 34 | 0.15% |
-| TRADFI | 11,527 | 9 | 0.08% |
-| DEFI | TBD | TBD | TBD |
-| SPORTS | TBD | TBD | TBD |
+| AG     |  Total | Missing | Leak rate |
+| ------ | -----: | ------: | --------: |
+| CEFI   | 21,989 |      34 |     0.15% |
+| TRADFI | 11,527 |       9 |     0.08% |
+| DEFI   |    TBD |     TBD |       TBD |
+| SPORTS |    TBD |     TBD |       TBD |
 
-Pattern so far: leak rate is small. The CAS retry loop survived most contention.
-Probably most of the 9 unconditional-write fallbacks earlier today happened on
-small-row peer writes that got safely re-merged by later writers via the dedup
-logic in `_merge_shard_frames`.
+Pattern so far: leak rate is small. The CAS retry loop survived most contention. Probably most of the 9
+unconditional-write fallbacks earlier today happened on small-row peer writes that got safely re-merged by later writers
+via the dedup logic in `_merge_shard_frames`.
 
 ### 16:07 IST — DEFI rebuild dry-run started (sequentially)
 
@@ -1165,67 +1129,63 @@ logic in `_merge_shard_frames`.
 
 User asked for a baseline-vs-now summary. **Important correction first**:
 
-**My earlier "morning baseline" was the WRONG bucket.** The 12:33 IST recon dry-run
-read from `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet`
-— that's the **MTDS (market-tick-data) bucket**, not instruments-service. The
-1,343,892 rows / 188,684 captured were MTDS phantoms, not instruments-service work.
+**My earlier "morning baseline" was the WRONG bucket.** The 12:33 IST recon dry-run read from
+`gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet` — that's the **MTDS
+(market-tick-data) bucket**, not instruments-service. The 1,343,892 rows / 188,684 captured were MTDS phantoms, not
+instruments-service work.
 
 For **instruments-service** (what we've been backfilling all day), the buckets are:
 
-| AG | Bucket | Morning rows | Current rows | Schema | Capture_status state |
-|---|---|---:|---:|---|---|
-| CEFI | `instruments-store-cefi-central-element-323112` | 21,955 | **21,958** (+3) | v4 mostly, 3 v6 | 21,952 blank (legacy v4 — coerced to "captured" by reader); 3 properly v6-captured |
-| TRADFI | `instruments-store-tradfi-central-element-323112` | ~11,518 | **11,735** (+217) | v4 mostly, 217 v6 | 11,301 blank (legacy v4); 217 v6-captured |
-| DEFI | `instruments-store-defi-central-element-323112` | 69,674 | **69,674** (no change) | older — no `capture_status` column at all | unknown (column missing) |
-| SPORTS | `instruments-store-sports-central-element-323112` | 2,401,547 | **2,404,882** (+3,335) | v5/v6 properly populated | 831,965 captured / 1,561,176 empty_confirmed / 11,741 attempted_failed |
+| AG     | Bucket                                            | Morning rows |           Current rows | Schema                                    | Capture_status state                                                               |
+| ------ | ------------------------------------------------- | -----------: | ---------------------: | ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| CEFI   | `instruments-store-cefi-central-element-323112`   |       21,955 |        **21,958** (+3) | v4 mostly, 3 v6                           | 21,952 blank (legacy v4 — coerced to "captured" by reader); 3 properly v6-captured |
+| TRADFI | `instruments-store-tradfi-central-element-323112` |      ~11,518 |      **11,735** (+217) | v4 mostly, 217 v6                         | 11,301 blank (legacy v4); 217 v6-captured                                          |
+| DEFI   | `instruments-store-defi-central-element-323112`   |       69,674 | **69,674** (no change) | older — no `capture_status` column at all | unknown (column missing)                                                           |
+| SPORTS | `instruments-store-sports-central-element-323112` |    2,401,547 | **2,404,882** (+3,335) | v5/v6 properly populated                  | 831,965 captured / 1,561,176 empty_confirmed / 11,741 attempted_failed             |
 
 #### Today's contribution to instruments-service manifests = SMALL
 
-Despite 575 chunks completing on disk (per `.backfill-checkpoints/`), **only ~3,500
-manifest rows durably committed**:
+Despite 575 chunks completing on disk (per `.backfill-checkpoints/`), **only ~3,500 manifest rows durably committed**:
+
 - CEFI: +3 rows out of (575 × 30 days × ~7 venues = ~17k expected) = **0.02%**
 - TRADFI: +217 rows
 - SPORTS: +3,335 rows (the SFI VM + our work)
 - DEFI: 0 rows (no v5/v6 writes — schema didn't migrate)
 
-**Most of the work didn't land in manifests** because of the CAS-fallback contention
-we identified. The actual instrument data parquets ARE on disk in
-`instrument_availability/by_date/day=X/venue=Y/instruments.parquet` (rebuild_manifest
-finds them), they just don't have manifest entries yet.
+**Most of the work didn't land in manifests** because of the CAS-fallback contention we identified. The actual
+instrument data parquets ARE on disk in `instrument_availability/by_date/day=X/venue=Y/instruments.parquet`
+(rebuild_manifest finds them), they just don't have manifest entries yet.
 
 #### Schema progression
 
 - **v4** (2026-04-04): no capture_status; reader coerces blank to "captured"
 - **v5** (2026-04-19): adds capture_status, error_reason, attempted_at — honest-coverage
-- **v6** (2026-04-23 — current): adds quote_asset, margin_type, combo_type, leg_weights
-  for DERIBIT inverse-vs-linear disambiguation
+- **v6** (2026-04-23 — current): adds quote_asset, margin_type, combo_type, leg_weights for DERIBIT inverse-vs-linear
+  disambiguation
 - Codex doc `availability-manifest-and-data-status.md` is OUT OF DATE — says v4
 
 #### Distance-to-100% — what does "100%" actually mean here?
 
 Three possible interpretations:
-1. **Manifest 100% captured + empty_confirmed** under expected-shards denominator. If
-   we count the v4-blank-coerced-to-captured rows, CEFI/TRADFI are nearly fully
-   "captured" already (just legacy coverage from 2026-05-01). Our 575 chunks would
-   add fresh v6 rows on top.
-2. **Per-day parquet coverage** — every (asset_group, venue, day) in the cutoff
-   window has a parquet on disk. CEFI: 575 chunks × 30 days × 7 venues / total
-   expected = ~10-20% of needed dates have fresh parquets from today.
-3. **All adapters running cleanly** — done for 4/5 AGs (sports + 3 instruments),
-   missing PREDICTION (out-of-scope) and ADAPTER bugs for OKX, COINBASE, POLYGON,
-   FRED.
 
-For **interpretation (1)**: we're effectively still at the 2026-05-01 state per
-the canonical manifest. Today's work hasn't durably moved the needle YET — but
-recovery via rebuild_cefi_manifest.py + per-VM-shards-from-now-on will fix this.
+1. **Manifest 100% captured + empty_confirmed** under expected-shards denominator. If we count the
+   v4-blank-coerced-to-captured rows, CEFI/TRADFI are nearly fully "captured" already (just legacy coverage from
+   2026-05-01). Our 575 chunks would add fresh v6 rows on top.
+2. **Per-day parquet coverage** — every (asset_group, venue, day) in the cutoff window has a parquet on disk. CEFI: 575
+   chunks × 30 days × 7 venues / total expected = ~10-20% of needed dates have fresh parquets from today.
+3. **All adapters running cleanly** — done for 4/5 AGs (sports + 3 instruments), missing PREDICTION (out-of-scope) and
+   ADAPTER bugs for OKX, COINBASE, POLYGON, FRED.
 
-For **interpretation (2)**: we're closer than the manifests suggest because the
-parquets exist, the manifest just doesn't index them.
+For **interpretation (1)**: we're effectively still at the 2026-05-01 state per the canonical manifest. Today's work
+hasn't durably moved the needle YET — but recovery via rebuild_cefi_manifest.py + per-VM-shards-from-now-on will fix
+this.
+
+For **interpretation (2)**: we're closer than the manifests suggest because the parquets exist, the manifest just
+doesn't index them.
 
 #### Recovery plan to actually move the index forward
 
-1. Wait for all 4 rebuild_cefi_manifest.py dry-runs to complete (DEFI in flight,
-   SPORTS queued).
+1. Wait for all 4 rebuild_cefi_manifest.py dry-runs to complete (DEFI in flight, SPORTS queued).
 2. Review counts. If reasonable (no surprise high), run write-mode per AG sequentially.
 3. Restart workers with patched scripts (per-VM shards + unique VM_NAME).
 4. Investigate DERIBIT memory leak before re-enabling DERIBIT chunk-2.
@@ -1233,35 +1193,37 @@ parquets exist, the manifest just doesn't index them.
 
 5 min after sports fan-out:
 
-| Metric | Value | Status |
-|---|---|---|
-| RAM used | 52 GB / 80 GB cap | ✅ 28 GB headroom |
-| RAM trend (5 min) | 46→52 GB | ✅ stable, slow climb |
-| Swap | 0.7 GB | ✅ idle (was 6.7 GB at OOM, now drained) |
-| OOM kills | 0 | ✅ |
-| Rate-limit hits | 0 | ✅ (watchdog re-armed PID 621482) |
-| Procs | 43 | — |
-| Checkpoints | 399 (+23 since resume) | ✅ |
+| Metric            | Value                  | Status                                   |
+| ----------------- | ---------------------- | ---------------------------------------- |
+| RAM used          | 52 GB / 80 GB cap      | ✅ 28 GB headroom                        |
+| RAM trend (5 min) | 46→52 GB               | ✅ stable, slow climb                    |
+| Swap              | 0.7 GB                 | ✅ idle (was 6.7 GB at OOM, now drained) |
+| OOM kills         | 0                      | ✅                                       |
+| Rate-limit hits   | 0                      | ✅ (watchdog re-armed PID 621482)        |
+| Procs             | 43                     | —                                        |
+| Checkpoints       | 399 (+23 since resume) | ✅                                       |
 
 Progress per AG:
+
 - CEFI: 199 chunks (+7 since resume)
 - TRADFI: 166 chunks (+21 since resume; fastest)
 - DEFI: 34 chunks (+7 since resume)
 - SPORTS chunked: API_FOOTBALL 3 chunks, FOOTYSTATS 1, others on chunk 1
-  - TRANSFERMARKT still on chunk 1 since 14:15 (15 min/chunk — internal rate-limit at ~1 req/sec is the real-world pace; not stuck, just paced)
+  - TRANSFERMARKT still on chunk 1 since 14:15 (15 min/chunk — internal rate-limit at ~1 req/sec is the real-world pace;
+    not stuck, just paced)
 
 ### Real adapter errors observed (not rate-limit)
 
-- **9× Databento NASDAQ `XNAS.ITCH symbols=2: 422 symbology_invalid_request`** — adapter
-  sending invalid symbol format for some early dates (likely BTC/ETH ETF tickers that
-  don't exist pre-listing; `TRADFI_TICKER_COVERAGE_START` should clip but apparently
-  isn't always). Lands as `attempted_failed` rows; not blocking. Follow-up: investigate
-  why the ticker cutoff isn't applying for these specific cases.
+- **9× Databento NASDAQ `XNAS.ITCH symbols=2: 422 symbology_invalid_request`** — adapter sending invalid symbol format
+  for some early dates (likely BTC/ETH ETF tickers that don't exist pre-listing; `TRADFI_TICKER_COVERAGE_START` should
+  clip but apparently isn't always). Lands as `attempted_failed` rows; not blocking. Follow-up: investigate why the
+  ticker cutoff isn't applying for these specific cases.
 
 ## Status snapshot (2026-05-04 13:15 IST — end of session)
 
-**Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known.
-**Phase 1 (flip phantoms) — DONE for cefi/tradfi/sports.**
+**Phase 0 (diagnose) — DONE.** Per-asset-group dry-runs completed; phantom counts known. **Phase 1 (flip phantoms) —
+DONE for cefi/tradfi/sports.**
+
 - cefi: 12,540 phantoms flipped to `attempted_failed`
 - tradfi: 2,726 phantoms flipped
 - sports: 41,223 phantoms flipped (SFI excluded)
@@ -1270,51 +1232,44 @@ Progress per AG:
 
 **Phase 2 (backfill) — NOT DONE, two blockers:**
 
-1. **Local cefi/tradfi backfill via `run_vm_backfill_e2e.sh` failed silently** — runner
-   doesn't export `GCP_PROJECT_ID`, so every chunk aborts at bootstrap. Re-fire commands
-   with corrected env are in the "Pending work" section below. ~Easy fix.
-2. **Sports VM launches blocked on IAM** — `harshkantariya@odum-research.com` lacks
-   `roles/iam.serviceAccountUser` on the Compute SA. Ikenna needs to grant. Fallback:
-   run sports adapters locally too (same Python CLI; needs `GCP_PROJECT_ID` env). Singleton
-   lock would be bypassed — risk of API thrash if other agents launch sports VMs in parallel.
+1. **Local cefi/tradfi backfill via `run_vm_backfill_e2e.sh` failed silently** — runner doesn't export `GCP_PROJECT_ID`,
+   so every chunk aborts at bootstrap. Re-fire commands with corrected env are in the "Pending work" section below.
+   ~Easy fix.
+2. **Sports VM launches blocked on IAM** — `harshkantariya@odum-research.com` lacks `roles/iam.serviceAccountUser` on
+   the Compute SA. Ikenna needs to grant. Fallback: run sports adapters locally too (same Python CLI; needs
+   `GCP_PROJECT_ID` env). Singleton lock would be bypassed — risk of API thrash if other agents launch sports VMs in
+   parallel.
 
-**Net**: nothing's been actually backfilled today. Manifests are honest now (phantoms
-flipped → orchestrator will retry on next launch), but the launches haven't happened.
-Resume tomorrow once the env-var fix is applied + IAM grant lands.
+**Net**: nothing's been actually backfilled today. Manifests are honest now (phantoms flipped → orchestrator will retry
+on next launch), but the launches haven't happened. Resume tomorrow once the env-var fix is applied + IAM grant lands.
 
 ## Context
 
-Scope of *this* plan is narrower than the parent epic
+Scope of _this_ plan is narrower than the parent epic
 (`instruments_and_market_tick_data_completion_2026_05_01.plan.md`):
 
-- **Service**: `instruments-service` only — instrument-definition shards, not market-tick or
-  market-data-processing.
+- **Service**: `instruments-service` only — instrument-definition shards, not market-tick or market-data-processing.
 - **Asset groups**: all five — `cefi`, `tradfi`, `sports`, `prediction`, `defi`.
-- **Target**: ≥99% `captured + empty_confirmed` under the secondary-cutoff denominator (per
-  parent-epic success criteria) by EOD 2026-05-04.
-- **Non-goals (this plan)**: deployment-ui Phase 0 bug fixes (deferred — Harsh will pick up
-  later), market-tick-data backfills, MDPS candle generation, sports % drive (in flight by
-  another agent).
+- **Target**: ≥99% `captured + empty_confirmed` under the secondary-cutoff denominator (per parent-epic success
+  criteria) by EOD 2026-05-04.
+- **Non-goals (this plan)**: deployment-ui Phase 0 bug fixes (deferred — Harsh will pick up later), market-tick-data
+  backfills, MDPS candle generation, sports % drive (in flight by another agent).
 
-**Why a separate plan**: parent epic has Phase 0 (UI) → Phase 1 (sports tick) → Phase 2 (cefi)
-→ etc. as a sequential DAG. Today's "instruments-only to 100%" cuts a horizontal slice across
-all asset groups for a single service. Tracking it separately keeps the parent epic clean and
-gives a tight EOD success criterion.
+**Why a separate plan**: parent epic has Phase 0 (UI) → Phase 1 (sports tick) → Phase 2 (cefi) → etc. as a sequential
+DAG. Today's "instruments-only to 100%" cuts a horizontal slice across all asset groups for a single service. Tracking
+it separately keeps the parent epic clean and gives a tight EOD success criterion.
 
 **Background discoveries from this session (2026-05-04)** that shape this plan:
 
-- `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` is the right diagnostic
-  — supports all 5 asset groups via `ASSET_GROUP_CONFIG`, probes both `category=` (legacy) and
-  `asset_group=` (canonical) hive keys to avoid the 2026-05-01 false-181k-phantoms incident on
-  cefi.
-- `reconcile_phantom_manifest_rows.py` (no `_all` suffix) is sports-only. Don't use it for
-  cefi/tradfi/defi/prediction.
-- The `deployment-ui` Deploy button does **not** spawn VMs locally (no orchestrator worker
-  runs in T2 dev). VM-spawning is done via the shell launchers in
-  `deployment-service/scripts/vm/launch-*.sh` directly. Harsh's teammate's 31 running VMs all
-  came from those launchers.
-- The cloud `deployment-dashboard` Cloud Run service exists but is in failed state since
-  2026-04-30 (`Ready=False`, container failed startup). T3 is non-functional. T2 is the SSOT.
+- `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` is the right diagnostic — supports all 5 asset
+  groups via `ASSET_GROUP_CONFIG`, probes both `category=` (legacy) and `asset_group=` (canonical) hive keys to avoid
+  the 2026-05-01 false-181k-phantoms incident on cefi.
+- `reconcile_phantom_manifest_rows.py` (no `_all` suffix) is sports-only. Don't use it for cefi/tradfi/defi/prediction.
+- The `deployment-ui` Deploy button does **not** spawn VMs locally (no orchestrator worker runs in T2 dev). VM-spawning
+  is done via the shell launchers in `deployment-service/scripts/vm/launch-*.sh` directly. Harsh's teammate's 31 running
+  VMs all came from those launchers.
+- The cloud `deployment-dashboard` Cloud Run service exists but is in failed state since 2026-04-30 (`Ready=False`,
+  container failed startup). T3 is non-functional. T2 is the SSOT.
 - Per CLAUDE.md and the playbook, the canonical workflow is:
   ```
   1. reconcile dry-run (per asset group)        — diagnose
@@ -1328,17 +1283,16 @@ gives a tight EOD success criterion.
 
 Same cutoffs as parent epic — repeated here so this plan is self-contained:
 
-| Asset group | Start (global)             | End   | Per-shard secondary clip                     |
-| ----------- | -------------------------- | ----- | -------------------------------------------- |
-| CEFI        | 2019-01-01                 | today | per-venue inception (`CEFI_SOURCE_COVERAGE_START`) |
-| TRADFI      | 2019-01-01                 | today | per-ticker listing (`TRADFI_TICKER_COVERAGE_START`) |
-| SPORTS      | 2020-06-01                 | today | per-source + prediction-vs-reference league filter |
-| PREDICTION  | 2020-06-12 (POLYMARKET)    | today | per-venue + per-sub-category (`PREDICTION_SOURCE_COVERAGE_START`) |
-| DEFI        | per-protocol launch        | today | per-protocol-per-chain (`DEFI_SOURCE_COVERAGE_START`) |
+| Asset group | Start (global)          | End   | Per-shard secondary clip                                          |
+| ----------- | ----------------------- | ----- | ----------------------------------------------------------------- |
+| CEFI        | 2019-01-01              | today | per-venue inception (`CEFI_SOURCE_COVERAGE_START`)                |
+| TRADFI      | 2019-01-01              | today | per-ticker listing (`TRADFI_TICKER_COVERAGE_START`)               |
+| SPORTS      | 2020-06-01              | today | per-source + prediction-vs-reference league filter                |
+| PREDICTION  | 2020-06-12 (POLYMARKET) | today | per-venue + per-sub-category (`PREDICTION_SOURCE_COVERAGE_START`) |
+| DEFI        | per-protocol launch     | today | per-protocol-per-chain (`DEFI_SOURCE_COVERAGE_START`)             |
 
-Always pass the **global** start. Launchers + manifest writers handle the secondary clip
-through UAC `clip_dates_to_source_coverage` / equivalents — pre-launch days land as
-`empty_confirmed`, not `attempted_failed`.
+Always pass the **global** start. Launchers + manifest writers handle the secondary clip through UAC
+`clip_dates_to_source_coverage` / equivalents — pre-launch days land as `empty_confirmed`, not `attempted_failed`.
 
 ## Execution DAG
 
@@ -1366,25 +1320,24 @@ Phase 3 (Verify, parallel)
 Phase 4 (Sign-off + plan close)
 ```
 
-Realistic ETA caveat: Phase 2 wall time depends on shard count. CEFI 2019-→today across 9
-venues has ~22k potential shards. Even with 100 concurrent VMs and ~5 min per shard, that's
-~18 hours. **EOD target may slip into the next day** if the gap is large; we'll know after
-Phase 0 dry-runs.
+Realistic ETA caveat: Phase 2 wall time depends on shard count. CEFI 2019-→today across 9 venues has ~22k potential
+shards. Even with 100 concurrent VMs and ~5 min per shard, that's ~18 hours. **EOD target may slip into the next day**
+if the gap is large; we'll know after Phase 0 dry-runs.
 
 ## Phase 0 — Diagnose (read-only, parallel)
 
 **Scope nit before starting**: "instruments at 100%" can mean two things:
 
-1. **Per-day shard coverage**: every `(asset_group, venue, day)` tuple in the cutoff window has
-   a manifest row in `captured + empty_confirmed`. The reconciler measures this.
-2. **Per-instrument completeness on captured days**: each captured day's parquet contains
-   every instrument that was tradeable on that day on that venue.
+1. **Per-day shard coverage**: every `(asset_group, venue, day)` tuple in the cutoff window has a manifest row in
+   `captured + empty_confirmed`. The reconciler measures this.
+2. **Per-instrument completeness on captured days**: each captured day's parquet contains every instrument that was
+   tradeable on that day on that venue.
 
 The reconciler dry-run only measures (1). (2) requires a separate per-row content audit.
 
-- [ ] [HUMAN] P0. Confirm with Ikenna which "100%" he means before launching backfills. If
-      (2), the work is much larger (we'd need a content-validation script per AG, none
-      exists generically today). Default assumption for now: **(1)**.
+- [ ] [HUMAN] P0. Confirm with Ikenna which "100%" he means before launching backfills. If (2), the work is much larger
+      (we'd need a content-validation script per AG, none exists generically today). Default assumption for now:
+      **(1)**.
 
 For each asset group, dry-run the reconciler to learn:
 
@@ -1394,156 +1347,115 @@ For each asset group, dry-run the reconciler to learn:
 - Real `attempted_failed` count
 - Missing-row count under the secondary cutoff
 
-Run each in its own terminal/background — they're independent. Per script docstring, bulk-list
-pattern is ~5 min for 600k rows per asset group.
+Run each in its own terminal/background — they're independent. Per script docstring, bulk-list pattern is ~5 min for
+600k rows per asset group.
 
 - [ ] [SCRIPT] P0. Dry-run cefi:
-      ```bash
-      cd ~/unified-trading-system-repos/instruments-service
-      .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py \
-        --asset-group cefi --dry-run 2>&1 | tee /tmp/recon-cefi.log
-      ```
-- [ ] [SCRIPT] P0. Dry-run tradfi: same as above with `--asset-group tradfi`, log to
-      `/tmp/recon-tradfi.log`.
-- [ ] [SCRIPT] P0. Dry-run sports: same with `--asset-group sports`, log to
-      `/tmp/recon-sports.log`. **Note**: sports manifest is the in-flight one; numbers may
-      shift as the consolidator daemon merges. Re-run if anomalies appear.
-- [ ] [SCRIPT] P0. Dry-run prediction: same with `--asset-group prediction`, log to
-      `/tmp/recon-prediction.log`.
+      `bash     cd ~/unified-trading-system-repos/instruments-service     .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py \       --asset-group cefi --dry-run 2>&1 | tee /tmp/recon-cefi.log     `
+- [ ] [SCRIPT] P0. Dry-run tradfi: same as above with `--asset-group tradfi`, log to `/tmp/recon-tradfi.log`.
+- [ ] [SCRIPT] P0. Dry-run sports: same with `--asset-group sports`, log to `/tmp/recon-sports.log`. **Note**: sports
+      manifest is the in-flight one; numbers may shift as the consolidator daemon merges. Re-run if anomalies appear.
+- [ ] [SCRIPT] P0. Dry-run prediction: same with `--asset-group prediction`, log to `/tmp/recon-prediction.log`.
 - [ ] [SCRIPT] P0. Dry-run defi: same with `--asset-group defi`, log to `/tmp/recon-defi.log`.
-- [ ] [HUMAN] P0. Review all five logs. Capture the per-asset-group counts in this plan's
-      Notes section so we have a baseline. Decide: which asset groups need phantom flips
-      (Phase 1)? Which need backfill VMs (Phase 2)?
+- [ ] [HUMAN] P0. Review all five logs. Capture the per-asset-group counts in this plan's Notes section so we have a
+      baseline. Decide: which asset groups need phantom flips (Phase 1)? Which need backfill VMs (Phase 2)?
 
 ## Phase 0.5 — Sports gate (partial — SFI excluded from this run)
 
-Per parent-epic Phase 0.5 — sports backfill VMs share league partitions, so collisions cause
-double-writes and manifest noise. As of session start (2026-05-04 11:30 IST):
+Per parent-epic Phase 0.5 — sports backfill VMs share league partitions, so collisions cause double-writes and manifest
+noise. As of session start (2026-05-04 11:30 IST):
 
-- **SFI (`soccer_football_info`) has 1 instruments-service VM running** for sports
-  backfill. **This plan EXCLUDES SFI** — do not launch any new SFI backfill or run sports
-  reconciler with SFI data types in scope. Other sports sources (api-football, transfermarkt,
-  footystats, understat, openmeteo) are eligible if their gate query is clean.
+- **SFI (`soccer_football_info`) has 1 instruments-service VM running** for sports backfill. **This plan EXCLUDES SFI**
+  — do not launch any new SFI backfill or run sports reconciler with SFI data types in scope. Other sports sources
+  (api-football, transfermarkt, footystats, understat, openmeteo) are eligible if their gate query is clean.
 
-- [ ] [HUMAN] P0. Confirm the SFI VM is the only in-flight sports work, and capture which
-      data types it's covering (so we know what NOT to touch):
-      ```bash
-      gcloud compute instances list \
-        --filter='name~"^(af|tm|sfi|fs|manifest-consolidator)-"' \
-        --format='table(name,status,zone,creationTimestamp)'
-      ```
-      Expected: only the SFI VM + optional `manifest-consolidator-*`. If `af` / `tm` / `fs`
-      VMs are also RUNNING — stop and ping the other agent's owner.
-- [ ] [SCRIPT] P0. When running sports phantom recon, scope away from SFI to avoid racing
-      its writes:
-      ```bash
-      .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py \
-        --asset-group sports --dry-run \
-        --data-types FIXTURES,FIXTURE_EVENTS,STANDINGS,LEAGUES,TEAMS,PLAYER_STATS,ODDS,PLAYER_VALUES,TRANSFERMARKT_LEAGUES
-      ```
-      (Replace data-types list with the non-SFI set Phase 0 reveals as relevant.) **Do NOT**
-      include `SFI_LEAGUES` or `SFI_PROGRESSIVE_STATS` while SFI VM is running — its
-      writes are mid-flight and reconciler reads would race them.
-- [ ] [HUMAN] P0. Snapshot sports drilldown headline coverage. Per parent-epic Phase 0.5,
-      should be ≥80% captured.
+- [ ] [HUMAN] P0. Confirm the SFI VM is the only in-flight sports work, and capture which data types it's covering (so
+      we know what NOT to touch):
+      `bash     gcloud compute instances list \       --filter='name~"^(af|tm|sfi|fs|manifest-consolidator)-"' \       --format='table(name,status,zone,creationTimestamp)'     `
+      Expected: only the SFI VM + optional `manifest-consolidator-*`. If `af` / `tm` / `fs` VMs are also RUNNING — stop
+      and ping the other agent's owner.
+- [ ] [SCRIPT] P0. When running sports phantom recon, scope away from SFI to avoid racing its writes:
+      `bash     .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py \       --asset-group sports --dry-run \       --data-types FIXTURES,FIXTURE_EVENTS,STANDINGS,LEAGUES,TEAMS,PLAYER_STATS,ODDS,PLAYER_VALUES,TRANSFERMARKT_LEAGUES     `
+      (Replace data-types list with the non-SFI set Phase 0 reveals as relevant.) **Do NOT** include `SFI_LEAGUES` or
+      `SFI_PROGRESSIVE_STATS` while SFI VM is running — its writes are mid-flight and reconciler reads would race them.
+- [ ] [HUMAN] P0. Snapshot sports drilldown headline coverage. Per parent-epic Phase 0.5, should be ≥80% captured.
 
 ## Phase 1 — Flip phantoms (parallel, only for AGs with phantoms > 0)
 
-Run *without* `--dry-run` only for asset groups where Phase 0 found phantoms. This is fast
-(same bulk-list pattern as dry-run, plus a single manifest write per asset group).
+Run _without_ `--dry-run` only for asset groups where Phase 0 found phantoms. This is fast (same bulk-list pattern as
+dry-run, plus a single manifest write per asset group).
 
-**Critical**: do NOT write empty placeholder parquets to mask phantoms. Per CLAUDE.md
-manifest-phantom-audit rule: `record_empty(...)` is for legitimately-empty source responses
-only. Phantoms must be flipped to `attempted_failed` so VMs re-attempt them.
+**Critical**: do NOT write empty placeholder parquets to mask phantoms. Per CLAUDE.md manifest-phantom-audit rule:
+`record_empty(...)` is for legitimately-empty source responses only. Phantoms must be flipped to `attempted_failed` so
+VMs re-attempt them.
 
 - [ ] [SCRIPT] P0. Flip phantoms for each AG with phantom_count > 0:
-      ```bash
-      .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>
-      ```
-      (no `--dry-run`). Repeat per asset group.
+      `bash     .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>     ` (no
+      `--dry-run`). Repeat per asset group.
 - [ ] [SCRIPT] P0. Re-run dry-run for each flipped AG to confirm phantom count → 0.
 
 ## Phase 2 — Launch backfills (parallel by asset group)
 
-This is where the actual instruments-service work happens. Critical distinction discovered
-in this session (2026-05-04):
+This is where the actual instruments-service work happens. Critical distinction discovered in this session (2026-05-04):
 
-**The cefi/tradfi/defi/prediction launchers in `deployment-service/scripts/vm/launch-*-backfill*.sh`
-that look like they're for instruments are NOT.** They have `VM_SERVICE=market_tick_data_service`
-and `VM_TASK=cefi-backfill` — they download tick data, not instrument definitions. Inspected
-the metadata of all 31 currently-running VMs (`cefi-bitfinex-…`, `cefi-okx-swap-…`,
-`cefi-deribit-…`, etc.) — they're all MTDS, not instruments-service.
+**The cefi/tradfi/defi/prediction launchers in `deployment-service/scripts/vm/launch-*-backfill*.sh` that look like
+they're for instruments are NOT.** They have `VM_SERVICE=market_tick_data_service` and `VM_TASK=cefi-backfill` — they
+download tick data, not instrument definitions. Inspected the metadata of all 31 currently-running VMs
+(`cefi-bitfinex-…`, `cefi-okx-swap-…`, `cefi-deribit-…`, etc.) — they're all MTDS, not instruments-service.
 
-**Launchers that actually run instruments-service** (verified by
-`grep VM_SERVICE=instruments_service` across `deployment-service/scripts/vm/`):
+**Launchers that actually run instruments-service** (verified by `grep VM_SERVICE=instruments_service` across
+`deployment-service/scripts/vm/`):
 
-- `launch-instruments-smoke-vm.sh` — single-day smoke test (writes to `*-test-` buckets,
-  not prod)
-- `launch-{api-football,transfermarkt,sfi,footystats,understat,openmeteo}-backfill-vm.sh`
-  — sports instruments only
-- `launch-sfi-forward-poll.sh`, `launch-footystats-forward-poll.sh` — daily forward-poll
-  (live, not backfill)
+- `launch-instruments-smoke-vm.sh` — single-day smoke test (writes to `*-test-` buckets, not prod)
+- `launch-{api-football,transfermarkt,sfi,footystats,understat,openmeteo}-backfill-vm.sh` — sports instruments only
+- `launch-sfi-forward-poll.sh`, `launch-footystats-forward-poll.sh` — daily forward-poll (live, not backfill)
 - `launch-sports-manifest-rescan-vm.sh` — sports manifest rescan only
 
-For **cefi/tradfi/defi/prediction instruments**, **no dedicated VM launcher exists**. The
-canonical local-driver script is
-[`instruments-service/scripts/run_vm_backfill_e2e.sh`](../../../instruments-service/scripts/run_vm_backfill_e2e.sh)
-(despite the name "vm" it runs locally — it invokes `.venv/bin/instruments-service ...` on
-whatever machine you run it on, with checkpointing + parallel chunks). Two paths to use it:
+For **cefi/tradfi/defi/prediction instruments**, **no dedicated VM launcher exists**. The canonical local-driver script
+is [`instruments-service/scripts/run_vm_backfill_e2e.sh`](../../../instruments-service/scripts/run_vm_backfill_e2e.sh)
+(despite the name "vm" it runs locally — it invokes `.venv/bin/instruments-service ...` on whatever machine you run it
+on, with checkpointing + parallel chunks). Two paths to use it:
 
-**Path A — local driver (simplest, fine for small gaps)**: run `run_vm_backfill_e2e.sh`
-directly on this machine. Resumable via checkpoints, so safe to interrupt. **IP-rate-limited
-to your laptop's IP** — fine for instruments-service (low API volume, tiny payloads), bad
-for tick-data scale.
+**Path A — local driver (simplest, fine for small gaps)**: run `run_vm_backfill_e2e.sh` directly on this machine.
+Resumable via checkpoints, so safe to interrupt. **IP-rate-limited to your laptop's IP** — fine for instruments-service
+(low API volume, tiny payloads), bad for tick-data scale.
 
-**Path B — wrap in a VM (ad-hoc)**: write a one-line `gcloud compute instances create` that
-sets `VM_SERVICE=instruments_service`, `VM_OPERATION=download`, `VM_ASSET_GROUP=…`,
-`VM_VENUE=…`, `VM_START_DATE`, `VM_END_DATE` — same metadata pattern as
-`launch-instruments-smoke-vm.sh` but with prod buckets (no `IS_TEST_RUN=true`). Defer to
-Ikenna before doing this — the smoke launcher exists, the prod-equivalent doesn't, and
-adding one new pattern is something he'd want to bless.
+**Path B — wrap in a VM (ad-hoc)**: write a one-line `gcloud compute instances create` that sets
+`VM_SERVICE=instruments_service`, `VM_OPERATION=download`, `VM_ASSET_GROUP=…`, `VM_VENUE=…`, `VM_START_DATE`,
+`VM_END_DATE` — same metadata pattern as `launch-instruments-smoke-vm.sh` but with prod buckets (no `IS_TEST_RUN=true`).
+Defer to Ikenna before doing this — the smoke launcher exists, the prod-equivalent doesn't, and adding one new pattern
+is something he'd want to bless.
 
-**Cost model (correction to common intuition)**: VMs in this stack have
-`VM_SHUTDOWN_ON_COMPLETION=true` — each one self-deletes when its shard finishes.
-Cost ≈ `(shard_count × per-shard_runtime × $0.07/hr)` on `e2-standard-2`. **Many
-short-lived VMs are NOT inherently expensive** — what matters is total runtime. For
-instruments-service the per-shard runtime is small (low API volume). The 31 currently-running
-MTDS VMs cost ~$52/day at full burn; instruments-service backfill at the same scale would
-cost a fraction of that since shards finish in minutes. Don't switch to a long-lived
+**Cost model (correction to common intuition)**: VMs in this stack have `VM_SHUTDOWN_ON_COMPLETION=true` — each one
+self-deletes when its shard finishes. Cost ≈ `(shard_count × per-shard_runtime × $0.07/hr)` on `e2-standard-2`. **Many
+short-lived VMs are NOT inherently expensive** — what matters is total runtime. For instruments-service the per-shard
+runtime is small (low API volume). The 31 currently-running MTDS VMs cost ~$52/day at full burn; instruments-service
+backfill at the same scale would cost a fraction of that since shards finish in minutes. Don't switch to a long-lived
 single-VM model — that costs more (idle time billed) and breaks shard-level failure isolation.
 
-**Tarball refresh**: per CLAUDE.md, refresh only if **instruments-service / UAC / UTL** code
-changed. Today's session changed only deployment-api + deployment-service routes (irrelevant
-to backfill VMs). **No tarball refresh needed.** If unsure:
+**Tarball refresh**: per CLAUDE.md, refresh only if **instruments-service / UAC / UTL** code changed. Today's session
+changed only deployment-api + deployment-service routes (irrelevant to backfill VMs). **No tarball refresh needed.** If
+unsure:
+
 ```bash
 bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group <X>
 ```
 
-**`--force` warning**: every launcher / CLI accepts a force flag (the deploy form defaults
-it to `true`, but for these scripts default is `false`). With `force=true`, the orchestrator
-re-fetches every shard regardless of `_should_skip_shard` — billable API cost, possible
-rate-limit hit. **Use `force=false` for daily gap-fill.** Reserve `force=true` for retesting
-one specific shard or after a code-fix that requires re-running known-bad data.
+**`--force` warning**: every launcher / CLI accepts a force flag (the deploy form defaults it to `true`, but for these
+scripts default is `false`). With `force=true`, the orchestrator re-fetches every shard regardless of
+`_should_skip_shard` — billable API cost, possible rate-limit hit. **Use `force=false` for daily gap-fill.** Reserve
+`force=true` for retesting one specific shard or after a code-fix that requires re-running known-bad data.
 
 ### CEFI
 
 - [ ] [HUMAN] P0. Confirm Phase 0 cefi gap (review `/tmp/recon-cefi.log`).
-- [ ] [HUMAN] P0. **Pick path** — local-driver (Path A, fast iteration) or VM-wrap (Path B,
-      needs Ikenna sign-off). For the per-asset-group counts likely seen at 85% baseline,
-      Path A is probably enough.
+- [ ] [HUMAN] P0. **Pick path** — local-driver (Path A, fast iteration) or VM-wrap (Path B, needs Ikenna sign-off). For
+      the per-asset-group counts likely seen at 85% baseline, Path A is probably enough.
 - [ ] [HUMAN] P0. Path A launch (per CEFI venue):
-      ```bash
-      cd ~/unified-trading-system-repos/instruments-service
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue BINANCE-SPOT \
-        --asset-group CEFI \
-        --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 4
-      ```
-      Repeat for each CEFI venue with a non-trivial gap (BINANCE-FUTURES, DERIBIT, BYBIT,
-      OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER). The script chunks the date range,
-      parallel-runs `--parallel` chunk workers, and checkpoints to
-      `.backfill-checkpoints/<venue>/<chunk>.done` so re-runs skip completed chunks.
+      `bash     cd ~/unified-trading-system-repos/instruments-service     bash scripts/run_vm_backfill_e2e.sh \       --venue BINANCE-SPOT \       --asset-group CEFI \       --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     `
+      Repeat for each CEFI venue with a non-trivial gap (BINANCE-FUTURES, DERIBIT, BYBIT, OKX, UPBIT, COINBASE,
+      HYPERLIQUID, ASTER). The script chunks the date range, parallel-runs `--parallel` chunk workers, and checkpoints
+      to `.backfill-checkpoints/<venue>/<chunk>.done` so re-runs skip completed chunks.
 - [ ] [HUMAN] P1. Watch progress via the checkpoint dir:
       `ls instruments-service/.backfill-checkpoints/CEFI/<venue>/ | wc -l`.
 
@@ -1551,28 +1463,20 @@ one specific shard or after a code-fix that requires re-running known-bad data.
 
 - [ ] [HUMAN] P0. Confirm Phase 0 tradfi gap (review `/tmp/recon-tradfi.log`).
 - [ ] [HUMAN] P0. Same Path A pattern as CEFI, per TradFi venue:
-      ```bash
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue CME --asset-group TRADFI \
-        --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 4
-      ```
-      Repeat for `CBOE`, `NASDAQ`, `NYSE`, `ICE`, `FX`, `POLYGON`, `FRED` if their slice is
-      red. Per-ticker listing-date clip is shipped (`TRADFI_TICKER_COVERAGE_START` UAC
-      `15b9e74`), pre-listing days auto-skip.
+      `bash     bash scripts/run_vm_backfill_e2e.sh \       --venue CME --asset-group TRADFI \       --start-date 2019-01-01 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     `
+      Repeat for `CBOE`, `NASDAQ`, `NYSE`, `ICE`, `FX`, `POLYGON`, `FRED` if their slice is red. Per-ticker listing-date
+      clip is shipped (`TRADFI_TICKER_COVERAGE_START` UAC `15b9e74`), pre-listing days auto-skip.
 
 ### SPORTS — instruments-service backfill, with SFI excluded
 
-- [ ] [HUMAN] P0. **GATE**: Phase 0.5 must confirm only the SFI VM is running. Other
-      sources (af/tm/fs/understat/openmeteo) clear to launch.
-- [ ] [HUMAN] P0. Sports has dedicated launchers (`VM_SERVICE=instruments_service`
-      confirmed in metadata). Pick the launcher matching the data-type slice that's red in
-      `/tmp/recon-sports.log`. **Do NOT touch SFI** while its VM is running — skip
-      `launch-sfi-backfill-vm.sh` and `launch-sfi-forward-poll.sh`.
-      ```bash
-      # api-football (LEAGUES, TEAMS, FIXTURES, FIXTURE_EVENTS, STANDINGS, INJURIES, …)
-      bash ~/unified-trading-system-repos/deployment-service/scripts/vm/launch-api-football-backfill-vm.sh \
-        --data-type <X> --start-date 2020-06-01
+- [ ] [HUMAN] P0. **GATE**: Phase 0.5 must confirm only the SFI VM is running. Other sources
+      (af/tm/fs/understat/openmeteo) clear to launch.
+- [ ] [HUMAN] P0. Sports has dedicated launchers (`VM_SERVICE=instruments_service` confirmed in metadata). Pick the
+      launcher matching the data-type slice that's red in `/tmp/recon-sports.log`. **Do NOT touch SFI** while its VM is
+      running — skip `launch-sfi-backfill-vm.sh` and `launch-sfi-forward-poll.sh`. ```bash # api-football (LEAGUES,
+      TEAMS, FIXTURES, FIXTURE_EVENTS, STANDINGS, INJURIES, …) bash
+      ~/unified-trading-system-repos/deployment-service/scripts/vm/launch-api-football-backfill-vm.sh \
+       --data-type <X> --start-date 2020-06-01
 
       # transfermarkt (PLAYER_VALUES, TRANSFERMARKT_LEAGUES)
       bash .../launch-transfermarkt-backfill-vm.sh --data-type <X> --start-date 2020-06-01
@@ -1583,125 +1487,97 @@ one specific shard or after a code-fix that requires re-running known-bad data.
       only — per parent-epic prediction-vs-reference cutoff rule. The orchestrator's
       `_should_skip_shard` + `_should_skip_reference_league` guards handle this; pass
       `--leagues prediction|reference|all` if the launcher accepts it.
-- [ ] [SCRIPT] P0. After each non-SFI launcher batch completes, re-run sports phantom recon
-      (no `--dry-run`) **with the same `--data-types` scope as Phase 0.5** (i.e. excluding
-      SFI_LEAGUES / SFI_PROGRESSIVE_STATS until the SFI VM is done).
+
+- [ ] [SCRIPT] P0. After each non-SFI launcher batch completes, re-run sports phantom recon (no `--dry-run`) **with the
+      same `--data-types` scope as Phase 0.5** (i.e. excluding SFI_LEAGUES / SFI_PROGRESSIVE_STATS until the SFI VM is
+      done).
 
 ### PREDICTION
 
 - [ ] [HUMAN] P0. Confirm Phase 0 prediction gap (review `/tmp/recon-prediction.log`).
 - [ ] [HUMAN] P0. **No dedicated launcher exists**. Use Path A (local driver):
-      ```bash
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue POLYMARKET --asset-group PREDICTION \
-        --start-date 2020-06-12 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 2
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue KALSHI --asset-group PREDICTION \
-        --start-date 2021-07-19 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 2
-      ```
+      `bash     bash scripts/run_vm_backfill_e2e.sh \       --venue POLYMARKET --asset-group PREDICTION \       --start-date 2020-06-12 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 2     bash scripts/run_vm_backfill_e2e.sh \       --venue KALSHI --asset-group PREDICTION \       --start-date 2021-07-19 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 2     `
       Lower `--parallel` (2 not 4) since PREDICTION venues have stricter rate limits.
-- [ ] [HUMAN] P1. Per-sub-category cutoffs (crypto/macro/football for POLYMARKET) — handled
-      by the adapter's internal coverage clip; pass venue-only here.
+- [ ] [HUMAN] P1. Per-sub-category cutoffs (crypto/macro/football for POLYMARKET) — handled by the adapter's internal
+      coverage clip; pass venue-only here.
 
 ### DEFI
 
 - [ ] [HUMAN] P0. Confirm Phase 0 defi gap (review `/tmp/recon-defi.log`).
 - [ ] [HUMAN] P0. **No dedicated launcher exists**. Use Path A per DeFi venue:
-      ```bash
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue AAVEV3-ETHEREUM --asset-group DEFI \
-        --start-date 2022-03-16 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 4
-      bash scripts/run_vm_backfill_e2e.sh \
-        --venue UNISWAPV3-ETHEREUM --asset-group DEFI \
-        --start-date 2021-05-05 --end-date $(date -u +%Y-%m-%d) \
-        --chunk-days 30 --parallel 4
-      # Repeat per (protocol × chain) — see UAC DEFI_SOURCE_COVERAGE_START for inception dates.
-      ```
-      DeFi instruments are monotonically-increasing (immutable contracts) per the
-      orchestrator high-watermark logic — `_should_skip_shard` + per-venue HWM means most
-      days will auto-skip. Only red shards re-run.
+      `bash     bash scripts/run_vm_backfill_e2e.sh \       --venue AAVEV3-ETHEREUM --asset-group DEFI \       --start-date 2022-03-16 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     bash scripts/run_vm_backfill_e2e.sh \       --venue UNISWAPV3-ETHEREUM --asset-group DEFI \       --start-date 2021-05-05 --end-date $(date -u +%Y-%m-%d) \       --chunk-days 30 --parallel 4     # Repeat per (protocol × chain) — see UAC DEFI_SOURCE_COVERAGE_START for inception dates.     `
+      DeFi instruments are monotonically-increasing (immutable contracts) per the orchestrator high-watermark logic —
+      `_should_skip_shard` + per-venue HWM means most days will auto-skip. Only red shards re-run.
 
 ## Phase 3 — Verify (parallel)
 
-- [ ] [SCRIPT] P0. For each asset group: re-run `reconcile_phantom_manifest_rows_all.py
-      --asset-group <X> --dry-run` and confirm phantom count is 0.
-- [ ] [HUMAN] P0. Snapshot the deployment-ui drilldown for `service=instruments-service` per
-      asset group. Each should show ≥99% `captured + empty_confirmed` under the secondary-
-      cutoff denominator.
-- [ ] [HUMAN] P1. Spot-check 5 random `(asset_group, day, venue, instrument_type)` rows:
-      follow each to its canonical GCS path and confirm the parquet exists.
+- [ ] [SCRIPT] P0. For each asset group: re-run `reconcile_phantom_manifest_rows_all.py     --asset-group <X> --dry-run`
+      and confirm phantom count is 0.
+- [ ] [HUMAN] P0. Snapshot the deployment-ui drilldown for `service=instruments-service` per asset group. Each should
+      show ≥99% `captured + empty_confirmed` under the secondary- cutoff denominator.
+- [ ] [HUMAN] P1. Spot-check 5 random `(asset_group, day, venue, instrument_type)` rows: follow each to its canonical
+      GCS path and confirm the parquet exists.
 
 ## Phase 4 — Sign-off + plan close
 
-- [ ] [HUMAN] P0. Update parent epic
-      (`instruments_and_market_tick_data_completion_2026_05_01.plan.md`) progress notes:
+- [ ] [HUMAN] P0. Update parent epic (`instruments_and_market_tick_data_completion_2026_05_01.plan.md`) progress notes:
       mark instruments-service slice complete, link to this plan.
 - [ ] [HUMAN] P0. Brief Ikenna on results vs the EOD target.
 - [ ] [AGENT] P2. Mark this plan complete and move to `plans/archive/`.
 
 ## Files / commands referenced
 
-| Repo                  | File / command                                                  | Phase |
-| --------------------- | --------------------------------------------------------------- | ----- |
-| instruments-service   | `scripts/reconcile_phantom_manifest_rows_all.py`                | 0,1,3 |
-| instruments-service   | `scripts/run_vm_backfill_e2e.sh` (local-driver, resumable)      | 2     |
-| deployment-service    | `scripts/vm/launch-{api-football,transfermarkt,footystats,understat,openmeteo}-backfill-vm.sh` (sports instruments only) | 2 |
-| deployment-service    | `scripts/vm/launch-instruments-smoke-vm.sh` (single-day, *-test buckets) | ref |
-| unified-api-contracts | `unified_api_contracts/canonical/coverage_starts.py`            | ref   |
-| unified-trading-pm    | `codex/14-playbooks/backfill-completion-playbook.md`            | ref   |
+| Repo                  | File / command                                                                                                           | Phase |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----- |
+| instruments-service   | `scripts/reconcile_phantom_manifest_rows_all.py`                                                                         | 0,1,3 |
+| instruments-service   | `scripts/run_vm_backfill_e2e.sh` (local-driver, resumable)                                                               | 2     |
+| deployment-service    | `scripts/vm/launch-{api-football,transfermarkt,footystats,understat,openmeteo}-backfill-vm.sh` (sports instruments only) | 2     |
+| deployment-service    | `scripts/vm/launch-instruments-smoke-vm.sh` (single-day, \*-test buckets)                                                | ref   |
+| unified-api-contracts | `unified_api_contracts/canonical/coverage_starts.py`                                                                     | ref   |
+| unified-trading-pm    | `codex/14-playbooks/backfill-completion-playbook.md`                                                                     | ref   |
 
-**Explicitly NOT used** (these run MTDS / market-tick-data, not instruments-service):
-`launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`, `launch-mdps-*-backfill*.sh`.
+**Explicitly NOT used** (these run MTDS / market-tick-data, not instruments-service): `launch-cefi-sharded-backfill.sh`,
+`launch-tradfi-backfill-vm.sh`, `launch-mdps-*-backfill*.sh`.
 
 ## Success criteria
 
-- All 5 asset groups: ≥99% `captured + empty_confirmed` for `service=instruments-service`,
-  scoped to the secondary-cutoff denominator (per parent-epic). **Definition (1) of "100%"**
-  per Phase 0 scope-nit; revisit if Ikenna meant (2).
-- Phantom recon dry-run reports 0 phantom flips for every asset group (excluding SFI while
-  its VM is running).
+- All 5 asset groups: ≥99% `captured + empty_confirmed` for `service=instruments-service`, scoped to the
+  secondary-cutoff denominator (per parent-epic). **Definition (1) of "100%"** per Phase 0 scope-nit; revisit if Ikenna
+  meant (2).
+- Phantom recon dry-run reports 0 phantom flips for every asset group (excluding SFI while its VM is running).
 - Drilldown spot-check: 5 random captured rows per AG resolve to actual parquets in GCS.
 
 ## Execution log (2026-05-04 EOD push)
 
-- **12:33–12:48 IST**: Phase 0 dry-runs for cefi/tradfi/sports/prediction/defi (parallel after
-  the `tempfile` patch). Sports first attempt timed out on GCS list under 5x parallel load;
-  retry with `--workers 16` succeeded.
-- **12:46–12:57 IST**: Phase 1 phantom flips for cefi (12,540), tradfi (2,726), sports
-  (41,223 SFI-excluded). All wrote manifest back successfully.
-- **12:55 IST**: Phase 2 TRADFI backfill fired locally via `run_vm_backfill_e2e.sh` for
-  CME/CBOE/NASDAQ/NYSE/ICE/FX (6 venues × 4 chunk-workers = 24 concurrent
-  instruments-service procs). No IAM issue — runs on this machine.
-- **12:57 IST**: Phase 2 CEFI backfill fired locally for the 9 active CEFI venues
-  (9 × 4 = 36 concurrent procs).
-- **12:57 IST**: Phase 2 SPORTS af + tm VM launches blocked: `User does not have access to
-  service account 1060025368044-compute@developer.gserviceaccount.com. Ask a project owner
-  to grant the iam.serviceAccountUser role.`
-- **13:10 IST**: Discovered cefi+tradfi local backfills had been silently failing every
-  chunk on `GCP_PROJECT_ID must be set in environment` — `run_vm_backfill_e2e.sh` doesn't
-  export the env. All 90 chunks per venue × 15 venues showed "START" but never "DONE",
-  produced zero checkpoints, wrote nothing to GCS. Killed all in-flight procs, cleaned
-  checkpoints + logs.
-- **13:08 IST**: Investigation found that the `setup-data-pipeline-vm.sh` script (line 596+)
-  for `VM_TASK=sports-backfill` just runs:
+- **12:33–12:48 IST**: Phase 0 dry-runs for cefi/tradfi/sports/prediction/defi (parallel after the `tempfile` patch).
+  Sports first attempt timed out on GCS list under 5x parallel load; retry with `--workers 16` succeeded.
+- **12:46–12:57 IST**: Phase 1 phantom flips for cefi (12,540), tradfi (2,726), sports (41,223 SFI-excluded). All wrote
+  manifest back successfully.
+- **12:55 IST**: Phase 2 TRADFI backfill fired locally via `run_vm_backfill_e2e.sh` for CME/CBOE/NASDAQ/NYSE/ICE/FX (6
+  venues × 4 chunk-workers = 24 concurrent instruments-service procs). No IAM issue — runs on this machine.
+- **12:57 IST**: Phase 2 CEFI backfill fired locally for the 9 active CEFI venues (9 × 4 = 36 concurrent procs).
+- **12:57 IST**: Phase 2 SPORTS af + tm VM launches blocked:
+  `User does not have access to service account 1060025368044-compute@developer.gserviceaccount.com. Ask a project owner to grant the iam.serviceAccountUser role.`
+- **13:10 IST**: Discovered cefi+tradfi local backfills had been silently failing every chunk on
+  `GCP_PROJECT_ID must be set in environment` — `run_vm_backfill_e2e.sh` doesn't export the env. All 90 chunks per venue
+  × 15 venues showed "START" but never "DONE", produced zero checkpoints, wrote nothing to GCS. Killed all in-flight
+  procs, cleaned checkpoints + logs.
+- **13:08 IST**: Investigation found that the `setup-data-pipeline-vm.sh` script (line 596+) for
+  `VM_TASK=sports-backfill` just runs:
   ```
   python -m instruments_service --operation instruments --mode batch \
     --asset-group SPORTS --sports-provider {API_FOOTBALL|TRANSFERMARKT|...} \
     --sports-entity <ENTITY> --start-date <X> --end-date <Y>
   ```
-  **The IAM block is NOT a hard blocker — same CLI runs locally** like cefi/tradfi.
-  Smoke test confirmed: `.venv/bin/python -m instruments_service ...` accepts the same
-  args; only requires `GCP_PROJECT_ID=central-element-323112` env. Can fire all sports
-  retries on this laptop without VM access. (Whether this is *desirable* — singleton
-  rate-limit lock exists for a reason; running locally bypasses it — see Risks section.)
+  **The IAM block is NOT a hard blocker — same CLI runs locally** like cefi/tradfi. Smoke test confirmed:
+  `.venv/bin/python -m instruments_service ...` accepts the same args; only requires
+  `GCP_PROJECT_ID=central-element-323112` env. Can fire all sports retries on this laptop without VM access. (Whether
+  this is _desirable_ — singleton rate-limit lock exists for a reason; running locally bypasses it — see Risks section.)
 
 ## Adapter smoke matrix (1 day per venue, 2026-05-01)
 
-Run before any fan-out — confirms the adapter+API+GCS+manifest path is wired per venue.
-Command pattern:
+Run before any fan-out — confirms the adapter+API+GCS+manifest path is wired per venue. Command pattern:
+
 ```bash
 cd ~/unified-trading-system-repos/instruments-service
 GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false \
@@ -1713,150 +1589,147 @@ GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false \
 
 ### Column meanings
 
-- **Active@day** — instruments that were **actually written to GCS** for the queried date
-  (after applying per-instrument launch/delisting filtering). This is the captured count.
-- **Universe** — instruments the adapter received from the upstream source AFTER symbol-level
-  filtering (majors + x-coins, not the entire venue universe). Tells us the adapter is
-  talking to the API. `Universe ≥ Active@day` always; the gap = instruments that exist in
-  the venue's history but aren't tradeable on the queried day.
-- A healthy smoke = `Active@day > 0`. A zero `Universe` means the adapter never reached the
-  API. A non-zero `Universe` with zero `Active@day` means date-filter / validation rejected
-  everything (config bug, not API bug).
+- **Active@day** — instruments that were **actually written to GCS** for the queried date (after applying per-instrument
+  launch/delisting filtering). This is the captured count.
+- **Universe** — instruments the adapter received from the upstream source AFTER symbol-level filtering (majors +
+  x-coins, not the entire venue universe). Tells us the adapter is talking to the API. `Universe ≥ Active@day` always;
+  the gap = instruments that exist in the venue's history but aren't tradeable on the queried day.
+- A healthy smoke = `Active@day > 0`. A zero `Universe` means the adapter never reached the API. A non-zero `Universe`
+  with zero `Active@day` means date-filter / validation rejected everything (config bug, not API bug).
 
 ### CEFI smoke results (2026-05-04 13:20 IST)
 
-| Venue            | Status | Active@day / Universe  | Notes                                                                                                                                                                                                                                                              |
-| ---------------- | :----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| BINANCE-SPOT     |   ✅   | 48 / 51                | Tardis `binance` endpoint, healthy. 3 instruments delisted before 2026-05-01.                                                                                                                                                                                       |
-| BINANCE-FUTURES  |   ✅   | 33 / 37                | Tardis `binance-futures` endpoint, healthy.                                                                                                                                                                                                                        |
-| DERIBIT          |   ✅   | 3,720 / 200,312        | Tardis returns full historical options chain (200k symbols across all expiries we ever saw); 3.7k active for 2026-05-01.                                                                                                                                            |
-| BYBIT            |   ✅   | 32 / 291               | Tardis `bybit` + `bybit-spot`, healthy.                                                                                                                                                                                                                            |
-| **OKX**          |   ❌   | adapter never ran      | `URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'`. Config bug — UAC `venue_to_tardis` mapping missing for canonical name `OKX`. Sharding config lists `OKX`, but adapter expects `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES`. **Not geo-block.** |
-| UPBIT            |   ✅   | 12 / 13                |                                                                                                                                                                                                                                                                    |
-| **COINBASE**     |   ❌   | adapter ran, 0 written | `URDI returned zero records for date=2026-05-01 asset_groups=['CEFI']`. Adapter ran but got nothing back. Either bare `COINBASE` is also a sharding-vs-adapter mismatch (canonical might be `COINBASE-SPOT`), or transient API issue.                                |
-| HYPERLIQUID      |   ✅   | 21 / 21                | On-chain CLOB, native API. No history-vs-active gap.                                                                                                                                                                                                                |
-| ASTER            |   ✅   | 19 / 19                |                                                                                                                                                                                                                                                                    |
+| Venue           | Status | Active@day / Universe  | Notes                                                                                                                                                                                                                                                                                   |
+| --------------- | :----: | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BINANCE-SPOT    |   ✅   | 48 / 51                | Tardis `binance` endpoint, healthy. 3 instruments delisted before 2026-05-01.                                                                                                                                                                                                           |
+| BINANCE-FUTURES |   ✅   | 33 / 37                | Tardis `binance-futures` endpoint, healthy.                                                                                                                                                                                                                                             |
+| DERIBIT         |   ✅   | 3,720 / 200,312        | Tardis returns full historical options chain (200k symbols across all expiries we ever saw); 3.7k active for 2026-05-01.                                                                                                                                                                |
+| BYBIT           |   ✅   | 32 / 291               | Tardis `bybit` + `bybit-spot`, healthy.                                                                                                                                                                                                                                                 |
+| **OKX**         |   ❌   | adapter never ran      | `URDI[OKX]: ADAPTER_ERROR (permanent): No Tardis exchange mapping for canonical venue 'OKX'`. Config bug — UAC `venue_to_tardis` mapping missing for canonical name `OKX`. Sharding config lists `OKX`, but adapter expects `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES`. **Not geo-block.** |
+| UPBIT           |   ✅   | 12 / 13                |                                                                                                                                                                                                                                                                                         |
+| **COINBASE**    |   ❌   | adapter ran, 0 written | `URDI returned zero records for date=2026-05-01 asset_groups=['CEFI']`. Adapter ran but got nothing back. Either bare `COINBASE` is also a sharding-vs-adapter mismatch (canonical might be `COINBASE-SPOT`), or transient API issue.                                                   |
+| HYPERLIQUID     |   ✅   | 21 / 21                | On-chain CLOB, native API. No history-vs-active gap.                                                                                                                                                                                                                                    |
+| ASTER           |   ✅   | 19 / 19                |                                                                                                                                                                                                                                                                                         |
 
-**7 of 9 CEFI venues healthy. OKX + COINBASE blocked on canonical-venue-name mismatches.**
-The Phase 2 backfill should proceed for the 7 working venues; OKX + COINBASE need a fix
-in either UAC `venue_to_tardis` map or the sharding YAML before they can run.
+**7 of 9 CEFI venues healthy. OKX + COINBASE blocked on canonical-venue-name mismatches.** The Phase 2 backfill should
+proceed for the 7 working venues; OKX + COINBASE need a fix in either UAC `venue_to_tardis` map or the sharding YAML
+before they can run.
 
 #### OKX + COINBASE root cause (deeper)
 
 Followed the trail across three SSOTs that disagree:
 
 1. **PM `unified-trading-pm/configs/venues.yaml`** (used by deployment-api shard calculator):
+
    ```yaml
-   CEFI: { venues: [..., OKX, COINBASE, ...], venue_to_tardis: { OKX: [okex,okex-futures,okex-swap], COINBASE: coinbase } }
+   CEFI:
+     {
+       venues: [..., OKX, COINBASE, ...],
+       venue_to_tardis: { OKX: [okex, okex-futures, okex-swap], COINBASE: coinbase },
+     }
    ```
+
    Canonical names: **unsuffixed** `OKX` / `COINBASE`.
 
 2. **UAC `unified_api_contracts/registry/venue_mapping.py` `tardis_to_venue`**:
+
    ```python
    "okex": "OKX-SPOT", "okex-swap": "OKX-SWAP", "okex-futures": "OKX-FUTURES",
    "coinbase": "COINBASE-SPOT"
    ```
+
    Canonical names: **suffixed** `OKX-SPOT` / `OKX-SWAP` / `OKX-FUTURES` / `COINBASE-SPOT`.
 
-3. **UAC venue registry** (CeFi / TradFi / DeFi / sports membership for validation):
-   Rejects BOTH unsuffixed (`OKX`, `COINBASE`) AND suffixed (`OKX-SPOT`, `COINBASE-SPOT`)
-   forms. Per smoke test: `--venues OKX-SPOT` runs through Tardis fine (fetches 112
-   instruments), then `Instrument validation: 112 rejected — unknown venue 'OKX-SPOT' —
-   not in CeFi, TradFi, DeFi, or sports registries`.
+3. **UAC venue registry** (CeFi / TradFi / DeFi / sports membership for validation): Rejects BOTH unsuffixed (`OKX`,
+   `COINBASE`) AND suffixed (`OKX-SPOT`, `COINBASE-SPOT`) forms. Per smoke test: `--venues OKX-SPOT` runs through Tardis
+   fine (fetches 112 instruments), then
+   `Instrument validation: 112 rejected — unknown venue 'OKX-SPOT' — not in CeFi, TradFi, DeFi, or sports registries`.
 
-So **all three** of `OKX`, `OKX-SPOT`, `OKX-SWAP`, `OKX-FUTURES`, `COINBASE`,
-`COINBASE-SPOT` fail somewhere in the pipeline. There's no working canonical name today.
+So **all three** of `OKX`, `OKX-SPOT`, `OKX-SWAP`, `OKX-FUTURES`, `COINBASE`, `COINBASE-SPOT` fail somewhere in the
+pipeline. There's no working canonical name today.
 
-**Fix scope**: this is a multi-repo alignment problem (PM venues.yaml ↔ UAC tardis_to_venue
-↔ UAC venue registry). Out of scope for an EOD push. **Action for tomorrow**: file a
-separate plan to align the three SSOTs on one canonical naming convention. For today's
-"100% by EOD" goal, accept that OKX + COINBASE remain at their current coverage and
-proceed with the 7 healthy CEFI venues.
+**Fix scope**: this is a multi-repo alignment problem (PM venues.yaml ↔ UAC tardis_to_venue ↔ UAC venue registry). Out
+of scope for an EOD push. **Action for tomorrow**: file a separate plan to align the three SSOTs on one canonical naming
+convention. For today's "100% by EOD" goal, accept that OKX + COINBASE remain at their current coverage and proceed with
+the 7 healthy CEFI venues.
 
 ### TRADFI smoke results (2026-05-04 13:26 IST)
 
-| Venue        | Status | Active@day / Universe     | Notes                                                                                                                                                          |
-| ------------ | :----: | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CME          |   ✅   | 14,794 / 16,394           | Databento, healthy. Includes futures + options chain. 1.6k gap = expired or future-dated quarterlies.                                                          |
-| CBOE         |   ✅   | 1 / 1                     | VIX index (Barchart). Single-record SSOT, expected.                                                                                                            |
-| NASDAQ       |   ✅   | 43 / 258                  | Databento equities (BTC/ETH ETFs only — universe is 258 symbols we ever cared about; 43 active for 2026-05-01).                                                |
-| NYSE         |   ✅   | 215 / 256                 |                                                                                                                                                                |
-| ICE          |   ✅   | 2,067 / 2,069             |                                                                                                                                                                |
-| FX           |   ✅   | 1 / 1                     | KRW/USD via Yahoo Finance, single instrument.                                                                                                                  |
-| **POLYGON**  |   ❌   | adapter never ran         | `URDI[POLYGON]: ADAPTER_ERROR (permanent): api_key required — service must fetch polygon-api-key from Secret Manager`. Either secret is missing in SM or `ApiKeyReloader` isn't picking it up. **Needs SM check.** |
-| **FRED**     |   ❌   | adapter ran, 0 written    | `URDI returned zero records for date=2026-05-01`. 2026-05-01 was a Friday — FRED should have data. Not yet root-caused; possibly adapter bug or cutoff issue.   |
+| Venue       | Status | Active@day / Universe  | Notes                                                                                                                                                                                                              |
+| ----------- | :----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CME         |   ✅   | 14,794 / 16,394        | Databento, healthy. Includes futures + options chain. 1.6k gap = expired or future-dated quarterlies.                                                                                                              |
+| CBOE        |   ✅   | 1 / 1                  | VIX index (Barchart). Single-record SSOT, expected.                                                                                                                                                                |
+| NASDAQ      |   ✅   | 43 / 258               | Databento equities (BTC/ETH ETFs only — universe is 258 symbols we ever cared about; 43 active for 2026-05-01).                                                                                                    |
+| NYSE        |   ✅   | 215 / 256              |                                                                                                                                                                                                                    |
+| ICE         |   ✅   | 2,067 / 2,069          |                                                                                                                                                                                                                    |
+| FX          |   ✅   | 1 / 1                  | KRW/USD via Yahoo Finance, single instrument.                                                                                                                                                                      |
+| **POLYGON** |   ❌   | adapter never ran      | `URDI[POLYGON]: ADAPTER_ERROR (permanent): api_key required — service must fetch polygon-api-key from Secret Manager`. Either secret is missing in SM or `ApiKeyReloader` isn't picking it up. **Needs SM check.** |
+| **FRED**    |   ❌   | adapter ran, 0 written | `URDI returned zero records for date=2026-05-01`. 2026-05-01 was a Friday — FRED should have data. Not yet root-caused; possibly adapter bug or cutoff issue.                                                      |
 
-**6 of 8 TRADFI venues healthy.** POLYGON + FRED fail. Both need separate investigation;
-do not block the 6 healthy venues from Phase 2 backfill.
+**6 of 8 TRADFI venues healthy.** POLYGON + FRED fail. Both need separate investigation; do not block the 6 healthy
+venues from Phase 2 backfill.
 
 ### DEFI smoke results (2026-05-04 13:36 IST)
 
-| Venue                  | Status | Active@day / Universe | Notes                                                               |
-| ---------------------- | :----: | --------------------- | ------------------------------------------------------------------- |
-| AAVEV3-ETHEREUM        |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.               |
-| UNISWAPV3-ETHEREUM     |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.              |
-| UNISWAPV2-ETHEREUM     |   ✅   | 24 / 772              | Pool universe (subgraph).                                           |
-| CURVE-ETHEREUM         |   ✅   | 13 / 49               |                                                                     |
-| LIDO-ETHEREUM          |   ✅   | 2 / 2                 | Liquid-staking tokens (stETH, wstETH).                              |
-| BALANCER-ETHEREUM      |   ✅   | 1,249 / 2,072         | Pool universe — biggest write count, ~60% historical-pool dropout.  |
-| EIGENLAYER-ETHEREUM    |   ✅   | 1 / 1                 | EIGEN token. Single instrument, expected.                           |
+| Venue               | Status | Active@day / Universe | Notes                                                              |
+| ------------------- | :----: | --------------------- | ------------------------------------------------------------------ |
+| AAVEV3-ETHEREUM     |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.              |
+| UNISWAPV3-ETHEREUM  |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.             |
+| UNISWAPV2-ETHEREUM  |   ✅   | 24 / 772              | Pool universe (subgraph).                                          |
+| CURVE-ETHEREUM      |   ✅   | 13 / 49               |                                                                    |
+| LIDO-ETHEREUM       |   ✅   | 2 / 2                 | Liquid-staking tokens (stETH, wstETH).                             |
+| BALANCER-ETHEREUM   |   ✅   | 1,249 / 2,072         | Pool universe — biggest write count, ~60% historical-pool dropout. |
+| EIGENLAYER-ETHEREUM |   ✅   | 1 / 1                 | EIGEN token. Single instrument, expected.                          |
 
-**7 of 7 DEFI venues healthy.** All protocol-chains verified. DEFI Phase 2 backfill is
-unblocked — local-driver pattern works for every protocol. (Reminder: DEFI manifest had
-only 597 phantoms and they were all on EIGENLAYER `rewards`, not core instruments. Low
-priority for Phase 2 work, but the adapter health is confirmed.)
+**7 of 7 DEFI venues healthy.** All protocol-chains verified. DEFI Phase 2 backfill is unblocked — local-driver pattern
+works for every protocol. (Reminder: DEFI manifest had only 597 phantoms and they were all on EIGENLAYER `rewards`, not
+core instruments. Low priority for Phase 2 work, but the adapter health is confirmed.)
 
 ### SPORTS smoke results (2026-05-04 13:36 IST)
 
 Sports has a different architecture than CEFI/TRADFI/DEFI — **two layers**:
 
-1. **Primary provider** (`API_FOOTBALL`) — fetches fixtures, leagues, teams from the
-   API; populates the canonical sports_reference paths in GCS.
-2. **Enrichment providers** (`OPEN_METEO`, `UNDERSTAT`, `FOOTYSTATS`, `TRANSFERMARKT`,
-   `SOCCER_FOOTBALL_INFO`) — read fixtures from GCS (already fetched by API_FOOTBALL),
-   call only their own API to enrich those fixtures. They short-circuit the main
-   orchestrator path.
+1. **Primary provider** (`API_FOOTBALL`) — fetches fixtures, leagues, teams from the API; populates the canonical
+   sports_reference paths in GCS.
+2. **Enrichment providers** (`OPEN_METEO`, `UNDERSTAT`, `FOOTYSTATS`, `TRANSFERMARKT`, `SOCCER_FOOTBALL_INFO`) — read
+   fixtures from GCS (already fetched by API_FOOTBALL), call only their own API to enrich those fixtures. They
+   short-circuit the main orchestrator path.
 
-A healthy enrichment-provider smoke = exits cleanly (rc=0) with no error, even if
-returns `{}` (no fixtures to enrich on that date / those fixtures aren't in this
-provider's coverage).
+A healthy enrichment-provider smoke = exits cleanly (rc=0) with no error, even if returns `{}` (no fixtures to enrich on
+that date / those fixtures aren't in this provider's coverage).
 
-**Valid `--sports-provider` values** (from CLI error output): `API_FOOTBALL`,
-`API_FOOTBALL_ENRICHMENT`, `OPEN_METEO`, `TRANSFERMARKT`, `SOCCER_FOOTBALL_INFO`,
-`UNDERSTAT`, `FOOTYSTATS`. Use these exact strings.
+**Valid `--sports-provider` values** (from CLI error output): `API_FOOTBALL`, `API_FOOTBALL_ENRICHMENT`, `OPEN_METEO`,
+`TRANSFERMARKT`, `SOCCER_FOOTBALL_INFO`, `UNDERSTAT`, `FOOTYSTATS`. Use these exact strings.
 
-| Provider           | Entity                  | Status | Notes                                                                                                                                            |
-| ------------------ | ----------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| API_FOOTBALL       | FIXTURES                |   ✅   | Manifest-skip on already-captured days (correct). With `--force`: `Fetched 101 fixtures` + 1,228 leagues + 618 teams. Healthy, just slow (rate-limit pacing). |
-| API_FOOTBALL       | STANDINGS               |   ✅   | Manifest-skip behavior identical. Adapter healthy.                                                                                                |
-| API_FOOTBALL       | TEAMS                   |   ✅   | Same.                                                                                                                                             |
-| TRANSFERMARKT      | PLAYER_VALUES           |   ✅¹  | Hit 90s timeout on smoke — adapter is rate-limited at ~1 req/sec, fully expected. Healthy.                                                        |
-| TRANSFERMARKT      | TRANSFERMARKT_LEAGUES   |   ✅   | DONE: `{transfermarkt_leagues: 32}` — wrote 32 league rows to GCS.                                                                                |
-| FOOTYSTATS         | FS_LEAGUES              |   ✅   | Short-circuited (enrichment), exit 0, empty result for 2024-08-15. Adapter healthy.                                                              |
-| UNDERSTAT          | UNDERSTAT_TEAMS         |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy.                                                                                          |
-| OPEN_METEO         | WEATHER                 |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy. (Initial test failed with `OPENMETEO` — correct provider name is `OPEN_METEO` with underscore.) |
-| SOCCER_FOOTBALL_INFO | SFI_LEAGUES           |   ⏭️   | **Excluded** from this run — other agent's SFI VM is in flight. Don't touch.                                                                     |
+| Provider             | Entity                | Status | Notes                                                                                                                                                         |
+| -------------------- | --------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API_FOOTBALL         | FIXTURES              |   ✅   | Manifest-skip on already-captured days (correct). With `--force`: `Fetched 101 fixtures` + 1,228 leagues + 618 teams. Healthy, just slow (rate-limit pacing). |
+| API_FOOTBALL         | STANDINGS             |   ✅   | Manifest-skip behavior identical. Adapter healthy.                                                                                                            |
+| API_FOOTBALL         | TEAMS                 |   ✅   | Same.                                                                                                                                                         |
+| TRANSFERMARKT        | PLAYER_VALUES         |  ✅¹   | Hit 90s timeout on smoke — adapter is rate-limited at ~1 req/sec, fully expected. Healthy.                                                                    |
+| TRANSFERMARKT        | TRANSFERMARKT_LEAGUES |   ✅   | DONE: `{transfermarkt_leagues: 32}` — wrote 32 league rows to GCS.                                                                                            |
+| FOOTYSTATS           | FS_LEAGUES            |   ✅   | Short-circuited (enrichment), exit 0, empty result for 2024-08-15. Adapter healthy.                                                                           |
+| UNDERSTAT            | UNDERSTAT_TEAMS       |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy.                                                                                                       |
+| OPEN_METEO           | WEATHER               |   ✅   | Short-circuited, exit 0, empty for 2024-08-15. Healthy. (Initial test failed with `OPENMETEO` — correct provider name is `OPEN_METEO` with underscore.)       |
+| SOCCER_FOOTBALL_INFO | SFI_LEAGUES           |   ⏭️   | **Excluded** from this run — other agent's SFI VM is in flight. Don't touch.                                                                                  |
 
-¹ TRANSFERMARKT/PLAYER_VALUES did not finish within the 90s smoke timeout, but reached
-the API and was making progress. For real backfill via the launcher (longer timeout +
-shutdown-on-completion) this is fine.
+¹ TRANSFERMARKT/PLAYER_VALUES did not finish within the 90s smoke timeout, but reached the API and was making progress.
+For real backfill via the launcher (longer timeout + shutdown-on-completion) this is fine.
 
-**6 of 6 testable sports providers healthy.** SFI excluded by design. All sports
-adapters can run.
+**6 of 6 testable sports providers healthy.** SFI excluded by design. All sports adapters can run.
 
 ## Pending work — what to launch when permissions / decisions land
 
 ### CEFI / TRADFI — local backfill failed silently, must re-fire with env vars
 
-**Status (2026-05-04 13:10 IST)**: First run of `run_vm_backfill_e2e.sh` for cefi+tradfi
-failed on every chunk — the runner doesn't export `GCP_PROJECT_ID` and the
-`instruments-service` CLI bootstrap aborts at `log_event("STARTED")` with
-`ValueError: GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment`. All chunks
-showed "START" but no "DONE", produced no checkpoints, and wrote nothing to GCS.
-**Killed and cleaned** — `.backfill-checkpoints/` and `logs/recon-fill-*` removed so
-reruns start fresh.
+**Status (2026-05-04 13:10 IST)**: First run of `run_vm_backfill_e2e.sh` for cefi+tradfi failed on every chunk — the
+runner doesn't export `GCP_PROJECT_ID` and the `instruments-service` CLI bootstrap aborts at `log_event("STARTED")` with
+`ValueError: GCP_PROJECT_ID or AWS_ACCOUNT_ID must be set in environment`. All chunks showed "START" but no "DONE",
+produced no checkpoints, and wrote nothing to GCS. **Killed and cleaned** — `.backfill-checkpoints/` and
+`logs/recon-fill-*` removed so reruns start fresh.
 
 **Re-fire command (must export env first)**:
+
 ```bash
 cd ~/unified-trading-system-repos/instruments-service
 export GCP_PROJECT_ID=central-element-323112
@@ -1885,26 +1758,28 @@ done
 wait
 ```
 
-Resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. Cumulative ~60 concurrent
-`instruments-service` procs. Smoke-test one chunk first to confirm env propagates:
+Resumable via `.backfill-checkpoints/<AG>_<venue>_<range>/`. Cumulative ~60 concurrent `instruments-service` procs.
+Smoke-test one chunk first to confirm env propagates:
+
 ```bash
 GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp \
   .venv/bin/instruments-service --operation instruments --mode batch \
   --asset-group CEFI --venues DERIBIT --start-date 2019-01-01 --end-date 2019-01-03
 ```
+
 Expected: real progress past the bootstrap log lines (currently it dies at log_event("STARTED")).
 
-**Follow-up bug to file**: `run_vm_backfill_e2e.sh` should export `GCP_PROJECT_ID` /
-`CLOUD_PROVIDER` for child invocations, OR at minimum check that they're set before
-spawning chunks. Silent fail across 90 chunks per venue with no visible error in the
-top-level log was a data quality risk. Tracking under
-`instruments-service` (no plan slug yet — Harsh to follow up tomorrow).
+**Follow-up bug to file**: `run_vm_backfill_e2e.sh` should export `GCP_PROJECT_ID` / `CLOUD_PROVIDER` for child
+invocations, OR at minimum check that they're set before spawning chunks. Silent fail across 90 chunks per venue with no
+visible error in the top-level log was a data quality risk. Tracking under `instruments-service` (no plan slug yet —
+Harsh to follow up tomorrow).
 
 ### SPORTS — choose one path
 
 **Path 1 (preferred, requires IAM grant) — VM launchers, singleton-locked:**
 
 Ikenna runs as project owner:
+
 ```bash
 gcloud iam service-accounts add-iam-policy-binding \
   1060025368044-compute@developer.gserviceaccount.com \
@@ -1914,6 +1789,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 ```
 
 Then fire:
+
 ```bash
 bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh 2020-06-01 2026-05-04
 bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh 2020-06-01 2026-05-04
@@ -1923,12 +1799,14 @@ bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2020-06-01 2
 bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2020-06-01 2026-05-04
 bash deployment-service/scripts/vm/launch-openmeteo-backfill-vm.sh 2020-06-01 2026-05-04
 ```
-Singleton-lock prevents thundering herd against shared API keys. **This is the canonical
-path** per the playbook — same pattern your teammate's existing 31 VMs use.
+
+Singleton-lock prevents thundering herd against shared API keys. **This is the canonical path** per the playbook — same
+pattern your teammate's existing 31 VMs use.
 
 **Path 2 (fallback, no IAM grant needed) — local CLI, manually paced:**
 
 If the IAM grant doesn't land in time, run sports adapters locally one-at-a-time:
+
 ```bash
 cd ~/unified-trading-system-repos/instruments-service
 export GCP_PROJECT_ID=central-element-323112
@@ -1953,61 +1831,59 @@ for entity in PLAYER_VALUES TRANSFERMARKT_LEAGUES TEAM_SQUAD; do
 done
 ```
 
-⚠️ **Caveat**: this bypasses the singleton lock. If another sports VM (or your
-teammate's SFI VM) is hitting the same shared API key, you'll thrash. Before firing
-Path 2 confirm `gcloud compute instances list --filter='name~"^(af|tm|fs|understat|openmeteo)-"'`
-is empty.
+⚠️ **Caveat**: this bypasses the singleton lock. If another sports VM (or your teammate's SFI VM) is hitting the same
+shared API key, you'll thrash. Before firing Path 2 confirm
+`gcloud compute instances list --filter='name~"^(af|tm|fs|understat|openmeteo)-"'` is empty.
 
 ### PREDICTION — out of scope
 
-Phase 0 dry-run found 11,848 phantoms but they're all on POLYMARKET / `trades` data type.
-That's MTDS data (market-tick), not `instruments-service` reference data. Either the
-prediction manifest is conflating MTDS writes with instruments writes, or the writers are
-mis-attributing the asset group. **Flag for Ikenna separately**, do not flip in this plan.
+Phase 0 dry-run found 11,848 phantoms but they're all on POLYMARKET / `trades` data type. That's MTDS data
+(market-tick), not `instruments-service` reference data. Either the prediction manifest is conflating MTDS writes with
+instruments writes, or the writers are mis-attributing the asset group. **Flag for Ikenna separately**, do not flip in
+this plan.
 
 ### DEFI — optional cleanup
 
 597 phantoms, all on EIGENLAYER / `rewards`. Not core instruments data. Two choices:
+
 - Skip (0.2% of defi manifest, won't move the headline percentage).
-- Flip with `reconcile_phantom_manifest_rows_all.py --asset-group defi` (~5 min,
-  no backfill needed, just clears the phantoms so the headline is honest).
+- Flip with `reconcile_phantom_manifest_rows_all.py --asset-group defi` (~5 min, no backfill needed, just clears the
+  phantoms so the headline is honest).
 
 ## Verification after backfills complete
 
 For each AG:
+
 ```bash
 cd ~/unified-trading-system-repos/instruments-service
 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run
 ```
-Expected: "No phantoms found. Manifest is clean." If non-zero, the orchestrator's
-`_should_skip_shard` skipped some shards as `attempted_failed` → `attempted_failed`
-(real failure, not phantom). Check the new `error_reason` distribution to decide
-whether to retry, fix the adapter, or accept as legitimate API failure.
+
+Expected: "No phantoms found. Manifest is clean." If non-zero, the orchestrator's `_should_skip_shard` skipped some
+shards as `attempted_failed` → `attempted_failed` (real failure, not phantom). Check the new `error_reason` distribution
+to decide whether to retry, fix the adapter, or accept as legitimate API failure.
 
 ## Risks / blockers
 
-- **SFI VM in flight**: while the single SFI instruments VM is running, do NOT touch
-  `SFI_LEAGUES` / `SFI_PROGRESSIVE_STATS` data types in either reconciler or launcher
-  invocations. Reading the manifest mid-write is OK (atomic GCS object), but flipping
-  rows the VM is about to write would race.
-- **Cefi/tradfi/defi/prediction instruments have no dedicated VM launcher.** Default path
-  is `run_vm_backfill_e2e.sh` running locally on this machine — IP-rate-limited by the
-  laptop's egress. For instruments-service this is fine (low API volume); if a particular
-  venue's daily fetch is slow, Path B (wrap in a VM) is the upgrade. Defer to Ikenna before
+- **SFI VM in flight**: while the single SFI instruments VM is running, do NOT touch `SFI_LEAGUES` /
+  `SFI_PROGRESSIVE_STATS` data types in either reconciler or launcher invocations. Reading the manifest mid-write is OK
+  (atomic GCS object), but flipping rows the VM is about to write would race.
+- **Cefi/tradfi/defi/prediction instruments have no dedicated VM launcher.** Default path is `run_vm_backfill_e2e.sh`
+  running locally on this machine — IP-rate-limited by the laptop's egress. For instruments-service this is fine (low
+  API volume); if a particular venue's daily fetch is slow, Path B (wrap in a VM) is the upgrade. Defer to Ikenna before
   introducing a new VM-launcher pattern.
-- **Wall-clock**: realistic only after Phase 0 dry-run reveals gap size. Instruments-service
-  shards are tiny (one daily JSON pull per venue), so even thousands of red shards can
-  finish in hours via `run_vm_backfill_e2e.sh --parallel 4`. Tick-data scale doesn't apply.
-- **API rate limits**: singleton-locked launchers (`launch-sfi-forward-poll.sh` etc.) refuse
-  duplicates by design. Don't bypass with `--force` without explicit reason. Use
-  `--parallel 2` instead of `--parallel 4` for prediction venues (POLYMARKET / KALSHI
-  rate-limit harder than crypto exchanges).
+- **Wall-clock**: realistic only after Phase 0 dry-run reveals gap size. Instruments-service shards are tiny (one daily
+  JSON pull per venue), so even thousands of red shards can finish in hours via `run_vm_backfill_e2e.sh --parallel 4`.
+  Tick-data scale doesn't apply.
+- **API rate limits**: singleton-locked launchers (`launch-sfi-forward-poll.sh` etc.) refuse duplicates by design. Don't
+  bypass with `--force` without explicit reason. Use `--parallel 2` instead of `--parallel 4` for prediction venues
+  (POLYMARKET / KALSHI rate-limit harder than crypto exchanges).
 - **Scope ambiguity**: the (1) vs (2) "100%" question above. Resolve before EOD push.
 
-## Out of scope (for *this* plan — covered by parent epic)
+## Out of scope (for _this_ plan — covered by parent epic)
 
 - deployment-ui Phase 0 bug fixes (CSV download, day-shard scroll, schema modal, market-tick
-  + market-data-processing unified view).
+  - market-data-processing unified view).
 - market-tick-data-service backfills (parent-epic Phase 2/3/4/5).
 - market-data-processing-service candle generation (parent-epic Phase 2).
 - VIX futures full-tick chain (parent-epic Phase 3, P2 deferred).
@@ -2015,31 +1891,37 @@ whether to retry, fix the adapter, or accept as legitimate API failure.
 
 ## Notes — Phase 0 dry-run results (2026-05-04 12:33–12:45 IST)
 
-| Asset group | Manifest rows | Captured-in-scope | Real captured | Phantoms | % phantom | Top concentration |
-| ----------- | ------------: | ----------------: | ------------: | -------: | --------: | ----------------- |
-| cefi        | 1,343,892     | 188,684           | 176,144       | **12,540** | 6.6%   | DERIBIT 3,070; BYBIT 1,834; BINANCE-FUTURES 1,763; OKX-SWAP 1,740; UPBIT 1,352. By data_type: empty=9,757 (schema-4 legacy rows), `trades` 2,501 |
-| tradfi      | 32,345        | 26,594            | 23,866        | **2,728**  | 10%    | CBOE 657; ICE 379; CME 373; NASDAQ/NYSE 368 each; FX 330. By data_type: empty=2,472 (schema-4), `ohlcv_*`+`trades`+`tbbo` <70 each |
-| sports      | 2,401,547     | 758,465           | 717,242       | **41,223** | 5.4%   | STANDINGS 13,022; INJURIES 9,872; PLAYER_VALUES 8,647; PLAYER_STATS 3,057; FIXTURE_{LINEUPS,STATS} ~2.7k each. SFI excluded (other agent's VM). All venue=`""` (sports keys on league_id, not venue). |
-| prediction  | 14,369        | 14,328            | 2,480         | **11,848** | 83%    | POLYMARKET / `trades` 11,831 of 11,848. Almost all phantom — but `trades` is MTDS data, not strict instruments-service |
-| defi        | 307,341       | 307,341           | 306,744       | **597**    | 0.2%   | EIGENLAYER / `rewards` (all 597). Effectively clean for instruments. |
+| Asset group | Manifest rows | Captured-in-scope | Real captured |   Phantoms | % phantom | Top concentration                                                                                                                                                                                     |
+| ----------- | ------------: | ----------------: | ------------: | ---------: | --------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi        |     1,343,892 |           188,684 |       176,144 | **12,540** |      6.6% | DERIBIT 3,070; BYBIT 1,834; BINANCE-FUTURES 1,763; OKX-SWAP 1,740; UPBIT 1,352. By data_type: empty=9,757 (schema-4 legacy rows), `trades` 2,501                                                      |
+| tradfi      |        32,345 |            26,594 |        23,866 |  **2,728** |       10% | CBOE 657; ICE 379; CME 373; NASDAQ/NYSE 368 each; FX 330. By data*type: empty=2,472 (schema-4), `ohlcv*\*`+`trades`+`tbbo` <70 each                                                                   |
+| sports      |     2,401,547 |           758,465 |       717,242 | **41,223** |      5.4% | STANDINGS 13,022; INJURIES 9,872; PLAYER*VALUES 8,647; PLAYER_STATS 3,057; FIXTURE*{LINEUPS,STATS} ~2.7k each. SFI excluded (other agent's VM). All venue=`""` (sports keys on league_id, not venue). |
+| prediction  |        14,369 |            14,328 |         2,480 | **11,848** |       83% | POLYMARKET / `trades` 11,831 of 11,848. Almost all phantom — but `trades` is MTDS data, not strict instruments-service                                                                                |
+| defi        |       307,341 |           307,341 |       306,744 |    **597** |      0.2% | EIGENLAYER / `rewards` (all 597). Effectively clean for instruments.                                                                                                                                  |
 
 ### Read of the data
 
-- **cefi**: 12,540 phantoms is real work but tractable — they're spread across the 9 active venues and the 9,757 empty-data_type rows are likely schema-4 legacy that need the same flip-to-`attempted_failed` treatment. Once flipped, the orchestrator will retry. Reasonable target for EOD.
-- **tradfi**: 2,728 phantoms, similar shape to cefi. The 2,472 empty-data_type rows are again schema-4 legacy. Should be quick.
-- **prediction**: 83% phantom rate is alarming but **the data_type is `trades`** — that's market-tick (MTDS) territory, not `instruments-service` reference data. Almost certainly the prediction manifest is conflating MTDS writes with instruments writes. **Out of scope for this plan**, flag for Ikenna separately.
-- **defi**: essentially clean. The 597 EIGENLAYER `rewards` phantoms aren't core instruments either. Could leave as-is or flip in 2 seconds.
+- **cefi**: 12,540 phantoms is real work but tractable — they're spread across the 9 active venues and the 9,757
+  empty-data_type rows are likely schema-4 legacy that need the same flip-to-`attempted_failed` treatment. Once flipped,
+  the orchestrator will retry. Reasonable target for EOD.
+- **tradfi**: 2,728 phantoms, similar shape to cefi. The 2,472 empty-data_type rows are again schema-4 legacy. Should be
+  quick.
+- **prediction**: 83% phantom rate is alarming but **the data_type is `trades`** — that's market-tick (MTDS) territory,
+  not `instruments-service` reference data. Almost certainly the prediction manifest is conflating MTDS writes with
+  instruments writes. **Out of scope for this plan**, flag for Ikenna separately.
+- **defi**: essentially clean. The 597 EIGENLAYER `rewards` phantoms aren't core instruments either. Could leave as-is
+  or flip in 2 seconds.
 - **sports**: still running, will refresh when it completes.
 
 ### Decisions
 
-| AG | Phase 1 (flip)? | Phase 2 (launch)? | Notes |
-| --- | --- | --- | --- |
-| cefi | YES — 12,540 phantoms | YES — after flip | Use `run_vm_backfill_e2e.sh` per venue |
-| tradfi | YES — 2,728 phantoms | YES — after flip | Same pattern |
-| sports | YES — 41,223 phantoms (SFI excluded) | YES — after flip | Use `launch-{api-football,transfermarkt}-backfill-vm.sh` for affected data types. SFI launchers stay off. |
-| prediction | NO | NO | Out of plan scope; `trades` rows are MTDS not instruments. Flag for Ikenna. |
-| defi | OPTIONAL — 597 phantoms | NO | EIGENLAYER `rewards` only, not strict instruments. Skip or flip-and-leave. |
+| AG         | Phase 1 (flip)?                      | Phase 2 (launch)? | Notes                                                                                                     |
+| ---------- | ------------------------------------ | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| cefi       | YES — 12,540 phantoms                | YES — after flip  | Use `run_vm_backfill_e2e.sh` per venue                                                                    |
+| tradfi     | YES — 2,728 phantoms                 | YES — after flip  | Same pattern                                                                                              |
+| sports     | YES — 41,223 phantoms (SFI excluded) | YES — after flip  | Use `launch-{api-football,transfermarkt}-backfill-vm.sh` for affected data types. SFI launchers stay off. |
+| prediction | NO                                   | NO                | Out of plan scope; `trades` rows are MTDS not instruments. Flag for Ikenna.                               |
+| defi       | OPTIONAL — 597 phantoms              | NO                | EIGENLAYER `rewards` only, not strict instruments. Skip or flip-and-leave.                                |
 
 ---
 
@@ -2048,74 +1930,88 @@ whether to retry, fix the adapter, or accept as legitimate API failure.
 ### What landed before fanout
 
 1. **Pulled 3 incoming commits on `live-defi-rollout` (instruments-service)**:
-   - `e077b35` phantom-audit: probe legacy `venue=PROTOCOL-CHAIN/` overload for DeFi rows (597 EIGENLAYER false-positives → 0)
-   - `faf5466` Tardis URDI: use full 50+ fiat quote-currency set (BTC-TRY/BRL/AUD/AED/SAR/IDR no longer collapse to BTC-USD on OKX-SPOT) + phantom audit 5-axis hardening (130,897 → 354 phantoms, 99.7% reduction)
+   - `e077b35` phantom-audit: probe legacy `venue=PROTOCOL-CHAIN/` overload for DeFi rows (597 EIGENLAYER
+     false-positives → 0)
+   - `faf5466` Tardis URDI: use full 50+ fiat quote-currency set (BTC-TRY/BRL/AUD/AED/SAR/IDR no longer collapse to
+     BTC-USD on OKX-SPOT) + phantom audit 5-axis hardening (130,897 → 354 phantoms, 99.7% reduction)
    - `2c207e2` chore: drop unused noqa marker
 2. **Pulled 4 incoming commits on `live-defi-rollout` (unified-trading-pm)**:
    - `4c718ac` codex doc availability-manifest-and-data-status v4 → v6
    - `1bd189b` workspace-manifest formatting drift
    - `65f67e0` phantom audit 5-axis docs + re-runnable VM recipe
    - `ada3367` cursor-configs/CLAUDE.md mirror
-3. **Rebuilt CEFI tarballs** (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`) — UTC 12:28:24, includes the Tardis fiat-quote fix.
+3. **Rebuilt CEFI tarballs** (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`) — UTC
+   12:28:24, includes the Tardis fiat-quote fix.
 
 ### New launcher script created
 
-- **`deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh`** (new file, modeled after `launch-cefi-forward-poll.sh`).
-  - Targets `instruments_service` (not MTDS). Sets `VM_SERVICE=instruments_service`, `VM_OPERATION=download`, `VM_TASK=cefi-instruments-backfill`.
+- **`deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh`** (new file, modeled after
+  `launch-cefi-forward-poll.sh`).
+  - Targets `instruments_service` (not MTDS). Sets `VM_SERVICE=instruments_service`, `VM_OPERATION=download`,
+    `VM_TASK=cefi-instruments-backfill`.
   - **NO `IS_TEST_RUN`** → writes to production buckets.
-  - Per-VM shard isolation already handled by `setup-data-pipeline-vm.sh` (line 358 exports `MANIFEST_PER_VM_SHARDS=true` by default; line 390/445 sets `VM_NAME` to GCE instance name).
+  - Per-VM shard isolation already handled by `setup-data-pipeline-vm.sh` (line 358 exports
+    `MANIFEST_PER_VM_SHARDS=true` by default; line 390/445 sets `VM_NAME` to GCE instance name).
   - Singleton-lock on `^cefi-instr-` prefix; `--force` bypass for multi-venue fanout.
-  - Singleton-lock `--force` is **separate** from instruments-service CLI `--force`. The launcher's `--force` only allows multiple VMs of the same prefix to run; it does NOT pass `VM_FORCE=true` metadata, so the python CLI runs without `--force` and pre-flight skip works as intended (CAPTURED shards are skipped).
+  - Singleton-lock `--force` is **separate** from instruments-service CLI `--force`. The launcher's `--force` only
+    allows multiple VMs of the same prefix to run; it does NOT pass `VM_FORCE=true` metadata, so the python CLI runs
+    without `--force` and pre-flight skip works as intended (CAPTURED shards are skipped).
 
 ### Smoke test before fanout
 
 - Smoke VM `cefi-instr-binance-spot-20260504-175849` for BINANCE-SPOT 2026-05-02:
   - 12:28:51 UTC: VM created
   - 12:32:29 UTC: setup script complete (~4 min boot)
-  - 12:32:57 UTC: data parquet (24,229 bytes) + per-VM shard (13,596 bytes, schema_v6, instrument_count=48 [intentionally filtered], capture_status=captured) both written
-  - 12:36:27 UTC: consolidator merged per-VM shard into canonical (cycle interval ~6 min for instruments-store-cefi bucket)
-  - 12:36:27 UTC: canonical row written: `{date: 2026-05-02, venue: BINANCE-SPOT, instrument_count: 48, schema_version: 6, capture_status: captured, expected: True, available: True}`
+  - 12:32:57 UTC: data parquet (24,229 bytes) + per-VM shard (13,596 bytes, schema_v6, instrument_count=48
+    [intentionally filtered], capture_status=captured) both written
+  - 12:36:27 UTC: consolidator merged per-VM shard into canonical (cycle interval ~6 min for instruments-store-cefi
+    bucket)
+  - 12:36:27 UTC: canonical row written:
+    `{date: 2026-05-02, venue: BINANCE-SPOT, instrument_count: 48, schema_version: 6, capture_status: captured, expected: True, available: True}`
   - **End-to-end pipeline verified**: VM boot → fetch → per-VM shard → consolidator merge → canonical updated.
 
 ### Phase 2a: 14 CEFI VMs launched (all RUNNING, asia-northeast1-c)
 
 Window: **2018-01-01 → 2026-05-04** (full history). Pre-flight skip ensures CAPTURED dates are not re-fetched.
 
-| Venue | VM name |
-| --- | --- |
-| ASTER | `cefi-instr-aster-20260504-181140` |
+| Venue           | VM name                                      |
+| --------------- | -------------------------------------------- |
+| ASTER           | `cefi-instr-aster-20260504-181140`           |
 | BINANCE-FUTURES | `cefi-instr-binance-futures-20260504-181152` |
-| BINANCE-SPOT | `cefi-instr-binance-spot-20260504-181202` |
-| BITFINEX-SPOT | `cefi-instr-bitfinex-spot-20260504-181215` |
-| BITGET-FUTURES | `cefi-instr-bitget-futures-20260504-181226` |
-| BITGET-SPOT | `cefi-instr-bitget-spot-20260504-181238` |
-| BYBIT | `cefi-instr-bybit-20260504-181250` |
-| COINBASE-SPOT | `cefi-instr-coinbase-spot-20260504-181302` |
-| DERIBIT | `cefi-instr-deribit-20260504-181316` |
-| HYPERLIQUID | `cefi-instr-hyperliquid-20260504-181333` |
-| OKX-FUTURES | `cefi-instr-okx-futures-20260504-181350` |
-| OKX-SPOT | `cefi-instr-okx-spot-20260504-181426` |
-| OKX-SWAP | `cefi-instr-okx-swap-20260504-181441` |
-| UPBIT | `cefi-instr-upbit-20260504-181458` |
+| BINANCE-SPOT    | `cefi-instr-binance-spot-20260504-181202`    |
+| BITFINEX-SPOT   | `cefi-instr-bitfinex-spot-20260504-181215`   |
+| BITGET-FUTURES  | `cefi-instr-bitget-futures-20260504-181226`  |
+| BITGET-SPOT     | `cefi-instr-bitget-spot-20260504-181238`     |
+| BYBIT           | `cefi-instr-bybit-20260504-181250`           |
+| COINBASE-SPOT   | `cefi-instr-coinbase-spot-20260504-181302`   |
+| DERIBIT         | `cefi-instr-deribit-20260504-181316`         |
+| HYPERLIQUID     | `cefi-instr-hyperliquid-20260504-181333`     |
+| OKX-FUTURES     | `cefi-instr-okx-futures-20260504-181350`     |
+| OKX-SPOT        | `cefi-instr-okx-spot-20260504-181426`        |
+| OKX-SWAP        | `cefi-instr-okx-swap-20260504-181441`        |
+| UPBIT           | `cefi-instr-upbit-20260504-181458`           |
 
-Expected per-venue runtime: ~5–10 min for low-gap venues; **BITFINEX-SPOT (~2,315 missing dates)** and **BITGET-SPOT/FUTURES (~542 each)** will run hours.
+Expected per-venue runtime: ~5–10 min for low-gap venues; **BITFINEX-SPOT (~2,315 missing dates)** and
+**BITGET-SPOT/FUTURES (~542 each)** will run hours.
 
 ### Phase 2b: 4 SPORTS VMs launched (all RUNNING)
 
 Each sports launcher enforces its own singleton-lock per shared API key.
 
-| Provider | VM name | Range |
-| --- | --- | --- |
-| api_football | `af-backfill-20260504-181544` | 2018-01-01 → 2026-05-04 |
-| footystats | `fs-backfill-20260504-181600` | 2019-01-01 → 2026-05-04 |
-| understat | `us-backfill-20260504-181616` | 2015-01-16 → 2026-05-04 |
+| Provider                   | VM name                        | Range                   |
+| -------------------------- | ------------------------------ | ----------------------- |
+| api_football               | `af-backfill-20260504-181544`  | 2018-01-01 → 2026-05-04 |
+| footystats                 | `fs-backfill-20260504-181600`  | 2019-01-01 → 2026-05-04 |
+| understat                  | `us-backfill-20260504-181616`  | 2015-01-16 → 2026-05-04 |
 | sfi (soccer_football_info) | `sfi-backfill-20260504-181631` | 2019-01-01 → 2026-05-04 |
 
-Note: **transfermarkt** intentionally not launched (its launcher `launch-transfermarkt-backfill-vm.sh` doesn't exist in this repo — only `launch-tradfi-backfill-vm.sh` and the four sports providers above). May need to revisit.
+Note: **transfermarkt** intentionally not launched (its launcher `launch-transfermarkt-backfill-vm.sh` doesn't exist in
+this repo — only `launch-tradfi-backfill-vm.sh` and the four sports providers above). May need to revisit.
 
 ### Bystander VMs (someone else launched)
 
-Spotted at 12:45:08 UTC: `instr-bitfinex-futures-20260504-134505` — likely Ikenna or another agent. Distinct prefix, not interfering.
+Spotted at 12:45:08 UTC: `instr-bitfinex-futures-20260504-134505` — likely Ikenna or another agent. Distinct prefix, not
+interfering.
 
 ### Total fleet
 
@@ -2123,29 +2019,42 @@ Spotted at 12:45:08 UTC: `instr-bitfinex-futures-20260504-134505` — likely Ike
 
 ### What to watch / acceptance criteria
 
-1. **Per-VM shards appear in `_index/per_vm/`** (each VM writes its own; existence proves VM made it through bootstrap + first capture)
-2. **Consolidator merges into canonical**: instruments-store-cefi bucket merge cycle is ~6 min; sports buckets vary (footystats much heavier — could be 60–90s per cycle).
+1. **Per-VM shards appear in `_index/per_vm/`** (each VM writes its own; existence proves VM made it through bootstrap +
+   first capture)
+2. **Consolidator merges into canonical**: instruments-store-cefi bucket merge cycle is ~6 min; sports buckets vary
+   (footystats much heavier — could be 60–90s per cycle).
 3. **`_index/availability_index.parquet` row count grows** for both CEFI and SPORTS canonicals.
 4. **Coverage % climbs** in deployment-ui Data Status tab.
-5. **VMs auto-shutdown** when their range completes (`VM_SHUTDOWN_ON_COMPLETION=true` on launcher metadata for cefi-instr-*; sports launchers handle their own shutdown).
+5. **VMs auto-shutdown** when their range completes (`VM_SHUTDOWN_ON_COMPLETION=true` on launcher metadata for
+   cefi-instr-\*; sports launchers handle their own shutdown).
 
 ### Known issues to revisit
 
-- **Manifest clobber from rebuild_*_manifest.py** earlier today (~50–100 CEFI rows lost in the 11:54 UTC consolidator merge that pulled stale snapshot before our rebuild's per-VM shard arrived). Recoverable from GCS generation `1777895583506752` (CEFI) and `1777895614776416` (TRADFI). NOT yet restored — the running fleet will recapture most of those gaps naturally.
-- **DERIBIT memory leak** identified earlier (~570 MB/day chunk growth, smoke profiler showed bootstrap alone eats 2 GB). Workaround: chunk-cycling in `run_vm_backfill_e2e.sh`. The VM workers each handle one venue → bounded RAM, so this should not bite the running fleet.
-- **deployment-api turbo endpoint per-venue numbers were unreliable** at full-history scale (returning 0 for every venue). Use `deploy-missing` POST endpoint as ground truth.
+- **Manifest clobber from rebuild\_\*\_manifest.py** earlier today (~50–100 CEFI rows lost in the 11:54 UTC consolidator
+  merge that pulled stale snapshot before our rebuild's per-VM shard arrived). Recoverable from GCS generation
+  `1777895583506752` (CEFI) and `1777895614776416` (TRADFI). NOT yet restored — the running fleet will recapture most of
+  those gaps naturally.
+- **DERIBIT memory leak** identified earlier (~570 MB/day chunk growth, smoke profiler showed bootstrap alone eats 2
+  GB). Workaround: chunk-cycling in `run_vm_backfill_e2e.sh`. The VM workers each handle one venue → bounded RAM, so
+  this should not bite the running fleet.
+- **deployment-api turbo endpoint per-venue numbers were unreliable** at full-history scale (returning 0 for every
+  venue). Use `deploy-missing` POST endpoint as ground truth.
 
 ### Tomorrow / continuation
 
-- **TRADFI**: ~3,683 missing shards (~9 venues, ~400/year). Use new launcher pattern, 1 VM per venue, 2018-01-01 → today.
-- **DEFI**: 307k canonical rows but EIGENLAYER restaking `rewards` (597 rows) is the only meaningful gap. Out of scope for this plan as MTDS-territory.
-- **PREDICTION**: 14k rows with 83% phantom rate but data_type is `trades` (MTDS, not instruments-service). Out of plan scope.
+- **TRADFI**: ~3,683 missing shards (~9 venues, ~400/year). Use new launcher pattern, 1 VM per venue, 2018-01-01 →
+  today.
+- **DEFI**: 307k canonical rows but EIGENLAYER restaking `rewards` (597 rows) is the only meaningful gap. Out of scope
+  for this plan as MTDS-territory.
+- **PREDICTION**: 14k rows with 83% phantom rate but data_type is `trades` (MTDS, not instruments-service). Out of plan
+  scope.
 
 ---
 
 ## Phase 2 corrections after reading handoff doc + backfill playbook (18:21 IST)
 
-After Harsh shared the handoff doc and I followed the references, found 4 things I should have done differently. **Do not repeat these in tomorrow's launches.**
+After Harsh shared the handoff doc and I followed the references, found 4 things I should have done differently. **Do
+not repeat these in tomorrow's launches.**
 
 ### Corrections applied
 
@@ -2156,17 +2065,31 @@ After Harsh shared the handoff doc and I followed the references, found 4 things
 
 ### Things I got wrong but didn't fix (low risk, just wasteful)
 
-2. **CEFI start date was 2018-01-01, playbook says 2019-01-01.** Pre-2019 dates have no Tardis coverage, so the orchestrator returns empty for them. Pre-flight skip means it's not catastrophic — just adds wasted attempts on the VM. Don't re-launch; let them run.
+2. **CEFI start date was 2018-01-01, playbook says 2019-01-01.** Pre-2019 dates have no Tardis coverage, so the
+   orchestrator returns empty for them. Pre-flight skip means it's not catastrophic — just adds wasted attempts on the
+   VM. Don't re-launch; let them run.
 
-3. **Sports start dates per launcher defaults** (2018-01-01 for api_football, 2019-01-01 for footystats, etc.) are too early. Playbook says **sports cutoff is 2020-06-01** (because odds_api data only starts 2020-06-06 and pre-odds data has no trading value). Same wastage situation — don't re-launch. The 2 new VMs (tm, weather) used the correct 2020-06-01 start.
+3. **Sports start dates per launcher defaults** (2018-01-01 for api_football, 2019-01-01 for footystats, etc.) are too
+   early. Playbook says **sports cutoff is 2020-06-01** (because odds_api data only starts 2020-06-06 and pre-odds data
+   has no trading value). Same wastage situation — don't re-launch. The 2 new VMs (tm, weather) used the correct
+   2020-06-01 start.
 
 ### Important gotchas from the playbook (must monitor)
 
-4. **Concurrent VM boot race on deadsnakes PPA.** Playbook line 207-209: "~3 of N parallel VMs hang at python3.13 install. Mitigation: kill the hung VMs and relaunch one-at-a-time, or stagger boots ≥30s apart." I launched 14 CEFI VMs at once (~12s spacing). **As of 18:21 IST, all 14 still in bootstrap (no run.log yet) — within normal range, but if any are still pre-log past T+8min from launch, those are likely PPA-hung.** Diagnose: `gcloud compute ssh <vm> --command='ps aux | grep python3.13'`.
+4. **Concurrent VM boot race on deadsnakes PPA.** Playbook line 207-209: "~3 of N parallel VMs hang at python3.13
+   install. Mitigation: kill the hung VMs and relaunch one-at-a-time, or stagger boots ≥30s apart." I launched 14 CEFI
+   VMs at once (~12s spacing). **As of 18:21 IST, all 14 still in bootstrap (no run.log yet) — within normal range, but
+   if any are still pre-log past T+8min from launch, those are likely PPA-hung.** Diagnose:
+   `gcloud compute ssh <vm> --command='ps aux | grep python3.13'`.
 
-5. **CeFi VM `rc=137` (OOM) does NOT write `EXIT_STATUS`.** `atexit` doesn't fire on `SIGKILL`. Symptom: VM ends, no EXIT_STATUS in run.log, manifest empty for half-completed shard. **BITFINEX-SPOT (~2,315 dates), BITGET-SPOT/FUTURES (~542 each)** are the OOM risks. Diagnose via `dmesg | grep -i kill` on the VM (if alive) or Cloud Logging `kernel: ... oom`. Mitigation: bump machine type or shard year-by-year.
+5. **CeFi VM `rc=137` (OOM) does NOT write `EXIT_STATUS`.** `atexit` doesn't fire on `SIGKILL`. Symptom: VM ends, no
+   EXIT_STATUS in run.log, manifest empty for half-completed shard. **BITFINEX-SPOT (~2,315 dates), BITGET-SPOT/FUTURES
+   (~542 each)** are the OOM risks. Diagnose via `dmesg | grep -i kill` on the VM (if alive) or Cloud Logging
+   `kernel: ... oom`. Mitigation: bump machine type or shard year-by-year.
 
-6. **Tarball pins to local pyproject.toml floors via `--no-sources -e <local-dir>`.** VM-deployed services don't see version floors of dependent repos. Cloud Run jobs (consolidator, defi-collection, deployment-api) use the MTDS Docker image and need a Docker rebuild after a UTL change, NOT a tarball refresh.
+6. **Tarball pins to local pyproject.toml floors via `--no-sources -e <local-dir>`.** VM-deployed services don't see
+   version floors of dependent repos. Cloud Run jobs (consolidator, defi-collection, deployment-api) use the MTDS Docker
+   image and need a Docker rebuild after a UTL change, NOT a tarball refresh.
 
 ### What the playbook says about priority order — re-evaluate tomorrow
 
@@ -2180,17 +2103,29 @@ The playbook lists sports priority by data_type completion %, not by source. Wor
 6. **TRANSFERMARKT_LEAGUES (50%)** — P1.
 7. **PLAYER_STATS (78%)** — P2 gap-fill.
 
-My current sports VM launches are PROVIDER-level (one VM per provider, all data_types). The playbook implies we should be running DATA_TYPE-level VMs to chase the worst-covered first. The launchers DO have `--entity` filters for this. **Tomorrow:** use `--entity FIXTURE_FEATURES`, `--entity PLAYER_VALUES`, `--entity SFI_LEAGUES` etc. for targeted backfill.
+My current sports VM launches are PROVIDER-level (one VM per provider, all data_types). The playbook implies we should
+be running DATA_TYPE-level VMs to chase the worst-covered first. The launchers DO have `--entity` filters for this.
+**Tomorrow:** use `--entity FIXTURE_FEATURES`, `--entity PLAYER_VALUES`, `--entity SFI_LEAGUES` etc. for targeted
+backfill.
 
 ### Architectural learnings
 
-7. **Reference-vs-prediction league filter.** For non-prediction leagues (40 reference leagues), only attempt FIXTURES + FIXTURE_EVENTS + STANDINGS. Don't push for FIXTURE_FEATURES / PLAYER_VALUES / SFI_* / understat — those endpoints expect prediction-level depth (33 prediction leagues). My current launches don't apply this filter; orchestrator should handle it via existing per-league logic, but worth verifying in the run.log.
+7. **Reference-vs-prediction league filter.** For non-prediction leagues (40 reference leagues), only attempt FIXTURES +
+   FIXTURE*EVENTS + STANDINGS. Don't push for FIXTURE_FEATURES / PLAYER_VALUES / SFI*\* / understat — those endpoints
+   expect prediction-level depth (33 prediction leagues). My current launches don't apply this filter; orchestrator
+   should handle it via existing per-league logic, but worth verifying in the run.log.
 
-8. **DeFi uses different CLI** — `collect-evm-defi` / `collect-dex-swaps`, NOT `--operation download`. So `launch-cefi-instruments-backfill.sh` cannot be reused for DeFi. Need a separate launcher pattern for DeFi tomorrow.
+8. **DeFi uses different CLI** — `collect-evm-defi` / `collect-dex-swaps`, NOT `--operation download`. So
+   `launch-cefi-instruments-backfill.sh` cannot be reused for DeFi. Need a separate launcher pattern for DeFi tomorrow.
 
-9. **TradFi is mostly complete already** per `project_tradfi_backfill_session_2026_04_30.md` memory. Outstanding only: VIX futures full-tick chain (separate plan), MBP_10 deep book (if microstructure strategy needs). Tomorrow's TradFi work is mostly verification, not fanout.
+9. **TradFi is mostly complete already** per `project_tradfi_backfill_session_2026_04_30.md` memory. Outstanding only:
+   VIX futures full-tick chain (separate plan), MBP_10 deep book (if microstructure strategy needs). Tomorrow's TradFi
+   work is mostly verification, not fanout.
 
-10. **Bystander VM `instr-bitfinex-futures-20260504-134505`** spotted earlier — this might be Ikenna catching what the playbook lists at "MVP CeFi → top assets on … BYBIT, HYPERLIQUID; Deribit options combos". BITFINEX-FUTURES wasn't in my fanout (not in the 14-venue list — probably should have been). Tomorrow: cross-check the venue list against UAC `_CEFI_VENUES`.
+10. **Bystander VM `instr-bitfinex-futures-20260504-134505`** spotted earlier — this might be Ikenna catching what the
+    playbook lists at "MVP CeFi → top assets on … BYBIT, HYPERLIQUID; Deribit options combos". BITFINEX-FUTURES wasn't
+    in my fanout (not in the 14-venue list — probably should have been). Tomorrow: cross-check the venue list against
+    UAC `_CEFI_VENUES`.
 
 ### Verification command set (run periodically)
 
@@ -2213,39 +2148,48 @@ curl -s "http://localhost:8004/api/data-status/turbo?service=instruments-service
 
 ## Day 2 (2026-05-05) — CEFI mixed range+list fanout to close remaining 2,672 gaps
 
-**Scope: CEFI venues only (instruments-service).** DERIBIT excluded per user (memory leak fixed in tardis.py override but not yet validated for multi-day historical sweep — will be tackled via VM with bigger machine separately).
+**Scope: CEFI venues only (instruments-service).** DERIBIT excluded per user (memory leak fixed in tardis.py override
+but not yet validated for multi-day historical sweep — will be tackled via VM with bigger machine separately).
 
 ### Why a mixed approach
 
-Yesterday's pure date-list fanout (117 pairs) worked great because each venue had only a few scattered dates. Today's gap is dominated by BITFINEX-FUTURES which needs 2,315 dates from 2020-01-01 → 2026-05-03 (full history since Tardis archive coverage).
+Yesterday's pure date-list fanout (117 pairs) worked great because each venue had only a few scattered dates. Today's
+gap is dominated by BITFINEX-FUTURES which needs 2,315 dates from 2020-01-01 → 2026-05-03 (full history since Tardis
+archive coverage).
 
-If we ran 2,315 single-day processes, each spends ~50s on service bootstrap and ~4s on the actual fetch. **92% of wall-clock would be wasted on bootstrap.** ~90 min total.
+If we ran 2,315 single-day processes, each spends ~50s on service bootstrap and ~4s on the actual fetch. **92% of
+wall-clock would be wasted on bootstrap.** ~90 min total.
 
-Fix: range-launch venues whose missing dates are contiguous (one process amortizes bootstrap across all dates), date-list-launch venues whose missing dates are scattered (no benefit to range since most of the range would be a no-op skip).
+Fix: range-launch venues whose missing dates are contiguous (one process amortizes bootstrap across all dates),
+date-list-launch venues whose missing dates are scattered (no benefit to range since most of the range would be a no-op
+skip).
 
 ### Per-venue strategy decision
 
-| Venue | Missing | Pattern | Strategy |
-|---|---|---|---|
-| BINANCE-FUTURES | 70 | 1 contiguous range 2019-09-08 → 2019-11-16 (pre-Tardis-launch — all skips) | range |
-| BITFINEX-FUTURES | 2,315 | 1 contiguous range 2020-01-01 → 2026-05-03 | range, **chunked** into yearly windows for parallelism |
-| UPBIT | 2 | 1 short range 2021-03-01 → 2021-03-02 | range |
-| BITFINEX-SPOT | 176 | 130 scattered ranges | list |
-| BITGET-FUTURES | 53 | 42 scattered ranges | list |
-| BITGET-SPOT | 56 | 34 scattered ranges | list |
-| **DERIBIT** | (excluded) | n/a | **skipped today** — will run separately on bigger VM after validating the cache-key fix from `instruments-service@9d91465` |
+| Venue            | Missing    | Pattern                                                                    | Strategy                                                                                                                   |
+| ---------------- | ---------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| BINANCE-FUTURES  | 70         | 1 contiguous range 2019-09-08 → 2019-11-16 (pre-Tardis-launch — all skips) | range                                                                                                                      |
+| BITFINEX-FUTURES | 2,315      | 1 contiguous range 2020-01-01 → 2026-05-03                                 | range, **chunked** into yearly windows for parallelism                                                                     |
+| UPBIT            | 2          | 1 short range 2021-03-01 → 2021-03-02                                      | range                                                                                                                      |
+| BITFINEX-SPOT    | 176        | 130 scattered ranges                                                       | list                                                                                                                       |
+| BITGET-FUTURES   | 53         | 42 scattered ranges                                                        | list                                                                                                                       |
+| BITGET-SPOT      | 56         | 34 scattered ranges                                                        | list                                                                                                                       |
+| **DERIBIT**      | (excluded) | n/a                                                                        | **skipped today** — will run separately on bigger VM after validating the cache-key fix from `instruments-service@9d91465` |
 
 ### Launch script
 
 `/tmp/launch-cefi-mixed.sh` (regenerable from this plan):
+
 - 9 range processes in parallel:
   - BINANCE-FUTURES 2019-09-08 → 2019-11-16
   - UPBIT 2021-03-01 → 2021-03-02
   - BITFINEX-FUTURES × 7 yearly chunks (2020, 2021, 2022, 2023, 2024, 2025, 2026-Jan→May-3)
-- 1 date-list fanout (`local_fill_pairs.sh`, PARALLEL=8) over `/tmp/cefi-scattered.txt` (285 pairs across BITFINEX-SPOT + BITGET-FUTURES + BITGET-SPOT)
+- 1 date-list fanout (`local_fill_pairs.sh`, PARALLEL=8) over `/tmp/cefi-scattered.txt` (285 pairs across
+  BITFINEX-SPOT + BITGET-FUTURES + BITGET-SPOT)
 - Total ~17-19 concurrent workers, capped well under Tardis API budget.
 
 Pairs files at:
+
 - `/tmp/cefi-all-missing-pairs.txt` (full 2,672 list, source of truth)
 - `/tmp/cefi-scattered.txt` (285 list-only pairs)
 
@@ -2263,11 +2207,13 @@ Total wallclock target: **~25 min** (dominated by BITFINEX-FUTURES yearly chunks
 - CEFI canonical: 25,332 / 27,954 = 90.62% (full-history window 2019-01-01 → 2026-05-03)
 - UI: 90.6% with BITFINEX-FUTURES at 0% being the biggest visible gap
 - Yesterday's 117-pair fanout already pushed CEFI 30-day window 63.66% → 88.82%
-- Validation regression for OKX-SPOT/FUTURES/SWAP, COINBASE-SPOT was fixed in `unified-api-contracts@41df720` (push-merged)
+- Validation regression for OKX-SPOT/FUTURES/SWAP, COINBASE-SPOT was fixed in `unified-api-contracts@41df720`
+  (push-merged)
 
 ### Post-launch verification
 
 After the mixed fanout completes, verify:
+
 1. Canonical row counts grew per venue:
    ```bash
    GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false python3 -c "
@@ -2289,9 +2235,12 @@ After the mixed fanout completes, verify:
 
 ### Lessons documented
 
-- **Bootstrap overhead matters at scale.** 50s/process is fine for 100 pairs (8 min total) but lethal for 2,000+ pairs (~90 min). Always check pair count before deciding range vs list.
-- **"Range" doesn't mean one process per venue's full history** — chunk by year (or quarter for venues with very dense data) to parallelize the long-running ones. 7 chunks × 25 min = 25 min wall vs 1 chunk × 175 min = 175 min wall.
-- **Date-list still wins when dates are scattered** because pre-flight skip across a 6-year range to find 50 missing days wastes per-date GCS round-trips.
+- **Bootstrap overhead matters at scale.** 50s/process is fine for 100 pairs (8 min total) but lethal for 2,000+ pairs
+  (~90 min). Always check pair count before deciding range vs list.
+- **"Range" doesn't mean one process per venue's full history** — chunk by year (or quarter for venues with very dense
+  data) to parallelize the long-running ones. 7 chunks × 25 min = 25 min wall vs 1 chunk × 175 min = 175 min wall.
+- **Date-list still wins when dates are scattered** because pre-flight skip across a 6-year range to find 50 missing
+  days wastes per-date GCS round-trips.
 
 ---
 
@@ -2301,16 +2250,19 @@ After the mixed fanout completes, verify:
 
 While CEFI mixed fanout was running locally, four sports VMs were left running from 2026-05-04. Triage:
 
-| VM | Provider | Behavior observed | Action |
-|---|---|---|---|
-| `af-backfill-20260504-232814` | api_football | Captures real fixtures per-date (~30s/date). Will hit daily rate limit. | Leave running. |
-| `sfi-backfill-20260504-183611` | soccer_football_info | **429-thrashing** every minute. ~5 successful fetches per 7-min window. | **Killed; relaunched with throttle fix.** |
-| `tm-backfill-20260504-183629` | transfermarkt | Sequential ~30s/league × 33 leagues × N seasons. RapidAPI upstream slow. | Leave running. Future: parallelize with `asyncio.gather(Semaphore(4))`. |
-| `us-backfill-20260504-232831` | understat | **Already 100% captured.** VM was iterating dates in a manifest pre-flight loop, ~7s/date × 4,124 days = 8 hours of pure noise. | **Killed.** No relaunch needed. |
+| VM                             | Provider             | Behavior observed                                                                                                               | Action                                                                  |
+| ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `af-backfill-20260504-232814`  | api_football         | Captures real fixtures per-date (~30s/date). Will hit daily rate limit.                                                         | Leave running.                                                          |
+| `sfi-backfill-20260504-183611` | soccer_football_info | **429-thrashing** every minute. ~5 successful fetches per 7-min window.                                                         | **Killed; relaunched with throttle fix.**                               |
+| `tm-backfill-20260504-183629`  | transfermarkt        | Sequential ~30s/league × 33 leagues × N seasons. RapidAPI upstream slow.                                                        | Leave running. Future: parallelize with `asyncio.gather(Semaphore(4))`. |
+| `us-backfill-20260504-232831`  | understat            | **Already 100% captured.** VM was iterating dates in a manifest pre-flight loop, ~7s/date × 4,124 days = 8 hours of pure noise. | **Killed.** No relaunch needed.                                         |
 
 ### SFI rate-limit fix — `instruments-service@04bc1bc`
 
-**Problem.** `BaseSportsReferenceAdapter._MIN_REQUEST_INTERVAL = 0.1` was a module-level constant tuned for api_football Ultra (~900 req/min). SFI plan is RapidAPI Ultra @ **4 req/sec** (provider dashboard screenshot 2026-05-05; 99,999/day). At 0.1s the SFI worker bursts up to 10 req/sec for a few seconds, hits the per-second cap, then 429-thrashes the rest of the minute.
+**Problem.** `BaseSportsReferenceAdapter._MIN_REQUEST_INTERVAL = 0.1` was a module-level constant tuned for api_football
+Ultra (~900 req/min). SFI plan is RapidAPI Ultra @ **4 req/sec** (provider dashboard screenshot 2026-05-05; 99,999/day).
+At 0.1s the SFI worker bursts up to 10 req/sec for a few seconds, hits the per-second cap, then 429-thrashes the rest of
+the minute.
 
 **Fix.** Convert the throttle to a per-class attribute on `BaseSportsReferenceAdapter`:
 
@@ -2320,18 +2272,23 @@ While CEFI mixed fanout was running locally, four sports VMs were left running f
 
 `SoccerFootballInfoAdapter._min_request_interval = 0.34` → ~3 req/sec, safely under the 4 req/sec cap.
 
-Other adapters (api_football, footystats, transfermarkt, understat, open_meteo) keep the base default — none have evidence of a tighter per-second cap today.
+Other adapters (api_football, footystats, transfermarkt, understat, open_meteo) keep the base default — none have
+evidence of a tighter per-second cap today.
 
 **Files changed (instruments-service):**
-- `instruments_service/reference_data/adapters/sports/adapters/base.py` — class attribute + `_throttle` uses `type(self)`
+
+- `instruments_service/reference_data/adapters/sports/adapters/base.py` — class attribute + `_throttle` uses
+  `type(self)`
 - `instruments_service/reference_data/adapters/sports/adapters/soccerfootball_info.py` — override + docstring
 
 **Deployment:**
+
 - Pushed `instruments-service@04bc1bc` to `live-defi-rollout`
 - Refreshed SPORTS tarball: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`
 - Killed old SFI VM, launched new: `sfi-backfill-20260505-120759` (range 2020-06-01..2026-05-04, single-VM mode)
 
 **Validation criteria.** After ~5 min the new VM's `run.log` should show:
+
 - Steady ~3 req/sec sustained, no `Rate limited (429)` lines
 - ~180 successful fetches per minute (vs ~14 measured pre-fix)
 - ~12× throughput improvement → 6.3-year backfill (~2,300 dates) wall-time drops from ~68 days single-VM to ~5–6 days
@@ -2343,9 +2300,14 @@ gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/sfi-backfill-2
 
 ### Understat — no relaunch needed
 
-Understat XG = 100.0% complete (verified via `/api/data-status/turbo`). The "skipping date — all 5 expected leagues per-league captured" log is the system working correctly; the slow part is a `ManifestReader` per-VM shard fallback when the consolidated blob is stale. Cost-benefit: not worth optimizing for an already-complete dataset.
+Understat XG = 100.0% complete (verified via `/api/data-status/turbo`). The "skipping date — all 5 expected leagues
+per-league captured" log is the system working correctly; the slow part is a `ManifestReader` per-VM shard fallback when
+the consolidated blob is stale. Cost-benefit: not worth optimizing for an already-complete dataset.
 
-If a gap *does* re-appear, the right fix is in `instruments-service/instruments_service/engine/orchestrator.py` near line 4426 — add a per-(league, season) pre-flight cache so the per-date dispatch short-circuits at O(unique seasons) instead of O(days × leagues). Do NOT add a standalone `local_understat_full_backfill.py` script (violates "System-First Architecture").
+If a gap _does_ re-appear, the right fix is in `instruments-service/instruments_service/engine/orchestrator.py` near
+line 4426 — add a per-(league, season) pre-flight cache so the per-date dispatch short-circuits at O(unique seasons)
+instead of O(days × leagues). Do NOT add a standalone `local_understat_full_backfill.py` script (violates "System-First
+Architecture").
 
 ### Transfermarkt — leave running, future optimization
 
@@ -2355,7 +2317,9 @@ If a gap *does* re-appear, the right fix is in `instruments-service/instruments_
 - No bulk endpoint exists
 - Rate limit: shared base default (0.1s) — no documented per-second cap
 
-**Future optimization** (not blocking today): wrap the orchestrator's per-league loop in `asyncio.gather(Semaphore(4))`. The base throttle still serializes underlying HTTP, so this hides upstream latency rather than stacking req/sec. Estimated 4× wall-time speedup. File: `instruments-service/instruments_service/engine/orchestrator.py:4740-4804`.
+**Future optimization** (not blocking today): wrap the orchestrator's per-league loop in `asyncio.gather(Semaphore(4))`.
+The base throttle still serializes underlying HTTP, so this hides upstream latency rather than stacking req/sec.
+Estimated 4× wall-time speedup. File: `instruments-service/instruments_service/engine/orchestrator.py:4740-4804`.
 
 ---
 
@@ -2363,80 +2327,94 @@ If a gap *does* re-appear, the right fix is in `instruments-service/instruments_
 
 ### The problem
 
-PREDICTION coverage stuck at **89.05%** (2,821/3,168 shards). 137 unique dates missing across 12 data_types (DJIA, NDX, SPX, SOL, GOLD, SILVER, XRP, CRUDE_OIL, FOOTBALL, DOGE, BNB, ETH).
+PREDICTION coverage stuck at **89.05%** (2,821/3,168 shards). 137 unique dates missing across 12 data_types (DJIA, NDX,
+SPX, SOL, GOLD, SILVER, XRP, CRUDE_OIL, FOOTBALL, DOGE, BNB, ETH).
 
 Initial fanout (2026-05-05 13:30 UTC, PARALLEL=10) hit hard wall:
+
 - 0 successful completions in 14 min
 - 3 timeout-FAILs (each ~10 min wallclock, 0 records written)
 - Aborted; killed remaining workers cleanly
 
-**Root cause:** Polymarket CLOB API has no per-date filter. Adapter scans up to 1000 pages × 1000 markets each (~860K markets total) for EVERY date, filtering client-side by `end_date_iso`. At PARALLEL=10 from one IP (shared NAT egress) the API silently times out individual requests around page 200-500. Not a 429 issue (zero observed) — request-level timeouts in deep pagination.
+**Root cause:** Polymarket CLOB API has no per-date filter. Adapter scans up to 1000 pages × 1000 markets each (~860K
+markets total) for EVERY date, filtering client-side by `end_date_iso`. At PARALLEL=10 from one IP (shared NAT egress)
+the API silently times out individual requests around page 200-500. Not a 429 issue (zero observed) — request-level
+timeouts in deep pagination.
 
 ### The cursor-sharding solution
 
 CLOB cursors are base64-encoded ASCII offsets:
+
 - `cursor=""` → page 0 (offset 0)
 - `next_cursor=MTAwMDAw` → offset 100,000 (decoded: "100000")
 - Verified via direct probe 2026-05-05 13:38 UTC
 
-Probing every 25K offset shows CLOB is **roughly chronologically sorted** by `end_date_iso` (oldest first), with some inversions at month boundaries:
+Probing every 25K offset shows CLOB is **roughly chronologically sorted** by `end_date_iso` (oldest first), with some
+inversions at month boundaries:
 
 | Cursor offset | end_date_iso |
-|---|---|
-| 0 | 2023-03-15 |
-| 50K | 2025-05-18 |
-| 100K | 2025-09-24 |
-| 200K | 2026-01-13 |
-| 400K | 2026-02-09 |
-| 600K | 2026-03-15 |
-| 800K | 2026-04-08 |
-| 870K | 2026-05-12 |
+| ------------- | ------------ |
+| 0             | 2023-03-15   |
+| 50K           | 2025-05-18   |
+| 100K          | 2025-09-24   |
+| 200K          | 2026-01-13   |
+| 400K          | 2026-02-09   |
+| 600K          | 2026-03-15   |
+| 800K          | 2026-04-08   |
+| 870K          | 2026-05-12   |
 
 This means each missing date can be assigned a **narrow cursor band** (~100-250 pages) instead of scanning all 1000.
 
 ### Adapter patch — instruments-service@<pending push>
 
-Backward-compatible env-var control added to `_fetch_clob_markets` in `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py`:
+Backward-compatible env-var control added to `_fetch_clob_markets` in
+`instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py`:
 
 - `POLYMARKET_START_CURSOR` — base64-encoded offset to start at (defaults `""` = page 0)
 - `POLYMARKET_END_CURSOR` — base64-encoded offset to stop at (defaults unset = full scan to natural EOF)
 
-If unset, behavior is identical to legacy. If set, worker scans only the requested cursor slice. Live mode (no `date` param) uses Gamma API and is unaffected.
+If unset, behavior is identical to legacy. If set, worker scans only the requested cursor slice. Live mode (no `date`
+param) uses Gamma API and is unaffected.
 
 **Smoke test (2026-05-05 13:53 UTC):**
+
 - date=2026-04-08, cursor slice 800,000..810,000 (10 pages)
 - Result: 3,584 records written in **18 seconds** (vs 10-15 min full-scan)
 - ~50× speedup, zero timeouts
 
 ### Cursor band assignments per (year, month)
 
-| Year-Month | Cursor band | Pages |
-|---|---|---|
-| 2025-03 to 2025-04 | 0..130,000 | 130 |
-| 2025-05 to 2025-06 | 40K..140K | 90-100 |
-| 2025-07 to 2025-09 | 90K..200K | 110 |
-| 2025-10 | 110K..220K | 110 |
-| 2025-11 | 140K..250K | 110 |
-| 2025-12 | 170K..330K | 160 |
-| 2026-01 | 180K..380K | 200 |
-| 2026-02 | 300K..500K | 200 |
-| 2026-03 | 450K..700K | 250 |
-| 2026-04 to 2026-05 | 650K..880K | 230 |
+| Year-Month         | Cursor band | Pages  |
+| ------------------ | ----------- | ------ |
+| 2025-03 to 2025-04 | 0..130,000  | 130    |
+| 2025-05 to 2025-06 | 40K..140K   | 90-100 |
+| 2025-07 to 2025-09 | 90K..200K   | 110    |
+| 2025-10            | 110K..220K  | 110    |
+| 2025-11            | 140K..250K  | 110    |
+| 2025-12            | 170K..330K  | 160    |
+| 2026-01            | 180K..380K  | 200    |
+| 2026-02            | 300K..500K  | 200    |
+| 2026-03            | 450K..700K  | 250    |
+| 2026-04 to 2026-05 | 650K..880K  | 230    |
 
-Bands have **deliberate overlap and ±50K padding** to absorb CLOB inversions. Overshoot is cheap (extra pages = a few seconds), missing data is not.
+Bands have **deliberate overlap and ±50K padding** to absorb CLOB inversions. Overshoot is cheap (extra pages = a few
+seconds), missing data is not.
 
 ### Runner design (this doc)
 
 - Per-date workers, max **PARALLEL=5** (gentle on Polymarket per-IP rate limit)
-- Each worker: `POLYMARKET_START_CURSOR=<band_start> POLYMARKET_END_CURSOR=<band_end> instruments-service --venues POLYMARKET --start-date X --end-date X`
+- Each worker:
+  `POLYMARKET_START_CURSOR=<band_start> POLYMARKET_END_CURSOR=<band_end> instruments-service --venues POLYMARKET --start-date X --end-date X`
 - Per-VM shard isolation: unique `VM_NAME=local_predict_{date}_{rand}`
 - Working **backward from newest** (per user request 2026-05-05) — most missing dates are recent
 - Estimated wallclock: ~1.5-2 hr for all 137 dates
 
 ### Open follow-up for Ikenna
 
-If this pattern works, the longer-term improvement is to make the orchestrator **batch missing-date queries by cursor band** so one process scan fills many dates simultaneously. Today's adapter still does one scan per date — even with narrow slices, that's 137 process bootstraps. A cursor-sweep mode that fills any (date, data_type) shard whose target falls within the scanned window would reduce 137 process invocations to ~10.
-
+If this pattern works, the longer-term improvement is to make the orchestrator **batch missing-date queries by cursor
+band** so one process scan fills many dates simultaneously. Today's adapter still does one scan per date — even with
+narrow slices, that's 137 process bootstraps. A cursor-sweep mode that fills any (date, data_type) shard whose target
+falls within the scanned window would reduce 137 process invocations to ~10.
 
 ---
 
@@ -2444,22 +2422,27 @@ If this pattern works, the longer-term improvement is to make the orchestrator *
 
 ### What we thought
 
-After completing the cursor-sharded fanout (137/137 dates captured), the deployment-ui kept showing PREDICTION at **89.05%**. Initial hypothesis: stale cache.
+After completing the cursor-sharded fanout (137/137 dates captured), the deployment-ui kept showing PREDICTION at
+**89.05%**. Initial hypothesis: stale cache.
 
-Found and patched a real cache layering issue: `/api/data-status/turbo/clear` was only dropping 2 of 4 cache layers. Fixed in `deployment-api@4dff799`:
+Found and patched a real cache layering issue: `/api/data-status/turbo/clear` was only dropping 2 of 4 cache layers.
+Fixed in `deployment-api@4dff799`:
 
 - ✅ `data_analytics_service._turbo_cache` (always cleared)
 - ✅ `data_status_service._INDEX_CACHE` (always cleared)
 - ✅ `data_status_drilldown._cache` — **previously NOT cleared** (drilldown shard counts, 5-min TTL)
 - ✅ `DataStatusService._REF_DATA_CACHE` — **previously NOT cleared** (upstream-expected-dates, 5-min TTL)
 
-`clear_drilldown_cache()` was imported at module top and its docstring claimed it was used by `/turbo/clear`, but the call had been silently dropped. Defensive fix lands all four clears.
+`clear_drilldown_cache()` was imported at module top and its docstring claimed it was used by `/turbo/clear`, but the
+call had been silently dropped. Defensive fix lands all four clears.
 
-But — after restarting the deployment-api with all 4 caches dropping, the **89% number persisted**. So cache wasn't the cause.
+But — after restarting the deployment-api with all 4 caches dropping, the **89% number persisted**. So cache wasn't the
+cause.
 
 ### Actual cause: adapter false positives
 
-The Polymarket adapter classifies markets into data_types (BTC, ETH, SOL, BNB, …) by substring-matching the market question text:
+The Polymarket adapter classifies markets into data_types (BTC, ETH, SOL, BNB, …) by substring-matching the market
+question text:
 
 ```python
 # Pre-fix in polymarket.py
@@ -2470,17 +2453,21 @@ def _match_crypto_asset(q):
             return canonical
 ```
 
-Bare-substring matching produces false positives where stock tickers containing crypto-ticker substrings get misclassified:
+Bare-substring matching produces false positives where stock tickers containing crypto-ticker substrings get
+misclassified:
 
-| Question | Bucket assigned | Reality |
-|---|---|---|
-| "Airbnb (ABNB) Up or Down on October 16?" | **BNB** | Airbnb stock |
-| "Solar panel adoption..." | **SOL** | Solar industry |
-| "Hyped product launches..." | **HYPE** | Generic adjective |
+| Question                                  | Bucket assigned | Reality           |
+| ----------------------------------------- | --------------- | ----------------- |
+| "Airbnb (ABNB) Up or Down on October 16?" | **BNB**         | Airbnb stock      |
+| "Solar panel adoption..."                 | **SOL**         | Solar industry    |
+| "Hyped product launches..."               | **HYPE**        | Generic adjective |
 
-Audit on 2026-05-05: **30 of 78 BNB-tagged dates** in the canonical manifest were Airbnb stock markets, NOT BNB token markets. Same pattern (smaller noise) for HYPE/DOGE/SOL.
+Audit on 2026-05-05: **30 of 78 BNB-tagged dates** in the canonical manifest were Airbnb stock markets, NOT BNB token
+markets. Same pattern (smaller noise) for HYPE/DOGE/SOL.
 
-So the deployment-ui's start_date for `(POLYMARKET, BNB) = 2026-03-01` is **correct** — that's roughly when actual BNB token markets first appeared on Polymarket. The earlier "BNB" rows in the canonical are noise. The 89% reflects **honest coverage** of real markets, with noise correctly excluded from both numerator and denominator.
+So the deployment-ui's start_date for `(POLYMARKET, BNB) = 2026-03-01` is **correct** — that's roughly when actual BNB
+token markets first appeared on Polymarket. The earlier "BNB" rows in the canonical are noise. The 89% reflects **honest
+coverage** of real markets, with noise correctly excluded from both numerator and denominator.
 
 ### Fix in `instruments-service@b336834`
 
@@ -2499,16 +2486,22 @@ def _match_crypto_asset(q_lower):
 ```
 
 Smoke tests pass:
+
 - ✅ `"Airbnb (ABNB) Up or Down"` → no match (was BNB)
 - ✅ `"BNB Up or Down March 15"` → BNB
 - ✅ `"Solar panel adoption"` → no match (was SOL)
 - ✅ `"Hyped product launch"` → no match (was HYPE)
 
-Macro keywords (`crude oil`, `s&p 500`, etc.) are multi-word phrases that don't suffer from this and stay on substring matching.
+Macro keywords (`crude oil`, `s&p 500`, etc.) are multi-word phrases that don't suffer from this and stay on substring
+matching.
 
 ### Out-of-scope follow-ups
 
-1. **Dict-iteration-order quirk**: questions like *"will ethereum (eth) flip btc?"* return the first-seen ticker (BTC), not the most-relevant one. Pre-existing behavior; needs a different fix (longest-match-first or schema-aware classification).
-2. **Existing canonical noise**: today's PREDICTION canonical still contains the misclassified Airbnb rows in BNB. After this adapter fix lands, a future fanout pass would write correct rows — but the noisy historic rows remain. Cleanup option: re-run the affected (date, BNB) shards to overwrite, OR add a one-off manifest-reconciliation script. Not blocking.
+1. **Dict-iteration-order quirk**: questions like _"will ethereum (eth) flip btc?"_ return the first-seen ticker (BTC),
+   not the most-relevant one. Pre-existing behavior; needs a different fix (longest-match-first or schema-aware
+   classification).
+2. **Existing canonical noise**: today's PREDICTION canonical still contains the misclassified Airbnb rows in BNB. After
+   this adapter fix lands, a future fanout pass would write correct rows — but the noisy historic rows remain. Cleanup
+   option: re-run the affected (date, BNB) shards to overwrite, OR add a one-off manifest-reconciliation script. Not
+   blocking.
 3. **No more "PREDICTION needs more data" work today** — coverage is honest, system reports the truth.
-
