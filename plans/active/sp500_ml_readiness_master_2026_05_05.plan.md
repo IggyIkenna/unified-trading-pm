@@ -385,9 +385,19 @@ but parallel-able among themselves.
       using the pre-fix code; their output will be migrated by P1.5b but cleaner to re-run with the fixed code.
       Decision-gate: if P1.5b proves cheap (<1h compute), let MDPS finish and migrate; if MDPS is still <50% done when
       P1.5 lands, kill-and-relaunch is faster.
-- [ ] [AGENT] **P1.6 Continuous-series builder (back-adjust)** — Add MDPS `--operation build-continuous` mode that reads
-      per-contract processed_candles + roll calendar from `instruments-service`, applies Panama-canal back-adjust,
-      writes: -
+- [x] [AGENT] **P1.6 Continuous-series builder (back-adjust)** — **SHIPPED 2026-05-05 market-tick-data-service
+      `133cfb4`**: `scripts/build_continuous_es.py` + `tests/unit/scripts/test_build_continuous_es.py` with 10 passing
+      unit tests covering: business-day shift, roll-date pairing, active-contracts table, reverse-walk shift
+      accumulation, 2-contract Panama-canal correctness (returns continuous, no phantom jump), idempotency, roll
+      metadata persistence, volume-not-adjusted, canonical contract-id format, honest-absence on missing roll-day data.
+      Pure-function core (no GCS) so testable without infra. CLI wrapper writes per-day continuous parquet + sidecar
+      SSOT for strategy-service / execution-service. NOTE: Implemented as a one-off script in
+      `market-tick-data-service/scripts/` rather than MDPS `--operation build-continuous` mode — same correctness, can
+      be promoted to MDPS native operation later when scope allows. Future agents: also add MDPS
+      `--operation     build-continuous` mode that wraps this script's core for canonical pipeline integration.
+- [ ] [AGENT] **P1.6-original Continuous-series builder (back-adjust) — superseded by above** — Add MDPS
+      `--operation build-continuous` mode that reads per-contract processed_candles + roll calendar from
+      `instruments-service`, applies Panama-canal back-adjust, writes: -
       `processed_candles/by_date/day={D}/timeframe={tf}/data_type={dt}/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet` -
       sidecar SSOT `processed_candles/_continuous/ES/_meta/active_contracts.parquet` mapping
       `(date →       active_contract_id, roll_spread, prev_contract_id)` - Same shape for MES. - Unit tests: (a) two
