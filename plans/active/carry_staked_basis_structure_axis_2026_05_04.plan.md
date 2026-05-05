@@ -3,11 +3,27 @@ plan_type: code
 asset_group: defi
 owner: ikenna
 created: 2026-05-04
+last_updated: 2026-05-05
 locked_by: live-defi-rollout
 locked_since: 2026-05-04
 name: carry-staked-basis-structure-axis-2026-05-04
 overview:
-  Refactor CARRY_STAKED_BASIS as a USDC-share-class market-neutral trade: start in USDC, deploy fraction `f` to buy ETH spot → stake into LST, hold (1−f) as perp margin on the short leg, short the equivalent ETH-PERP. The execution structure (whether the LST or USDC sits at the perp venue, whether spot-buy-then-stake collapses to a single LST mint, etc.) is **derived** from `unified_api_contracts.registry.venue_collateral.VENUE_COLLATERAL_MATRIX` — the engine queries the matrix at preflight and emits whatever atomic-leg sequence the venue capabilities permit. No baked-in structure choice. COLLATERAL_BORROW path (current default — pay USDC borrow on Aave against LST collateral) is deleted: it erodes basis P&L. Catalog regenerates from the matrix as (LST × perp × f) tuples; the engine derives the leg sequence per slot. Tracer measures realised net USDC APY per slot over 30 days — orchestrator picks winners by realised carry.
+  CARRY_STAKED_BASIS is a market-neutral carry trade in USDC share class — long LST, short perp on the same coin, with the LST acting as the perp short's cross-margin. Three architectural pivots over four sessions led here:
+
+    1. (2026-05-04) Refactor away from the COLLATERAL_BORROW default — borrowing USDC on Aave against LST to fund the perp short eats the basis. Replaced by a structure derived from VENUE_COLLATERAL_MATRIX at preflight (LST_AS_MARGIN if accepted, SPLIT_STAKE otherwise).
+    2. (2026-05-05) Delete SPLIT_STAKE — strictly dominated by CARRY_BASIS_PERP at 2x size on the unstaked half whenever `funding > staking·f / (2-f)` (almost always at MVP-coin level), and dominated by CARRY_RECURSIVE_STAKED whenever `staking > 3·funding`. Firm rule: if the LST is not accepted as direct cross-margin at the perp venue, the slot is rejected at preflight. LST_AS_MARGIN is the only allowed structure post-2026-05-05.
+    3. (2026-05-05) Per-LST × per-venue acceptance is the universe — VENUE_COLLATERAL_MATRIX must encode each individual LST (eETH/weETH, stETH/wstETH, rETH, cbETH, jitoSOL, mSOL, bSOL, …) per venue, with verifiable haircuts. CARRY_STAKED_BASIS catalog enumerates `(lst, perp_venue) ∈ accepted_perp_collateral` filtered. Today that set is 2 (DRIFT/jitoSOL, DRIFT/mSOL); honest, grows organically as Phase 7 audit lands ETH-LST rows.
+
+  Each archetype runs its own ranker (Phase 8) — one shared `BaseRankAllocator` + 7 subclasses with archetype-specific universe filter + ranking metric + top-N config + 250 bps default threshold. CARRY_STAKED_BASIS ranker filters to LST-margin-eligible tuples and ranks by combined `staking_apy_total + funding_apy` (USDC-denominated). No cross-archetype switching — that's a future layer. Tracer drives V2BatchHarness through the full live pipeline (matching engine, position-balance-monitor, risk-service) — batch = live, no closed-form math.
+
+  Share-class table (delta-neutrality intrinsic to archetype, share-class is the eligibility filter):
+    YIELD_STAKING_SIMPLE → ETH / SOL only (LST appreciates in same denom).
+    CARRY_BASIS_PERP → USDC / USDT only (spot + perp short cancels in USD).
+    CARRY_STAKED_BASIS → USDC / USDT only (staked-long + perp-short cancels in USD; LST sits at perp venue).
+    CARRY_RECURSIVE_STAKED → ETH or USDC / USDT (ETH path: stake-long + ETH-borrow-short; USD path: USD collateral → borrow ETH → stake).
+    CARRY_BASIS_DATED → USDC / USDT only (long spot + short dated future cancels in USD).
+    YIELD_ROTATION_LENDING → USDC / USDT (lending stables; no underlying exposure).
+    ARBITRAGE_PRICE_DISPERSION → USDC / USDT (perps OR dated, not both — configurable).
 type: code
 epic: epic-business
 status: active
@@ -114,6 +130,74 @@ todos:
     content: |
       - [x] [AGENT] P2. unified-trading-pm. Rewrote `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (existing path; not the speculated `03-strategies/`) to capture (a) USDC-share-class market-neutral framing, (b) two structures (LST_AS_MARGIN / SPLIT_STAKE) with formulas, (c) eligibility derivation from VENUE_COLLATERAL_MATRIX, (d) on-chain APY derivation (real, not vendor), (e) tracer protocol, (f) why COLLATERAL_BORROW was deleted (basis erosion). Cross-references plan + venue_collateral.py + tracer + lst_rates_handler.
     status: done
+    note: "Superseded by Phase 6: SPLIT_STAKE was subsequently deleted as strictly dominated; LST_AS_MARGIN is the only allowed structure post-2026-05-05. PM doc to be re-rewritten in Phase 6c."
+  - id: phase-6a-engine-delete-split-stake
+    content: |
+      - [x] [AGENT] P0. strategy-service local — `staked_basis.py` engine: `MarginStructure = Literal["LST_AS_MARGIN"]` (was `LST_AS_MARGIN | SPLIT_STAKE`). `_derive_structure(cfg)` now returns `None` unless the perp venue accepts the LST per `accepted_perp_collateral(perp_venue)`; no USDC-fallback path. `_resolve_setup` defaults `stake_fraction=1.0`; the f-grid is gone (LST is the perp margin, no spare USDC needed). `_build_legs` always emits the 4-leg sequence SWAP + STAKE + TRANSFER + TRADE. `declare_leg_portfolio_state` always reports `lst_long.venue == perp_venue` (LST sits at the perp venue as cross-margin).
+    status: done
+    note: "Why SPLIT_STAKE is dominated — direct compare at given stake_fraction f and capital C: SPLIT_STAKE = f·(staking + funding) + (1-f)·idle_yield; CARRY_BASIS_PERP at 2x size on the unstaked half = 2·funding. SPLIT_STAKE < BASIS_PERP iff funding > staking·f / (2-f). For f=0.5: BASIS_PERP wins iff funding > staking/3 — almost always true at MVP-coin level. For staking > 3·funding: CARRY_RECURSIVE_STAKED wins by leverage. There is no funding regime where SPLIT_STAKE is the right answer. User explicit: 'if you can't use this liquid staking token as collateral to short the perp, then it doesn't make sense to do the trade.'"
+  - id: phase-6b-catalog-collapse-to-matrix-only
+    content: |
+      - [x] [AGENT] P0. strategy-service local — `target_universe/catalog.py::_build_carry_staked_basis`: enumerate `(lst_asset, perp_venue) ∈ accepted_perp_collateral × LST_REGISTRY` filtered by acceptance. `_STAKED_BASIS_F_VALUES = (Decimal("1.0"),)` only. `_resolve_start_token` requires `lst_asset in accepted` (was OR-with-stable). Slot count today = 2: `CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod` + `CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod`. Honest: DRIFT is the only venue today that accepts an LST as cross-margin per the current matrix (jitoSOL + mSOL, 10% haircut). The slot count grows directly when Phase 7 adds verified ETH-LST-margin rows.
+    status: done
+  - id: phase-6c-tests-+-pm-doc-rewrite
+    content: |
+      - [x] [SCRIPT] P0. strategy-service local — 47 carry-and-yield-related unit tests + full unit suite (1,279 tests) all green after SPLIT_STAKE deletion. `test_target_universe.py::test_no_archetype_has_fewer_than_three_rows` carries a documented CARRY_STAKED_BASIS exception (floor lowered to 1) — the count tracks `VENUE_COLLATERAL_MATRIX` directly; no synthetic floor. `test_archetype_engines_filled.py` cases rewritten: HYPERLIQUID/stETH always rejects (no LST_AS_MARGIN available), unknown-perp-venue rejects, no-borrow-apy uses DRIFT/JitoSOL.
+      - [ ] [AGENT] P1. unified-trading-pm — rewrite `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`: drop the SPLIT_STAKE table row, restate the firm rule (LST must be accepted as cross-margin at the perp venue or the trade is rejected at preflight), document the dominance argument from 6a `note`, point at Phase 7 for matrix expansion. Cross-link the per-archetype ranker family (Phase 8).
+    status: in-progress
+  - id: phase-6d-strategy-qg-+-quickmerge
+    content: |
+      - [ ] [SCRIPT] P0. strategy-service Pass 1 `quality-gates.sh` then `quickmerge.sh "feat: delete SPLIT_STAKE from CARRY_STAKED_BASIS, LST_AS_MARGIN-only" --agent`. Branch: live-defi-rollout (per workspace-manifest.json).
+    status: todo
+    blocked_by: phase-6c-tests-+-pm-doc-rewrite
+  - id: phase-7a-matrix-eth-lst-coverage-audit
+    content: |
+      - [ ] [HUMAN+AGENT] P0. **Per-LST × per-venue acceptance audit.** Today's `VENUE_COLLATERAL_MATRIX` only has LST-margin rows for DRIFT (jitoSOL + mSOL). The honest universe for CARRY_STAKED_BASIS depends on which (LST, perp_venue) tuples actually accept the LST as cross-margin. Audit: for each ETH-perp venue we run (HYPERLIQUID, ASTER, BINANCE, BYBIT, OKX, DERIBIT, GMX, plus DEXes — Aevo, Lyra-V2, Hyperliquid spot/perp wrapper), check each ETH LST (stETH, wstETH, weETH, rETH, cbETH, ETHx, sfrxETH) AND its wrapped equivalents — which is/are accepted as direct cross-margin (NOT lending collateral, NOT spot only)? Output: rows added to `VENUE_COLLATERAL_MATRIX` with verifiable haircut (cite docs URL or admin-set parameter in the venue's risk-engine UI). For SOL-perp venues, repeat for SOL LSTs (jitoSOL, mSOL, bSOL, jupSOL) across DRIFT + ZETA + Mango — DRIFT already covered.
+      - [ ] [HUMAN+AGENT] P1. **BTC LST follow-up (de-prioritised).** No mainstream BTC LST is accepted as direct perp margin today (LBTC / wBTC.b / pumpBTC are still in lending-protocol territory). Add a placeholder row only when a venue ships it.
+    status: todo
+    note: "Why per-LST and not per-asset: weETH + stETH have very different on-chain rate behaviour and very different acceptance — Aave V3 takes weETH at 72.5% LTV but stETH only at the wstETH wrapper, and Hyperliquid takes neither. Treating 'ETH LSTs' as one set would lose every deployment decision the matrix is supposed to make."
+  - id: phase-7b-matrix-haircut-correctness
+    content: |
+      - [ ] [AGENT] P1. After Phase 7a lands rows: extend `get_collateral_haircut(venue, token)` to be the SSOT for ranking-input weighting in Phase 8. Per (LST, perp_venue), the **effective LST notional** the perp short can lean on = `lst_balance · (1 − haircut)`. The ranker uses this haircut-adjusted notional when computing position sizing — not face notional. Add unit test that asserts `get_collateral_haircut("DRIFT", "JitoSOL") == Decimal("0.10")` and that the ranker's effective notional shrinks proportionally.
+    status: todo
+    blocked_by: phase-7a-matrix-eth-lst-coverage-audit
+  - id: phase-7c-catalog-auto-expand
+    content: |
+      - [ ] [AGENT] P0. Once Phase 7a/b ship, `_build_carry_staked_basis` automatically picks up the new (LST × perp_venue) rows via `accepted_perp_collateral` — no catalog code change needed. Confirm by re-running the catalog generator and asserting slot count grows by exactly the new matrix rows (one per accepting (LST, perp_venue) tuple). Update `test_target_universe::test_slot_count` floor to track the new total. Drop the `n >= 1` exception in `test_no_archetype_has_fewer_than_three_rows` once CARRY_STAKED_BASIS clears 3 slots organically.
+    status: todo
+    blocked_by: phase-7b-matrix-haircut-correctness
+  - id: phase-8a-base-rank-allocator
+    content: |
+      - [ ] [AGENT] P0. strategy-service — extract `BaseRankAllocator(StrategyAllocator)` from current `CarryFundingRankAllocator` into `engine/allocators/base_rank_allocator.py`. Shape: pre-rank universe filter (abstract `_eligible_universe(input_series) -> Iterable[Tuple[Hashable, ...]]`), ranking metric (abstract `_score(input_series, key) -> Decimal`), top-N at each tier (config-driven), threshold gate (default 250 bps, config-overridable), tie-break (deterministic — by key tuple). Returns `dict[StrategyInstanceId, Decimal]` weights. Drop the existing 3-stage hierarchical hard-coding from `CarryFundingRankAllocator` so subclasses can pick their own grouping arity (1 stage for single-axis archetypes, 2 stages for coin × venue, 3 stages where present).
+    status: todo
+    note: "Universe filter is the most important method — it's what differentiates CARRY_STAKED_BASIS (LST × perp_venue accepted-only) from CARRY_BASIS_PERP (coin × venue MVP set). Keep it explicitly archetype-specific."
+  - id: phase-8b-seven-subclass-allocators
+    content: |
+      - [ ] [AGENT] P0. strategy-service — implement 7 subclasses, one per archetype. Each shipped under `engine/allocators/{archetype_lower}_rank_allocator.py`:
+
+        | Subclass                               | Universe filter                                                                              | Ranking metric                                                | Top-N config                          |
+        | -------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------- |
+        | YieldStakingSimpleRankAllocator        | LSTs in registry × eligible-share-class (ETH/SOL)                                            | `staking_apy_total` (base + EIGEN + seasonal − dust)          | top_n_lsts                            |
+        | CarryBasisPerpRankAllocator            | MVP-coin set × all perp venues; spot+perp same venue preferred                               | funding APY (annualised)                                      | top_n_coins, top_n_venues_per_coin    |
+        | CarryStakedBasisRankAllocator          | (LST × perp_venue) where `venue_accepts_collateral(perp_venue, lst) is True`                 | `staking_apy_total + funding_apy` (combined, USDC-denominated)| top_n_lsts, top_n_venues_per_lst      |
+        | CarryRecursiveStakedRankAllocator      | (LST × lending_protocol × leverage_step) where LTV permits                                   | `leverage · (staking_apy_total − borrow_apy)`                 | top_n_loops                           |
+        | CarryBasisDatedRankAllocator           | (CME / Deribit) × (ETH / BTC) × matched expiry                                               | dated future basis APY (expiry-matched)                       | top_n_coins, top_n_venues_per_coin    |
+        | YieldRotationLendingRankAllocator      | stable lending protocols × chains                                                            | lending APY (supply-side, net of utilisation cap)             | top_n_protocols                       |
+        | ArbitragePriceDispersionRankAllocator  | mode=perp → (venue_pair × coin) on funding spread; mode=dated → (venue_pair × coin × expiry) | signed spread (with directional rule for perp-mode)           | mode, top_n_pairs                     |
+
+        Threshold defaults to 250 bps for every archetype, all per-archetype config-overridable via `share_class_config`. Each subclass gets its own unit-test file with at least: empty-universe fallback, threshold-just-below rejection, threshold-just-above selection, top-N truncation, deterministic tie-break.
+    status: todo
+    blocked_by: phase-8a-base-rank-allocator
+  - id: phase-8c-staking-apy-total-aggregator
+    content: |
+      - [ ] [AGENT] P1. features-onchain-service — implement `staking_apy_total` aggregator combining base LST APY (already on-chain-derived from `lst_rates` rate-diff per Phase 4a-5) + EIGEN AVS rewards (per `eigenlayer_rewards_handler`) + ETHFI / ANKR / Jito seasonal rewards (per `lst_seasonal_rewards_scheduler`) − dust-realisation slippage (per existing dust loader). Single aggregated feature emitted to `lst_yields` feature group; consumed by both YieldStakingSimpleRankAllocator and CarryStakedBasisRankAllocator. Lives next to current `_process_lst_yields` orchestrator method to preserve batch=live consistency.
+    status: todo
+    note: "Why aggregated and not summed at allocator-level: the dust component is path-dependent (depends on swap notional and pool depth) and the seasonal component has different schedules per LST — both are not APY-shaped natively, so they need a feature-side conversion. Allocators should consume one APY scalar."
+  - id: phase-8d-archetype-ranker-wiring-+-tests
+    content: |
+      - [ ] [AGENT] P0. strategy-service — wire each `*RankAllocator` to its archetype via `AllocatorArchetype` enum + `share_class_config.allocator_class`. Add `AllocatorArchetype.CARRY_STAKED_BASIS_RANK` (and the other 6) values. Update `test_allocator_registry.py` to assert each archetype has its own allocator class. Smoke-test integration: synthetic `StrategyInputSeries` with 10 candidate slots per archetype, assert top-N gating, threshold gating, tie-break determinism.
+    status: todo
+    blocked_by: phase-8b-seven-subclass-allocators
 isProject: false
 ---
 
@@ -138,16 +222,21 @@ The right model:
 - Net carry in USDC terms:
   `f · (staking_apy + funding_apy) + (1−f) · usdc_idle_yield − conversion_fees − rebalance_fees`
 
-| Venue capability      | Derived leg sequence                                                               | Net carry (USDC)                                  |
-| --------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Accepts LST as margin | BUY_SPOT(f·USDC→ETH) → STAKE → TRANSFER LST to perp → TRADE short                  | `f·(staking + funding) + (1−f)·usdc_yield − fees` |
-| Accepts USDC, not LST | BUY_SPOT(f·USDC→ETH) → STAKE (held off-venue) → TRADE short with (1−f)·USDC margin | `f·(staking + funding) + (1−f)·usdc_yield − fees` |
-| Accepts neither       | Reject slot at preflight                                                           | n/a                                               |
-| ~~Aave borrow USDC~~  | ~~Deleted — basis-eroding~~                                                        | ~~negative under E-Mode haircut~~                 |
+| Venue capability              | Derived leg sequence                                                          | Net carry (USDC)                           |
+| ----------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| Accepts this LST as margin    | SWAP(USDC→native) → STAKE(native→LST) → TRANSFER(LST→perp venue) → TRADE      | `staking_apy_total + funding_apy − fees`   |
+| Does not accept this LST      | Reject slot at preflight (firm rule, post-2026-05-05)                         | n/a                                        |
+| ~~SPLIT_STAKE (USDC margin)~~ | ~~Deleted 2026-05-05 — strictly dominated by CARRY_BASIS_PERP / RECURSIVE~~   | ~~< basis-perp at 2x or recursive at L>1~~ |
+| ~~Aave borrow USDC~~          | ~~Deleted 2026-05-04 — basis-eroding (borrow APY > basis at E-Mode haircut)~~ | ~~negative~~                               |
 
-So "which structure?" is never a question the user answers — it falls out of `accepted_perp_collateral(perp_venue)`.
-Catalog enumerates (LST × perp × f) tuples; engine derives the legs. Tracer measures realised net USDC APY per slot.
-Orchestrator allocates by realised winner.
+So "which slots run at all?" is never a question the user answers — it falls directly out of
+`venue_accepts_collateral(perp_venue, lst)`. Catalog enumerates `(lst, perp_venue)` tuples filtered to True. Engine
+emits the 4-leg sequence. Tracer drives V2BatchHarness through the full live pipeline; orchestrator allocates by
+realised carry.
+
+Today's matrix coverage is sparse for LSTs: only DRIFT (jitoSOL + mSOL, 10% haircut). Phase 7 lands the ETH-LST rows
+once each (LST, perp_venue) tuple is verified against venue documentation — that is the unblock for non-trivial slot
+counts.
 
 ## Pre-audit (blast radius)
 
@@ -209,6 +298,29 @@ eating.
   each venue accepts as margin. Re-declaring it in the catalog (or worse, in the engine) would create drift. The engine
   reads the matrix at preflight; adding a row to the matrix automatically expands the engine's eligible structures on
   next tick — no engine code change needed for new venues.
-- **Why f ∈ {0.5, 0.75}**: 0.5 is the conservative case (half perp margin buffer, half staked); 0.75 is the yield-tilted
-  case. f=1.0 leaves zero perp margin so it's invalid on USDC-margined venues; f<0.5 is dominated by staking-yield drag.
-  Universe selector picks the winner empirically per (LST, perp) pair.
+- **Why f ∈ {0.5, 0.75}** (superseded 2026-05-05): the f-grid was a SPLIT_STAKE-era artefact. Now that the only allowed
+  structure is LST_AS_MARGIN, the LST IS the perp margin — there is no spare USDC bucket to fund margin separately, so
+  `f = 1.0` is the only meaningful value. `_STAKED_BASIS_F_VALUES` collapsed to `(Decimal("1.0"),)`.
+- **Why SPLIT_STAKE was deleted (2026-05-05)**: SPLIT_STAKE was the case where the venue accepts USDC (not the LST) so
+  the user staked half their USDC into LST off-venue and posted the other half at the perp venue as USDC margin. It is
+  strictly dominated:
+  - vs `CARRY_BASIS_PERP` at 2x size on the unstaked half: SPLIT_STAKE = `f·(staking + funding) + (1−f)·idle_yield`;
+    `CARRY_BASIS_PERP @ 2x = 2·funding`. SPLIT_STAKE loses iff `funding > staking·f / (2−f)` — at the f=0.5 case, iff
+    `funding > staking/3`, which is overwhelmingly the regime for MVP coins (BTC/ETH/SOL).
+  - vs `CARRY_RECURSIVE_STAKED`: when `staking > 3·funding` (the only regime where SPLIT_STAKE would beat BASIS_PERP),
+    recursive-staked wins by leverage (it amplifies the staking spread, SPLIT_STAKE doesn't). No funding/staking regime
+    exists where SPLIT_STAKE is the right answer; remove it cleanly.
+- **Why per-LST × per-venue acceptance, not per-asset (2026-05-05)**: weETH and stETH have different on-chain rate
+  behaviour, different EigenLayer-restaking exposure, and very different venue acceptance — Aave V3 takes weETH at 72.5%
+  LTV but stETH only via the wstETH wrapper, and Hyperliquid takes neither. Treating "ETH LSTs" as one bucket would lose
+  every deployment decision the matrix is supposed to make. Phase 7a audit walks each (LST, perp_venue) tuple
+  individually with verifiable haircut citations.
+- **Why each archetype has its own ranker (2026-05-05)**: cross-archetype orthogonality detection (e.g. switching
+  capital between CARRY_BASIS_PERP and CARRY_STAKED_BASIS based on which is paying more) is a future layer. For MVP,
+  each archetype has its own `*RankAllocator` subclass with archetype-specific universe filter + ranking metric +
+  top-N + 250 bps threshold. The shared `BaseRankAllocator` enforces the contract; subclasses pick grouping arity (1
+  stage for staking-simple, 2 for coin × venue, 3 where present).
+- **Batch = live (2026-05-04, reaffirmed 2026-05-05)**: the tracer drives `V2BatchHarness` per slot — engine `on_tick` →
+  AtomicInstruction → matching engine → position-balance-monitor → equity rebalance — not a standalone closed-form
+  simulator. Already shipped at `strategy-service@6d805e0`. There is no "live-only strategy" or "batch-only strategy";
+  99% of the code path is identical, only execution-fill source differs.

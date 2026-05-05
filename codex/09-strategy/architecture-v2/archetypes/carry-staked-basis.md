@@ -16,19 +16,18 @@ topology_requirements:
 
 ## What it does
 
-USDC-share-class market-neutral basis trade: deploy a fraction `f` of starting USDC into ETH (or SOL), stake into the
-LST, short the equivalent perp on a venue, hold the (1−f) USDC at the perp venue as margin. Earn staking yield on the
-staked fraction + funding rate on the short + idle yield on the cash fraction. Delta = 0 because the perp short cancels
-the long underlying delta the LST creates.
+USDC-share-class market-neutral basis trade: deploy starting USDC into the native asset (ETH / SOL), stake into the LST,
+transfer the LST to the perp venue as cross-margin, short the equivalent perp. Earn staking yield on the staked
+principal + funding rate on the short. Delta = 0 because the perp short cancels the long underlying delta the LST
+creates.
 
-The execution structure (which legs are emitted, which venue holds which asset) is **derived from the UAC venue
-collateral matrix** at preflight, not user-chosen. Engine queries
-[`unified_api_contracts.registry.venue_collateral.accepted_perp_collateral`](../../../../unified-api-contracts/unified_api_contracts/registry/venue_collateral.py)
-on the `perp_venue` and emits whatever leg sequence is feasible. No baked-in structure choice.
+**Firm rule (post-2026-05-05):** the LST must be accepted as direct cross-margin at the perp venue, or the slot is
+rejected at preflight. No SPLIT_STAKE fallback, no COLLATERAL_BORROW path. The execution structure is **`LST_AS_MARGIN`
+only** — derived from the UAC venue collateral matrix at preflight, not user-chosen. Engine queries
+[`unified_api_contracts.registry.venue_collateral.venue_accepts_collateral`](../../../../unified-api-contracts/unified_api_contracts/registry/venue_collateral.py)
+on `(perp_venue, lst_asset)`; if False, the slot is rejected.
 
-## Token / position flow — two structures, derived from the matrix
-
-### Structure A — LST_AS_MARGIN (when perp venue accepts the LST as cross-margin)
+## Token / position flow — `LST_AS_MARGIN` (only allowed structure)
 
 ```
 1. SWAP (leader): USDC --> ETH/SOL on a spot venue (UNISWAP_V3, JUPITER, ...).
@@ -37,34 +36,35 @@ on the `perp_venue` and emits whatever leg sequence is feasible. No baked-in str
 4. TRADE (hedge): SHORT perp_instrument equal-and-opposite to the LST principal.
 
    Net carry (USDC, annualised, bps):
-       net_apy_bps = staking_apy + funding_apy - fees
+       net_apy_bps = staking_apy_total + funding_apy - fees
 
-       Where staking_apy is derived on-chain (rate diff per day, annualised).
+       staking_apy_total combines base on-chain rate-diff + EIGEN restaking
+       rewards + seasonal LST rewards minus dust slippage — see
+       features-onchain `staking_apy_total` aggregator.
 ```
 
-Eligibility: the perp venue must have a `(venue, lst_asset, accepted=True)` row in `VENUE_COLLATERAL_MATRIX`.
+`stake_fraction` = `1.0` is the only meaningful value: the LST IS the perp margin, there is no spare USDC bucket. The
+f-grid was a SPLIT_STAKE-era artefact and was retired with the deletion.
 
-### Structure B — SPLIT_STAKE (when perp venue accepts only USDC)
+### Why SPLIT_STAKE was deleted (2026-05-05)
 
-```
-1. SWAP (leader): f * USDC --> ETH/SOL on a spot venue.
-2. STAKE: ETH/SOL --> LST on the staking protocol; LST stays at the staking venue.
-3. TRADE (hedge): SHORT perp using (1-f) * USDC as margin.
+SPLIT_STAKE was the case where the perp venue did **not** accept the LST as margin, so the user staked half of starting
+USDC into LST off-venue and posted the other half at the perp venue as USDC margin. It is **strictly dominated**:
 
-   Net carry (USDC, annualised, bps):
-       net_apy_bps = f * (staking_apy + funding_apy)
-                    + (1 - f) * usdc_idle_yield
-                    - fees
-```
+- vs `CARRY_BASIS_PERP` at 2x size on the unstaked half: SPLIT_STAKE = `f·(staking + funding) + (1−f)·idle_yield`;
+  basis-perp at 2x = `2·funding`. SPLIT_STAKE loses iff `funding > staking·f / (2−f)`. For f = 0.5 that's
+  `funding > staking/3` — overwhelmingly the regime for MVP coins (BTC / ETH / SOL).
+- vs `CARRY_RECURSIVE_STAKED`: when `staking > 3·funding` (the only regime where SPLIT_STAKE could beat basis-perp), the
+  recursive variant wins by leverage — it amplifies the staking spread, SPLIT_STAKE doesn't.
 
-`f` ∈ (0, 1] is the only user-tunable structure parameter. `f = 1.0` is rejected at preflight on USDC-only venues (would
-leave zero perp margin); valid splits are typically `f ∈ {0.5, 0.75}`.
+There is no funding/staking regime where SPLIT_STAKE is the right answer; we removed it cleanly rather than carry the
+flag.
 
-### COLLATERAL_BORROW — deleted (do NOT use)
+### COLLATERAL_BORROW — also deleted (do NOT use)
 
-The previous engine implementation routed: stake LST → pledge as Aave collateral → borrow USDC → use that USDC as perp
-margin. **Removed 2026-05-04** because the stablecoin borrow rate (typically 5–8% APY) erodes the basis P&L faster than
-the staking + funding earns it back. There is no scenario where this dominates Structure A or B.
+Previous engine routed: stake LST → pledge as Aave collateral → borrow USDC → use that USDC as perp margin. **Removed
+2026-05-04** because the stablecoin borrow rate (typically 5–8% APY) erodes the basis P&L faster than the staking +
+funding earns it back. Same reasoning as SPLIT_STAKE: structurally narrower than the carry it's protecting.
 
 ## On-chain APY derivation (real, not vendor)
 
@@ -92,32 +92,40 @@ should treat current numbers as a conservative floor.
 Adding a venue or LST to `VENUE_COLLATERAL_MATRIX` automatically expands the catalog's eligible slots on next
 regeneration. No engine code changes, no catalog code changes — just a new matrix row.
 
-Today's matrix (2026-05-04):
+Today's matrix (2026-05-05):
 
-| perp_venue            | accepts        | structure produced | LST eligibility            |
-| --------------------- | -------------- | ------------------ | -------------------------- |
-| HYPERLIQUID           | USDC           | SPLIT_STAKE        | n/a (no LST accepted)      |
-| DERIBIT               | USDC, ETH, BTC | SPLIT_STAKE        | n/a                        |
-| ASTER                 | USDC, USDT     | SPLIT_STAKE        | n/a                        |
-| BINANCE / BYBIT / OKX | USDT, BTC, ETH | not eligible       | USDT-only (no USDC margin) |
+| perp_venue                                              | LST acceptance                                  | catalog rows produced |
+| ------------------------------------------------------- | ----------------------------------------------- | --------------------- |
+| DRIFT                                                   | jitoSOL (10% haircut), mSOL (10% haircut)       | 2 rows                |
+| HYPERLIQUID                                             | none (USDC-only) — explicit accepted=False rows | 0 rows                |
+| BINANCE / BYBIT / OKX / DERIBIT / ASTER / GMX           | none — explicit accepted=False rows             | 0 rows                |
+| BINANCE-FUTURES / BYBIT-FUTURES / KRAKEN-FUTURES / etc. | none — explicit accepted=False rows             | 0 rows                |
 
-No venue currently accepts an LST as direct margin. Once Aevo / GMX / Drift land in the matrix with `wstETH` / `jitoSOL`
-accepted=True rows, their `LST_AS_MARGIN` slots will appear in the catalog automatically.
+Today's slot count = 2: `CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod` +
+`CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod`. Honest — DRIFT is the only venue that accepts an LST as
+cross-margin in production today.
+
+**Phase 7a audit (operator-side):** the matrix should encode each individual (LST, perp_venue) tuple — eETH/weETH ≠
+stETH/wstETH ≠ rETH ≠ cbETH. Aave V3 takes weETH at 72.5% LTV but stETH only via the wstETH wrapper, and Hyperliquid
+takes neither. Treating "ETH LSTs" as one bucket would lose every deployment decision the matrix is supposed to make.
+Negative rows (`accepted=False`) are explicit so absences are self-documenting; positive rows wait on per-venue
+verification with haircut citations from the venue's risk-engine UI or docs URL. When Aevo / Lyra-V2 / dYdX /
+Hyperliquid ship LST-margin support, flip the relevant row to `accepted=True` with a haircut citation in `notes` —
+catalog regeneration on import expands the slot list automatically.
 
 ## Catalog axis (slot labels)
 
 ```
-CARRY_STAKED_BASIS@{staking_protocol}-{perp_venue}-f{int(f*100)}-usdc-1h-usdc-v2-prod
+CARRY_STAKED_BASIS@{staking_protocol}-{perp_venue}-f100-usdc-1h-usdc-v2-prod
 
-Examples (2026-05-04):
-  CARRY_STAKED_BASIS@lido-hyperliquid-f50-usdc-1h-usdc-v2-prod
-  CARRY_STAKED_BASIS@lido-hyperliquid-f75-usdc-1h-usdc-v2-prod
-  CARRY_STAKED_BASIS@etherfi-deribit-f50-usdc-1h-usdc-v2-prod
-  CARRY_STAKED_BASIS@jito-hyperliquid-f50-usdc-1h-usdc-v2-prod
+Examples (2026-05-05):
+  CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod
+  CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod
 ```
 
-22 slots total: 3 ETH-LST × 3 ETH-perp × 2 f-values + 2 SOL-LST × 1 SOL-perp × 2 f-values. Built by
-`_build_carry_staked_basis` in
+2 slots today (DRIFT/JitoSOL + DRIFT/mSOL); the count grows organically as Phase 7a lands verified ETH-LST acceptance
+rows. `f` is fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no
+spare USDC bucket. Built by `_build_carry_staked_basis` in
 [`strategy-service/.../target_universe/catalog.py`](../../../../strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py)
 from the matrix at module import.
 
@@ -126,50 +134,53 @@ from the matrix at module import.
 ```yaml
 share_class: USDC
 capital_budget_share_class: USDC
-capital_budget_amount: 100000 # ETH; 75000 for SOL bundles
+capital_budget_amount: 1000000
 
 # Required engine params (passed via initial_config dict):
-staking_protocol: LIDO # required (LIDO / ROCKETPOOL / ETHERFI / JITO / MARINADE)
-native_asset: ETH # ETH or SOL
-lst_asset: stETH # stETH / rETH / weETH / JitoSOL / mSOL
-perp_venue: HYPERLIQUID # must appear in VENUE_COLLATERAL_MATRIX
-perp_instrument: ETH-PERP # or SOL-PERP
-spot_venue: UNISWAP_V3 # USDC->native swap venue (UNISWAP_V3 / JUPITER / ...)
-stake_fraction: "0.5" # f in (0, 1]; engine derives structure from venue capability
+staking_protocol: JITO # JITO / MARINADE today; LIDO / ROCKETPOOL / ETHERFI when an ETH-perp venue lands LST margin
+native_asset: SOL # SOL today; ETH when an ETH-perp venue lands LST margin
+lst_asset: JitoSOL # JitoSOL / mSOL today
+perp_venue: DRIFT # must appear in VENUE_COLLATERAL_MATRIX with the LST accepted=True
+perp_instrument: SOL-PERP
+spot_venue: JUPITER # USDC->native swap venue (JUPITER / UNISWAP_V3 / ...)
+start_token: USDC # entry token; must be in `accepted_perp_collateral(perp_venue)` (sanity check)
+stake_fraction: "1.0" # always 1.0 post-2026-05-05 — LST is the perp margin
 
 # Optional thresholds:
 entry_bps: "200" # net carry must exceed this to enter
 exit_bps: "50" # net carry below this triggers exit
-min_health_factor: "1.25" # gate when LST_AS_MARGIN structure (irrelevant for SPLIT_STAKE)
+min_health_factor: "1.25" # gates the perp short against LST-haircut breach
 hedge_deadline_ms: "5000" # perp hedge deadline
 ```
 
 There is **no** `lending_protocol`, `borrow_asset`, or `borrow_apy_bps` — those belong to the deleted COLLATERAL_BORROW
-path.
+path. There is also no SPLIT_STAKE fallback or USDC-margin alternative: if
+`venue_accepts_collateral(perp_venue, lst_asset)` returns False, the slot is rejected at preflight.
 
 ## Execution semantics
 
 `AtomicInstruction` with `execution_mode = LEADER_HEDGE`:
 
-- **Structure A (4 legs)**: SWAP (leader) + STAKE + TRANSFER + TRADE (hedge).
-- **Structure B (3 legs)**: SWAP (leader) + STAKE + TRADE (hedge); LST stays at staking venue, USDC margin lives at the
-  perp venue.
+- **`LST_AS_MARGIN` (4 legs)**: SWAP (leader) + STAKE + TRANSFER + TRADE (hedge).
 
-Compensation policy: `CLOSE_LEADER_IF_HEDGE_FAILS`. If the perp short fails within `hedge_deadline_ms`, the SWAP + STAKE
-legs are unwound (UNSTAKE + reverse SWAP) — strategy returns to USDC.
+Compensation policy: `CLOSE_LEADER_IF_HEDGE_FAILS`. If the perp short fails within `hedge_deadline_ms`, the SWAP +
+STAKE + TRANSFER legs are unwound (TRANSFER LST back + UNSTAKE + reverse SWAP) — strategy returns to USDC.
 
 ## P&L attribution
 
-| Leg              | Income                                     | Cost                        | Source                        |
-| ---------------- | ------------------------------------------ | --------------------------- | ----------------------------- |
-| Staked principal | staking_apy_bps × f × notional             | mint/burn fees              | `lst_rates` rate-diff per day |
-| Perp short       | funding_apy_bps × notional (when positive) | commission                  | venue funding feed            |
-| USDC margin      | usdc_idle_yield_apy_bps × (1-f) × notional | n/a                         | venue funding rebate (TODO)   |
-| Spot conversion  | n/a                                        | bid-ask spread on USDC↔ETH | matching engine simulation    |
+| Leg                 | Income                                     | Cost           | Source                                          |
+| ------------------- | ------------------------------------------ | -------------- | ----------------------------------------------- |
+| Staked principal    | staking_apy_total_bps × notional           | mint/burn fees | `lst_rates` rate-diff + EIGEN + seasonal − dust |
+| Perp short          | funding_apy_bps × notional (when positive) | commission     | venue funding feed                              |
+| LST → perp transfer | n/a                                        | bridge/fee     | execution-service                               |
+| Spot conversion     | n/a                                        | bid-ask spread | matching engine simulation                      |
 
-Restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx) accrue additional layers — see
-[restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md). Those are recorded as separate
-attribution rows; not part of the basis-trade carry calculation.
+`staking_apy_total_bps` is the aggregated staking APY: base on-chain rate-diff + EIGEN AVS rewards (when the LST is
+restaked) + ETHFI / ANKR / Jito seasonal rewards − dust realisation slippage. Source: features-onchain
+[`engine/staking_apy_total.py`](../../../../features-onchain-service/features_onchain_service/engine/staking_apy_total.py)
+aggregator. The same value is consumed by `YieldStakingSimpleRankAllocator` and `CarryStakedBasisRankAllocator` so both
+batch and live allocators see the same number. Restaking economics detail:
+[restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md).
 
 ## Risk profile
 
@@ -187,15 +198,38 @@ attribution rows; not part of the basis-trade carry calculation.
 STAKE/UNSTAKE micro-flows are deferred to the lease-controller cash-sweep — no need to mint/burn LST on every equity
 wobble.
 
+## Per-archetype rank allocator
+
+Capital allocation across the eligible (LST, perp_venue) slots uses
+[`CarryStakedBasisRankAllocator`](../../../../strategy-service/strategy_service/portfolio_allocator/archetypes.py)
+(Phase 8 of plan `carry_staked_basis_structure_axis_2026_05_04`). The ranker:
+
+1. Filters to slots where `lst_asset` AND `venue` are populated (the universe is gated upstream by the catalog
+   generator's `accepted_perp_collateral` filter — slots that don't pass the matrix never reach the allocator).
+2. Scores each slot as `staking_apy_total_bps + funding_apy_bps` (USDC-denominated combined carry).
+3. Drops slots scoring below `min_apy_bps` (default 250 = 2.5%, configurable per allocator instance).
+4. Stage 1: ranks LSTs by their average score across surviving venues; truncates to `top_n_lsts` if set.
+5. Stage 2: per surviving LST, ranks venues by per-venue score; truncates to `top_n_venues_per_lst` if set.
+6. Final per-slot weight = stage_1_lst_weight × stage_2_venue_weight; sums to 1 across surviving slots.
+
+Below threshold = the slot is dropped (zero allocation). If every slot is below threshold the snapshot returns all-zeros
+with a rationale string — the caller decides whether to lend the cash instead.
+
+`AllocatorArchetype.CARRY_STAKED_BASIS_RANK` is the registry key. The same `BaseRankAllocator` shape is reused by 6
+sibling subclasses (one per rank-eligible archetype: `YieldStakingSimpleRankAllocator`, `CarryBasisPerpRankAllocator`,
+`CarryRecursiveStakedRankAllocator`, `CarryBasisDatedRankAllocator`, `YieldRotationLendingRankAllocator`,
+`ArbitragePriceDispersionRankAllocator`). Each gets its own universe filter + ranking metric — no cross-archetype
+switching for now (future layer).
+
 ## Tracer protocol
 
-`scripts/trace_carry_staked_basis.py` ranks the 22 catalog slots by realised net USDC APY over a configurable window:
+`scripts/trace_carry_staked_basis.py` ranks the catalog slots by realised net USDC APY over a configurable window:
 
 ```bash
 cd strategy-service
 python scripts/trace_carry_staked_basis.py \
-    --start-date 2026-04-04 \
-    --end-date 2026-05-03
+    --start-date 2026-04-05 \
+    --end-date 2026-05-05
 ```
 
 Reads MTDS `lst_rates` directly (same upstream as the live engine via the calculator refactor), pulls funding via
