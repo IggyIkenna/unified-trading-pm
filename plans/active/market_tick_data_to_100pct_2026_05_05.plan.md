@@ -483,14 +483,16 @@ Notable shape differences:
 
 Real files (sampled `NYSE:EQUITY:ABBV-USD.parquet`: 4251 bytes, written 2026-02-17). Active data, not stale.
 
-Hypotheses:
-- **(a) Pre-hive writer** — an older TradFi adapter version used dash-separators before the codebase standardised
-  on hive `=` notation. Never migrated.
-- **(b) Different writer class** — perhaps Yahoo Finance / Barchart adapter uses this shape while Databento uses
-  canonical.
+Hypotheses (refined 2026-05-05 after spot-check):
+- **(a) One-off bulk import — confirmed**. Top-level prefixes show only 3 days: `day-2025-11-02`,
+  `day-2025-11-08`, `day-2026-01-01`. Each holds ~33k parquets. Storage class is **NEARLINE** (cold storage).
+  Sample creation time: 2026-02-17 12:49:43Z. Pattern fits a one-time Yahoo Finance / Barchart bulk-import that
+  used an older path convention and was never migrated to the canonical hive layout.
+- **(b) Not active**: NO new files written since 2026-02-17. Live TradFi adapters (Databento) write canonical
+  hive paths.
 
-Severity: **MEDIUM** — 100k blobs of real TradFi data invisible to canonical recon, manifest, and downstream readers
-(unless they handle this layout specifically).
+Severity: **LOW-MEDIUM** — 100k blobs are real but isolated (only 3 days, NEARLINE cold storage). Not blocking
+audit progress. Easy to migrate or document-as-archived.
 
 Investigation needed: (i) which adapter writes this? (ii) is the manifest tracking these or are they all phantoms?
 (iii) is downstream reading them or ignoring them?
