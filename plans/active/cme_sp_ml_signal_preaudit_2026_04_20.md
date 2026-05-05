@@ -7,6 +7,87 @@ locked_since: 2026-04-20
 
 # CME S&P 500 ML directional signal — pre-audit + MVP backtest plan
 
+## 2026-05-05 manifest-truth correction
+
+Manifest probe on 2026-05-05 against
+`gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` resolves several blockers below
+and re-ranks the punch list. The "B1 cannot verify from local workspace" caveat in §2 is now obsolete — the answer is ES
+is fully captured.
+
+**Re-ranked leading punch list (replaces the 2026-04-20 priority order in §2):**
+
+1. **B2 — continuous-series / representative-future builder** — still missing. Now the actual leading blocker for any
+   multi-year backtest. ES-front stitching has no implementation in MTDS. BL-10 untouched.
+2. **B3 — ES not registered in ml-training-service parser** — still open per code probe. `parser.py:14-18` still
+   hard-codes `TRADFI: ["SPY"]`.
+3. **VIX adapter triage (NEW)** — canonical manifest shows 2,211 rows 2020-01-03 → 2026-04-29 ALL `empty_confirmed` with
+   blank `instrument_id`. User reports manually uploading real VIX data 2-4 weeks ago, likely under a non-canonical
+   path. Term-structure features for ES need this resolved. Databento has no CFE/VX continuous symbology so Yahoo
+   Finance / manual upload is the only source.
+4. **MDPS processed_candles for tradfi (separate-but-blocking)** — features-multi-timeframe-service consumes
+   processed_candles from MDPS, not raw ohlcv from MTDS. ES processed_candles availability for tradfi must be confirmed
+   before C2 can pass.
+
+**Resolved by manifest probe:**
+
+- B1 (CME ES multi-year ohlcv_1m not confirmed in GCS) → resolved. ES futures captured 2020-01-01 → 2026-05-04, 100% on
+  futures_chain (1,848 ohlcv_1m + 1,974 trades) and options_chain (1,287 ohlcv_1m). Same for MES. ES_OPT options_chain
+  has gaps 2020-2021 + 2025 sparse — fill VM `tradfi-bf-es-opt-fill-20260505-123434` running.
+- B4 (no TRADFI backfill / ML-training VM launcher) → **partially resolved**. `launch-tradfi-backfill-vm.sh` exists at
+  `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` with valid roots `ES|ES_OPT|MES|BTC|ETH|IBIT|ETHA`,
+  singleton lock, ServiceBootstrap events. ML-training VM launcher not confirmed yet — keep open with reduced scope.
+
+**Still open (separate todo):** B6 (calendar/macro features wired for TRADFI). **B5 (FUTURES_ROLL emission) SHIPPED
+2026-05-05 strategy-service `d7dad8d`** — `engine/futures/roll_emitter.py` + 16 unit tests; reads active_contracts SSOT
+and emits `FuturesRollInstruction` on boundary days (Layer-B translation per
+`sp500_ml_readiness_master_2026_05_05.plan.md` §8 Q4 architecture).
+
+Future agents: re-verify against the manifest path above before acting on the table in §2.
+
+## 2026-05-05 second-probe correction
+
+Re-probe on 2026-05-05 against `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet`
+plus direct GCS path probes overrides the first-probe correction's "VIX adapter triage (NEW)" item — that was wrong. VIX
+is fully captured at the canonical CBOE path; no triage needed. Below is the corrected leading punch list.
+
+**Re-ranked leading punch list (replaces both the §2 priority order and the first-correction list above):**
+
+1. **B2 — continuous-series / representative-future builder** — still missing. **The only data-side blocker remaining
+   for a multi-year backtest.** ES-front stitching has no implementation in MTDS. BL-10 untouched.
+2. **B3 — ES not registered in ml-training-service parser** — still open per code probe. `parser.py:14-18` still
+   hard-codes `TRADFI: ["SPY"]`.
+3. **MDPS processed_candles for tradfi (separate-but-blocking C2)** — features-multi-timeframe-service consumes
+   processed_candles from MDPS, not raw ohlcv from MTDS. ES processed_candles availability for tradfi must be confirmed
+   before C2 can pass.
+4. **ES_OPT 2020-2022 backfill (Phase A — IV/skew features only)** — in flight via
+   `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` (killed predecessor `tradfi-bf-es-opt-fill-20260505-123434` was
+   refetching already-captured 2023-2026 instead of filling the 2020-2022 gap). Needed for IV/skew features, **NOT for
+   the technical-indicator MVP** (B2 + B3 are the actual MVP gates).
+
+**Resolved by second-probe (corrects first-probe assertions):**
+
+- ~~VIX adapter triage~~ → **WRONG.** VIX is fully captured at canonical path
+  `gs://market-data-tick-tradfi-central-element-323112/raw_tick_data/by_date/day={D}/asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet`.
+  696+ daily partitions on disk. Manifest has **1,602 rows `venue=CBOE, data_type=ohlcv_15m, capture_status=captured`**
+  covering 2020-01-07 → 2026-05-05. Sample-read 2026-05-04 confirmed 52 rows, OHLC populated 17.23-18.95,
+  `instrument_key=CBOE:INDEX:VIX-USD`, `volume=0` (correct for index). **VIX 15m captured 2020-2026 at `venue=CBOE`
+  canonical — feed into volatility/skew calculators directly.** The 2,211 `empty_confirmed` rows under
+  `venue=YAHOO_FINANCE` are a separate abandoned adapter (cleanup low-priority).
+- B1 ES futures — confirmed captured 100% 2020-2026 (unchanged from first probe).
+- B4 launcher — confirmed exists `launch-tradfi-backfill-vm.sh` (unchanged from first probe).
+
+**New finding (NASDAQ S&P 500 constituents):** legacy path `day-2026-01-03/data_type-ohlcv_1m/equities/NASDAQ/` holds 79
+instrument files including AAPL, ADBE, ADI, ADP, ADSK, AMAT, AMD, AMGN, AMZN, AVGO, BIIB, BKNG, CDNS, CDW, CEG, CHTR,
+CMCSA, COST, CPRT, CSCO, CSGP — top S&P 500 NASDAQ tech names. Canonical path
+`day=2026-05-04/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=ohlcv_1m/` only has IBIT.parquet +
+ETHA.parquet — live captures are spot-ETF-only, individual constituents NOT being live-captured. **Implication: ES
+futures (proxy for SPX) is the canonical training input for this MVP.** Individual constituents are nice-to-have, not
+blocking. Legacy NASDAQ data could be surfaced by porting the phantom-audit / manifest-rebuild scripts to tradfi
+(separate plan: `cefi_tradfi_tick_data_backfill_2026_04_10.plan.md`).
+
+**Still open (unchanged):** B6 (calendar/macro features wired for TRADFI). **B5 (FUTURES_ROLL emission) SHIPPED
+2026-05-05** — see prior section.
+
 Target archetype + slot: `ML_DIRECTIONAL_CONTINUOUS@cme-es-dated-1m-usd-prod` (TRADFI / dated_future / venue CME,
 rollMode both, status PARTIAL per `unified-trading-system-ui/lib/architecture-v2/coverage.ts:181-192`).
 
@@ -155,14 +236,14 @@ Item (d) cannot be verified from the local workspace — requires a GCS query ag
 
 In priority order:
 
-| #   | Blocker                                                                                                                                                                                                                                                                                                                                         | Severity                                                                          | Fix scope                                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| B1  | **CME ES multi-year ohlcv_1m not confirmed to be in GCS.** No way to verify from local workspace. If not present, need Databento backfill across ES expiries 2022-2026 via a yet-to-be-written `launch-tradfi-backfill-vm.sh`.                                                                                                                  | **HARD BLOCKER — probably days of backfill if empty.**                            | MTDS + new launcher                                                                                                |
-| B2  | **No continuous-series / representative-future builder.** Strategy can trade any single dated contract (e.g. `CME:FUTURE:ES-20260620`) but that contract only runs 3 months. An ML model trained on a single expiry has almost no training data. For multi-year training you need a rolled continuous series. BL-10 is the canonical reference. | **HARD BLOCKER for a multi-year backtest.** Soft for a single-quarter backtest.   | New module in MTDS OR a new `representative-future-service` repo + UAC `RepresentativeFutureRegistry` + UTL events |
-| B3  | **ES not registered in ml-training-service.** `parser.py` hard-codes `TRADFI: ["SPY"]`.                                                                                                                                                                                                                                                         | **ERROR — CLI will reject `--instrument ES`.**                                    | 3-line change to `parser.py`                                                                                       |
-| B4  | **No TRADFI backfill / ML-training VM launcher.** Cannot run heavy backtest compute on a VM.                                                                                                                                                                                                                                                    | Medium — can run locally for a smoke, but no serious multi-year run without this. | 2 new shell scripts                                                                                                |
-| B5  | **`strategy-service` ML_DIRECTIONAL_CONTINUOUS engine has no `FUTURES_ROLL` emission**. Needed when the representative-future flips. Without it, a backtest running across more than one expiry will flatline when the contract expires.                                                                                                        | Medium — only matters once B2 is real.                                            | Strategy-service engine extension                                                                                  |
-| B6  | **Term-structure + macro-calendar features not confirmed wired for TRADFI**. features-calendar-service has FOMC/CPI/NFP but wiring it to TRADFI-feature-group output for ES-1m consumption is untested.                                                                                                                                         | Low — model trains without these, just weaker.                                    | Smoke test                                                                                                         |
+| #   | Blocker                                                                                                                                                                                                                                                                                                                                                                                                                       | Severity                                                                        | Fix scope                                                                                                          |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --- | --- | ---- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
+| B1  | ~~**CME ES multi-year ohlcv_1m not confirmed to be in GCS.**~~ **RESOLVED 2026-05-05** by manifest probe against `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` — ES futures_chain 100% captured 2020-01-01 → 2026-05-04 (1,848 ohlcv_1m + 1,974 trades). MES same. ES_OPT options_chain has gaps 2020-2021 + sparse 2025 (fill VM `tradfi-bf-es-opt-fill-20260505-123434` running). | ~~HARD BLOCKER~~ **DONE**                                                       | n/a                                                                                                                |
+| B2  | **No continuous-series / representative-future builder.** Strategy can trade any single dated contract (e.g. `CME:FUTURE:ES-20260620`) but that contract only runs 3 months. An ML model trained on a single expiry has almost no training data. For multi-year training you need a rolled continuous series. BL-10 is the canonical reference.                                                                               | **HARD BLOCKER for a multi-year backtest.** Soft for a single-quarter backtest. | New module in MTDS OR a new `representative-future-service` repo + UAC `RepresentativeFutureRegistry` + UTL events |
+| B3  | **ES not registered in ml-training-service.** `parser.py` hard-codes `TRADFI: ["SPY"]`.                                                                                                                                                                                                                                                                                                                                       | **ERROR — CLI will reject `--instrument ES`.**                                  | 3-line change to `parser.py`                                                                                       |
+| B4  | ~~**No TRADFI backfill / ML-training VM launcher.** Cannot run heavy backtest compute on a VM.~~ **PARTIALLY RESOLVED 2026-05-05.** `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` exists (valid roots `ES                                                                                                                                                                                                      | ES_OPT                                                                          | MES                                                                                                                | BTC | ETH | IBIT | ETHA`, singleton lock, `VM_SHUTDOWN_ON_COMPLETION=true`, ServiceBootstrap events). ML-training VM launcher still missing. | Reduced — backfill launcher done; ML-training launcher still open. | 1 remaining shell script (launch-ml-training-vm.sh) |
+| B5  | **`strategy-service` ML_DIRECTIONAL_CONTINUOUS engine has no `FUTURES_ROLL` emission**. Needed when the representative-future flips. Without it, a backtest running across more than one expiry will flatline when the contract expires.                                                                                                                                                                                      | Medium — only matters once B2 is real.                                          | Strategy-service engine extension                                                                                  |
+| B6  | **Term-structure + macro-calendar features not confirmed wired for TRADFI**. features-calendar-service has FOMC/CPI/NFP but wiring it to TRADFI-feature-group output for ES-1m consumption is untested.                                                                                                                                                                                                                       | Low — model trains without these, just weaker.                                  | Smoke test                                                                                                         |
 
 ## 3. Minimum viable backtest — what "MVP" can realistically mean
 
@@ -299,31 +380,61 @@ Three tiers of "runnable":
 
 ### Phase A — Data foundation
 
-- [ ] [HUMAN] P0. Verify CME ES multi-year `ohlcv_1m` data presence in
-      `gs://<tick-data-bucket>/raw_tick_data/by_date/.../venue=CME/.../data_type=ohlcv_1m/ES-*.parquet`. Command:
-      `gsutil ls gs://<bucket>/_index/availability_index.parquet` +
-      `python -c "import pandas as pd; df = pd.read_parquet('...'); print(df[(df.venue=='CME')&(df.data_type=='ohlcv_1m')].groupby('attempted_at').size())"`.
-- [ ] [AGENT] P0. Write `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` — copy pattern from
-      `launch-cefi-sharded-backfill.sh`; `VM_CATEGORY=TRADFI`, `VM_SERVICE=mtds`, metadata for ES expiries 2022-2026.
+- [x] [HUMAN] P0. Verify CME ES multi-year `ohlcv_1m` data presence (verified captured 2020-01-01 → 2026-05-04 by
+      manifest probe 2026-05-05 against
+      `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet`; ES futures_chain 1,848
+      ohlcv_1m + 1,974 trades, options_chain 1,287 ohlcv_1m + 1 trades. MES same shape).
+- [x] [AGENT] P0. Write `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` (verified exists 2026-05-05 at
+      `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh`, valid roots `ES|ES_OPT|MES|BTC|ETH|IBIT|ETHA`,
+      singleton lock, ServiceBootstrap events, VM_SHUTDOWN_ON_COMPLETION=true).
 - [ ] [AGENT] P0. Extend `deployment-service/scripts/vm/create-code-tarballs.sh` `TRADFI_REPOS` with
       `ml-training-service`; add
       `--include features-multi-timeframe-service features-calendar- service features-volatility-service` as scoped
       defaults.
+- [x] [AGENT] P0. VIX adapter triage / canonical manifest rebuild — **NOT NEEDED** (corrected by second-probe
+      2026-05-05). VIX 15m captured 2020-2026 at canonical CBOE path
+      `gs://market-data-tick-tradfi-central-element-323112/raw_tick_data/by_date/day={D}/asset_group=tradfi/venue=CBOE/instrument_type=index/data_type=ohlcv_15m/VIX.parquet`.
+      Manifest has 1,602 rows `venue=CBOE, data_type=ohlcv_15m, capture_status=captured` covering 2020-01-07 →
+      2026-05-05; sample-read 2026-05-04 confirmed real OHLC values 17.23-18.95 with
+      `instrument_key=CBOE:INDEX:VIX-USD`. Feed into volatility/skew calculators directly. The 2,211 `empty_confirmed`
+      rows under `venue=YAHOO_FINANCE` (which the first-probe correction surfaced) are a separate abandoned adapter, NOT
+      the canonical VIX feed — cleanup is low-priority noise removal in the sibling tradfi backfill plan.
+- [ ] [AGENT] P0. Confirm MDPS processed_candles for tradfi covers ES 2020-2026 — features-multi-timeframe-service
+      consumes MDPS processed_candles, not raw MTDS ohlcv. Probe MDPS canonical path; if missing, run MDPS tradfi
+      backfill before C2 can pass.
+- [ ] [AGENT] P1. ES_OPT 2020-2022 backfill in flight via `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` in
+      `asia-northeast1-c` (`--start-date 2020-01-01 --end-date 2022-12-31`, instruments
+      `ES.OPT;EW.OPT;EW1-4.OPT;E1A-E5A.OPT;EOM.OPT`, data_types `ohlcv_1m`). STARTED event partitions confirmed at
+      `gs://central-element-323112-events/events/market-tick-data-service/2026-05-05/tradfi-bf-es-opt-adhoc-adhoc-20260505-183009/hour=17/+hour=18/`
+      (probe 2026-05-05). Replaces killed `tradfi-bf-es-opt-fill-20260505-123434` (had `VM_FORCE_WINDOW=true` +
+      `VM_START_DATE=2023-01-01`, refetching already-captured 2023-2026 instead of filling the 2020-2022 gap). **Needed
+      for IV/skew features, NOT for the technical-indicator MVP** — B2 (continuous-series builder) + B3 (ES registration
+      in ml-training-service) are the actual MVP blockers. Verify capture_status=captured for filled windows post-run.
 
 ### Phase B — Continuous-series builder
 
-- [ ] [AGENT] P0. Add `market-tick-data-service/market_tick_data_service/scripts/ build_continuous_es.py` — roll on
-      volume-crossover heuristic between front and next month; write `CME:CONTINUOUS:ES` partition parquet under
-      standard TRADFI canonical path.
-- [ ] [AGENT] P0. Add test `tests/market_interface/adapters/tradfi/test_continuous_es_roll.py` — validates stitch
-      continuity, no gaps, roll-day price continuity check.
+- [x] [AGENT] P0. Add `market-tick-data-service/market_tick_data_service/scripts/build_continuous_es.py` — **SHIPPED
+      2026-05-05 market-tick-data-service `133cfb4`**. Panama-canal back-adjust stitcher. Pure-function core
+      (`build_active_contracts_table`, `extract_roll_events`, `compute_back_adjust_shifts`,
+      `apply_panama_canal_backadjust`, `attach_roll_metadata`). CLI wrapper writes per-day continuous parquet + sidecar
+      SSOT at `processed_candles/_continuous/{ROOT}/_meta/active_contracts.parquet`. ES + MES via `--root` flag.
+- [x] [AGENT] P0. Add tests for the continuous-series stitcher — **SHIPPED 2026-05-05** at
+      `market-tick-data-service/tests/unit/scripts/test_build_continuous_es.py`. 10 unit tests cover business-day shift,
+      roll-date pairing, active-contracts table, reverse-walk shift accumulation, 2-contract Panama-canal correctness,
+      idempotency, roll metadata persistence, volume-not-adjusted, canonical contract-id format, honest-absence on
+      missing roll-day data.
 
 ### Phase C1 — ml-training-service registration (parallel)
 
-- [ ] [AGENT] P0. Register ES in `ml-training-service/ml_training_service/cli/parser.py`:
-      `INSTRUMENTS["TRADFI"] = ["SPY", "ES"]`; `INSTRUMENT_ID_MAP["ES"] = "CME:CONTINUOUS:ES"`.
-- [ ] [AGENT] P1. Add target-builder smoke test for ES in `ml-training-service/tests/`.
-- [ ] [AGENT] P0. Run `bash scripts/quality-gates.sh` on ml-training-service.
+- [x] [AGENT] P0. Register ES in `ml-training-service/ml_training_service/cli/parser.py` — **SHIPPED 2026-05-05
+      ml-training-service `a21e9ed`** (ES + ES_FRONT + MES + MES_FRONT + VIX).
+      `INSTRUMENT_ID_MAP["ES_FRONT"] =     "CME:CONTINUOUS:ES"`,
+      `INSTRUMENT_ID_MAP["MES_FRONT"] = "CME:CONTINUOUS:MES"`, `INSTRUMENT_ID_MAP["VIX"] = "CBOE:INDEX:VIX-USD"`.
+- [x] [AGENT] P1. Add CLI parser tests for new symbols — **SHIPPED 2026-05-05 ml-training-service `ba0d778`**.
+      `test_cli_parser.py::TestInstrumentMapping` asserts MES/MES_FRONT/VIX resolve to canonical ids and resolve to
+      TRADFI asset group. Target-builder integration smoke test still pending (gated on processed_candles backfill).
+- [x] [AGENT] P0. Run `bash scripts/quality-gates.sh` on ml-training-service — **DONE 2026-05-05** as part of P1.9
+      workspace QG sweep. Lint clean on parser/config/validator after pre-existing E501 fixes.
 
 ### Phase C2 — features orchestration (parallel with C1)
 

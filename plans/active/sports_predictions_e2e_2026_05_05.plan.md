@@ -81,7 +81,7 @@ e2e plan but scoped only to MTDS arb validation), and adds explicit ML-training 
 **On the existing 288M Odds-API rows and bucketing.** MTDS already holds ~288M historical odds rows under
 `gs://market-data-tick-sports-{pid}/...venue=ODDS_API/...` (legacy layout). The MDPS bucketing infra for predictions
 already exists: `SportsBucketAssignmentAdapter` in
-[`market-data-processing-service/.../sports/bucket_assignment_adapter.py`](../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)
+[`market-data-processing-service/.../sports/bucket_assignment_adapter.py`](../../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)
 implements an **8-bucket ML horizon grid** (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0) with graduated
 staleness caps (60 / 45 / 30 / 20 / 15 / 10 / 5 / 5 minutes), long → wide pivot (h2h → home/draw/away, spreads →
 handicap, totals → over/under, btts → yes/no), and dedup per (fixture, bookmaker, bucket) keeping freshest snapshot.
@@ -91,7 +91,7 @@ The path for this plan is:
 
 - **Re-key existing 288M rows** from legacy `venue=ODDS_API` to canonical `data_source=ODDS_API/venue={BOOKMAKER}/...`
   via the idempotent script
-  [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py).
+  [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py).
   Pure GCS rewrite, **no API credits**.
 - **Run MDPS `SportsBucketAssignmentAdapter`** on the migrated rows — assigns each row to one of the 8 horizon buckets
   using `bm_minutes_to_kickoff`. **No API credits.** This produces the cleaned bucketed odds dataset that FSS feeds on.
@@ -106,8 +106,8 @@ future arb push wants finer bucket fidelity, that's a separate plan.
 
 The fold targets:
 
-- **sports_e2e_validation_2026_03_27** (archived 2026-05-05, 23 open todos at archive time): Phases 2/3/5 fold here.
-  The Phase 4 re-collection cost plan is dropped — predictions don't need it.
+- **sports_e2e_validation_2026_03_27** (archived 2026-05-05, 23 open todos at archive time): Phases 2/3/5 fold here. The
+  Phase 4 re-collection cost plan is dropped — predictions don't need it.
 
 This plan does **not** swallow:
 
@@ -161,7 +161,7 @@ Default mode: **use the existing 288M Odds-API rows**. Path: re-key (free) → M
       usable timestamp (`bm_time` if present, else `fetch_utc` / `last_update` / `timestamp` as a proxy). Records the
       column name to use in the next todo.
 - [ ] [SCRIPT] P0. Run
-      [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py)
+      [`market-tick-data-service/.../scripts/migrate_sports_canonical.py`](../../../market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical.py)
       end-to-end on the legacy 288M rows. Idempotent re-key from `venue=ODDS_API/...` to canonical
       `data_source=ODDS_API/venue={BOOKMAKER}/league_id=L/instrument_type=odds/data_type=trades/`. Confirm row counts
       match (288M ± migration drops).
@@ -244,8 +244,8 @@ Folded from sports_e2e_validation Phase 5 (MTDS/MDPS/FSS/strategy live mode).
 
 ## Out of scope
 
-- **Odds-API re-collection** — dropped. Existing 288M rows + 8-bucket MDPS adapter cover predictions. Re-open
-  separately only if a future arb push wants finer bucket fidelity than `(kickoff - timestamp)` can approximate.
+- **Odds-API re-collection** — dropped. Existing 288M rows + 8-bucket MDPS adapter cover predictions. Re-open separately
+  only if a future arb push wants finer bucket fidelity than `(kickoff - timestamp)` can approximate.
 - **Arb-style cross-bookmaker scanning** (implied prob > 100%) — out of this plan's predictions scope. Reference: N10
   archive `analyze_all_markets.py` if revived later.
 - **Live (non-paper) sports execution** — Group F caps at execution-service paper mode. Live execution gated on operator
