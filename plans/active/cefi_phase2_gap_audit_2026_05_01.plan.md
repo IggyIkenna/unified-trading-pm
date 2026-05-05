@@ -545,3 +545,74 @@ the DERIBIT BUG-1 signature.
 - BUG-4 (lifecycle exit-code reporting): unchanged — still reports `exit_code=0` on failure per audit findings. Lower
   priority than the schema-validator fix because the data-quality impact is observability-only.
 - Phase 2.0 zombie cleanup happened at some point (was 20 zombies on 2026-05-01; 4 healthy VMs today).
+
+## 2026-05-05 fix landed — BUG-X1 + BUG-X2
+
+The corrected diagnosis was confirmed by a second pass through the manifest data: chain-shard failures are clean (only
+BTC/ETH underlyings as UAC seeds), and the per-instrument failures all share `instrument_type=` blank with the OPTION
+schema error message — meaning they're sentinel rows fanned out from a venue-level exception, not actual write attempts
+on each instrument. Two compounding bugs fixed:
+
+### BUG-X1 — instrument_id vocabulary mismatch (closed)
+
+The orchestrator's Tier-3 `captured_per_instrument_shards` set stored the writer's wire-format symbol (`BTC-PERPETUAL` /
+`BTCUSDT` / `BTC-USDT-SWAP` / `ADA_USDC-PERPETUAL` / `BTCF0:USTF0`). UAC's MVP seed tables emit canonical IDs
+(`BTC-PERP` / `BTC-USDT`). The set-diff at the sentinel comparison never matched on perp venues — every captured shard
+re-emitted as a sentinel `attempted_failed` row, even on dates where the data was successfully captured.
+
+Two-part fix:
+
+- **MTDS** (commit `fe5cc2c` on `live-defi-rollout`): added `_canonicalize_captured_instrument_id(venue, raw_symbol)`
+  helper that maps wire→UAC seed canonical at the captured-side write into `captured_per_instrument_shards`. Driven by
+  the existing `_VENUE_INSTRUMENT_TYPE` dict so adding a new perp venue updates one place. Never mutates the parquet
+  `file_stem` or manifest `instrument_id` column — those keep wire form as the immutable downstream-reader contract.
+  28 unit tests in `test_orchestrator_canonicalize_captured.py` lock per-venue rules (DERIBIT inverse + linear, BYBIT
+  USDT + USD inverse, OKX-SWAP, HYPERLIQUID bare, BITFINEX margin `:USTF0`, BITGET / KRAKEN packed, BINANCE-SPOT,
+  COINBASE-SPOT).
+- **UAC** (commit `82d7d50` on `live-defi-rollout`): fixed three sub-bugs in `get_expected_instruments_for_venue`'s
+  default seed path: (1) `-FUTURES` venues fell through to SPOT branch and seeded `BTC-USDT` instead of `BTC-PERP`;
+  (2) `derivative_ticker` returned PERP seeds unconditionally even for spot-only venues that physically can't publish
+  it; (3) `trades` / `book_snapshot_5` ignored the venue's `VENUE_DATA_TYPE_CAPABILITIES` entry, so ASTER (no
+  `book_snapshot_5` capability) seeded book sentinels anyway. `VENUE_DATA_TYPE_CAPABILITIES` is now consulted as the
+  SSOT before any seed is emitted.
+
+### BUG-X2 — venue-level error fanned out as if per-instrument (closed)
+
+A single bad row in a venue fetch (one Tardis option row missing `expiry_date`) raised `ValueError`, the exception was
+caught at the venue level, and the Tier-3 sentinel stamped its 80-char description (`"OPTION row requires
+'expiry_date'..."`) onto **every** per-instrument sentinel row for that (venue, date, dt). Made it look like every perp
+failed schema validation when in fact one option row in the bundle did. Same pattern in the sports Tier-2 fan-out.
+
+Fix in MTDS commit `fe5cc2c`: when `classify_venue_error` cannot bucket the exception, the sentinel writes the generic
+code `VENUE_FETCH_FAILED` instead of leaking exception text. Descriptive message stays in logs; manifest stops lying.
+Applied symmetrically to the CeFi Tier-3 path and the sports Tier-2 fan-out.
+
+### Manifest-state expectations after fix lands
+
+The 86k stale `attempted_failed` rows from 2026-04-29/30 are still in the manifest — they pre-date the fix. Expect them
+to flip on next backfill pass (the orchestrator's pre-flight will skip them as "already attempted" unless `--force` is
+passed; alternatively, the next phantom-recon sweep will reclassify any with parquets present). Going forward, new runs
+will write honest manifest rows.
+
+**Pre-existing test failures fixed in passing**: `test_umi_tick_provider_routes.py` had three failing tests on the
+baseline (missing `fetch_l2_book` AsyncMock stub); patched in the same MTDS commit so the QG can pass.
+
+### Affected venues (X1 blast radius — 100% covered by fix)
+
+- DERIBIT (perp + linear perp + options chains): wire forms `BTC-PERPETUAL`, `ADA_USDC-PERPETUAL` etc. → canonical
+  `BTC-PERP`, `ADA-PERP` etc.
+- BINANCE-FUTURES, BYBIT, OKX-SWAP, ASTER, HYPERLIQUID: packed/wire forms → `BASE-PERP`.
+- BITFINEX-FUTURES (margin pair `BTCF0:USTF0`), BITGET-FUTURES, KRAKEN-FUTURES: packed → `BASE-PERP`.
+- BINANCE-SPOT, COINBASE-SPOT, OKX-SPOT, BITFINEX-SPOT, BITGET-SPOT, KRAKEN-SPOT, UPBIT: packed/dash → canonical
+  `BASE-QUOTE`.
+
+### Out-of-scope / deferred
+
+- **ASTER backfill**: 0 `captured` rows of any data_type in the manifest. Unclear whether Tardis has archive coverage
+  for ASTER or the wire-symbol format passed by the launcher is wrong. Investigate before launching ASTER VMs. The X1
+  fix covers ASTER's vocabulary mismatch but won't help if the upstream archive is genuinely empty.
+- **Manifest backfill of stale rows**: the 86k stale `attempted_failed` rows from 2026-04-29/30 don't auto-fix; they
+  need a phantom-recon sweep or a forced re-run. Not blocking — new captures will land cleanly.
+- **UAC `normalize_symbol` separately**: UAC's own `_normalize_deribit` regex doesn't handle linear `ADA_USDC-PERPETUAL`
+  shapes, and `_normalize_bybit` quotes set is missing `USD`. These are documented separately because the MTDS-side
+  helper handles them. Fold into UAC if any other consumer hits the same issue.
