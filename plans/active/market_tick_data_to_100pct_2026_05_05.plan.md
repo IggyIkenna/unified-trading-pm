@@ -41,7 +41,13 @@ this log is the ground truth.
 | 2026-05-05 | DISCOVERY-8 | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key mismatch) | done | findings F19, F20 |
 | 2026-05-05 | NEXT | FIX-7: case-insensitive comparison in recon (covers F19) | next | TBD |
 | 2026-05-05 | NEXT | FIX-8: DeFi venue-key normaliser in recon (covers F20) | next | TBD |
-| 2026-05-05 | NEXT | FIX-5 design decision — disk migration vs reader-side multi-layout | pending | TBD |
+| 2026-05-05 | DISCOVERY-9 | Smoke patched recon → F19 (sports case mismatch) + F20 (DeFi venue-key) | done | findings F19, F20 |
+| 2026-05-05 | FIX-7+8 | Case-insensitive compare + DeFi venue-key normaliser | done | commit `c335eba` |
+| 2026-05-05 | FIX-10 | audit_legacy_paths: scope to raw_tick_data/ prefix only | done | commit `b159b1b` |
+| 2026-05-05 | DISCOVERY-10 | Spot-check during prediction legacy-paths → F22 (10-segment) + F23 (8-segment sports) | done | findings F22, F23 |
+| 2026-05-05 | FIX-9 | Add F22 + F23 path patterns to recon + audit_legacy_paths | done | commit `e096185` |
+| 2026-05-05 | NOW | Full-range recon + legacy-paths audit running across all 5 AGs (9 parallel tasks) | in_progress | TBD |
+| 2026-05-05 | NEXT | Aggregate findings + design FIX-5 / FIX-6 from results | pending | TBD |
 
 ## Findings F1-F9 — structural-check audit (2026-05-05)
 
@@ -293,6 +299,55 @@ phantom AND a missing_row simultaneously.
 - Fix candidate: add case-insensitive comparison on data_type AND instrument_type when reconciling.
   Better: write-time normalisation — UTL ManifestWriter should lowercase before persisting.
 
+### F22 — PREDICTION uses 10-segment path layout (NEW axis discovered 2026-05-05)
+
+```
+raw_tick_data/by_date/day=2025-03-14/
+  category=prediction/
+  data_source=POLYMARKET_CLOB/
+  venue=POLYMARKET/
+  chain=POLYGON/
+  market_category=CRYPTO_PRICE/
+  underlying=BTC/
+  market_type=binary/
+  resolution_period=monthly/
+  data_type=trades/
+  0x796f....parquet
+```
+
+10 segments instead of canonical 6. Discovered when audit_legacy_paths
+reported 39,235 of 40,000 raw_tick_data blobs as UNKNOWN axis. Adapter is
+emitting prediction-specific dimensions (data_source, market_category,
+underlying, market_type, resolution_period) as path segments.
+
+- Severity: **CRITICAL** — entire PREDICTION raw_tick_data layer is
+  invisible to recon's canonical PATH_RE.
+- Fix: added `_PREDICTION_DEEP_PATH_RE` to recon variants. After fix:
+  PREDICTION 1-day smoke went from 8 matched / 2 phantom to 9 matched /
+  1 phantom (most blobs now visible).
+
+### F23 — SPORTS uses 8-segment path layout (NEW axis discovered 2026-05-05)
+
+```
+raw_tick_data/by_date/day=2024-06-15/
+  category=sports/
+  data_source=ODDS_API/
+  venue=BETFAIR_EX_EU/
+  league_id=J1_LEAGUE/
+  instrument_type=odds/
+  data_type=trades/
+  ticks.parquet
+```
+
+8 segments. Audit-legacy reported 20,876 of 20,876 sports blobs as UNKNOWN
+axis. Sports adapter is emitting `data_source=` AND `league_id=` segments
+between venue and instrument_type.
+
+- Severity: **CRITICAL** — entire SPORTS raw_tick_data layer is invisible.
+- Fix: added `_SPORTS_LEAGUE_PATH_RE` to recon variants. After fix:
+  SPORTS 1-day smoke went from 1 matched / 0 phantom to 23 matched / 0
+  phantom (full per-bookmaker per-league bundles now visible).
+
 ### F20 — DeFi manifest-vs-disk venue-keying mismatch (CRITICAL)
 
 Surfaced by smoke run of patched recon on DEFI 2024-06-15:
@@ -348,7 +403,9 @@ captured shards but failing silently for the failure path — needs runtime tele
 | FIX-5 | Sports/DeFi disk-layout migration vs reader-side multi-layout — DESIGN call | TBD (UTL writer or MTDS adapters or migration script) | TBD | F16, F17, F19, F20 root cause | — | DESIGN |
 | FIX-7 | Case-insensitive comparison in recon (data_type + instrument_type) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F19 | — | NEXT |
 | FIX-8 | DeFi venue-key normaliser in recon (collapse overload+canonical to common key) | market-tick-data-service | scripts/reconcile_market_tick_manifest.py | F20 | — | NEXT |
-| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after FIX-7,8) |
+| FIX-9 | Add SPORTS axis-9 + PREDICTION axis-8 path layouts to recon + audit | market-tick-data-service | scripts/reconcile_market_tick_manifest.py + scripts/audit_legacy_paths.py | F22, F23 | `e096185` | LANDED |
+| FIX-10 | audit_legacy_paths: scope to raw_tick_data/ prefix (skip processed_candles) | market-tick-data-service | scripts/audit_legacy_paths.py | scope correctness | `b159b1b` | LANDED |
+| FIX-6 | Manifest rebuild for sports/prediction (v4 → v6) | market-tick-data-service | scripts/rebuild_mtds_manifest.py | F1, F7, F14 | — | PENDING (after full audit) |
 | (skip) | F6 DeFi 0% attempted_failed | — | — | — | — | CLOSED — wiring correct, observation only |
 | (TBD) | Schema-validation reject breakdown by (venue, data_type) | market-tick-data-service | analysis | F11 | — | INVESTIGATING |
 | (TBD) | Stale test-bucket retirement | deployment-service | scripts/cleanup-test-buckets.sh | F4, F5 | — | PENDING |
