@@ -106,6 +106,13 @@ See **Questions for Harsh** section above (9 items). Most consequential:
    (b) keep UAC aspirational + plan deferred backfill back to 2020-06-12 (Phase 2 budget impact).
    Affects denominator for PREDICTION coverage % on data-status UI.
 
+10. **MAJOR — disk migration scripts already exist (2026-04-18)**. Found 4 scripts:
+    `migrate_sports_canonical.py`, `migrate_polymarket_canonical.py`, `migrate_tradfi_canonical.py`,
+    `migrate_defi_canonical.py` plus `launch-canonical-migration-vm.sh`. Audit evidence suggests migrations
+    have NOT yet run at scale (legacy data still on disk). **Have these been run? When are they scheduled?**
+    If they run, F16/F17/F22/F23/F24/F25 all close. **This is the cheapest path to fixing the layout zoo.**
+    Recommendation: prioritise running these over implementing FIX-5 Option B reader-side multi-layout.
+
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
 This section is the operating surface. Every audit run, finding, fix decision, and background-agent dispatch lands here
@@ -873,6 +880,48 @@ out of the manifest. The 603 phantoms are pre-coverage-start rows the writer som
 Severity: **LOW** — small population (603 / 17288 = 3.5%), easy to flip via recon `--commit`.
 Action: leave for FIX-6 rebuild to overwrite, OR run sports recon with `--commit` to flip these
 to attempted_failed (mark them honest).
+
+## MAJOR DISCOVERY (2026-05-05 21:15) — disk migration scripts already exist!
+
+While waiting for TRADFI recon, fetched MTDS and discovered FOUR canonical
+migration scripts already in the repo (since 2026-04-18, `78657fd`):
+
+```
+market_tick_data_service/scripts/migrate_sports_canonical.py        — sports OLD per-league → 8-segment
+market_tick_data_service/scripts/migrate_polymarket_canonical.py    — Polymarket adapter changes + path
+market_tick_data_service/scripts/migrate_tradfi_canonical.py        — F25 hyphen → equals rewrite
+market_tick_data_service/scripts/migrate_defi_canonical.py          — DeFi venue-overload split
+```
+
+Plus `launch-canonical-migration-vm.sh` already supports `prediction`, `sports`, `tradfi`, `defi`, and `all` flags.
+
+**This changes the FIX-5 design call entirely.** Option A (disk migration) infrastructure is already
+built — Ikenna's team has been preparing for this. Latest sports migration commit was today (`ce9b069`,
+2026-05-05), suggesting these scripts are being prepped for production execution.
+
+### Implication for FIX-5
+
+The design conversation shifts from "do we migrate or not?" to "have these migrations been RUN against
+production buckets?":
+
+- If **NO**: schedule the run. The audit findings F16/F17/F22/F23/F24/F25 will all collapse once these
+  migrations execute. Most of the layout zoo evaporates.
+- If **PARTIALLY** (e.g. sports migrated but tradfi pending): document which buckets are clean and which
+  aren't. Run the remaining ones.
+- If **YES**: the legacy paths the audit found are residual leftovers — the migrations didn't catch every
+  blob. Investigate why.
+
+Audit evidence suggests **migrations have NOT been run yet at scale**:
+- F16: 5,332 axis-6 venue-overload blobs still on disk in DeFi (would be 0 if migrated).
+- F17/F23/F24: ~25k sports blobs at 4 different shapes (would converge to canonical if migrated).
+- F22: 573k prediction axis-8 deep blobs on disk (would be canonical if migrated).
+- F25: 100k TRADFI dash-format blobs (would be canonical if migrated).
+
+Recommendation: **prioritise running these existing migration scripts** over implementing FIX-5 Option B
+(reader-side multi-layout). Talk to Ikenna about scheduling the migrations. They're a one-time cost; FIX-5
+Option B is permanent reader-side complexity.
+
+Documented as Q&A item 10.
 
 ## FIX-6 design — manifest rebuild approach (after FIX-7+8+11+12 + reader updates)
 
