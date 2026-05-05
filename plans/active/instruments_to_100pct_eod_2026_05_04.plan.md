@@ -2505,3 +2505,68 @@ matching.
    option: re-run the affected (date, BNB) shards to overwrite, OR add a one-off manifest-reconciliation script. Not
    blocking.
 3. **No more "PREDICTION needs more data" work today** — coverage is honest, system reports the truth.
+
+---
+
+## Day 2 (2026-05-05) — Polymarket misclassification cleanup (Phase 1 + verification)
+
+### What we cleaned
+
+Removed **42 Airbnb (ABNB) stock markets** from the canonical that had been misclassified as BNB token markets due to substring keyword matching.
+
+| Action | Count |
+|---|---|
+| Instrument rows removed | **42** |
+| Shards emptied (manifest row dropped) | 25 (Airbnb-only Oct/Nov 2025) |
+| Shards trimmed (Airbnb removed, real BNB markets kept) | 17 |
+| Canonical rows | 3,966 → **3,940** |
+| BNB unique dates remaining | 78 → **53** |
+| Backups | `gs://instruments-store-prediction-central-element-323112/_backups/20260505-182631/` |
+
+All removals verified line-by-line — every removed row's `market_slug` was `abnb-up-or-down-on-...` (Airbnb), not `bnb-up-or-down-...` (real BNB token).
+
+### Adapter fix iterations (instruments-service@d7bd17f)
+
+The journey was non-trivial:
+
+**Iteration 1 (b336834)**: Pure word-boundary regex `\bbtc\b`. Fixed `abnb`→BNB false positive but introduced regression — also rejected `archBitcoin`/`archEthereum`/`archSolana`/`archXRP`/`archHyperliquid` which are LEGITIMATE Polymarket arch* prefixed markets. Audit flagged 629 candidates including ~388 false negatives.
+
+**Iteration 2 (d7bd17f, current)**: Hybrid matcher:
+- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring match. Catches `archBitcoin`, `Bitcoin`, `Ethereum...`, `archXRP` correctly. Safe because no English word contains these as a substring.
+- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundary `(?<![a-z])TICKER(?![a-z])`. Rejects `abnb`, `solar`, `hyped` while still matching `BTC?`, `BNB `, etc.
+
+15/15 smoke tests pass.
+
+### Phase 1 audit revealed dual-schema issue
+
+Polymarket adapter writes two distinct parquet shapes:
+- **Question-format** shards: have `question`, `market_slug`, `description`, `event_title` columns. Adapter classifies by parsing question text. Most BNB/BTC/etc. shards from 2026-03+ use this.
+- **Canonical-ID-format** shards: have `instrument_key`, `base_asset` (e.g. `PREDICTION:POLYMARKET:UP_DOWN:DOGE:1D:2025-03-14`), `venue`, `instrument_type`. Older Polymarket adapter writes some asset_groups in this shape — the data_type is encoded in `base_asset`, not classified from text.
+
+The first audit script only inspected `question` column. **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC rows flagged for removal in v1 audit were actually canonical-ID-format shards with no question text** — they're correctly classified by their `base_asset` encoding, the audit just couldn't see it.
+
+After narrowing scope to question-format shards only, real misclassifications dropped from "629" to **42** (all Airbnb-as-BNB).
+
+### Phase 2 verification
+
+Built `/tmp/audit-polymarket-canonical-id.py` to parse `base_asset` and verify the encoded data_type matches the shard's stored data_type. Running now to confirm canonical-ID-format shards have no real misclassifications.
+
+### Cache-clear hardening (deployment-api@4dff799) — separate fix
+
+`/api/data-status/turbo/clear` previously dropped only 2 of 4 cache layers. `clear_drilldown_cache()` was imported at module top with a docstring claiming it was used by `/turbo/clear`, but the call had been silently dropped. Now drops all 4 layers:
+
+1. `data_analytics_service._turbo_cache`
+2. `data_status_service._INDEX_CACHE`
+3. `data_status_drilldown._cache` (was missing)
+4. `DataStatusService._REF_DATA_CACHE` (was missing)
+
+Defensive hardening — wasn't actually responsible for the 89% display today, but worth fixing.
+
+### What remains for Ikenna
+
+1. **VenueMapping per-(venue, data_type) start dates**: legitimate `bnb-up-or-down-on-october-21-2025`-style markets exist back to 2025-10-21 but the UI's start_date for `(POLYMARKET, BNB)` is set to ~2026-03-01. After today's Airbnb cleanup, the remaining BNB rows are all real — the start_date config could be extended back to 2025-10-21 to credit the early coverage.
+
+2. **Pre-existing dict-iteration-order quirk** in `_match_crypto_asset`: questions like `"will ethereum (eth) flip btc?"` return the first-seen ticker (BTC), not the most-relevant one. Out of scope today; needs longest-match-first logic or schema-aware classification.
+
+3. **Polymarket dual-schema architecture**: the adapter writes both question-format and canonical-ID-format shards depending on... something. Worth a code-walk to understand which path triggers which, and whether to consolidate.
+
