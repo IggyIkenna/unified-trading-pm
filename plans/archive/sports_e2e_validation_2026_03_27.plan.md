@@ -8,6 +8,14 @@ supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
 reconciliation_supersedes_added: 2026-04-25
 ---
 
+> **ARCHIVED 2026-05-05.** Folded into
+> [`sports_predictions_e2e_2026_05_05`](../active/sports_predictions_e2e_2026_05_05.plan.md). Phases 2/3/5 (MTDS Tier 2
+> 1-week validation, arb backtest, live pipeline) are absorbed there. **Phase 4 (Tier 1 ML 126M + Tier 2 arb 103M = 207M
+> credit re-collection) is DROPPED, not deferred** — predictions don't need fine-grain arb bucketing, and the 8-bucket
+> ML horizon adapter (`SportsBucketAssignmentAdapter` in MDPS) covers what predictions need on the existing 288M rows.
+> Treat this archived plan as historical context only; do not revive Phase 4 without reopening the predictions-vs-arb
+> scope debate first.
+>
 > **Reconciliation note (2026-04-25):** This plan absorbs
 > [sports_batch_pipeline_end_to_end_2026_03_25.plan.md](./sports_batch_pipeline_end_to_end_2026_03_25.plan.md).
 > sports_e2e_validation supersedes the MTDS adapter portion of sports_batch_pipeline per its body text See

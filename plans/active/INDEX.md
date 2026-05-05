@@ -10,16 +10,6 @@ This is the canonical index of all active plans. Plans are organized by domain.
 
 **Read first** when touching venue routing, buckets, or market-data category maps:
 
-- [venue_axis_asset_group_vocabulary_2026_04_25.plan.md](venue_axis_asset_group_vocabulary_2026_04_25.plan.md) — Trading
-  **venue axis** vocabulary (**asset group**): UAC aliases (`VENUES_BY_ASSET_GROUP`, …), UTL bucket helper, MDPS
-  `MarketAssetGroup`, MTDS `VENUE_TO_ASSET_GROUP` / `get_tick_data_bucket(..., asset_group=...)`. Waves A–B done; Waves
-  C–E (features, execution consumers, deployment/SIT) pending. Agent copy: `unified-trading-pm/cursor-configs/CLAUDE.md`
-  (symlinked from unified-trading-api, UTL, instruments-service, market-tick-data-service, and other services).
-- [shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md](shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md)
-  — **Global SSOT** pass: service shard config dimension `category` → `asset_group` + deployment-api/UI/SIT (GCS
-  `category=` path segments out of scope). **Decision record:**
-  `codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md`. Depends on venue-axis
-  vocabulary plan.
 - [instrument_catalogue_availability_matrix_2026_04_29.plan.md](instrument_catalogue_availability_matrix_2026_04_29.plan.md)
   — Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
   live/batch capability per `(asset_group × data_type × venue × instrument_type)`) with **live availability-manifest
@@ -60,25 +50,13 @@ examples for testing any DeFi strategy
 
 ### Sports
 
-- features_sports_upstream_coverage_gaps_2026_04_21.plan.md — Third follow-up: close raw-layer coverage gaps that
-  prevent the fixture-features pipeline from populating. Three tracks: (A) Transfermarkt `player_values` 2020-2026
-  backfill — operator fires `launch-transfermarkt-backfill-vm.sh`; (B) SFI `SFI_LEAGUES + SFI_PROGRESSIVE_STATS`
-  2020-2026 backfill — new `launch-sfi-backfill-vm.sh` shipped + codex §2.4 rewrite ("SFI has no standings endpoint");
-  (C) Weather venue-id SCREAMING_SNAKE fallback shipped (115/170 fixtures now weather-populated vs 0/170 before). Tracks
-  B+C code shipped 2026-04-21 (FSS `d21e49f` + deployment-service `885131e` + PM `77e7512c`); VMs fired 2026-04-21
-  23:18Z.
 - sports_predictions_e2e_2026_05_05.plan.md — Drives sports predictions running end-to-end: feature-service-sports →
   ml-training (Model 2A walk-forward) → strategy-service paper trade (ArbitrageStrategy + MLSportsStrategy) →
-  execution-service paper fills + matching-engine for execution alpha → upcoming-fixtures-ui shows predictions. Folds
-  `sports_e2e_validation_2026_03_27` Phases 2/3/5 (MTDS Tier 2 1-week validation, arb backtest, live pipeline). Phase 4
-  (207M-credit Tier 1 + Tier 2 expansion) deferred to operator. Depends on master roadmap Phase 6, UTL base-image
-  rebuild, and features_sports_honest_coverage_2026_05_05.
-- sfi_chunk_parallel_backfill_2026_04_22.plan.md — Cut SFI backfill wall-clock from ~68 days (single-VM observed
-  2026-04-22 @ ~1.4 dates/hour) to ~3-5 days via chunk-safe multi-VM pattern. Clones
-  `rescan_sports_fixtures_canonical.py` 3-mode shape (single / worker / coordinator). Phase 0 measures the real SFI
-  per-minute API ceiling; Phase 2 has two routes — Option 1 (GCS-lease rate-coordinator shared across workers, optimal)
-  or Option 2 (independent chunks, 3x slower but simpler). Phase 3 extends `launch-sfi-backfill-vm.sh` with
-  `--chunks N`. 3 repos (instruments-service + deployment-service + PM).
+  execution-service paper fills + matching-engine for execution alpha → upcoming-fixtures-ui shows predictions. Path:
+  re-key existing 288M Odds-API rows (`migrate_sports_canonical.py`, idempotent, no API) + MDPS 8-bucket horizon
+  adapter (`SportsBucketAssignmentAdapter`, no API) → FSS feature compute → ML → strategy → UI. Folds
+  `sports_e2e_validation_2026_03_27` Phases 2/3/5; Phase 4 re-collection budget dropped (predictions don't need it).
+  Depends on master roadmap Phase 6, UTL base-image rebuild, and features_sports_honest_coverage_2026_05_05.
 - instruments_service_write_gate_validation_2026_04_22.plan.md — Close the architectural gap where raw-data sinks in
   instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
   `InstrumentsWriteGate.validate_and_write(df, partition, batch_date, mode='strict'|'warn')` asserting

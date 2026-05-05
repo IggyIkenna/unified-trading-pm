@@ -3,10 +3,10 @@ name: sports-predictions-e2e
 overview: |
   Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
   honest non-NULL features → ML training (Model 2A walk-forward) → strategy-service paper trade
-  (ArbitrageStrategy + MLSportsStrategy) → upcoming-fixtures-ui showing predictions. Folds
-  sports_e2e_validation_2026_03_27 Phases 2/3/5 (MTDS Tier 2 validation, arb backtest, live pipeline)
-  into a single coherent driver, gated on master roadmap Phase 6 deployment activation and the new
-  features_sports_honest_coverage plan that's actively shipping.
+  (ArbitrageStrategy + MLSportsStrategy) → upcoming-fixtures-ui showing predictions. Path uses
+  existing 288M Odds-API rows: re-key via migrate_sports_canonical.py + MDPS 8-bucket horizon
+  adapter (no API credits) → FSS → ML → strategy → UI. Gated on master roadmap Phase 6 deployment
+  activation and the features_sports_honest_coverage plan.
 type: mixed
 epic: sports-predictions-e2e
 status: in_progress
@@ -79,17 +79,15 @@ UI. This plan is that driver. It folds sports_e2e_validation_2026_03_27 Phases 2
 e2e plan but scoped only to MTDS arb validation), and adds explicit ML-training and UI-verification gates.
 
 **On the existing 288M Odds-API rows and bucketing.** MTDS already holds ~288M historical odds rows under
-`gs://market-data-tick-sports-{pid}/...venue=ODDS_API/...` (legacy layout). The MDPS bucketing infrastructure for
-predictions **already exists** — `SportsBucketAssignmentAdapter` in
+`gs://market-data-tick-sports-{pid}/...venue=ODDS_API/...` (legacy layout). The MDPS bucketing infra for predictions
+already exists: `SportsBucketAssignmentAdapter` in
 [`market-data-processing-service/.../sports/bucket_assignment_adapter.py`](../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)
-implements an **8-bucket Tier 1 ML horizon grid** (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0) with
-graduated staleness caps (60 / 45 / 30 / 20 / 15 / 10 / 5 / 5 minutes). It pivots long → wide odds (h2h →
-home/draw/away, spreads → handicap, totals → over/under, btts → yes/no) and dedups per (fixture, bookmaker, bucket)
-keeping freshest snapshot. **This is what predictions need — not the 57-bucket "Tier 2" arb-grade grid that was sketched
-in sports_e2e_validation but never built.**
+implements an **8-bucket ML horizon grid** (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0) with graduated
+staleness caps (60 / 45 / 30 / 20 / 15 / 10 / 5 / 5 minutes), long → wide pivot (h2h → home/draw/away, spreads →
+handicap, totals → over/under, btts → yes/no), and dedup per (fixture, bookmaker, bucket) keeping freshest snapshot.
+This is what predictions need.
 
-The sports_e2e_validation Phase 4 cost plan (Tier 1 ML 126M / 5.8yr + Tier 2 arb 103M / 1yr = 207M credits) was framed
-through the arb lens. For predictions, the path is much cheaper:
+The path for this plan is:
 
 - **Re-key existing 288M rows** from legacy `venue=ODDS_API` to canonical `data_source=ODDS_API/venue={BOOKMAKER}/...`
   via the idempotent script
@@ -97,23 +95,19 @@ through the arb lens. For predictions, the path is much cheaper:
   Pure GCS rewrite, **no API credits**.
 - **Run MDPS `SportsBucketAssignmentAdapter`** on the migrated rows — assigns each row to one of the 8 horizon buckets
   using `bm_minutes_to_kickoff`. **No API credits.** This produces the cleaned bucketed odds dataset that FSS feeds on.
-- **The N10-era reference** at
-  [`archive/new-sports-batting-services/scripts/arbitrage/analyze_all_markets.py`](../../archive/new-sports-batting-services/scripts/arbitrage/analyze_all_markets.py)
-  is the historical arb-style analyzer; the bucketing pattern there matches what `bucket_assignment_adapter.py` now
-  bakes in. Predictions consume the bucketed output, not the analyzer.
+  If legacy rows lack `bm_minutes_to_kickoff`, derive it as `(fixture.kickoff - row_timestamp) / 60` in MDPS using
+  instruments-service's known kickoff times. Group D's first todo confirms which timestamp column legacy rows carry.
+- **FSS feature compute** on the bucketed output. Standard pipeline.
 
-The 207M-credit re-collection plan is **dropped**, not deferred. It's the wrong tool for predictions — we want clean
-data with a sense of temporal evolution, not arb-grade bucket fidelity.
-
-The only Group D unknown is whether the legacy 288M rows carry a usable `bm_time` (or any bookmaker timestamp). The
-adapter expects `bm_minutes_to_kickoff = (kickoff - bm_time) / 60`. If legacy rows lack `bm_time`, MDPS can derive an
-approximation from `(kickoff - fetch_utc)` (whatever timestamp column the legacy adapter wrote) — that's still
-predictions-grade. Group D first todo confirms which column we have.
+**Re-collection is not in scope here.** The N10-era arb-style analyzer at
+`archive/new-sports-batting-services/scripts/arbitrage/analyze_all_markets.py` was the historical reference for
+fine-grained arb scanning; predictions consume the bucketed output of `bucket_assignment_adapter.py` instead. If a
+future arb push wants finer bucket fidelity, that's a separate plan.
 
 The fold targets:
 
-- **sports_e2e_validation_2026_03_27** (status active, 23 open todos, last updated 2026-04-25): Phases 2/3/5 fold here.
-  Phase 4 (cost plan + Tier 1/2 re-collect) is dropped — see above.
+- **sports_e2e_validation_2026_03_27** (archived 2026-05-05, 23 open todos at archive time): Phases 2/3/5 fold here.
+  The Phase 4 re-collection cost plan is dropped — predictions don't need it.
 
 This plan does **not** swallow:
 
@@ -250,10 +244,8 @@ Folded from sports_e2e_validation Phase 5 (MTDS/MDPS/FSS/strategy live mode).
 
 ## Out of scope
 
-- **207M-credit re-collection (Tier 1 ML 126M + Tier 2 arb 103M)** — dropped. Predictions don't need fine-grain arb
-  bucketing, and the 8-bucket Tier 1 ML grid already exists in MDPS (`SportsBucketAssignmentAdapter`) and runs on the
-  re-keyed existing 288M rows. Re-open separately only if a future arb push wants T-30m/T-60m bucket fidelity that the
-  existing rows can't approximate from `(kickoff - timestamp)`.
+- **Odds-API re-collection** — dropped. Existing 288M rows + 8-bucket MDPS adapter cover predictions. Re-open
+  separately only if a future arb push wants finer bucket fidelity than `(kickoff - timestamp)` can approximate.
 - **Arb-style cross-bookmaker scanning** (implied prob > 100%) — out of this plan's predictions scope. Reference: N10
   archive `analyze_all_markets.py` if revived later.
 - **Live (non-paper) sports execution** — Group F caps at execution-service paper mode. Live execution gated on operator

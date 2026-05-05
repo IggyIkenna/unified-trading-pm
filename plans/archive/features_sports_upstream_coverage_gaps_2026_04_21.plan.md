@@ -6,8 +6,6 @@ priority: P1
 status: active
 owner: agent
 created: 2026-04-21
-locked_by: live-defi-rollout
-locked_since: 2026-04-21
 type: code
 epic: none
 completion_gates:

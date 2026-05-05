@@ -1,3 +1,9 @@
+> **ARCHIVED 2026-05-05 — DO NOT REVIVE TIER 2 / 57-BUCKET FRAMING.** This plan references a 57-bucket "Tier 2"
+> arb-grade collection grid that was sketched but never built. Predictions don't need it: MDPS
+> [`SportsBucketAssignmentAdapter`](../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)
+> implements an 8-bucket ML horizon grid (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0) that runs on the
+> existing 288M re-keyed rows with zero API credits. Live successor: [`sports_predictions_e2e_2026_05_05`](../active/sports_predictions_e2e_2026_05_05.plan.md).
+
 ---
 name: sports-integration-02-odds-market-data-pipeline
 remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
