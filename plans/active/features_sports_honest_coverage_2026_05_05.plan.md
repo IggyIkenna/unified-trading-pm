@@ -564,3 +564,52 @@ broken.
       grep each calculator for actual `read_entity(...)` calls and reconcile against the YAML.
 - [ ] [DOC] Add weather + understat + SFI + predictions features to the YAML (or confirm they shouldn't be there). The
       100% XG / 96.5% SFI_PROGRESSIVE_STATS / 100% WEATHER captures suggest features SHOULD exist on top of these.
+
+## Phase 0.6 — Standalone SFI progressive backfill VM (2026-05-05)
+
+**Why front-loaded:** Halftime features can be computed for the entire SFI coverage window (2020-01-01 → today) purely
+from already-captured GCS `progressive_stats` parquets. No upstream backfill needed. Running this in a single
+e2-standard-4 VM should produce halftime detection-rate stats and full halftime feature coverage within ~30-45 min,
+BEFORE Phase 1 starts. That way the rest of the pipeline lights up with halftime already complete.
+
+- [ ] [SCRIPT] P0.6.A. Create `deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh` —
+      singleton-locked, e2-standard-4, prefix `features-sfi-progressive-`. Add the prefix to
+      `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` (heartbeat-only — no shard bucket). Relaunch watchdog VM after.
+- [ ] [SCRIPT] P0.6.B. Either add `--calculator sfi_progressive` filter mode to features-sports-service CLI, OR write a
+      one-off `scripts/compute_sfi_progressive_only.py` that calls `compute_sfi_progressive_batch` directly per
+      fixture-day partition.
+- [ ] [SCRIPT] P0.6.C. Refresh sports tarballs:
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`.
+- [ ] [SCRIPT] P0.6.D. Launch the VM. Tail `gs://deployment-scripts-.../vm-logs/features-sfi-progressive-.../run.log`.
+      Pair the launch with event-stream verification (no fire-and-forget) —
+      `gcloud storage ls gs://{pid}-events/events/.../` after 90s, confirm `STARTED`; periodically check progress
+      events; verify `STOPPED` at exit.
+- [ ] [SCRIPT] P0.6.E. Validate output: 5 random fixtures across the date range, spot-check 3 xg_nan + 3
+      counter_freeze + 3 unavailable cases. Confirm `ht_start_seconds` ∈ [38min, 65min] and `ht_duration_seconds` ∈
+      [5min, 25min] for detected cases.
+- [ ] [SCRIPT] P0.6.F. Detection-rate summary into the plan: % xg_nan / % counter_freeze / % unavailable per league_id.
+      Helps Phase 1 set realistic FEATURE_UPSTREAM_REQUIREMENTS for the halftime features (e.g. flag K-League halftime
+      features as "ht_unavailable expected").
+
+## Phase 0.7 — odds_api venue→data_source migration (BLOCKING for Stage A odds features)
+
+**Context (added 2026-05-05):** A separate agent is mid-flight migrating odds_api data from `venue=odds_api` to
+`data_source=odds_api` because odds_api is an aggregator, not a venue. This is a manifest + GCS path schema change that
+affects the ODDS / ODDS_HORIZON_BUCKET shards. Several Stage A features in this plan derive from odds_api output (Phase
+4.G — Stage A odds_api, ~7 features in `odds_calculator`).
+
+**How this interacts with Phase 1+ here:**
+
+- [ ] [AGENT] P0.7.A. Confirm the other agent has landed the migration on origin/live-defi-rollout before starting
+      Phase 1. Look for: UAC sports facade renames + deployment-api SPORTS_DATA_TYPE_META updates +
+      MTDS/instruments-service writer updates + manifest backfill of legacy `venue=odds_api` rows. Cross-reference with
+      the in-flight commits on `live-defi-rollout` branch.
+- [ ] [DOC] P0.7.B. Once landed, update FEATURE_UPSTREAM_REQUIREMENTS (Phase 1 work) to reference odds_api as a
+      `data_source` axis, not a `venue` axis, on every odds-derived feature. Same change for the
+      `in_coverage(source=...)` helper — `source="odds_api"` should resolve via the new `data_source` axis.
+- [ ] [DOC] P0.7.C. Update Phase 4.G iteration plan if the migration changes the GCS path SSOT for ODDS shards. If
+      `candidate_parquet_paths(data_type="ODDS_HORIZON_BUCKET")` now returns a `data_source=odds_api/...` partition, the
+      features-sports gcs_reader needs to follow.
+- [ ] [DOC] P0.7.D. Sanity-check that the existing 92% upstream ODDS coverage doesn't regress because of the schema
+      change. The migration should be metadata-only (GCS files not relocated) — but verify on data-status UI before
+      declaring Phase 4.G ready.
