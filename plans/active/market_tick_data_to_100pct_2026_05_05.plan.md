@@ -204,6 +204,27 @@ Same severity + fix.
 - 1,831,164 / 2,226,631. Consistent with a recent rebuild scenario more than a bug.
 - Same disambiguation needed as F3.
 
+#### F3 disambiguation result (2026-05-05) — BENIGN rebuild signature, NOT a bug
+
+Sampled 1.83M CEFI late rows. The `written_at` distribution clusters around very recent dates:
+- 2026-05-04: 951k rows (52%)
+- 2026-04-29: 530k rows (29%)
+- 2026-05-01: 181k rows
+- 2026-04-30: 51k rows
+- 2026-05-05: 41k rows
+
+The data dates these rows reference span 2019-2024. So the writers ran in late April / early May 2026 and
+wrote manifest rows for years-old data. That's **the 2026-04-29 366-VM rollout** + **2026-05-04 backfill VMs**
+populating the manifest from disk truth (or from a fresh fetch).
+
+**Conclusion**: F3 is the rebuild-write timestamp signature, not phantom rows or a writing-without-data bug.
+The data IS captured (recon shows 99.7% match rate for CEFI). The high "365+ day" count just means the
+rebuild stamped `written_at = rebuild_time` on rows that originally referred to data from years ago.
+
+**Closed as observed-and-explained**, not actionable. If we want a "true ingest time" later, we'd need to
+preserve the original write timestamp — which would require a writer change. Not worth doing for the audit
+purpose.
+
 #### F6' — CEFI capture_status distribution
 
 - captured: 1,021,335 (45.9%)
