@@ -89,6 +89,14 @@ examples for testing any DeFi strategy
 
 ### Data & Testing
 
+- [instruments_to_100pct_eod_2026_05_04.plan.md](instruments_to_100pct_eod_2026_05_04.plan.md) — instruments-service to
+  ≥99% honest coverage across all 5 asset groups (sibling to MTDS plan; epic: data-pipeline-completion).
+- [market_tick_data_to_100pct_2026_05_05.plan.md](market_tick_data_to_100pct_2026_05_05.plan.md) —
+  market-tick-data-service raw download to ≥99% honest coverage across all 5 asset groups. **GCS-truth-first**: Phase
+  0.1 inverse-phantom audit (parquet-on-disk-no-manifest-row) is a mandatory gate before any backfill VM launches —
+  prevents wasted Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild
+  (cheap) vs backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
+  `launch-mtds-prediction-backfill-vm.sh`, MTDS DeFi data-type launchers. Depends on instruments plan above.
 - agent6_mock_data_quality_2026_03_22.plan.md — Mock data quality
 - agent8_e2e_tests_quality_2026_03_22.plan.md — E2E testing
 - ui_full_site_link_crawler_e2e_2026_04_22.plan.md — Full-site Playwright link crawler in `unified-trading-system-ui`
