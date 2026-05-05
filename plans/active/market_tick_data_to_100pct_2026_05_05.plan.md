@@ -363,6 +363,31 @@ underlying, market_type, resolution_period) as path segments.
   PREDICTION 1-day smoke went from 8 matched / 2 phantom to 9 matched /
   1 phantom (most blobs now visible).
 
+### F11-detail — ALL 3,220 CEFI schema-validation reject rows are ASTER
+
+Investigation result. F11 surfaced 3,220 `StreamingParquetWriter pre-write validation failed` rows in CEFI manifest.
+Breakdown by (venue, data_type):
+
+```
+ASTER  book_snapshot_5      920
+ASTER  derivative_ticker    920
+ASTER  trades               920
+ASTER  liquidations         460
+```
+
+100% ASTER. 7 rows/day across 4 data_types.
+
+**Cross-reference with BUG-X1 prerequisite section**: ASTER doesn't have `book_snapshot_5` capability per UAC's
+`VENUE_DATA_TYPE_CAPABILITIES`. Per the section: "ASTER (no book_snapshot_5 capability) seeded book sentinels
+anyway, creating 14 false-miss rows per day." That matches the pattern here perfectly.
+
+**Reading**: these 3220 rows are **stale sentinel artefacts** from before the BUG-X1 fix landed. The Tier-3 sentinel
+fan-out was emitting per-instrument rows for capabilities ASTER doesn't have. Pre-write validation correctly
+rejected them (no real data → empty parquet → fails Schema Definition contract).
+
+- Severity: **LOW** (already-diagnosed, BUG-X1 fix prevents new ones).
+- Action: leave in place; FIX-6 manifest rebuild will overwrite them.
+
 ### F25 — TRADFI has ~100k blobs at NON-HIVE layout with `day-` separator (NEW finding 2026-05-05)
 
 Sampled at TRADFI legacy-paths audit run. 100,698 of ~600k blobs are at:
