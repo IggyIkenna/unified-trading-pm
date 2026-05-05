@@ -2582,3 +2582,126 @@ Defensive hardening — wasn't actually responsible for the 89% display today, b
 
 **Total cleanup needed: 42 rows. All removed. Canonical is now clean.**
 
+
+---
+
+## Retrospective — how the Polymarket misclassification was actually found
+
+This deserves a full writeup because the investigation was meandering and the user (Harsh) repeatedly steered it away from dead ends. The agent (Claude) did the mechanical work but kept fixating on wrong hypotheses. Without the user's pushback at three separate decision points, this would have ended with either (a) a "the cache is broken" patch that wouldn't have actually fixed anything, or (b) a destructive cleanup of 388 legitimate markets.
+
+### Why it took ~2 hours to find a 1-line bug
+
+#### Detour 1: chasing the cache-staleness hypothesis (~30 min)
+
+After the PREDICTION fanout completed, the deployment-ui kept showing `89.05%` coverage. The agent's initial framing was: *"the data is in the canonical, so the UI's number must be cached."*
+
+The agent dug into the deployment-api source, found four cache layers, noticed `/turbo/clear` only drops two of them, and patched it (`deployment-api@4dff799`). This was a real bug — the docstring at `clear_drilldown_cache()` claimed it was used by `/turbo/clear` but the call had been silently dropped. Patching it was correct hardening.
+
+But after the patch landed and the deployment-api restarted, the **89% number persisted**. Cache wasn't the cause.
+
+**User intervention #1:** Harsh asked *"i dont understand the issue clearly, can you give me example of whats now vs whats correct for venue, data_type issue."*
+
+This forced the agent to stop hand-waving and produce concrete numbers. The agent showed:
+- Canonical has 78 BNB dates (Oct 2025 → Apr 2026)
+- API reports 41 dates found in window 2026-03-01 → 2026-05-03
+- Difference: 37 dates pre-March that exist in canonical but are excluded by the UI's per-(venue, data_type) start_date
+
+The agent's next take was *"the system is correct — the UI's start_date config is right and the canonical has incidental noise."* Ready to close the ticket as "honest coverage, no action needed."
+
+#### Detour 2: trusting the system without checking the data (~10 min)
+
+**User intervention #2:** Harsh:
+> "Expected dates = 2026-03-01 → 2026-04-16 = 64 dates -> how is this 64 dates? its just 45 days... or are we not including the holidays and weekends? to answer the system vs data we should check which markets are these in october?"
+
+Two important nudges in one message:
+1. The agent's date math was off (the actual window end was `2026-05-03` per the query, giving 64 days — agent had eyeballed it wrong).
+2. **Don't trust the abstraction; look at the raw data.**
+
+Without that second nudge, the agent would have closed the case based on its assumptions about what the start_date config "must" mean. Instead, the agent opened a real October-2025 BNB instrument parquet and found:
+
+```
+question: "Airbnb (ABNB) Up or Down on October 16?"
+market_slug: "abnb-up-or-down-on-october-16-2025"
+```
+
+That single row of evidence proved the actual bug: **the matcher had been misclassifying Airbnb stock markets as BNB token markets via substring keyword matching.**
+
+#### Detour 3: shipping a fix that introduced a regression (~25 min)
+
+The agent immediately patched `_match_crypto_asset` to use word-boundary regex (`\bbnb\b` instead of `bnb in q.lower()`). Smoke tested 5 cases, all passed. Pushed `instruments-service@b336834`. Felt confident.
+
+**User intervention #3:** Harsh asked the agent to actually verify by running an audit before doing the cleanup:
+> "Yes please do all the 3 things"  *(ie. patch + audit + cleanup)*
+
+And then later, when the agent was about to run the cleanup based on the audit:
+> "But, you should check what we are deleting, you know. Instead of just running the script, think you should First do the audit of what it's replacing or what it's deleting removing, what you know about those things. Once the audit looks clean, know, then we can run the pipeline and delete you know, the wrong instrument."
+
+This insistence on a real pre-audit before any writes is what saved the integrity of the canonical. The agent ran the audit, planning to use the results to drive the cleanup. The audit returned **629 candidates for removal**.
+
+The agent looked at the BTC sample first:
+
+```
+"archBitcoin Up or Down on June 11?"
+"archEthereum Up or Down on June 11?"
+"archSolana Up or Down on August 16, 12AM ET"
+```
+
+These were all **legitimate Polymarket markets** (`arch*` is a Polymarket-internal market series prefix) that the agent's "fixed" matcher was now incorrectly excluding. The pure word-boundary regex `\bbitcoin\b` doesn't match `archBitcoin` because the `B` is preceded by a word character (no boundary).
+
+If the agent had run the cleanup script with that audit output, **388 legitimate crypto markets across BTC/ETH/SOL/XRP/HYPE would have been silently removed from the canonical** — far worse than the original 42-row Airbnb noise.
+
+Instead, the agent caught the regression because Harsh's audit-first protocol forced inspection. The agent reverted to a hybrid matcher (`instruments-service@d7bd17f`):
+- **Long-form names** (bitcoin, ethereum, solana, dogecoin, hyperliquid, xrp): plain substring — catches `archBitcoin` correctly because no English word contains `bitcoin` as a substring outside crypto contexts
+- **Short tickers** (btc, eth, sol, doge, bnb, hype): require non-letter boundaries `(?<![a-z])TICKER(?![a-z])` — rejects `abnb`, `solar`, `hyped`
+
+15/15 smoke tests passed.
+
+#### Detour 4: audit script blind to dual schemas (~15 min)
+
+Re-ran the audit with the corrected matcher. Got **443 candidates**. Inspected DOGE samples — all had `question=NaN`. Pulled a DOGE shard directly:
+
+```python
+# DOGE 2025-03-14 shard
+columns: ['instrument_key', 'venue', 'instrument_type', 'raw_symbol', 'base_asset', ...]
+sample: {
+    'instrument_key': '0xe369626bf3813af67dfc...',
+    'base_asset': 'PREDICTION:POLYMARKET:UP_DOWN:DOGE:1D:2025-03-14',
+    ...
+}
+# NO question column at all
+```
+
+The Polymarket adapter writes **two distinct parquet shapes**:
+- **Question-format** shards: classified by parsing question text (most BNB, BTC, etc. from 2026-03+)
+- **Canonical-ID-format** shards: classified by the `base_asset` string itself (older Polymarket adapter writes for some asset_groups)
+
+The audit script was only checking `question` — for canonical-ID shards it found `question=NaN` and treated them as "no match → REMOVE candidate". **128 DOGE / 23 ETH / 25 SOL / 14 XRP / 27 BTC / 76 BNB rows were false alarms** because the audit script couldn't read the canonical-ID schema.
+
+If the agent had run the cleanup against the v2 audit results, it would have deleted **401 legitimate canonical-ID rows**.
+
+The agent narrowed scope to question-format shards only, getting the real answer: **42 Airbnb-in-BNB rows. That's it. That's the whole bug.**
+
+A Phase 2 audit (`/tmp/audit-polymarket-canonical-id.py`) was written specifically to verify canonical-ID shards by parsing `base_asset` and confirming the encoded data_type matched the stored data_type. **Result: 0 mismatches across 95 canonical-ID shards.** Confirmed clean.
+
+### What the user (Harsh) did right that the agent kept missing
+
+1. **Demand concrete numbers, not narratives.** When the agent said *"system is correct, UI clips pre-launch dates"*, Harsh asked *"give me example of what's now vs what's correct"*. That forced the agent to look at actual rows.
+
+2. **Don't trust the abstraction without checking the data.** The agent kept treating `start_date` config as authoritative. Harsh's *"check which markets are these in october"* turned a hand-wave into a one-line proof that the bug was upstream of the start_date config — it was the adapter producing noise that the start_date config was correctly filtering.
+
+3. **Pre-audit before any destructive action, even when the patch "looks right".** The agent had passed 5 smoke tests on the word-boundary matcher and was ready to ship + clean up. Harsh's *"first do the audit of what it's replacing"* caught the arch* regression that would have destroyed 388 legitimate market records. Same protocol caught the dual-schema audit-script bug that would have destroyed another 401 legitimate rows.
+
+4. **Iteration over confidence.** Three separate times the agent declared *"the fix is in, we're done"* and three times Harsh said *"verify it"*. Each verification cycle uncovered a different layer of the issue: cache staleness was wrong, then word-boundary was over-aggressive, then dual-schema audit was incomplete.
+
+The actual bug — substring matching in 12 lines of `_match_crypto_asset` — could be fixed with a 49-line diff. The 2-hour journey was the cost of arriving at that small fix without breaking anything else.
+
+### Lessons for the codebase / process
+
+1. **The `_match_crypto_asset` function should never have been doing keyword classification.** The canonical-ID shards already encode the data_type in `base_asset`. The bug exists because the adapter has two code paths writing different schemas, and the question-format path uses a regex hack instead of a structured classifier. Long-term: unify on canonical-ID shards or carry a `derived_data_type` field through the adapter so classification doesn't depend on text matching.
+
+2. **Audit scripts should fail loud on schema-blindness.** The first audit silently mapped `question=NaN` to "REMOVE candidate". Better default: raise on missing schema fields, force the human to tell the script "I know about this case, treat it as X".
+
+3. **Defensive cache-clear hardening is good**, but cache symptoms are easy to misdiagnose. When a UI number "looks stale", check the actual data store first, not the cache layer.
+
+4. **Pre-audit is non-negotiable for destructive ops.** This run shipped without breaking the canonical because Harsh insisted on it. A different agent (or different user) skipping the audit would have catastrophically corrupted the data.
+
