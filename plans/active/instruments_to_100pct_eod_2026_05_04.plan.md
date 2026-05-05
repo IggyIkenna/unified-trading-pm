@@ -2437,3 +2437,78 @@ Bands have **deliberate overlap and ±50K padding** to absorb CLOB inversions. O
 
 If this pattern works, the longer-term improvement is to make the orchestrator **batch missing-date queries by cursor band** so one process scan fills many dates simultaneously. Today's adapter still does one scan per date — even with narrow slices, that's 137 process bootstraps. A cursor-sweep mode that fills any (date, data_type) shard whose target falls within the scanned window would reduce 137 process invocations to ~10.
 
+
+---
+
+## Day 2 (2026-05-05) — PREDICTION 89% display: NOT a cache bug
+
+### What we thought
+
+After completing the cursor-sharded fanout (137/137 dates captured), the deployment-ui kept showing PREDICTION at **89.05%**. Initial hypothesis: stale cache.
+
+Found and patched a real cache layering issue: `/api/data-status/turbo/clear` was only dropping 2 of 4 cache layers. Fixed in `deployment-api@4dff799`:
+
+- ✅ `data_analytics_service._turbo_cache` (always cleared)
+- ✅ `data_status_service._INDEX_CACHE` (always cleared)
+- ✅ `data_status_drilldown._cache` — **previously NOT cleared** (drilldown shard counts, 5-min TTL)
+- ✅ `DataStatusService._REF_DATA_CACHE` — **previously NOT cleared** (upstream-expected-dates, 5-min TTL)
+
+`clear_drilldown_cache()` was imported at module top and its docstring claimed it was used by `/turbo/clear`, but the call had been silently dropped. Defensive fix lands all four clears.
+
+But — after restarting the deployment-api with all 4 caches dropping, the **89% number persisted**. So cache wasn't the cause.
+
+### Actual cause: adapter false positives
+
+The Polymarket adapter classifies markets into data_types (BTC, ETH, SOL, BNB, …) by substring-matching the market question text:
+
+```python
+# Pre-fix in polymarket.py
+_CRYPTO_KEYWORDS = {"bnb": "BNB", "btc": "BTC", "sol": "SOL", "hype": "HYPE", ...}
+def _match_crypto_asset(q):
+    for kw, canonical in _CRYPTO_KEYWORDS.items():
+        if kw in q.lower():
+            return canonical
+```
+
+Bare-substring matching produces false positives where stock tickers containing crypto-ticker substrings get misclassified:
+
+| Question | Bucket assigned | Reality |
+|---|---|---|
+| "Airbnb (ABNB) Up or Down on October 16?" | **BNB** | Airbnb stock |
+| "Solar panel adoption..." | **SOL** | Solar industry |
+| "Hyped product launches..." | **HYPE** | Generic adjective |
+
+Audit on 2026-05-05: **30 of 78 BNB-tagged dates** in the canonical manifest were Airbnb stock markets, NOT BNB token markets. Same pattern (smaller noise) for HYPE/DOGE/SOL.
+
+So the deployment-ui's start_date for `(POLYMARKET, BNB) = 2026-03-01` is **correct** — that's roughly when actual BNB token markets first appeared on Polymarket. The earlier "BNB" rows in the canonical are noise. The 89% reflects **honest coverage** of real markets, with noise correctly excluded from both numerator and denominator.
+
+### Fix in `instruments-service@b336834`
+
+`_match_crypto_asset` now uses **word-boundary regex** patterns compiled once at import:
+
+```python
+_CRYPTO_KEYWORD_PATTERNS = [
+    (re.compile(rf"\b{re.escape(kw)}\b"), canonical)
+    for kw, canonical in _CRYPTO_KEYWORDS.items()
+]
+
+def _match_crypto_asset(q_lower):
+    for pattern, canonical in _CRYPTO_KEYWORD_PATTERNS:
+        if pattern.search(q_lower):
+            return canonical
+```
+
+Smoke tests pass:
+- ✅ `"Airbnb (ABNB) Up or Down"` → no match (was BNB)
+- ✅ `"BNB Up or Down March 15"` → BNB
+- ✅ `"Solar panel adoption"` → no match (was SOL)
+- ✅ `"Hyped product launch"` → no match (was HYPE)
+
+Macro keywords (`crude oil`, `s&p 500`, etc.) are multi-word phrases that don't suffer from this and stay on substring matching.
+
+### Out-of-scope follow-ups
+
+1. **Dict-iteration-order quirk**: questions like *"will ethereum (eth) flip btc?"* return the first-seen ticker (BTC), not the most-relevant one. Pre-existing behavior; needs a different fix (longest-match-first or schema-aware classification).
+2. **Existing canonical noise**: today's PREDICTION canonical still contains the misclassified Airbnb rows in BNB. After this adapter fix lands, a future fanout pass would write correct rows — but the noisy historic rows remain. Cleanup option: re-run the affected (date, BNB) shards to overwrite, OR add a one-off manifest-reconciliation script. Not blocking.
+3. **No more "PREDICTION needs more data" work today** — coverage is honest, system reports the truth.
+
