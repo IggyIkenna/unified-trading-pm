@@ -367,6 +367,27 @@ underlying, market_type, resolution_period) as path segments.
   PREDICTION 1-day smoke went from 8 matched / 2 phantom to 9 matched /
   1 phantom (most blobs now visible).
 
+### F21 — RESOLVED — DEFI vault_share_price residual phantoms were a recon bug, not a data issue
+
+Earlier DEFI 1-day smoke (2024-06-15, before FIX-11 landed) reported 4 phantoms:
+`FRAX, MAKER, MORPHO_VAULTS, YEARN_V3` × `vault_share_price`.
+
+After FIX-11 (`_CANONICAL_PATH_RE` allows optional `chain=`):
+
+```
+Total DEFI vault_share_price rows: 5036
+By venue:   MORPHO_VAULTS=1008, ETHENA=1007, FRAX=1007, MAKER=1007, YEARN_V3=1007
+By chain:   ETHEREUM=5036
+capture_status: captured=4469, empty_confirmed=567, attempted_failed=0
+```
+
+All 5 venues are valid DeFi protocols on Ethereum chain. Manifest tracks them
+correctly. The earlier "phantom" classification was caused by recon's
+canonical PATH_RE not allowing the `chain=` segment, so it failed to match
+the disk paths even though the data was there.
+
+**F21 closed as false alarm. Bug was in recon, not in data.** FIX-11 resolved it.
+
 ### F11-detail — ALL 3,220 CEFI schema-validation reject rows are ASTER
 
 Investigation result. F11 surfaced 3,220 `StreamingParquetWriter pre-write validation failed` rows in CEFI manifest.
