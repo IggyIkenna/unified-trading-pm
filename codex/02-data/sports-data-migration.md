@@ -2,12 +2,22 @@
 scope: [engineer, admin]
 ---
 
+<!-- POST_PLAN_BANNER_2026_05_06 -->
+
+> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
+> BEFORE making code or doc changes informed by this doc. This doc is partially stale: may describe shard atoms,
+> manifest behaviour, available_at semantics, or partitioning that's evolving with the writegate-honest-coverage plan
+> (per-fixture sports sharding, canonical_question_group for predictions, cluster validation mandatory, three-category
+> empty-output decision, available_at per-row write-time). The post-plan-reality doc lists the 10 cross-cutting
+> principles codified in workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output decision A/B/C,
+> cluster validation mandatory at record_captured, per-row write-time `available_at`, prediction lifecycle timing,
+> temporary state must have named successor, per-VM shard isolation, etc.) plus the active plans where the canonical
+> post-plan reality is being implemented. If this doc and the active plans disagree, the plans win. If you find a
+> contradiction the plans don't address, flag to user — don't decide unilaterally.
+
 # Sports Data Migration: GCS Bucket Refactoring
 
-**Priority:** P1-high  
-**Owner:** Harsh  
-**Status:** Specification Phase  
-**Target:** Before sports implementation begins
+**Priority:** P1-high **Owner:** Harsh **Status:** Specification Phase **Target:** Before sports implementation begins
 
 ---
 
@@ -16,8 +26,8 @@ scope: [engineer, admin]
 This document defines the migration strategy for refactoring existing sports data in GCS buckets to match the unified
 trading system's structure (hive partitioning, hierarchical clustering, data status tracking).
 
-**Existing Data:** 50GB+ across 6 GCS buckets  
-**Target:** Unified structure with `gs://market-data-raw/SPORTS/{venue}/{date}/`
+**Existing Data:** 50GB+ across 6 GCS buckets **Target:** Unified structure with
+`gs://market-data-raw/SPORTS/{venue}/{date}/`
 
 ---
 
@@ -129,8 +139,7 @@ gs://ml-models/SPORTS/
 
 ### Fixtures & Reference Data
 
-**Shard by:** Day  
-**Rationale:** ~100-500 fixtures/day across all leagues, manageable file size
+**Shard by:** Day **Rationale:** ~100-500 fixtures/day across all leagues, manageable file size
 
 ```
 gs://instruments-data/SPORTS/fixtures/2024-01-01/fixtures.parquet  # ~10-50 MB
@@ -138,8 +147,7 @@ gs://instruments-data/SPORTS/fixtures/2024-01-01/fixtures.parquet  # ~10-50 MB
 
 ### Odds Data
 
-**Shard by:** Day or Week  
-**Rationale:** Depends on tick frequency
+**Shard by:** Day or Week **Rationale:** Depends on tick frequency
 
 | Data Type                  | Shard By | File Size (Approx) | Rationale                     |
 | -------------------------- | -------- | ------------------ | ----------------------------- |
@@ -152,8 +160,7 @@ gs://instruments-data/SPORTS/fixtures/2024-01-01/fixtures.parquet  # ~10-50 MB
 
 ### Features
 
-**Shard by:** Day, partitioned by league/season  
-**Rationale:** Features computed per fixture, natural hierarchy
+**Shard by:** Day, partitioned by league/season **Rationale:** Features computed per fixture, natural hierarchy
 
 ```
 gs://features-sports/t0/ENG-PREMIER_LEAGUE/2024-2025/2024-08-16/team_features.parquet  # ~1-5 MB
@@ -163,8 +170,7 @@ gs://features-sports/t0/ENG-PREMIER_LEAGUE/2024-2025/2024-08-16/team_features.pa
 
 ### Models
 
-**Shard by:** Version (no date sharding)  
-**Rationale:** Models versioned, not date-dependent
+**Shard by:** Version (no date sharding) **Rationale:** Models versioned, not date-dependent
 
 ```
 gs://ml-models/SPORTS/match_odds/v1/model.pkl  # ~50-200 MB
