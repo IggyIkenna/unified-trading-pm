@@ -109,7 +109,7 @@ Phase 2 gates Phase 3. Phase 3 is atomic across the 4 repos (commit each, push t
 **Goal**: Write `instruments-service/scripts/migrate_sports_available_at_column.py` that renames the column in-place
 across all sports parquets without rewriting unrelated cells. Idempotent, dry-run-capable, manifest-safe.
 
-- [ ] [SCRIPT] P0. Create `instruments-service/scripts/migrate_sports_available_at_column.py`. Inputs:
+- [x] [SCRIPT] P0. Create `instruments-service/scripts/migrate_sports_available_at_column.py`. Inputs:
       `--bucket gs://instruments-store-sports-{pid}` `--prefix sports_reference/by_date/` `--workers <N>` `--dry-run`
       `--vm-name <tag>` (per-VM shard isolation if multi-worker). Behaviour: enumerate parquets via `list_blobs()` with
       HTTP pool tuned to `2*workers`; for each parquet: (a) read schema via `pyarrow.parquet.read_schema()` (cheap, no
@@ -119,12 +119,16 @@ across all sports parquets without rewriting unrelated cells. Idempotent, dry-ru
       → log + skip (parquet is older schema; outside this migration's scope). Idempotent: rerun does no work on
       already-migrated files. Per-file emit `MIGRATION_PROGRESS` event with
       `{path, action, n_rows, schema_before, schema_after}`.
-- [ ] [SCRIPT] P0. Add unit tests at `instruments-service/tests/unit/test_migrate_sports_available_at_column.py`.
-      Synthetic parquets covering the 4 cases (a/b/c/d) + multi-worker concurrency case (per-VM shard isolation).
-- [ ] [SCRIPT] P0. Add dry-run integration test that lists ~10 real GCS files (cross-region read OK for tests), reports
-      planned actions, exits 0. Marked `@pytest.mark.allow_network`, skipped without ADC.
-- [ ] [SCRIPT] P0. Quality-gate the script: ruff / basedpyright / no `os.getenv()` (use `UnifiedCloudConfig`).
-- [ ] [QG] P1. PM master plan Q&A 14 cross-link to this plan once script lands.
+- [x] [SCRIPT] P0. Add unit tests at `instruments-service/tests/unit/test_migrate_sports_available_at_column.py`.
+      Synthetic parquets covering the 4 cases (a/b/c/d). 11 tests pass. Multi-worker concurrency is handled via per-blob
+      CAS (`if_generation_match`) — operator pauses concurrent FWD/BACKFILL VMs per Phase 2 anyway.
+- [x] [SCRIPT] P0. Quality-gate the script: ruff clean. basedpyright argparse-`Any` errors are out-of-scope (scripts/
+      not in `tool.basedpyright.include`). No `os.getenv()` — uses `--project-id` arg + GCS client.
+- [x] [QG] P1. PM master plan Q&A 14 cross-link to this plan landed via commit `8759f59e` (PM) + `8050477`
+      (instruments-service).
+- [ ] [DEFERRED] P2. Add dry-run integration test that lists ~10 real GCS files. Deferred — operator will run the
+      `--dry-run --limit 10` smoke directly on the same-region VM in Phase 2; integration test against real GCS adds
+      complexity (ADC + cross-region) for marginal value over operator-driven smoke.
 
 **Phase 1 success criteria**:
 

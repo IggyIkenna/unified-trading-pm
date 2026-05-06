@@ -70,9 +70,9 @@ resolutions for two would-be code refactors. This doc tells you what's done and 
   orchestrator (13 callsites) + 2 instruments-service scripts (10 callsites) + features-sports batch_handler (1+) +
   tests. Audit + execution-DAG embedded in the plan; next agent does NOT need to re-grep.
 - Phase 0 (audit) shipped via this plan ship.
-- Phase 1 (migration script `instruments-service/scripts/migrate_sports_available_at_column.py`) is the next concrete
-  agent task. Idempotent + dry-run + unit tests + per-VM shard isolation per workspace rule. Ships dormant; no
-  operational impact.
+- Phase 1 (migration script `instruments-service/scripts/migrate_sports_available_at_column.py`) **SHIPPED 2026-05-07**
+  on `instruments-service@8050477`. Idempotent + dry-run + 11 unit tests + per-blob CAS (`if_generation_match`). Dormant
+  — no operational impact until operator runs it.
 - Phase 2 (operator runs migration on same-region GCE VM `asia-northeast1-c`) is operator-driven, requires forward-poll
   - backfill VM pause. Sequenced after Phase 1.
 - Phase 3 (atomic 4-repo source rename) sequenced after Phase 2 completes. Per workspace "manifest migration not
