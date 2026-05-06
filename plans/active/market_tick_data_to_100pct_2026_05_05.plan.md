@@ -206,16 +206,16 @@ passing.
 - [x] [SCRIPT] P0. Lock-test: extend `tests/unit/sports/test_gcs_paths_player_values.py` pattern with a
       `tests/unit/defi/test_vault_venue_canonical_names.py` asserting the 4 canonical venues are in `ALL_DEFI_VENUES`
       and the legacy forms are in `LEGACY_DEFI_VENUE_ALIASES`. Regression-proof. **Done 2026-05-06 UAC `a901e91`** —
-      shipped at `tests/unit/test_vault_venue_canonical_names.py` (1 dir higher than the original todo target;
-      asserts identical guarantees).
+      shipped at `tests/unit/test_vault_venue_canonical_names.py` (1 dir higher than the original todo target; asserts
+      identical guarantees).
 
 ### Phase 1.5a-2 — UTL NormalisingManifestWriter (Q&A 8) — **SUPERSEDED 2026-05-06**
 
 > **Superseded by `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (commit `d591416d`)**, which folds the
-> same write-time validation into `ManifestWriter.record_captured` directly via the 4-pillar write-gate
-> (row-count > 0, NaN ratio < threshold, schema match, cluster coverage ≥ expected) rather than a separate
-> `NormalisingManifestWriter` wrapper. Per the HANDOVER's coordination rule: "Don't build a parallel mechanism — once
-> the UTL change lands, services just need to pass the clusters dict for any shard that's a bundle."
+> same write-time validation into `ManifestWriter.record_captured` directly via the 4-pillar write-gate (row-count > 0,
+> NaN ratio < threshold, schema match, cluster coverage ≥ expected) rather than a separate `NormalisingManifestWriter`
+> wrapper. Per the HANDOVER's coordination rule: "Don't build a parallel mechanism — once the UTL change lands, services
+> just need to pass the clusters dict for any shard that's a bundle."
 >
 > The wrapper-vs-in-class trade-off was decided in favour of in-class because (a) every consumer needs the gates, not
 > just opt-in callers; (b) keeps the manifest API surface single; (c) the cluster-coverage check generalises naturally
@@ -249,20 +249,56 @@ passing.
 - [x] [SCRIPT] P0. **Vault venue manifest rename** (Q&A 4 follow-up): for each row in
       `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` where
       `data_type='vault_share_price'` AND `venue ∈ {MORPHO_VAULTS, YEARN_V3}` → rewrite venue to canonical form
-      (MORPHOVAULTS, YEARNV3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write.
-      **Done 2026-05-05 MTDS `bf81219`** — `scripts/rename_vault_venue_canonical.py` shipped; production run is
-      the operator action below.
-- [ ] [HUMAN] P0. **Production run** of both scripts above (sequence: flip_cefi_bug_x2_leaked_text.py first against
-      the CEFI manifest, then rename_vault_venue_canonical.py against the DeFi manifest). Each is a backup-then-write
-      one-shot; coordinate with concurrent stream so no other writer is mid-flight against either manifest.
-- [ ] [HUMAN] P0. Re-read manifest, sanity-check counts (`captured` / `empty_confirmed` / `attempted_failed` breakdown
-      matches expected post-flip), confirm `error_reason` distribution shows VENUE_FETCH_FAILED dominates.
-- [ ] [HUMAN] P0. Delete backup blobs once verified.
+      (MORPHOVAULTS, YEARNV3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write. **Done
+      2026-05-05 MTDS `bf81219`** — `scripts/rename_vault_venue_canonical.py` shipped; production run is the operator
+      action below.
+- [x] [HUMAN] P0. **Production run — CEFI BUG-X2 flip done 2026-05-06T10:15:42Z** (executed via inline equivalent of
+      `flip_cefi_bug_x2_leaked_text.py`; same backup-then-write semantics). - Backup:
+      `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet.pre_bugx2_flip_20260506T101542Z.bak`
+      (deleted post-verify). - **Result**: 83,924 rows flipped to `error_reason='VENUE_FETCH_FAILED'`; remaining BUG-X2
+      leak rows = **0**. capture_status distribution unchanged: captured 1,024,362 / empty_confirmed 1,132,988 /
+      attempted_failed 85,556. VENUE_FETCH_FAILED count rose from 54 → 83,978. - Patterns flipped: 29,472 "Response
+      payload is not completed" + 23,498 "FUTURE row requires expiry_date" + 16,240 "OPTION row requires..." + 3,220
+      "StreamingParquetWriter pre-write validation failed" + 11,494 "In CSV column #N".
+- [ ] [HUMAN] P0. **Production run — vault venue rename** (DeFi manifest) via `rename_vault_venue_canonical.py`.
+      Coordinate with concurrent stream; one-shot backup-then-write. Still operator-pending.
+- [x] [HUMAN] P0. Re-read manifest sanity-check done — VENUE_FETCH_FAILED dominates the attempted_failed bucket
+      post-flip; row counts and capture_status distribution intact.
+- [x] [HUMAN] P0. Backup blobs deleted (both `pre_bugx2_flip_*` blobs removed via `gcloud storage rm`; manifest
+      `_index/` listing shows zero `.bak` files).
 
 ### Phase 1.5a-4 — Disk migrations (Q&A 7 + Q&A 10)
 
 > **Scripts confirmed ready 2026-05-06**: all 5 migrate scripts exist and were wrapped in `run_lifecycle` this session
 > (MTDS `3e65dfb` + `3a5de78` + `8177955`). Phase is operator-gated; nothing to ship.
+>
+> **Path-template fix shipped 2026-05-06 MTDS `eeb03c3`**: `migrate_tradfi_to_hive.py` writes to canonical
+> `day={D}/asset_group=tradfi/...` (not legacy `category=tradfi/`) per CLAUDE.md "Asset-group vocabulary" rule. Without
+> this, the migration would have written to a legacy-vocab path requiring a second migration to re-key.
+>
+> **Shard-granularity coordination required (CRITICAL — 2026-05-06)**: dry-run revealed that `migrate_tradfi_to_hive.py`
+> writes at **per-day-aggregate** granularity (one `ticks.parquet` per `(date, venue, data_type)`, ~10k rows each) — but
+> per CLAUDE.md "Shard-granularity SSOT" the canonical writer for TradFi splits at instrument-level (per-instrument for
+> ETFs, per-root for futures+options bundles). Running the migration as-is would produce a SHARD ATOM that doesn't match
+> writer atomicity / manifest row key / data-status display. **The migration's output shape conflicts with the canonical
+> TradFi shard-key matrix** (see CLAUDE.md "Per-asset-group shard-key matrix"):
+>
+> - TradFi futures: `(asset_group=tradfi, venue, data_type, instrument_type, root, day)` — bundled per root.
+> - TradFi ETFs: `(asset_group=tradfi, venue, data_type, instrument_type, instrument_id, day)` — per-instrument.
+> - TradFi options: `(asset_group=tradfi, venue, data_type, options_chain, root, day)` — bundled per root, 11-cluster
+>   ES.OPT taxonomy.
+>
+> The migrate's "all-instruments-into-one-ticks.parquet" doesn't match any of these. **DO NOT RUN the migrate as-is**.
+> Real fix: rewrite `migrate_tradfi_to_hive.py` to split per-instrument (ETFs) / per-root (futures + options chains)
+> matching the canonical shard-key matrix; OR use the canonical TradFi PartitionedTickWriter directly to write each
+> source row at its proper shard key. Tracked in
+> [`shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`](shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md)
+> as a per-service migration verify item — that plan owns the canonical shard-key shapes; this plan defers to it.
+>
+> Inventory of legacy data (verified 2026-05-06): 100,698 source files across 12 `day-` directories spanning 2025-11-02
+> to 2026-02-01. Sample per date: 82 NASDAQ + 426 NYSE ohlcv_1m equities + 40 CME options_chain + 10k+ CME trades. Real
+> unique data — NOT duplicates of canonical day=\*/asset_group=tradfi/ contents (probed ABBV/IBIT/AUD on 2025-11-02 —
+> none in canonical). Cannot delete; must migrate at correct shard-key shape.
 
 - [ ] [HUMAN] P0. **TRADFI legacy `day-` migration** (Q&A 7): run
       `cd market-tick-data-service && .venv/bin/python scripts/migrate_tradfi_to_hive.py --dry-run` first. Verify the
