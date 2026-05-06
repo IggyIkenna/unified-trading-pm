@@ -313,6 +313,55 @@ The `asset_class='crypto'` finding is **new and worse than the original Q5b note
   `available_to_datetime=NaT`. Cross-check when running the same audit on
   `instruments-store-tradfi/.../venue=CME/instruments.parquet`. Tracked but not blocking.
 
+### 2026-05-06 — A7: shard-granularity Phase 1 dependency cross-reference
+
+**What was checked:** read-only review of
+`plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 0 audit findings against this plan's
+Unit A–E execution plan. Goal: identify which shard-granularity fixes MUST land before range-index Unit B–E can
+compute honest `(covered_from, covered_to, gap_dates)`.
+
+**Mapping (shard-granularity finding → range-index dependency):**
+
+| Shard-granularity item                                                          | Service / file                                            | Range-index impact                                                                                                                                                                                        | Severity for unparking |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **MIG-MDPS1** + **MIG-MDPS2** — MRO shadow + 1440-NaN-bar phantom fix           | MDPS `orchestration_writer.py:328`, 17 `_create_empty_output` sites in `adapters/{cefi,tradfi,defi,sports}/` | **CRITICAL** — every NaN-bar day collapsed into `(covered_from, covered_to)` becomes part of the range, falsely claiming coverage. Until MDPS stops writing 1440-NaN parquets with `capture_status=captured`, v7 cannot trust v6 `captured` status to derive ranges. | **HARD BLOCKER**       |
+| **MIG-MDPS3** — `_write_manifest_records` v3-shape → v6 with `chain, instrument_type, instrument_id, timeframe` | MDPS `orchestration_service.py:283-388`              | **CRITICAL** — v7 ranges are keyed `(service, venue, instrument_id, timeframe, data_type)`. If MDPS today writes v3 coarse `(date, venue, data_type, row_count)` rows, there is NO per-instrument signal to range over. v7 cannot be derived from v3 rows.   | **HARD BLOCKER**       |
+| **MTDS DeFi instrument_id drop** — `_defi_manifest.py:120,300`                  | MTDS DeFi handlers                                        | HIGH — DeFi v7 needs `instrument_id_or_protocol_id` per row. If today's manifest has empty `instrument_id`, can't range per-pool.                                                                          | HARD BLOCKER           |
+| **MTDS GMX `chain=""`** — `perp_funding_handler.py:225`                         | MTDS DeFi perp funding                                    | MED — GMX rows need `chain="ARBITRUM"`/`"AVALANCHE"`. v7 keys `chain` first-class; bad chain = mis-bucketed range.                                                                                          | blocker (small surface)|
+| **instruments-service Polymarket `data_type=BTC|ETH` overload** — `orchestrator.py:1988-1995` | instruments-service                                       | HIGH (prediction only) — v7 ranges for prediction need `canonical_question_group`. UAC SSOT greenfield (BUILD-PRED1..4). Block prediction range-index land until UAC ships canonical_question_group.       | blocker (prediction)   |
+| **instruments-service SFI / FOOTYSTATS coarser-pre-flight bug**                 | instruments-service `orchestrator.py:5013-5018`, `4747-4750` | LOW for range-index (sports out-of-scope per A4) — but may pollute the catalogue plan's count-based sports coverage which range-index docs reference.                                                       | not a blocker          |
+| **`available_at` not stamped at write-time anywhere** (5/5 services)            | MTDS, MDPS, features-onchain, features-sports, features-delta-one | MED for range-index L1 (instruments already have `available_from_datetime`). HIGH for L2/3 (raw + processed) — range-index L2/3 was deferred in plan's Q3, so this isn't immediately blocking.            | not a blocker for L1   |
+| **No NaN-ratio / row-count / schema / cluster write-gate** (5/5 services)       | UTL `FeatureWriteGate` extension + per-service apply       | HIGH — same root cause as MDPS phantom: write-gate failure means `captured` rows lie. Range-index trusts `captured` to decide a day is "in" the range.                                                     | HARD BLOCKER           |
+| **Honest-coverage trio (`record_empty` / `record_failed`) absent in main paths** | MDPS, features-onchain, features-delta-one                | HIGH — range-index treats `empty_confirmed` as "honest empty within trading calendar" → not a `gap_date`. If the writer never emits `record_empty`, the range-index can't distinguish "we tried and source had nothing" from "we never tried."                | HARD BLOCKER           |
+| **Pre-flight coarser than writer** (5+ services)                                | instruments / MTDS / MDPS / features-onchain / features-sports | MED — affects re-run + concurrent backfill safety, not range correctness directly. Range-index can land with this still partially open as long as writer is honest.                                       | not a blocker          |
+| **LookaheadBiasError input-side gap**                                           | features-* (3/3 audited)                                  | NONE for range-index L1 — affects feature-output correctness, not instrument coverage. Don't block on this.                                                                                                | not a blocker          |
+| **except: continue` per-instrument silent-drops** (umi_tick_provider.py 3 sites) | MTDS                                                      | HIGH — silently-failed-but-ranged-as-captured instruments produce false ranges. Same severity class as the empty-placeholder bug.                                                                          | HARD BLOCKER           |
+
+**Hard-blocker summary** (must land before this plan unparks):
+1. MIG-MDPS1 + MIG-MDPS2 (MRO shadow + 1440-NaN fix) — without this, ranges encode lies on every option/perp.
+2. MIG-MDPS3 (v3 → v6 manifest shape) — without per-instrument rows, no per-instrument ranges to compute.
+3. MTDS DeFi `instrument_id` + GMX `chain` fixes (`_defi_manifest.py`, `perp_funding_handler.py:225`).
+4. UTL write-gate trio (NaN / row-count / schema / cluster) lifted from `schema_validation.py` + applied
+   workspace-wide. Specifically: range-index trusts `capture_status=captured` to mean "real rows landed";
+   without write-gates, that's not enforceable.
+5. Honest-coverage trio (`record_empty` / `record_failed`) added to MDPS + features-onchain +
+   features-delta-one main paths — without `record_empty`, range-index can't subtract holidays / honest gaps
+   from the "missing days" set.
+6. MTDS `umi_tick_provider.py:581/737/921` per-instrument silent-drop fix — same root cause as MDPS phantoms.
+
+**Plan-level status update:** the original "Hard prerequisite: shard-granularity Phase 2 done" was correct but
+under-specified. **Concretely, the items above are the critical subset of Phase 1 + a slice of Phase 2.** Range-
+index plan can unpark when those 6 hard-blockers green plus Q5b TRADFI `instrument_type` re-stamp lands. Other
+Phase 1 items (LookaheadBiasError, pre-flight coarseness, sports-specific fixes, dual-vocab probe lift) are
+complementary but not unparking-blockers.
+
+**Action items for this audit's harness (no code changes, just tracking):**
+- [x] A7-1: Cross-reference table embedded above. ✓
+- [ ] A7-2: When shard-granularity Phase 1 ships any of the 6 hard-blockers, append a "blocker N green" line to
+      this finding and update the activation-trigger table at the top of this plan.
+- [ ] A7-3: Sync with shard-granularity plan owner (claude/teammate) to flag the 6 hard-blockers as items the
+      range-index plan depends on, so they don't get reordered/parked behind lower-impact items.
+
 
 
 
