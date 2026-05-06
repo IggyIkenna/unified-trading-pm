@@ -210,16 +210,27 @@ stream — not added here.
       FIXTURE_LINEUPS, FIXTURE_PLAYER_STATS, INJURIES). The 1 remaining
       (`fixtures` itself) already has `kickoff_utc` — trivial.
 
-      **Caveat for the user**: schema bumps in B touch downstream consumers in
-      MDPS / strategy-service if they read these tables. Claude has not yet
-      grepped to confirm. If they don't read them yet, B is free; if they do,
-      we coordinate. Recommended next step: grep
+      **Blast-radius confirmed 2026-05-06**: `rg` across the workspace for
       `FIXTURE_STATS_COLUMNS|FIXTURE_EVENTS_COLUMNS|FIXTURE_LINEUPS_COLUMNS|FIXTURE_PLAYER_STATS_COLUMNS|INJURIES_COLUMNS`
-      across MDPS + strategy-service + features-onchain to confirm blast radius
-      before starting the schema bump.
+      finds matches **only inside features-sports-service** (the schema module
+      itself, `exports.py`, and two test files). No MDPS / strategy-service /
+      features-onchain / instruments-service / market-tick-data-service
+      consumer reads these schema column constants. Schema bump for Option B
+      is therefore a free contained change — no cross-repo coordination
+      required. **Hybrid (A for 8 reference, B for 5 post-match) is the
+      go-ahead for next session**; the only remaining pre-work is implementing
+      the `_FETCH_COMPLETED_AT` cache in `_fetch_runner` (Option A) and adding
+      `kickoff_utc` to the 5 fixture-keyed schemas + their fetch_runner
+      population paths (Option B).
 
-      Paused pending user direction on hybrid acceptance + go-ahead to grep
-      consumer sites.
+      Note: the batch_handler `_stamp_available_at` dispatcher
+      (commit `52602fe`) ALREADY applies the right rule for both buckets at
+      the per-export-call site — the source-of-truth fix here is making the
+      stamp use a real timestamp (fetch-time for reference, match-end for
+      post-match) rather than the conservative `target_date + 23:59 UTC`
+      fallback. Until the per-export sources land, the dispatcher's fallback
+      is honest-conservative (over-stamps available_at slightly later than
+      truth, never earlier — so it never leaks).
 
 - [ ] **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback at
       `batch_handler.py:_ensure_timestamp` entirely.

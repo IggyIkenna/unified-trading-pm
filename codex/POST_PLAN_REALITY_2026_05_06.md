@@ -2,6 +2,7 @@
 type: stale-doc-pointer
 created: 2026-05-06
 status: ACTIVE — read before making any code or doc change in the affected scopes
+scope: [engineer]
 ---
 
 # Post-Plan Reality — Pointer for Fresh Agents (2026-05-06)
