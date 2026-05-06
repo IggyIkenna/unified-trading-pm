@@ -428,12 +428,19 @@ see the predictions plan, multi-week scope. Open new plan for any other (b.3) di
 
 #### Phase 1A — Per-service shard-axis audit + fixes (parallel)
 
-- [ ] [audit] P1. Per-service writer probe: confirm the manifest rows being written today populate the columns listed in
-      the SHARD axes column above. Report any that don't.
-- [ ] [MTDS sports] P1. If `league_id` is empty in the MTDS sports manifest, fix the orchestrator/adapter writer to pass
-      it on every per-fixture write.
-- [ ] [features-sports] P1. Each calculator adapter writes `feature_group=` matching the upstream-source-keyed bucket
+- [x] [audit] P1. Per-service writer probe: confirm the manifest rows being written today populate the columns listed in
+      the SHARD axes column above. Report any that don't. (Audit 2026-05-08 — MTDS sports `league_id` ✅
+      [orchestrator.py:2182](../../../../Code/unified-trading-system-repos/market-tick-data-service/market_tick_data_service/engine/orchestrator.py#L2182)
+      already passes; features-sports `feature_group` ✅ all calculators already pass per Phase 0.6.G.5 `9874f13`;
+      ml-training/inference/strategy/execution `job_id` shipped this session — see Phase 1B below.)
+- [x] [MTDS sports] P1. If `league_id` is empty in the MTDS sports manifest, fix the orchestrator/adapter writer to pass
+      it on every per-fixture write. (Already (a)-compliant per audit — `league_id_key` flows from shard tuple at line
+      2069 through to `manifest.add(league_id=league_id_key)` at line 2188; sentinel paths at 2332/2337 also pass. No
+      fix needed.)
+- [x] [features-sports] P1. Each calculator adapter writes `feature_group=` matching the upstream-source-keyed bucket
       (`api_football_only`, `footystats_only`, `understat_only`, `sfi_progressive_only`, `cross_source`, `weather`).
+      (Already (a)-compliant per audit 2026-05-08 — `batch_handler.py` writers at lines 550-838 +
+      `compute_sfi_progressive_only.py` at lines 144/175/233/241 all pass `feature_group=` in row_key.)
 - [ ] [features-onchain] P1. Each calculator writes `feature_group=` matching its upstream source (`lending_rates`,
       `lst_yields`, `gas_fees`, `dex_liquidity`, `bridge_events`, etc.) plus `chain=`.
 - [ ] [features-calendar] P1. Each source writer (FRED, tradingeconomics, sec, holiday_calendar) populates
@@ -442,11 +449,23 @@ see the predictions plan, multi-week scope. Open new plan for any other (b.3) di
 
 #### Phase 1B — `job_id` writers (parallel with 1A)
 
-- [ ] [ml-training-service] P1. ServiceBootstrap or top-level job init: derive `job_id = f"{RUN_TS}-{experiment_name}"`
-      (or accept `--job-id` CLI flag); thread through to every `manifest.record_captured(job_id=job_id, ...)`.
-- [ ] [ml-inference-service] P1. Same shape.
-- [ ] [strategy-service] P1. Backtest CLI / job entry sets `job_id` per backtest run; threads through every shard write.
-- [ ] [execution-service] P1. Backtest CLI same shape.
+- [x] [ml-training-service] P1. ServiceBootstrap or top-level job init: derive `job_id = f"{RUN_TS}-{experiment_name}"`
+      (or accept `--job-id` CLI flag); thread through to every `manifest.record_captured(job_id=job_id, ...)`. (Shipped
+      2026-05-08 ml-training-service@`f7369f2` — `experiment_id` from CLI handler threaded into
+      `TrainingOrchestrator.__init__(experiment_id=...)`, stored as attribute, passed to
+      `model_registry.store_model(job_id=...)`, reaches `writer.add(model_family, training_period, job_id)`.
+      Construction sites in train_handler / grid_search_handler / final_training_handler updated.)
+- [x] [ml-inference-service] P1. Same shape. (Shipped 2026-05-08 ml-inference-service@`69d6313` —
+      `PredictionPublisher.__init__` derives `_service_run_id = f"{RUN_TS}-inference"` and threads into both single +
+      batch `writer.add()` callsites with `model_family=prediction_event.model_id`.)
+- [x] [strategy-service] P1. Backtest CLI / job entry sets `job_id` per backtest run; threads through every shard write.
+      (Shipped 2026-05-08 strategy-service@`90e00bb` — `CloudStrategyStorage.__init__` derives
+      `_service_run_id = f"{RUN_TS}-strategy"`, threaded into all 3 `writer.add()` callsites — orders / positions / pnl.
+      Restarts split rows by service-process boundaries.)
+- [x] [execution-service] P1. Backtest CLI same shape. (Shipped 2026-05-08 execution-service@`0b664d99` — two writer
+      paths: `save_operations._upload_report_to_gcs` passes `run_id` (already in scope from GCS path partition) as
+      `job_id` plus `strategy_id` + `instruction_type` for the v5 columns; live `LiveCloudStorageSink` derives
+      `_service_run_id = f"{RUN_TS}-execution-live"` for continuous results.)
 - [ ] [tests] P1. Per-service unit test: write under a job_id, assert manifest has populated job_id.
 
 ### Phase 2 — deployment-api SHARD_AXIS_MATRIX consumer
