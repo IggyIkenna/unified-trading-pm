@@ -101,12 +101,12 @@ class CanonicalParquetReader:
 > **Two axes from the new shard-granularity HANDOVER are missing** and block DeFi + Prediction reads:
 >
 > - **DeFi**: per HANDOVER lines 130–145, `chain` is a first-class shard-key axis (e.g. `AAVEV3-ETHEREUM` vs
->   `AAVEV3-ARBITRUM` are distinct shards). Current `read_shard(venue, data_type, instrument_type, target_date,
->   instrument_id)` derives asset_group from venue but doesn't accept `chain` — DeFi reads on chain-agnostic venue
->   tokens may collide / silently return wrong-chain rows.
+>   `AAVEV3-ARBITRUM` are distinct shards). Current
+>   `read_shard(venue, data_type, instrument_type, target_date, instrument_id)` derives asset_group from venue but
+>   doesn't accept `chain` — DeFi reads on chain-agnostic venue tokens may collide / silently return wrong-chain rows.
 > - **Prediction**: per HANDOVER line 143, `canonical_question_group` is the bundling axis (analog of options_chain).
->   Currently flagged as "most likely greenfield bit" — UAC SSOT for `market_id → canonical_question_group` mapping
->   may not exist yet. Prediction reads need this once the UAC SSOT lands.
+>   Currently flagged as "most likely greenfield bit" — UAC SSOT for `market_id → canonical_question_group` mapping may
+>   not exist yet. Prediction reads need this once the UAC SSOT lands.
 >
 > **Coordination**: see `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`. Phase 1 follow-up is to extend
 > `read_shard()` signature with optional `chain: str | None = None` (validated against UAC `CHAIN_RPC_TEMPLATES`) and
@@ -125,11 +125,11 @@ class CanonicalParquetReader:
       returned. (c) `list_instruments`: verify `columns=["symbol"]` passed to pyarrow (no full load). (d)
       `ShardNotFoundError` raised when manifest has no matching row. **Done 2026-04-24 MTDS `2095d1b`** —
       `tests/market_interface/unit/test_canonical_parquet_reader.py` (472 lines).
-- [x] [AGENT] P0. Export `CanonicalParquetReader` and `ShardNotFoundError` from MTDS public API. **Done 2026-04-24
-      MTDS `2095d1b`**.
-- [x] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` — **Done 2026-05-06** (this session,
-      86s green, all gates pass including the new STEP 5.63 run_lifecycle pairing gate; `mtds_canonical_sharding_alignment_2026_03_31`
-      Phase 2 closeout).
+- [x] [AGENT] P0. Export `CanonicalParquetReader` and `ShardNotFoundError` from MTDS public API. **Done 2026-04-24 MTDS
+      `2095d1b`**.
+- [x] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` — **Done 2026-05-06** (this session, 86s
+      green, all gates pass including the new STEP 5.63 run_lifecycle pairing gate;
+      `mtds_canonical_sharding_alignment_2026_03_31` Phase 2 closeout).
 - [x] [SCRIPT] P0. Quickmerge MTDS. **Done 2026-04-24** as part of `2095d1b`.
 
 ### Phase 1.5 — DeFi `chain` + Prediction `canonical_question_group` axis extension (NEW — added 2026-05-06)

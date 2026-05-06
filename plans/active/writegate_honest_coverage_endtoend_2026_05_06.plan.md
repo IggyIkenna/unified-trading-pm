@@ -1,10 +1,16 @@
 ---
 type: plan
+role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 parent_plan: shard_granularity_ssot_propagation_2026_05_06.plan.md
+related:
+  - predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md
+  - data_status_multi_axis_shard_propagation_2026_05_06.plan.md
+  - shard_granularity_ssot_propagation_2026_05_06.plan.md
+  - shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 supersedes_phases:
   - shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
   - shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 2 raw-tables (sports available_at, paused — now
@@ -12,12 +18,72 @@ supersedes_phases:
 status: drafted
 ---
 
-# Write-Gate + Honest-Coverage End-to-End — Plan
+# Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 
 **Branch:** `live-defi-rollout` **Goal:** Collapse two double-SSOT bugs (MDPS empty-handling, sports `available_at`
 stamping) and the partial-bundle silent-acceptance class into one cohesive contract change at
 `ManifestWriter.record_captured`. Forward + retrospective + UI + QG enforcement so post-merge backfill % across every
 service means **real** % (no fake captured rows, no NaN placeholders, no partial bundles passing as complete).
+
+---
+
+## Wrapped sibling plans (this is the single SSOT plan to reference end-to-end)
+
+This is the **umbrella PM plan** for the honest-coverage + shard-granularity work-package. It binds together four
+interlocking PM plans into one execution surface. **Do not re-derive todos here** — each child plan remains the
+canonical source for its own todos. The umbrella's job is references, sequencing across the layered DAG, and
+coordination notes.
+
+| Plan file                                                                                                                                                                                         | Role                             | Owns                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`writegate_honest_coverage_endtoend_2026_05_06.plan.md`** (this file)                                                                                                                           | UMBRELLA                         | UTL `record_captured` 4-pillar gate; UAC SSOTs (BUNDLED_DATA_TYPES, source_priority, availability_semantics); MDPS `_create_empty_output` delete + 37-callsite A/B/C migration; MTDS partition validation; features-sports `available_at`; CLAUDE.md rules; UI typed-error rendering; reconcilers; ratchet |
+| [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](./predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)                                  | child                            | UAC predictions classifier + lifecycle module; instruments-service MARKET_LIFECYCLE writer; MTDS Polymarket / Kalshi adapter rekey to `prediction_canonical_question_group`; per-base_asset → canonical_group GCS rewrite; per-market lifecycle gating in features-cross-instrument                        |
+| [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](./shard_granularity_ssot_propagation_2026_05_06.plan.md) + [`HANDOVER.md`](./shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md) | parent / architectural rationale | Per-asset-group shard-key matrix; layer discipline (UAC/UTL/per-service); workspace `manifest.add()` → `record_captured()` migration directive (HANDOVER Item 1, mainline). Phase 1 Tier 1 #1 + Tier 2 raw-tables superseded by writegate Phase 2                                                          |
+| [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](./data_status_multi_axis_shard_propagation_2026_05_06.plan.md)                                                                    | child                            | Read/display side: `fixture_id` (display-axis only) + `job_id` manifest columns; UAC `data_status_axis_matrix.py` SSOT; deployment-api `breakdowns` + `secondary_axis` filtering; deployment-ui DataStatusTab dropdowns + `BreakdownsAccordion`                                                            |
+
+**Layered DAG across all four plans:**
+
+```
+Layer 1 (UTL/UAC contract changes — block everything)
+  ├── writegate Phase 1A   — UTL record_captured signature + 3 typed errors + availability_stamping helpers
+  ├── data_status Phase 0  — UTL fixture_id + job_id columns; UAC data_status_axis_matrix SSOT
+  ├── writegate Phase 1B   — UAC BUNDLED_DATA_TYPES / DATA_TYPE_TO_CLUSTER_REGISTRY / SPORTS_FIXTURE_CLUSTERS / PREDICTION_GROUPS={}
+  ├── writegate Phase 1C   — CLAUDE.md sections (4 new rules)
+  └── predictions Phase 1A — UAC predictions modules; PREDICTION_GROUPS populate; semantics+priority entries
+       ↓
+Layer 2 (per-service writers — parallel after Layer 1)
+  ├── writegate Phase 2.A  — MDPS _create_empty_output delete + 37 A/B/C migration + v3 path delete + v6 column wiring
+  ├── writegate Phase 2.B  — MTDS partition validation + workspace-wide manifest.add() → record_captured() migration
+  ├── writegate Phase 2.C  — features-sports _ensure_timestamp delete + 4 stub exporter wiring
+  ├── writegate Phase 2.D  — URDI sports schema bump (event_time only)
+  ├── predictions Phase 2  — instruments-service MARKET_LIFECYCLE + MTDS Polymarket rekey + features-cross-instrument
+  ├── data_status Phase 1A — sports fixture_id writers (instruments-service / MTDS / features-sports)
+  └── data_status Phase 1B — job_id writers (ml-training / ml-inference / strategy-service / execution-service)
+       ↓
+Layer 3 (deployment-api + UI — parallel after Layer 2; shares data_status_service.py)
+  ├── writegate Phase 4.A   — typed-error rendering + per-pillar breakdown + live-vs-historical alert
+  ├── predictions Phase 4.A — PREDICTION_DATA_TYPE_META + lifecycle expected-coverage endpoint
+  ├── data_status Phase 2   — SHARD_AXIS_MATRIX consumer + _build_breakdowns + secondary_axis query params
+  ├── writegate Phase 4.B   — DataStatusTab per-typed-error display
+  ├── predictions Phase 4.B — canonical_question_group rollup + lifecycle viz + classifier confidence
+  └── data_status Phase 3   — BreakdownsAccordion + axis selector + cell-grid query wiring
+       ↓
+Layer 4 (retrospective migrations — parallel after Layer 2)
+  ├── writegate Phase 3      — 1440-NaN flip + partial-bundle reflip + pre-v6 cleanup + GCS available_at backfill
+  ├── predictions Phase 3    — Polymarket per-base_asset → canonical_group GCS rewrite + manifest reflip
+  └── data_status Phase 4    — almost no-op; conditional per-service migrations only if Phase 1A audit reveals incorrectly-populated feature_group/chain/timeframe/league_id writers
+       ↓
+Layer 5 (validation + ratchet)
+  ├── data_status Phase 5    — rollup worker rebuild (Cloud Run)
+  ├── writegate Phase 5      — coverage measurement + baseline doc + LookaheadBias smoke + write-gate quartet
+  ├── predictions Phase 5    — per-canonical_group baseline + ratchet floor
+  └── data_status Phase 6    — workspace QG sweep + e2e ml-training + e2e sports fixture drill-down
+```
+
+QG gate between every layer. No Layer N+1 todo starts until every Layer N todo across every sibling plan is checked +
+workspace QG passes on every repo touched in Layer N.
+
+---
 
 This plan resolves the 3 CRITICAL questions in the parent HANDOVER (MDPS contract shape / sports raw-tables migration /
 cluster-validation sequencing) into a single shippable work-package per the user's framework: production-grade, no
@@ -483,18 +549,17 @@ Plan's 53-site count confirmed: prediction contributes 0 direct sites; the actua
 
 ### Phase 0 audit findings — MDPS `except: continue / return None` sweep beyond `_create_empty_output`
 
-**Methodology**: AST-walked all `.py` files under `market_data_processing_service/` (excluding `.venv`, `build`, `tests`)
-for `except` blocks whose body contains `continue`, `pass`, `return None`, or bare `return`. Each site read in context,
-classified by severity, checked against whether a manifest `record_failed` follows.
+**Methodology**: AST-walked all `.py` files under `market_data_processing_service/` (excluding `.venv`, `build`,
+`tests`) for `except` blocks whose body contains `continue`, `pass`, `return None`, or bare `return`. Each site read in
+context, classified by severity, checked against whether a manifest `record_failed` follows.
 
 **Total sites found: 24** across 15 files. Distribution: 7 HIGH / 4 MEDIUM / 13 LOW.
 
 **Key cross-cutting finding (refactor target — feeds Phase 2.A scope expansion)**:
 
-Three parallel write-path copies of the same swallow exist —
-`candle_write_mixin._write_candles` (line 141), `data_sink.SyncGCSDataSink.write` (line 290), and
-`orchestration_writer._write_candles_to_gcs` (line 413). All three contain an identical
-`except (OSError, ValueError, RuntimeError, ...) → logger.error → return None` block wrapping a
+Three parallel write-path copies of the same swallow exist — `candle_write_mixin._write_candles` (line 141),
+`data_sink.SyncGCSDataSink.write` (line 290), and `orchestration_writer._write_candles_to_gcs` (line 413). All three
+contain an identical `except (OSError, ValueError, RuntimeError, ...) → logger.error → return None` block wrapping a
 `write_candle_parquet` call. Per CLAUDE.md "no double SSOT" + Phase 2.A consolidation target, these three write paths
 should be consolidated into ONE canonical writer, with a single `record_failed` site at the leaf. Any fix to
 write-failure manifest recording today must be applied in three places with diverging call signatures — known
@@ -502,31 +567,35 @@ maintenance trap. **Phase 2.A scope expansion**: include consolidation of these 
 
 **HIGH severity (per-instrument or larger granularity silent drops, no manifest record)**:
 
-| File:Line                                | Loop / context                                                            | Caught                                              | What is swallowed                                                                                                                                            | Fix shape                                                                                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `candle_processing_service.py:349`       | `for timeframe in sorted_timeframes` per-(instrument_id, timeframe)       | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | Entire per-instrument per-timeframe candle generation failure (`_generate_or_aggregate_candles` raised). No `record_failed`. Direct batch-path analogue of MTDS `PerLeafFailureRouter` gap. | `record_failed(row_key=(instrument_id, timeframe, data_type, date_str), error=classify_venue_error(e), attempted_at=now())` before `continue`. Wire `ManifestWriter` into this class. |
-| `candle_processing_service.py:591`       | `for prefix in prefixes` per-(date_str, data_type) GCS listing            | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS listing failure for an entire `(date_str, data_type)` prefix. Silently empty → entire date×data_type shard dropped. No manifest row.                     | Reader/infrastructure failure (Category C). `record_failed` at (date_str, data_type) granularity + `ADAPTER_FETCH_FAILED` event before `continue`.        |
-| `candle_write_mixin.py:141`              | Per-instrument candle write (live orchestration)                          | (OSError, ValueError, RuntimeError, KeyError, TypeError) | GCS write failure returns `None`. Caller at `live_workers.py:682` does NOT check return — unconditionally increments `total_candles`, appends to `processed_timeframes`. Failure looks like success. | Return-value check at every call site; on `None` `record_failed(...)` with typed `WriteFailedError`. Or consolidate into single canonical writer (preferred). |
-| `data_sink.py:290`                       | `SyncGCSDataSink.write()` per-instrument (older batch path)               | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers cannot distinguish success from failure. No `record_failed`.                                                       | Same — re-raise typed `WriteFailedError`; let shard-level caller record.                                                                                  |
-| `orchestration_writer.py:413`            | `_write_candles_to_gcs` per-instrument                                    | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers test `if result is None` for the **skip case** (existing file) — error case also returns `None`, indistinguishable. | Same — distinguish skip vs error via typed return / sentinel; `record_failed` on error.                                                                   |
-| `output_writer_service.py:341`           | `OutputWriterService.write_candles` per-instrument                        | (OSError, ValueError)                               | Same pattern — write fails, returns `None`, callers test for already-exists skip. No `record_failed`.                                                        | Same.                                                                                                                                                      |
-| `live_workers.py:890`                    | `_maybe_dispatch_chain_streaming` per chain blob                          | (OSError, ValueError, RuntimeError, KeyError, TypeError) | Streaming dispatch fails for chain blob — returns `None`, caller falls through to **eager path** as fallback. If eager also fails, shard lost with no record. | Acceptable as first-level fallback within same request. Outer caller must `record_failed` if eager path also produces no output.                          |
+| File:Line                          | Loop / context                                                      | Caught                                                          | What is swallowed                                                                                                                                                                                    | Fix shape                                                                                                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `candle_processing_service.py:349` | `for timeframe in sorted_timeframes` per-(instrument_id, timeframe) | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | Entire per-instrument per-timeframe candle generation failure (`_generate_or_aggregate_candles` raised). No `record_failed`. Direct batch-path analogue of MTDS `PerLeafFailureRouter` gap.          | `record_failed(row_key=(instrument_id, timeframe, data_type, date_str), error=classify_venue_error(e), attempted_at=now())` before `continue`. Wire `ManifestWriter` into this class. |
+| `candle_processing_service.py:591` | `for prefix in prefixes` per-(date_str, data_type) GCS listing      | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS listing failure for an entire `(date_str, data_type)` prefix. Silently empty → entire date×data_type shard dropped. No manifest row.                                                             | Reader/infrastructure failure (Category C). `record_failed` at (date_str, data_type) granularity + `ADAPTER_FETCH_FAILED` event before `continue`.                                    |
+| `candle_write_mixin.py:141`        | Per-instrument candle write (live orchestration)                    | (OSError, ValueError, RuntimeError, KeyError, TypeError)        | GCS write failure returns `None`. Caller at `live_workers.py:682` does NOT check return — unconditionally increments `total_candles`, appends to `processed_timeframes`. Failure looks like success. | Return-value check at every call site; on `None` `record_failed(...)` with typed `WriteFailedError`. Or consolidate into single canonical writer (preferred).                         |
+| `data_sink.py:290`                 | `SyncGCSDataSink.write()` per-instrument (older batch path)         | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers cannot distinguish success from failure. No `record_failed`.                                                                                               | Same — re-raise typed `WriteFailedError`; let shard-level caller record.                                                                                                              |
+| `orchestration_writer.py:413`      | `_write_candles_to_gcs` per-instrument                              | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers test `if result is None` for the **skip case** (existing file) — error case also returns `None`, indistinguishable.                                        | Same — distinguish skip vs error via typed return / sentinel; `record_failed` on error.                                                                                               |
+| `output_writer_service.py:341`     | `OutputWriterService.write_candles` per-instrument                  | (OSError, ValueError)                                           | Same pattern — write fails, returns `None`, callers test for already-exists skip. No `record_failed`.                                                                                                | Same.                                                                                                                                                                                 |
+| `live_workers.py:890`              | `_maybe_dispatch_chain_streaming` per chain blob                    | (OSError, ValueError, RuntimeError, KeyError, TypeError)        | Streaming dispatch fails for chain blob — returns `None`, caller falls through to **eager path** as fallback. If eager also fails, shard lost with no record.                                        | Acceptable as first-level fallback within same request. Outer caller must `record_failed` if eager path also produces no output.                                                      |
 
 **MEDIUM severity (per-symbol/per-instrument drops inside aggregate, corrupts completeness)**:
 
-| File:Line                                | Loop / context                                                              | Caught                                            | What is swallowed                                                                                                                                                                       | Fix shape                                                                                                                                                  |
-| ---------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `live_workers.py:512`                    | `for group_value in groups` per-symbol slice in `_iter_chain_symbol_dfs`    | (pl.exceptions.ComputeError, OSError, RuntimeError) | Single symbol's Polars filter fails → silently dropped from chain output. For options_chain / futures_chain, downstream may write **partial-cluster parquet** with missing symbols and no `ClusterCoverageError`. | Per-symbol counter `dropped_symbols`, warn-summary after generator's `finally`. For bundled data_types, feed into cluster-coverage validator (Phase 2.B). |
-| `live_workers.py:773`                    | `for inst_key in instrument_keys` in `_process_chain_timeframe`             | `Exception` (bare)                                | `classify_and_emit_error` is called (event emitted) but no per-symbol counter, no warn-summary. N instruments → M fail → M dropped with no aggregate accounting.                        | Add `dropped_count` counter + `logger.warning("Dropped %d/%d instruments for %s")` after loop (consistent with `solana_defi_handler.py` `7fedfe5` pattern).  |
-| `live_workers.py:835`                    | `for symbol in symbols` in `_process_chain_timeframe_by_symbol`             | `Exception` (bare)                                | Same as line 773 but legacy-bundle `symbol`-keyed path.                                                                                                                                  | Same fix.                                                                                                                                                  |
-| `live_workers.py:490`                    | `_iter_chain_symbol_dfs` Polars lazy scan to enumerate groups               | (pl.exceptions.ColumnNotFoundError, pl.exceptions.ComputeError) | Failure to enumerate groups → bare `return` → generator exits yielding 0 symbols → entire chain bundle silently skipped. `ColumnNotFoundError` here is schema-drift bug (Category C). | `record_failed` at blob level + classify as Category C (schema drift), not silent skip.                                                                    |
+| File:Line             | Loop / context                                                           | Caught                                                          | What is swallowed                                                                                                                                                                                                 | Fix shape                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live_workers.py:512` | `for group_value in groups` per-symbol slice in `_iter_chain_symbol_dfs` | (pl.exceptions.ComputeError, OSError, RuntimeError)             | Single symbol's Polars filter fails → silently dropped from chain output. For options_chain / futures_chain, downstream may write **partial-cluster parquet** with missing symbols and no `ClusterCoverageError`. | Per-symbol counter `dropped_symbols`, warn-summary after generator's `finally`. For bundled data_types, feed into cluster-coverage validator (Phase 2.B).   |
+| `live_workers.py:773` | `for inst_key in instrument_keys` in `_process_chain_timeframe`          | `Exception` (bare)                                              | `classify_and_emit_error` is called (event emitted) but no per-symbol counter, no warn-summary. N instruments → M fail → M dropped with no aggregate accounting.                                                  | Add `dropped_count` counter + `logger.warning("Dropped %d/%d instruments for %s")` after loop (consistent with `solana_defi_handler.py` `7fedfe5` pattern). |
+| `live_workers.py:835` | `for symbol in symbols` in `_process_chain_timeframe_by_symbol`          | `Exception` (bare)                                              | Same as line 773 but legacy-bundle `symbol`-keyed path.                                                                                                                                                           | Same fix.                                                                                                                                                   |
+| `live_workers.py:490` | `_iter_chain_symbol_dfs` Polars lazy scan to enumerate groups            | (pl.exceptions.ColumnNotFoundError, pl.exceptions.ComputeError) | Failure to enumerate groups → bare `return` → generator exits yielding 0 symbols → entire chain bundle silently skipped. `ColumnNotFoundError` here is schema-drift bug (Category C).                             | `record_failed` at blob level + classify as Category C (schema drift), not silent skip.                                                                     |
 
 **LOW severity** (13 sites — documented intentional path-probes / observability hooks / per-blob metadata isolation):
 
-- `live_workers.py:158` and `:228` — D10 lifecycle/progress event emission; documented "must not raise from observability hook".
-- `candle_processing_service.py:681` — `MarketAssetGroup(category)` enum coercion fallback to `None`; downstream handles `None` gracefully.
-- `path_parsing.py:59,61` and `orchestration_scanner.py:307,367` — per-blob path-metadata parse error isolation; documented in module docstring.
-- `orchestration_scanner.py:201` and `orchestration_scheduling.py:165` — `_load_instrument_definitions` fallback to `None` (no trading-hours filter); processing still runs.
+- `live_workers.py:158` and `:228` — D10 lifecycle/progress event emission; documented "must not raise from
+  observability hook".
+- `candle_processing_service.py:681` — `MarketAssetGroup(category)` enum coercion fallback to `None`; downstream handles
+  `None` gracefully.
+- `path_parsing.py:59,61` and `orchestration_scanner.py:307,367` — per-blob path-metadata parse error isolation;
+  documented in module docstring.
+- `orchestration_scanner.py:201` and `orchestration_scheduling.py:165` — `_load_instrument_definitions` fallback to
+  `None` (no trading-hours filter); processing still runs.
 - `market_state_detector.py:140` — `_parse_time_string` utility returns `None`.
 - `canonical_writer.py:229` — `lookup_mdps_contract` fallback when `strict=False`; `strict=True` path re-raises.
 - `live_workers.py:394` — Polars→pandas read fallback (acceptable I/O fallback; pandas raise propagates).
@@ -535,58 +604,57 @@ maintenance trap. **Phase 2.A scope expansion**: include consolidation of these 
 
 **Top 5 priority fixes**:
 
-1. **Write-path consolidation** (`candle_write_mixin.py:141` + `data_sink.py:290` + `orchestration_writer.py:413` + `output_writer_service.py:341`) — 4 sites, same root cause. Phase 2.A scope addition: single canonical writer with one `record_failed` site at the leaf.
-2. **`candle_processing_service.py:349`** — batch-path counterpart of MTDS `PerLeafFailureRouter` gap. Highest-impact single site.
-3. **`live_workers.py:512`** — per-symbol Polars filter failure in streaming chain path; for bundled data_types, this directly contradicts Phase 2.B cluster-coverage validation.
-4. **`candle_processing_service.py:591`** — entire date×data_type prefix lost on GCS listing failure (HIGH — invisible in manifest).
-5. **`live_workers.py:773` and `:835`** — per-symbol classify+emit but no aggregate warn-summary (MEDIUM, consistency with `7fedfe5` pattern).
+1. **Write-path consolidation** (`candle_write_mixin.py:141` + `data_sink.py:290` + `orchestration_writer.py:413` +
+   `output_writer_service.py:341`) — 4 sites, same root cause. Phase 2.A scope addition: single canonical writer with
+   one `record_failed` site at the leaf.
+2. **`candle_processing_service.py:349`** — batch-path counterpart of MTDS `PerLeafFailureRouter` gap. Highest-impact
+   single site.
+3. **`live_workers.py:512`** — per-symbol Polars filter failure in streaming chain path; for bundled data_types, this
+   directly contradicts Phase 2.B cluster-coverage validation.
+4. **`candle_processing_service.py:591`** — entire date×data_type prefix lost on GCS listing failure (HIGH — invisible
+   in manifest).
+5. **`live_workers.py:773` and `:835`** — per-symbol classify+emit but no aggregate warn-summary (MEDIUM, consistency
+   with `7fedfe5` pattern).
 
 **Implications for the master plan**:
 
-- Phase 2.A scope expanded: not just `_create_empty_output` migration but also write-path consolidation (3 → 1) AND `candle_processing_service.py:349,591` `record_failed` wiring.
-- Phase 2.B cluster-coverage validation gains a sibling concern: `live_workers.py:512`'s per-symbol drop must feed into the cluster validator OR the streaming path must short-circuit on first symbol failure.
-- LOW sites left as-is (documented intentional patterns); add codex doc reference at `app/utils/path_parsing.py` for the 5-site per-blob isolation pattern.
+- Phase 2.A scope expanded: not just `_create_empty_output` migration but also write-path consolidation (3 → 1) AND
+  `candle_processing_service.py:349,591` `record_failed` wiring.
+- Phase 2.B cluster-coverage validation gains a sibling concern: `live_workers.py:512`'s per-symbol drop must feed into
+  the cluster validator OR the streaming path must short-circuit on first symbol failure.
+- LOW sites left as-is (documented intentional patterns); add codex doc reference at `app/utils/path_parsing.py` for the
+  5-site per-blob isolation pattern.
 
 **Phase 2.A write-path consolidation pre-audit (2026-05-06 round 2)**:
 
-Read-only callsite map for the 4 parallel write-path swallows. Critical finding:
-**3 of the 4 write-paths are ORPHANED in production**.
+Read-only callsite map for the 4 parallel write-path swallows. Critical finding: **3 of the 4 write-paths are ORPHANED
+in production**.
 
-| Path | Site                             | Production callsites | ManifestWriter access? | Status                                                             |
-| ---- | -------------------------------- | -------------------- | ---------------------- | ------------------------------------------------------------------ |
-| 1    | `candle_write_mixin.py:141`      | **3 active**         | None — must plumb     | **LIVE** — `live_workers.py:682,1061` + `batch_workers.py:164`     |
-| 2    | `data_sink.py:290`               | **0**                | n/a                    | **ORPHANED** — `GCSDataSink.write_candles` has no production calls |
-| 3    | `orchestration_writer.py:413`    | **0**                | n/a                    | **ORPHANED** — `_write_candles_to_gcs` is dead code                |
-| 4    | `output_writer_service.py:341`   | **0**                | n/a                    | **ORPHANED** — `OutputWriterService.write_candles` unwired         |
+| Path | Site                           | Production callsites | ManifestWriter access? | Status                                                             |
+| ---- | ------------------------------ | -------------------- | ---------------------- | ------------------------------------------------------------------ |
+| 1    | `candle_write_mixin.py:141`    | **3 active**         | None — must plumb      | **LIVE** — `live_workers.py:682,1061` + `batch_workers.py:164`     |
+| 2    | `data_sink.py:290`             | **0**                | n/a                    | **ORPHANED** — `GCSDataSink.write_candles` has no production calls |
+| 3    | `orchestration_writer.py:413`  | **0**                | n/a                    | **ORPHANED** — `_write_candles_to_gcs` is dead code                |
+| 4    | `output_writer_service.py:341` | **0**                | n/a                    | **ORPHANED** — `OutputWriterService.write_candles` unwired         |
 
-**Path 1 (CandleWriteMixin._write_candles) callers — all 3 ignore the return
-value**:
+**Path 1 (CandleWriteMixin.\_write_candles) callers — all 3 ignore the return value**:
 
-- `live_workers.py:682` (`_process_all_timeframes`) — return discarded; errors
-  caught at outer try at line 721.
-- `live_workers.py:1061` (`_write_chain_candles_concat`) — return discarded;
-  errors appended to list at line 1074.
-- `batch_workers.py:164` (`_write_closed_market_candles`) — bare call; outer
-  try/except at line 214 catches if write raises (but the swallow blocks
-  re-raising, so the failure is silent).
+- `live_workers.py:682` (`_process_all_timeframes`) — return discarded; errors caught at outer try at line 721.
+- `live_workers.py:1061` (`_write_chain_candles_concat`) — return discarded; errors appended to list at line 1074.
+- `batch_workers.py:164` (`_write_closed_market_candles`) — bare call; outer try/except at line 214 catches if write
+  raises (but the swallow blocks re-raising, so the failure is silent).
 
-**Phase 2.A consolidation simplifies**: delete Paths 2/3/4 entirely (dead code
-removal aligns with the "no double SSOT" + "delete deprecated code" rules);
-focus consolidation on Path 1's 3 callers. **Canonical writer is the leaf**:
-`canonical_writer.py:41-47` already wraps `write_candle_parquet()` with
-`ManifestWriter.record_captured()` — Phase 2.A plumbs `record_failed` alongside
-this so `canonical_writer.py` becomes the single failure-recording site.
+**Phase 2.A consolidation simplifies**: delete Paths 2/3/4 entirely (dead code removal aligns with the "no double
+SSOT" + "delete deprecated code" rules); focus consolidation on Path 1's 3 callers. **Canonical writer is the leaf**:
+`canonical_writer.py:41-47` already wraps `write_candle_parquet()` with `ManifestWriter.record_captured()` — Phase 2.A
+plumbs `record_failed` alongside this so `canonical_writer.py` becomes the single failure-recording site.
 
-**Caller-side fix required**: each of the 3 Path 1 callers must check the
-return value (or get the error via plumbed `ManifestWriter` reference). The
-return-None ambiguity (None means "skipped, file existed" OR "swallowed error")
-must be resolved via a typed return shape (`WriteResult` enum or
-`Result[str, WriteFailedError]` shape).
+**Caller-side fix required**: each of the 3 Path 1 callers must check the return value (or get the error via plumbed
+`ManifestWriter` reference). The return-None ambiguity (None means "skipped, file existed" OR "swallowed error") must be
+resolved via a typed return shape (`WriteResult` enum or `Result[str, WriteFailedError]` shape).
 
-**Exception-set unification needed**: Path 1 catches `(OSError, ValueError,
-RuntimeError, KeyError, TypeError)` but the orphans differ. Phase 2.A unifies
-to the broadest set and routes ALL caught exceptions through
-`classify_venue_error`.
+**Exception-set unification needed**: Path 1 catches `(OSError, ValueError, RuntimeError, KeyError, TypeError)` but the
+orphans differ. Phase 2.A unifies to the broadest set and routes ALL caught exceptions through `classify_venue_error`.
 
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
@@ -778,34 +846,30 @@ new UTL pinned in workspace-manifest.json.
 > **2026-05-06 progress note**: Phase 0 audit discovered that `ES_OPTIONS_CLUSTERS` (11-cluster taxonomy),
 > `extract_es_options_cluster`, and `get_active_es_options_clusters_for_date` (calendar fallback) **already exist** in
 > UAC `unified_api_contracts/registry/tradfi_symbology.py:539` — earlier than this plan assumed. The "lift from
-> instruments-service" step is therefore a delete-and-delegate: instruments-service `reference_data/options_cluster_lookup.py`
-> consumers re-import from UAC; no new SSOT needed for ES.OPT itself. **Already-shipped (UAC commit `31e9e75` 2026-05-06)**:
-> `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES` (frozenset of 4 — options_chain,
-> futures_chain, prediction_canonical_question_group, sports_fixture_bundle), `futures_expiry_bucket()` derivation
-> (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor — closes the row-schema gap noted in row
-> 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus re-export surface delegating to the registry
-> SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric front/back/spread bucketing, custom front-window
-> override, and re-export delegation regression. **Remaining Phase 1B work**: `DATA_TYPE_TO_CLUSTER_REGISTRY`,
-> `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder slot, source_priority +
-> availability_semantics modules.
+> instruments-service" step is therefore a delete-and-delegate: instruments-service
+> `reference_data/options_cluster_lookup.py` consumers re-import from UAC; no new SSOT needed for ES.OPT itself.
+> **Already-shipped (UAC commit `31e9e75` 2026-05-06)**:
+> `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES` (frozenset of 4 —
+> options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle), `futures_expiry_bucket()`
+> derivation (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor — closes the row-schema gap
+> noted in row 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus re-export surface delegating to
+> the registry SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric front/back/spread bucketing, custom
+> front-window override, and re-export delegation regression. **Remaining Phase 1B work**:
+> `DATA_TYPE_TO_CLUSTER_REGISTRY`, `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder
+> slot, source_priority + availability_semantics modules.
 >
-> **2026-05-06 progress note (round 2)**: UAC commit `106430c` adds the remaining
-> two crosscutting modules — `canonical/crosscutting/availability_semantics.py`
-> (36 seed entries; 10-mode `AvailabilitySemantic` literal covering
-> kickoff_minus_60min / match_end_time / event_time / report_time / announced_at /
-> forecast_issue_time / publication_time / fetch_completed_at / tick_timestamp /
-> market_created_at; raises `KeyError` on unregistered pairs — no silent default,
-> failing loud is intentional) and `canonical/crosscutting/source_priority.py`
-> (single-source Phase 1B seeds with `get_primary_source` convenience helper for
-> stamping callers; multi-source merge logic deferred to follow-up). 38 new tests
-> (18 + 20), total 68 with honest_coverage. Cross-module consistency check
-> validates every `(asset_group, data_type)` pair appears in BOTH registries
-> (stamping helpers can't compute `available_at` without a source priority
-> entry). **Phase 1B status**: 3 of 4 crosscutting modules shipped. Remaining:
-> `DATA_TYPE_TO_CLUSTER_REGISTRY` mapping (data_type → cluster registry symbol
-> reference), `SPORTS_FIXTURE_CLUSTERS` greenfield seed (per-league-tier
-> bookmaker sets), and `PREDICTION_GROUPS = {}` placeholder slot (gets populated
-> by Plan A canonical_question_group SSOT — flagged in temporary-states section).
+> **2026-05-06 progress note (round 2)**: UAC commit `106430c` adds the remaining two crosscutting modules —
+> `canonical/crosscutting/availability_semantics.py` (36 seed entries; 10-mode `AvailabilitySemantic` literal covering
+> kickoff_minus_60min / match_end_time / event_time / report_time / announced_at / forecast_issue_time /
+> publication_time / fetch_completed_at / tick_timestamp / market_created_at; raises `KeyError` on unregistered pairs —
+> no silent default, failing loud is intentional) and `canonical/crosscutting/source_priority.py` (single-source Phase
+> 1B seeds with `get_primary_source` convenience helper for stamping callers; multi-source merge logic deferred to
+> follow-up). 38 new tests (18 + 20), total 68 with honest_coverage. Cross-module consistency check validates every
+> `(asset_group, data_type)` pair appears in BOTH registries (stamping helpers can't compute `available_at` without a
+> source priority entry). **Phase 1B status**: 3 of 4 crosscutting modules shipped. Remaining:
+> `DATA_TYPE_TO_CLUSTER_REGISTRY` mapping (data_type → cluster registry symbol reference), `SPORTS_FIXTURE_CLUSTERS`
+> greenfield seed (per-league-tier bookmaker sets), and `PREDICTION_GROUPS = {}` placeholder slot (gets populated by
+> Plan A canonical_question_group SSOT — flagged in temporary-states section).
 
 - [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/honest_coverage.py`: -
       `BUNDLED_DATA_TYPES: frozenset[str]` initial seed: - `"options_chain"` — registry: `OPTIONS_CLUSTERS` (populated,
@@ -1257,6 +1321,27 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 
 ## Coordination with sibling plans
 
+> **2026-05-06 update**: this plan is now the **umbrella** for the honest-coverage + shard-granularity work-package. See
+> "Wrapped sibling plans (this is the single SSOT plan to reference end-to-end)" section near the top. The four wrapped
+> plans (writegate / predictions / shard_granularity / data_status_multi_axis) execute against the layered DAG defined
+> there. Coordination notes below are surface-level cross-references; full execution sequencing lives in the
+> wrapped-plans Layer 1-5 DAG.
+
+**Wrapped child plans:**
+
+- **[`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](./predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)**
+  — child plan. Predictions Phase 1A populates the `PREDICTION_GROUPS = {}` slot reserved by writegate Phase 1B;
+  predictions Phase 2 ships instruments-service MARKET_LIFECYCLE writer + MTDS Polymarket / Kalshi adapter rekey +
+  features-cross-instrument reader migration. Sequenced Layer 2 in DAG.
+- **[`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](./data_status_multi_axis_shard_propagation_2026_05_06.plan.md)**
+  — child plan. Phase 0 ships UTL `fixture_id` / `job_id` columns + UAC `data_status_axis_matrix.py` SSOT (bundles with
+  writegate Phase 1A UTL change); Phase 1A sports fixture_id writers + Phase 1B job_id writers ship alongside writegate
+  Phase 2.B/2.C; Phase 2 deployment-api + Phase 3 deployment-ui ship alongside writegate Phase 4. `fixture_id` is
+  **display-axis only**, not a manifest shard atom (per the plan's "When to shard vs when to just add a display axis"
+  framework). Phase 4 is almost no-op (no bulk fixture_id or job_id backfill).
+
+**Parent plan + companion HANDOVER (architectural):**
+
 - **`shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused)** — superseded by
   this plan's Phase 2.A. Mark as superseded in companion plan; delete the "AWAITING USER DIRECTION" todo.
 - **`shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 1 Tier 2 raw-tables (sports available_at, paused)** —
@@ -1264,13 +1349,23 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
   hybrid acceptance" todo.
 - **HANDOVER §"Item 1 — Cluster-aware bundle validation"** — superseded by this plan's Phase 1A `record_captured`
   mandatory kwarg + Phase 1C CLAUDE.md rule. The "TradFi MVP follow-ups parallel stream" framing is no longer accurate;
-  cluster validation is now the mainline contract change, not a parallel stream.
+  cluster validation is now the mainline contract change, not a parallel stream. **HANDOVER lines 67-73, 709, 772, 807,
+  834, 953 commit to workspace-wide `manifest.add()` → `record_captured()` migration** — this plan's Phase 2.B is the
+  MTDS instance of that workspace migration. Same pattern rolled across features-sports `batch_handler.py:615-628`,
+  features-onchain canonical writer, instruments-service `writer.add()`, features-delta-one, MDPS
+  `canonical_writer.py:313-326`.
+
+**Other related plans (not wrapped):**
+
 - **`market_tick_data_to_100pct_2026_05_05.plan.md`** — coordination: Phase 2.B partition-key validation + cluster
   wiring overlap with this plan's MTDS scope. Reconcile ownership in Phase 0 before Phase 2.B starts.
-- **`data_status_ui_fixes_2026_05_06.plan.md`** + **`data_status_offline_rollup_2026_05_06.plan.md`** — coordination:
-  Phase 4 UI work overlaps. Reconcile in Phase 0; either fold into this plan or split cleanly.
+- **`data_status_ui_fixes_2026_05_06.plan.md`** + **`data_status_offline_rollup_2026_05_06.plan.md`** —
+  predecessor/sibling plans whose incremental fixes ship pre-umbrella; outputs already in production per
+  data_status_multi_axis plan §References ("This session's incremental fixes (already shipped, not part of this plan)").
 - **`manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md`** — Phase 2.A v6 column wiring + Phase 2.B v6 column
   wiring align. Verify v6 schema state matches what this plan assumes.
+- **`feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`** — referenced by data_status_multi_axis as related;
+  feature DAG SSOT work is Tracked Open Q #2 here (not in umbrella scope yet — separate follow-up).
 
 ---
 
@@ -1278,16 +1373,12 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 
 These remain open and will be resolved in subsequent plans the user drafts:
 
-1. **UAC `canonical_question_group` SSOT** for Polymarket / Kalshi predictions — greenfield UAC build. Blocks prediction
-   shard-key correctness in instruments-service + MTDS. **Successor plan drafted 2026-05-06**:
+1. ~~**UAC `canonical_question_group` SSOT** for Polymarket / Kalshi predictions~~ — **ABSORBED INTO UMBRELLA
+   2026-05-06.** Now a child plan under "Wrapped sibling plans" section above:
    [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](./predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md).
-   Covers `CanonicalQuestionGroup` enum + classifier with stability hash, per-market lifecycle timestamps
-   (`market_created_at` / `resolution_time` / `settlement_time`) per user direction 2026-05-06 (CLAUDE.md
-   `§ Prediction market lifecycle timing`), MTDS adapter migration to
-   `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` bundles with
-   cluster validation, GCS migration of existing per-base_asset Polymarket parquets, `LookaheadBiasError` per-market
-   lifecycle gating, data-status UI per-canonical_group + per-market drill-down. Also resolves Tracked Open Question §10
-   (Polymarket shard-key sequencing) and the residual `category=prediction` legacy hive vocab cleanup.
+   Layered DAG sequences predictions Phase 1A after writegate Phase 1B (PREDICTION_GROUPS slot + classifier wraps
+   existing UAC `_prediction_market_taxonomy.py`). Also resolves Tracked Open Question §10 (Polymarket shard-key
+   sequencing) and the residual `category=prediction` legacy hive vocab cleanup.
 2. **`feature_group → required_inputs[]` DAG SSOT in UAC** — currently inlined 3 different ways across features-onchain,
    features-sports, features-delta-one. Drives `LookaheadBiasError` enforcement.
 3. **v6 columns `quote_asset` / `margin_type` / `combo_type` / `leg_weights` ownership** — only MTDS writes them;
@@ -1307,10 +1398,25 @@ These remain open and will be resolved in subsequent plans the user drafts:
    Reasoning: ML predictions are fixture-level; without per-fixture sharding, can't drill down on missing fixtures or
    fixture-specific stats. League stays as a higher-level rollup grouping. Anything that breaks (MTDS reader paths, MDPS
    sports adapter, features-sports input pipeline, deployment-ui sports panel) is fixed in this plan. Manifest
-   reconciliation handles the shard-shape migration in Phase 3.A.
+   reconciliation handles the shard-shape migration in Phase 3.A. **Update 2026-05-06 (data_status_multi_axis plan)**:
+   `fixture_id` is now correctly framed as a **display-axis-only column** (per
+   [data_status_multi_axis_shard_propagation_2026_05_06.plan.md](./data_status_multi_axis_shard_propagation_2026_05_06.plan.md)
+   "When to shard vs when to just add a display axis" section), NOT a manifest shard-atom. `(league_id, day)` bounds the
+   fixture set; per-fixture detail comes from the parquet at drill-down time. Writers populate `fixture_id` as a column
+   on per-fixture rows for filter/group; no bulk manifest row-expansion script.
 10. **Polymarket shard-key sequencing** — commits `b336834`/`d7bd17f` fixed crypto-keyword false-positives but the
-    shard-key (`data_type=<base_asset>`) still deviates. Risk: re-classifying as classifier matures. Defer to
-    canonical_question_group plan.
+    shard-key (`data_type=<base_asset>`) still deviates. Resolved by Q #1 successor (predictions plan, now child of
+    umbrella).
+11. **Multi-axis read-side display + manifest column additions** (`fixture_id`, `job_id`, UAC axis matrix SSOT,
+    deployment-api `breakdowns`, deployment-ui dropdowns) — **ABSORBED INTO UMBRELLA 2026-05-06.** Child plan:
+    [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](./data_status_multi_axis_shard_propagation_2026_05_06.plan.md).
+    Sequenced into Layer 1 (Phase 0 UTL+UAC) / Layer 2 (Phase 1A sports fixture_id writers + Phase 1B job_id writers) /
+    Layer 3 (Phase 2 deployment-api + Phase 3 deployment-ui) / Layer 4 (Phase 4 conditional migrations) / Layer 5 (Phase
+    5 rollup + Phase 6 e2e). One open follow-up: `client_id` semantics rework — kept as separate Tracked Open Question
+    here per the data_status plan's "What this plan does NOT do" section.
+12. **`client_id` semantics rework** — already in v6 with multi-tenant scoping meaning. Out of scope for both the
+    umbrella and the data_status_multi_axis child plan; deferred to a future plan that has a real consumer needing the
+    rework.
 
 ---
 

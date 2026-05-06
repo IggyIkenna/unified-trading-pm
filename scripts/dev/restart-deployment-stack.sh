@@ -85,12 +85,19 @@ start_api() {
     echo "ERROR: deployment-api .venv missing — run 'cd deployment-api && uv venv && uv pip install -e .' first" >&2
     exit 1
   fi
-  echo "==> Starting deployment-api on :${API_PORT} (real mode, real cloud)"
+  echo "==> Starting deployment-api on :${API_PORT} (real mode, real cloud, 4 workers)"
   local logfile="${PIDS_DIR}/deployment-api.log"
+  # 4 workers — the Data Status tab fires 5 concurrent requests on open
+  # (manifest + config/region + expected-start-dates + fixtures + checklist).
+  # Single-worker uvicorn serialises them behind the heaviest one (the
+  # transpacific GCS rollup fetch, 8-10s cold) and you get a 24s wallclock
+  # even though no individual endpoint is slow. Each worker has its own
+  # in-process _ROLLUP_CACHE; the 30-min TTL means they all warm up after
+  # one cold hit each.
   env CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false DISABLE_AUTH=true \
       ENVIRONMENT=development \
     nohup .venv/bin/python -m uvicorn deployment_api.main:app \
-      --host 0.0.0.0 --port "$API_PORT" \
+      --host 0.0.0.0 --port "$API_PORT" --workers 4 \
     > "$logfile" 2>&1 &
   echo $! > "${PIDS_DIR}/deployment-api.pid"
   echo "  pid $(cat "${PIDS_DIR}/deployment-api.pid") — log $logfile"

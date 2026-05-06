@@ -11,7 +11,8 @@ type: code
 epic: epic-code-completion
 status: archived
 archived_date: 2026-05-06
-archived_reason: superseded by consolidated_defi_data_pipeline_2026_04_15 per 2026-04-25 reconciliation; remaining work tracked there
+archived_reason:
+  superseded by consolidated_defi_data_pipeline_2026_04_15 per 2026-04-25 reconciliation; remaining work tracked there
 
 completion_gates:
   code: C5

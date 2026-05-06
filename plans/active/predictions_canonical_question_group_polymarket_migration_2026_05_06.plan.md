@@ -179,25 +179,24 @@ QG gates between every phase.
       conditionId universe" below.
 - [x] [AUDIT] P0. Kalshi ticker universe — **Done 2026-05-06.** See "Phase 0 audit findings — Kalshi pipeline status"
       below.
-- [x] [AUDIT] P0. Existing classifier behaviour — **Done 2026-05-06.** **MAJOR PLAN-PREMISE CORRECTION**: the
-      classifier the plan describes as greenfield UAC work ALREADY EXISTS at
+- [x] [AUDIT] P0. Existing classifier behaviour — **Done 2026-05-06.** **MAJOR PLAN-PREMISE CORRECTION**: the classifier
+      the plan describes as greenfield UAC work ALREADY EXISTS at
       `unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py:540` `classify_polymarket_market()`. See
       "Phase 0 audit findings — existing UAC classifier" below.
 - [ ] [AUDIT] P0. Canonical-question-group taxonomy — **PARTIAL** via classifier audit + GCS findings. See "Phase 0
       audit findings — canonical-question-group taxonomy seed (partial)" below. Final taxonomy still requires Ikenna
       sign-off on per-cadence expected counts + naming convention (HOURLY/DAILY suffix policy).
 - [x] [AUDIT] P0. Lifecycle field availability — **Done 2026-05-06.** See "Phase 0 audit findings — lifecycle field
-      availability" below. CRITICAL: `PolymarketGammaMarket` schema silently drops `createdAt` and `closedTime` due
-      to `extra="ignore"`; one-line UAC fix unblocks `market_created_at` and event-level resolution proxy.
-- [x] [AUDIT] P0. Downstream consumer inventory — **Done 2026-05-06.** 28 Python/TypeScript files + 4 shell/test
-      files; 12 RESHAPE / 12 RENAME / 3 DELETE / 1 out-of-scope. See "Phase 0 audit findings — downstream consumer
+      availability" below. CRITICAL: `PolymarketGammaMarket` schema silently drops `createdAt` and `closedTime` due to
+      `extra="ignore"`; one-line UAC fix unblocks `market_created_at` and event-level resolution proxy.
+- [x] [AUDIT] P0. Downstream consumer inventory — **Done 2026-05-06.** 28 Python/TypeScript files + 4 shell/test files;
+      12 RESHAPE / 12 RENAME / 3 DELETE / 1 out-of-scope. See "Phase 0 audit findings — downstream consumer
       blast-radius" below.
 - [ ] [AUDIT] P0. Classifier stability hash design — **PENDING.** Audit-3 documented the existing classifier shape
-      (130-entry slug-prefix map + 26-entry keyword map + 6-pass cascade). Stability hash = SHA-256 of sorted-keys
-      of `(SLUG_PREFIX_MAP ∪ KEYWORD_TO_CATEGORY ∪ OUTCOME_TO_MARKET_TYPE ∪ _RANGE_BRACKET_TOKENS ∪ _MONTHLY_TOKENS ∪
-      _WEEKLY_TOKENS ∪ _QUARTERLY_TOKENS)` + `CLASSIFIER_VERSION` constant. Stored as
-      `CLASSIFIER_STABILITY_HASH` module-level constant alongside the classifier; manifest rows record this hash
-      so reclassification only fires when the hash changes.
+      (130-entry slug-prefix map + 26-entry keyword map + 6-pass cascade). Stability hash = SHA-256 of sorted-keys of
+      `(SLUG_PREFIX_MAP ∪ KEYWORD_TO_CATEGORY ∪ OUTCOME_TO_MARKET_TYPE ∪ _RANGE_BRACKET_TOKENS ∪ _MONTHLY_TOKENS ∪     _WEEKLY_TOKENS ∪ _QUARTERLY_TOKENS)` +
+      `CLASSIFIER_VERSION` constant. Stored as `CLASSIFIER_STABILITY_HASH` module-level constant alongside the
+      classifier; manifest rows record this hash so reclassification only fires when the hash changes.
 
 QG between Phase 0 and Phase 1: audit outputs reviewed by user; canonical-question-group taxonomy signed off; classifier
 stability hash agreed.
@@ -208,8 +207,8 @@ stability hash agreed.
 
 ### Phase 0 audit findings — Polymarket conditionId universe
 
-Direct GCS listing of `gs://market-data-tick-prediction-central-element-323112/` confirms the on-disk shape is
-**ALREADY richer than the plan assumed**.
+Direct GCS listing of `gs://market-data-tick-prediction-central-element-323112/` confirms the on-disk shape is **ALREADY
+richer than the plan assumed**.
 
 **Plan premise**: shards at `data_type=<base_asset>` (BTC/ETH/SPX/FOOTBALL/OTHER) — 5 buckets across thousands of
 underlying markets, with per-market identity collapsed at write-time.
@@ -230,6 +229,7 @@ per-`market_type` + per-`resolution_period` hive partitions ALREADY exist. The s
 manifest row already.
 
 **Universe size**:
+
 - 2025-03-14: 85 distinct condition_ids
 - 2025-09-01: 424 distinct condition_ids
 - 2026-01-15: 1,848 distinct condition_ids (~21x growth in 10 months)
@@ -237,36 +237,37 @@ manifest row already.
 
 **Date coverage**: 352 days (2025-03-14 → 2026-04-29).
 
-**Hive vocab transition mid-flight**: older days (2025-03-14) use legacy `category=prediction`; newer days
-(2026-04-27+) use canonical `asset_group=prediction`. Migration partially in-flight.
+**Hive vocab transition mid-flight**: older days (2025-03-14) use legacy `category=prediction`; newer days (2026-04-27+)
+use canonical `asset_group=prediction`. Migration partially in-flight.
 
 **Implications**:
-- The plan's "migrate from per-base_asset shard to per-canonical-group bundle" is already mostly done at the GCS
-  level — what's missing is (a) the canonical-group label as a hive key, (b) lifecycle metadata, (c) cluster-coverage
-  validation at the bundle level.
-- Migration scope is smaller than plan estimated: per-(market_category, underlying, market_type, resolution_period)
-  hive keys already capture the essence of canonical_question_group; new work is a single composition step
-  (4-tuple → canonical group name) rather than a structural reshape.
+
+- The plan's "migrate from per-base_asset shard to per-canonical-group bundle" is already mostly done at the GCS level —
+  what's missing is (a) the canonical-group label as a hive key, (b) lifecycle metadata, (c) cluster-coverage validation
+  at the bundle level.
+- Migration scope is smaller than plan estimated: per-(market_category, underlying, market_type, resolution_period) hive
+  keys already capture the essence of canonical_question_group; new work is a single composition step (4-tuple →
+  canonical group name) rather than a structural reshape.
 
 ### Phase 0 audit findings — Kalshi pipeline status
 
 **Status: WIRED-BUT-UNVERIFIED.** Code-complete at every layer; operational blocker only.
 
 - `KalshiAdapter` (`market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py:49-278`) — full
-  implementation; uses public `https://trading-api.kalshi.com/trade-api/v2/markets/{ticker}/trades` (no auth needed
-  for public reads).
+  implementation; uses public `https://trading-api.kalshi.com/trade-api/v2/markets/{ticker}/trades` (no auth needed for
+  public reads).
 - Venue dispatch wired: `umi_tick_provider.py:54` `_PREDICTION_VENUES = frozenset({"POLYMARKET", "KALSHI"})`.
 - Factory wired: `factory.py:165` `"kalshi": ("prediction_market", KalshiAdapter)`.
 - Instruments-service wired: `engine/orchestrator.py:937-939` adds KALSHI to venues.
-- **Blocker**: UAC `data_type_capability.py:600-605` says `"# KALSHI excluded — no US account yet."` — operational
-  not architectural. Public read endpoints work without account.
+- **Blocker**: UAC `data_type_capability.py:600-605` says `"# KALSHI excluded — no US account yet."` — operational not
+  architectural. Public read endpoints work without account.
 
 **Ticker format**: `market_ticker` (leaf, e.g. `KXBTC-26MAR21-T95000`); `series_ticker` (e.g. `KXBTC`) is the
 canonical-group analog; `event_ticker` (e.g. `KXBTC-26MAR21`) is event-level. The shard ID written to GCS is
 `market_ticker`.
 
-**Lifecycle fields confirmed**: `open_time` ✓, `close_time` ✓, `expiration_time` ✓, `expected_expiration_time` ✓
-(all present in `KalshiMarket` schema + verified in cassette `markets.yaml:17`). `settlement_timestamp` is in
+**Lifecycle fields confirmed**: `open_time` ✓, `close_time` ✓, `expiration_time` ✓, `expected_expiration_time` ✓ (all
+present in `KalshiMarket` schema + verified in cassette `markets.yaml:17`). `settlement_timestamp` is in
 `KalshiHistoricalCutoff` (bulk cutoff) but NOT per-market — use `expiration_time` as proxy.
 
 **Risk for Plan A**: can ship Polymarket-only Phase 1 without Kalshi; Kalshi migration is near-zero-delta when
@@ -274,23 +275,27 @@ operational unblock lands.
 
 ### Phase 0 audit findings — existing UAC classifier (PLAN PREMISE CORRECTION)
 
-**The plan's Phase 1A "build canonical_question_group classifier" is significantly overspec'd — most of the work
-is already done.**
+**The plan's Phase 1A "build canonical_question_group classifier" is significantly overspec'd — most of the work is
+already done.**
 
-**Existing SSOT**: `unified-api-contracts/unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py`
-exists and is already consumed by:
+**Existing SSOT**: `unified-api-contracts/unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py` exists
+and is already consumed by:
+
 - `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:32` (production)
 - `market_tick_data_service/scripts/migrate_polymarket_canonical.py:115` (migration)
 
-**Function**: `classify_polymarket_market(slug, event_slug, title, outcome) → (category, underlying, market_type, resolution_period)`
+**Function**:
+`classify_polymarket_market(slug, event_slug, title, outcome) → (category, underlying, market_type, resolution_period)`
 
 **Output schema** (already production-grade):
+
 - 13 categories (`PredictionShardCategory`): CRYPTO_PRICE / EQUITY_INDEX / COMMODITY / FX / MACRO / POLITICS_US /
   POLITICS_INTL / SPORTS_FOOTBALL / SPORTS_OTHER / CULTURE / TECH / WEATHER / MISC
 - 5 market types: binary / scalar / categorical / ranked / range_bracket
 - 8 resolution periods: intraday / hourly / daily / weekly / monthly / quarterly / yearly / event
 
 **Rule-set**:
+
 - 130-entry `SLUG_PREFIX_MAP` (lines 117-306) — most-specific-first ordered dict; first match wins
 - 26-entry `KEYWORD_TO_CATEGORY` (lines 311-338) — substring fallback
 - 6-pass resolution cascade (slug-prefix → event-slug-prefix → slug-token → event-slug-token → title-keyword →
@@ -300,26 +305,28 @@ exists and is already consumed by:
   Polymarket data.
 
 **What's NOT yet built (real Plan A scope)**:
-1. **Composition wrapper**: `classify_market_to_canonical_group() → CanonicalQuestionGroup | None` that composes
-   the 4-tuple `(category, underlying, market_type, resolution_period)` into a canonical group name (e.g.
+
+1. **Composition wrapper**: `classify_market_to_canonical_group() → CanonicalQuestionGroup | None` that composes the
+   4-tuple `(category, underlying, market_type, resolution_period)` into a canonical group name (e.g.
    `BTC_UP_DOWN_HOURLY`).
-2. **`CLASSIFIER_STABILITY_HASH` constant** — currently absent. Required for manifest rows to record which
-   classifier version produced the label.
-3. **Bug fix**: `_MONTHLY_TOKENS` is missing `"may"` (3-letter and full-name set both miss it). `"bnb-up-or-down-may-15"`
-   resolves to `YEARLY` instead of `MONTHLY`.
+2. **`CLASSIFIER_STABILITY_HASH` constant** — currently absent. Required for manifest rows to record which classifier
+   version produced the label.
+3. **Bug fix**: `_MONTHLY_TOKENS` is missing `"may"` (3-letter and full-name set both miss it).
+   `"bnb-up-or-down-may-15"` resolves to `YEARLY` instead of `MONTHLY`.
 4. **7 edge-case tests** to add (Airbnb / archBitcoin / solar / house-price / fed-ex / bnb-may-15 / fear-factor).
 5. **Hybrid long-form / short-ticker pattern** from instruments-service `b336834`/`d7bd17f` — currently in
-   `instruments_service/reference_data/adapters/prediction/polymarket.py` (separate question-text classifier). Port
-   to UAC if KEYWORD_TO_CATEGORY is extended to question-text matching.
+   `instruments_service/reference_data/adapters/prediction/polymarket.py` (separate question-text classifier). Port to
+   UAC if KEYWORD_TO_CATEGORY is extended to question-text matching.
 
-**Plan amendment needed**: Phase 1A scope drops by ~70% — UAC work is "wrap + bug-fix + add stability hash"
-(~1-2 days), not "design and build classifier from scratch" (~1 week).
+**Plan amendment needed**: Phase 1A scope drops by ~70% — UAC work is "wrap + bug-fix + add stability hash" (~1-2 days),
+not "design and build classifier from scratch" (~1 week).
 
 ### Phase 0 audit findings — canonical-question-group taxonomy seed (partial)
 
 The existing UAC classifier produces the 4-tuple foundation. Composing into canonical group names:
 
 **Cadenced markets** (4-tuple → group):
+
 - `(CRYPTO_PRICE, BTC, range_bracket, hourly)` → `BTC_UP_DOWN_HOURLY` (24/day expected)
 - `(CRYPTO_PRICE, BTC, range_bracket, daily)` → `BTC_UP_DOWN_DAILY` (1/day expected)
 - Same shape for ETH/SOL/XRP/DOGE/BNB/HYPE/SUI/ADA/LTC/AVAX/LINK (12 cryptos in `SLUG_PREFIX_MAP`)
@@ -327,11 +334,13 @@ The existing UAC classifier produces the 4-tuple foundation. Composing into cano
 - `(COMMODITY, GOLD, range_bracket, daily)` → `GOLD_UP_DOWN_DAILY`; same for SILVER/CRUDE_OIL/NAT_GAS
 
 **Macro events** (irregular cadence):
+
 - `(MACRO, FED_FUNDS, categorical, event)` → `FED_RATE_DECISION_PER_FOMC` (8/year expected per FOMC schedule)
 - `(MACRO, CPI, scalar, event)` → `CPI_RELEASE_PER_MONTH` (12/year expected)
 - Same for GDP/UNEMPLOYMENT/NONFARM_PAYROLLS/PPI/PCE/JOBLESS
 
 **Election / long-lifecycle**:
+
 - `(POLITICS_US, US_ELECTION, categorical, yearly)` → `ELECTION_PRESIDENT_{year}` (1 active at a time)
 - `(POLITICS_US, US_SENATE, categorical, yearly)` → `ELECTION_SENATE_{year}`
 - `(POLITICS_US, US_HOUSE, categorical, yearly)` → `ELECTION_HOUSE_{year}`
@@ -344,60 +353,54 @@ The existing UAC classifier produces the 4-tuple foundation. Composing into cano
 `attempted_failed[reason=ClassifierConfidenceLow]`; cluster gate fires loud.
 
 **Open questions for Ikenna**:
+
 1. Naming convention: `BTC_UP_DOWN_HOURLY` vs `BTC_HOURLY` vs `CRYPTO_BTC_HOURLY`?
-2. Per-cadence expected_market_ids_per_day source: hardcoded constants in the registry, or dynamic from manifest
-   row counts?
+2. Per-cadence expected_market_ids_per_day source: hardcoded constants in the registry, or dynamic from manifest row
+   counts?
 3. Election year suffix: explicit year (`ELECTION_PRESIDENT_2028`) or floating (`ELECTION_PRESIDENT_NEXT`)?
-4. Sports fixture canonical groups: align with writegate plan's `SPORTS_FIXTURE_CLUSTERS`? Same registry or
-   separate?
+4. Sports fixture canonical groups: align with writegate plan's `SPORTS_FIXTURE_CLUSTERS`? Same registry or separate?
 
 **2026-05-06 cadence-count probe — concrete proposal for Ikenna sign-off**:
 
-Probed `_prediction_market_taxonomy.py` `_infer_resolution_period()` cascade
-(lines 568-616), `polymarket/schemas.py` lifecycle hints, MTDS
-`polymarket_adapter.py`, and the on-disk inventory referenced in the
-2026-04-29 audit (1,848 distinct condition_ids; 352 days; resolution periods
-observed = hourly / daily / weekly / monthly / event). Concrete cadence-count
-proposal:
+Probed `_prediction_market_taxonomy.py` `_infer_resolution_period()` cascade (lines 568-616), `polymarket/schemas.py`
+lifecycle hints, MTDS `polymarket_adapter.py`, and the on-disk inventory referenced in the 2026-04-29 audit (1,848
+distinct condition_ids; 352 days; resolution periods observed = hourly / daily / weekly / monthly / event). Concrete
+cadence-count proposal:
 
-| canonical_question_group | cadence    | expected_markets_per_day | evidence                                                                            | confidence |
-| ------------------------ | ---------- | ------------------------ | ----------------------------------------------------------------------------------- | ---------- |
-| `BTC_UP_DOWN_HOURLY`     | HOURLY     | 24                       | classifier `_infer_resolution_period:578-579` (hour/hourly token); slug pattern present | HIGH       |
-| `BTC_UP_DOWN_DAILY`      | DAILY      | 1                        | classifier `:587-588` (daily/day tokens); slug `btc-up-or-down-april-15`            | HIGH       |
-| `ETH_UP_DOWN_HOURLY`     | HOURLY     | 24                       | symmetric with BTC pattern                                                          | HIGH       |
-| `ETH_UP_DOWN_DAILY`      | DAILY      | 1                        | symmetric with BTC pattern                                                          | HIGH       |
-| `SOL/XRP/DOGE/BNB/HYPE/SUI/ADA/LTC/AVAX/LINK_UP_DOWN_*` | HOURLY+DAILY | 24+1   | 12 cryptos in `SLUG_PREFIX_MAP`                                                     | HIGH       |
-| `SPX_UP_DOWN_DAILY`      | DAILY      | 1                        | classifier `:143-145` (spx-/sp500-/s-and-p-500- → EQUITY_INDEX)                     | HIGH       |
-| `NDX/DJIA_UP_DOWN_DAILY` | DAILY      | 1                        | symmetric with SPX                                                                  | HIGH       |
-| `GOLD_UP_DOWN_DAILY`     | DAILY      | 1                        | classifier `:151` (gold- → COMMODITY)                                               | MEDIUM     |
-| `SILVER/CRUDE_OIL/NAT_GAS_UP_DOWN_DAILY` | DAILY | 1                | symmetric with GOLD                                                                 | MEDIUM     |
-| `FED_RATE_DECISION_PER_FOMC` | EVENT  | 1 per FOMC date          | classifier `:166-168` (fed-rate-/fomc-); 8 FOMC meetings/year hardcoded             | MEDIUM     |
-| `CPI_RELEASE_PER_MONTH`  | MONTHLY    | 1                        | MONTHLY tokens at `:369-395`; 12/year                                               | MEDIUM     |
-| `GDP/UNEMPLOYMENT/NFP/PPI/PCE/JOBLESS_*` | varies | varies               | release schedule per macro indicator                                                | MEDIUM     |
-| `ELECTION_PRESIDENT_2028` | EVENT_LONG | 1 (active over months/years) | classifier `:615` (default EVENT for politics); SLUG_PREFIX_MAP shows trump-/harris- → POLITICS_US | MEDIUM |
-| `WEATHER_HURRICANE_*`    | EVENT      | variable per storm       | classifier `:296` (hurricane-/weather- → WEATHER); EVENT default                    | MEDIUM     |
+| canonical_question_group                                | cadence      | expected_markets_per_day     | evidence                                                                                           | confidence |
+| ------------------------------------------------------- | ------------ | ---------------------------- | -------------------------------------------------------------------------------------------------- | ---------- |
+| `BTC_UP_DOWN_HOURLY`                                    | HOURLY       | 24                           | classifier `_infer_resolution_period:578-579` (hour/hourly token); slug pattern present            | HIGH       |
+| `BTC_UP_DOWN_DAILY`                                     | DAILY        | 1                            | classifier `:587-588` (daily/day tokens); slug `btc-up-or-down-april-15`                           | HIGH       |
+| `ETH_UP_DOWN_HOURLY`                                    | HOURLY       | 24                           | symmetric with BTC pattern                                                                         | HIGH       |
+| `ETH_UP_DOWN_DAILY`                                     | DAILY        | 1                            | symmetric with BTC pattern                                                                         | HIGH       |
+| `SOL/XRP/DOGE/BNB/HYPE/SUI/ADA/LTC/AVAX/LINK_UP_DOWN_*` | HOURLY+DAILY | 24+1                         | 12 cryptos in `SLUG_PREFIX_MAP`                                                                    | HIGH       |
+| `SPX_UP_DOWN_DAILY`                                     | DAILY        | 1                            | classifier `:143-145` (spx-/sp500-/s-and-p-500- → EQUITY_INDEX)                                    | HIGH       |
+| `NDX/DJIA_UP_DOWN_DAILY`                                | DAILY        | 1                            | symmetric with SPX                                                                                 | HIGH       |
+| `GOLD_UP_DOWN_DAILY`                                    | DAILY        | 1                            | classifier `:151` (gold- → COMMODITY)                                                              | MEDIUM     |
+| `SILVER/CRUDE_OIL/NAT_GAS_UP_DOWN_DAILY`                | DAILY        | 1                            | symmetric with GOLD                                                                                | MEDIUM     |
+| `FED_RATE_DECISION_PER_FOMC`                            | EVENT        | 1 per FOMC date              | classifier `:166-168` (fed-rate-/fomc-); 8 FOMC meetings/year hardcoded                            | MEDIUM     |
+| `CPI_RELEASE_PER_MONTH`                                 | MONTHLY      | 1                            | MONTHLY tokens at `:369-395`; 12/year                                                              | MEDIUM     |
+| `GDP/UNEMPLOYMENT/NFP/PPI/PCE/JOBLESS_*`                | varies       | varies                       | release schedule per macro indicator                                                               | MEDIUM     |
+| `ELECTION_PRESIDENT_2028`                               | EVENT_LONG   | 1 (active over months/years) | classifier `:615` (default EVENT for politics); SLUG_PREFIX_MAP shows trump-/harris- → POLITICS_US | MEDIUM     |
+| `WEATHER_HURRICANE_*`                                   | EVENT        | variable per storm           | classifier `:296` (hurricane-/weather- → WEATHER); EVENT default                                   | MEDIUM     |
 
-**Recommended Ikenna decisions on the 4 open questions** (formed from the
-probe + workspace conventions):
+**Recommended Ikenna decisions on the 4 open questions** (formed from the probe + workspace conventions):
 
-1. **Naming convention**: `{UNDERLYING}_UP_DOWN_{CADENCE}` for cadenced
-   range-bracket markets (BTC_UP_DOWN_HOURLY); `{UNDERLYING}_{EVENT}_{SUFFIX}`
-   for events (FED_RATE_DECISION_PER_FOMC, ELECTION_PRESIDENT_2028). Rationale:
-   `UP_DOWN` is meaningful (range-bracket markets resolve binary up/down vs a
-   strike), and the cadence suffix is the cluster-validator's expected-count key.
-2. **Expected count source**: hardcoded in registry. Dynamic-from-manifest is
-   tempting but creates a chicken-and-egg with the cluster validator (it'd
-   bootstrap from incomplete data). Hardcoded = honest expectation; manifest
-   row counts diverging from hardcoded = honest gap → investigate.
-3. **Election year suffix**: explicit year (`ELECTION_PRESIDENT_2028`).
-   Floating `_NEXT` makes historical readback ambiguous and breaks training
-   pipelines.
-4. **Sports fixture canonical groups**: separate registry — different cluster
-   identity (per-fixture per-bookmaker vs per-canonical-group per-market_id).
-   Both can live in `unified_api_contracts.canonical.crosscutting.honest_coverage`
+1. **Naming convention**: `{UNDERLYING}_UP_DOWN_{CADENCE}` for cadenced range-bracket markets (BTC*UP_DOWN_HOURLY);
+   `{UNDERLYING}*{EVENT}\_{SUFFIX}`for events (FED_RATE_DECISION_PER_FOMC, ELECTION_PRESIDENT_2028). Rationale:`UP_DOWN`
+   is meaningful (range-bracket markets resolve binary up/down vs a strike), and the cadence suffix is the
+   cluster-validator's expected-count key.
+2. **Expected count source**: hardcoded in registry. Dynamic-from-manifest is tempting but creates a chicken-and-egg
+   with the cluster validator (it'd bootstrap from incomplete data). Hardcoded = honest expectation; manifest row counts
+   diverging from hardcoded = honest gap → investigate.
+3. **Election year suffix**: explicit year (`ELECTION_PRESIDENT_2028`). Floating `_NEXT` makes historical readback
+   ambiguous and breaks training pipelines.
+4. **Sports fixture canonical groups**: separate registry — different cluster identity (per-fixture per-bookmaker vs
+   per-canonical-group per-market_id). Both can live in `unified_api_contracts.canonical.crosscutting.honest_coverage`
    under `PREDICTION_GROUPS` and `SPORTS_FIXTURE_CLUSTERS` slots.
 
 Sources verified during probe:
+
 - `unified-api-contracts/unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py:98-615`
 - `unified-api-contracts/unified_api_contracts/external/polymarket/schemas.py:49-365`
 - `market-tick-data-service/.../polymarket_adapter.py:1-676`
@@ -406,74 +409,81 @@ Sources verified during probe:
 
 **Polymarket — partial coverage with one zero-effort UAC fix**:
 
-| Plan field | Source field | Status | Action |
-|---|---|---|---|
-| `market_created_at` | `PolymarketGammaMarket.createdAt` (raw JSON has it; Pydantic model drops it) | **CRITICAL ONE-LINE FIX** | Add `created_at: str | None = Field(None, alias="createdAt")` to `PolymarketGammaMarket` (UAC `external/polymarket/schemas.py:289`) |
-| `resolution_time` (actual) | `PolymarketMarketResult.resolution_time` (separate REST endpoint) | Available via second API call | One-extra-call-per-resolved-market in instruments-service Phase 1B |
-| `resolution_time` (proxy) | `PolymarketGammaMarket.end_date_iso` | Available; scheduled-not-actual | Use as `lifecycle_confidence="low_scheduled_end_date"` for unresolved markets |
-| `settlement_time` | NO direct field | UNAVAILABLE | Always derive: `resolution_time + settlement_lag` (2h UMA undisputed; 48-72h disputed); confidence column mandatory |
+| Plan field                 | Source field                                                                 | Status                          | Action                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `market_created_at`        | `PolymarketGammaMarket.createdAt` (raw JSON has it; Pydantic model drops it) | **CRITICAL ONE-LINE FIX**       | Add `created_at: str                                                                                                | None = Field(None, alias="createdAt")`to`PolymarketGammaMarket`(UAC`external/polymarket/schemas.py:289`) |
+| `resolution_time` (actual) | `PolymarketMarketResult.resolution_time` (separate REST endpoint)            | Available via second API call   | One-extra-call-per-resolved-market in instruments-service Phase 1B                                                  |
+| `resolution_time` (proxy)  | `PolymarketGammaMarket.end_date_iso`                                         | Available; scheduled-not-actual | Use as `lifecycle_confidence="low_scheduled_end_date"` for unresolved markets                                       |
+| `settlement_time`          | NO direct field                                                              | UNAVAILABLE                     | Always derive: `resolution_time + settlement_lag` (2h UMA undisputed; 48-72h disputed); confidence column mandatory |
 
 **Kalshi — full coverage**:
+
 - `market_created_at` ← `open_time` ✓ confirmed in cassette
 - `resolution_time` ← `close_time` ✓
 - `settlement_time` ← `expiration_time` ✓ (often equal to `close_time`; settlement lag often zero)
 - ~3-month historical window only on trades; metadata endpoint persistence needs runtime verification.
 
-**Test fixtures available**: Polymarket `gamma_events_cassette.json` confirms raw JSON has `createdAt`/`closedTime`
-on per-market sub-objects (lines 59, 61); UAC model just doesn't capture them. Kalshi `markets.yaml` confirms full
+**Test fixtures available**: Polymarket `gamma_events_cassette.json` confirms raw JSON has `createdAt`/`closedTime` on
+per-market sub-objects (lines 59, 61); UAC model just doesn't capture them. Kalshi `markets.yaml` confirms full
 lifecycle.
 
 ### Phase 0 audit findings — downstream consumer blast-radius
 
 **Total: 28 Python/TypeScript files + 4 shell/test files** across 9 repos.
 
-**Distribution by migration action**:
-| Action | Count | Notes |
-|---|---|---|
-| RESHAPE | 12 | Core data path — structural change required |
-| RENAME | 12 | String-literal swap; low risk; can batch |
-| DELETE | 3 | Superseded scripts post-migration |
-| Out of scope | 1 | execution-service `gcs_creator.py` — base_asset is CeFi currency not prediction |
+**Distribution by migration action**: | Action | Count | Notes | |---|---|---| | RESHAPE | 12 | Core data path —
+structural change required | | RENAME | 12 | String-literal swap; low risk; can batch | | DELETE | 3 | Superseded
+scripts post-migration | | Out of scope | 1 | execution-service `gcs_creator.py` — base_asset is CeFi currency not
+prediction |
 
 **12 high-risk RESHAPE files** (require design before implementation):
-1. `instruments-service/instruments_service/engine/orchestrator.py:2052-2086, 2580-2616` — `_extract_prediction_shard()` write path
-2. `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:55-145, 777-892` — separate question-text classifier with b336834/d7bd17f hybrid regex
-3. `market-tick-data-service/.../prediction/polymarket_adapter.py:59-112, 494-560, 606-660` — tick shard + lifecycle gating + GCS reader
+
+1. `instruments-service/instruments_service/engine/orchestrator.py:2052-2086, 2580-2616` — `_extract_prediction_shard()`
+   write path
+2. `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:55-145, 777-892` — separate
+   question-text classifier with b336834/d7bd17f hybrid regex
+3. `market-tick-data-service/.../prediction/polymarket_adapter.py:59-112, 494-560, 606-660` — tick shard + lifecycle
+   gating + GCS reader
 4. `market-tick-data-service/.../prediction/kalshi_adapter.py:254-262, 288` — parallel migration
-5. `market-data-processing-service/.../dependency_checker.py:21-24, 442-445` — pre-flight gate uses `instrument_type=BTC|ETH|FOOTBALL|OTHER` blob tokens
+5. `market-data-processing-service/.../dependency_checker.py:21-24, 442-445` — pre-flight gate uses
+   `instrument_type=BTC|ETH|FOOTBALL|OTHER` blob tokens
 6. `features-cross-instrument-service/.../batch_handler.py:62-102` — GCS blob filter on old data_type path
-7. `deployment-api/services/data_status_drilldown.py:509-511, 545-546, 919-941, 987-1049` — entire `instrument_type=OTHER` special-casing for POLYMARKET
-8. `deployment-api/services/data_status_service.py:848-910` — `PREDICTION_DATA_TYPE_META` shard_dim tuple + expected coverage logic
-9. `deployment-ui/src/components/DataStatusTab.tsx:4719-4750` — instrument_type guess `"OTHER"` for POLYMARKET drill-down
+7. `deployment-api/services/data_status_drilldown.py:509-511, 545-546, 919-941, 987-1049` — entire
+   `instrument_type=OTHER` special-casing for POLYMARKET
+8. `deployment-api/services/data_status_service.py:848-910` — `PREDICTION_DATA_TYPE_META` shard_dim tuple + expected
+   coverage logic
+9. `deployment-ui/src/components/DataStatusTab.tsx:4719-4750` — instrument_type guess `"OTHER"` for POLYMARKET
+   drill-down
 10. `deployment-ui/tests/unit/components/DataStatusDrilldown.test.tsx:78-389` — all test fixtures use old shape
 11. `unified-api-contracts/.../_prediction_market_taxonomy.py` — existing taxonomy enum supersession plan
-12. `unified-api-contracts/canonical/domain/prediction/prediction_mapping.py:17-27, 54-74` — overlapping `PredictionMarketCategory` enum needs alignment with new `CanonicalQuestionGroup`
+12. `unified-api-contracts/canonical/domain/prediction/prediction_mapping.py:17-27, 54-74` — overlapping
+    `PredictionMarketCategory` enum needs alignment with new `CanonicalQuestionGroup`
 
 **12 RENAME files** (post-Phase-1A batch update): `umi_tick_provider.py`, `canonical_writer.py`,
-`features_cross_instrument_service/{config.py, engine/orchestrator.py, calculators/__init__.py,
-schemas/feature_builder_registry.py}`, `strategy_service/{archetype_slot_resolver.py, target_universe/catalog.py,
-migration/legacy_strategy_mapping.py, cli/handlers/batch_utils.py}`, `execution-service/mock_data_provider.py`,
-`deployment-ui/DataStatusDrilldown.tsx` (labels), `deployment-api/routes/data_status.py` (comments),
-`launch-mtds-prediction-backfill-vm.sh` (comment).
+`features_cross_instrument_service/{config.py, engine/orchestrator.py, calculators/__init__.py, schemas/feature_builder_registry.py}`,
+`strategy_service/{archetype_slot_resolver.py, target_universe/catalog.py, migration/legacy_strategy_mapping.py, cli/handlers/batch_utils.py}`,
+`execution-service/mock_data_provider.py`, `deployment-ui/DataStatusDrilldown.tsx` (labels),
+`deployment-api/routes/data_status.py` (comments), `launch-mtds-prediction-backfill-vm.sh` (comment).
 
-**3 DELETE files** (post-migration cleanup): `instruments-service/scripts/{patch_prediction_shards.py,
-rescan_prediction_v4.py, split_prediction_by_market.py}` — superseded entirely by canonical migration script.
+**3 DELETE files** (post-migration cleanup):
+`instruments-service/scripts/{patch_prediction_shards.py, rescan_prediction_v4.py, split_prediction_by_market.py}` —
+superseded entirely by canonical migration script.
 
 **Test fixtures** (flagged separately): 4 test files — most just need fixture-string updates.
 
 ### Plan amendments surfaced (post Phase 0)
 
-| # | Amendment | Status | Owner |
-|---|---|---|---|
-| α | Phase 1A scope reduction: existing classifier IS the SSOT — wrap + bug-fix + add stability hash, not greenfield build (~70% effort drop) | Surfaced — needs Ikenna sign-off on revised scope | Ikenna |
-| β | One-line UAC fix: `PolymarketGammaMarket.created_at: str | None = Field(None, alias="createdAt")` + same for `closedTime`. Unblocks `market_created_at` and event-level `resolution_time` proxy. | **Trivial — Claude can ship after sign-off** | Claude (with sign-off) |
-| γ | Bug fix: add `"may"` to `_MONTHLY_TOKENS` in `_prediction_market_taxonomy.py` (currently missing from both 3-letter and full-name sets). | Trivial bug fix | Claude (with sign-off) |
-| δ | 7 edge-case tests to add for the existing classifier (Airbnb / archBitcoin / solar / house-price / fed-ex / bnb-may-15 / fear-factor — see audit-3 §F3). | Test coverage | Claude (with sign-off) |
-| ε | Migration scope reduction: GCS hive partitions ALREADY include `market_category` / `underlying` / `market_type` / `resolution_period`. Migration is a single composition step (4-tuple → canonical_group name) + lifecycle metadata add, NOT a structural reshape. | Surfaced | Ikenna |
-| ζ | Open question: canonical-group naming convention (`BTC_UP_DOWN_HOURLY` vs `BTC_HOURLY` vs `CRYPTO_BTC_HOURLY`)? | Pending | Ikenna |
-| η | Open question: per-cadence `expected_market_ids_per_day` — hardcoded constants in registry, or dynamic from manifest row counts? | Pending | Ikenna |
-| θ | Open question: election year suffix — explicit (`ELECTION_PRESIDENT_2028`) or floating (`ELECTION_PRESIDENT_NEXT`)? | Pending | Ikenna |
-| ι | Open question: sports fixture canonical groups — align with writegate plan's `SPORTS_FIXTURE_CLUSTERS` registry, or separate? | Pending — coordination point with writegate | Ikenna |
+| #   | Amendment                                                                                                                                                                                                                                                          | Status                                                                                                                            | Owner                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------- |
+| α   | Phase 1A scope reduction: existing classifier IS the SSOT — wrap + bug-fix + add stability hash, not greenfield build (~70% effort drop)                                                                                                                           | Surfaced — needs Ikenna sign-off on revised scope                                                                                 | Ikenna                                       |
+| β   | One-line UAC fix: `PolymarketGammaMarket.created_at: str                                                                                                                                                                                                           | None = Field(None, alias="createdAt")`+ same for`closedTime`. Unblocks `market_created_at`and event-level`resolution_time` proxy. | **Trivial — Claude can ship after sign-off** | Claude (with sign-off) |
+| γ   | Bug fix: add `"may"` to `_MONTHLY_TOKENS` in `_prediction_market_taxonomy.py` (currently missing from both 3-letter and full-name sets).                                                                                                                           | Trivial bug fix                                                                                                                   | Claude (with sign-off)                       |
+| δ   | 7 edge-case tests to add for the existing classifier (Airbnb / archBitcoin / solar / house-price / fed-ex / bnb-may-15 / fear-factor — see audit-3 §F3).                                                                                                           | Test coverage                                                                                                                     | Claude (with sign-off)                       |
+| ε   | Migration scope reduction: GCS hive partitions ALREADY include `market_category` / `underlying` / `market_type` / `resolution_period`. Migration is a single composition step (4-tuple → canonical_group name) + lifecycle metadata add, NOT a structural reshape. | Surfaced                                                                                                                          | Ikenna                                       |
+| ζ   | Open question: canonical-group naming convention (`BTC_UP_DOWN_HOURLY` vs `BTC_HOURLY` vs `CRYPTO_BTC_HOURLY`)?                                                                                                                                                    | Pending                                                                                                                           | Ikenna                                       |
+| η   | Open question: per-cadence `expected_market_ids_per_day` — hardcoded constants in registry, or dynamic from manifest row counts?                                                                                                                                   | Pending                                                                                                                           | Ikenna                                       |
+| θ   | Open question: election year suffix — explicit (`ELECTION_PRESIDENT_2028`) or floating (`ELECTION_PRESIDENT_NEXT`)?                                                                                                                                                | Pending                                                                                                                           | Ikenna                                       |
+| ι   | Open question: sports fixture canonical groups — align with writegate plan's `SPORTS_FIXTURE_CLUSTERS` registry, or separate?                                                                                                                                      | Pending — coordination point with writegate                                                                                       | Ikenna                                       |
 
 ---
 

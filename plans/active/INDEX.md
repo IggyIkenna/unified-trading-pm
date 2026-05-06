@@ -57,8 +57,8 @@ examples for testing any DeFi strategy
   (`SportsBucketAssignmentAdapter`, no API) → FSS feature compute → ML → strategy → UI. Folds
   `sports_e2e_validation_2026_03_27` Phases 2/3/5; Phase 4 re-collection budget dropped (predictions don't need it).
   Depends on master roadmap Phase 6, UTL base-image rebuild, and features_sports_honest_coverage_2026_05_05.
-- run_lifecycle_events_ssot_2026_05_05.plan.md — Cross-cutting observability fix per the 2026-05-05 CLAUDE.md
-  "No fire-and-forget VM launches" rule. 4 phases: (1) UTL helper `run_lifecycle(service_name, details=...)` context
+- run_lifecycle_events_ssot_2026_05_05.plan.md — Cross-cutting observability fix per the 2026-05-05 CLAUDE.md "No
+  fire-and-forget VM launches" rule. 4 phases: (1) UTL helper `run_lifecycle(service_name, details=...)` context
   manager + unit tests in `unified_trading_library.events`; (2) audit every long-running entry-point in the workspace;
   (3) rollout to MTDS migrates / MDPS / instruments-service / deployment-service / FSS / strategy / execution; (4)
   base-service.sh STEP 5.63 QG enforcement. Closes the gap where 11 audited scripts emit `setup_events` but no

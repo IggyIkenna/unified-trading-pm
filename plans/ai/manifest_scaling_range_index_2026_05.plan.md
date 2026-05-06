@@ -24,42 +24,42 @@ prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
 
 This plan is **parked**, not abandoned. Two pieces of pre-work are running before any v7 schema code is written:
 
-1. **Pre-activation measurement** — confirm whether any of the four activation triggers
-   (manifest > 50 MB, cold-read p99 > 3 s, chart p99 > 2 s, ~100 concurrent users) is firing today. Without a fired
-   trigger, range-index code is premature optimization.
-2. **Open-question resolution** — Q1 (DEFI Layer 1 path), Q2 (sports range-fit), Q5b (TRADFI `instrument_type` bug),
-   Q5c (`available_from_datetime` semantics). These block the JSON sample from being faithful and the schema from
-   being committable.
+1. **Pre-activation measurement** — confirm whether any of the four activation triggers (manifest > 50 MB, cold-read
+   p99 > 3 s, chart p99 > 2 s, ~100 concurrent users) is firing today. Without a fired trigger, range-index code is
+   premature optimization.
+2. **Open-question resolution** — Q1 (DEFI Layer 1 path), Q2 (sports range-fit), Q5b (TRADFI `instrument_type` bug), Q5c
+   (`available_from_datetime` semantics). These block the JSON sample from being faithful and the schema from being
+   committable.
 
 **Hard prerequisite** for moving from parked → active: the shard-granularity propagation plan
-(`plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md`) must reach Phase 2 done. Reason: collapsing
-v6 rows into v7 ranges only works if v6 is honest. Today's v6 has confirmed lies (MDPS 1440 NaN-bar phantoms passed
-as `captured`; MTDS DeFi drops `instrument_id`; instruments-service Polymarket overloads `data_type`). Collapsing
-those into `(covered_from, covered_to, gap_dates)` would bake the lies into the v7 schema and make them
-unauditable inside multi-year ranges.
+(`plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md`) must reach Phase 2 done. Reason: collapsing v6
+rows into v7 ranges only works if v6 is honest. Today's v6 has confirmed lies (MDPS 1440 NaN-bar phantoms passed as
+`captured`; MTDS DeFi drops `instrument_id`; instruments-service Polymarket overloads `data_type`). Collapsing those
+into `(covered_from, covered_to, gap_dates)` would bake the lies into the v7 schema and make them unauditable inside
+multi-year ranges.
 
 **Pre-activation audit roadmap** (this plan, this branch — `live-defi-rollout`, no separate feature branch):
 
-- [ ] [AUDIT] A1. Capture current manifest read p99 baseline via `scripts/bench_candle_reads.py`
-      (add "manifest read p99" scenario if missing). Owner: harsh. Output: number, written into Section
-      "Activation triggers — current measurements" below.
-- [ ] [AUDIT] A2. Measure today's `_index/availability_index.parquet` size per bucket
-      (instruments-store-{ag}, market-data-tick-{ag}, mdps output). Output: table in Section "Activation triggers".
-- [ ] [AUDIT] A3. Resolve Q1 — DEFI Layer 1 on-disk path (read 1-2 sample
-      `gs://instruments-store-defi-{pid}/...` parquets, decide canonical surface). Update Q1 with the answer.
+- [ ] [AUDIT] A1. Capture current manifest read p99 baseline via `scripts/bench_candle_reads.py` (add "manifest read
+      p99" scenario if missing). Owner: harsh. Output: number, written into Section "Activation triggers — current
+      measurements" below.
+- [ ] [AUDIT] A2. Measure today's `_index/availability_index.parquet` size per bucket (instruments-store-{ag},
+      market-data-tick-{ag}, mdps output). Output: table in Section "Activation triggers".
+- [ ] [AUDIT] A3. Resolve Q1 — DEFI Layer 1 on-disk path (read 1-2 sample `gs://instruments-store-defi-{pid}/...`
+      parquets, decide canonical surface). Update Q1 with the answer.
 - [ ] [AUDIT] A4. Resolve Q2 — SPORTS Layer 1 fixtures schema (read sample
-      `sports_reference/by_date/day=*/entity=fixtures/fixtures.parquet`). Decide whether range model applies or
-      sports gets its own catalogue plan.
-- [ ] [AUDIT] A5. Resolve Q5b — TRADFI cash-equity `instrument_type='SPOT_PAIR'` and `holiday_calendar='NASDAQ'`
-      vs codex-spec `EQUITY` and `XNYS`. Determine intentional vs bug. If bug, this plan blocks on
+      `sports_reference/by_date/day=*/entity=fixtures/fixtures.parquet`). Decide whether range model applies or sports
+      gets its own catalogue plan.
+- [ ] [AUDIT] A5. Resolve Q5b — TRADFI cash-equity `instrument_type='SPOT_PAIR'` and `holiday_calendar='NASDAQ'` vs
+      codex-spec `EQUITY` and `XNYS`. Determine intentional vs bug. If bug, this plan blocks on
       `instrument_schema_cohesion_and_market_hours_2026_03_31` fixing it.
 - [ ] [AUDIT] A6. Resolve Q5c — confirm `available_from_datetime` = listing date and `available_to_datetime` =
       expiry/null on a real options + spot/perp sample.
 - [ ] [AUDIT] A7. Cross-reference shard-granularity Phase 1 fix list. Identify which fixes affect range-index
-      `gap_dates` correctness (e.g. MIG-MDPS2 1440-NaN-bar fix changes which days are "honest empty" vs "real
-      gap"). Document the dependency edges so the plan unparks at the right moment.
-- [ ] [AUDIT] A8. Append each finding to "## Audit findings (pre-activation)" below as the audit progresses.
-      Commit each finding to `live-defi-rollout` immediately (per workspace feedback rule).
+      `gap_dates` correctness (e.g. MIG-MDPS2 1440-NaN-bar fix changes which days are "honest empty" vs "real gap").
+      Document the dependency edges so the plan unparks at the right moment.
+- [ ] [AUDIT] A8. Append each finding to "## Audit findings (pre-activation)" below as the audit progresses. Commit each
+      finding to `live-defi-rollout` immediately (per workspace feedback rule).
 
 Phase 0 (this audit) is **read-only** — no code, no schema changes, no manifest writes. Sole deliverable: data + Q&A
 that lets harsh decide whether to (a) move plan to `active` and start Unit B, (b) keep parked but with a sharper
@@ -70,70 +70,70 @@ alternatives appendix) if measurements suggest it.
 
 _Filled in by audit items A1, A2 below. Empty until measured._
 
-| Trigger                                    | Threshold       | Today's value                                                  | Status                |
-| ------------------------------------------ | --------------- | -------------------------------------------------------------- | --------------------- |
-| Largest **canonical** `availability_index.parquet` | > 50 MB         | **30.2 MiB** (`market-data-tick-cefi`, 2026-05-06)             | NOT FIRED (60% of)    |
-| Largest **per-VM shard** in any `_index/per_vm/` | > 50 MB         | **3.65 MB** (`market-data-tick-defi/per_vm/local-10889-bd08`)  | NOT FIRED             |
-| Total `_index/` footprint per bucket       | (advisory)      | up to **163 MiB** (sports-instruments, mostly weather backfill VMs) | advisory; consolidator should compact |
-| `read_availability_index` p99 cold cache   | > 3 s           | TBD (A1)                                                       | TBD                   |
-| Chart-route p99 (manifest-read portion)    | > 2 s           | TBD (A1)                                                       | TBD                   |
-| Concurrent chart users                     | ~100            | TBD (operations data)                                          | TBD                   |
+| Trigger                                            | Threshold  | Today's value                                                       | Status                                |
+| -------------------------------------------------- | ---------- | ------------------------------------------------------------------- | ------------------------------------- |
+| Largest **canonical** `availability_index.parquet` | > 50 MB    | **30.2 MiB** (`market-data-tick-cefi`, 2026-05-06)                  | NOT FIRED (60% of)                    |
+| Largest **per-VM shard** in any `_index/per_vm/`   | > 50 MB    | **3.65 MB** (`market-data-tick-defi/per_vm/local-10889-bd08`)       | NOT FIRED                             |
+| Total `_index/` footprint per bucket               | (advisory) | up to **163 MiB** (sports-instruments, mostly weather backfill VMs) | advisory; consolidator should compact |
+| `read_availability_index` p99 cold cache           | > 3 s      | TBD (A1)                                                            | TBD                                   |
+| Chart-route p99 (manifest-read portion)            | > 2 s      | TBD (A1)                                                            | TBD                                   |
+| Concurrent chart users                             | ~100       | TBD (operations data)                                               | TBD                                   |
 
 ## Audit findings (pre-activation)
 
-_Findings appended per audit item as they complete. Each entry: date, item ID, what was checked, what was found,
-what it means for this plan._
+_Findings appended per audit item as they complete. Each entry: date, item ID, what was checked, what was found, what it
+means for this plan._
 
 ### 2026-05-06 — A2: index parquet sizes per bucket (read-only GCS scan)
 
 **What was checked:** all 10 canonical buckets (5 asset_groups × `instruments-store` + `market-data-tick`) at
-`gs://{kind}-{ag}-central-element-323112/_index/`. For each, captured size of the canonical
-`availability_index.parquet` and the largest per-VM shard, plus the total `_index/` footprint.
+`gs://{kind}-{ag}-central-element-323112/_index/`. For each, captured size of the canonical `availability_index.parquet`
+and the largest per-VM shard, plus the total `_index/` footprint.
 
 **Canonical `availability_index.parquet` sizes (2026-05-06):**
 
-| Bucket                                    | Canonical index size |
-| ----------------------------------------- | -------------------- |
-| `market-data-tick-cefi`                   | **30.2 MiB**         |
-| `instruments-store-sports`                | **18.8 MiB**         |
-| `market-data-tick-defi`                   | **3.6 MiB**          |
-| `market-data-tick-tradfi`                 | **2.2 MiB**          |
-| `market-data-tick-sports`                 | **2.1 MiB**          |
-| `instruments-store-defi`                  | **1.1 MiB**          |
-| `instruments-store-cefi`                  | **0.6 MiB**          |
-| `instruments-store-tradfi`                | **0.5 MiB**          |
-| `market-data-tick-prediction`             | **0.2 MiB**          |
-| `instruments-store-prediction`            | **0.09 MiB**         |
+| Bucket                         | Canonical index size |
+| ------------------------------ | -------------------- |
+| `market-data-tick-cefi`        | **30.2 MiB**         |
+| `instruments-store-sports`     | **18.8 MiB**         |
+| `market-data-tick-defi`        | **3.6 MiB**          |
+| `market-data-tick-tradfi`      | **2.2 MiB**          |
+| `market-data-tick-sports`      | **2.1 MiB**          |
+| `instruments-store-defi`       | **1.1 MiB**          |
+| `instruments-store-cefi`       | **0.6 MiB**          |
+| `instruments-store-tradfi`     | **0.5 MiB**          |
+| `market-data-tick-prediction`  | **0.2 MiB**          |
+| `instruments-store-prediction` | **0.09 MiB**         |
 
-(`instruments-store-tradfi` has no `BucketKind.MARKET_DATA` entry per UAC SSOT — TRADFI uses Databento managed
-storage; not relevant here.)
+(`instruments-store-tradfi` has no `BucketKind.MARKET_DATA` entry per UAC SSOT — TRADFI uses Databento managed storage;
+not relevant here.)
 
 **Verdict against Trigger 1 (> 50 MB):** **NOT FIRED.** Largest canonical index is 30.2 MiB on `market-data-tick-cefi`,
-~60% of threshold. Sports-instruments at 18.8 MiB is the second-largest and is plausibly inflated by
-weather-backfill per-VM shards (4 weather VMs alone wrote 0.5–0.7 MB each into `_index/per_vm/`); after the
-consolidator merges + dedup, the canonical would shrink.
+~60% of threshold. Sports-instruments at 18.8 MiB is the second-largest and is plausibly inflated by weather-backfill
+per-VM shards (4 weather VMs alone wrote 0.5–0.7 MB each into `_index/per_vm/`); after the consolidator merges + dedup,
+the canonical would shrink.
 
 **However**: the `market-data-tick-cefi` bucket is at 30 MiB **today**, with backfill ongoing. Two of the active
 backfills will inflate it materially:
-1. Deribit options backfill (2020–2025) — `_index/per_vm/opt-deribit-{year}.parquet` shards already total
-   ~199 KB summing 2020–2025; once consolidated into the canonical and as more option chains land, this is the
-   biggest single growth driver.
-2. CeFi spot/perp full backfill (mdps-cefi-2024/2025/2026 per-VM shards visible) — per-instrument-per-day
-   v6 row shape × ~7 timeframes × ~4 data_types × ~3000 cefi instruments × multi-year = the dominant row source.
+
+1. Deribit options backfill (2020–2025) — `_index/per_vm/opt-deribit-{year}.parquet` shards already total ~199 KB
+   summing 2020–2025; once consolidated into the canonical and as more option chains land, this is the biggest single
+   growth driver.
+2. CeFi spot/perp full backfill (mdps-cefi-2024/2025/2026 per-VM shards visible) — per-instrument-per-day v6 row shape ×
+   ~7 timeframes × ~4 data_types × ~3000 cefi instruments × multi-year = the dominant row source.
 
 **Implication for this plan:**
+
 - **Don't unpark yet.** Trigger 1 is at 60%, not over.
-- **Re-measure in 2 weeks** (post-shard-granularity Phase 1 cleanup, post-Deribit-options-2024-2025 backfill
-  wave). If `market-data-tick-cefi` canonical exceeds 50 MB by then, Trigger 1 has fired and this plan moves to
-  active.
+- **Re-measure in 2 weeks** (post-shard-granularity Phase 1 cleanup, post-Deribit-options-2024-2025 backfill wave). If
+  `market-data-tick-cefi` canonical exceeds 50 MB by then, Trigger 1 has fired and this plan moves to active.
 - **Cluster the per-VM shards.** A separate concern: per-VM shards count is high (1307 shards on
-  `market-data-tick-cefi/_index/per_vm/`). Consolidator already runs but the per-VM tail is long. This is a
-  Trigger-2/3 (read-latency) leading indicator regardless of canonical size — every reader that does
-  `read_availability_index` after a recent write must walk per-VM shards until consolidation catches up.
+  `market-data-tick-cefi/_index/per_vm/`). Consolidator already runs but the per-VM tail is long. This is a Trigger-2/3
+  (read-latency) leading indicator regardless of canonical size — every reader that does `read_availability_index` after
+  a recent write must walk per-VM shards until consolidation catches up.
 
 **Doesn't change the Q1–Q5 schema design questions** — Trigger 1's not-fired status delays activation but doesn't
-invalidate the schema work; that work proceeds independently and remains gated on the shard-granularity
-prerequisite.
+invalidate the schema work; that work proceeds independently and remains gated on the shard-granularity prerequisite.
 
 ### 2026-05-06 — A3 / Q1: DEFI Layer 1 canonical path resolved
 
@@ -141,49 +141,58 @@ prerequisite.
 `_catalogue/instruments-service/` and `instrument_availability/by_date/`.
 
 **Findings:**
+
 - `instrument_availability/by_date/day=YYYY-MM-DD/venue={PROTOCOL-CHAIN}/instruments.parquet` **exists and is the
   canonical surface** for DEFI Layer 1.
-- `_catalogue/instruments-service/day=YYYY-MM-DD/manifest.json` is a **pointer**, not a duplicate. Sample
-  manifest (`day=2020-03-01`):
+- `_catalogue/instruments-service/day=YYYY-MM-DD/manifest.json` is a **pointer**, not a duplicate. Sample manifest
+  (`day=2020-03-01`):
   ```json
-  {"dataset_id": "instruments", "category": "", "processing_date": "2020-03-01", "row_count": 11,
-   "gcs_bucket": "instruments-store-defi-...", "gcs_prefix": "instrument_availability/by_date/day=2020-03-01/venue=CURVE-ETHEREUM/instruments.parquet",
-   "service_name": "instruments-service", "written_at": "..."}
+  {
+    "dataset_id": "instruments",
+    "category": "",
+    "processing_date": "2020-03-01",
+    "row_count": 11,
+    "gcs_bucket": "instruments-store-defi-...",
+    "gcs_prefix": "instrument_availability/by_date/day=2020-03-01/venue=CURVE-ETHEREUM/instruments.parquet",
+    "service_name": "instruments-service",
+    "written_at": "..."
+  }
   ```
   i.e. catalogue points at `instrument_availability/...`. Q1's premise ("`_catalogue/...` is intended canonical
   surface") is wrong — `_catalogue` is a per-day, per-dataset shipping receipt, the data lives at
   `instrument_availability/by_date/.../instruments.parquet` exactly like CEFI/TRADFI/PREDICTION.
 
-**Sample parquet** (`day=2020-01-20/venue=CURVE-ETHEREUM/instruments.parquet`, 13 rows): same `InstrumentRecord`
-schema as CEFI/TRADFI (`instrument_key`, `venue`, `instrument_type`, `available_from_datetime`,
-`available_to_datetime`, `asset_class`, ...) **plus** DEFI-specific columns
-(`pool_address`, `pool_fee_tier`, `base_asset_contract_address`, `quote_asset_contract_address`,
-`base_asset_decimals`, `base_asset_symbol_onchain`, `atoken_address`, `debt_token_address`,
-`rate_method_selector`). `instrument_type='POOL'` for AMMs.
+**Sample parquet** (`day=2020-01-20/venue=CURVE-ETHEREUM/instruments.parquet`, 13 rows): same `InstrumentRecord` schema
+as CEFI/TRADFI (`instrument_key`, `venue`, `instrument_type`, `available_from_datetime`, `available_to_datetime`,
+`asset_class`, ...) **plus** DEFI-specific columns (`pool_address`, `pool_fee_tier`, `base_asset_contract_address`,
+`quote_asset_contract_address`, `base_asset_decimals`, `base_asset_symbol_onchain`, `atoken_address`,
+`debt_token_address`, `rate_method_selector`). `instrument_type='POOL'` for AMMs.
 
-**Drift to flag separately (not an A3 blocker):** the partition uses `venue={PROTOCOL-CHAIN}` joined
-(e.g. `venue=CURVE-ETHEREUM`, `venue=RAYDIUM-SOLANA`), not separate `venue=` and `chain=` partitions. Per the
+**Drift to flag separately (not an A3 blocker):** the partition uses `venue={PROTOCOL-CHAIN}` joined (e.g.
+`venue=CURVE-ETHEREUM`, `venue=RAYDIUM-SOLANA`), not separate `venue=` and `chain=` partitions. Per the
 shard-granularity SSOT (CLAUDE.md per-asset-group shard-key matrix), the DeFi shard atom is
-`(asset_group=defi, **chain**, venue/protocol, data_type, instrument_id_or_protocol_id, day)` — `chain` is
-first-class, not embedded in `venue`. The path layout collapses chain into the venue token. This is **already
-known to the shard-granularity audit** — see MTDS finding `engine/orchestrator.py:1880-1908` (DeFi
-protocol-prefix list to lift to UAC) and instruments-service `_extract_prediction_shard` parallels.
+`(asset_group=defi, **chain**, venue/protocol, data_type, instrument_id_or_protocol_id, day)` — `chain` is first-class,
+not embedded in `venue`. The path layout collapses chain into the venue token. This is **already known to the
+shard-granularity audit** — see MTDS finding `engine/orchestrator.py:1880-1908` (DeFi protocol-prefix list to lift to
+UAC) and instruments-service `_extract_prediction_shard` parallels.
 
 **Implication for this plan:**
-- **Q1 is RESOLVED.** Use `instrument_availability/by_date/day=*/venue=*/instruments.parquet` as the DEFI
-  Layer 1 surface for the range index, exactly like CEFI/TRADFI/PREDICTION.
+
+- **Q1 is RESOLVED.** Use `instrument_availability/by_date/day=*/venue=*/instruments.parquet` as the DEFI Layer 1
+  surface for the range index, exactly like CEFI/TRADFI/PREDICTION.
 - **JSON sample can be made faithful** for the DEFI Layer 1 rows (drop the "extrapolated from UAC schema" caveat).
-- **The `chain`-in-`venue` partition drift becomes the range-index plan's problem too**: when v7 emits a row
-  per `(service, venue, instrument_id, ...)` for DeFi, must we use `venue='CURVE-ETHEREUM'` (matches today's
-  partition) or split into `venue='CURVE'` + `chain='ETHEREUM'`? **Recommendation**: split — adopt the
-  shard-granularity SSOT shape; the path partition stays joined for backwards compat (legacy reader handles it
-  per CLAUDE.md "asset_group= canonical, category= legacy" pattern), but the manifest row keys carry `chain` as
-  a first-class column. Encode this in Unit B schema definition when the plan unparks.
+- **The `chain`-in-`venue` partition drift becomes the range-index plan's problem too**: when v7 emits a row per
+  `(service, venue, instrument_id, ...)` for DeFi, must we use `venue='CURVE-ETHEREUM'` (matches today's partition) or
+  split into `venue='CURVE'` + `chain='ETHEREUM'`? **Recommendation**: split — adopt the shard-granularity SSOT shape;
+  the path partition stays joined for backwards compat (legacy reader handles it per CLAUDE.md "asset_group= canonical,
+  category= legacy" pattern), but the manifest row keys carry `chain` as a first-class column. Encode this in Unit B
+  schema definition when the plan unparks.
 - **No new prerequisite added.** This is a clean schema decision the plan can carry alone.
 
 ### 2026-05-06 — A4 / Q2: SPORTS Layer 1 fixtures schema + range-fit verdict
 
 **What was checked:** `sports_reference/by_date/day=2024-08-15/entity=fixtures/fixtures.parquet`. 43 rows. Schema:
+
 ```
 af_fixture_id int64, referee_name string, date string, timestamp string, periods_first string, periods_second string,
 venue_id double, venue_name string, venue_city string, status_long/short/elapsed_time, af_league_id int64,
@@ -192,178 +201,173 @@ home_score_halftime/fulltime/extratime/penalty (and away_*), day string, data_av
 ```
 
 **Findings:**
-- **Fixture is the "instrument" for sports Layer 1** — confirmed. Each row is a fixture identified by
-  `af_fixture_id` with a single `timestamp` (kickoff). Schema is rich (referee, venue, scores, halftime/fulltime
-  splits) — completed-match data on this date.
-- **`data_available_at` IS stamped at write-time per fixture** — sample shows `2024-08-08 01:00:00+UTC` for a
-  fixture on `2024-08-15 01:00:00+UTC`, i.e. ~7 days before kickoff. (Aligns with the `kickoff - 72h` /
-  `kickoff - 60min` rules per the shard-granularity audit's sports temporal-availability stamping section.) This
-  is good news — sports already has the column the shard-granularity plan demands; the gap is in
-  features-sports midnight-UTC fallback (`_ensure_timestamp` at `batch_handler.py:146-151`), not at instruments
-  Layer 1.
+
+- **Fixture is the "instrument" for sports Layer 1** — confirmed. Each row is a fixture identified by `af_fixture_id`
+  with a single `timestamp` (kickoff). Schema is rich (referee, venue, scores, halftime/fulltime splits) —
+  completed-match data on this date.
+- **`data_available_at` IS stamped at write-time per fixture** — sample shows `2024-08-08 01:00:00+UTC` for a fixture on
+  `2024-08-15 01:00:00+UTC`, i.e. ~7 days before kickoff. (Aligns with the `kickoff - 72h` / `kickoff - 60min` rules per
+  the shard-granularity audit's sports temporal-availability stamping section.) This is good news — sports already has
+  the column the shard-granularity plan demands; the gap is in features-sports midnight-UTC fallback
+  (`_ensure_timestamp` at `batch_handler.py:146-151`), not at instruments Layer 1.
 - **Schema cohesion concern:** prefixed columns (`af_*` for api-football, `tm_*` elsewhere likely) inside a
-  generic-named entity (`fixtures`). Reasonable per-source provenance; flag for harmonisation only if a
-  cross-source join is needed.
-- **Range model FIT VERDICT: does NOT apply naturally.** Each fixture is point-in-time
-  (`(af_fixture_id, kickoff_ts)`). There is no `(covered_from, covered_to, gap_dates)` semantic for fixtures
-  themselves — a fixture exists on its kickoff day, not as a range. The "coverage" question for sports is
-  different: "for league L on day D, how many fixtures were ingested vs how many actually played?" — a
-  *count-based* coverage matrix, not a *range-based* one. (A range model COULD apply to per-league season
-  windows: "Premier League season 2024-25 coverage_from=2024-08-16 to=2025-05-25 gap_dates=[mid-week breaks]" —
-  but that's a higher-level rollup, not the L1 atom.)
+  generic-named entity (`fixtures`). Reasonable per-source provenance; flag for harmonisation only if a cross-source
+  join is needed.
+- **Range model FIT VERDICT: does NOT apply naturally.** Each fixture is point-in-time (`(af_fixture_id, kickoff_ts)`).
+  There is no `(covered_from, covered_to, gap_dates)` semantic for fixtures themselves — a fixture exists on its kickoff
+  day, not as a range. The "coverage" question for sports is different: "for league L on day D, how many fixtures were
+  ingested vs how many actually played?" — a _count-based_ coverage matrix, not a _range-based_ one. (A range model
+  COULD apply to per-league season windows: "Premier League season 2024-25 coverage_from=2024-08-16 to=2025-05-25
+  gap_dates=[mid-week breaks]" — but that's a higher-level rollup, not the L1 atom.)
 
 **Implication for this plan:**
+
 - **Q2 is RESOLVED with a recommendation: scope sports OUT of v7 range index for the first cut.** Land
   CEFI/TRADFI/DEFI/PREDICTION (where range model is the natural shape because instruments persist over multi-year
-  windows with daily/intraday data). Sports needs its own per-fixture coverage catalogue — a sibling artifact, not
-  the same shape.
-- **The catalogue plan (`instrument_catalogue_availability_matrix_2026_04_29`) already handles sports correctly**
-  — it's count-based (fixtures captured / fixtures expected per (league, day)), which IS the right shape for
-  sports. The range-index plan deferring sports doesn't leave a gap; the catalogue plan covers it.
-- **Update Unit B schema to explicitly state "asset_group ∈ {cefi, defi, tradfi, prediction}"** when this plan
-  unparks. Sports gets a follow-up plan if/when the catalogue's count-based aggregation hits scaling pain.
-- **`data_available_at` column already exists** on Layer 1 fixtures — when Layers 2/3 sports range-coverage is
-  designed (deferred), inputs will have honest PIT stamping. The shard-granularity Phase 1 fix
-  (features-sports `_ensure_timestamp` midnight UTC bug) is in the consumer, not the source.
+  windows with daily/intraday data). Sports needs its own per-fixture coverage catalogue — a sibling artifact, not the
+  same shape.
+- **The catalogue plan (`instrument_catalogue_availability_matrix_2026_04_29`) already handles sports correctly** — it's
+  count-based (fixtures captured / fixtures expected per (league, day)), which IS the right shape for sports. The
+  range-index plan deferring sports doesn't leave a gap; the catalogue plan covers it.
+- **Update Unit B schema to explicitly state "asset_group ∈ {cefi, defi, tradfi, prediction}"** when this plan unparks.
+  Sports gets a follow-up plan if/when the catalogue's count-based aggregation hits scaling pain.
+- **`data_available_at` column already exists** on Layer 1 fixtures — when Layers 2/3 sports range-coverage is designed
+  (deferred), inputs will have honest PIT stamping. The shard-granularity Phase 1 fix (features-sports
+  `_ensure_timestamp` midnight UTC bug) is in the consumer, not the source.
 
 ### 2026-05-06 — A5 / Q5b: TRADFI cash-equity `instrument_type='SPOT_PAIR'` confirmed BUG (still firing)
 
-**What was checked:** sampled `instruments-store-tradfi-{pid}/instrument_availability/by_date/day=2026-05-04/`
-for both NASDAQ (43 rows) and NYSE (215 rows = 174 SPOT_PAIR + 41 ETF). 6 days after the original Q5b sample
-(2026-04-30) — same backfill version, no fix shipped between then and 2026-05-04.
+**What was checked:** sampled `instruments-store-tradfi-{pid}/instrument_availability/by_date/day=2026-05-04/` for both
+NASDAQ (43 rows) and NYSE (215 rows = 174 SPOT_PAIR + 41 ETF). 6 days after the original Q5b sample (2026-04-30) — same
+backfill version, no fix shipped between then and 2026-05-04.
 
-**Findings (per-row, NASDAQ:AAPL example):**
-| Column                  | Codex spec / expected | On disk (2026-05-04)       | Verdict        |
-| ----------------------- | --------------------- | -------------------------- | -------------- |
-| `instrument_type`       | `EQUITY`              | `SPOT_PAIR`                | ❌ BUG         |
-| `asset_class`           | `equity`              | `crypto`                   | ❌ BUG (worse) |
-| `holiday_calendar`      | `XNYS` (exchange_calendars key) | `NASDAQ` / `NYSE`  | ❌ BUG         |
-| `timezone`              | `America/New_York`    | `America/New_York`         | ✓              |
-| `regular_open_utc`      | `13:30:00 UTC`        | `13:30:00 UTC`             | ✓              |
-| `regular_close_utc`     | `20:00:00 UTC`        | `20:00:00 UTC`             | ✓              |
-| `pre_market_open_utc`   | non-null              | `08:00:00 UTC`             | ✓ (2C done?)   |
-| `post_market_close_utc` | non-null              | next-day `00:00:00 UTC`    | ✓              |
-| `instrument_key`        | format consistent     | `NASDAQ:SPOT_PAIR:AAPL`    | derived from buggy `instrument_type` |
-| ETFs (NYSE row sample)  | `instrument_type=ETF` | correct                    | ✓ ETFs OK      |
+**Findings (per-row, NASDAQ:AAPL example):** | Column | Codex spec / expected | On disk (2026-05-04) | Verdict | |
+----------------------- | --------------------- | -------------------------- | -------------- | | `instrument_type` |
+`EQUITY` | `SPOT_PAIR` | ❌ BUG | | `asset_class` | `equity` | `crypto` | ❌ BUG (worse) | | `holiday_calendar` | `XNYS`
+(exchange_calendars key) | `NASDAQ` / `NYSE` | ❌ BUG | | `timezone` | `America/New_York` | `America/New_York` | ✓ | |
+`regular_open_utc` | `13:30:00 UTC` | `13:30:00 UTC` | ✓ | | `regular_close_utc` | `20:00:00 UTC` | `20:00:00 UTC` | ✓ |
+| `pre_market_open_utc` | non-null | `08:00:00 UTC` | ✓ (2C done?) | | `post_market_close_utc` | non-null | next-day
+`00:00:00 UTC` | ✓ | | `instrument_key` | format consistent | `NASDAQ:SPOT_PAIR:AAPL` | derived from buggy
+`instrument_type` | | ETFs (NYSE row sample) | `instrument_type=ETF` | correct | ✓ ETFs OK |
 
 The `asset_class='crypto'` finding is **new and worse than the original Q5b note** — the original noted
 `asset_class='equity'` was correct; that's now ALSO wrong. Likely the same root-cause backfill bug propagated.
 
 **Implication for this plan:**
-- **Q5b is RESOLVED as a BLOCKER, not a clarification.** The TRADFI cash-equity backfill is producing data with
-  three mis-stamped columns. If the range-index plan adopts the on-disk vocabulary
-  (`instrument_type='SPOT_PAIR'`, `asset_class='crypto'`, `holiday_calendar='NASDAQ'`), the v7 manifest will
-  index broken classification — every TRADFI cash-equity range row would be keyed `SPOT_PAIR` instead of
-  `EQUITY`, making cross-asset-group queries (e.g. "show me all EQUITY ranges") return zero on TRADFI.
+
+- **Q5b is RESOLVED as a BLOCKER, not a clarification.** The TRADFI cash-equity backfill is producing data with three
+  mis-stamped columns. If the range-index plan adopts the on-disk vocabulary (`instrument_type='SPOT_PAIR'`,
+  `asset_class='crypto'`, `holiday_calendar='NASDAQ'`), the v7 manifest will index broken classification — every TRADFI
+  cash-equity range row would be keyed `SPOT_PAIR` instead of `EQUITY`, making cross-asset-group queries (e.g. "show me
+  all EQUITY ranges") return zero on TRADFI.
 - **This plan now has TWO hard prerequisites:**
   1. `plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 2 done (existing).
   2. `plans/active/instrument_schema_cohesion_and_market_hours_2026_03_31.plan.md` Phase 2C **plus** a corrective
      re-stamp of the in-bucket TRADFI rows (instrument_type, asset_class, holiday_calendar). The original
-     instruments_schema_cohesion plan owns the writer fix; the corrective re-stamp likely needs a sibling
-     migration script (precedent: `instruments-service/scripts/migrate_local_sfi_to_canonical.py`).
-- **Recommendation:** flag this finding to the schema-cohesion plan owner immediately. The bug is producing bad
-  data on every backfill run and silently growing the corrupted footprint. (Not the range-index plan's job to
-  fix, but the range-index plan can't ship until this is fixed.)
-- **Pre-market / regular-hours fields are correct** — Phase 1E of `instrument_schema_cohesion_and_market_hours`
-  has clearly shipped to TRADFI; the gap is Phase 2C (databento adapter populating the *correct* per-instrument
-  values, not just any values). The `'NASDAQ'` placeholder in `holiday_calendar` looks like a default-fill
-  rather than a `pandas_market_calendars` lookup result.
+     instruments_schema_cohesion plan owns the writer fix; the corrective re-stamp likely needs a sibling migration
+     script (precedent: `instruments-service/scripts/migrate_local_sfi_to_canonical.py`).
+- **Recommendation:** flag this finding to the schema-cohesion plan owner immediately. The bug is producing bad data on
+  every backfill run and silently growing the corrupted footprint. (Not the range-index plan's job to fix, but the
+  range-index plan can't ship until this is fixed.)
+- **Pre-market / regular-hours fields are correct** — Phase 1E of `instrument_schema_cohesion_and_market_hours` has
+  clearly shipped to TRADFI; the gap is Phase 2C (databento adapter populating the _correct_ per-instrument values, not
+  just any values). The `'NASDAQ'` placeholder in `holiday_calendar` looks like a default-fill rather than a
+  `pandas_market_calendars` lookup result.
 
 ### 2026-05-06 — A6 / Q5c: options `available_from_datetime` semantics PARTIALLY confirmed + new gap found
 
-**What was checked:** sampled `instruments-store-cefi-{pid}/instrument_availability/by_date/day=2026-05-04/venue=DERIBIT/instruments.parquet`.
-3563 rows: 2918 OPTION + 547 COMBO + 74 FUTURE + 16 PERPETUAL + 8 SPOT_PAIR.
+**What was checked:** sampled
+`instruments-store-cefi-{pid}/instrument_availability/by_date/day=2026-05-04/venue=DERIBIT/instruments.parquet`. 3563
+rows: 2918 OPTION + 547 COMBO + 74 FUTURE + 16 PERPETUAL + 8 SPOT_PAIR.
 
 **Findings:**
 
 1. **`available_from_datetime` = listing date — CONFIRMED for options + futures.**
-   - BTC-26JUN26 option chain (10 strikes inspected): all share `available_from_datetime=2025-06-26 00:00:00+UTC`
-     (12 months before the 2026-06-26 expiry). Identical timestamp across strikes → it's the **chain listing
-     date** (Deribit lists the chain together), not per-strike activation time.
+   - BTC-26JUN26 option chain (10 strikes inspected): all share `available_from_datetime=2025-06-26 00:00:00+UTC` (12
+     months before the 2026-06-26 expiry). Identical timestamp across strikes → it's the **chain listing date** (Deribit
+     lists the chain together), not per-strike activation time.
    - BTC-26JUN26 future: `available_from_datetime=2025-06-27` (1 day after option-chain listing — adjacent but
      distinct).
-   - BTC-PERPETUAL: `available_from_datetime=2019-03-30` — perpetual listing date matches Deribit's BTC perp
-     launch. Plausible.
+   - BTC-PERPETUAL: `available_from_datetime=2019-03-30` — perpetual listing date matches Deribit's BTC perp launch.
+     Plausible.
 2. **`available_to_datetime` = NaT (always null) — REGARDLESS of expiry.** 0/3563 rows have a non-null
    `available_to_datetime`, including instruments with concrete `expiry` columns (futures + options). The schema
-   declares the column but the writer never populates it. Today's options chain happens to contain only live
-   instruments (`expiry >= today`, min expiry = 2026-05-04 = today), so this isn't visible from a single-day
-   snapshot. **For the range index, this means today's L1 has no `available_to` to use as the natural
-   `covered_to` for dated derivatives — must be derived from `expiry`.**
-3. **The day-snapshot partition holds the as-of-day live universe, not the historical universe.** 0/2918 options
-   on day=2026-05-04 are expired. To find an instrument's full lifetime via L1, must walk the day-partitions
-   between its `available_from_datetime` and either its `expiry` or its disappearance from a later partition.
-   This is exactly what the range index is supposed to compute — so the "where do I find the full lifetime?"
-   question is answered by the index existing.
+   declares the column but the writer never populates it. Today's options chain happens to contain only live instruments
+   (`expiry >= today`, min expiry = 2026-05-04 = today), so this isn't visible from a single-day snapshot. **For the
+   range index, this means today's L1 has no `available_to` to use as the natural `covered_to` for dated derivatives —
+   must be derived from `expiry`.**
+3. **The day-snapshot partition holds the as-of-day live universe, not the historical universe.** 0/2918 options on
+   day=2026-05-04 are expired. To find an instrument's full lifetime via L1, must walk the day-partitions between its
+   `available_from_datetime` and either its `expiry` or its disappearance from a later partition. This is exactly what
+   the range index is supposed to compute — so the "where do I find the full lifetime?" question is answered by the
+   index existing.
 
 **Implication for this plan:**
+
 - **Q5c is RESOLVED with refinement:**
   - `available_from_datetime` = chain/instrument **listing date** ✓ (matches plan's prior assumption)
-  - `available_to_datetime` is **declared but unpopulated** — the v7 range index for dated derivatives must
-    derive `covered_to` from `expiry`, not from `available_to_datetime`.
+  - `available_to_datetime` is **declared but unpopulated** — the v7 range index for dated derivatives must derive
+    `covered_to` from `expiry`, not from `available_to_datetime`.
 - **Recommendation for Unit B schema:**
   ```
   covered_from = max(available_from_datetime, first day instrument actually has data in this bucket)
   covered_to   = (expiry if instrument_type ∈ {OPTION, FUTURE, COMBO}) else (last day instrument has data; null if still active)
   ```
 - **No new prerequisite required.** This works around the unpopulated `available_to_datetime` column rather than
-  blocking on a fix. Optional follow-up: file a separate ticket to populate `available_to_datetime=expiry` at
-  write-time so the column matches its name; cosmetic but reduces confusion for future consumers.
+  blocking on a fix. Optional follow-up: file a separate ticket to populate `available_to_datetime=expiry` at write-time
+  so the column matches its name; cosmetic but reduces confusion for future consumers.
 - **Schema-cohesion plan note**: TRADFI futures (CME `MES`, etc.) need the same scrutiny — likely also have
   `available_to_datetime=NaT`. Cross-check when running the same audit on
   `instruments-store-tradfi/.../venue=CME/instruments.parquet`. Tracked but not blocking.
 
 ### 2026-05-06 — A7: shard-granularity Phase 1 dependency cross-reference
 
-**What was checked:** read-only review of
-`plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 0 audit findings against this plan's
-Unit A–E execution plan. Goal: identify which shard-granularity fixes MUST land before range-index Unit B–E can
-compute honest `(covered_from, covered_to, gap_dates)`.
+**What was checked:** read-only review of `plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 0
+audit findings against this plan's Unit A–E execution plan. Goal: identify which shard-granularity fixes MUST land
+before range-index Unit B–E can compute honest `(covered_from, covered_to, gap_dates)`.
 
 **Mapping (shard-granularity finding → range-index dependency):**
 
-| Shard-granularity item                                                          | Service / file                                            | Range-index impact                                                                                                                                                                                        | Severity for unparking |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| **MIG-MDPS1** + **MIG-MDPS2** — MRO shadow + 1440-NaN-bar phantom fix           | MDPS `orchestration_writer.py:328`, 17 `_create_empty_output` sites in `adapters/{cefi,tradfi,defi,sports}/` | **CRITICAL** — every NaN-bar day collapsed into `(covered_from, covered_to)` becomes part of the range, falsely claiming coverage. Until MDPS stops writing 1440-NaN parquets with `capture_status=captured`, v7 cannot trust v6 `captured` status to derive ranges. | **HARD BLOCKER**       |
-| **MIG-MDPS3** — `_write_manifest_records` v3-shape → v6 with `chain, instrument_type, instrument_id, timeframe` | MDPS `orchestration_service.py:283-388`              | **CRITICAL** — v7 ranges are keyed `(service, venue, instrument_id, timeframe, data_type)`. If MDPS today writes v3 coarse `(date, venue, data_type, row_count)` rows, there is NO per-instrument signal to range over. v7 cannot be derived from v3 rows.   | **HARD BLOCKER**       |
-| **MTDS DeFi instrument_id drop** — `_defi_manifest.py:120,300`                  | MTDS DeFi handlers                                        | HIGH — DeFi v7 needs `instrument_id_or_protocol_id` per row. If today's manifest has empty `instrument_id`, can't range per-pool.                                                                          | HARD BLOCKER           |
-| **MTDS GMX `chain=""`** — `perp_funding_handler.py:225`                         | MTDS DeFi perp funding                                    | MED — GMX rows need `chain="ARBITRUM"`/`"AVALANCHE"`. v7 keys `chain` first-class; bad chain = mis-bucketed range.                                                                                          | blocker (small surface)|
-| **instruments-service Polymarket `data_type=BTC|ETH` overload** — `orchestrator.py:1988-1995` | instruments-service                                       | HIGH (prediction only) — v7 ranges for prediction need `canonical_question_group`. UAC SSOT greenfield (BUILD-PRED1..4). Block prediction range-index land until UAC ships canonical_question_group.       | blocker (prediction)   |
-| **instruments-service SFI / FOOTYSTATS coarser-pre-flight bug**                 | instruments-service `orchestrator.py:5013-5018`, `4747-4750` | LOW for range-index (sports out-of-scope per A4) — but may pollute the catalogue plan's count-based sports coverage which range-index docs reference.                                                       | not a blocker          |
-| **`available_at` not stamped at write-time anywhere** (5/5 services)            | MTDS, MDPS, features-onchain, features-sports, features-delta-one | MED for range-index L1 (instruments already have `available_from_datetime`). HIGH for L2/3 (raw + processed) — range-index L2/3 was deferred in plan's Q3, so this isn't immediately blocking.            | not a blocker for L1   |
-| **No NaN-ratio / row-count / schema / cluster write-gate** (5/5 services)       | UTL `FeatureWriteGate` extension + per-service apply       | HIGH — same root cause as MDPS phantom: write-gate failure means `captured` rows lie. Range-index trusts `captured` to decide a day is "in" the range.                                                     | HARD BLOCKER           |
-| **Honest-coverage trio (`record_empty` / `record_failed`) absent in main paths** | MDPS, features-onchain, features-delta-one                | HIGH — range-index treats `empty_confirmed` as "honest empty within trading calendar" → not a `gap_date`. If the writer never emits `record_empty`, the range-index can't distinguish "we tried and source had nothing" from "we never tried."                | HARD BLOCKER           |
-| **Pre-flight coarser than writer** (5+ services)                                | instruments / MTDS / MDPS / features-onchain / features-sports | MED — affects re-run + concurrent backfill safety, not range correctness directly. Range-index can land with this still partially open as long as writer is honest.                                       | not a blocker          |
-| **LookaheadBiasError input-side gap**                                           | features-* (3/3 audited)                                  | NONE for range-index L1 — affects feature-output correctness, not instrument coverage. Don't block on this.                                                                                                | not a blocker          |
-| **except: continue` per-instrument silent-drops** (umi_tick_provider.py 3 sites) | MTDS                                                      | HIGH — silently-failed-but-ranged-as-captured instruments produce false ranges. Same severity class as the empty-placeholder bug.                                                                          | HARD BLOCKER           |
+| Shard-granularity item                                                                                          | Service / file                                                                                               | Range-index impact                                                                                                                                                                                                                                                   | Severity for unparking                                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| **MIG-MDPS1** + **MIG-MDPS2** — MRO shadow + 1440-NaN-bar phantom fix                                           | MDPS `orchestration_writer.py:328`, 17 `_create_empty_output` sites in `adapters/{cefi,tradfi,defi,sports}/` | **CRITICAL** — every NaN-bar day collapsed into `(covered_from, covered_to)` becomes part of the range, falsely claiming coverage. Until MDPS stops writing 1440-NaN parquets with `capture_status=captured`, v7 cannot trust v6 `captured` status to derive ranges. | **HARD BLOCKER**                                                                                                                                                                                     |
+| **MIG-MDPS3** — `_write_manifest_records` v3-shape → v6 with `chain, instrument_type, instrument_id, timeframe` | MDPS `orchestration_service.py:283-388`                                                                      | **CRITICAL** — v7 ranges are keyed `(service, venue, instrument_id, timeframe, data_type)`. If MDPS today writes v3 coarse `(date, venue, data_type, row_count)` rows, there is NO per-instrument signal to range over. v7 cannot be derived from v3 rows.           | **HARD BLOCKER**                                                                                                                                                                                     |
+| **MTDS DeFi instrument_id drop** — `_defi_manifest.py:120,300`                                                  | MTDS DeFi handlers                                                                                           | HIGH — DeFi v7 needs `instrument_id_or_protocol_id` per row. If today's manifest has empty `instrument_id`, can't range per-pool.                                                                                                                                    | HARD BLOCKER                                                                                                                                                                                         |
+| **MTDS GMX `chain=""`** — `perp_funding_handler.py:225`                                                         | MTDS DeFi perp funding                                                                                       | MED — GMX rows need `chain="ARBITRUM"`/`"AVALANCHE"`. v7 keys `chain` first-class; bad chain = mis-bucketed range.                                                                                                                                                   | blocker (small surface)                                                                                                                                                                              |
+| \*\*instruments-service Polymarket `data_type=BTC                                                               | ETH`overload** —`orchestrator.py:1988-1995`                                                                  | instruments-service                                                                                                                                                                                                                                                  | HIGH (prediction only) — v7 ranges for prediction need `canonical_question_group`. UAC SSOT greenfield (BUILD-PRED1..4). Block prediction range-index land until UAC ships canonical_question_group. | blocker (prediction) |
+| **instruments-service SFI / FOOTYSTATS coarser-pre-flight bug**                                                 | instruments-service `orchestrator.py:5013-5018`, `4747-4750`                                                 | LOW for range-index (sports out-of-scope per A4) — but may pollute the catalogue plan's count-based sports coverage which range-index docs reference.                                                                                                                | not a blocker                                                                                                                                                                                        |
+| **`available_at` not stamped at write-time anywhere** (5/5 services)                                            | MTDS, MDPS, features-onchain, features-sports, features-delta-one                                            | MED for range-index L1 (instruments already have `available_from_datetime`). HIGH for L2/3 (raw + processed) — range-index L2/3 was deferred in plan's Q3, so this isn't immediately blocking.                                                                       | not a blocker for L1                                                                                                                                                                                 |
+| **No NaN-ratio / row-count / schema / cluster write-gate** (5/5 services)                                       | UTL `FeatureWriteGate` extension + per-service apply                                                         | HIGH — same root cause as MDPS phantom: write-gate failure means `captured` rows lie. Range-index trusts `captured` to decide a day is "in" the range.                                                                                                               | HARD BLOCKER                                                                                                                                                                                         |
+| **Honest-coverage trio (`record_empty` / `record_failed`) absent in main paths**                                | MDPS, features-onchain, features-delta-one                                                                   | HIGH — range-index treats `empty_confirmed` as "honest empty within trading calendar" → not a `gap_date`. If the writer never emits `record_empty`, the range-index can't distinguish "we tried and source had nothing" from "we never tried."                       | HARD BLOCKER                                                                                                                                                                                         |
+| **Pre-flight coarser than writer** (5+ services)                                                                | instruments / MTDS / MDPS / features-onchain / features-sports                                               | MED — affects re-run + concurrent backfill safety, not range correctness directly. Range-index can land with this still partially open as long as writer is honest.                                                                                                  | not a blocker                                                                                                                                                                                        |
+| **LookaheadBiasError input-side gap**                                                                           | features-\* (3/3 audited)                                                                                    | NONE for range-index L1 — affects feature-output correctness, not instrument coverage. Don't block on this.                                                                                                                                                          | not a blocker                                                                                                                                                                                        |
+| **except: continue` per-instrument silent-drops** (umi_tick_provider.py 3 sites)                                | MTDS                                                                                                         | HIGH — silently-failed-but-ranged-as-captured instruments produce false ranges. Same severity class as the empty-placeholder bug.                                                                                                                                    | HARD BLOCKER                                                                                                                                                                                         |
 
 **Hard-blocker summary** (must land before this plan unparks):
+
 1. MIG-MDPS1 + MIG-MDPS2 (MRO shadow + 1440-NaN fix) — without this, ranges encode lies on every option/perp.
 2. MIG-MDPS3 (v3 → v6 manifest shape) — without per-instrument rows, no per-instrument ranges to compute.
 3. MTDS DeFi `instrument_id` + GMX `chain` fixes (`_defi_manifest.py`, `perp_funding_handler.py:225`).
-4. UTL write-gate trio (NaN / row-count / schema / cluster) lifted from `schema_validation.py` + applied
-   workspace-wide. Specifically: range-index trusts `capture_status=captured` to mean "real rows landed";
-   without write-gates, that's not enforceable.
-5. Honest-coverage trio (`record_empty` / `record_failed`) added to MDPS + features-onchain +
-   features-delta-one main paths — without `record_empty`, range-index can't subtract holidays / honest gaps
-   from the "missing days" set.
+4. UTL write-gate trio (NaN / row-count / schema / cluster) lifted from `schema_validation.py` + applied workspace-wide.
+   Specifically: range-index trusts `capture_status=captured` to mean "real rows landed"; without write-gates, that's
+   not enforceable.
+5. Honest-coverage trio (`record_empty` / `record_failed`) added to MDPS + features-onchain + features-delta-one main
+   paths — without `record_empty`, range-index can't subtract holidays / honest gaps from the "missing days" set.
 6. MTDS `umi_tick_provider.py:581/737/921` per-instrument silent-drop fix — same root cause as MDPS phantoms.
 
 **Plan-level status update:** the original "Hard prerequisite: shard-granularity Phase 2 done" was correct but
-under-specified. **Concretely, the items above are the critical subset of Phase 1 + a slice of Phase 2.** Range-
-index plan can unpark when those 6 hard-blockers green plus Q5b TRADFI `instrument_type` re-stamp lands. Other
-Phase 1 items (LookaheadBiasError, pre-flight coarseness, sports-specific fixes, dual-vocab probe lift) are
-complementary but not unparking-blockers.
+under-specified. **Concretely, the items above are the critical subset of Phase 1 + a slice of Phase 2.** Range- index
+plan can unpark when those 6 hard-blockers green plus Q5b TRADFI `instrument_type` re-stamp lands. Other Phase 1 items
+(LookaheadBiasError, pre-flight coarseness, sports-specific fixes, dual-vocab probe lift) are complementary but not
+unparking-blockers.
 
 **Action items for this audit's harness (no code changes, just tracking):**
+
 - [x] A7-1: Cross-reference table embedded above. ✓
-- [ ] A7-2: When shard-granularity Phase 1 ships any of the 6 hard-blockers, append a "blocker N green" line to
-      this finding and update the activation-trigger table at the top of this plan.
+- [ ] A7-2: When shard-granularity Phase 1 ships any of the 6 hard-blockers, append a "blocker N green" line to this
+      finding and update the activation-trigger table at the top of this plan.
 - [ ] A7-3: Sync with shard-granularity plan owner (claude/teammate) to flag the 6 hard-blockers as items the
       range-index plan depends on, so they don't get reordered/parked behind lower-impact items.
-
-
-
 
 ## Relationship to existing plans
 

@@ -565,23 +565,24 @@ Two-part fix:
 - **MTDS** (commit `fe5cc2c` on `live-defi-rollout`): added `_canonicalize_captured_instrument_id(venue, raw_symbol)`
   helper that maps wire→UAC seed canonical at the captured-side write into `captured_per_instrument_shards`. Driven by
   the existing `_VENUE_INSTRUMENT_TYPE` dict so adding a new perp venue updates one place. Never mutates the parquet
-  `file_stem` or manifest `instrument_id` column — those keep wire form as the immutable downstream-reader contract.
-  28 unit tests in `test_orchestrator_canonicalize_captured.py` lock per-venue rules (DERIBIT inverse + linear, BYBIT
+  `file_stem` or manifest `instrument_id` column — those keep wire form as the immutable downstream-reader contract. 28
+  unit tests in `test_orchestrator_canonicalize_captured.py` lock per-venue rules (DERIBIT inverse + linear, BYBIT
   USDT + USD inverse, OKX-SWAP, HYPERLIQUID bare, BITFINEX margin `:USTF0`, BITGET / KRAKEN packed, BINANCE-SPOT,
   COINBASE-SPOT).
 - **UAC** (commit `82d7d50` on `live-defi-rollout`): fixed three sub-bugs in `get_expected_instruments_for_venue`'s
-  default seed path: (1) `-FUTURES` venues fell through to SPOT branch and seeded `BTC-USDT` instead of `BTC-PERP`;
-  (2) `derivative_ticker` returned PERP seeds unconditionally even for spot-only venues that physically can't publish
-  it; (3) `trades` / `book_snapshot_5` ignored the venue's `VENUE_DATA_TYPE_CAPABILITIES` entry, so ASTER (no
+  default seed path: (1) `-FUTURES` venues fell through to SPOT branch and seeded `BTC-USDT` instead of `BTC-PERP`; (2)
+  `derivative_ticker` returned PERP seeds unconditionally even for spot-only venues that physically can't publish it;
+  (3) `trades` / `book_snapshot_5` ignored the venue's `VENUE_DATA_TYPE_CAPABILITIES` entry, so ASTER (no
   `book_snapshot_5` capability) seeded book sentinels anyway. `VENUE_DATA_TYPE_CAPABILITIES` is now consulted as the
   SSOT before any seed is emitted.
 
 ### BUG-X2 — venue-level error fanned out as if per-instrument (closed)
 
 A single bad row in a venue fetch (one Tardis option row missing `expiry_date`) raised `ValueError`, the exception was
-caught at the venue level, and the Tier-3 sentinel stamped its 80-char description (`"OPTION row requires
-'expiry_date'..."`) onto **every** per-instrument sentinel row for that (venue, date, dt). Made it look like every perp
-failed schema validation when in fact one option row in the bundle did. Same pattern in the sports Tier-2 fan-out.
+caught at the venue level, and the Tier-3 sentinel stamped its 80-char description
+(`"OPTION row requires 'expiry_date'..."`) onto **every** per-instrument sentinel row for that (venue, date, dt). Made
+it look like every perp failed schema validation when in fact one option row in the bundle did. Same pattern in the
+sports Tier-2 fan-out.
 
 Fix in MTDS commit `fe5cc2c`: when `classify_venue_error` cannot bucket the exception, the sentinel writes the generic
 code `VENUE_FETCH_FAILED` instead of leaking exception text. Descriptive message stays in logs; manifest stops lying.

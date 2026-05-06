@@ -194,18 +194,18 @@ prediction-vs-reference league filters applied.
 Most of the work landed 2026-04-30; remaining items are gap-fill + verification.
 
 - [x] [AGENT] P0. Verify ETF coverage from listing dates (IBIT/FBTC/GBTC/ARKB from 2024-01-11; ETHA/FETH/ETHE from
-      2024-07-23; BITO from 2021-10-19). `TRADFI_TICKER_COVERAGE_START` (UAC `15b9e74`) clips pre-listing days.
-      **Done 2026-05-06** — TradFi MVP closeout reached 98.8% honest coverage including IBIT/ETHA NASDAQ ETFs;
-      deployment-service `13e877c` per-ticker listing-date clip applied. (FBTC/GBTC/ARKB/FETH/ETHE/BITO dropped
-      from MVP scope per `project_tradfi_mvp_etf_scope_reduction_2026_05_05` — IBIT + ETHA cover spot exposure.)
+      2024-07-23; BITO from 2021-10-19). `TRADFI_TICKER_COVERAGE_START` (UAC `15b9e74`) clips pre-listing days. **Done
+      2026-05-06** — TradFi MVP closeout reached 98.8% honest coverage including IBIT/ETHA NASDAQ ETFs;
+      deployment-service `13e877c` per-ticker listing-date clip applied. (FBTC/GBTC/ARKB/FETH/ETHE/BITO dropped from MVP
+      scope per `project_tradfi_mvp_etf_scope_reduction_2026_05_05` — IBIT + ETHA cover spot exposure.)
 - [x] [AGENT] P1. Confirm BTC + ETH futures heavy windows (May 2023 + Jun 2024) have `trades+tbbo` captured. Heavy
-      reference months are the microstructure SSOT for crypto-basis backtests. **Done 2026-05-06** —
-      per-(venue, data_type) coverage windows registry replaced global TRADFI_TICK_DATA_WINDOWS;
-      `("CME","tbbo")` clipped to May 2023 + Jun 2024 reference months and verified captured in TradFi MVP closeout.
+      reference months are the microstructure SSOT for crypto-basis backtests. **Done 2026-05-06** — per-(venue,
+      data_type) coverage windows registry replaced global TRADFI_TICK_DATA_WINDOWS; `("CME","tbbo")` clipped to May
+      2023 + Jun 2024 reference months and verified captured in TradFi MVP closeout.
 - [x] [AGENT] P1. Confirm ES_OPT combo bundling holds — sample any 2024 day: should have
       `instrument_type=combo/data_type=ohlcv_1m/underlying=*/ticks.parquet` bundles, no per-combo legacy files.
-      Migration ran 2026-05-01 04:14 UTC. **Done 2026-05-06** — ES.OPT options chain at 98.8% honest coverage in
-      TradFi MVP closeout; combo bundling holds.
+      Migration ran 2026-05-01 04:14 UTC. **Done 2026-05-06** — ES.OPT options chain at 98.8% honest coverage in TradFi
+      MVP closeout; combo bundling holds.
 - [ ] [HUMAN] P2. **Deferred — VIX futures full-tick chain**. UAC `_CBOE_INSTRUMENTS = []` placeholder. Needs
       declarative VX contract calendar (XCBF.PITCH dataset, raw_symbol stype). Separate plan; index data already
       migrated (1,585 days at
