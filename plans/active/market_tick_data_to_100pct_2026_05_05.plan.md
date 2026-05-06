@@ -112,56 +112,152 @@ See **Questions for Harsh** section above (9 items). Most consequential:
 4. Re-run audits to confirm <1% phantom + <1% missing-row across all AGs.
 5. Only THEN evaluate genuine remaining gaps and launch any paid backfills.
 
-## Questions for Harsh (Q&A queue — will discuss when you're back)
+## Decisions log (Q&A queue — all 10 items RESOLVED 2026-05-06)
 
-1. **FIX-5 design decision — RESOLVED 2026-05-05 Q&A: Option A (disk migration to canonical + writer lock to UAC
-   `build_*_partition_path`).** See updated `## FIX-5 — disk migration to canonical + writer lock to UAC SSOT` section
-   below for the executable Phase 1.5 sub-section (pre-flight → migrate → audit returns 0 non-canonical → writer
-   lock-down → drop migration scripts). Option B / C kept in the section as the audit trail of rejected alternatives. No
-   Q&A needed; this item is closed.
+The original "Questions for Harsh" queue + the live decisions made 2026-05-05/06 are kept here as audit trail. Every
+item now carries RESOLVED status + decision + the Phase 1.5a sub-section that executes the decision. When this plan
+archives, every Q&A item is closed.
 
-2. **Manifest rebuild — proceed with what data?** F1 (sports manifest 100% schema-v4) and F7 (prediction 99.5% v4)
-   suggest a rebuild from disk truth is needed. But the audit just found ~1M+ axis-8 PREDICTION rows on disk (much
-   larger than the 14k in current manifest). Rebuild would expand the prediction manifest by ~70x. Is that the intended
-   outcome or do we want a stricter inclusion filter?
+1. **FIX-5 design decision** — **RESOLVED 2026-05-05**: Option A (disk migration to canonical + writer lock to UAC
+   `build_*_partition_path`). See `## FIX-5` section below + Phase 1.5a-2 (NormalisingManifestWriter chokepoint) and
+   Phase 1.5a-4 (run existing `migrate_*_canonical.py` scripts).
 
-3. **F20 (DeFi venue-key mismatch)** — manifest claims `venue=AAVE_V3, instrument_type=a_token, data_type=oracle_prices`
-   but disk has bundled `venue=AAVEV3-ETHEREUM/<file>`. The bundle parquet contains MULTIPLE logical shards. Should
-   manifest writers match disk granularity (one row per (date, AAVEV3-ETHEREUM)) OR should disk writers split into
-   per-shard files? Both have downstream cost.
+2. **Manifest rebuild — proceed with what data?** — **RESOLVED 2026-05-06**: rebuild from disk truth, no inclusion
+   filter. Per CLAUDE.md "honest absence vs fake placeholders", manifest = disk truth, not aspirational. The PREDICTION
+   ~70× expansion is correct: numerator + denominator scale together → UI % stays meaningful. Aspirational denominators
+   belong in deployment-api `data_status_service.py` (per_league_periodic etc.), not in the manifest. Executes inside
+   Phase 1.5 main rebuild.
 
-4. **F21 — DeFi vault_share_price residual phantoms** (FRAX/MAKER/MORPHO_VAULTS/YEARN_V3): manifest claims captured,
-   disk has `venue=MORPHO-ETHEREUM/` and `venue=MORPHO_VAULTS/` separately. Are these venue-name aliases or genuinely
-   different protocols? Affects rebuild correctness.
+3. **F20 DeFi venue-key mismatch (`AAVE_V3` vs `AAVEV3`)** — **RESOLVED 2026-05-06**: premise was partially wrong. Both
+   manifest writer (`_defi_manifest.py`) and disk writer (`write_defi_rows`) store `(venue, chain)` separately and ARE
+   aligned. The audit false-flag is a CASING+ALIAS issue handled by FIX-7+8 (already shipped — recon script normaliser).
+   Verify with a post-Phase-1.5 audit re-run. No new code change needed beyond what's shipped.
 
-5. **F4/F5 — stale test buckets** (`market-data-tick-test-tradfi-*` and `market-data-tick-test-defi-*` legacy convention
-   vs canonical `*-test-*`). Confirm safe to retire? Empty? Want me to spot-check.
+4. **F21 DeFi vault_share_price aliases** (FRAX/MAKER/MORPHO_VAULTS/YEARN_V3) — **RESOLVED 2026-05-06**: these are
+   architecturally distinct protocols (Morpho Blue lending ≠ MetaMorpho curated vaults; YearnV3, Frax, Maker are
+   standalone yield protocols). Currently emitted by `vault_share_price_handler.py` but undeclared in UAC
+   `ALL_DEFI_VENUES`. Decision: declare canonically as `MORPHOVAULTS-ETHEREUM`, `YEARNV3-ETHEREUM`, `FRAX-ETHEREUM`,
+   `MAKER-ETHEREUM` (matches existing no-underscore pattern AAVEV3/UNISWAPV3/COMPOUNDV3); add
+   `LEGACY_DEFI_VENUE_ALIASES` mapping; update vault_share_price_handler to emit canonical. Executes in Phase 1.5a-1.
 
-6. **Bug deeper than path-shape** — F10 (29k Tardis "Response payload not completed" leaked into error_reason) and F11
-   (3236 schema-validation rejects). BUG-X2 fix from your prerequisite section covers NEW failures, but old rows
-   persist. Manifest rebuild (FIX-6) will overwrite them. Confirm we leave them as-is until rebuild?
+5. **F4/F5 stale test buckets** — **RESOLVED 2026-05-06**: live `gcloud storage ls` probe on all 4 candidate buckets
+   (legacy `test-tradfi`, legacy `test-defi`, canonical `tradfi-test`, canonical `defi-test`) returned ZERO entries. No
+   bucket-lifecycle action needed. Any stale manifest rows pointing at test-bucket names get cleaned up by Phase 1.5
+   rebuild as a side-effect.
 
-7. **F25 — TRADFI 100k blobs at non-hive `day-data_type-...` layout** — pre-hive writer or active multi-source? Need to
-   identify which adapter writes this shape and decide migrate-or-add-pattern. Real files, 4-5KB, written 2026-02.
-   Currently invisible to canonical recon.
+6. **F10/F11 BUG-X2 leaked-text rows** — **RESOLVED 2026-05-06**: live data shows ~76k of 86k CEFI `attempted_failed`
+   rows are pollution (29,492 "Response payload not completed" + 23,568 "FUTURE row requires expiry_date" + 16,260
+   "OPTION row requires..." + ~7k "In CSV column #N" + 9k other). Decision: one-shot flip to `VENUE_FETCH_FAILED` BEFORE
+   Phase 1.5 rebuild — 30-second op, makes data-status honest immediately, reduces cognitive load. Executes in Phase
+   1.5a-3.
 
-8. **F18+F19+F20+F22+F23+F24 cluster — which writer is in scope for the canonical SSOT?** The audit found 6 distinct
-   writers across MTDS each emitting different on-disk shapes. Shipping a write-time normaliser at UTL-level (one layer
-   down from individual adapters) might unify the layout zoo without rewriting 30+ DeFi handlers + sports + prediction
-   adapters. Worth designing.
+7. **F25 TRADFI 100k non-hive `day-` blobs** — **RESOLVED 2026-05-06**: live probe confirms blobs exist with path-dates
+   extending to `day-2026-01-04`; **zero `grep` hits for `day-` (hyphen) path templates anywhere in current MTDS
+   source** → writer is gone (frozen pre-hive legacy). Decision: run existing `migrate_tradfi_to_hive.py` (server-side
+   `gsutil mv`, ~5-min metadata op for ~100k blobs). Executes in Phase 1.5a-4.
 
-9. **F26 — PREDICTION coverage_start mismatch**. UAC says POLYMARKET data should go back to 2020-06-12. Disk only has
-   data from 2025-03-14. ~5 years of "missing" days that were never actually fetched. Should we: (a) update UAC to
-   actual MTDS backfill start (loses provenance about when Polymarket protocol launched), or (b) keep UAC aspirational +
-   plan deferred backfill back to 2020-06-12 (Phase 2 budget impact). Affects denominator for PREDICTION coverage % on
-   data-status UI.
+8. **F18+F19+F20+F22+F23+F24 cluster — UTL write-time normaliser** — **RESOLVED 2026-05-06**: ship as
+   `NormalisingManifestWriter` wrapper in UTL with **STRICT-FAIL** mode (any non-canonical `gcs_path=` raises
+   `ValueError` at write-time). UAC `build_{cefi,defi,tradfi,prediction}_partition_path` are the canonical builders;
+   wrapper validates incoming `gcs_path` against builder output and rejects mismatches. ~1-day refactor. This IS the
+   FIX-5 Option A "writer lock-down" committed to in Q&A 1. Executes in Phase 1.5a-2.
 
-10. **MAJOR — disk migration scripts already exist (2026-04-18)**. Found 4 scripts: `migrate_sports_canonical.py`,
-    `migrate_polymarket_canonical.py`, `migrate_tradfi_canonical.py`, `migrate_defi_canonical.py` plus
-    `launch-canonical-migration-vm.sh`. Audit evidence suggests migrations have NOT yet run at scale (legacy data still
-    on disk). **Have these been run? When are they scheduled?** If they run, F16/F17/F22/F23/F24/F25 all close. **This
-    is the cheapest path to fixing the layout zoo.** Recommendation: prioritise running these over implementing FIX-5
-    Option B reader-side multi-layout.
+9. **F26 PREDICTION coverage_start** — **RESOLVED 2026-05-06**: Polymarket Gamma API live probe returns ZERO markets for
+   `start_date_min=2020-06-12`; UAC `external/polymarket/schemas.py:5` confirms "Available: November 21, 2022 (CLOB
+   launch) onwards." Pre-CLOB on-chain LMSR markets exist on Polygon but require a separate on-chain indexer adapter
+   (out of current scope). Decision: update UAC to **2022-11-21** (CLOB launch). Add `KNOWN_COVERAGE_GAPS` entry for the
+   2020-06-12..2022-11-20 LMSR window (documented exclusion, not a backfill TODO). Executes in Phase 1.5a-1.
+
+10. **MAJOR — existing disk migration scripts** — **RESOLVED 2026-05-05**: confirmed `migrate_sports_canonical.py`,
+    `migrate_polymarket_canonical.py`, `migrate_tradfi_canonical.py`, `migrate_defi_canonical.py` all exist in MTDS; not
+    yet run at scale. Decision: run them per-AG in Phase 1.5a-4 BEFORE the main Phase 1.5 manifest rebuild. Cheapest
+    path to closing F16/F17/F22/F23/F24/F25.
+
+## Phase 1.5a — Pre-rebuild Q&A operational follow-ups (gate for Phase 1.5 main rebuild)
+
+Q&A items 4, 6, 7, 8, 9 each ship a discrete operational change before the main manifest rebuild runs. Order matters:
+SSOT changes first (UAC), then writer enforcement (UTL), then one-shot manifest cleanups, then disk migrations, THEN the
+existing Phase 1.5 rebuild (which operates on the now-canonical disk + manifest). Each step is gated on the prior step
+passing.
+
+### Phase 1.5a-1 — UAC SSOT alignment (Q&A 4 + Q&A 9)
+
+- [ ] [SCRIPT] P0. **UAC** `unified_api_contracts/registry/defi_venues.py`: - Add to `ALL_DEFI_VENUES`:
+      `MORPHOVAULTS-ETHEREUM`, `YEARNV3-ETHEREUM`, `FRAX-ETHEREUM`, `MAKER-ETHEREUM` (no-underscore canonical form per
+      Q&A 4 decision). - Add to `LEGACY_DEFI_VENUE_ALIASES`: `MORPHO_VAULTS → MORPHOVAULTS-ETHEREUM`,
+      `YEARN_V3 → YEARNV3-ETHEREUM`, `FRAX → FRAX-ETHEREUM`, `MAKER → MAKER-ETHEREUM`. Audit-script normaliser
+      auto-handles the legacy form via these aliases until the handler change in Phase 1.5a-2 lands.
+- [ ] [SCRIPT] P0. **UAC** `unified_api_contracts/canonical/domain/prediction/coverage_starts.py` (or wherever
+      `PREDICTION_COVERAGE_START` lives — verify location): change `POLYMARKET = "2020-06-12"` →
+      `POLYMARKET = "2022-11-21"` (CLOB launch). Per Q&A 9.
+- [ ] [SCRIPT] P0. **UAC** add `KNOWN_COVERAGE_GAPS` entry:
+      `("polymarket", "*"): [(date(2020, 6, 12), date(2022, 11, 20))]` documenting the on-chain LMSR window as a
+      provider-side exclusion (not a backfill TODO). Affects data-status denominator clipping.
+- [ ] [SCRIPT] P0. **MTDS** `cli/handlers/vault_share_price_handler.py`: emit canonical venue names (`MORPHOVAULTS`,
+      `YEARNV3`, `FRAX`, `MAKER`) instead of legacy `MORPHO_VAULTS` / `YEARN_V3`.
+- [ ] [HUMAN] P0. UAC + MTDS quality-gates pass; commit + push (UAC first → wait for AR `:latest` to land per CLAUDE.md
+      UTL→consumer race rule → then MTDS).
+- [ ] [SCRIPT] P0. Lock-test: extend `tests/unit/sports/test_gcs_paths_player_values.py` pattern with a
+      `tests/unit/defi/test_vault_venue_canonical_names.py` asserting the 4 canonical venues are in `ALL_DEFI_VENUES`
+      and the legacy forms are in `LEGACY_DEFI_VENUE_ALIASES`. Regression-proof.
+
+### Phase 1.5a-2 — UTL NormalisingManifestWriter (Q&A 8)
+
+- [ ] [SCRIPT] P0. **UTL** new module `unified-trading-library/unified_trading_library/manifest_writer_normalising.py`
+      wrapping `ManifestWriter`. At `add()`/`record_*()` time, validates incoming `gcs_path=` against UAC
+      `build_{cefi,defi,tradfi,prediction}_partition_path` output. **Strict-fail**: mismatch →
+      `ValueError("manifest gcs_path does not match canonical build_*_partition_path output")` with the diff in the
+      message. Per Q&A 8 decision.
+- [ ] [SCRIPT] P0. **UTL** `unified_trading_library/__init__.py`: export `NormalisingManifestWriter` alongside
+      `ManifestWriter` (legacy + normalised, opt-in for now to avoid breaking concurrent agents' work).
+- [ ] [SCRIPT] P0. **UTL** unit tests: 4 cases — (a) canonical path passes through; (b) mismatch raises with diff
+      message; (c) UAC builder unavailable for asset_group → graceful skip with log; (d) wrapper preserves
+      `record_empty` / `record_failed` semantics.
+- [ ] [HUMAN] P0. UTL quality-gates pass; commit + push.
+- [ ] [SCRIPT] P0. **MTDS** swap all production `ManifestWriter` instantiations to `NormalisingManifestWriter` — grep
+      `ManifestWriter(` workspace-wide; per-handler audit + swap. Any pre-existing non-canonical writes will surface as
+      test failures: that's the intended detection of the layout zoo.
+- [ ] [HUMAN] P0. MTDS quality-gates pass; commit + push.
+
+### Phase 1.5a-3 — One-shot manifest cleanups (Q&A 6)
+
+- [ ] [SCRIPT] P0. **CEFI manifest BUG-X2 leaked-text flip**: 30-second script. For each row in
+      `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet` where
+      `capture_status='attempted_failed'` AND `error_reason` matches one of: `"Response payload is not completed"`,
+      `"FUTURE row requires 'expiry_date'"`, `"OPTION row requires 'expiry_date'"`, `"In CSV column #*"`,
+      `"StreamingParquetWriter pre-write validation failed"` → set `error_reason='VENUE_FETCH_FAILED'`.
+      Backup-then-write pattern (mirror Phase 2 PLAYER_VALUES rebuild). Expected: ~76k rows touched of 86k
+      attempted_failed.
+- [ ] [SCRIPT] P0. **Vault venue manifest rename** (Q&A 4 follow-up): for each row in
+      `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` where
+      `data_type='vault_share_price'` AND `venue ∈ {MORPHO_VAULTS, YEARN_V3}` → rewrite venue to canonical form
+      (MORPHOVAULTS, YEARNV3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write.
+- [ ] [HUMAN] P0. Re-read manifest, sanity-check counts (`captured` / `empty_confirmed` / `attempted_failed` breakdown
+      matches expected post-flip), confirm `error_reason` distribution shows VENUE_FETCH_FAILED dominates.
+- [ ] [HUMAN] P0. Delete backup blobs once verified.
+
+### Phase 1.5a-4 — Disk migrations (Q&A 7 + Q&A 10)
+
+- [ ] [HUMAN] P0. **TRADFI legacy `day-` migration** (Q&A 7): run
+      `cd market-tick-data-service && .venv/bin/python scripts/migrate_tradfi_to_hive.py --dry-run` first. Verify the
+      script touches ~100k blobs and the rename pattern is `day-{D}/data_type-{DT}/...` →
+      `day={D}/asset_group=tradfi/.../data_type={DT}/...`. Then `--apply`. Server-side `gsutil mv`, expected ~5 min for
+      100k blobs.
+- [ ] [HUMAN] P0. **Per-AG canonical migrations** (Q&A 10): same pattern for each existing migrate script. Order
+      smallest-first to fail-fast on regressions: - PREDICTION: `scripts/migrate_polymarket_canonical.py` - SPORTS:
+      `scripts/migrate_sports_canonical.py` - DEFI: `scripts/migrate_defi_canonical.py` - TRADFI:
+      `scripts/migrate_tradfi_canonical.py` (separate from `migrate_tradfi_to_hive.py` above — verify before running) -
+      CEFI: covered by existing per-VM shard pattern; no separate migrate script needed.
+- [ ] [HUMAN] P0. Re-run `audit_legacy_paths.py` per AG → expected non-canonical count ≈ 0.
+
+### Phase 1.5a — exit gate
+
+- [ ] [HUMAN] P0. Confirm all four 1.5a sub-phases (1/2/3/4) green:
+  - UAC canonical venues + PREDICTION_COVERAGE_START shipped, lock-tests pass.
+  - UTL NormalisingManifestWriter shipped, MTDS callers swapped, no validation errors at QG.
+  - CEFI manifest BUG-X2 flip done; vault venue rename done.
+  - All disk migrations apply'd; `audit_legacy_paths.py` shows ~0 non-canonical paths.
+- [ ] [HUMAN] P0. ONLY THEN proceed to the existing Phase 1.5 main manifest rebuild below.
 
 ## Live operations log (newest first — read this to know what's happening RIGHT NOW)
 
