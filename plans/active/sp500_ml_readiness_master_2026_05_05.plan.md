@@ -382,8 +382,24 @@ but parallel-able among themselves.
   `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
   groups by chain root + (date, timeframe, data_type), writes bundled at canonical path, `record_captured` via
   ManifestWriter. Idempotent. Same skip-if-exists pattern as the raw-tick aggregator.
-- [ ] [AGENT] **P1.5d OOM remediation — Phase 1 NOT COMPLETE** — **2026-05-06 06:00-08:00 UTC**: of the 7 sharded VMs
-      `mdps-tradfi-{2020..2026}-20260506-005356`, **2 OOM'd** during legacy options-chain processing: -
+- [x] [AGENT] **P1.5d OOM remediation SHIPPED 2026-05-06 09:30 UTC** — full hybrid plan executed: - **Step 1**:
+      deployment-service `3c55fc7` made `MACHINE_TYPE` configurable on the launcher; killed the 5 still- OOM-bound
+      e2-standard-8 VMs (work preserved by skip-if-exists) and relaunched 7 fresh shards on `e2-highmem-8` (64GB) →
+      unblocked Phase 1 progress immediately. - **Step 2 (helper)**: market-data-processing-service `918f66a` added
+      `_iter_chain_symbol_dfs` (lazy per-symbol streamer via Polars predicate pushdown against tmpfile) + hardened
+      `_read_tick_data` with `low_memory=True` + explicit `del pl_df` (~30-50% peak reduction even on the eager path). -
+      **Step 3 (wiring)**: market-data-processing-service `1dfae3b` wired the streamer into `_process_instrument_file`
+      via `_chain_bundle_likely_from_path` path-only detector + `_maybe_dispatch_chain_streaming`. The new
+      `_process_chain_bundle_streaming` orchestrates per-symbol dispatch, accumulates per-tf candles across symbols,
+      writes ONE `ticks.parquet` per timeframe via the P1.5 chain-bundle path helper. Peak memory ≈ largest
+      single-symbol slice + per-tf accumulator (small), NOT the whole bundle. 11 unit tests cover yield count, slice
+      purity, auto-detect priority, fallback paths, single-download invariant, tmpfile cleanup, path-only detection.
+      Refactored 4 helpers to keep both `_process_chain_bundle_streaming` and `_process_instrument_file` under ruff C901
+      complexity ≤ 15. - **Step 4**: refreshed TRADFI tarball at 08:26 UTC with the streaming code; killed the 7
+      e2-highmem-8 VMs; relaunched 7 fresh shards on default `e2-standard-8` (32GB) at 09:29 UTC as
+      `mdps-tradfi-{2020..2026}-20260506-092945`. Cost back to default. Verification scheduled at +10min.
+- [ ] [AGENT] **P1.5d-original (legacy framing — kept for context)** — **2026-05-06 06:00-08:00 UTC**: of the 7 sharded
+      VMs `mdps-tradfi-{2020..2026}-20260506-005356`, **2 OOM'd** during legacy options-chain processing: -
       `mdps-tradfi-2026`: exit=137 (SIGKILL/OOM) at 00:27 UTC after 18/126 days (14% YTD). - `mdps-tradfi-2020`: dead at
       06:35 UTC after 31/365 days (8%); final event `MEMORY_THRESHOLD_REACHED`; no EXIT_STATUS file (killed before
       vm-exec finalised). - Last log before death: `Detected legacy ticks.parquet bundle: 4053 symbols in ticks.parquet`
