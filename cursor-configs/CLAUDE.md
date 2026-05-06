@@ -510,6 +510,34 @@ marked `@pytest.mark.allow_network`. Skipped if SM credentials unavailable.
 
 ## Local Development
 
+### Deployment-stack restart (SSOT — overrides earlier guidance)
+
+For the **deployment-api (port 8004) + deployment-ui (port 5183)** pair — the data-status / deployment-flow stack —
+the canonical local script is:
+
+```bash
+bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh           # restart both
+bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh --api      # restart deployment-api only
+bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh --ui       # restart deployment-ui only
+bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh --stop     # stop both, don't restart
+```
+
+**This script supersedes the prior `dev-start.sh --api deployment-api` + `cd deployment-ui && npm run dev` two-step.**
+Do NOT use the legacy two-script invocation for this pair.
+
+Behaviour:
+
+- **Always real cloud mode** (`CLOUD_PROVIDER=gcp`, `CLOUD_MOCK_MODE=false`) — no mock flag. Reads the same Cloud Run
+  rollup bucket the shared `uts-shared-deployment-api` Cloud Run service does, so the in-region slicer fast-path lights
+  up locally too (Jan 2018 → today response in <2s instead of 5+ min).
+- **Hardcoded ports** (8004 / 5183) — `deployment-ui/src/contexts/CloudProviderContext.tsx` resolves the API base via
+  `window.location.hostname`; on `localhost` it dials port 8004 verbatim. Changing either port breaks the UI's
+  same-origin proxy and every widget shows "Failed to load".
+- **CLI flags scope the restart** — `--api`/`--ui`/`--all` (default) — so day-to-day tweaks don't bounce the other.
+- **Startup logs / pids** under `${TMPDIR}/deployment-stack-pids/` (macOS: `/var/folders/.../`, Linux: `/tmp/`).
+
+### Other tiers (unchanged)
+
 Tier 0 is the canonical local-dev mode — Firebase Emulator Suite layered with `NEXT_PUBLIC_MOCK_API=true` so widgets
 render against in-repo fixtures while sign-in / Firestore / Storage hit a local emulator pool seeded with the demo
 personas. Same Firebase code path as staging and prod (only project ID + emulator hosts change). The two layers are
