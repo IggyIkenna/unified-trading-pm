@@ -2,65 +2,162 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
-
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: may describe service
-> architecture, shard granularity, or failure isolation that's evolving with writegate Phase 2 + predictions Phase 2
-> (per-fixture sports sharding, lifecycle timing for predictions, MDPS empty-output A/B/C decision tree, cluster
-> validation as 4th write-gate pillar). The post-plan-reality doc lists the 10 cross-cutting principles codified in
-> workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output decision A/B/C, cluster validation
-> mandatory at record_captured, per-row write-time `available_at`, prediction lifecycle timing, temporary state must
-> have named successor, per-VM shard isolation, etc.) plus the active plans where the canonical post-plan reality is
-> being implemented. If this doc and the active plans disagree, the plans win. If you find a contradiction the plans
-> don't address, flag to user — don't decide unilaterally.
-
 # Shard-Level Failure Isolation (SSOT)
 
 ## Rule
 
-**A failed shard MUST NOT kill other shards in the same batch.**
+**A failed shard MUST NOT kill other shards in the same batch (or other services in the same live cluster).**
 
 Shards are the isolation boundary. When processing fails for one shard, the service:
 
-1. Logs the error with full details (venue, error message, shard ID, correlation ID) to the event stream
-2. Emits a `VENUE_PROCESSING_FAILED` or `DATE_PROCESSING_FAILED` event with error details
-3. Continues processing remaining shards
-4. Reports partial success at the end (not total failure)
+1. Logs the error with full details (shard atom + correlation ID + typed error reason) to the structured event stream.
+2. Records the failure to the manifest via
+   `ManifestWriter.record_failed(row_key, error=<typed_error>, attempted_at=<now>)` so the data-status panel surfaces it
+   (NOT silently dropped).
+3. Continues processing remaining shards in the batch (batch cluster) or remaining requests in the service (live
+   cluster).
+4. Reports partial success at the end with per-shard pass/fail breakdown.
 
-A **partially complete shard** should be killed — do not store partial data for a shard that errored mid-processing.
+A **partially complete shard** is killed at the write boundary — `ManifestWriter.record_captured` runs the 4-pillar
+write-gate (see below); any pillar failure → `record_failed` instead of writing the parquet. NO partial parquets land on
+disk. NO silent NaN placeholder rows.
 
-## Sharding Dimensions
+**The 4-pillar write-gate** (per workspace CLAUDE.md `§ Validation gates per record_captured`):
 
-For the complete per-service shard dimension matrix (all 8 pipeline layers, all categories), see
-**`codex/02-data/availability-manifest-and-data-status.md`** — the SSOT for availability manifest schema, shard
-dimensions, data status page hierarchy, and availability % calculation.
+| Pillar                                            | Gate                                                                                                                                                                                         | Failure mode                                                         |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **1. Row count > 0**                              | Mandatory unless source response was legitimately empty (then `record_empty`, not `record_captured`).                                                                                        | `record_failed(EmptyAfterFilterError)`.                              |
+| **2. NaN ratio per column < threshold**           | Per-feature-group thresholds in UAC `nan_thresholds.NAN_RATIO_THRESHOLDS`; lifted from per-service inline in Plan B.                                                                         | `record_failed(NanRatioExceededError(column, observed, threshold))`. |
+| **3. Schema matches contract**                    | Required columns + types match UAC schema declaration. Existing `ParquetSchemaEnforcer`.                                                                                                     | `record_failed(SchemaMismatchError)`.                                |
+| **4. Cluster coverage ≥ expected** (BUNDLED only) | For `data_type ∈ BUNDLED_DATA_TYPES`, `expected_root_clusters` + `cluster_extractor` MANDATORY (UTL guard raises `MissingClusterValidationError` if absent; QG STEP 5.64 statically checks). | `record_failed(ClusterCoverageError(missing, observed))`.            |
 
-Quick reference (not exhaustive — see SSOT for full matrix):
+**Empty result decision tree (3 categories — NO 4th, NO silent NaN placeholders)**: every empty-result condition
+resolves to one of:
 
-| Service                        | Shard Dimensions                                                | Example                                          |
-| ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------ |
-| instruments-service            | category x venue x [chain] x date                               | DEFI x AAVE_V3 x ETHEREUM x 2026-01-05           |
-| market-tick-data-service       | category x venue x [chain] x instrument_type x data_type x date | CEFI x BINANCE-SPOT x spot x trades x 2026-01-05 |
-| market-data-processing-service | category x venue x [chain] x instrument_type x date x timeframe | CEFI x BINANCE-SPOT x spot x 2026-01-05 x 1m     |
-| feature services               | feature_group x [timeframe] x [chain] x [league_id] x date      | momentum x 1h x 2026-01-05                       |
-| ML services                    | model_family x [training_period] x date                         | pregame_xg x 2024 x 2026-01-05                   |
-| strategy/execution/PnL         | strategy_id x [venue] x [instruction_type] x date               | strat_001 x BETFAIR x TRADE x 2026-01-05         |
-| risk-and-exposure              | client_id x date                                                | client_A x 2026-01-05                            |
+- **A. Honest absence** — source returned 0 ticks for the requested window → `record_empty(row_key, attempted_at)`.
+- **B. Upstream timestamp bias** — source returned ticks; ALL fall outside the requested day after `interval_idx` filter
+  → `record_failed(UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks))`. UPSTREAM bug — partition
+  mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew. Paired upstream MTDS
+  partitioner-validation fix at `raw_tick_hive.py`.
+- **C. Mid-process malformed fields** — rows in window but downstream calc dropped due to NaN/malformed source fields →
+  `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`. Data-quality bug; sample values surface for
+  triage.
 
-## Error Handling Pattern
+The `_create_empty_output()` placeholder method is BANNED from `base_adapter` and equivalents (writegate Phase 2.A
+deletes it across MDPS' 37 callsites).
+
+---
+
+## Shard atom — depends on the deployment cluster type
+
+The shard atom = the v6 manifest row key for the service. The shard atom MUST be identical across writer atomicity
+boundary, manifest row key, data-status display rollup, downstream service pre-flight gate, and deployment-ui
+drill-down. Drift between any two = silent correctness bug.
+
+**Two cluster types** (see
+[`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+for full taxonomy):
+
+- **Live deployment cluster** = multiple different services co-located + co-running (instruments-service + MTDS + MDPS +
+  features-\* + strategy + execution all online concurrently). Shards = the natural unit of work the service processes
+  per request (e.g. one fixture, one instrument-day, one strategy-decision).
+- **Batch deployment cluster** = the SAME service running N times concurrently for N different shards (parallel
+  processing of historical data). Shards = the work-units we partition the backfill into.
+
+Live and batch are operationally different (one cluster type co-locates services; the other parallelises a single
+service) but they produce IDENTICAL outputs at the shard atom level. Per workspace CLAUDE.md `§ Live = batch`, the data,
+fields, and timing semantics are identical between live and batch — only the source serving a given
+`(asset_group, data_type)` may differ. Daily shards are the common axis: every tier shards by date, so we can pick
+start/end ranges for any backtest or backfill.
+
+### Shard semantics by service tier
+
+The shard atom shape depends on which tier of the pipeline the service belongs to:
+
+| Tier                   | Services                                                              | Shard atom                                                                                                                                                                                                                                                                              | What "a shard" means                                                                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Data-pipeline tier** | instruments-service, MTDS, MDPS, features-\*                          | `(asset_group, [chain], venue, data_type, [instrument_type], [instrument_id\|root\|fixture_id\|canonical_question_group], [timeframe], [feature_group], [league_id], day)` — full v6 row key per asset_group, see `02-data/availability-manifest-and-data-status.md` per-service matrix | One day's worth of one (instrument OR root OR fixture OR canonical-question-group) for one (data_type / timeframe / feature_group) for one venue/chain. Daily granularity is universal. |
+| **Decision tier**      | strategy-service, position-balance-monitor, risk-and-exposure-service | `(asset_group, strategy_id\|client_id, day, [config_id])`                                                                                                                                                                                                                               | One day's worth of one strategy or client running with one config. For backtests, `config_id` distinguishes parameter sweeps; daily shards let backtests pick start/end ranges.         |
+| **ML tier**            | ml-training-service, ml-inference-service                             | `(asset_group, model_family, training_period\|day, [config_id])`                                                                                                                                                                                                                        | Training: one walk-forward window for one model family. Inference: one day's worth of inference for one model family. Daily inference shards for backtest-mode replay.                  |
+| **Execution tier**     | execution-service                                                     | `(asset_group, strategy_id, venue, instruction_type, day, [config_id])`                                                                                                                                                                                                                 | One day's worth of execution decisions for one (strategy, venue, instruction_type). Live cluster + matching-engine cluster both shard identically; only the fill source differs.        |
+
+Per the workspace CLAUDE.md `Per-asset-group shard-key matrix`, the data-pipeline tier expands to:
+
+| Asset group              | Shard atom (data-pipeline tier)                                                                                                          | Bundling notes                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **CeFi spot/perp**       | `(asset_group, venue, data_type, instrument_type, instrument_id, day)`                                                                   | per-instrument                                                                      |
+| **CeFi options/futures** | `(asset_group, venue, data_type, options_chain\|futures_chain, root, day)` + `quote_asset` + `margin_type` for DERIBIT inverse vs linear | bundled by root with cluster validation MANDATORY                                   |
+| **TradFi futures**       | `(asset_group=tradfi, venue, data_type, instrument_type, root, day)`                                                                     | bundled, non-trading days pre-skipped → `empty_confirmed`                           |
+| **TradFi ETFs**          | `(asset_group=tradfi, venue, data_type, instrument_type, instrument_id, day)`                                                            | per-instrument (IBIT, ETHA on NASDAQ)                                               |
+| **TradFi options**       | `(asset_group=tradfi, venue, data_type, options_chain, root, day)` — ES.OPT 11-cluster taxonomy + `combo_type` + `leg_weights`           | bundled with cluster validation MANDATORY                                           |
+| **DeFi**                 | `(asset_group=defi, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)`                                                | `chain` is a first-class v5 axis                                                    |
+| **Sports per-fixture**   | `(asset_group=sports, source, data_type, league_id, fixture_id, day)` for ODDS*\*, FIXTURE*\*, INJURIES (when fixture-scoped)            | per-fixture; cluster*extractor=bookmaker for ODDS*\*                                |
+| **Sports day-aggregate** | `(asset_group=sports, source, data_type, league_id, day)` for STANDINGS, LEAGUES, TEAMS, REFEREES, COACHES, ROUNDS                       | per-league-day                                                                      |
+| **Prediction**           | `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`               | bundled by canonical_question_group + per-market_id rows; lifecycle bounds enforced |
+
+For the complete per-service shard dimension matrix, see
+[`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md).
+
+---
+
+## Per-VM shard isolation for concurrent backfills
+
+Every batch-cluster deployment (multiple GCE VMs running the same service for different shards in parallel) MUST set
+`VM_NAME=<unique>` + `MANIFEST_PER_VM_SHARDS=true` per worker. UTL runtime guard: `ManifestWriter.__init__` raises
+`MultiWorkerWithoutShardIsolationError` when multi-process detection fires AND per-VM shard isolation isn't set. New
+base-service.sh QG STEP 5.66 AST-walks launcher scripts that fork multi-process; asserts envvar setting.
+
+Manifest consolidator merges per-VM shards under `_index/per_vm/{vm_name}.parquet` into the canonical
+`_index/availability_index.parquet` with last-writer-wins on identical row_key. Reader fallback merges per-VM shards
+when canonical blob is older than `MANIFEST_CONSOLIDATED_STALENESS_SEC` (default 120s).
+
+**Why this matters for shard-level failure isolation**: in a batch cluster with 10 VMs writing the same manifest, OCC
+contention on the canonical CAS causes retry exhaustion + last-writer-wins mid-merge that drops most of a rebuild's
+output. Per-VM shard isolation eliminates the contention entirely — each VM writes its own shard, the consolidator
+merges. Reference incident **2026-05-04**: instruments-service chunk workers without isolation clobbered each other's
+manifest entries; fixed in `00f6352` + `619a32e`.
+
+---
+
+## Error Handling Pattern (data-pipeline tier)
 
 ```python
-for venue in venues_to_process:
+for shard in shards_to_process:
     try:
-        result = await process_venue(venue, date)
-        all_results[venue] = result
-    except (ValueError, KeyError, TypeError, RuntimeError) as e:
-        # Per-shard error isolation: log and continue
-        logger.error("Shard %s/%s failed: %s — continuing", venue, date, e)
-        log_event("VENUE_PROCESSING_FAILED", details={
-            "venue": venue,
-            "date": date.isoformat(),
+        df = await fetch_and_normalise(shard)
+        manifest_writer.record_captured(
+            row_key=shard.to_row_key(),
+            df=df,
+            data_type=shard.data_type,
+            # Bundled data_types REQUIRE these kwargs (UTL MissingClusterValidationError if absent):
+            expected_root_clusters=UAC.DATA_TYPE_TO_CLUSTER_REGISTRY[shard.data_type] if shard.data_type in UAC.BUNDLED_DATA_TYPES else None,
+            cluster_extractor=shard.cluster_extractor if shard.data_type in UAC.BUNDLED_DATA_TYPES else None,
+        )
+    except SourceReturnedNoTicks:
+        manifest_writer.record_empty(row_key=shard.to_row_key(), attempted_at=now)
+    except UpstreamTimestampBiasError as e:
+        manifest_writer.record_failed(row_key=shard.to_row_key(), error=e, attempted_at=now)
+        log_event("UPSTREAM_TIMESTAMP_BIAS", severity="WARNING", details={
+            "shard": shard.to_dict(),
+            "observed_dates": e.observed_dates,
+            "expected_day": e.expected_day.isoformat(),
+            "n_ticks": e.n_ticks,
+        })
+    except MalformedTickFieldError as e:
+        manifest_writer.record_failed(row_key=shard.to_row_key(), error=e, attempted_at=now)
+    except (ClusterCoverageError, NanRatioExceededError, SchemaMismatchError) as e:
+        # Write-gate pillar failures — `record_captured` already routed to record_failed internally
+        # before raising; this catch is just for orchestrator-level continue
+        log_event("WRITE_GATE_FAILED", severity="WARNING", details={"shard": shard.to_dict(), "pillar": type(e).__name__})
+    except Exception as e:
+        # Anything else: classify via UAC + record_failed
+        manifest_writer.record_failed(
+            row_key=shard.to_row_key(),
+            error=classify_venue_error(e),
+            attempted_at=now,
+        )
+        log_event("ADAPTER_FETCH_FAILED", severity="WARNING", details={
+            "shard": shard.to_dict(),
             "error": str(e),
             "error_type": type(e).__name__,
             "correlation_id": correlation_id,
@@ -68,20 +165,73 @@ for venue in venues_to_process:
         # Do NOT raise — continue with remaining shards
 ```
 
+---
+
 ## Anti-Patterns (DO NOT)
 
-- `raise RuntimeError(...)` inside a per-venue loop — kills all remaining venues
-- Swallowing errors silently (`except: pass`) — errors must be logged and evented
-- Storing partial shard data — if a shard fails mid-processing, discard its partial output
+- `raise RuntimeError(...)` inside a per-shard loop — kills all remaining shards in the batch.
+- Swallowing errors silently (`except: pass` or `except: continue` without `record_failed`) — errors must be logged AND
+  surfaced in the manifest. Per `2026-05-05` Databento incident: `except Exception: continue` inside `download_batch_df`
+  silently dropped per-schema results when ohlcv_1m + trades were bundled and ohlcv hit 429; orchestrator marked the
+  shard `complete` with no record of the failure. Workspace rule: every per-schema / per-instrument loop must emit
+  `record_failed` for failures.
+- Storing partial shard data — if a shard fails ANY write-gate pillar mid-processing, discard its partial output
+  (`record_failed` only writes the manifest row, NOT the parquet).
+- `_create_empty_output()` returning n-row NaN DataFrames — banned method (writegate Phase 2.A deletes from
+  `base_adapter`). Reference incident **2026-05-05**: MDPS produced 1440-row NaN OHLC parquets per (venue, data_type,
+  day) for years; manifest said `captured`; downstream features computed garbage on garbage.
+- Empty parquet that passes `existence_check` but has 0 rows + manifest claims `captured` — banned. Either
+  `record_empty(row_key)` (honest absence) OR `record_failed(<typed_reason>)` (something went wrong).
+
+---
 
 ## Event Stream Requirements
 
 Failed shard events MUST include:
 
-- `venue`: Which venue/shard failed
-- `error`: Human-readable error message
-- `error_type`: Exception class name
-- `correlation_id`: For tracing
-- `category`: Market category (cefi, tradfi, defi, sports)
+- **Shard atom fields**: `asset_group`, `venue`, `chain` (DeFi), `data_type`, `instrument_type`, `instrument_id` /
+  `root` / `fixture_id` / `canonical_question_group`, `league_id` (sports), `timeframe`, `feature_group`, `day` —
+  whichever apply to this service's tier.
+- **Typed error reason**: `error_type` = exception class name (`UpstreamTimestampBiasError` / `MalformedTickFieldError`
+  / `ClusterCoverageError` / `NanRatioExceededError` / `SchemaMismatchError` / `MissingClusterValidationError` / etc.).
+- **Diagnostic payload**: error-specific fields (e.g. `observed_dates` + `expected_day` + `n_ticks` for
+  UpstreamTimestampBiasError; `missing_clusters` + `observed_clusters` for ClusterCoverageError; `column` +
+  `observed_ratio` + `threshold` for NanRatioExceededError).
+- **`correlation_id`**: For tracing across the live cluster (multi-service) or batch cluster (multi-VM).
 
-This enables diagnosis from the event stream (GCS in batch, PubSub in live) without re-running the service.
+This enables diagnosis from the event stream (GCS in batch, PubSub in live) without re-running the service. Per
+workspace CLAUDE.md `§ No fire-and-forget VM launches`, every VM launch MUST emit STARTED within 60s + per-shard
+progress + STOPPED/FAILED at exit; events stream to
+`gs://{pid}-events/events/{service}/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl`.
+
+**Event types** (per writegate plan + plan C):
+
+- `STARTED` / `STOPPED` / `FAILED` (lifecycle)
+- `INSTRUMENT_PROCESSED` (per-instrument progress with row count) — required for adapter-level visibility per CLAUDE.md
+- `RAW_TICK_PARTITION_MISMATCH` (MTDS partitioner validation)
+- `CLUSTER_COVERAGE_INSUFFICIENT` (bundle adapter under-coverage)
+- `LIFECYCLE_BOUNDS_VIOLATED` (prediction adapter pre-created or post-settled tick)
+- `LOOKAHEAD_BIAS_DETECTED` (features-\* compute consumed row with `available_at > target_ts`)
+- `MANIFEST_PER_VM_SHARD_WRITE` (per-VM shard parquet landed)
+- `MULTI_WORKER_WITHOUT_SHARD_ISOLATION` (UTL guard fired)
+- `ADAPTER_FETCH_FAILED` (canonical per-shard failure event with classified error)
+- `DATA_ALIGNMENT_VIOLATION` (timestamp-alignment-gate fired — per `06-coding-standards/validation-patterns.md`)
+- `UPSTREAM_TIMESTAMP_BIAS` (path B in three-category empty-output decision)
+- `WRITE_GATE_FAILED` (any of the 4 pillars failed)
+
+---
+
+## Cross-references
+
+- **Manifest semantics + per-service shard dimension matrix**:
+  [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+- **Deployment cluster taxonomy (live vs batch)**:
+  [`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+- **deployment-service shard alignment + GCS path templates**:
+  [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
+- **Three-category empty-output decision**:
+  [`06-coding-standards/error-handling.md`](../06-coding-standards/error-handling.md)
+- **Cluster validation + 4-pillar write-gate**:
+  [`06-coding-standards/validation-patterns.md`](../06-coding-standards/validation-patterns.md)
+- **Active plan**:
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
