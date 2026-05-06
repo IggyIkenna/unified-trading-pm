@@ -184,11 +184,36 @@ stream — not added here.
 
 ### Phase 1 Tier 2 — Remaining (next session)
 
-- [ ] **Per-export-fn migration in features-sports** — for each entry in
-      `TABLE_TO_EXPORT` and the `derived_features` / `fixture_features` / `odds_
-      features` paths, inject the correct LIFT-3 helper to populate `available_at`
-      before write. Once every export_fn supplies it, delete the `_ensure_timestamp`
-      shim entirely. Mechanical follow-up — one PR per export category.
+- [x] **odds_features** (`features-sports-service@d8ef4c3`) —
+      `_pivot_bucketed_to_fixture` derives `available_at = max(bm_time)` per
+      fixture/horizon group; `export_odds_features` merges it back from the
+      pivoted snapshot after `compute_odds_batch`.
+- [x] **derived_features** (`features-sports-service@19cbc74`) — merges
+      `kickoff_utc` from `target_fixtures` per `fixture_id` and renames to
+      `available_at` after metadata stamping. `_filter_completed_before` already
+      excludes any historical input that hasn't ended, so kickoff_utc is the
+      conservative-correct upper bound.
+- [x] **fixture_features** (`features-sports-service@ef4a483`) — both
+      `_build_row` and `_null_row` paths set `row[available_at] = kickoff_utc`
+      mirroring the existing `timestamp` column.
+- [ ] **Raw tables migration (next slice — needs design)** — 14 entries in
+      `TABLE_TO_EXPORT`. Source-of-truth gap: `fetch_runner` doesn't expose a
+      `fetch_completed_at` timestamp, and the post-match raw schemas
+      (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / FIXTURE_PLAYER_STATS)
+      don't include `kickoff_utc`. Two options for cleaning this up:
+      - **Option A**: extend `_fetch_runner` to expose
+        `fetch_completed_at(table_name) → datetime`; for reference data
+        (players, venues, leagues, teams, referees, coaches, standings, rounds)
+        use `stamp_available_at_explicit(when=fetch_completed_at)`; for
+        per-fixture post-match (FIXTURE_*) join with fixtures cache for
+        kickoff_utc and apply `stamp_available_at_post_match`.
+      - **Option B**: extend each per-fixture post-match schema to include
+        `kickoff_utc` from source; reference data uses table-specific snapshot
+        timestamp captured at fetch boundary.
+      Either way needs touching ~5 schema definitions + the fetch_runner module.
+      Paused pending user direction on which option to take.
+- [ ] **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop
+      the midnight UTC fallback at `batch_handler.py:_ensure_timestamp` entirely.
 
 #### Phase 1 Tier 2 — Additional Shipped 2026-05-06
 
