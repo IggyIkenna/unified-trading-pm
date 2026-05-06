@@ -96,17 +96,52 @@ class CanonicalParquetReader:
 
 ### Phase 1 — `CanonicalParquetReader` implementation (SEQUENTIAL)
 
-- [ ] [AGENT] P0. Create `market_tick_data_service/reader.py` with `CanonicalParquetReader` class. Constructor takes
+> **Phase 1 status 2026-05-06**: PARTIAL — class shipped MTDS `2095d1b` (2026-04-24) at
+> `market_tick_data_service/reader.py` (386 lines + 472-line test suite). Supports CeFi / TradFi / Sports shard keys.
+> **Two axes from the new shard-granularity HANDOVER are missing** and block DeFi + Prediction reads:
+>
+> - **DeFi**: per HANDOVER lines 130–145, `chain` is a first-class shard-key axis (e.g. `AAVEV3-ETHEREUM` vs
+>   `AAVEV3-ARBITRUM` are distinct shards). Current `read_shard(venue, data_type, instrument_type, target_date,
+>   instrument_id)` derives asset_group from venue but doesn't accept `chain` — DeFi reads on chain-agnostic venue
+>   tokens may collide / silently return wrong-chain rows.
+> - **Prediction**: per HANDOVER line 143, `canonical_question_group` is the bundling axis (analog of options_chain).
+>   Currently flagged as "most likely greenfield bit" — UAC SSOT for `market_id → canonical_question_group` mapping
+>   may not exist yet. Prediction reads need this once the UAC SSOT lands.
+>
+> **Coordination**: see `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`. Phase 1 follow-up is to extend
+> `read_shard()` signature with optional `chain: str | None = None` (validated against UAC `CHAIN_RPC_TEMPLATES`) and
+> `canonical_question_group: str | None = None` (validated against the prediction SSOT once it lands). The original
+> Phase 1 scope (CeFi/TradFi/Sports) is shipped — these are additive extensions, not a re-design.
+
+- [x] [AGENT] P0. Create `market_tick_data_service/reader.py` with `CanonicalParquetReader` class. Constructor takes
       `ManifestReader` (for GCS path resolution) and `gcs_client`. `read_shard()`: look up manifest row → build GCS path
       → `pq.read_table(path, filters=filters if instrument_id else None)` → return as pd.DataFrame.
       `list_instruments()`: read `symbol` column only via `columns=["symbol"]` projection.
-      `ShardNotFoundError(venue, date, data_type)`: raised when manifest has no matching row.
-- [ ] [AGENT] P0. Unit tests in `tests/unit/test_canonical_parquet_reader.py`: (a) Full bundle read: mock GCS returns
+      `ShardNotFoundError(venue, date, data_type)`: raised when manifest has no matching row. **Done 2026-04-24 MTDS
+      `2095d1b`** — class at `market_tick_data_service/reader.py` (386 lines).
+- [x] [AGENT] P0. Unit tests in `tests/unit/test_canonical_parquet_reader.py`: (a) Full bundle read: mock GCS returns
       3-row parquet → all 3 rows returned, no filters applied. (b) Per-instrument read: mock GCS returns 1000-row
       parquet → `pq.read_table` called with `filters=[("symbol","==","BTC-25MAR26-50000-C")]` → only matching rows
       returned. (c) `list_instruments`: verify `columns=["symbol"]` passed to pyarrow (no full load). (d)
-      `ShardNotFoundError` raised when manifest has no matching row.
-- [ ] [AGENT] P0. Export `CanonicalParquetReader` and `ShardNotFoundError` from MTDS public API.
+      `ShardNotFoundError` raised when manifest has no matching row. **Done 2026-04-24 MTDS `2095d1b`** —
+      `tests/market_interface/unit/test_canonical_parquet_reader.py` (472 lines).
+- [x] [AGENT] P0. Export `CanonicalParquetReader` and `ShardNotFoundError` from MTDS public API. **Done 2026-04-24
+      MTDS `2095d1b`**.
+- [x] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` — **Done 2026-05-06** (this session,
+      86s green, all gates pass including the new STEP 5.63 run_lifecycle pairing gate; `mtds_canonical_sharding_alignment_2026_03_31`
+      Phase 2 closeout).
+- [x] [SCRIPT] P0. Quickmerge MTDS. **Done 2026-04-24** as part of `2095d1b`.
+
+### Phase 1.5 — DeFi `chain` + Prediction `canonical_question_group` axis extension (NEW — added 2026-05-06)
+
+- [ ] [AGENT] P0. Extend `CanonicalParquetReader.read_shard()` signature with `chain: str | None = None` for DeFi reads
+      (when present, validates via UAC `CHAIN_RPC_TEMPLATES` keys and routes to the chain-specific shard path:
+      `asset_group=defi/chain={CHAIN}/venue={PROTOCOL}/...`). Default `None` preserves CeFi/TradFi/Sports behaviour.
+- [ ] [AGENT] P0. Extend `read_shard()` signature with `canonical_question_group: str | None = None` for Prediction
+      reads — gated on the UAC SSOT for `market_id → canonical_question_group` mapping (per HANDOVER line 143). Skip
+      until that SSOT lands; coordinate with the shard-granularity stream.
+- [ ] [AGENT] P0. Unit tests for the two new axes — DeFi chain-collision case (same protocol, two chains, different
+      shard rows) and Prediction canonical_question_group filter.
 - [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
 - [ ] [SCRIPT] P0. Quickmerge MTDS.
 

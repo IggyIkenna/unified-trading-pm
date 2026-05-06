@@ -238,33 +238,44 @@ passing.
 
 ### Phase 1.5a-3 — One-shot manifest cleanups (Q&A 6)
 
-- [ ] [SCRIPT] P0. **CEFI manifest BUG-X2 leaked-text flip**: 30-second script. For each row in
+- [x] [SCRIPT] P0. **CEFI manifest BUG-X2 leaked-text flip**: 30-second script. For each row in
       `gs://market-data-tick-cefi-central-element-323112/_index/availability_index.parquet` where
       `capture_status='attempted_failed'` AND `error_reason` matches one of: `"Response payload is not completed"`,
       `"FUTURE row requires 'expiry_date'"`, `"OPTION row requires 'expiry_date'"`, `"In CSV column #*"`,
       `"StreamingParquetWriter pre-write validation failed"` → set `error_reason='VENUE_FETCH_FAILED'`.
       Backup-then-write pattern (mirror Phase 2 PLAYER_VALUES rebuild). Expected: ~76k rows touched of 86k
-      attempted_failed.
-- [ ] [SCRIPT] P0. **Vault venue manifest rename** (Q&A 4 follow-up): for each row in
+      attempted_failed. **Done 2026-05-05 MTDS `57b3da3`** — `scripts/flip_cefi_bug_x2_leaked_text.py` shipped with
+      backup-then-write semantics; production run is the operator action below.
+- [x] [SCRIPT] P0. **Vault venue manifest rename** (Q&A 4 follow-up): for each row in
       `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` where
       `data_type='vault_share_price'` AND `venue ∈ {MORPHO_VAULTS, YEARN_V3}` → rewrite venue to canonical form
       (MORPHOVAULTS, YEARNV3). FRAX + MAKER already canonical (no underscore in source). Backup-then-write.
+      **Done 2026-05-05 MTDS `bf81219`** — `scripts/rename_vault_venue_canonical.py` shipped; production run is
+      the operator action below.
+- [ ] [HUMAN] P0. **Production run** of both scripts above (sequence: flip_cefi_bug_x2_leaked_text.py first against
+      the CEFI manifest, then rename_vault_venue_canonical.py against the DeFi manifest). Each is a backup-then-write
+      one-shot; coordinate with concurrent stream so no other writer is mid-flight against either manifest.
 - [ ] [HUMAN] P0. Re-read manifest, sanity-check counts (`captured` / `empty_confirmed` / `attempted_failed` breakdown
       matches expected post-flip), confirm `error_reason` distribution shows VENUE_FETCH_FAILED dominates.
 - [ ] [HUMAN] P0. Delete backup blobs once verified.
 
 ### Phase 1.5a-4 — Disk migrations (Q&A 7 + Q&A 10)
 
+> **Scripts confirmed ready 2026-05-06**: all 5 migrate scripts exist and were wrapped in `run_lifecycle` this session
+> (MTDS `3e65dfb` + `3a5de78` + `8177955`). Phase is operator-gated; nothing to ship.
+
 - [ ] [HUMAN] P0. **TRADFI legacy `day-` migration** (Q&A 7): run
       `cd market-tick-data-service && .venv/bin/python scripts/migrate_tradfi_to_hive.py --dry-run` first. Verify the
       script touches ~100k blobs and the rename pattern is `day-{D}/data_type-{DT}/...` →
       `day={D}/asset_group=tradfi/.../data_type={DT}/...`. Then `--apply`. Server-side `gsutil mv`, expected ~5 min for
-      100k blobs.
+      100k blobs. **Script ready** — `market_tick_data_service/scripts/migrate_tradfi_to_hive.py` exists.
 - [ ] [HUMAN] P0. **Per-AG canonical migrations** (Q&A 10): same pattern for each existing migrate script. Order
       smallest-first to fail-fast on regressions: - PREDICTION: `scripts/migrate_polymarket_canonical.py` - SPORTS:
       `scripts/migrate_sports_canonical.py` - DEFI: `scripts/migrate_defi_canonical.py` - TRADFI:
       `scripts/migrate_tradfi_canonical.py` (separate from `migrate_tradfi_to_hive.py` above — verify before running) -
-      CEFI: covered by existing per-VM shard pattern; no separate migrate script needed.
+      CEFI: covered by existing per-VM shard pattern; no separate migrate script needed. **All 4 scripts ready** —
+      verified at `market_tick_data_service/scripts/migrate_*_canonical.py`; each emits paired RUN_STARTED +
+      RUN_COMPLETED|FAILED via the new `run_lifecycle` helper for traceability.
 - [ ] [HUMAN] P0. Re-run `audit_legacy_paths.py` per AG → expected non-canonical count ≈ 0.
 
 ### Phase 1.5a — exit gate
