@@ -285,11 +285,22 @@ consolidation target post-cutover.
     `SHARD_AXIS_MATRIX` entry, own bucket, own manifest; no double-representation. UI rollup ("raw ticks 99% / processed
     candles 95%" under one asset_group view) is a deployment-UI enhancement deferred to post-cutover work-stream
     B-adjacent.
-11. ✓ **Cluster validation wiring (writegate Phase 1A Amendment F) — orchestrator boundary at
-    `engine/orchestrator.py:1940` `writer_manifest.add()` wrapped with `if data_type in BUNDLED_DATA_TYPES:` check.**
-    Passes through for non-bundle adapters; fires cluster validation for bundles. MTDS code change. Unblocks writegate
-    Phase 2.B.
-12. ✓ **Sports `fixture_id` shard atom (writegate HANDOVER vs multi-axis plan) — multi-axis plan wins; `fixture_id` is
+11. ✓ **Cluster validation wiring (writegate Phase 1A Amendment F) — REVISED 2026-05-06 after MTDS re-read: ALREADY
+    SHIPPED for ES.OPT.** `engine/orchestrator.py:2126-2193` already gates `writer_manifest.add()` for ES.OPT bundles
+    via the hardcoded `venue_name == "CME-OPTIONS"` branch using `get_active_es_options_clusters_for_date_from_snapshot`
+    - `ManifestWriter.check_cluster_coverage_from_counts`. The "wrap with `if data_type in BUNDLED_DATA_TYPES:`" framing
+      is the **generalisation** to non-CME-OPTIONS bundles (futures_chain / prediction_canonical_question_group /
+      sports_fixture_bundle), which is deferred until those bundle adapters exist. Phase 2.B for ES.OPT is **DONE**;
+      Phase 2.B generalisation kicks in when a 2nd bundle data_type ships.
+12. ✓ **`ES_OPTIONS_CLUSTERS` rename — REVISED 2026-05-06 after re-read: NO RENAME NEEDED.** Earlier proposal to make it
+    generic `OPTIONS_CLUSTERS_BY_ROOT` was a misread of the architecture. The 11-cluster ES taxonomy is genuinely
+    ES-specific — driven by CME futures symbology regex which differs from Deribit BTC options (`BTC-30JUN24-50000-C`),
+    Solana DEX options, etc. Each future root needs its own extractor + cluster taxonomy
+    - active-calendar logic. Current symbol naming (`ES_OPTIONS_CLUSTERS`, `extract_es_options_cluster`,
+      `get_active_es_options_clusters_for_date`) is correctly scoped. When a 2nd root ships, the pattern is **sibling
+      symbols** (`DERIBIT_BTC_OPTIONS_CLUSTERS` + `extract_deribit_btc_options_cluster`) plus a per-(data_type, root)
+      lookup, NOT a rename of the existing symbols.
+13. ✓ **Sports `fixture_id` shard atom (writegate HANDOVER vs multi-axis plan) — multi-axis plan wins; `fixture_id` is
     NOT a shard atom.** `(league_id, day)` already bounds fixtures; per-fixture detail comes from parquet at drill-down
     time. HANDOVER per-asset-group matrix updated; features-sports audit reframes to `(feature_group, league_id, day)`.
 

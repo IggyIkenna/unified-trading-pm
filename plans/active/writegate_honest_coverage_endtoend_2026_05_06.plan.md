@@ -199,14 +199,45 @@ amendment commit for rationale per item). 1 (**F**) is routed to Ikenna because 
 | E     | Add 4 stub-wiring todos to Phase 2.C as prerequisites (`fixture_lineups`, `fixture_player_stats`, `coaches`, `rounds`). 4 export functions silently return empty — distinct bug class from 1440-NaN.                                                                                                                                                                                                                                                                   | **Applied**                                                                         | Scope expansion — Claude |
 | **F** | **Phase 2.B cluster wiring point** — audit found ZERO `record_captured` callsites for any MTDS bundle. All bundles flow through `writer_manifest.add()` at `engine/orchestrator.py:1940`. Phase 1A's `MissingClusterValidationError` guard at `record_captured` would never fire. Plan needs to either (i) move the wiring point to `orchestrator.py:1940`, or (ii) refactor adapters to call `record_captured` directly. Affects Phase 1A contract design assumption. | **RESOLVED 2026-05-06: option (i) — orchestrator boundary, with bundle-only check** | Architectural — Ikenna   |
 
-**Amendment F resolution (2026-05-06):** Wire cluster validation at `engine/orchestrator.py:1940`
-`writer_manifest.add()` wrapped with `if data_type in BUNDLED_DATA_TYPES:` check. Passes through unchanged for
-non-bundle adapters; fires `MissingClusterValidationError` guard for bundles. One change point (no per-adapter
-refactor); isolated impact (non-bundle adapters untouched). MTDS code change in Phase 2.B. Decision recorded in
-`master_to_live_defi_2026_05_23.plan.md` Q&A 11.
+**Amendment F resolution (2026-05-06): ALREADY IMPLEMENTED for ES.OPT — generalisation deferred until 2nd bundle adapter
+exists.**
 
-**Phase 2.B execution gate (UPDATED 2026-05-06)**: Phase 2.B execution proceeds with option (i) wiring at orchestrator
-boundary. Cluster_extractor wiring todo unblocked.
+Inspection of `engine/orchestrator.py:2126-2193` showed cluster validation is wired today for ES.OPT
+(`venue_name == "CME-OPTIONS"` + `itype_key in _UNDERLYING_PARTITIONED_TYPES`). The flow:
+
+1. Adapter writes parquets, `writer.cluster_counts` populated per `(itype, dt, underlying)`.
+2. Orchestrator aggregates into `chain_cluster_counts[(venue, itype, dt, underlying)]` at line 1867.
+3. Per-bundle gate at lines 2138-2179: `get_active_es_options_clusters_for_date_from_snapshot` → expected;
+   `ManifestWriter.check_cluster_coverage_from_counts(observed, expected)` → routes under-coverage to
+   `record_failed(ClusterCoverageError)`; otherwise `writer_manifest.add()` proceeds.
+
+The earlier framing (Phase 1A guard at `record_captured` never fires because adapters call `writer_manifest.add()` not
+`record_captured` directly) is **correct** but the orchestrator already wraps the gate around `writer_manifest.add()`
+for bundles. So the design goal — bundle-only cluster validation gating the manifest write — is met for ES.OPT.
+
+**What still ships in Phase 2.B (deferred until those bundles need validation):**
+
+- Replace the hardcoded `venue_name == "CME-OPTIONS"` branch with `data_type in BUNDLED_DATA_TYPES` lookup driven by
+  UAC.
+- Per-bundle `expected_root_clusters` lookup (today: ES uses `get_active_es_options_clusters_for_date_from_snapshot`;
+  futures_chain / prediction_canonical_question_group / sports_fixture_bundle each need their own expected-cluster
+  source).
+
+For ES.OPT today (the only currently-needed bundle), Phase 1A's design intent is met. Phase 2.B generalisation kicks in
+when a second bundle adapter ships.
+
+**ES_OPTIONS_CLUSTERS naming clarification (2026-05-06):** The earlier "`ES_OPTIONS_CLUSTERS` → generic
+`OPTIONS_CLUSTERS_BY_ROOT` rename" note was a misread of the architecture. The 11-cluster taxonomy (`ES`, `EW`,
+`EW1`-`EW4`, `E1A`-`E5A`, `EOM`) is genuinely ES-specific — driven by CME futures symbology
+(`<root><month-letter><year>` format). Deribit BTC options (`BTC-30JUN24-50000-C`) and Solana DEX options have
+completely different formats, requiring separate extractor regexes + cluster taxonomies. The correct pattern when a
+second root lands: add `DERIBIT_BTC_OPTIONS_CLUSTERS` + `extract_deribit_btc_options_cluster` +
+`get_active_deribit_btc_options_clusters_for_date` as **siblings** to the ES symbols, plus a per-(data_type, root)
+lookup at `DATA_TYPE_TO_CLUSTER_REGISTRY`. **No rename needed today; current symbols are correctly scoped.**
+
+**Phase 2.B execution gate (UPDATED 2026-05-06)**: ES.OPT cluster gate **shipped** in MTDS orchestrator already
+(CME-OPTIONS branch). Generalisation to other bundle types deferred to when a second bundle data_type exists with live
+MTDS adapters.
 
 ---
 
@@ -869,21 +900,25 @@ new UTL pinned in workspace-manifest.json.
 > instruments-service" step is therefore a delete-and-delegate: instruments-service
 > `reference_data/options_cluster_lookup.py` consumers re-import from UAC; no new SSOT needed for ES.OPT itself.
 >
-> **2026-05-06 follow-up (Conflict 2 resolution)**: The shipped name `ES_OPTIONS_CLUSTERS` is too narrow — options
-> clusters apply to Deribit BTC, CME NQ, etc. too, and the plan body below at the registry table refers to the symbol as
-> `OPTIONS_CLUSTERS` (per-root dict). UAC follow-up commit will rename `ES_OPTIONS_CLUSTERS` →
-> `OPTIONS_CLUSTERS: dict[str, dict[str, int]]` keyed by root (`"ES"` → 11-cluster taxonomy seed; future entries `"NQ"`,
-> `"BTC"`, `"ETH"`), with `extract_options_cluster(symbol, root)` taking root explicitly. 5 callers total (UAC
-> honest_coverage.py + tradfi_symbology.py + UTL options_cluster_lookup.py + 2 tests) — contained scope. Ship before
-> Phase 2.B wiring so orchestrator's bundle-only check sees the generic registry shape. **Already-shipped (UAC commit
-> `31e9e75` 2026-05-06)**: `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES`
-> (frozenset of 4 — options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle),
-> `futures_expiry_bucket()` derivation (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor —
-> closes the row-schema gap noted in row 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus
-> re-export surface delegating to the registry SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric
-> front/back/spread bucketing, custom front-window override, and re-export delegation regression. **Remaining Phase 1B
-> work**: `DATA_TYPE_TO_CLUSTER_REGISTRY`, `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}`
-> placeholder slot, source_priority + availability_semantics modules.
+> **2026-05-06 follow-up (Conflict 2 resolution — REVISED 2026-05-06 after architecture re-read)**: The earlier proposal
+> to rename `ES_OPTIONS_CLUSTERS` → generic `OPTIONS_CLUSTERS_BY_ROOT` was a misread. The 11-cluster taxonomy (`ES`,
+> `EW`, `EW1`-`EW4`, `E1A`-`E5A`, `EOM`) is genuinely ES-specific — driven by the CME futures symbology regex
+> (`<root><month-letter><year>` format). Deribit BTC options (`BTC-30JUN24-50000-C`), Solana DEX options, and ETH index
+> options have completely different formats — each needs its own extractor regex + cluster taxonomy + active- calendar
+> logic, not a shared dispatch over `ES_OPTIONS_CLUSTERS`. **Current naming is correct.** When a second root ships, the
+> pattern is sibling symbols: `DERIBIT_BTC_OPTIONS_CLUSTERS` + `extract_deribit_btc_options_cluster` +
+> `get_active_deribit_btc_options_clusters_for_date`, plus a per-(data_type, root) lookup at
+> `DATA_TYPE_TO_CLUSTER_REGISTRY` so MTDS orchestrator can dispatch on venue/root. No UAC rename ships today; see the
+> Amendment F resolution above for the equivalent finding on the orchestrator side (cluster validation already wired for
+> ES.OPT; generalisation deferred to 2nd bundle adapter). **Already-shipped (UAC commit `31e9e75` 2026-05-06)**:
+> `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES` (frozenset of 4 —
+> options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle), `futures_expiry_bucket()`
+> derivation (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor — closes the row-schema gap
+> noted in row 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus re-export surface delegating to
+> the registry SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric front/back/spread bucketing, custom
+> front-window override, and re-export delegation regression. **Remaining Phase 1B work**:
+> `DATA_TYPE_TO_CLUSTER_REGISTRY`, `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder
+> slot, source_priority + availability_semantics modules.
 >
 > **2026-05-06 progress note (round 2)**: UAC commit `106430c` adds the remaining two crosscutting modules —
 > `canonical/crosscutting/availability_semantics.py` (36 seed entries; 10-mode `AvailabilitySemantic` literal covering
