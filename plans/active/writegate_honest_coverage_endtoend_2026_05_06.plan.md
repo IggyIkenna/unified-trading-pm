@@ -801,12 +801,12 @@ opaque):
 
 ## Phase 1A — UTL contract changes (sequential, blocks all)
 
-- [ ] [SCRIPT] P0. Add 3 new typed errors to `unified_trading_library/errors.py`: -
+- [x] [SCRIPT] P0. Add 3 new typed errors to `unified_trading_library/errors.py`: -
       `UpstreamTimestampBiasError(observed_date_range: tuple[date, date], expected_day: date, n_ticks_seen: int, instrument_id: str | None = None)`
       — path B -
       `MalformedTickFieldError(field: str, n_dropped: int, sample_values: list[Any] = None, instrument_id: str | None = None)`
       — path C - `MissingClusterValidationError(data_type: str, expected_registry_key: str)` — record_captured guard
-- [ ] [SCRIPT] P0. `manifest_writer.py:1163` `record_captured` signature change: - Add
+- [x] [SCRIPT] P0. `manifest_writer.py:1163` `record_captured` signature change: - Add
       `expected_root_clusters: Mapping[str, int] | None = None` - Add
       `cluster_extractor: Callable[[str], str] | None = None` - Add `symbol_column: str = "symbol"` (currently in
       helper) - Inside `record_captured`: if `data_type in BUNDLED_DATA_TYPES` (imported from UAC) and
@@ -814,7 +814,7 @@ opaque):
       `MissingClusterValidationError(data_type, DATA_TYPE_TO_CLUSTER_REGISTRY.get(data_type))`. - When kwargs present:
       call `_check_cluster_coverage` internally; on `ClusterCoverageError` return → call `record_failed(...)` instead of
       writing the parquet.
-- [ ] [SCRIPT] P0. `manifest_writer.py:1098` rename `check_cluster_coverage` → `_check_cluster_coverage`. Remove from
+- [x] [SCRIPT] P0. `manifest_writer.py:1098` rename `check_cluster_coverage` → `_check_cluster_coverage`. Remove from
       `__all__`. Internal-only.
 - [ ] [SCRIPT] P0. `availability_stamping.py` extend with: -
       `stamp_available_at_kickoff_offset(df, kickoff_col="kickoff_utc", minutes=60)` — for lineups -
@@ -823,10 +823,10 @@ opaque):
       pass-through, used for fixture_events + injuries (when row has its own time) -
       `stamp_available_at_announcement(df, announced_col="announced_at")` — for fixtures -
       `stamp_available_at_explicit(df, fetch_completed_at: datetime)` — for 8 reference tables
-- [ ] [SCRIPT] P0. New UTL helper `manifest_writer.assert_available_at_present(df: pd.DataFrame)` — raises
+- [x] [SCRIPT] P0. New UTL helper `manifest_writer.assert_available_at_present(df: pd.DataFrame)` — raises
       `LookaheadBiasError` (existing) if `available_at` column missing or contains NaN. Called automatically from
       `record_captured` when not in cluster path.
-- [ ] [TEST] P0. UTL unit tests: - `record_captured` raises `MissingClusterValidationError` for every entry in
+- [x] [TEST] P0. UTL unit tests: - `record_captured` raises `MissingClusterValidationError` for every entry in
       `BUNDLED_DATA_TYPES` when kwarg not passed. - `record_captured` succeeds + writes when kwargs passed and clusters
       complete. - `record_captured` calls `record_failed` (no parquet write) when clusters incomplete. -
       `record_captured` calls `assert_available_at_present` and raises `LookaheadBiasError` on missing/null
@@ -871,7 +871,7 @@ new UTL pinned in workspace-manifest.json.
 > greenfield seed (per-league-tier bookmaker sets), and `PREDICTION_GROUPS = {}` placeholder slot (gets populated by
 > Plan A canonical_question_group SSOT — flagged in temporary-states section).
 
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/honest_coverage.py`: -
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/honest_coverage.py`: -
       `BUNDLED_DATA_TYPES: frozenset[str]` initial seed: - `"options_chain"` — registry: `OPTIONS_CLUSTERS` (populated,
       lifted from instruments-service ES.OPT 11-cluster taxonomy; per-root entries) - `"futures_chain"` — registry:
       `FUTURES_CLUSTERS` (greenfield; ES + MES seeds; expand per-root in this plan) - `"ODDS_SNAPSHOT"`,
@@ -884,12 +884,12 @@ new UTL pinned in workspace-manifest.json.
       dict[str,
       str]`(data_type → registry symbol name).     -`OPTIONS_CLUSTERS`lifted from instruments-service (ES.OPT 11-cluster taxonomy as seed; per-root entries).     -`FUTURES_CLUSTERS`(greenfield; ES + MES seeds; spreads + butterflies per root).     -`SPORTS_FIXTURE_CLUSTERS` (greenfield; per-`league_tier`→ expected bookmaker set; tier-1 EU football seed; tier-2 / tier-3 expansion in this plan or follow-up).     -`PREDICTION_GROUPS
       = {}` (empty placeholder; gets populated by canonical_question_group SSOT plan).
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/source_priority.py`: - `SourcePriority` enum
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/source_priority.py`: - `SourcePriority` enum
       or dataclass per `(asset_group, data_type)`. - `SOURCE_PRIORITY: dict[tuple[str, str], list[str]]` — ordered list
       of source keys, top entry is primary. - Tie-breaker rules documented in module docstring (timestamp-availability >
       coverage > info-richness > merge-different-fields). - Phase 1B seeds the dict for sports data_types (lineups,
       fixture_events, injuries) with single-source entries; multi-source merge logic deferred.
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/availability_semantics.py`: -
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/availability_semantics.py`: -
       `AvailabilitySemantic = Literal["fetch_completed_at", "kickoff_minus_60min", "match_end_time", "event_time", "report_time", "announced_at", "forecast_issue_time", "publication_time"]` -
       `AVAILABILITY_AT_SEMANTICS: dict[tuple[str, str], AvailabilitySemantic]` — per-(asset_group, data_type) stamping
       rule. - Sports seeds: `("sports", "FIXTURES")` → `announced_at`; `("sports", "FIXTURE_LINEUPS")` →
@@ -899,7 +899,7 @@ new UTL pinned in workspace-manifest.json.
       event-time straightforward).
 - [ ] [SCRIPT] P0. Lift instruments-service ES.OPT cluster lookup (`reference_data/options_cluster_lookup.py`) to UAC
       `OPTIONS_CLUSTERS` registry. Delete the instruments-service module; update consumers.
-- [ ] [TEST] P0. UAC unit tests: - Every entry in `BUNDLED_DATA_TYPES` has a corresponding entry in
+- [x] [TEST] P0. UAC unit tests: - Every entry in `BUNDLED_DATA_TYPES` has a corresponding entry in
       `DATA_TYPE_TO_CLUSTER_REGISTRY`. - Every registry symbol referenced in `DATA_TYPE_TO_CLUSTER_REGISTRY` resolves to
       a non-empty dict. - Every `(asset_group, data_type)` shipped by any service has an entry in
       `AVAILABILITY_AT_SEMANTICS` (parametrise over service registries). - Every multi-source `(asset_group, data_type)`
@@ -911,7 +911,7 @@ QG between Phase 1B and Phase 2: UAC tests green; UAC pushed; consumer-pin propa
 
 ## Phase 1C — Workspace CLAUDE.md rule additions (parallel with 1A/1B)
 
-- [ ] [DOCS] P0. Add to `unified-trading-pm/cursor-configs/CLAUDE.md` (between "No fire-and-forget VM launches" and
+- [x] [DOCS] P0. Add to `unified-trading-pm/cursor-configs/CLAUDE.md` (between "No fire-and-forget VM launches" and
       "Sports GCS path SSOT", or wherever fits):
 
       **§ "Live = batch — same data, different sources"**
