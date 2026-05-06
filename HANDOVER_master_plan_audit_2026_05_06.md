@@ -62,21 +62,23 @@ resolutions for two would-be code refactors. This doc tells you what's done and 
 
 ### A. Pending code changes from Stage 6 decisions
 
-**A1. Sports `data_available_at` → `available_at` rename (HIGH-2).**
+**A1. Sports `data_available_at` → `available_at` rename (HIGH-2) — DEDICATED PLAN SHIPPED 2026-05-07.**
 
-- Sports adapters (instruments-service `instruments_service/reference_data/adapters/sports/...`) currently write
-  `data_available_at`.
-- `InstrumentsWriteGate.DEFAULT_AS_OF_COLUMNS` lists `data_available_at`.
-- UTL `assert_available_at_present` checks for canonical `available_at`.
-- Action:
-  1. Grep workspace for every `data_available_at` write site + `DEFAULT_AS_OF_COLUMNS` reference.
-  2. Rename adapters to write `available_at`.
-  3. Update `InstrumentsWriteGate.DEFAULT_AS_OF_COLUMNS` to use `available_at`.
-  4. Write one-time migration script `instruments-service/scripts/migrate_sports_available_at_column.py` that renames
-     the column in existing GCS sports parquets (per "manifest migration not fallback" rule).
-  5. Run migration on a same-region GCE VM (cross-region is 18× slower).
-  6. Quality-gate sports adapters; verify writegate Phase 2.C `LookaheadBiasError` strict-mode no longer hard-fails on
-     sports.
+- Plan:
+  [`plans/active/sports_data_available_at_rename_2026_05_07.plan.md`](./plans/active/sports_data_available_at_rename_2026_05_07.plan.md).
+- Pre-audit complete: 4 UAC schema files (8 callsites total) + UTL write-gate + PIT (4 callsites) + instruments-service
+  orchestrator (13 callsites) + 2 instruments-service scripts (10 callsites) + features-sports batch_handler (1+) +
+  tests. Audit + execution-DAG embedded in the plan; next agent does NOT need to re-grep.
+- Phase 0 (audit) shipped via this plan ship.
+- Phase 1 (migration script `instruments-service/scripts/migrate_sports_available_at_column.py`) is the next concrete
+  agent task. Idempotent + dry-run + unit tests + per-VM shard isolation per workspace rule. Ships dormant; no
+  operational impact.
+- Phase 2 (operator runs migration on same-region GCE VM `asia-northeast1-c`) is operator-driven, requires forward-poll
+  - backfill VM pause. Sequenced after Phase 1.
+- Phase 3 (atomic 4-repo source rename) sequenced after Phase 2 completes. Per workspace "manifest migration not
+  fallback" rule — no reader fallback path.
+- Phase 4 unblocks writegate Phase 2.C strict-mode flip + verifies sports `record_captured` no longer raises
+  `LookaheadBiasError`.
 - Required before writegate Phase 2.C ships.
 
 **A2. `_create_full_day_empty_output` consumer audit + delete (HIGH-3) — AUDIT SHIPPED 2026-05-07; CODE CHANGE FOLDED
