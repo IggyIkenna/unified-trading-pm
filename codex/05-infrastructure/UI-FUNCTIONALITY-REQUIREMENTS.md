@@ -15,9 +15,8 @@ work, implement features in **`unified-trading-system-ui`** and **`deployment-ui
 **workspace-root `archive/README.md`** are **ARCHIVED — reference only** (not in `workspace-manifest.json`
 repositories).
 
-**Last Updated:** 2026-03-24
-**Related:** `UI-DEPENDENCY-MATRIX.md` (API wiring, ports), `workspace-manifest.json` (repo registry),
-`unified-trading-pm/scripts/dev/ui-api-mapping.json` (active UI/API stacks)
+**Last Updated:** 2026-03-24 **Related:** `UI-DEPENDENCY-MATRIX.md` (API wiring, ports), `workspace-manifest.json` (repo
+registry), `unified-trading-pm/scripts/dev/ui-api-mapping.json` (active UI/API stacks)
 
 ---
 
@@ -73,8 +72,8 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.1 Deployment (deployment-ui) — **active**
 
-**Who:** DevOps, deployment engineers
-**API:** `deployment-api` (port per `unified-trading-pm/scripts/dev/ui-api-mapping.json`, typically 8004)
+**Who:** DevOps, deployment engineers **API:** `deployment-api` (port per
+`unified-trading-pm/scripts/dev/ui-api-mapping.json`, typically 8004)
 
 | Screen         | Route             | Functionality                                                                                                 |
 | -------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -93,8 +92,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.2 Onboarding (onboarding-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders, admins, onboarding team
-**API:** `config-api` (**archived** repo — see `archive/README.md`)
+**Who:** Traders, admins, onboarding team **API:** `config-api` (**archived** repo — see `archive/README.md`)
 
 | Screen          | Route             | Functionality                                                   |
 | --------------- | ----------------- | --------------------------------------------------------------- |
@@ -114,8 +112,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.3 Execution Analytics (execution-analytics-ui) — **ARCHIVED — reference only**
 
-**Who:** Quants, traders
-**API:** `execution-results-api` (**archived** — see `archive/README.md`)
+**Who:** Quants, traders **API:** `execution-results-api` (**archived** — see `archive/README.md`)
 
 | Screen           | Route           | Functionality                                                     |
 | ---------------- | --------------- | ----------------------------------------------------------------- |
@@ -137,8 +134,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.4 Strategy (strategy-ui) — **ARCHIVED — reference only**
 
-**Who:** Quants, traders
-**API:** `execution-results-api` (**archived** — see `archive/README.md`)
+**Who:** Quants, traders **API:** `execution-results-api` (**archived** — see `archive/README.md`)
 
 | Screen           | Route           | Functionality                                                |
 | ---------------- | --------------- | ------------------------------------------------------------ |
@@ -162,9 +158,8 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.5 Settlement (settlement-ui) — **ARCHIVED — reference only**
 
-**Who:** Ops, finance, reconciliation team
-**API:** `trading-analytics-api` (**archived** — see `archive/README.md`) — historic `/settlement/*` and
-`/settlements/*` routes
+**Who:** Ops, finance, reconciliation team **API:** `trading-analytics-api` (**archived** — see `archive/README.md`) —
+historic `/settlement/*` and `/settlements/*` routes
 
 | Screen      | Route          | Functionality                                                              |
 | ----------- | -------------- | -------------------------------------------------------------------------- |
@@ -177,8 +172,8 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.6 Live Health Monitor (live-health-monitor-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders (live trading desk)
-**API:** `execution-results-api` (**archived**); manual trade instructions → execution-service (historic env patterns)
+**Who:** Traders (live trading desk) **API:** `execution-results-api` (**archived**); manual trade instructions →
+execution-service (historic env patterns)
 
 | Screen        | Route        | Functionality                                                                |
 | ------------- | ------------ | ---------------------------------------------------------------------------- |
@@ -193,8 +188,7 @@ controls; manual trade entry form
 
 ### 2.7 Logs Dashboard (logs-dashboard-ui) — **ARCHIVED — reference only**
 
-**Who:** Engineers, operators
-**API:** `batch-audit-api` (**archived** — see `archive/README.md`)
+**Who:** Engineers, operators **API:** `batch-audit-api` (**archived** — see `archive/README.md`)
 
 | Screen     | Route       | Functionality                                                                     |
 | ---------- | ----------- | --------------------------------------------------------------------------------- |
@@ -208,8 +202,7 @@ controls; manual trade entry form
 
 ### 2.8 ML Training (ml-training-ui) — **ARCHIVED — reference only**
 
-**Who:** Data scientists, quants
-**API:** `ml-training-api` (**archived** — see `archive/README.md`)
+**Who:** Data scientists, quants **API:** `ml-training-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route              | Functionality                                                                       |
 | ----------------- | ------------------ | ----------------------------------------------------------------------------------- |
@@ -221,8 +214,7 @@ controls; manual trade entry form
 
 ### 2.9 Trading Analytics (trading-analytics-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders, ops
-**API:** `trading-analytics-api` (**archived** — see `archive/README.md`)
+**Who:** Traders, ops **API:** `trading-analytics-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route                     | Functionality                                                                 |
 | ----------------- | ------------------------- | ----------------------------------------------------------------------------- |
@@ -237,8 +229,7 @@ controls; manual trade entry form
 
 ### 2.10 Batch Audit (batch-audit-ui) — **ARCHIVED — reference only**
 
-**Who:** Ops, compliance
-**API:** `batch-audit-api` (**archived** — see `archive/README.md`)
+**Who:** Ops, compliance **API:** `batch-audit-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route               | Functionality                                                                                  |
 | ----------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
@@ -254,9 +245,9 @@ controls; manual trade entry form
 
 ### 2.11 Client Reporting (client-reporting-ui) — **ARCHIVED — reference only**
 
-**Who:** Account managers, client-facing ops
-**API:** **`client-reporting-api` remains active**; standalone `client-reporting-ui` is **archived**. Client reporting
-UX is integrated into **`unified-trading-system-ui`** per `ui-api-mapping.json`.
+**Who:** Account managers, client-facing ops **API:** **`client-reporting-api` remains active**; standalone
+`client-reporting-ui` is **archived**. Client reporting UX is integrated into **`unified-trading-system-ui`** per
+`ui-api-mapping.json`.
 
 | Screen          | Route          | Functionality                                                                                  |
 | --------------- | -------------- | ---------------------------------------------------------------------------------------------- |
@@ -270,9 +261,9 @@ UX is integrated into **`unified-trading-system-ui`** per `ui-api-mapping.json`.
 
 ### 2.12 User Management (user-management-ui) — **ARCHIVED — reference only**
 
-**Who:** Admins
-**API:** User lifecycle is **`auth-api` + `unified-trading-system-ui`** in the active workspace; standalone
-`user-management-ui` is **archived** (see `archive/README.md` and `ui-api-mapping.json` `user-management` stack).
+**Who:** Admins **API:** User lifecycle is **`auth-api` + `unified-trading-system-ui`** in the active workspace;
+standalone `user-management-ui` is **archived** (see `archive/README.md` and `ui-api-mapping.json` `user-management`
+stack).
 
 | Screen      | Route        | Functionality                        |
 | ----------- | ------------ | ------------------------------------ |

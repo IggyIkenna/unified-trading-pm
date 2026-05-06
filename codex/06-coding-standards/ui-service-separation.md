@@ -10,16 +10,15 @@ scope: [engineer]
 
 # UI / Service Separation
 
-**Last Updated:** 2026-02-28
-**Cursor rule:** `.cursor/rules/ui-service-separation.mdc` (enforcement)
-**SSOT for repo registry:** `unified-trading-pm/workspace-manifest.json`
+**Last Updated:** 2026-02-28 **Cursor rule:** `.cursor/rules/ui-service-separation.mdc` (enforcement) **SSOT for repo
+registry:** `unified-trading-pm/workspace-manifest.json`
 
 ---
 
 ## Rule
 
-> UI code must **never** live inside a service repo. Every UI is its own git repo.
-> Services expose HTTP (FastAPI + OAuth). UIs consume them over HTTP/SSE.
+> UI code must **never** live inside a service repo. Every UI is its own git repo. Services expose HTTP (FastAPI +
+> OAuth). UIs consume them over HTTP/SSE.
 
 ---
 

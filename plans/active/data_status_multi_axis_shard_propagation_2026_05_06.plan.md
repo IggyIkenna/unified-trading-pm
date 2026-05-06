@@ -352,14 +352,37 @@ QG gate: UTL + UAC quality-gates pass.
 - [ ] [deployment-api] P2. Routes pass query params through; pydantic schema for the new `breakdowns` field.
 - [ ] [deployment-api] P2. Unit tests: per-service breakdown coverage; secondary-axis filtering on manifest endpoint.
 
-### Phase 3 — deployment-ui DataStatusTab
+### Phase 3 — deployment-ui DataStatusTab (FIRST deliverable for the next agent)
 
-- [ ] [deployment-ui] P3. New `BreakdownsAccordion` component reading `breakdowns` per asset_group.
-- [ ] [deployment-ui] P3. Per-service-aware axis selector: uses UAC `SHARD_AXIS_MATRIX` exported via
-      `/api/config/shard-axis-matrix` endpoint (new) → DEFI panel gets a chain dropdown, sports a league + fixture
-      dropdown, strategy a job_id selector, etc.
-- [ ] [deployment-ui] P3. Cell-grid query passes `secondary_axis` + filter params; renders the resulting matrix.
-- [ ] [deployment-ui] P3. Visual regression smoke: every service tab loads cleanly with new shape.
+**Deliver-with-empty-data principle**: every component below must render gracefully when its breakdown column is empty
+(writer hasn't populated it yet). Skeleton + "no data yet" placeholder, not an error toast. The backend writers
+(Phase 1) catch up after the UI ships; we want the visual shape locked in first across all 15 services, then data
+back-fills behind it.
+
+- [ ] [deployment-ui] P3. New `BreakdownsAccordion` component reading the `breakdowns: dict[axis, dict[value, count]]`
+      field per asset_group. Empty `breakdowns` → render the axis labels with "no data yet" placeholder, not a blank
+      panel.
+- [ ] [deployment-ui] P3. Per-service-aware axis selector reading the new `/api/config/shard-axis-matrix` endpoint (UAC
+      SSOT proxy). Each asset_group panel gets the dropdowns its row dictates: DEFI → chain, sports → league_id,
+      strategy/execution → job_id, ML → model_family + training_period, multi-timeframe → timeframe, etc. If the backend
+      returns empty values for the dropdown, render an empty selector (disabled state) rather than hiding it.
+- [ ] [deployment-ui] P3. Cell-grid query passes `secondary_axis` + filter params (`league_id`,
+      `canonical_question_group`, `job_id`, `chain`) when the user picks one. Empty matrix from the API → "no shards
+      captured for this filter yet" empty-state, not an error.
+- [ ] [deployment-ui] P3. Per-service tab matrix coverage: walk every service in `SHARD_AXIS_MATRIX` and confirm the tab
+      renders the right axes per asset_group (especially the experiment-based services where today's manifests are
+      mostly empty — we want the job_id selector visible-but-empty so it's obvious how to navigate once data lands).
+- [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
+      applicable); every tab loads cleanly with the new shape; no console errors; empty-state placeholders render where
+      data is absent.
+- [ ] [deployment-ui] P3. Document the "expected empty until Phase 1 writers ship" tabs in a doc-comment on
+      `DataStatusTab.tsx` so the next reviewer doesn't think the UI is broken.
+
+**Out of scope for Phase 3 (defer to later phases)**:
+
+- Don't write any backend writer code (that's Phase 1).
+- Don't gate Phase 3 ship on the rollup worker emitting `breakdowns` (Phase 5). The on-demand path in Phase 2 is
+  sufficient for first ship; rollup catches up automatically.
 
 ### Phase 4 — Migration scripts
 
