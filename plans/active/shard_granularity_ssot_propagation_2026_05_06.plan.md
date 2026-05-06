@@ -116,4 +116,123 @@ _To be populated after audit completes. Owner: harsh routes findings into ordere
 
 _Findings appended per service as audit progresses. Each section follows the ✓ / ❌ / 🔀 / ❓ structure._
 
+### instruments-service — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06. Source files: `instruments_service/engine/orchestrator.py` (6107 lines),
+`instruments_service/cli/instruments_handler.py` (214 lines), plus 14 manifest-touching scripts under `scripts/`.
+
+#### ✓ Matches target
+
+- **v5 row-key API exists in UTL** — `ManifestWriter.record_captured` / `record_empty` / `record_failed` accept full
+  v5+ row_key shape including `chain`, `instrument_type`, `instrument_id`, `league_id`, `feature_group`, `model_family`,
+  `quote_asset`, `margin_type`, `combo_type`, `leg_weights` (`unified_trading_library/manifest_writer.py:1048-1188`,
+  `_ROW_KEY_COLUMNS` at line 383).
+- **Pre-launch guard is built into `add()`** — UAC `is_pre_launch_date(data_type, date)` short-circuits writes for
+  pre-`SOURCE_COVERAGE_START` / pre-`DATA_TYPE_COVERAGE_START` rows (`manifest_writer.py:708-720`). Comment cites the
+  2026-05-04 incident (229,224 pre-launch rows purged).
+- **Honest-coverage trio used** — orchestrator distinguishes `record_empty` (legitimate empty,
+  e.g. `orchestrator.py:4032`, `4475`, `5206-5218`) from `record_failed` (exception, e.g. `4053`, `4496`, `5395-5409`).
+  Failure routes through `_classify_adapter_failure → classify_venue_error` (line 530-543).
+- **`_should_skip_date_for_per_league` helper exists and is correctly used in some sites** — solves the per-league
+  honest-coverage gap for FOOTYSTATS PREDICTIONS (line 3897) and FOOTYSTATS MATCHES (line 4258 area). Comment at
+  line 506 documents the 2026-05-05 MATCHES 18%-coverage incident this fixes.
+- **Sports per-league `record_empty` for in-season-but-zero-fixtures** — API_FOOTBALL FIXTURES
+  (`orchestrator.py:1956-1970`), SFI_PROGRESSIVE_STATS (5335-5343, 5352-5360, 5368-5376) — leagues whose season covers
+  the date but had zero output get explicit `record_empty(row_key={..., league_id=lid})` rows. Without this, mid-week
+  per-league gaps render as red `missing` instead of `empty_confirmed`.
+- **`_classify_adapter_failure` routes through UAC `classify_venue_error`** — error reasons are categorical, not raw
+  exception strings (`orchestrator.py:530-543`).
+- **TradFi non-trading-day handling is honest** — `is_non_trading_day(venue, date)` from
+  `venue_trading_calendar` produces 0-count manifest rows for weekends/holidays
+  (`orchestrator.py:1799-1830`, `2010-2028`). No naive weekday filters.
+- **PIT `data_available_at` stamped at write-time per source** for sports adapters. Examples:
+  - FootyStats predictions: `kickoff_utc - 72h` (line 3918) — verified against 2026-04-17 probe
+  - FootyStats odds: `kickoff_utc - 72h` (line 4377)
+  - API Football injuries/fixtures: `date + 12h` / `kickoff + 17h` (line 3135, 3271, 3325, 3446)
+  - SFI progressive: `kickoff_15:00 + timer_seconds` (line 5283)
+  - Pred (Polymarket UP_DOWN): `kickoff_utc - 72h` (line 3918)
+
+#### ❌ Mismatches
+
+- **[pre-flight]** `orchestrator.py:5013-5018` — SFI_PROGRESSIVE_STATS pre-flight reads coarse
+  `row_key={"date": date, "data_type": "SFI_PROGRESSIVE_STATS"}` but the writer at `5293-5313` (and the per-league
+  `record_empty` at `5210-5218`, `5335-5343`, `5352-5360`, `5368-5376`) writes per-league rows including
+  `league_id=...`. Result: if the coarse date-row is captured but a league is missing, the date-level skip permanently
+  locks out per-league re-fetch. Same pattern as the 2026-05-05 MATCHES 18%-coverage incident; should use
+  `_should_skip_date_for_per_league` like FOOTYSTATS PREDICTIONS (line 3897) does. Fix layer: **[per-service]**.
+- **[pre-flight]** `orchestrator.py:5183` — SFI_STANDINGS pre-flight at coarse `(date, data_type)` only. Same bug
+  shape. Fix layer: **[per-service]**.
+- **[pre-flight]** `orchestrator.py:4747-4750` — PLAYER_VALUES (Transfermarkt) pre-flight at coarse
+  `row_key={"date": date, "data_type": "PLAYER_VALUES"}`; writer at `4946-4951` records `record_empty` per-league. Fix
+  layer: **[per-service]**.
+- **[write-gate]** `orchestrator.py:3946-3952` + `4064-4112` — `_validate_predictions_null_rates` is inlined per-data-
+  type with hardcoded thresholds (5% for core cols, 20% for potentials). Violations emit a `logger.warning(...)` but
+  the parquet is **written anyway** ("writing anyway" comment line 3949). This is the carry-tracer pattern; threshold
+  source-of-truth should be UAC per `feature_group`, and violations should produce `attempted_failed` not silent warn.
+  Fix layer: **[UTL]** (lift to shared write-gate helper) + **[UAC]** (per-feature_group thresholds).
+- **[write-gate]** Workspace-wide gap — no row-count==0 / NaN-ratio / schema-match gate fires at the write boundary.
+  `record_captured`'s `_maybe_validate` does schema-only check (warn-only by default; strict mode is opt-in via
+  `MANIFEST_STRICT_SCHEMA_VALIDATION=true`). Row-count and NaN-ratio gates absent. Fix layer: **[UTL]** (extend
+  `_maybe_validate` or add sibling gate) + **[UAC]** (per-feature_group NaN thresholds).
+- **[available_at]** `orchestrator.py:5279-5285` — SFI progressive PIT stamp uses `15:00 UTC` as a **hardcoded common
+  match hour** because no per-match kickoff lookup is wired in. This is approximation, not stamping-at-write-time. Late
+  matches (e.g. 21:00 UTC kickoff) get `available_at` 6h too early — potential look-ahead leak for downstream features.
+  Fix layer: **[per-service]** (lookup `kickoff_utc` from API_FOOTBALL fixtures bucket) or **[UAC]** (sports temporal
+  availability helper that fetches kickoff_utc).
+- **[available_at]** `orchestrator.py:1990-1995` — Polymarket per-market manifest write uses
+  `data_type=_mkt_str` (e.g. `"BTC"`, `"FOOTBALL"`) which **overloads `data_type` with shard-name**. The handover
+  explicitly forbids overloading dimensions. The shard-name should be `instrument_id` or a new `canonical_question_group`
+  column, not `data_type`. Fix layer: **[UAC]** + **[per-service]**.
+- **[migration]** `orchestrator.py:1988-1995` Polymarket manifest write uses `_extract_prediction_shard` (line 2497)
+  which does inline `base_asset.split(":")` parsing with hardcoded shard patterns (`UP_DOWN`, `FOOTBALL`). This is the
+  canonical-question-group SSOT gap the handover flagged. **No UAC SSOT exists** for raw Polymarket market_id →
+  canonical question group (verified by grep). Fix layer: **[UAC build]**.
+
+#### 🔀 Wrong layer
+
+- **[UTL → per-service drift]** `_validate_predictions_null_rates` (orchestrator.py:4064) is a service-local NaN-ratio
+  gate that should live in UTL alongside `ManifestWriter` write-gates. Other services likely have a similar inlined
+  gate (audit pending — flagged for synthesis phase).
+- **[UTL → per-service drift]** `_classify_adapter_failure` (orchestrator.py:530-543) is small but is exactly the
+  kind of cross-service utility that should be a shared UTL helper since EVERY adapter does this same try/UAC-classify/
+  fallback dance. Verify other services aren't duplicating; if they are, lift.
+- **[per-service → UAC]** `_extract_prediction_shard` (orchestrator.py:2497) — the canonical-question-group taxonomy
+  is a UAC SSOT concern, not per-service parsing logic.
+
+#### ❓ Couldn't verify
+
+- Whether downstream consumers (MTDS prediction adapter, features-* prediction calculators) read the Polymarket per-
+  market manifest at the same `data_type=_mkt_str` shape, or whether they expect a different column. If they expect
+  `instrument_id`, the writer is silently writing rows the readers don't find — phantom equivalent.
+  Cross-check pending in MTDS audit.
+- Whether the 14 scripts under `instruments-service/scripts/` (rebuild_sports_manifest, rescan_*, fill_missing_*,
+  patch_prediction_shards, fix_manifest_venue_casing, etc.) follow the manifest concurrency principle (read-once + TTL
+  freshness check + write-time CAS). Backfill scripts that bypass it can mass-overwrite concurrent worker writes. Spot-
+  check pending.
+- Per-instrument progress events (`INSTRUMENT_PROCESSED` with row_count) — orchestrator emits `PROCESSING_COMPLETED`
+  per date and `ADAPTER_FETCH_FAILED` on errors, but I did not verify whether per-instrument or per-shard events with
+  row counts exist for the silent-success-with-zero-output detection pattern. Pending.
+- Manifest drift on disk — would need to actually list a few canonical bucket prefixes to confirm v5 column shape
+  in production parquet. Audit only inspected source-code writers, not on-disk artifacts.
+
+#### Migration items (instruments-service contribution)
+
+- **MIG-1**: Add `canonical_question_group` column to v5 manifest schema (UAC + UTL); migrate Polymarket on-disk rows
+  from `data_type=BTC|ETH|...` overload to `canonical_question_group=BTC|ETH|...` + `data_type=PREDICTION_INSTRUMENTS`
+  (or similar). Migration script precedent: `instruments-service/scripts/migrate_local_sfi_to_canonical.py`.
+- **MIG-2**: SFI_PROGRESSIVE `available_at` rows currently stamped against `kickoff = 15:00 UTC` placeholder need a
+  one-time migration to back-fill from `kickoff_utc` once the per-match lookup is wired in. Mark old rows with a
+  `available_at_quality=approximate` flag or re-stamp.
+
+#### UTL-lift items (instruments-service contribution)
+
+- **LIFT-1**: NaN-ratio + row-count==0 + schema-match write-gate trio. Single helper
+  `validate_shard_or_fail(df, *, feature_group, data_type, threshold_source=UAC) → ValidationResult` lifted to UTL.
+  Replaces inlined `_validate_predictions_null_rates` and equivalent logic in other services.
+- **LIFT-2**: `_classify_adapter_failure` (orchestrator.py:530-543) — try `classify_venue_error` then fall back to
+  exception class name. Probably duplicated across MTDS/features-*.
+- **LIFT-3**: `_should_skip_date_for_per_league` (orchestrator.py:490-527) is service-local but the per-league-skip
+  pattern applies anywhere a writer produces per-leaf rows under a coarser key. Generalise to
+  `_should_skip_date_for_per_leaf(manifest, date, data_type, expected_leaf_dim, expected_leaf_values, force)`.
+
 <!-- AUDIT_FINDINGS_INSERT_BELOW -->
