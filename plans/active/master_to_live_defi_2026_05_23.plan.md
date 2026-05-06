@@ -561,27 +561,30 @@ gap.
 Mechanical cleanups that shrink `active/` from ~148 to ~130 plans and unblock the master plan from referencing
 self-superseded artefacts.
 
-**Archive (18 self-tagged superseded plans):**
+**Archive Stage 1 — 17 self-tagged superseded plans (DONE 2026-05-06, commit forthcoming):**
 
-- [ ] [SCRIPT] `client_config_and_defi_risk_2026_04_01` → `archive/` with `[unlock-plan]`
-- [ ] [SCRIPT] `cross_domain_alpha_execution_intelligence_2026_04_11` → archive
-- [ ] [SCRIPT] `strategy_lifecycle_visibility_ui_2026_04_11` → archive
-- [ ] [SCRIPT] `ui_walkthrough_and_e2e_alignment_2026_04_01` → archive
-- [ ] [SCRIPT] `dart_ui_strategy_filtering_and_onboarding_2026_04_24` → archive
-- [ ] [SCRIPT] `ml_pipeline_revolution_2026_04_11` → archive
-- [ ] [SCRIPT] `domain_agnostic_ml_framework_2026_04_11` → archive
-- [ ] [SCRIPT] `defi_instrument_pipeline_and_rewards_2026_04_01` → archive
-- [ ] [SCRIPT] `mev_protection_and_execution_enhancements_2026_04_01` → archive
-- [ ] [SCRIPT] `manual_trade_booking_reconciliation_2026_03_22` → archive
-- [ ] [SCRIPT] `unified_pipeline_scheduling_and_triggers_2026_04_15` → archive
-- [ ] [SCRIPT] `remove_data_types_field_2026_04_10` → archive
-- [ ] [SCRIPT] `polymarket_prediction_pipeline_2026_03_25` → archive (and update `superseded_by:` →
-      `predictions_canonical_question_group_polymarket_migration_2026_05_06`)
-- [ ] [SCRIPT] `smoke_dep_chain_tactical_fixes_2026_04_20` → archive
-- [ ] [SCRIPT] `instruments_service_template_refactor_8e653acc` → archive
-- [ ] [SCRIPT] `availability_manifest_v4_and_data_status_2026_04_13` → archive (manifest now v6)
-- [ ] [SCRIPT] `defi_pipeline_extension_followups_2026_05_03` → archive (`status: complete`)
-- [ ] [SCRIPT] `dashboard_services_grid_collapse_2026_04_21` → archive once final 3 todos land
+- [x] [SCRIPT] `client_config_and_defi_risk_2026_04_01` → archive
+- [x] [SCRIPT] `cross_domain_alpha_execution_intelligence_2026_04_11` → archive
+- [x] [SCRIPT] `strategy_lifecycle_visibility_ui_2026_04_11` → archive
+- [x] [SCRIPT] `ui_walkthrough_and_e2e_alignment_2026_04_01` → archive
+- [x] [SCRIPT] `dart_ui_strategy_filtering_and_onboarding_2026_04_24` → archive
+- [x] [SCRIPT] `ml_pipeline_revolution_2026_04_11` → archive
+- [x] [SCRIPT] `domain_agnostic_ml_framework_2026_04_11` → archive
+- [x] [SCRIPT] `defi_instrument_pipeline_and_rewards_2026_04_01` → archive
+- [x] [SCRIPT] `mev_protection_and_execution_enhancements_2026_04_01` → archive
+- [x] [SCRIPT] `manual_trade_booking_reconciliation_2026_03_22` → archive
+- [x] [SCRIPT] `unified_pipeline_scheduling_and_triggers_2026_04_15` → archive
+- [x] [SCRIPT] `remove_data_types_field_2026_04_10` → archive
+- [x] [SCRIPT] `polymarket_prediction_pipeline_2026_03_25` → archive (still has dangling `superseded_by:` to
+      non-existent `consolidated_sports_prediction_pipeline_2026_04_15`; fix in follow-up)
+- [x] [SCRIPT] `smoke_dep_chain_tactical_fixes_2026_04_20` → archive
+- [x] [SCRIPT] `instruments_service_template_refactor_8e653acc` → archive
+- [x] [SCRIPT] `availability_manifest_v4_and_data_status_2026_04_13` → archive (manifest now v6)
+- [x] [SCRIPT] `defi_pipeline_extension_followups_2026_05_03` → archive (`status: complete`)
+- [ ] [SCRIPT] `dashboard_services_grid_collapse_2026_04_21` → archive **once final 3 todos land** (deferred — plan
+      explicitly says "Ready for [unlock-plan] + archive once final 3 todos land")
+
+**Active count: 148 → 131 after Stage 1.**
 
 **Convert to ICEBOX / paused (3):**
 
