@@ -2,20 +2,6 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
-
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: doesn't reflect the 4-pillar
-> write-gate (row-count + NaN-ratio + schema + cluster-coverage), record_empty / record_failed typed reasons, per-VM
-> shard isolation, or sports per-fixture sharding. The post-plan-reality doc lists the 10 cross-cutting principles
-> codified in workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output decision, cluster
-> validation mandatory, per-row write-time `available_at`, prediction lifecycle timing, temporary state must have named
-> successor, per-VM shard isolation, etc.) plus the active plans where the canonical post-plan reality is being
-> implemented (`writegate_honest_coverage_endtoend_2026_05_06.plan.md`,
-> `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`). If this doc and the active plans
-> disagree, the plans win. If you find a contradiction the plans don't address, flag to user — don't decide
-> unilaterally.
-
 # Availability Manifest & Data Status — SSOT
 
 > **This document is the single source of truth** for: what the availability manifest is, its schema, shard dimensions
@@ -35,14 +21,88 @@ The deployment-ui renders it as the data status page.
 
 ### SSOT Locations
 
-| Component                                     | Location                                                                                              |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Schema definition                             | `unified-trading-library/unified_trading_library/manifest_writer.py` — `AvailabilityRecord` dataclass |
-| Writer                                        | `unified-trading-library/unified_trading_library/manifest_writer.py` — `ManifestWriter` class         |
-| Reader                                        | `unified-trading-library/unified_trading_library/manifest_writer.py` — `read_availability_index()`    |
-| Registry (start dates, expected venues, etc.) | `unified-api-contracts/unified_api_contracts/registry/`                                               |
-| API that serves data status                   | `deployment-api/deployment_api/services/data_status_service.py`                                       |
-| UI that renders data status                   | `deployment-ui/src/components/DataStatusTab.tsx`                                                      |
+| Component                                            | Location                                                                                                                                                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema definition                                    | `unified-trading-library/unified_trading_library/manifest_writer.py` — `AvailabilityRecord` dataclass                                                                                               |
+| Writer                                               | `unified-trading-library/unified_trading_library/manifest_writer.py` — `ManifestWriter` class                                                                                                       |
+| Reader                                               | `unified-trading-library/unified_trading_library/manifest_writer.py` — `read_availability_index()`                                                                                                  |
+| Registry (start dates, expected venues, etc.)        | `unified-api-contracts/unified_api_contracts/registry/`                                                                                                                                             |
+| **BUNDLED_DATA_TYPES + cluster registries**          | `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` (Phase 1B writegate plan)                                                                                                     |
+| **SOURCE_PRIORITY (multi-source ranking)**           | `unified-api-contracts/.../canonical/crosscutting/source_priority.py` (Phase 1B writegate plan)                                                                                                     |
+| **AVAILABILITY_AT_SEMANTICS (per-row stamp)**        | `unified-api-contracts/.../canonical/crosscutting/availability_semantics.py` (Phase 1B writegate plan)                                                                                              |
+| **Per-source `available_at` stamping helpers**       | `unified-trading-library/unified_trading_library/availability_stamping.py` (LIFT-3 + writegate Phase 1A)                                                                                            |
+| **Typed write-failure errors**                       | `unified-trading-library/unified_trading_library/errors.py` — `MissingClusterValidationError`, `UpstreamTimestampBiasError`, `MalformedTickFieldError`, `ClusterCoverageError` (writegate Phase 1A) |
+| **CanonicalQuestionGroup + lifecycle (predictions)** | `unified-api-contracts/.../canonical/domain/predictions/` — `CanonicalQuestionGroup` enum, `classify_market_to_canonical_group`, `MarketLifecycle` (predictions Plan A Phase 1A)                    |
+| API that serves data status                          | `deployment-api/deployment_api/services/data_status_service.py`                                                                                                                                     |
+| UI that renders data status                          | `deployment-ui/src/components/DataStatusTab.tsx`                                                                                                                                                    |
+
+### Active write-side contract changes (writegate plan + predictions plan)
+
+The `ManifestWriter.record_captured` contract is being extended (writegate plan Phase 1A) — read this BEFORE adding new
+caller code or assuming the legacy contract:
+
+- `record_captured` will accept (and **require** for `data_type ∈ BUNDLED_DATA_TYPES`) two new kwargs:
+  `expected_root_clusters: Mapping[str, int]` and `cluster_extractor: Callable[[str], str]`. Internal helper
+  `_check_cluster_coverage` runs at write time; on under-coverage `record_failed(ClusterCoverageError(...))` fires
+  INSTEAD of writing the parquet. UTL guard raises `MissingClusterValidationError` if `data_type` is bundled and the
+  kwargs are absent. QG STEP 5.64 statically walks every `record_captured(` callsite + asserts the kwargs are passed
+  when the literal data_type is bundled — fails CI if missing.
+- `record_captured` will call `assert_available_at_present(df)` internally — every shard's parquet MUST have an
+  `available_at` column populated per row, stamped at write time per `UAC.AVAILABILITY_AT_SEMANTICS`. Missing or null →
+  `LookaheadBiasError`.
+- Three new typed error variants for `record_failed`:
+  `UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks)` (path B in the empty-output decision tree below),
+  `MalformedTickFieldError(field, n_dropped, sample_values)` (path C),
+  `MissingClusterValidationError(data_type, expected_registry_key)` (cluster guard).
+- A 4th typed error for the future NaN-ratio gate: `NanRatioExceededError(column, observed_ratio, threshold)` — landing
+  in Plan B (UTL/UAC lift triple) which lifts `instruments-service _validate_predictions_null_rates` to a UTL helper.
+
+**Bundled data_types (cluster validation mandatory):**
+
+- `options_chain` — registry: `OPTIONS_CLUSTERS` (ES.OPT 11-cluster taxonomy seed; lifted from instruments-service to
+  UAC).
+- `futures_chain` — registry: `FUTURES_CLUSTERS` (ES + MES seeds; per-root spreads/butterflies; greenfield).
+- `prediction_canonical_question_group` — registry: `PREDICTION_GROUPS` (per-canonical-group expected market_ids per day
+  by cadence; populated by predictions Plan A Phase 1A; empty placeholder until then; cluster guard fires loud if used
+  before populated).
+- `ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE` (sports per-fixture-bundle data_types) — registry:
+  `SPORTS_FIXTURE_CLUSTERS` (per-league-tier expected bookmaker sets; tier-1 EU football seed; expand per follow-up).
+
+**Multi-source merge** (Plan D, deferred): Phase 1B writegate seeds `SOURCE_PRIORITY` top-entry-only per
+`(asset_group, data_type)`. Plan D extends to multi-source merge with per-field provenance tracking
+(timestamp-availability > coverage > info-richness > merge-different-fields tie-breakers per user direction 2026-05-06).
+Until Plan D lands, ranking is single-source per pair.
+
+**Predictions migration** (Plan A): Polymarket adapter migrating from `data_type=<base_asset>`
+(BTC/ETH/SPX/FOOTBALL/OTHER) → `data_type=prediction_canonical_question_group` with shard atom
+`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`.
+Per-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) captured in instruments-service. MTDS
+respects lifecycle bounds. LookaheadBiasError per-market-aware. Until Plan A lands, Polymarket continues to write
+per-base_asset shards; the data_type slot in BUNDLED_DATA_TYPES is reserved.
+
+**Sports per-fixture sharding** (writegate plan Phase 2.B): sports per-fixture data_types (`ODDS_SNAPSHOT`,
+`ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`
+when fixture-scoped) shard at full v5/v6 spec `(asset_group=sports, source, data_type, league_id, fixture_id, day)`
+(per-fixture). Aggregate data_types (`STANDINGS`, `LEAGUES`, `TEAMS`, etc.) shard at day-aggregate. **League is a
+higher-level rollup grouping for data-status panel filtering, NOT the shard atom.** Without per-fixture sharding, can't
+drill down on missing fixtures or fixture-specific stats; ML predictions are fixture-level. Anything that breaks (MTDS
+reader paths, MDPS sports adapter, features-sports input pipeline, deployment-ui drill-down) is fixed within the
+writegate plan.
+
+**`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
+
+| `(asset_group, data_type)`                                                                         | Semantic                                          | Notes                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `(sports, FIXTURES)`                                                                               | `announced_at`                                    | Currently low-confidence `kickoff_utc − 7d` fallback; named successor `sports_forward_poll_timestamps_2026_<TBD>.plan.md`                                                      |
+| `(sports, FIXTURE_LINEUPS)`                                                                        | `kickoff_utc − 60min`                             | Conservative — actual is at LEAST 60min before, often 1-2h                                                                                                                     |
+| `(sports, FIXTURE_EVENTS)`                                                                         | per-row `event_time`                              | Derived from `kickoff_utc + elapsed_min × 60s`                                                                                                                                 |
+| `(sports, INJURIES)`                                                                               | per-row `report_time` / `occurrence_time`         | Currently low-confidence `kickoff_utc − injury_lead_time_estimate` fallback; named successor as above                                                                          |
+| `(sports, FIXTURE_STATS)` / `(sports, FIXTURE_PLAYER_STATS)`                                       | `match_end_time`                                  | Detected via cascade: api_football native → SFI progressive-stats freeze (re-uses halftime detector) → footystats / understat → low-confidence `kickoff_utc + 120min` fallback |
+| Sports reference (8 tables: players, venues, leagues, teams, referees, coaches, standings, rounds) | `fetch_completed_at`                              | From `_FETCH_COMPLETED_AT` cache in `_fetch_runner.py` (writegate Phase 2.C)                                                                                                   |
+| `(prediction, prediction_canonical_question_group)`                                                | per-row `tick.timestamp + scrape_latency`         | Live = batch — same as live pipeline arrival                                                                                                                                   |
+| `(prediction, MARKET_LIFECYCLE)`                                                                   | `market_created_at`                               | We couldn't have known about the market before it was listed                                                                                                                   |
+| CeFi / DeFi / TradFi tick-level data                                                               | `tick.timestamp + source_priority_scrape_latency` | Live = batch                                                                                                                                                                   |
+| Weather forecasts                                                                                  | forecast-issue-time                               | Distinct from forecast-target time                                                                                                                                             |
 
 ## Schema v6 (current)
 
@@ -168,14 +228,14 @@ Each service writes a specific subset of columns. "—" means the column is alwa
 
 ### Layer 2: market-tick-data-service (raw market data)
 
-| Category   | venue                                                                                           | chain                                 | data_type                                                                                                                | instrument_type                                | league_id |
-| ---------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | --------- |
-| CEFI       | BINANCE-SPOT, BYBIT, DERIBIT, OKX, COINBASE, ...                                                | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, options_chain, futures_chain                                   | spot, perpetuals, futures_chain, options_chain | —         |
-| CEFI \*    | HYPERLIQUID, ASTER                                                                              | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, perp_funding                                                   | **perpetuals only** — see guard note below     | —         |
-| TRADFI     | CME, NASDAQ, NYSE, ICE, CBOE                                                                    | —                                     | trades, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo                                                                             | equity, futures_chain, options_chain, index    | —         |
-| DEFI       | AAVE_V3, UNISWAP_V3, CURVE, DRIFT, ...                                                          | ETHEREUM, ARBITRUM, BASE, SOLANA, ... | swaps, liquidity, rate_indices, oracle_prices, utilization, rewards, risk_params, gas_fees, lst_rates, perp_funding, tvl | pool, lending, lst                             | —         |
-| SPORTS     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, ... (~21 bookmakers) | —                                     | odds                                                                                                                     | —                                              | league_id |
-| PREDICTION | POLYMARKET, KALSHI                                                                              | —                                     | prediction_trades, prediction_book_snapshot, prediction_market_metadata                                                  | prediction_market                              | —         |
+| Category   | venue                                                                                           | chain                                 | data_type                                                                                                                                                                                                          | instrument_type                                | league_id                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| CEFI       | BINANCE-SPOT, BYBIT, DERIBIT, OKX, COINBASE, ...                                                | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, options_chain, futures_chain                                                                                                                             | spot, perpetuals, futures_chain, options_chain | —                                                                                      |
+| CEFI \*    | HYPERLIQUID, ASTER                                                                              | —                                     | trades, book_snapshot_5, derivative_ticker, liquidations, perp_funding                                                                                                                                             | **perpetuals only** — see guard note below     | —                                                                                      |
+| TRADFI     | CME, NASDAQ, NYSE, ICE, CBOE                                                                    | —                                     | trades, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo                                                                                                                                                                       | equity, futures_chain, options_chain, index    | —                                                                                      |
+| DEFI       | AAVE_V3, UNISWAP_V3, CURVE, DRIFT, ...                                                          | ETHEREUM, ARBITRUM, BASE, SOLANA, ... | swaps, liquidity, rate_indices, oracle_prices, utilization, rewards, risk_params, gas_fees, lst_rates, perp_funding, tvl                                                                                           | pool, lending, lst                             | —                                                                                      |
+| SPORTS     | PINNACLE, BETFAIR_EX, DRAFTKINGS, FANDUEL, CORAL, PADDYPOWER, WILLIAMHILL, ... (~21 bookmakers) | —                                     | ODDS_SNAPSHOT, ODDS_MOVEMENT, ARBITRAGE, FIXTURE_STATS, FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_PLAYER_STATS, INJURIES (per-fixture); STANDINGS, LEAGUES, TEAMS, REFEREES, COACHES, ROUNDS (day-aggregate)        | —                                              | league_id (rollup); **fixture_id** is the per-fixture shard axis (writegate Phase 2.B) |
+| PREDICTION | POLYMARKET, KALSHI                                                                              | —                                     | **`prediction_canonical_question_group`** (post-Plan A) — bundled by canonical_question_group with per-market_id rows. Pre-Plan A: legacy `data_type=<base_asset>` per-market shards (BTC/ETH/SPX/FOOTBALL/OTHER). | prediction_market                              | —                                                                                      |
 
 > **\* Hyperliquid / Aster perpetuals-only guard:** `BaseOnchainPerpAdapter` raises
 > `UnsupportedCapabilityError(venue=..., capability="options")` when `instrument_type` is OPTION or FUTURE. The
@@ -508,6 +568,98 @@ of this comes from UAC. No service has hardcoded lists. No service tries to get 
 
 **Why:** If 5 services have 5 different ideas of when AAVE_V3 on BASE became available, some will try to fetch data that
 doesn't exist, and the data status page will show false negatives.
+
+### 4. Write-gate quartet at `record_captured` (post-2026-05-06)
+
+Every `record_captured` call is gated by 4 pillars. Failure of any pillar → `record_failed(<typed_reason>)` instead of
+writing the parquet. NO partial passes.
+
+| Pillar                                         | Gate                                                                                                                                                                                                                                                             | Failure mode                                                         |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Row count > 0**                              | Mandatory unless source response was legitimately empty (then `record_empty`, not `record_captured`).                                                                                                                                                            | `record_failed(EmptyAfterFilterError)` for non-honest empties.       |
+| **NaN ratio per column < threshold**           | Per-feature-group thresholds in UAC `nan_thresholds.NAN_RATIO_THRESHOLDS`. Currently inlined per-service (instruments-service `_validate_predictions_null_rates` is FootyStats-only); Plan B lifts to UTL `write_gate_helpers.check_nan_ratio` with single SSOT. | `record_failed(NanRatioExceededError(column, observed, threshold))`. |
+| **Schema matches contract**                    | Required columns + types match UAC schema declaration. Existing `ParquetSchemaEnforcer`. Includes `available_at` column (per pillar 5 below).                                                                                                                    | `record_failed(SchemaMismatchError(column, expected, observed))`.    |
+| **Cluster coverage ≥ expected** (BUNDLED only) | For `data_type ∈ BUNDLED_DATA_TYPES`, `expected_root_clusters` + `cluster_extractor` kwargs are MANDATORY (UTL guard raises `MissingClusterValidationError` if absent; QG STEP 5.64 statically checks). Internal `_check_cluster_coverage` runs at write time.   | `record_failed(ClusterCoverageError(missing, observed))`.            |
+
+This 4-pillar model is the canonical write-gate going forward. Adapters that are post-migration MUST pass each pillar;
+pre-migration adapters get phased through Phase 2 of the writegate plan.
+
+### 5. `available_at` per row, write-time, equal to live-pipeline-arrival (post-2026-05-06)
+
+Every shard's parquet contains an `available_at` column. Each row's value = when the live pipeline would have actually
+had that row's information per `UAC.AVAILABILITY_AT_SEMANTICS`. NEVER derived at read-time.
+
+`record_captured` calls `assert_available_at_present(df)` internally — missing or null `available_at` →
+`LookaheadBiasError`. UTL stamping helpers in `unified_trading_library.availability_stamping`:
+
+- `stamp_available_at_kickoff_offset(df, kickoff_col, minutes=60)` — sports lineups
+- `stamp_available_at_post_match(df, kickoff_col, duration_min, scrape_latency_min)` — sports fixture_stats /
+  fixture_player_stats
+- `stamp_available_at_event_time(df, event_time_col)` — per-row event_time pass-through (fixture_events, injuries when
+  in-fixture)
+- `stamp_available_at_announcement(df, announced_col)` — fixtures (low-confidence default until forward-poll source
+  lands)
+- `stamp_available_at_explicit(df, fetch_completed_at)` — sports reference tables, prediction market lifecycle metadata
+- `stamp_available_at_tick_plus_latency(df, ts_col, source_key)` — CeFi / DeFi / TradFi / prediction tick-level data;
+  latency from `UAC.SOURCE_PRIORITY[(asset_group, data_type)]` top entry
+
+**Live = batch principle**: live and batch produce identical schemas, identical fields, identical timing semantics. Only
+the SOURCE differs (some live sources are faster than canonical historical archives). Historical writes stamp
+`available_at` with the live-pipeline-equivalent arrival time, NOT the historical archive's slower archive time. Banned:
+separate live-only data_types like `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH`; field sets that diverge between live +
+batch parquets.
+
+### 6. Three-category empty-output decision tree (post-2026-05-06)
+
+Every condition that could produce an empty result resolves to ONE of:
+
+| Path                                | Condition                                                                              | Manifest verb                                                                      | Notes                                                                                                                                                                                                                                                           |
+| ----------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A. Honest absence**               | Source returned 0 ticks for the requested window.                                      | `record_empty(row_key, attempted_at)`                                              | Counts in denominator only.                                                                                                                                                                                                                                     |
+| **B. Upstream timestamp bias**      | Source returned ticks; ALL fall outside the requested day after `interval_idx` filter. | `record_failed(UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks))` | UPSTREAM bug — partition mislabeled at MTDS write-time, OR source replay covered wrong window, OR clock-skew. Paired upstream MTDS partitioner-validation fix (writegate Phase 2.B) at `raw_tick_hive.py`: `assert tick.timestamp.date() == day_partition_key`. |
+| **C. Mid-process malformed fields** | Rows in window but downstream calc dropped due to NaN/malformed source fields.         | `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`          | Data-quality bug worth diagnosing — adapter author surfaces sample values for triage.                                                                                                                                                                           |
+
+**NO fourth category. NO silent NaN placeholder rows.** The `_create_empty_output()` method is BANNED from
+`base_adapter` and equivalents (writegate Phase 2.A deletes it across MDPS' 37 callsites). Reference incident
+**2026-05-05**: MDPS produced 1440-row NaN OHLC parquets per (venue, data_type, day) for years; manifest said
+`captured`; downstream features computed garbage on garbage. The post-plan contract makes this bug class structurally
+impossible.
+
+**NEW BUG SURFACED (Phase 0 audit 2026-05-06)**: orchestrator prediction empty path at `live_workers.py:268-271` returns
+`success=True, candles_generated=0` with NO manifest record (no `record_empty`, no `record_captured`, no
+`record_failed`). Distinct from 1440-NaN class but equally opaque. Fix in writegate Phase 2.A scope expansion — adds
+`record_empty(row_key)` so prediction empties surface as honest absence.
+
+### 7. Per-VM shard isolation for concurrent backfills (workspace rule, codified 2026-05-06)
+
+Every multi-worker backfill (multiple chunk processes locally OR multiple GCE VMs writing to the same manifest) MUST set
+`VM_NAME=<unique>` + `MANIFEST_PER_VM_SHARDS=true` per worker. Manifest consolidator merges per-VM shards under
+`_index/per_vm/{vm_name}.parquet` into the canonical `_index/availability_index.parquet` with last-writer-wins on
+identical row_key.
+
+UTL runtime guard: `ManifestWriter.__init__` raises `MultiWorkerWithoutShardIsolationError` when multi-process detection
+fires AND per-VM shard isolation isn't set. New base-service.sh QG STEP 5.66 AST-walks launcher scripts that fork
+multi-process; asserts envvar setting.
+
+Reference incident **2026-05-04**: instruments-service chunk workers without isolation clobbered each other's manifest
+entries (commits `00f6352` + `619a32e` were the per-script fixes; Plan C codifies the workspace rule).
+
+### 8. Temporary state must have named successor plan (workspace rule, codified 2026-05-06)
+
+When a plan ships a partial implementation that is not the final shape, the partial state MUST be documented in a
+`## Temporary states + their canonical follow-up plans` section of that plan, with the named successor plan filename
+listed. NO temporary state is silently accepted as final. NO "we'll fix it later" without a named doc. Reviewers reject
+any partial implementation lacking a successor reference.
+
+Currently-tracked temporary states relevant to the manifest:
+
+- `BUNDLED_DATA_TYPES` slot for `prediction_canonical_question_group` reserved with empty `PREDICTION_GROUPS = {}`
+  registry → successor: predictions Plan A.
+- `SOURCE_PRIORITY` top-entry-only seed → successor: Plan D multi-source merge.
+- `announced_at` / `report_time` / `match_end_time` low-confidence fallback values → successor:
+  `sports_forward_poll_timestamps_2026_<TBD>.plan.md`.
+- Prediction empty path patched with current Polymarket per-base_asset row_key → successor: predictions Plan A migrates
+  to canonical_question_group shape.
 
 ## DeFi Protocol × Chain Coverage
 
