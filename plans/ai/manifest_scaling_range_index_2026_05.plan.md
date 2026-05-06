@@ -226,6 +226,49 @@ home_score_halftime/fulltime/extratime/penalty (and away_*), day string, data_av
   designed (deferred), inputs will have honest PIT stamping. The shard-granularity Phase 1 fix
   (features-sports `_ensure_timestamp` midnight UTC bug) is in the consumer, not the source.
 
+### 2026-05-06 — A5 / Q5b: TRADFI cash-equity `instrument_type='SPOT_PAIR'` confirmed BUG (still firing)
+
+**What was checked:** sampled `instruments-store-tradfi-{pid}/instrument_availability/by_date/day=2026-05-04/`
+for both NASDAQ (43 rows) and NYSE (215 rows = 174 SPOT_PAIR + 41 ETF). 6 days after the original Q5b sample
+(2026-04-30) — same backfill version, no fix shipped between then and 2026-05-04.
+
+**Findings (per-row, NASDAQ:AAPL example):**
+| Column                  | Codex spec / expected | On disk (2026-05-04)       | Verdict        |
+| ----------------------- | --------------------- | -------------------------- | -------------- |
+| `instrument_type`       | `EQUITY`              | `SPOT_PAIR`                | ❌ BUG         |
+| `asset_class`           | `equity`              | `crypto`                   | ❌ BUG (worse) |
+| `holiday_calendar`      | `XNYS` (exchange_calendars key) | `NASDAQ` / `NYSE`  | ❌ BUG         |
+| `timezone`              | `America/New_York`    | `America/New_York`         | ✓              |
+| `regular_open_utc`      | `13:30:00 UTC`        | `13:30:00 UTC`             | ✓              |
+| `regular_close_utc`     | `20:00:00 UTC`        | `20:00:00 UTC`             | ✓              |
+| `pre_market_open_utc`   | non-null              | `08:00:00 UTC`             | ✓ (2C done?)   |
+| `post_market_close_utc` | non-null              | next-day `00:00:00 UTC`    | ✓              |
+| `instrument_key`        | format consistent     | `NASDAQ:SPOT_PAIR:AAPL`    | derived from buggy `instrument_type` |
+| ETFs (NYSE row sample)  | `instrument_type=ETF` | correct                    | ✓ ETFs OK      |
+
+The `asset_class='crypto'` finding is **new and worse than the original Q5b note** — the original noted
+`asset_class='equity'` was correct; that's now ALSO wrong. Likely the same root-cause backfill bug propagated.
+
+**Implication for this plan:**
+- **Q5b is RESOLVED as a BLOCKER, not a clarification.** The TRADFI cash-equity backfill is producing data with
+  three mis-stamped columns. If the range-index plan adopts the on-disk vocabulary
+  (`instrument_type='SPOT_PAIR'`, `asset_class='crypto'`, `holiday_calendar='NASDAQ'`), the v7 manifest will
+  index broken classification — every TRADFI cash-equity range row would be keyed `SPOT_PAIR` instead of
+  `EQUITY`, making cross-asset-group queries (e.g. "show me all EQUITY ranges") return zero on TRADFI.
+- **This plan now has TWO hard prerequisites:**
+  1. `plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 2 done (existing).
+  2. `plans/active/instrument_schema_cohesion_and_market_hours_2026_03_31.plan.md` Phase 2C **plus** a corrective
+     re-stamp of the in-bucket TRADFI rows (instrument_type, asset_class, holiday_calendar). The original
+     instruments_schema_cohesion plan owns the writer fix; the corrective re-stamp likely needs a sibling
+     migration script (precedent: `instruments-service/scripts/migrate_local_sfi_to_canonical.py`).
+- **Recommendation:** flag this finding to the schema-cohesion plan owner immediately. The bug is producing bad
+  data on every backfill run and silently growing the corrupted footprint. (Not the range-index plan's job to
+  fix, but the range-index plan can't ship until this is fixed.)
+- **Pre-market / regular-hours fields are correct** — Phase 1E of `instrument_schema_cohesion_and_market_hours`
+  has clearly shipped to TRADFI; the gap is Phase 2C (databento adapter populating the *correct* per-instrument
+  values, not just any values). The `'NASDAQ'` placeholder in `holiday_calendar` looks like a default-fill
+  rather than a `pandas_market_calendars` lookup result.
+
 
 
 
