@@ -382,6 +382,29 @@ but parallel-able among themselves.
   `gs://market-data-tick-{cefi,tradfi}-{pid}/processed_candles/by_date/day=*/timeframe=*/data_type=*/venue=*/CME:OPTION:*.parquet`
   groups by chain root + (date, timeframe, data_type), writes bundled at canonical path, `record_captured` via
   ManifestWriter. Idempotent. Same skip-if-exists pattern as the raw-tick aggregator.
+- [ ] [AGENT] **P1.5d OOM remediation — Phase 1 NOT COMPLETE** — **2026-05-06 06:00-08:00 UTC**: of the 7 sharded VMs
+      `mdps-tradfi-{2020..2026}-20260506-005356`, **2 OOM'd** during legacy options-chain processing: -
+      `mdps-tradfi-2026`: exit=137 (SIGKILL/OOM) at 00:27 UTC after 18/126 days (14% YTD). - `mdps-tradfi-2020`: dead at
+      06:35 UTC after 31/365 days (8%); final event `MEMORY_THRESHOLD_REACHED`; no EXIT_STATUS file (killed before
+      vm-exec finalised). - Last log before death: `Detected legacy ticks.parquet bundle: 4053 symbols in ticks.parquet`
+      → MDPS loads entire bundle into one Polars DataFrame → 32GB RAM (e2-standard-8) exhausted.
+
+      **Live VMs at 07:42 UTC** (2021-2025) have done 12-22% each; likely heading for same OOM as they reach
+      options-heavy days (2024 ES_OPT chain especially).
+
+      **Remediation options** (next-session decision-gate, BEFORE Phase 2.3/3/4 work):
+      1. **Bigger VM**: e2-highmem-8 (64GB) or e2-standard-16 (64GB). Cheaper engineering, 2× cost, may still OOM
+         on the heaviest days. Edit `launch-mdps-sharded-backfill.sh` `MACHINE_TYPE`.
+      2. **MDPS streaming refactor**: split the legacy-bundle reader to process per-symbol, never holding the
+         whole bundle. Cleaner long-term, ~1-2 day engineering effort. SSOT: MDPS
+         `app/core/live_workers.py::_process_chain_timeframe_by_symbol` already iterates per-symbol — but the
+         upstream `_read_tick_data` loads the whole parquet first. Fix the read to lazy-stream via Polars
+         `scan_parquet`.
+      3. **Hybrid**: fix #2 for legacy bundles, ship now on e2-highmem-8 to unblock backfill in parallel.
+
+      **Phase 1 success-gate is NOT met** until processed_candles populated for ≥95% of 2020-2026 trading days.
+      Phase 2.3 / Phase 3 / Phase 4 are HARD-BLOCKED until then.
+
 - [x] [AGENT] **P1.5c Re-launch MDPS tradfi backfill with chain-bundle fix** — **DONE 2026-05-06**: 7 zombie
       `mdps-tradfi-{2020..2026}-20260505-203928` VMs killed (silently zombied 6+h after 2026-05-05 23:06 UTC last event
       — exactly the no-fire-and-forget pattern from CLAUDE.md). Refreshed tarball
