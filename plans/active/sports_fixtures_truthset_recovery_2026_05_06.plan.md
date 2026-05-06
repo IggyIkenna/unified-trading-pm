@@ -249,25 +249,31 @@ Pattern mirrors the existing `flip_phantom_*` scripts. ~30 min implementation.
 - [x] [AGENT] P0. Build VM launcher `launch-fixtures-truthset-audit-vm.sh` + widen api-football-backfill singleton lock
       to catch `af-audit-` + register prefix in `vm_zombie_watchdog.py`. **Shipped deployment-service `c23d4a9`
       2026-05-06.**
-- [ ] [HUMAN] P0. Operator review checkpoint **before launching the full audit VM**. Confirm: 94 leagues x 9 seasons =
-      ~846 calls (~3-4h Pro tier), no other af-\* VMs running, latest tarball includes the audit script. Then relaunch
-      the watchdog VM so it picks up the new `af-audit-` prefix entry.
-- [ ] [AGENT] P0. Refresh tarball: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` (so
-      the VM pulls the new audit script).
-- [ ] [AGENT] P0. Launch Phase 1 full run: `bash deployment-service/scripts/vm/launch-fixtures-truthset-audit-vm.sh`.
-      Apply the no-fire-and-forget rule: 90s STARTED check, 15-min progress polls on the events bucket +
-      `_audits/fixtures_truthset_*.parquet` checkpoint mtime, STOPPED-or-FAILED at exit. ~3h.
-- [ ] [AGENT] P0. Inspect Phase 1 diff CSV
-      (`gs://instruments-store-sports-central-element-323112/_audits/fixtures_diff_{run_ts}.csv`). Report SILENT_DROP /
-      RETRY / MISSING / STRANGE counts. Flag mapping-breakage CSV separately if non-empty.
-- [ ] [HUMAN] P0. Operator decision: ship Phase 2 recovery as-is, or first triage any STRANGE_CAPTURED_BUT_TRUTH_ABSENT
-      rows.
-- [ ] [AGENT] P0. Implement Phase 2 recovery script `recover_fixtures_from_truthset.py`. ~30 min.
-- [ ] [HUMAN] P0. Operator review of Phase 2 dry-run output.
-- [ ] [AGENT] P0. Run Phase 2 (writes parquets + manifest). ~1-2h.
-- [ ] [HUMAN] P0. Operator triggers Phase 3 chain runner. ~3-5h.
-- [ ] [AGENT] P1. Implement + run Phase 4 drift audit.
-- [ ] [HUMAN] P1. Phase 5 UI verification.
+- [x] [AGENT] P0. Phase 1 audit run completed on `af-audit-20260506-163544`. Truth-set + diff + recovery-set written to
+      `_audits/*_20260506-153914.{parquet,csv}`. **182,263 truth-set rows; 39,429 recovery-set rows (RETRY=26,893 +
+      SILENT_DROP=11,526 + MISSING=1,010); 0 mapping-breakage cases.**
+- [x] [AGENT] P0. Implement Phase 2 recovery script `recover_fixtures_from_truthset.py`. **Shipped instruments-service
+      `bfc4893` (initial) + `36aefed` (refactor flip-empty to per-VM shard).**
+- [x] [AGENT] P0. Build Phase 2 launcher `launch-fixtures-recovery-vm.sh` + register `af-recover-` in watchdog dict.
+      **Shipped deployment-service `326bb84`.**
+- [x] [AGENT] P0. Phase 2 recovery run completed on `af-recover-20260506-175258`. **34,583 days written / 112,192
+      fixtures recovered across 423 (league, season) pairs in ~37 min, 0 failed pairs. 69,149 ATTEMPTED_FAILED_NO_TRUTH
+      rows flipped to empty_confirmed via per-VM shard.**
+- [x] [AGENT] P1. UTL fix: consolidator now reads `consolidator_run_at` GCS metadata marker instead of `blob.updated`
+      for the incremental-merge cutoff. **Shipped UTL `0ab7432a` 2026-05-06. Closes the silent-skip bug where
+      out-of-band canonical writes invalidated the cutoff. 4 new tests added.** Reference incident: recovery shard at
+      17:33:23 UTC was skipped on every consolidator cycle for 2+h after the original flip-empty step bumped canonical
+      mtime to 17:33:36 UTC; manual mtime-bump on the recovery shard unblocked the merge.
+- [x] [AGENT] P1. Verified canonical reflects recovery: 34,583 FIXTURES rows with `venue=API_FOOTBALL`
+      `capture_status=captured` now in canonical (captured FIXTURES count: 29,273 → 63,856). Spot-check on ALLSVENSKAN
+      2018-04-01 confirms 4 real fixtures with full 32-column schema + correct `data_available_at = kickoff − 7d`.
+- [ ] [HUMAN] P0. Operator triggers Phase 3 chain runner via:
+      `tmux new-session -d -s phantom-chain bash deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh     --start-date 2020-06-06 --end-date 2026-05-04`.
+      Runs PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES sequentially against the
+      now-correct FIXTURES manifest. ~3-5h total.
+- [ ] [AGENT] P1. Implement + run Phase 4 drift audit (cross-check residual `empty_confirmed` rows on per-fixture
+      entities vs the now-correct FIXTURES truth — flag any gaps to `attempted_failed` for re-fetch).
+- [ ] [HUMAN] P1. Phase 5 UI verification — clear deployment-api turbo cache + open SPORTS data-status.
 - [ ] [HUMAN] P1. After verification, delete the manifest backup blobs (`*.bak.parquet`).
 
 ## Critical reads before starting
