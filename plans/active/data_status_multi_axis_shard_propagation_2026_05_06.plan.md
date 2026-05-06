@@ -323,6 +323,109 @@ QG gate: UTL + UAC quality-gates pass.
 
 ### Phase 1 — Writer updates (per-service)
 
+#### Phase 1 execution principles (codified 2026-05-08 — the (a)/(b)/(c) decision tree)
+
+**Why this section exists**: Phase 0/2/3 shipped the **deliver-with-empty-data** contract — UTL@ed658e9b adds
+`fixture_id` + `job_id` columns, deployment-api@85053fe exposes `breakdowns: dict[axis, dict[value, count]]` keyed on
+UAC `BREAKDOWN_AXES`, deployment-ui@8056995 renders every declared axis (header + "no data yet" placeholder when empty).
+**The UI shape is locked NOW.** Phase 1 fills the data behind it.
+
+The user (operator) sees empty axes today (`league_id` empty for sports / `feature_group` empty for features-\* /
+`job_id` empty for ml-training etc.) — Phase 1 lights them up service-by-service, lowest-blast-radius first.
+
+**Per-writer 3-part check** (walk in order; the answer dictates whether the work is a one-line fix or a multi-week
+migration):
+
+- **(a) MANIFEST COLUMN** — does the writer pass the new axis as a kwarg into `manifest.record_captured(...)` /
+  `manifest.record_empty(row_key={...})` / `manifest.record_failed(row_key={...})`? UTL@ed658e9b accepts `fixture_id` +
+  `job_id`; the existing v5 columns (`chain`, `league_id`, `feature_group`, `model_family`, `training_period`,
+  `timeframe`, `strategy_id`, `client_id`, `instruction_type`) have been there since the v5 honest-coverage bump. **If
+  the writer just isn't passing them → one-line fix per callsite.** Run quality-gates.sh, push, curl
+  `/api/data-status/coverage-summary` and confirm the corresponding `breakdowns` dict populates. Done.
+
+- **(b) ON-DISK PARQUET PATH** — does the parquet's hive partition already include this axis, or is it baked into a
+  different partition (or worse, into the filename)? **Walk the actual bucket layout before assuming**
+  (`gcloud storage ls gs://{bucket}/...` or `/api/data-status/list-files`). Three outcomes:
+  - **(b.1)** Path already includes the axis. Examples:
+    - Sports per-league: `entity={E}/league={L}/{E}.parquet` already supported per UAC `candidate_parquet_paths`. So
+      features-sports `feature_group` is purely a manifest- column add (#a), no path migration.
+    - DeFi `chain=` partition: instruments-service migrated 64,060 legacy rows in commit `36261b6` (split venue/chain at
+      manifest-write); the path layout already has `chain=ETHEREUM/...` for new writes.
+    - `timeframe=` partition: already on every features-\* and MDPS parquet path. → No path change needed. Just (a).
+      Done.
+
+  - **(b.2)** Path needs a new partition layer **for new writes only** (legacy data stays where it is, reader falls
+    through). Examples:
+    - ml-training-service / ml-inference-service: today the parquet path under `gs://ml-training-artifacts-{pid}/` is
+      keyed on `model_family` + `training_period` only. Phase 1B `job_id` work needs
+      `model_family={M}/training_period={T}/job_id={J}/...` partition for new experiment runs. Old rows (no job_id) keep
+      their flatter path; reader probes the new layout first then falls through.
+    - strategy-service / execution-service backtest writes: same shape — add `strategy_id={S}/job_id={J}/...` partition
+      for new runs; old runs surface under synthetic `__legacy__` job_id key in the breakdowns endpoint (already wired
+      in deployment-api@85053fe). → Add the new partition to the writer + extend the reader to probe the new layout
+      first, fall back to flatter legacy path. **NO migration script needed** (legacy stays on disk untouched, manifest
+      already has flat rows).
+
+  - **(b.3)** Path needs to **MIGRATE** legacy data because the wrong axis was baked into a different partition /
+    filename. **STOP — don't do (b.3) inside a Phase 1 writer commit.** It needs its own plan with a one-shot migration
+    script + fallback-reader removal, lands in its own PR. Workspace rule **"Manifest migration, NOT fallback"**: the
+    only documented exception is hive-vocab `category=` vs `asset_group=` legacy preservation. Examples:
+    - Prediction `canonical_question_group`: today encoded as `data_type` (e.g. `data_type=BTC` / `data_type=ETH` /
+      `data_type=SPX`) so the manifest collapses 24 hourly markets into one `BTC_UP_DOWN_HOURLY` row. Has its own
+      successor plan `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` (multi-week
+      migration). DO NOT touch in Phase 1 of this plan. → Precedent migration scripts:
+      [`instruments-service/scripts/migrate_local_sfi_to_canonical.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_local_sfi_to_canonical.py),
+      [`instruments-service/scripts/migrate_defi_legacy_venue_chain.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_defi_legacy_venue_chain.py).
+
+- **(c) READER** — does any downstream consumer (other services' pre-flight gates, MDPS, features-\*, deployment-ui
+  drill-down, deployment-api parquet-download endpoint) need to learn about the new path? Sports + DeFi readers already
+  probe candidate paths via UAC SSOT (`candidate_parquet_paths`); ML/strategy/execution readers don't yet exist for the
+  experiment data because nobody reads ML training artefacts as a downstream — the only consumer is the data-status
+  panel itself, which reads the manifest, not the parquet. So (c) is usually a no-op for the experiment-axis work.
+
+**Principle**: prefer (a)-only fixes. Bump to (b.2) when the axis is genuinely a separate filesystem dimension
+(ml/strategy/execution `job_id` is the canonical case). NEVER do (b.3) inside a Phase 1 writer commit — those need their
+own plan.
+
+**Per-service execution loop** (do this for each writer — service by service, NOT all at once):
+
+1. **Walk the bucket** — `gcloud storage ls gs://{bucket}/...` or
+   `GET /api/data-status/list-files?service=...&asset_group=...&date={recent}` — confirm the actual on-disk path layout.
+2. **Decide (a) / (b.1) / (b.2) / (b.3)** per the tree above.
+3. **Write the fix** — one-line manifest-kwarg add (a), or partition-layer add (b.2).
+4. **Run** `bash scripts/quality-gates.sh` → commit + push to `live-defi-rollout` per the dirty-deps rule (no quickmerge
+   required).
+5. **Verify breakdowns light up** —
+   `curl http://localhost:8004/api/data-status/coverage-summary | jq '.{service}.{asset_group}.breakdowns'` — confirm
+   the axis dict populates with real values (not `__legacy__` only).
+6. **Move to next service.**
+
+**Highest-leverage order** (these unlock the empty axes the user sees TODAY in the deployment-ui):
+
+1. **MTDS sports** `league_id` — confirm populates on every per-fixture write. Path layout already has `league={L}`, so
+   this is **(a)-only**. (See memory: `project_sports_phantom_fixtures_recovery_2026_05_06.md` for full sports manifest
+   state.)
+2. **features-sports** `feature_group` — each calculator adapter writes `feature_group=` matching the
+   upstream-source-keyed bucket (`api_football_only` / `footystats_only` / `understat_only` / `sfi_progressive_only` /
+   `cross_source` / `weather`). Audit the 30+ calculators; flag any that omit it. Path layout already has
+   `entity={E}/league={L}/...` — confirm whether `feature_group` is encoded somewhere on disk OR is purely a manifest
+   column for breakdowns. Purely manifest → **(a)-only**. On-disk in another partition → **(b.2)**.
+3. **ml-training-service** `job_id` — derive `job_id = f"{RUN_TS}-{experiment_name}"` at ServiceBootstrap or top-level
+   job init, thread through every `manifest.record_captured(job_id=job_id, ...)`. Walk the bucket — does parquet path
+   include `job_id=` for new writes? If not, **(b.2)**: extend writer path AND reader fallback. ml-inference / strategy
+   / execution follow the same shape.
+4. **features-onchain** `feature_group` + `chain` — per calculator (`lending_rates` / `lst_yields` / `gas_fees` /
+   `dex_liquidity` / `bridge_events`). DeFi `chain=` partition already exists per the per-asset-group shard-key matrix;
+   `feature_group` should be **(a)-only** or **(b.2)**.
+5. **features-calendar** `feature_group` — per source (`fred` / `tradingeconomics` / `sec` / `holiday_calendar`).
+   Cross-asset shared bucket; verify path layout before assuming.
+6. **features-cross-instrument / multi-timeframe** `timeframe` — confirm populates in the manifest. `timeframe=`
+   partition already on every features-\* path → **(a)-only**.
+
+**STOP rule**: if a service surfaces a (b.3) case (axis baked into wrong partition → needs migration), STOP and report —
+don't try to land it inside a Phase 1 commit. The canonical (b.3) example is predictions `canonical_question_group` —
+see the predictions plan, multi-week scope. Open new plan for any other (b.3) discovered.
+
 #### Phase 1A — Per-service shard-axis audit + fixes (parallel)
 
 - [ ] [audit] P1. Per-service writer probe: confirm the manifest rows being written today populate the columns listed in
