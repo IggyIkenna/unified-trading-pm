@@ -3,9 +3,9 @@ name: mtds-multi-dimensional-shard-architecture
 overview: Multi-dimensional shard tracking, schema validation, smart caching, and UAC governance for MTDS
 type: code
 epic: epic-code-completion
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-04-12
+status: archived
+archived_date: 2026-05-06
+archived_reason: superseded by manifest_schema_v6_quote_margin_combo_2026_04_23 + manifest_429_per_vm_sharding_2026_04_25 per 2026-04-25 reconciliation
 
 completion_gates:
   code: C5
