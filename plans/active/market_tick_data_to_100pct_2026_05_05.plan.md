@@ -182,24 +182,32 @@ passing.
 
 ### Phase 1.5a-1 — UAC SSOT alignment (Q&A 4 + Q&A 9)
 
-- [ ] [SCRIPT] P0. **UAC** `unified_api_contracts/registry/defi_venues.py`: - Add to `ALL_DEFI_VENUES`:
+- [x] [SCRIPT] P0. **UAC** `unified_api_contracts/registry/defi_venues.py`: - Add to `ALL_DEFI_VENUES`:
       `MORPHOVAULTS-ETHEREUM`, `YEARNV3-ETHEREUM`, `FRAX-ETHEREUM`, `MAKER-ETHEREUM` (no-underscore canonical form per
       Q&A 4 decision). - Add to `LEGACY_DEFI_VENUE_ALIASES`: `MORPHO_VAULTS → MORPHOVAULTS-ETHEREUM`,
       `YEARN_V3 → YEARNV3-ETHEREUM`, `FRAX → FRAX-ETHEREUM`, `MAKER → MAKER-ETHEREUM`. Audit-script normaliser
-      auto-handles the legacy form via these aliases until the handler change in Phase 1.5a-2 lands.
-- [ ] [SCRIPT] P0. **UAC** `unified_api_contracts/canonical/domain/prediction/coverage_starts.py` (or wherever
+      auto-handles the legacy form via these aliases until the handler change in Phase 1.5a-2 lands. **Done 2026-05-06
+      UAC `a901e91`** (CosmicTrader).
+- [x] [SCRIPT] P0. **UAC** `unified_api_contracts/canonical/domain/prediction/coverage_starts.py` (or wherever
       `PREDICTION_COVERAGE_START` lives — verify location): change `POLYMARKET = "2020-06-12"` →
-      `POLYMARKET = "2022-11-21"` (CLOB launch). Per Q&A 9.
-- [ ] [SCRIPT] P0. **UAC** add `KNOWN_COVERAGE_GAPS` entry:
+      `POLYMARKET = "2022-11-21"` (CLOB launch). Per Q&A 9. **Done 2026-05-06 UAC `a901e91`** — actual location was
+      `canonical/coverage_starts.py` (the `(or wherever)` fallback in the original todo).
+- [x] [SCRIPT] P0. **UAC** add `KNOWN_COVERAGE_GAPS` entry:
       `("polymarket", "*"): [(date(2020, 6, 12), date(2022, 11, 20))]` documenting the on-chain LMSR window as a
-      provider-side exclusion (not a backfill TODO). Affects data-status denominator clipping.
-- [ ] [SCRIPT] P0. **MTDS** `cli/handlers/vault_share_price_handler.py`: emit canonical venue names (`MORPHOVAULTS`,
-      `YEARNV3`, `FRAX`, `MAKER`) instead of legacy `MORPHO_VAULTS` / `YEARN_V3`.
+      provider-side exclusion (not a backfill TODO). Affects data-status denominator clipping. **Done 2026-05-06 UAC
+      `a901e91`** — shipped as `PREDICTION_KNOWN_COVERAGE_GAPS` keyed `("POLYMARKET", "*")` (uppercase to match the
+      per-asset-group dict pattern in `coverage_starts.py`).
+- [x] [SCRIPT] P0. **MTDS** `cli/handlers/vault_share_price_handler.py`: emit canonical venue names (`MORPHOVAULTS`,
+      `YEARNV3`, `FRAX`, `MAKER`) instead of legacy `MORPHO_VAULTS` / `YEARN_V3`. **Done 2026-05-06 MTDS `8bf742a`**
+      (CosmicTrader).
 - [ ] [HUMAN] P0. UAC + MTDS quality-gates pass; commit + push (UAC first → wait for AR `:latest` to land per CLAUDE.md
-      UTL→consumer race rule → then MTDS).
-- [ ] [SCRIPT] P0. Lock-test: extend `tests/unit/sports/test_gcs_paths_player_values.py` pattern with a
+      UTL→consumer race rule → then MTDS). **Operator-verify**: both repos pushed to origin/live-defi-rollout per
+      `a901e91` + `8bf742a`; explicit QG run not yet logged.
+- [x] [SCRIPT] P0. Lock-test: extend `tests/unit/sports/test_gcs_paths_player_values.py` pattern with a
       `tests/unit/defi/test_vault_venue_canonical_names.py` asserting the 4 canonical venues are in `ALL_DEFI_VENUES`
-      and the legacy forms are in `LEGACY_DEFI_VENUE_ALIASES`. Regression-proof.
+      and the legacy forms are in `LEGACY_DEFI_VENUE_ALIASES`. Regression-proof. **Done 2026-05-06 UAC `a901e91`** —
+      shipped at `tests/unit/test_vault_venue_canonical_names.py` (1 dir higher than the original todo target;
+      asserts identical guarantees).
 
 ### Phase 1.5a-2 — UTL NormalisingManifestWriter (Q&A 8)
 
