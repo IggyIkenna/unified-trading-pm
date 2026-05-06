@@ -355,4 +355,263 @@ Audit pass 2026-05-06. Files inspected: `unified_api_contracts/canonical/domain/
 - **BUILD-PRED4**: Update MTDS prediction adapter (`polymarket_adapter.py`, `kalshi_adapter.py`) to read at
   `canonical_question_group` granularity, not `data_type=_mkt_str`.
 
+### features-onchain-service — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06 by Sonnet sub-agent. Source files: `features_onchain_service/engine/orchestrator.py`,
+`features_onchain_service/app/core/feature_writer.py`, `dependency_checker.py`, `mtds_canonical_reader.py`,
+`schemas/feature_builder_registry.py`, 25+ calculators under `app/calculators/`.
+
+#### ✓ Matches target
+
+- **Write-gate trio fires** — `OnChainFeatureWriter.write_features` (`feature_writer.py:119-133`) returns False on empty
+  DataFrame; `FeatureWriteGate` from UTL evaluated at every write (`feature_writer.py:154-178`); timestamp-date
+  alignment validated at 99% (`feature_writer.py:326-348`). Three of the four pillars are honored at the writer.
+- **`LookaheadBiasError` from UTL** — imported and raised via `_enforce_point_in_time` (`feature_writer.py:270-324`).
+  Strict in production, warn-only in mock mode. The currently-firing case for `lst_yields` is here.
+- **Per-day write isolation** — `_process_daily_feature_group` writes one parquet per day with `date=cur` so a single
+  bad day doesn't poison the whole window. The pre-2026-05 concat-all-write-once anti-pattern has been fixed.
+- **Shard-level failure isolation** — `batch_handler.py:112-136` per-feature-group try/except.
+- **Honest progress events** — `LST_DAY_PROCESSED` per-day row counts (`orchestrator.py:654-665`),
+  `FEATURE_GROUP_WINDOW_SUMMARY` aggregates, `PERSISTENCE_STARTED/COMPLETED` from actual write site.
+- **Domain types from UAC** — `models.py` is a re-export facade over `unified_api_contracts.internal`.
+- **Canonical MTDS path probe + dual-vocab fallback** — `mtds_canonical_reader.py` uses `build_defi_partition_path` from
+  UAC; legacy `category=defi/` fallback limited to that single substitution.
+
+#### ❌ Mismatches
+
+- **[writer]** `orchestrator.py:163-172` — `ManifestWriter.add` called with only `(processing_date, row_count,
+  feature_group)`. **No `chain`, no `venue`, no `instrument_id`, no `data_type`.** DeFi target shard is
+  `(asset_group=defi, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)`. Current writer collapses
+  every `(feature_group, day)` to a single row regardless of how many chains × protocols were processed. Same
+  partial-bundle bug class as the handover incidents. Fix layer: **[per-service]**.
+- **[pre-flight]** `orchestrator.py:108-113` — `check_shard_freshness(bucket, date, service_name,
+  expected_venues=[feature_group])` is at `(date, feature_group)` only. If `lending_rates` was previously written for
+  ETHEREUM and Arbitrum data arrives later, skip-if-fresh **incorrectly reports the shard as fresh**. Pre-flight
+  coarser than writer = silent partial coverage. Fix layer: **[per-service]**.
+- **[record_empty / record_failed]** — Never called anywhere. Empty-loader days silently `continue`
+  (`orchestrator.py:1119-1121`, `_process_lst_yields` at `510-513`). The honest-coverage trio is unused.
+  Fix layer: **[per-service]**.
+- **[available_at]** — `_add_timestamp_out` (`feature_writer.py:238-268`) adds `timestamp_out` (observation +
+  synthetic 500ms delay), NOT `available_at`. No calculator stamps `available_at` on output. Downstream consumers
+  reading these parquets have no column to check `<= kickoff_or_target_ts - N`. Fix layer: **[per-service]** + **[UAC]**
+  (semantics).
+- **[lookahead]** — `LookaheadBiasError` only checks **output observation timestamps vs `as_of_date + 1 day`**, not
+  **input rows' `available_at` vs `target_ts - N`**. Structural gap: no calculator can input-check because
+  `available_at` is absent from upstream MTDS parquets. The currently-passing lst_yields case is the writer's
+  output-side guard, not the input-side rule the handover requires. Fix layer: **[per-service]** + **[UTL]** +
+  upstream **MTDS** must stamp `available_at`.
+- **[NaN threshold]** `feature_writer.py:61` — `nan_threshold=0.95` hardcoded. Per-feature-group thresholds belong in
+  UAC. Fix layer: **[UAC]** + **[UTL]** (`FeatureWriteGate` accept per-group lookup).
+- **[feature_group → required_inputs DAG]** `feature_builder_registry.py:59-76` — service-local `_metadata` dict
+  declares deps (`aave_rate_impact: [aave_lending_rates, aave_utilization]`, etc.). DAG belongs in UAC SSOT so
+  downstream pre-flight checks can also import without duplication. Fix layer: **[UAC]**.
+- **[downstream pre-flight checks one upstream bucket, not all DAG inputs]** `dependency_checker.py:41-63` —
+  `UPSTREAM_DEPS` is a fixed dict checking MDPS bucket existence + 3 optional MTDS buckets. Does NOT consult the
+  feature_group DAG. `rate_impact` can run even if `lending_rates` produced zero rows that day. Fix layer:
+  **[per-service]**.
+- **[CanonicalDefiShard service-local]** `mtds_canonical_reader.py:39-51` — used by 5 calculators. Cross-cutting shard
+  identity descriptor, belongs in `unified_api_contracts.defi` or UTL. Fix layer: **[UAC]**.
+- **[manifest concurrency]** No TTL-cached per-date freshness check. Multi-day window processing has no per-day
+  re-check. Concurrent workers will duplicate work. Fix layer: **[per-service]** (apply the
+  `_refresh_captured_cache + _is_now_captured` pattern from PM CLAUDE.md).
+- **[classify_venue_error / ADAPTER_FETCH_FAILED absent]** `data_loader.py` and adapters wrap exceptions with
+  `EnhancedError` but never call `classify_venue_error()` or emit `ADAPTER_FETCH_FAILED`. Workspace rule violation.
+  Fix layer: **[per-service]**.
+- **[CLI/registry inconsistency]** `parser.py:24` `CATEGORIES = ["CEFI", "DEFI"]` but `dependency_checker.py:76`
+  references `"TRADFI": "features-onchain-{project_id}"`. Either dead code or missing CLI choice. Fix layer:
+  **[per-service]** trim or extend.
+
+#### 🔀 Wrong layer
+
+- `CanonicalDefiShard` (`mtds_canonical_reader.py:39-51`) → UAC.
+- `FEATURE_GROUPS` list (`cli/parser.py:9-22`) + `_metadata` DAG (`feature_builder_registry.py:58-76`) → UAC.
+- `_MTDS_OUTPUT_BUCKET_DOMAINS` + `_PATH_DATA_TYPE` (`mtds_output_config.py:33-53`) — module docstring acknowledges
+  pending UAC migration. Lift.
+- `WRITE_GATE_CONFIG` `nan_threshold=0.95` (`feature_writer.py:52-65`) — per-group thresholds → UAC.
+
+#### ❓ Couldn't verify
+
+- Whether UTL `check_shard_freshness` accepts a `chain=` filter argument (currently supports `league_id=` only).
+  Even after writer fix, pre-flight would need API change.
+- Whether `add()` path sets `capture_status="captured"` vs leaving blank — affects data-status rendering.
+- Whether downstream strategy-service pre-flight reads features-onchain manifest at the right granularity.
+- Whether Phase 8 calculators (`block_priority_gas_distribution`, `concentrated_liquidity_il_realised`,
+  `vault_share_price_apy`, `pool_invariant_drift`) have actual MTDS partitions on disk — they currently silently produce
+  zero-row outputs when partitions don't exist (no `record_empty`).
+
+#### Lookahead-bias coverage matrix (features-onchain)
+
+| Calculator | LookaheadBiasError raised | available_at checked | Notes |
+|---|---|---|---|
+| `lst_yields` (orchestrator inline) | ✓ via writer | ❌ | Output-observation check vs as_of+1d, NOT input.available_at vs target-N |
+| `lending_rates`, `utilization`, `rewards`, `risk_params`, `flash_loan_availability`, `health_factor`, `liquidation_events`, `onchain_perps`, `macro_sentiment`, `rate_impact` | ✓ via writer (same path) | ❌ | Same: output-side only |
+| `aave_*_calculator.py` (lending/rate_impact/risk/utilization) | ❌ | ❌ | Calculator's `calculate_features` doesn't check lookahead at all |
+| Phase 8: `block_priority_gas_distribution`, `concentrated_liquidity_il_realised`, `vault_share_price_apy`, `pool_invariant_drift` | ❌ | ❌ | Not yet wired to dispatch; no guard |
+| `defillama_tvl`, `fear_greed`, `macro_sentiment_calculator`, `cryptoquant_exchange_flow`, `eigen_rewards`, `protocol_rewards`, `flash_loan_calculator`, `lst_staking`, `onchain_regime_calculator` | ❌ | ❌ | No lookahead guard in any |
+
+**Summary**: 11 feature_groups go through the shared writer's `_enforce_point_in_time` (output-side check only,
+not the input-side rule). 14+ calculators have no lookahead guard at all. The structural gap is missing `available_at`
+on MTDS upstream parquets — until that lands, calculators can't input-check.
+
+#### Migration items (features-onchain-service contribution)
+
+- None for this service's own historical writes — manifest rows are at `(feature_group, day)` granularity, which is
+  too coarse but not a v4-vs-v5 schema-version drift. **Corrective action is to expand the writer key, not migrate
+  existing rows.** Once writer is fixed, on-disk multi-chain coverage will be visible immediately.
+
+#### UTL-lift items (features-onchain-service contribution)
+
+- **LIFT-OC1**: `CanonicalDefiShard` (mtds_canonical_reader.py) → UAC `unified_api_contracts.defi`.
+- **LIFT-OC2**: `_MTDS_OUTPUT_BUCKET_DOMAINS` + `_PATH_DATA_TYPE` (mtds_output_config.py) → UAC.
+- **LIFT-OC3**: `feature_group → required_inputs` DAG (`_metadata` dict in feature_builder_registry.py) → UAC
+  `ONCHAIN_FEATURE_GROUP_DEPS`.
+- **LIFT-OC4**: NaN threshold from per-group UAC lookup, not service-hardcoded.
+
+### features-sports-service — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06 by Sonnet sub-agent. Source files: `features_sports_service/engine/batch_handler.py`,
+`writer.py`, `orchestrator.py`, `data/gcs_reader.py`, exporters, calculators, `compute/coverage_gate.py`,
+`tracking/feature_builder_registry.py`.
+
+#### ✓ Matches target
+
+- **Shard-level failure isolation** — per-table/per-feature-group try/except never raises in `batch_handler.py:370,
+  457, 520, 590`.
+- **Honest-coverage trio used** — `record_empty` for legitimately-empty (`batch_handler.py:357, 450, 513, 583`),
+  `record_failed` for exceptions (`379, 465, 528, 598`), `manifest.add()` for captured.
+- **`FeatureWriteGate`** applied (`writer.py:125`) with NaN 50%, alignment 90%, leakage check.
+- **`PointInTimeEnforcer`** + `LookaheadBiasError` imported (`writer.py:17, 53`).
+- **Live-mode lookahead re-raise** — `orchestrator.py:140-151` re-raises `PointInTimeViolation` after
+  `LOOKAHEAD_BIAS_VIOLATION` event.
+- **HT-odds PIT gate** — `odds_features_exporter.py:43-116` drops post-HT-break odds rows.
+- **Dual-vocab read** — `gcs_reader.py:39-41, 940-941` tries `asset_group=sports` canonical first then
+  `category=sports` legacy.
+- **`validate_batch_no_leakage`** strict=True (`orchestrator.py:156-212`).
+- **`asof_lookup`** filters `timestamp_col <= as_of` (`pipeline/_asof.py:81`).
+- **UAC `FEATURE_UPSTREAM_REQUIREMENTS` / `in_coverage`** imported in `compute/coverage_gate.py:44-48`.
+- **Per-league GCS write sharding** — `_write_per_league` (`batch_handler.py:176-231`) groups by league_id.
+- **`manifest.add(league_id=...)`** — captured rows at `batch_handler.py:615-628`.
+
+#### ❌ Mismatches
+
+- **[writer]** `batch_handler.py:615-628` — captured rows use legacy `manifest.add()` not `record_captured(row_key=...)`.
+  `add()` capture_status default is unclear (need to read manifest_writer.py:636-685 fully). v6 SSOT method is
+  `record_captured`. All 3 feature groups + all 14+ raw tables go through this path. Fix layer: **[per-service]**.
+- **[pre-flight]** `batch_handler.py:304-308` — pre-flight `manifest.lookup` row_key = `{date, feature_group}` only.
+  Missing `fixture_id`, `league_id`, `timeframe`. Day-level captured-status will skip recompute for ALL leagues even
+  if individual leagues failed. Coarser than writer's per-league sharding. Fix layer: **[per-service]**.
+- **[writer]** `manifest.add()` for captured rows does NOT include `timeframe` or `fixture_id` even when writer
+  shards by league_id. Per-fixture drill-down impossible. Fix layer: **[per-service]**.
+- **[writer]** `batch_handler.py:40-44` `_FEATURE_GROUP_TO_DATA_TYPE` maps **only 3 of 14+ feature groups** to canonical
+  data_type. Remaining 11 raw table groups (fixture_stats, fixture_events, lineups, player_stats, injuries, players,
+  venues, fixtures, leagues, teams, referees, coaches, standings, rounds) write `data_type=""` — invisible to data-
+  status reader filtered by data_type. Fix layer: **[per-service]**.
+- **[available_at] CRITICAL** — `_ensure_timestamp` (`batch_handler.py:146-151`) sets `timestamp = datetime(year, month,
+  day, tzinfo=UTC)` (midnight UTC) for any DataFrame lacking timestamp. Midnight passes the 23:59:59 PIT enforcer
+  silently → every output table's `available_at` is artificial midnight, NOT source-specific availability. Specifically:
+  - **Lineups**: should be `kickoff - 60min`; actual midnight. ❌
+  - **Injuries**: should be event-time of injury report; actual midnight. `injury_impact_calculator.py` does not
+    filter by prior-fixture timing. ❌
+  - **Pre-match odds**: `bm_time` / `bm_minutes_to_kickoff` used for HT-gate filtering only, NOT propagated as
+    `available_at` column on output. ❌
+  - **Post-match (xG, fixture_stats, sfi_progressive, results)**: should be `match_end_time`; actual midnight.
+    Midnight is BEFORE kickoff for same-day post-match data → leak risk. ❌
+  - **Weather**: should be forecast-issue time; no `forecast_issue_time` column in output. ❌
+  Fix layer: **[per-service]** + **[UTL]** (per-source availability stamping helper).
+- **[writer]** `writer.py:65-66` — `except LookaheadBiasError: pass` in `_enforce_pit_sports` with `strict=False`. The
+  enforcer warns then raises; writer's `pass` eats it. **Future-timestamped observations never block batch writes.**
+  `strict=False` is intentional per comment but means PIT enforcer is informational-only in batch. Fix layer:
+  **[per-service]**.
+- **[writer]** `batch_handler.py:492` — `export_derived_features(date_str)` called **without `horizon=`**. The horizon
+  gate (`apply_horizon_gate`) and `validate_pit_compliance` at `584-594` are never called. Post-match actuals
+  (home_goals, away_xg) are included in flat daily parquet without horizon gating. Downstream ML training reading
+  this can access post-match data for same-day fixtures. Fix layer: **[per-service]**.
+- **[pre-flight]** `_table_exists_in_gcs` (`batch_handler.py:154-173`) — `except Exception: return False` swallows
+  GCS auth failure → unnecessary recompute. Fix layer: **[per-service]**.
+- **[writer]** `batch_handler.py:629-631` — `manifest.write()` failure caught with `except Exception`, only warning.
+  If it fires for the whole batch day, **no manifest rows for any table** — entire day invisible to data-status. Fix
+  layer: **[per-service]**.
+- **[path-SSOT]** `gcs_reader.py:651, 675, 697, 1186, 1192` — hardcodes `sports_reference/by_date/day=.../entity=...`
+  paths inline (5+ sites). CLAUDE.md SSOT requires `from unified_api_contracts.sports import candidate_parquet_paths`
+  — no such import anywhere. Per-league fallback at line 697 partially re-implements UAC `SportsPathLayout.PER_DAY_PER_LEAGUE`.
+  Fix layer: **[per-service]**.
+- **[coverage_gate not wired]** `compute/coverage_gate.py` exists, imports UAC correctly, but
+  `check_calculator_coverage()` is **never called** in `derived_features_exporter.py` or `batch_handler.py`. Dispatch
+  uses only `if not data.empty:` guards. Module is dead code. Fix layer: **[per-service]**.
+- **[direct google.cloud import]** `gcs_reader.py:662, 946, 1082, 1179` — `from google.cloud import storage as
+  gcs_storage` directly. UCI `get_storage_client()` exists and is imported at line 34 but bypassed for bulk reference
+  reads. Fix layer: **[per-service]**.
+- **[progress events]** No `INSTRUMENT_PROCESSED` / `FIXTURE_PROCESSED` structured events with row counts. SSE
+  `emit_feature_ready` exists at `batch_handler.py:198, 221` but isn't `log_event` to the events bucket. Silent-success-
+  with-zero-output detection from event stream impossible. Fix layer: **[per-service]**.
+
+#### 🔀 Wrong layer
+
+- `_ensure_timestamp` (`batch_handler.py:146-151`) — midnight UTC fallback workaround for missing `available_at`. Should
+  not exist; replace with per-source stamping. **[UTL lift]**.
+- `_validate_feature_quality` (`batch_handler.py:94-143`) — inline all-NaN counter + classify_and_emit_error. Subset
+  of `FeatureWriteGate` already used in writer.py. Duplicate inline gate; delete. **[UTL]**.
+- `tracking/feature_builder_registry.py` `BuilderEntry` `required_inputs` DAG → UAC. **[UAC]**.
+- Dual-vocab `_MTDS_RAW_ODDS_ASSET_GROUP_SEGMENT` / `_MTDS_RAW_ODDS_LEGACY_HIVE_CATEGORY_SEGMENT`
+  (`gcs_reader.py:939-941`) → 7th+ inlined copy of dual-vocab probe across workspace. **[UTL]**.
+- Horizon sidecar `_write_horizon_schema_sidecar` (`writer.py:164-207`) — bare `except Exception` swallows failures.
+  Horizon metadata should be parquet schema or UTL-backed contract, not best-effort JSON sidecar. **[UTL/UAC]**.
+
+#### ❓ Couldn't verify
+
+- Whether `add()` defaults `capture_status="captured"` or leaves blank.
+- Whether UAC `FEATURE_UPSTREAM_REQUIREMENTS` covers all calc names (e.g. `elo`, `injury_impact`) or falls through
+  to `READY` for uncatalogued calcs.
+- Whether `compute_sfi_progressive_only.py` (`features_sports_service/scripts/`) is on canonical code path or one-off.
+  Uses finer per-league granularity than `batch_handler.py`.
+
+#### available_at stamping per source (features-sports)
+
+| Source | Calculator | Stamping rule | Matches handover? |
+|---|---|---|---|
+| Lineups | derived_features via `compute_player_lineup_batch` | `_ensure_timestamp` → midnight UTC | NO — should be `kickoff - 60min` |
+| Injuries | derived_features via `compute_injury_impact_batch` | midnight; not filtered by prior-fixture timing | NO — should be event-time |
+| Pre-match odds | odds_features_exporter | `bm_time` used for HT filter only, NOT on output | NO — `publication_time` not stamped |
+| Post-match (xG/fixture_stats/results/sfi_progressive) | derived_features | midnight; `_filter_completed_before` correct for history but stamps midnight not match_end | NO — CRITICAL leak risk |
+| Weather | `compute_weather_for_fixtures` | midnight; no `forecast_issue_time` | NO — distinction not maintained |
+
+#### Lookahead-bias coverage matrix (features-sports)
+
+| Calculator / context | LookaheadBiasError raised | Notes |
+|---|---|---|
+| `orchestrator.py` live mode | ✓ (re-raises PointInTimeViolation) | Correct |
+| `writer.py` batch mode `_enforce_pit_sports` | ❌ (`except LookaheadBiasError: pass`, strict=False) | Silently downgrades all to warning |
+| `derived_features_exporter.py` (22+ calcs) | ❌ | No per-input `available_at <= kickoff - N` guard |
+| `odds_features_exporter.py` | PARTIAL — HT break only | Other horizons not gated |
+| `export_derived_features` horizon gate | DEAD IN BATCH | `validate_pit_compliance` only fires when `horizon` arg passed; `batch_handler.py:492` calls without |
+
+#### Hardcoded sports paths (path-SSOT violations)
+
+All in `features_sports_service/data/gcs_reader.py`:
+- Line 651: `sports_reference/by_date/day={date}/entity={entity}/{entity}.parquet`
+- Line 675: same template (inside 7-day lookback loop)
+- Line 697: `sports_reference/by_date/day={date}/entity={entity}/league=` — partially re-implements UAC layout
+- Line 1186: `prefix = "sports_reference/by_date/day="`
+- Line 1192: `if "/entity=fixtures/fixtures.parquet" not in path:`
+
+#### Migration items (features-sports-service contribution)
+
+1. **MIG-FS1**: All `manifest.add()` calls for captured rows (`batch_handler.py:615-628`) → `record_captured`.
+2. **MIG-FS2**: Add `timeframe` + `fixture_id` to all manifest row_keys.
+3. **MIG-FS3**: Extend `_FEATURE_GROUP_TO_DATA_TYPE` to all 14 raw table groups.
+4. **MIG-FS4**: Replace hardcoded sports paths with `candidate_parquet_paths()`.
+5. **MIG-FS5**: Stamp `available_at` per source rules at write-time (needs UTL `availability_stamping.py`).
+6. **MIG-FS6**: Pass `horizon=` to `export_derived_features` in batch.
+7. **MIG-FS7**: Wire `coverage_gate.check_calculator_coverage()` into dispatch.
+8. **MIG-FS8**: Replace direct `from google.cloud import storage` with `get_storage_client()`.
+9. **MIG-FS9**: Make `manifest.write()` failure fatal or emit FAILED event.
+
+#### UTL-lift items (features-sports-service contribution)
+
+- **LIFT-FS1**: `_validate_feature_quality` (batch_handler.py:94-143) — duplicate of `FeatureWriteGate`; delete.
+- **LIFT-FS2**: `tracking/feature_builder_registry.py` `required_inputs` DAG → UAC.
+- **LIFT-FS3**: `_ensure_timestamp` (batch_handler.py:146-151) → delete; replace with per-source `available_at`
+  stamping from UTL `availability_stamping.py`.
+- **LIFT-FS4**: Dual-vocab `_MTDS_RAW_ODDS_*_SEGMENT` (gcs_reader.py:939-941) → UTL `hive_vocab.py` (7th workspace copy).
+
 <!-- AUDIT_FINDINGS_INSERT_BELOW -->
