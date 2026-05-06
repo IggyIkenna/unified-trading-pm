@@ -181,6 +181,52 @@ protocol-prefix list to lift to UAC) and instruments-service `_extract_predictio
   a first-class column. Encode this in Unit B schema definition when the plan unparks.
 - **No new prerequisite added.** This is a clean schema decision the plan can carry alone.
 
+### 2026-05-06 — A4 / Q2: SPORTS Layer 1 fixtures schema + range-fit verdict
+
+**What was checked:** `sports_reference/by_date/day=2024-08-15/entity=fixtures/fixtures.parquet`. 43 rows. Schema:
+```
+af_fixture_id int64, referee_name string, date string, timestamp string, periods_first string, periods_second string,
+venue_id double, venue_name string, venue_city string, status_long/short/elapsed_time, af_league_id int64,
+season int64, round string, af_home_id/away_id/winner_id, af_home_name/away_name, home_score/away_score,
+home_score_halftime/fulltime/extratime/penalty (and away_*), day string, data_available_at timestamp[UTC]
+```
+
+**Findings:**
+- **Fixture is the "instrument" for sports Layer 1** — confirmed. Each row is a fixture identified by
+  `af_fixture_id` with a single `timestamp` (kickoff). Schema is rich (referee, venue, scores, halftime/fulltime
+  splits) — completed-match data on this date.
+- **`data_available_at` IS stamped at write-time per fixture** — sample shows `2024-08-08 01:00:00+UTC` for a
+  fixture on `2024-08-15 01:00:00+UTC`, i.e. ~7 days before kickoff. (Aligns with the `kickoff - 72h` /
+  `kickoff - 60min` rules per the shard-granularity audit's sports temporal-availability stamping section.) This
+  is good news — sports already has the column the shard-granularity plan demands; the gap is in
+  features-sports midnight-UTC fallback (`_ensure_timestamp` at `batch_handler.py:146-151`), not at instruments
+  Layer 1.
+- **Schema cohesion concern:** prefixed columns (`af_*` for api-football, `tm_*` elsewhere likely) inside a
+  generic-named entity (`fixtures`). Reasonable per-source provenance; flag for harmonisation only if a
+  cross-source join is needed.
+- **Range model FIT VERDICT: does NOT apply naturally.** Each fixture is point-in-time
+  (`(af_fixture_id, kickoff_ts)`). There is no `(covered_from, covered_to, gap_dates)` semantic for fixtures
+  themselves — a fixture exists on its kickoff day, not as a range. The "coverage" question for sports is
+  different: "for league L on day D, how many fixtures were ingested vs how many actually played?" — a
+  *count-based* coverage matrix, not a *range-based* one. (A range model COULD apply to per-league season
+  windows: "Premier League season 2024-25 coverage_from=2024-08-16 to=2025-05-25 gap_dates=[mid-week breaks]" —
+  but that's a higher-level rollup, not the L1 atom.)
+
+**Implication for this plan:**
+- **Q2 is RESOLVED with a recommendation: scope sports OUT of v7 range index for the first cut.** Land
+  CEFI/TRADFI/DEFI/PREDICTION (where range model is the natural shape because instruments persist over multi-year
+  windows with daily/intraday data). Sports needs its own per-fixture coverage catalogue — a sibling artifact, not
+  the same shape.
+- **The catalogue plan (`instrument_catalogue_availability_matrix_2026_04_29`) already handles sports correctly**
+  — it's count-based (fixtures captured / fixtures expected per (league, day)), which IS the right shape for
+  sports. The range-index plan deferring sports doesn't leave a gap; the catalogue plan covers it.
+- **Update Unit B schema to explicitly state "asset_group ∈ {cefi, defi, tradfi, prediction}"** when this plan
+  unparks. Sports gets a follow-up plan if/when the catalogue's count-based aggregation hits scaling pain.
+- **`data_available_at` column already exists** on Layer 1 fixtures — when Layers 2/3 sports range-coverage is
+  designed (deferred), inputs will have honest PIT stamping. The shard-granularity Phase 1 fix
+  (features-sports `_ensure_timestamp` midnight UTC bug) is in the consumer, not the source.
+
+
 
 
 ## Relationship to existing plans
