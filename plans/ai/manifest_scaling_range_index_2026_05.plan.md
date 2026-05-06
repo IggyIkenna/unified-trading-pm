@@ -269,6 +269,50 @@ The `asset_class='crypto'` finding is **new and worse than the original Q5b note
   values, not just any values). The `'NASDAQ'` placeholder in `holiday_calendar` looks like a default-fill
   rather than a `pandas_market_calendars` lookup result.
 
+### 2026-05-06 — A6 / Q5c: options `available_from_datetime` semantics PARTIALLY confirmed + new gap found
+
+**What was checked:** sampled `instruments-store-cefi-{pid}/instrument_availability/by_date/day=2026-05-04/venue=DERIBIT/instruments.parquet`.
+3563 rows: 2918 OPTION + 547 COMBO + 74 FUTURE + 16 PERPETUAL + 8 SPOT_PAIR.
+
+**Findings:**
+
+1. **`available_from_datetime` = listing date — CONFIRMED for options + futures.**
+   - BTC-26JUN26 option chain (10 strikes inspected): all share `available_from_datetime=2025-06-26 00:00:00+UTC`
+     (12 months before the 2026-06-26 expiry). Identical timestamp across strikes → it's the **chain listing
+     date** (Deribit lists the chain together), not per-strike activation time.
+   - BTC-26JUN26 future: `available_from_datetime=2025-06-27` (1 day after option-chain listing — adjacent but
+     distinct).
+   - BTC-PERPETUAL: `available_from_datetime=2019-03-30` — perpetual listing date matches Deribit's BTC perp
+     launch. Plausible.
+2. **`available_to_datetime` = NaT (always null) — REGARDLESS of expiry.** 0/3563 rows have a non-null
+   `available_to_datetime`, including instruments with concrete `expiry` columns (futures + options). The schema
+   declares the column but the writer never populates it. Today's options chain happens to contain only live
+   instruments (`expiry >= today`, min expiry = 2026-05-04 = today), so this isn't visible from a single-day
+   snapshot. **For the range index, this means today's L1 has no `available_to` to use as the natural
+   `covered_to` for dated derivatives — must be derived from `expiry`.**
+3. **The day-snapshot partition holds the as-of-day live universe, not the historical universe.** 0/2918 options
+   on day=2026-05-04 are expired. To find an instrument's full lifetime via L1, must walk the day-partitions
+   between its `available_from_datetime` and either its `expiry` or its disappearance from a later partition.
+   This is exactly what the range index is supposed to compute — so the "where do I find the full lifetime?"
+   question is answered by the index existing.
+
+**Implication for this plan:**
+- **Q5c is RESOLVED with refinement:**
+  - `available_from_datetime` = chain/instrument **listing date** ✓ (matches plan's prior assumption)
+  - `available_to_datetime` is **declared but unpopulated** — the v7 range index for dated derivatives must
+    derive `covered_to` from `expiry`, not from `available_to_datetime`.
+- **Recommendation for Unit B schema:**
+  ```
+  covered_from = max(available_from_datetime, first day instrument actually has data in this bucket)
+  covered_to   = (expiry if instrument_type ∈ {OPTION, FUTURE, COMBO}) else (last day instrument has data; null if still active)
+  ```
+- **No new prerequisite required.** This works around the unpopulated `available_to_datetime` column rather than
+  blocking on a fix. Optional follow-up: file a separate ticket to populate `available_to_datetime=expiry` at
+  write-time so the column matches its name; cosmetic but reduces confusion for future consumers.
+- **Schema-cohesion plan note**: TRADFI futures (CME `MES`, etc.) need the same scrutiny — likely also have
+  `available_to_datetime=NaT`. Cross-check when running the same audit on
+  `instruments-store-tradfi/.../venue=CME/instruments.parquet`. Tracked but not blocking.
+
 
 
 
