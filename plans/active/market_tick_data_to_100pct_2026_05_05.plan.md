@@ -279,8 +279,8 @@ passing.
 > **Shard-granularity coordination required (CRITICAL — 2026-05-06)**: dry-run revealed that `migrate_tradfi_to_hive.py`
 > wrote at **per-day-aggregate** granularity (one `ticks.parquet` per `(date, venue, data_type)`, ~10k rows each) — but
 > per CLAUDE.md "Shard-granularity SSOT" the canonical writer for TradFi splits at instrument-level (per-instrument for
-> ETFs, per-root for futures+options bundles). Running the migration as-was would produce a SHARD ATOM that doesn't match
-> writer atomicity / manifest row key / data-status display.
+> ETFs, per-root for futures+options bundles). Running the migration as-was would produce a SHARD ATOM that doesn't
+> match writer atomicity / manifest row key / data-status display.
 >
 > **Rewrite shipped 2026-05-06 MTDS `b92e866`** — `migrate_tradfi_to_hive.py` now writes per-shard-atom output matching
 > the v5 shard-key matrix:
@@ -300,9 +300,10 @@ passing.
 > Coordination with `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`: the per-shard-atom output is stable
 > today. Once Stream A's `ManifestWriter.record_captured` gains `expected_root_clusters` + `cluster_extractor` params, a
 > follow-up patch will wire ManifestWriter v5 row writing into this script and pass cluster dicts for ES.OPT 11-cluster
-> + futures-chain by-root. **DO NOT RUN before that follow-up lands** — running with manifest writes disabled means the
-> orchestrator's pre-flight skip won't see the new files until Phase 1.5 main rebuild completes; safe but creates a
-> transient gap in data-status visibility.
+>
+> - futures-chain by-root. **DO NOT RUN before that follow-up lands** — running with manifest writes disabled means the
+>   orchestrator's pre-flight skip won't see the new files until Phase 1.5 main rebuild completes; safe but creates a
+>   transient gap in data-status visibility.
 >
 > Inventory of legacy data (verified 2026-05-06): 100,698 source files across 12 `day-` directories spanning 2025-11-02
 > to 2026-02-01. Sample per date: 82 NASDAQ + 426 NYSE ohlcv_1m equities + 40 CME options_chain + 10k+ CME trades. Real
@@ -324,6 +325,65 @@ passing.
       verified at `market_tick_data_service/scripts/migrate_*_canonical.py`; each emits paired RUN_STARTED +
       RUN_COMPLETED|FAILED via the new `run_lifecycle` helper for traceability.
 - [ ] [HUMAN] P0. Re-run `audit_legacy_paths.py` per AG → expected non-canonical count ≈ 0.
+
+### Phase 1.5a-5 — Hive vocab audit on migration writers (added 2026-05-06)
+
+Before any per-AG canonical migration runs, all writer-side `category=` (legacy) hive vocab in migration scripts needed
+flipping to canonical `asset_group=` (per CLAUDE.md "Asset-group vocabulary" SSOT
+`raw_tick_hive.RAW_TICK_ASSET_GROUP_HIVE_KEY`). Without this, every migration would write to a non-canonical path that
+would itself need a second migration to re-key — entirely defeating the purpose of running them.
+
+**Audit scope (2026-05-06)**: ripgrep across all repos for code constructing `category=` paths. 8 hits identified.
+Per-script classification:
+
+| Script                                                                 | Site                                                  | Category                                                             | Action                                                                                          |
+| ---------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `_migrate_tradfi_classifier.py`                                        | `_canonical_key()` line 253                           | WRITER                                                               | **fixed** MTDS `037c3bb`                                                                        |
+| `migrate_polymarket_canonical.py`                                      | `canonical_key()` line 377 (outer) + line 381 (inner) | WRITER (outer) + collision (inner)                                   | **fixed** MTDS `037c3bb` (see polymarket-specific block below)                                  |
+| `migrate_sports_canonical.py`                                          | `_canonical_key()` line 201                           | WRITER                                                               | **fixed** MTDS `037c3bb`                                                                        |
+| `migrate_cefi_instrument_types.py`                                     | 3 `new_path` sites (lines 208, 265, 288)              | WRITER                                                               | **fixed** MTDS `037c3bb`                                                                        |
+| `migrate_deribit_margin_split_v6.py`                                   | `prefix_tardis` line 234                              | READER (legacy probe)                                                | leave as-is — correct fallback                                                                  |
+| `migrate_to_per_instrument.py`                                         | `search_prefix` lines 145, 147                        | READER + in-place WRITER                                             | leave as-is — splits at SAME hive prefix, doesn't move between vocab                            |
+| `restructure_tradfi_files.py`                                          | `target_path` lines 132, 215                          | In-place WRITER (same hive prefix)                                   | leave as-is — same in-place pattern                                                             |
+| `deployment-service/.../data_status_checkers.py`                       | `calendar/category={fg}/` line 437                    | Different namespace (calendar feature-group, not raw_tick_data hive) | leave as-is — separate SSOT                                                                     |
+| `deployment-api/.../*` (drilldown, storage_facade, shard_detail, mock) | many                                                  | READER fallback                                                      | leave as-is — correct per CLAUDE.md "Readers must try canonical first then fall back to legacy" |
+
+**Polymarket-specific 2026-05-06 (canonical_key 6-dim layout)**:
+
+The polymarket migration's "canonical" 6-dim layout had a NAMING COLLISION with the MTDS hive vocab:
+
+- Outer partition (asset-group axis): was `category=prediction` → now `asset_group=prediction` (canonical hive vocab).
+- Inner partition (Polymarket market category — CRYPTO_PRICE / POLITICS_US / ...): was `asset_group=BTC` → now
+  `market_class=BTC`. Without this rename, the new outer-canonical path would read like
+  `asset_group=prediction/.../asset_group=BTC/` — same partition key with two different values, breaking hive semantics
+  entirely.
+- Renamed all 8 in-script sites: function param, DataFrame column (`df["asset_group"]` → `df["market_class"]`), path
+  partition string, `_CANONICAL_PATH_MARKER` (was `/asset_group=` → now `/market_class=`), shard_cols list, docstring.
+- Test file (`test_migrate_polymarket_canonical.py`): 11 sites updated (DataFrame col, kwargs, output path strings,
+  canonical-marker fixture). 15/15 polymarket tests pass; 16/16 tradfi tests pass.
+
+**Polymarket intermediate-canonical re-migration (one-off, NEW item)**:
+
+- [ ] [HUMAN] P1. **Re-migrate intermediate-canonical Polymarket files** — earlier runs of
+      `migrate_polymarket_canonical.py` wrote to the now-deprecated intermediate canonical path:
+      `category=prediction/data_source=POLYMARKET_CLOB/.../asset_group=BTC|ETH|.../market_type=*/...{cid}.parquet`.
+      After the 2026-05-06 vocab + collision fixes, these files match neither (a) the legacy `_SOURCE_PATH_RE` (which
+      targets the original BNB-overload pattern) nor (b) the new `_CANONICAL_PATH_MARKER = "/market_class="`. They will
+      be silently skipped by future migrate runs. - **Action**: write a one-off re-migration script (or extend
+      `migrate_polymarket_canonical.py` with `--re-migrate-intermediate-canonical` flag) that: 1. Detects files at
+      `category=prediction/.../asset_group={CRYPTO_PRICE|POLITICS_US|...}/...{cid}.parquet` via a dedicated regex (the
+      OLD inner `asset_group=` was always the categorisation token, not BTC/ETH — i.e. it matched the value space
+      CRYPTO_PRICE/POLITICS_US/MISC/etc). 2. For each match: rename the path to the new canonical:
+      `asset_group=prediction/.../market_class={CAT}/...{cid}.parquet` via server-side `bucket.copy_blob` + original
+      delete (cheap GCS metadata op, no row reads). 3. Manifest is rebuilt from disk truth in the existing Phase 1.5
+      main rebuild — no inline manifest writes. - **Inventory** (must run before scripting):
+      `gcloud storage ls --recursive       gs://market-data-tick-prediction-central-element-323112/raw_tick_data/by_date/day=*/category=prediction/.../asset_group=*/`
+      and exclude false-positive matches where the inner `asset_group=` value is `prediction` (which would mean the
+      OUTER hive partition was already canonical and the path is mis-shaped — different bug). - Estimated scope: any
+      polymarket data ever migrated by a prior run of this script (likely 0–N days, operator probe required to
+      confirm). - Tracked in
+      [`shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`](shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md)
+      as a per-service migration-verify item.
 
 ### Phase 1.5a — exit gate
 
