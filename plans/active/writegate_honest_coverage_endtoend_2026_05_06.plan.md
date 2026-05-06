@@ -25,6 +25,36 @@ double-SSOT, schema/manifest/GCS migrations sanctioned where needed, no compat s
 
 ---
 
+## Workflow note for the executing agent
+
+**Direct git workflow, NOT quickmerge.** Confirmed by user 2026-05-06: `bash scripts/quality-gates.sh` per-repo on the
+touched files, then `git add` + `git commit` + `git push origin live-defi-rollout` directly. Skip the two-pass model.
+Skip `quickmerge`. Reasoning: this is a multi-week multi-repo plan; quickmerge per commit is friction without benefit.
+
+**Before every commit + push:**
+
+1. `git fetch origin` — pull the latest reference; do NOT auto-merge.
+2. `git log HEAD..origin/live-defi-rollout --pretty='%h %ae %s'` — list incoming commits from anyone else (semver-bot,
+   harshkantariya, parallel agents).
+3. For each incoming commit, decide:
+   - **Compatible with this plan's scope** → `git pull --rebase` to absorb cleanly + continue.
+   - **Touches the same files this plan modifies** → read the diff. If complementary, rebase + adapt. If in direct
+     conflict with a plan principle, do NOT revert silently — flag back to the user with: commit hash, author, file:line
+     of conflict, summary of what the incoming commit does vs what the plan requires, and ask for direction. Pause work
+     on that file until user responds; continue on unaffected files.
+4. After your push, `git fetch origin && git log HEAD..origin/live-defi-rollout` — if anything new landed during your
+   push (race), absorb-and-continue or flag-and-pause per the same rule.
+
+**Concurrent-stream awareness (sports phantom recovery)**: the "Concurrent in-flight stream" section below documents the
+active sports backfill VM. Don't kill that VM, don't revert commits from that stream without coordination — they're
+solving a related-but-separate phantom-recovery problem with its own correctness invariants.
+
+**Workspace concurrency rule (CLAUDE.md `§ Per-VM shard isolation`)**: when this plan's reconciler scripts in Phase 3
+fan out to multiple VMs, each VM sets `VM_NAME=<unique>` + `MANIFEST_PER_VM_SHARDS=true`. Without this, parallel
+reconcilers clobber each other's manifest writes.
+
+---
+
 ## Cross-cutting principles (confirmed 2026-05-06)
 
 These bind every todo in this plan. Workspace CLAUDE.md additions in Phase 1C codify them:
@@ -74,13 +104,13 @@ These bind every todo in this plan. Workspace CLAUDE.md additions in Phase 1C co
 **Principle**: nothing in this plan accepts a temporary state as final. Every partial implementation lists its named
 successor plan that ships the proper fix. No "we'll fix it later" without a doc.
 
-| Temporary state shipped here                                                                                     | What it means                                                                                                                                                                                                                                                                                                                                                             | Successor plan / phase                                                                                                  |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `BUNDLED_DATA_TYPES` includes `prediction_canonical_question_group` with `PREDICTION_GROUPS = {}` empty registry | The slot is reserved + cluster guard is wired. No caller currently uses this data_type (Polymarket shards per-`base_asset` per current audit). When canonical_question_group SSOT lands, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Until then: any caller using this data_type fails loud → forces them to wait for the SSOT. | `prediction_canonical_question_group_uac_ssot_2026_<TBD>.plan.md` (greenfield UAC build; see Tracked Open Questions §1) |
-| (no temporary state on `match_end_time`)                                                                         | `match_end_time` is detected from real source signals, not a constant. Detection cascade in Phase 2.D below: api_football native field → SFI progressive-stats freeze → footystats / understat fallbacks → last-resort `kickoff + 120min` only when all else missing (and that case marks the row with a low-confidence flag).                                            | (in-scope)                                                                                                              |
-| MTDS v6 columns owner sign-off                                                                                   | Wired per the explicit decision rule (see Phase 2.A). UAC owner verifies completeness post-merge in case any data_type's row carries v6-relevant fields we missed.                                                                                                                                                                                                        | In-plan Phase 5 verification todo.                                                                                      |
-| `SOURCE_PRIORITY` registry top-entry-only                                                                        | Phase 1B seeds the priority-1 source per `(asset_group, data_type)`. Multi-source merge (timestamp-availability > coverage > info-richness > merge-different-fields per user 2026-05-06) is its own design pass.                                                                                                                                                          | `multi_source_priority_merge_2026_<TBD>.plan.md` (Tracked Open Questions §7)                                            |
-| MDPS / features-\* `feature_group → required_inputs[]` DAG inlined per-service                                   | Three services keep their local DAGs (features-onchain, features-sports, features-delta-one). Lookahead-bias enforcement still runs but reads from per-service DAG.                                                                                                                                                                                                       | `feature_dag_uac_ssot_2026_<TBD>.plan.md` (Tracked Open Questions §2)                                                   |
+| Temporary state shipped here                                                                                     | What it means                                                                                                                                                                                                                                                                                                                                                             | Successor plan / phase                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BUNDLED_DATA_TYPES` includes `prediction_canonical_question_group` with `PREDICTION_GROUPS = {}` empty registry | The slot is reserved + cluster guard is wired. No caller currently uses this data_type (Polymarket shards per-`base_asset` per current audit). When canonical_question_group SSOT lands, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Until then: any caller using this data_type fails loud → forces them to wait for the SSOT. | [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](./predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md) — drafted 2026-05-06 |
+| (no temporary state on `match_end_time`)                                                                         | `match_end_time` is detected from real source signals, not a constant. Detection cascade in Phase 2.D below: api_football native field → SFI progressive-stats freeze → footystats / understat fallbacks → last-resort `kickoff + 120min` only when all else missing (and that case marks the row with a low-confidence flag).                                            | (in-scope)                                                                                                                                                                            |
+| MTDS v6 columns owner sign-off                                                                                   | Wired per the explicit decision rule (see Phase 2.A). UAC owner verifies completeness post-merge in case any data_type's row carries v6-relevant fields we missed.                                                                                                                                                                                                        | In-plan Phase 5 verification todo.                                                                                                                                                    |
+| `SOURCE_PRIORITY` registry top-entry-only                                                                        | Phase 1B seeds the priority-1 source per `(asset_group, data_type)`. Multi-source merge (timestamp-availability > coverage > info-richness > merge-different-fields per user 2026-05-06) is its own design pass.                                                                                                                                                          | `multi_source_priority_merge_2026_<TBD>.plan.md` (Tracked Open Questions §7)                                                                                                          |
+| MDPS / features-\* `feature_group → required_inputs[]` DAG inlined per-service                                   | Three services keep their local DAGs (features-onchain, features-sports, features-delta-one). Lookahead-bias enforcement still runs but reads from per-service DAG.                                                                                                                                                                                                       | `feature_dag_uac_ssot_2026_<TBD>.plan.md` (Tracked Open Questions §2)                                                                                                                 |
 
 Anything not listed here is intended as the final shape post-merge. If a reviewer finds a hidden temporary state, file
 it as a plan-amendment todo before merging.
@@ -211,118 +241,93 @@ every repo touched in Phase N.
 ## Concurrent in-flight stream — sports phantom FIXTURES recovery (2026-05-06)
 
 A separate stream is running in parallel to this plan, owned by the
-`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan. Be aware while
-executing this plan because the recovery touches the same `ManifestWriter` /
-orchestrator surfaces this plan modifies — the two streams must not step on
-each other.
+`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan. Be aware while executing this plan because the recovery
+touches the same `ManifestWriter` / orchestrator surfaces this plan modifies — the two streams must not step on each
+other.
 
 ### What's running
 
-**Live VM (as of 2026-05-06 13:54 UTC)**: `af-backfill-20260506-135454` on
-asia-northeast1-c, e2-standard-4, running api_football FIXTURES backfill
-2020-06-06 → 2026-05-04. Estimated ~10h wall-clock (most dates are
-no-fixture days = fast paths; match days ~80s each for the api_football
-fetch + per-league manifest write). After this VM auto-shuts, a sequential
-chain runner (`deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh`,
-commit `5be53a7`) launches 5 follow-on VMs (PLAYER_STATS / FIXTURE_STATS /
-FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES) — singleton-locked on
-`af-backfill-` prefix; ~3-5h sequential.
+**Live VM (as of 2026-05-06 13:54 UTC)**: `af-backfill-20260506-135454` on asia-northeast1-c, e2-standard-4, running
+api_football FIXTURES backfill 2020-06-06 → 2026-05-04. Estimated ~10h wall-clock (most dates are no-fixture days = fast
+paths; match days ~80s each for the api_football fetch + per-league manifest write). After this VM auto-shuts, a
+sequential chain runner (`deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh`, commit `5be53a7`)
+launches 5 follow-on VMs (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES) — singleton-locked
+on `af-backfill-` prefix; ~3-5h sequential.
 
 ### Why it's running
 
-The orchestrator's FIXTURES adapter pre-2026-05-06 was emitting
-`manifest.add(row_count=0)` for every Prediction-tier league × date (zero-fixture
-days), creating ~100k phantom `captured` rows that violate CLAUDE.md "4 pillars"
-rule #1. Root-cause writer fix shipped in instruments-service `f36651c`. The
-recovery sequence:
+The orchestrator's FIXTURES adapter pre-2026-05-06 was emitting `manifest.add(row_count=0)` for every Prediction-tier
+league × date (zero-fixture days), creating ~100k phantom `captured` rows that violate CLAUDE.md "4 pillars" rule #1.
+Root-cause writer fix shipped in instruments-service `f36651c`. The recovery sequence:
 
-1. `flip_phantom_fixtures_zero_rows.py` (instruments-service `962982e`) flipped
-   100k phantoms `captured`+`instrument_count=0` → `empty_confirmed`. **Wrong**: orchestrator
-   skips both `captured` and `empty_confirmed`.
-2. `flip_phantom_to_attempted_failed.py` (`2821111`) re-flipped to
-   `attempted_failed` + extended to 75k cap-zero rows on per-fixture downstreams
-   (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES).
-   **Insufficient**: discovered `check_shard_freshness` ignores
-   `capture_status` — attempted_failed treated as "fresh" by orchestrator
-   pre-flight (see `feedback_check_shard_freshness_ignores_capture_status.md`).
-3. `write_phantom_reflip_per_vm_shard.py` (`2d18d0d`) mirrored corrective rows
-   to a fresh per-VM shard so reader's fall-back merge sees them past the 120s
-   canonical mtime threshold (see `feedback_manifest_reader_staleness_per_vm_fallback.md`).
-4. `delete_phantom_rows_from_shards.py` (`73be000`) **DELETED** the 176k
-   phantom rows (canonical + 10 per-VM shards with backups). Goal: orchestrator
-   sees them as MISSING and re-fetches.
-5. **Discovered**: orchestrator pre-flight is at (date, data_type) granularity,
-   not per-league — once any league has FIXTURES for date X, the date is "fresh"
-   and the WHOLE date is skipped. See
+1. `flip_phantom_fixtures_zero_rows.py` (instruments-service `962982e`) flipped 100k phantoms
+   `captured`+`instrument_count=0` → `empty_confirmed`. **Wrong**: orchestrator skips both `captured` and
+   `empty_confirmed`.
+2. `flip_phantom_to_attempted_failed.py` (`2821111`) re-flipped to `attempted_failed` + extended to 75k cap-zero rows on
+   per-fixture downstreams (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES).
+   **Insufficient**: discovered `check_shard_freshness` ignores `capture_status` — attempted_failed treated as "fresh"
+   by orchestrator pre-flight (see `feedback_check_shard_freshness_ignores_capture_status.md`).
+3. `write_phantom_reflip_per_vm_shard.py` (`2d18d0d`) mirrored corrective rows to a fresh per-VM shard so reader's
+   fall-back merge sees them past the 120s canonical mtime threshold (see
+   `feedback_manifest_reader_staleness_per_vm_fallback.md`).
+4. `delete_phantom_rows_from_shards.py` (`73be000`) **DELETED** the 176k phantom rows (canonical + 10 per-VM shards with
+   backups). Goal: orchestrator sees them as MISSING and re-fetches.
+5. **Discovered**: orchestrator pre-flight is at (date, data_type) granularity, not per-league — once any league has
+   FIXTURES for date X, the date is "fresh" and the WHOLE date is skipped. See
    `feedback_orchestrator_freshness_per_league_granularity.md`.
-6. **Orchestrator patched** (instruments-service `d73565a`) to defer pre-flight
-   to per-entity handlers when `expected[]` contains any of 17 sports
-   per-league entities. Per-entity handlers' existing `_should_skip_date_for_per_league`
-   pattern (orchestrator.py:490) handles per-(date, data_type, league_id)
-   correctly. **THIS is the architectural fix this plan should be aware of.**
+6. **Orchestrator patched** (instruments-service `d73565a`) to defer pre-flight to per-entity handlers when `expected[]`
+   contains any of 17 sports per-league entities. Per-entity handlers' existing `_should_skip_date_for_per_league`
+   pattern (orchestrator.py:490) handles per-(date, data_type, league_id) correctly. **THIS is the architectural fix
+   this plan should be aware of.**
 
-The currently-running VM v6 was launched after the patch + confirmed working in
-production: log shows `"date=2020-06-07: deferring pre-flight to per-league
-entity handlers"` + `"SPORTS: No fixtures for date=2020-06-07 — wrote
-empty_confirmed markers for 33 leagues"`. Patch is live + correct behavior.
+The currently-running VM v6 was launched after the patch + confirmed working in production: log shows
+`"date=2020-06-07: deferring pre-flight to per-league entity handlers"` +
+`"SPORTS: No fixtures for date=2020-06-07 — wrote empty_confirmed markers for 33 leagues"`. Patch is live + correct
+behavior.
 
 ### Potential effects on this plan
 
 **Surfaces touched that overlap with this plan's scope:**
 
-1. **`ManifestWriter` per-VM shard merge** (`unified-trading-library/.../manifest_writer.py:2222`):
-   the recovery stream's `delete_phantom_rows_from_shards.py` mutated the
-   `_index/per_vm/*.parquet` set in the sports bucket. If this plan's Phase 1A
-   `record_captured` contract change introduces new shard-key columns or
-   migrates existing ones, the recovery's deleted-then-rewritten rows must
-   migrate cleanly. The DELETE script's signature filter
-   (`(capture_status='attempted_failed' AND error_reason marker) OR
-   (capture_status='captured' AND instrument_count==0)`) leaves all columns
-   otherwise unchanged, so a v6→v7 schema upgrade should be transparent.
+1. **`ManifestWriter` per-VM shard merge** (`unified-trading-library/.../manifest_writer.py:2222`): the recovery
+   stream's `delete_phantom_rows_from_shards.py` mutated the `_index/per_vm/*.parquet` set in the sports bucket. If this
+   plan's Phase 1A `record_captured` contract change introduces new shard-key columns or migrates existing ones, the
+   recovery's deleted-then-rewritten rows must migrate cleanly. The DELETE script's signature filter
+   (`(capture_status='attempted_failed' AND error_reason marker) OR (capture_status='captured' AND instrument_count==0)`)
+   leaves all columns otherwise unchanged, so a v6→v7 schema upgrade should be transparent.
 
-2. **`check_shard_freshness` (UTL)**: this plan's Phase 1A may add per-row
-   capture_status filtering to the freshness check (closing the
-   "attempted_failed treated as fresh" hole architecturally rather than via
-   per-service defer-to-handler workaround). When that lands, the
-   per-service patch in instruments-service `d73565a` becomes redundant but
-   harmless — it just makes is_fresh=False unconditionally for sports
-   per-league entities, which is what the new UTL behavior would do anyway.
-   Recommend keeping the instruments-service patch in place until UTL fix
-   ships + verifying the new path doesn't regress (test: launch a
-   `--sports-entity FIXTURES` VM, confirm it doesn't skip-cycle).
+2. **`check_shard_freshness` (UTL)**: this plan's Phase 1A may add per-row capture_status filtering to the freshness
+   check (closing the "attempted_failed treated as fresh" hole architecturally rather than via per-service
+   defer-to-handler workaround). When that lands, the per-service patch in instruments-service `d73565a` becomes
+   redundant but harmless — it just makes is_fresh=False unconditionally for sports per-league entities, which is what
+   the new UTL behavior would do anyway. Recommend keeping the instruments-service patch in place until UTL fix ships +
+   verifying the new path doesn't regress (test: launch a `--sports-entity FIXTURES` VM, confirm it doesn't skip-cycle).
 
-3. **Manifest backups in canonical bucket**: recovery wrote 4 backup blobs
-   in `gs://instruments-store-sports-central-element-323112/_index/`:
+3. **Manifest backups in canonical bucket**: recovery wrote 4 backup blobs in
+   `gs://instruments-store-sports-central-element-323112/_index/`:
    - `availability_index.20260506-111222.bak.parquet` (pre-flip-1)
    - `availability_index.20260506-112347.bak.parquet` (pre-flip-2)
-   - 10 per-VM shard `.20260506-120021.bak.parquet` siblings (pre-DELETE)
-   These are reversibility safety nets. **Do not delete** them while the
-   recovery VMs are still running. After verify (~2026-05-07) they can be
-   purged.
+   - 10 per-VM shard `.20260506-120021.bak.parquet` siblings (pre-DELETE) These are reversibility safety nets. **Do not
+     delete** them while the recovery VMs are still running. After verify (~2026-05-07) they can be purged.
 
-4. **`af-backfill-` VM concurrency**: the recovery stream's chain runner
-   uses the singleton-locked launcher (`launch-api-football-backfill-vm.sh`).
-   This plan's Phase 2.D instruments-service work (writer-side changes to
-   `_create_empty_output` callsite categorisation) does not launch
-   `af-backfill-` VMs, so no direct lock conflict — but if a Phase 2.D
-   smoke test wants to launch one, sequence after the chain runner has
-   finished its 5 entities or use `--force`.
+4. **`af-backfill-` VM concurrency**: the recovery stream's chain runner uses the singleton-locked launcher
+   (`launch-api-football-backfill-vm.sh`). This plan's Phase 2.D instruments-service work (writer-side changes to
+   `_create_empty_output` callsite categorisation) does not launch `af-backfill-` VMs, so no direct lock conflict — but
+   if a Phase 2.D smoke test wants to launch one, sequence after the chain runner has finished its 5 entities or use
+   `--force`.
 
 5. **Orchestrator `defer pre-flight` log line**: the new log signature is
-   `"date={D}: deferring pre-flight to per-league entity handlers (sports
-   per-league mode; expected={...})"`. If this plan adds telemetry/structured
-   events around pre-flight, this is a new log shape to be aware of.
+   `"date={D}: deferring pre-flight to per-league entity handlers (sports per-league mode; expected={...})"`. If this
+   plan adds telemetry/structured events around pre-flight, this is a new log shape to be aware of.
 
 ### Memory entries to read for context
 
 - `project_sports_phantom_fixtures_recovery_2026_05_06.md` — full session log
-- `feedback_orchestrator_freshness_per_league_granularity.md` — the
-  architectural finding that drives the orchestrator patch
-- `feedback_check_shard_freshness_ignores_capture_status.md` — the related
-  UTL-level finding
-- `feedback_manifest_reader_staleness_per_vm_fallback.md` — the 120s mtime
-  threshold gotcha (relevant to any one-shot manifest mutation script this
-  plan's Phase 3 might write)
+- `feedback_orchestrator_freshness_per_league_granularity.md` — the architectural finding that drives the orchestrator
+  patch
+- `feedback_check_shard_freshness_ignores_capture_status.md` — the related UTL-level finding
+- `feedback_manifest_reader_staleness_per_vm_fallback.md` — the 120s mtime threshold gotcha (relevant to any one-shot
+  manifest mutation script this plan's Phase 3 might write)
 
 ---
 
@@ -942,7 +947,15 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 These remain open and will be resolved in subsequent plans the user drafts:
 
 1. **UAC `canonical_question_group` SSOT** for Polymarket / Kalshi predictions — greenfield UAC build. Blocks prediction
-   shard-key correctness in instruments-service + MTDS.
+   shard-key correctness in instruments-service + MTDS. **Successor plan drafted 2026-05-06**:
+   [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](./predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md).
+   Covers `CanonicalQuestionGroup` enum + classifier with stability hash, per-market lifecycle timestamps
+   (`market_created_at` / `resolution_time` / `settlement_time`) per user direction 2026-05-06 (CLAUDE.md
+   `§ Prediction market lifecycle timing`), MTDS adapter migration to
+   `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` bundles with
+   cluster validation, GCS migration of existing per-base_asset Polymarket parquets, `LookaheadBiasError` per-market
+   lifecycle gating, data-status UI per-canonical_group + per-market drill-down. Also resolves Tracked Open Question §10
+   (Polymarket shard-key sequencing) and the residual `category=prediction` legacy hive vocab cleanup.
 2. **`feature_group → required_inputs[]` DAG SSOT in UAC** — currently inlined 3 different ways across features-onchain,
    features-sports, features-delta-one. Drives `LookaheadBiasError` enforcement.
 3. **v6 columns `quote_asset` / `margin_type` / `combo_type` / `leg_weights` ownership** — only MTDS writes them;

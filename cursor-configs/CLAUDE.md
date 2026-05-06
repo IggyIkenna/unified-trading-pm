@@ -231,6 +231,98 @@ Read these before making ANY code changes:
   to `live-defi-rollout`). Sub-agents executing this work pick the rules up via this section + the handover doc
   - SUB_AGENT_MANDATORY_RULES.md inheritance.
 
+- **Live = batch — same data, same fields, same timing semantics, different sources OK (CRITICAL — applies to every
+  asset_group)** — Live and batch are operational modes of the SAME pipeline. They produce identical schemas, identical
+  `data_types`, identical fields. The ONLY thing that legitimately differs is which SOURCE serves a given
+  `(asset_group, data_type)`, because some sources lag others on real-time emission. Historical writes MUST be
+  timestamped with the `available_at` we'd actually have in live mode (the
+  `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` top entry's emission time, NOT the
+  canonical historical source's slower archive time). Banned anti-patterns: separate live-only data_types like
+  `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH`; distinct field sets between live + batch parquets; deriving
+  `available_at` at read-time from the live-batch mode flag. Reference: 2026-05-06 user direction during
+  writegate-honest-coverage planning. Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md`.
+
+- **No double SSOT in data-saving methodology (CRITICAL — applies top-to-bottom)** — Where two paths produce the same
+  outcome, one is deleted. Banned coexistence: `_create_empty_output()` AND `_handle_empty_tick_data()` (writegate plan
+  Phase 2.A deletes the placeholder method); `_ensure_timestamp` shim AND per-source `stamp_available_at_*` helpers
+  (writegate Phase 2.C deletes the shim); parallel v3-shape `_write_manifest_records` AND v6 canonical writer (writegate
+  Phase 2.A deletes the v3 path); inline NaN-ratio gate AND UTL `write_gate_helper` (Plan B Q #4 lifts the inline);
+  per-service phantom-audit drift probe AND UTL `manifest_audit` module (Plan B Q #5 lifts the script). When you find
+  yourself maintaining two ways to do the same thing, kill one — don't add a third helper to "reconcile" them.
+
+- **Three-category empty-output decision (every per-shard adapter — MDPS / MTDS / features-\* / instruments-service)** —
+  Every condition that could produce an empty result resolves to ONE of: **A. Source returned 0 ticks for the requested
+  window** → `record_empty(row_key, attempted_at)` (honest absence); **B. Source returned ticks; ALL fall outside the
+  requested day after `interval_idx` filter** →
+  `record_failed(UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks))` (UPSTREAM BUG — partition
+  mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew; paired upstream fix at MTDS
+  `raw_tick_hive.py` partitioner-validation); **C. Rows in window but downstream calc dropped all rows due to
+  NaN/malformed source fields** → `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`
+  (data-quality bug worth diagnosing). NO FOURTH CATEGORY. NO silent NaN placeholder rows. The
+  `_create_empty_output()`-style placeholder method is **banned** from `base_adapter` and any equivalent base class.
+  Reference incident: 2026-05-05 MDPS 1440 NaN OHLC bars per day per (venue, data_type) for years passed manifest as
+  `captured`. Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A deletes `_create_empty_output`
+  workspace-wide.
+
+- **Cluster validation MANDATORY at `record_captured` for bundled shards (CRITICAL — runtime + static enforcement)** —
+  For any `data_type ∈ unified_api_contracts.canonical.crosscutting.honest_coverage.BUNDLED_DATA_TYPES`,
+  `ManifestWriter.record_captured` REQUIRES `expected_root_clusters` + `cluster_extractor` kwargs. UTL guard raises
+  `MissingClusterValidationError` if absent. **QG STEP 5.64 statically walks every `record_captured(` callsite + asserts
+  the kwargs are passed when the literal data_type is bundled** — fails CI if missing. Bundled types include
+  `options_chain` (ES.OPT 11-cluster taxonomy), `futures_chain` (per-root spreads / butterflies),
+  `prediction_canonical_question_group` (per-canonical-group market_id sets), and the sports per-fixture-bundle
+  data_types `ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE` (per-league-tier expected bookmaker sets). Adding a new
+  bundled data_type means adding it to UAC `BUNDLED_DATA_TYPES` AND seeding its registry — no half-measures, no
+  helper-call-pattern. The standalone `check_cluster_coverage` helper is private to UTL after the contract change;
+  callers that try to use it directly outside `record_captured` get a deprecation error. Plan:
+  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 1A.
+
+- **`available_at` is per-row, write-time, equal to live-pipeline-arrival (workspace-wide)** — Every shard's parquet
+  contains an `available_at` column. Each row's value = when the live pipeline would have actually had that row's
+  information per `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS`. NEVER
+  derived at read-time. Stamping helpers: `unified_trading_library.availability_stamping.stamp_available_at_*`. UTL's
+  `record_captured` calls `assert_available_at_present` internally — missing or null `available_at` →
+  `LookaheadBiasError`. Per-source rules (from CLAUDE.md historical-source-vs-live-pipeline section): Sports lineups →
+  `kickoff − 60min`; fixture_events → per-row `event_time`; injuries → per-row `report_time` / `occurrence_time`;
+  fixture_stats / fixture_player_stats → `match_end_time` (detected via cascade: api_football native → SFI progressive
+  freeze → footystats / understat → low-confidence `kickoff + 120min` fallback); fixtures → `announced_at`; reference
+  tables → `fetch_completed_at`; weather → forecast-issue-time. CeFi / DeFi / TradFi tick-level data → tick timestamp +
+  source-priority scrape latency.
+
+- **Prediction market lifecycle timing (instruments-service + MTDS — CRITICAL for prediction shard correctness)** —
+  Prediction markets (Polymarket / Kalshi / others) are NOT static instruments; each market has a lifecycle:
+  `market_created_at` (when listed), `resolution_time` (outcome determined), `settlement_time` (payouts). Recurring
+  canonical groups (`BTC_UP_DOWN_HOURLY`, `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `ELECTION_PRESIDENT_2028`, etc.)
+  cycle through multiple market_ids over time — HOURLY = 24/day, DAILY = 1/day, ELECTION = 1 over months/years.
+  Instrument definitions in instruments-service MUST capture all three lifecycle timestamps per market_id PLUS the
+  canonical_question_group membership. MTDS CLOB capture must respect lifecycle bounds: NO ticks before
+  `market_created_at`, NO new ticks after `settlement_time` (the market is closed; post-settlement data is not
+  informative for prediction). Cluster validation per `(canonical_question_group, day)` checks that all expected
+  market_ids with active windows in that day are represented (HOURLY → 24 clusters expected, DAILY → 1, etc.).
+  LookaheadBiasError respects per-market lifecycle: a feature compute at time T can only consume ticks where
+  `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`. Plan: predictions follow-up plan
+  `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`.
+
+- **Temporary state must have a named successor plan (no silent "fix later")** — When a plan ships a partial
+  implementation that is not the final shape (e.g. UAC `PREDICTION_GROUPS = {}` empty registry until
+  canonical_question_group SSOT lands; SOURCE_PRIORITY top-entry-only until multi-source merge plan lands; per-service
+  DAG until UAC DAG SSOT lands), the partial state MUST be documented in a
+  `## Temporary states + their canonical follow-up plans` section of that plan, with the named successor plan filename
+  listed. NO temporary state is silently accepted as final. NO "we'll fix it later" without a named doc. Reviewers
+  reject any partial implementation lacking a successor reference. Reference: writegate-honest-coverage plan
+  `Temporary states + their canonical follow-up plans` section.
+
+- **Per-VM shard isolation for concurrent backfills (workspace rule — codified 2026-05-06)** — Every multi-worker
+  backfill (multiple chunk processes locally OR multiple GCE VMs writing to the same manifest) MUST set
+  `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true` per worker. The manifest consolidator merges per-VM shards
+  under `_index/per_vm/{vm_name}.parquet` into the canonical `_index/availability_index.parquet` with last-writer-wins
+  on identical row*key. Without this, concurrent workers race on the canonical CAS and the
+  retry-15-then-unconditional-write fallback clobbers each other's rows. `ManifestWriter.__init__` runtime guard: if
+  multi-process detection fires AND per-VM shard isolation isn't set → raise `MultiWorkerWithoutShardIsolationError`.
+  New base-service.sh QG STEP 5.66 AST-walks launcher scripts that fork multi-process; asserts envvar setting. Reference
+  incident: 2026-05-04 instruments-service `00f6352` + `619a32e` chunk workers without isolation clobbered each other's
+  manifest entries. Plan: `pre_flight_concurrency_hardening_2026*<TBD>.plan.md` (Plan C in writegate follow-ups).
+
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
   The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead
@@ -512,8 +604,8 @@ marked `@pytest.mark.allow_network`. Skipped if SM credentials unavailable.
 
 ### Deployment-stack restart (SSOT — overrides earlier guidance)
 
-For the **deployment-api (port 8004) + deployment-ui (port 5183)** pair — the data-status / deployment-flow stack —
-the canonical local script is:
+For the **deployment-api (port 8004) + deployment-ui (port 5183)** pair — the data-status / deployment-flow stack — the
+canonical local script is:
 
 ```bash
 bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh           # restart both
