@@ -2,30 +2,32 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
-
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: may describe shard atoms,
-> manifest behaviour, available_at semantics, or partitioning that's evolving with the writegate-honest-coverage plan
-> (per-fixture sports sharding, canonical_question_group for predictions, cluster validation mandatory, three-category
-> empty-output decision, available_at per-row write-time). The post-plan-reality doc lists the 10 cross-cutting
-> principles codified in workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output decision A/B/C,
-> cluster validation mandatory at record_captured, per-row write-time `available_at`, prediction lifecycle timing,
-> temporary state must have named successor, per-VM shard isolation, etc.) plus the active plans where the canonical
-> post-plan reality is being implemented. If this doc and the active plans disagree, the plans win. If you find a
-> contradiction the plans don't address, flag to user — don't decide unilaterally.
-
 # Data Partitioning Conventions
 
 ## TL;DR
 
-- **Universal partition key**: `by_date/day={date}/` -- every service partitions by date.
+- **Universal partition key**: `by_date/day={date}/` — every service partitions by date. **Daily granularity is the
+  universal axis** across all tiers (data, decision, ML, execution) so any backtest or backfill can pick `start_date` +
+  `end_date`.
 - **Bucket naming**: `{domain}-{asset_group_lower}-{project_id}` for asset-group–scoped data; `{domain}-{project_id}`
   for shared buckets.
-- **Core venue asset groups**: CEFI, TRADFI, DEFI — each gets its own bucket when data is partitioned by that axis
-  (older docs said “category”).
-- **Additional dimensions** vary by service: timeframe, data_type, instrument_type, feature_group, etc.
+- **Core venue asset groups**: CEFI, TRADFI, DEFI, SPORTS, PREDICTION — each gets its own bucket where data is
+  partitioned by that axis. Legacy term: "category". **Canonical hive vocab (post-2026-04 rename)**: `asset_group=` for
+  new writes; `category=` is legacy-preserved on disk (do NOT rekey existing data per workspace CLAUDE.md
+  `§ Asset-group vocabulary`). Readers try canonical `asset_group=` first then fall back to legacy `category=`.
+- **Per-fixture sports sharding** (writegate Phase 2.B, post-2026-05-06): per-fixture data*types (ODDS*\_, FIXTURE\_\_,
+  INJURIES) shard at `fixture_id` granularity. League stays as a higher-level rollup grouping for data-status panel
+  filtering, NOT the shard atom.
+- **Predictions canonical_question_group** (predictions Plan A, post-2026-05-06): Polymarket / Kalshi shards at
+  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`
+  with per-market lifecycle bounds.
+- **Additional dimensions** vary by service: timeframe, data_type, instrument_type, feature_group, fixture_id,
+  canonical_question_group, etc.
 - **Hive-style partitioning**: `key=value/` directory structure for partition pushdown in queries.
+- **`available_at` column required per row** (post-2026-05-06): every shard's parquet has an `available_at` column
+  populated per row at write time (per workspace CLAUDE.md
+  `§ available_at is per-row, write-time, equal to live-pipeline-arrival`). UTL `record_captured` calls
+  `assert_available_at_present` internally.
 - Path templates are defined in `dependencies.yaml` and are the single source of truth.
 - Instrument files are named by instrument ID; feature files are named by feature group.
 
@@ -167,26 +169,35 @@ Venues are defined in `venues.yaml` and are the canonical list:
 
 Used by market-tick-data-service and market-data-processing-service:
 
-| Category | Data Types                                                                                                                |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| CEFI     | `trades`, `book_snapshot_5`, `derivative_ticker`, `liquidations`, `options_chain`                                         |
-| TRADFI   | `trades`, `ohlcv_1m`, `ohlcv_15m`, `ohlcv_24h`, `tbbo`                                                                    |
-| DEFI     | `swaps`, `rate_indices`, `oracle_prices`, `utilization`, `liquidity`, `risk_params`, `flash_loan_availability`, `rewards` |
+| Asset group | Data Types                                                                                                                                                                                                                                                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CEFI        | `trades`, `book_snapshot_5`, `derivative_ticker`, `liquidations`, `options_chain` (bundled, cluster-validation MANDATORY), `futures_chain` (bundled, cluster-validation MANDATORY)                                                                                                                             |
+| TRADFI      | `trades`, `ohlcv_1m`, `ohlcv_15m`, `ohlcv_24h`, `tbbo`, `options_chain` (ES.OPT 11-cluster, MANDATORY), `futures_chain` (ES + MES seeds, MANDATORY)                                                                                                                                                            |
+| DEFI        | `swaps`, `rate_indices`, `oracle_prices`, `utilization`, `liquidity`, `risk_params`, `flash_loan_availability`, `rewards`                                                                                                                                                                                      |
+| SPORTS      | Per-fixture: `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE` (bundled, cluster_extractor=bookmaker, MANDATORY), `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES` (when fixture-scoped). Day-aggregate: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`. |
+| PREDICTION  | `prediction_canonical_question_group` (post-Plan A; bundled by canonical_question_group; cluster_extractor=market_id; MANDATORY). Pre-Plan A: per-base_asset legacy data_types `BTC` / `ETH` / `SPX` / `FOOTBALL` / `OTHER`.                                                                                   |
+
+**Bundled data_types require cluster validation** at `ManifestWriter.record_captured` per writegate plan Phase 1A
+(`expected_root_clusters` + `cluster_extractor` kwargs MANDATORY; UTL guard raises `MissingClusterValidationError` if
+absent; QG STEP 5.64 statically checks). See
+[`06-coding-standards/validation-patterns.md`](../06-coding-standards/validation-patterns.md) `§Write-Gate-Quartet`.
 
 ### instrument_type
 
 Determined by venue (from `venues.yaml`):
 
-| Venue                  | Instrument Types          |
-| ---------------------- | ------------------------- |
-| BINANCE-SPOT           | SPOT_PAIR                 |
-| BINANCE-FUTURES        | PERPETUAL, FUTURE         |
-| DERIBIT                | PERPETUAL, FUTURE, OPTION |
-| CME                    | FUTURE, OPTION            |
-| NASDAQ, NYSE           | EQUITY, ETF               |
-| UNISWAPV3-ETHEREUM     | POOL                      |
-| AAVEV3-ETHEREUM        | POOL                      |
-| LIDO-ETHEREUM, ETHERFI | LST                       |
+| Venue                  | Instrument Types                                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| BINANCE-SPOT           | SPOT_PAIR                                                                                                                         |
+| BINANCE-FUTURES        | PERPETUAL, FUTURE                                                                                                                 |
+| DERIBIT                | PERPETUAL, FUTURE, OPTION (with v6 disambiguation: `quote_asset` + `margin_type` for inverse vs linear)                           |
+| CME                    | FUTURE, OPTION (with v6 `combo_type` + `leg_weights` for spreads / butterflies / iron condors)                                    |
+| NASDAQ, NYSE           | EQUITY, ETF (IBIT, ETHA on NASDAQ post-2026-05-05 MVP scope)                                                                      |
+| UNISWAPV3-ETHEREUM     | POOL                                                                                                                              |
+| AAVEV3-ETHEREUM        | POOL                                                                                                                              |
+| LIDO-ETHEREUM, ETHERFI | LST                                                                                                                               |
+| HYPERLIQUID, ASTER     | PERPETUAL only (UnsupportedCapabilityError raised on OPTION / FUTURE)                                                             |
+| POLYMARKET, KALSHI     | PREDICTION_MARKET (with per-market lifecycle: `market_created_at` / `resolution_time` / `settlement_time` per predictions Plan A) |
 
 ### timeframe
 

@@ -2,25 +2,16 @@
 scope: [engineer]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
+# CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation
 
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: may describe shard atoms,
-> manifest behaviour, available_at semantics, or partitioning that's evolving with the writegate-honest-coverage plan
-> (per-fixture sports sharding, canonical_question_group for predictions, cluster validation mandatory, three-category
-> empty-output decision, available_at per-row write-time). The post-plan-reality doc lists the 10 cross-cutting
-> principles codified in workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output decision A/B/C,
-> cluster validation mandatory at record_captured, per-row write-time `available_at`, prediction lifecycle timing,
-> temporary state must have named successor, per-VM shard isolation, etc.) plus the active plans where the canonical
-> post-plan reality is being implemented. If this doc and the active plans disagree, the plans win. If you find a
-> contradiction the plans don't address, flag to user — don't decide unilaterally.
-
-# CeFi shard granularity — instrument_type × quote_asset × margin_type (v6)
-
-**Status:** active as of 2026-04-23 (manifest schema v6 shipped). **SSOT:**
-`unified-trading-pm/plans/active/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md`. **Related:**
+**Status:** v6 columns active as of 2026-04-23 (manifest schema v6 shipped). Cluster validation as 4th write-gate pillar
+in progress (writegate Phase 1A + 2.B). **SSOT:**
+`unified-trading-pm/plans/active/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
+`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`. **Related:**
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
-[partitioning.md](./partitioning.md).
+[partitioning.md](./partitioning.md),
+[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
+[06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).
 
 ## Problem v6 solves
 
@@ -105,10 +96,90 @@ Unknown venues or ambiguous symbols return `("", "")` — the shard falls back t
 4. **`rebuild_cefi_manifest.py`** recognises all three layouts (v6 chain, legacy `underlying=` sub-path, Tardis
    canonical `{stem}.parquet`) — see `parse_hive_path`.
 
+## Cluster validation as 4th write-gate pillar (post-2026-05-06)
+
+CeFi options/futures bundles (`options_chain` / `futures_chain` data_types) are now subject to the **mandatory cluster
+validation pillar** at `ManifestWriter.record_captured` per writegate plan Phase 1A. This is the 4th pillar of the
+write-gate quartet (row count > 0; NaN ratio < threshold; schema matches contract; **cluster coverage ≥ expected**).
+
+### What this means for CeFi bundles
+
+Every `record_captured` call for `data_type ∈ {options_chain, futures_chain}` REQUIRES two new kwargs:
+
+```python
+manifest_writer.record_captured(
+    row_key={"venue": "CME", "data_type": "options_chain", "underlying": "ES",
+             "day": "2026-01-05", "instrument_type": "options_chain"},
+    df=es_options_df,
+    data_type="options_chain",
+    expected_root_clusters=UAC.OPTIONS_CLUSTERS["ES.OPT"],   # ES.OPT 11-cluster taxonomy
+    cluster_extractor=lambda row: re.match(r"^(E[1-5]A|EW[1-4]|EOM|ES)", row["symbol"]).group(0),
+)
+```
+
+UTL guard raises `MissingClusterValidationError` if these kwargs are absent for a bundled `data_type`. **QG STEP 5.64
+statically walks every `record_captured(` callsite and asserts the kwargs are passed when the literal data_type is
+bundled** — fails CI if missing.
+
+### Cluster registries in UAC (writegate Phase 1B)
+
+| data_type       | Registry (UAC)     | Cluster extractor                                                              | Notes                                                                                                                                                                                |
+| --------------- | ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `options_chain` | `OPTIONS_CLUSTERS` | regex on symbol prefix → `(E[1-5]A\|EW[1-4]\|EOM\|ES)` for ES.OPT 11-cluster   | Lifted from instruments-service `reference_data/options_cluster_lookup.py`; registry has `{cluster: min_rows}` per root.                                                             |
+| `futures_chain` | `FUTURES_CLUSTERS` | derived from `raw_symbol` via UTL helper `derive_expiry_bucket(symbol, today)` | ES + MES seeds; per-root spreads + butterflies. **Gap**: Databento weekly-series prefix needs `DatabentoClassification.root_cluster: str` UAC enrichment (writegate Phase 2.B todo). |
+
+### Bundle row-count gate (existing, complementary)
+
+Earlier per-bundle row-count > 0 check (pillar 1) catches "source returned empty bundle"; cluster validation (pillar 4)
+catches "source returned partial bundle missing some expected root clusters" (e.g. ES.OPT 18 dates with single-parent
+fills passing manifest as `captured` — the 2026-05-06 reference incident). Both pillars run on every `record_captured`.
+
+### COMBO row treatment (unchanged)
+
+COMBO rows live INSIDE the parent chain bundle; cluster validation runs on the bundle as a whole. `combo_type != ""`
+rows participate in the cluster count for their parent root.
+
+### Three-category empty-output decision applies (post-2026-05-06)
+
+Per workspace CLAUDE.md `§ Three-category empty-output decision` +
+[`06-coding-standards/error-handling.md`](../06-coding-standards/error-handling.md), every empty-output result for a
+CeFi bundle adapter resolves to one of:
+
+- **A. Honest absence** — source returned 0 ticks for the requested window → `record_empty(row_key, attempted_at)`.
+- **B. Upstream timestamp bias** — source returned ticks; ALL fall outside the requested day →
+  `record_failed(UpstreamTimestampBiasError(...))`. Paired upstream MTDS partitioner-validation fix at
+  `raw_tick_hive.py`.
+- **C. Mid-process malformed fields** → `record_failed(MalformedTickFieldError(...))`.
+
+The `_create_empty_output()` placeholder method is BANNED (writegate Phase 2.A deletes from `base_adapter`). NO silent
+NaN placeholder rows.
+
+### `available_at` per row (post-2026-05-06)
+
+Every CeFi bundle parquet row carries `available_at = tick.timestamp + scrape_latency` (per
+`UAC.SOURCE_PRIORITY[(asset_group, data_type)]` top entry). UTL helper:
+`unified_trading_library.availability_stamping.stamp_available_at_tick_plus_latency(df, ts_col, source_key)`.
+`record_captured` calls `assert_available_at_present(df)` internally; missing or null `available_at` →
+`LookaheadBiasError`.
+
+---
+
 ## Non-goals (for v6)
 
 - Does NOT extend `build_instrument_id` with `quote_asset` / `margin_type` kwargs. Canonical IDs
   (`DERIBIT:OPTION:BTC:26DEC25:100000:C`) stay stable for backward compatibility of the catalogue. Disambiguation is
   load-bearing at the _shard path_ + _manifest row_ layer, not in the ID. (Follow-up: Phase 2c of the v6 plan —
   deferred.)
-- Does NOT touch sports / prediction / DeFi manifests. v6 is additive for them — the four new columns are simply `""`.
+- Does NOT touch sports / prediction / DeFi manifests at the v6 column level. v6 is additive for them — the four new
+  columns are simply `""`.
+
+**However, post-2026-05-06 writegate plan extends related concepts to all asset groups**:
+
+- **Sports per-fixture bundles** (`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE`): cluster validation MANDATORY with
+  `cluster_extractor=lambda row: row["bookmaker"]` and `SPORTS_FIXTURE_CLUSTERS` per league-tier. Per-fixture sharding
+  `(asset_group=sports, source, data_type, league_id, fixture_id, day)`.
+- **Predictions** (`prediction_canonical_question_group`): cluster validation MANDATORY with
+  `cluster_extractor=lambda row: row["market_id"]` and `PREDICTION_GROUPS` per cadence (HOURLY=24/day, DAILY=1/day,
+  etc.). Per-market lifecycle bounds.
+- **DeFi**: chain-specific shards (`chain` first-class axis); no bundle structure today, so cluster validation N/A
+  unless a per-chain bundled data_type emerges in future.
