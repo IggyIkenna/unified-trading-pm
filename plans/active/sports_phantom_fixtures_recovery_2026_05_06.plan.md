@@ -34,24 +34,25 @@ depends_on: []
 todos:
   - id: refresh-tarballs
     content: |
-      - [ ] [HUMAN+AGENT] P0. Refresh SPORTS tarballs to ship the orchestrator writer fix + UAC dedupe to future VMs.
+      - [x] [HUMAN+AGENT] P0. Refresh SPORTS tarballs to ship the orchestrator writer fix + UAC dedupe to future VMs.
             Command: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS`
             (use `/opt/homebrew/bin/bash` on macOS — the script uses bash-4 features).
             Verify with `gcloud storage ls -l "gs://deployment-scripts-central-element-323112/code/instruments-service-code.tar.gz"` showing fresh mtime.
             If the upload md5-mismatches and nukes a sibling tarball (mtds, etc.), re-run the script — same-day re-run reproduces fine.
-    status: todo
+            **Done 2026-05-06**: instruments-service tarball mtime `08:26:57Z` → `11:03:51Z`; all 23 service tarballs refreshed.
+    status: done
     note: "Quick — 1-2 min."
 
   - id: drop-phantom-fixtures-rows
     content: |
-      - [ ] [HUMAN+AGENT] P0. Convert phantom `captured` FIXTURES rows (instrument_count=0, no parquet on disk) to `attempted_failed` so the orchestrator's `_should_skip_shard` no longer treats them as done.
-            Use `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run` first to see scope.
-            Expected: ~38 leagues × ~1500-3000 rows each = ~50-100k phantom rows reclassified.
-            Then run live (drop `--dry-run`) on a same-region GCE VM (laptop is 18× slower per phantom-audit memory).
-    status: todo
+      - [x] [HUMAN+AGENT] P0. Convert phantom `captured` FIXTURES rows (instrument_count=0, no parquet on disk) to honest manifest state so the orchestrator's `_should_skip_shard` no longer treats them as done.
+            **Done 2026-05-06** — implemented as a targeted one-shot script `instruments-service/scripts/flip_phantom_fixtures_zero_rows.py` (commit `962982e`) instead of using the generic reconcile_phantom_manifest_rows_all.py. The phantom signature here is unambiguous (`capture_status='captured' AND data_type='FIXTURES' AND instrument_count==0` violates 4-pillar rule #1 by definition — legacy `manifest.add(row_count=0)` API never wrote parquets), so per-row GCS path probing is unnecessary; takes the run from ~2h to ~30s.
+            **Production --apply outcome**: 100,431 rows flipped to `capture_status='empty_confirmed'` with `error_reason='phantom_zero_row_count_fixed_by_f36651c'`, original `attempted_at` preserved. Backup: `gs://instruments-store-sports-central-element-323112/_index/availability_index.20260506-111222.bak.parquet`. Post-flip verification: 0 phantom rows remaining; 29,273 real captured FIXTURES rows untouched; 119 leagues affected (broader than the plan's ~38 estimate — every top European league had ~3041 phantoms from off-season / international-break dates).
+            Distinct from the original plan note: shipped as `empty_confirmed` (not `attempted_failed`) because manifest.add() was a manifest-only API — no parquet was ever written, so these are equivalent to "we tried, source returned zero data, recorded honestly". Saves ~100k unnecessary api_football re-attempts.
+    status: done
     blocked_by: refresh-tarballs
     note: |
-      Phantom signature: capture_status='captured' AND instrument_count=0 AND data_type='FIXTURES'. The reconcile script's existing logic should already match this drift axis (it handles 5 axes per CLAUDE.md memory). Verify before running — if it doesn't, extend the script first with a 6th axis: "captured-with-zero-rows-and-no-parquet".
+      Implementation diverged from the original plan note (which suggested extending reconcile_phantom_manifest_rows_all.py with a 6th axis). The targeted one-shot pattern (flip_cefi_bug_x2_leaked_text.py / rename_vault_venue_canonical.py / flip_phantom_fixtures_zero_rows.py) is simpler, faster, and more idempotent for well-understood single-axis bugs. Reconcile-script extension is left for general-purpose phantom audits (cross-axis drift); this specific bug class is self-contained.
 
   - id: relaunch-fixtures-backfill-category-a
     content: |
