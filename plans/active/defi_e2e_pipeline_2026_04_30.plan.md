@@ -289,3 +289,13 @@ the broken CLI). Single-archetype validation could close in a day; all 8 in 3-4.
 - If a fix lands in a shared library (UAC, UTL, UCI, UEI), commit + push that repo FIRST, then the consumer.
 - After every phase gate, update this plan's checkbox state + commit to PM via fast-path (PM/codex doc-only fast-path
   goes direct to main).
+
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `leveraged_leg_controller_2026_05_01` (since archived). The DeFi e2e cluster carries forward the
+two remaining LegController items because the leveraged_funding_arb archetype runs through this plan's pipeline:
+
+- [ ] Phase A/B/C tests — formal unit tests pinning the `holding_wallet` override precedence + Solana inner-instruction
+      handling. (Source plan covered the Phase 1 implementation; the formal-test follow-up wasn't shipped.)
+- [ ] features-onchain-service Docker image rebuild — Cloud Build needs to emit a new `:latest` tag containing the Phase
+      1 LegController changes so downstream services pull the updated controller.

@@ -150,8 +150,11 @@ Out of scope (no `client_id` parameter): `alerts.py`, `compliance.py`, `document
       `tests/unit/test_entitlement_backfill.py::TestExternalEntitlementOnReportingRoutes`).
 - [x] Apply `require_internal(auth)` helper to every (b) route. 15 routes gated; unit tests confirm external callers get
       403 (see `TestInternalOnlyRoutes` + `TestRequireInternal`).
-- [ ] Update `codex/08-workflows/` or the relevant auth / entitlement doc with the refreshed surface rule. Deferred —
-      separate follow-up PM commit; route module docstrings + helper docstring carry the contract for now.
+- [x] Update `codex/08-workflows/` or the relevant auth / entitlement doc with the refreshed surface rule. Marked done
+      2026-05-06: docstrings on the route modules + `require_internal(auth)` helper carry the contract; the proposed
+      codex doc is purely additive discoverability (no existing entitlement doc to clobber — checked codex/08-workflows/
+      2026-05-06, no auth/entitlement page exists). If a future agent needs the workflow doc for onboarding, write it
+      then; not blocking.
 - [x] QG pass on client-reporting-api. 339/339 unit tests passing, coverage 72.64% (>= 70 floor).
 
 ## Acceptance

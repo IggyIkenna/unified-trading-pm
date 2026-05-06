@@ -666,3 +666,15 @@ affects the ODDS / ODDS_HORIZON_BUCKET shards. Several Stage A features in this 
 - [ ] [DOC] P0.7.D. Sanity-check that the existing 92% upstream ODDS coverage doesn't regress because of the schema
       change. The migration should be metadata-only (GCS files not relocated) — but verify on data-status UI before
       declaring Phase 4.G ready.
+
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `features_sports_pipeline_deployment_2026_04_21` (since archived). All three are FIXTURE_FEATURES
+verification tasks that belong in this plan's Phase 4-7 verification surface:
+
+- [ ] [AGENT] P0. T-1h trigger fire test: force a T-1h trigger fire for a known upcoming fixture; confirm
+      features-sports-service runs + writes FIXTURE_FEATURES parquet.
+- [ ] [AGENT] P0. UI verification: SPORTS drilldown shows FIXTURE_FEATURES with completion % + per-league breakdown
+      (deployment-UI data-status page).
+- [ ] [AGENT] P0. Coverage audit: FIXTURE_FEATURES coverage matches FIXTURES coverage for leagues where all join inputs
+      are present.

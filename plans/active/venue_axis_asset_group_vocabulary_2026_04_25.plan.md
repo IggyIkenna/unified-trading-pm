@@ -110,6 +110,17 @@ isProject: false
       separate concern. Operator note: all Wave-E-affected VMs were stopped + deleted before rollout, so no live VM
       registry rows reference the old name; new launches use the new name only.
 
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `venue_availability_ssot_2026_03_25` (since archived). The asset-group vocabulary cluster lead
+absorbs the venue-axis SSOT cleanup items:
+
+- [ ] [AGENT] P0. Delete `venue_start_dates` from `VenueMapping` (old format) — replace with the canonical venue+date
+      shape (per the source plan's design doc).
+- [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path).
+- [ ] [AGENT] P2. Data-status dashboard checks against same SSOT — confirm dashboard reads venue start dates from the
+      canonical source post-cleanup.
+
 ## References
 
 - `unified-trading-pm/cursor-configs/CLAUDE.md` — “Venue axis (trading) SSOT” bullet (shared by symlinked service

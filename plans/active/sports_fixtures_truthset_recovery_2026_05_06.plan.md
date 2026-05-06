@@ -329,6 +329,17 @@ After Phase 5:
 - Manifest sanity: zero rows with
   `capture_status='captured' AND data_type IN sports_data_types AND instrument_count == 0`.
 
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `apifootball_enrichment_historical_backfill_2026_04_21` (since archived). The truthset cluster
+absorbs api_football enrichment verification because both rely on the same api_football direct-call truth-set:
+
+- [ ] [AGENT] P0. Monitor + rescan + audit. Verify the detached chain orchestrator completes and the manifest reflects
+      api_football enrichment correctly (was in-progress at orchestrator handoff per the source plan).
+- [ ] [AGENT] P0. Query deployment-api data-status endpoint. Confirm SPORTS category attempted ≥ 50%, captured ≥ 45%.
+- [ ] [AGENT] P0. Spot-check 3 random dates per entity (INJURIES / FIXTURE_STATS / FIXTURE_LINEUPS / PLAYER_STATS /
+      FIXTURE_EVENTS) for data quality: row counts plausible, fields populated.
+
 ## Out of scope
 
 - footystats / understat / transfermarkt / SFI / open_meteo backfills — those have their own coverage pipelines.

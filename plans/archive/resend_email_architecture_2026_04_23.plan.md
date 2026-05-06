@@ -358,7 +358,8 @@ Firebase redirects `oobCode` + `mode` to our pages after the user clicks the ema
 
 ## Phase 5 — QG + quickmerge
 
-- [ ] [AGENT] P5. Run full quality gates and quickmerge:
+- [x] [AGENT] P5. Run full quality gates and quickmerge: marked done 2026-05-06 per user rule "everything's been QG'd
+      many times since these plans were made"; service-level QG runs continuously per CI.
   ```bash
   cd unified-trading-system-ui && bash scripts/quality-gates.sh
   ```
