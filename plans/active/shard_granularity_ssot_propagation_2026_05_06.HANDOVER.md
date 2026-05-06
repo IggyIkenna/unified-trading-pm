@@ -12,6 +12,16 @@ locked_since: 2026-05-06
 
 ---
 
+## Before you start — sync CLAUDE.md
+
+This handover's principles are codified in the workspace CLAUDE.md at `unified-trading-pm/cursor-configs/CLAUDE.md`,
+section **"Shard-granularity SSOT (CRITICAL)"** (between "No fire-and-forget VM launches" and "Sports GCS path SSOT").
+**Copy that section into your own CLAUDE.md** so sub-agents you launch during execution inherit the rules via
+`SUB_AGENT_MANDATORY_RULES.md`. If your `.claude/CLAUDE.md` is already a symlink into PM, you have it — confirm with
+`grep "Shard-granularity SSOT (CRITICAL" .claude/CLAUDE.md`. If not, copy the section verbatim.
+
+---
+
 ## Why this plan exists
 
 Most of this is already implemented across previous plans. **This plan is a redo-and-test pass to verify end-to-end
@@ -187,6 +197,49 @@ Target shape:
 
 For each service, report: which of the above match target, which don't, and what the current shape actually is. I'll
 handle the UI/download fixes separately.
+
+### Pre-audit findings (2026-05-06 — already surfaced, fold into your audit report)
+
+A workspace pre-audit identified 5 specific gaps in deployment-UI data-status. Verify they still hold and add to your
+per-service report — they're real and actionable, not blue-sky speculation.
+
+**Denominator gaps (silently inflate the "missing" %):**
+
+1. **MTDS sports source-coverage missing** — `deployment-api/deployment_api/services/data_status_service.py:888-935`
+   `_mtds_expected_dates_cached` doesn't call `_clip_dates_to_source_coverage` for the `SPORTS` asset_group branch.
+   Pre-sports-launch dates remain in the denominator → false low %. Fix: thread `data_type` and `source_key` through and
+   call `clip_dates_to_source_coverage` for sports, mirroring the sports-branch logic at lines 314-355.
+
+2. **Phase 8D 50-cap on per-instrument** — `data_status_service.py:1026-1031, 1104-1106` `_per_instrument_coverage` uses
+   `get_expected_instruments_for_venue(venue, dt, cap=50)` (hardcoded MVP cap, line 76). BINANCE-FUTURES has 100+
+   perpetuals → real denominator is half. Fix: remove the cap or pass the actual venue instrument universe size from
+   instruments-service.
+
+3. **Prediction granularity is per-(venue, dt, day) only** — no per-`conditionId` shard tracking; POLYMARKET / KALSHI
+   markets are undifferentiated. Fix: depends on the UAC `canonical_question_group` SSOT (build item in this plan); once
+   that lands, thread it through the prediction denominator computation.
+
+**Honesty rendering gaps (UI work — audit-only for you, I'll handle the UI fixes):**
+
+4. **`empty_confirmed` rolled into "found" in the UI** — backend correctly separates `captured` / `empty_confirmed` /
+   `attempted_failed` and computes `attempt_coverage_pct` / `capture_coverage_pct` / `empty_rate` (per
+   `deployment-api/tests/unit/test_data_status_capture_status.py:70-78`), but the UI surfaces only aggregate
+   `completion_pct`. A venue with 50 captured + 50 `empty_confirmed` reads 100% — true at the manifest level, but you
+   can't tell "95% real captures" from "95% mostly empty_confirmed legitimately". Backend has the data; UI needs the
+   breakdown columns.
+
+5. **No `attempted_failed` rendering** — same surface issue. Failed shards count as missing in the UI numerator without
+   being distinguished from never-attempted.
+
+**What's correctly working (don't redo):**
+
+- ✓ Sports denominator clips pre-`SOURCE_COVERAGE_START`, applies `KNOWN_COVERAGE_GAPS`, uses fixture calendar + cadence
+  bucket-matching (2026-05-05 fix `_data_status_service.py:483-512`).
+- ✓ TradFi denominator: per-(venue, data_type) coverage windows + non-trading-day exclusion via
+  `venue_mapping.get_expected_trading_dates`.
+- ✓ CLI / API / JSON response keys all use `asset_group` (migrated from `category` per `deployment-api f9fc472`).
+  Internal Python variable naming still says `category` in places — acceptable per CLAUDE.md asset-group section, no fix
+  needed.
 
 ---
 
