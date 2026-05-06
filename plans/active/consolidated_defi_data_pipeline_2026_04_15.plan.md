@@ -79,9 +79,12 @@ PredictIt / Betdaq / Smarkets, add 8 new DeFi types) shipped per UAC `13db4a9` +
       protocol-TVL + Solend chart-replay backfill in collect-solana-defi).
 - [x] [AGENT] P0. mtds-s3-4-solend: Add Solend lending collector (Solana). Evidence: MTDS `8f6a5d5` (same commit covers
       Solend chart-replay backfill).
-- [ ] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana assets.
-      <!-- needs human review: CLAUDE.md lists Pyth under "removed providers — do NOT reference". Likely scope is now Chainlink/oracle alternatives. -->
+- [ ] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana assets via Hermes (HTTPS pull, batch) +
+      PythNet (Solana RPC, live). Scope: Solana-only price feeds for SOL / jitoSOL / mSOL / bSOL / SPL token reads
+      needed by `carry_staked_basis` LST yields.
+      <!-- UNBLOCKED 2026-05-06: Pyth UNBANNED for Solana-only scope per master_to_live_defi_2026_05_23.plan.md Q&A 9 + CLAUDE.md "Removed providers". Chainlink covers EVM only; no viable Switchboard wiring; LST yields need on-chain Solana prices. -->
 - [ ] [AGENT] P0. mtds-s3-6-multi-chain-oracle: Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon).
+      NOT for Solana — Solana uses Pyth per mtds-s3-5.
 - [ ] [AGENT] P1. mtds-s3-7-solana-lst-onchain: Add mSOL/jitoSOL on-chain exchange rate tracking to lst_rates_handler.
 - [ ] [AGENT] P1. mtds-s3-8-features-solana-lending: Add Solana lending feature calculations (after Kamino Lend).
 - [ ] [HUMAN] P1. mtds-s5-7-kamino-lend: Run Kamino Lend data collection on VM.

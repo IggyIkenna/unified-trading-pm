@@ -15,6 +15,15 @@ depends_on:
   - instruments_and_market_tick_data_completion_2026_05_01.plan.md
 ---
 
+> **2026-05-06 update — Phase 1 mechanism unblocked once UTL fix lands.** This plan's flip-to-`attempted_failed`
+> approach was previously broken because `check_shard_freshness` (UTL `manifest_writer.py`) ignored `capture_status` —
+> orchestrators saw `attempted_failed` rows as fresh and skipped retry, forcing the DELETE-and-refetch hack used in
+> `sports_fixtures_truthset_recovery_2026_05_06`. **Architectural fix scheduled: extend `check_shard_freshness` to treat
+> `ATTEMPTED_FAILED` as stale (default-on; opt-out via `retry_failed: bool = True` param).** Once UTL ships the fix,
+> this plan's Phase 1 flip-and-retry semantics work as originally designed; truthset DELETE pattern becomes optional.
+> Reference: `master_to_live_defi_2026_05_23.plan.md` Risk Register row "`check_shard_freshness` ignores
+> `capture_status`".
+
 ## Context
 
 Spun out of the data-pipeline-completion kickoff session (2026-05-01). The canonical sports manifest

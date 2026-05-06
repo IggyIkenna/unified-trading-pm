@@ -176,6 +176,14 @@ Phase 5  — Hardening
   this fix `aave_borrow_apy` came out >95% NaN and CARRY_RECURSIVE_STAKED + CARRY_STAKED_BASIS strategies saw no
   borrow_apy_bps. Verified probing real 2025-06-15 ETH parquet (1000 rows, USDT example: variable_borrow_rate=0.049225).
 
+> **⚠️ SUPERSEDED 2026-05-05 — `CARRY_STAKED_BASIS` borrow path deleted.** The variable_borrow_rate fix above unblocked
+> `aave_borrow_apy` for CARRY_RECURSIVE_STAKED, but `CARRY_STAKED_BASIS` no longer uses that code path.
+> `carry_staked_basis_structure_axis_2026_05_04.plan.md` deleted COLLATERAL_BORROW (2026-05-04), then deleted
+> SPLIT_STAKE (2026-05-05). Only **LST_AS_MARGIN** structure survives. Engine emits a 4-leg sequence
+> (SWAP+STAKE+TRANSFER+TRADE), no borrow leg. Empirical-progress entries below for
+> `DEFI_ETH_STAKED_BASIS_HYPERLIQUID_SCE_1H` describe the **pre-pivot** shape — re-verify after running against the
+> structure-axis-aligned engine. CARRY_RECURSIVE_STAKED progress notes are still valid (it kept the borrow leg).
+
 ### Empirical pipeline progress
 
 - **Strategy-service backtest 7/7 dates successful** for DEFI 2025-06-15..21. Two real DeFi v2 archetype instances

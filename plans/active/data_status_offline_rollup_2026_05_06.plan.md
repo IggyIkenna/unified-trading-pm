@@ -96,6 +96,17 @@ Phase 4 (validation + retire on-demand >1y)
 
 Phase boundaries are QG gates — next phase doesn't start until previous quality-gates passes for every affected repo.
 
+> **2026-05-06 cross-link.** Two adjacent plans need coordination here:
+>
+> 1. **`data_status_multi_axis_shard_propagation_2026_05_06.plan.md` Phase 5** introduces a `breakdowns` dict in the
+>    rollup blob (per-axis breakdown of coverage). To avoid a v1→v2 schema bump, **Phase 1 worker MUST emit `breakdowns`
+>    from the first build** rather than ship the manifest payload alone. Cross-link Phase 1 SCRIPT below to multi-axis's
+>    `_build_breakdowns` helper.
+> 2. **`data_status_ui_fixes_2026_05_06.plan.md` Finding #3** removes MDPS from `TURBO_MODE_SERVICES` (turbo path hangs
+>    > 90s on 1-day window). MDPS rollup adoption depends on that turbo removal landing first; otherwise the manifest
+>    > path is fast but turbo path stays slow → confusing UX. **Prereq: ui_fixes Finding #3 lands before MDPS adopts the
+>    > rollup.**
+
 ## Phase 1 — Worker script (PARALLEL)
 
 - [ ] [SCRIPT] P1. Create `deployment-service/scripts/data_status_rollup_worker.py`
@@ -103,6 +114,8 @@ Phase boundaries are QG gates — next phase doesn't start until previous qualit
     `data_status_service.py`)
   - For each service: call `DataStatusService.get_manifest_status(service, start_date="2018-01-01", end_date=today)`
     synchronously
+  - **Include `breakdowns` field per `data_status_multi_axis_shard_propagation_2026_05_06.plan.md` Phase 5 contract**
+    (per-asset_group axis breakdown). Avoids v1→v2 schema bump downstream.
   - Compress with gzip, write to `gs://{bucket}/{service}/full.json.gz` with content-encoding=gzip metadata
   - Emit lifecycle events (`STARTED`, per-service `SERVICE_PROCESSED` with row counts, `STOPPED`/`FAILED`) per CLAUDE.md
     "no fire-and-forget VM launches" + adapter-progress-event rules

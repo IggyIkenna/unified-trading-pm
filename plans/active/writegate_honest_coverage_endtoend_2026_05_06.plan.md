@@ -190,17 +190,23 @@ it as a plan-amendment todo before merging.
 The Phase 0 audits surfaced 6 amendments. 5 (A-E) are routed-and-applied based on evidence (see commit message on the
 amendment commit for rationale per item). 1 (**F**) is routed to Ikenna because it touches the Phase 1A contract design.
 
-| #     | Amendment                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status             | Owner                    |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------ |
-| A     | Correct Phase 2.B file paths (monolithic `tardis_adapter.py` / `databento_adapter.py` / `tradfi_shared.py`, NOT non-existent `adapters/tardis/options_chain.py` etc.)                                                                                                                                                                                                                                                                                                  | **Applied**        | Cosmetic — Claude        |
-| B     | Drop `announced_at` from Phase 2.D schema bumps (no source field exists)                                                                                                                                                                                                                                                                                                                                                                                               | **Applied**        | Evidence-backed — Claude |
-| C     | Drop `report_time` / `occurrence_time` for injuries from Phase 2.D as immediately actionable (api_football `/injuries` has no timestamp; we have dates not exact times). Documented in schema-additions table comments.                                                                                                                                                                                                                                                | **Applied**        | Evidence-backed — Claude |
-| D     | Defer `match_end_time` schema bump to Stage 2 follow-up plan; keep detection cascade design + current `kickoff+120min` fallback as Stage 1. We have dates not exact end times. Documented in schema-additions table comments.                                                                                                                                                                                                                                          | **Applied**        | Evidence-backed — Claude |
-| E     | Add 4 stub-wiring todos to Phase 2.C as prerequisites (`fixture_lineups`, `fixture_player_stats`, `coaches`, `rounds`). 4 export functions silently return empty — distinct bug class from 1440-NaN.                                                                                                                                                                                                                                                                   | **Applied**        | Scope expansion — Claude |
-| **F** | **Phase 2.B cluster wiring point** — audit found ZERO `record_captured` callsites for any MTDS bundle. All bundles flow through `writer_manifest.add()` at `engine/orchestrator.py:1940`. Phase 1A's `MissingClusterValidationError` guard at `record_captured` would never fire. Plan needs to either (i) move the wiring point to `orchestrator.py:1940`, or (ii) refactor adapters to call `record_captured` directly. Affects Phase 1A contract design assumption. | **PENDING IKENNA** | Architectural — Ikenna   |
+| #     | Amendment                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status                                                                              | Owner                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------ |
+| A     | Correct Phase 2.B file paths (monolithic `tardis_adapter.py` / `databento_adapter.py` / `tradfi_shared.py`, NOT non-existent `adapters/tardis/options_chain.py` etc.)                                                                                                                                                                                                                                                                                                  | **Applied**                                                                         | Cosmetic — Claude        |
+| B     | Drop `announced_at` from Phase 2.D schema bumps (no source field exists)                                                                                                                                                                                                                                                                                                                                                                                               | **Applied**                                                                         | Evidence-backed — Claude |
+| C     | Drop `report_time` / `occurrence_time` for injuries from Phase 2.D as immediately actionable (api_football `/injuries` has no timestamp; we have dates not exact times). Documented in schema-additions table comments.                                                                                                                                                                                                                                                | **Applied**                                                                         | Evidence-backed — Claude |
+| D     | Defer `match_end_time` schema bump to Stage 2 follow-up plan; keep detection cascade design + current `kickoff+120min` fallback as Stage 1. We have dates not exact end times. Documented in schema-additions table comments.                                                                                                                                                                                                                                          | **Applied**                                                                         | Evidence-backed — Claude |
+| E     | Add 4 stub-wiring todos to Phase 2.C as prerequisites (`fixture_lineups`, `fixture_player_stats`, `coaches`, `rounds`). 4 export functions silently return empty — distinct bug class from 1440-NaN.                                                                                                                                                                                                                                                                   | **Applied**                                                                         | Scope expansion — Claude |
+| **F** | **Phase 2.B cluster wiring point** — audit found ZERO `record_captured` callsites for any MTDS bundle. All bundles flow through `writer_manifest.add()` at `engine/orchestrator.py:1940`. Phase 1A's `MissingClusterValidationError` guard at `record_captured` would never fire. Plan needs to either (i) move the wiring point to `orchestrator.py:1940`, or (ii) refactor adapters to call `record_captured` directly. Affects Phase 1A contract design assumption. | **RESOLVED 2026-05-06: option (i) — orchestrator boundary, with bundle-only check** | Architectural — Ikenna   |
 
-**Phase 2.B execution gate**: do NOT execute the cluster_extractor wiring todo in Phase 2.B until amendment F is
-resolved. The Phase 2.B body has been annotated with this gate.
+**Amendment F resolution (2026-05-06):** Wire cluster validation at `engine/orchestrator.py:1940`
+`writer_manifest.add()` wrapped with `if data_type in BUNDLED_DATA_TYPES:` check. Passes through unchanged for
+non-bundle adapters; fires `MissingClusterValidationError` guard for bundles. One change point (no per-adapter
+refactor); isolated impact (non-bundle adapters untouched). MTDS code change in Phase 2.B. Decision recorded in
+`master_to_live_defi_2026_05_23.plan.md` Q&A 11.
+
+**Phase 2.B execution gate (UPDATED 2026-05-06)**: Phase 2.B execution proceeds with option (i) wiring at orchestrator
+boundary. Cluster_extractor wiring todo unblocked.
 
 ---
 
@@ -348,9 +354,23 @@ every repo touched in Phase N.
 ## Concurrent in-flight stream — sports phantom FIXTURES recovery (2026-05-06)
 
 A separate stream is running in parallel to this plan, owned by the
-`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan. Be aware while executing this plan because the recovery
-touches the same `ManifestWriter` / orchestrator surfaces this plan modifies — the two streams must not step on each
-other.
+`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan AND its successor
+`sports_fixtures_truthset_recovery_2026_05_06.plan.md`. Be aware while executing this plan because the recovery touches
+the same `ManifestWriter` / orchestrator / `available_at` surfaces this plan modifies — the streams must not step on
+each other.
+
+> **2026-05-06 cross-cluster sequencing note (Conflict 14 resolution).** Three plans touch features-sports
+> `available_at` from different angles: (a) this writegate plan (Phase 2.C deletes `_ensure_timestamp` + per-source
+> `stamp_available_at_*` helpers, then Phase 3 flips `LookaheadBiasError` to strict-mode), (b) HANDOVER audit calls out
+> features-sports `_ensure_timestamp` midnight bug + `LookaheadBiasError` silent-downgrade in `writer.py:65-66`, (c)
+> sports truthset recovery is rewriting parquets that need `available_at` populated. **Required sequence (do not
+> interleave):**
+>
+> 1. **First** — sports truthset recovery completes (FIXTURES + 5 downstream entities populated; capture_status
+>    correct).
+> 2. **Second** — this writegate plan's Phase 2.C ships `_ensure_timestamp` deletion + per-source stamping helpers.
+> 3. **Third** — flip `LookaheadBiasError` to `strict=True` last (Phase 3). Flipping earlier would block the truthset
+>    recovery's writes mid-flight.
 
 ### What's running
 
@@ -848,15 +868,22 @@ new UTL pinned in workspace-manifest.json.
 > UAC `unified_api_contracts/registry/tradfi_symbology.py:539` — earlier than this plan assumed. The "lift from
 > instruments-service" step is therefore a delete-and-delegate: instruments-service
 > `reference_data/options_cluster_lookup.py` consumers re-import from UAC; no new SSOT needed for ES.OPT itself.
-> **Already-shipped (UAC commit `31e9e75` 2026-05-06)**:
-> `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES` (frozenset of 4 —
-> options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle), `futures_expiry_bucket()`
-> derivation (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor — closes the row-schema gap
-> noted in row 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus re-export surface delegating to
-> the registry SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric front/back/spread bucketing, custom
-> front-window override, and re-export delegation regression. **Remaining Phase 1B work**:
-> `DATA_TYPE_TO_CLUSTER_REGISTRY`, `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder
-> slot, source_priority + availability_semantics modules.
+>
+> **2026-05-06 follow-up (Conflict 2 resolution)**: The shipped name `ES_OPTIONS_CLUSTERS` is too narrow — options
+> clusters apply to Deribit BTC, CME NQ, etc. too, and the plan body below at the registry table refers to the symbol as
+> `OPTIONS_CLUSTERS` (per-root dict). UAC follow-up commit will rename `ES_OPTIONS_CLUSTERS` →
+> `OPTIONS_CLUSTERS: dict[str, dict[str, int]]` keyed by root (`"ES"` → 11-cluster taxonomy seed; future entries `"NQ"`,
+> `"BTC"`, `"ETH"`), with `extract_options_cluster(symbol, root)` taking root explicitly. 5 callers total (UAC
+> honest_coverage.py + tradfi_symbology.py + UTL options_cluster_lookup.py + 2 tests) — contained scope. Ship before
+> Phase 2.B wiring so orchestrator's bundle-only check sees the generic registry shape. **Already-shipped (UAC commit
+> `31e9e75` 2026-05-06)**: `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES`
+> (frozenset of 4 — options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle),
+> `futures_expiry_bucket()` derivation (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor —
+> closes the row-schema gap noted in row 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus
+> re-export surface delegating to the registry SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric
+> front/back/spread bucketing, custom front-window override, and re-export delegation regression. **Remaining Phase 1B
+> work**: `DATA_TYPE_TO_CLUSTER_REGISTRY`, `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}`
+> placeholder slot, source_priority + availability_semantics modules.
 >
 > **2026-05-06 progress note (round 2)**: UAC commit `106430c` adds the remaining two crosscutting modules —
 > `canonical/crosscutting/availability_semantics.py` (36 seed entries; 10-mode `AvailabilitySemantic` literal covering

@@ -558,7 +558,14 @@ code prefix (FAIL/RETRY/SKIP).
 execution-service. All via service CLIs. No standalone scripts. See the pipeline map discussion in this session's
 memory.
 
-**Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC, MTDS, docs.
+**Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura — all deleted from UAC, MTDS, docs.
+
+**Pyth — UNBANNED 2026-05-06** for Solana on-chain price feeds. `carry_staked_basis` LST yields (jitoSOL / mSOL / bSOL)
+need on-chain Solana prices; Chainlink covers EVM only (Arb / Base / Polygon), not Solana; no viable Switchboard wiring
+exists in workspace. Re-add Pyth via Hermes (HTTPS pull) for batch and PythNet (Solana RPC) for live. Scope: Solana-only
+price reads. Other chains continue using Chainlink. Decision recorded in
+`unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` Q&A section +
+`consolidated_defi_data_pipeline_2026_04_15.plan.md` `mtds-s3-5-pyth-oracle` todo.
 
 ## Version Graduation (1.0.0 Process)
 

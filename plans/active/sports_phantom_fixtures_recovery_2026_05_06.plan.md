@@ -167,6 +167,16 @@ isProject: false
 
 # Sports Phantom FIXTURES Recovery — 2026-05-06
 
+> **2026-05-06 supersession note.** Remaining open todos in this plan are either (a) **already superseded by
+> `sports_fixtures_truthset_recovery_2026_05_06.plan.md`** (which declares `supersedes_phases:` covering
+> `relaunch-fixtures-backfill-category-a` + `audit-and-flip-stale-empties`), or (b) **blocked by the upcoming UTL
+> `check_shard_freshness` fix** (extend to treat `ATTEMPTED_FAILED` as stale; once shipped, the DELETE-shard pattern
+> here becomes optional and flip-to-`attempted_failed` works as originally designed). The downstream-entity sweep
+> (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES) has dependency on the truthset's
+> api_football direct-call truth-set, not this plan's manifest-trust approach. **Action:** read truthset plan first; if
+> any todo here isn't superseded by truthset and isn't unblocked by the UTL fix, mark it explicit. Otherwise treat this
+> plan as historical context, archive when truthset closes its Phase 2.
+
 ## Context
 
 While auditing why 38 sports leagues showed 0% PLAYER_STATS coverage in the deployment-UI, we discovered a deeper bug:
