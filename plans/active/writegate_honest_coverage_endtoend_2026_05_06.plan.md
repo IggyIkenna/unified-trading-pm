@@ -117,6 +117,26 @@ it as a plan-amendment todo before merging.
 
 ---
 
+## Plan amendments — post Phase 0 audit (2026-05-06 Claude session)
+
+The Phase 0 audits surfaced 6 amendments. 5 (A-E) are routed-and-applied based on evidence (see commit message
+on the amendment commit for rationale per item). 1 (**F**) is routed to Ikenna because it touches the Phase 1A
+contract design.
+
+| # | Amendment | Status | Owner |
+|---|---|---|---|
+| A | Correct Phase 2.B file paths (monolithic `tardis_adapter.py` / `databento_adapter.py` / `tradfi_shared.py`, NOT non-existent `adapters/tardis/options_chain.py` etc.) | **Applied** | Cosmetic — Claude |
+| B | Drop `announced_at` from Phase 2.D schema bumps (no source field exists) | **Applied** | Evidence-backed — Claude |
+| C | Drop `report_time` / `occurrence_time` for injuries from Phase 2.D as immediately actionable (api_football `/injuries` has no timestamp; we have dates not exact times). Documented in schema-additions table comments. | **Applied** | Evidence-backed — Claude |
+| D | Defer `match_end_time` schema bump to Stage 2 follow-up plan; keep detection cascade design + current `kickoff+120min` fallback as Stage 1. We have dates not exact end times. Documented in schema-additions table comments. | **Applied** | Evidence-backed — Claude |
+| E | Add 4 stub-wiring todos to Phase 2.C as prerequisites (`fixture_lineups`, `fixture_player_stats`, `coaches`, `rounds`). 4 export functions silently return empty — distinct bug class from 1440-NaN. | **Applied** | Scope expansion — Claude |
+| **F** | **Phase 2.B cluster wiring point** — audit found ZERO `record_captured` callsites for any MTDS bundle. All bundles flow through `writer_manifest.add()` at `engine/orchestrator.py:1940`. Phase 1A's `MissingClusterValidationError` guard at `record_captured` would never fire. Plan needs to either (i) move the wiring point to `orchestrator.py:1940`, or (ii) refactor adapters to call `record_captured` directly. Affects Phase 1A contract design assumption. | **PENDING IKENNA** | Architectural — Ikenna |
+
+**Phase 2.B execution gate**: do NOT execute the cluster_extractor wiring todo in Phase 2.B until amendment F
+is resolved. The Phase 2.B body has been annotated with this gate.
+
+---
+
 ## Pre-audit blast radius
 
 ### MDPS (market-data-processing-service)
@@ -144,12 +164,13 @@ live_workers — so the routing infra exists; adapters bypass it).
 
 | File                                        | Line     | Concern                                                                                               |
 | ------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `market_tick_data_service/raw_tick_hive.py` | (writer) | Phase 2.B: write-time `tick.timestamp.date()` vs `day=` partition validation; reject + log mismatches |
-| `adapters/databento_adapter.py`             | 30–48    | `_PerSchemaFailure` already shipped (parent plan Phase 1) — verify                                    |
-| `adapters/tardis/options_chain.py`          | 596–702  | Bundle write — Phase 2.B cluster validation site                                                      |
-| `adapters/tardis/futures_chain.py`          | similar  |                                                                                                       |
-| `adapters/databento/options_chain.py`       | 869–985  | Bundle write — Phase 2.B cluster validation site                                                      |
-| `umi_tick_provider.py`                      | 225      | `category=` → `asset_group=` vocab cleanup                                                            |
+| `market_tick_data_service/raw_tick_hive.py`                                                              | (writer) | Phase 2.B: write-time `tick.timestamp.date()` vs `day=` partition validation; reject + log mismatches                                                                                                                                                                                                                                                                                                                       |
+| `adapters/databento_adapter.py`                                                                          | 30–48    | `_PerSchemaFailure` already shipped (parent plan Phase 1) — verify                                                                                                                                                                                                                                                                                                                                                          |
+| `market_interface/adapters/tradfi/tardis_adapter.py` (Tardis CeFi + TradFi options/futures bundles)      | 870, 1693, 1804 | Bundle write — Phase 2.B cluster validation site. **Path corrected per audit 2026-05-06 amendment A**: original plan listed `adapters/tardis/options_chain.py` and `adapters/tardis/futures_chain.py` which do not exist. Tardis logic is in this monolithic file (CeFi + TradFi paths) — `finalise_and_write_cefi_shards()` at line 870, `_download_futures_per_instrument()` at 1693, futures_chain TradFi path at 1804. |
+| `market_interface/adapters/cefi/tardis_shared.py`                                                        | 84, 507  | Tardis CeFi shared helper — `CHAIN_INSTRUMENT_TYPES` constant + `build_partition_path()` for v5/v6 chain paths. Phase 2.B touches if cluster_extractor wires through here.                                                                                                                                                                                                                                                  |
+| `market_interface/adapters/tradfi/tradfi_shared.py`                                                      | 296, 423 | TradFi shared write helper — `_shard_instrument_type_for(OPTION) → "options_chain"` decision at line 296; `write_tradfi_shard()` at line 423 is the actual upload site for both Tardis-TradFi and Databento-TradFi bundle paths.                                                                                                                                                                                            |
+| `market_interface/adapters/tradfi/databento_adapter.py` (Databento TradFi options/futures bundles)        | 91, 822, 869–1001 | Bundle write — Phase 2.B cluster validation site. **Path corrected per audit 2026-05-06 amendment A**: original plan listed `adapters/databento/options_chain.py` and `adapters/databento/futures_chain.py` which do not exist. Databento logic is in this monolithic file: `_PARTITION_INSTRUMENT_TYPE` at line 91 (OPTION → options_chain), `download_batch_df()` writer.write_chunk() at 822, `_enrich_with_canonical_ids()` at 869-1001. |
+| `umi_tick_provider.py`                                                                                   | 225      | `category=` → `asset_group=` vocab cleanup                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### features-sports-service
 
@@ -166,17 +187,19 @@ live_workers — so the routing infra exists; adapters bypass it).
 
 Schema additions (in `unified_reference_data_interface` / sports schemas):
 
-| Schema                                                  | Add column                                                                                                    | Reason                                                                                                          |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `FIXTURES_COLUMNS`                                      | `announced_at` (timestamp UTC)                                                                                | Fixtures are scheduled days/weeks pre-kickoff; this is the row's true `available_at`                            |
-| `FIXTURE_EVENTS_COLUMNS`                                | `event_time` (timestamp UTC)                                                                                  | Per-event truth — already per-row in semantics; verify column exists or add                                     |
-| `INJURIES_COLUMNS`                                      | `report_time` / `occurrence_time` (timestamp UTC)                                                             | Per-injury truth — when the injury was reported / when it happened (occurrence wins for events during fixtures) |
-| `FIXTURE_STATS_COLUMNS`, `FIXTURE_PLAYER_STATS_COLUMNS` | `match_end_time` (timestamp UTC)                                                                              | Post-match aggregates — earliest moment we'd have the full row                                                  |
-| `FIXTURE_LINEUPS_COLUMNS`                               | `available_at` derived as `kickoff_utc − 60min` (constant); no schema column needed if we stamp at write-time | Conservative — lineups are always at LEAST 60min before, often 1–2h                                             |
+| Schema                                                  | Add column                                                                                                    | Status (post Phase 0 audit 2026-05-06) | Reason / Source-side reality                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FIXTURES_COLUMNS`                                      | ~~`announced_at` (timestamp UTC)~~                                                                            | **DROPPED — amendment B**              | NO source exposes fixture-announcement time. api_football, footystats, understat all return scheduled kickoffs without an announcement timestamp. Current `kickoff − 7d` proxy in `_stamp_available_at` (`batch_handler.py:278-280`) is the maximum achievable precision; document as canonical synthesis. If a future provider exposes announcement time, route to a separate plan.                                                          |
+| `FIXTURE_EVENTS_COLUMNS`                                | `event_time` (timestamp UTC)                                                                                  | **KEPT — derivable**                   | api_football provides `time.elapsed` (integer in-game minute). `event_time = kickoff_utc + elapsed_min * 60s` — derive at the normalizer (in `gcs_reader._normalize_fixture_events`) when `kickoff_utc` is joinable. Approximation caveat: doesn't account for clock-stoppage / extra-time overruns; maximum precision available without per-event wall-clock from api_football.                                                              |
+| `INJURIES_COLUMNS`                                      | ~~`report_time` / `occurrence_time` (timestamp UTC)~~                                                         | **DROPPED — amendment C**              | API-Football `/injuries?date=YYYY-MM-DD` endpoint returns NO timestamp field — only `player`, `team`, `fixture`, `league`, `season`, `reason`, `type`. The `date` filter is the FETCH date, not the injury event time. **We only have dates, not exact times.** Route to a separate plan: instruments-service forward-poll-vs-backfill timestamp differentiation (so `available_at` could be approximated as "first time we observed this injury in our forward-poll stream"). |
+| `FIXTURE_STATS_COLUMNS`, `FIXTURE_PLAYER_STATS_COLUMNS` | ~~`match_end_time` (timestamp UTC)~~ as Stage 1 in this plan; precision upgrade deferred to Stage 2          | **DEFERRED — amendment D**             | **We only have dates, not exact end times** from any current source. api_football stores `status` string ("FT") but not `fixture.fixture.timestamp` or `fixture.status.elapsed` in the FIXTURES schema. understat / footystats not yet audited for match-end timestamp exposure. Stage 1 (in this plan): keep `stamp_available_at_post_match(kickoff_col=kickoff_utc, duration_min=120)` fallback (already wired at `batch_handler.py:287-312`). Stage 2 (deferred follow-up plan): instruments-service stores `fixture.status.elapsed` + `fixture.fixture.timestamp` from api_football response → enables match_end_time precision upgrade. The detection cascade (Phase 2.D body) stays in scope as designed; only the schema bump is deferred. |
+| `FIXTURE_LINEUPS_COLUMNS`                               | `available_at` derived as `kickoff_utc − 60min` (constant); no schema column needed if we stamp at write-time | **KEPT**                               | Conservative — lineups are always at LEAST 60min before, often 1–2h. Stamping rule applies via `stamp_available_at_kickoff_offset(kickoff_col=kickoff_utc, minutes=60)`. Prerequisite: wire `fixture_lineups` stub (currently discards GCS data at `_fetch_runner.py:171`) — see Phase 2.C amendment E. |
 
 Blast radius for schema bumps: **0 references to these schemas outside features-sports-service** (verified:
 `FIXTURE_STATS_COLUMNS|FIXTURE_EVENTS_COLUMNS|FIXTURE_LINEUPS_COLUMNS|FIXTURE_PLAYER_STATS_COLUMNS|INJURIES_COLUMNS` —
 47 hits all inside features-sports-service, 0 in MDPS / strategy-service / features-onchain). Schema bumps are free.
+
+**Net Phase 2.D schema-bump scope (post-amendments)**: only `event_time` on `FIXTURE_EVENTS_COLUMNS` (derivable). `FIXTURE_LINEUPS` uses the kickoff-offset stamping rule without a new column. The other 3 proposed columns (`announced_at`, `report_time`/`occurrence_time`, `match_end_time`) are unsourceable from any current provider — we have dates, not exact times. The `kickoff − 7d` / `kickoff + 120min` proxies remain the canonical synthesis until separate follow-up plans add forward-poll timestamp differentiation or upstream-source enrichment.
 
 ### UTL (unified-trading-library)
 
@@ -691,11 +714,27 @@ grep.
       `tick.timestamp.date() == day_partition_key` before writing each tick. On mismatch: log + emit
       `RAW_TICK_PARTITION_MISMATCH` event + reject the tick (do NOT write to GCS). Per-instrument shard-level isolation;
       one instrument's mismatch doesn't kill the venue run.
-- [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into every MTDS bundle adapter: -
-      `adapters/tardis/options_chain.py` (lines ~596–702) - `adapters/tardis/futures_chain.py` -
-      `adapters/databento/options_chain.py` (lines ~869–985) - `adapters/databento/futures_chain.py` -
-      `polymarket_adapter.py` (uses `prediction_canonical_question_group` once that lands — for now, pass an empty
-      registry → cluster gate is a no-op, deferred to follow-up plan)
+- [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into every MTDS bundle write site
+      (paths corrected per audit 2026-05-06 amendment A — original plan listed non-existent files):
+      - `market_interface/adapters/tradfi/tardis_adapter.py:870` `finalise_and_write_cefi_shards()` (Tardis CeFi
+        options_chain + futures_chain bundle write; cluster = `underlying` per row, also splits by
+        `(underlying, quote_asset, margin_type)` for DERIBIT inverse/linear v6 disambiguation) +
+        `tardis_adapter.py:1804` (TradFi futures_chain via same shared helper).
+      - `market_interface/adapters/tradfi/tradfi_shared.py:423` `write_tradfi_shard()` (TradFi options_chain final
+        upload; cluster_extractor: `lambda symbol: re.match(r'^(E[1-5]A|EW[1-4]|EOM|ES)', symbol.upper()).group(0)`
+        for ES.OPT 11-cluster taxonomy).
+      - `market_interface/adapters/tradfi/databento_adapter.py:822` `writer.write_chunk(df)` (Databento TradFi
+        options/futures bundle; cluster from `cls.underlying` set at line 981 — but Databento weekly-series cluster
+        E1A/EW1/etc. is in `raw_symbol` prefix, NOT exposed as a named field). **Gap**: requires UAC-side
+        `DatabentoClassification.root_cluster: str` enrichment (deferred follow-up plan).
+      - `polymarket_adapter.py` (uses `prediction_canonical_question_group` once that lands — for now, pass an empty
+        registry → cluster gate is a no-op, deferred to follow-up plan).
+      **CRITICAL ROUTING FINDING from audit 2026-05-06 (amendment F, see "Phase 0 audit findings"
+      — pending Ikenna review)**: ALL MTDS bundles flow through `writer_manifest.add()` at
+      `engine/orchestrator.py:1940`, NOT through `record_captured`. Phase 1A's `MissingClusterValidationError` guard
+      would never fire at the adapter layer. The wiring point likely needs to move to `orchestrator.py:1940` (or
+      adapters need refactoring to call `record_captured` directly). **Do NOT execute this Phase 2.B todo until
+      amendment F is resolved by Ikenna.**
 - [ ] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
       workspace vocabulary.
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
@@ -737,23 +776,69 @@ grep.
 
 ### Phase 2.C — features-sports forward fixes
 
+**Audit 2026-05-06 update** (amendment E + audit #0.4 findings):
+- `_stamp_available_at` already implemented in `cli/handlers/batch_handler.py:238-338` (~80% of original
+  Phase 2.C work done in code we hadn't read). 3 stamping buckets wired: `fixtures` (`kickoff−7d`), 5 post-match
+  tables (`stamp_available_at_post_match` with `kickoff+120min` fallback), 8 reference tables (`datetime.now(UTC)`).
+- `_FETCH_COMPLETED_AT` cache does NOT exist; Phase 2.C builds it from scratch.
+- 4 export STUBS surfaced — must be wired BEFORE per-table `available_at` work makes sense (otherwise the new
+  stamping rules write `available_at` onto perpetually-empty parquets).
+- Per-table stamping rules below are amended to reflect amendments B/C/D — `announced_at` / `report_time` /
+  `match_end_time` columns dropped from Phase 2.D scope; we keep proxy-based stamping until follow-up plans add
+  upstream-source enrichment.
+
+#### Phase 2.C prerequisites — wire export stubs (amendment E)
+
+- [ ] [SCRIPT] P0. **Wire `fixture_lineups` stub.** `_fetch_runner.py:171` reads GCS lineup data but **discards it**
+      (no `_fetched_fixture_lineups` cache). `export_fixture_lineups()` at `exporters/exports.py:70-71` always
+      returns `_empty_df`. Fix: (i) add `_fetched_fixture_lineups: list[dict]` module-level cache in
+      `_fetch_runner.py`; (ii) populate in `_load_event_entities` from the `gcs_data["fixture_lineups"]` already
+      being read; (iii) add `get_fetched_fixture_lineups()` accessor; (iv) implement `export_fixture_lineups()`
+      using it. Then switch `fixture_lineups` out of `_POST_MATCH_TABLES` (currently incorrect rule applied) into
+      the kickoff-offset stamping path (`stamp_available_at_kickoff_offset(kickoff_col="kickoff_utc",
+      minutes=60)`).
+- [ ] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173`
+      logs row count but never stores. `export_fixture_player_stats()` returns empty. Fix: add
+      `_fetched_player_stats` cache + accessor + real export. Stamping stays as `post_match` once wired.
+- [ ] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
+      empty; no source fetch is implemented anywhere in `_fetch_runner.py`. Decide: (a) implement an
+      `api_football /coachs` endpoint fetch path, OR (b) explicitly mark `coaches` as deferred + emit
+      `record_empty(row_key)` for every batch run so the manifest is honest. **Default if no decision: (b)** —
+      surfaces the gap as honest absence rather than silent empty.
+- [ ] [SCRIPT] P0. **Wire OR scope-out `rounds` stub.** Same status as `coaches` — `export_rounds()` at
+      `exports.py:148-150` returns empty; no source fetch. Same decision: implement OR `record_empty`. Default (b).
+
+#### Phase 2.C body — `available_at` stamping migration (post-amendments)
+
 - [ ] [SCRIPT] P0. Delete `_ensure_timestamp` from `cli/handlers/batch_handler.py:146` AND `cli/batch_write.py:38`. No
       shim, no fallback.
 - [ ] [SCRIPT] P0. Replace 4 `_ensure_timestamp` callsites in `batch_handler.py:383, 465, 528, 597` (and 1 in
       `batch_write.py:88`) with the appropriate `availability_stamping.stamp_available_at_*` call per
       `UAC.AVAILABILITY_AT_SEMANTICS`.
-- [ ] [SCRIPT] P0. For each of the 14 `TABLE_TO_EXPORT` entries in `cli/handlers/batch_handler.py:76–91`, wire
-      write-time `available_at` stamping per UAC semantic: - `fixtures` →
-      `stamp_available_at_announcement(df, "announced_at")` (column added by Phase 2.D) - `fixture_stats`,
-      `fixture_player_stats` → `stamp_available_at_post_match(df, "kickoff_utc", duration_min=120)` - `fixture_events` →
-      `stamp_available_at_event_time(df, "event_time")` (column added by Phase 2.D) - `fixture_lineups` →
-      `stamp_available_at_kickoff_offset(df, "kickoff_utc", minutes=60)` - `injuries` →
-      `stamp_available_at_event_time(df, "report_time")` (column added by Phase 2.D) - 8 reference tables →
-      `stamp_available_at_explicit(df, fetch_completed_at)` where `fetch_completed_at` comes from
-      `_FETCH_COMPLETED_AT[table_name]` cache populated at fetch time
-- [ ] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in the export runner (currently
-      appears to live in `exports.py` — verify in Phase 0). Populate inside each `export_*` for the 8 reference tables.
-      Accessor: `get_fetch_completed_at(table_name) -> datetime`.
+- [ ] [SCRIPT] P0. For each of the 14 `TABLE_TO_EXPORT` entries in `cli/handlers/batch_handler.py:76-91`, wire
+      write-time `available_at` stamping per UAC semantic (rules amended per audit findings 2026-05-06):
+      - `fixtures` → `stamp_available_at_offset(df, "kickoff_utc", offset=-7d)` — **synthesis-only** since no
+        source exposes announcement time (amendment B). Document `kickoff−7d` as canonical proxy until upstream
+        source enrichment plan lands.
+      - `fixture_stats`, `fixture_player_stats` → `stamp_available_at_post_match(df, "kickoff_utc",
+        duration_min=120)` — **already wired**; `match_end_time` schema bump deferred to Stage 2 follow-up
+        plan (amendment D). Current implementation is the maximum precision available.
+      - `fixture_events` → `stamp_available_at_event_time(df, "event_time")` — `event_time` derived from
+        `kickoff_utc + elapsed_min * 60s` in `gcs_reader._normalize_fixture_events` (amendment kept; only
+        derivable column from Phase 2.D bumps).
+      - `fixture_lineups` → `stamp_available_at_kickoff_offset(df, "kickoff_utc", minutes=60)`. Prerequisite:
+        wire stub above first.
+      - `injuries` → `stamp_available_at_post_match(df, "kickoff_utc", duration_min=120)` — **fallback only**
+        since api_football `/injuries` exposes no timestamp (amendment C). Document as best-effort proxy until
+        forward-poll-vs-backfill timestamp differentiation lands in instruments-service (separate plan).
+      - 8 reference tables → `stamp_available_at_explicit(df, fetch_completed_at)` where `fetch_completed_at`
+        comes from `_FETCH_COMPLETED_AT[table_name]` cache populated at fetch time.
+- [ ] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in `_fetch_runner.py`
+      (verified location via audit 2026-05-06; currently does not exist). Populate inside each `run_fetch_*`
+      for the 8 reference tables at the moment the GCS read returns. Accessor:
+      `get_fetch_completed_at(table_name) -> datetime`. Today's `datetime.now(UTC)` at stamp time is
+      architecturally safe (slightly pessimistic — run-start, not per-entity fetch finish) but will be replaced
+      by precise per-entity timestamps after this work lands.
 - [ ] [TEST] P0. Per-table unit test: build a fixture row → call export → assert `available_at` column present + matches
       semantic + would pass `LookaheadBiasError` for a feature at `kickoff − 24h` window.
 - [ ] [TEST] P0. Integration test: run batch over 1 day × 1 league × all 14 tables; assert manifest reflects honest
