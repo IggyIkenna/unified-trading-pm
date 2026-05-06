@@ -235,4 +235,124 @@ Audit pass 2026-05-06. Source files: `instruments_service/engine/orchestrator.py
   pattern applies anywhere a writer produces per-leaf rows under a coarser key. Generalise to
   `_should_skip_date_for_per_leaf(manifest, date, data_type, expected_leaf_dim, expected_leaf_values, force)`.
 
+### features-delta-one-service — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06. Source files: `features_delta_one_service/engine/orchestrator.py` (733 lines),
+`features_delta_one_service/engine/delta_one_validity_engine.py` (269 lines), 30+ calculators under
+`features_delta_one_service/app/calculators/`.
+
+#### ✓ Matches target
+
+- **Shard-level failure isolation** — `_safe_process_instrument` (orchestrator.py:341+) catches errors per-instrument,
+  doesn't raise inside the per-instrument loop.
+- **`resolve_data_type_for_feature_group`** uses UAC SSOT (`orchestrator.py:339`) with per-asset-group overrides.
+- **`validate_batch_completeness`** is called pre-write (orchestrator.py:295) — at least one cross-instrument
+  completeness check exists.
+
+#### ❌ Mismatches
+
+- **[writer]** `orchestrator.py:316-326` — `writer.add()` is called **TWICE** with the same payload (lines 316-321 with
+  `timeframe=`, lines 322-326 without). Writes **2 manifest rows per processing cycle** for the same shard. Almost
+  certainly a refactor leftover. One of these is a bug; either `timeframe=` is required everywhere (delete 322-326) or
+  not used (delete 316-321). Fix layer: **[per-service]**.
+- **[writer]** Service uses **only `manifest.add()`**. No `record_captured` / `record_empty` / `record_failed` calls
+  anywhere in the source tree. The honest-coverage trio is not implemented for delta-one features. So:
+  - Failed shards → no manifest row at all (silently absent — line 292 conditions write on `success_count > 0`).
+  - Empty/sparse shards → no `record_empty` distinction; if `success_count == 0`, no row written.
+  - The 4-pillar write-gate (row=0 / NaN / schema / cluster) does NOT fire — `add()` skips schema validation.
+  Fix layer: **[per-service]** (rewrite write-path) + **[UTL]** (the `record_captured` API exists already).
+- **[pre-flight]** No `_should_skip_shard` lookup anywhere. Recompute happens unconditionally per-instrument — only
+  `force_reprocess` flag governs (same as no skip). Means concurrent backfill / re-run will redo all work since manifest
+  isn't consulted. Fix layer: **[per-service]**.
+- **[write-gate]** `validate_batch_completeness` returns `(is_complete, missing)`. On incomplete: code logs warning at
+  line 303 then **skips manifest write entirely** (line 309 — `else` branch wrapping the writer). So a 50%-complete
+  batch leaves **zero manifest rows** for both completed AND missing shards. Anti-pattern. Should `record_captured`
+  per-completed-shard + `record_failed` per-missing-shard. Fix layer: **[per-service]**.
+- **[write-gate]** `orchestrator.py:328-329` — manifest write failure caught with bare
+  `except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError)` and warning-logged. If GCS hiccups, the
+  whole shard becomes invisible to data-status. Should be fatal or `record_failed` route. Fix layer: **[per-service]**.
+- **[lookahead] CRITICAL** — `grep -rn LookaheadBiasError` in features-delta-one returned **zero hits**. The 30+
+  calculators (`moving_averages.py`, `momentum.py`, `vwap.py`, `economic_events.py`, `kurtosis.py`, etc.) do NOT raise
+  `LookaheadBiasError`. The only `available_at` check in the workspace lives in features-onchain `feature_writer.py`.
+  Per the handover: "extend to every features-\* calculator." This is the largest single lookahead-bias gap in the
+  workspace. Fix layer: **[per-service]** (per-calculator) + **[UTL/UAC]** (mandatory `LookaheadBiasError` extension
+  via shared base-class + `feature_group → required_inputs` DAG SSOT).
+- **[available_at]** No service-level write of `available_at` column observed in the orchestrator write-path. Need to
+  spot-check one calculator (e.g. `vwap.py`) to confirm whether each writes its own `available_at` — high probability
+  it doesn't, given the LookaheadBiasError gap. Fix layer: **[per-service]**.
+
+#### 🔀 Wrong layer
+
+- **[per-service]** `validate_batch_completeness` (used at orchestrator.py:295, imported from somewhere — likely
+  `unified_trading_library`) sounds like the right utility for completeness validation, but its current usage drops the
+  manifest write on incomplete which is the wrong action. The action on incomplete should be `record_failed` per-missing
+  shard, not "skip the manifest entirely" — that policy decision is encoded at the call site, not in the helper. Tag as
+  per-service rewrite.
+
+#### ❓ Couldn't verify
+
+- Whether ANY of the 30+ calculators stamp `available_at` at write-time. Would need spot-check 3-5 calculators
+  (vwap, moving_averages, momentum, kurtosis, economic_events) to confirm or contradict. Listed under per-calculator
+  fix items in Phase 1.
+- Whether `delta_one_validity_engine.py` (269 lines, not yet read) does any PIT or lookahead enforcement that
+  wraps the calculator outputs. If yes, the LookaheadBiasError gap might be partially closed. If no, the gap is total.
+- Per-instrument progress events (`INSTRUMENT_PROCESSED`) — orchestrator emits a `BATCH_COMPLETED`-style event after
+  the full batch (the `log_event(...)` at line 273-289 includes counts); per-instrument granular events with row counts
+  not confirmed. Pending.
+
+#### Migration items (features-delta-one-service contribution)
+
+- **MIG-DO1**: Switch `writer.add()` calls (orchestrator.py:316-326) to `record_captured` / `record_empty` /
+  `record_failed`. Delete the duplicate `add()` call.
+- **MIG-DO2**: All 30+ calculators need `available_at` stamping at write-time. Per-calculator review + add `available_at
+  = compute_input.timestamp + calc_horizon` (or per-source rule).
+
+#### UTL-lift items (features-delta-one-service contribution)
+
+- **LIFT-DO1**: Mandatory `LookaheadBiasError` enforcement across all features-\* calculators — UTL helper that wraps
+  every calculator's compute call with PIT enforcement. Currently only features-onchain `feature_writer.py` does this.
+  This needs to lift to a shared `feature_calculator_base.py` in UTL that all features-\* services inherit, so
+  LookaheadBiasError raises become structural rather than per-service additions.
+- **LIFT-DO2**: Manifest write-on-incomplete-batch policy — a UTL helper `record_partial_batch(manifest, completed,
+  failed)` that does the right thing (record_captured for completed + record_failed for missing), instead of services
+  re-implementing the conditional + dropping the manifest entirely on incomplete.
+
+### UAC prediction canonical-question-group SSOT — Audit Finding
+
+Audit pass 2026-05-06. Files inspected: `unified_api_contracts/canonical/domain/prediction/prediction_mapping.py`,
+`unified_api_contracts/external/polymarket/`.
+
+#### ❌ Greenfield gap (confirmed)
+
+- **Existing module is a different abstraction**: `prediction_mapping.py` defines `CanonicalPredictionMarket` (per-
+  market `PRED:{category}:{hash12}` IDs) and `PredictionMarketCrossVenueMapping` (cross-venue event linking with
+  `underlying`, `timeframe`, `strike`). Categories are 7 coarse buckets:
+  POLITICS / FINANCIAL / SPORTS / CRYPTO / WEATHER / ENTERTAINMENT / OTHER. Useful but **NOT the shard-atom SSOT
+  the handover specifies**.
+- **Missing**: A function `polymarket_market_id_to_canonical_question_group(market_id) → str` returning a stable
+  identifier like `BTC_UP_DOWN_1D`, `SPX_UP_DOWN_1D`, `EPL_MATCH_ODDS`, etc. This is the bundling axis equivalent to
+  `options_chain` for derivatives. Service-side proxy (`instruments-service/orchestrator.py:_extract_prediction_shard`,
+  line 2497) does inline parsing with hardcoded patterns (`UP_DOWN`, `FOOTBALL`).
+- **Missing**: A registry of expected `canonical_question_group` values per (venue, day) so write-gates can detect
+  partial bundles (e.g. "expected 6 BTC UP_DOWN strikes, only got 4" → `record_failed(ClusterCoverageError)`).
+- **Missing**: Cross-venue normalization — Polymarket BTC up/down vs Kalshi BTC up/down should map to the SAME
+  `canonical_question_group_id` for downstream cross-venue alpha capture.
+
+#### Build items (UAC prediction SSOT)
+
+- **BUILD-PRED1**: New module `unified_api_contracts/canonical/domain/prediction/canonical_question_group.py` with:
+  - `CanonicalQuestionGroup` dataclass: `(group_id, underlying, instrument_type, timeframe, expiry_class)` —
+    parallel to `options_chain` shape.
+  - `polymarket_market_to_canonical_group(condition_id, question_text, resolution_date) → CanonicalQuestionGroup`.
+  - `kalshi_market_to_canonical_group(market_ticker, ...) → CanonicalQuestionGroup`.
+  - `EXPECTED_QUESTION_GROUPS_PER_DAY[(venue, date)] → set[group_id]` for cluster-coverage validation.
+  - Migration helper to back-fill `canonical_question_group` column on existing on-disk manifest rows, mapping from
+    the legacy `data_type` overload (e.g. `data_type=BTC` → `canonical_question_group=BTC_UP_DOWN_1D`).
+- **BUILD-PRED2**: Wire `canonical_question_group` as a v6 manifest column (UTL `_ROW_KEY_COLUMNS` already accepts
+  optional dimensions; add via plan's manifest schema migration).
+- **BUILD-PRED3**: Update `instruments-service/scripts/aggregate_processed_options_to_chain_bundle.py` precedent
+  pattern to a sibling `aggregate_polymarket_to_canonical_group_bundle.py` for prediction.
+- **BUILD-PRED4**: Update MTDS prediction adapter (`polymarket_adapter.py`, `kalshi_adapter.py`) to read at
+  `canonical_question_group` granularity, not `data_type=_mkt_str`.
+
 <!-- AUDIT_FINDINGS_INSERT_BELOW -->
