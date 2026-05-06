@@ -143,50 +143,109 @@ This is the deliverable that ties the audit to action. For each high-leverage ch
 the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this
 plan, before agents start writing code in the affected area.**
 
-| Area                                                            | Codex SSOT                                                                                                                                  | Sub-plans                                                                                                                                                        | Drift status                                                                     | Resolve via                                                                                                            |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                        | ⚠ Mixed v4/v5/v6 references in some plans; codex post-2026-05-06 is canonical   | Mark older plans superseded; doc clearly states v6 + v4/v5 hive-key fallback                                           |
-| Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06` | ⚠ 3 simultaneous in-flight plans on the same surface                            | Designate HANDOVER as the SSOT; other two reference it explicitly                                                      |
-| Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                  | ⚠ Doc partially describes target; VM launchers are GCP-only in code             | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                 |
-| Live-mode services (PBM, R&E, P&L attr, alerting, B-vs-L recon) | Mostly covered by `04-architecture/alerting-batch-live.md`, `autonomous-recovery-matrix.md`, `09-strategy/cross-cutting/pnl-attribution.md` | ❌ **No active plan for any of them**                                                                                                                            | Open the 5 new plans (work-stream E) before writing code                         |
-| Custody (Copper + CEFFU)                                        | `04-architecture/copper-custody-integration.md`, `custody-providers.md`, `wallet-hierarchy-and-capital-flow.md`                             | (no active plan; CEFFU not in codex)                                                                                                                             | ⚠ CEFFU has no codex doc; integration unwritten                                 | Add CEFFU codex doc + plan as part of work-stream E                                                                    |
-| Strategy v2 finalization                                        | `09-strategy/strategy-summary.md`, `architecture-v2/`                                                                                       | `strategy_architecture_v2_finalization_2026_04_19`, `strategy_architecture_v2_phase3_11_handoff_2026_04_17`                                                      | ⚠ Two overlapping plans                                                         | Designate one as authoritative                                                                                         |
-| DART / research-service                                         | `09-strategy/cross-cutting/operational-modes-matrix.md` (operational modes)                                                                 | `dart_ui_strategy_filtering_and_onboarding_2026_04_24`                                                                                                           | ⚠ research-service has 0 repo, only PNG mockups; manual-trade lane not in codex | Add `04-architecture/research-service-and-dart-integration.md`; extend operational-modes-matrix with manual-trade lane |
-| ML experiment lifecycle                                         | `02-data/data-lineage-MTDS-features-ml.md` (partial)                                                                                        | `ml_pipeline_revolution_2026_04_11`, `consolidated_ml_advanced_pipeline_2026_04_15`, `sp500_ml_readiness_master_2026_05_05`                                      | ⚠ No dedicated SSOT for ML job_id lifecycle (separate from data manifest)       | Add `04-architecture/ml-experiment-lifecycle.md` (work-stream F)                                                       |
-| Live observability / log streaming                              | `03-observability/lifecycle-events.md`, `coordination-events.md`                                                                            | (no active plan for GCS event-tail endpoint)                                                                                                                     | ⚠ Doc defines events; deployment-api endpoint to consume them doesn't exist     | Build endpoint as part of work-stream A; doc stays current                                                             |
+| Area                                                            | Codex SSOT                                                                                                                                  | Sub-plans                                                                                                                                                              | Drift status                                                                                              | Resolve via                                                                                                                                                               |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                              | ⚠ Confirmed — `availability_manifest_v4_…` is the only stale active plan; self-tagged superseded         | Archive the v4 plan via work-stream G; doc already canonical v6 with v4/v5 hive-key fallback                                                                              |
+| Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06`       | ⚠ Confirmed — `writegate_…` declared umbrella; other two are children but not yet `parent:`-tagged       | Re-tag children with `parent: writegate_honest_coverage_endtoend_2026_05_06` (work-stream G); surface only umbrella                                                       |
+| Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                        | ⚠ Doc partially describes target; VM launchers GCP-only in code                                          | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                                                                    |
+| Live-mode services (PBM, R&E, P&L attr, alerting, B-vs-L recon) | Mostly covered by `04-architecture/alerting-batch-live.md`, `autonomous-recovery-matrix.md`, `09-strategy/cross-cutting/pnl-attribution.md` | ✓ REVISED — PBM/R&E/P&L attr in `defi_e2e_pipeline_2026_04_30` Fork 1; B-vs-L recon in `consolidated_operational_validation_2026_04_15`; only **alerting** has no plan | ⚠ Only alerting genuinely missing a plan                                                                 | Open `alerting-service-live-rules_2026_05_07.plan.md`; extend the 4 existing plans with explicit live-mode todos (work-stream E REVISED)                                  |
+| Custody (Copper + CEFFU)                                        | `04-architecture/copper-custody-integration.md`, `custody-providers.md`, `wallet-hierarchy-and-capital-flow.md`                             | (no active plan; CEFFU not in codex)                                                                                                                                   | ⚠ CEFFU has no codex doc; integration unwritten                                                          | Add CEFFU codex doc + plan as part of work-stream F + E                                                                                                                   |
+| Strategy v2 finalization                                        | `09-strategy/strategy-summary.md`, `architecture-v2/`                                                                                       | `strategy_architecture_v2_finalization_2026_04_19`, `strategy_architecture_v2_phase3_11_handoff_2026_04_17`                                                            | ⚠ Confirmed — finalization is live; handoff is historical (Phase 2 done)                                 | Mark handoff `parent_of: finalization`; verify residuals; archive once absorbed (work-stream G)                                                                           |
+| DART / research-service                                         | `09-strategy/cross-cutting/operational-modes-matrix.md` (operational modes)                                                                 | `dart_ui_strategy_filtering_and_onboarding_2026_04_24` (self-tagged superseded), `dart_ux_cockpit_refactor_2026_04_29` (active superset)                               | ⚠ research-service has 0 repo, only PNG mockups; manual-trade lane not in codex                          | Archive DART UI plan; add `04-architecture/research-service-and-dart-integration.md`; extend operational-modes-matrix                                                     |
+| ML experiment lifecycle                                         | `02-data/data-lineage-MTDS-features-ml.md` (partial)                                                                                        | `ml_pipeline_revolution_2026_04_11` (self-tagged superseded), `consolidated_ml_advanced_pipeline_2026_04_15` (active), `sp500_ml_readiness_master_2026_05_05`          | ⚠ No dedicated SSOT for ML job_id lifecycle; `ml_pipeline_revolution` should archive                     | Archive `ml_pipeline_revolution_2026_04_11` + `domain_agnostic_ml_framework_2026_04_11` (work-stream G); add `04-architecture/ml-experiment-lifecycle.md` (work-stream F) |
+| Live observability / log streaming                              | `03-observability/lifecycle-events.md`, `coordination-events.md`                                                                            | (no active plan for GCS event-tail endpoint)                                                                                                                           | ⚠ Doc defines events; deployment-api endpoint doesn't exist                                              | Build endpoint as part of work-stream A; doc stays current                                                                                                                |
+| **NEW (audit-discovered):** Plan frontmatter discipline         | `plans/PLAN_FORMAT.md`                                                                                                                      | n/a (workspace-wide systemic gap)                                                                                                                                      | ⚠ 95% missing `last_updated`, 96% missing `asset_group`, 21% missing `locked_by`, 5 plans no frontmatter | Workspace-wide one-shot backfill script (work-stream G)                                                                                                                   |
+| **NEW (audit-discovered):** Service-overlap concentration       | n/a (master-plan tracking concern)                                                                                                          | 35 plans on instruments-service; 16 each on deployment-service / strategy-service / deployment-api; 12+ on UTS-UI / execution-service / deployment-ui                  | ⚠ Real overlap risk; consolidation candidate post-cutover                                                | Post-May-23 cleanup; not blocking. Document on master plan; address in next cycle                                                                                         |
 
 **Audit guideline going forward.** Whenever an agent touches a row in this table, the PR includes a one-line "drift
 status: resolved / unchanged / new-drift" note in the description. New drift = a new row gets added here.
 
 ---
 
-## Audit — sub-plan conflicts, overlaps, stale references
+## Audit — sub-plan conflicts, overlaps, stale references (VERIFIED 2026-05-06)
 
-Surface-level scan of the 175 active sub-plans. Flagged items the master plan should resolve before agents start:
+Two parallel agents (mechanical frontmatter + topic-map sweep ; content-overlap pass) audited the **148 active
+sub-plans** on 2026-05-06. **Headline corrections to the earlier suspicion list:** 3 of the 5 "NO-PLAN" live-mode
+services are actually already in scope of `defi_e2e_pipeline_2026_04_30` Fork 1 — only **alerting** genuinely needs a
+new dedicated plan. **18 self-tagged superseded plans** should be archived. Frontmatter discipline is systemically
+broken (95% missing `last_updated`, 96% missing `asset_group`, 21% missing `locked_by`) — needs a one-shot backfill
+script.
 
-1. **Shard-granularity propagation** is in flight via three plans simultaneously:
-   `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`, `writegate_honest_coverage_endtoend_2026_05_06`,
-   `data_status_multi_axis_shard_propagation_2026_05_06`. Master plan needs to confirm one is the SSOT and the other two
-   reference it.
-2. **Manifest schema versioning** — codex says v6 (`manifest_schema_v6_quote_margin_combo_2026_04_23`), some plans still
-   reference v4/v5. Memory note: writers ship v6 columns; readers fall back to v5/v4 hive-key. Confirm there is no v7 in
-   flight.
-3. **Sports phantom recovery vs honest-coverage** — `sports_phantom_fixtures_recovery_2026_05_06` (in-flight) blocks
-   `features_sports_honest_coverage_2026_05_05` Phase 4-7. Master plan needs to confirm sequencing so VMs don't
-   conflict.
-4. **DeFi pipeline extension followups** — `defi_pipeline_extension_followups_2026_05_03` shows "complete" in the
-   inventory but the leveraged-funding-arb archetype may still depend on calculator closeouts. Verify before assuming
-   complete.
-5. **Cloud-agnostic** is half-done: `_code_builds_aws.py` exists in deployment-api, `buildspec.aws.yaml` exists, but
-   `deployment-service/scripts/vm/` is GCP-only. Codex `cloud-agnostic-migration.md` exists but needs a "VM launcher
-   parity" appendix.
-6. **research-service** has 0 repo and 10+ DART PNG mockups in workspace root. No active plan claims the build. Decision
-   needed (work-stream C).
-7. **Strategy v2 finalization** (`strategy_architecture_v2_finalization_2026_04_19`) and
-   `strategy_architecture_v2_phase3_11_handoff_2026_04_17` overlap. Confirm one is authoritative.
-8. **Live-mode services** (`position-balance-monitor-service`, `risk-and-exposure-service`, `pnl-attribution-service`,
-   `alerting-service`, `batch-live-reconciliation-service`) have no active plan tagged for the May 23 cutover. **This is
-   the biggest sub-plan gap.**
+### Plan clusters → surface ONE per cluster on the master plan
+
+| Cluster                          | Lead / umbrella plan                                                                                                                         | Children (reference, not duplicate)                                                                                                                                                                                                                 | Action                                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **DeFi end-to-end pipeline**     | `defi_e2e_pipeline_2026_04_30`                                                                                                               | `defi_pipeline_extension_2026_05_01` · `leveraged_leg_controller_2026_05_01` · `carry_staked_basis_structure_axis_2026_05_04` · `consolidated_defi_data_pipeline_2026_04_15` (residuals) · `defi_data_types_completeness_2026_04_24` (residuals)    | Surface only the lead on master plan; track children as sub-bullets. Archive `defi_full_coverage_expansion_2026_04_09`.         |
+| **Write-gate / honest-coverage** | `writegate_honest_coverage_endtoend_2026_05_06` (umbrella; declares `supersedes_phases:` on shard-granularity Tier 1 #1 + Tier 2 raw-tables) | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER` · `data_status_multi_axis_shard_propagation_2026_05_06` · `feature_dag_uac_ssot_and_features_coverage_2026_05_06` · `predictions_canonical_question_group_polymarket_migration_2026_05_06` | Re-tag children with `role: child` / `parent: writegate_…`; surface only the umbrella.                                          |
+| **Sports phantom recovery**      | `sports_fixtures_truthset_recovery_2026_05_06` (active executor; declares `supersedes_phases:` on phantom-recovery relaunch + audit-flip)    | `sports_phantom_fixtures_recovery_2026_05_06` · `sports_phantom_recon_and_failure_triage_2026_05_01` (diagnostic context)                                                                                                                           | Surface only truthset; the others are background.                                                                               |
+| **Strategy v2 finalization**     | `strategy_architecture_v2_finalization_2026_04_19` (live, supersedes `strategy_architecture_v2_2026_04_17`)                                  | `strategy_architecture_v2_phase3_11_handoff_2026_04_17` (historical, Phase 2 done)                                                                                                                                                                  | Surface only finalization; mark handoff `parent_of: finalization`.                                                              |
+| **DART terminal / cockpit**      | `dart_ux_cockpit_refactor_2026_04_29` (active superset; supersedes codex `14-playbooks/dart/dart-terminal-vs-research.md`)                   | `dart_terminal_research_split_2026_04_28` (mechanics shipped)                                                                                                                                                                                       | Archive terminal-research-split.                                                                                                |
+| **Marketing site**               | `marketing_site_three_route_consolidation_2026_04_26`                                                                                        | `marketing_homepage_old_hero_migration_2026_04_22` (homepage scope within route-consolidation) · `dart_ui_strategy_filtering_and_onboarding_2026_04_24` (self-tagged superseded)                                                                    | Archive DART UI plan; reference homepage as scope-of route-consolidation.                                                       |
+| **Sports roadmap**               | `sports_roadmap_master_execution_2026_04_21` (10-plan parallel-execution master)                                                             | 4 explicit children (apifootball_enrichment_historical_backfill · non_apifootball_provider_backfill_launchers · features_sports_pipeline_deployment · sports_scheduler_cron_activation, all 2026-04-21)                                             | Surface master only; reconcile overlap with `sports_predictions_e2e_2026_05_05` + `features_sports_honest_coverage_2026_05_05`. |
+| **Playbook SSOT**                | `playbook_ssot_stage_3_infra_spec_2026_04_19`                                                                                                | `_stage_2_doc_rewrite_2026_04_19` · `_stage_1_rules_2026_04_19` (correctly modeled with `depends_on` / `blocks`)                                                                                                                                    | Surface as one playbook-SSOT cluster.                                                                                           |
+| **Asset-group vocabulary**       | `venue_axis_asset_group_vocabulary_2026_04_25` (parent)                                                                                      | `shard_dimension_naming_asset_group_ssot_2026_04_25` (declares "complements")                                                                                                                                                                       | **Merge** or formal child link.                                                                                                 |
+
+### Self-tagged superseded plans (18) — archive with `[unlock-plan]`
+
+All have `superseded_by:` declared in frontmatter but still sit in `active/`:
+
+`client_config_and_defi_risk_2026_04_01` · `cross_domain_alpha_execution_intelligence_2026_04_11` ·
+`strategy_lifecycle_visibility_ui_2026_04_11` · `ui_walkthrough_and_e2e_alignment_2026_04_01` ·
+`dart_ui_strategy_filtering_and_onboarding_2026_04_24` · `ml_pipeline_revolution_2026_04_11` ·
+`domain_agnostic_ml_framework_2026_04_11` · `defi_instrument_pipeline_and_rewards_2026_04_01` ·
+`mev_protection_and_execution_enhancements_2026_04_01` · `manual_trade_booking_reconciliation_2026_03_22` ·
+`unified_pipeline_scheduling_and_triggers_2026_04_15` · `remove_data_types_field_2026_04_10` ·
+`polymarket_prediction_pipeline_2026_03_25` · `smoke_dep_chain_tactical_fixes_2026_04_20` ·
+`instruments_service_template_refactor_8e653acc` · `availability_manifest_v4_and_data_status_2026_04_13` (manifest now
+v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
+`dashboard_services_grid_collapse_2026_04_21` (88% done, awaiting unlock).
+
+### Other stale / drift findings
+
+- **`signal_leasing_broadcast_architecture_2026_04_20`** — 8 phases all complete
+  (`reconciliation_status: shipped_substantive`), awaiting human `[unlock-plan]`.
+- **`venue_availability_ssot_2026_03_25`** — 88% done; either archive or extract 3 polish items into a small follow-up.
+- **`hybrid_sampler_5s_resolution_2026_03_30`** — `orphan_candidate: true`, stalled since pivot to manifest+rescan. Move
+  to ICEBOX.
+- **`mempool_feed_integration_2026_06_01`** — `status: paused`, future-dated. Remove from `active/`-as-current.
+- **Dangling `superseded_by` references:** `polymarket_prediction_pipeline_2026_03_25` points at
+  `consolidated_sports_prediction_pipeline_2026_04_15` which isn't in `active/` (likely archived) — update to point at
+  `predictions_canonical_question_group_polymarket_migration_2026_05_06`. `defi_strategies_phase2_2026_03_29`
+  `depends_on:` `defi-instrument-pipeline-and-rewards` (itself superseded → transitively dangling).
+- **Removed-providers references** (Elysium / Bloxroute / Arkham / Pyth / Infura) appear in technical scope of
+  `consolidated_defi_data_pipeline_2026_04_15`, `mev_protection_and_execution_enhancements_2026_04_01`,
+  `mempool_feed_integration_2026_06_01` — scrub or archive.
+
+### Frontmatter discipline (systemic)
+
+| Issue                                           | Count |
+| ----------------------------------------------- | ----: |
+| Plans with NO frontmatter at all                |     5 |
+| Plans missing `locked_by`                       |    31 |
+| Plans missing `name` field                      |    11 |
+| Plans missing `last_updated` (95%)              |   140 |
+| `superseded_by` set but plan still in `active/` |    18 |
+| Filename ↔ `name` field mismatch               |     1 |
+| YAML errors                                     |     2 |
+
+**Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
+from filename + body, populate `locked_by: live-defi-rollout` for any that are mid-flight. **Work-stream G below.**
+
+### Service-overlap concentration (>5 active plans = consolidation candidate)
+
+| Service                   | Active plans touching it |
+| ------------------------- | -----------------------: |
+| instruments-service       |                **35** ⚠ |
+| deployment-service        |                    16 ⚠ |
+| strategy-service          |                    16 ⚠ |
+| deployment-api            |                    16 ⚠ |
+| unified-trading-system-ui |                    12 ⚠ |
+| execution-service         |                    12 ⚠ |
+| deployment-ui             |                    12 ⚠ |
+| market-tick-data-service  |                    10 ⚠ |
+
+Eight services with >5 active plans = real overlap risk. The `instruments-service` 35-plan count is the clearest
+consolidation target post-cutover.
 
 ---
 
@@ -341,19 +400,21 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 | ml-inference-service              | ◐      | ◐      | ◐         | n/a        | ◐     | n/a       | n/a  | consolidated_ml_advanced_pipeline_2026_04_15                                                                          |
 | strategy-service                  | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | strategy_architecture_v2_finalization_2026_04_19, carry_staked_basis_structure_axis_2026_05_04                        |
 | execution-service                 | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | defi_phase3_infrastructure_2026_03_30, leveraged_leg_controller_2026_05_01                                            |
-| position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — gap)**                                                                                                   |
-| risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — gap)**                                                                                                   |
-| pnl-attribution-service           | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — gap)**                                                                                                   |
-| alerting-service                  | ✗      | n/a    | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — gap)**                                                                                                   |
-| batch-live-reconciliation-service | ✗      | n/a    | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — gap)**                                                                                                   |
+| position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (PBMS dual projection / fill attributor / child-venue attribution)                |
+| risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (R&E intent subscriber — extend with explicit live-wiring todo)                   |
+| pnl-attribution-service           | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (compute --mode batch CLI; extend with live-mode wiring todo)                     |
+| alerting-service                  | ✗      | n/a    | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — only genuine gap; new plan needed)**                                                                     |
+| batch-live-reconciliation-service | ✗      | n/a    | ◐         | n/a        | ◐     | ◐         | n/a  | consolidated_operational_validation_2026_04_15 (extend with live-cutover items)                                       |
 | deployment-api                    | ✓      | n/a    | ◐         | n/a        | ◐     | n/a       | n/a  | deployment_ui_e2e_uat_2026_04_01                                                                                      |
 | deployment-service                | ✓      | n/a    | ◐         | n/a        | ◐     | n/a       | n/a  | deployment_service_build_infrastructure_repair_2026_04_22                                                             |
 | deployment-ui                     | ✓      | n/a    | n/a       | n/a        | n/a   | n/a       | n/a  | data_status_offline_rollup_2026_05_06, data_status_ui_fixes_2026_05_06                                                |
 | unified-trading-system-ui         | ✓      | n/a    | n/a       | n/a        | n/a   | n/a       | n/a  | consolidated_strategy_and_ui_2026_04_15, dart_ui_strategy_filtering_and_onboarding_2026_04_24                         |
 
-> **Action:** Cell values seeded from session memory + sub-plan inventory. Verify via per-service yamls in
-> `codex/10-audit/repos/` before relying. Five **(NO PLAN — gap)** rows are the highest-leverage backlog item — every
-> one is required for live trading.
+> **Action:** Cell values seeded from session memory + sub-plan inventory + 2026-05-06 plan-vs-plan audit. Verify via
+> per-service yamls in `codex/10-audit/repos/` before relying. Plan-vs-plan audit corrected the earlier "5 NO-PLAN"
+> claim: PBMS / R&E / pnl-attribution are already in `defi_e2e_pipeline_2026_04_30` Fork 1 (extend, don't open new);
+> batch-live-reconciliation folds into `consolidated_operational_validation_2026_04_15` (extend); only
+> **alerting-service** genuinely needs a new plan.
 
 ### Tier 2 — backfill catch-up + ML readiness ladder (NOT live by May 23)
 
@@ -467,14 +528,23 @@ migration is gated by cost.
 - [ ] [DOC] Codex SSOT at `codex/04-architecture/seamless-cloud-switch.md` — preserved-state semantics when migrating a
       live deployment between clouds
 
-### E · Live-mode services (the 5 NO-PLAN gaps)
+### E · Live-mode services (REVISED post-2026-05-06 audit — 1 new plan, 4 extensions)
 
-- [ ] [PLAN] Open `position-balance-monitor-live-mode_2026_05_07.plan.md`
-- [ ] [PLAN] Open `risk-and-exposure-live-mode_2026_05_07.plan.md`
-- [ ] [PLAN] Open `pnl-attribution-live-mode_2026_05_07.plan.md`
-- [ ] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md`
-- [ ] [PLAN] Open `batch-live-reconciliation-2026_05_07.plan.md`
-- All 5 lock to `live-defi-rollout`, all reference checklist Groups F + G
+The plan-vs-plan audit found 4 of 5 services already covered by existing plans. Only **alerting** is a genuine new-plan
+gap.
+
+- [ ] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
+      `live-defi-rollout`. References checklist Groups F + G.
+- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit todos for **position-balance-monitor live-mode
+      wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor + child-venue attribution already shipped
+      per plan body).
+- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit **risk-and-exposure intent-subscriber live-wiring
+      todo** (currently flagged as one of 5 wiring holes blocking live closure).
+- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit **pnl-attribution `--operation compute --mode live`
+      todo** alongside the existing batch CLI.
+- [ ] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
+      items** (matches plan's existing operational-validation surface; archive
+      `manual_trade_booking_reconciliation_2026_03_22` which is self-tagged superseded by it).
 
 ### F · Codex SSOT gaps to fill alongside the work
 
@@ -486,6 +556,60 @@ migration is gated by cost.
       mode
 - [ ] [DOC] CEFFU integration page in `codex/04-architecture/` (peer to `copper-custody-integration.md`)
 
+### G · Plan hygiene sweep (Day 1 quick-win, surfaced by 2026-05-06 audit)
+
+Mechanical cleanups that shrink `active/` from ~148 to ~130 plans and unblock the master plan from referencing
+self-superseded artefacts.
+
+**Archive (18 self-tagged superseded plans):**
+
+- [ ] [SCRIPT] `client_config_and_defi_risk_2026_04_01` → `archive/` with `[unlock-plan]`
+- [ ] [SCRIPT] `cross_domain_alpha_execution_intelligence_2026_04_11` → archive
+- [ ] [SCRIPT] `strategy_lifecycle_visibility_ui_2026_04_11` → archive
+- [ ] [SCRIPT] `ui_walkthrough_and_e2e_alignment_2026_04_01` → archive
+- [ ] [SCRIPT] `dart_ui_strategy_filtering_and_onboarding_2026_04_24` → archive
+- [ ] [SCRIPT] `ml_pipeline_revolution_2026_04_11` → archive
+- [ ] [SCRIPT] `domain_agnostic_ml_framework_2026_04_11` → archive
+- [ ] [SCRIPT] `defi_instrument_pipeline_and_rewards_2026_04_01` → archive
+- [ ] [SCRIPT] `mev_protection_and_execution_enhancements_2026_04_01` → archive
+- [ ] [SCRIPT] `manual_trade_booking_reconciliation_2026_03_22` → archive
+- [ ] [SCRIPT] `unified_pipeline_scheduling_and_triggers_2026_04_15` → archive
+- [ ] [SCRIPT] `remove_data_types_field_2026_04_10` → archive
+- [ ] [SCRIPT] `polymarket_prediction_pipeline_2026_03_25` → archive (and update `superseded_by:` →
+      `predictions_canonical_question_group_polymarket_migration_2026_05_06`)
+- [ ] [SCRIPT] `smoke_dep_chain_tactical_fixes_2026_04_20` → archive
+- [ ] [SCRIPT] `instruments_service_template_refactor_8e653acc` → archive
+- [ ] [SCRIPT] `availability_manifest_v4_and_data_status_2026_04_13` → archive (manifest now v6)
+- [ ] [SCRIPT] `defi_pipeline_extension_followups_2026_05_03` → archive (`status: complete`)
+- [ ] [SCRIPT] `dashboard_services_grid_collapse_2026_04_21` → archive once final 3 todos land
+
+**Convert to ICEBOX / paused (3):**
+
+- [ ] [SCRIPT] `hybrid_sampler_5s_resolution_2026_03_30` → ICEBOX (`orphan_candidate: true`)
+- [ ] [SCRIPT] `mempool_feed_integration_2026_06_01` → remove from `active/` (paused, future-dated)
+- [ ] [SCRIPT] `signal_leasing_broadcast_architecture_2026_04_20` → archive on next `[unlock-plan]` pass (8 phases done)
+
+**Frontmatter backfill (one-shot script):**
+
+- [ ] [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (140 plans affected)
+- [ ] [SCRIPT] Same script populates `asset_group` inferred from filename + body (142 plans affected)
+- [ ] [SCRIPT] Same script populates `locked_by: live-defi-rollout` for the 31 plans missing it (verify each is actually
+      mid-flight first; otherwise leave unset)
+- [ ] [SCRIPT] Add YAML frontmatter to 5 plans that have none (`_sports_phantom_fixtures_recovery_handover_2026_05_06`,
+      `dashboard_services_grid_collapse_2026_04_21`, `defi-strategy-ui-verification`, `tiered_help_chatbot_2026_03_22`,
+      `universe_ssot_fix_2026_04_20`)
+- [ ] [SCRIPT] Fix the 1 filename↔name mismatch (`path_to_100m_finalization_2026_04_20`)
+- [ ] [SCRIPT] Fix the 2 YAML errors
+
+**Re-tag children of cluster umbrellas:**
+
+- [ ] [SCRIPT] Add `parent: writegate_honest_coverage_endtoend_2026_05_06` to the 4 child plans
+- [ ] [SCRIPT] Add `parent: defi_e2e_pipeline_2026_04_30` to defi_pipeline_extension / leveraged_leg_controller /
+      carry_staked_basis where appropriate
+- [ ] [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery + recon plans
+- [ ] [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25` under
+      `venue_axis_asset_group_vocabulary_2026_04_25`
+
 ---
 
 ## Critical-path DAG (May 6 → May 23)
@@ -496,8 +620,12 @@ migration is gated by cost.
 - [ ] Close TradFi MVP residuals (cluster-validation wiring at `record_captured`)
 - [ ] Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate)
 - [ ] Close sports phantom recovery — frees VM-quota for DeFi + AWS work
-- [ ] **Open the 5 live-mode plans** (position-balance-monitor, risk-and-exposure, pnl-attribution, alerting-service,
-      batch-live-reconciliation) — work-stream E
+- [ ] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
+      PBMS / R&E / pnl-attribution extend `defi_e2e_pipeline_2026_04_30`; batch-live-recon extends
+      `consolidated_operational_validation_2026_04_15`)
+- [ ] **Plan hygiene sweep (Day 1 quick-win)** — archive 18 self-tagged superseded plans; backfill missing frontmatter
+      (`last_updated` / `asset_group` / `locked_by` / 5 plans with no frontmatter at all); re-tag cluster children with
+      `parent:` field — work-stream G
 - [ ] Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A)
 - [ ] Decide research-service repo question (work-stream C)
 - [ ] AWS migration cost analysis (work-stream D.1) → user signs off scope
