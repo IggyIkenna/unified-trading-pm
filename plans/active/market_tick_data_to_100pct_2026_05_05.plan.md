@@ -209,23 +209,32 @@ passing.
       shipped at `tests/unit/test_vault_venue_canonical_names.py` (1 dir higher than the original todo target;
       asserts identical guarantees).
 
-### Phase 1.5a-2 — UTL NormalisingManifestWriter (Q&A 8)
+### Phase 1.5a-2 — UTL NormalisingManifestWriter (Q&A 8) — **SUPERSEDED 2026-05-06**
 
-- [ ] [SCRIPT] P0. **UTL** new module `unified-trading-library/unified_trading_library/manifest_writer_normalising.py`
-      wrapping `ManifestWriter`. At `add()`/`record_*()` time, validates incoming `gcs_path=` against UAC
-      `build_{cefi,defi,tradfi,prediction}_partition_path` output. **Strict-fail**: mismatch →
-      `ValueError("manifest gcs_path does not match canonical build_*_partition_path output")` with the diff in the
-      message. Per Q&A 8 decision.
-- [ ] [SCRIPT] P0. **UTL** `unified_trading_library/__init__.py`: export `NormalisingManifestWriter` alongside
-      `ManifestWriter` (legacy + normalised, opt-in for now to avoid breaking concurrent agents' work).
-- [ ] [SCRIPT] P0. **UTL** unit tests: 4 cases — (a) canonical path passes through; (b) mismatch raises with diff
-      message; (c) UAC builder unavailable for asset_group → graceful skip with log; (d) wrapper preserves
-      `record_empty` / `record_failed` semantics.
-- [ ] [HUMAN] P0. UTL quality-gates pass; commit + push.
-- [ ] [SCRIPT] P0. **MTDS** swap all production `ManifestWriter` instantiations to `NormalisingManifestWriter` — grep
-      `ManifestWriter(` workspace-wide; per-handler audit + swap. Any pre-existing non-canonical writes will surface as
-      test failures: that's the intended detection of the layout zoo.
-- [ ] [HUMAN] P0. MTDS quality-gates pass; commit + push.
+> **Superseded by `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (commit `d591416d`)**, which folds the
+> same write-time validation into `ManifestWriter.record_captured` directly via the 4-pillar write-gate
+> (row-count > 0, NaN ratio < threshold, schema match, cluster coverage ≥ expected) rather than a separate
+> `NormalisingManifestWriter` wrapper. Per the HANDOVER's coordination rule: "Don't build a parallel mechanism — once
+> the UTL change lands, services just need to pass the clusters dict for any shard that's a bundle."
+>
+> The wrapper-vs-in-class trade-off was decided in favour of in-class because (a) every consumer needs the gates, not
+> just opt-in callers; (b) keeps the manifest API surface single; (c) the cluster-coverage check generalises naturally
+> beyond `gcs_path` validation. The original Phase 1.5a-2 todos below are kept as historical record but are no longer
+> actionable on this plan — track the supersession in the HANDOVER.
+
+- [ ] [SCRIPT] P0. ~~**UTL** new module `unified-trading-library/unified_trading_library/manifest_writer_normalising.py`
+      wrapping `ManifestWriter`.~~ **Superseded** — replaced by in-class write-gates per HANDOVER Item 1.
+- [ ] [SCRIPT] P0. ~~**UTL** `unified_trading_library/__init__.py`: export `NormalisingManifestWriter` alongside
+      `ManifestWriter`~~. **Superseded** — no separate class; `ManifestWriter.record_captured` gains
+      `expected_root_clusters` + `cluster_extractor` params instead.
+- [ ] [SCRIPT] P0. ~~**UTL** unit tests: 4 cases~~. **Superseded** — write-gate tests will live alongside the existing
+      `ManifestWriter` test suite per the new HANDOVER.
+- [ ] [HUMAN] P0. ~~UTL quality-gates pass; commit + push.~~ **Superseded**.
+- [ ] [SCRIPT] P0. ~~**MTDS** swap all production `ManifestWriter` instantiations to `NormalisingManifestWriter`~~.
+      **Superseded** — no swap needed; existing callsites get the gates for free once UTL ships them. Per-service work
+      reduces to passing the cluster dict for bundled shards (`options_chain`, `futures_chain`, prediction
+      canonical-question groups, sports per-fixture aggregates).
+- [ ] [HUMAN] P0. ~~MTDS quality-gates pass; commit + push.~~ **Superseded**.
 
 ### Phase 1.5a-3 — One-shot manifest cleanups (Q&A 6)
 

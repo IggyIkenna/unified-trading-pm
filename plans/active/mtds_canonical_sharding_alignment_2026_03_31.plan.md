@@ -104,7 +104,9 @@ Phase 4: E2E validation (full pipeline run)
       `check_shard_freshness` now receives `[f"{v}:{dt}" for v in active_venues for dt in data_types]`
 - [x] [AGENT] P0. Update shard completeness check to compare `(venue, data_type)` pairs — stale/missing shard keys now
       split on `:` to extract base venue for re-fetch targeting
-- [ ] [AGENT] P0. Run `cd market-tick-data-service && bash scripts/quality-gates.sh`
+- [x] [AGENT] P0. Run `cd market-tick-data-service && bash scripts/quality-gates.sh` — **Done 2026-05-06** (86s,
+      all gates green including the new STEP 5.63 run_lifecycle pairing gate; 6 codex violations within tolerance of 6;
+      no test failures).
 
 ## Phase 3 — MDPS Read + Write Path Alignment [PARALLEL within, SEQUENTIAL after Phase 2]
 
@@ -124,7 +126,13 @@ Phase 4: E2E validation (full pipeline run)
       partitions — orchestration_writer already processes per instrument_id and resolves venue from data
 - [x] [AGENT] P0. Update ManifestWriter shard key to `(date, data_type)` — DONE: \_write_manifest_records uses data_type
       as venue shard key
-- [ ] [AGENT] P0. Run `cd market-data-processing-service && bash scripts/quality-gates.sh`
+- [ ] [AGENT] P0. Run `cd market-data-processing-service && bash scripts/quality-gates.sh` — **Attempted 2026-05-06**:
+      MDPS QG fails on `tests/unit/test_per_instrument_pipeline.py::TestPerInstrumentPipelineFix::test_legacy_ticks_parquet_recovers_instrument_id_from_data`
+      (instrument_id resolves to `""` instead of `BINANCE-FUTURES:PERPETUAL:BTC-USDT`). Pre-existing regression in the
+      streaming chain-bundle dispatch (commit `1dfae3b feat(mdps): wire streaming chain-bundle dispatch + 11 unit tests`)
+      — unrelated to canonical sharding alignment. Concurrent agent (CosmicTrader) has in-flight edits to
+      `candle_write_mixin.py` + `cli/main.py` that simplify the fan-out path. **Blocked-by-concurrent-stream**: re-run
+      this gate after that work lands. Coverage 71.64% / 71.77%; rest of suite green (1123 passed, 1 failed).
 
 ## Phase 4 — E2E Validation [SEQUENTIAL]
 
