@@ -19,6 +19,30 @@ which python  # .venv-workspace/bin/python
 
 `.claude/settings.json` may prepend `.venv-workspace/bin` to PATH — if so, checks pass without manual activation.
 
+## Master Plan — Live DeFi Trading by 2026-05-23
+
+**The current orchestration target.** Two DeFi archetypes (`carry_staked_basis` lead + `leveraged_funding_arb`) live on
+a real wallet ≥7 continuous days by 2026-05-23, with hedge legs across 6 perp venues (Bybit, Deribit, Binance, OKX,
+Hyperliquid, Aster) and full AWS↔GCP cloud parity.
+
+- **Working plan (current state, todos, Q&A, risk register):**
+  `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md`
+- **Codex SSOT companion (durable readiness model + doc-touchpoint map):**
+  `unified-trading-pm/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`
+
+**Principle.** _Docs are the intent._ Codex SSOTs are ahead of the code and in line with the plans. Order of operations:
+**doc → plan → code**. Drift between any pair (doc/plan/code) is a review-blocking failure. Before any change in scope
+of the doc-touchpoint map (manifest schema, batch=live, cloud-agnostic, custody, live observability, P&L attribution,
+operational modes, ML lifecycle, hot reload, service-infra requirements, asset-group vocabulary, lookahead bias), read
+the listed SSOTs first; commit must touch **all** of them or the PR explicitly states why a given SSOT is unaffected.
+
+**Per-service readiness checklist** (7 groups / 23 items): A · Code health (1-3) · B · Data correctness (4-8) · C ·
+Runtime parity (9-11) · D · Coverage & shard (12-14) · E · Operability (15-16) · F · Trading prerequisites — live-only
+(17-22) · G · Operator UX — live-only (23). Live-only groups F + G cover backtest fidelity (real gas / matching engine /
+cost+yield precision), 2-year batch backtest run, Copper + CEFFU treasury, live testnet replicating prod, batch-vs-live
+reconciliation + P&L attribution, circuit breakers + kill switches + alerting + auto-recovery, and the DART manual-trade
+gate.
+
 ## Rules: Read Before Coding
 
 Read these before making ANY code changes:
