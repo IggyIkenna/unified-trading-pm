@@ -99,7 +99,51 @@ if $DO_BUILD; then
     --exclude='test-results' \
     "$UI_SRC/" "$TEMP_UI/"
   echo "    bundled ui/ size: $(du -sh "$TEMP_UI" | cut -f1)"
-  trap 'rm -rf "${DEPLOYMENT_API_DIR}/ui"' EXIT
+
+  # Bundle the deployment-service sibling repo. deployment-api imports from
+  # ``deployment_service.*`` at runtime (vm_deployments route + others) but
+  # the UTL base image doesn't ship it (it's an application-level lib, not a
+  # T0/T1 library). pyproject.toml's ``[tool.uv.sources]`` points at
+  # ``../deployment-service`` for local dev, which doesn't exist in Cloud
+  # Build context. We rsync it into ``./_deployment-service/`` for the
+  # Dockerfile to pip-install.
+  DS_SRC="${WORKSPACE_ROOT}/deployment-service"
+  if [ ! -d "$DS_SRC" ]; then
+    echo "ERROR: deployment-service sibling repo not found at $DS_SRC" >&2
+    exit 1
+  fi
+  TEMP_DS="${DEPLOYMENT_API_DIR}/_deployment-service"
+  if [ -e "$TEMP_DS" ] || [ -L "$TEMP_DS" ]; then rm -rf "$TEMP_DS"; fi
+  rsync -a \
+    --exclude='.venv' --exclude='.git' --exclude='__pycache__' \
+    --exclude='*.egg-info' --exclude='build' --exclude='dist' \
+    --exclude='node_modules' --exclude='.pytest_cache' \
+    --exclude='.coverage' --exclude='htmlcov' \
+    --exclude='terraform' --exclude='terraform.tfstate*' \
+    --exclude='.terraform' --exclude='*.tfstate*' \
+    --exclude='tests' --exclude='docs' --exclude='data' \
+    --exclude='coverage.json' --exclude='coverage.xml' \
+    "$DS_SRC/" "$TEMP_DS/"
+  echo "    deployment-service: $(du -sh "$TEMP_DS" | cut -f1)"
+
+  # Materialise the codex-data / pm-plans / pm-configs symlinks. Local checkouts
+  # have these as symlinks into ../unified-trading-pm/{codex/10-audit/repos,plans,configs};
+  # Cloud Build's tarball prep doesn't follow symlinks, so the COPY steps
+  # in the Dockerfile would fail with "file not found in build context".
+  PM_ROOT="${WORKSPACE_ROOT}/unified-trading-pm"
+  echo "==> Materialising codex-data/ pm-plans/ pm-configs/ from ${PM_ROOT}"
+  for dst in codex-data pm-plans pm-configs; do
+    target="${DEPLOYMENT_API_DIR}/${dst}"
+    if [ -L "$target" ]; then rm -f "$target"; fi
+    if [ -d "$target" ] && [ ! -L "$target" ]; then continue; fi  # real dir, leave it
+  done
+  rsync -a "${PM_ROOT}/codex/10-audit/repos/" "${DEPLOYMENT_API_DIR}/codex-data/"
+  rsync -a --exclude='archive' "${PM_ROOT}/plans/" "${DEPLOYMENT_API_DIR}/pm-plans/"
+  rsync -a "${PM_ROOT}/configs/" "${DEPLOYMENT_API_DIR}/pm-configs/"
+  echo "    codex-data:  $(du -sh "${DEPLOYMENT_API_DIR}/codex-data" | cut -f1)"
+  echo "    pm-plans:    $(du -sh "${DEPLOYMENT_API_DIR}/pm-plans" | cut -f1)"
+  echo "    pm-configs:  $(du -sh "${DEPLOYMENT_API_DIR}/pm-configs" | cut -f1)"
+  trap 'rm -rf "${DEPLOYMENT_API_DIR}/ui" "${DEPLOYMENT_API_DIR}/codex-data" "${DEPLOYMENT_API_DIR}/pm-plans" "${DEPLOYMENT_API_DIR}/pm-configs" "${DEPLOYMENT_API_DIR}/_deployment-service" 2>/dev/null; ln -sfn ../unified-trading-pm/codex/10-audit/repos "${DEPLOYMENT_API_DIR}/codex-data"; ln -sfn ../unified-trading-pm/plans "${DEPLOYMENT_API_DIR}/pm-plans"; ln -sfn ../unified-trading-pm/configs "${DEPLOYMENT_API_DIR}/pm-configs"' EXIT
 
   # Manual `gcloud builds submit` does not auto-populate SHORT_SHA / COMMIT_SHA
   # (those only come from Cloud Build triggers). The repo's cloudbuild.yaml
@@ -111,8 +155,8 @@ if $DO_BUILD; then
 
   gcloud builds submit . \
     --project="$PROJECT_ID" \
-    --config=cloudbuild.yaml \
-    --substitutions="_BRANCH=${BRANCH},SHORT_SHA=${SHORT_SHA}" \
+    --config=cloudbuild-tier3.yaml \
+    --substitutions="SHORT_SHA=${SHORT_SHA}" \
     --region="$REGION"
   echo "==> Build complete. :latest now points at the new digest."
 fi
@@ -125,10 +169,11 @@ if $DO_DEPLOY; then
     --region="$REGION" \
     --image="$IMAGE" \
     --port=8080 \
-    --memory=2Gi \
-    --cpu=1 \
+    --memory=4Gi \
+    --cpu=2 \
     --min-instances=1 \
-    --max-instances=4 \
+    --max-instances=20 \
+    --concurrency=80 \
     --timeout=900 \
     --service-account="$SA" \
     --allow-unauthenticated \
