@@ -330,23 +330,199 @@ empty_confirmed markers for 33 leagues"`. Patch is live + correct behavior.
 
 - [x] [AUDIT] P0. instruments-service delta vs HANDOVER findings (done 2026-05-06; see HANDOVER §instruments-service
       post-audit).
-- [ ] [AUDIT] P0. MDPS — categorise all 53 `_create_empty_output` callsites into A / B / C. Output: a per-callsite
-      manifest table file:line → category. 1-2 days.
-- [ ] [AUDIT] P0. MDPS prediction adapters — count `_create_empty_output` sites + classify (not yet listed in audit).
-- [ ] [AUDIT] P0. MTDS — confirm bundle adapter list (options_chain, futures_chain, prediction, sports_fixture_bundle) +
-      each adapter's row schema (so cluster_extractor can be written).
-- [ ] [AUDIT] P0. features-sports — for each of the 14 `TABLE_TO_EXPORT` entries, document the actual source columns
-      currently present. Confirm we have the columns required to stamp the new `available_at` semantics (e.g.
-      `match_end_time` is present on `fixture_stats` rows; `event_time` on `fixture_events`; `report_time` on
-      `injuries`).
-- [ ] [AUDIT] P0. Multi-source coverage matrix per `(asset_group, data_type)` — list every source we currently use AND
-      every alternative we could use. Drives the `SOURCE_PRIORITY` registry seeding in Phase 1B.
+- [x] [AUDIT] P0. MDPS — categorise all 53 `_create_empty_output` callsites into A / B / C. **Done 2026-05-06.**
+      See "Phase 0 audit findings — MDPS callsite categorisation" below.
+- [x] [AUDIT] P0. MDPS prediction adapters — count `_create_empty_output` sites + classify. **Done 2026-05-06.**
+      See "Phase 0 audit findings — MDPS prediction adapters" below.
+- [x] [AUDIT] P0. MTDS — confirm bundle adapter list + each adapter's row schema. **Done 2026-05-06.**
+      See "Phase 0 audit findings — MTDS bundle adapter inventory" below.
+- [x] [AUDIT] P0. features-sports — for each of the 14 `TABLE_TO_EXPORT` entries, document the actual source columns
+      currently present. **Done 2026-05-06.**
+      See "Phase 0 audit findings — features-sports TABLE_TO_EXPORT inventory" below.
+- [x] [AUDIT] P0. Multi-source coverage matrix per `(asset_group, data_type)`. **Done 2026-05-06.**
+      See "Phase 0 audit findings — multi-source coverage matrix" below.
 - [ ] [AUDIT] P0. instruments-service sports schemas — confirm the columns to add (`announced_at` on fixtures;
       `event_time` on fixture_events; `report_time` on injuries; `match_end_time` on fixture_stats /
-      fixture_player_stats).
+      fixture_player_stats). **PARTIAL via #0.4 audit**: features-sports audit revealed source-side blockers — see
+      "Phase 0 audit findings — features-sports TABLE_TO_EXPORT inventory" §"Tables blocked on upstream source-field
+      availability". Schema bumps still needed for `event_time` (derivable from `kickoff_utc + elapsed_min`); the
+      remaining proposed columns (`announced_at`, `report_time`, `match_end_time`) cannot be sourced from current
+      providers — see findings below.
 
 QG between Phase 0 and Phase 1A/1B/1C: audit manifest reviewed by user; per-callsite A/B/C decisions signed off;
 SOURCE_PRIORITY tie-breaker rules confirmed for each (asset_group, data_type) where multi-source applies.
+
+---
+
+## Phase 0 audit findings (2026-05-06 Claude session)
+
+### Phase 0 audit findings — MDPS callsite categorisation
+
+**Total callsites: 37** (NOT 53 — original plan estimate counted method definitions; actual `return self._create_empty_output(...)` callsites = 37). Distribution: 16 A / 15 B / 5 C / 2 ?.
+
+| File:Line | Branch trigger | Category | Reason |
+|---|---|---|---|
+| `cefi/book_snapshot_adapter.py:87` | tick_data empty on entry | A | Honest absence — no rows from MTDS |
+| `cefi/book_snapshot_adapter.py:117` | tick_data empty after `interval_idx` filter | B | Ticks present, all outside requested day — upstream timestamp bias |
+| `cefi/derivative_adapter.py:69` | tick_data empty on entry | A | |
+| `cefi/derivative_adapter.py:99` | tick_data empty after filter | B | |
+| `cefi/futures_chain_adapter.py:75` | tick_data empty on entry | A | Bundle: "no rows" = no contracts had quotes; not a cluster failure |
+| `cefi/futures_chain_adapter.py:105` | tick_data empty after filter | B | Bundle B-category — upstream partition bias |
+| `cefi/liquidations_adapter.py:143` | tick_data empty on entry | A | Legitimately sparse for low-OI |
+| `cefi/liquidations_adapter.py:173` | tick_data empty after filter | B | |
+| `cefi/options_chain_adapter.py:164` | tick_data empty on entry | A | Bundle A-category |
+| `cefi/options_chain_adapter.py:194` | tick_data empty after filter | B | Bundle B-category |
+| `cefi/trades_adapter.py:69` | tick_data empty on entry | A | |
+| **`cefi/trades_adapter.py:74`** | `_prepare_tick_data` returned None (interval_idx filter dropped all) | **B** | **Plan-confirmed reproduction path** — non-empty input, empty after bucketing |
+| `cefi/trades_adapter.py:83` | `price_col is None` (no derivable price column) | C | Schema/field error — derive_price_column failed |
+| `defi/fx_rate_adapter.py:120` | tick_data empty on entry | A | |
+| `defi/fx_rate_adapter.py:131` | `_detect_asset(instrument_id)` returned None | **C** | **NEW finding**: instrument_id pattern unrecognised — schema/metadata gap |
+| `defi/fx_rate_adapter.py:136` | `_ASSET_TO_FEATURE.get(asset)` returned None | **C** | **NEW finding**: asset detected but no feature mapping — registry gap |
+| `defi/fx_rate_adapter.py:167` | `price_col is None` (none of `(price, close, last, price_usd, usd_price)` in columns) | **C** | **NEW finding**: source schema drift — column name probe stale |
+| `defi/liquidity_adapter.py:87` | tick_data empty on entry | A | |
+| `defi/liquidity_adapter.py:119` | tick_data empty after filter | B | |
+| `defi/market_state_adapter.py:77` | tick_data empty on entry | A | |
+| `defi/market_state_adapter.py:109` | tick_data empty after filter | B | |
+| `defi/swap_adapter.py:74` | tick_data empty on entry | A | |
+| **`defi/swap_adapter.py:106`** | tick_data empty after filter | **B** | **Plan-confirmed reproduction path** — 1440 NaN bars when swaps timestamp-mislabeled |
+| `sports/arbitrage_adapter.py:42` | tick_data empty on entry | A | |
+| `sports/arbitrage_adapter.py:79` | tick_data empty after filter | B | Sports odds B-category — multi-day spans + wrong partition |
+| `sports/bucket_assignment_adapter.py:313` | tick_data empty on entry | A | |
+| `sports/bucket_assignment_adapter.py:319` | `_prepare_tick_data` returned empty (pivot/column failure) | C | Schema mismatch — `bm_minutes_to_kickoff` missing or pivot failed |
+| `sports/bucket_assignment_adapter.py:331` | all rows had `horizon_idx == -1` (outside staleness caps) | **?** | **Ambiguous**: legitimately stale odds (A) vs miscalculated `bm_minutes_to_kickoff` (C). **Recommend C provisionally** — derived field; miscalc most likely cause |
+| `sports/odds_movement_adapter.py:37` | tick_data empty on entry | A | |
+| `sports/odds_movement_adapter.py:74` | tick_data empty after filter | B | |
+| `sports/odds_snapshot_adapter.py:41` | tick_data empty on entry | A | |
+| `sports/odds_snapshot_adapter.py:78` | tick_data empty after filter | B | |
+| `tradfi/ohlcv_passthrough.py:89` | tick_data empty on entry → `_create_full_day_empty_output` (sets `market_state=CLOSED`) | **?** | **Ambiguous**: INTENTIONAL (closed-market signal) IF orchestrator pre-skips non-trading days via `venue_trading_calendar`; A/B otherwise. **Needs human review**: verify pre-flight reliability before re-categorising |
+| `tradfi/tbbo_adapter.py:73` | tick_data empty on entry | A | |
+| `tradfi/tbbo_adapter.py:103` | tick_data empty after filter | B | |
+| `tradfi/trades_adapter.py:67` | tick_data empty on entry | A | |
+| `tradfi/trades_adapter.py:97` | tick_data empty after filter | B | |
+
+**Notable findings**:
+- 5 NEW Path C sites in `fx_rate_adapter` not in original plan estimate — 3 distinct error classes (asset detection, feature mapping, price-column probe).
+- `tradfi/ohlcv_passthrough.py:89` could be **INTENTIONAL** (deletes the site entirely) — needs runtime verification of orchestrator's `venue_trading_calendar` pre-skip.
+- Bundle adapters (futures_chain / options_chain): A/B sites fire BEFORE cluster validation; cluster-coverage failure is a separate path at `record_captured` (Phase 2.B).
+
+### Phase 0 audit findings — MDPS prediction adapters
+
+**Direct callsites in `app/adapters/prediction/`: 0**.
+
+`PredictionTradesAdapter` subclasses `CefiTradesAdapter` directly and **does not override `process_to_candles`**. The 3 cefi/trades_adapter.py callsites (69 / 74 / 83) are inherited as-is and apply to prediction (mapping to A / B / C respectively).
+
+**NEW BUG SURFACED — distinct from 1440-NaN class**: orchestrator's prediction empty path at `live_workers.py:268-271` calls `_handle_empty_tick_data(category, ...)`. For prediction (`MarketAssetGroup.PREDICTION`), `batch_workers.py:199` skips the TRADFI branch and falls through to lines 219-228: `success=True, candles_generated=0` returned **with NO manifest record** (no `record_empty`, no `record_captured`, no `record_failed`).
+
+Implications:
+- Resolved/never-traded condition_ids return `success` silently — invisible to manifest, denominator counts as `missing`.
+- Pipeline re-attempts every backfill run (wasted I/O against empty GCS paths).
+- Cannot distinguish "haven't processed this day" from "processed it, market resolved before day".
+- **Phase 2.A scope expansion**: orchestrator's prediction empty path needs a `record_empty(row_key)` call alongside the typed-exception migration.
+
+Plan's 53-site count confirmed: prediction contributes 0 direct sites; the actual full count is 37 (cefi/defi/tradfi/sports inherited paths only).
+
+### Phase 0 audit findings — MTDS bundle adapter inventory
+
+**CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
+- `adapters/tardis/options_chain.py` — **does not exist**. Logic is in `market_interface/adapters/tradfi/tardis_adapter.py` (CeFi+TradFi paths) and `market_interface/adapters/cefi/tardis_shared.py` (shared helper).
+- `adapters/databento/options_chain.py` — **does not exist**. Logic is in `market_interface/adapters/tradfi/databento_adapter.py` and `tradfi_shared.py`.
+- `odds_snapshot_adapter.py` / `odds_movement_adapter.py` / `arbitrage_adapter.py` — **do not exist as separate files**. Implemented in `adapters/sports/odds_api_adapter.py` + `engine/orchestrator.py:_process_sports_venue_with_leagues()`.
+
+**CRITICAL ARCHITECTURAL FINDING**: ZERO `record_captured` callsites for ANY MTDS bundle. All bundles flow through `writer_manifest.add()` at `engine/orchestrator.py:1940`. The plan's Phase 1A guard (`MissingClusterValidationError` raised inside `record_captured` when `data_type ∈ BUNDLED_DATA_TYPES`) **would never fire** because nothing calls `record_captured`. **Phase 2.B wiring point at line 513 (adapters) is the wrong layer — must wire at `orchestrator.py:1940` callsite OR refactor adapters to call `record_captured` directly.** Plan needs amendment.
+
+| Adapter | data_type | Write site | Cluster identity | `cluster_extractor` recipe | Status |
+|---|---|---|---|---|---|
+| Tardis CeFi | `options_chain` (Tardis URL alias; canonical `instrument_type=options_chain`, `data_type=trades`) | `tardis_adapter.py:870` `finalise_and_write_cefi_shards` | `underlying` (groupby key) — DERIBIT path additionally splits by `(underlying, quote_asset, margin_type)` for inverse/linear v6 disambiguation | `lambda row: row["underlying"]` — already present per row | Wire `cluster_extractor` at orchestrator boundary |
+| Tardis CeFi | `futures_chain` | `tardis_adapter.py:1804` via `finalise_and_write_cefi_shards` | `underlying` per row; expiry-bucket NOT in row schema (front/back/spread cluster) | **Gap**: derive expiry_bucket from `symbol` parsing (`ESM6` → March 2026 → near-term). Need helper or new column | Schema gap must be closed before cluster gate fires meaningfully |
+| Tardis TradFi | `options_chain` (via `tradfi_shared.py:296` `_shard_instrument_type_for(OPTION) → options_chain`) | `tradfi_shared.py:450` `write_tradfi_shard` | `underlying` per row; ES.OPT 11-cluster prefix encoded in `symbol` (E1A/EW1/EOM etc.) | `lambda symbol: re.match(r'^(E[1-5]A|EW[1-4]|EOM|ES)', symbol).group(0)` — confirmed extractable | Ready (regex-based) |
+| Databento TradFi | `options_chain` (via `databento_adapter.py:91` `_PARTITION_INSTRUMENT_TYPE[OPTION]="options_chain"`) | `databento_adapter.py:822` `writer.write_chunk(df)` + `_enrich_with_canonical_ids()` at line 869 | `underlying` set at `:981` from `cls.underlying`; weekly-series cluster (E1A/EW1/etc.) in `raw_symbol` prefix | **Gap**: `DatabentoClassification` needs new `root_cluster: str` field. Currently only `underlying` is exposed; weekly-series prefix requires new pattern match | UAC change needed |
+| Databento TradFi | `futures_chain` (via `:90` `_PARTITION_INSTRUMENT_TYPE[FUTURE]="futures_chain"`) | Same `databento_adapter.py:822` path | `underlying` per row; expiry NOT exposed as column | **Gap**: same as Tardis futures_chain — derive from `raw_symbol` | Schema gap |
+| Sports `odds_api_adapter.py` | **`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE` data_type strings DO NOT EXIST in current code** — current live data_type = `"trades"` with `instrument_type="odds"`. Plan adds the new strings as part of per-fixture sharding | `orchestrator.py:1780` `instrument_type=odds/data_type=trades/ticks.parquet`; groups by `(bookmaker_key, league_id)` — **NO per-fixture grouping yet** | `bookmaker_key` per row (= `venue` after rename at line 1747) | `lambda row: row["bookmaker"]` — UAC `SPORTS_ODDS_SNAPSHOT` schema confirms `bookmaker` is the cluster identity | **Blocked**: per-fixture sharding (Phase 2.B line 520) must land first |
+| `polymarket_adapter.py` (prediction) | Current `"trades"`; future `prediction_canonical_question_group` | `polymarket_adapter.py:590` `writer.write_chunk(df)` | NO canonical_question_group column exists. Current grouping by `underlying` (BTC/ETH/etc.) is informal — written to `underlying` column only | `lambda condition_id: PREDICTION_GROUPS[condition_id]` — but `PREDICTION_GROUPS = {}` empty | **Blocked**: requires UAC canonical_question_group SSOT (Tracked Open Question §1) |
+| `kalshi_adapter.py` (prediction) | Same as Polymarket | `kalshi_adapter.py:256` `df["data_type"] = "trades"` | `instrument_type="prediction"` (note: inconsistency — Polymarket uses `"prediction_market"`) | Same blocker | Same blocker |
+
+**Cluster_extractor recipes (concrete)**:
+- `options_chain` (Tardis CeFi): `lambda row: row["underlying"]` — direct column
+- `options_chain` (TradFi Tardis): `lambda symbol: re.match(r'^(E[1-5]A|EW[1-4]|EOM|ES)', symbol.upper()).group(0)` — symbol-prefix regex
+- `options_chain` (TradFi Databento): blocked on `DatabentoClassification.root_cluster: str` UAC enrichment
+- `futures_chain` (both): blocked on `expiry_bucket` derivation from symbol parsing — needs new helper
+- `ODDS_*` (sports): `lambda row: row["bookmaker"]` — but blocked on per-fixture sharding
+- `prediction_canonical_question_group`: blocked on UAC SSOT
+
+### Phase 0 audit findings — features-sports TABLE_TO_EXPORT inventory
+
+**SURPRISE FINDING**: `_stamp_available_at` is **already implemented** in `cli/handlers/batch_handler.py:238-338`. Phase 2.C work is ~80% done in code I hadn't read this session. Three stamping buckets already wired:
+- `fixtures` → `stamp_available_at_offset(kickoff_col="kickoff_utc", offset=-7d)` (line 278-280)
+- `_POST_MATCH_TABLES` (5 tables) → `stamp_available_at_post_match(kickoff_col="kickoff_utc")` with `kickoff + 120min` fallback (lines 287-312)
+- `_REFERENCE_TABLES` (8 tables) → `stamp_available_at_explicit(when=datetime.now(UTC))` (lines 319-320)
+
+**`_FETCH_COMPLETED_AT` cache: does not exist.** Phase 2.C must build it from scratch. Current `datetime.now(UTC)` at stamp time is architecturally safe (slightly pessimistic) — it's run-start, never read-time-derived.
+
+**4 export STUBS surfaced** (silently writing empty parquets every batch run — distinct bug class from 1440-NaN, equally opaque):
+- `export_fixture_lineups()` — GCS data IS read (`_fetch_runner.py:171`) but discarded; no `_fetched_fixture_lineups` cache. Stub returns empty.
+- `export_fixture_player_stats()` — same pattern; `player_stats` data read at `:173` but never stored.
+- `export_coaches()` — no source fetch implemented.
+- `export_rounds()` — no source fetch implemented.
+
+**CRITICAL Phase 2.D blockers** (proposed schema bumps cannot be filled from current sources):
+- **`announced_at`** for `fixtures`: NO source exposes fixture announcement timestamp. api_football, footystats, understat all return scheduled kickoffs without an `announced_at`. Current `kickoff - 7d` proxy is the maximum achievable precision. **Plan Phase 2.D `announced_at` column is unsourceable.**
+- **`report_time` / `occurrence_time`** for `injuries`: API-Football `/injuries` endpoint returns `player`, `team`, `fixture`, `league`, `reason`, `type` — NO timestamp. The endpoint is a roster-availability snapshot for a given `date`. **Plan Phase 2.D injury timestamp work is blocked indefinitely** unless instruments-service builds a forward-poll-vs-backfill timestamp differentiation.
+- **`match_end_time`** for `fixture_stats` / `fixture_player_stats`: NO source exposes this directly. api_football stores `status` string ("FT") but not the actual `elapsed` clock value at FT. The plan's match_end_time detection cascade (Phase 2.D bullet) hits a wall: requires instruments-service to store `fixture.status.elapsed` from API responses (it currently doesn't).
+- **`event_time`** for `fixture_events`: derivable as `kickoff_utc + elapsed_min * 60s` (api_football provides `time.elapsed` integer in-game minute). Schema bump still useful but is a derivation, not native.
+
+| Table | Current schema status | Phase 2.D readiness | Risk |
+|---|---|---|---|
+| `fixture_stats` | 20 cols, no `match_end_time` | Stamped correctly today via `kickoff + 120min` fallback | MEDIUM — `match_end_time` unsourceable |
+| `fixture_events` | 9 cols, no `event_time` | Derivable (`kickoff_utc + elapsed_min * 60s`) | HIGH — needs schema bump + `kickoff_utc` join in normalizer |
+| `fixture_lineups` | 11 cols | Stub not wired (data discarded at `_fetch_runner.py:171`) | CRITICAL — fix stub before Phase 2.D applies |
+| `fixture_player_stats` | 33 cols | Stub not wired (data discarded at `:173`) | CRITICAL — fix stub before Phase 2.D applies |
+| `injuries` | 6 cols, no `report_time` | UNSOURCEABLE from any current provider | HIGH — blocked indefinitely |
+| `players` | 10 cols | Already stamped via `datetime.now(UTC)` | LOW — `_FETCH_COMPLETED_AT` is precision improvement |
+| `venues` | 8 cols, derived inline from fixtures | Already stamped | LOW |
+| `fixtures` | 23 cols, has `kickoff_utc` ✓, no `announced_at` | UNSOURCEABLE; `kickoff - 7d` proxy is best achievable | MEDIUM — remove `announced_at` from Phase 2.D scope |
+| `leagues` | 6 cols | Already stamped | LOW |
+| `teams` | 7 cols | Already stamped | LOW |
+| `referees` | 3 cols, derived inline | Already stamped | LOW |
+| `coaches` | 5 cols | Stub returns empty; no source fetch | LOW for stamping; HIGH for data quality |
+| `standings` | 15 cols | Already stamped | LOW |
+| `rounds` | 6 cols | Stub returns empty; no source fetch | LOW for stamping; HIGH for data quality |
+
+**Plan amendments needed**:
+1. Drop `announced_at` from Phase 2.D (no source field). Keep `kickoff - 7d` proxy as documented synthesis.
+2. Drop `report_time` / `occurrence_time` from Phase 2.D as immediately actionable; route to a separate plan that adds forward-poll vs backfill timestamp differentiation in instruments-service.
+3. Drop `match_end_time` schema bump from Phase 2.D as immediately actionable; current `kickoff + 120min` fallback is the maximum without instruments-service exposing `fixture.status.elapsed`.
+4. Keep `event_time` schema bump (derivable; useful for downstream readers).
+5. Add 4 stub-wiring todos as Phase 2.C prerequisites: `fixture_lineups`, `fixture_player_stats`, `coaches`, `rounds`.
+
+### Phase 0 audit findings — multi-source coverage matrix
+
+**Most pairs are single-source** (no priority decision needed). The genuinely contested multi-source pairs:
+
+| Pair | Sources | Priority decision |
+|---|---|---|
+| `(cefi, trades)` HYPERLIQUID-specific | Tardis (returns `[]` for HL) vs Hyperliquid S3 (≥2025-03-22) + REST | **Hyperliquid S3 wins** on coverage + timestamp-availability. Already routed at `umi_tick_provider.py` HYPERLIQUID branch before Tardis check. |
+| `(tradfi, ohlcv_15m)` CBOE VIX | Barchart CSV (2020-01-02 → 2025-11-12) + Yahoo Finance (rolling 60d) + GAP (2025-11-13 → today−60d) | **Temporal layering, not tie-break.** `data_source_continuity.py:get_vix_15m_source()` is the SSOT. Recommend `["barchart_csv", "yahoo_finance"]` with note that date-based dispatch governs. |
+| `(sports, ODDS)` | footystats (backfill, 46 leagues, ≥2019) + odds_api (live, 33 prediction leagues, ≥2020-06-06) | **odds_api priority-1** for live + 33 prediction leagues; footystats priority-2 for 13 additional leagues + pre-2020-06 history. Recommend `["odds_api", "footystats"]`. |
+| `(sports, STANDINGS)` | api_football (entity=standings) vs footystats (per `SPORTS_DATA_TYPE_TO_SOURCE`) | **AMBIGUOUS — needs runtime verification.** SSOT (`league_data.py:133`) maps to footystats but adapter dependency doc shows api_football also writes. If both write, api_football wins on breadth (95 vs 46 leagues). |
+| `(prediction, trades)` | POLYMARKET (live WS) vs KALSHI (no US account) | **POLYMARKET priority-1** on all tie-breakers; KALSHI priority-2 contingent on account setup. |
+| `(sports, FIXTURE_STATS)` | api_football (detailed: xG, duels, passes) vs footystats MATCHES (aggregated) | **api_football priority-1** on info-richness; footystats is merge-different-fields candidate (deferred). |
+| `(cefi, derivative_ticker)` live vs batch | Direct WS (live, all venues) vs Tardis (batch) | **Live=batch source split**: WS for live pipeline, Tardis for batch backfill. `SOURCE_PRIORITY` should encode `["direct_ws_<venue>", "tardis"]`. |
+| `(defi, lending_indices)` | The Graph (AaveV3) + Morpho REST (Morpho protocol) | **Non-overlapping protocols** — merge-different-protocols, not tie-break. Encode as `["the_graph", "morpho_blue_api"]`. |
+
+**Migration-target pairs** (current source not optimal):
+- `(tradfi, trades/ohlcv_1m/tbbo)`: Polygon.io declared in capability but not wired; would enable `live_capable=True` for tradfi.
+- `(tradfi, ohlcv_24h)`: ECB declared but not wired; more authoritative for FX than Yahoo.
+- `(defi, gas_fees)`: Etherscan-via-catalog vs Alchemy (key already in SM); Alchemy `eth_feeHistory` is more granular and reuses existing key.
+
+**merge-different-fields opportunities** (deferred to multi-source merge plan):
+- `(sports, FIXTURE_EVENTS + XG)`: api_football scaffold + understat per-shot xG join by `(fixture_id, player, minute)`.
+- `(sports, FIXTURE_STATS + MATCHES)`: api_football granular + footystats derived (ELO, ppg).
+- `(prediction, prediction_trades)`: POLYMARKET (crypto/sports) + KALSHI (US macro/regulatory) — non-overlapping domains.
+
+**SOURCE_PRIORITY seeding for Phase 1B**:
+- ~85% of pairs: single-element list (document the monopoly).
+- 6-8 contested pairs (above): explicit `[priority1, priority2]` lists.
+- Sports/ODDS, tradfi/ohlcv_15m: encode temporal/league-tier routing in module docstring; Phase 1B writes top entry only.
 
 ---
 
