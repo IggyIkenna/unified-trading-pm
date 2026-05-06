@@ -5,32 +5,35 @@ last_updated: 2026-04-21
 scope: [engineer]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
-
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: describes pre-(per-fixture
-> sharding) shard atom; canonical post-plan shape is
-> `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)` per writegate plan. The
-> post-plan-reality doc lists the 10 cross-cutting principles codified in workspace `CLAUDE.md` (live=batch, no double
-> SSOT, three-category empty-output decision, cluster validation mandatory, per-row write-time `available_at`,
-> prediction lifecycle timing, temporary state must have named successor, per-VM shard isolation, etc.) plus the active
-> plans where the canonical post-plan reality is being implemented
-> (`writegate_honest_coverage_endtoend_2026_05_06.plan.md`,
-> `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`). If this doc and the active plans
-> disagree, the plans win. If you find a contradiction the plans don't address, flag to user — don't decide
-> unilaterally.
-
 # Sports Scheduling & Sharding
 
 SSOT for **when** each sports data source is fetched, **how far ahead / behind**, **when the underlying data is actually
-published** (lookahead-bias discipline for historical backfill), and **how shards are keyed** in the availability
-manifest. Consolidates the trigger-tier scheduler (`deployment-service/configs/sports-trigger-tiers.yaml`) with adapter
-implementation details and a per-fixture sharding contract.
+published** (lookahead-bias discipline for historical backfill — `available_at` per row stamped per UAC
+`AVAILABILITY_AT_SEMANTICS`), and **how shards are keyed** in the availability manifest. Consolidates the trigger-tier
+scheduler (`deployment-service/configs/sports-trigger-tiers.yaml`) with adapter implementation details and a per-fixture
+sharding contract.
 
-## 1. Anchoring principle — fixture_id is the canonical shard key
+**Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
+[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
+[05-infrastructure/deployment-clusters-live-vs-batch.md](../05-infrastructure/deployment-clusters-live-vs-batch.md),
+[06-coding-standards/error-handling.md](../06-coding-standards/error-handling.md),
+[06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).
+
+## 1. Anchoring principle — fixture_id is the canonical shard key (writegate Phase 2.B)
 
 Every piece of sports data — schedules, stats, odds, standings, weather, player values — maps back to a **fixture**.
 `(league_id, kickoff_date)` is derivable from `fixture_id`, not the other way round.
+
+**Per-fixture shard atom** (writegate Phase 2.B, post-2026-05-06):
+`(asset_group=sports, source, data_type, league_id, fixture_id, day)` for fixture-native data_types — `ODDS_SNAPSHOT`,
+`ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`
+(when fixture-scoped). Day-aggregate data_types (`STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`) use
+`(asset_group=sports, source, data_type, league_id, day)` without `fixture_id`. **League is a higher-level rollup
+grouping for data-status panel filtering, NOT the shard atom.**
+
+**Cluster validation MANDATORY for ODDS\_\* per-fixture bundles** (writegate Phase 1A + 2.B):
+`cluster_extractor=lambda row: row["bookmaker"]` + `SPORTS_FIXTURE_CLUSTERS` per league-tier (UAC seeds tier-1 EU
+football). UTL guard `MissingClusterValidationError` if absent; QG STEP 5.64 statically checks.
 
 **Consequence:** the availability manifest's primary per-shard key for fixture-native data types is `fixture_id`. For
 venue-native or player-native data (weather, Transfermarkt values, league standings), we still write shard-native rows
@@ -38,7 +41,7 @@ in their own storage layout, but **features-sports-service denormalises them ont
 so every fixture has a complete as-of snapshot without lookahead leakage.
 
 `(date, league_id)` remains the **query-time index** and **backfill horizon** — it's what the daily cron iterates and
-what the UI data-status drilldown renders. But it's not what the data is.
+what the UI data-status drilldown renders as a higher-level rollup. But it's not the shard atom; per-fixture is.
 
 ## 2. Provider-by-provider scheduling matrix
 

@@ -2,27 +2,23 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06 -->
-
-> **POST-PLAN REALITY (2026-05-06)** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)
-> BEFORE making code or doc changes informed by this doc. This doc is partially stale: describes
-> pre-canonical_question_group Polymarket per-base_asset shard atom; canonical post-plan shape uses
-> `prediction_canonical_question_group` data_type per Plan A predictions. The post-plan-reality doc lists the 10
-> cross-cutting principles codified in workspace `CLAUDE.md` (live=batch, no double SSOT, three-category empty-output
-> decision, cluster validation mandatory, per-row write-time `available_at`, prediction lifecycle timing, temporary
-> state must have named successor, per-VM shard isolation, etc.) plus the active plans where the canonical post-plan
-> reality is being implemented (`writegate_honest_coverage_endtoend_2026_05_06.plan.md`,
-> `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`). If this doc and the active plans
-> disagree, the plans win. If you find a contradiction the plans don't address, flag to user — don't decide
-> unilaterally.
-
 # Prediction Market Schema Paths
 
 SSOT for prediction market data flowing through the unified trading system.
 
-## Category
+**Active migration**: predictions Plan A
+([`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md))
+migrates from per-base_asset shard atom (`data_type=BTC|ETH|SPX|FOOTBALL|OTHER`) to canonical_question_group bundled
+shard atom + per-market lifecycle. Both shapes documented below: legacy (pre-Plan A) + target (post-Plan A).
 
-`PREDICTION` — one of five `MarketCategory` values in UIC (`market_category.py`).
+**Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
+[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
+[05-infrastructure/deployment-clusters-live-vs-batch.md](../05-infrastructure/deployment-clusters-live-vs-batch.md),
+[06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).
+
+## Asset group
+
+`PREDICTION` — one of five `MarketAssetGroup` values in UAC. (Legacy term: "category".)
 
 ## Venues
 
@@ -54,6 +50,8 @@ PREDICTION
 
 ## GCS Hive Paths
 
+### Legacy (pre-Plan A — current as of 2026-05-06)
+
 ```
 instruments-store-prediction-{project}/
   instrument_availability/by_date/day={date}/venue=POLYMARKET/instruments.parquet
@@ -64,6 +62,77 @@ market-data-tick-prediction-{project}/
     sub_category=macro/{index}_{timeframe}.parquet
     sub_category=football/{fixture_id}.parquet
 ```
+
+Pre-Plan A shards at the legacy `instrument_type=<base_asset>` level (BTC / ETH / SPX / FOOTBALL / OTHER) with no
+per-market identification preserved at write-time. **NEW BUG SURFACED** (Phase 0 audit 2026-05-06): orchestrator
+prediction empty path returns `success=True, candles_generated=0` with NO manifest record — distinct from 1440-NaN class
+but equally opaque. Fix in writegate Phase 2.A scope expansion: adds `record_empty(row_key)` so prediction empties
+surface as honest absence.
+
+### Target (post-Plan A)
+
+```
+instruments-store-prediction-{project}/
+  by_date/day={date}/asset_group=prediction/
+    venue=POLYMARKET/data_type=MARKET_LIFECYCLE/{market_id}.parquet     ← per-market lifecycle metadata
+
+market-data-tick-prediction-{project}/
+  raw_tick_data/by_date/day={date}/asset_group=prediction/venue=POLYMARKET/
+    data_type=prediction_canonical_question_group/
+      canonical_question_group={cqg}/
+        {market_id}.parquet     ← per-market CLOB ticks within canonical_question_group bundle
+```
+
+**Shard atom**:
+`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`.
+Bundled by canonical_question_group with per-market_id rows. **Cluster validation MANDATORY** (writegate Phase 1A):
+`cluster_extractor=lambda row: row["market_id"]` + `PREDICTION_GROUPS` registry per cadence (HOURLY=24/day, DAILY=1/day,
+ELECTION=1 over months). UTL guard `MissingClusterValidationError` raised if absent.
+
+### Canonical question groups (UAC `CanonicalQuestionGroup` enum, predictions Plan A)
+
+| Cadence           | Examples                                                                          | Expected market_ids per (canonical_group, day) |
+| ----------------- | --------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Hourly recurring  | `BTC_UP_DOWN_HOURLY`, `ETH_UP_DOWN_HOURLY`                                        | 24                                             |
+| Daily recurring   | `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `BTC_PRICE_AT_CLOSE_DAILY`              | 1                                              |
+| Weekly recurring  | `BTC_UP_DOWN_WEEKLY`                                                              | ~1/7                                           |
+| Monthly recurring | `BTC_UP_DOWN_MONTHLY`, `SPX_UP_DOWN_MONTHLY`                                      | ~1/30                                          |
+| Single-event      | `ELECTION_PRESIDENT_2028`, `ELECTION_HOUSE_2026`, `OSCARS_2026`, `WORLD_CUP_2026` | 1 over months/years                            |
+| Macro / FOMC      | `FED_RATE_DECISION_PER_FOMC`                                                      | irregular per FOMC schedule                    |
+| Sports outcome    | (per-fixture; cross-references sports per-fixture sharding)                       | 1 per fixture                                  |
+| `OTHER`           | Catch-all for unclassifiable; classifier-confidence-low                           | varies                                         |
+
+Mapping driven by:
+
+- `unified_api_contracts.canonical.domain.predictions.classifiers.classify_market_to_canonical_group(market_metadata)` —
+  word-boundary regex + token-overlap scoring + classifier stability hash.
+- `POLYMARKET_CONDITION_ID_TO_GROUP` (UAC) — hand-curated overrides for headline markets.
+- `KALSHI_TICKER_TO_GROUP` (UAC) — same shape for Kalshi.
+
+Markets where classifier returns `None` (sub-threshold confidence) → `record_failed(ClassifierConfidenceLow)`.
+
+### Per-market lifecycle (instruments-service)
+
+Each market_id has lifecycle timestamps captured in instruments-service `MARKET_LIFECYCLE` data_type:
+
+| Field               | Semantics                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `market_created_at` | When the market was listed on Polymarket / Kalshi. `available_at` for the metadata row = this value (we couldn't have known about the market before it was listed). |
+| `resolution_time`   | When the outcome was determined (oracle resolution).                                                                                                                |
+| `settlement_time`   | When payouts happened (typically resolution_time + small buffer).                                                                                                   |
+| `current_status`    | `created` / `active` / `resolved` / `settled`                                                                                                                       |
+
+**MTDS respects lifecycle bounds**: NO ticks captured before `market_created_at`, NO new ticks captured after
+`settlement_time` (the market is closed; post-settlement data is not informative). **LookaheadBiasError
+per-market-aware**: a feature compute at time T can only consume ticks where `tick.timestamp <= T` AND
+`tick.market_id`'s `market_created_at <= T` AND `tick.market_id`'s `settlement_time > T`.
+
+### Migration (predictions Plan A Phase 3.A reconciler)
+
+`mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` reads existing per-base_asset Polymarket parquets, looks
+up each row's `condition_id` via UAC classifier to derive `canonical_question_group`, regroups by
+`(canonical_question_group, day)`, writes new parquets at canonical path. Old `data_type=BTC|ETH|...` rows flip to
+`attempted_failed[reason=ShardSchemaMigrated]` for cleanup. Old parquets deleted only after sample verification.
 
 ## Polymarket API Endpoints
 
