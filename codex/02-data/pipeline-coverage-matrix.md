@@ -2,10 +2,6 @@
 scope: [engineer]
 ---
 
----
-
-## scope: [engineer]
-
 # Pipeline Coverage Matrix — instruments-service · MTDS · MDPS
 
 **Purpose:** single-page reference for "what does each service capture / produce, per (asset_group, venue, data_type)"
