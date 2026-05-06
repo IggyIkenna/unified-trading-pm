@@ -291,11 +291,25 @@ Read these before making ANY code changes:
   mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew; paired upstream fix at MTDS
   `raw_tick_hive.py` partitioner-validation); **C. Rows in window but downstream calc dropped all rows due to
   NaN/malformed source fields** → `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`
-  (data-quality bug worth diagnosing). NO FOURTH CATEGORY. NO silent NaN placeholder rows. The
+  (data-quality bug worth diagnosing). NO silent NaN placeholder rows. The
   `_create_empty_output()`-style placeholder method is **banned** from `base_adapter` and any equivalent base class.
   Reference incident: 2026-05-05 MDPS 1440 NaN OHLC bars per day per (venue, data_type) for years passed manifest as
   `captured`. Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A deletes `_create_empty_output`
   workspace-wide.
+
+  **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
+  discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed
+  set under UAC `EMPTY_CONFIRMED_REASONS`): `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PAUSED_LEAGUE` /
+  `EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED` /
+  `EXPECTED_INSTRUMENT_DELISTED` / `EXPECTED_PARTIAL_HALF_DAY` / `SOURCE_RETURNED_ZERO`. Every `(shard_key, day)`
+  in the expected universe gets a manifest row — calendar-pre-skip cases emit
+  `record_expected_empty(reason=EXPECTED_<X>)` instead of "no row at all." **NO parquet on disk for bad/partial-
+  expected days** — manifest reason IS the SSOT; downstream consumers read the manifest, not the parquet, to
+  determine absence semantics. Per-service consumer-class audit (execution skips / ML NaN-fills / rolling-window
+  features adjust denominator while keeping window size / same-day features NaN-fill / cross-instrument calcs
+  propagate per-leg) is the workspace contract — see [`codex/02-data/honest-absence-downstream-handling.md`](unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md)
+  § "Reason taxonomy (codified 2026-05-07)" + § "Per-service consumer-class audit." Plan: writegate Phase 2.E
+  ships UTL contract extension + per-service writer migration + per-service consumer-class audit.
 
 - **Cluster validation MANDATORY at `record_captured` for bundled shards (CRITICAL — runtime + static enforcement)** —
   For any `data_type ∈ unified_api_contracts.canonical.crosscutting.honest_coverage.BUNDLED_DATA_TYPES`,
