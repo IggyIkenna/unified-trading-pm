@@ -316,7 +316,18 @@ consolidation target post-cutover.
     **Codex follow-up doc**: "empty upstream means no expectation of data downstream; manifest `empty_confirmed` is the
     SSOT, NOT placeholder rows. Holidays + market hours via `venue_trading_calendar`; unexpected empties handled
     per-service in pre-flight." Block writegate Phase 2.A on grep audit of features-volatility / features-cross-
-    instrument for `market_state == "CLOSED"` consumers; refactor any to read manifest `capture_status` instead.
+    instrument for `market_state == "CLOSED"` consumers; refactor any to read manifest `capture_status` instead. **A2
+    audit shipped 2026-05-07** (commit `7d8ce330` codex doc; writegate plan re-categorisation): codex SSOT
+    `codex/02-data/honest-absence-downstream-handling.md` codifies the principle. Audit ruling:
+    `_create_full_day_empty_output` in `tradfi/ohlcv_passthrough.py:266` re-categorised from `?` to **A (honest
+    absence)**; sibling banned method `_create_closed_market_candle` in `orchestration_writer.py:65`
+    (1-row-per-non-trading-day variant) added to same delete scope. Two consumers (`features-volatility-service` +
+    `features-delta-one-service` `_filter_market_state`) have legitimate intra-day filter purpose (`pre_market` /
+    `post_market` / `closed` minutes from `_apply_market_state` on real trading days) — those filters STAY;
+    placeholder-row drop role disappears once delete-and-replace ships. Consumer refactor: add manifest pre-flight gate
+    (skip `empty_confirmed` days at parquet-load time). Code change folded into writegate Phase 2.A scope (already
+    covers 37 `_create_empty_output` callsites + 3-write-path consolidation); A2 deliverable is the audit ruling that
+    resolves the writegate plan's open `?` entry, not a separate commit.
 16. ✓ **Sports `fixture_id` shard atom (writegate HANDOVER vs multi-axis plan) — multi-axis plan wins; `fixture_id` is
     NOT a shard atom.** `(league_id, day)` already bounds fixtures; per-fixture detail comes from parquet at drill-down
     time. HANDOVER per-asset-group matrix updated; features-sports audit reframes to `(feature_group, league_id, day)`.

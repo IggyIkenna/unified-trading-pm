@@ -79,17 +79,29 @@ resolutions for two would-be code refactors. This doc tells you what's done and 
      sports.
 - Required before writegate Phase 2.C ships.
 
-**A2. `_create_full_day_empty_output` consumer audit + delete (HIGH-3).**
+**A2. `_create_full_day_empty_output` consumer audit + delete (HIGH-3) — AUDIT SHIPPED 2026-05-07; CODE CHANGE FOLDED
+INTO WRITEGATE PHASE 2.A.**
 
-- File: `market_tick_data_service/adapters/tradfi/ohlcv_passthrough.py:89` (and any other adapters with same helper).
-- Action:
-  1. Grep features-volatility + features-cross-instrument + features-delta-one source for `market_state == "CLOSED"` and
-     `market_state ==` patterns.
-  2. If zero consumers → delete `_create_full_day_empty_output`. Replace with
-     `record_empty(capture_status=empty_confirmed)` for closed days.
-  3. If consumers exist → refactor consumers to read manifest `capture_status == empty_confirmed` instead of in-row
-     `market_state == "CLOSED"`.
-- Then unblock writegate Phase 2.A.
+- Real path: `market-data-processing-service/.../tradfi/ohlcv_passthrough.py` (HANDOVER initially said
+  `market_tick_data_service` — typo).
+- Audit findings:
+  - `_create_full_day_empty_output` defined at `:266`, called at `:89`. Sibling banned method
+    `_create_closed_market_candle` at `orchestration_writer.py:65` (1-row-per-non-trading-day variant) — same shape,
+    same fix.
+  - **Two consumers exist** but their `market_state` filter has dual purpose:
+    - `features-volatility-service` `_filter_market_state` (`engine/orchestrator.py:531-558` +
+      `core/volatility_orchestration.py:67-73`) filters `df["market_state"].isin(["normal", "auction"])` — drops both
+      placeholder full-day rows AND legitimate intra-day pre/post/closed minutes from `_apply_market_state` on real
+      trading days.
+    - `features-delta-one-service` `_filter_market_state` (`engine/orchestrator.py:614-630`) — same shape.
+  - Consumer refactor: add manifest pre-flight gate (skip `empty_confirmed` days at parquet-load time, never enter
+    `_filter_market_state` for those days); intra-day filter for real-trading-day non-NORMAL minutes is unchanged.
+- Resolution: writegate plan line 561 `?` entry re-categorised to **A (honest absence)** + sibling
+  `_create_closed_market_candle` added to Phase 2.A delete scope. Phase 2.A scope already covers 37
+  `_create_empty_output` callsites + 3-write-path consolidation; absorbing these two siblings + the 2 consumer
+  pre-flight gates is incremental.
+- A2 deliverable shipped: audit ruling (writegate plan + master plan Q&A 15 + this handover); A3 codex SSOT shipped
+  (`codex/02-data/honest-absence-downstream-handling.md`, commit `7d8ce330`). Code change is writegate Phase 2.A's job.
 
 **A3. New codex doc: "empty upstream means no expectation of data downstream"** — **SHIPPED 2026-05-06.**
 
