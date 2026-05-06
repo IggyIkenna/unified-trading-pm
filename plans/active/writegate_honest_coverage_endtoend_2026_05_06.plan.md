@@ -208,6 +208,124 @@ every repo touched in Phase N.
 
 ---
 
+## Concurrent in-flight stream — sports phantom FIXTURES recovery (2026-05-06)
+
+A separate stream is running in parallel to this plan, owned by the
+`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan. Be aware while
+executing this plan because the recovery touches the same `ManifestWriter` /
+orchestrator surfaces this plan modifies — the two streams must not step on
+each other.
+
+### What's running
+
+**Live VM (as of 2026-05-06 13:54 UTC)**: `af-backfill-20260506-135454` on
+asia-northeast1-c, e2-standard-4, running api_football FIXTURES backfill
+2020-06-06 → 2026-05-04. Estimated ~10h wall-clock (most dates are
+no-fixture days = fast paths; match days ~80s each for the api_football
+fetch + per-league manifest write). After this VM auto-shuts, a sequential
+chain runner (`deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh`,
+commit `5be53a7`) launches 5 follow-on VMs (PLAYER_STATS / FIXTURE_STATS /
+FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES) — singleton-locked on
+`af-backfill-` prefix; ~3-5h sequential.
+
+### Why it's running
+
+The orchestrator's FIXTURES adapter pre-2026-05-06 was emitting
+`manifest.add(row_count=0)` for every Prediction-tier league × date (zero-fixture
+days), creating ~100k phantom `captured` rows that violate CLAUDE.md "4 pillars"
+rule #1. Root-cause writer fix shipped in instruments-service `f36651c`. The
+recovery sequence:
+
+1. `flip_phantom_fixtures_zero_rows.py` (instruments-service `962982e`) flipped
+   100k phantoms `captured`+`instrument_count=0` → `empty_confirmed`. **Wrong**: orchestrator
+   skips both `captured` and `empty_confirmed`.
+2. `flip_phantom_to_attempted_failed.py` (`2821111`) re-flipped to
+   `attempted_failed` + extended to 75k cap-zero rows on per-fixture downstreams
+   (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES).
+   **Insufficient**: discovered `check_shard_freshness` ignores
+   `capture_status` — attempted_failed treated as "fresh" by orchestrator
+   pre-flight (see `feedback_check_shard_freshness_ignores_capture_status.md`).
+3. `write_phantom_reflip_per_vm_shard.py` (`2d18d0d`) mirrored corrective rows
+   to a fresh per-VM shard so reader's fall-back merge sees them past the 120s
+   canonical mtime threshold (see `feedback_manifest_reader_staleness_per_vm_fallback.md`).
+4. `delete_phantom_rows_from_shards.py` (`73be000`) **DELETED** the 176k
+   phantom rows (canonical + 10 per-VM shards with backups). Goal: orchestrator
+   sees them as MISSING and re-fetches.
+5. **Discovered**: orchestrator pre-flight is at (date, data_type) granularity,
+   not per-league — once any league has FIXTURES for date X, the date is "fresh"
+   and the WHOLE date is skipped. See
+   `feedback_orchestrator_freshness_per_league_granularity.md`.
+6. **Orchestrator patched** (instruments-service `d73565a`) to defer pre-flight
+   to per-entity handlers when `expected[]` contains any of 17 sports
+   per-league entities. Per-entity handlers' existing `_should_skip_date_for_per_league`
+   pattern (orchestrator.py:490) handles per-(date, data_type, league_id)
+   correctly. **THIS is the architectural fix this plan should be aware of.**
+
+The currently-running VM v6 was launched after the patch + confirmed working in
+production: log shows `"date=2020-06-07: deferring pre-flight to per-league
+entity handlers"` + `"SPORTS: No fixtures for date=2020-06-07 — wrote
+empty_confirmed markers for 33 leagues"`. Patch is live + correct behavior.
+
+### Potential effects on this plan
+
+**Surfaces touched that overlap with this plan's scope:**
+
+1. **`ManifestWriter` per-VM shard merge** (`unified-trading-library/.../manifest_writer.py:2222`):
+   the recovery stream's `delete_phantom_rows_from_shards.py` mutated the
+   `_index/per_vm/*.parquet` set in the sports bucket. If this plan's Phase 1A
+   `record_captured` contract change introduces new shard-key columns or
+   migrates existing ones, the recovery's deleted-then-rewritten rows must
+   migrate cleanly. The DELETE script's signature filter
+   (`(capture_status='attempted_failed' AND error_reason marker) OR
+   (capture_status='captured' AND instrument_count==0)`) leaves all columns
+   otherwise unchanged, so a v6→v7 schema upgrade should be transparent.
+
+2. **`check_shard_freshness` (UTL)**: this plan's Phase 1A may add per-row
+   capture_status filtering to the freshness check (closing the
+   "attempted_failed treated as fresh" hole architecturally rather than via
+   per-service defer-to-handler workaround). When that lands, the
+   per-service patch in instruments-service `d73565a` becomes redundant but
+   harmless — it just makes is_fresh=False unconditionally for sports
+   per-league entities, which is what the new UTL behavior would do anyway.
+   Recommend keeping the instruments-service patch in place until UTL fix
+   ships + verifying the new path doesn't regress (test: launch a
+   `--sports-entity FIXTURES` VM, confirm it doesn't skip-cycle).
+
+3. **Manifest backups in canonical bucket**: recovery wrote 4 backup blobs
+   in `gs://instruments-store-sports-central-element-323112/_index/`:
+   - `availability_index.20260506-111222.bak.parquet` (pre-flip-1)
+   - `availability_index.20260506-112347.bak.parquet` (pre-flip-2)
+   - 10 per-VM shard `.20260506-120021.bak.parquet` siblings (pre-DELETE)
+   These are reversibility safety nets. **Do not delete** them while the
+   recovery VMs are still running. After verify (~2026-05-07) they can be
+   purged.
+
+4. **`af-backfill-` VM concurrency**: the recovery stream's chain runner
+   uses the singleton-locked launcher (`launch-api-football-backfill-vm.sh`).
+   This plan's Phase 2.D instruments-service work (writer-side changes to
+   `_create_empty_output` callsite categorisation) does not launch
+   `af-backfill-` VMs, so no direct lock conflict — but if a Phase 2.D
+   smoke test wants to launch one, sequence after the chain runner has
+   finished its 5 entities or use `--force`.
+
+5. **Orchestrator `defer pre-flight` log line**: the new log signature is
+   `"date={D}: deferring pre-flight to per-league entity handlers (sports
+   per-league mode; expected={...})"`. If this plan adds telemetry/structured
+   events around pre-flight, this is a new log shape to be aware of.
+
+### Memory entries to read for context
+
+- `project_sports_phantom_fixtures_recovery_2026_05_06.md` — full session log
+- `feedback_orchestrator_freshness_per_league_granularity.md` — the
+  architectural finding that drives the orchestrator patch
+- `feedback_check_shard_freshness_ignores_capture_status.md` — the related
+  UTL-level finding
+- `feedback_manifest_reader_staleness_per_vm_fallback.md` — the 120s mtime
+  threshold gotcha (relevant to any one-shot manifest mutation script this
+  plan's Phase 3 might write)
+
+---
+
 ## Phase 0 — Pre-audit + remaining blast-radius gaps
 
 - [x] [AUDIT] P0. instruments-service delta vs HANDOVER findings (done 2026-05-06; see HANDOVER §instruments-service
