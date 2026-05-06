@@ -70,17 +70,70 @@ alternatives appendix) if measurements suggest it.
 
 _Filled in by audit items A1, A2 below. Empty until measured._
 
-| Trigger                                    | Threshold       | Today's value | Status |
-| ------------------------------------------ | --------------- | ------------- | ------ |
-| Largest `availability_index.parquet`       | > 50 MB         | TBD           | TBD    |
-| `read_availability_index` p99 cold cache   | > 3 s           | TBD           | TBD    |
-| Chart-route p99 (manifest-read portion)    | > 2 s           | TBD           | TBD    |
-| Concurrent chart users                     | ~100            | TBD           | TBD    |
+| Trigger                                    | Threshold       | Today's value                                                  | Status                |
+| ------------------------------------------ | --------------- | -------------------------------------------------------------- | --------------------- |
+| Largest **canonical** `availability_index.parquet` | > 50 MB         | **30.2 MiB** (`market-data-tick-cefi`, 2026-05-06)             | NOT FIRED (60% of)    |
+| Largest **per-VM shard** in any `_index/per_vm/` | > 50 MB         | **3.65 MB** (`market-data-tick-defi/per_vm/local-10889-bd08`)  | NOT FIRED             |
+| Total `_index/` footprint per bucket       | (advisory)      | up to **163 MiB** (sports-instruments, mostly weather backfill VMs) | advisory; consolidator should compact |
+| `read_availability_index` p99 cold cache   | > 3 s           | TBD (A1)                                                       | TBD                   |
+| Chart-route p99 (manifest-read portion)    | > 2 s           | TBD (A1)                                                       | TBD                   |
+| Concurrent chart users                     | ~100            | TBD (operations data)                                          | TBD                   |
 
 ## Audit findings (pre-activation)
 
 _Findings appended per audit item as they complete. Each entry: date, item ID, what was checked, what was found,
 what it means for this plan._
+
+### 2026-05-06 — A2: index parquet sizes per bucket (read-only GCS scan)
+
+**What was checked:** all 10 canonical buckets (5 asset_groups × `instruments-store` + `market-data-tick`) at
+`gs://{kind}-{ag}-central-element-323112/_index/`. For each, captured size of the canonical
+`availability_index.parquet` and the largest per-VM shard, plus the total `_index/` footprint.
+
+**Canonical `availability_index.parquet` sizes (2026-05-06):**
+
+| Bucket                                    | Canonical index size |
+| ----------------------------------------- | -------------------- |
+| `market-data-tick-cefi`                   | **30.2 MiB**         |
+| `instruments-store-sports`                | **18.8 MiB**         |
+| `market-data-tick-defi`                   | **3.6 MiB**          |
+| `market-data-tick-tradfi`                 | **2.2 MiB**          |
+| `market-data-tick-sports`                 | **2.1 MiB**          |
+| `instruments-store-defi`                  | **1.1 MiB**          |
+| `instruments-store-cefi`                  | **0.6 MiB**          |
+| `instruments-store-tradfi`                | **0.5 MiB**          |
+| `market-data-tick-prediction`             | **0.2 MiB**          |
+| `instruments-store-prediction`            | **0.09 MiB**         |
+
+(`instruments-store-tradfi` has no `BucketKind.MARKET_DATA` entry per UAC SSOT — TRADFI uses Databento managed
+storage; not relevant here.)
+
+**Verdict against Trigger 1 (> 50 MB):** **NOT FIRED.** Largest canonical index is 30.2 MiB on `market-data-tick-cefi`,
+~60% of threshold. Sports-instruments at 18.8 MiB is the second-largest and is plausibly inflated by
+weather-backfill per-VM shards (4 weather VMs alone wrote 0.5–0.7 MB each into `_index/per_vm/`); after the
+consolidator merges + dedup, the canonical would shrink.
+
+**However**: the `market-data-tick-cefi` bucket is at 30 MiB **today**, with backfill ongoing. Two of the active
+backfills will inflate it materially:
+1. Deribit options backfill (2020–2025) — `_index/per_vm/opt-deribit-{year}.parquet` shards already total
+   ~199 KB summing 2020–2025; once consolidated into the canonical and as more option chains land, this is the
+   biggest single growth driver.
+2. CeFi spot/perp full backfill (mdps-cefi-2024/2025/2026 per-VM shards visible) — per-instrument-per-day
+   v6 row shape × ~7 timeframes × ~4 data_types × ~3000 cefi instruments × multi-year = the dominant row source.
+
+**Implication for this plan:**
+- **Don't unpark yet.** Trigger 1 is at 60%, not over.
+- **Re-measure in 2 weeks** (post-shard-granularity Phase 1 cleanup, post-Deribit-options-2024-2025 backfill
+  wave). If `market-data-tick-cefi` canonical exceeds 50 MB by then, Trigger 1 has fired and this plan moves to
+  active.
+- **Cluster the per-VM shards.** A separate concern: per-VM shards count is high (1307 shards on
+  `market-data-tick-cefi/_index/per_vm/`). Consolidator already runs but the per-VM tail is long. This is a
+  Trigger-2/3 (read-latency) leading indicator regardless of canonical size — every reader that does
+  `read_availability_index` after a recent write must walk per-VM shards until consolidation catches up.
+
+**Doesn't change the Q1–Q5 schema design questions** — Trigger 1's not-fired status delays activation but doesn't
+invalidate the schema work; that work proceeds independently and remains gated on the shard-granularity
+prerequisite.
 
 
 
