@@ -57,25 +57,48 @@ todos:
   - id: corrective-reflip-to-attempted-failed
     content: |
       - [x] [HUMAN+AGENT] P0. Re-flip the prior 100,431 FIXTURES `empty_confirmed` rows to `attempted_failed` (the orchestrator skips both `captured` and `empty_confirmed`, so the writer fix never re-attempts under the prior flip). PLUS extend to api_football per-fixture entities that share the same bug class (manifest.add(row_count=0) when FIXTURES enumeration was phantom-empty): INJURIES, FIXTURE_STATS, FIXTURE_EVENTS, FIXTURE_LINEUPS, PLAYER_STATS — filtered to (date, league) pairs that match the FIXTURES phantom set.
-            **Done 2026-05-06** — `instruments-service/scripts/flip_phantom_to_attempted_failed.py` (commit `2821111`); production --apply flipped 176,021 rows total: 100,431 FIXTURES re-flips + 75,590 per-fixture cap-zero rows on the same phantom pairs (FIXTURE_STATS=17,919, FIXTURE_EVENTS=17,590, FIXTURE_LINEUPS=16,633, PLAYER_STATS=15,646, INJURIES=7,802). All now carry `error_reason='phantom_re_attempt_after_writer_fix_f36651c'` and fresh `attempted_at` timestamps. Backup: `_index/availability_index.20260506-112347.bak.parquet`.
-            **Not touched in this pass**: ~223k empty_confirmed rows on per-fixture entities for the same phantom pairs. Most are legitimately empty (no fixtures = nothing to fetch); the few wrongs (fixtures existed but skipped due to FIXTURES phantom) will get re-attempted naturally when the orchestrator re-runs FIXTURES first and the per-fixture entity then sees real fixtures to enumerate. Follow-up audit after FIXTURES backfill completes (todo `audit-and-flip-stale-empties` below) covers any residual drift.
+            **Done 2026-05-06 12:23 UTC** — `instruments-service/scripts/flip_phantom_to_attempted_failed.py` (commit `2821111`); production --apply flipped 176,021 rows total. Backup: `_index/availability_index.20260506-112347.bak.parquet`.
+            **Insufficient on its own**: discovered `check_shard_freshness` (UTL `manifest_writer.py:2356`) only checks row presence + schema_version + written_at — does NOT consider `capture_status`. attempted_failed rows are still treated as "fresh" by the orchestrator pre-flight. See `feedback_check_shard_freshness_ignores_capture_status.md`. Required two follow-ups below (per-VM shard mirror + targeted DELETE).
     status: done
     blocked_by: drop-phantom-fixtures-rows
 
+  - id: per-vm-shard-mirror-for-reader-visibility
+    content: |
+      - [x] [HUMAN+AGENT] P0. Mirror corrective rows to a per-VM shard so the reader's per-VM merge sees them regardless of canonical mtime staleness (the 120s threshold means direct-canonical writes are invisible to readers >2 min later). **Done 2026-05-06 12:41 UTC** — `instruments-service/scripts/write_phantom_reflip_per_vm_shard.py` (commit `2d18d0d`) wrote 176,021 rows to `_index/per_vm/flip-phantom-corrective-20260506-114110.parquet`.
+            **Still insufficient**: even with corrective rows visible to the reader, attempted_failed rows pass `check_shard_freshness` because that function ignores capture_status. Two FIXTURES VMs (af-backfill-20260506-122705 / -124157) skip-cycled all 100k phantom dates and were killed.
+    status: done
+    blocked_by: corrective-reflip-to-attempted-failed
+
+  - id: targeted-delete-phantom-rows-from-shards
+    content: |
+      - [x] [HUMAN+AGENT] P0. Delete phantom rows ENTIRELY from canonical + every per-VM shard so the orchestrator sees them as MISSING (the only state that bypasses `check_shard_freshness`). **Done 2026-05-06 13:07 UTC** — `instruments-service/scripts/delete_phantom_rows_from_shards.py` (commit `73be000`) production --apply deleted 183,796 canonical rows + 623,307 per-VM rows across 10 shards (with duplicates between shards). Phantom signature: `(capture_status='attempted_failed' AND error_reason marker) OR (capture_status='captured' AND instrument_count==0)` restricted to FIXTURES + 5 api_football per-fixture entities. Backup-then-write per shard. Idempotent.
+            **Why DELETE not --force**: `--force` re-fetches EVERY date in the range (~6 years × 119 leagues × 6 entities = millions of api_football calls). Targeted delete forces only the 176k truly-phantom rows to be re-fetched. The `check_shard_freshness` design only respects "missing" as a re-attempt signal.
+    status: done
+    blocked_by: per-vm-shard-mirror-for-reader-visibility
+
   - id: relaunch-fixtures-backfill-category-a
     content: |
-      - [x] [HUMAN+AGENT] P0. Relaunch FIXTURES backfill for the 100,431 attempted_failed (date, league) pairs. The orchestrator will re-attempt them under the new tarball's writer fix, which `record_empty`s zero-fixture days correctly.
+      - [x] [HUMAN+AGENT] P0. Relaunch FIXTURES backfill for the 176,021 (now-deleted) phantom (date, league) rows. The orchestrator will see them as MISSING and fetch under the new writer fix, which `record_empty`s zero-fixture days correctly.
             Command: `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-05-04`
-            VM_END_DATE clipped to api_football PLAYER_STATS coverage start.
-            **Launched 2026-05-06 12:27** — VM name `af-backfill-20260506-122705` on asia-northeast1-c (e2-standard-2). Singleton lock cleared (no other af-backfill VMs running; `fs-backfill-20260506-083546` is footystats, different quota — not competing). STARTED event verification + completion monitor passed via launch-and-monitor pair below.
+            **Multiple VM iterations** (each killed/replaced as bugs surfaced):
+              * v1 `af-backfill-20260506-122705` 12:27 — skip-cycled because corrective flip was empty_confirmed. Killed 12:40.
+              * v2 `af-backfill-20260506-124157` 12:42 — skip-cycled because attempted_failed still passes `check_shard_freshness`. Killed 12:55.
+              * v3 `af-backfill-20260506-125413` 12:54 — launched with `--force` but bypassed too broadly. Killed 13:00.
+              * v4 `af-backfill-20260506-130727` 13:07 — OOM at exit_code=137 on e2-standard-2 (per-VM shard merge × 51 shards × pandas concat blew past 8GB). Auto-shut.
+              * **v5 `af-backfill-20260506-131302` 13:13 LIVE on e2-standard-4** — launcher patched (deployment-service `b7c5d8e`) to default e2-standard-4 with MACHINE_TYPE override. Phantom rows previously deleted from canonical + 10 per-VM shards (instruments-service `73be000`); orchestrator should now see them as missing and fetch.
     status: launched
-    blocked_by: corrective-reflip-to-attempted-failed
+    blocked_by: targeted-delete-phantom-rows-from-shards
     note: |
       Watch for new captures via the manifest: AUSTRIAN_BUNDESLIGA / GREEK_SUPER_LEAGUE FIXTURES `captured` count should rise from 0-real to ~150 fixtures/season. Run `python3 -c "import pandas as pd, io; from google.cloud import storage; df = pd.read_parquet(io.BytesIO(storage.Client().bucket('instruments-store-sports-central-element-323112').blob('_index/availability_index.parquet').download_as_bytes())); print(df[(df['data_type']=='FIXTURES') & (df['league_id'].isin(['AUSTRIAN_BUNDESLIGA','GREEK_SUPER_LEAGUE'])) & (df['capture_status']=='captured') & (df['instrument_count']>0)].groupby('league_id').size())"` to verify post-run.
 
   - id: relaunch-per-fixture-downstream-after-fixtures
     content: |
-      - [ ] [HUMAN+AGENT] P0. After FIXTURES re-backfill (`af-backfill-20260506-122705`) auto-shuts, sequentially relaunch the api_football per-fixture downstream entities for the 75,590 `attempted_failed` rows the corrective flip exposed. Singleton lock on `af-backfill-` prefix means these are sequential (one VM at a time):
+      - [ ] [HUMAN+AGENT] P0. After FIXTURES re-backfill (`af-backfill-20260506-131302`) auto-shuts, sequentially relaunch the api_football per-fixture downstream entities for the 75,590 deleted-phantom rows. Use the chain runner (deployment-service `5be53a7`) which auto-cycles through all 5 entities:
+            ```
+            tmux new-session -d -s phantom-chain bash deployment-service/scripts/vm/run-sports-phantom-downstream-chain.sh \\
+              --start-date 2020-06-06 --end-date 2026-05-04
+            ```
+            Or invoke launchers manually (singleton lock on `af-backfill-` prefix means these are sequential, one VM at a time):
             1. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity PLAYER_STATS 2020-06-06 2026-05-04` — 15,646 attempted_failed rows
             2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_STATS 2020-06-06 2026-05-04` — 17,919 rows
             3. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_EVENTS 2020-06-06 2026-05-04` — 17,590 rows
