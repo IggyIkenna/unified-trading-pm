@@ -1293,6 +1293,41 @@ else
     fi
 fi
 
+# 5.6.3 — run_lifecycle pairing for setup_events() entry-points
+# Every script / entry-point that calls setup_events() MUST emit a paired
+# RUN_STARTED + RUN_COMPLETED|RUN_FAILED via either:
+#   * run_lifecycle(...)        (preferred — auto-correlated by run_id)
+#   * ServiceBootstrap(...)     (services — UTL handles lifecycle internally)
+#   * ad-hoc log_event _RUN_STARTED + _RUN_(COMPLETED|FAILED) pair (legacy)
+# The UTL helper definition itself + repos that define setup_events are skipped.
+_LIFECYCLE_FILES=$(rg -l 'setup_events\(' --type py \
+    --glob '!.venv*' \
+    --glob '!**/tests/**' \
+    --glob '!**/run_lifecycle.py' \
+    --glob '!**/events/__init__.py' \
+    "$SOURCE_DIR/" 2>/dev/null || :)
+_LIFECYCLE_VIOLATIONS=""
+for _f in $_LIFECYCLE_FILES; do
+    # Skip files that define setup_events themselves (the UTL helper).
+    if grep -q 'def setup_events' "$_f" 2>/dev/null; then continue; fi
+    # Pass: ServiceBootstrap wraps lifecycle for services.
+    if grep -q 'ServiceBootstrap(' "$_f" 2>/dev/null; then continue; fi
+    # Pass: run_lifecycle context manager.
+    if grep -q 'run_lifecycle(' "$_f" 2>/dev/null; then continue; fi
+    # Legacy pass: explicit *_RUN_STARTED + *_RUN_(COMPLETED|FAILED) pair.
+    if grep -qE '_RUN_STARTED' "$_f" 2>/dev/null && grep -qE '_RUN_(COMPLETED|FAILED)' "$_f" 2>/dev/null; then
+        continue
+    fi
+    _LIFECYCLE_VIOLATIONS="${_LIFECYCLE_VIOLATIONS}${_f}"$'\n'
+done
+if [ -n "$_LIFECYCLE_VIOLATIONS" ]; then
+    log_fail "STEP 5.63: setup_events() entry-points missing run_lifecycle/ServiceBootstrap pairing — wrap main() in 'with run_lifecycle(service_name=...) as run:' (from unified_trading_library):"
+    printf "  %s\n" $_LIFECYCLE_VIOLATIONS
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.63: All setup_events() entry-points paired with run_lifecycle / ServiceBootstrap / explicit RUN events"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
