@@ -375,3 +375,85 @@ All work continues on `live-defi-rollout`. Quickmerge is the standard pathway
 
 The sub-agent rules injection block in `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` applies to
 anyone executing this handover.
+
+---
+
+## Session 2026-05-06 (continuation) — what shipped, what's still open
+
+The "next agent" (this same session, post-handover) executed the highest-leverage subset and deferred the multi-day work
+back to a future agent. Status of each item:
+
+### Item 2 — Configurable peak-memory target — SHIPPED
+
+- MTDS `tardis_stream_processor._resolve_block_size_bytes()` reads `TARDIS_STREAM_BLOCK_SIZE_MB` env var (default 8,
+  clamped to [1, 64] MiB) at module load.
+- `_DEFAULT_BLOCK_SIZE` now derives from that resolver — both `stream_bulk_csv_to_parquet` and the legacy `download_csv`
+  path in `tardis_adapter.py:489` use the same env-driven knob.
+- `setup-data-pipeline-vm.sh` reads `TARDIS_STREAM_BLOCK_SIZE_MB` from VM metadata + exports for Python.
+- 16 GB VMs running heavy Coinbase BTC-USD days can now set `TARDIS_STREAM_BLOCK_SIZE_MB=2` via launcher metadata to
+  bound peak RSS to ~2 GB at the cost of ~5-10% larger output parquets.
+- **Bench knob not yet calibrated** — operator should run the {1, 2, 4, 8, 16} MiB sweep on Coinbase BTC-USD heavy day
+  per the original handover's "Tunable values to pick" section to pick the right default. Surfacing the knob is the
+  prerequisite; bench is a follow-up.
+
+### Item 3 — Downsize launcher defaults — SHIPPED
+
+- `launch-cefi-sharded-backfill.sh`: `MACHINE_TYPE_HEAVY` default bumped from `e2-standard-2` (8 GB) to `e2-highmem-2`
+  (16 GB / $0.10/hr). Light profile unchanged at e2-standard-2 (8 GB) — book_snapshot_5 isn't in the light bundle so 8
+  GB is fine. Override with `MACHINE_TYPE_HEAVY=e2-highmem-4` for Coinbase BTC-USD-only relaunches if 16 GB proves thin
+  in practice.
+- `launch-tier3-cefi-backfill.sh`: `MACHINE_TYPE` default downsized from `e2-standard-4` (16 GB compute) to
+  `e2-highmem-2` (16 GB highmem, ~30% cheaper).
+- Comment blocks updated to reference the streaming-finalize ship (MTDS f07f3f9) and the env-var override path.
+- **Cost impact**: ~$0.01-0.05/hr per VM cheaper. On a 56-VM Coinbase fan-out + 7-VM tier3 run that's ~$0.50-3/hr
+  fleet-wide. Marginal; the real cost reduction is the streaming-finalize peak drop (256 GB → 16 GB), which already
+  shipped in the prior session.
+
+### Item 5 — KRAKEN-SPOT Tardis exchange-code mismatch — TOOLING SHIPPED, change pending probe
+
+- `market-tick-data-service/scripts/diagnose_kraken_spot_tardis.py` — probes Tardis for the canonical KRAKEN-SPOT
+  exchange code by HEAD-ing every (exchange, symbol) combination on a known-active date. Run on a VM in
+  `asia-northeast1-c` with `TARDIS_API_KEY` set.
+- `market-tick-data-service/scripts/cleanup_kraken_spot_empty_confirmed.py` — diagnostic-only listing of stale manifest
+  rows; points the operator at the canonical phantom-audit reconciler
+  (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --venue KRAKEN-SPOT --apply`)
+  for the actual deletion. The phantom-audit only deletes rows whose underlying parquet/source-response doesn't exist,
+  so it's the right tool for "post-mapping-fix stale empties".
+- **NOT YET CHANGED**: `unified_api_contracts/registry/venue_mapping.py:166`. The probe must run first to confirm the
+  right code (likely `kraken-spot`, but could be `kraken_spot` or symbol-format-only) — speculative changes could wipe
+  valid mapping entries. Operator: run the probe on a VM, then update the mapping per its `Action items` output.
+
+### Item 1 — Lift `StreamingShardFinalizer` to UTL — DEFERRED
+
+The path is working in production today (default-on per MTDS f07f3f9, validated end-to-end on Coinbase AVAX-USD smoke).
+The lift is structurally a callback-API refactor with substantial test surface (writer-pool semantics, FD-leak
+guarantees, multi-shard append) and would need cluster-validation interaction reviewed at the seam.
+
+The lift is the right move per the workspace shard-granularity SSOT rule "Do not duplicate cross-service utilities
+per-service" — but it's not blocking anything today. Refresh the design sketch in the original handover (Item 1 §What to
+extract) is still accurate; only the test inventory needs adapting to whatever the next adapter (Databento or new
+Tardis-style provider) actually exercises.
+
+**When to do it**: when a second adapter needs the same row-group + writer-pool pattern, OR when the cluster-coverage
+gate (UTL `record_captured` 4 pillars) needs to fire from inside the streaming finalize path — at that point duplicating
+the logic per-adapter would be the wrong call.
+
+### Item 4 — DEX historical via on-chain replay (EXTENDED / LIGHTER / PACIFICA) — DEFERRED
+
+Multi-day work — at minimum: subgraph definition (Lighter first, fully-on-chain CLOB), Alchemy/Helius integration for
+Starknet + Solana settlement events, schema-match validation against live REST output, MTDS routing. The original
+handover Item 4 lays out the architecture per venue.
+
+The right next step: pick Lighter as the canonical greenfield, build the subgraph against
+`gs://deployment-scripts-.../subgraphs/lighter_zksync.yaml` (or wherever the workspace holds subgraph sources), validate
+one day's replay matches the schema of `_fetch_lighter_rest`, then propagate the pattern to Extended + Pacifica.
+Allocate ~3-5 days for this slice.
+
+### Reference commits — Session 2026-05-06 (continuation)
+
+- MTDS `<SHA>` — `TARDIS_STREAM_BLOCK_SIZE_MB` env var + diagnostic scripts (`diagnose_kraken_spot_tardis.py`,
+  `cleanup_kraken_spot_empty_confirmed.py`)
+- deployment-service `<SHA>` — launcher defaults bump + VM metadata passthrough for the new env var
+- PM `<SHA>` — this handover update
+
+(SHAs stamped by `live-defi-rollout` push.)
