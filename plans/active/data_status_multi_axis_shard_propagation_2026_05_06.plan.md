@@ -8,6 +8,7 @@ related:
   - writegate_honest_coverage_endtoend_2026_05_06.plan.md
   - data_status_offline_rollup_2026_05_06.plan.md
   - feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md
+  - data_status_operations_dropdown_cli_derived_2026_05_07.plan.md
 ---
 
 # Data-status multi-axis shard propagation
@@ -616,6 +617,7 @@ back-fills behind it.
   canonical_question_group bundles) — covered by `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 1A.
 - **`client_id` semantics rework**. Already in v6; keeps its multi-tenant scoping meaning. `job_id` is added alongside,
   not as a replacement.
+- **Operations-dropdown CLI derivation** — covered by `data_status_operations_dropdown_cli_derived_2026_05_07.plan.md`.
 
 ## References
 
