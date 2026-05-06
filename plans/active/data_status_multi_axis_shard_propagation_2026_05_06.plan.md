@@ -303,13 +303,21 @@ QG gate between every phase. Phase 4 can run in parallel with Phase 3.
       keys lowercase, every SHARD has PRIMARY, BREAKDOWN_AXES = SHARD union DISPLAY - {PRIMARY}, DEFI data-pipeline
       services include chain, PREDICTION market-side includes canonical_question_group, experiment services include
       job_id, sports excludes fixture_id from shard atoms.)
-- [ ] [UAC] P0. Bump availability-manifest schema declaration v6 → v7: add `job_id` (str | None). `fixture_id` is
-      **NOT** added.
-- [ ] [UTL] P0. Update `unified_trading_library/manifests/manifest_writer.py` `_CANONICAL_COLUMNS` to include `job_id`.
-      New `add(...)` kwarg: `job_id: str | None = None`.
-- [ ] [UTL] P0. `manifest_reader.py` already tolerates older rows missing newer columns (v4/v5/v6 mix); confirm `job_id`
-      is null-safe.
-- [ ] [UTL] P0. Add unit tests: write + read with `job_id`; round-trip across schema versions.
+- [x] [UAC] P0. Bump availability-manifest schema declaration v6 → v7: add `job_id` (str | None). `fixture_id` is
+      **NOT** added. (UTL@ed658e9b — `MANIFEST_SCHEMA_VERSION` 6 → 7 with v7 docstring; UAC has no separate constant for
+      the manifest schema version, UTL is the SSOT.)
+- [x] [UTL] P0. Update `unified_trading_library/manifests/manifest_writer.py` `_CANONICAL_COLUMNS` to include `job_id`.
+      New `add(...)` kwarg: `job_id: str | None = None`. (UTL@ed658e9b — `_ROW_KEY_COLUMNS` already had `fixture_id` +
+      `job_id` from `0882b951`; this commit ships the schema-version bump alongside, plus a `_record_status` fix that
+      propagates `fixture_id`/`job_id` from `record_empty`/`record_failed` row_keys — they were being dropped before.)
+- [x] [UTL] P0. `manifest_reader.py` already tolerates older rows missing newer columns (v4/v5/v6 mix); confirm `job_id`
+      is null-safe. (UTL@ed658e9b — `read_availability_index._V6_COLUMNS` renamed to `_V7_COLUMNS` with `fixture_id` and
+      `job_id` added; `_backfill()` defaults missing columns to `""` for legacy v1-v6 parquets, surfacing under
+      synthetic `__legacy__` job_id key in the deployment-api breakdowns endpoint.)
+- [x] [UTL] P0. Add unit tests: write + read with `job_id`; round-trip across schema versions. (UTL@ed658e9b —
+      `tests/unit/test_manifest_writer_v7.py` covers default values, `_coerce_row_key` casing preservation, `.add()` +
+      `.record_empty()` write paths for ML/sports/strategy adapters, v6→v7 legacy parquet backfill. v6 + league test
+      files updated to assert current `MANIFEST_SCHEMA_VERSION == 7`.)
 
 QG gate: UTL + UAC quality-gates pass.
 
@@ -340,17 +348,34 @@ QG gate: UTL + UAC quality-gates pass.
 
 ### Phase 2 — deployment-api SHARD_AXIS_MATRIX consumer
 
-- [ ] [deployment-api] P2. `services/data_status_service.py`: import `SHARD_AXIS_MATRIX` from UAC. Replace
-      `_SERVICE_GROUP_AXIS_OVERRIDE` with `PRIMARY_AXIS` lookup.
-- [ ] [deployment-api] P2. Add `_build_breakdowns(filtered_index, axes)` helper: for each axis name, returns
-      `dict[value, sum(instrument_count)]`. Skip axes where the column is empty across all rows.
-- [ ] [deployment-api] P2. Wire into `_get_coverage_summary_sync`: per asset_group, look up
+- [x] [deployment-api] P2. `services/data_status_service.py`: import `SHARD_AXIS_MATRIX` from UAC. Replace
+      `_SERVICE_GROUP_AXIS_OVERRIDE` with `PRIMARY_AXIS` lookup. (deployment-api@85053fe — `_select_coverage_group_axis`
+      reads `get_primary_axis(service, cat.lower())` first; `_SERVICE_GROUP_AXIS_OVERRIDE` kept only as a tail fallback
+      when the SSOT has no entry for a (service, asset_group) pair.)
+- [x] [deployment-api] P2. Add `_build_breakdowns(filtered_index, axes)` helper: for each axis name, returns
+      `dict[value, sum(instrument_count)]`. Skip axes where the column is empty across all rows. (deployment-api@85053fe
+      — `_build_breakdowns` keyed on UAC `BREAKDOWN_AXES`; empty columns surface as `{}` so the UI renders an "expected,
+      no data yet" placeholder rather than hiding the dropdown; empty values collapse under synthetic `__legacy__` key
+      for pre-Phase-1B ML/strategy/execution rows.)
+- [x] [deployment-api] P2. Wire into `_get_coverage_summary_sync`: per asset_group, look up
       `BREAKDOWN_AXES[(service, cat)]`, build `breakdowns` dict, attach to result. Keep `latest_day_instruments`
-      populated from primary axis for backward-compat.
-- [ ] [deployment-api] P2. `_get_manifest_status_sync`: accept new query params `secondary_axis`, `league_id`,
+      populated from primary axis for backward-compat. (deployment-api@85053fe — `_build_coverage_for_cat` returns
+      `breakdowns: dict[axis, dict[value, count]]` alongside the existing `latest_day_instruments` map. Rollup worker
+      self-feeds into this path so the next 5-min cron tick lands `breakdowns` in the rolled-up `coverage.json.gz` blob
+      automatically.)
+- [x] [deployment-api] P2. `_get_manifest_status_sync`: accept new query params `secondary_axis`, `league_id`,
       `fixture_id`, `canonical_question_group`, `job_id`. Apply as filters before building the cell grid.
-- [ ] [deployment-api] P2. Routes pass query params through; pydantic schema for the new `breakdowns` field.
-- [ ] [deployment-api] P2. Unit tests: per-service breakdown coverage; secondary-axis filtering on manifest endpoint.
+      (deployment-api@85053fe — `_pack_row_filters` + `_apply_row_filters` helpers; rollup fast-path bypassed when any
+      filter is set so filtered queries fall through to the on-demand path. Response echoes `secondary_axis` + `filters`
+      back so the UI can confirm the slice it received.)
+- [x] [deployment-api] P2. Routes pass query params through; pydantic schema for the new `breakdowns` field.
+      (deployment-api@85053fe — `/api/data-status/manifest` accepts the 6 new query params; `breakdowns` is part of the
+      existing flexible `dict[str, object]` response shape. New endpoint `/api/config/shard-axis-matrix` exposes the UAC
+      SSOT to the deployment-ui axis selector.)
+- [x] [deployment-api] P2. Unit tests: per-service breakdown coverage; secondary-axis filtering on manifest endpoint.
+      (deployment-api@85053fe — `tests/unit/test_data_status_axis_matrix.py` covers strategy / execution / sports
+      primary-axis selection, DEFI chain breakdown, ml-training empty-column behaviour, and `__legacy__` key
+      collapsing.)
 
 ### Phase 3 — deployment-ui DataStatusTab (FIRST deliverable for the next agent)
 
@@ -359,24 +384,40 @@ QG gate: UTL + UAC quality-gates pass.
 (Phase 1) catch up after the UI ships; we want the visual shape locked in first across all 15 services, then data
 back-fills behind it.
 
-- [ ] [deployment-ui] P3. New `BreakdownsAccordion` component reading the `breakdowns: dict[axis, dict[value, count]]`
+- [x] [deployment-ui] P3. New `BreakdownsAccordion` component reading the `breakdowns: dict[axis, dict[value, count]]`
       field per asset_group. Empty `breakdowns` → render the axis labels with "no data yet" placeholder, not a blank
-      panel.
-- [ ] [deployment-ui] P3. Per-service-aware axis selector reading the new `/api/config/shard-axis-matrix` endpoint (UAC
+      panel. (deployment-ui@8056995 — `src/components/BreakdownsAccordion.tsx` + `BreakdownsAccordion.test.tsx`; 5
+      vitest tests covering deliver-with-empty-data invariant, sorted-by-count value rows, `__legacy__` value
+      labelling + click skip, axis-count summary in header.)
+- [x] [deployment-ui] P3. Per-service-aware axis selector reading the new `/api/config/shard-axis-matrix` endpoint (UAC
       SSOT proxy). Each asset_group panel gets the dropdowns its row dictates: DEFI → chain, sports → league_id,
       strategy/execution → job_id, ML → model_family + training_period, multi-timeframe → timeframe, etc. If the backend
       returns empty values for the dropdown, render an empty selector (disabled state) rather than hiding it.
+      (deployment-ui@8056995 — `getShardAxisMatrix(service)` API wrapper + `ShardAxisMatrixResponse` interface;
+      `DataStatusTab.tsx` fetches alongside coverage-summary and renders `BreakdownsAccordion` under each asset_group
+      card with the axes UAC declares for that pair.)
 - [ ] [deployment-ui] P3. Cell-grid query passes `secondary_axis` + filter params (`league_id`,
       `canonical_question_group`, `job_id`, `chain`) when the user picks one. Empty matrix from the API → "no shards
-      captured for this filter yet" empty-state, not an error.
-- [ ] [deployment-ui] P3. Per-service tab matrix coverage: walk every service in `SHARD_AXIS_MATRIX` and confirm the tab
+      captured for this filter yet" empty-state, not an error. **Partially shipped** in deployment-ui@8056995:
+      `getDataStatusManifest` accepts the 6 new params and the BreakdownsAccordion `onSelectValue` callback is in place.
+      Wiring the cell-grid component to actually re-issue with the secondary axis + render the empty-state placeholder
+      lives in a follow-up sub-slice of Phase 3.
+- [x] [deployment-ui] P3. Per-service tab matrix coverage: walk every service in `SHARD_AXIS_MATRIX` and confirm the tab
       renders the right axes per asset_group (especially the experiment-based services where today's manifests are
       mostly empty — we want the job_id selector visible-but-empty so it's obvious how to navigate once data lands).
+      (deployment-ui@8056995 — `BreakdownsAccordion` walks the axes list returned by `/api/config/shard-axis-matrix` for
+      each rendered asset_group card; empty axes still render with header + "no data yet" placeholder by design, so all
+      15 services × applicable asset_groups surface the SSOT shape.)
 - [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
       applicable); every tab loads cleanly with the new shape; no console errors; empty-state placeholders render where
-      data is absent.
-- [ ] [deployment-ui] P3. Document the "expected empty until Phase 1 writers ship" tabs in a doc-comment on
-      `DataStatusTab.tsx` so the next reviewer doesn't think the UI is broken.
+      data is absent. **Partially shipped** in deployment-ui@8056995: TypeScript + ESLint + smoke build clean; vitest
+      passes for the new component. Full Playwright walk across 15 services × 5 asset_groups deferred to a follow-up
+      verification slice.
+- [x] [deployment-ui] P3. Document the "expected empty until Phase 1 writers ship" tabs in a doc-comment on
+      `DataStatusTab.tsx` so the next reviewer doesn't think the UI is broken. (deployment-ui@8056995 —
+      `BreakdownsAccordion.tsx` carries the deliver-with-empty-data principle in its module header docstring;
+      `DataStatusTab.tsx` `shardAxisMatrix` state has an inline comment explaining the empty-state policy and the
+      silent-fallback behaviour for pre-Phase-2 deployment-api images.)
 
 **Out of scope for Phase 3 (defer to later phases)**:
 
