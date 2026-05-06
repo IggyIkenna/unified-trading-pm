@@ -189,12 +189,29 @@ stream — not added here.
       features` paths, inject the correct LIFT-3 helper to populate `available_at`
       before write. Once every export_fn supplies it, delete the `_ensure_timestamp`
       shim entirely. Mechanical follow-up — one PR per export category.
-- [ ] **Apply LIFT-7 to features-sports `manifest.write` swallow** — `batch_handler.
-      py:629-631` catches `Exception` and only warns; entire day vanishes from data-
-      status on any GCS hiccup. Wrap in `PerLeafFailureRouter` or make fatal.
-- [ ] **Apply LIFT-7 to MTDS additional `except: continue` sites** — `solana_defi_
-      handler.py:687, 810` (TVL / APY datapoint silent drops). Lower severity than
-      umi (per-datapoint corruption of aggregates, not whole-instrument loss).
+
+#### Phase 1 Tier 2 — Additional Shipped 2026-05-06
+
+- [x] **features-sports `manifest.write` swallow** —
+      `batch_handler.py:642-663` previously caught `Exception` with only
+      `logger.warning`; a single GCS hiccup silently dropped ALL of the day's
+      manifest rows. Now: narrow except to `(ConnectionError, TimeoutError,
+      OSError, ValueError, RuntimeError)`, log at ERROR with row count lost,
+      route through `classify_and_emit_error` with `ErrorCategory.INFRASTRUCTURE`
+      / `ErrorSeverity.HIGH`, and `return False` so the caller knows the day
+      failed (shard-level failure isolation preserved — no raise into the per-
+      table loop). Repo: `features-sports-service@live-defi-rollout` commit
+      `fc0f297`.
+- [x] **MTDS solana_defi datapoint silent drops** —
+      `solana_defi_handler.py:687` (Marginfi TVL) and `:810` (Solend chart)
+      previously swallowed parse errors with `except (TypeError, ValueError):
+      continue` + no count or log. Now both sites: count drops per category,
+      debug-log each error with the offending raw value, and emit warn-level
+      summary when drop rate is significant (>5% or >5 absolute for TVL; any
+      parse error preventing pool match for Solend). Lower severity than umi
+      (per-datapoint corruption of aggregates, not whole-instrument loss) —
+      observability fix proportionate to scope. Repo: `market-tick-data-
+      service@live-defi-rollout` commit `7fedfe5`.
 
 ### Open dependencies / coordination
 
