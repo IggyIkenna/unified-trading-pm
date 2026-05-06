@@ -255,6 +255,29 @@ Read these before making ANY code changes:
   Documented date-range gaps (provider outages, paused leagues) go in `KNOWN_COVERAGE_GAPS` (currently empty) and are
   filtered by `is_in_known_gap(source, data_type, iso_date)` — data-status drops them from the denominator and the
   orchestrator pre-skips them so VMs don't waste rate-limit quota grinding through known-empty range.
+- **VIX 15m source layering (workspace-wide rule, applies across MTDS / data-status / manifest / features-\*)** — VIX
+  15m intraday has TWO non-overlapping sources and one accepted gap. All layers must understand the layering or they
+  silently corrupt history.
+  1. **Barchart historical preload** (`BARCHART_VIX_FIRST_DATE` 2020-01-02 → `BARCHART_VIX_LAST_DATE` 2025-11-12) —
+     one-time bulk import sat in GCS as ~15 daily parquet files; manifest already has `captured` rows for every trading
+     day in the range. **Never re-fetch via Yahoo for these dates** — the rolling 60-day window doesn't reach them, so a
+     Yahoo round-trip returns empty and stamping `empty_confirmed` overwrites real history. MTDS `_fetch_yahoo_vix_15m`
+     short-circuits to empty WITHOUT calling Yahoo when `BARCHART_VIX_FIRST_DATE <= target <= BARCHART_VIX_LAST_DATE` —
+     the manifest is left untouched so the existing Barchart row stands.
+  2. **Yahoo Finance 15m rolling window** (`get_yahoo_vix_15m_start()` ≈ today − 60d → today) — used for all dates past
+     `BARCHART_VIX_LAST_DATE`. UAC `YAHOO_VIX_15M_WINDOW_DAYS = 60` is the SSOT for the window length; if Yahoo ever
+     extends to 90, bump that constant only.
+  3. **Honest gap** (2025-11-13 → today − 60d) — no source covers this range. UAC `is_vix_15m_gap_date(date)` returns
+     True; MTDS returns empty so the orchestrator records `empty_confirmed`. Data-status must understand this is an
+     accepted gap (denominator clip), not a coverage hole.
+
+  **Routing surface**: in `market_tick_data_service/adapters/umi_tick_provider.py`, the (CBOE, ohlcv_15m) shard is
+  routed to `_fetch_yahoo_vix_15m` BEFORE the generic Databento route — Databento's GLBX.MDP3 doesn't carry the spot VIX
+  index, so the legacy path silently emptied the data_type via `_DATABENTO_SUPPORTED_DATA_TYPES` filtering.
+  **Pre-2020-01-02 dates** are out of scope for VIX 15m (no source ever existed); the route returns empty without
+  calling Yahoo. Reference incident **closeout 2026-05-06**: 17 VIX 15m days were filled manually via
+  `/tmp/fill_vix_15m_yahoo.py` because the route wasn't wired; the helper this rule references uses the same shape.
+
 - **Manifest concurrency principle (workspace-wide)** — Any script that consumes the availability manifest as a "to-do
   list" (instruments-service backfills, MTDS gapfills, MDPS reprocessors, features-\* recomputes, strategy-service
   archetype runs, execution-service event replays, deployment-service backfill VMs, end-to-end test suites) MUST follow

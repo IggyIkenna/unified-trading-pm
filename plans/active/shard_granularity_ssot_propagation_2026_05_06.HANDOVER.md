@@ -87,10 +87,31 @@ MTDS adapters, this one is being fixed in parallel — note that, but **DO scan 
 anti-pattern (`except: continue` swallowing per-schema or per-instrument failures inside `download_batch_df`-shaped
 loops). Report findings; I'll route them.
 
-### Item 3 — VIX forward-poll wiring (unrelated to your audit)
+### Item 3 — VIX 15m source layering (shipped — read before any VIX-adjacent edit)
 
-`umi_tick_provider.py` CBOE+ohlcv_15m route → wire `YahooFinanceAdapter.download_15min_vix()`. Single-line addition. No
-structural overlap. Mentioned only so you don't accidentally re-do.
+The (CBOE, ohlcv_15m) shard has THREE distinct date regions, each with different correctness rules. Drift between any
+two = silent corruption (overwrites Barchart preload OR fakes captured for the gap OR records `empty_confirmed` for a
+honest gap). All write/read/validate layers must understand the layering — this is the canonical short version (full
+text in the workspace `CLAUDE.md` "VIX 15m source layering" rule).
+
+1. **Barchart historical preload** (`BARCHART_VIX_FIRST_DATE` 2020-01-02 → `BARCHART_VIX_LAST_DATE` 2025-11-12) —
+   one-time bulk import already in GCS; manifest already has `captured` rows. **Never re-fetch.** MTDS
+   `_fetch_yahoo_vix_15m` short-circuits to empty WITHOUT calling Yahoo when the date is in this range; manifest is left
+   untouched so the existing Barchart row stands.
+2. **Yahoo Finance 15m rolling window** (`get_yahoo_vix_15m_start()` ≈ today − 60d → today). UAC
+   `YAHOO_VIX_15M_WINDOW_DAYS = 60` is the SSOT; if Yahoo extends to 90d, bump that constant only.
+3. **Honest gap** (2025-11-13 → today − 60d) — no source covers this. UAC `is_vix_15m_gap_date(date)` returns True; MTDS
+   returns empty so the orchestrator records `empty_confirmed`. Data-status must understand this is an accepted gap
+   (denominator clip), not a coverage hole.
+
+**Routing surface**: `market_tick_data_service/adapters/umi_tick_provider.py` `_fetch_yahoo_vix_15m` is wired BEFORE the
+generic Databento route — Databento's GLBX.MDP3 doesn't carry the spot VIX index, so the legacy path silently emptied
+the data_type via `_DATABENTO_SUPPORTED_DATA_TYPES` filtering. Pre-2020-01-02 dates return empty without a Yahoo call.
+
+**For your audit**: any features-volatility / strategy-service / data-status work that touches VIX 15m must treat the
+gap range as an honest gap (not "missing coverage") — feature backfills should NaN-fill that range cleanly, not raise
+DependencyError. If you find a calculator that expects VIX 15m density without a NaN gap, file under "Reader/schema
+drift" (Category 3 of honest-absence).
 
 ### Workspace principles already codified (re-use, don't re-derive)
 
