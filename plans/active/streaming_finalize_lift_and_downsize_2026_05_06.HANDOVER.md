@@ -451,9 +451,51 @@ Allocate ~3-5 days for this slice.
 
 ### Reference commits — Session 2026-05-06 (continuation)
 
-- MTDS `<SHA>` — `TARDIS_STREAM_BLOCK_SIZE_MB` env var + diagnostic scripts (`diagnose_kraken_spot_tardis.py`,
+- MTDS `dae9bc4` — `TARDIS_STREAM_BLOCK_SIZE_MB` env var + diagnostic scripts (`diagnose_kraken_spot_tardis.py`,
   `cleanup_kraken_spot_empty_confirmed.py`)
-- deployment-service `<SHA>` — launcher defaults bump + VM metadata passthrough for the new env var
-- PM `<SHA>` — this handover update
+- deployment-service `f77c4f4` — launcher defaults bump + VM metadata passthrough for the new env var
+- PM `4b9d6e72` — initial handover update
 
-(SHAs stamped by `live-defi-rollout` push.)
+---
+
+## Session 2026-05-07 — Items 1, 4, 5 closed
+
+User direction post 2026-05-06 closeout: "lets do all of these this session properly".
+
+### Item 5 — KRAKEN-SPOT mapping — SHIPPED
+
+Empirical Tardis API probe via `api.tardis.dev/v1/exchanges/kraken` (run on a Tokyo VM with the API key) confirmed:
+
+- Tardis exchange code `kraken` is correct (no venue_mapping change).
+- URL path symbol format is hyphen (`XBT-USD`), 1857 symbols on Tardis.
+- CSV content's `symbol` column keeps the slash form (`XBT/USD`) — Kraken native.
+
+The bug: launcher emits `XBT/USD`, aiohttp URL-encodes the slash to `%2F`, Tardis 404s. Fix: extend
+`tardis_adapter._normalize_symbol_for_exchange` to translate `/` → `-` for `kraken` at URL-build time only. CSV +
+manifest symbol column unchanged so downstream readers see no schema drift.
+
+MTDS commit `b12ecb5` ships the fix + 9 unit tests. Operator next step: refresh tarball, re-launch KRAKEN-SPOT, then run
+the phantom-audit reconciler to clear stale empty_confirmed rows.
+
+### Item 1 — UTL StreamingShardFinalizer lift — SHIPPED
+
+UTL commit `75d16f28` introduces `unified_trading_library.io.streaming_shard_finalizer.StreamingShardFinalizer`. Lifts
+~150 lines of generic row-group iteration + writer-pool logic from MTDS up to UTL. MTDS Tardis adapter now calls into
+UTL with a `_tardis_cefi_shard_router` callback for the Tardis-specific classification.
+
+7 UTL unit tests + the existing 6 MTDS streaming-finalize tests (patch-targets updated to mock the UTL seam) — all
+green. Future adapters (Databento, DEX replay) reuse via
+`from unified_trading_library.io import StreamingShardFinalizer`.
+
+### Item 4 — DEX historical replay — PLAN SHIPPED
+
+Multi-day implementation work; concrete plan at
+`unified-trading-pm/plans/active/dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md`. Covers all three
+venues (LIGHTER-ZKSYNC, EXTENDED-STARKNET, PACIFICA-SOLANA) with per-venue research items, schema-parity validation,
+manifest concurrency principle, and cost budgets. Lighter via The Graph subgraph is the canonical greenfield path.
+
+### Reference commits — Session 2026-05-07
+
+- UTL `75d16f28` — StreamingShardFinalizer + 7 unit tests
+- MTDS `b12ecb5` — kraken slash→hyphen + UTL-lift refactor + tests
+- PM `<this commit>` — DEX replay plan + handover closeout
