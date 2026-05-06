@@ -135,6 +135,52 @@ backfills will inflate it materially:
 invalidate the schema work; that work proceeds independently and remains gated on the shard-granularity
 prerequisite.
 
+### 2026-05-06 — A3 / Q1: DEFI Layer 1 canonical path resolved
+
+**What was checked:** top-level prefixes of `gs://instruments-store-defi-{pid}/` and the contents of both
+`_catalogue/instruments-service/` and `instrument_availability/by_date/`.
+
+**Findings:**
+- `instrument_availability/by_date/day=YYYY-MM-DD/venue={PROTOCOL-CHAIN}/instruments.parquet` **exists and is the
+  canonical surface** for DEFI Layer 1.
+- `_catalogue/instruments-service/day=YYYY-MM-DD/manifest.json` is a **pointer**, not a duplicate. Sample
+  manifest (`day=2020-03-01`):
+  ```json
+  {"dataset_id": "instruments", "category": "", "processing_date": "2020-03-01", "row_count": 11,
+   "gcs_bucket": "instruments-store-defi-...", "gcs_prefix": "instrument_availability/by_date/day=2020-03-01/venue=CURVE-ETHEREUM/instruments.parquet",
+   "service_name": "instruments-service", "written_at": "..."}
+  ```
+  i.e. catalogue points at `instrument_availability/...`. Q1's premise ("`_catalogue/...` is intended canonical
+  surface") is wrong — `_catalogue` is a per-day, per-dataset shipping receipt, the data lives at
+  `instrument_availability/by_date/.../instruments.parquet` exactly like CEFI/TRADFI/PREDICTION.
+
+**Sample parquet** (`day=2020-01-20/venue=CURVE-ETHEREUM/instruments.parquet`, 13 rows): same `InstrumentRecord`
+schema as CEFI/TRADFI (`instrument_key`, `venue`, `instrument_type`, `available_from_datetime`,
+`available_to_datetime`, `asset_class`, ...) **plus** DEFI-specific columns
+(`pool_address`, `pool_fee_tier`, `base_asset_contract_address`, `quote_asset_contract_address`,
+`base_asset_decimals`, `base_asset_symbol_onchain`, `atoken_address`, `debt_token_address`,
+`rate_method_selector`). `instrument_type='POOL'` for AMMs.
+
+**Drift to flag separately (not an A3 blocker):** the partition uses `venue={PROTOCOL-CHAIN}` joined
+(e.g. `venue=CURVE-ETHEREUM`, `venue=RAYDIUM-SOLANA`), not separate `venue=` and `chain=` partitions. Per the
+shard-granularity SSOT (CLAUDE.md per-asset-group shard-key matrix), the DeFi shard atom is
+`(asset_group=defi, **chain**, venue/protocol, data_type, instrument_id_or_protocol_id, day)` — `chain` is
+first-class, not embedded in `venue`. The path layout collapses chain into the venue token. This is **already
+known to the shard-granularity audit** — see MTDS finding `engine/orchestrator.py:1880-1908` (DeFi
+protocol-prefix list to lift to UAC) and instruments-service `_extract_prediction_shard` parallels.
+
+**Implication for this plan:**
+- **Q1 is RESOLVED.** Use `instrument_availability/by_date/day=*/venue=*/instruments.parquet` as the DEFI
+  Layer 1 surface for the range index, exactly like CEFI/TRADFI/PREDICTION.
+- **JSON sample can be made faithful** for the DEFI Layer 1 rows (drop the "extrapolated from UAC schema" caveat).
+- **The `chain`-in-`venue` partition drift becomes the range-index plan's problem too**: when v7 emits a row
+  per `(service, venue, instrument_id, ...)` for DeFi, must we use `venue='CURVE-ETHEREUM'` (matches today's
+  partition) or split into `venue='CURVE'` + `chain='ETHEREUM'`? **Recommendation**: split — adopt the
+  shard-granularity SSOT shape; the path partition stays joined for backwards compat (legacy reader handles it
+  per CLAUDE.md "asset_group= canonical, category= legacy" pattern), but the manifest row keys carry `chain` as
+  a first-class column. Encode this in Unit B schema definition when the plan unparks.
+- **No new prerequisite added.** This is a clean schema decision the plan can carry alone.
+
 
 
 ## Relationship to existing plans
