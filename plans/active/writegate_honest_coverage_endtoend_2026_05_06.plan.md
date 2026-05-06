@@ -481,6 +481,72 @@ Implications:
 Plan's 53-site count confirmed: prediction contributes 0 direct sites; the actual full count is 37
 (cefi/defi/tradfi/sports inherited paths only).
 
+### Phase 0 audit findings — MDPS `except: continue / return None` sweep beyond `_create_empty_output`
+
+**Methodology**: AST-walked all `.py` files under `market_data_processing_service/` (excluding `.venv`, `build`, `tests`)
+for `except` blocks whose body contains `continue`, `pass`, `return None`, or bare `return`. Each site read in context,
+classified by severity, checked against whether a manifest `record_failed` follows.
+
+**Total sites found: 24** across 15 files. Distribution: 7 HIGH / 4 MEDIUM / 13 LOW.
+
+**Key cross-cutting finding (refactor target — feeds Phase 2.A scope expansion)**:
+
+Three parallel write-path copies of the same swallow exist —
+`candle_write_mixin._write_candles` (line 141), `data_sink.SyncGCSDataSink.write` (line 290), and
+`orchestration_writer._write_candles_to_gcs` (line 413). All three contain an identical
+`except (OSError, ValueError, RuntimeError, ...) → logger.error → return None` block wrapping a
+`write_candle_parquet` call. Per CLAUDE.md "no double SSOT" + Phase 2.A consolidation target, these three write paths
+should be consolidated into ONE canonical writer, with a single `record_failed` site at the leaf. Any fix to
+write-failure manifest recording today must be applied in three places with diverging call signatures — known
+maintenance trap. **Phase 2.A scope expansion**: include consolidation of these three write paths.
+
+**HIGH severity (per-instrument or larger granularity silent drops, no manifest record)**:
+
+| File:Line                                | Loop / context                                                            | Caught                                              | What is swallowed                                                                                                                                            | Fix shape                                                                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `candle_processing_service.py:349`       | `for timeframe in sorted_timeframes` per-(instrument_id, timeframe)       | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | Entire per-instrument per-timeframe candle generation failure (`_generate_or_aggregate_candles` raised). No `record_failed`. Direct batch-path analogue of MTDS `PerLeafFailureRouter` gap. | `record_failed(row_key=(instrument_id, timeframe, data_type, date_str), error=classify_venue_error(e), attempted_at=now())` before `continue`. Wire `ManifestWriter` into this class. |
+| `candle_processing_service.py:591`       | `for prefix in prefixes` per-(date_str, data_type) GCS listing            | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS listing failure for an entire `(date_str, data_type)` prefix. Silently empty → entire date×data_type shard dropped. No manifest row.                     | Reader/infrastructure failure (Category C). `record_failed` at (date_str, data_type) granularity + `ADAPTER_FETCH_FAILED` event before `continue`.        |
+| `candle_write_mixin.py:141`              | Per-instrument candle write (live orchestration)                          | (OSError, ValueError, RuntimeError, KeyError, TypeError) | GCS write failure returns `None`. Caller at `live_workers.py:682` does NOT check return — unconditionally increments `total_candles`, appends to `processed_timeframes`. Failure looks like success. | Return-value check at every call site; on `None` `record_failed(...)` with typed `WriteFailedError`. Or consolidate into single canonical writer (preferred). |
+| `data_sink.py:290`                       | `SyncGCSDataSink.write()` per-instrument (older batch path)               | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers cannot distinguish success from failure. No `record_failed`.                                                       | Same — re-raise typed `WriteFailedError`; let shard-level caller record.                                                                                  |
+| `orchestration_writer.py:413`            | `_write_candles_to_gcs` per-instrument                                    | (ValueError, TypeError, KeyError, AttributeError, RuntimeError) | GCS write failure returns `None`. Callers test `if result is None` for the **skip case** (existing file) — error case also returns `None`, indistinguishable. | Same — distinguish skip vs error via typed return / sentinel; `record_failed` on error.                                                                   |
+| `output_writer_service.py:341`           | `OutputWriterService.write_candles` per-instrument                        | (OSError, ValueError)                               | Same pattern — write fails, returns `None`, callers test for already-exists skip. No `record_failed`.                                                        | Same.                                                                                                                                                      |
+| `live_workers.py:890`                    | `_maybe_dispatch_chain_streaming` per chain blob                          | (OSError, ValueError, RuntimeError, KeyError, TypeError) | Streaming dispatch fails for chain blob — returns `None`, caller falls through to **eager path** as fallback. If eager also fails, shard lost with no record. | Acceptable as first-level fallback within same request. Outer caller must `record_failed` if eager path also produces no output.                          |
+
+**MEDIUM severity (per-symbol/per-instrument drops inside aggregate, corrupts completeness)**:
+
+| File:Line                                | Loop / context                                                              | Caught                                            | What is swallowed                                                                                                                                                                       | Fix shape                                                                                                                                                  |
+| ---------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live_workers.py:512`                    | `for group_value in groups` per-symbol slice in `_iter_chain_symbol_dfs`    | (pl.exceptions.ComputeError, OSError, RuntimeError) | Single symbol's Polars filter fails → silently dropped from chain output. For options_chain / futures_chain, downstream may write **partial-cluster parquet** with missing symbols and no `ClusterCoverageError`. | Per-symbol counter `dropped_symbols`, warn-summary after generator's `finally`. For bundled data_types, feed into cluster-coverage validator (Phase 2.B). |
+| `live_workers.py:773`                    | `for inst_key in instrument_keys` in `_process_chain_timeframe`             | `Exception` (bare)                                | `classify_and_emit_error` is called (event emitted) but no per-symbol counter, no warn-summary. N instruments → M fail → M dropped with no aggregate accounting.                        | Add `dropped_count` counter + `logger.warning("Dropped %d/%d instruments for %s")` after loop (consistent with `solana_defi_handler.py` `7fedfe5` pattern).  |
+| `live_workers.py:835`                    | `for symbol in symbols` in `_process_chain_timeframe_by_symbol`             | `Exception` (bare)                                | Same as line 773 but legacy-bundle `symbol`-keyed path.                                                                                                                                  | Same fix.                                                                                                                                                  |
+| `live_workers.py:490`                    | `_iter_chain_symbol_dfs` Polars lazy scan to enumerate groups               | (pl.exceptions.ColumnNotFoundError, pl.exceptions.ComputeError) | Failure to enumerate groups → bare `return` → generator exits yielding 0 symbols → entire chain bundle silently skipped. `ColumnNotFoundError` here is schema-drift bug (Category C). | `record_failed` at blob level + classify as Category C (schema drift), not silent skip.                                                                    |
+
+**LOW severity** (13 sites — documented intentional path-probes / observability hooks / per-blob metadata isolation):
+
+- `live_workers.py:158` and `:228` — D10 lifecycle/progress event emission; documented "must not raise from observability hook".
+- `candle_processing_service.py:681` — `MarketAssetGroup(category)` enum coercion fallback to `None`; downstream handles `None` gracefully.
+- `path_parsing.py:59,61` and `orchestration_scanner.py:307,367` — per-blob path-metadata parse error isolation; documented in module docstring.
+- `orchestration_scanner.py:201` and `orchestration_scheduling.py:165` — `_load_instrument_definitions` fallback to `None` (no trading-hours filter); processing still runs.
+- `market_state_detector.py:140` — `_parse_time_string` utility returns `None`.
+- `canonical_writer.py:229` — `lookup_mdps_contract` fallback when `strict=False`; `strict=True` path re-raises.
+- `live_workers.py:394` — Polars→pandas read fallback (acceptable I/O fallback; pandas raise propagates).
+- `engine/mock_data_provider.py:205,243,262` — mock/dev path only.
+- `cli/main.py:76` — pre-flight asset-group bucket env-var check; intentional "this category not configured on this VM".
+
+**Top 5 priority fixes**:
+
+1. **Write-path consolidation** (`candle_write_mixin.py:141` + `data_sink.py:290` + `orchestration_writer.py:413` + `output_writer_service.py:341`) — 4 sites, same root cause. Phase 2.A scope addition: single canonical writer with one `record_failed` site at the leaf.
+2. **`candle_processing_service.py:349`** — batch-path counterpart of MTDS `PerLeafFailureRouter` gap. Highest-impact single site.
+3. **`live_workers.py:512`** — per-symbol Polars filter failure in streaming chain path; for bundled data_types, this directly contradicts Phase 2.B cluster-coverage validation.
+4. **`candle_processing_service.py:591`** — entire date×data_type prefix lost on GCS listing failure (HIGH — invisible in manifest).
+5. **`live_workers.py:773` and `:835`** — per-symbol classify+emit but no aggregate warn-summary (MEDIUM, consistency with `7fedfe5` pattern).
+
+**Implications for the master plan**:
+
+- Phase 2.A scope expanded: not just `_create_empty_output` migration but also write-path consolidation (3 → 1) AND `candle_processing_service.py:349,591` `record_failed` wiring.
+- Phase 2.B cluster-coverage validation gains a sibling concern: `live_workers.py:512`'s per-symbol drop must feed into the cluster validator OR the streaming path must short-circuit on first symbol failure.
+- LOW sites left as-is (documented intentional patterns); add codex doc reference at `app/utils/path_parsing.py` for the 5-site per-blob isolation pattern.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
