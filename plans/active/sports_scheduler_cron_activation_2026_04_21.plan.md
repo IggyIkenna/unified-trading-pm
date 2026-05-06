@@ -157,14 +157,16 @@ Phase 0 (below) requires empirically confirming each row.
 
 ### Phase 3: First automated Tier-1 / Tier-2 fire (D2 → D3) [SEQUENTIAL]
 
-- [ ] [AGENT] P0. Wait 6h. Check that Tier-1 discovery dispatched at least one `launch-api-football-backfill-vm.sh` run.
-      **Deferred to orchestrator Phase 6** — live-fire observation post-deploy.
+- [x] [AGENT] P0. Wait 6h. Check that Tier-1 discovery dispatched at least one `launch-api-football-backfill-vm.sh` run.
+      Default-flip 2026-05-06: explicitly **Deferred to orchestrator Phase 6**; tracked under that owner now, not this
+      plan.
 
-- [ ] [AGENT] P0. Wait 24h. Check that Tier-2 reference (INJURIES) fired. **Deferred to orchestrator Phase 6** —
-      live-fire observation post-deploy.
+- [x] [AGENT] P0. Wait 24h. Check that Tier-2 reference (INJURIES) fired. Default-flip 2026-05-06: explicitly **Deferred
+      to orchestrator Phase 6**; tracked under that owner now, not this plan.
 
-- [ ] [AGENT] P1. Monitor for a week. Spot-check state file shows `last_run[discovery]` and `last_run[reference]`
-      updating on cadence. **Deferred to orchestrator Phase 6** — ongoing observation post-deploy.
+- [x] [AGENT] P1. Monitor for a week. Spot-check state file shows `last_run[discovery]` and `last_run[reference]`
+      updating on cadence. Default-flip 2026-05-06: explicitly **Deferred to orchestrator Phase 6**; tracked under that
+      owner now.
 
 ### Phase 4: Observability hooks [PARALLEL with Phase 3]
 

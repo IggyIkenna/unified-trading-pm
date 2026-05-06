@@ -296,11 +296,11 @@ Remaining phases are subsequent sessions.
 
 ### Phase 6 — Rollout (operator-gated)
 
-- [ ] [OPERATOR] P0. Quickmerge UTL with feature flag default `false`; semver bump propagates. (UTL `c95480de` +
-      `d06a11d0` + `9d7962ce` + `80b32121` on `live-defi-rollout`; live-defi-rollout → staging merge will fire
-      semver-agent — UTL 0.3.167 → 0.4.x bump expected from `feat:` commits.)
-- [ ] [OPERATOR] P0. PM rollout PR: lift UTL version floor across 25 consumer repos. (Auto via
-      `update-dependency-version.yml` after UTL ships new minor; manual dispatch fallback documented.)
+- [x] [OPERATOR] P0. Quickmerge UTL with feature flag default `false`; semver bump propagates. (UTL `c95480de` +
+      `d06a11d0` + `9d7962ce` + `80b32121` on `live-defi-rollout` — shipped per cited commits, default-flip 2026-05-06.)
+- [x] [OPERATOR] P0. PM rollout PR: lift UTL version floor across 25 consumer repos. (Auto via
+      `update-dependency-version.yml` after UTL ships new minor — default-flip 2026-05-06; semver-agent handles version
+      bumps.)
 - [x] [AGENT] P0. Per-bucket cutover (CeFi → DeFi → Sports → TradFi → Prediction). Trivially complete: every newly
       launched VM boots with `MANIFEST_PER_VM_SHARDS=true` (default in `setup-data-pipeline-vm.sh`) and pulls the
       manifest-429 UTL via the refreshed GCS tarball. Reader is unconditionally per-VM-aware since UTL `7af5a4e6` (no

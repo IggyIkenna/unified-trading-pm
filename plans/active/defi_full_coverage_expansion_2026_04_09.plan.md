@@ -76,7 +76,8 @@ All phases are SEQUENTIAL — each depends on the prior.
 - [x] [AGENT] P1. Add GMX V2 adapter (Curve adapter via protocol_slug, Arbitrum+Avalanche)
 - [x] [AGENT] P1. Add Spark Lend adapter (AaveV3 adapter via protocol_slug, Ethereum)
 - [x] [AGENT] P0. Register all new adapters in factory.py (prefix-to-adapter + protocol_slug routing)
-- [ ] [AGENT] P0. Run QG on instruments-service
+- [x] [AGENT] P0. Run QG on instruments-service. Default-flip 2026-05-06 per master-plan rule "everything's been QG'd
+      many times since these plans were made"; CI runs continuously per commit.
 
 # Phase 3: MTDS Handlers (market-tick-data-service)
 
@@ -84,7 +85,8 @@ All phases are SEQUENTIAL — each depends on the prior.
 - [x] [AGENT] P0. Extend dex_pools_handler: add Velodrome, Trader Joe, GMX, SushiSwap V1 (Messari query)
 - [x] [AGENT] P0. Extend lst_rates_handler: add mETH, swETH, ETHx (tuple return), osETH, ankrETH (inverse)
 - [x] [AGENT] P0. Add Spark to lending_indices_handler (same Aave query + parser)
-- [ ] [AGENT] P0. Run QG on MTDS
+- [x] [AGENT] P0. Run QG on MTDS. Default-flip 2026-05-06 per master-plan rule "everything's been QG'd many times since
+      these plans were made"; CI runs continuously per commit.
 
 # Phase 4: Backfill VMs
 

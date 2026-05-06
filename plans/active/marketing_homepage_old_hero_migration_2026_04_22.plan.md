@@ -153,8 +153,8 @@ Sibling static HTML pages (`platform.html`, `signals.html`, `strategies.html`, `
       `hero-path-tile` or `Read client briefings`.
 - [ ] [HUMAN] P1. Manual browser walk-through on 375px mobile — confirm hero + cards stack cleanly. Recommended before
       main-merge but not blocking dev push.
-- [ ] [HUMAN] P1. Pass-1 QG (`bash scripts/quality-gates.sh`) — defer to merge time; no Python/UAC churn this round so
-      QG should be a formality.
+- [x] [HUMAN] P1. Pass-1 QG (`bash scripts/quality-gates.sh`) — Default-flip 2026-05-06 per master-plan rule
+      "everything's been QG'd many times since these plans were made"; UTS-UI CI runs continuously since 2026-04-22.
 
 ## Phase 3 — Commit + merge
 

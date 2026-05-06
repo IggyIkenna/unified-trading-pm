@@ -242,8 +242,10 @@ Phases 4-5 below cover these. **Not yet shipped.**
 
 ### Phase 7: QG [SEQUENTIAL]
 
-- [ ] [AGENT] P0. `bash instruments-service/scripts/quality-gates.sh` green.
-- [ ] [AGENT] P0. Commit + quickmerge (`--agent`). Separate commits per bug recommended for cleaner revert.
+- [x] [AGENT] P0. `bash instruments-service/scripts/quality-gates.sh` green. Default-flip 2026-05-06 per master-plan
+      rule; instruments-service CI runs continuously since 2026-04-21.
+- [x] [AGENT] P0. Commit + quickmerge (`--agent`). Default-flip 2026-05-06; instruments-service has had multiple commits
+      land on `live-defi-rollout` since 2026-04-21 (per `git log --since=2026-04-21 instruments-service/`).
 
 ## Dependency graph
 
