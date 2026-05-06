@@ -236,3 +236,14 @@ This plan dovetails with `shard_granularity_ssot_propagation_2026_05_06.HANDOVER
 - The slicer logic in Phase 3 is the read-side equivalent of the SSOT shard-key matrix: it must respect the same
   per-asset-group axis schema (chain for DeFi, league_id for Sports, instrument_id for CeFi spot/perp, root for bundled
   options/futures).
+
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `manifest_429_per_vm_sharding_2026_04_25` (since archived). 23/26 done in source; the 3 remaining
+P0 operator-monitoring items belong here because per-VM shard rollup → consolidated index is the same surface this plan
+covers:
+
+- [ ] [AGENT] P0. After last bucket: delete `_write_with_generation_match` legacy path, delete feature flag, clean
+      legacy `availability_index.parquet` writer code (post-rollout cleanup).
+- [ ] [OPERATOR] P0. Add Cloud Monitoring panel "ManifestWriter generation conflicts" — must read 0 post-rollout.
+- [ ] [OPERATOR] P0. 7-day production observation; deployment-api data-status freshness < 5min P99.

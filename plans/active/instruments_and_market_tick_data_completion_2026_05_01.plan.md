@@ -264,3 +264,15 @@ Most of the work landed 2026-04-30; remaining items are gap-fill + verification.
 - mbp_10 deep-book for tradfi (deferred).
 - Strategy-level "target instruments" subscription mechanism (different work stream entirely).
 - New asset groups beyond the existing 5.
+
+## Absorbed from sibling plans (2026-05-06)
+
+This plan declares `epic: data-pipeline-completion` and is the canonical successor to the older 2026-04-18 plan with the
+same name + scope. Folded:
+
+- `data_pipeline_completion_2026_04_18` (archived) — older epic, same name + scope, same 22 repos. 139 open / 7 done.
+  Operational scope (manifest schema + backfill + retire + schedule across 5 asset groups) is fully covered by this
+  2026-05-01 epic with tighter audit. No item-level migration needed — strict subset.
+- `data_canonicalisation_mvp_2026_04_17` (archived) — 33/67 done; Phase 3 migration scripts (CeFi/TradFi/DeFi) already
+  shipped per `market_tick_data_to_100pct_2026_05_05` lines 65-67 (`migrate_*_canonical.py` exist in MTDS). Residual
+  Phase 5/6 validation belongs in `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`.

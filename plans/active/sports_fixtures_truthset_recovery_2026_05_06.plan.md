@@ -340,6 +340,22 @@ absorbs api_football enrichment verification because both rely on the same api_f
 - [ ] [AGENT] P0. Spot-check 3 random dates per entity (INJURIES / FIXTURE_STATS / FIXTURE_LINEUPS / PLAYER_STATS /
       FIXTURE_EVENTS) for data quality: row counts plausible, fields populated.
 
+Items folded in from `instruments_service_orchestrator_reliability_fixes_2026_04_21` (since archived). 6 open Phase 5/6
+todos for AF enrichment per-league empty-loop pattern + smoke verification — overlaps the truthset recovery's same 5+1
+entities and same root-cause (`manifest.add(row_count=0)` vs `record_empty(row_key=...)`):
+
+- [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on a forward-poll VM: confirm Bug 1 (Pydantic future-fixture
+      goals nullable) + Bug 2 (UnboundLocalError on `get_leagues_needing_refresh`) + Bug 3 (404 on
+      instrument_availability for future dates) are gone.
+- [ ] [AGENT] P0. Apply the per-league empty-loop pattern (Bug 6 fix, line 1682 in orchestrator) to AF enrichment
+      entities (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES / STANDINGS) — Bugs 7-8 in
+      source plan; partially overlaps writer fix `f36651c` already covering FIXTURES.
+- [ ] [AGENT] P0. Unit tests per entity: synthetic adapter response covering 2 in-season leagues out of 6 expected →
+      assert per-league `record_empty` for the 4 not present + `manifest.add` for the 2 present.
+- [ ] [AGENT] P0. End-to-end smoke: fire AF backfill on a known mixed-coverage date, verify per-league rows for all 6
+      entities.
+- [ ] [AGENT] P0. Launch fresh forward-poll VM, tail GCS log, assert zero warnings/errors of the three Bug 1-3 classes.
+
 ## Out of scope
 
 - footystats / understat / transfermarkt / SFI / open_meteo backfills — those have their own coverage pipelines.

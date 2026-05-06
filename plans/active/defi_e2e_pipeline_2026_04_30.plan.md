@@ -299,3 +299,17 @@ two remaining LegController items because the leveraged_funding_arb archetype ru
       handling. (Source plan covered the Phase 1 implementation; the formal-test follow-up wasn't shipped.)
 - [ ] features-onchain-service Docker image rebuild — Cloud Build needs to emit a new `:latest` tag containing the Phase
       1 LegController changes so downstream services pull the updated controller.
+
+Items folded in from `defi_full_coverage_expansion_2026_04_09` (since archived). 27/29 done in source; 2 remaining P1
+items covered by this cluster lead's data-quality verification surface:
+
+- [ ] [SCRIPT] P1. Verify data quality across all new DeFi protocols (PancakeSwap V3, SushiSwap V3, Aerodrome V3,
+      Camelot V3) — gas consistency, rates plausibility, no NaN drops.
+- [ ] [AGENT] P1. Fix subgraph schema mismatches for PancakeSwap V3, SushiSwap V3, Aerodrome V3, Camelot V3 — these
+      forks use UniV3-style subgraph with renamed fields.
+
+Items folded in from `defi_data_types_completeness_2026_04_24` (since archived). The 12 open todos there reduce to the
+verification surface below + items already represented in `consolidated_defi_data_pipeline_2026_04_15` Group F:
+
+- [ ] [AGENT] P1. Validate the 8 added DeFi data types (per UAC `13db4a9` + `56feaff`) flow end-to-end through MDPS /
+      features-onchain into strategy-service archetype tracers.
