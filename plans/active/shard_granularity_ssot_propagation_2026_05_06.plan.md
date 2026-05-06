@@ -134,11 +134,23 @@ stream — not added here.
       (15 more sites suspect) actively producing 1440 NaN OHLC bars when ticks are
       present but all fall outside valid intervals. Fix needs a contract change between
       adapter (`CandleOutput` return) and orchestrator (`record_empty` routing). Three
-      candidate shapes: (a) typed exception (`EmptyAfterIntervalFilter`), (b) zero-row
-      `CandleOutput`, (c) `is_empty: bool` flag on `CandleOutput`. Overlaps Item 1
-      (cluster validation) `record_captured` surface — handover coordination rule says
-      ping first. **AWAITING USER DIRECTION** on contract shape choice + whether to ship
-      now or stage with parallel-stream Item 1.
+      candidate shapes:
+
+      | Shape | Pros | Cons |
+      |---|---|---|
+      | **(a) Typed exception** `EmptyAfterIntervalFilter` raised in adapter, caught in orchestrator → `record_empty(row_key=...)` | • CandleOutput shape stays invariant (no downstream consumer changes) <br>• Mirrors how MDPS already shard-isolates per-instrument failures via `continue` <br>• One change site per adapter (raise instead of return placeholder) <br>• Honest: clearly signals "tried, no usable data" not "fake bars" | • Adds a new exception type that orchestrator must catch in 2-3 spots |
+      | (b) Zero-row CandleOutput | • No exception machinery <br>• Already legal Python | • Every consumer of CandleOutput has to handle empty case (audit found 5+ sites that don't currently) <br>• Easy to confuse "intentional empty" with "bug returning zero" |
+      | (c) `is_empty: bool` flag on CandleOutput | • Backward-compat with current callers | • Every consumer must check the flag → high risk of "forgot to check" silent leak <br>• Same anti-pattern as the bug we're fixing |
+
+      **Claude recommends (a) typed exception**. ~2-3 adapters need the raise;
+      orchestrator's `_handle_empty_tick_data` extends to also catch the typed
+      exception. `defi/swap_adapter.py:106` + `cefi/trades_adapter.py:74` are the
+      confirmed reproduction paths; the 15 other suspect `_create_empty_output` sites
+      get audited before/while shipping.
+
+      Overlaps Item 1 (cluster validation) `record_captured` surface — handover
+      coordination rule says ping first. **AWAITING USER DIRECTION** on contract
+      shape choice + whether to ship now or stage with parallel-stream Item 1.
 
 ### Phase 1 Tier 2 — UTL/UAC lifts that unblock multiple services
 
@@ -201,17 +213,30 @@ stream — not added here.
       `fetch_completed_at` timestamp, and the post-match raw schemas
       (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / FIXTURE_PLAYER_STATS)
       don't include `kickoff_utc`. Two options for cleaning this up:
-      - **Option A**: extend `_fetch_runner` to expose
-        `fetch_completed_at(table_name) → datetime`; for reference data
-        (players, venues, leagues, teams, referees, coaches, standings, rounds)
-        use `stamp_available_at_explicit(when=fetch_completed_at)`; for
-        per-fixture post-match (FIXTURE_*) join with fixtures cache for
-        kickoff_utc and apply `stamp_available_at_post_match`.
-      - **Option B**: extend each per-fixture post-match schema to include
-        `kickoff_utc` from source; reference data uses table-specific snapshot
-        timestamp captured at fetch boundary.
-      Either way needs touching ~5 schema definitions + the fetch_runner module.
-      Paused pending user direction on which option to take.
+
+      | | Option A (extend fetch_runner) | Option B (extend schemas with kickoff_utc) |
+      |---|---|---|
+      | **Touch points** | `_fetch_runner.py` (add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache + `get_fetch_completed_at(table_name)` accessor; populate inside each `run_fetch_*`) + per-export `stamp_available_at_explicit(...)` calls in `exports.py` | Each fixture-keyed schema (FIXTURE_STATS_COLUMNS, FIXTURE_EVENTS_COLUMNS, FIXTURE_LINEUPS_COLUMNS, FIXTURE_PLAYER_STATS_COLUMNS, INJURIES_COLUMNS) gets `kickoff_utc` added; fetch_runner joins fixtures cache when populating each table; per-export uses `stamp_available_at_post_match` |
+      | **Honesty for post-match** | Wrong: stamps the *fetch time* (when we discovered the data), not match_end_time. Fetch could happen weeks after match end → over-stamps available_at later than truth | Correct: per-fixture match_end_time |
+      | **Honesty for reference data** | Right: snapshot fetch time | Wrong: reference data has no fixture |
+      | **Schema migration** | None — purely additive runtime metadata | Schema bump for 5 schemas → potential downstream consumer breakage |
+      | **Verdict** | Fine for reference data (8 tables: players, venues, leagues, teams, referees, coaches, standings, rounds) but wrong for post-match (5 tables) | Right for post-match, wrong for reference |
+
+      **Claude recommends a hybrid**: Option A for the 8 reference tables,
+      Option B for the 5 post-match tables (FIXTURE_STATS, FIXTURE_EVENTS,
+      FIXTURE_LINEUPS, FIXTURE_PLAYER_STATS, INJURIES). The 1 remaining
+      (`fixtures` itself) already has `kickoff_utc` — trivial.
+
+      **Caveat for the user**: schema bumps in B touch downstream consumers in
+      MDPS / strategy-service if they read these tables. Claude has not yet
+      grepped to confirm. If they don't read them yet, B is free; if they do,
+      we coordinate. Recommended next step: grep
+      `FIXTURE_STATS_COLUMNS|FIXTURE_EVENTS_COLUMNS|FIXTURE_LINEUPS_COLUMNS|FIXTURE_PLAYER_STATS_COLUMNS|INJURIES_COLUMNS`
+      across MDPS + strategy-service + features-onchain to confirm blast radius
+      before starting the schema bump.
+
+      Paused pending user direction on hybrid acceptance + go-ahead to grep
+      consumer sites.
 - [ ] **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop
       the midnight UTC fallback at `batch_handler.py:_ensure_timestamp` entirely.
 
