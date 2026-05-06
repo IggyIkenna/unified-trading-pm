@@ -301,7 +301,23 @@ consolidation target post-cutover.
       `get_active_es_options_clusters_for_date`) is correctly scoped. When a 2nd root ships, the pattern is **sibling
       symbols** (`DERIBIT_BTC_OPTIONS_CLUSTERS` + `extract_deribit_btc_options_cluster`) plus a per-(data_type, root)
       lookup, NOT a rename of the existing symbols.
-13. ✓ **Sports `fixture_id` shard atom (writegate HANDOVER vs multi-axis plan) — multi-axis plan wins; `fixture_id` is
+13. ✓ **VIX 15m source layering — `cefi_tradfi_tick_data_backfill_2026_04_10` Phase 3b OBSOLETE.** Plan A's Barchart VM
+    for `2025-11-13 → today` would clobber Yahoo-served rows. CLAUDE.md "VIX 15m source layering" SSOT + MTDS `4a2747a`
+    are canonical: Barchart preload ends 2025-11-12; post-cutoff is Yahoo Finance rolling 60-day window;
+    `2025-11-13 → today−60d` is the honest gap (`empty_confirmed`). Phase 3b dropped.
+14. ✓ **Sports `data_available_at` → `available_at` rename + on-disk migration.** UTL `assert_available_at_present` +
+    every other service uses canonical `available_at`. Sports adapters + `InstrumentsWriteGate.DEFAULT_AS_OF_COLUMNS`
+    rename to `available_at` + one-time GCS column rename in existing sports parquets (per "manifest migration not
+    fallback" rule). Required before writegate Phase 2.C / `LookaheadBiasError` strict-mode flip — otherwise sports
+    pipeline hard-fails on every record_captured call.
+15. ✓ **`_create_full_day_empty_output` delete (writegate Phase 2.A) — Option A: audit consumers, delete iff safe.**
+    Empty/closed days use `record_empty(capture_status=empty_confirmed)` per existing SSOT — placeholder rows are
+    double-SSOT. Downstream services NaN-handle their own way (forward-fill, masking, ML missing-data tolerance).
+    **Codex follow-up doc**: "empty upstream means no expectation of data downstream; manifest `empty_confirmed` is the
+    SSOT, NOT placeholder rows. Holidays + market hours via `venue_trading_calendar`; unexpected empties handled
+    per-service in pre-flight." Block writegate Phase 2.A on grep audit of features-volatility / features-cross-
+    instrument for `market_state == "CLOSED"` consumers; refactor any to read manifest `capture_status` instead.
+16. ✓ **Sports `fixture_id` shard atom (writegate HANDOVER vs multi-axis plan) — multi-axis plan wins; `fixture_id` is
     NOT a shard atom.** `(league_id, day)` already bounds fixtures; per-fixture detail comes from parquet at drill-down
     time. HANDOVER per-asset-group matrix updated; features-sports audit reframes to `(feature_group, league_id, day)`.
 
