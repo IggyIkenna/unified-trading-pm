@@ -3,7 +3,7 @@ type: plan
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-status: phase-0-audit-complete
+status: phase-1-tier-1-partial-shipped
 owner: harsh
 auditor: claude
 ---
@@ -89,13 +89,123 @@ Phase 0.3 (synthesis)
 
 ---
 
-## Phase 1 — Per-Service Fixes (TBD pending audit)
+## Phase 1 — Per-Service Fixes (in progress)
 
 Phased fix work derived from Phase 0 findings. Each fix is tagged with placement layer (`[UAC]`, `[UTL]`,
 `[per-service]`, `[deployment-api]`, `[deployment-ui]`). Items overlapping co-evolving Items 1/2 stay in the parallel
 stream — not added here.
 
-_To be populated after audit completes. Owner: harsh routes findings into ordered fix DAG._
+### Phase 1 Tier 1 — Ship-blocker correctness bugs
+
+#### Shipped 2026-05-06 (Claude session)
+
+- [x] **#2 instruments-service per-league pre-flight** —
+      `instruments_service/engine/orchestrator.py` switched from coarse
+      `_should_skip_shard(row_key={date, data_type})` to
+      `_should_skip_date_for_per_league(...)` for **SFI_PROGRESSIVE_STATS** and
+      **PLAYER_VALUES**. Same shape as 2026-05-05 MATCHES 18%-coverage incident.
+      Behavior change: dates with N/M expected leagues captured now re-attempt until
+      all M are captured (costs more API calls during convergence; stops permanent
+      per-league lockout). SFI_STANDINGS retracted from fix list — code path is dead.
+      Repo: `instruments-service@live-defi-rollout` commit `7bfa877`.
+- [x] **#3 MTDS umi per-instrument silent drops** —
+      `market_tick_data_service/adapters/umi_tick_provider.py:583/740/925` book-snapshot
+      `except: continue` swallows replaced with `PerLeafFailureRouter.record(...)` calls
+      that route per-coin failures through the new UTL helper. Same fix applied to
+      parallel HTTP-non-200 silent paths. `logger.debug` → `logger.warning` at all 6
+      sites for immediate visibility. Orchestrator constructs per-venue router,
+      aggregates into `failed_per_instrument_by_venue`, flushes into `writer_manifest`
+      after sentinel pass so each per-coin failure becomes a `record_failed` row +
+      `ADAPTER_FETCH_FAILED` event. Repo: `market-tick-data-service@live-defi-rollout`
+      commit `1258d5c`.
+- [x] **#4 features-sports PIT enforcement loud in batch** —
+      `features_sports_service/data/writer.py:65-66` `try/except LookaheadBiasError:
+      pass` swallow removed; `PointInTimeEnforcer(strict=False)` switched to
+      `strict=True`. Future-timestamped observations now raise
+      `LookaheadBiasError` on the first leaking row instead of being logged-and-
+      ignored. Behavior change: batches with leaks fail loud rather than silently
+      producing leaky features. Repo: `features-sports-service@live-defi-rollout`
+      commit `03b05f5`.
+
+#### Paused — needs direction (cross-service contract change)
+
+- [ ] **#1 MDPS 1440-NaN reproduction path** — `market-data-processing-service`
+      `app/adapters/defi/swap_adapter.py:106` + `app/adapters/cefi/trades_adapter.py:74`
+      (15 more sites suspect) actively producing 1440 NaN OHLC bars when ticks are
+      present but all fall outside valid intervals. Fix needs a contract change between
+      adapter (`CandleOutput` return) and orchestrator (`record_empty` routing). Three
+      candidate shapes: (a) typed exception (`EmptyAfterIntervalFilter`), (b) zero-row
+      `CandleOutput`, (c) `is_empty: bool` flag on `CandleOutput`. Overlaps Item 1
+      (cluster validation) `record_captured` surface — handover coordination rule says
+      ping first. **AWAITING USER DIRECTION** on contract shape choice + whether to ship
+      now or stage with parallel-stream Item 1.
+
+### Phase 1 Tier 2 — UTL/UAC lifts that unblock multiple services
+
+#### Shipped 2026-05-06 (Claude session)
+
+- [x] **LIFT-7 PerLeafFailureRouter** — UTL helper for shard-level failure isolation.
+      Lifts the canonical pattern from
+      `market-tick-data-service/cli/handlers/_defi_manifest.py:DefiManifestRecorder.
+      record_failed` into a row_key-shape-agnostic helper. Replaces workspace-wide
+      `except: continue` + `logger.debug` anti-pattern. API: `router.record(row_key=...,
+      error=exc, context=...)` inside per-leaf loops, `router.flush_to_manifest(writer)`
+      once after; emits one `record_failed` row + one `ADAPTER_FETCH_FAILED` event per
+      leaf with venue-classified error code. Best-effort flush (manifest write errors
+      warn-logged; `log_event` `RuntimeError` swallowed). 9 unit tests cover
+      classification fallbacks, multi-leaf flush, single-leaf failure isolation,
+      attempted_at handling, top-level export, smoke integration with real
+      `ManifestWriter`. Exported from `unified_trading_library`. Already consumed by
+      MTDS umi (#3 above). Repo: `unified-trading-library@live-defi-rollout` commit
+      `ab94432`.
+- [x] **LIFT-3 availability_stamping** — UTL per-source `available_at` stamping
+      helpers implementing the handover's sports temporal-availability table.
+      Functions: `stamp_available_at_lineups(df, kickoff_col=, pre_kickoff_offset=)`
+      (kickoff-60min default), `stamp_available_at_event_time(df, event_time_col=)`
+      (generic for injuries / pre-match odds / weather forecast-issue), `stamp_
+      available_at_post_match(df, match_end_col=, kickoff_col=, default_match_
+      duration=)` (match_end_time with kickoff+120min fallback for NaT rows), `stamp_
+      available_at_offset(df, kickoff_col=, offset=)` (generic kickoff+offset),
+      `stamp_available_at_explicit(df, when=)` (one-shot snapshot pulls). All raise
+      `AvailableAtStampingError` loud on missing columns / all-NaT results — no silent
+      midnight fallbacks. All return copies (never mutate input). 22 unit tests cover
+      every helper + edge cases (empty df, naive datetime, fallback paths, custom
+      offsets). Exported from `unified_trading_library`. Repo: `unified-trading-
+      library@live-defi-rollout` commit `cf312f6`.
+- [x] **features-sports `_ensure_timestamp` deprecation marker** — `features_sports_
+      service/cli/handlers/batch_handler.py:_ensure_timestamp` docstring updated with
+      `⚠️ DEPRECATED INTERIM SHIM` warning + per-export-fn migration guide listing the
+      canonical LIFT-3 helper for each source category (lineups → `stamp_available_at_
+      lineups`; injuries/odds/weather → `_event_time`; post-match (xG/fixture_stats/
+      results/sfi_progressive/derived_features/fixture_features) → `_post_match`).
+      Function body unchanged (still writes midnight UTC) — actual removal requires
+      per-export-fn surgery to inject the right `available_at` column at source. Repo:
+      `features-sports-service@live-defi-rollout` commit `4db8f36`.
+
+### Phase 1 Tier 2 — Remaining (next session)
+
+- [ ] **Per-export-fn migration in features-sports** — for each entry in
+      `TABLE_TO_EXPORT` and the `derived_features` / `fixture_features` / `odds_
+      features` paths, inject the correct LIFT-3 helper to populate `available_at`
+      before write. Once every export_fn supplies it, delete the `_ensure_timestamp`
+      shim entirely. Mechanical follow-up — one PR per export category.
+- [ ] **Apply LIFT-7 to features-sports `manifest.write` swallow** — `batch_handler.
+      py:629-631` catches `Exception` and only warns; entire day vanishes from data-
+      status on any GCS hiccup. Wrap in `PerLeafFailureRouter` or make fatal.
+- [ ] **Apply LIFT-7 to MTDS additional `except: continue` sites** — `solana_defi_
+      handler.py:687, 810` (TVL / APY datapoint silent drops). Lower severity than
+      umi (per-datapoint corruption of aggregates, not whole-instrument loss).
+
+### Open dependencies / coordination
+
+- **MDPS empty-placeholder fix (Phase 1 #1)** — needs contract-shape decision; see
+  "Paused — needs direction" above.
+- **Cluster validation (Item 1 from handover)** — touches the same `record_captured`
+  surface as MDPS empty-placeholder fix. The two should ship together to avoid double-
+  edits to `ManifestWriter.record_captured` semantics.
+- **UAC `canonical_question_group` SSOT (BUILD-PRED1..4)** — greenfield UAC build
+  required for Polymarket / Kalshi shard-correctness. Independent of the above; can
+  start in parallel.
 
 ---
 
@@ -160,8 +270,11 @@ Audit pass 2026-05-06. Source files: `instruments_service/engine/orchestrator.py
   `league_id=...`. Result: if the coarse date-row is captured but a league is missing, the date-level skip permanently
   locks out per-league re-fetch. Same pattern as the 2026-05-05 MATCHES 18%-coverage incident; should use
   `_should_skip_date_for_per_league` like FOOTYSTATS PREDICTIONS (line 3897) does. Fix layer: **[per-service]**.
-- **[pre-flight]** `orchestrator.py:5183` — SFI_STANDINGS pre-flight at coarse `(date, data_type)` only. Same bug
-  shape. Fix layer: **[per-service]**.
+- ~~**[pre-flight]** SFI_STANDINGS~~ — **RETRACTED on re-read 2026-05-06**: the SFI_STANDINGS code path at
+  `orchestrator.py:5133-5168` is gated by `if _filtered_sfi_ids and _want_sfi_standings` and the comment at line
+  5134-5136 says "Currently unreachable — `_want_sfi_standings` is hard-coded False because SFI has no standings
+  endpoint." Writer only emits one coarse manifest row (5163-5167), no per-league writes outside the dead branch. Not
+  a real bug.
 - **[pre-flight]** `orchestrator.py:4747-4750` — PLAYER_VALUES (Transfermarkt) pre-flight at coarse
   `row_key={"date": date, "data_type": "PLAYER_VALUES"}`; writer at `4946-4951` records `record_empty` per-league. Fix
   layer: **[per-service]**.
