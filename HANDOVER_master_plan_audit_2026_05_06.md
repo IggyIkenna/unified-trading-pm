@@ -91,14 +91,17 @@ resolutions for two would-be code refactors. This doc tells you what's done and 
      `market_state == "CLOSED"`.
 - Then unblock writegate Phase 2.A.
 
-**A3. New codex doc: "empty upstream means no expectation of data downstream"** (per user direction 2026-05-06).
+**A3. New codex doc: "empty upstream means no expectation of data downstream"** — **SHIPPED 2026-05-06.**
 
-- Location: `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` or extend existing
-  `availability-manifest-and-data-status.md`.
-- Content: codify the principle — `record_empty(empty_confirmed)` is the SSOT for "no data here"; placeholder rows are
-  double-SSOT and banned. Downstream services NaN-handle their own way (forward-fill / masking / ML missing-data
-  tolerance). Holidays + market hours via `venue_trading_calendar`; unexpected empties handled per-service in pre-flight
-  validation.
+- Doc: `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` (new dedicated downstream-consumption
+  SSOT; manifest doc remains write-side SSOT).
+- Cross-references: bidirectional with `availability-manifest-and-data-status.md` § 6 + CLAUDE.md "Honest absence vs
+  fake placeholders" principle.
+- Content shipped: principle statement, three causes of "no data" (calendar / honest empty / unexpected pipeline gap)
+  with different downstream actions, MUST-NOT list, MAY tolerance patterns (NaN passthrough / rank skip /
+  bounded-forward-fill / drop-with-min-rows / per-row available*at gating), per-service pre-flight responsibility,
+  anti-pattern catalogue (`fillna(0)`, sentinel values,
+  `\_create*\*\_empty_output`placeholders,`--skip-dependency-check` bypass), reference incidents.
 
 ### B. Stage 6 MEDIUM/LOW conflict items not yet shipped (from earlier audit, deferred)
 

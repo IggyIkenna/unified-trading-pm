@@ -652,6 +652,11 @@ Every condition that could produce an empty result resolves to ONE of:
 `captured`; downstream features computed garbage on garbage. The post-plan contract makes this bug class structurally
 impossible.
 
+**Downstream-consumption SSOT** (what feature calcs / ML / strategy do when they READ an `empty_confirmed` row):
+[`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md). Short version: NaN-handle per the
+consumer's modeling tolerance (tree-based ML, rank allocators, bounded forward-fill, drop-with-min-rows). Never
+fabricate placeholder rows, never `fillna(0)` at calc boundaries, never use sentinels. Pre-flight gates are per-service.
+
 **NEW BUG SURFACED (Phase 0 audit 2026-05-06)**: orchestrator prediction empty path at `live_workers.py:268-271` returns
 `success=True, candles_generated=0` with NO manifest record (no `record_empty`, no `record_captured`, no
 `record_failed`). Distinct from 1440-NaN class but equally opaque. Fix in writegate Phase 2.A scope expansion — adds

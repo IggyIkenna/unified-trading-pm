@@ -158,7 +158,8 @@ Read these before making ANY code changes:
   garbage, models/strategies trained on empty bars produce confidently-wrong signals. When in doubt, fail loud.
   Validation-by-output-inspection (read a sample parquet, assert OHLC populated, assert at least one instrument-shard
   exists per (venue, data_type)) is required at every backfill boundary, not just QG. Counting rows is not validation;
-  populating rows is.
+  populating rows is. **Downstream-consumption SSOT** (NaN-handling tolerances, anti-pattern catalogue, pre-flight gates
+  per consumer): `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md`.
 
 - **No fire-and-forget VM launches (CRITICAL — production observability)** — every VM launch MUST be paired with active
   verification that the VM is emitting structured events. Events stream to
