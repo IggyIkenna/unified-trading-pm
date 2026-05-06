@@ -54,39 +54,61 @@ todos:
     note: |
       Implementation diverged from the original plan note (which suggested extending reconcile_phantom_manifest_rows_all.py with a 6th axis). The targeted one-shot pattern (flip_cefi_bug_x2_leaked_text.py / rename_vault_venue_canonical.py / flip_phantom_fixtures_zero_rows.py) is simpler, faster, and more idempotent for well-understood single-axis bugs. Reconcile-script extension is left for general-purpose phantom audits (cross-axis drift); this specific bug class is self-contained.
 
+  - id: corrective-reflip-to-attempted-failed
+    content: |
+      - [x] [HUMAN+AGENT] P0. Re-flip the prior 100,431 FIXTURES `empty_confirmed` rows to `attempted_failed` (the orchestrator skips both `captured` and `empty_confirmed`, so the writer fix never re-attempts under the prior flip). PLUS extend to api_football per-fixture entities that share the same bug class (manifest.add(row_count=0) when FIXTURES enumeration was phantom-empty): INJURIES, FIXTURE_STATS, FIXTURE_EVENTS, FIXTURE_LINEUPS, PLAYER_STATS — filtered to (date, league) pairs that match the FIXTURES phantom set.
+            **Done 2026-05-06** — `instruments-service/scripts/flip_phantom_to_attempted_failed.py` (commit `2821111`); production --apply flipped 176,021 rows total: 100,431 FIXTURES re-flips + 75,590 per-fixture cap-zero rows on the same phantom pairs (FIXTURE_STATS=17,919, FIXTURE_EVENTS=17,590, FIXTURE_LINEUPS=16,633, PLAYER_STATS=15,646, INJURIES=7,802). All now carry `error_reason='phantom_re_attempt_after_writer_fix_f36651c'` and fresh `attempted_at` timestamps. Backup: `_index/availability_index.20260506-112347.bak.parquet`.
+            **Not touched in this pass**: ~223k empty_confirmed rows on per-fixture entities for the same phantom pairs. Most are legitimately empty (no fixtures = nothing to fetch); the few wrongs (fixtures existed but skipped due to FIXTURES phantom) will get re-attempted naturally when the orchestrator re-runs FIXTURES first and the per-fixture entity then sees real fixtures to enumerate. Follow-up audit after FIXTURES backfill completes (todo `audit-and-flip-stale-empties` below) covers any residual drift.
+    status: done
+    blocked_by: drop-phantom-fixtures-rows
+
   - id: relaunch-fixtures-backfill-category-a
     content: |
-      - [ ] [HUMAN+AGENT] P0. Relaunch FIXTURES backfill for Category A leagues. After the phantom drop, every (date, league) pair in the affected leagues will be either `attempted_failed` (the dropped phantoms) or `missing` (never attempted). The orchestrator will re-attempt them under the new tarball's writer fix, which `record_empty`s zero-fixture days correctly.
+      - [x] [HUMAN+AGENT] P0. Relaunch FIXTURES backfill for the 100,431 attempted_failed (date, league) pairs. The orchestrator will re-attempt them under the new tarball's writer fix, which `record_empty`s zero-fixture days correctly.
             Command: `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-05-04`
-            VM_END_DATE clipped to api_football PLAYER_STATS coverage start (matching the gap-fill scope already established).
-            Singleton lock: kill the current `fill-missing-player-stats-*` VM first or use `--force` if it's still running. Will share api_football quota until gap-fill VM auto-shuts.
-    status: todo
-    blocked_by: drop-phantom-fixtures-rows
+            VM_END_DATE clipped to api_football PLAYER_STATS coverage start.
+            **Launched 2026-05-06 12:27** — VM name `af-backfill-20260506-122705` on asia-northeast1-c (e2-standard-2). Singleton lock cleared (no other af-backfill VMs running; `fs-backfill-20260506-083546` is footystats, different quota — not competing). STARTED event verification + completion monitor passed via launch-and-monitor pair below.
+    status: launched
+    blocked_by: corrective-reflip-to-attempted-failed
     note: |
       Watch for new captures via the manifest: AUSTRIAN_BUNDESLIGA / GREEK_SUPER_LEAGUE FIXTURES `captured` count should rise from 0-real to ~150 fixtures/season. Run `python3 -c "import pandas as pd, io; from google.cloud import storage; df = pd.read_parquet(io.BytesIO(storage.Client().bucket('instruments-store-sports-central-element-323112').blob('_index/availability_index.parquet').download_as_bytes())); print(df[(df['data_type']=='FIXTURES') & (df['league_id'].isin(['AUSTRIAN_BUNDESLIGA','GREEK_SUPER_LEAGUE'])) & (df['capture_status']=='captured') & (df['instrument_count']>0)].groupby('league_id').size())"` to verify post-run.
 
-  - id: relaunch-player-stats-gap-fill-after-fixtures
+  - id: relaunch-per-fixture-downstream-after-fixtures
     content: |
-      - [ ] [HUMAN+AGENT] P0. After FIXTURES re-backfill completes, relaunch the targeted PLAYER_STATS gap-fill so the now-discoverable Austrian / Greek / etc. fixtures get player-stats captured.
-            Command: `bash deployment-service/scripts/vm/launch-fill-missing-player-stats-vm.sh --concurrency 4`
-            (Reads canonical manifest, recomputes the missing-shard set — should now include the 38 leagues' real fixtures because the FIXTURES manifest finally has truthful `instrument_count > 0` rows for them.)
-            Singleton lock will protect against running while af-backfill VM is still alive.
+      - [ ] [HUMAN+AGENT] P0. After FIXTURES re-backfill (`af-backfill-20260506-122705`) auto-shuts, sequentially relaunch the api_football per-fixture downstream entities for the 75,590 `attempted_failed` rows the corrective flip exposed. Singleton lock on `af-backfill-` prefix means these are sequential (one VM at a time):
+            1. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity PLAYER_STATS 2020-06-06 2026-05-04` — 15,646 attempted_failed rows
+            2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_STATS 2020-06-06 2026-05-04` — 17,919 rows
+            3. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_EVENTS 2020-06-06 2026-05-04` — 17,590 rows
+            4. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURE_LINEUPS 2020-06-06 2026-05-04` — 16,633 rows
+            5. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity INJURIES 2020-06-06 2026-05-04` — 7,802 rows
+            (Optional alternative for PLAYER_STATS: `launch-fill-missing-player-stats-vm.sh` is the targeted gap-fill that reads manifest + only fetches missing — same outcome, slightly faster startup.) Each VM auto-shuts on completion; estimate ~30-60 min wall-clock per entity at api_football Pro tier rate ceiling. Total ~3-5h sequential.
     status: todo
     blocked_by: relaunch-fixtures-backfill-category-a
     note: |
-      Estimated run-time: similar to the original gap-fill run (~30-60 min wall-clock at api_football's per-key rate ceiling). Cat-B leagues (POLAND_I_LIGA / J2_LEAGUE / EMPEROR_CUP / cups) will continue to write `empty_confirmed` because api_football Pro tier doesn't cover them — that's correct behaviour, not a bug to retry.
+      The orchestrator's per-fixture adapters depend on FIXTURES being correctly populated first — that's why the sequence is FIXTURES → downstream. Cat-B leagues (POLAND_I_LIGA / J2_LEAGUE / EMPEROR_CUP / cups) will continue to write `empty_confirmed` because api_football Pro tier doesn't cover them — that's correct behaviour, not a bug to retry.
+
+  - id: audit-and-flip-stale-empties
+    content: |
+      - [ ] [AGENT] P1. After the per-fixture downstream sweep completes, audit the residual ~223k `empty_confirmed` rows on per-fixture entities for any drift: rows that were stamped empty when FIXTURES was phantom-empty but where the now-correctly-populated FIXTURES has `instrument_count > 0`. Those are wrongly-empty downstream rows.
+            Logic: for each per-fixture data type (PLAYER_STATS / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES), filter rows with `capture_status='empty_confirmed'`. For each, look up the corresponding FIXTURES row; if FIXTURES is now `captured AND instrument_count > 0`, flip the downstream row to `attempted_failed`. Re-launch the per-fixture backfills if any drift is found.
+            Expected scale: ~14% of 223k = ~31k rows (matches the 13% match-day ratio observed in EPL etc.). Worth one final pass to close the loop.
+    status: todo
+    blocked_by: relaunch-per-fixture-downstream-after-fixtures
+    note: |
+      Implementation pattern mirrors `flip_phantom_to_attempted_failed.py` — read manifest, build cross-reference index, flip drift rows, backup-then-write.
 
   - id: verify-deployment-ui-coverage-jump
     content: |
-      - [ ] [HUMAN] P1. After all three runs above complete, clear the `/turbo` cache (`curl -X POST http://localhost:8004/api/data-status/turbo/clear` OR click "Clear Cache" in the deployment-UI) and verify SPORTS coverage in the UI.
+      - [ ] [HUMAN] P1. After all entity runs above complete (FIXTURES + 5 per-fixture downstreams + audit-and-flip-stale-empties pass), clear the `/turbo` cache (`curl -X POST http://localhost:8004/api/data-status/turbo/clear` OR click "Clear Cache" in the deployment-UI) and verify SPORTS coverage in the UI.
             Expected jumps:
               - Category A leagues (AUSTRIAN_BUNDESLIGA / GREEK_SUPER_LEAGUE / ~17 others): 0% → ~30-40% (top tiers, normal coverage rate).
               - Category B leagues (cups + lower divisions): stay at low coverage but with HONEST `empty_confirmed` rows instead of phantom captured ones.
               - Overall PLAYER_STATS: 78% → ~85%+ (driven by Category A recovery).
+              - Overall FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES: similar climb (broader downstream sweep covered all api_football per-fixture entities, not just PLAYER_STATS).
               - Overall FIXTURES: marginal change (denominator stays same, captured count drops to honest figures, empty_confirmed grows).
             Take a screenshot for the session log.
     status: todo
-    blocked_by: relaunch-player-stats-gap-fill-after-fixtures
+    blocked_by: audit-and-flip-stale-empties
     note: ""
 
   - id: monitor-watchdog-catch-all
