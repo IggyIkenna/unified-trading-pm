@@ -52,14 +52,14 @@ isProject: false
 Phase 1 + Phase 3 shipped. Phase 2 calculator + Phase 3.E shim deletion + Phase 4 verification deferred — see handoff
 section at the end.
 
-| Phase | Status | Commits |
-|---|---|---|
-| 1.A — UAC `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT | ✅ shipped | `unified-api-contracts@3613e90` |
-| 1.B — features-onchain emit canonical columns + `supply_apy` alias | ✅ shipped | `features-onchain-service@7f1b2a1` |
-| 2 — `paired_price_dispersion` calculator | ⏸ deferred (handoff) | none |
-| 3.A-D — strategy-service catalog spec additions | ✅ shipped | `strategy-service@e4a0cdd` |
-| 3.E — tracer adapter shim deletion | ⏸ deferred (depends on Phase 1.B re-run + Phase 2) | none |
-| 4 — partial Stage 3 + Stage 4 verification | ⏸ deferred (depends on Phase 1.B re-run + Phase 2) | none |
+| Phase                                                              | Status                                              | Commits                            |
+| ------------------------------------------------------------------ | --------------------------------------------------- | ---------------------------------- |
+| 1.A — UAC `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT                       | ✅ shipped                                          | `unified-api-contracts@3613e90`    |
+| 1.B — features-onchain emit canonical columns + `supply_apy` alias | ✅ shipped                                          | `features-onchain-service@7f1b2a1` |
+| 2 — `paired_price_dispersion` calculator                           | ⏸ deferred (handoff)                               | none                               |
+| 3.A-D — strategy-service catalog spec additions                    | ✅ shipped                                          | `strategy-service@e4a0cdd`         |
+| 3.E — tracer adapter shim deletion                                 | ⏸ deferred (depends on Phase 1.B re-run + Phase 2) | none                               |
+| 4 — partial Stage 3 + Stage 4 verification                         | ⏸ deferred (depends on Phase 1.B re-run + Phase 2) | none                               |
 
 `CARRY_BASIS_DATED` 7 → 16 specs (added 2 NASDAQ-CME ETF-vs-future, 2 intra-Deribit, 5 ETF placeholders marked
 `databento_pending`). `ARBITRAGE_PRICE_DISPERSION` 15 → 17 specs (added 2 CME-DERIBIT cross-venue futures arbs).
@@ -250,26 +250,28 @@ wiring) — too large to ship safely without a focused session.
 
 **File map**:
 
-- **NEW**: `features_cross_instrument_service/app/calculators/paired_price_dispersion.py` extending `BaseFeatureCalculator`.
-  Required props: `feature_group="paired_price_dispersion"`,
+- **NEW**: `features_cross_instrument_service/app/calculators/paired_price_dispersion.py` extending
+  `BaseFeatureCalculator`. Required props: `feature_group="paired_price_dispersion"`,
   `required_columns=["timestamp", "left_venue", "left_root", "right_venue", "right_root", "left_close", "right_close", "expiry"]`,
-  `output_features=["spread_bps", "annualised_apy_bps", "days_to_expiry"]`.
-  `_calculate_features` kernel: spread_bps = (right_close − left_close) / left_close × 1e4; annualised_apy_bps =
-  spread_bps × 365 / days_to_expiry. Stamp `available_at` = max(left.tick_ts, right.tick_ts) + scrape latency.
+  `output_features=["spread_bps", "annualised_apy_bps", "days_to_expiry"]`. `_calculate_features` kernel: spread_bps =
+  (right_close − left_close) / left_close × 1e4; annualised_apy_bps = spread_bps × 365 / days_to_expiry. Stamp
+  `available_at` = max(left.tick_ts, right.tick_ts) + scrape latency.
 - **NEW**: catalog row resolver — reads strategy-service catalog spec params (`cash_venue` / `future_venue` /
   `cash_instrument` / `future_instrument` for `CARRY_BASIS_DATED`; `long_venue` / `short_venue` / `long_instrument` /
-  `asset` for `ARBITRAGE_PRICE_DISPERSION`) → emits `(left_venue, left_root, right_venue, right_root)` pairs.
-  This is the pre-flight that maps catalog spec rows to MTDS raw_tick_data fetch keys.
+  `asset` for `ARBITRAGE_PRICE_DISPERSION`) → emits `(left_venue, left_root, right_venue, right_root)` pairs. This is
+  the pre-flight that maps catalog spec rows to MTDS raw_tick_data fetch keys.
 - **EDIT**: `features_cross_instrument_service/engine/orchestrator.py` — register the new calculator in the dispatch
   table (currently 17 calculators; this becomes the 18th). Pattern: same as `cross_venue_calculator.py` — see existing
   imports at top of orchestrator.py.
 - **EDIT**: UAC `unified_api_contracts.canonical.crosscutting.feature_groups.FeatureGroup` enum — add
-  `PAIRED_PRICE_DISPERSION = "paired_price_dispersion"`. Required-inputs DAG entry: `{paired_price_dispersion: [raw_tick_data]}`.
+  `PAIRED_PRICE_DISPERSION = "paired_price_dispersion"`. Required-inputs DAG entry:
+  `{paired_price_dispersion: [raw_tick_data]}`.
 - **NEW**: tests under `features-cross-instrument-service/tests/unit/test_paired_price_dispersion.py` covering: kernel
   computation correctness (known spread → expected APY), expiry parsing, single-leg-empty handling (record_empty),
   cross-venue same-expiry pair selection.
-- **NEW**: bucket env var per existing convention — `FEATURES_CROSS_INSTRUMENT_BUCKET` env var read by the writer.
-  Shard atom per Phase 9 plan: `(asset_group, data_type=paired_price_dispersion, left_venue, left_root, right_venue, right_root, day)`.
+- **NEW**: bucket env var per existing convention — `FEATURES_CROSS_INSTRUMENT_BUCKET` env var read by the writer. Shard
+  atom per Phase 9 plan:
+  `(asset_group, data_type=paired_price_dispersion, left_venue, left_root, right_venue, right_root, day)`.
 - **WIRE**: LookaheadBiasError raised loud per workspace rule — every input row consumed must satisfy
   `input.available_at <= target_ts - horizon`. UTL helper `assert_available_at_present` handles the basic check at
   `record_captured`; the calculator is responsible for the strict-mode raise on temporal violation.
@@ -277,22 +279,22 @@ wiring) — too large to ship safely without a focused session.
 **Pre-audit findings from this session**:
 
 - `features-cross-instrument-service` has 17 existing calculators following the `BaseFeatureCalculator` pattern. The
-  closest analogues are `cross_venue_calculator.py` (cross-venue spreads — same shape but no temporal arbitrage)
-  and `cme_gap.py` (170 LOC, simplest end-to-end example).
+  closest analogues are `cross_venue_calculator.py` (cross-venue spreads — same shape but no temporal arbitrage) and
+  `cme_gap.py` (170 LOC, simplest end-to-end example).
 - The orchestrator (`engine/orchestrator.py`) dispatches by feature_group string. Adding a new calculator is mostly
   mechanical: one import + one entry in the registry dict.
-- The strategy-service catalog rows for the new specs are already wired (this session's
-  `strategy-service@e4a0cdd`). Once the calculator emits parquet at the canonical path, the carry tracer's
-  resolver will find it without further changes.
+- The strategy-service catalog rows for the new specs are already wired (this session's `strategy-service@e4a0cdd`).
+  Once the calculator emits parquet at the canonical path, the carry tracer's resolver will find it without further
+  changes.
 
 ### 3. Phase 3.E — delete tracer adapter shim
 
-Once Phase 1.B re-run completes (parquets have canonical columns) AND Phase 2 calculator emits
-`paired_price_dispersion` parquet:
+Once Phase 1.B re-run completes (parquets have canonical columns) AND Phase 2 calculator emits `paired_price_dispersion`
+parquet:
 
-- **DELETE** `_TOKEN_TO_PROTOCOL_ASSET` (and `_tokens_for_protocol_asset`, `_filter_lst_yields_by_protocol_asset`)
-  from `strategy-service/scripts/trace_all_carry_archetypes.py`. The features-onchain calculator now emits the
-  `protocol` / `asset` columns directly.
+- **DELETE** `_TOKEN_TO_PROTOCOL_ASSET` (and `_tokens_for_protocol_asset`, `_filter_lst_yields_by_protocol_asset`) from
+  `strategy-service/scripts/trace_all_carry_archetypes.py`. The features-onchain calculator now emits the `protocol` /
+  `asset` columns directly.
 - **DELETE** the `aave_supply_apy → supply_apy → lending_apy` fallback chain. Calculator emits both `aave_supply_apy`
   AND `supply_apy` (one transition cycle); after cleanup, just read `supply_apy`. The legacy `aave_*` columns can be
   removed from features-onchain in a follow-up plan once all consumers are updated.
@@ -310,9 +312,8 @@ Once Phase 1.B re-run completes (parquets have canonical columns) AND Phase 2 ca
 ### Operational follow-ups (not code)
 
 - Re-launch `cefi-deribit-2025-light` + `cefi-deribit-2026-light` with longer runtime so intra-Deribit
-  CARRY_BASIS_DATED + CME-DERIBIT ARBITRAGE_PRICE_DISPERSION specs have data (currently Deribit dated/options
-  ingestion is partial for 2025/2026 — only Jan + Apr have all instrument_types). Launcher:
+  CARRY_BASIS_DATED + CME-DERIBIT ARBITRAGE_PRICE_DISPERSION specs have data (currently Deribit dated/options ingestion
+  is partial for 2025/2026 — only Jan + Apr have all instrument_types). Launcher:
   `ONLY="DERIBIT:2026:light DERIBIT:2025:light" FORCE=1 bash scripts/vm/launch-cefi-sharded-backfill.sh`.
-- Compound/Spark/Morpho lending-rate cross-protocol arb: pre-condition is MTDS coverage extension. Their parquet
-  rows are currently all-NaN — only Aave V3 has populated values. Out-of-scope per this plan; covered by separate
-  MTDS plan.
+- Compound/Spark/Morpho lending-rate cross-protocol arb: pre-condition is MTDS coverage extension. Their parquet rows
+  are currently all-NaN — only Aave V3 has populated values. Out-of-scope per this plan; covered by separate MTDS plan.
