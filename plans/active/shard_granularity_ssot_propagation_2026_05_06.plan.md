@@ -3,7 +3,7 @@ type: plan
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-status: phase-0-audit-in-progress
+status: phase-0-audit-complete
 owner: harsh
 auditor: claude
 ---
@@ -68,19 +68,19 @@ Phase 0.3 (synthesis)
 
 ### Phase 0 Todos
 
-- [ ] [AUDIT] P0. instruments-service — writer / pre-flight / available_at / write-gates / dual-vocab probe / per-instrument
+- [x] [AUDIT] P0. instruments-service — writer / pre-flight / available_at / write-gates / dual-vocab probe / per-instrument
       progress events
-- [ ] [AUDIT] P0. market-tick-data-service — same checklist + scan every adapter for `except: continue` swallowing
+- [x] [AUDIT] P0. market-tick-data-service — same checklist + scan every adapter for `except: continue` swallowing
       per-schema/per-instrument failures (skip databento_adapter.py — being fixed in parallel)
-- [ ] [AUDIT] P0. market-data-processing-service — same + reader-vs-writer drift (1440-empty-bars incident pattern)
-- [ ] [AUDIT] P0. features-onchain-service — same + LookaheadBiasError coverage + DAG-input pre-flight granularity
-- [ ] [AUDIT] P0. features-sports-service — same + sports temporal availability stamping rules (lineups / injuries /
+- [x] [AUDIT] P0. market-data-processing-service — same + reader-vs-writer drift (1440-empty-bars incident pattern)
+- [x] [AUDIT] P0. features-onchain-service — same + LookaheadBiasError coverage + DAG-input pre-flight granularity
+- [x] [AUDIT] P0. features-sports-service — same + sports temporal availability stamping rules (lineups / injuries /
       pre-match odds / post-match / weather)
-- [ ] [AUDIT] P0. features-delta-one-service — same + LookaheadBiasError coverage
-- [ ] [AUDIT] P0. UAC prediction canonical-question-group SSOT — verify mapping raw Polymarket market_id →
+- [x] [AUDIT] P0. features-delta-one-service — same + LookaheadBiasError coverage
+- [x] [AUDIT] P0. UAC prediction canonical-question-group SSOT — verify mapping raw Polymarket market_id →
       canonical question group exists; flag as build item if missing
-- [ ] [AUDIT] P0. Consolidated migration list — manifest drift instances per service + estimated migration shape
-- [ ] [AUDIT] P0. Consolidated UTL-lift list — cross-service utilities currently inlined per-service
+- [x] [AUDIT] P0. Consolidated migration list — manifest drift instances per service + estimated migration shape
+- [x] [AUDIT] P0. Consolidated UTL-lift list — cross-service utilities currently inlined per-service
 
 ### QG between phases
 
@@ -613,5 +613,327 @@ All in `features_sports_service/data/gcs_reader.py`:
 - **LIFT-FS3**: `_ensure_timestamp` (batch_handler.py:146-151) → delete; replace with per-source `available_at`
   stamping from UTL `availability_stamping.py`.
 - **LIFT-FS4**: Dual-vocab `_MTDS_RAW_ODDS_*_SEGMENT` (gcs_reader.py:939-941) → UTL `hive_vocab.py` (7th workspace copy).
+
+### market-tick-data-service (MTDS) — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06 by Sonnet sub-agent. Source files: `engine/orchestrator.py`, `cli/handlers/_defi_manifest.py`,
+`cli/handlers/perp_funding_handler.py`, `cli/handlers/tick_data_handler.py`, `cli/handlers/schema_validation.py`,
+`market_interface/adapters/prediction/{polymarket,kalshi}_adapter.py`, `adapters/umi_tick_provider.py`,
+`adapters/hyperliquid_s3.py`, `cli/handlers/solana_defi_handler.py`, `cli/handlers/vault_share_price_handler.py`,
+`reader.py`, `raw_tick_hive.py`. Databento adapter explicitly excluded (parallel-stream Item 2).
+
+#### ✓ Matches target
+
+- **Writer granularity — CeFi/TradFi v6** — `engine/orchestrator.py:1918`:
+  `writer_manifest.add(processing_date, row_count, venue, chain, data_type, league_id, instrument_type, underlying,
+  quote_asset, margin_type)` — full v6 7-tuple. Matches v6 spec.
+- **Tier-3 per-instrument sentinel** — `engine/orchestrator.py:2194` emits `record_empty` / `record_failed` per
+  `instrument_id` for non-captured instruments after main loop.
+- **Dual-vocab hive key SSOT** — `raw_tick_hive.py` defines `RAW_TICK_ASSET_GROUP_HIVE_KEY="asset_group"` +
+  `RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY="category"`. Reader probes canonical first (`reader.py:160`).
+- **Write-gates wired for DeFi handlers** — `validate_before_write()` called pre-write in
+  `perp_funding_handler.py:322,463,615` etc. Required cols (hard fail), NaN ratio > 0.5 (warn), row count > 0.
+- **DeFi `record_empty` / `record_failed` route through UTL** — `cli/handlers/_defi_manifest.py` correctly delegates to
+  `ManifestWriter.record_empty/record_failed` with proper row_key dicts + capture_status.
+- **`INSTRUMENT_PROCESSED` event schema known** — `lending_indices_handler.py:458` is the sole-but-correct example;
+  emits `rows_written, parquet_path`. Pattern exists; just needs propagation.
+
+#### ❌ Mismatches
+
+- **[writer]** `cli/handlers/_defi_manifest.py:120` — `DefiManifestRecorder.record_captured()` calls
+  `self._writer.add(..., venue, chain, data_type, instrument_type)` — **`instrument_id` omitted entirely**.
+  `_build_row_key()` at line 300 only keys `{date, venue, chain, data_type}` — missing `instrument_id` AND
+  `instrument_type`. DeFi shards collapse to `(venue, chain, data_type, date)`, losing per-instrument visibility.
+  Fix layer: **[per-service]**.
+- **[writer]** `polymarket_adapter.py:534, 541` shards per raw `condition_id`; `kalshi_adapter.py` shards per `ticker`.
+  Neither maps to a `canonical_question_group`. UAC has no such constant yet (confirmed greenfield in instruments-svc
+  audit). Fix layer: **[UAC]** first, then **[per-service]**.
+- **[writer]** `engine/orchestrator.py:1771` — sports shard key is `(bookmaker_str, "trades", league_str, "odds", "")`
+  — 5-tuple with NO `fixture_id`. Per-fixture granularity absent. Fix layer: **[per-service]**.
+- **[pre-flight]** `cli/handlers/tick_data_handler.py:173` — outer `check_shard_freshness(bucket, date,
+  expected_venues=...)` is at `(bucket, date, venue)` only. No data_type, no instrument_id. **Far coarser than v6
+  writer**. Fix layer: **[per-service]**.
+- **[pre-flight]** `engine/orchestrator.py:1394-1425` — inner pre-flight reads `read_availability_index(bucket)` and
+  filters by `(venue, data_type)` only. Misses `instrument_type`, `instrument_id`, `quote_asset`, `margin_type`.
+  Mismatches writer granularity. Fix layer: **[per-service]**.
+- **[available_at]** Zero occurrences of `available_at` column in ANY MTDS write path (orchestrator, DeFi handlers,
+  sports, prediction). Fix layer: **[UTL]** (extend `ManifestWriter.add()`/`record_captured()` to accept
+  `available_at`) + **[per-service]** plumbing.
+- **[write-gate]** CeFi/TradFi/Sports/Prediction orchestrator path has NO NaN-ratio / required-col / row-count guard
+  before flush. `validate_before_write()` is **DeFi-only**. Other asset_groups can write zero-row or all-NaN parquets
+  and record `captured`. Fix layer: **[UTL lift]** + **[per-service]** apply.
+- **[write-gate]** No cluster-coverage gate anywhere in MTDS. CeFi options/futures chains, Sports bookmaker aggregates
+  can record bundle-level `captured` without checking ≥N instruments captured. Fix layer: **[UTL]** new gate +
+  **[per-service]**.
+- **[INSTRUMENT_PROCESSED]** Only `PROCESSING_COMPLETED` at end-of-date in `engine/orchestrator.py:2289`. NO per-
+  instrument row-count events in CeFi/TradFi/Sports/Prediction/DeFi main loops. Zero-output runs undetectable from
+  event stream. Fix layer: **[per-service]**.
+- **[manifest v6 combo_type / leg_weights]** UTL `ManifestWriter.add()` accepts these. **Zero MTDS call sites pass
+  them.** Multi-leg / combo instrument types untracked. Fix layer: **[per-service]** (when introduced).
+- **[manifest shape]** `perp_funding_handler.py:225` — `chain_for_manifest = protocol.upper() if protocol in
+  ("hyperliquid", "aster") else ""`. **GMX written with `chain=""`** — non-queryable by chain. Should be
+  `chain="ARBITRUM"` or `"AVALANCHE"`. Fix layer: **[per-service]**.
+
+#### 🔀 Wrong layer
+
+- `cli/handlers/schema_validation.py` `validate_before_write` — should be in UTL `write_gates` for re-use across MDPS
+  / features-* / strategy-service. **MTDS is the reference impl; lift.**
+- `engine/orchestrator.py:1880-1908` — hardcoded 27-entry tuple of DeFi protocol prefixes (`uniswap`, `aave`, `gmx`,
+  ...) for `PROTOCOL-CHAIN` venue split. Belongs in UAC `registry/capability_declarations/_defi.py` next to
+  `CHAIN_RPC_TEMPLATES`. **[UAC]**.
+- Multiple docstrings + inline comments in `engine/orchestrator.py` reference legacy `category=` partition paths.
+  Documentation drift only; clean up.
+
+#### ❓ Couldn't verify
+
+- Whether `canonical_question_group` is partially implemented elsewhere (it isn't, per UAC audit).
+- Whether sports-service backfill pipeline (parallel) will deliver fixture_id before MTDS consumes it.
+- Whether TradFi `chain` column equates to exchange MIC or empty (databento adapter excluded).
+
+#### `except: continue` sweep — NEW HIGH-SEVERITY FINDINGS
+
+| File | Line | Loop body | Swallows | Severity |
+|---|---|---|---|---|
+| `adapters/umi_tick_provider.py` | **581** | per-coin book snapshot, PACIFICA-SOLANA | `aiohttp.ClientError, TimeoutError` debug-only | **HIGH** — per-instrument net-fail silently drops; no `record_failed` |
+| `adapters/umi_tick_provider.py` | **737** | per-symbol book snapshot, EXTENDED-STARKNET | same | **HIGH** |
+| `adapters/umi_tick_provider.py` | **921** | per-symbol orderbook fetch, LIGHTER | same | **HIGH** |
+| `cli/handlers/solana_defi_handler.py` | 687 | TVL time-series datapoint parse | `TypeError, ValueError` silent drop | **MED** — corrupts TVL aggregates silently, no count |
+| `cli/handlers/solana_defi_handler.py` | 810 | APY timestamp parse | `ValueError` silent drop | **MED** |
+| `adapters/hyperliquid_s3.py` | 245, 265 | per-hour S3 + per-line decode | NoSuchKey + JSON decode | **LOW** — documented intent, acceptable |
+| `cli/handlers/vault_share_price_handler.py` | 338 | per-protocol-group Alchemy init | tracked in `per_group_errors` → `record_failed` | **LOW** — mitigated |
+| `reader.py` | 171, 184 | GCS prefix probe | path-not-exist, try next vocab | **LOW** — canonical pattern |
+
+**3 NEW HIGH-severity sites** (`umi_tick_provider.py:581/737/921`) not listed in prior Phase 0 inventory.
+
+#### MTDS migration items
+
+- **MIG-MTDS1**: Backfill `instrument_id` + `instrument_type` to all DeFi manifest rows (currently dropped).
+  Migration script per drift axis.
+- **MIG-MTDS2**: Re-stamp GMX manifest rows with `chain="ARBITRUM"`/`"AVALANCHE"`.
+- **MIG-MTDS3**: When `canonical_question_group` ships from UAC, migrate Polymarket+Kalshi prediction shards.
+
+#### MTDS UTL-lift items
+
+- **LIFT-MTDS1**: `validate_before_write` (`schema_validation.py`) → UTL `write_gates`.
+- **LIFT-MTDS2**: DeFi protocol-prefix list → UAC `_defi.py`.
+
+### market-data-processing-service (MDPS) — Shard-Granularity Audit Findings
+
+Audit pass 2026-05-06 by Sonnet sub-agent. Source files: `orchestration_scanner.py`, `live_workers.py`,
+`batch_workers.py`, `orchestration_writer.py`, `orchestration_service.py`, `canonical_writer.py`, `candle_write_mixin.py`,
+`adapters/{cefi,tradfi,defi,sports}/...`.
+
+#### ✓ Matches target
+
+- **Reader path-template hive-key-agnostic** — `orchestration_scanner.py` lists `raw_tick_data/by_date/day={date}/`
+  and walks all blobs; picks up both `category=` and `asset_group=` variants. **No drift from the 2026-05-05
+  ticks.parquet-vs-per-instrument incident.** Chain-bundle parquets routed to `_process_chain_bundle_streaming` via
+  `_chain_bundle_likely_from_path`. Per-instrument routed via `extract_instrument_id_from_blob_path`.
+- **Per-instrument file-level skip** — `_check_existing_outputs` in scanner uses path-based instrument_id extraction.
+- **`INSTRUMENT_PROCESSED` events with non-null column counts** — `live_workers.py:112-162`
+  `_emit_instrument_processed_event` with `_TRACKED_NON_NULL_COLUMNS` per-column counts; called inside
+  `_process_all_timeframes` at lines 702-709. **Silent-success-with-zero-output detectable from event stream** for the
+  standard path.
+- **Honest empty handling for non-TRADFI** — `batch_workers.py:189-228` `_handle_empty_tick_data` returns
+  `success=True, candles_generated=0` with NO parquet + NO manifest row. Correct honest gap (data-status shows missing,
+  not phantom).
+- **Partition-required gate** — `orchestration_scanner.py:75-82` `_data_type_requires_partition` prevents fallback
+  aggregation across mismatched instrument types for 46 DeFi/CeFi data types.
+- **Intentional closed-market NaN candles labelled** — `_create_closed_market_candle` and
+  `_create_full_day_empty_output` set `market_state=CLOSED` distinguishing intentional placeholders.
+- **OOM fix for chain bundles** — `_process_chain_bundle_streaming` uses Polars predicate pushdown per-symbol (no
+  full chain-bundle parquet load).
+
+#### ❌ Mismatches
+
+- **[CRITICAL — M1] MRO shadow: `CandleOrchestrationWriter._write_candles` hides `CandleWriteMixin._write_candles`**
+  — `orchestration_writer.py:328` defines its own `_write_candles` that calls `self.storage_client.upload_bytes()`
+  directly (raw GCS upload, line 390). `CandleWriteMixin._write_candles` (which calls
+  `canonical_writer.write_candle_parquet → ManifestWriter.add()`) is **NEVER reached** in production. Consequence:
+  `canonical_writer.py:313-326` `ManifestWriter.add()` call is **dead code in production**. All manifest rows come
+  only from `_write_manifest_records` (see M3) which is v3-shaped. Fix layer: **[per-service]** CRITICAL.
+- **[CRITICAL — empty placeholder reproduction path]** Every adapter's `_create_empty_output(timeframe,
+  instrument_info) → CandleOutput` returns `n_candles = get_candles_per_day(timeframe)` rows with
+  `open=high=low=close=volume=NaN`. The `_handle_empty_tick_data` guard only intercepts at `tick_data.empty` — does
+  NOT intercept "ticks present but all outside valid intervals". **Highest-risk confirmed path:**
+  - `defi/swap_adapter.py:106` — non-empty tick_data, all ticks outside valid swap intervals → 1440 NaN bars + manifest
+    `expected=True, available=True` → data-status `captured` → downstream 1440 garbage. **2026-05-05 incident exact
+    reproduction path active today.**
+  - `cefi/trades_adapter.py:74` — same pattern.
+  - 15+ other `_create_empty_output` sites across `adapters/{cefi,tradfi,defi,sports}/` (full table in agent report;
+    most "Unknown if guarded" — needs spot-check). Fix layer: **[per-service]** CRITICAL.
+- **[M2]** `canonical_writer.py:313-326` uses legacy `.add()` not `record_captured()` — no `capture_status`,
+  `attempted_at`, `error_reason`. Comments at lines 5, 187, 299 say "v4 manifest row"; UTL is v5/v6. (Moot until M1
+  fixed — this code is dead.)
+- **[M3]** `orchestration_service.py:283-388` `_write_manifest_records` writes v3-shaped coarse summaries —
+  `(date, venue, data_type, row_count)` with NO `instrument_type`, `chain`, `instrument_id`, `timeframe` at instrument
+  level. Three variants all coarser than the shard atom. Pre-flight `_should_skip_shard` cannot match at instrument
+  granularity. Fix layer: **[per-service]**.
+- **[M4]** `orchestration_service.py:160-184` calls `check_shard_freshness(expected_venues=data_types, ...)` — at
+  `(date, data_types)` only. Missing instrument-level dims. Fix layer: **[per-service]**.
+- **[M5] `record_empty` / `record_failed` never called from main service code paths** — only used in
+  `scripts/reprocess_sports_odds.py`. Three failure modes:
+  - Adapters returning `_create_empty_output` (NaN rows) write parquets and `.add()` rows with `expected=True` —
+    manifest shows `captured`, downstream reads 1440 NaN. **2026-05-05 pattern.**
+  - Write failures caught in `candle_write_mixin.py:141-143` (`except ... as e: logger.error; return None`) emit no
+    manifest row at all — shard permanently invisible.
+  - Per-symbol failures in `_iter_chain_symbol_dfs` swallowed with `continue` — no `record_failed`, no
+    `ADAPTER_FETCH_FAILED`, no manifest entry.
+  Fix layer: **[per-service]** CRITICAL.
+- **[M6] available_at** — Zero occurrences in any MDPS output parquet schema or manifest row. `canonical_writer.py:110`
+  schema columns are `[open, high, low, close, volume, vwap, trade_count, market_state, timeframe]`. Fix layer:
+  **[per-service]** + **[UTL]**.
+- **[M7] No NaN-ratio write gate** — `ParquetSchemaEnforcer` checks column presence + dtype only. No code checks
+  `df[['open','high','low','close']].isna().mean() > threshold`. **A 1440-NaN parquet passes schema enforcement.**
+  Fix layer: **[UTL]** lift + **[per-service]** apply.
+- **[M8] Streaming chain-bundle path has NO `INSTRUMENT_PROCESSED` events** — `live_workers.py:1033-1079`
+  `_streaming_write_per_tf` calls `_write_candles` per symbol per timeframe but never calls
+  `_emit_instrument_processed_event`. **Chain bundle runs (options chains, futures chains) emit zero per-instrument
+  progress events.** Fix layer: **[per-service]**.
+
+#### 🔀 Wrong layer
+
+- `_normalise_timeframe` inline in `canonical_writer.py:59-67` — UTL-level normalization. Lift.
+- "v4 manifest row" comments — documentation drift; clean up.
+
+#### ❓ Couldn't verify
+
+- Whether `CandleOrchestrationWriter._write_candles` is actually invoked in production vs `CandleWriteMixin._write_candles`
+  (MRO analysis strongly indicates the shadow but didn't run service to confirm empirically).
+- Whether `ManifestWriter.add()` v3 API still exists in current UTL (likely backwards-compat shim; confirmed at instruments-
+  service audit it does).
+- Exact `_create_empty_output` call sites that bypass `tick_data.empty` guard — `defi/swap_adapter.py:106` and
+  `cefi/trades_adapter.py:74` confirmed; remaining 15 sites need exhaustive trace.
+- Whether DeFi adapters `liquidity`/`market_state`/`fx_rates` are actually registered (confirmed NOT in
+  `adapters/__init__.py` top-level; uncertain whether other import paths trigger registration).
+
+#### Empty-placeholder hunt — adapter inventory
+
+17 sites in `adapters/{cefi,tradfi,defi,sports}/...` call `_create_empty_output` / `_create_full_day_empty_output`.
+Confirmed reproduction path: `defi/swap_adapter.py:106`, `cefi/trades_adapter.py:74`. Remaining 15 sites need
+spot-check (full table embedded in audit transcript).
+
+#### MDPS migration items
+
+- **MIG-MDPS1**: Fix MRO shadow — delete `CandleOrchestrationWriter._write_candles` (or refactor inheritance) so
+  `CandleWriteMixin._write_candles` is the production write path. Critical.
+- **MIG-MDPS2**: Replace ALL `_create_empty_output` returning NaN-filled DataFrames with returning `None` /
+  `CandleOutput(n_candles=0, ...)`; ensure upstream flow routes empty-tick + ticks-outside-valid-intervals to
+  `record_empty`, NOT to write+`record_captured`.
+- **MIG-MDPS3**: Migrate `_write_manifest_records` from `(date, venue, data_type, row_count)` v3 shape to per-instrument
+  v5/v6 shape with `chain, instrument_type, instrument_id, timeframe`.
+- **MIG-MDPS4**: One-time scan of existing parquets to detect 1440-NaN-bar phantoms; flip manifest rows to
+  `attempted_failed` or delete parquets + write `record_empty`. (Same pattern as instruments-service phantom audit.)
+
+#### MDPS UTL-lift items
+
+- **LIFT-MDPS1**: `_normalise_timeframe` (`canonical_writer.py:59-67`) → UTL.
+- **LIFT-MDPS2**: NaN-ratio write gate (currently absent) → UTL `write_gates`.
+
+---
+
+## Phase 0 Synthesis
+
+### Cross-cutting findings (workspace-wide patterns)
+
+The following anti-patterns appear in **3+ services** and represent the highest-leverage fixes:
+
+| Pattern | Services affected | Severity | Fix layer |
+|---|---|---|---|
+| **`available_at` not stamped at write-time** | MTDS, MDPS, features-onchain, features-sports, features-delta-one (5/5 audited) | CRITICAL | UTL stamping helper + per-service plumbing |
+| **`record_empty` / `record_failed` not called in main paths** | MDPS, features-onchain, features-delta-one (3/5) | CRITICAL | per-service rewrite |
+| **Pre-flight coarser than writer granularity** | instruments-service (3 sites), MTDS (2 sites), MDPS, features-onchain, features-sports (5/6) | CRITICAL | per-service |
+| **`LookaheadBiasError` only on output-side, not input-side** | features-onchain (writer-only), features-sports (eaten in batch), features-delta-one (zero) (3/3 features-* audited) | HIGH | UTL base-class lift + per-service inherit |
+| **NaN-ratio gate inlined per-service or absent** | instruments-service (inlined per-data-type), MTDS (DeFi-only), MDPS (absent), features-onchain (hardcoded 0.95), features-sports (subset of FeatureWriteGate) (5/5) | HIGH | UTL lift + UAC per-feature_group thresholds |
+| **Empty placeholders that look populated (1440 NaN bars pattern)** | MDPS confirmed (defi/swap_adapter.py:106, cefi/trades_adapter.py:74), 15 more sites suspect | CRITICAL | per-service |
+| **Manifest write swallowed by bare except** | features-delta-one, features-sports (manifest.write batch_handler.py:629-631) | HIGH | per-service |
+| **Hardcoded sports paths bypass UAC SSOT** | features-sports (5+ sites in gcs_reader.py) | MED | per-service |
+| **Dual-vocab probe inlined per-service** | features-sports (`_MTDS_RAW_ODDS_*_SEGMENT`) — 7th workspace copy | MED | UTL `hive_vocab.py` |
+| **`feature_group → required_inputs` DAG self-declared** | features-onchain (`_metadata` dict), features-sports (`feature_builder_registry.py`) | HIGH | UAC SSOT |
+| **`except: continue` swallows per-instrument failures** | MTDS umi_tick_provider.py:581/737/921 (3 NEW HIGH sites), solana_defi_handler.py:687/810 (2 MED) | HIGH | per-service |
+| **No `INSTRUMENT_PROCESSED` events with row counts** | MTDS (1 of N exists), MDPS streaming-chain-bundle path, features-onchain (only window summaries), features-sports (SSE only), features-delta-one (only batch-level) | MED | per-service |
+
+### Consolidated migration list
+
+#### v5/v6 manifest schema migrations (per-service)
+
+- **MTDS DeFi**: backfill `instrument_id` + `instrument_type` to all DeFi manifest rows (currently dropped at
+  `_defi_manifest.py:120,300`).
+- **MTDS GMX**: re-stamp manifest rows from `chain=""` to `chain="ARBITRUM"`/`"AVALANCHE"`.
+- **MDPS**: replace `_write_manifest_records` v3-shaped rows with per-instrument v5/v6 shape; one-time scan-and-rewrite.
+- **MDPS phantom audit**: scan existing OHLC parquets for 1440-NaN-bar phantoms; flip manifest to `attempted_failed` or
+  delete parquet + `record_empty`.
+- **instruments-service Polymarket**: migrate `data_type=BTC|ETH|...` overload to
+  `canonical_question_group=BTC_UP_DOWN_1D|...` (depends on UAC build).
+- **instruments-service SFI_PROGRESSIVE `available_at`**: re-stamp from `15:00 UTC` placeholder to actual `kickoff_utc`
+  once API_FOOTBALL fixture lookup is wired.
+- **features-sports**: switch `manifest.add()` calls (`batch_handler.py:615-628`) to `record_captured` with
+  full row_key including `timeframe` + `fixture_id` + `data_type` for all 14+ raw table groups.
+
+No service has v4-vs-v5 schema-version drift on disk that needs migration. **Corrective action everywhere is to
+expand writer keys + start using `record_captured/empty/failed`, not migrate existing rows.**
+
+### Consolidated UTL-lift list
+
+| ID | Lift | Currently inlined in | Target layer |
+|---|---|---|---|
+| LIFT-1 | NaN-ratio + row-count + schema write-gate trio (extend `FeatureWriteGate`) | instruments-service (`_validate_predictions_null_rates`), features-sports (`_validate_feature_quality`), features-onchain (hardcoded 0.95), MTDS (`schema_validation.py` DeFi-only), MDPS (absent) | UTL |
+| LIFT-2 | Cluster-coverage gate for bundled shards | absent everywhere | UTL (new) + UAC clusters |
+| LIFT-3 | Per-source `available_at` stamping helper | features-sports (`_ensure_timestamp` midnight workaround), all others (absent) | UTL |
+| LIFT-4 | `_should_skip_date_for_per_leaf` (generalised from `_should_skip_date_for_per_league`) | instruments-service only | UTL |
+| LIFT-5 | `_classify_adapter_failure` (try-classify-fallback dance) | instruments-service `orchestrator.py:530-543` | UTL (likely duplicated in MTDS adapters) |
+| LIFT-6 | Mandatory `LookaheadBiasError` enforcement at calculator base-class | features-onchain (writer-only), all others absent | UTL `feature_calculator_base` |
+| LIFT-7 | `record_partial_batch(manifest, completed, failed)` policy helper | features-delta-one, features-sports (drop manifest on incomplete) | UTL |
+| LIFT-8 | `feature_group → required_inputs` DAG SSOT | features-onchain (`_metadata` dict), features-sports (`feature_builder_registry.py`) | **UAC** (not UTL) |
+| LIFT-9 | Dual-vocab `category=` vs `asset_group=` probe utility (5 phantom-audit drift axes) | features-sports (7th copy), instruments-service `reconcile_phantom_manifest_rows_all.py` | UTL `hive_vocab.py` |
+| LIFT-10 | DeFi protocol-prefix list | MTDS `engine/orchestrator.py:1880-1908` | UAC `_defi.py` |
+| LIFT-11 | `CanonicalDefiShard` dataclass | features-onchain `mtds_canonical_reader.py:39-51` (used by 5 calcs) | UAC `unified_api_contracts.defi` |
+| LIFT-12 | `_normalise_timeframe` | MDPS `canonical_writer.py:59-67` | UTL timeframe utils |
+| LIFT-13 | MTDS bucket / data-type maps | features-onchain `mtds_output_config.py:33-53` (acknowledged pending) | UAC |
+
+### Consolidated UAC build items
+
+- **BUILD-PRED1..4**: Polymarket+Kalshi `canonical_question_group` SSOT (greenfield — see UAC prediction finding).
+- **BUILD-NAN-THRESH**: `FEATURE_GROUP_NAN_THRESHOLDS` per-feature_group in UAC.
+- **BUILD-DAG**: `FEATURE_GROUP_REQUIRED_INPUTS` DAG SSOT (lifts from features-onchain + features-sports).
+
+### Phase 1 priority (suggested ordering)
+
+Three tiers of urgency:
+
+**Tier 1 — Ship-blocker correctness bugs**:
+1. MDPS MRO shadow + `_create_empty_output` 1440-NaN-bar reproduction path (CRITICAL — actively producing bad data).
+2. instruments-service SFI_PROGRESSIVE / SFI_STANDINGS / PLAYER_VALUES coarser-pre-flight bug (per-league coverage
+   permanently locked out — same shape as 2026-05-05 MATCHES 18%-coverage incident).
+3. MTDS `umi_tick_provider.py:581/737/921` per-instrument silent-drop swallows.
+4. features-sports `writer.py:65-66 except LookaheadBiasError: pass` — disables PIT enforcement in batch.
+5. features-sports `_ensure_timestamp` midnight UTC for post-match data — leak risk.
+
+**Tier 2 — UTL/UAC lifts that unblock multiple services**:
+1. LIFT-1 (NaN-ratio + row-count + schema gate trio) — unblocks MTDS+MDPS+features-* write-gate enforcement.
+2. LIFT-3 (per-source `available_at` stamping helper) — unblocks all 5 services.
+3. LIFT-6 (mandatory LookaheadBiasError at base-class) — unblocks 30+ delta-one calculators + 25+ onchain calculators
+   + 22+ sports calculators.
+4. BUILD-PRED1..4 (canonical_question_group SSOT) — unblocks Polymarket+Kalshi shard-correctness.
+5. LIFT-8 (feature_group DAG in UAC) — unblocks downstream pre-flight checks.
+
+**Tier 3 — Hygiene**:
+1. Per-service writer key expansion to v6 row_key everywhere.
+2. Replace `add()` with `record_captured/empty/failed` everywhere.
+3. Hardcoded sports paths (features-sports `gcs_reader.py`).
+4. `INSTRUMENT_PROCESSED` event propagation.
+5. Dual-vocab probe utility lift (LIFT-9).
+
+### What this audit did NOT cover
+
+- **strategy-service**, **execution-service**, **deployment-api**, **deployment-ui** — not in audit scope.
+- **On-disk parquet inspection** — audit was source-code only. The phantom-audit recipe in PM CLAUDE.md should run as a
+  pre-Phase-1 step to enumerate live drift.
+- **Spot-check of MDPS adapter `_create_empty_output` sites 3-17** — only 2 of 17 confirmed as 1440-NaN reproduction
+  path; remaining 15 marked "Unknown if guarded" need verification before Phase 1.
+- **DeFi adapter registration verification** — `liquidity`/`market_state`/`fx_rates` adapters confirmed NOT in
+  `adapters/__init__.py` top-level; whether they're imported via another path uncertain.
+- **`canonical_question_group` retroactive mapping** for existing on-disk Polymarket/Kalshi data — depends on
+  BUILD-PRED1 design.
 
 <!-- AUDIT_FINDINGS_INSERT_BELOW -->
