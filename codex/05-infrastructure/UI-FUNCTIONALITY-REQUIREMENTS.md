@@ -2,6 +2,12 @@
 scope: [engineer, admin]
 ---
 
+<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
+
+> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
+> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
+> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
+
 # UI Functionality Requirements — Unified Trading System
 
 **Purpose:** Reference for UI capabilities and how they map to APIs and the Python pipeline. For **current** product
@@ -9,7 +15,7 @@ work, implement features in **`unified-trading-system-ui`** and **`deployment-ui
 **workspace-root `archive/README.md`** are **ARCHIVED — reference only** (not in `workspace-manifest.json`
 repositories).
 
-**Last Updated:** 2026-03-24  
+**Last Updated:** 2026-03-24
 **Related:** `UI-DEPENDENCY-MATRIX.md` (API wiring, ports), `workspace-manifest.json` (repo registry),
 `unified-trading-pm/scripts/dev/ui-api-mapping.json` (active UI/API stacks)
 
@@ -67,7 +73,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.1 Deployment (deployment-ui) — **active**
 
-**Who:** DevOps, deployment engineers  
+**Who:** DevOps, deployment engineers
 **API:** `deployment-api` (port per `unified-trading-pm/scripts/dev/ui-api-mapping.json`, typically 8004)
 
 | Screen         | Route             | Functionality                                                                                                 |
@@ -87,7 +93,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.2 Onboarding (onboarding-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders, admins, onboarding team  
+**Who:** Traders, admins, onboarding team
 **API:** `config-api` (**archived** repo — see `archive/README.md`)
 
 | Screen          | Route             | Functionality                                                   |
@@ -108,7 +114,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.3 Execution Analytics (execution-analytics-ui) — **ARCHIVED — reference only**
 
-**Who:** Quants, traders  
+**Who:** Quants, traders
 **API:** `execution-results-api` (**archived** — see `archive/README.md`)
 
 | Screen           | Route           | Functionality                                                     |
@@ -131,7 +137,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.4 Strategy (strategy-ui) — **ARCHIVED — reference only**
 
-**Who:** Quants, traders  
+**Who:** Quants, traders
 **API:** `execution-results-api` (**archived** — see `archive/README.md`)
 
 | Screen           | Route           | Functionality                                                |
@@ -156,7 +162,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.5 Settlement (settlement-ui) — **ARCHIVED — reference only**
 
-**Who:** Ops, finance, reconciliation team  
+**Who:** Ops, finance, reconciliation team
 **API:** `trading-analytics-api` (**archived** — see `archive/README.md`) — historic `/settlement/*` and
 `/settlements/*` routes
 
@@ -171,7 +177,7 @@ migration reference; **do not treat them as current delivery targets.**
 
 ### 2.6 Live Health Monitor (live-health-monitor-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders (live trading desk)  
+**Who:** Traders (live trading desk)
 **API:** `execution-results-api` (**archived**); manual trade instructions → execution-service (historic env patterns)
 
 | Screen        | Route        | Functionality                                                                |
@@ -187,7 +193,7 @@ controls; manual trade entry form
 
 ### 2.7 Logs Dashboard (logs-dashboard-ui) — **ARCHIVED — reference only**
 
-**Who:** Engineers, operators  
+**Who:** Engineers, operators
 **API:** `batch-audit-api` (**archived** — see `archive/README.md`)
 
 | Screen     | Route       | Functionality                                                                     |
@@ -202,7 +208,7 @@ controls; manual trade entry form
 
 ### 2.8 ML Training (ml-training-ui) — **ARCHIVED — reference only**
 
-**Who:** Data scientists, quants  
+**Who:** Data scientists, quants
 **API:** `ml-training-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route              | Functionality                                                                       |
@@ -215,7 +221,7 @@ controls; manual trade entry form
 
 ### 2.9 Trading Analytics (trading-analytics-ui) — **ARCHIVED — reference only**
 
-**Who:** Traders, ops  
+**Who:** Traders, ops
 **API:** `trading-analytics-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route                     | Functionality                                                                 |
@@ -231,7 +237,7 @@ controls; manual trade entry form
 
 ### 2.10 Batch Audit (batch-audit-ui) — **ARCHIVED — reference only**
 
-**Who:** Ops, compliance  
+**Who:** Ops, compliance
 **API:** `batch-audit-api` (**archived** — see `archive/README.md`)
 
 | Screen            | Route               | Functionality                                                                                  |
@@ -248,7 +254,7 @@ controls; manual trade entry form
 
 ### 2.11 Client Reporting (client-reporting-ui) — **ARCHIVED — reference only**
 
-**Who:** Account managers, client-facing ops  
+**Who:** Account managers, client-facing ops
 **API:** **`client-reporting-api` remains active**; standalone `client-reporting-ui` is **archived**. Client reporting
 UX is integrated into **`unified-trading-system-ui`** per `ui-api-mapping.json`.
 
@@ -264,7 +270,7 @@ UX is integrated into **`unified-trading-system-ui`** per `ui-api-mapping.json`.
 
 ### 2.12 User Management (user-management-ui) — **ARCHIVED — reference only**
 
-**Who:** Admins  
+**Who:** Admins
 **API:** User lifecycle is **`auth-api` + `unified-trading-system-ui`** in the active workspace; standalone
 `user-management-ui` is **archived** (see `archive/README.md` and `ui-api-mapping.json` `user-management` stack).
 

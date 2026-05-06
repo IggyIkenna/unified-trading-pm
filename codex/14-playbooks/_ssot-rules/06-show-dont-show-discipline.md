@@ -2,6 +2,12 @@
 scope: [engineer, admin, sales]
 ---
 
+<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
+
+> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
+> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
+> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
+
 # Rule 06 — Show / don't-show discipline
 
 > What you leave off the page matters as much as what you put on it. Every experience playbook has an explicit

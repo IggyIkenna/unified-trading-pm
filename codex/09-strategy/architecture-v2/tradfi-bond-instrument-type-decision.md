@@ -2,6 +2,12 @@
 scope: [engineer, admin]
 ---
 
+<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
+
+> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
+> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
+> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
+
 # TradFi Bond Instrument-Type Decision (2026-04-21)
 
 **Context:** Audit driver — `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 Task C. The v1

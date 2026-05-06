@@ -2,11 +2,17 @@
 scope: [engineer, admin]
 ---
 
+<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
+
+> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
+> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
+> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
+
 # UCS Docker Image: Known Issues & Rollout Tracking
 
-**Owner:** Ikenna  
-**Priority:** P1-high  
-**Status:** Rollout complete (11/11 services); auto-trigger bug open  
+**Owner:** Ikenna
+**Priority:** P1-high
+**Status:** Rollout complete (11/11 services); auto-trigger bug open
 **Last Updated:** 2026-02-12
 
 ---
@@ -15,8 +21,8 @@ scope: [engineer, admin]
 
 ### Issue 1: Cloud Build Not Auto-Triggering on Main Push
 
-**Priority:** P1-high  
-**Status:** Open  
+**Priority:** P1-high
+**Status:** Open
 **Tracking:** `unified-trading-services/.github/ISSUE_BUG_UCS_IMAGE_NOT_AUTO_PUSHING.md`
 
 **Problem:** Cloud Build trigger for `unified-trading-services` is configured correctly but does NOT automatically
@@ -131,7 +137,7 @@ from Artifact Registry.
 
 ## Python Version Alignment
 
-**Current State:** ✅ Python 3.13 everywhere (11/11 services)  
+**Current State:** ✅ Python 3.13 everywhere (11/11 services)
 **Target State:** Python 3.13 everywhere — **achieved**
 
 **Completed:**
@@ -146,7 +152,7 @@ from Artifact Registry.
 
 ## uv Migration
 
-**Status:** ✅ Complete (11/11 services)  
+**Status:** ✅ Complete (11/11 services)
 **Goal:** Replace `pip` with `uv` for 10-100x faster builds — **achieved**
 
 **Migration Pattern:**
