@@ -146,6 +146,91 @@ Read these before making ANY code changes:
   Adapters MUST emit per-instrument progress events with row counts so silent-success-with-zero-output is detectable
   from the event stream alone.
 
+- **Shard-granularity SSOT (CRITICAL — applies top-to-bottom across every service)** — The shard atom MUST be identical
+  across (a) writer atomicity boundary (parquet finalize + `record_captured`), (b) manifest row key (v5 columns:
+  `asset_group, venue, chain, data_type, instrument_type, instrument_id, league_id, timeframe, feature_group, model_family, ...`),
+  (c) data-status display rollup, (d) downstream service pre-flight gate, (e) deployment-UI drill-down + parquet
+  download
+  - schema view. Drift between any two = silent correctness bug. TradFi MVP partial-bundle (ES.OPT 18 dates with
+    single-parent fills passed manifest as `captured`), MDPS empty-placeholder (1440 NaN OHLC bars/day for years passed
+    as `captured`), and Databento per-schema drop (bundled `ohlcv_1m;trades` lost ohlcv on 429 marked complete) are all
+    instances of this class.
+
+  **Per-asset-group shard-key matrix:**
+  - **CeFi spot/perp**: (asset_group, venue, data_type, instrument_type, instrument_id, day) — per-instrument (35GB
+    roots, source atom is per-instrument-per-day).
+  - **CeFi options/futures**: (asset_group, venue, data_type, `options_chain`/`futures_chain`, root, day) — bundled by
+    root.
+  - **TradFi futures**: (asset_group=tradfi, venue, data_type, instrument_type, root, day) — bundled, non-trading days
+    pre-skipped via `venue_trading_calendar` + recorded as `empty_confirmed`.
+  - **TradFi ETFs**: (asset_group=tradfi, venue, data_type, instrument_type, instrument_id, day) — per-instrument.
+  - **TradFi options**: (asset_group=tradfi, venue, data_type, `options_chain`, root, day) — bundled, 11-cluster ES.OPT
+    taxonomy (ES + E1A–E5A weeklies + EW1–EW4 + EOM).
+  - **DeFi**: (asset_group=defi, **chain**, venue/protocol, data_type, instrument_id_or_protocol_id, day) — `chain` is a
+    first-class v5 axis; pre-genesis dates per chain are `empty_confirmed`.
+  - **Sports**: (asset_group=sports, source, data_type, league_id, fixture_id or day-aggregate, day) — paused-league
+    windows (`KNOWN_COVERAGE_GAPS`) and pre-`SOURCE_COVERAGE_START` dates are `empty_confirmed`.
+  - **Prediction**: (asset_group=prediction, venue, data_type, **canonical_question_group**, day) — raw market_ids
+    bundled into canonical names (BTC up/down, S&P up/down) like options-chain bundling. UAC SSOT for the market_id →
+    canonical_question_group mapping is required (greenfield item if not yet present).
+
+  **Layer discipline (tag every change before implementing):**
+  - **[UAC]** — contracts, shard-key shapes, `feature_group → required_inputs` DAG SSOT, `SOURCE_COVERAGE_START` /
+    `DATA_TYPE_COVERAGE_START` / `KNOWN_COVERAGE_GAPS`, `available_at` semantics per source, prediction
+    canonical-question grouping, `venue_trading_calendar`.
+  - **[UTL]** — cross-service runtime utilities: `ManifestWriter`, dual-vocab probe utility (the 5 phantom-audit drift
+    axes lifted from `reconcile_phantom_manifest_rows_all.py` into one shared module), write-gate helper (row count +
+    NaN ratio + schema + cluster coverage), `LookaheadBiasError`, schema-introspection helper, `run_lifecycle`.
+  - **[per-service]** — only what genuinely differs: source-specific `available_at` stamping, calculator/adapter
+    business logic.
+  - **[deployment-api / deployment-ui]** — per-service download endpoint + schema-view route, data-status drill-down to
+    leaf parquet.
+  - **Do not duplicate cross-service utilities per-service.** If you find one inlined (e.g. NaN-ratio check copy-pasted
+    across calculators), lift to UTL.
+
+  **`available_at` is a write-time column, never derived at read-time** (read-time inference can't tell "available now"
+  from "available when the fixture happened"; sports temporal-availability stamping rules):
+  - Lineups: `kickoff - 60min` (conservative — clip earlier leaks).
+  - Injuries: event-time of the injury report (so feature for fixture F sees only injuries from prior fixtures).
+  - Pre-match odds: publication time per snapshot (opening days before, closing at kickoff).
+  - Post-match (understat xG, fixture_stats, results, sfi_progressive): `match_end_time` — NEVER available pre-kickoff.
+  - Weather forecasts: forecast-**issue** time (distinct from forecast-target time).
+  - If `available_at` is missing on disk for a source, stamp it at backfill-replay time before downstream consumes.
+
+  **`LookaheadBiasError` raised loud at every features-\* + MDPS compute, not warn-mode**: every input row consumed must
+  satisfy `input.available_at <= target_ts - horizon`. Strict-mode raise, not log-and-continue. Currently fires for
+  lst_yields; extend to every features-\* calculator. The UAC `feature_group → required_inputs` DAG drives the check.
+
+  **Validation gates per `record_captured` — 4 pillars** (any failure → `record_failed` with typed `error_reason`, never
+  `record_captured` with garbage rows):
+  1. **Row count > 0** unless source response was legitimately empty (then `record_empty`, not `record_captured`).
+  2. **NaN ratio per column < threshold** (per-feature-group threshold in UAC; the carry-tracer `write_gate_rejected`
+     pattern, currently inlined per-calculator — must be lifted to a UTL helper).
+  3. **Schema matches contract** (columns + types match UAC schema declaration).
+  4. **Cluster coverage ≥ expected** for bundled shards. Implementation:
+     `ManifestWriter.record_captured(expected_root_clusters: dict[str, int], cluster_extractor: Callable[[str], str])`;
+     under-coverage triggers `record_failed(ClusterCoverageError(missing=..., observed=...))` instead of writing the
+     parquet. Generalises to `options_chain` (ES.OPT 11-cluster), `futures_chain`, prediction canonical-question
+     bundles, sports fixture bundles.
+
+  Without all four, manifest is presence-only and partial bundles / empty placeholders pass silently. Reference
+  incidents: TradFi MVP **2026-05-06** (ES.OPT 18 single-parent fills, since refilled) and MDPS **2026-05-05** (1440
+  empty placeholder bars/day persisted for years before hand-inspection caught them).
+
+  **Manifest migration, NOT fallback**: when any manifest drifts from v5 canonical shape (pre-v5 row schema,
+  off-canonical paths, wrong row keys), write a one-time migration script (precedent
+  `instruments-service/scripts/migrate_local_sfi_to_canonical.py`) and **remove** the fallback reader. The one
+  documented exception that survives: hive-vocab `category=` vs `asset_group=` on-disk legacy preservation per the
+  Asset-group vocabulary section above (reader tries canonical first, falls back to legacy; do NOT rekey on-disk data).
+  Everything else: migrate, then delete the fallback path. Aligns with workspace "no try/except fallback imports" + "no
+  compat shims" rules.
+
+  **Companion plan + executor handover**: full per-service verify/fix/lift/build checklist with anti-patterns and
+  parallel-stream coordination notes in
+  `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (commit `d591416d`, locked
+  to `live-defi-rollout`). Sub-agents executing this work pick the rules up via this section + the handover doc
+  - SUB_AGENT_MANDATORY_RULES.md inheritance.
+
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
   The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead
