@@ -64,6 +64,14 @@ in your audit:
 
 ### Item 1 — Cluster-aware bundle validation (lands in UTL, affects your scope)
 
+> **2026-05-06 update — supersedes the framing below.** Item 1 is no longer a "parallel stream"; it's mainline contract
+> change inside
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](./writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> Phase 1A + Phase 2.A/2.B. `record_captured` gets `expected_root_clusters` + `cluster_extractor` as **mandatory kwargs
+> for any data_type ∈ UAC.BUNDLED_DATA_TYPES** (runtime guard + new QG STEP 5.64 static check). Single SSOT,
+> plug-in-everywhere; bundles 1440-NaN MDPS fix + sports per-fixture_id sharding + sports `available_at` correctness
+> into one work-package. The original framing below is kept for context.
+
 `ManifestWriter.record_captured` gets two new params: `expected_root_clusters: dict[str, int]` +
 `cluster_extractor: Callable[[str], str]`. At write-time, rows are counted per cluster; any expected-active cluster
 below its `min_rows` triggers `record_failed(ClusterCoverageError(missing=..., observed=...))` instead of writing the
@@ -378,54 +386,103 @@ I'll fold your report into the plan's pre-audit manifest and we'll phase the act
 
 # Phase 0 Audit Report (2026-05-06)
 
-Seven parallel Sonnet audits ran against the verify/fix/lift/build checklist. Findings below are file:line specific. Sections are ordered by service then UTL-lift scan; severity prefixes ✓ matches / ❌ mismatches / 🔀 wrong layer / ❓ unverified are in each section.
+Seven parallel Sonnet audits ran against the verify/fix/lift/build checklist. Findings below are file:line specific.
+Sections are ordered by service then UTL-lift scan; severity prefixes ✓ matches / ❌ mismatches / 🔀 wrong layer / ❓
+unverified are in each section.
 
 ## Cross-cutting themes (read this first)
 
 These show up in 3+ services — fix in UTL/UAC, not per-service:
 
-1. **v6 columns `combo_type` / `leg_weights` are dead** — defined in `manifest_writer.py:516,519` but no service writes them. MTDS chain bundles, MDPS chain-bundle outputs, instruments-service combo discovery all leave them at `""`.
-2. **Pre-flight is coarser than writer in 4 of 6 services** — MTDS skip-if-exists at `(venue, data_type, date)` but writer at v6 7-tuple; MDPS pre-flight lacks `timeframe`; features-delta-one and features-sports lack per-fixture/per-instrument granularity entirely; only instruments-service `_should_skip_shard` reads at full granularity.
-3. **Bundle / partial-shard detection is not wired anywhere** — every chain-bundle adapter (Tardis options/futures, Databento options/futures, perp_funding, sports per-(bookmaker, league)) accepts row_count > 0 as success. The TradFi MVP cluster-aware bundle gate (Item 1, parallel stream) lands in UTL `record_captured`; once it ships, every bundle adapter must pass `expected_root_clusters` + `cluster_extractor`. Audit confirms zero adapters do this today.
-4. **`available_at` stamping is partial and inconsistent** — instruments-service stamps `data_available_at` correctly per-source for sports; MDPS+features-delta-one use `timestamp + 500ms` synthetic; features-onchain doesn't stamp at all; features-sports uses processing-date midnight via `_ensure_timestamp` (defeats the PIT enforcer). Not the SSOT-prescribed stamping (kickoff−60min for lineups, event-time for injuries, match_end_time for post-match, forecast-issue-time for weather).
-5. **`record_empty` / `record_failed` adoption is partial** — instruments-service (✓), MTDS DeFi handlers (✓), features-sports batch_handler (✓). MDPS, features-delta-one, features-onchain only call `manifest.add()` (or its v6 equivalent) on success; missing/failed shards are invisible to the manifest. Phantom audit cannot detect "never attempted" vs "attempted and failed" for these services.
-6. **Empty placeholder bug class still latent in MDPS** — `_create_empty_output` returns n_candles-row NaN DataFrames in 15 adapters; the upstream `tick_data.empty` guard catches the common path, but adapter-internal "no ticks within valid intervals" branches (e.g. `swap_adapter.py:106`) can still feed 1440-row all-NaN DataFrames to the writer. The 2026-05-05 fix was data_type partition gating; the placeholder return shape itself was not changed.
-7. **Prediction `canonical_question_group` SSOT does not exist** — confirmed across instruments-service, MTDS, UAC. Polymarket and Kalshi shard at individual `condition_id` / `ticker` granularity. The shard key in the handover brief is greenfield; UAC needs a new symbol before any service can adopt it.
-8. **DAG SSOT `feature_group → required_inputs[]` is not in UAC** — features-onchain has it in `cli/parser.py` + `feature_builder_registry.py`; features-sports has it in `tracking/feature_builder_registry.py`; features-delta-one has it inlined locally. Three services, three DAGs, no UAC SSOT.
-9. **Dual-vocab probe is duplicated 7+ times** — features-onchain (2 places), features-cross-instrument, deployment-service, MDPS reprocess scripts, instruments-service migration scripts, execution-service. SSOT keys exist (`RAW_TICK_ASSET_GROUP_HIVE_KEY` / `_LEGACY` in `raw_tick_hive.py`); the probe utility does not.
-10. **Phantom audit is a script, not a UTL utility** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (with its 5 drift axes + ASSET_GROUP_CONFIG dict) is the canonical impl but not callable from other services without shelling out.
+1. **v6 columns `combo_type` / `leg_weights` are dead** — defined in `manifest_writer.py:516,519` but no service writes
+   them. MTDS chain bundles, MDPS chain-bundle outputs, instruments-service combo discovery all leave them at `""`.
+2. **Pre-flight is coarser than writer in 4 of 6 services** — MTDS skip-if-exists at `(venue, data_type, date)` but
+   writer at v6 7-tuple; MDPS pre-flight lacks `timeframe`; features-delta-one and features-sports lack
+   per-fixture/per-instrument granularity entirely; only instruments-service `_should_skip_shard` reads at full
+   granularity.
+3. **Bundle / partial-shard detection is not wired anywhere** — every chain-bundle adapter (Tardis options/futures,
+   Databento options/futures, perp_funding, sports per-(bookmaker, league)) accepts row_count > 0 as success. The TradFi
+   MVP cluster-aware bundle gate (Item 1, parallel stream) lands in UTL `record_captured`; once it ships, every bundle
+   adapter must pass `expected_root_clusters` + `cluster_extractor`. Audit confirms zero adapters do this today.
+4. **`available_at` stamping is partial and inconsistent** — instruments-service stamps `data_available_at` correctly
+   per-source for sports; MDPS+features-delta-one use `timestamp + 500ms` synthetic; features-onchain doesn't stamp at
+   all; features-sports uses processing-date midnight via `_ensure_timestamp` (defeats the PIT enforcer). Not the
+   SSOT-prescribed stamping (kickoff−60min for lineups, event-time for injuries, match_end_time for post-match,
+   forecast-issue-time for weather).
+5. **`record_empty` / `record_failed` adoption is partial** — instruments-service (✓), MTDS DeFi handlers (✓),
+   features-sports batch_handler (✓). MDPS, features-delta-one, features-onchain only call `manifest.add()` (or its v6
+   equivalent) on success; missing/failed shards are invisible to the manifest. Phantom audit cannot detect "never
+   attempted" vs "attempted and failed" for these services.
+6. **Empty placeholder bug class still latent in MDPS** — `_create_empty_output` returns n_candles-row NaN DataFrames in
+   15 adapters; the upstream `tick_data.empty` guard catches the common path, but adapter-internal "no ticks within
+   valid intervals" branches (e.g. `swap_adapter.py:106`) can still feed 1440-row all-NaN DataFrames to the writer. The
+   2026-05-05 fix was data_type partition gating; the placeholder return shape itself was not changed.
+7. **Prediction `canonical_question_group` SSOT does not exist** — confirmed across instruments-service, MTDS, UAC.
+   Polymarket and Kalshi shard at individual `condition_id` / `ticker` granularity. The shard key in the handover brief
+   is greenfield; UAC needs a new symbol before any service can adopt it.
+8. **DAG SSOT `feature_group → required_inputs[]` is not in UAC** — features-onchain has it in `cli/parser.py` +
+   `feature_builder_registry.py`; features-sports has it in `tracking/feature_builder_registry.py`; features-delta-one
+   has it inlined locally. Three services, three DAGs, no UAC SSOT.
+9. **Dual-vocab probe is duplicated 7+ times** — features-onchain (2 places), features-cross-instrument,
+   deployment-service, MDPS reprocess scripts, instruments-service migration scripts, execution-service. SSOT keys exist
+   (`RAW_TICK_ASSET_GROUP_HIVE_KEY` / `_LEGACY` in `raw_tick_hive.py`); the probe utility does not.
+10. **Phantom audit is a script, not a UTL utility** —
+    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (with its 5 drift axes + ASSET_GROUP_CONFIG
+    dict) is the canonical impl but not callable from other services without shelling out.
 
 ---
 
 ## instruments-service
 
 ### ✓ Matches
-- `_should_skip_shard` reads at full shard granularity — `engine/orchestrator.py:467–487`. Per-league sport pre-flight `_should_skip_date_for_per_league` iterates every expected canonical league before returning True (line 490–527; fixed 2026-05-05 regression).
-- `record_empty` / `record_failed` used consistently across all sources (FootyStats, Understat, Transfermarkt, SFI, etc.); no `record_captured` call site for zero-row paths.
-- `data_available_at` stamped at write-time per source: predictions T−72h from `kickoff_utc` (3918), fixtures T−7d (3271), per-fixture stats date+17:00 UTC (3446), FootyStats matches T+3h (4207), SFI kickoff+timer (5283).
+
+- `_should_skip_shard` reads at full shard granularity — `engine/orchestrator.py:467–487`. Per-league sport pre-flight
+  `_should_skip_date_for_per_league` iterates every expected canonical league before returning True (line 490–527; fixed
+  2026-05-05 regression).
+- `record_empty` / `record_failed` used consistently across all sources (FootyStats, Understat, Transfermarkt, SFI,
+  etc.); no `record_captured` call site for zero-row paths.
+- `data_available_at` stamped at write-time per source: predictions T−72h from `kickoff_utc` (3918), fixtures T−7d
+  (3271), per-fixture stats date+17:00 UTC (3446), FootyStats matches T+3h (4207), SFI kickoff+timer (5283).
 - `InstrumentsWriteGate` wraps every `sink.write()` via `_gated_sink_write` (257–286).
 - Shard-level isolation respected throughout; `classify_venue_error` used.
-- Phantom audit `reconcile_phantom_manifest_rows_all.py:64–154` correctly probes both `category=` and `asset_group=` across four path shapes per asset_group.
+- Phantom audit `reconcile_phantom_manifest_rows_all.py:64–154` correctly probes both `category=` and `asset_group=`
+  across four path shapes per asset_group.
 
 ### ❌ Mismatches
-- **Prediction shard key deviates** — POLYMARKET writer uses `data_type=<base_asset>` (BTC, ETH, SPX…) at `orchestrator.py:1990–1995`; brief specifies `canonical_question_group`. UAC has no such symbol. **Greenfield build needed in UAC first.**
-- **Bulk pre-flight `check_shard_freshness` coarser than per-league skip** — UTL `check_shard_freshness` at line 2259–2267 doesn't include `league_id` in match unless explicitly passed; orchestrator line 1224 calls without it. Per-league skip is recovered downstream by `_should_skip_date_for_per_league` but bulk gate gives false-positive freshness.
-- **Stale comment** — `orchestrator.py:4933` says "ManifestWriter v5 tolerates extra kwargs"; current schema is v6 (functionally harmless but misleading).
-- **`_validate_predictions_null_rates`** at `orchestrator.py:4064–4112` inlines NaN-ratio gate with hardcoded thresholds; should be UTL helper (lift candidate).
+
+- **Prediction shard key deviates** — POLYMARKET writer uses `data_type=<base_asset>` (BTC, ETH, SPX…) at
+  `orchestrator.py:1990–1995`; brief specifies `canonical_question_group`. UAC has no such symbol. **Greenfield build
+  needed in UAC first.**
+- **Bulk pre-flight `check_shard_freshness` coarser than per-league skip** — UTL `check_shard_freshness` at line
+  2259–2267 doesn't include `league_id` in match unless explicitly passed; orchestrator line 1224 calls without it.
+  Per-league skip is recovered downstream by `_should_skip_date_for_per_league` but bulk gate gives false-positive
+  freshness.
+- **Stale comment** — `orchestrator.py:4933` says "ManifestWriter v5 tolerates extra kwargs"; current schema is v6
+  (functionally harmless but misleading).
+- **`_validate_predictions_null_rates`** at `orchestrator.py:4064–4112` inlines NaN-ratio gate with hardcoded
+  thresholds; should be UTL helper (lift candidate).
 
 ### 🔀 Wrong layer
+
 - `_validate_predictions_null_rates` NaN-ratio gate (4064–4112) — lift to UTL.
 - `reconcile_phantom_manifest_rows_all.py` 5-axis drift probe + `ASSET_GROUP_CONFIG` (64–391) — lift to UTL.
-- `_extract_prediction_shard` / `_compute_prediction_shards` (2497–2524) — belongs in UAC once `canonical_question_group` lands.
+- `_extract_prediction_shard` / `_compute_prediction_shards` (2497–2524) — belongs in UAC once
+  `canonical_question_group` lands.
 
 ### ❓ Unverified
+
 - Existence of UAC `canonical_question_group` SSOT (confirmed absent; needs build item).
-- Whether `INSTRUMENT_PROCESSED` per-instrument progress events are emitted at a lower layer (URDI / UTL `DomainValidationService`) or are genuinely absent. CLAUDE.md cites them as CRITICAL post-2026-05-05; no emission found in instruments-service source.
-- Whether instruments-service manifest rows should carry v6 `quote_asset` / `margin_type` / `combo_type` / `leg_weights` (likely MTDS-only — needs UAC owner confirmation).
+- Whether `INSTRUMENT_PROCESSED` per-instrument progress events are emitted at a lower layer (URDI / UTL
+  `DomainValidationService`) or are genuinely absent. CLAUDE.md cites them as CRITICAL post-2026-05-05; no emission
+  found in instruments-service source.
+- Whether instruments-service manifest rows should carry v6 `quote_asset` / `margin_type` / `combo_type` / `leg_weights`
+  (likely MTDS-only — needs UAC owner confirmation).
 
 ### Migration items
+
 - 5 phantom-audit drift axes still on disk (per `reconcile_phantom_manifest_rows_all.py`).
-- Pre-v5 manifest rows still present; `dedupe_manifest_schema_drift.py` + `purge_legacy_unsharded_manifest_rows.py` exist but not in orchestrator path.
+- Pre-v5 manifest rows still present; `dedupe_manifest_schema_drift.py` + `purge_legacy_unsharded_manifest_rows.py`
+  exist but not in orchestrator path.
 
 ### `except: continue` — none found inside per-shard loops (all paths route through `classify_and_emit_error` + `record_failed`).
 
@@ -434,38 +491,58 @@ These show up in 3+ services — fix in UTL/UAC, not per-service:
 ## market-tick-data-service
 
 ### ✓ Matches
+
 - Hive SSOT via `raw_tick_hive.py:15` (`asset_group=` canonical, `category=` legacy fallback).
 - CeFi spot/perp per-instrument shard at `orchestrator.py:864–867`; options/futures bundle by underlying.
-- v6 `quote_asset` / `margin_type` wired through orchestrator (1616–1641, 1922–1928) and `PartitionedTickWriter.record_shard_count` (1058–1059). **Only service that writes these v6 columns.**
+- v6 `quote_asset` / `margin_type` wired through orchestrator (1616–1641, 1922–1928) and
+  `PartitionedTickWriter.record_shard_count` (1058–1059). **Only service that writes these v6 columns.**
 - TradFi `tradfi_shared.py:260` uses canonical key.
-- DeFi chain as first-class manifest axis (`_defi_manifest.py:120–162`); `canonical_write.py` separates venue from chain (14, 53–59, 235).
+- DeFi chain as first-class manifest axis (`_defi_manifest.py:120–162`); `canonical_write.py` separates venue from chain
+  (14, 53–59, 235).
 - All three manifest paths wired across DeFi handlers (`record_captured` / `record_empty` / `record_failed`).
 - Honest-coverage Tier-2/Tier-3 fan-out at `orchestrator.py:2012–2251`.
 - Sports shards at `(bookmaker, league_id)` (1739–1772).
-- Databento `except + continue` fix shipped (`databento_adapter.py:30–48`); `_PerSchemaFailure` propagates per-schema failures correctly.
+- Databento `except + continue` fix shipped (`databento_adapter.py:30–48`); `_PerSchemaFailure` propagates per-schema
+  failures correctly.
 - Pre-flight at `(venue, data_type)` granularity (1383–1435).
 - `DefiManifestRecorder` context manager flushes on exit (95–115), batch_size=1.
 
 ### ❌ Mismatches
-- **Prediction `canonical_question_group` not implemented** — `polymarket_adapter.py:454–602` and `kalshi_adapter.py:242–269` shard per `condition_id` / `ticker`. No grouping logic, no UAC reference.
-- **Sports per-fixture_id shard granularity collapsed** — `orchestrator.py:1739` groups by `(bookmaker, league)` only; per-fixture sub-grouping silently dropped. Brief spec is `(ag, source, dt, league_id, fixture_id|day-aggregate, day)`.
-- **GMX multi-chain sentinel coarse** — `perp_funding_handler.py:225` writes `chain=""` for GMX (Hyperliquid/Aster get `chain = protocol.upper()`). Comment on 223 acknowledges per-chain Tier-2 fan-out is a follow-up.
-- **`combo_type` / `leg_weights` v6 columns never written** — `orchestrator.py:1918–1928` calls `writer_manifest.add()` without either. No MTDS adapter populates them. UTL schema supports them.
-- **Skip-if-exists granularity** — `tick_data_handler.py:166` calls `check_shard_freshness()` at `(venue, data_type, date)`. For DERIBIT inverse vs linear (same `underlying`, different `quote_asset`/`margin_type`), captured linear suppresses re-download of missing inverse at the pre-flight gate. Tier-2/3 sentinel at 1857–1876 does use full v6 key, but pre-flight does not.
-- **Orchestrator DeFi venue-split list is hardcoded** — `orchestrator.py:1880–1908` has inline tuple of 27 protocol prefixes; will silently fail to split any new protocol. Duplicate check at 2093 uses `venue in _VENUE_MAPPING.all_defi_venues` — inconsistent. Rationalize on the mapping.
-- **Bundle row-count gate absent** — Tardis & Databento options/futures chain writers (`tardis_shared.py:596–702`, `databento_adapter.py:869–985`) accept partial bundles silently. ES.OPT 18/839 incident class.
-- Docstring drift: 9 DeFi handler docstrings still show `category=defi/` paths (actual writes use canonical `asset_group=defi`). Documentation drift only, not runtime.
+
+- **Prediction `canonical_question_group` not implemented** — `polymarket_adapter.py:454–602` and
+  `kalshi_adapter.py:242–269` shard per `condition_id` / `ticker`. No grouping logic, no UAC reference.
+- **Sports per-fixture_id shard granularity collapsed** — `orchestrator.py:1739` groups by `(bookmaker, league)` only;
+  per-fixture sub-grouping silently dropped. Brief spec is `(ag, source, dt, league_id, fixture_id|day-aggregate, day)`.
+- **GMX multi-chain sentinel coarse** — `perp_funding_handler.py:225` writes `chain=""` for GMX (Hyperliquid/Aster get
+  `chain = protocol.upper()`). Comment on 223 acknowledges per-chain Tier-2 fan-out is a follow-up.
+- **`combo_type` / `leg_weights` v6 columns never written** — `orchestrator.py:1918–1928` calls `writer_manifest.add()`
+  without either. No MTDS adapter populates them. UTL schema supports them.
+- **Skip-if-exists granularity** — `tick_data_handler.py:166` calls `check_shard_freshness()` at
+  `(venue, data_type, date)`. For DERIBIT inverse vs linear (same `underlying`, different `quote_asset`/`margin_type`),
+  captured linear suppresses re-download of missing inverse at the pre-flight gate. Tier-2/3 sentinel at 1857–1876 does
+  use full v6 key, but pre-flight does not.
+- **Orchestrator DeFi venue-split list is hardcoded** — `orchestrator.py:1880–1908` has inline tuple of 27 protocol
+  prefixes; will silently fail to split any new protocol. Duplicate check at 2093 uses
+  `venue in _VENUE_MAPPING.all_defi_venues` — inconsistent. Rationalize on the mapping.
+- **Bundle row-count gate absent** — Tardis & Databento options/futures chain writers (`tardis_shared.py:596–702`,
+  `databento_adapter.py:869–985`) accept partial bundles silently. ES.OPT 18/839 incident class.
+- Docstring drift: 9 DeFi handler docstrings still show `category=defi/` paths (actual writes use canonical
+  `asset_group=defi`). Documentation drift only, not runtime.
 
 ### 🔀 Wrong layer
+
 - `umi_tick_provider.py:225` calls `get_adapter(category="prediction_market")` — should use `asset_group=` vocabulary.
 - Docstring `category=` paths across 10 handlers — lift to a shared `CANONICAL_DEFI_PATH_EXAMPLE` constant.
 
 ### ❓ Unverified
+
 - UAC `canonical_question_group` SSOT (absent in MTDS; absent in UAC per other audits).
 - `check_shard_freshness()` internals (probes full v6 key or only `(venue, data_type, date)`).
-- On-disk migration status of `category=*` legacy objects (migration scripts exist for cefi/defi/tradfi/sports/prediction; run status unknown).
+- On-disk migration status of `category=*` legacy objects (migration scripts exist for
+  cefi/defi/tradfi/sports/prediction; run status unknown).
 
 ### Migration items
+
 - `category=` → `asset_group=` GCS objects across all asset groups; migration scripts exist; run status unknown.
 - Polymarket residual `category=prediction` objects per `migrate_polymarket_canonical.py`.
 
@@ -478,38 +555,71 @@ These show up in 3+ services — fix in UTL/UAC, not per-service:
 ## market-data-processing-service
 
 ### ✓ Matches
+
 - `_data_type_requires_partition` gate covers 22 canonical types (`orchestration_scanner.py:75–82`).
 - `dex_swaps` canonical registration fixed (`swap_adapter.py:24`) — 2026-05-05 root cause closed.
-- Chain-bundle `ticks.parquet` legacy detection routes to streaming split before eager download (`live_workers.py:531–601`) — both 2026-05-05 cross-symbol corruption and 2026-05-06 OOM addressed.
-- **Per-instrument `INSTRUMENT_PROCESSED` events with row counts + per-column non-null counts** at `live_workers.py:112–162` (`_TRACKED_NON_NULL_COLUMNS`). Directly closes the silent-success-with-zero-output gap.
-- `ManifestWriter.add()` in canonical path stamps `processing_date`, `venue`, `chain`, `instrument_type`, `data_type`, `timeframe`, `league_id`, `underlying`, `instrument_id`, `row_count` (`canonical_writer.py:309–335`). Explicit per-shard `flush()` prevents SIGKILL/OOM losing records.
-- Two-stage schema gate before GCS upload (`candle_write_mixin.py:262–286`, `canonical_writer.write_candle_parquet` `strict=True`).
+- Chain-bundle `ticks.parquet` legacy detection routes to streaming split before eager download
+  (`live_workers.py:531–601`) — both 2026-05-05 cross-symbol corruption and 2026-05-06 OOM addressed.
+- **Per-instrument `INSTRUMENT_PROCESSED` events with row counts + per-column non-null counts** at
+  `live_workers.py:112–162` (`_TRACKED_NON_NULL_COLUMNS`). Directly closes the silent-success-with-zero-output gap.
+- `ManifestWriter.add()` in canonical path stamps `processing_date`, `venue`, `chain`, `instrument_type`, `data_type`,
+  `timeframe`, `league_id`, `underlying`, `instrument_id`, `row_count` (`canonical_writer.py:309–335`). Explicit
+  per-shard `flush()` prevents SIGKILL/OOM losing records.
+- Two-stage schema gate before GCS upload (`candle_write_mixin.py:262–286`, `canonical_writer.write_candle_parquet`
+  `strict=True`).
 - Empty tick data routes to `_handle_empty_tick_data` (no placeholder parquet).
 
 ### ❌ Mismatches
-- **`canonical_writer.add()` missing v6 `quote_asset` / `margin_type` / `combo_type` / `leg_weights`** (`canonical_writer.py:313–326`). UTL accepts them; MDPS doesn't pass them. DERIBIT inverse vs linear collide at the same row-key.
-- **`orchestration_service._write_manifest_records` is v3-shaped** (`orchestration_service.py:329–388`). Parallel manifest write per (venue, data_type, timeframe) summary, lacking `instrument_type`, `chain`, `league_id`, `instrument_id`, `quote_asset`, `margin_type`. Same `ManifestWriter` buffer → row-key collisions with the canonical v6 write. Docstring still says "v4 shard tuple."
-- **`_create_empty_output` placeholder pattern still latent** — 15 adapters return n_candles-row NaN DataFrames (cefi/trades, derivative, book_snapshot, liquidations, futures_chain, options_chain; defi/swap, liquidity, market_state; tradfi/trades, tbbo; sports/odds_snapshot, odds_movement, arbitrage). Upstream `tick_data.empty` guard catches the common path, but adapter-internal "no ticks within valid intervals" branches (e.g. `swap_adapter.py:106`) can reach `_write_candles` with 1440 NaN rows. **The fix is to return 0-row CandleOutput, not n_candles-row NaN.**
-- **Pre-flight missing `timeframe` axis** — `dependency_checker.py:313–397`, `process_handler.py:256–293` probe `(date, venue, data_type)` only. Incremental timeframe backfill blocked by freshness check.
-- **Scanner data_type set incomplete** — `_CEFI_TRADFI_DEFI_DATA_TYPES` (orchestration_scanner.py:46–72) missing `dex_pool_swaps`, `evm_defi_lending`, `evm_defi_amm`, `staking_yields` (all in `_DATA_TYPE_TO_MDPS_PREFIX`). Falls back to "all parquets" branch for unknown types.
-- **Adapter registry mismatch** — DEFI `liquidity`, `market_state`, `fx_rates` registered in their adapter files but **not imported in `adapters/__init__.py`**. Decorator never fires → registry has no entry → "<1s, 0/0 succeeded" symptom. Same class as 2026-05-05 `dex_swaps`.
+
+- **`canonical_writer.add()` missing v6 `quote_asset` / `margin_type` / `combo_type` / `leg_weights`**
+  (`canonical_writer.py:313–326`). UTL accepts them; MDPS doesn't pass them. DERIBIT inverse vs linear collide at the
+  same row-key.
+- **`orchestration_service._write_manifest_records` is v3-shaped** (`orchestration_service.py:329–388`). Parallel
+  manifest write per (venue, data_type, timeframe) summary, lacking `instrument_type`, `chain`, `league_id`,
+  `instrument_id`, `quote_asset`, `margin_type`. Same `ManifestWriter` buffer → row-key collisions with the canonical v6
+  write. Docstring still says "v4 shard tuple."
+- **`_create_empty_output` placeholder pattern still latent** — 15 adapters return n_candles-row NaN DataFrames
+  (cefi/trades, derivative, book_snapshot, liquidations, futures_chain, options_chain; defi/swap, liquidity,
+  market_state; tradfi/trades, tbbo; sports/odds_snapshot, odds_movement, arbitrage). Upstream `tick_data.empty` guard
+  catches the common path, but adapter-internal "no ticks within valid intervals" branches (e.g. `swap_adapter.py:106`)
+  can reach `_write_candles` with 1440 NaN rows. **The fix is to return 0-row CandleOutput, not n_candles-row NaN.**
+- **Pre-flight missing `timeframe` axis** — `dependency_checker.py:313–397`, `process_handler.py:256–293` probe
+  `(date, venue, data_type)` only. Incremental timeframe backfill blocked by freshness check.
+- **Scanner data_type set incomplete** — `_CEFI_TRADFI_DEFI_DATA_TYPES` (orchestration_scanner.py:46–72) missing
+  `dex_pool_swaps`, `evm_defi_lending`, `evm_defi_amm`, `staking_yields` (all in `_DATA_TYPE_TO_MDPS_PREFIX`). Falls
+  back to "all parquets" branch for unknown types.
+- **Adapter registry mismatch** — DEFI `liquidity`, `market_state`, `fx_rates` registered in their adapter files but
+  **not imported in `adapters/__init__.py`**. Decorator never fires → registry has no entry → "<1s, 0/0 succeeded"
+  symptom. Same class as 2026-05-05 `dex_swaps`.
 
 ### 🔀 Wrong layer
-- **No NaN-ratio threshold gate at write-time anywhere in MDPS.** `ParquetSchemaEnforcer` only checks presence/types. Lift to UTL `StreamingParquetWriter` so MDPS / MTDS / features-* share threshold semantics.
+
+- **No NaN-ratio threshold gate at write-time anywhere in MDPS.** `ParquetSchemaEnforcer` only checks presence/types.
+  Lift to UTL `StreamingParquetWriter` so MDPS / MTDS / features-\* share threshold semantics.
 - Dual-vocab probe duplicated in `orchestration_scanner.py:75–95` and `process_handler.py:256–277`.
 - `_normalise_timeframe("24h" → "1d")` in `canonical_writer.py:59–67` — should be UTL.
 
 ### ❓ Unverified
-- Whether `INSTRUMENT_PROCESSED` events fire on the streaming-bundle path (`_process_chain_bundle_streaming` → `_streaming_write_per_tf` → `_write_candles` → `canonical_writer.write_candle_parquet`; emission lives in `_process_all_timeframes` only).
-- Whether `_write_manifest_records` is invoked for SPORTS / PREDICTION asset groups (would corrupt `league_id` / canonical_question_group axes).
+
+- Whether `INSTRUMENT_PROCESSED` events fire on the streaming-bundle path (`_process_chain_bundle_streaming` →
+  `_streaming_write_per_tf` → `_write_candles` → `canonical_writer.write_candle_parquet`; emission lives in
+  `_process_all_timeframes` only).
+- Whether `_write_manifest_records` is invoked for SPORTS / PREDICTION asset groups (would corrupt `league_id` /
+  canonical_question_group axes).
 
 ### `except: continue` — multiple silent-drop instances flagged
-- `live_workers.py:512–519` — per-symbol streaming failure swallowed in `_iter_chain_symbol_dfs`; symbol silently dropped from candle output, no `record_failed`.
-- `live_workers.py:773–779`, `835–841` — per-instrument exception in `_process_chain_timeframe(_by_symbol)` calls `classify_and_emit_error` but doesn't append to caller's error accumulator → looks like success.
-- `dependency_checker.py:461`, `515` — pre-flight storage errors classified but caller treats as "data unavailable" (False) or "assume available" (True), no event distinguishing "check failed" from "data absent."
-- `candle_write_mixin.py:141–143` — write failure logged, returns None, **no `record_failed` row** → shard permanently invisible to manifest.
+
+- `live_workers.py:512–519` — per-symbol streaming failure swallowed in `_iter_chain_symbol_dfs`; symbol silently
+  dropped from candle output, no `record_failed`.
+- `live_workers.py:773–779`, `835–841` — per-instrument exception in `_process_chain_timeframe(_by_symbol)` calls
+  `classify_and_emit_error` but doesn't append to caller's error accumulator → looks like success.
+- `dependency_checker.py:461`, `515` — pre-flight storage errors classified but caller treats as "data unavailable"
+  (False) or "assume available" (True), no event distinguishing "check failed" from "data absent."
+- `candle_write_mixin.py:141–143` — write failure logged, returns None, **no `record_failed` row** → shard permanently
+  invisible to manifest.
 
 ### Migration items
+
 - v3-shaped summary rows from `orchestration_service._write_manifest_records` co-exist with v6 canonical rows.
 - Stale comment in `canonical_writer.py:7` says "v4 manifest row."
 
@@ -518,35 +628,56 @@ These show up in 3+ services — fix in UTL/UAC, not per-service:
 ## features-onchain-service
 
 ### ✓ Matches
-- `FeatureWriteGate` with `nan_threshold=0.95` + row-count==0 guard + `PointInTimeEnforcer` (`feature_writer.py:52–66, 119–133, 270–324`). Gate evaluates on every write path (154–180).
-- `LookaheadBiasError` imported from UTL (no local re-declare); raised in production (strict=True) for **all** feature_groups (`macro_sentiment`, `lending_rates`, `lst_yields`, `onchain_perps`). Handover claim that it fires only for `lst_yields` is no longer true.
-- Per-day write isolation in `_process_daily_feature_group` and `_process_lst_yields` (1087–1177, 482–567) — fixes the prior concat-then-write-once bug.
+
+- `FeatureWriteGate` with `nan_threshold=0.95` + row-count==0 guard + `PointInTimeEnforcer`
+  (`feature_writer.py:52–66, 119–133, 270–324`). Gate evaluates on every write path (154–180).
+- `LookaheadBiasError` imported from UTL (no local re-declare); raised in production (strict=True) for **all**
+  feature_groups (`macro_sentiment`, `lending_rates`, `lst_yields`, `onchain_perps`). Handover claim that it fires only
+  for `lst_yields` is no longer true.
+- Per-day write isolation in `_process_daily_feature_group` and `_process_lst_yields` (1087–1177, 482–567) — fixes the
+  prior concat-then-write-once bug.
 - Dual-vocab probe in MTDS canonical reader (`mtds_canonical_reader.py:116–135`) — but inlined, not via UTL helper.
-- `FEATURE_GROUP_WINDOW_SUMMARY` event emits `rows_total`, `days_written`, `days_attempted` per feature_group (`orchestrator.py:1161–1172`); `LST_DAY_PROCESSED` per-day with row count + token list (654–666).
+- `FEATURE_GROUP_WINDOW_SUMMARY` event emits `rows_total`, `days_written`, `days_attempted` per feature_group
+  (`orchestrator.py:1161–1172`); `LST_DAY_PROCESSED` per-day with row count + token list (654–666).
 - Schema validation in `onchain_writer.py:41` via `BaseGCSWriter` + local `ONCHAIN_FEATURES_SCHEMA`.
 - Shard-level failure isolation in batch_handler (113–136).
 
 ### ❌ Mismatches
-- **Manifest `writer.add()` missing `chain`, `timeframe`, `instrument_id` for all feature_groups** (`orchestrator.py:167–171`). Single call passes only `processing_date`, `row_count`, `feature_group`. v6 shard key requires `chain` (DeFi first-class), `timeframe`, `instrument_id_or_protocol_id`. **Primary manifest-drift gap.**
-- **`record_empty` / `record_failed` never called** — when feature_group returns False or raises, no manifest row is emitted. Neither symbol exists anywhere in service source. Empty/failed shards invisible to manifest.
-- **`output_schemas.py:60` has `chain` column nullable** but calculators don't populate it. `lending_rates` strips chain at calculator layer.
-- **Primary writer (`feature_writer.py`) doesn't validate against UAC contract** — only `validate_feature_dataframe` (timestamp checks). Secondary `OnChainWriter` validates schema but is not on the primary code path.
+
+- **Manifest `writer.add()` missing `chain`, `timeframe`, `instrument_id` for all feature_groups**
+  (`orchestrator.py:167–171`). Single call passes only `processing_date`, `row_count`, `feature_group`. v6 shard key
+  requires `chain` (DeFi first-class), `timeframe`, `instrument_id_or_protocol_id`. **Primary manifest-drift gap.**
+- **`record_empty` / `record_failed` never called** — when feature_group returns False or raises, no manifest row is
+  emitted. Neither symbol exists anywhere in service source. Empty/failed shards invisible to manifest.
+- **`output_schemas.py:60` has `chain` column nullable** but calculators don't populate it. `lending_rates` strips chain
+  at calculator layer.
+- **Primary writer (`feature_writer.py`) doesn't validate against UAC contract** — only `validate_feature_dataframe`
+  (timestamp checks). Secondary `OnChainWriter` validates schema but is not on the primary code path.
 
 ### 🔀 Wrong layer
-- `FEATURE_GROUPS` list + per-group `_metadata` in `cli/parser.py:9–22` and `feature_builder_registry.py:59–76` — should be UAC SSOT for `feature_group → required_inputs[]`.
-- `nan_threshold=0.95` hardcoded inline (`feature_writer.py:61`) — should be UTL `WriteGateConfig` per-domain default or UAC contract.
-- `ONCHAIN_FEATURES_SCHEMA` defined locally (`output_schemas.py:34–63`) — overlaps UAC manifest shard dimensions; no UAC contract validates output shape pre-`record_captured`.
+
+- `FEATURE_GROUPS` list + per-group `_metadata` in `cli/parser.py:9–22` and `feature_builder_registry.py:59–76` — should
+  be UAC SSOT for `feature_group → required_inputs[]`.
+- `nan_threshold=0.95` hardcoded inline (`feature_writer.py:61`) — should be UTL `WriteGateConfig` per-domain default or
+  UAC contract.
+- `ONCHAIN_FEATURES_SCHEMA` defined locally (`output_schemas.py:34–63`) — overlaps UAC manifest shard dimensions; no UAC
+  contract validates output shape pre-`record_captured`.
 
 ### ❓ Unverified
-- `available_at` per UTL manifest SSOT semantics — service stamps `timestamp_out = timestamp + 500ms` synthetic delay (255–257) but no `available_at` in output schema or manifest row.
-- Whether downstream pre-flight reads UAC `feature_group → required_inputs[]` table — `DependencyChecker.UPSTREAM_DEPS` (41–63) is bucket-level only; UAC import path for the registry not found.
+
+- `available_at` per UTL manifest SSOT semantics — service stamps `timestamp_out = timestamp + 500ms` synthetic delay
+  (255–257) but no `available_at` in output schema or manifest row.
+- Whether downstream pre-flight reads UAC `feature_group → required_inputs[]` table — `DependencyChecker.UPSTREAM_DEPS`
+  (41–63) is bucket-level only; UAC import path for the registry not found.
 
 ### `except: continue` — typed and classified, acceptable
+
 - `mtds_canonical_reader.py:128–130` — typed exceptions, logged, isolated.
 - `mock_data_provider.py:291,311`, `service.py:89` — broad catch but at boundaries with `classify_and_emit_error()`.
 - No bare `except:` anywhere.
 
 ### Migration items
+
 - Add `chain`, `timeframe`, `instrument_id` to `writer.add()` (`orchestrator.py:167–171`).
 - Add `record_empty` / `record_failed` paths.
 - Propagate `chain` from MTDS shard into output parquet for `lending_rates` / `lst_yields` / `onchain_perps`.
@@ -557,7 +688,9 @@ These show up in 3+ services — fix in UTL/UAC, not per-service:
 ## features-sports-service
 
 ### ✓ Matches
-- Shard-level isolation: per-table/per-feature_group catches typed exceptions, NEVER raises (`batch_handler.py:369,456,519,589`).
+
+- Shard-level isolation: per-table/per-feature_group catches typed exceptions, NEVER raises
+  (`batch_handler.py:369,456,519,589`).
 - `record_empty` / `record_failed` distinction honoured (`batch_handler.py:356,378,449,464,512,527,582,597`).
 - `ManifestWriter` from UTL imported once per batch (286).
 - Pre-flight `manifest.lookup()` checks `capture_status in ("captured", "empty_confirmed")` (291–320).
@@ -569,47 +702,71 @@ These show up in 3+ services — fix in UTL/UAC, not per-service:
 - `asof_lookup` `timestamp_col <= as_of` filter (`pipeline/_asof.py:81`).
 
 ### ❌ Mismatches (MAJOR)
-- **Shard key missing `timeframe` and `fixture_id` everywhere** — every `record_empty` / `record_failed` / `add` row_key uses only `{date, feature_group}` ± `league_id`. Brief target: `(feature_group, timeframe, league_id, fixture_id, day)`. Per-fixture drilldown impossible.
-- **`manifest.add` instead of `record_captured`** for captured rows (`batch_handler.py:614–627`). v6 SSOT method explicitly sets `capture_status="captured"`; legacy `add` may not — needs UTL verification.
-- **`export_derived_features` called without `horizon=` in batch mode** (`batch_handler.py:491`). Horizon gate + `validate_pit_compliance` therefore dead in batch (`derived_features_exporter.py:583–594`). Single flat parquet mixes all horizons, post-match actuals (home_goals, away_xg) leak freely.
-- **`_FEATURE_GROUP_TO_DATA_TYPE` covers only 3 of 14+ groups** (`batch_handler.py:29–33`). 11 raw groups (`fixture_stats`, `injuries`, `fixture_lineups`, `player_stats`, `standings`, etc.) write `data_type=""` → invisible to data-status reader.
-- **No per-`(feature_group, horizon)` shard writes** — single daily parquet per feature_group; no `record_empty` for invalid combos.
+
+- **Shard key missing `timeframe` and `fixture_id` everywhere** — every `record_empty` / `record_failed` / `add` row_key
+  uses only `{date, feature_group}` ± `league_id`. Brief target:
+  `(feature_group, timeframe, league_id, fixture_id, day)`. Per-fixture drilldown impossible.
+- **`manifest.add` instead of `record_captured`** for captured rows (`batch_handler.py:614–627`). v6 SSOT method
+  explicitly sets `capture_status="captured"`; legacy `add` may not — needs UTL verification.
+- **`export_derived_features` called without `horizon=` in batch mode** (`batch_handler.py:491`). Horizon gate +
+  `validate_pit_compliance` therefore dead in batch (`derived_features_exporter.py:583–594`). Single flat parquet mixes
+  all horizons, post-match actuals (home_goals, away_xg) leak freely.
+- **`_FEATURE_GROUP_TO_DATA_TYPE` covers only 3 of 14+ groups** (`batch_handler.py:29–33`). 11 raw groups
+  (`fixture_stats`, `injuries`, `fixture_lineups`, `player_stats`, `standings`, etc.) write `data_type=""` → invisible
+  to data-status reader.
+- **No per-`(feature_group, horizon)` shard writes** — single daily parquet per feature_group; no `record_empty` for
+  invalid combos.
 
 ### 🔀 Wrong layer
-- `_ensure_timestamp` synthesises midnight-UTC for missing `timestamp` (`batch_handler.py:145–150`) — defeats PIT enforcer (`writer.py:101`); should derive from kickoff/match_end per source.
-- `HORIZON_SCHEMA_FILENAME` sidecar best-effort with bare `except Exception` (`writer.py:155–207`) — silent failure means downstream ml-training has no horizon gate.
+
+- `_ensure_timestamp` synthesises midnight-UTC for missing `timestamp` (`batch_handler.py:145–150`) — defeats PIT
+  enforcer (`writer.py:101`); should derive from kickoff/match_end per source.
+- `HORIZON_SCHEMA_FILENAME` sidecar best-effort with bare `except Exception` (`writer.py:155–207`) — silent failure
+  means downstream ml-training has no horizon gate.
 - `tracking/feature_builder_registry.py` `required_inputs` DAG should be in UAC.
 
 ### ❓ Unverified
+
 - Whether `ManifestWriter.add()` sets `capture_status="captured"` (UTL read needed).
 - Whether data-status reader falls back to scanning by `feature_group` when `data_type=""`.
 - UAC `SPORTS_DATA_TYPE_META` contents (3 vs 14+ groups expected at data-status layer).
 
 ### available_at stamping per source — **all wrong**
-| Source | Spec | Actual |
-|---|---|---|
-| Lineups | `kickoff − 60min` | midnight via `_ensure_timestamp` (no kickoff-relative clip) |
-| Injuries | event-time of injury report | midnight; `injury_impact_calculator.py:98–172` includes ALL injuries regardless of fixture timing |
-| Pre-match odds | publication time per snapshot | implicit via MDPS `bm_time`, no explicit `publication_time` column |
-| Post-match (xG, fixture_stats, sfi_progressive) | `match_end_time` | midnight; horizon gate dead in batch (no `horizon=` arg) → **post-match leaks freely** |
-| Weather | forecast-issue time | midnight via `_ensure_timestamp` (forecast-target time used for API only) |
+
+| Source                                          | Spec                          | Actual                                                                                            |
+| ----------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| Lineups                                         | `kickoff − 60min`             | midnight via `_ensure_timestamp` (no kickoff-relative clip)                                       |
+| Injuries                                        | event-time of injury report   | midnight; `injury_impact_calculator.py:98–172` includes ALL injuries regardless of fixture timing |
+| Pre-match odds                                  | publication time per snapshot | implicit via MDPS `bm_time`, no explicit `publication_time` column                                |
+| Post-match (xG, fixture_stats, sfi_progressive) | `match_end_time`              | midnight; horizon gate dead in batch (no `horizon=` arg) → **post-match leaks freely**            |
+| Weather                                         | forecast-issue time           | midnight via `_ensure_timestamp` (forecast-target time used for API only)                         |
 
 ### LookaheadBiasError coverage
+
 - orchestrator (live mode): correct.
-- writer.py (batch mode): `except LookaheadBiasError: pass` because `strict=False` — silently downgrades to warning. Future-timestamped observations never block writes (`writer.py:65–66`).
-- All 14+ calculators: zero raises, zero `available_at <= kickoff − N` guards. Horizon enforcement post-hoc (`apply_horizon_gate` after compute), not per-input.
+- writer.py (batch mode): `except LookaheadBiasError: pass` because `strict=False` — silently downgrades to warning.
+  Future-timestamped observations never block writes (`writer.py:65–66`).
+- All 14+ calculators: zero raises, zero `available_at <= kickoff − N` guards. Horizon enforcement post-hoc
+  (`apply_horizon_gate` after compute), not per-input.
 
 ### Horizon × feature_group validity matrix
-Service produces **flat daily parquet per feature_group**, no per-horizon shards. Effectively every (post-match group × every horizon) silently writes FT-data into pre-kickoff horizons. The horizon gate exists only inside `derived_features` when `horizon=` is passed — which batch handler never does.
+
+Service produces **flat daily parquet per feature_group**, no per-horizon shards. Effectively every (post-match group ×
+every horizon) silently writes FT-data into pre-kickoff horizons. The horizon gate exists only inside `derived_features`
+when `horizon=` is passed — which batch handler never does.
 
 ### `except: continue` — multiple, mostly low-impact
+
 - `derived_features_exporter.py:229–230` — bare `except Exception: pass` in dtype coercion loop.
 - `writer.py:65–66` — `except LookaheadBiasError: pass` in `strict=False` mode (the bug above).
-- `batch_handler.py:629–630` — manifest write failure non-fatal; **if it fires, no manifest row written for entire day's batch.**
-- `batch_handler.py:171–172` — `_table_exists_in_gcs` GCS auth failure silently treated as "doesn't exist" → unnecessary recompute.
+- `batch_handler.py:629–630` — manifest write failure non-fatal; **if it fires, no manifest row written for entire day's
+  batch.**
+- `batch_handler.py:171–172` — `_table_exists_in_gcs` GCS auth failure silently treated as "doesn't exist" → unnecessary
+  recompute.
 - `bucketed_features_calculator.py:149,163,177,193,201,211,225,243` — 8× swallowed bucketing failures, no metric.
 
 ### Migration items
+
 - Add `timeframe` + `fixture_id` to all manifest row_keys.
 - Extend `_FEATURE_GROUP_TO_DATA_TYPE` to all 14 raw groups.
 - Replace `manifest.add(processing_date=...)` with `record_captured(row_key=...)`.
@@ -620,9 +777,13 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
 ## features-delta-one-service
 
 ### ✓ Matches
-- Shard key `(feature_group, timeframe)` in every `writer.add()` (`orchestrator.py:316–327`); `_write_parquet` partitions by `{day, feature_group, timeframe}` (`feature_writer.py:535–545`).
-- `timestamp_out = timestamp + 500ms` synthetic delay applied universally (`feature_writer.py:558–563`); `PointInTimeViolation` raised on `timestamp_out <= timestamp` (577–590).
-- Dual-layer NaN-ratio gate: `NaNHandler.validate_nan_ratio` (50%) pre-persist (`orchestrator.py:525–535`); `FeatureWriteGate` re-checked in writer (264–279).
+
+- Shard key `(feature_group, timeframe)` in every `writer.add()` (`orchestrator.py:316–327`); `_write_parquet`
+  partitions by `{day, feature_group, timeframe}` (`feature_writer.py:535–545`).
+- `timestamp_out = timestamp + 500ms` synthetic delay applied universally (`feature_writer.py:558–563`);
+  `PointInTimeViolation` raised on `timestamp_out <= timestamp` (577–590).
+- Dual-layer NaN-ratio gate: `NaNHandler.validate_nan_ratio` (50%) pre-persist (`orchestrator.py:525–535`);
+  `FeatureWriteGate` re-checked in writer (264–279).
 - Schema gate via `ParquetSchemaEnforcer` + `validate_feature_columns_not_null` (`feature_writer.py:598–632`).
 - Timestamp-alignment gate (100% threshold).
 - Sports excluded from valid set (correct).
@@ -631,26 +792,47 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
 - `MANIFEST_SCHEMA_VERSION=v6` stamped automatically inside UTL.
 
 ### ❌ Mismatches
-- **Manifest row key missing `venue`, `instrument_type`, `instrument_id`** (`orchestrator.py:316–326`). Canonical: `(ag, service, feature_group, timeframe, venue, instrument_type, instrument_id, day)`. Every venue collapses into a single row per `(date, feature_group, timeframe)`. Per-venue coverage rollup broken.
+
+- **Manifest row key missing `venue`, `instrument_type`, `instrument_id`** (`orchestrator.py:316–326`). Canonical:
+  `(ag, service, feature_group, timeframe, venue, instrument_type, instrument_id, day)`. Every venue collapses into a
+  single row per `(date, feature_group, timeframe)`. Per-venue coverage rollup broken.
 - **Second `writer.add()` call drops `timeframe`** (322–326), creating timeless duplicate rows. No spec justification.
-- **`DependencyError` raised without `fail_fast=True`** (`batch_handler.py:121–124`). UTL `DependencyError` (`dependency_checker.py:32`) is plain `Exception` subclass — `fail_fast` kwarg doesn't exist. Class needs the attribute.
-- **Multi-timeframe loop absent from DAG driver** — `_process_one_group` calls `process_feature_group` once with single timeframe (`batch_handler.py:513–536`). CLI default `--timeframe 15s` (parser.py:77–81) is outside the audit-mandated `{1m, 5m, 1h}` set. Operator must invoke CLI three times.
-- **`available_at` not passed to `writer.add()` explicitly** — service uses `.add()` not `.record_captured(row_key=...)`. `record_empty` / `record_failed` never called. Only successful shards in manifest.
+- **`DependencyError` raised without `fail_fast=True`** (`batch_handler.py:121–124`). UTL `DependencyError`
+  (`dependency_checker.py:32`) is plain `Exception` subclass — `fail_fast` kwarg doesn't exist. Class needs the
+  attribute.
+- **Multi-timeframe loop absent from DAG driver** — `_process_one_group` calls `process_feature_group` once with single
+  timeframe (`batch_handler.py:513–536`). CLI default `--timeframe 15s` (parser.py:77–81) is outside the audit-mandated
+  `{1m, 5m, 1h}` set. Operator must invoke CLI three times.
+- **`available_at` not passed to `writer.add()` explicitly** — service uses `.add()` not
+  `.record_captured(row_key=...)`. `record_empty` / `record_failed` never called. Only successful shards in manifest.
 
 ### 🔀 Wrong layer
-- `FEATURE_GROUP_DATA_TYPES`, `TRADFI_DATA_TYPE_OVERRIDES`, `DEFI_DATA_TYPE_OVERRIDES`, `PREDICTION_DATA_TYPE_OVERRIDES` redeclared locally (`orchestrator.py:64–129`) with comment saying UAC is now SSOT — **dead drift-risk code, delete**.
-- `ExpectedCandleCalculator`, `LookbackValidator`, `calculate_buffer_days` (`dependency_checker.py:205–616`) — service-local market-hours logic; should live in UTL `BaseDependencyChecker` or a UTL calendar utility.
+
+- `FEATURE_GROUP_DATA_TYPES`, `TRADFI_DATA_TYPE_OVERRIDES`, `DEFI_DATA_TYPE_OVERRIDES`, `PREDICTION_DATA_TYPE_OVERRIDES`
+  redeclared locally (`orchestrator.py:64–129`) with comment saying UAC is now SSOT — **dead drift-risk code, delete**.
+- `ExpectedCandleCalculator`, `LookbackValidator`, `calculate_buffer_days` (`dependency_checker.py:205–616`) —
+  service-local market-hours logic; should live in UTL `BaseDependencyChecker` or a UTL calendar utility.
 
 ### ❓ Unverified
-- Whether MDPS manifest is probed before loading candles. `DataLoader._collect_daily_frames` reads GCS blob paths directly (`data_loader.py:212–247`) with `FileNotFoundError: continue`. No per-shard manifest pre-flight; `DependencyError(fail_fast=True)` only raised for upstream service bucket entirely absent, not per-`(venue, data_type, instrument_type, instrument_id, timeframe)` shard.
-- Shard-level DAG test coverage — `test_shard_combinatorics.py` defers to `unified-trading-deployment-v2` (auto-skipped via `pytest.importorskip`).
+
+- Whether MDPS manifest is probed before loading candles. `DataLoader._collect_daily_frames` reads GCS blob paths
+  directly (`data_loader.py:212–247`) with `FileNotFoundError: continue`. No per-shard manifest pre-flight;
+  `DependencyError(fail_fast=True)` only raised for upstream service bucket entirely absent, not
+  per-`(venue, data_type, instrument_type, instrument_id, timeframe)` shard.
+- Shard-level DAG test coverage — `test_shard_combinatorics.py` defers to `unified-trading-deployment-v2` (auto-skipped
+  via `pytest.importorskip`).
 
 ### `except: continue` — both acceptable
-- `data_loader.py:197–198` — `except FileNotFoundError: continue` inside candidate-path loop (intentional fallback chain).
-- `app/calculators/base.py:144–145` — typed exceptions inside `normalize_distribution` transform-selection loop. Includes `RuntimeWarning` catch which is unusual (only fires under `simplefilter("error")`).
+
+- `data_loader.py:197–198` — `except FileNotFoundError: continue` inside candidate-path loop (intentional fallback
+  chain).
+- `app/calculators/base.py:144–145` — typed exceptions inside `normalize_distribution` transform-selection loop.
+  Includes `RuntimeWarning` catch which is unusual (only fires under `simplefilter("error")`).
 
 ### Migration items
-- Add `venue`, `instrument_type`, `instrument_id` to `writer.add()`. Switch to `record_captured(row_key=...)` to enable `record_empty` / `record_failed`.
+
+- Add `venue`, `instrument_type`, `instrument_id` to `writer.add()`. Switch to `record_captured(row_key=...)` to enable
+  `record_empty` / `record_failed`.
 - Remove second timeless `writer.add()` (322–326).
 - Add `fail_fast: bool = True` to UTL `DependencyError.__init__`; update batch_handler raise site.
 - Add MDPS per-shard manifest pre-flight before candle load.
@@ -662,9 +844,11 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
 ## UTL-lift candidates summary
 
 ### Already in UTL (✓)
+
 - `LookaheadBiasError` (`point_in_time.py:36`).
 - `LookaheadBiasGuard` (`feature_calculator/liquidation_bands.py:322`).
-- `FeatureWriteGate` / `WriteGateConfig` (`feature_service_base/write_gate.py`) — adopted by features-onchain, features-cross-instrument, features-volatility, features-delta-one, features-sports.
+- `FeatureWriteGate` / `WriteGateConfig` (`feature_service_base/write_gate.py`) — adopted by features-onchain,
+  features-cross-instrument, features-volatility, features-delta-one, features-sports.
 - `check_nan_ratio` / `find_excessive_nan_cols` (`feature_calculator/base_validation.py:42, 32`).
 - `run_lifecycle` (`events/run_lifecycle.py`).
 - `columns_available_at_horizon` (`feature_service_base/horizon_gate.py:76`).
@@ -673,6 +857,7 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
 ### Lift candidates (duplicated per-service)
 
 **1. Dual-vocab probe** → `unified_trading_library/hive_vocab.py` (proposed)
+
 - features-onchain `mtds_canonical_reader.py:53–55` + `eigen_rewards_calculator.py:46–55`
 - features-cross-instrument `batch_handler.py:65–100`
 - deployment-service `shard_builder.py:254`
@@ -681,52 +866,75 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
 - execution-service `defi_arbitrage_dispersion_decision_trace.py:274`
 - 7+ inlined copies; SSOT keys exist (`RAW_TICK_ASSET_GROUP_HIVE_KEY` / `_LEGACY`) but probe utility doesn't.
 
-**2. Write-gate helper extension** → `unified_trading_library/write_gates.py` (extend `feature_service_base/write_gate.py`)
-- (a) Row-count==0 standalone gate — currently inlined at `features-cross-instrument/base_calculator.py:166`, `features-delta-one/base_calculator.py:152`, `microstructure.py:43`, `funding_oi.py:43`, `futures_basis.py:44`.
+**2. Write-gate helper extension** → `unified_trading_library/write_gates.py` (extend
+`feature_service_base/write_gate.py`)
+
+- (a) Row-count==0 standalone gate — currently inlined at `features-cross-instrument/base_calculator.py:166`,
+  `features-delta-one/base_calculator.py:152`, `microstructure.py:43`, `funding_oi.py:43`, `futures_basis.py:44`.
 - (b) NaN ratio — already in UTL via `FeatureWriteGate`; carry-tracer pattern is lifted.
-- (c) Schema-match against UAC contract — `features-delta-one/feature_writer.py:603` (`_validate_schema`), MDPS `orchestration_writer.py:242` (`_validate_alignment_and_schema`), MDPS `output_writer_service.py:182` (`_validate_candles_schema`). None call a shared UTL contract enforcer.
-- (d) **Cluster-aware bundle gate (TradFi MVP Item 1)** — confirmed absent. Lands as the 4th gate; `expected_root_clusters` + `cluster_extractor` params on `record_captured`.
+- (c) Schema-match against UAC contract — `features-delta-one/feature_writer.py:603` (`_validate_schema`), MDPS
+  `orchestration_writer.py:242` (`_validate_alignment_and_schema`), MDPS `output_writer_service.py:182`
+  (`_validate_candles_schema`). None call a shared UTL contract enforcer.
+- (d) **Cluster-aware bundle gate (TradFi MVP Item 1)** — confirmed absent. Lands as the 4th gate;
+  `expected_root_clusters` + `cluster_extractor` params on `record_captured`.
 
 **3. LookaheadBiasError adoption coverage**
+
 - Defined in UTL (`point_in_time.py:36`); raised in `PointInTimeEnforcer.check_observation_timestamp` (71).
-- Consumed correctly: features-onchain `feature_writer.py:22, 320`; ml-training `leverage_distribution_trainer.py:21, 370`; features-delta-one (via `FeatureWriteGate` strict mode); features-sports orchestrator (live mode).
-- **Coverage gap:** features-sports batch mode swallows it (`writer.py:65–66`) due to `strict=False`. features-delta-one and features-volatility/multi-timeframe/cross-instrument: PIT enforcement depends on service-config `strict` setting (not all default to True).
+- Consumed correctly: features-onchain `feature_writer.py:22, 320`; ml-training
+  `leverage_distribution_trainer.py:21, 370`; features-delta-one (via `FeatureWriteGate` strict mode); features-sports
+  orchestrator (live mode).
+- **Coverage gap:** features-sports batch mode swallows it (`writer.py:65–66`) due to `strict=False`. features-delta-one
+  and features-volatility/multi-timeframe/cross-instrument: PIT enforcement depends on service-config `strict` setting
+  (not all default to True).
 
 **4. `available_at` stamping helpers** → `unified_trading_library/availability_stamping.py` (proposed)
-- All sports per-source stamping rules inlined in `instruments-service/orchestrator.py` (lineups 3918, post-match 4207/4597, weather 5781–5785, transfer 3135, FX 3446, SFI 5283).
+
+- All sports per-source stamping rules inlined in `instruments-service/orchestrator.py` (lineups 3918, post-match
+  4207/4597, weather 5781–5785, transfer 3135, FX 3446, SFI 5283).
 - features-sports re-uses `data_available_at` propagated through but doesn't have its own stamping helper.
 - New service writing sports features will silently get this wrong without a UTL helper.
 
 **5. Schema-introspection helper** → `unified_trading_library/schema_introspection.py` (proposed — **does not exist**)
+
 - deployment-api `data_status_drilldown.py` serves contract-registry metadata only (declared schema from UAC).
-- No utility reads an actual parquet on disk and returns `{columns, dtypes, row_count, nan_ratio_per_column, available_at_min/max}`.
+- No utility reads an actual parquet on disk and returns
+  `{columns, dtypes, row_count, nan_ratio_per_column, available_at_min/max}`.
 - Required for deployment-UI schema view; flag as build item.
 
 **6. Phantom-audit utility** → `unified_trading_library/phantom_audit.py` (proposed)
+
 - Currently `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`.
-- 5 drift axes (hive-vocab, IT casing, empty IT, path-prefix, chain-bundle equiv) + `ASSET_GROUP_CONFIG` + `_venue_level_prefixes()` + `_audit_generic()` + HTTP-pool sizing fix.
+- 5 drift axes (hive-vocab, IT casing, empty IT, path-prefix, chain-bundle equiv) + `ASSET_GROUP_CONFIG` +
+  `_venue_level_prefixes()` + `_audit_generic()` + HTTP-pool sizing fix.
 - Lift pure functions to UTL; keep CLI wrapper in instruments-service.
 
 ### Build items (don't exist)
 
 1. UAC `canonical_question_group` SSOT for prediction markets (Polymarket / Kalshi).
-2. UAC `feature_group → required_inputs[]` DAG SSOT (currently scattered across features-onchain, features-sports, features-delta-one).
+2. UAC `feature_group → required_inputs[]` DAG SSOT (currently scattered across features-onchain, features-sports,
+   features-delta-one).
 3. UTL `hive_vocab.py` (dual-vocab probe).
 4. UTL `availability_stamping.py` (per-source `available_at` rules).
 5. UTL `schema_introspection.py` (real-parquet introspection for UI).
 6. UTL `phantom_audit.py` (lifted from instruments-service script).
 7. UTL `write_gates.py` extension with cluster-aware bundle gate (Item 1, parallel stream — coordinate before shipping).
 8. UTL `DependencyError(fail_fast: bool = True)` — class needs the kwarg.
-9. UAC `INSTRUMENT_PROCESSED` event taxonomy + adapter adoption (CLAUDE.md says CRITICAL post-2026-05-05; instruments-service doesn't emit it).
+9. UAC `INSTRUMENT_PROCESSED` event taxonomy + adapter adoption (CLAUDE.md says CRITICAL post-2026-05-05;
+   instruments-service doesn't emit it).
 
 ---
 
 ## Coordination flags (ping before shipping)
 
-- **Item 1 (cluster-aware bundle validation):** any audit fix that touches `record_captured` signature blocks on this. MDPS bundles, MTDS Tardis/Databento options/futures, sports per-(bookmaker,league) all need it.
-- **Item 2 (Databento `except: continue`):** confirmed fixed; no other MTDS adapters have the same anti-pattern. Safe to scope out.
-- **Prediction `canonical_question_group`:** UAC build-item before any service can adopt; confirm with UAC owner before drafting plan.
-- **`fail_fast` on `DependencyError`:** features-delta-one already uses the spelling but UTL doesn't accept the kwarg. Either lift to UTL (preferred) or remove the call site.
+- **Item 1 (cluster-aware bundle validation):** any audit fix that touches `record_captured` signature blocks on this.
+  MDPS bundles, MTDS Tardis/Databento options/futures, sports per-(bookmaker,league) all need it.
+- **Item 2 (Databento `except: continue`):** confirmed fixed; no other MTDS adapters have the same anti-pattern. Safe to
+  scope out.
+- **Prediction `canonical_question_group`:** UAC build-item before any service can adopt; confirm with UAC owner before
+  drafting plan.
+- **`fail_fast` on `DependencyError`:** features-delta-one already uses the spelling but UTL doesn't accept the kwarg.
+  Either lift to UTL (preferred) or remove the call site.
 
 ---
 
@@ -740,7 +948,8 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
    - UTL `DependencyError(fail_fast=True)` kwarg
 
 2. **Phase 1 — per-service writer fixes (parallel, all 6 services)**
-   - Add missing v6 columns to manifest row_keys per service (especially features-onchain, features-sports, features-delta-one, MDPS).
+   - Add missing v6 columns to manifest row_keys per service (especially features-onchain, features-sports,
+     features-delta-one, MDPS).
    - Switch `manifest.add()` → `record_captured(row_key=...)` everywhere.
    - Wire `record_empty` / `record_failed` paths in features-onchain, features-delta-one, MDPS.
    - Stamp `available_at` per source rules in features-sports (use UTL helper from Phase 0).
@@ -772,4 +981,5 @@ Service produces **flat daily parquet per feature_group**, no per-horizon shards
    - Data-status drilldown to full v6 granularity.
    - Per-leaf parquet download + schema view (uses UTL `schema_introspection.py` from Phase 0).
 
-QG gates between every phase. Phase 1 can branch off Phase 0 individual UTL deliverables (don't wait for all). Phases 2 and 3 strictly require Phase 0 complete.
+QG gates between every phase. Phase 1 can branch off Phase 0 individual UTL deliverables (don't wait for all). Phases 2
+and 3 strictly require Phase 0 complete.
