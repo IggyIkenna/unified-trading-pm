@@ -1,8 +1,9 @@
 ---
 title: Manifest scaling — range index for instrument×timeframe coverage
 id: manifest_scaling_range_index_2026_05
-status: parked — measure first
+status: parked — pre-activation audit in progress (2026-05-06)
 created: 2026-04-30
+owner: harsh
 audience: backend engineers, data platform engineers
 parent_reference:
   - codex/02-data/availability-manifest-and-data-status.md
@@ -15,8 +16,73 @@ sibling_plans:
   - plans/active/combo_bundle_aggregation_2026_04_30.plan.md
   - plans/active/defi_e2e_pipeline_2026_04_30.plan.md
   - price_chart_gcs_delivery_2026_04_29.plan.md
+hard_prerequisite_plan: plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md
 prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
 ---
+
+## Status banner (2026-05-06)
+
+This plan is **parked**, not abandoned. Two pieces of pre-work are running before any v7 schema code is written:
+
+1. **Pre-activation measurement** — confirm whether any of the four activation triggers
+   (manifest > 50 MB, cold-read p99 > 3 s, chart p99 > 2 s, ~100 concurrent users) is firing today. Without a fired
+   trigger, range-index code is premature optimization.
+2. **Open-question resolution** — Q1 (DEFI Layer 1 path), Q2 (sports range-fit), Q5b (TRADFI `instrument_type` bug),
+   Q5c (`available_from_datetime` semantics). These block the JSON sample from being faithful and the schema from
+   being committable.
+
+**Hard prerequisite** for moving from parked → active: the shard-granularity propagation plan
+(`plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md`) must reach Phase 2 done. Reason: collapsing
+v6 rows into v7 ranges only works if v6 is honest. Today's v6 has confirmed lies (MDPS 1440 NaN-bar phantoms passed
+as `captured`; MTDS DeFi drops `instrument_id`; instruments-service Polymarket overloads `data_type`). Collapsing
+those into `(covered_from, covered_to, gap_dates)` would bake the lies into the v7 schema and make them
+unauditable inside multi-year ranges.
+
+**Pre-activation audit roadmap** (this plan, this branch — `live-defi-rollout`, no separate feature branch):
+
+- [ ] [AUDIT] A1. Capture current manifest read p99 baseline via `scripts/bench_candle_reads.py`
+      (add "manifest read p99" scenario if missing). Owner: harsh. Output: number, written into Section
+      "Activation triggers — current measurements" below.
+- [ ] [AUDIT] A2. Measure today's `_index/availability_index.parquet` size per bucket
+      (instruments-store-{ag}, market-data-tick-{ag}, mdps output). Output: table in Section "Activation triggers".
+- [ ] [AUDIT] A3. Resolve Q1 — DEFI Layer 1 on-disk path (read 1-2 sample
+      `gs://instruments-store-defi-{pid}/...` parquets, decide canonical surface). Update Q1 with the answer.
+- [ ] [AUDIT] A4. Resolve Q2 — SPORTS Layer 1 fixtures schema (read sample
+      `sports_reference/by_date/day=*/entity=fixtures/fixtures.parquet`). Decide whether range model applies or
+      sports gets its own catalogue plan.
+- [ ] [AUDIT] A5. Resolve Q5b — TRADFI cash-equity `instrument_type='SPOT_PAIR'` and `holiday_calendar='NASDAQ'`
+      vs codex-spec `EQUITY` and `XNYS`. Determine intentional vs bug. If bug, this plan blocks on
+      `instrument_schema_cohesion_and_market_hours_2026_03_31` fixing it.
+- [ ] [AUDIT] A6. Resolve Q5c — confirm `available_from_datetime` = listing date and `available_to_datetime` =
+      expiry/null on a real options + spot/perp sample.
+- [ ] [AUDIT] A7. Cross-reference shard-granularity Phase 1 fix list. Identify which fixes affect range-index
+      `gap_dates` correctness (e.g. MIG-MDPS2 1440-NaN-bar fix changes which days are "honest empty" vs "real
+      gap"). Document the dependency edges so the plan unparks at the right moment.
+- [ ] [AUDIT] A8. Append each finding to "## Audit findings (pre-activation)" below as the audit progresses.
+      Commit each finding to `live-defi-rollout` immediately (per workspace feedback rule).
+
+Phase 0 (this audit) is **read-only** — no code, no schema changes, no manifest writes. Sole deliverable: data + Q&A
+that lets harsh decide whether to (a) move plan to `active` and start Unit B, (b) keep parked but with a sharper
+re-measurement trigger, or (c) supersede with a different design (e.g. two-tier sharded index from the rejected
+alternatives appendix) if measurements suggest it.
+
+## Activation triggers — current measurements
+
+_Filled in by audit items A1, A2 below. Empty until measured._
+
+| Trigger                                    | Threshold       | Today's value | Status |
+| ------------------------------------------ | --------------- | ------------- | ------ |
+| Largest `availability_index.parquet`       | > 50 MB         | TBD           | TBD    |
+| `read_availability_index` p99 cold cache   | > 3 s           | TBD           | TBD    |
+| Chart-route p99 (manifest-read portion)    | > 2 s           | TBD           | TBD    |
+| Concurrent chart users                     | ~100            | TBD           | TBD    |
+
+## Audit findings (pre-activation)
+
+_Findings appended per audit item as they complete. Each entry: date, item ID, what was checked, what was found,
+what it means for this plan._
+
+
 
 ## Relationship to existing plans
 
