@@ -277,34 +277,45 @@ passing.
 > this, the migration would have written to a legacy-vocab path requiring a second migration to re-key.
 >
 > **Shard-granularity coordination required (CRITICAL — 2026-05-06)**: dry-run revealed that `migrate_tradfi_to_hive.py`
-> writes at **per-day-aggregate** granularity (one `ticks.parquet` per `(date, venue, data_type)`, ~10k rows each) — but
+> wrote at **per-day-aggregate** granularity (one `ticks.parquet` per `(date, venue, data_type)`, ~10k rows each) — but
 > per CLAUDE.md "Shard-granularity SSOT" the canonical writer for TradFi splits at instrument-level (per-instrument for
-> ETFs, per-root for futures+options bundles). Running the migration as-is would produce a SHARD ATOM that doesn't match
-> writer atomicity / manifest row key / data-status display. **The migration's output shape conflicts with the canonical
-> TradFi shard-key matrix** (see CLAUDE.md "Per-asset-group shard-key matrix"):
+> ETFs, per-root for futures+options bundles). Running the migration as-was would produce a SHARD ATOM that doesn't match
+> writer atomicity / manifest row key / data-status display.
+>
+> **Rewrite shipped 2026-05-06 MTDS `b92e866`** — `migrate_tradfi_to_hive.py` now writes per-shard-atom output matching
+> the v5 shard-key matrix:
 >
 > - TradFi futures: `(asset_group=tradfi, venue, data_type, instrument_type, root, day)` — bundled per root.
 > - TradFi ETFs: `(asset_group=tradfi, venue, data_type, instrument_type, instrument_id, day)` — per-instrument.
 > - TradFi options: `(asset_group=tradfi, venue, data_type, options_chain, root, day)` — bundled per root, 11-cluster
 >   ES.OPT taxonomy.
 >
-> The migrate's "all-instruments-into-one-ticks.parquet" doesn't match any of these. **DO NOT RUN the migrate as-is**.
-> Real fix: rewrite `migrate_tradfi_to_hive.py` to split per-instrument (ETFs) / per-root (futures + options chains)
-> matching the canonical shard-key matrix; OR use the canonical TradFi PartitionedTickWriter directly to write each
-> source row at its proper shard key. Tracked in
-> [`shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`](shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md)
-> as a per-service migration verify item — that plan owns the canonical shard-key shapes; this plan defers to it.
+> Output paths now match UAC `build_tradfi_partition_path` shape:
+> `day={D}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/{stem}.parquet` where `{stem}` is per-shard
+> (ticker for ETFs, root for futures/chain bundles, symbol for indices/spot). The `output_dt` collapse that folded
+> `futures_chain` and `options_chain` data_types is dropped — `instrument_type` and `data_type` are orthogonal axes per
+> UAC SSOT. Inline `write_manifest_entries` (v2-schema) is disabled with rationale; the Phase 1.5 main rebuild
+> reconstructs `availability_index` from on-disk truth at full v5 granularity post-migration.
+>
+> Coordination with `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`: the per-shard-atom output is stable
+> today. Once Stream A's `ManifestWriter.record_captured` gains `expected_root_clusters` + `cluster_extractor` params, a
+> follow-up patch will wire ManifestWriter v5 row writing into this script and pass cluster dicts for ES.OPT 11-cluster
+> + futures-chain by-root. **DO NOT RUN before that follow-up lands** — running with manifest writes disabled means the
+> orchestrator's pre-flight skip won't see the new files until Phase 1.5 main rebuild completes; safe but creates a
+> transient gap in data-status visibility.
 >
 > Inventory of legacy data (verified 2026-05-06): 100,698 source files across 12 `day-` directories spanning 2025-11-02
 > to 2026-02-01. Sample per date: 82 NASDAQ + 426 NYSE ohlcv_1m equities + 40 CME options_chain + 10k+ CME trades. Real
 > unique data — NOT duplicates of canonical day=\*/asset_group=tradfi/ contents (probed ABBV/IBIT/AUD on 2025-11-02 —
-> none in canonical). Cannot delete; must migrate at correct shard-key shape.
+> none in canonical).
 
 - [ ] [HUMAN] P0. **TRADFI legacy `day-` migration** (Q&A 7): run
       `cd market-tick-data-service && .venv/bin/python scripts/migrate_tradfi_to_hive.py --dry-run` first. Verify the
-      script touches ~100k blobs and the rename pattern is `day-{D}/data_type-{DT}/...` →
-      `day={D}/asset_group=tradfi/.../data_type={DT}/...`. Then `--apply`. Server-side `gsutil mv`, expected ~5 min for
-      100k blobs. **Script ready** — `market_tick_data_service/scripts/migrate_tradfi_to_hive.py` exists.
+      script touches ~100k blobs and the per-shard output paths match
+      `day={D}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/{stem}.parquet` (where `{stem}` is
+      ticker for ETFs, root for futures/chain bundles, symbol for indices/spot). Then `--apply`. **Script-side ready
+      2026-05-06 MTDS `b92e866`** — per-shard-atom rewrite shipped; gated on Stream A's `ManifestWriter.record_captured`
+      cluster-coverage params landing before production run so manifest gets v5 rows alongside the disk writes.
 - [ ] [HUMAN] P0. **Per-AG canonical migrations** (Q&A 10): same pattern for each existing migrate script. Order
       smallest-first to fail-fast on regressions: - PREDICTION: `scripts/migrate_polymarket_canonical.py` - SPORTS:
       `scripts/migrate_sports_canonical.py` - DEFI: `scripts/migrate_defi_canonical.py` - TRADFI:
