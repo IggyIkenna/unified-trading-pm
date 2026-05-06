@@ -446,6 +446,36 @@ Read these before making ANY code changes:
     `mtds-perp-funding-`, `instr-`) silently zombied because their launchers were added without dict updates. SSOT for
     the table: the Python file. The launcher comment block is documentation, not the dict.
 
+- **Two teammates × multiple parallel agents — don't edit unfamiliar files (CRITICAL)** — Harsh AND Ikenna both work
+  this workspace continuously, **each running multiple parallel agents (Cursor + Claude Code sessions in flight at the
+  same time)**. Untracked files in any repo, dirty mid-edit state, or remote commits that landed in the last few minutes
+  are almost always someone else's in-flight work. **Do not touch a file outside your clear context just to clear a QG
+  gate, lint check, or scope-registry check.** Formatting / mechanical fixes on files YOU are already legitimately
+  editing are fine. Editing untracked files, codex docs you haven't read, or plan files you're not working on is NOT.
+  - **Never run `git checkout origin/<branch> -- .`** as a recovery move — it dumps remote changes (including other
+    agents' just-landed work) into your working tree, and your subsequent commits absorb their content as if it were
+    yours.
+  - **If a quickmerge stash conflict happens**, resolve by reading the specific file and editing surgically, NOT by
+    mass-resetting the working tree. Mass resets pull in 20+ files of noise from old stashes that then look like "your"
+    changes.
+  - **Untracked file in a dep repo = NOT YOURS.** Reference incident **2026-05-06**:
+    `unified-trading-pm/codex/02-data/pipeline-coverage-matrix.md` was Ikenna's untracked WIP. Claude added a `scope:`
+    frontmatter to it to satisfy a workspace-wide codex scope-registry QG check. Prettier then double-formatted the
+    edit, the file landed in Claude's commit. If Ikenna had unsaved local edits, they were lost.
+  - **The right escape valve when a QG gate fails on a file you don't own**: tell the user. The cost of one extra
+    question is far lower than the cost of clobbering a teammate's work. Workspace rule **"DO NOT run quickmerge when
+    local dep repos are dirty unless the user explicitly asks"** applies here too — same shape, different surface.
+
+- **Clear context = implement, don't ask** — When the plan / SSOT / prior turns in the same conversation already name
+  the canonical approach with a `[SCRIPT] P0` todo (file:line + exact change), **just ship it.** Asking the user to pick
+  between (a)/(b)/(c) when the plan already specifies the answer wastes their time and signals indecision. Apply when
+  the plan has a concrete todo, the user has chosen direction earlier in the conversation, a workspace SSOT names the
+  fix shape, or an audit report concluded with a specific recommendation. **Don't apply when** the operation is
+  destructive beyond what was authorized, the work would touch files outside your clear context (see "Two teammates"
+  rule above — these compose), or the plan explicitly says "AWAITING USER DIRECTION." Reference user feedback
+  2026-05-06: _"you are a grown up man, please take the decisions on your own for such trivial minor things dont wait
+  for me to guide you everywhere"_ + _"execute when the plan already specifies the fix."_
+
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)
 
 Every service MUST have all of the following (enforced as errors in base-service.sh since 2026-03-24):
