@@ -734,6 +734,20 @@ new UTL pinned in workspace-manifest.json.
 
 ## Phase 1B — UAC SSOTs (parallel with 1A)
 
+> **2026-05-06 progress note**: Phase 0 audit discovered that `ES_OPTIONS_CLUSTERS` (11-cluster taxonomy),
+> `extract_es_options_cluster`, and `get_active_es_options_clusters_for_date` (calendar fallback) **already exist** in
+> UAC `unified_api_contracts/registry/tradfi_symbology.py:539` — earlier than this plan assumed. The "lift from
+> instruments-service" step is therefore a delete-and-delegate: instruments-service `reference_data/options_cluster_lookup.py`
+> consumers re-import from UAC; no new SSOT needed for ES.OPT itself. **Already-shipped (UAC commit `31e9e75` 2026-05-06)**:
+> `unified_api_contracts/canonical/crosscutting/honest_coverage.py` with `BUNDLED_DATA_TYPES` (frozenset of 4 — options_chain,
+> futures_chain, prediction_canonical_question_group, sports_fixture_bundle), `futures_expiry_bucket()` derivation
+> (front/back/spread/unknown bucketing for futures_chain bundle cluster_extractor — closes the row-schema gap noted in row
+> 583 of the cluster wiring matrix), `FUTURES_CHAIN_BUCKETS` constant, plus re-export surface delegating to the registry
+> SSOT. 30 unit tests cover BUNDLED_DATA_TYPES membership, parametric front/back/spread bucketing, custom front-window
+> override, and re-export delegation regression. **Remaining Phase 1B work**: `DATA_TYPE_TO_CLUSTER_REGISTRY`,
+> `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder slot, source_priority +
+> availability_semantics modules.
+
 - [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/honest_coverage.py`: -
       `BUNDLED_DATA_TYPES: frozenset[str]` initial seed: - `"options_chain"` — registry: `OPTIONS_CLUSTERS` (populated,
       lifted from instruments-service ES.OPT 11-cluster taxonomy; per-root entries) - `"futures_chain"` — registry:
