@@ -547,6 +547,47 @@ maintenance trap. **Phase 2.A scope expansion**: include consolidation of these 
 - Phase 2.B cluster-coverage validation gains a sibling concern: `live_workers.py:512`'s per-symbol drop must feed into the cluster validator OR the streaming path must short-circuit on first symbol failure.
 - LOW sites left as-is (documented intentional patterns); add codex doc reference at `app/utils/path_parsing.py` for the 5-site per-blob isolation pattern.
 
+**Phase 2.A write-path consolidation pre-audit (2026-05-06 round 2)**:
+
+Read-only callsite map for the 4 parallel write-path swallows. Critical finding:
+**3 of the 4 write-paths are ORPHANED in production**.
+
+| Path | Site                             | Production callsites | ManifestWriter access? | Status                                                             |
+| ---- | -------------------------------- | -------------------- | ---------------------- | ------------------------------------------------------------------ |
+| 1    | `candle_write_mixin.py:141`      | **3 active**         | None — must plumb     | **LIVE** — `live_workers.py:682,1061` + `batch_workers.py:164`     |
+| 2    | `data_sink.py:290`               | **0**                | n/a                    | **ORPHANED** — `GCSDataSink.write_candles` has no production calls |
+| 3    | `orchestration_writer.py:413`    | **0**                | n/a                    | **ORPHANED** — `_write_candles_to_gcs` is dead code                |
+| 4    | `output_writer_service.py:341`   | **0**                | n/a                    | **ORPHANED** — `OutputWriterService.write_candles` unwired         |
+
+**Path 1 (CandleWriteMixin._write_candles) callers — all 3 ignore the return
+value**:
+
+- `live_workers.py:682` (`_process_all_timeframes`) — return discarded; errors
+  caught at outer try at line 721.
+- `live_workers.py:1061` (`_write_chain_candles_concat`) — return discarded;
+  errors appended to list at line 1074.
+- `batch_workers.py:164` (`_write_closed_market_candles`) — bare call; outer
+  try/except at line 214 catches if write raises (but the swallow blocks
+  re-raising, so the failure is silent).
+
+**Phase 2.A consolidation simplifies**: delete Paths 2/3/4 entirely (dead code
+removal aligns with the "no double SSOT" + "delete deprecated code" rules);
+focus consolidation on Path 1's 3 callers. **Canonical writer is the leaf**:
+`canonical_writer.py:41-47` already wraps `write_candle_parquet()` with
+`ManifestWriter.record_captured()` — Phase 2.A plumbs `record_failed` alongside
+this so `canonical_writer.py` becomes the single failure-recording site.
+
+**Caller-side fix required**: each of the 3 Path 1 callers must check the
+return value (or get the error via plumbed `ManifestWriter` reference). The
+return-None ambiguity (None means "skipped, file existed" OR "swallowed error")
+must be resolved via a typed return shape (`WriteResult` enum or
+`Result[str, WriteFailedError]` shape).
+
+**Exception-set unification needed**: Path 1 catches `(OSError, ValueError,
+RuntimeError, KeyError, TypeError)` but the orphans differ. Phase 2.A unifies
+to the broadest set and routes ALL caught exceptions through
+`classify_venue_error`.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
@@ -747,6 +788,24 @@ new UTL pinned in workspace-manifest.json.
 > override, and re-export delegation regression. **Remaining Phase 1B work**: `DATA_TYPE_TO_CLUSTER_REGISTRY`,
 > `SPORTS_FIXTURE_CLUSTERS` greenfield seeds, `PREDICTION_GROUPS = {}` placeholder slot, source_priority +
 > availability_semantics modules.
+>
+> **2026-05-06 progress note (round 2)**: UAC commit `106430c` adds the remaining
+> two crosscutting modules — `canonical/crosscutting/availability_semantics.py`
+> (36 seed entries; 10-mode `AvailabilitySemantic` literal covering
+> kickoff_minus_60min / match_end_time / event_time / report_time / announced_at /
+> forecast_issue_time / publication_time / fetch_completed_at / tick_timestamp /
+> market_created_at; raises `KeyError` on unregistered pairs — no silent default,
+> failing loud is intentional) and `canonical/crosscutting/source_priority.py`
+> (single-source Phase 1B seeds with `get_primary_source` convenience helper for
+> stamping callers; multi-source merge logic deferred to follow-up). 38 new tests
+> (18 + 20), total 68 with honest_coverage. Cross-module consistency check
+> validates every `(asset_group, data_type)` pair appears in BOTH registries
+> (stamping helpers can't compute `available_at` without a source priority
+> entry). **Phase 1B status**: 3 of 4 crosscutting modules shipped. Remaining:
+> `DATA_TYPE_TO_CLUSTER_REGISTRY` mapping (data_type → cluster registry symbol
+> reference), `SPORTS_FIXTURE_CLUSTERS` greenfield seed (per-league-tier
+> bookmaker sets), and `PREDICTION_GROUPS = {}` placeholder slot (gets populated
+> by Plan A canonical_question_group SSOT — flagged in temporary-states section).
 
 - [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/honest_coverage.py`: -
       `BUNDLED_DATA_TYPES: frozenset[str]` initial seed: - `"options_chain"` — registry: `OPTIONS_CLUSTERS` (populated,

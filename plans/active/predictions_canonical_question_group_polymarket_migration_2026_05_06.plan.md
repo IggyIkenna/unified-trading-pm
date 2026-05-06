@@ -351,6 +351,57 @@ The existing UAC classifier produces the 4-tuple foundation. Composing into cano
 4. Sports fixture canonical groups: align with writegate plan's `SPORTS_FIXTURE_CLUSTERS`? Same registry or
    separate?
 
+**2026-05-06 cadence-count probe — concrete proposal for Ikenna sign-off**:
+
+Probed `_prediction_market_taxonomy.py` `_infer_resolution_period()` cascade
+(lines 568-616), `polymarket/schemas.py` lifecycle hints, MTDS
+`polymarket_adapter.py`, and the on-disk inventory referenced in the
+2026-04-29 audit (1,848 distinct condition_ids; 352 days; resolution periods
+observed = hourly / daily / weekly / monthly / event). Concrete cadence-count
+proposal:
+
+| canonical_question_group | cadence    | expected_markets_per_day | evidence                                                                            | confidence |
+| ------------------------ | ---------- | ------------------------ | ----------------------------------------------------------------------------------- | ---------- |
+| `BTC_UP_DOWN_HOURLY`     | HOURLY     | 24                       | classifier `_infer_resolution_period:578-579` (hour/hourly token); slug pattern present | HIGH       |
+| `BTC_UP_DOWN_DAILY`      | DAILY      | 1                        | classifier `:587-588` (daily/day tokens); slug `btc-up-or-down-april-15`            | HIGH       |
+| `ETH_UP_DOWN_HOURLY`     | HOURLY     | 24                       | symmetric with BTC pattern                                                          | HIGH       |
+| `ETH_UP_DOWN_DAILY`      | DAILY      | 1                        | symmetric with BTC pattern                                                          | HIGH       |
+| `SOL/XRP/DOGE/BNB/HYPE/SUI/ADA/LTC/AVAX/LINK_UP_DOWN_*` | HOURLY+DAILY | 24+1   | 12 cryptos in `SLUG_PREFIX_MAP`                                                     | HIGH       |
+| `SPX_UP_DOWN_DAILY`      | DAILY      | 1                        | classifier `:143-145` (spx-/sp500-/s-and-p-500- → EQUITY_INDEX)                     | HIGH       |
+| `NDX/DJIA_UP_DOWN_DAILY` | DAILY      | 1                        | symmetric with SPX                                                                  | HIGH       |
+| `GOLD_UP_DOWN_DAILY`     | DAILY      | 1                        | classifier `:151` (gold- → COMMODITY)                                               | MEDIUM     |
+| `SILVER/CRUDE_OIL/NAT_GAS_UP_DOWN_DAILY` | DAILY | 1                | symmetric with GOLD                                                                 | MEDIUM     |
+| `FED_RATE_DECISION_PER_FOMC` | EVENT  | 1 per FOMC date          | classifier `:166-168` (fed-rate-/fomc-); 8 FOMC meetings/year hardcoded             | MEDIUM     |
+| `CPI_RELEASE_PER_MONTH`  | MONTHLY    | 1                        | MONTHLY tokens at `:369-395`; 12/year                                               | MEDIUM     |
+| `GDP/UNEMPLOYMENT/NFP/PPI/PCE/JOBLESS_*` | varies | varies               | release schedule per macro indicator                                                | MEDIUM     |
+| `ELECTION_PRESIDENT_2028` | EVENT_LONG | 1 (active over months/years) | classifier `:615` (default EVENT for politics); SLUG_PREFIX_MAP shows trump-/harris- → POLITICS_US | MEDIUM |
+| `WEATHER_HURRICANE_*`    | EVENT      | variable per storm       | classifier `:296` (hurricane-/weather- → WEATHER); EVENT default                    | MEDIUM     |
+
+**Recommended Ikenna decisions on the 4 open questions** (formed from the
+probe + workspace conventions):
+
+1. **Naming convention**: `{UNDERLYING}_UP_DOWN_{CADENCE}` for cadenced
+   range-bracket markets (BTC_UP_DOWN_HOURLY); `{UNDERLYING}_{EVENT}_{SUFFIX}`
+   for events (FED_RATE_DECISION_PER_FOMC, ELECTION_PRESIDENT_2028). Rationale:
+   `UP_DOWN` is meaningful (range-bracket markets resolve binary up/down vs a
+   strike), and the cadence suffix is the cluster-validator's expected-count key.
+2. **Expected count source**: hardcoded in registry. Dynamic-from-manifest is
+   tempting but creates a chicken-and-egg with the cluster validator (it'd
+   bootstrap from incomplete data). Hardcoded = honest expectation; manifest
+   row counts diverging from hardcoded = honest gap → investigate.
+3. **Election year suffix**: explicit year (`ELECTION_PRESIDENT_2028`).
+   Floating `_NEXT` makes historical readback ambiguous and breaks training
+   pipelines.
+4. **Sports fixture canonical groups**: separate registry — different cluster
+   identity (per-fixture per-bookmaker vs per-canonical-group per-market_id).
+   Both can live in `unified_api_contracts.canonical.crosscutting.honest_coverage`
+   under `PREDICTION_GROUPS` and `SPORTS_FIXTURE_CLUSTERS` slots.
+
+Sources verified during probe:
+- `unified-api-contracts/unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py:98-615`
+- `unified-api-contracts/unified_api_contracts/external/polymarket/schemas.py:49-365`
+- `market-tick-data-service/.../polymarket_adapter.py:1-676`
+
 ### Phase 0 audit findings — lifecycle field availability
 
 **Polymarket — partial coverage with one zero-effort UAC fix**:
