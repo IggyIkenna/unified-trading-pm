@@ -489,7 +489,7 @@ superseded entirely by canonical migration script.
 
 ## Phase 1A — UAC SSOTs (sequential, blocks all)
 
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/canonical_groups.py`: ```python class
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/canonical_groups.py`: ```python class
       CanonicalQuestionGroup(StrEnum): BTC_UP_DOWN_HOURLY = "BTC_UP_DOWN_HOURLY" BTC_UP_DOWN_DAILY =
       "BTC_UP_DOWN_DAILY" # ... (per Phase 0 taxonomy) OTHER = "OTHER"
 
@@ -504,14 +504,14 @@ superseded entirely by canonical migration script.
       CANONICAL_GROUP_METADATA: dict[CanonicalQuestionGroup, CanonicalGroupMetadata] = {...}
       ```
 
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/classifiers.py`: -
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/classifiers.py`: -
       `classify_market_to_canonical_group(market_metadata: PolymarketMarketMetadata | KalshiMarketMetadata) -> CanonicalQuestionGroup | None`
       — returns None for sub-threshold confidence; caller marks shard as
       `attempted_failed[reason=ClassifierConfidenceLow]`. - Internal: word-boundary regex rules + token-overlap
       scoring + `POLYMARKET_CONDITION_ID_OVERRIDES` / `KALSHI_TICKER_OVERRIDES` lookup-first. - Stability hash:
       `CLASSIFIER_STABILITY_HASH` constant computed at import time from regex pattern source + override dict hashes.
       Manifest writes carry this hash; re-runs skip re-classification when hash unchanged.
-- [ ] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/lifecycle.py`: ```python
+- [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/lifecycle.py`: ```python
       @dataclass(frozen=True) class MarketLifecycle: market_id: str venue: str # "POLYMARKET" / "KALSHI"
       canonical_group: CanonicalQuestionGroup market_created_at: datetime resolution_time: datetime settlement_time:
       datetime current_status: Literal["created", "active", "resolved", "settled"]
@@ -526,23 +526,23 @@ superseded entirely by canonical migration script.
           ...
       ```
 
-- [ ] [SCRIPT] P0. Populate `unified_api_contracts/canonical/crosscutting/honest_coverage.py` `PREDICTION_GROUPS`
+- [x] [SCRIPT] P0. Populate `unified_api_contracts/canonical/crosscutting/honest_coverage.py` `PREDICTION_GROUPS`
       registry (was empty per writegate plan): - For each `CanonicalQuestionGroup`, derive the expected
       market_ids_per_day from lifecycle metadata. - `cluster_extractor` for prediction shards:
       `lambda row: row["market_id"]`. - `min_rows_per_cluster`: per-cadence (HOURLY → expect ~1000 ticks per market over
       its 1-hour life; DAILY → expect ~10000 ticks over 24h; etc., refine per Phase 0 audit data).
-- [ ] [SCRIPT] P0. Update `unified_api_contracts/canonical/crosscutting/availability_semantics.py`: -
+- [x] [SCRIPT] P0. Update `unified_api_contracts/canonical/crosscutting/availability_semantics.py`: -
       `("prediction", "prediction_canonical_question_group")` → `event_time` (per-row tick timestamp). -
       `("prediction", "MARKET_LIFECYCLE")` (the metadata table) → `market_created_at` (we couldn't have known about the
       market before it was listed).
-- [ ] [SCRIPT] P0. Update `unified_api_contracts/canonical/crosscutting/source_priority.py`: -
+- [x] [SCRIPT] P0. Update `unified_api_contracts/canonical/crosscutting/source_priority.py`: -
       `("prediction", "prediction_canonical_question_group")` →
       `["polymarket_ws_live", "polymarket_rest_archive", "kalshi_ws_live", "kalshi_rest_archive"]` (live sources rank
       above archives per "live = batch" rule; archive falls back when historical replay needed).
-- [ ] [SCRIPT] P0. New facade `unified_api_contracts/predictions/__init__.py` re-exports all of the above for consumer
+- [x] [SCRIPT] P0. New facade `unified_api_contracts/predictions/__init__.py` re-exports all of the above for consumer
       ergonomics:
       `python     from unified_api_contracts.predictions import (         CanonicalQuestionGroup,         classify_market_to_canonical_group,         MarketLifecycle,         is_market_active_at,         expected_market_ids_for_canonical_group,     )     `
-- [ ] [TEST] P0. UAC tests: - Every `CanonicalQuestionGroup` has a metadata entry. - Classifier handles every
+- [x] [TEST] P0. UAC tests: - Every `CanonicalQuestionGroup` has a metadata entry. - Classifier handles every
       conditionId in the Phase 0 audit `conditionid_universe.csv` — assert classification + expected-group match curated
       overrides for headline markets. - Stability hash deterministic; changes only when regex / overrides change. -
       Lifecycle helpers: `is_market_active_at` returns False before `market_created_at`, True during
