@@ -297,9 +297,12 @@ QG gate between every phase. Phase 4 can run in parallel with Phase 3.
 
 ### Phase 0 — UAC + UTL schema additions
 
-- [ ] [UAC] P0. Add `unified_api_contracts/registry/data_status_axis_matrix.py` with `SHARD_AXIS_MATRIX` +
+- [x] [UAC] P0. Add `unified_api_contracts/registry/data_status_axis_matrix.py` with `SHARD_AXIS_MATRIX` +
       `DISPLAY_AXES` + `PRIMARY_AXIS` per-(service, asset_group). Lock to the matrix in this plan as initial state.
-      Re-export from `unified_api_contracts/registry/__init__.py`.
+      Re-export from `unified_api_contracts/registry/__init__.py`. (UAC@2b56dbc — 32 cross-registry tests: asset_group
+      keys lowercase, every SHARD has PRIMARY, BREAKDOWN_AXES = SHARD union DISPLAY - {PRIMARY}, DEFI data-pipeline
+      services include chain, PREDICTION market-side includes canonical_question_group, experiment services include
+      job_id, sports excludes fixture_id from shard atoms.)
 - [ ] [UAC] P0. Bump availability-manifest schema declaration v6 → v7: add `job_id` (str | None). `fixture_id` is
       **NOT** added.
 - [ ] [UTL] P0. Update `unified_trading_library/manifests/manifest_writer.py` `_CANONICAL_COLUMNS` to include `job_id`.
