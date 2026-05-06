@@ -142,3 +142,22 @@ PredictIt / Betdaq / Smarkets, add 8 new DeFi types) shipped per UAC `13db4a9` +
       `8f6a5d5` (Marginfi + Solend).
 - [ ] [AGENT] P1. multichain-qg-sweep: QG sweep on all 8 repos + bridge E2E + WETH wrap/unwrap testnet.
 - [ ] [AGENT] P1. mev-3a-e2e: Add MEV + execution scenarios to e2e-testing.
+
+## Absorbed from sibling plans (2026-05-06)
+
+Items folded in from `defi_phase3_infrastructure_2026_03_30` (since archived). Most Phase 3 / Phase 5 todos in that plan
+(run instruments-service / MTDS / MDPS / features-onchain for March 2026; generate per-strategy P&L plots; compare
+strategy returns vs Ethena benchmark; P&L attribution breakdown) are already covered by `defi_e2e_pipeline_2026_04_30`
+Fork 1+2 closure work — not duplicated here. The single genuinely-open infra item that hasn't shipped:
+
+- [ ] [AGENT] P1. **Copper sandbox integration test** — validate `CopperCustodyProvider` (in
+      `execution_service/custody/copper.py`, shipped per source plan's Phase 4B) against Copper's sandbox API
+      end-to-end: HMAC-SHA256 auth → `POST /platform/orders` → `POST /platform/orders/{id}/sign` → poll for completion.
+      Ref: `codex/04-architecture/copper-custody-integration.md`. Required before live wallet flips per master-plan
+      Group F item 19 (Copper for DeFi-side custody).
+
+Items folded in from `defi_strategies_phase2_2026_03_29` (since archived): the March plan's strategy-archetype
+vocabulary (lending / basis / recursive) has been superseded by codex `09-strategy/strategy-summary.md` canonical names
+(`YIELD_ROTATION_LENDING`, `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_STAKED_BASIS`, `YIELD_STAKING_SIMPLE`).
+The 4 Phase-2F open todos (Clean GCS state / 7-day run / generate plots / compare returns) are absorbed by
+`defi_e2e_pipeline_2026_04_30` Fork 2 batch closure verification — no new work folded.
