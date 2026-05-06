@@ -2494,3 +2494,9 @@ Capture per-AG baseline + decision here so the team can see what each AG's path 
 - **Cost-of-rebuild vs cost-of-redownload** — rebuilds list every parquet in the bucket; for buckets at scale that's
   millions of objects. Same-region VM keeps it tractable (~222 prefixes/sec), cross-region from laptop is 18× slower.
   Don't run rebuilds from a laptop on a non-trivial AG.
+
+## Absorbed from sibling plans (2026-05-06)
+
+- `cefi_phase2_gap_audit_2026_05_01` (archived) — 29 open todos / root-cause clusters A/B/C/D for CeFi 90,991
+  attempted_failed rows. Superseded by this 2026-05-05 plan's fresh 30-finding audit + concrete F1-F30 fix list. The
+  earlier audit's analysis survives as archive context; operational fix list lives here.

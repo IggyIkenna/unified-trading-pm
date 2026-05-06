@@ -985,3 +985,18 @@ when `horizon=` is passed — which batch handler never does.
 
 QG gates between every phase. Phase 1 can branch off Phase 0 individual UTL deliverables (don't wait for all). Phases 2
 and 3 strictly require Phase 0 complete.
+
+## Absorbed from sibling plans (2026-05-06)
+
+This HANDOVER is the canonical SSOT for shard granularity + manifest write-gate work. The following plans had
+overlapping scope and have been folded:
+
+- `manifest_schema_v6_quote_margin_combo_2026_04_23` (archived) — schema v6 dimensions (quote_asset / margin_type /
+  combo_type / leg_weights) ARE the multi-axis story. Open todos covered by Phase 0 + Phase 1 of this HANDOVER. Design
+  rationale on the v6 dimension set survives in archive as background.
+- `mtds_canonical_sharding_alignment_2026_03_31` (archived) — 8 open todos on MTDS shard-key alignment. Covered by Phase
+  1 layer-discipline rules + the per-asset-group shard atom matrix.
+- `combo_bundle_aggregation_2026_04_30` (archived) — combo bundling is a `BUNDLED_DATA_TYPES` member with cluster
+  validation per `record_captured` (Item 1 cluster validation primitive). 2026-04-30 writer fix + ~13M legacy per-combo
+  parquet compaction shipped per session memory; residual Phase 5 verification belongs in Phase 1 cluster validation
+  rollout.
