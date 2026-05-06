@@ -246,3 +246,62 @@ For same-day single-sample calcs: there's no rolling-window denominator adjustme
 the calc emits `record_empty(reason=NO_INPUT_AVAILABLE)` for its own output row that day. Downstream consumers see
 the absence in the calc's manifest and apply their own consumer-class rule (NaN-fill for ML, skip for execution,
 etc.). Don't fabricate a value.
+
+---
+
+## Reader-side fallback for legacy rows (codified 2026-05-07 — operator gap finding)
+
+Phase 2.E.1 ships UTL `record_empty(reason=...)` for NEW writes. Existing manifest rows have `error_reason=None`
+for honest empty (or no row at all if calendar-pre-skipped). Without retrospective backfill (writegate Phase 3.D),
+historical reads land on rows the consumer can't classify.
+
+**The contract every consumer service implements** (defensive, runs even after Phase 3.D backfill — covers race
+conditions during migration + future-proofs against new asset_groups whose backfill hasn't run):
+
+```python
+def get_reason(row_key: dict, day: date) -> str:
+    """Return the canonical EMPTY_CONFIRMED_REASONS code for this row.
+
+    Reads the manifest reason if present; falls back to calendar/coverage SSOT
+    classification if the row is legacy (error_reason empty) or missing entirely.
+    """
+    row = manifest.lookup(row_key)
+    if row is not None and row.error_reason:
+        return row.error_reason  # new writers populate this — fast path
+    # Legacy fallback: classify from calendar / coverage SSOTs
+    return classify_legacy_empty_row(row_key, day)
+```
+
+`classify_legacy_empty_row(row_key, day)` consults the same SSOTs the writer would have:
+
+1. **`venue_trading_calendar`** — TradFi closed-day → `EXPECTED_HOLIDAY` or `EXPECTED_WEEKEND`.
+2. **`SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`** — date < source coverage → `EXPECTED_PRE_SOURCE_COVERAGE_START`.
+3. **`KNOWN_COVERAGE_GAPS`** — sports paused leagues → `EXPECTED_PAUSED_LEAGUE`.
+4. **DeFi chain-genesis lookup** — date < chain genesis → `EXPECTED_PRE_GENESIS_CHAIN`.
+5. **Instrument lifecycle** (instruments-service `MARKET_LIFECYCLE` for predictions, `delisted_at` for CeFi/TradFi):
+   - day < `market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED`
+   - day ≥ `delisted_at` (or `settlement_time` for predictions) → `EXPECTED_INSTRUMENT_DELISTED`
+6. **Default**: `SOURCE_RETURNED_ZERO` — the writer attempted, source had nothing, no calendar/coverage exception
+   applied.
+
+This makes the consumer code uniform across legacy AND new manifest rows. Writers populate the manifest reason
+upfront so the fast path is just a row read; the fallback exists for in-migration coverage and as a defensive
+guarantee that consumers always have an answer.
+
+### What this changes vs. the original codex § "Three causes of no data" matrix
+
+The original matrix said "no manifest row written; `venue_trading_calendar` says closed → skip silently." Per
+operator direction 2026-05-07 we now want the manifest to BE the SSOT, so:
+
+- **Going forward**: writers emit `record_expected_empty(reason=EXPECTED_HOLIDAY)` for calendar-closed days
+  instead of pre-skipping.
+- **For legacy data** (until Phase 3.D backfill runs): consumer-side `classify_legacy_empty_row(...)` derives the
+  reason on the fly from the same SSOTs.
+- **Either way**, the consumer's downstream behaviour is the same — the lookup is just slightly slower for legacy
+  rows. The audit rule per consumer class (NaN-fill / skip / adjust denominator) doesn't care whether the reason
+  came from manifest or fallback.
+
+Cross-reference: writegate Phase 3.D `reconcile_expected_absence_reasons.py` per asset_group performs the
+retrospective backfill so the slow path eventually empties out per asset_group.
+
+---

@@ -1427,6 +1427,76 @@ split.
 QG between Phase 3 and Phase 4: every reconciler has run end-to-end on a 1-week sample window; audit reports reviewed by
 user; no anomalies.
 
+### Phase 3.D — Expanded-reason backfill (added 2026-05-07 — operator gap finding)
+
+**Why this exists.** Phase 2.E.1 ships UTL `record_empty(reason=...)` so NEW writes carry the expanded reason
+taxonomy. But existing manifest rows have `error_reason=None` for honest empty, and calendar-pre-skipped days
+have NO row at all. Without a retrospective backfill, the per-service consumer-class audit (NaN-fill for
+`EXPECTED_HOLIDAY`, etc.) only works for new data — historical reads land on rows the consumer can't classify.
+
+The fix is **two-layer defensive**:
+
+1. **Retrospective backfill** (this Phase 3.D) — populate the manifest with reasons for every historical row +
+   generate missing rows for the calendar-pre-skip cases.
+2. **Reader-side fallback** (codified in the codex doc — see § "Reader-side fallback for legacy rows") — every
+   consumer service implements: "if `error_reason` is empty, consult `venue_trading_calendar` /
+   `SOURCE_COVERAGE_START` / `KNOWN_COVERAGE_GAPS` / instrument-listing windows to classify on the fly." This
+   makes the consumer code robust during migration AND future-proofs against any new asset_group whose backfill
+   hasn't run yet.
+
+#### Phase 3.D.1 — `reconcile_expected_absence_reasons.py` per asset_group
+
+- [ ] [SCRIPT] P0. New script per asset_group (cefi / defi / tradfi / sports / prediction). Iterates the
+      "expected universe" per (service, asset_group, data_type) using:
+      - Date range from `SOURCE_COVERAGE_START` (UAC) up to today.
+      - Instrument set from instruments-service per `(asset_group, data_type, day)` — accounts for listing
+        + delisting via `market_created_at` / `delisted_at` lifecycle.
+      - Calendar via `venue_trading_calendar` (TradFi) + `KNOWN_COVERAGE_GAPS` (sports paused leagues) +
+        chain-genesis (DeFi).
+- [ ] [SCRIPT] P0. For each `(shard_key, day)` in the expected universe:
+      - If manifest row exists with `capture_status=captured` → leave alone.
+      - If manifest row exists with `capture_status=attempted_failed` (typed reason already there) → leave alone.
+      - If manifest row exists with `capture_status=empty_confirmed` AND `error_reason` is empty → classify
+        (calendar lookup / coverage_start / paused league / source_returned_zero) and stamp the right
+        `EXPECTED_*` or `SOURCE_RETURNED_ZERO` reason via `record_empty(reason=...)`.
+      - If NO manifest row exists AND classification says "expected absence" → emit
+        `record_expected_empty(reason=EXPECTED_<X>)`.
+      - If NO manifest row exists AND classification says "should have been captured but wasn't" → emit
+        `record_failed(reason=NEVER_ATTEMPTED)` so it surfaces in the deployment-ui breakdowns as a real gap.
+- [ ] [SCRIPT] P0. Same safety scaffolding as `reconcile_1440_nan_placeholders.py`: default scan-only mode,
+      `--apply-flips`, `--max-flips-per-run` default 100k, `MANIFEST_PER_VM_SHARDS=true` required for apply,
+      RECONCILER_* lifecycle events, CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`.
+- [ ] [SCRIPT] P0. Idempotent — re-runs detect "row already has the right reason" and no-op (don't re-write
+      identical rows). The decision matrix above is deterministic; same input → same output.
+- [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the decision matrix.
+
+#### Phase 3.D.2 — Reader-side fallback in every consumer service
+
+- [ ] [SCRIPT] P0. New helper in UTL (or per-service): `classify_legacy_empty_row(row_key, day) -> str` —
+      consults the same calendar/coverage SSOTs the writer uses. Returns one of the `EXPECTED_*` or
+      `SOURCE_RETURNED_ZERO` codes.
+- [ ] [SCRIPT] P0. Per-consumer-service: when reading a manifest row with `capture_status=empty_confirmed` AND
+      `error_reason` empty, call `classify_legacy_empty_row(...)` to derive the reason at read time. Apply the
+      consumer-class audit rule (NaN-fill / skip / etc.) using the classified reason.
+- [ ] [TEST] P0. Per-consumer test: feed a legacy row (no `error_reason`) → assert reader applies the right
+      consumer-class action.
+
+#### Phase 3.D.3 — Operator runbook + sequencing
+
+The retrospective backfill is potentially several million row writes per asset_group (TradFi alone has ~190k
+weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeFi has ~few thousand chain-pre-
+genesis rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run
+`--apply-flips`:
+
+- [ ] [DOCS] P0. Document the per-asset-group expected backfill volume in
+      `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to
+      verify volume, then `--apply-flips` per asset_group sequentially.
+- [ ] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side
+      fallback helper.
+
+QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback
+unit-tested; per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.
+
 ---
 
 ## Phase 4 — Data-status UI + alerts (parallel with Phase 2 after Phase 1 lands)
