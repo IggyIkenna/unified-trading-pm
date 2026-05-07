@@ -1747,11 +1747,19 @@ sub-phase ships the enumerator that physically writes those rows.
       the matrix above, reads the canonical manifest ONCE (manifest concurrency principle), filters to tuples with NO
       manifest row, writes
       `record_expected_empty(reason=EXPECTED*\*)`rows via UTL`record_expected_empty`helper.     Default scan-only (CSV report);`--apply-write`requires`MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=...`per the     per-VM shard isolation rule.`--max-writes-per-run`default 100k halt safety. Mirrors the safety scaffolding of    `reconcile_expected_absence_reasons.py`.
-- [ ] [SCRIPT] P0. Per-asset-group reason classifier dispatch — DeFi → `EXPECTED_PRE_GENESIS_CHAIN` +
-      `EXPECTED_INSTRUMENT_NOT_LISTED`; Sports → `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SOURCE_COVERAGE_START`; TradFi
-      → `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`; CeFi → `EXPECTED_INSTRUMENT_NOT_LISTED` +
-      `EXPECTED_INSTRUMENT_DELISTED`. Reuses UTL `classify_legacy_empty_row` SSOT (single classifier, both reconciler +
-      enumerator import from UTL).
+- [x] [SCRIPT] P0 (shipped instruments-service@8e404c8 / @d1c9928). Per-asset-group reason classifier dispatch —
+      `_enumerate_tradfi` yields `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` (via UAC `non_trading_day_reason`);
+      `_enumerate_defi` yields `EXPECTED_PRE_GENESIS_CHAIN` (day < `chain_genesis`) and `EXPECTED_INSTRUMENT_NOT_LISTED`
+      (day < `protocol_launch`); `_enumerate_sports` yields `EXPECTED_PRE_SOURCE_COVERAGE_START` (per-source);
+      `_enumerate_cefi` and `_enumerate_prediction` yield `EXPECTED_PRE_VENUE_LAUNCH` (real impl per UAC@ac218dc +
+      `venue_launch_dates` SSOT, no longer stubs). **Architectural note**: the enumerator computes the reason
+      forward from the UAC SSOTs (`CHAIN_GENESIS_DATES` / `PROTOCOL_LAUNCH_DATES` / `*_VENUE_LAUNCH_DATES` /
+      `SOURCE_COVERAGE_START` / `non_trading_day_reason`) at the moment it generates the row — different paradigm
+      from UTL `classify_legacy_empty_row(asset_group, row_dict)` which classifies an EXISTING manifest row whose
+      attributes are already populated. Both share the closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS`
+      but the enumerator-side dispatch is forward-construction, not row-classification. Sports per-league /
+      `EXPECTED_PAUSED_LEAGUE` + CeFi/Prediction per-instrument lifecycle (`EXPECTED_INSTRUMENT_NOT_LISTED` /
+      `EXPECTED_INSTRUMENT_DELISTED`) are deferred to Phase 3.D.5 v2 enumerator (per-asset-group catalog read).
 - [x] [SCRIPT] P0 (shipped deployment-service@dcc5c87). NEW
       `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` — follows
       `launch-defi-phantom-recon-vm.sh` pattern (singleton lock per `expected-universe-enum-` prefix in
@@ -1830,14 +1838,15 @@ The all-5-asset_group scan-only sweep surfaced three follow-up items not covered
       `--max-writes-per-run`.** Third positional arg on `launch-expected-universe-enumerator-vm.sh` validates as
       positive integer + appends `--max-writes-per-run <N>` to `BACKFILL_CMD`. Empty/missing falls through to script
       default (1M). Used to ship the defi 5M-cap rerun without an ad-hoc launcher.
-- [ ] [SCRIPT] P1. **CSV report upload to GCS before VM auto-shutdown.** The enumerator writes its CSV report to
-      `tempfile.gettempdir()` (i.e. `/tmp` on the VM), which is local disk and is destroyed when
-      `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes the VM. Operator can read distribution-by-reason from the events
-      log + run.log (those persist), but row-by-row inspection requires SSH-before-shutdown which is a race. Add a
-      `--gcs-report-bucket` flag to the script (or environment-driven) so the CSV gets uploaded to
-      `gs://deployment-scripts-{pid}/enumerator-reports/{vm_name}/<asset_group>-<ts>.csv` before exit. Low priority
-      because the events log already captures the distribution; needed only if the operator wants to inspect specific
-      candidate rows.
+- [x] [SCRIPT] P1 (shipped 2026-05-07, instruments-service@aedf316). **CSV report upload to GCS before VM
+      auto-shutdown.** Added `--gcs-report-bucket` flag to `enumerate_expected_universe.py`. Default behaviour:
+      auto-upload to `gs://deployment-scripts-{PROJECT_ID}/enumerator-reports/{vm_name_or_run_id}/<asset_group>-<ts>.csv`
+      when `VM_NAME` env var is set (i.e. running on a backfill VM); operator can opt-out with
+      `--gcs-report-bucket=""` for local dev or override with an explicit bucket. Best-effort upload — failure logs a
+      warning + emits `ENUMERATOR_REPORT_UPLOAD_FAILED` event but does not abort the run (manifest write is the
+      primary correctness guarantee; CSV is operator-inspection sugar). The `gcs_report_uri` lands in both
+      `ENUMERATOR_COMPLETED` events (scan-only and apply-write paths). Drive-by lint cleanup (Findings Triage case-1):
+      `try/except/pass` → `contextlib.suppress`; multiplication-sign chars in docstrings normalised.
 
 #### Phase 3.D.5 — Instruments-service-driven enumeration v2 (NEW 2026-05-07 — operator architectural directive)
 
