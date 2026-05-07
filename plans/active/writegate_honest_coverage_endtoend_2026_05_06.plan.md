@@ -1942,19 +1942,161 @@ the largest "didn't exist yet" slice (1.45M rows). v2 is multi-week work that re
 catalog audits + schema agreement. Operator gets immediate denominator-divergence relief from v1 while v2
 is built; no v2 prerequisite blocks v1's value.
 
-#### Phase 3.D.5 — Architectural trade-off (operator framing 2026-05-07 evening)
+#### Phase 3.D.5 — Hierarchical SSOT model (operator framing 2026-05-07 evening, REVISED)
 
-The operator captured the v1-vs-v2 trade-off cleanly:
+The operator clarified the architecture (revising the earlier v1-vs-v2 trade-off framing): v1 and v2 are
+**hierarchical layers of one model**, not competing approaches. Two SSOTs, one manifest:
 
-> "Yeah, I guess the only downside of doing it based on instrument services is if instrument services
-> haven't run yet, then what do you do? I guess it just means that we'd have to keep re-running it as
-> instrument services expand. ... Whereas if you do it this way, you're going to get a whole bunch of empty
-> data that you know is empty because you haven't run instrument services, but at least once instrument
-> service is 100%, you can run it just a straight data status, because the manifest is already making sense.
-> That's the trade-off, right?"
+* **UAC = single SSOT for "is `(asset_group, venue/chain, day)` structurally possible"** — the coarse
+  availability axis (chain genesis, venue launch, source coverage start, calendar non-trading days). Cheap,
+  idempotent, doesn't move when instruments evolve. Owned by UAC `*_LAUNCH_DATES` /
+  `CHAIN_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`.
+* **instruments-service = single SSOT for "given that triple is possible, what instruments are live"** —
+  the per-instrument universe. Time-dependent (perp futures listed/delisted/expired, fixtures created
+  per-kickoff, prediction market_ids cycled per canonical-question-group). Updates whenever the catalog
+  discovers new instruments.
 
-**Yes, that is the trade-off** — and it's the right reason to keep v1 (cross-product) AS WELL AS v2
-(catalog-driven), not replace v1 with v2:
+**They compose, they don't replace each other:**
+
+```
+expected_universe(venue, data_type, day):
+    if not UAC.venue_alive_on(venue, day):
+        yield (venue, data_type, "", "", day, reason=PRE_VENUE_LAUNCH)   # v1 layer (shipped today)
+    else:
+        for instr in instruments_service.list_instruments(venue, day):
+            if day < instr.available_from:
+                yield (..., reason=INSTRUMENT_NOT_LISTED)                # v2 layer
+            elif day > instr.available_to:
+                yield (..., reason=INSTRUMENT_DELISTED)                  # v2 layer
+            else:
+                yield (..., capture_status=expected_unattempted)         # v2 layer (NEW status)
+```
+
+**The 4th `capture_status` value: `expected_unattempted` (NEW, operator direction 2026-05-07).** Today the
+manifest only has 3 capture_status values (`captured` / `empty_confirmed` / `attempted_failed`) and they all
+imply "we tried." Per the operator: _"so we do need to write the instrument definition instruments into the
+manifest enumeration so that we can write them as something that indicates that we haven't tried them yet,
+but they should exist."_
+
+`expected_unattempted` is distinct from `empty_confirmed` (which means "we tried, source returned 0 / the
+day is structurally empty per calendar/genesis/coverage rules") and from `attempted_failed` (which means
+"we tried, got an exception"). Pre-populated by v2 enumerator from the instruments-service catalog; flipped
+to `captured` (or `empty_confirmed` / `attempted_failed`) by MTDS when it actually fetches. The manifest
+becomes the to-do list — what stays as `expected_unattempted` IS the work backlog, no separate worklist
+needed.
+
+**Coverage % at every drilldown level becomes meaningful and sums right:**
+
+* `captured` count = data exists on disk
+* `empty_confirmed` count = honest absence (pre-launch, weekend, holiday, paused-league, source-zero)
+* `attempted_failed` count = something broke (with typed error_reason)
+* `expected_unattempted` count = work backlog (catalog says it should exist, MTDS hasn't tried)
+* Coverage % = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. The
+  denominator is the catalog × dates universe, not "rows in manifest" — the universe is fully enumerated.
+
+**Tasks for the new 4th capture_status (cross-repo blast radius — multi-day shippable):**
+
+- [ ] [UAC] P0. Add `EXPECTED_UNATTEMPTED` (or `expected_unattempted`) value to the manifest
+      `CAPTURE_STATUS` enum / closed-set in
+      `unified_api_contracts/canonical/crosscutting/honest_coverage.py` (or wherever the capture_status
+      taxonomy lives). Update the docstring to spell out the 4-state model + the post-v2 idempotence
+      property (MTDS-write of `captured` cleanly supersedes a prior `expected_unattempted` row by row_key).
+- [ ] [UTL] P0. Add `ManifestWriter.record_expected_unattempted(row_key=...)` helper mirroring
+      `record_empty` / `record_failed`. Same per-VM shard isolation guards as the other write methods. CAS
+      semantics + last-writer-wins on identical row_key when the consolidator merges (so MTDS's later
+      `record_captured` for the same instrument-day cleanly overrides).
+- [ ] [UTL] P0. Update `ManifestWriter.record_captured` / `record_empty` / `record_failed` last-writer-wins
+      contract to explicitly handle the case where a prior `expected_unattempted` row exists for the same
+      row_key — the new write must supersede it cleanly (no merge conflict, no orphan row). Add a unit test
+      for the supersede path.
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi /
+      tradfi / defi / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument
+      whose `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a
+      stronger status. Today's v1 keeps writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` etc.
+- [ ] [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes
+      `expected_unattempted` count. Surface the breakdown in the response payload (`captured`,
+      `empty_confirmed`, `attempted_failed`, `expected_unattempted` as 4 buckets). Backwards-compat: if
+      `expected_unattempted` count is 0, response shape unchanged.
+- [ ] [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction
+      2026-05-07: _"data status in deployment ui needs to be able to visualise that to the instrument
+      granularity breakdown so we can visually see, per instrument, which days are available and which are
+      missing. Since there can be so many instruments, I think there's already something in the UI that
+      groups them and we can click to see more, click to see more, etc. It needs to be the same with days
+      as well so that we can see all the days available vs missing."_
+      * Today's drilldown lands at `(venue, data_type, instrument_type, instrument_id)` and shows
+        `X days captured of Y total` — aggregate. Operator wants to drill **into the days dimension** per
+        instrument to see which specific days are captured / empty / failed / unattempted.
+      * Per-instrument pagination already exists (Phase 6 shipped per
+        `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — 200 instruments per page,
+        load-more button). Mirror that pattern at the day grain: per-instrument-leaf, render a calendar /
+        list of days with status badges (4 colours for the 4 capture_status values), paginate
+        chronologically.
+      * Layout suggestion: per-instrument click expands to a year × 12-month grid (visual calendar) where
+        each cell shows the day's status colour. Hover for details (error_reason, attempted_at, file size
+        if captured). Click a day → leaf actions (re-deploy that day's shard, download the parquet,
+        inspect the failure reason).
+      * Pagination at the day grain may be unnecessary if rendered as a calendar (8 years × 365 = ~2920
+        days per instrument fits a single tall page). For instrument-types with thousands of expiring
+        contracts (options chains), the per-cluster bundle drilldown already collapses; per-day for the
+        bundle root is the relevant grain.
+- [ ] [DOCS] P0. Update
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the
+      `expected_unattempted` → `captured` supersede semantics.
+- [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference:
+      _"manifest `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` /
+      `attempted_failed` / `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`,
+      `SOURCE_COVERAGE_START`, `venue_trading_calendar`) own the coarse 'is this triple structurally
+      possible' axis. instruments-service catalog owns the fine 'given alive, what instruments exist on
+      this day' axis. Both layers write to the manifest; MTDS's `captured` writes supersede prior
+      `expected_unattempted` rows by row_key. Coverage % at every drilldown level = `captured / (captured +
+      empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe."_
+
+**Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan
+to date. Cross-repo touch:
+
+* UAC — capture_status enum extension (small)
+* UTL — `ManifestWriter` 4th method + supersede semantics (small-medium)
+* MTDS — verify that `record_captured` already supersedes prior writes by row_key (no change expected, but
+  audit needed)
+* deployment-api — coverage calc 4-bucket breakdown (small)
+* deployment-ui — per-instrument × per-day calendar visualization (medium-large; operator-flagged P0)
+* codex docs — manifest schema doc + CLAUDE.md rule (small)
+* downstream consumers — every code path that switches on `capture_status` needs a handler for the 4th
+  value (audit pass + small fixes per consumer)
+
+**Suggested sequencing** — UAC + UTL first (schema landing), then enumerator + manifest backfill, then
+deployment-api/UI. Manifest backfill ships v2 catalog reads per-asset-group (sports first since fixtures
+catalog is most mature, prediction last since `PREDICTION_GROUPS` is still empty in UAC).
+
+#### Phase 3.D.5 — Operator's reasoning trail (2026-05-07 evening, kept for audit context)
+
+The operator walked through the v1/v2 architecture in three steps. Reproduced here verbatim so the
+final hierarchical-SSOT model (immediately above) is anchored to the reasoning that produced it:
+
+**Step 1 — initial trade-off framing.** Operator: _"Yeah, I guess the only downside of doing it based on
+instrument services is if instrument services haven't run yet, then what do you do? I guess it just means
+that we'd have to keep re-running it as instrument services expand. ... Whereas if you do it this way,
+you're going to get a whole bunch of empty data that you know is empty because you haven't run instrument
+services, but at least once instrument service is 100%, you can run it just a straight data status,
+because the manifest is already making sense. That's the trade-off, right?"_ — read as v1 vs v2 competing.
+
+**Step 2 — clarification toward a hybrid.** Operator: _"a perp instrument is a shard in itself ... so when
+you're doing a data status check on market tick data service how does it know that that instrument is
+missing if it doesn't use instrument service ... unified api contracts only tells us when a venue data
+type instrument type day shard should start but it doesn't tell us how many instruments we should expect
+in that ... I could understand a hybrid ... we could use the single source of truth for like venue
+instrument type data type availability on a daily basis, but then we'd still need instrument service for
+the deep dive."_ — recognises v1 and v2 are at different grains.
+
+**Step 3 — final synthesis.** Operator: _"so we do need to write the instrument definition instruments
+into the manifest enumeration so that we can write them as something that indicates that we haven't tried
+them yet, but they should exist."_ — proposes the 4th `capture_status` (`expected_unattempted`) that
+makes the manifest fully self-describing across both grains. **This is the implementation directive**
+captured as concrete tasks in the section above.
+
+**The contrast (kept for downstream consumer audits + future-agent reading) — what changed between
+"v1 alone vs v2 alone" and the final "v1 + v2 hierarchical with `expected_unattempted`":**
 
 | Property                                        | v1 cross-product (shipped today)                                                         | v2 catalog-driven (Phase 3.D.5 above)                                                                            |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
