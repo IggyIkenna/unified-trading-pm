@@ -235,3 +235,87 @@ Same shape for Extended + Pacifica — write per-venue diagnostic scripts before
 - Hyperliquid + Aster historical: both already have historical bulk REST endpoints — covered by existing MTDS adapters.
   NOT part of this plan.
 - New DEX venues beyond the three named here. Add them to a separate plan.
+
+---
+
+## Session 2026-05-07 — empirical findings + Lighter Phase 1 SHIPPED
+
+### What changed since the plan was written
+
+The plan's "on-chain event replay via subgraph" premise turned out to be wrong for Lighter. Empirical probing of
+`api.tardis.dev/v1/exchanges/lighter`, the Lighter Python SDK (`github.com/elliottech/lighter-python`), and the Lighter
+mainnet REST endpoints from a Tokyo VM revealed:
+
+1. **Lighter is not a fully on-chain CLOB at the per-trade level.** Its `block_height` field (~229M as of May 2026) is
+   Lighter's own sequencer block, NOT zkSync L1 (~50M). The 80-hex-char `tx_hash` is also non-zkSync (zkSync uses 64-hex
+   32-byte hashes). Per-trade events are NOT posted to zkSync mainnet — they live only in Lighter's centralized indexer.
+2. **The Lighter SDK confirms `recent_trades` is hard-capped at `limit<=100` with no cursor parameter** — no `from_id` /
+   `before_id` / `time_range` argument exists. The bare REST endpoint accepts and silently ignores those params (returns
+   latest regardless).
+3. **/candles is the ONE historical-capable endpoint.** Accepts `start_timestamp` (sec) + `end_timestamp` (sec) +
+   `resolution` (1m / 5m / 15m / 1h / 4h / 1d) + `count_back`. Returns OHLCV bars with both base + quote volume + trade
+   count. Goes back to Lighter genesis (`2024-08-01` per UAC `start_date`).
+
+### Phase 1 — Lighter — SHIPPED via /candles route (not subgraph)
+
+MTDS commit `10aa715` adds `_fetch_lighter_candles` in `umi_tick_provider.py` which routes `(LIGHTER-ZKSYNC, ohlcv_1m)`
+to `/candles`. Schema matches the canonical ohlcv_1m row shape used by other OHLCV producers in MTDS (CBOE VIX 15m
+bars):
+`symbol, instrument_id, venue, instrument_type, data_type, timeframe, ts_event, ts_init, open, high, low, close, volume, trade_count`.
+
+4 unit tests pin the contract: routing (ohlcv_1m → /candles, others → /recentTrades), schema parity, day-boundary
+clipping, missing-market-id graceful handling.
+
+**What's NOT covered**: per-trade historical for Lighter. The honest gap is that this data does not exist in any public
+Lighter API. Forward-poll going forward (already running) is the only way to build per-trade history. Add `ohlcv_1m` to
+UAC `data_types` for LIGHTER-ZKSYNC so backfill VMs can request it; `trades` and `book_snapshot_5` data_types stay
+live-only.
+
+### Phase 2 — Pacifica — `/kline` discovered
+
+Empirical probe 2026-05-07 found Pacifica has `/api/v1/kline` with the same shape as Lighter's /candles, different field
+names:
+
+```
+{symbol, interval, start_time (ms), end_time (ms)} -> {success, data: [{t, T, s, i, o, c, h, l, v, n}]}
+```
+
+- `t` / `T` = bar start / end (both ms)
+- `s` = symbol, `i` = interval
+- `o, c, h, l` = OHLC (string-typed, must `float()`)
+- `v` = base volume (string)
+- `n` = trade count
+
+Verified data exists from ~2025-07-01 onward (probed BTC 1m → 1437 bars on 2026-04-01; empty for 2024-12-01 —
+pre-launch). UAC `start_date` for PACIFICA-SOLANA should match this empirical floor.
+
+**Implementation TODO**: clone the Lighter shape into `_fetch_pacifica_candles` next to `_fetch_pacifica_rest` in the
+same file. Routing rule identical to Lighter: `(PACIFICA-SOLANA, ohlcv_1m)` → `/kline`; other data_types stay on REST.
+Cluster-validation + manifest concurrency rules apply identically.
+
+### Phase 3 — Extended — no public OHLCV endpoint found
+
+Empirical probe 2026-05-07 returned 404 / empty for all candidate paths under `https://api.extended.exchange/api/v1`:
+`info/markets/{symbol}/candles`, `info/candles`, `candles`, `info/markets/{symbol}/klines`, `klines`. Extended's
+historical OHLCV may live behind authenticated routes only, or may genuinely not be exposed publicly.
+
+**Implementation TODO**: deeper probe needed before writing an adapter:
+
+1. Read Extended docs at `docs.extended.exchange` — find the documented historical endpoint.
+2. If none, Extended may need a Starknet event subgraph (unlike Lighter, Extended IS Starknet-native — settlement events
+   SHOULD be on-chain).
+3. If on-chain replay is the path, add `STARKNET_RPC_TEMPLATE` to UAC `CHAIN_RPC_TEMPLATES` (currently only zkSync +
+   Solana).
+
+### Updated phase summary
+
+| Phase | Venue             | Path               | Status                              |
+| ----- | ----------------- | ------------------ | ----------------------------------- |
+| 1     | LIGHTER-ZKSYNC    | REST `/candles`    | SHIPPED 2026-05-07 (MTDS `10aa715`) |
+| 2     | PACIFICA-SOLANA   | REST `/kline`      | TODO (mirror P1)                    |
+| 3     | EXTENDED-STARKNET | TBD (probe deeper) | BLOCKED on research                 |
+
+### Reference commits — Session 2026-05-07
+
+- MTDS `10aa715` — `_fetch_lighter_candles` + 4 unit tests
+- PM `<this commit>` — empirical findings update
