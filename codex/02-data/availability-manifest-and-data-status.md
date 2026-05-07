@@ -52,30 +52,31 @@ A common misread (incident 2026-05-07 — sub-agent + main-agent both miscounted
 multiple GCS buckets by `(asset_group=defi, data_type)`**. Reading only the "canonical" `market-data-tick-defi-{pid}`
 bucket and concluding "Arb/Base/Polygon are at 0%" is **wrong** — those chains have data in the per-data_type buckets.
 
-**Bucket layout** (verified 2026-05-07 by listing every DeFi-named bucket in
-`gs://central-element-323112` + reading each `_index/availability_index.parquet`):
+**Bucket layout** (verified 2026-05-07 by listing every DeFi-named bucket in `gs://central-element-323112` + reading
+each `_index/availability_index.parquet`):
 
-| Bucket pattern                                | Carries data_types                                                                                                                | Phase | Chains observed                                              |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------ |
-| `market-data-tick-defi-{pid}` (asset-group)   | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `rate_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2  | ETHEREUM + SOLANA                                            |
-| `lending-indices-{pid}`                       | `lending_indices`                                                                                                                 | 1     | ETHEREUM + 9 EVM chains (Optimism / Base / Arbitrum / Scroll / Avalanche / Linea / BSC / Polygon / zkSync) |
-| `dex-swaps-{pid}`                             | `dex_swaps`                                                                                                                       | 1     | ETHEREUM + 7 EVM chains                                      |
-| `dex-pools-{pid}` (override-targeted)         | `dex_pools`                                                                                                                       | 1     | (per-pool granularity)                                       |
-| `oracle-prices-{pid}`                         | `oracle_prices`                                                                                                                   | 1     | ETHEREUM + Arbitrum / Base / Optimism / Polygon              |
-| `gas-fees-{pid}`                              | `gas_fees`                                                                                                                        | 1     | ETHEREUM + 9 EVM chains                                      |
-| `lst-rates-{pid}`                             | `lst_rates`                                                                                                                       | 1     | ETHEREUM + SOLANA                                            |
-| `perp-funding-{pid}`                          | `perp_funding`                                                                                                                    | 1     | HYPERLIQUID, ASTER (DEX perps)                               |
-| `liquidations-{pid}` (override-targeted)      | `liquidations`                                                                                                                    | 1     | EVM                                                          |
-| `evm-defi-{pid}`                              | `evm_defi`, `lending_indices`                                                                                                     | mixed | ETHEREUM + 4 EVM chains                                      |
-| `solana-defi-{pid}`                           | `solana_defi`                                                                                                                     | mixed | SOLANA                                                       |
-| `instruments-store-defi-{pid}`                | (instruments metadata, multi-chain)                                                                                               | n/a   | 7+ chains                                                    |
+| Bucket pattern                              | Carries data_types                                                                                                                                                                                                                                                                                                                                        | Phase | Chains observed                                                                                            |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------- |
+| `market-data-tick-defi-{pid}` (asset-group) | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `rate_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2   | ETHEREUM + SOLANA                                                                                          |
+| `lending-indices-{pid}`                     | `lending_indices`                                                                                                                                                                                                                                                                                                                                         | 1     | ETHEREUM + 9 EVM chains (Optimism / Base / Arbitrum / Scroll / Avalanche / Linea / BSC / Polygon / zkSync) |
+| `dex-swaps-{pid}`                           | `dex_swaps`                                                                                                                                                                                                                                                                                                                                               | 1     | ETHEREUM + 7 EVM chains                                                                                    |
+| `dex-pools-{pid}` (override-targeted)       | `dex_pools`                                                                                                                                                                                                                                                                                                                                               | 1     | (per-pool granularity)                                                                                     |
+| `oracle-prices-{pid}`                       | `oracle_prices`                                                                                                                                                                                                                                                                                                                                           | 1     | ETHEREUM + Arbitrum / Base / Optimism / Polygon                                                            |
+| `gas-fees-{pid}`                            | `gas_fees`                                                                                                                                                                                                                                                                                                                                                | 1     | ETHEREUM + 9 EVM chains                                                                                    |
+| `lst-rates-{pid}`                           | `lst_rates`                                                                                                                                                                                                                                                                                                                                               | 1     | ETHEREUM + SOLANA                                                                                          |
+| `perp-funding-{pid}`                        | `perp_funding`                                                                                                                                                                                                                                                                                                                                            | 1     | HYPERLIQUID, ASTER (DEX perps)                                                                             |
+| `liquidations-{pid}` (override-targeted)    | `liquidations`                                                                                                                                                                                                                                                                                                                                            | 1     | EVM                                                                                                        |
+| `evm-defi-{pid}`                            | `evm_defi`, `lending_indices`                                                                                                                                                                                                                                                                                                                             | mixed | ETHEREUM + 4 EVM chains                                                                                    |
+| `solana-defi-{pid}`                         | `solana_defi`                                                                                                                                                                                                                                                                                                                                             | mixed | SOLANA                                                                                                     |
+| `instruments-store-defi-{pid}`              | (instruments metadata, multi-chain)                                                                                                                                                                                                                                                                                                                       | n/a   | 7+ chains                                                                                                  |
 
 **deployment-api routes correctly** — see `data_status_service.py`
-[`_BUCKET_CATEGORY_OVERRIDES`](../../deployment-api/deployment_api/services/data_status_service.py)
-(line 2802) which explicitly maps `(market-tick-data-service, gas-fees|evm-defi|solana-defi|dex-pools|dex-swaps|lending-indices|liquidations|lst-rates|oracle-prices|perp-funding) → {data_type}-{pid}`. The
-[`_MTDS_DEFI_SUB_DIMENSIONS`](../../deployment-api/deployment_api/services/data_status_service.py) list (line 2818)
-enumerates the Phase-1 sub-buckets so the data-status panel queries each one. **If you're computing DeFi coverage,
-read every bucket — not just the canonical asset-group one.**
+[`_BUCKET_CATEGORY_OVERRIDES`](../../deployment-api/deployment_api/services/data_status_service.py) (line 2802) which
+explicitly maps
+`(market-tick-data-service, gas-fees|evm-defi|solana-defi|dex-pools|dex-swaps|lending-indices|liquidations|lst-rates|oracle-prices|perp-funding) → {data_type}-{pid}`.
+The [`_MTDS_DEFI_SUB_DIMENSIONS`](../../deployment-api/deployment_api/services/data_status_service.py) list (line 2818)
+enumerates the Phase-1 sub-buckets so the data-status panel queries each one. **If you're computing DeFi coverage, read
+every bucket — not just the canonical asset-group one.**
 
 #### Why two manifest layouts coexist
 
@@ -84,27 +85,27 @@ read every bucket — not just the canonical asset-group one.**
    Subgraph / chain-specific RPC adapters can rate-limit independently and operators can drill in via per-bucket
    coverage panels.
 2. **Phase-2 event-typed handlers + eigenlayer_rewards** (`liquidation_events`, `flash_loan_events`, etc.) — newer
-   pattern; lands in the canonical `market-data-tick-defi-{pid}` bucket (no override needed; default
-   `_BUCKET_TEMPLATES` entry picks them up).
+   pattern; lands in the canonical `market-data-tick-defi-{pid}` bucket (no override needed; default `_BUCKET_TEMPLATES`
+   entry picks them up).
 
 #### Vocabulary inconsistency to know about (kebab-case vs snake_case)
 
 Many DeFi buckets contain BOTH `data_type=lending-indices` (kebab-case, older write path) AND
-`data_type=lending_indices` (snake_case, newer + UAC-canonical) for the SAME data. Concrete numbers
-(verified 2026-05-07):
+`data_type=lending_indices` (snake_case, newer + UAC-canonical) for the SAME data. Concrete numbers (verified
+2026-05-07):
 
-* `lending-indices-{pid}`: 24,976 kebab-case + 12,024 snake_case rows
-* `dex-swaps-{pid}`: 28,171 kebab + 18,320 snake
-* `lst-rates-{pid}`: 1,560 kebab + 2,796 snake
-* `oracle-prices-{pid}`: 1,926 kebab + 5,106 snake
-* `perp-funding-{pid}`: 3,298 kebab + 2,277 snake
+- `lending-indices-{pid}`: 24,976 kebab-case + 12,024 snake_case rows
+- `dex-swaps-{pid}`: 28,171 kebab + 18,320 snake
+- `lst-rates-{pid}`: 1,560 kebab + 2,796 snake
+- `oracle-prices-{pid}`: 1,926 kebab + 5,106 snake
+- `perp-funding-{pid}`: 3,298 kebab + 2,277 snake
 
 The deployment-api handles this via
-[`_canonicalise_defi_data_types()`](../../deployment-api/deployment_api/services/data_status_service.py)
-(line 991) which read-time normalises kebab → snake. Per the function's docstring, "safe to remove once the
-corresponding one-shot manifest migration runs (Plan B follow-up — currently no successor plan)" — so this is a real
-follow-up: write a migration script that rewrites kebab `data_type` values in place across the 5 affected buckets,
-then delete the canonicaliser. Aligns with the workspace "Manifest migration, NOT fallback" rule.
+[`_canonicalise_defi_data_types()`](../../deployment-api/deployment_api/services/data_status_service.py) (line 991)
+which read-time normalises kebab → snake. Per the function's docstring, "safe to remove once the corresponding one-shot
+manifest migration runs (Plan B follow-up — currently no successor plan)" — so this is a real follow-up: write a
+migration script that rewrites kebab `data_type` values in place across the 5 affected buckets, then delete the
+canonicaliser. Aligns with the workspace "Manifest migration, NOT fallback" rule.
 
 #### Operator verification recipe — exhaustive bucket walk
 
@@ -127,9 +128,9 @@ for B in ['dex-swaps','evm-defi','gas-fees','lending-indices','lst-rates','marke
 ```
 
 Reference incident: **2026-05-07** — a per-chain coverage diagnosis sub-agent read only `market-data-tick-defi`,
-concluded Arb/Base/Polygon were at 0%, surfaced as "PLANNING-CRITICAL CORRECTION" to the operator. Wrong call —
-those chains have ~1k-5k rows each in the per-data_type buckets. The codex section above is the durable answer so
-future agents don't repeat this misread.
+concluded Arb/Base/Polygon were at 0%, surfaced as "PLANNING-CRITICAL CORRECTION" to the operator. Wrong call — those
+chains have ~1k-5k rows each in the per-data_type buckets. The codex section above is the durable answer so future
+agents don't repeat this misread.
 
 ### SSOT Locations
 
@@ -553,9 +554,9 @@ identical whether the source was silent or the pipeline had never run. `write_wi
 7. **DeFi migrated-bundle wildcard** (added 2026-05-07 — C.9 audit) — `migrate_mtds_defi_legacy_venue_underscore.py`
    produced `ticks_migrated_*.parquet` bundle files at the combined-venue prefix
    (`raw_tick_data/by_date/day=*/asset_group=defi/venue=PROTOCOL-CHAIN/`) WITHOUT the trailing
-   `instrument_type=*/data_type=*/` segments. The bundle holds ALL data_types for that (date, protocol, chain) tuple in
+   `instrument_type=*/data_type=*/` segments. The bundle holds ALL data*types for that (date, protocol, chain) tuple in
    one parquet. The audit's standard `data_type={dt}/` substring check fails because the bundle path has no such
-   substring; the wildcard accepts any `ticks_migrated_*.parquet` file under a matching combined-venue prefix as
+   substring; the wildcard accepts any `ticks_migrated*\*.parquet` file under a matching combined-venue prefix as
    evidence of capture for any (data_type, instrument_type). DeFi-only — the migration bundle pattern is not used by
    other asset_groups.
 
@@ -604,8 +605,8 @@ the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_
 
 **History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) →
 354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry. **2026-05-07
-defi audit (C.9)** reduced AAVEV3 false-positives from 29,782 (entire dataset, would have destroyed all manifest
-state if `--apply` had run) → 0 after axes 6 + 7 landed.
+defi audit (C.9)** reduced AAVEV3 false-positives from 29,782 (entire dataset, would have destroyed all manifest state
+if `--apply` had run) → 0 after axes 6 + 7 landed.
 
 ### Audit-script gotchas — adapter-specific path duality
 
@@ -646,8 +647,8 @@ Per-adapter quirks future audits MUST handle to avoid false-positive flips destr
 ### Rollup-side metric inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07
 
 **Symptom (per the C.9 wrapper-tracker investigation 2026-05-07)**: the deployment-api offline rollup at
-`gs://central-element-323112-data-status-rollups/market-tick-data-service/full.json.gz` emits per-(combined-venue)
-DEFI entries where `dates_found` is non-zero for venues that have ZERO rows in the canonical manifest. Example:
+`gs://central-element-323112-data-status-rollups/market-tick-data-service/full.json.gz` emits per-(combined-venue) DEFI
+entries where `dates_found` is non-zero for venues that have ZERO rows in the canonical manifest. Example:
 
 ```
 AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0, empty_confirmed: 0, attempted_failed: 0}
@@ -665,13 +666,94 @@ reference, OR a default initialisation that was never overwritten when the manif
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
-**Action**: file under `infrastructure_master_2026_05_07.plan.md` § Data-status multi-axis follow-up — the rollup
-worker must derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected
-denominator. Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading.
-Owner: data-status multi-axis stream.
+**Action**: file under `infrastructure_master_2026_05_07.plan.md` § Data-status multi-axis follow-up — the rollup worker
+must derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected
+denominator. Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner:
+data-status multi-axis stream.
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
 canonical phantom-audit blast radius.
+
+### Rollup-vs-drilldown denominator divergence (codified 2026-05-07)
+
+**Two code paths, two denominators.** The data-status panel surfaces TWO percentages that operators can see diverge, and
+the divergence is by-design (not a bug) — but the workspace is closing it via writegate Phase 2.E.2.
+
+| Layer                    | Code path                                                                                                   | Source                                                                                                        | Denominator                                                                                                                                                                                      |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Top-level (panel header) | [`_slice_rollup_to_window`](../../../deployment-api/deployment_api/services/data_status_service.py)         | Offline rollup blob (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`); sub-2s slicer | **Pre-computed expected universe** (calendar-clipped per `venue_trading_calendar`, source-coverage-clipped per UAC `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` / `CHAIN_GENESIS_DATES`) |
+| Drill-down breakdown     | [`get_hierarchical_drilldown`](../../../deployment-api/deployment_api/services/data_status_hierarchical.py) | Live `read_availability_index(bucket)` — manifest parquet; ~30MB read                                         | **Manifest row count** (only what the writer physically recorded)                                                                                                                                |
+
+**Where they diverge.** Any expected `(shard_key, day)` tuple that has **no manifest row at all** (not `captured`, not
+`empty_confirmed`, not `attempted_failed` — just absent) gets counted in the rollup denominator but missed by the
+drill-down. Today this happens for:
+
+- **DeFi pre-genesis chain dates** — ARBITRUM pre-2021-08-31, BASE pre-2023-07-13, LINEA pre-2023-07-11, etc. The
+  orchestrator pre-skips with no row written.
+- **Sports pre-`SOURCE_COVERAGE_START` dates** per-source (api_football pre-2018-01-01, footystats pre-2019-01-01,
+  understat pre-2015-01-16, …).
+- **Paused-league windows in `KNOWN_COVERAGE_GAPS`** (currently empty registry; will populate over time).
+- **TradFi non-trading days** (calendar pre-skip — was emitting no row pre-Phase 2.E.2; partly shipped 2026-05-07).
+- **CeFi instruments not yet listed / already delisted** on a given day.
+
+### Why two paths exist (cannot collapse to one)
+
+Operators sometimes ask: "why don't we just use drilldown for both?" The answer is performance + cost asymmetry:
+
+- Rollup: 30MB pre-computed JSON.gz, slicer fast-path, sub-2-second response for full Jan 2018 → today window. Used by
+  the panel header that's loaded on every dashboard view.
+- Drilldown: live manifest parquet read (~30MB per asset_group), more compute on each request, paginated children. Used
+  when an operator clicks into a venue.
+
+Collapsing the panel header onto the drilldown's live-manifest read would 6x the every-page load time. **The canonical
+fix is not to merge the paths; the canonical fix is to make their denominators agree** by ensuring the manifest carries
+a row for every expected `(shard_key, day)`.
+
+### The fix — writegate Phase 2.E.2 + expected-universe enumeration v2
+
+The closure has two halves, both required:
+
+**Half 1 — Forward-write `record_expected_empty(reason=EXPECTED_*)`** (writegate Phase 2.E.2 — partly shipped
+2026-05-07). Every NEW empty case at adapter / orchestrator level emits a manifest row with structured reason instead of
+skipping write. Adapter migrations done for sports + cefi + defi + tradfi this session
+([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
+
+**Half 2 — Backward-fill the expected universe** (NOT YET BUILT — tracked in plan; codified here 2026-05-07). Enumerate
+the expected universe per asset*group and write
+`record_expected_empty(reason=EXPECTED*\*)`rows for every tuple that has no manifest row today. The existing reconciler at`instruments-service/scripts/reconcile_expected_absence_reasons.py`
+(shipped 2026-05-07 late3) handles **legacy null-reason rows** but does **NOT enumerate the universe**. The v2
+expected-universe enumerator that DOES enumerate is the deferred follow-up; it requires per-asset-group cross-product
+over UAC SSOTs:
+
+| Asset group | Expected-universe inputs (UAC + service catalogs)                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| DeFi        | `CHAIN_GENESIS_DATES` × instruments-service protocol catalog × `DATA_TYPES_BY_ASSET_GROUP['defi']` × dates                                                                     |
+| Sports      | `SOURCE_COVERAGE_START` (+ `DATA_TYPE_COVERAGE_START` overrides) × leagues catalog (with paused-league filtering via `is_in_known_gap`) × `SPORTS_DATA_TYPE_TO_FOLDER` × dates |
+| TradFi      | `venue_trading_calendar` × instruments-service catalog × `DATA_TYPES_BY_ASSET_GROUP['tradfi']` × dates                                                                         |
+| CeFi        | Instrument lifecycle (`available_from`, `available_to`, `expiry`) × venue × `DATA_TYPES_BY_ASSET_GROUP['cefi']` × dates                                                        |
+| Prediction  | Market lifecycle (`market_created_at`, `settlement_time`) × canonical_question_group registry × `DATA_TYPES_BY_ASSET_GROUP['prediction']` × dates                              |
+
+### Architectural framing — why `empty_confirmed + EXPECTED_*` is identical to "not_attempted" placeholder
+
+Operators sometimes propose a separate `not_attempted` capture*status to mark expected-but-untouched tuples. The
+workspace chose `empty_confirmed + error_reason=EXPECTED*\*` instead. Both are functionally identical — the
+denominator-divergence closure depends on the row EXISTING, not on the specific status value:
+
+- **Workspace approach**: `capture_status=empty_confirmed`,
+  `error_reason=EXPECTED_PRE_GENESIS_CHAIN | EXPECTED_HOLIDAY | EXPECTED_PRE_SOURCE_COVERAGE_START | …`. Reuses the
+  existing `empty_confirmed` plumbing (downstream services already branch on it for NaN-fills, denominator counting).
+  Closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS` (per CLAUDE.md "Reason taxonomy codified 2026-05-07").
+  Consumer-class behaviour documented in
+  [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md).
+
+- **Hypothetical "not_attempted" approach**: separate status enum value. Identical effect (manifest carries the row,
+  drilldown counts it, rollup denominator matches). Would have required updating every downstream consumer to branch on
+  the new status. Net: more code change, same outcome.
+
+The **absence-of-row semantic** ("not in expected universe") is preserved either way. Once Half 2 ships, manifest
+absence definitively means "outside expected universe" (e.g. a pre-2021-08-31 row for an Arbitrum tuple is absent
+because Arbitrum didn't exist; the rollup's expected denominator clips pre-genesis dates so the % stays honest).
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 

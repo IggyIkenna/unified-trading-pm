@@ -1680,6 +1680,79 @@ rows; sports has ~thousands of paused-league rows). Operator decision per asset_
 QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback unit-tested;
 per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.
 
+#### Phase 3.D.4 — Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)
+
+**Why this exists.** Phase 3.D.1 reconciler stamps reasons on `empty_confirmed AND error_reason IS NULL` rows (legacy
+backfill), but does **NOT enumerate the expected universe** — tuples that have NO manifest row at all stay absent. This
+leaves the rollup-vs-drilldown denominator gap open (per
+[`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+§ "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"). To close the gap, every expected
+`(shard_key, day)` MUST have a manifest row.
+
+**Operator directive 2026-05-07**: _"if needs be, we can just write the manifest with every single entry as
+not-attempted or something that's not the same as empty, so that all the possible combinatorics are already reflected in
+the manifest. Use that to plug in the gaps... so that the manifest not having an entry literally means it's not
+relevant."_ The workspace already has the equivalent structure (`empty_confirmed + error_reason=EXPECTED_*`); this
+sub-phase ships the enumerator that physically writes those rows.
+
+**Scope per asset_group** (cross-product over UAC SSOTs + service catalogs):
+
+| Asset group | Expected-universe inputs                                                                                                                                                                                                | Expected backfill volume                                    |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| DeFi        | UAC `CHAIN_GENESIS_DATES` × instruments-service protocol catalog × UAC `DATA_TYPES_BY_ASSET_GROUP['defi']` × dates(2018-01-01 → today). Per-(chain, protocol, data_type) clip at `max(chain_genesis, protocol_launch)`. | ~few thousand pre-genesis rows per chain × N chains         |
+| Sports      | UAC `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` × leagues catalog × `is_in_known_gap` filter × `SPORTS_DATA_TYPE_TO_FOLDER` × dates                                                                            | ~thousands of paused-league + pre-coverage rows per source  |
+| TradFi      | UAC `venue_trading_calendar` × instruments-service catalog × UAC `DATA_TYPES_BY_ASSET_GROUP['tradfi']` × dates                                                                                                          | ~190k weekend/holiday rows over 5 years (already partly on) |
+| CeFi        | Instrument lifecycle (`available_from` / `available_to` / `expiry`) × venue × UAC `DATA_TYPES_BY_ASSET_GROUP['cefi']` × dates                                                                                           | ~few hundred lifecycle-bound rows per venue                 |
+| Prediction  | Market lifecycle (`market_created_at`, `settlement_time`) × UAC `PREDICTION_GROUPS` registry × dates                                                                                                                    | depends on prediction-canonical rollout (Phase 2.E.5 dep)   |
+
+**Tasks** — sequential per asset_group (DeFi first per operator priority — multi-chain coverage the most user-visible).
+
+- [ ] [SCRIPT] P0. NEW `instruments-service/scripts/enumerate_expected_universe.py` — accepts
+      `--asset-group {defi |     sports | tradfi | cefi | prediction}` flag, walks the asset*group's expected universe
+      per the matrix above, reads the canonical manifest ONCE (manifest concurrency principle), filters to tuples with
+      NO manifest row, writes
+      `record_expected_empty(reason=EXPECTED*\*)`rows via UTL`record_expected_empty`helper. Default     scan-only (CSV report);`--apply-write`requires`MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=...`per the     per-VM shard isolation rule.`--max-writes-per-run`default 100k halt safety. Mirrors the safety scaffolding     of`reconcile_expected_absence_reasons.py`.
+- [ ] [SCRIPT] P0. Per-asset-group reason classifier dispatch — DeFi → `EXPECTED_PRE_GENESIS_CHAIN` +
+      `EXPECTED_INSTRUMENT_NOT_LISTED`; Sports → `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SOURCE_COVERAGE_START`; TradFi
+      → `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`; CeFi → `EXPECTED_INSTRUMENT_NOT_LISTED` +
+      `EXPECTED_INSTRUMENT_DELISTED`. Reuses UTL `classify_legacy_empty_row` SSOT (single classifier, both reconciler +
+      enumerator import from UTL).
+- [ ] [SCRIPT] P0. NEW `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` — follows
+      `launch-defi-phantom-recon-vm.sh` pattern (singleton lock per asset_group prefix, e2-standard-4, `VM_TASK=`
+      enumerator metadata). Add prefix `expected-universe-enum-` to
+      `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry per VM Naming Convention
+      rule. Same-region VM (asia-northeast1-c) for fast manifest reads.
+- [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the enumerator's classifier
+      dispatch. Test the cross-product enumeration shape (right rows present, wrong rows absent) with mocked manifest +
+      UAC SSOT fixtures.
+- [ ] [VM-LAUNCH] P0. Run DeFi enumerator first (highest-leverage; multi-chain pre-genesis is the biggest visible gap):
+      scan-only on a same-region GCE VM, review CSV → `--apply-write` after operator confirms volume looks right. Verify
+      `STARTED` event within 90s per no-fire-and-forget rule.
+- [ ] [VM-LAUNCH] P0. After DeFi confirms, sequentially launch Sports / TradFi / CeFi / Prediction enumerators. Each
+      gets its own scan-only → review → apply-write cycle. Singleton-lock per asset_group prefix prevents duplicate
+      runs.
+- [ ] [VERIFY] P0. After each asset_group's `--apply-write` lands, re-check the rollup-vs-drilldown gap by spot-
+      checking 3-5 (venue, data_type) tuples across the date window. The two percentages should now agree (within rollup
+      cache TTL — default 5min).
+- [ ] [DOCS] P0. Update
+      [`codex/02-data/expected-absence-backfill-runbook.md`](../../codex/02-data/expected-absence-backfill-runbook.md)
+      with the v2 enumerator section: invocation, expected per-asset-group volume, sequencing, verification steps.
+- [ ] [DOCS] P0. After all 5 asset_groups land, mark
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **shipped** with the VM
+      commit shas + verification evidence.
+
+**QG between Phase 3.D.4 and Phase 4**: every asset_group's enumerator scan-only run reviewed by operator;
+`--apply-write` produces convergent rollup-vs-drilldown percentages on spot-checked tuples; codex doc updated to reflect
+shipped state.
+
+**Cost estimate per asset_group VM**: ~e2-standard-4 + 50GB + 30-60min runtime ≈ $0.50-$1.00 per VM. Total
+five-asset-group sequence ≈ $5 + ~3hr operator time. Cheap relative to the operator-time savings from honest rollup
+percentages.
+
+**Successor / co-ordination**: Phase 3.D.4 is paired with the per-asset-group **forward-write** Phase 2.E.2 work already
+in flight — once both halves ship per asset_group, that asset_group's denominator is closed permanently.
+
 ---
 
 ## Phase 4 — Data-status UI + alerts (parallel with Phase 2 after Phase 1 lands)
