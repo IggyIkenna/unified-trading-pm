@@ -1544,10 +1544,20 @@ split.
       prediction_canonical_question_group are deferred (script returns exit 3 + RECONCILER_FAILED event with
       `reason=data_type_deferred`) until predictions Phase 1A + sports Phase 2.B's lifecycle SSOT lands. Shipped
       MTDS@ba5423f 2026-05-07.
-- [ ] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw_tick parquets; for each instrument's
+- [x] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw_tick parquets; for each instrument's
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
-      (this is upstream-bug detection, not data-quality fix).
+      (this is upstream-bug detection, not data-quality fix). Shipped MTDS@a32433b —
+      `scripts/mtds_reconcile_partition_mismatch.py` (454 lines). Walks `raw_tick_data/by_date/day=*/...` via
+      ThreadPoolExecutor + pyarrow column-only reads; samples up to `--sample-size` rows (default 1000) per parquet
+      and counts ticks whose `tick_timestamp.date()` differs from the path partition `day=`. Probes 7 candidate
+      timestamp column names (`timestamp` / `ts` / `tick_timestamp` / `event_timestamp` / `block_timestamp` /
+      `trade_timestamp` / `kline_timestamp`); skips parquets without one. Output: CSV report at
+      `$TMPDIR/mtds-partition-mismatch-{asset_group}-{ts}.csv` + top-20 `(venue, data_type, day)` aggregate logged
+      for operator quick-look. **Stats-only by design** — does NOT flip manifest rows. Operator decides remediation
+      (typically: launch MTDS gapfill VM for the high-mismatch_pct tuples). RECONCILER_* events emitted via UTL
+      log_event. Filters: `--asset-group {cefi,defi,tradfi,prediction}` + optional `--venue` / `--data-type` /
+      `--day` for incremental review. Smoke-verified module loads + asset_group set + timestamp probe order.
 - [x] [SCRIPT] P0. `features_sports_reconcile_available_at.py` — for every features-sports parquet on disk, check if
       `available_at` column present + populated correctly per the new UAC semantic. If missing or wrong → flip manifest
       from `captured` to `attempted_failed[reason=MissingAvailableAt]`. Re-attempt happens via Phase 2.C re-run. Shipped
