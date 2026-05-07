@@ -25,6 +25,36 @@ related_plans:
 
 # Sports Master — asset_group umbrella
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: ~70 of 70 unchecked todos
+- **Mis-marked DONE → flipped**: 0 (existing checked items intact and accurate per commit refs)
+- **In-flight (running VMs)**: 4 VMs in current gcloud snapshot — `af-backfill-20260507-033214` (T+0h, just started;
+  api_football all 4 entities), `sfi-backfill-20260507-010938` (T+5h; SFI_PROGRESSIVE_STATS),
+  `us-backfill-20260507-010653` (T+5h; understat XG), and `vm-zombie-watchdog-20260506-175221` (T+22h; ongoing
+  watchdog). Note: `fs-backfill` and `weather-backfill` named in plan are NOT in current snapshot — either completed
+  already, were renamed, or named differently. ETA for active 3: 4-12h depending on date range, so 2026-05-07 to
+  2026-05-08
+- **Blocked by**: `manifest_migration_master_2026_05_07:Stage 1` (sports `data_available_at` rename Phase 2 =
+  operator-triggered GCE migration); `writegate_honest_coverage_endtoend:Phase 2.C` (`_ensure_timestamp` shim deletion
+  intersects rename Phase 3)
+- **Blocks**: `master_to_live_defi_2026_05_23:G` (DART manual-trade gate); `predictions_master:ML half` (gated on sports
+  half completion of `sports_predictions_e2e`)
+- **Last meaningful commit**: instruments-service@`8050477` (A1 Phase 1 sports data_available_at→available_at migration
+  script + 11 unit tests); instruments-service@`070f7e7` (api_football throttle bumped to full Mega tier 15 req/sec);
+  instruments-service@`cf20016` (promote recovery_fixture_ids to redo_all bypassing pre-flight skip);
+  instruments-service@`9f0e3f9` (dedup_phantom_after_recovery.py shipped); features-sports@`a215e36` (Path-A post-fetch
+  record_empty with reason=SOURCE_RETURNED_ZERO); features-sports@`f123069` (features_sports_reconcile_available_at.py —
+  Phase 3.B legacy gap detector); deployment-service@`7453741`/`3a95ae7` (`--recovery-fixture-ids` plumbed through 4
+  sports launchers + AF launcher + chain runner); UAC@`fb02104` (event_time field on CanonicalFixtureEvent — Phase 2.D)
+- **Recommendation**: KEEP ACTIVE. Heavy P0/P1 surface area + cross-plan coordination required
+  (rename→writegate→fixture-recovery dedup chain). Some "ai/" plan refs (e.g.
+  `api_football_minimal_flattening_removal_2026_05_07.plan.md` for B.1) need verification — those are still in
+  `plans/ai/`. After 4 recovery VMs drain (ETA 2026-05-08), the post-recovery dedup script
+  (`dedup_phantom_after_recovery.py`) is the critical-path next move. Do NOT flip B.1/C.2/C.4/C.6 to DONE — those are
+  real shipped-code-pending plans.
+
 ## Scope
 
 Single source of truth for **sports asset_group** work. Per master plan asset-group readiness ladder, sports is
@@ -106,49 +136,69 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 #### Phase 2 — Operator runs migration (PENDING — sequenced after Phase 1)
 
 - [ ] [OPERATOR] P0. Pause sports forward-poll VMs (`af-fwd-*`, `fs-fwd-*`, `tm-fwd-*`, `sfi-fwd-*`, `us-fwd-*`,
-      `openmeteo-fwd-*`).
-- [ ] [OPERATOR] P0. Pause sports backfill VMs (`af-backfill-*`, `fs-backfill-*`, etc.).
+      `openmeteo-fwd-*`). [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 1 sequencing — Phase
+      2 starts after current 4 recovery VMs drain (2026-05-08)]
+- [ ] [OPERATOR] P0. Pause sports backfill VMs (`af-backfill-*`, `fs-backfill-*`, etc.). [AUDIT 2026-05-07: BLOCKED-ON
+      manifest_migration_master_2026_05_07:Stage 1 — coordinate with current `af-backfill`/`sfi-backfill`/`us-backfill`
+      recovery VMs]
 - [ ] [OPERATOR] P0. Launch migration VM in `asia-northeast1-c` per CLAUDE.md "same-region GCE VM" rule. VM name
       `sports-migrate-available-at-{ts}` (add prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first). Run
-      `--dry-run` first; review; then full run.
+      `--dry-run` first; review; then full run. [AUDIT 2026-05-07: FRESH — actionable post recovery-VM-drain]
 - [ ] [OPERATOR] P0. Verify completion: spot-check ~20 parquets across years 2018-2026 — `pq.read_schema(uri).names`
-      includes `available_at` and not `data_available_at`.
-- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships.
+      includes `available_at` and not `data_available_at`. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 2 migration
+      VM run]
+- [ ] [OPERATOR] P0. DO NOT resume FWD/BACKFILL VMs until Phase 3 atomic source rename ships. [AUDIT 2026-05-07:
+      BLOCKED-ON sports_master:Phase 3]
 
 #### Phase 3 — Atomic 4-repo source rename (PENDING — sequenced after Phase 2)
 
-- [ ] [SCRIPT] P0. UAC: rename in 4 schema files (1 commit, push to `live-defi-rollout`).
-- [ ] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push).
-- [ ] [SCRIPT] P0. instruments-service: rename 13 orchestrator callsites + 2 scripts + tests (1 commit, push).
+- [ ] [SCRIPT] P0. UAC: rename in 4 schema files (1 commit, push to `live-defi-rollout`). [AUDIT 2026-05-07: BLOCKED-ON
+      sports_master:Phase 2 migration VM completion]
+- [ ] [SCRIPT] P0. UTL: rename `DEFAULT_AS_OF_COLUMNS` + `point_in_time.py` comment + tests (1 commit, push). [AUDIT
+      2026-05-07: BLOCKED-ON sports_master:Phase 2]
+- [ ] [SCRIPT] P0. instruments-service: rename 13 orchestrator callsites + 2 scripts + tests (1 commit, push). [AUDIT
+      2026-05-07: BLOCKED-ON sports_master:Phase 2]
 - [ ] [SCRIPT] P0. features-sports-service: rename `batch_handler.py` reference. **Coordinate with writegate Phase 2.C**
       `_ensure_timestamp` deletion if 2.C is mid-flight (fold into 2.C's batch_handler work instead of separate commit).
-- [ ] [QG] P0. Run `quality-gates.sh` on all 4 repos sequentially before each push.
+      [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 2 + writegate_honest_coverage_endtoend:Phase 2.C coordination]
+- [ ] [QG] P0. Run `quality-gates.sh` on all 4 repos sequentially before each push. [AUDIT 2026-05-07: BLOCKED-ON
+      sports_master:Phase 3 commits]
 - [ ] [QG] P0. Workspace-wide ripgrep for stragglers — `rg -n 'data_available_at' --type py --glob '!.venv*'` returns
-      ZERO non-test, non-archived results.
+      ZERO non-test, non-archived results. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 3 commits]
 - [ ] [SKIP] `tests/unit/test_availability_stamping.py` in UTL — DIRTY with another agent's WIP, do NOT touch in Phase 3
-      ship; coordinate with owner before final ship.
+      ship; coordinate with owner before final ship. [AUDIT 2026-05-07: BLOCKED-ON UTL teammate coordination per
+      CLAUDE.md "Two teammates" rule]
 
 #### Phase 4 — Writegate Phase 2.C unblock + verify (PENDING)
 
-- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`.
-- [ ] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped.
-- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs.
-- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs.
+- [ ] [SCRIPT] P0. Smoke-run sports backfill; confirm `record_captured` no longer raises `LookaheadBiasError`. [AUDIT
+      2026-05-07: BLOCKED-ON sports_master:Phase 3]
+- [ ] [VERIFY] P0. Update writegate plan Phase 2.C "prerequisites" section to mark sports rename as shipped. [AUDIT
+      2026-05-07: BLOCKED-ON sports_master:Phase 3]
+- [ ] [VERIFY] P0. Update master plan Q&A 14 to mark HIGH-2 as SHIPPED + record commit SHAs. [AUDIT 2026-05-07:
+      BLOCKED-ON sports_master:Phase 3]
+- [ ] [OPERATOR] P0. Resume forward-poll + backfill VMs. [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 4]
 
 ### Sports honest-coverage architecture (`features_sports_honest_coverage`)
 
-- [ ] [AGENT] P1. UAC `unified_api_contracts.sports`: add `UpstreamReq` dataclass + `FEATURE_UPSTREAM_REQUIREMENTS`
-      dict + `in_coverage(source, entity, league, date) -> bool` helper.
-- [ ] [AGENT] P1. Unit tests for `in_coverage` — coverage of each clip rule; pre-launch dates + paused leagues.
+- [x] [AGENT] P1. UAC `unified_api_contracts.sports`: add `UpstreamReq` dataclass + `FEATURE_UPSTREAM_REQUIREMENTS`
+      dict + `in_coverage(source, entity, league, date) -> bool` helper. [AUDIT 2026-05-07: DONE — UAC@3137271
+      (UpstreamReq + FEATURE_UPSTREAM_REQUIREMENTS + in_coverage Phase 1)]
+- [ ] [AGENT] P1. Unit tests for `in_coverage` — coverage of each clip rule; pre-launch dates + paused leagues. [AUDIT
+      2026-05-07: FRESH — actionable; UAC@3137271 commit message says Phase 1 implies tests; verify test file exists]
 - [ ] [AGENT] P2. features-sports-service: feature compute path calls `in_coverage` per upstream before
-      fetching/joining.
+      fetching/joining. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P2. NaN handling — distinguish NaN-by-design (write parquet, manifest `captured`) from
       NaN-from-missing-upstream (manifest `empty_confirmed` no parquet) per
-      `codex/02-data/honest-absence-downstream-handling.md`.
+      `codex/02-data/honest-absence-downstream-handling.md`. [AUDIT 2026-05-07: FRESH — actionable; codex doc shipped
+      per MEMORY entry project_master_plan_audit_continuation_2026_05_07 (A3 ship)]
 - [ ] [AGENT] P2. Backwards-compat — features computed before this change have manifest rows without coverage info;
-      one-time migration or tolerate via reader-side fallback (per honest-absence doc).
+      one-time migration or tolerate via reader-side fallback (per honest-absence doc). [AUDIT 2026-05-07: FRESH —
+      actionable; UTL `classify_legacy_empty_row` helper landed via Tier 3D.2 per MEMORY
+      (handoff_writegate_tier3d2_2026_05_07_late4)]
 - [ ] [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
-      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues).
+      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). [AUDIT 2026-05-07:
+      FRESH — actionable]
 
 ### Fixture truthset recovery (`sports_fixtures_truthset_recovery`)
 
@@ -162,7 +212,10 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       PREDICTIONS + ODDS), `weather-backfill-20260507-010923` (open_meteo WEATHER), `sfi-backfill-20260507-010938`
       (SFI_PROGRESSIVE_STATS). Verify auto-shutdown on completion (`VM_SHUTDOWN_ON_COMPLETION=true`). Allowlist parquet:
       `gs://instruments-store-sports-central-element-323112/_audits/fixtures_recovery_allowlist_20260506-153914.parquet`
-      (112,192 af_fixture_ids).
+      (112,192 af_fixture_ids). [AUDIT 2026-05-07: IN-FLIGHT — 3 of 5 named VMs RUNNING in current snapshot (af/sfi/us);
+      fs-backfill-20260507-010724 + weather-backfill-20260507-010923 NOT in current `gcloud running` listing — likely
+      already drained or auto-shutdown fired. Verify via STOPPED event log or recreate if missing. ETA for active 3:
+      2026-05-07 to 2026-05-08]
 - [ ] [OPERATOR] **P0. POST-RECOVERY PHANTOM DEDUP — REQUIRED.** Once ALL 5 recovery VMs above are STOPPED (or DELETED
       via `VM_SHUTDOWN_ON_COMPLETION`), run the dedup script on a same-region VM (or laptop, GCS-only):
 
@@ -195,48 +248,65 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
         Backups: `_index/availability_index.{run_ts}.dedup_phantom.bak.parquet` per shard (canonical + per-VM).
 
 - [ ] [AGENT] P0. Query deployment-api data-status: SPORTS attempted ≥50%, captured ≥45%, **% empty drops** as phantoms
-      get dedup'd.
+      get dedup'd. [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain + post-recovery dedup script run]
 - [ ] [AGENT] P0. Spot-check 3 random dates × 5 entities (INJURIES / FIXTURE_STATS / FIXTURE_LINEUPS / PLAYER_STATS /
-      ODDS).
-- [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM.
-- [ ] [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment.
+      ODDS). [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain]
+- [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment. [AUDIT 2026-05-07: FRESH —
+      actionable]
 - [ ] [HUMAN] P1. Phase 5 UI verification — clear deployment-api turbo cache + open SPORTS data-status. Verify `% empty`
-      figure has dropped from the ~70% baseline observed pre-recovery.
+      figure has dropped from the ~70% baseline observed pre-recovery. [AUDIT 2026-05-07: BLOCKED-ON
+      sports_master:recovery VM drain + dedup]
 - [ ] [HUMAN] P1. After verification, delete manifest backup blobs (`*.bak.parquet`, `*.dedup_phantom.bak.parquet`).
+      [AUDIT 2026-05-07: BLOCKED-ON sports_master:Phase 5 UI verification]
 
 ### Phantom recon + failure triage (`sports_phantom_recon_and_failure_triage`)
 
 - [ ] [HUMAN] P0. **SFI_STANDINGS 100% failed** (42/42 rows phantom 2026-04-29). All have empty error_reason — diagnose
-      adapter or upstream data.
+      adapter or upstream data. [AUDIT 2026-05-07: FRESH — actionable; sfi-backfill-20260507-010938 VM RUNNING may be
+      addressing this]
 - [ ] [HUMAN] P0. **open-meteo silent 2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose forward-poll VM.
+      [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [HUMAN] P0. **api-football date-range starts 2015-01-01** but UAC declares 2018-01-01. Reconcile UAC
-      `SOURCE_COVERAGE_START` vs reality.
-- [ ] [HUMAN] P0. **understat date-range starts 2014-01-01** but UAC declares 2015-01-16. Same issue.
-- [ ] [HUMAN] P0. Wait for `af-backfill-test-`, `sfi-backfill-` VMs to drain.
-- [ ] [HUMAN] P0. Run real recon scoped to footystats first.
-- [ ] [HUMAN] P0. deployment-api `_sports_honest_coverage` MR review + merge.
+      `SOURCE_COVERAGE_START` vs reality. [AUDIT 2026-05-07: FRESH — actionable; per CLAUDE.md
+      `DATA_TYPE_COVERAGE_START` per-(source, data_type) override pattern is the canonical fix shape]
+- [ ] [HUMAN] P0. **understat date-range starts 2014-01-01** but UAC declares 2015-01-16. Same issue. [AUDIT 2026-05-07:
+      FRESH — actionable]
+- [ ] [HUMAN] P0. Wait for `af-backfill-test-`, `sfi-backfill-` VMs to drain. [AUDIT 2026-05-07: IN-FLIGHT —
+      sfi-backfill-20260507-010938 RUNNING (T+5h); af-backfill-test- not in current snapshot]
+- [ ] [HUMAN] P0. Run real recon scoped to footystats first. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [HUMAN] P0. deployment-api `_sports_honest_coverage` MR review + merge. [AUDIT 2026-05-07: FRESH — actionable]
 
 ### Sports half of `sports_predictions_e2e` — 288M ODDS_API row migration
 
-- [ ] [SCRIPT] P0. Inventory existing 288M legacy `venue=ODDS_API` rows: probe parquet to confirm columns.
+- [ ] [SCRIPT] P0. Inventory existing 288M legacy `venue=ODDS_API` rows: probe parquet to confirm columns. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. Migrate rows to canonical sports manifest shape (re-key from `venue=ODDS_API` to canonical
-      `(asset_group=sports, source=odds_api, data_type, league_id, day)`).
+      `(asset_group=sports, source=odds_api, data_type, league_id, day)`). [AUDIT 2026-05-07: FRESH — actionable;
+      coordinate with manifest_migration_master_2026_05_07:Stage 3]
 - [ ] [SCRIPT] P0. Run MDPS `SportsBucketAssignmentAdapter` on migrated rows for 1 recent week (smoke pass) — all 8
-      horizons (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0).
-- [ ] [ANALYSIS] P0. Bucket-coverage check: how many fixtures have ≥1 row per (fixture, bookmaker, bucket).
-- [ ] [SCRIPT] P0. Backfill MDPS bucketing across full historical window (5+ years) on migrated rows.
+      horizons (T-24h / T-12h / T-6h / T-4h / T-2h / T-1h / T-10m / T-0). [AUDIT 2026-05-07: BLOCKED-ON
+      sports_master:288M migration above]
+- [ ] [ANALYSIS] P0. Bucket-coverage check: how many fixtures have ≥1 row per (fixture, bookmaker, bucket). [AUDIT
+      2026-05-07: BLOCKED-ON sports_master:bucket smoke run]
+- [ ] [SCRIPT] P0. Backfill MDPS bucketing across full historical window (5+ years) on migrated rows. [AUDIT 2026-05-07:
+      BLOCKED-ON sports_master:bucket smoke verified]
 - [ ] [SCRIPT] P1. Run features-sports-service (FSS) on bucketed dataset — verify odds features populate (velocity, CLV,
-      steam, late-money).
+      steam, late-money). [AUDIT 2026-05-07: BLOCKED-ON sports_master:full bucket backfill]
 - [ ] [SCRIPT] P1. Verify feature matrix is ML-ready (one row per fixture × bucket, NaN only where honest-absence).
+      [AUDIT 2026-05-07: BLOCKED-ON sports_master:FSS run]
 - [ ] [GATE] P0. Block predictions Group E until FSS produces ≥95% non-NULL features for trained universe at the buckets
-      predictions ML targets.
+      predictions ML targets. [AUDIT 2026-05-07: ACTIVE GATE — explicitly BLOCKS predictions_master:ML half]
 
 ### Sports MTDS slice (`market_tick_data_to_100pct` — sports)
 
 - [ ] [AGENT] P1. Per-source completion %: api_football, footystats, transfermarkt, sfi, understat, open_meteo,
-      odds_api. Surface to deployment-ui.
-- [ ] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators.
-- [ ] [AGENT] P1. Apply UAC `KNOWN_COVERAGE_GAPS` for documented date-range provider outages.
+      odds_api. Surface to deployment-ui. [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain]
+- [ ] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators. [AUDIT 2026-05-07: FRESH —
+      actionable; deployment-api wiring needed (per MEMORY entry, deployment-api has B.3 per-chain clipping wired
+      analogously)]
+- [ ] [AGENT] P1. Apply UAC `KNOWN_COVERAGE_GAPS` for documented date-range provider outages. [AUDIT 2026-05-07: FRESH —
+      actionable]
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -251,20 +321,24 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.plan.md` (5
 - [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
       normalizers (`normalize_fixture_stats`, `normalize_fixture_event`, `normalize_lineup`, `normalize_injury`) with
       real flatteners that unpack the nested `statistics: [...]` / `events: [...]` /
-      `startXI: [...] + substitutes: [...]` / `players: [...]` arrays into per-row records.
+      `startXI: [...] + substitutes: [...]` / `players: [...]` arrays into per-row records. [AUDIT 2026-05-07: FRESH —
+      actionable; UAC@fb02104 added event_time field on CanonicalFixtureEvent (Phase 2.D) which is pre-req prep]
 - [ ] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
-      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`.
-- [ ] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer.
+      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
       `record_failed(reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING, attempted_at=now)`, delete the thin parquets, then
       re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
+      [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_master_2026_05_07:Stage 3]
 - [ ] [TEST] P0. Cassette parity test (`unified-api-contracts/tests/test_cassette_schema_parity.py` extension):
-      flattened normalizer output matches the per-row UAC schema for each of the 4 data_types.
+      flattened normalizer output matches the per-row UAC schema for each of the 4 data_types. [AUDIT 2026-05-07: FRESH
+      — actionable]
 - [ ] [VERIFY] P0. After re-fetch VM completes for one league × one season, open deployment-ui schema modal for each of
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
-      starting-XI per slot, etc.).
+      starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
 
 #### C.2 — ODDS in instruments-service: provenance audit + canonical-home decision
 
@@ -274,15 +348,17 @@ should live in MTDS, not instruments-service), `footystats_odds` (separate UAC n
 
 - [ ] [AGENT] P0. Trace the writer for `data_type=odds` in instruments-service: `git blame` / `rg "data_type.*odds"`
       across `instruments-service/instruments_service/`. Identify which normalizer + orchestrator path produces the row
-      and which API endpoint feeds it.
+      and which API endpoint feeds it. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. Decide canonical home: MTDS for market-typed odds (matches the asset*group=cefi `data_type=ohlcv*\*`
       convention — odds are price-equivalent ticks); instruments-service ONLY if these rows are pre-game pricing
-      reference (analogous to options-chain definitions, not actual market ticks).
+      reference (analogous to options-chain definitions, not actual market ticks). [AUDIT 2026-05-07: FRESH —
+      actionable]
 - [ ] [SCRIPT] P0. If verdict = MTDS-owned: migrate writer + flip manifest rows → `record_failed(reason=WRONG_OWNER)` +
       delete parquets + re-fetch via MTDS adapter. If verdict = instruments-service-owned (refdata): seed UAC contract
-      with the source-specific schema + add `cadence` field per rule C.11 below.
+      with the source-specific schema + add `cadence` field per rule C.11 below. [AUDIT 2026-05-07: BLOCKED-ON
+      sports_master:C.2 trace + verdict above]
 - [ ] [DOC] P0. Document the outcome in `codex/02-data/sports-data-source-coverage-matrix.md` under a new
-      `# Odds     provenance` section.
+      `# Odds     provenance` section. [AUDIT 2026-05-07: BLOCKED-ON sports_master:C.2 verdict]
 
 #### C.3 — PREDICTIONS vs ODDS schema-modal clarity (doc-only)
 
@@ -292,7 +368,7 @@ The two data_types collide visually in the data-status panel without a clear dis
 - [ ] [DOC] P1. Update UAC schema descriptions (footystats normalizer comments + UAC `data_type` registry descriptions)
       to call out provenance + computed-vs-market distinction. Add a one-liner in
       `codex/02-data/sports-data-source-coverage-matrix.md` under `# footystats data_types` section so deployment-ui
-      schema modal renders the disambiguation.
+      schema modal renders the disambiguation. [AUDIT 2026-05-07: FRESH — actionable doc-only]
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -301,12 +377,14 @@ Same minimal-flattening pattern as B.1. Current PLAYER_VALUES carries team-level
 
 - [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/transfermarkt/normalize.py` — extend `normalize_player_values` to
       emit per-(team, player, season, fetch_day) rows with `player_id`, `player_name`, `position`, `age`,
-      **`market_value_eur`**, `contract_until`, `current_club_id`, `nationality_iso`.
+      **`market_value_eur`**, `contract_until`, `current_club_id`, `nationality_iso`. [AUDIT 2026-05-07: FRESH —
+      actionable]
 - [ ] [SCRIPT] P0. UAC contract: bump PLAYER_VALUES schema to per-player shape; old team-aggregate becomes a derived
-      view in features-sports OR is dropped if features-sports is happy rolling per-player at compute time.
+      view in features-sports OR is dropped if features-sports is happy rolling per-player at compute time. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. Migration shape: same flip-to-failed + delete + re-fetch pattern as B.1; Transfermarkt's
-      per-team-per-season endpoint is already isolated, no upstream impact.
-- [ ] [TEST] P0. Cassette parity test for the new per-player shape.
+      per-team-per-season endpoint is already isolated, no upstream impact. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [TEST] P0. Cassette parity test for the new per-player shape. [AUDIT 2026-05-07: FRESH — actionable]
 
 #### C.6 + C.10 — `match_end_time` cascade implementation (groups together)
 
@@ -316,21 +394,25 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 
 - [ ] [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
       compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
-      response. Add `match_end_time` column to UAC FIXTURES contract.
+      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
       snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
       UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
-      `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives).
+      `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives). [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. **Step 3**: UTL helper
       `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
       in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
-      low-confidence `kickoff + 120min` fallback. Returns the timestamp + provenance string.
+      low-confidence `kickoff + 120min` fallback. Returns the timestamp + provenance string. [AUDIT 2026-05-07: FRESH —
+      actionable]
 - [ ] [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
-      write-time, equal-to-live-pipeline-arrival" rule.
-- [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape.
+      write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
+      sports_master:Phase 3 rename]
+- [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [VERIFY] P0. After ship + smoke, deployment-ui schema modal for FIXTURES / SFI_PROGRESSIVE_STATS / FIXTURE_STATS
-      shows `match_end_time` column populated for completed fixtures.
+      shows `match_end_time` column populated for completed fixtures. [AUDIT 2026-05-07: BLOCKED-ON above C.6 ship]
 
 #### C.7 — Sanity-sweep STANDINGS / WEATHER / XG / MATCHES schema modals
 
@@ -340,8 +422,10 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
 - [ ] [AGENT] P1. Open the deployment-ui schema modal for each of STANDINGS / WEATHER / XG / MATCHES; log column count
       vs. source-payload signal density (e.g. understat per-shot endpoint returns `xG`, `xA`, `minute`, `player_id`,
       `situation`, `shotType`, `lastAction`; if the parquet only carries match-aggregate xG, that's a flatten miss).
+      [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P1. For any data_type with column-count < signal density: file a follow-up flatten todo here under the
-      same B.1 pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity).
+      same B.1 pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity). [AUDIT 2026-05-07:
+      BLOCKED-ON sports_master:C.7 audit above]
 
 ## Anti-patterns + workspace-rule cross-references
 

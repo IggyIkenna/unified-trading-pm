@@ -47,6 +47,29 @@ isProject: false
 
 # Venue axis (asset group) vocabulary
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 3 of 3 unchecked todos (all 3 are `Absorbed from sibling plans (2026-05-06)` items)
+- **Mis-marked DONE -> flipped**: 0 — Waves A/B/C/D/E all already correctly marked `[x]` per CLAUDE.md
+- **In-flight (running VMs)**: none gated by this plan
+- **Blocked by**: none
+- **Blocks**: nothing critical — Wave C/D consumer-side keys already shipped per checked items
+- **Last meaningful commits**: UAC `068ce07` (clean break) -> features-\* 8-service Wave C
+  (`7ded56e`/`818375e`/`95f8adb`/`2889de3`/`1797f32`+`a2032ca`/`5daba09e`/`2625996`/`9930b60`+`efce89f`) ->
+  execution/strategy/PBM Wave D (`46dd6f67`/`335b666`/`a874b34`/`8ae32182`); deployment-service VM_ASSET_GROUP env vars
+  verified live across 14+ launchers
+- **Recommendation**: ARCHIVE-READY after the 3 absorbed items resolve. All 5 main waves (A/B/C/D/E) confirmed shipped —
+  UAC clean break verified (`grep VENUE_TO_CATEGORY` shows only `check_uac_adoption.py` legacy-detector rule + tests).
+  The 3 remaining unchecked todos are absorbed from `venue_availability_ssot_2026_03_25` (which is archived). Suggest
+  folding those 3 into the asset_group umbrellas (`defi_master_2026_05_07` for the `poolGetSnapshots` DeFi item;
+  `infrastructure_master_2026_05_07` for the `venue_start_dates` deletion + dashboard SSOT items) and archiving this
+  plan, since CLAUDE.md already documents the `asset_group` vocabulary as the canonical workspace rule.
+- **Anomalies**: `venue_start_dates` still referenced in `deployment-service/tests/conftest.py` +
+  `deployment-service/tests/unit/test_shard_calculator.py` + `test_shard_optimization.py` (8+ test sites) — confirms
+  `[ ] P0 Delete venue_start_dates from VenueMapping` is still actionable. Cross-cutting impact lives in
+  deployment-service shard-calculator tests, not in core SSOT.
+
 **SSOT (data):** `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`
 
 - Legacy names — `VENUES_BY_CATEGORY`, `DATA_TYPES_BY_CATEGORY`, `VENUE_TO_CATEGORY` (dict keys remain `cefi` / `defi` /
@@ -116,10 +139,16 @@ Items folded in from `venue_availability_ssot_2026_03_25` (since archived). The 
 absorbs the venue-axis SSOT cleanup items:
 
 - [ ] [AGENT] P0. Delete `venue_start_dates` from `VenueMapping` (old format) — replace with the canonical venue+date
-      shape (per the source plan's design doc).
-- [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path).
+      shape (per the source plan's design doc). [AUDIT 2026-05-07: FRESH — actionable; 8+ deployment-service test sites
+      still reference `venue_start_dates` (`tests/conftest.py:392`,
+      `tests/unit/test_shard_calculator.py:486/513/543/577/623`, `test_shard_optimization.py:80/107/137/171`); deletion
+      is a real ~10-file change; consider folding into `infrastructure_master_2026_05_07`]
+- [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path). [AUDIT
+      2026-05-07: FRESH — actionable; `grep poolGetSnapshots` returns 0 hits in workspace, confirming this DeFi-pool
+      query path migration has not yet shipped; consider folding into `defi_master_2026_05_07`]
 - [ ] [AGENT] P2. Data-status dashboard checks against same SSOT — confirm dashboard reads venue start dates from the
-      canonical source post-cleanup.
+      canonical source post-cleanup. [AUDIT 2026-05-07: BLOCKED-ON venue_axis:absorbed-item-1; cannot verify dashboard
+      SSOT consumption until `venue_start_dates` is deleted from VenueMapping]
 
 ## References
 

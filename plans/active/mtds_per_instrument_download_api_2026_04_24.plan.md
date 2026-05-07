@@ -8,6 +8,33 @@ locked_since: 2026-04-24
 
 # MTDS per-instrument download API — bundle + per-symbol search via predicate pushdown
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 11 of 11 unchecked todos
+- **Mis-marked DONE -> flipped**: 1 (Phase 4 codex doc — confirmed shipped at
+  `unified-trading-pm/codex/02-data/mtds-download-api.md` with `scope: [engineer]`, 145 lines)
+- **In-flight (running VMs)**: none gated by this plan
+- **Blocked by**: none on Phase 1.5 chain axis (UAC `CHAIN_RPC_TEMPLATES` is shipped); Phase 1.5 prediction
+  `canonical_question_group` axis depends on UAC `PREDICTION_GROUPS` registry (UAC `bb24aba` ships skeleton + `af2bc9b`
+  SSOT lifecycle, so SSOT is partially landed)
+- **Blocks**: `infrastructure_master_2026_05_07` Phase B.2/C.13 drilldown shard-atom alignment — per-instrument access
+  from the data-status drilldown's per-day icons would consume this API
+- **Last meaningful commit**: MTDS `2095d1b` (2026-04-24) — `CanonicalParquetReader` shipped at
+  `market_tick_data_service/reader.py` (428 lines + `tests/market_interface/unit/test_canonical_parquet_reader.py` 472
+  lines)
+- **Recommendation**: NOT YET ARCHIVE-READY. Phase 1 (CeFi/TradFi/Sports) shipped; Phase 4 codex doc shipped; Phase 1.5
+  (DeFi `chain` + Prediction `canonical_question_group` axes), Phase 2 (consumer wiring — 11 `pd.read_parquet` direct
+  call sites still in MTDS source), and Phase 3 (integration test) all remain. Phase 1.5 DeFi `chain` axis is
+  critical-path for the 24 cefi VMs + DeFi backfills since `read_shard()` callers without the `chain=` axis can silently
+  return wrong-chain rows on protocols spanning multiple chains. Suggest promoting Phase 1.5 chain axis to "ship by
+  2026-05-12" and deferring Phase 1.5 prediction axis + Phase 2 consumer migration + Phase 3 integration test to
+  post-deadline.
+- **Anomalies**: `pd.read_parquet` direct calls remain in MTDS source at 11 sites (kalshi_adapter.py:297,
+  tardis_adapter.py:1648/1966/2124, polymarket_adapter.py:626, \_instruments_metadata.py:170, \_defi_instruments.py:60,
+  plus 4 migrate scripts) — Phase 2 search-and-replace still actionable. Phase 4 codex doc was already shipped but
+  listed as `[ ]` in the plan — flipping below.
+
 ## Context
 
 The MTDS manifest shards at bundle level where it makes sense (options_chain, futures_chain, combo_chain — if one
@@ -138,41 +165,57 @@ class CanonicalParquetReader:
 - [ ] [AGENT] P0. Extend `CanonicalParquetReader.read_shard()` signature with `chain: str | None = None` for DeFi reads
       (when present, validates via UAC `CHAIN_RPC_TEMPLATES` keys and routes to the chain-specific shard path:
       `asset_group=defi/chain={CHAIN}/venue={PROTOCOL}/...`). Default `None` preserves CeFi/TradFi/Sports behaviour.
+      [AUDIT 2026-05-07: FRESH — actionable; `grep "chain:|canonical_question_group:" reader.py` shows 0 hits, axes not
+      yet plumbed; UAC `CHAIN_RPC_TEMPLATES` exists; CRITICAL-PATH for 2026-05-23 deadline given DeFi
+      protocol-multi-chain collision risk]
 - [ ] [AGENT] P0. Extend `read_shard()` signature with `canonical_question_group: str | None = None` for Prediction
       reads — gated on the UAC SSOT for `market_id → canonical_question_group` mapping (per HANDOVER line 143). Skip
-      until that SSOT lands; coordinate with the shard-granularity stream.
+      until that SSOT lands; coordinate with the shard-granularity stream. [AUDIT 2026-05-07: FRESH — actionable; UAC
+      `bb24aba` (PREDICTION_GROUPS skeleton) + UAC `af2bc9b` (canonical-question-group SSOT + lifecycle + classifier)
+      shipped — gating SSOT now PARTIALLY landed; can ship the read-side axis now]
 - [ ] [AGENT] P0. Unit tests for the two new axes — DeFi chain-collision case (same protocol, two chains, different
-      shard rows) and Prediction canonical_question_group filter.
-- [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P0. Quickmerge MTDS.
+      shard rows) and Prediction canonical_question_group filter. [AUDIT 2026-05-07: BLOCKED-ON
+      Phase-1.5-axis-extension]
+- [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` [AUDIT 2026-05-07: BLOCKED-ON
+      Phase-1.5-axis-extension]
+- [ ] [SCRIPT] P0. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-1.5-axis-extension]
 
 ### Phase 2 — Consumer wiring (PARALLEL, after Phase 1 merged)
 
 - [ ] [AGENT] P1. Update any existing MTDS download helpers that currently do `pd.read_parquet(path)` directly to use
       `CanonicalParquetReader.read_shard()` instead. Search:
       `rg "pd\.read_parquet" market-tick-data-service/market_tick_data_service --type py`. This ensures all internal
-      consumers benefit from path resolution and pushdown automatically.
+      consumers benefit from path resolution and pushdown automatically. [AUDIT 2026-05-07: FRESH — actionable; 11
+      direct-call sites confirmed: `kalshi_adapter.py:297`, `tardis_adapter.py:1648/1966/2124`,
+      `polymarket_adapter.py:626`, `_instruments_metadata.py:170`, `_defi_instruments.py:60`, plus 4 migrate scripts]
 - [ ] [AGENT] P1. If `CanonicalParquetReader` is generically useful (features-service, strategy-service), move to
       `unified_trading_library/readers.py` and re-export from MTDS for backwards compatibility. Decide after Phase 1 —
-      if >1 non-MTDS repo would import it, move it; otherwise keep in MTDS.
-- [ ] [QG] P1. QG on all affected repos.
-- [ ] [SCRIPT] P1. Quickmerge.
+      if >1 non-MTDS repo would import it, move it; otherwise keep in MTDS. [AUDIT 2026-05-07: FRESH — actionable but P1
+      deferral acceptable]
+- [ ] [QG] P1. QG on all affected repos. [AUDIT 2026-05-07: BLOCKED-ON Phase-2-consumer-wiring]
+- [ ] [SCRIPT] P1. Quickmerge. [AUDIT 2026-05-07: BLOCKED-ON Phase-2-consumer-wiring]
 
 ### Phase 3 — Integration test (SEQUENTIAL after Phase 1)
 
 - [ ] [AGENT] P1. Integration test: `tests/integration/test_canonical_parquet_reader_integration.py`. Uses a real
       (small) options_chain parquet fixture (or downloads a test date from GCS in CI with `@pytest.mark.allow_network`).
       Verifies: (a) Full bundle returns expected row count. (b) Per-instrument filter returns only the matching symbol's
-      rows. (c) Memory RSS during per-instrument read stays below 500 MB even when full bundle is >1 GB parquet.
-- [ ] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh`
-- [ ] [SCRIPT] P1. Quickmerge MTDS.
+      rows. (c) Memory RSS during per-instrument read stays below 500 MB even when full bundle is >1 GB parquet. [AUDIT
+      2026-05-07: FRESH — actionable; verified `tests/integration/` has no `*canonical_parquet_reader*` file (only
+      `test_library_contracts.py`); P1 deferral acceptable for May-23 deadline]
+- [ ] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh` [AUDIT 2026-05-07: BLOCKED-ON
+      Phase-3-integration-test]
+- [ ] [SCRIPT] P1. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-3-integration-test]
 
 ### Phase 4 — Codex doc
 
-- [ ] [AGENT] P1. Write `codex/02-data/mtds-download-api.md` (scope: [engineer]): Documents `CanonicalParquetReader` —
+- [x] [AGENT] P1. Write `codex/02-data/mtds-download-api.md` (scope: [engineer]): Documents `CanonicalParquetReader` —
       when to use full bundle vs per-instrument filter, memory characteristics, manifest dependency,
-      `ShardNotFoundError` handling pattern.
-- [ ] [SCRIPT] P1. Quickmerge PM.
+      `ShardNotFoundError` handling pattern. [AUDIT 2026-05-07: DONE —
+      `unified-trading-pm/codex/02-data/mtds-download-api.md` exists, 145 lines, `scope: [engineer]` frontmatter
+      present]
+- [ ] [SCRIPT] P1. Quickmerge PM. [AUDIT 2026-05-07: STALE — codex doc is already in PM (verified via `ls`); a
+      stand-alone quickmerge for it is no longer needed; the doc was committed as part of an earlier PM session]
 
 ## Success criteria
 

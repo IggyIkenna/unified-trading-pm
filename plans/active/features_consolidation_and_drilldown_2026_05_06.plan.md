@@ -64,6 +64,35 @@ isProject: false
 
 # Features consolidation + drill-down (P2/P3 follow-ons)
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 14 of 14 unchecked todos
+- **Mis-marked DONE → flipped**: 0 (none — Phase 3 deployment-ui shipped multi-axis SchemaModal + per-asset-group
+  accordion + SmartDownloadButton via `8056995` / `7309b56` / `537d468` / `0fbd28b`, but those land general data-status
+  drilldown — they do NOT yet implement the feature_group-specific routes named here, so the Phase 3 todos are still
+  fresh as scoped.)
+- **In-flight (running VMs)**: none (this plan is pure code-shipping).
+- **Blocked by**:
+  - `writegate_honest_coverage_endtoend_2026_05_06` — write-gate must validate consolidator output (Phase 1B Step 2).
+    Tier 1 UTL contract shipped (UAC@8867891 + UTL@958634f9), Tier 2 sports/cefi/defi/tradfi adapters shipped, but
+    `LookaheadBiasError` strict-mode + Phase 5 ratchet still pending.
+  - `feature_dag_uac_ssot_and_features_coverage_2026_05_06` (sibling) — `EXPECTED_FEATURE_GROUPS_BY_SERVICE` is required
+    to know which feature_groups must be present in a consolidated parquet for a given (asset_group, day) (Phase 1B
+    `MissingFeatureGroup` honest-failure path).
+  - `ml_training_feature_read_perf_2026_05_06` — needs to land first to establish the baseline that consolidation must
+    beat by ≥5x (Phase 1C benchmark target).
+- **Blocks**:
+  - `master_to_live_defi_2026_05_23` — if the May-23 deadline hits, this whole plan is post-deadline. Drill-down
+    (Phase 3) is closer to operator-UX surface area but not on the live-go critical path.
+- **Last meaningful commit**: deployment-ui multi-axis SchemaModal stack landed (`7309b56`, `537d468`, `0fbd28b`,
+  `8056995`, `ebfbc5d`), but NONE wire the feature_group-leaf endpoint specified in Phase 3 — drill-down today is at
+  per-shard granularity, not per-feature_group route.
+- **Recommendation**: KEEP active but explicitly P2/P3. Plan is well-scoped and depends-on chain is correct (writegate →
+  feature_dag → ml-read-perf → this plan). For May-23 deadline this is post-launch optimisation. If budget tight: drop
+  Phase 1 (feature-store consolidation = ~500 LOC + risky), keep Phase 2 (UTL FeatureBatchHandler, worth 200 LOC × 4
+  services) + Phase 3 (drill-down — operator visibility for Group G UX).
+
 ## Why sequenced after siblings
 
 The two sibling plans land first because they're correctness + cheap perf. This plan ships the higher-effort
@@ -86,50 +115,66 @@ transformational pieces:
 - [ ] [AGENT] P0. **Decide consolidation atom**: per `(asset_group, day, timeframe)` wide-table or per
       `(asset_group, day, instrument_id)` per-instrument wide-table. Trade-off: instrument-wide reads in single file
       (fast for per-instrument training) vs day-wide cross-instrument reads (fast for ranking/portfolio models).
-      Recommendation: ship instrument-wide first; add day-wide if measured useful.
+      Recommendation: ship instrument-wide first; add day-wide if measured useful. [AUDIT 2026-05-07: FRESH — design
+      decision, not started.]
 - [ ] [AGENT] P0. **Path SSOT in UAC**:
       `gs://features-consolidated-{asset_group}-{project_id}/by_date/day=YYYY-MM-DD/timeframe={tf}/{instrument_id}.parquet`.
       One file per (asset_group, day, instrument, timeframe) carrying every feature column from every feature_group
-      joined on `(timestamp, instrument_id)`.
+      joined on `(timestamp, instrument_id)`. [AUDIT 2026-05-07: FRESH — UAC grep `features-consolidated` → 0 hits;
+      bucket SSOT not yet added.]
 - [ ] [AGENT] P0. **Manifest** — consolidation rows in availability manifest with `feature_group="_consolidated"`
-      sentinel + `model_family / training_period` empty.
+      sentinel + `model_family / training_period` empty. [AUDIT 2026-05-07: FRESH — sentinel value not yet written by
+      any service.]
 
 ### 1B — Write-time orchestration
 
 - [ ] [AGENT] P1. **features-consolidation sidecar (or per-service post-compute hook)**: after each features-\*-service
       finishes a (day, instrument, timeframe) shard, emit a Pub/Sub event. Subscriber consolidator joins all available
       feature_groups for that key into a wide parquet. If any required feature_group is missing, write
-      `record_failed(MissingFeatureGroup)`; honest signal.
+      `record_failed(MissingFeatureGroup)`; honest signal. [AUDIT 2026-05-07: FRESH — no `features-consolidation`
+      service or sidecar exists in workspace.]
 - [ ] [AGENT] P1. **Strict ordering** — consolidator depends on writegate's write-gate, so it never joins garbage rows.
-      UTL `validate_shard()` re-runs on the consolidated output (pillars 2-4).
+      UTL `validate_shard()` re-runs on the consolidated output (pillars 2-4). [AUDIT 2026-05-07: BLOCKED-ON writegate
+      Phase 1A `record_captured` 4-pillar gate — Tier 1 contract shipped at `8867891`/`958634f9`, but
+      `LookaheadBiasError` strict-mode pending across writers.]
 
 ### 1C — ml-training read switch
 
 - [ ] [AGENT] P1. `FeatureDataAdapter` switches to read `features-consolidated-...` paths when present, falls back to
-      per-feature_group paths only for legacy training periods. Migration window documented.
+      per-feature_group paths only for legacy training periods. Migration window documented. [AUDIT 2026-05-07: FRESH —
+      `feature_data_adapter.py` still reads per-feature_group GCS paths; no consolidation branch.]
 - [ ] [AGENT] P1. Benchmark vs ml_training_feature_read_perf baseline (post-DuckDB-merge): target 5-10× speedup on
-      representative training run.
+      representative training run. [AUDIT 2026-05-07: BLOCKED-ON ml_training_feature_read_perf_2026_05_06:Phase-4
+      baseline numbers (which itself is not yet started — `gcs_feature_reader.py` still uses pandas + BytesIO +
+      ThreadPoolExecutor, no DuckDB).]
 
 ## Phase 2 — UTL FeatureBatchHandler base
 
 - [ ] [AGENT] P2. **UTL `unified_trading_library/feature_service_base/batch_handler.py`** — `FeatureBatchHandler[T]`
       generic base lifting the (DataLoader, Calculator, FeatureWriter, ManifestWriter, ManifestFreshnessCache,
       write-gate) wiring. Per-service hooks: `load_inputs(shard_key) -> InputBundle`, `compute(inputs) -> OutputBundle`,
-      `expected_clusters(shard_key) -> dict | None`.
+      `expected_clusters(shard_key) -> dict | None`. [AUDIT 2026-05-07: FRESH —
+      `unified_trading_library/feature_service_base/` exists, no `batch_handler.py` shipped; depends on
+      `ManifestFreshnessCache` from sibling feature_dag plan.]
 - [ ] [AGENT] P2. Refactor Delta-One, Onchain, Sports, Volatility BatchHandlers to extend the base. Net delete ~200 LOC
-      each. Behavior-preserving — diff existing batch outputs.
+      each. Behavior-preserving — diff existing batch outputs. [AUDIT 2026-05-07: BLOCKED-ON preceding todo.]
 
 ## Phase 3 — deployment-ui feature drill-down
 
 - [ ] [AGENT] P3. **deployment-api**: per-feature_group leaf endpoint
       `GET /data_status/feature_groups/{service}/{feature_group}/shards?...` returning shard-level rows + GCS URIs.
-      Mirror the existing market-data drill-down depth.
+      Mirror the existing market-data drill-down depth. [AUDIT 2026-05-07: FRESH — deployment-api grep
+      `/data_status/feature_groups/` route → 0 hits; current data-status surfaces feature_groups via
+      `_build_feature_group_breakdown` aggregate only.]
 - [ ] [AGENT] P3. **deployment-api**: parquet download endpoint
       `GET /data_status/feature_groups/{service}/{feature_group}/parquet?day=...&instrument=...&timeframe=...` returning
-      the parquet bytes (or a signed URL).
+      the parquet bytes (or a signed URL). [AUDIT 2026-05-07: FRESH — `SmartDownloadButton` shipped in deployment-ui
+      (`7309b56`) but no per-feature_group download endpoint on deployment-api side.]
 - [ ] [AGENT] P3. **deployment-ui** new route `/feature-groups/{service}/{feature_group}` rendering shard list + schema
       view + download button. Match the look of the existing market-data drill-down. Reuses `DimensionStatus` types
-      already in `deployment-ui/src/types/index.ts`.
+      already in `deployment-ui/src/types/index.ts`. [AUDIT 2026-05-07: FRESH — multi-axis SchemaModal + per-asset-group
+      accordion shipped at `8056995`/`7309b56`/ `537d468`/`0fbd28b`/`ebfbc5d` but those land general data-status
+      drilldown, not the feature_group leaf route named here.]
 
 ## Success criteria
 

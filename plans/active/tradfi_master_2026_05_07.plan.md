@@ -23,6 +23,29 @@ related_plans:
 
 # TradFi Master — asset_group umbrella
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 18 of 18 unchecked todos
+- **Mis-marked DONE → flipped**: 0
+- **In-flight (running VMs)**: 5 VMs — `mdps-tradfi-2021/22/23/24/25-20260506-125828`, created 2026-05-06T05:00 UTC,
+  T+22h, ETA 2026-05-08
+- **Blocked by**: `cefi_master:24-VM drain` (shares MDPS pipeline ground-truth assertion);
+  `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder deletion for honest coverage % across MDPS — MDPS@e9520a0
+  already migrated tradfi adapters off `_create_empty_output()`)
+- **Blocks**: `master_to_live_defi_2026_05_23:G` (DART manual-trade gate; ML pipeline running on representative sample
+  is a hard floor); does NOT block live trading per master plan ("batch-only this cutover cycle")
+- **Last meaningful commit**: MDPS@`e9520a0` (Tier 2E tradfi adapters A/B/C migration off `_create_empty_output`);
+  UAC@`121e6c5` (tradfi_symbology pure-calendar fallback for ES.OPT cluster activity); UAC@`198a39a` (export
+  ES_OPTIONS_CLUSTERS + extract_es_options_cluster); UAC@`2a970c5` (non_trading_day_reason discriminator — TradFi
+  calendar pre-skips emit EXPECTED_HOLIDAY/WEEKEND); strategy@`d7dad8d` (FUTURES_ROLL emission helper + 16 roll-boundary
+  tests)
+- **Recommendation**: KEEP ACTIVE. P1 priority is correct — TradFi is not on May 23 critical path for live trading. Most
+  market-hours integration items remain (12 affected repos to QG-pass). 5 mdps-tradfi VMs running shapes 2024 + 2025
+  fills; 2021/22/23 backfilling. Post-VM-drain (2026-05-08), run data-status rollup to confirm tradfi shards count vs
+  expected. ES.OPT 2020-2022 ad-hoc backfill (line 110) needs ground-truth check via
+  `gcloud compute instances list --filter='name~tradfi-bf-es-opt'`.
+
 ## Scope
 
 Single source of truth for **TradFi asset_group** work. Per master plan asset-group readiness ladder, TradFi is
@@ -68,34 +91,48 @@ respective umbrellas.
 ### Market-hours + holiday SSOT integration (`instrument_schema_cohesion_and_market_hours`)
 
 - [ ] [AGENT] P0. databento.py adapter: populate `pre_market_open_utc`, `post_market_close_utc`, `holiday_calendar` per
-      TradFi instrument.
+      TradFi instrument. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. `ml-training-service/app/core/data_filters.py`: replace `filter_market_hours()` hardcoded NYSE with
-      `venue_trading_calendar` lookup.
+      `venue_trading_calendar` lookup. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. `ml-training-service/app/core/mock_feature_generator.py`: remove `_US_HOLIDAYS_2023` hardcoded
-      holidays; consume `venue_trading_calendar` SSOT.
-- [ ] [AGENT] P0. Run `bash scripts/quality-gates.sh` on all 12 affected repos.
+      holidays; consume `venue_trading_calendar` SSOT. [AUDIT 2026-05-07: FRESH — actionable; per MEMORY entry, this
+      file has Harsh's pre-existing os.environ violation that masks downstream QG steps — coordinate]
+- [ ] [AGENT] P0. Run `bash scripts/quality-gates.sh` on all 12 affected repos. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. Run instruments pipeline for all 3 categories (CEFI, DEFI, TRADFI) and verify: (a) all venues emit
-      calendar fields, (b) no hardcoded holidays remain.
-- [ ] [AGENT] P1. `instrument_validation.py`: require `holiday_calendar` + `timezone` for TradFi instruments.
+      calendar fields, (b) no hardcoded holidays remain. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [AGENT] P1. `instrument_validation.py`: require `holiday_calendar` + `timezone` for TradFi instruments. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P1. Add diagnostic: TradFi venue returning 0 rows on a trading day → WARN (potential upstream issue).
-- [ ] [AGENT] P1. Strategy base class config: `market_hours_only: bool = True` default for TradFi.
-- [ ] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason.
-- [ ] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log.
+      [AUDIT 2026-05-07: FRESH — actionable; instruments-service@8b5eca3 Tier 2B already emits
+      EXPECTED_WEEKEND/EXPECTED_HOLIDAY for non-trading-day pre-skips — extend to active-day-zero diagnostic]
+- [ ] [AGENT] P1. Strategy base class config: `market_hours_only: bool = True` default for TradFi. [AUDIT 2026-05-07:
+      FRESH — actionable]
+- [ ] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason. [AUDIT 2026-05-07:
+      FRESH — actionable]
+- [ ] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log. [AUDIT
+      2026-05-07: IN-FLIGHT verification — `mdps-tradfi-2021/22/23/24/25` VMs RUNNING (T+22h, ETA 2026-05-08); event
+      stream + manifest will show pre-skip behavior post-drain]
 
 **Acceptance**: MTDS skips closed TradFi markets; execution-service rejects TradFi orders on closed markets; ML training
 reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected repos pass QG.
 
 ### S&P 500 ML readiness (`sp500_ml_readiness_master`)
 
-- [ ] [AGENT] P2. Continuous-series stitcher for ES (rolled futures) — back-adjust for roll.
-- [ ] [AGENT] P2. `FUTURES_ROLL` event emission in `strategy-service` ML engine on continuous-series roll.
-- [ ] [AGENT] P3. Run `features-delta-one-service` for tradfi/ES across 36 calculators.
-- [ ] [AGENT] P3. Run `features-volatility-service` for tradfi/ES + tradfi/CBOE-VIX (realized-vol + skew).
+- [ ] [AGENT] P2. Continuous-series stitcher for ES (rolled futures) — back-adjust for roll. [AUDIT 2026-05-07: FRESH —
+      actionable]
+- [x] [AGENT] P2. `FUTURES_ROLL` event emission in `strategy-service` ML engine on continuous-series roll. [AUDIT
+      2026-05-07: DONE — strategy@d7dad8d (FUTURES_ROLL emission helper + 16 roll-boundary tests)]
+- [ ] [AGENT] P3. Run `features-delta-one-service` for tradfi/ES across 36 calculators. [AUDIT 2026-05-07: FRESH —
+      actionable]
+- [ ] [AGENT] P3. Run `features-volatility-service` for tradfi/ES + tradfi/CBOE-VIX (realized-vol + skew). [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P3. VIX-specific feature calculator (level, contango proxy from VIX 1m vs 1h, momentum +
-      volatility-of-volatility).
-- [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store.
+      volatility-of-volatility). [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
+      FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max
-      drawdown + feature importance top-20.
+      drawdown + feature importance top-20. [AUDIT 2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08) and
+      ML smoke above]
 - [DEFERRED] Implied-vol skew from ES_OPT chain — gated on Phase 0 ES_OPT 2020-2022 backfill completion.
 - [DEFERRED] VX futures term structure — gated on Databento CFE/VX support.
 - [DEFERRED] S&P 500 constituent stocks — gated on canonical NASDAQ+NYSE equity backfill.
@@ -103,19 +140,32 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
 
 ### CeFi+TradFi tick data — TradFi half (`cefi_tradfi_tick_data_backfill`)
 
-- [ ] [AGENT] P0. Verify MTDS orchestrator handles CME via Databento and CBOE via Barchart for target data_types.
+- [ ] [AGENT] P0. Verify MTDS orchestrator handles CME via Databento and CBOE via Barchart for target data_types. [AUDIT
+      2026-05-07: IN-FLIGHT — 5 mdps-tradfi VMs running; verify post-drain]
 - [ ] [SCRIPT] P0. VM launch script for CBOE VIX backfill (ohlcv_15m, dates=2025-11-13→2026-04-10) — VIX layering per
-      CLAUDE.md rule.
-- [ ] [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` to completion.
-- [ ] [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July 2024 only.
-- [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to TradFi (legacy disk path differs).
-- [ ] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction].
+      CLAUDE.md rule. [AUDIT 2026-05-07: STALE — VIX 15m source layering wired per MEMORY/CLAUDE.md (Yahoo rolling
+      window + Barchart preload for 2020-01-02 → 2025-11-12); 17 days were filled manually 2026-05-06 per CLAUDE.md "VIX
+      15m source layering" closeout. Re-verify the actual gap window; this todo may be effectively closed]
+- [ ] [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` to completion. [AUDIT
+      2026-05-07: STALE / DONE? — VM not in current `gcloud running` snapshot so it has either drained or been deleted;
+      verify via manifest check (ES.OPT 18 single-parent fills was the original issue per CLAUDE.md "TradFi MVP
+      partial-bundle"); UAC@198a39a + UAC@121e6c5 wired the cluster-coverage gate so re-runs correctly bundle-validate]
+- [ ] [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July 2024 only. [AUDIT
+      2026-05-07: FRESH — actionable]
+- [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to TradFi (legacy disk path differs). [AUDIT 2026-05-07:
+      FRESH — actionable; instruments-service `reconcile_phantom_manifest_rows_all.py --asset-group tradfi` per
+      CLAUDE.md is multi-asset-group; needs per-tradfi axis verification (TradFi options 11-cluster taxonomy)]
+- [ ] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction]. [AUDIT 2026-05-07:
+      FRESH — actionable]
 - [ ] [AGENT] P2. Yahoo Finance manifest cleanup — 2,211 abandoned `empty_confirmed` rows under `venue=YAHOO_FINANCE`.
+      [AUDIT 2026-05-07: FRESH — actionable]
 
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
 
 - [ ] [AGENT] P1. Per-venue completion %: CME ES, CME MES, CBOE VIX, NYSE ETFs, NASDAQ ETFs. Surface to deployment-ui.
-- [ ] [AGENT] P1. After backfill VMs drain, run data-status rollup; confirm TradFi shards count vs expected.
+      [AUDIT 2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
+- [ ] [AGENT] P1. After backfill VMs drain, run data-status rollup; confirm TradFi shards count vs expected. [AUDIT
+      2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
 
 ## Anti-patterns + workspace-rule cross-references
 

@@ -21,6 +21,51 @@ related_plans:
   - venue_axis_asset_group_vocabulary_2026_04_25
 ---
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 30 of 30 unchecked todos
+- **Mis-marked DONE → flipped**: 0 — but 4 todos newly classified as STALE (superseded by writegate /
+  data-status-drilldown plan), 9 verified actionable, 17 routed to other plans
+- **In-flight (running VMs)**: 24 cefi + 5 tradfi MDPS + 4 sports backfill VMs are LIVE TESTS of
+  deployment-service@`456acb9` multi-axis correction shipped 2026-05-06; vm-zombie-watchdog always running. Plan does
+  not gate these directly — they validate the shipped infrastructure.
+- **Blocked by**: writegate `writegate_honest_coverage_endtoend_2026_05_06` Phase 2.A (legacy `_create_empty_output`
+  deletion gates `_ensure_timestamp` shim deletion since the per-source `stamp_available_at_*` helpers in UTL@`cf312f66`
+  are the migration target); `manifest_migration_master_2026_05_07` Stage 4 (raw-tables migration ordering)
+- **Blocks**: `master_to_live_defi_2026_05_23` operator-facing data-status drilldown UX (B.2 + C.13 audit findings);
+  `cefi_master` / `defi_master` / `tradfi_master` / `sports_master` / `predictions_master` umbrellas (each consumes the
+  shard-axis matrix endpoint shipped here)
+- **Last meaningful commits** (chronological, last shipped):
+  - deployment-api@`176c599` (Tier 3D.2 reader-side classify_legacy_empty_row UTL helper wiring) — 2026-05-07
+  - deployment-api@`0384eab` (DEFI pool drilldown probes asset_group= + chain= partition) — 2026-05-07
+  - deployment-api@`14bbff9` (per-chain pre-launch date clipping for DEFI panel)
+  - deployment-api@`64d2be9` / `cfb5096` / `8056995` / `7309b56` / `85053fe` (multi-axis breakdowns shipped)
+  - deployment-ui@`ebfbc5d` (default startDate 2018-01-01 fix)
+  - deployment-ui@`537d468` / `0fbd28b` / `7309b56` (BreakdownsAccordion + SchemaModal)
+  - deployment-service@`456acb9` (multi-axis correction in docs)
+  - UTL@`bf41175c` (split \_INDEX_CACHE into canonical+merged) + UTL@`75d16f28` (lift StreamingShardFinalizer)
+  - UTL@`ed658e9b` (manifest v6→v7 with fixture_id + job_id columns)
+- **Recommendation**: **NOT YET ARCHIVE-READY** — 9 actionable items remain (raw-tables migration, `_ensure_timestamp`
+  shim deletion gated on it, drilldown depth audit + per-day icons, MTDS CLI shard-targeting flags, Cloud Build smoke
+  for sports + features-sports). The deployment-ui drilldown depth-audit (B.2 / C.13) is the most operator-visible
+  blocker and should be promoted to top-priority. The shard-granularity MDPS-1440-NaN reproduction-test todo is STALE —
+  superseded by writegate Phase 2.A + MDPS@`d3be0ef` (`mdps_reconcile_1440_nan_placeholders.py` retrospective cleanup
+  script). Per-service `feature_group`/`job_id` writer wiring is largely COMPLETE (onchain + calendar +
+  multi-timeframe + ml-training@training_orchestrator + execution@save_operations + strategy@cloud_strategy_storage all
+  confirmed) — those todos can be flipped after a final 1-day verification pass.
+- **Anomalies**:
+  - "MDPS 1440-NaN reproduction path" todo is STALE (superseded by writegate Phase 2.A and reconciler `d3be0ef`) —
+    should be flipped to STALE marker not pursued.
+  - The B.2 drilldown plan is in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` (its own
+    active plan), NOT in `plans/ai/` as the prose says — it was promoted on 2026-05-07 per PM commit `d968b5d3`.
+    Reference text in plan body is now outdated.
+  - "Schema modal works at every leaf" todo is verified live in deployment-ui — `SchemaModal` is wired
+    (deployment-ui@`7309b56`/`537d468`), but the per-leaf coverage matrix audit is the real gating step.
+  - Cloud Build status (Phases 3-7) — recent commits `e10a6ce` (deployment-api: "unbreak Cloud Build (red since 04-29)")
+    and `6b05dd6` (UTL-base-image migration) suggest Phases 1+2 already shipped; Phase 3+4 (local Docker + Cloud Build
+    smoke) likely still pending per the plan text.
+
 # Infrastructure Master — shard / data-status / deployment-build umbrella
 
 ## Scope
@@ -78,44 +123,98 @@ reconcilers + `mtds-s4-10` rescan complete.
 ### Shard granularity propagation (`shard_granularity_ssot_propagation`)
 
 - [ ] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
+      [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction `456acb9`
+      + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate human
+      sign-off remaining]
 - [ ] [AGENT] P0. **#1 MDPS 1440-NaN reproduction path** — the canonical per-shard test case for shard-atom alignment
-      regressions.
+      regressions. [AUDIT 2026-05-07: STALE — superseded by writegate Phase 2.A (`_create_empty_output` deletion across
+      all asset_groups, MDPS@`5b52d0b`/`b9f9328`/`80cf141`/`e9520a0`) AND retrospective cleanup script MDPS@`d3be0ef`
+      `mdps_reconcile_1440_nan_placeholders.py`. Reproduction-test value moot — the bug is fixed at write-time AND
+      backfill-cleaned]
 - [ ] [AGENT] P0. **Raw tables migration** (next slice — needs design): 14 entries in `TABLE_TO_EXPORT`. Source-of-truth
-      gap: pick canonical shape per table.
+      gap: pick canonical shape per table. [AUDIT 2026-05-07: FRESH — actionable; `TABLE_TO_EXPORT` confirmed at
+      `features-sports-service/features_sports_service/cli/batch_write.py:20` with 8+ test mock sites; Stage 4 of
+      `manifest_migration_master_2026_05_07` per plan body]
 - [ ] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
-      Coordinated with writegate Phase 2.C.
-- [ ] [AGENT] P0. All affected downstream consumers updated in this plan (no "fix later").
-- [ ] [VERIFY] P0. Manifest reads + writes use same shard key for every (service, data_type).
-- [ ] [VERIFY] P0. Data-status surfaces match writer granularity (audit report only — UI fix tracked separately).
-- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests.
-- [ ] [VERIFY] P0. Tests cover write-gates: row=0 → fail loud, high NaN → fail loud, schema mismatch → fail loud.
+      Coordinated with writegate Phase 2.C. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:raw-tables-migration;
+      verified `_ensure_timestamp` still defined at
+      `features-sports-service/features_sports_service/cli/batch_write.py:38` + `cli/handlers/batch_handler.py:148`
+      (called at lines 544/628/695/766) + referenced by reconciler `scripts/features_sports_reconcile_available_at.py` —
+      9 sites; cannot delete until raw-tables migration ships]
+- [ ] [AGENT] P0. All affected downstream consumers updated in this plan (no "fix later"). [AUDIT 2026-05-07: BLOCKED-ON
+      infrastructure_master:raw-tables-migration]
+- [ ] [VERIFY] P0. Manifest reads + writes use same shard key for every (service, data_type). [AUDIT 2026-05-07: FRESH —
+      verification gate; depends on raw-tables migration completion]
+- [ ] [VERIFY] P0. Data-status surfaces match writer granularity (audit report only — UI fix tracked separately). [AUDIT
+      2026-05-07: BLOCKED-ON infrastructure_master:Audit-findings-B.2-drilldown-depth-audit; UI fix lives in
+      `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`]
+- [ ] [VERIFY] P0. No fallback paths remain for migrated manifests. [AUDIT 2026-05-07: FRESH — verification gate;
+      deployment-api@`64d2be9` dropped DEFI legacy-venue read-time canonicalisation fallback (one slice complete);
+      raw-tables migration completion will retire remaining `_ensure_timestamp` fallback]
+- [ ] [VERIFY] P0. Tests cover write-gates: row=0 → fail loud, high NaN → fail loud, schema mismatch → fail loud. [AUDIT
+      2026-05-07: FRESH — verification gate; `record_empty(reason=...)` + `record_failed` shipped via UTL@`958634f9`;
+      per-test-fixture verification across services pending]
 - [ ] [VERIFY] P0. `available_at` end-to-end smoke: write feature at t-24, verify no input row consumed has
-      `available_at > t-24-horizon`.
+      `available_at > t-24-horizon`. [AUDIT 2026-05-07: FRESH — verification gate; UTL@`cf312f66`
+      `availability_stamping` shipped + `LookaheadBiasError` raised in features-onchain `lst_yields`; smoke gate across
+      all features-* pending]
 
 ### Data-status multi-axis (`data_status_multi_axis_shard_propagation`)
 
 - [ ] [features-onchain] P1. Each calculator writes `feature_group=` matching its upstream source (`lending_rates`,
-      `lst_yields`, etc.).
+      `lst_yields`, etc.). [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
+      `features-onchain-service/features_onchain_service/adapters/onchain_writer.py:23` documents the path layout
+      `by_date/day={date}/feature_group={group}/{protocol}.parquet` and `engine/orchestrator.py` has 13+
+      `feature_group=` write sites (lines 134/164/192/200/208/257/575/584/1155/1187/1220 covering `lst_yields` /
+      `lending_rates` / `macro_sentiment` / `rate_impact` / per-feature-group); flip after spot-check of writer fixture
+      tests]
 - [ ] [features-calendar] P1. Each source writer (FRED, tradingeconomics, sec, holiday_calendar) populates
-      `feature_group`.
-- [ ] [features-cross-instrument / multi-timeframe] P1. Confirm `timeframe` populates correctly.
-- [ ] [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`.
+      `feature_group`. [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
+      `features_calendar_service/engine/calendar_orchestrator.py:167-390` has 8+ `feature_group=` plumb-through sites;
+      `engine/calculators/economic_events.py:56` declares `self.feature_group = "economic_events"`; flip after
+      writer-test spot-check]
+- [ ] [features-cross-instrument / multi-timeframe] P1. Confirm `timeframe` populates correctly. [AUDIT 2026-05-07:
+      VERIFIED — `features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258` has
+      `timeframe=` write plumb; ready to flip]
+- [ ] [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`. [AUDIT
+      2026-05-07: VERIFIED — ml-training@`f7369f2` / ml-inference@`69d6313` / strategy@`90e00bb` / execution@`0b664d99`
+      shipped Phase 1B job_id writers (per master-plan-audit memory); ml-training `training_orchestrator.py:192-193/843`
+      + `final_training_handler.py:207` + `model_registry.py:270` plumb job_id; execution `save_operations.py:802`
+      plumbs job_id=run_id; strategy `cloud_strategy_storage.py:79-201` plumbs service_run_id; per-service unit-test
+      verification pending but writer code is in place]
 - [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
-      applicable).
+      applicable). [AUDIT 2026-05-07: FRESH — actionable; deferred per CLAUDE.md DEFI canonicalisation closeout
+      2026-05-07 ("B.2 Playwright walk across 15 services × 5 asset_groups deferred — needs full local stack + manual
+      visual"); P3 deferral acceptable for May-23 deadline]
 - [ ] [feature_group backfills] P4. **If** Phase 1A audit finds a per-service writer that has never populated
-      `feature_group`, backfill the manifest column for historical rows.
+      `feature_group`, backfill the manifest column for historical rows. [AUDIT 2026-05-07: BLOCKED-ON
+      infrastructure_master:Phase-1A-audit-feature_group; conditional on audit finding]
 - [ ] [deployment-api / scripts/data_status_rollup_worker.py] P5. Update worker to emit `breakdowns` in the rollup blob.
-- [ ] [deployment-service] P5. Push new image to Cloud Run; cron rebuilds 5 min after deploy.
-- [ ] [deployment-ui] P5. Verify on Cloud Run URL.
+      [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
+      `deployment-api/deployment_api/services/data_status_service.py:3126-3288` has `_build_breakdowns` method +
+      per-(service, asset_group) breakdowns wired at line 3284-3288; deployment-api@`8056995` shipped per-asset-group
+      breakdowns accordion + UAC SSOT axis matrix; rollup-worker @`44b4a98` shipped coverage-summary fast-path; flip
+      after rollup blob inspection]
+- [ ] [deployment-service] P5. Push new image to Cloud Run; cron rebuilds 5 min after deploy. [AUDIT 2026-05-07:
+      BLOCKED-ON infrastructure_master:Cloud-Build-smoke; deployment-api@`e10a6ce` "unbreak Cloud Build (red since
+      04-29)" suggests Cloud Build is now green; verify before flipping]
+- [ ] [deployment-ui] P5. Verify on Cloud Run URL. [AUDIT 2026-05-07: BLOCKED-ON
+      infrastructure_master:deployment-service-Cloud-Run-push]
 
 ### Deployment service build infrastructure (`deployment_service_build_infrastructure_repair`)
 
-- [ ] [AGENT] P3. (`p3-local-smoke`) Phase 3 — Local Docker build smoke. Blocked on Phase 1 + Phase 2.
-- [ ] [AGENT] P4. (`p4-cloud-build-smoke`) Phase 4 — Cloud Build smoke. Blocked on Phase 3 AND Phase 3b passing.
+- [ ] [AGENT] P3. (`p3-local-smoke`) Phase 3 — Local Docker build smoke. Blocked on Phase 1 + Phase 2. [AUDIT
+      2026-05-07: FRESH — actionable; UTL-base-image migration committed @`6b05dd6` suggests Phase 1+2 done; Phase 3
+      local-Docker smoke remains]
+- [ ] [AGENT] P4. (`p4-cloud-build-smoke`) Phase 4 — Cloud Build smoke. Blocked on Phase 3 AND Phase 3b passing. [AUDIT
+      2026-05-07: FRESH — likely close to done; deployment-api@`e10a6ce` (2026-05-06) "unbreak Cloud Build (red since
+      04-29) + tier-3 fast-path" suggests Cloud Build is now green; needs explicit smoke verification]
 - [ ] [AGENT] P5. (`p5-plan3-unblock`) Phase 5 — Unblock Plan 3 (sports_scheduler_cron_activation). Blocked on Phase 4.
+      [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:Phase-4-Cloud-Build-smoke]
 - [ ] [AGENT] P6. (`p6-plan6-check`) Phase 6 — Check whether Plan 6 (features-sports-service deployment) has the same
-      build issue.
-- [ ] [AGENT] P7. (`p7-success-criteria`) Phase 7 — Validate workspace-wide success criteria.
+      build issue. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:Phase-4-Cloud-Build-smoke]
+- [ ] [AGENT] P7. (`p7-success-criteria`) Phase 7 — Validate workspace-wide success criteria. [AUDIT 2026-05-07:
+      BLOCKED-ON infrastructure_master:Phase-6-plan6-check]
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -127,11 +226,13 @@ depths for different (service, venue, data_type) combinations — some land at p
 
 #### B.2 — Drill-down hierarchy must match codex shard-key matrix per asset_group
 
-Plan in `plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` (5 phases). Owner-side todos:
+Plan in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` (5 phases — promoted from
+`plans/ai/` to `plans/active/` on 2026-05-07 per PM commit `d968b5d3`). Owner-side todos:
 
 - [ ] [AGENT] P0. **Phase 1 audit** — walk the deployment-ui data-status panel for each (service, asset_group) and
       compare the rendered drill-down hierarchy against the codex shard-key matrix in CLAUDE.md
-      `§ Per-asset-group shard-key matrix`. Expected matrix:
+      `§ Per-asset-group shard-key matrix`. Expected matrix: [AUDIT 2026-05-07: BLOCKED-ON
+      data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-1-audit; tracked in own active plan]
   - CeFi spot/perp: `venue → data_type → instrument_type → instrument_id → day`
   - CeFi options/futures: `venue → data_type → options_chain|futures_chain → root → day`
   - TradFi futures: `venue → data_type → instrument_type → root → day`
@@ -144,18 +245,25 @@ Plan in `plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`
       hierarchy keyed on the SSOT matrix (not per-service overrides). Source: UAC `data_status_axis_matrix.PRIMARY_AXIS`
       (already wired into `_select_coverage_group_axis` per data-status multi-axis Phase 0). Add nested-axis support so
       the response is `dict[axis, dict[value, dict[axis, ...]]]` to arbitrary depth (the matrix above tops out at 5
-      levels per asset_group).
+      levels per asset_group). [AUDIT 2026-05-07: BLOCKED-ON
+      data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-2-endpoint]
 - [ ] [SCRIPT] P0. **Phase 3 deployment-ui component** — replace the current hardcoded 2-level drill-down
       (`venue → data_type`) with a recursive renderer that walks the per-asset_group axis chain from the
       `/api/config/shard-axis-matrix` endpoint (already shipped in deployment-api@`85053fe`). Each level is collapsible;
-      the leaf level always shows per-day download icons + schema modal trigger.
+      the leaf level always shows per-day download icons + schema modal trigger. [AUDIT 2026-05-07: BLOCKED-ON
+      data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-3-renderer]
 - [ ] [SCRIPT] P0. **Phase 4 per-shard download + missing-day surfacing** — every leaf node renders one icon-per-day
       with hover tooltip showing `attempted_at` / `error_reason` / `probed_paths` for missing days. Backend
-      `probed_paths` field shipped deployment-api@`4ca4bb7`; UI must surface it.
+      `probed_paths` field shipped deployment-api@`4ca4bb7`; UI must surface it. [AUDIT 2026-05-07: BLOCKED-ON
+      data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-4-leaf-icons; backend probed_paths confirmed shipped
+      deployment-api@`4ca4bb7`]
 - [ ] [SCRIPT] P0. **Phase 5 MTDS CLI shard-targeting flags** — `market-tick-data-service` CLI gains `--shard-key`
       (compound key string per asset_group), `--instrument-type`, `--root`, `--instrument-id`, `--day`,
       `--canonical-question-group`. Operator clicking a missing-day download icon in the UI gets a copy-paste-ready CLI
-      invocation that recovers exactly that shard atom (no broader collateral re-fetch).
+      invocation that recovers exactly that shard atom (no broader collateral re-fetch). [AUDIT 2026-05-07: FRESH —
+      actionable; verified MTDS CLI does NOT have `--shard-key` / `--root` / `--day` / `--canonical-question-group`
+      flags (`grep` in `cli/main.py` returns 0 hits — only existing `--venues` / `--data-types` / `--instrument-ids`);
+      critical-path for operator UX after Phase 4 lands]
 
 #### C.13 — Drill-down DEPTH consistency audit (operator finding 2026-05-07 from MTDS TRADFI screenshot)
 
@@ -178,15 +286,18 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
   - Drill-down depth reached before the renderer stops adding levels.
   - Whether the leaf level renders per-day download icons.
   - Whether the schema modal triggers from the leaf.
-  - Compare the actual depth to the codex shard-key matrix expected depth.
+  - Compare the actual depth to the codex shard-key matrix expected depth. [AUDIT 2026-05-07: FRESH — actionable; gating
+    audit step for Phase 3 verification]
 - [ ] [DOC] P0. Output a coverage matrix at `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`
       listing every (service, asset*group, venue, data_type) tuple as one of: `WORKING` /
-      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/    `MISSING_DOWNLOAD_ICON`. Reference incidents
-      (CBOE ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot.
+      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/    `MISSING_DOWNLOAD_ICON`. Reference incidents     (CBOE ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot. [AUDIT 2026-05-07: FRESH — actionable; verified `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`does NOT exist (only`data-status-drilldown.md`+`shard-granularity-cefi.md`);
+      doc creation is greenfield]
 - [ ] [VERIFY] P0. After B.2 Phase 3 deployment-ui renderer ships: re-walk the same audit; every entry in the matrix
-      flips to `WORKING`. Block Phase 5 (MTDS CLI shard-targeting) sign-off until the matrix is 100% green.
+      flips to `WORKING`. Block Phase 5 (MTDS CLI shard-targeting) sign-off until the matrix is 100% green. [AUDIT
+      2026-05-07: BLOCKED-ON data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-3-renderer]
 - [ ] [VERIFY] P0. Schema modal works at every leaf — confirm via Playwright walk (B.2 Phase 3's Playwright coverage
-      extends here).
+      extends here). [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:deployment-ui-Playwright-walk; SchemaModal
+      wired in deployment-ui@`7309b56`/`537d468`; per-leaf coverage pending]
 
 ## Anti-patterns + workspace-rule cross-references
 

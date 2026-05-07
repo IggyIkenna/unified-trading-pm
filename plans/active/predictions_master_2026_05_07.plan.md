@@ -22,6 +22,30 @@ related_plans:
 
 # Predictions Master — asset_group umbrella
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 35 of 35 unchecked todos
+- **Mis-marked DONE → flipped**: 0
+- **In-flight (running VMs)**: 0 — NO mtds-prediction VMs in current snapshot
+- **Blocked by**: `sports_master:Group E gate` (predictions ML half is gated on sports half completion of
+  `sports_predictions_e2e` per explicit GATE marker); `manifest_migration_master_2026_05_07:Stage 3` (Polymarket parquet
+  rewrite + manifest reflip is Stage 3); `writegate_honest_coverage_endtoend:Phase 2.A` (placeholder method deletion
+  must complete before manifest migration)
+- **Blocks**: `master_to_live_defi_2026_05_23:G` (DART manual-trade gate — features pipeline running on representative
+  sample is required readiness floor for predictions); does NOT block live trading per master plan
+  ("features-pipeline-running, no ML this cycle")
+- **Last meaningful commit**: UAC@`af2bc9b` (canonical-question-group SSOT + lifecycle + classifier wrapper — Phase 1A);
+  UAC@`5f76bd4` (CLASSIFIER_STABILITY_HASH for prediction-market reclassification gating); UAC@`58cc5f8` (Polymarket
+  lifecycle aliases + edge-case regression tests); UAC@`bb24aba` (DATA_TYPE_TO_CLUSTER_REGISTRY +
+  SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS); UAC@`a901e91` (vault-venue canonical names + Polymarket CLOB coverage)
+- **Recommendation**: KEEP ACTIVE. Phase 1A scaffolding shipped (taxonomy + lifecycle + classifier wrapper SSOTs in
+  UAC); BUT no MTDS adapter migration, no instruments-service lifecycle ingestion writer, no parquet rewrite/reflip yet.
+  P1 priority is correct (features-pipeline-running, not live-ML, by 2026-05-23). Critical pending: 14 P0 items in 16
+  days. Per user direction 2026-05-07 (MEMORY entry C.12 in the plan body): small Polymarket dataset means migration is
+  feasible in a single VM run; the OTHER bucket pattern is required to remove "out of scope" badge in deployment-ui.
+  Block Phase 5 baseline + ratchet until POLYMARKET no longer renders "out of scope".
+
 ## Scope
 
 Single source of truth for **prediction asset_group** work. Per master plan asset-group readiness ladder, predictions is
@@ -72,39 +96,48 @@ Covers:
 
 ### Canonical-question-group taxonomy + lifecycle ingestion
 
-- [ ] [AUDIT] P0. Classifier stability hash design — pending; audit-3 documented existing classifier shape but hash
-      design not finalized.
+- [x] [AUDIT] P0. Classifier stability hash design — pending; audit-3 documented existing classifier shape but hash
+      design not finalized. [AUDIT 2026-05-07: DONE — UAC@5f76bd4 (CLASSIFIER_STABILITY_HASH for prediction-market
+      reclassification gating)]
 - [ ] [SCRIPT] P0. Lifecycle ingestion in instruments-service: capture `market_created_at`, `resolution_time`,
-      `settlement_time` per conditionId / Kalshi ticker.
-- [ ] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle.
+      `settlement_time` per conditionId / Kalshi ticker. [AUDIT 2026-05-07: FRESH — actionable; UAC SSOT (af2bc9b
+      lifecycle wrapper) is in place but instruments-service writer not yet shipped]
+- [ ] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
       classifier; emit
       `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, market_id, day)`
-      shard atom.
-- [ ] [TEST] P0. instruments-service unit + integration tests for lifecycle ingestion + classifier integration.
+      shard atom. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [TEST] P0. instruments-service unit + integration tests for lifecycle ingestion + classifier integration. [AUDIT
+      2026-05-07: FRESH — actionable]
 
 ### Adapter migration (MTDS — Polymarket + Kalshi)
 
 - [ ] [SCRIPT] P0. Polymarket adapter (`polymarket_adapter.py:454–602`): read lifecycle from instruments-service; reject
       ticks outside `[market_created_at, settlement_time]` window per CLAUDE.md "Prediction market lifecycle timing"
-      rule.
-- [ ] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration.
+      rule. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:lifecycle-ingestion writer in instruments-service (Phase
+      1)]
+- [ ] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration. [AUDIT 2026-05-07: BLOCKED-ON
+      predictions_master:Phase 1 lifecycle ingestion]
 - [ ] [SCRIPT] P0. `umi_tick_provider.py:225`: replace `category="prediction_market"` with `asset_group="prediction"` +
-      `data_type="prediction_canonical_question_group"`.
+      `data_type="prediction_canonical_question_group"`. [AUDIT 2026-05-07: FRESH — actionable; UAC@bb24aba already
+      added DATA_TYPE_TO_CLUSTER_REGISTRY incl PREDICTION_GROUPS]
 - [ ] [SCRIPT] P0. Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old `data_type = <base_asset>` → new
-      `data_type = prediction_canonical_question_group`.
+      `data_type = prediction_canonical_question_group`. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [TEST] P0. MTDS unit tests: lifecycle gating (pre-created tick rejected, post-settled tick rejected); cluster
-      validation per `(canonical_question_group, day)`.
+      validation per `(canonical_question_group, day)`. [AUDIT 2026-05-07: BLOCKED-ON above adapter migrations]
 
 ### Reader / feature / strategy migration
 
 - [ ] [SCRIPT] P0. Reader migration: every callsite with `data_type=BTC|ETH|...` →
-      `data_type=prediction_canonical_question_group` + filter on `canonical_question_group`.
+      `data_type=prediction_canonical_question_group` + filter on `canonical_question_group`. [AUDIT 2026-05-07:
+      BLOCKED-ON predictions_master:Phase 1 lifecycle + adapter migration]
 - [ ] [SCRIPT] P0. Per-market lifecycle gating in feature compute: `LookaheadBiasError` extension — feature at time T
-      consumes only market_ids where `market_created_at ≤ T`.
+      consumes only market_ids where `market_created_at ≤ T`. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1]
 - [ ] [SCRIPT] P0. Strategy-service prediction archetypes: archetype configs reference `canonical_question_group`
-      directly (not base_asset).
+      directly (not base_asset). [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1]
 - [ ] [TEST] P0. End-to-end smoke: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify.
+      [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1 ship]
 
 ### Manifest + parquet migration
 
@@ -114,39 +147,52 @@ sequencing DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-pred
 resume ONLY after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not
 legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
 
-- [ ] [SCRIPT] P0. New script `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` (in scripts/).
+- [ ] [SCRIPT] P0. New script `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` (in scripts/). [AUDIT
+      2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 3 + writegate Phase 2.A]
 - [ ] [SCRIPT] P0. Manifest reflip script `mtds_reflip_polymarket_per_base_asset.py` per
-      `unified_trading_library.run_lifecycle` pattern.
+      `unified_trading_library.run_lifecycle` pattern. [AUDIT 2026-05-07: BLOCKED-ON
+      manifest_migration_master_2026_05_07:Stage 3]
 - [ ] [SCRIPT] P0. Old parquet deletion — only AFTER (a) new parquets verified by hand-inspection (sample 10 random
-      groups × random days), (b) downstream features compute clean, (c) operator approval.
+      groups × random days), (b) downstream features compute clean, (c) operator approval. [AUDIT 2026-05-07: BLOCKED-ON
+      predictions_master:above migration scripts run + verified]
 - [ ] [SCRIPT] P0. Backfill any missing canonical_groups — markets in `conditionid_universe.csv` that classifier maps to
-      a group not yet in `PREDICTION_GROUPS` registry.
+      a group not yet in `PREDICTION_GROUPS` registry. [AUDIT 2026-05-07: FRESH — actionable; per CLAUDE.md "Temporary
+      state" rule, PREDICTION_GROUPS empty registry has predictions_master named as successor]
 - [ ] [SCRIPT] P0. Confirm `migrate_polymarket_canonical.py` (MTDS) ran for all targets; afterwards delete legacy
-      `category=prediction` fallback reader in MTDS (no compat shim per workspace rule).
-- [ ] [SCRIPT] P0. Every reconciler wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)`.
+      `category=prediction` fallback reader in MTDS (no compat shim per workspace rule). [AUDIT 2026-05-07: BLOCKED-ON
+      above migration]
+- [ ] [SCRIPT] P0. Every reconciler wraps work in `unified_trading_library.run_lifecycle.run_lifecycle(...)`. [AUDIT
+      2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. Each reconciler supports `--max-flips-per-run=10000` halt safety; operator confirms first 10k flips.
-- [ ] [SCRIPT] P0. CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`.
+      [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [SCRIPT] P0. CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`. [AUDIT 2026-05-07: FRESH — actionable]
 
 ### Data-status panel — Predictions asset_group drill-down
 
-- [ ] [SCRIPT] P0. Predictions asset_group panel — drill-down shape: `(venue, canonical_question_group, day)`.
+- [ ] [SCRIPT] P0. Predictions asset_group panel — drill-down shape: `(venue, canonical_question_group, day)`. [AUDIT
+      2026-05-07: BLOCKED-ON predictions_master:Phase 1 + manifest reflip; aligns with infrastructure_master Data-status
+      multi-axis follow-up]
 
 ### Predictions ML half (`sports_predictions_e2e`)
 
 - [ ] [SCRIPT] P0. Run ml-training Model 2A walk-forward against the Group-D-validated feature matrix (gated on sports
-      half completion in `sports_master`).
+      half completion in `sports_master`). [AUDIT 2026-05-07: BLOCKED-ON sports_master:Group E gate (FSS produces ≥95%
+      non-NULL features)]
 - [ ] [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per consolidated plan
-      bar.
+      bar. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:walk-forward run]
 - [ ] [SCRIPT] P0. Training-config sanity check: feature columns match FSS schema, label leakage absent, walk-forward
-      window correct.
-- [ ] [GATE] P0. Block Group F until walk-forward AUC ≥ 0.55 and calibration error ≤ 5%.
+      window correct. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:walk-forward run]
+- [ ] [GATE] P0. Block Group F until walk-forward AUC ≥ 0.55 and calibration error ≤ 5%. [AUDIT 2026-05-07: ACTIVE GATE
+      — explicitly BLOCKS master_to_live_defi_2026_05_23:Group F]
 - [ ] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
-- [ ] [ANALYSIS] P1. Persist model + metrics to ml-models registry; tag `model_family=sports_arb_v1`.
+      [AUDIT 2026-05-07: FRESH — actionable; verify shipped status against features-sports-service catalog]
+- [ ] [ANALYSIS] P1. Persist model + metrics to ml-models registry; tag `model_family=sports_arb_v1`. [AUDIT 2026-05-07:
+      BLOCKED-ON predictions_master:walk-forward run]
 
 ### Predictions MTDS slice (`market_tick_data_to_100pct` — predictions)
 
 - [ ] [AGENT] P1. Per-(canonical_question_group, day) completion %: HOURLY = 24 expected/day, DAILY = 1, ELECTION = 1
-      over months/years.
+      over months/years. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1 lifecycle ingestion + classifier]
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -167,23 +213,26 @@ adapter migration. The two items below close the loop on the deployment-ui panel
       `OTHER`. Rationale per user direction 2026-05-07: small Polymarket dataset means we can audit `OTHER` membership
       after each backfill VM run and promote frequently-seen patterns to first-class groups. Treating `OTHER` as a known
       catch-all bucket is honest absence; treating those markets as "out of scope" hides them from the panel and from
-      the classifier audit loop.
+      the classifier audit loop. [AUDIT 2026-05-07: FRESH — actionable; UAC@bb24aba seeded PREDICTION_GROUPS but OTHER
+      bucket presence unverified]
   - [ ] UAC `PREDICTION_GROUPS` registry seeding (Phase 1 critical-path item) MUST include `OTHER` as a special-case
         entry from day one. Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), not a target
-        count.
+        count. [AUDIT 2026-05-07: FRESH — actionable]
   - [ ] Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId` to
-        `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion.
+        `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion. [AUDIT
+        2026-05-07: FRESH — actionable]
   - [ ] Data-status panel renders `OTHER` as a normal canonical-question-group bucket (not "out of scope"). Hover
         tooltip: "Markets not yet mapped to a curated canonical question group — review event stream + promote recurring
-        patterns to first-class groups."
+        patterns to first-class groups." [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [VERIFY] P0. Phase 1 timeline check against 2026-05-23 master deadline: 14/37 done (38%) as of 2026-05-07. The 14
       remaining P0 items in Phase 1 + Phase 2 + Phase 3 (lifecycle ingestion + classifier + adapter migration + parquet
       rewrite + manifest reflip) need to ship in ~16 days. Per user direction: small dataset means migration is
       feasible. Block Phase 5 baseline + ratchet until POLYMARKET no longer renders "out of scope" in deployment-ui.
+      [AUDIT 2026-05-07: FRESH — actionable; this IS the timeline gate]
 - [ ] [VERIFY] P0. After Phase 1 ships: re-walk deployment-ui prediction panel; POLYMARKET drill-down renders as
       `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
-      groups.
+      groups. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1 ship]
 
 ## Anti-patterns + workspace-rule cross-references
 

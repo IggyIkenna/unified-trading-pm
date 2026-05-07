@@ -58,6 +58,32 @@ isProject: false
 
 # Feature DAG UAC SSOT + features-only coverage
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 11 of 11 unchecked todos
+- **Mis-marked DONE → flipped**: 0 (none — all 11 still genuinely pending)
+- **In-flight (running VMs)**: none (Phase 1 is pure UAC + UTL code work; no VMs needed yet)
+- **Blocked by**:
+  - `writegate_honest_coverage_endtoend_2026_05_06` — Phase 2.D `available_at` stamping shape + `LookaheadBiasError` +
+    `AVAILABILITY_AT_SEMANTICS` taxonomy must land first (this plan reuses, not redefines). Per writegate handoff
+    2026-05-07-late, Tier 1 UTL contract + Tier 2A sports adapters shipped, but `LookaheadBiasError` strict-mode +
+    sports `available_at` rename (Phase 2.C) still pending — see writegate handoff cascade.
+- **Blocks**:
+  - `features_consolidation_and_drilldown_2026_05_06` — Phase 1+2+3 all transitively depend on this plan's UAC SSOTs
+    (denominator clip, expected-feature-groups registry).
+  - `ml_training_feature_read_perf_2026_05_06` Phase 4 benchmark sign-off — won't measure correctly until features
+    manifest is honest (this plan's denominator clip).
+  - `master_to_live_defi_2026_05_23` Group D (Coverage & shard 12-14) for features-\* services.
+- **Last meaningful commit**: nothing in this plan's scope. Adjacent activity: features-cross-instrument
+  `190bea1`/`2804f47`/`071604f`/`d1da107` (paired_dispersion calculator+resolver+catalog+dispatch — Phase 9 of strategy
+  v2, NOT this plan); features-onchain `7f1b2a1` (canonical columns — Phase 9, NOT this plan). No commits touch UAC
+  `features/required_inputs.py` or UTL `manifest/freshness.py` (paths don't exist).
+- **Recommendation**: KEEP active. Phase 1 (UAC + UTL foundations) is mechanically simple and unblocks everything
+  downstream. The feature DAG SSOT is one of the highest-leverage 1-day items remaining for `LookaheadBiasError`
+  enforcement to be honest. Schedule Phase 1 as soon as writegate Phase 2.D (`AVAILABILITY_AT_SEMANTICS`) lands. Phases
+  2-3 are sequenced after but trivially parallelisable across the 3 features-\* services.
+
 ## Why this exists (and what it deliberately doesn't cover)
 
 `writegate_honest_coverage_endtoend_2026_05_06.plan.md` (in-flight, locked to live-defi-rollout) is the canonical plan
@@ -137,15 +163,21 @@ QG gate between phases.
       scattered across features-onchain, features-sports, features-delta-one (writegate identified these locations).
       `InputReq(source, data_type, available_at_rule, horizon)` where `available_at_rule` reuses writegate's
       `AVAILABILITY_AT_SEMANTICS` taxonomy (do NOT redefine — import). Export via `unified_api_contracts.features`
-      facade.
+      facade. [AUDIT 2026-05-07: FRESH — actionable; verified absent: `unified_api_contracts/canonical/domain/features/`
+      contains only `models.py` + `__init__.py`, no `required_inputs.py`; UAC grep `FEATURE_REQUIRED_INPUTS` → 0 hits.
+      Blocked-on writegate `AVAILABILITY_AT_SEMANTICS` import target.]
 - [ ] [AGENT] P0. **Per-service registry**. `EXPECTED_FEATURE_GROUPS_BY_SERVICE: dict[str, list[str]]` in
       `unified_api_contracts/canonical/domain/features/registry.py`. Source: each service's `app/calculators/` directory
-      listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table.
+      listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. [AUDIT 2026-05-07: FRESH —
+      actionable; verified absent: UAC grep `EXPECTED_FEATURE_GROUPS_BY_SERVICE` → 0 hits; no `registry.py` in
+      `canonical/domain/features/`.]
 - [ ] [AGENT] P0. **Per-feature-group coverage floor**. `FEATURE_COVERAGE_START: dict[tuple[str, str], date]` mirroring
-      `SOURCE_COVERAGE_START` shape. Default = epoch when not declared.
+      `SOURCE_COVERAGE_START` shape. Default = epoch when not declared. [AUDIT 2026-05-07: FRESH — actionable; UAC grep
+      `FEATURE_COVERAGE_START` → 0 hits.]
 - [ ] [AGENT] P0. **Tests**. UAC unit tests assert: (a) every service in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` has a
       corresponding directory in workspace; (b) every entry in `FEATURE_REQUIRED_INPUTS` references a real
-      source/data_type from existing UAC registries; (c) DAG has no cycles.
+      source/data_type from existing UAC registries; (c) DAG has no cycles. [AUDIT 2026-05-07: FRESH — depends on the
+      three preceding todos.]
 
 ### 1B — UTL
 
@@ -153,9 +185,13 @@ QG gate between phases.
       `is_now_captured(row_key) -> bool`, `refresh()` on TTL expiry, `bulk_load(skip_set)` at startup. Reference impl:
       `/tmp/fill_missing_ohlcv.py` `_refresh_captured_cache` + `_is_now_captured`. Tests must cover concurrent-write
       race: two workers picking up same row_key from a stale skip-set; one's `is_now_captured` returns True after the
-      other's `record_captured`; loser skips.
+      other's `record_captured`; loser skips. [AUDIT 2026-05-07: FRESH — actionable; verified absent: no
+      `unified_trading_library/manifest/` package exists; UTL grep `ManifestFreshnessCache` → 0 hits. UTL has
+      `manifest_writer.py`/`manifest_consolidator.py` flat at top level — when adding `manifest/freshness.py` consider
+      moving these into a `manifest/` sub-package or just create `manifest_freshness.py` flat.]
 - [ ] [AGENT] P0. **Public API**: re-export from `unified_trading_library.manifest`. Document the 60s TTL default and
-      the trade-off explicit in CLAUDE.md (don't drop below 30s — burns GCS reads).
+      the trade-off explicit in CLAUDE.md (don't drop below 30s — burns GCS reads). [AUDIT 2026-05-07: FRESH — depends
+      on preceding todo.]
 
 **Phase 1 success**: UAC + UTL pass quickmerge; downstream services can
 `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS, EXPECTED_FEATURE_GROUPS_BY_SERVICE, FEATURE_COVERAGE_START`
@@ -167,17 +203,22 @@ and `from unified_trading_library.manifest import ManifestFreshnessCache`.
 
 - [ ] [AGENT] P1. **features-onchain-service**: delete local feature_group → required_inputs DAG; replace with
       `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS`. Writegate's `assert_no_lookahead(...)`
-      already reads from this; just point at the new SSOT.
-- [ ] [AGENT] P1. **features-sports-service**: same.
-- [ ] [AGENT] P1. **features-delta-one-service**: same.
+      already reads from this; just point at the new SSOT. [AUDIT 2026-05-07: BLOCKED-ON
+      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
+- [ ] [AGENT] P1. **features-sports-service**: same. [AUDIT 2026-05-07: BLOCKED-ON
+      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
+- [ ] [AGENT] P1. **features-delta-one-service**: same. [AUDIT 2026-05-07: BLOCKED-ON
+      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
 
 ### 2B — Adopt `ManifestFreshnessCache`
 
 - [ ] [AGENT] P1. **features-sports-service BatchHandler**: instantiate `ManifestFreshnessCache(ttl_seconds=60)` at
       handler init; call `cache.is_now_captured(row_key)` before any expensive remote call (per-source API fetch).
-      Reference: CLAUDE.md "Manifest concurrency principle" rule.
+      Reference: CLAUDE.md "Manifest concurrency principle" rule. [AUDIT 2026-05-07: BLOCKED-ON
+      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1B.]
 - [ ] [AGENT] P1. **features-volatility-service orchestrator**: same. Skip if manifest already says captured; avoids
-      redundant IV-surface fits under concurrent backfill.
+      redundant IV-surface fits under concurrent backfill. [AUDIT 2026-05-07: BLOCKED-ON
+      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1B.]
 
 ### 2C — deployment-api denominator clip
 
@@ -188,7 +229,10 @@ and `from unified_trading_library.manifest import ManifestFreshnessCache`.
     `EXPECTED_FEATURE_GROUPS_BY_SERVICE[service]` (instead of inferring from what's been written).
     `found = captured + empty_confirmed`. `missing = attempted_failed`. Same shape as sports.
   - Endpoint `/data_status?check_feature_groups=true` (line 2288) returns honest expected/found/missing per
-    feature_group.
+    feature_group. [AUDIT 2026-05-07: BLOCKED-ON feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.
+    Verified at `data_status_service.py:4259-4269` `_build_feature_group_breakdown` still uses
+    `_build_simple_dimension_breakdown(...)` — no UAC denominator clip + no `FEATURE_COVERAGE_START` import. Endpoint
+    `/data_status?check_feature_groups=` already exists (line 2405).]
 
 **Phase 2 success**: per-service QG passes; data-status feature-coverage % matches honest expected/found/missing when
 verified against deployment-ui DataStatusTab on a representative shard.
@@ -199,13 +243,17 @@ verified against deployment-ui DataStatusTab on a representative shard.
       accept `features` (or add `--features` flag). Probe feature parquet paths via UAC SSOT candidate-path helper
       (mirror sports' `candidate_parquet_paths`). New drift axes: timeframe hive casing, feature_group empty-check
       (parquet exists but is 0 rows or all-NaN beyond writegate's NaN-threshold). Regression test: synthesise a phantom
-      row + missing parquet; audit flags it.
+      row + missing parquet; audit flags it. [AUDIT 2026-05-07: FRESH — actionable; verified absent:
+      `reconcile_phantom_manifest_rows_all.py` grep `features|FEATURE_REQUIRED_INPUTS|EXPECTED_FEATURE_GROUPS` → 0 hits
+      (the audit only walks raw-data manifests). Soft-blocked-on Phase-1A SSOTs (probe denominator).]
 - [ ] [AGENT] P2. **Same-region GCE smoke run** of the audit in `--dry-run` against the features manifest (per CLAUDE.md
-      cross-region listing perf rule). Confirm zero phantoms or document genuine drift.
+      cross-region listing perf rule). Confirm zero phantoms or document genuine drift. [AUDIT 2026-05-07: BLOCKED-ON
+      preceding todo.]
 - [ ] [AGENT] P3. **Sanity replay** — pick 3 small representative shards (one DeFi onchain, one CeFi delta-one, one
       sports), recompute. Assert: (a) features-\* services no longer carry inlined DAGs (grep returns 0); (b)
       data-status feature-coverage % matches expected (denominator clip works); (c) phantom audit dry-run output is
-      parseable.
+      parseable. [AUDIT 2026-05-07: FRESH — final acceptance; depends on Phase 1+2+3 + relevant raw-data backfill VMs
+      finishing per writegate and the asset-group umbrellas.]
 
 **Phase 3 success**: features manifest is now under the same phantom-audit regime as raw data; data-status shows honest
 features coverage end-to-end.

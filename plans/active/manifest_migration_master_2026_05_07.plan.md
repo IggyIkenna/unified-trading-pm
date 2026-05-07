@@ -22,6 +22,107 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
 ---
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass)
+- **Verified**: 18 of 18 unchecked todos (audit-findings section only — Stage 1-4 status tables are rollups, not todos
+  with `- [ ]` markers)
+- **Mis-marked DONE → flipped**: 0
+- **In-flight (running VMs)**: none directly tied to this plan's todos. Sports VMs (af/fs/sfi/us-backfill) are pre-pause
+  from Stage 1 Phase 2's perspective; sports rename + GCS migration is OPERATOR-GATED and has not started.
+- **Status-rollup truth check** (Stage 1-4 tables, refreshed against current workspace state):
+  - Stage 1 Phase 1: SHIPPED `instruments-service@8050477` (`scripts/migrate_sports_available_at_column.py` exists).
+    Confirmed via git log on the file.
+  - Stage 1 Phase 2-4: still PENDING — confirmed `data_available_at` still appears in
+    `unified-api-contracts/.../internal/schemas/_sports_*.py` (4 contract files); atomic 4-repo source rename has not
+    shipped.
+  - Stage 2.A: still partial — `_create_empty_output` / `_create_full_day_empty_output` / `_create_closed_market_candle`
+    still present in MDPS `app/adapters/base_adapter.py`, `app/adapters/tradfi/ohlcv_passthrough.py`,
+    `app/core/orchestration_writer.py`, `app/core/batch_workers.py` plus their tests.
+  - Stage 2.B: LIVE per memory (MTDS@ae2be64 + 0fc8ba2). Confirmed.
+  - Stage 2.C: still GATED on Stage 1 Phase 3.
+  - Stage 3.A: reconcilers SHIPPED — `market-data-processing-service/scripts/reconcile_1440_nan_placeholders.py` (per
+    memory MDPS@d3be0ef) and `market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py` (per memory
+    MTDS@ba5423f).
+  - Stage 3.D expected-absence backfill: `instruments-service/scripts/reconcile_expected_absence_reasons.py` SHIPPED
+    (per memory @1f93745).
+  - Stage 3 Predictions / Sports ODDS_API / fixture truthset: still scoped per parent plans; not in this plan's flip
+    scope.
+  - Stage 4 final sweeps: PENDING.
+- **Blocked by**:
+  - `manifest_migration_master:Stage 1 Phase 2-4` blocked by `sports_master_2026_05_07:Stage A1` (operator-gated GCE
+    migration + atomic 4-repo source rename).
+  - `manifest_migration_master:Stage 2.C` blocked by `manifest_migration_master:Stage 1 Phase 3` (sports rename) AND by
+    `writegate_honest_coverage_endtoend_2026_05_06:Phase 2.A` (placeholder method deletion).
+  - `manifest_migration_master:Stage 3.A reflip` blocked by `writegate_honest_coverage_endtoend_2026_05_06:Phase 2.A`
+    deletions completing.
+  - `manifest_migration_master:Stage 4 mtds-s4-10 rescan` blocked by `defi_master_2026_05_07:mtds-s4-10` ownership AND
+    all Stage 3 streams completing.
+  - `manifest_migration_master:Stage 4 raw-tables migration + _ensure_timestamp DELETE` blocked by
+    `infrastructure_master_2026_05_07:raw-tables`.
+  - **Audit-findings C.1 + C.11 + C.8 todos** (lines 411-470) blocked by writegate Phase 2.E reason-taxonomy SSOT (UAC
+    `EMPTY_CONFIRMED_REASONS` extension is the entry point for the new `EXPECTED_DEPRECATED_DATA_TYPE` +
+    `EXPECTED_REFDATA_CADENCE_CHANGE` codes).
+- **Blocks**:
+  - `manifest_migration_master:Stage 1 Phase 2-4` BLOCKS `writegate_honest_coverage_endtoend_2026_05_06:Phase 2.C`
+    (LookaheadBiasError strict-mode flip — sports `record_captured` would hard-fail workspace-wide if flip ships first).
+  - `manifest_migration_master:Stage 4 mtds-s4-10 rescan` BLOCKS final post-migration verification across every
+    per-service manifest.
+  - `manifest_migration_master:audit-findings C.1 + C.11` BLOCK `sports_master_2026_05_07` data-status panel
+    cadence-aware denominator rendering (3046 daily LEAGUES + TEAMS shards stay inflated until kill +
+    per-(league,season) migration).
+- **Last meaningful commit on this plan file**: PM@7d3fe376 ("absorb 2026-05-07 deployment-ui audit findings into
+  asset_group masters") — added the C.1 / C.8 / C.11 audit-findings section. Prior: PM@e87ea712 (conflicts + VM impact +
+  operational guidance), PM@e06b278f (initial creation).
+- **Per-todo verification** (audit-findings § lines 411-470 — all 18 unchecked items confirmed FRESH):
+  - **§ Refdata cadence SSOT — UAC SchemaContract `cadence` field**: FRESH. Verified `class SchemaContract` at UAC
+    `internal/schemas/contracts.py:92` has no `cadence` field.
+  - **§ C.1 LEAGUES kill — lift `logo_url` into UAC `LeagueDefinition`**: FRESH. Verified `LeagueDefinition` at UAC
+    `canonical/domain/sports/league_registry.py:28` has no `logo_url` field.
+  - **§ C.1 LEAGUES kill — flip manifest rows + delete daily parquets**: BLOCKED-ON the new
+    `EXPECTED_DEPRECATED_DATA_TYPE` reason code below.
+  - **§ C.1 LEAGUES kill — remove orchestrator scheduler entry**: FRESH.
+  - **§ C.1 LEAGUES kill — remove UAC LEAGUES `data_type` registration / mark `cadence=singleton`**: BLOCKED-ON cadence
+    field landing in SchemaContract first.
+  - **§ C.1 LEAGUES kill — update sports-data-source-coverage-matrix.md**: FRESH (doc-only follow-up).
+  - **§ C.11 TEAMS refdata cadence — VENUES-or-TEAMS design decision**: FRESH (design pending).
+  - **§ C.11 TEAMS — migrate adapter to per-(team, season)**: BLOCKED-ON cadence field landing in SchemaContract first.
+  - **§ C.11 TEAMS — flip 3046 daily TEAMS rows + write per-(league, season) shards**: BLOCKED-ON
+    `EXPECTED_REFDATA_CADENCE_CHANGE` reason code landing first.
+  - **§ C.11 TEAMS — data-status cadence-aware denominators**: BLOCKED-ON cadence field — deployment-api needs to read
+    `SchemaContract.cadence` from UAC.
+  - **§ Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC**: FRESH. Verified neither code
+    present in `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` (which is the actual home of
+    `EmptyConfirmedReason` StrEnum + `EMPTY_CONFIRMED_REASONS` frozenset). NOTE — plan path
+    `crosscutting.empty_confirmed_reasons` is stale; the canonical module is `honest_coverage.py`. Update path when
+    shipping.
+  - **§ C.8 footystats normalizer audit**: FRESH. Verified `external/footystats/normalize.py` exists.
+  - **§ C.8 understat normalizer audit**: FRESH. Verified `external/understat/normalize.py` exists.
+  - **§ C.8 SFI normalizer audit**: FRESH. Verified `external/soccer_football_info/normalize.py` exists.
+  - **§ C.8 transfermarkt normalizer audit**: FRESH. Verified `external/transfermarkt/normalize.py` exists.
+  - **§ C.8 DeFi adapters dex\_\* schema-drop audit**: FRESH. Cross-asset_group sweep beyond DeFi
+    `add()`-canonicalisation hook (UTL@25ded4f3 fixed venue-name drift; this audit catches schema-drop drift).
+  - **§ C.8 per-source meta-todo (file follow-up flatten todos under sports_master B.1 pattern)**: FRESH.
+  - **§ C.8 add `tests/test_normalizer_no_stub_pass_through.py` to UAC**: FRESH. Verified no such test in UAC `tests/`.
+- **Recommendation**:
+  - This plan is a **coordination/sequencing sub-plan**, not a todo-owning plan. Status tables (Stage 1-4) are rollups
+    that mirror parent plans' state — they should be refreshed when parent plans flip checkboxes, but there's no agent
+    action to "complete" them here.
+  - The only actionable todos in this plan are the 18 audit-findings items absorbed from
+    `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md`. These belong to UAC + sports_master +
+    writegate_honest_coverage parent scopes but landed here because the data-status audit surfaced them. **NOT
+    superseded by writegate Phase 3.D.2 reader-side fallback** — read-side fallback (UTL@c5c2669e +
+    deployment-api@176c599) classifies legacy null-reason rows on read; this plan's migration scripts are the WRITE-side
+    back-fill. Both required: read-side handles present + legacy data we never re-write; write-side handles canonical
+    data plane long-term.
+  - Plan stays active until Stage 4 closeout. Recommend converting to a codex SSOT
+    (`codex/02-data/manifest-migration-coordination.md`) when fully drained, rather than archive — the sequencing DAG +
+    risk register + VM impact matrix is durable institutional memory.
+  - **Concurrency note**: this plan file is being concurrently edited by another agent's prettier/auto-format pass;
+    per-todo `[AUDIT 2026-05-07: ...]` line markers were attempted and reverted twice. The plan-level header (this
+    section) is the SSOT for the audit findings. Per-todo annotations consolidated into the "Per-todo verification"
+    bullet list above.
+
 # Manifest Migration Master — cross-plan dependency sequencer
 
 ## Why this exists
