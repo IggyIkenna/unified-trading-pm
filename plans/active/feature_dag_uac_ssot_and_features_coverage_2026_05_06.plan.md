@@ -158,26 +158,34 @@ QG gate between phases.
 
 ### 1A — UAC
 
-- [ ] [AGENT] P0. **`FEATURE_REQUIRED_INPUTS` DAG**. Single declaration in
+- [x] [AGENT] P0. **`FEATURE_REQUIRED_INPUTS` DAG**. Single declaration in
       `unified_api_contracts/canonical/domain/features/required_inputs.py`. Lift the inlined DAG entries currently
       scattered across features-onchain, features-sports, features-delta-one (writegate identified these locations).
       `InputReq(source, data_type, available_at_rule, horizon)` where `available_at_rule` reuses writegate's
       `AVAILABILITY_AT_SEMANTICS` taxonomy (do NOT redefine — import). Export via `unified_api_contracts.features`
-      facade. [AUDIT 2026-05-07: FRESH — actionable; verified absent: `unified_api_contracts/canonical/domain/features/`
-      contains only `models.py` + `__init__.py`, no `required_inputs.py`; UAC grep `FEATURE_REQUIRED_INPUTS` → 0 hits.
-      Blocked-on writegate `AVAILABILITY_AT_SEMANTICS` import target.]
-- [ ] [AGENT] P0. **Per-service registry**. `EXPECTED_FEATURE_GROUPS_BY_SERVICE: dict[str, list[str]]` in
+      facade. **SHIPPED 2026-05-07 UAC@4a25b07**: dataclass shape
+      `InputReq(asset_group, data_type, available_at_rule, horizon, source=None)` — `(asset_group, data_type)` is the
+      lookup key into AVAILABILITY_AT_SEMANTICS (data_type alone is ambiguous: `trades` exists in cefi+tradfi+prediction).
+      32 feature_groups seeded: 2 onchain (lst_staking_yields, defillama_tvl) + 30 delta-one (price + microstructure +
+      S/R + enrichment + Phase-1 ML). Re-exported from `unified_api_contracts.canonical.domain.features` (and via the
+      `unified_api_contracts.features` facade by transitivity). 10 onchain + all sports feature_groups omitted pending
+      AVAILABILITY_AT_SEMANTICS defi-vocabulary follow-up (see "Temporary states" section below).
+- [x] [AGENT] P0. **Per-service registry**. `EXPECTED_FEATURE_GROUPS_BY_SERVICE: dict[str, list[str]]` in
       `unified_api_contracts/canonical/domain/features/registry.py`. Source: each service's `app/calculators/` directory
-      listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. [AUDIT 2026-05-07: FRESH —
-      actionable; verified absent: UAC grep `EXPECTED_FEATURE_GROUPS_BY_SERVICE` → 0 hits; no `registry.py` in
-      `canonical/domain/features/`.]
-- [ ] [AGENT] P0. **Per-feature-group coverage floor**. `FEATURE_COVERAGE_START: dict[tuple[str, str], date]` mirroring
-      `SOURCE_COVERAGE_START` shape. Default = epoch when not declared. [AUDIT 2026-05-07: FRESH — actionable; UAC grep
-      `FEATURE_COVERAGE_START` → 0 hits.]
-- [ ] [AGENT] P0. **Tests**. UAC unit tests assert: (a) every service in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` has a
+      listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. **SHIPPED 2026-05-07
+      UAC@4a25b07**: 5 services seeded — features-onchain (12), features-delta-one (33), features-sports (36),
+      features-volatility (empty stub per audit 2026-05-07), features-cross-instrument (empty stub pending BuilderRegistry
+      rollout). Used by data-status `_build_feature_group_breakdown` denominator clip.
+- [x] [AGENT] P0. **Per-feature-group coverage floor**. `FEATURE_COVERAGE_START: dict[tuple[str, str], date]` mirroring
+      `SOURCE_COVERAGE_START` shape. Default = epoch when not declared. **SHIPPED 2026-05-07 UAC@4a25b07**: 6 onchain
+      floors seeded (Aave V3 mainnet 2022-03-16, Lido stETH 2020-12-18, EigenLayer 2023-06-14, Morpho 2022-06-01).
+      `get_feature_coverage_start(service, feature_group) -> date | None` returns None for unregistered pairs (no clip).
+- [x] [AGENT] P0. **Tests**. UAC unit tests assert: (a) every service in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` has a
       corresponding directory in workspace; (b) every entry in `FEATURE_REQUIRED_INPUTS` references a real
-      source/data_type from existing UAC registries; (c) DAG has no cycles. [AUDIT 2026-05-07: FRESH — depends on the
-      three preceding todos.]
+      source/data_type from existing UAC registries; (c) DAG has no cycles. **SHIPPED 2026-05-07 UAC@4a25b07**: 15
+      tests in `tests/test_feature_dag_ssot.py` covering all 3 plan invariants + helper round-trips + frozen-dataclass
+      behaviour + FEATURE_COVERAGE_START sanity (range guard + every key references a registered feature_group). All
+      pass; basedpyright clean; ruff clean.
 
 ### 1B — UTL
 
@@ -276,6 +284,33 @@ features coverage end-to-end.
 - Don't keep per-service DAGs alive in parallel with the UAC SSOT (workspace "delete deprecated code" rule).
 - Don't tune `ManifestFreshnessCache` TTL below 30s — CLAUDE.md says it burns GCS reads for marginal gain.
 - Don't add a fallback "if UAC registry missing, infer from manifest" — that's the bug we're fixing.
+
+## Temporary states + their canonical follow-up plans
+
+Per workspace rule "Temporary state must have a named successor plan (no silent 'fix later')". Phase 1A
+(UAC@4a25b07) shipped a partial seed of `FEATURE_REQUIRED_INPUTS`; the gaps below must be closed before Phase 2A
+consumer migration completes.
+
+- **AVAILABILITY_AT_SEMANTICS defi vocabulary gap.** 10 of 12 onchain feature_groups (`aave_lending_rates`,
+  `aave_utilization`, `aave_risk_params`, `fear_greed`, `macro_sentiment`, `eigen_rewards`, `protocol_rewards`,
+  `flash_loan_availability`, `aave_rate_impact`, `onchain_regime`) read from defi data_types
+  (`lending_indices` / `risk_params` / `rewards` / `flash_loan_events` / `eigenlayer_rewards`) that are NOT in
+  `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS` today. They appear
+  in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` (so data-status denominator works) but are absent from
+  `FEATURE_REQUIRED_INPUTS` (so LookaheadBiasError treats them as unenforced). Successor: extend
+  AVAILABILITY_AT_SEMANTICS in writegate's Phase 2.D scope OR open a small `availability_semantics_defi_vocab_2026_<TBD>`
+  follow-up. Once landed, lift the 10 onchain entries here in the same commit.
+- **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity
+  names (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
+  feature_groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from
+  `FEATURE_REQUIRED_INPUTS`. Successor: open a `sports_feature_required_inputs_vocab_2026_<TBD>.plan.md` that maps
+  each sports entity-name to one or more `(source, data_type)` pairs (e.g. `"fixtures_history" → [("api_football",
+  "FIXTURES"), ("footystats", "FIXTURES")]`) and lifts them into UAC.
+- **features-volatility-service + features-cross-instrument-service stubs.** Both services have empty
+  `EXPECTED_FEATURE_GROUPS_BY_SERVICE` lists today — populate as their respective `BuilderRegistry` patterns
+  consolidate (volatility currently a placeholder per audit 2026-05-07; cross-instrument has 20+ calculators in dir
+  but no central registry yet). Successor: rolled into Phase 2A consumer-migration when those services adopt the
+  pattern.
 
 ## Coordination with writegate
 
