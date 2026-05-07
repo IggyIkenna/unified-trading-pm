@@ -916,12 +916,50 @@ Agent 5):
 
 ## Critical-path DAG (May 6 → May 23)
 
+### Top 3 risks for May-23 cutover (synthesised 2026-05-07 from 6-asset-group deep audit)
+
+| #   | Risk                                                                  | Confidence | Impact | Mitigation                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | --------------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Lending-indices silent-zero cascade** on AAVE V3 ETHEREUM           | HIGH       | HIGH   | Day 1 (2026-05-08): root-cause + commit fix + re-launch `mtds-lending-indices` VM. Likely cause: instruments-store-defi metadata + subgraph URL mapping per chain. Validate Ethereum captures ≥1 row before declaring re-run complete. **Hard floor for carry_staked_basis batch e2e** (Week 2 item 1).                                                                           |
+| 2   | **4-service QG + 9-connector testnet validation slip into Week 3**    | MEDIUM     | HIGH   | Days 2-5 (May 9-12): parallelize across 3 sub-agents — strategy-service Phase 6d (1 day), execution-service + features-onchain + R&E QG (3 agents × 2 days), deployment-api testnet runner for connector smoke (Day 2). EOD May 12 gate: all 4 services pass + 9 connectors validated. Owner: Agent 4. **Failure mode**: Group F checklist cannot close → Week 3 cutover at risk. |
+| 3   | **PBM + R&E + pnl-attr live-mode wiring scope unspecified, no owner** | MEDIUM     | MEDIUM | Day 3 (May 10): assign owner (Agent 3 or 4); add explicit todos in defi_master Fork 1; validate Pub/Sub + intent-subscriber + `pnl-attribution --mode live` CLI in same 1-day sprint as 4-service QG. **Failure mode**: wiring stays implicit, slips into Week 3, or ships half-baked post-cutover.                                                                               |
+
+**Sequencing recommendation for May 8-12 (5-day buffer to Week 2):**
+
+1. **Day 1 (May 8)**: Lending-indices root-cause + fix + re-launch (Risk 1).
+2. **Day 2 (May 9)**: Strategy-service Phase 6d QG → merge; execution-service QG start.
+3. **Day 3 (May 10)**: Assign PBM/R&E/pnl-attr live-wiring owners (Risk 3); author 2-year config-grid backtest runner
+   (deep-audit P0 follow-up).
+4. **Days 4-5 (May 11-12)**: 9-connector testnet smoke (parallel); features-onchain + R&E + pnl-attr QG (parallel).
+5. **EOD May 12 gate**: all 4-service QG passing; 9 connectors validated; lending-indices re-run complete; PBM/R&E
+   live-wiring owners committed. **Do NOT defer any of these — losing May 8-12 leaves zero buffer for Week 3.**
+
 ### Week 1 (May 6–12) · foundations close + tier-1 services pass Groups A–E + AWS migration starts
 
-- [ ] Close shard-granularity propagation (designate one of the 3 plans as the SSOT)
-- [ ] Close TradFi MVP residuals (cluster-validation wiring at `record_captured`)
-- [ ] Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate)
-- [ ] Close sports phantom recovery — frees VM-quota for DeFi + AWS work
+> **Refreshed 2026-05-07 evening (Agent 5 deep-audit Item 3 follow-up)** — 6 parallel sub-agents audited cefi / defi /
+> tradfi / sports / predictions / infrastructure umbrellas for shipped-vs-remaining. Bullets below now cite evidence per
+> flip; remaining work routed to specific umbrella + risk-flagged where May-23 cutover is at stake.
+
+- [x] Close shard-granularity propagation (designate one of the 3 plans as the SSOT). **DONE 2026-05-07** —
+      `infrastructure_master_2026_05_07` is the SSOT umbrella (folds in `shard_granularity_propagation` +
+      `data_status_multi_axis` + `deployment_service_build_infrastructure_repair`). Multi-axis correction shipped per
+      deployment-service@`456acb9`; 4-state capture_status SSOT codified PM@`28e975b0`.
+- [ ] Close TradFi MVP residuals (cluster-validation wiring at `record_captured`). **PARTIAL 2026-05-07** — Tier 2E
+      tradfi adapters complete (MDPS@`e9520a0`); ES.OPT 11-cluster validation gate wired (MTDS@`260325c`); 35,033 tradfi
+      EXPECTED_HOLIDAY/WEEKEND rows landed (PM@`79e47874`). **REMAINING**: market-hours + holiday SSOT integration
+      across 12 affected repos (databento.py adapter, ml-training-service data_filters.py + mock_feature_generator.py,
+      strategy base class config), 5 mdps-tradfi VMs draining ETA 2026-05-08.
+- [ ] Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate). **PARTIAL
+      2026-05-07** — Pyth Hermes (Solana) + Chainlink EVM multi-chain oracle adapters shipped per `mtds-s3-5` +
+      `mtds-s3-6`. **🚨 RISK 1 (HIGH/HIGH)**: Lending-indices silent-zero cascade on AAVE V3 ETHEREUM — VM
+      `mtds-lending-indices-20260507-140418` ran + diagnosed 3 bugs (AAVE V3 ETH 0/343 captured / COMPOUND V3
+      multi-chain subgraph schema error / instruments-store-defi metadata 404 for early-2022 dates); **MUST FIX BY
+      2026-05-12** else carry_staked_basis batch e2e fails Week 2. Owner: Agent 4 / defi_master Fork 1.
+- [ ] Close sports phantom recovery — frees VM-quota for DeFi + AWS work. **PARTIAL 2026-05-07** — Phase 1 + Phase 3
+      pre-req shipped (instruments-service@`9f0e3f9` `dedup_phantom_after_recovery.py`; chain-runner architecture
+      @`cbb50fa`/`e900769`/`7ce509e`); 4 sports recovery VMs in flight (af / fs / sfi / us) ETA 2026-05-08; LEAGUES
+      daily-dump killed (instruments-service@`93efebf`); ODDS source confirmed footystats (codex doc updated). **POST
+      2026-05-08 VM DRAIN**: run `dedup_phantom_after_recovery.py --apply` then `data_available_at` rename Phase 2.
 - [x] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
       PBMS / R&E / pnl-attribution extend `defi_e2e_pipeline_2026_04_30`; batch-live-recon extends
       `consolidated_operational_validation_2026_04_15`). **DONE 2026-05-07** —
@@ -931,29 +969,78 @@ Agent 5):
       (`last_updated` / `asset_group` / `locked_by` / 5 plans with no frontmatter at all); re-tag cluster children with
       `parent:` field — work-stream G. **DONE 2026-05-06** — Stage 1 archived 17 self-tagged superseded plans (one
       deferred per "Ready for [unlock-plan]" rule); per-plan checkboxes flipped under work-stream G § "Archive Stage 1".
-- [ ] Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A)
-- [ ] Decide research-service repo question (work-stream C)
-- [ ] AWS migration cost analysis (work-stream D.1) → user signs off scope
-- [ ] Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone (parallel — tier 2 ladder)
+- [ ] Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A). **IN FLIGHT 2026-05-07** — Phase 1
+      UAC types shipped (UAC@`a70b3f6`: `BackfillLaunchRequest`, `BackfillLaunchResult`, `VMLifecycleEvent`,
+      `VMEventListResult`, `BackfillLaunchTaskKind` 23-value StrEnum + 15 unit tests). Phase 2 (POST/GET handlers) +
+      Phase 3 (QG) pending. Owner: Harsh Day 3 (Agent 1 work_stream_a tab).
+- [ ] Decide research-service repo question (work-stream C). **PENDING** — fold into deployment-api default; no decision
+      logged. Owner: operator + Agent 4.
+- [x] AWS migration cost analysis (work-stream D.1) → user signs off scope. **DONE 2026-05-07** — codex doc shipped at
+      `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`; recommendation SUPERSEDED by dual-cloud
+      decision per `aws_migration_defi_first_2026_05_07.plan.md` Phase 0 (≥$40k credit confirmed; no service / region /
+      account locks). Phase 2 dual-bucket setup is Agent 4 Day 4.
+- [ ] Sports / TradFi / CeFi ML pipelines reach "running on representative sample" milestone (parallel — tier 2 ladder).
+      **BLOCKED ON VM DRAIN** — sports + tradfi VMs draining 2026-05-08; cefi VMs draining 2026-05-08/09 per cefi_master
+      audit. Post-drain: ML smoke + backtest grid actionable for each.
 - [ ] Hyperliquid + Aster perp DEX integration: instrument registry + market-data live (these don't have CEFFU
-      equivalents — direct on-chain)
+      equivalents — direct on-chain). **PARTIAL 2026-05-07** — Lighter zkSync + Pacifica Solana DEX onboarding shipped
+      (MTDS@`10aa715` + `51fecd5` + UAC@`e890022` for ohlcv_1m); Hyperliquid + Aster live execution wiring pending.
+      Owner: Agent 4 (defi_master Fork 1 hedging-leg).
+- [ ] **Lending-indices silent-zero fix + re-launch** (Day 1 = today, 2026-05-08). **NEW 2026-05-07 deep-audit** — Risk
+      1: AAVE V3 ETHEREUM 0/343 captured silently on `mtds-lending-indices-20260507-140418`; root-cause + commit fix +
+      re-launch VM. Gates carry_staked_basis batch e2e (Week 2). Owner: Agent 4 (defi_master Fork 1).
+- [ ] **4-service QG sweep** (strategy / execution / R&E / features-onchain; Days 2-5). **NEW 2026-05-07 deep-audit** —
+      Risk 2: 37 unchecked defi_master items + 9 execution-service connectors untested on testnet. Parallelize across 3
+      agents Days 2-3; testnet smoke Day 4-5. EOD May 12 gate: all 4 services pass + 9 connectors validated. Owner:
+      Agent 4 (DeFi launch tab).
+- [ ] **PBM + R&E + pnl-attr live-mode owner assignment** (Day 3). **NEW 2026-05-07 deep-audit** — Risk 3: defi_master
+      Fork 1 folded `defi_e2e_pipeline` but did NOT explicitly scope "live-mode wiring" as separate todos — they sit as
+      free-floating audit findings. Assign owner + add explicit todos in defi_master Fork 1 by 2026-05-10 else slips
+      into Week 3 or ships half-baked post-cutover.
 
 ### Week 2 (May 13–19) · live wiring + cloud parity + Groups F/G
 
-- [ ] `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills (Group F item 17)
-- [ ] `leveraged_funding_arb` runs end-to-end in batch — cross-venue funding spread across 6 perp venues
-- [ ] 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18)
-- [ ] Execution-service connectors validated on testnet:
+> **Refreshed 2026-05-07 evening (deep-audit Item 3)** — each Week 2 bullet now has its blocker chain explicit. Items at
+> HIGH risk of slipping into Week 3 are flagged 🚨.
+
+- [ ] `carry_staked_basis` runs end-to-end in batch with `always_fill` + matching-engine fills (Group F item 17).
+      **Blockers**: 4-service QG (strategy / execution / R&E / features-onchain — none yet passing), execution-service
+      Aave/Uniswap/Lido testnet validation (NOT yet started), vault-share-price + lst-rates MTDS VMs (NOT yet launched).
+      Lending-indices silent-zero fix is the gate.
+- [ ] `leveraged_funding_arb` runs end-to-end in batch — cross-venue funding spread across 6 perp venues. **Blockers**:
+      funding_oi calculator backfill VMs in flight 2026-05-05; cross-venue funding spread feature; 4-service QG;
+      Hyperliquid + Aster live execution wiring (Lighter + Pacifica shipped, but Hyperliquid + Aster pending).
+- [ ] 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨
+      **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py` exists yet — P0 follow-up filed in work-stream F §
+      Deep-audit P0 follow-ups. Owner: Agent 4. Existing `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py`
+      are tracing/simulation, NOT config-grid sweeps.
+- [ ] Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT YET validated** —
+      master plan assumes testnet wiring exists; deep audit found 0 testnet branch paths in execution-service. Owner:
+      Agent 4 (CeFi side) + Agent 4 (DeFi side). Tenderly fork fixtures shipped DeFi-side per
+      `execution-service/tests/integration/conftest.py`; CeFi side fully unvalidated.
   - DeFi: Aave / Uniswap / Lido (carry_staked_basis); Hyperliquid + Aster (leveraged_funding_arb on-chain leg)
   - CeFi: Bybit perp + Deribit options/perp + Binance perp + OKX perp (the four CeFi venues)
-- [ ] Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated
-- [ ] Alerting-service: live rules fired on synthetic violations
-- [ ] Live Deployment UI tab shipped (work-stream B)
-- [ ] **AWS data migration completed** (DeFi-only, work-stream D.1) — data status works on both clouds
-- [ ] **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2)
-- [ ] **AWS backtest + ML examples** run via deployment-api (work-stream D.3)
-- [ ] DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C)
-- [ ] Treasury: Copper integration validated; CEFFU manual handoff documented
+- [ ] Position-balance-monitor + risk-and-exposure + pnl-attribution: live mode validated. 🚨 **OWNER UNASSIGNED** —
+      Risk 3 from deep audit. defi_master Fork 1 folded `defi_e2e_pipeline` but live-mode wiring sits as free-floating
+      audit findings. PBM Pub/Sub + R&E intent-subscriber + pnl-attribution `--mode live` CLI all pending.
+- [ ] Alerting-service: live rules fired on synthetic violations. **Blocked**: alerting Phase 2 (Agent 1 tab) — consumer
+      wiring (`grep AlertCode alerting-service/` returns 0 hits as of 2026-05-07 evening). UAC AlertCode taxonomy
+      shipped UAC@`d00326d`; rules engine integration is the gap.
+- [ ] Live Deployment UI tab shipped (work-stream B). **Blockers**: codex SSOT
+      `codex/05-infrastructure/live-deployment-monitoring.md` (still missing), deployment-api `/api/vm/events` endpoint
+      (work-stream A Phase 2), deployment-ui `/ops/live-deployments` route. Owner: Harsh Day 4-5 + Agent 4.
+- [ ] **AWS data migration completed** (DeFi-only, work-stream D.1) — data status works on both clouds. **Blocked**:
+      `aws_migration_defi_first_2026_05_07` Phase 2 dual-bucket setup (Agent 4 Day 4); Phase 1.5.A bucket-name string
+      parity audit; Phase 1.5.D `cloud-providers.yaml` parity (10 missing DeFi raw-data buckets identified).
+- [ ] **AWS batch backfill `--force`** runs on a small DeFi window (work-stream D.2). **Blocked on D.1**.
+- [ ] **AWS backtest + ML examples** run via deployment-api (work-stream D.3). **Blocked on D.2**.
+- [ ] DART terminal in UTS-UI: archetype visualization + manual trade entry (work-stream C). **Blocked**:
+      research-service repo decision (Week 1 above); UTS-UI `/research/ml-experiments` +
+      `/research/strategy-backtests` + `/research/execution-backtests` tabs; work-stream A endpoints.
+- [ ] Treasury: Copper integration validated; CEFFU manual handoff documented. **Blocked on Copper sandbox integration
+      test (pending) + CEFFU codex doc body** (stub shipped 2026-05-07 at
+      [`codex/04-architecture/ceffu-custody-integration.md`](../../codex/04-architecture/ceffu-custody-integration.md);
+      content owners pending).
 
 ### Week 3 (May 20–23) · cutover (live trading + AWS live deployment)
 
