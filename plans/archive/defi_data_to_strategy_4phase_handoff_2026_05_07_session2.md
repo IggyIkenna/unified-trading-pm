@@ -159,3 +159,37 @@ features-cross-instrument-service/
 - Resolver:
   `features-cross-instrument-service/features_cross_instrument_service/app/calculators/futures_roll_resolver.py`
 - Builder: `features-cross-instrument-service/features_cross_instrument_service/app/calculators/catalog_pair_builder.py`
+
+---
+
+## SUPERSEDED 2026-05-07 — see active plans for current SSOT
+
+All actionable items from this handoff have been folded into active PM plans (PM commit `2cd3bbaf`). This doc is
+reference-only; **new agents should read `unified-trading-pm/plans/active/` for the current source of truth**.
+
+Mapping:
+
+| Section here                                                                                                                                  | Active plan SSOT                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| A1 features-onchain VM rerun + parquet verify                                                                                                 | `defi_master_2026_05_07.plan.md` § Carry tracer verification gates (Phase A) — SHIPPED                   |
+| A4 tracer shim deletion                                                                                                                       | `defi_master_2026_05_07.plan.md` (referenced via strategy@666dc2d) — SHIPPED                             |
+| A5 DERIBIT light VMs                                                                                                                          | `defi_master_2026_05_07.plan.md` (operational) — SHIPPED                                                 |
+| A2 / A3 carry tracer Phase 9 (futures_roll_resolver, catalog_pair_builder, paired_dispatch, UAC catalog SSOT, UAC build_instrument_id wiring) | `defi_master_2026_05_07.plan.md` (commit refs in Audit 2026-05-07 section) — SHIPPED                     |
+| Phase A verification gate                                                                                                                     | `defi_master_2026_05_07.plan.md` § Carry tracer verification gates — PARTIAL                             |
+| Phase D verification gate (full Stage 4 historical)                                                                                           | `defi_master_2026_05_07.plan.md` § Carry tracer verification gates — FRESH                               |
+| B4 part 1 UTL helper                                                                                                                          | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md` Phase 2A — SHIPPED                       |
+| B4 part 2 per-service wiring + adapter-stamping prereq                                                                                        | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md` Phase 2A — FRESH                         |
+| B1 writegate Phase 2.B orchestrator pre-skip                                                                                                  | `writegate_honest_coverage_endtoend_2026_05_06.plan.md`                                                  |
+| B2 reconcilers                                                                                                                                | `writegate_honest_coverage_endtoend_2026_05_06.plan.md` + `manifest_migration_master_2026_05_07.plan.md` |
+| B3 manifest v6→v7 reader                                                                                                                      | `manifest_migration_master_2026_05_07.plan.md`                                                           |
+| C1 strategy v2 finalization                                                                                                                   | `strategy_architecture_v2_finalization_2026_04_19.plan.md`                                               |
+| C2 4-service QGs                                                                                                                              | `defi_master_2026_05_07.plan.md` § DeFi e2e pipeline gates                                               |
+| C3 CARRY_RECURSIVE_STAKED batch e2e                                                                                                           | `defi_master_2026_05_07.plan.md` § DeFi e2e pipeline gates                                               |
+| C4 features-onchain Docker rebuild                                                                                                            | `defi_master_2026_05_07.plan.md` § DeFi e2e pipeline gates                                               |
+| D1 MTDS DeFi 100%                                                                                                                             | `defi_master_2026_05_07.plan.md` § MTDS DeFi slice                                                       |
+| D2 tail-chain coverage                                                                                                                        | `defi_master_2026_05_07.plan.md` § Tail-chain                                                            |
+| D3 Lighter / Extended / Pacifica historical                                                                                                   | `defi_master_2026_05_07.plan.md` § Lighter / Extended / Pacifica historical replay                       |
+| D4 Pyth / Chainlink oracle                                                                                                                    | `defi_master_2026_05_07.plan.md` § Oracle prices + chain expansion                                       |
+| DEX perp follow-ups (Items A-F from HANDOVER)                                                                                                 | `defi_master_2026_05_07.plan.md` § DEX perp forward-poll handlers + collateral matrix                    |
+
+This doc is preserved as historical context for the multi-session Phase 9 / 4-phase work.
