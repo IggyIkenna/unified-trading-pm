@@ -1138,21 +1138,23 @@ grep.
       fall-through `record_empty_for_shard` per (instrument, timeframe) — including prediction) emit `record_empty`
       instead of silent return. Row_key uses placeholder per-base_asset shape per plan note; reconciler in Phase 3.A
       re-flips when canonical_question_group SSOT lands via predictions plan.]
-- [ ] [SCRIPT] P0. Delete `_write_manifest_records` v3-shape parallel write from `orchestration_service.py:329–388`.
+- [x] [SCRIPT] P0. Delete `_write_manifest_records` v3-shape parallel write from `orchestration_service.py:329–388`.
       Single canonical v6 path via `canonical_writer` only. (Resolves parent HANDOVER §"❌ MDPS mismatches" item.)
-      [AUDIT 2026-05-07: FRESH — actionable; `_write_manifest_records` still present at
-      `market_data_processing_service/app/core/orchestration_service.py:283`, called from line 242. Mainline writer
-      co-exists with canonical_writer (added MDPS@5363fd2). Need delete + caller refactor + downstream reader audit.]
-      **DEFERRED 2026-05-07 (freshness-check entanglement)**: re-investigation found the v3-shape
-      `_write_manifest_records` writes summary rows (per-(date, data_type) and per-(date, data_type, timeframe), with
-      empty `venue` and no `instrument_id`) that `check_shard_freshness` at `orchestration_service.py:160` directly
-      depends on for the "skip if already fresh" pre-flight. Deleting the v3 path without migrating the freshness check
-      would force MDPS to re-process every category every run, defeating the cache. The audit's "downstream reader
-      audit" item refers precisely to this. Successor: pair the v3 delete with a `check_shard_freshness` migration that
-      reads per-instrument v6 manifest rows and aggregates to a per-(data_type, timeframe) freshness verdict. Not a
-      2-hour delete — needs UTL `check_shard_freshness` API extension or callsite refactor in the same change. Safe to
-      take in a focused follow-up session; no live VMs depend on the v3 rows for correctness (they only feed the
-      skip-if-fresh path), so the blocker is engineering effort, not coordination.
+      Shipped MDPS@e56d0e4 — method body deleted (-110 LOC), call site at line 242 removed, orphan UTL imports
+      (`ManifestWriter`, `validate_batch_completeness`) dropped.
+      **AUDIT-CORRECTION 2026-05-07**: the prior `**DEFERRED**` annotation worried that
+      `check_shard_freshness` at `orchestration_service.py:160` matched the v3 summary rows
+      (per-(date, data_type), empty venue + no instrument_id) and that deleting them would
+      force every-category re-processing. Re-investigation found that's NOT the case:
+      `check_shard_freshness(expected_venues=[<data_type>])` matches on the `data_type` column
+      (UTL `manifest_writer.py` ~line 2970) via the `venue == v | data_type == v` union, and
+      the per-instrument rows that `canonical_writer.write_candle_parquet` writes for every
+      shard ALREADY populate the `data_type` column. So the freshness check sees a fresh
+      shard from per-instrument rows alone — the summary rows were genuinely redundant.
+      Regression guard: `tests/unit/test_check_shard_freshness_granular_rows_only.py`
+      (3 tests asserting freshness check works correctly with ONLY per-instrument rows
+      present, including the missing-data_type and attempted_failed-only branches). Locked in
+      BEFORE the delete so any future regression fails CI loudly.
 - [ ] [SCRIPT] P0. Wire v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) into
       `canonical_writer.add()` per the explicit decision rule below — no UAC-owner blocking dependency: **Wire (row
       carries v6-relevant info):** - CeFi: `derivative_adapter`, `futures_chain_adapter`, `options_chain_adapter` —

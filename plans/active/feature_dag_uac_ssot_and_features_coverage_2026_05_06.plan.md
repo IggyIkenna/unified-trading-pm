@@ -313,15 +313,19 @@ Per workspace rule "Temporary state must have a named successor plan (no silent 
 (UAC@4a25b07) shipped a partial seed of `FEATURE_REQUIRED_INPUTS`; the gaps below must be closed before Phase 2A
 consumer migration completes.
 
-- **AVAILABILITY_AT_SEMANTICS defi vocabulary gap.** 10 of 12 onchain feature_groups (`aave_lending_rates`,
-  `aave_utilization`, `aave_risk_params`, `fear_greed`, `macro_sentiment`, `eigen_rewards`, `protocol_rewards`,
-  `flash_loan_availability`, `aave_rate_impact`, `onchain_regime`) read from defi data_types
-  (`lending_indices` / `risk_params` / `rewards` / `flash_loan_events` / `eigenlayer_rewards`) that are NOT in
-  `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS` today. They appear
-  in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` (so data-status denominator works) but are absent from
-  `FEATURE_REQUIRED_INPUTS` (so LookaheadBiasError treats them as unenforced). Successor: extend
-  AVAILABILITY_AT_SEMANTICS in writegate's Phase 2.D scope OR open a small `availability_semantics_defi_vocab_2026_<TBD>`
-  follow-up. Once landed, lift the 10 onchain entries here in the same commit.
+- **AVAILABILITY_AT_SEMANTICS defi vocabulary gap — half closed 2026-05-07.**
+  - **Half 1 shipped UAC@2f40c9d**: `lending_indices` / `risk_params` / `rewards` / `flash_loan_events` /
+    `eigenlayer_rewards` now registered in
+    `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS` with the
+    `tick_timestamp` semantic (matching every other DeFi entry — they're per-event on-chain reads). 7 unit tests
+    in `tests/unit/test_availability_semantics.py` cover every new entry + the closed-set output guarantee.
+  - **Half 2 still pending**: lift the 10 deferred onchain feature_groups (`aave_lending_rates`,
+    `aave_utilization`, `aave_risk_params`, `fear_greed`, `macro_sentiment`, `eigen_rewards`, `protocol_rewards`,
+    `flash_loan_availability`, `aave_rate_impact`, `onchain_regime`) into `FEATURE_REQUIRED_INPUTS` so
+    LookaheadBiasError enforces them. Each lift requires reading the calculator's actual upstream reads to
+    determine the precise `(asset_group, data_type, source)` shape. Deferred to a Phase 1A.2 follow-up commit
+    so the UAC unblock lands first and isn't held up by the calculator audit. Same plan, same temporary-states
+    section — replace this bullet with a full strikethrough when Half 2 lands.
 - **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity
   names (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
   feature_groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from
