@@ -62,6 +62,23 @@ unit as code" hard rules.
 
 ### Day 2 — 2026-05-08
 
+- [ ] [INFRA+COORDINATION] P0. **Expected-universe enumerator Phase 3.D.4** — execute the carry-over handoff from D1
+  (PM Claude session 2026-05-07; commits PM `c1711e34` / `372e23aa` + instruments-service `8e404c8`). The script
+  [`enumerate_expected_universe.py`](../../../instruments-service/scripts/enumerate_expected_universe.py) is shipped +
+  smoke-tested (TradFi/DeFi FULL, Sports PARTIAL, CeFi/Prediction stubs); 4 phases remain: (1) build
+  `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` (mirror `launch-defi-phantom-recon-vm.sh`);
+  (2) update `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` (add `expected-universe-enum-`) + relaunch watchdog;
+  (3) refresh tarballs (`create-code-tarballs.sh --all`); (4) sequential VM launches (TradFi → DeFi → Sports → CeFi
+  stub → Prediction stub) with no-fire-and-forget event verification (90s STARTED + 10-15min progress +
+  ENUMERATOR_COMPLETED); scan-only first, operator-review CSV, then `--apply-write`; annotate 6+ active plans with
+  VM RUNNING → VM COMPLETED markers (writegate, drilldown, master-defi, defi_master, 2 issue files, canonicalisation
+  plan). **Full handoff**:
+  [`_HANDOFF_expected_universe_enumerator_2026_05_07.md`](_HANDOFF_expected_universe_enumerator_2026_05_07.md). Why
+  nuanced: closes the rollup-vs-drilldown denominator divergence (codex SSOT
+  [`availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"); cross-cutting across instruments-service +
+  deployment-service + 6+ PM plans + codex; affects what every other agent sees in the data-status panel. Cost:
+  ~$2-5 GCE + ~2-3hr operator time. Repos: deployment-service + instruments-service + PM.
 - [ ] [DEEP] P0. writegate Phase 2.A residual: `batch_workers` path B/C migration + MDPS cluster-coverage wiring +
   delete `_write_manifest_records`. Plan: writegate Phase 2.A. Repos: MDPS + UTL. Why nuanced: per-adapter judgment
   about empty-vs-failed three-category model; partial-bundle cluster-validation correctness for the 11-cluster ES.OPT
