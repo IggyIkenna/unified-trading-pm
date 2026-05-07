@@ -255,8 +255,14 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       `setup-data-pipeline-vm.sh`, and added `defi-phantom-recon-` prefix to `vm_zombie_watchdog.py`. Path bug fix at
       deployment-service@a6d3b8f (instruments tarball alias = `$WORKSPACE/instruments` not
       `$WORKSPACE/instruments-service`). VM `defi-phantom-recon-defi-20260507-141621` launched 14:16 IST, watchdog
-      relaunched as `vm-zombie-watchdog-20260507-141056`. Awaiting full-DEFI phantom count vs the 354-residual cefi
-      benchmark — monitor active.
+      relaunched as `vm-zombie-watchdog-20260507-141056`. **Result 14:24 IST (rc=0, ~10 min runtime, 86,982 prefixes
+      listed at 360/sec same-region GCE)**: 309,749 real captures + **2,931 phantom captures (0.94%)**. Top phantom
+      data_types: vault_share_price (1,633) + rewards (1,298). Top phantom venues: EIGENLAYER (1,298),
+      MORPHOVAULTS (851), YEARNV3 (782) — concentrated in features-onchain consumers (`eigen_rewards` +
+      `vault_share_price`), so they're real blockers, not prober drift. **Next step (operator)**: run
+      `bash scripts/vm/launch-defi-phantom-recon-vm.sh defi --apply` to flip the 2,931 phantoms to `attempted_failed`,
+      then re-run the affected MTDS DeFi backfills (eigen_rewards via `mtds-perp-funding`/equivalent and morpho/yearn
+      `vault_share_price` via `launch-mtds-vault-share-price-backfill-vm.sh`).
 - [x] [DOC] P0. Updated `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"
       to enumerate 7 drift axes (was 5); added rollup-side metric inconsistency finding under § "Rollup-side metric
       inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07"; updated history benchmark
