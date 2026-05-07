@@ -119,9 +119,13 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)
       (just promoted) — overlaps with defi_master Fork 1 launch decision; canonicalise venue-collateral matrix BEFORE
       the launch picks chains/protocols.
-- [ ] [COORDINATION] P2. Triage
+- [x] [COORDINATION] P2. Triage
       [`session_2026_05_07_data_status_audit_findings`](session_2026_05_07_data_status_audit_findings.plan.md) (just
-      promoted) — folds into infra_master or stays standalone? Decision-only, ~30 min.
+      promoted) — folds into infra_master or stays standalone? Decision-only, ~30 min. **DONE 2026-05-07 (Agent 5)**:
+      STANDALONE. Wrapper-tracker spans 5 owner plans (sports / predictions / defi / manifest_migration /
+      infrastructure); folding into infra_master mis-attributes most findings (only B.2 + C.13 belong there) + loses
+      cross-master rollup visibility. Tracker is lifecycle-bounded (self-archives when all referenced master-plan todos
+      go green). Triage decision recorded at top of the plan body.
 
 ### Day 5 — 2026-05-11
 
