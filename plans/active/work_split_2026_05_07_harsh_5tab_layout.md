@@ -35,20 +35,57 @@ available for direction-setting.
 
 ## How agents talk to each other (the bus)
 
-**Plan docs are the message bus.** No real-time messaging between agents. Async via PM commits.
+**Plan docs are the message bus + a lightweight ping ledger is the doorbell.** No real-time messaging between
+agents — async via PM commits + git pull, but the main agent polls the ping ledger autonomously so Harsh
+doesn't have to be the relay.
 
-When a spawned agent is blocked / has a clarifying question / surfaces a decision-needed:
+### Two-tier design
 
-1. Spawned agent writes the question in their **plan doc's `## Open questions` section** (near the top of the
-   plan body, after the frontmatter).
-2. Spawned agent commits + pushes.
-3. Harsh sees the question (either by checking the tab directly OR by asking the main agent "go check
-   `<plan-name>.plan.md`, an agent has been asking questions").
-4. Main agent reads the plan + writes an answer in the same `## Open questions` section.
-5. Spawned agent reads the answer on its next iteration + continues.
-6. Harsh can ALSO answer directly in the tab if main agent isn't around.
+- **[`_agent_pings.md`](_agent_pings.md) = ephemeral doorbell.** Always 5-10 lines (active pings only). Sub-agents
+  append a one-liner when they need attention; main agent removes the line when handled. Zero history kept here.
+- **Plan doc `## Open questions` = durable Q&A record.** Full question + answer + status marker. Never deleted —
+  the audit trail of "what did we ask + decide" lives here forever.
 
-### Q&A entry format
+### Lifecycle
+
+```
+[T+0]   Spawned agent hits ambiguity
+        ↓ writes Q1 in <relevant-plan>.plan.md `## Open questions` (status 🟡 BLOCKED)
+        ↓ appends one-liner to _agent_pings.md
+        ↓ commits + pushes both
+
+[T+10m] Main agent's /loop wakes
+        ↓ git pull --ff-only origin live-defi-rollout
+        ↓ reads _agent_pings.md for new entries
+        ↓ for each ping → opens the referenced plan doc, reads Q1
+        ↓ EITHER answers autonomously (technical Q's I can resolve from context)
+        ↓ OR surfaces to Harsh in chat (strategic decisions Harsh must make)
+        ↓ when answered: writes A1 in plan doc, flips Q1 status to ✅ RESOLVED
+        ↓ removes the line from _agent_pings.md
+        ↓ commits + pushes
+
+[T+12m] Spawned agent pulls, reads A1 in plan doc, continues work.
+```
+
+### Ping ledger format
+
+One line per active ping, in [`_agent_pings.md`](_agent_pings.md):
+
+```text
+[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
+```
+
+Examples:
+
+```text
+[2026-05-08 09:14 UTC] phase2-routes-tab — Q on subprocess.run timeout default; see deployment_api_work_stream_a_2026_05_07.plan.md
+[2026-05-08 09:32 UTC] dart-playwright-tab — done with personas 1-3, blocked on persona 4 fixture; see strategy_and_dart_master_2026_05_07.plan.md
+[2026-05-08 10:01 UTC] manifest-rescan-tab — silent-zero finding for prediction asset_group; see issues/prediction_silent_zero_2026_05_08.md
+```
+
+`<agent-tag>` = whatever short identifier the spawned agent picks for itself (typically based on its plan/scope).
+
+### Plan doc Q&A format
 
 In any plan doc, append to / create a `## Open questions` section near the top of the body:
 
@@ -56,19 +93,36 @@ In any plan doc, append to / create a `## Open questions` section near the top o
 ## Open questions
 
 ### Q1 — [agent-id, 2026-05-07 14:30] — short title
+**Status**: 🟡 BLOCKED — waiting for answer
+
 <full question with file:line context, what you tried, what's ambiguous, what options
 you considered>
-**Status**: BLOCKED / waiting for answer.
 
 #### A1 — [main, 2026-05-07 14:42]
-<answer + reasoning + any next-step pointers + commit-sha-of-anything-shipped-meanwhile>
+**Status**: ✅ RESOLVED
+
+<answer + reasoning + any next-step pointers + commit-sha of anything shipped meanwhile>
 ```
 
-After answering, main agent flips status to `RESOLVED` (or leaves the Q&A as a historical record + adds a
-RESOLVED tag). Sub-agent confirms by reading on its next iteration.
+Status badges in the heading make scan-for-open-questions instant: 🟡 = needs attention, ✅ = resolved.
+Sub-agents check `## Open questions` before starting each new sub-todo + only act on 🟡 items they themselves
+asked.
 
-**Sub-agents check `## Open questions` before starting each new todo.** Main agent sweeps these on every
-"what's everyone doing?" audit.
+### When the ping ledger overflows
+
+- **5-10 active pings**: normal busy day, single main agent (this one) keeps up via /loop.
+- **15-20+ pings persistently**: signal Harsh to spawn a SECOND main agent (another tab with this orchestration
+  doc). Two main agents divide the ledger — typically by repo or first-claim. Add a `[CLAIMED-BY: main-1]` marker
+  to a ping when starting work on it so the other main doesn't double-handle.
+
+### Daily ledger sweep
+
+Each morning during boot, main agent:
+
+1. Sweep all `plans/active/*.plan.md` for `## Open questions` containing ✅ RESOLVED Q&As older than 24h —
+   collapse them into a `### Q&A history (resolved)` subsection at the bottom of the same plan to declutter.
+2. Verify [`_agent_pings.md`](_agent_pings.md) has no stale entries (>24h without resolution = either re-prompt
+   the sub-agent or escalate to Harsh as a stuck task).
 
 ## Spawned-agent prompt template
 
@@ -82,11 +136,17 @@ Your task is documented in [PLAN-DOC-PATH] — read it first.
 ORCHESTRATION RULES:
 1. `git fetch origin live-defi-rollout && git pull --ff-only origin live-defi-rollout` before
    the first edit. Re-pull before every commit (other agents are pushing in parallel).
-2. If you hit ambiguity / a blocker, write a question in [PLAN-DOC-PATH]'s `## Open questions`
-   section using the format in `plans/active/work_split_2026_05_07_harsh_5tab_layout.md`,
-   commit + push, and continue with anything you CAN do. The main agent will answer there;
-   you read the answer on your next iteration. **Do not block waiting in chat** — the main
-   agent isn't your conversational peer.
+2. If you hit ambiguity / a blocker / a decision that needs Harsh's strategic input:
+   a. Write the full question in [PLAN-DOC-PATH]'s `## Open questions` section using the
+      format in `plans/active/work_split_2026_05_07_harsh_5tab_layout.md` (status 🟡 BLOCKED).
+   b. Append a one-liner to `plans/active/_agent_pings.md` with timestamp + your agent-tag
+      + a 5-10 word summary + plan-doc pointer.
+   c. Commit + push both.
+   d. Continue with anything you CAN do — don't block waiting. The main agent's /loop polls
+      the ping ledger every ~10 min, will answer in the plan doc + remove the ping line. You
+      pick up the answer on your next git pull.
+   e. **Do not message Harsh directly** unless your finding is case-5 (big) per Findings
+      Triage Discipline. The main agent is your conversational dispatcher.
 3. Read `unified-trading-pm/cursor-configs/CLAUDE.md` for workspace rules — especially
    "Findings Triage Discipline", "Commit + Push + Flip Plan Checkboxes (HARD RULE)",
    "Two teammates × multiple parallel agents", and the per-asset-group shard-key matrix.
@@ -153,13 +213,20 @@ Main agent boots and:
    commits for Harsh (so both have shared context).
 2. `git pull --ff-only origin live-defi-rollout` (if no local commits ahead) or `git rebase` if there are.
 3. Re-read [`work_split_2026_05_07.md`](work_split_2026_05_07.md) (the parent D1-D5 plan) + this ledger's
-   "Today's status" + any plan with `## Open questions` flagged.
-4. Move yesterday's "Done today" entries into the "Historical log" section at the bottom.
-5. Reset "Today's status" with the new date header + identify today's actionable items.
-6. Surface any unanswered Q&A questions still pending from previous days.
-7. Report to Harsh: "Today's plan = X, Y, Z. I recommend doing X here, queuing Y for fresh tab, Z idle on
-   prereq."
-8. Wait for Harsh's direction.
+   "Today's status" + [`_agent_pings.md`](_agent_pings.md) for any overnight pings.
+4. **Daily ledger sweep** — for every plan with `## Open questions`:
+   - Identify ✅ RESOLVED Q&As older than 24h → collapse into a `### Q&A history (resolved)` subsection at the
+     bottom of the same plan to declutter the top.
+   - Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, either re-prompt the sub-agent or
+     escalate to Harsh as a stuck task.
+   - Verify `_agent_pings.md` has no orphan lines (lines whose plan-doc Q&A was already resolved but the ledger
+     line wasn't removed).
+5. Move yesterday's "Done today" entries into the "Historical log" section at the bottom of this doc.
+6. Reset "Today's status" with the new date header + identify today's actionable items.
+7. Re-arm the /loop polling the ping ledger (`/loop 10m check ping ledger and answer technical Qs`).
+8. Report to Harsh: "Today's plan = X, Y, Z. I recommend doing X here, queuing Y for fresh tab, Z idle on
+   prereq. Ping ledger has K entries open."
+9. Wait for Harsh's direction.
 
 ## Historical log
 
