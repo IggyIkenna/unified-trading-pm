@@ -109,12 +109,38 @@ same `__init__.py`. Push immediately after each commit so other tabs `git pull -
 
 **Done definition**:
 
-1. UAC `AlertCode` StrEnum + threshold dataclass merged + tests green via repo `bash scripts/quality-gates.sh`.
-2. alerting-service Phase 2 rules wired + KillSwitchBus integration test passes.
-3. AAVE bps threshold has a documented value with a citation comment pointing at source.
-4. Plan checkboxes flipped in
-   [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md) in the same
-   logical unit as each code commit.
+1. ✅ UAC `AlertCode` StrEnum + threshold dataclass merged + tests green via repo
+   `bash scripts/quality-gates.sh`. **Shipped 2026-05-07 at UAC@d00326d** — 39-code closed set,
+   `AlertSeverity` (CRITICAL/HIGH/WARN/INFO), `AlertChannel`, `AlertRule` Pydantic with
+   construction-time validators, `LIVE_ALERT_RULES` (37), `ALERT_THRESHOLDS` (10 with explicit
+   `ThresholdUnit`), 31 unit tests green, all 6/6 QG gates green.
+2. ⚠️ alerting-service Phase 2 rules wired + KillSwitchBus integration test passes.
+   **PARTIAL** — declarative half shipped 2026-05-07 at alerting-service@b025e83
+   (`_default_routing_rules` consumes UAC `LIVE_ALERT_RULES`, AAVE threshold migrated to UAC,
+   37 unit tests green, `triggers_kill_switch=True` flag set on `KILL_SWITCH_*` rules with
+   construction-time validator). **Publish-side hook + integration test DEFERRED** to a future
+   session / Harsh pair-review per
+   [`issues/alerting_kill_switch_publish_hook_2026_05_08.md`](issues/alerting_kill_switch_publish_hook_2026_05_08.md):
+   when an alert with `triggers_kill_switch=True` fires through `route_event`, it must publish
+   a `KillSwitchEvent` to the UTL bus so execution-service halt subscribers consume it.
+   Without this hook, paged operators must manually trigger the kill switch via DART —
+   acceptable for the 7-day live-soak with humans watching, NOT acceptable as institutional
+   steady state. Gates `master_to_live_defi_2026_05_23` Group F (kill-switch verification) +
+   alerting plan Phase 8 rehearsal.
+3. ✅ AAVE bps threshold has a documented value with a citation comment pointing at source.
+   **Shipped 2026-05-07 at UAC@d00326d** —
+   `ALERT_THRESHOLDS["defi_aave_utilization_spike_bps"]` carries explicit `ThresholdUnit.BPS_OF_ONE`
+   + citation to Aave V3 InterestRateStrategy `optimalUsageRatio=0.95 RAY` for WETH/USDC/USDT/DAI.
+   Per-archetype override: `leveraged_funding_arb` fires at 9000 bps_of_one (90 %) vs default 9500 (95 %).
+4. ✅ Plan checkboxes flipped in
+   [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
+   in the same logical unit as each code commit. **Phase 1 flipped at PM@7624ab21; Phase 2 +
+   codex SSOTs (alert-code-taxonomy.md + threshold-tuning.md) activated at PM@48ed2e4f.**
+
+**Status (2026-05-08)**: COMPLETE except item 2 publish-side hook (deferred + tracked in
+`issues/`). Agent 1 stops here; the deferred hook is a small follow-up (~30-45 min) that
+either Harsh picks up via the issue doc OR a future Ikenna session lands once Harsh has
+pair-reviewed the architectural seam between `route_event` and the `KillSwitchBus` publisher.
 
 ---
 
