@@ -2725,6 +2725,94 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 
 ---
 
+## Handover — Agent 2 (writegate tab) 2026-05-07 evening
+
+**Session scope:** ikenna 5-tab layout Agent 2 — writegate (heaviest tab). 3 items: Phase 4.A typed-error rendering,
+Phase 2.A residual, Phase 5 honest-coverage baseline.
+
+**Shipped this session (8 commits across 3 repos):**
+
+- deployment-ui@a7384a0 — `TypedReasonBadges` + `FailurePillarStack` components + 24 unit tests + `client.ts`
+  `TurboSubDimension` extension covering `failure_pillars` / `empty_reasons` / `capture_status_counts` /
+  derived percentages. Closed-set drift guard test fails CI if deployment-api `_FAILURE_PILLAR_KEYS` /
+  `_EMPTY_REASON_KEYS` adds a new key without the UI mirror updating.
+- deployment-ui@621f0b3 — wired both components into `DataStatusTab.tsx` venue summary line between the
+  existing "blocked on raw" badge and `BucketCountsBadge`. Operator-visible immediately for every venue with
+  any non-zero typed-failure or typed-empty.
+- deployment-api@3b0477a — new `GET /api/data-status/leaf-stats` endpoint + `get_leaf_parquet_stats()` helper +
+  `LeafParquetStats` / `LeafParquetColumnStat` / `LeafAvailableAtEnvelope` Pydantic models + 7 unit tests. Live
+  per-leaf-parquet stats: row count, per-column non-null + NaN ratio, `available_at` envelope, file size.
+  Distinct from existing `/schema` (declared `SchemaContract`) and `/shard-detail` (full unified drilldown).
+- deployment-ui@8f630a6 — `LeafSchemaModal` component + 15 unit tests + `fetchLeafParquetStats()` API client +
+  matching response types. Renders the `/leaf-stats` payload as three blocks (header, `available_at` envelope
+  with contract-violation badge for missing column, per-column NaN-ratio table with color thresholds at 0% /
+  >0% / ≥10% / ≥50%).
+- PM@21f8a277 + PM@fa9b5f43 + PM@5c876f9d (bundled) — Phase 4.B.1 + 4.B.2 + 4.A.3 + 4.B.3 + Phase 5 baseline-doc
+  flips. The baseline doc itself promoted from `status=planned` to `status=draft` with full methodology +
+  ratchet design + table schema (per-data_type numeric cells TBD pending operator-run measurement script on a
+  same-region GCE VM).
+
+**Phase 2.A residual — re-audit found mostly already shipped, NOT re-touched this session:**
+
+- `_create_empty_output()` deletion across MDPS Tier 2A/2C/2D/2E shipped earlier (MDPS@5b52d0b, b9f9328,
+  80cf141, e9520a0).
+- `_write_manifest_records` v3-shape delete shipped MDPS@e56d0e4 (per the existing plan checkbox).
+- `batch_workers` path-B/C migration verified consistent via the orchestration mixin chain audit (MDPS@f2f5428
+  ships the regression tests). The "NOT yet wired in batch_workers" worry from the earlier audit was based on
+  inspecting the file in isolation and missing the explicit MRO override; the chain at
+  `BatchOrchestrationMixin._process_files_parallel` → `CandleOrchestrationService._process_instrument_file` →
+  `LiveOrchestrationMixin._process_instrument_file` → `_process_all_timeframes` → typed-error catch is correct
+  by design and tested.
+- **Genuinely unshipped + remaining (not picked up this session):** v6 column wiring into
+  `canonical_writer.add()` (3-5 day item per audit estimate); MDPS chain-bundle `expected_root_clusters` +
+  `cluster_extractor` wiring; per-adapter integration tests; end-to-end smoke harness; MDPS QG green.
+
+**Phase 4.A residual — NOT picked up this session:**
+
+- Phase 4.A item 4: live-vs-historical envelope alert. Multi-repo (UAC + UTL + 3 services) — bigger
+  coordination than Items 1/2/3. Plan flags this as a follow-up paired with the Phase 1A.future error-class
+  additions. Leaving for the next writegate-tab session.
+
+**Phase 4.B residual — NOT picked up this session:**
+
+- Phase 4.B item 4: live-vs-historical envelope badge (waits on Phase 4.A item 4).
+- Drill-down click-through from the `TypedReasonBadges` `onBadgeClick` callback into the new
+  `LeafSchemaModal` — the badge component already supports the click handler (interactive button mode), and
+  the modal is mounted-ready, but the layout edit that wires the click into the modal mount lives in
+  `DataStatusTab.tsx`. Single small edit; deferred to a follow-up commit so the badges + modal can be reviewed
+  + reverted independently.
+
+**Phase 5 residual — table population script:**
+
+- `unified-trading-pm/scripts/qg/measure-honest-coverage.py` — operator-driven baseline measurement script that
+  reads each asset_group's `_index/availability_index.parquet` from a same-region GCE VM, applies the formulas
+  documented in `codex/02-data/honest_coverage_baseline_2026_05.md` § "Methodology", and writes per-data_type
+  rows back into the doc's table. Cross-region listing is 18× slower per the manifest phantom-audit recipe so
+  this MUST run on a same-region VM. Reference impl shape: mirror
+  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (HTTP pool tuned to `2*workers`,
+  same-region zone, per-asset-group bucket loop).
+- `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` — CI gate that reads the doc's table at PR-time and
+  hard-fails when any cell regresses beyond the ±0.5pp tolerance band. Spec'd in the doc § "QG ratchet
+  implementation"; needs a JSON delta report per PR for operator visibility.
+- LookaheadBiasError end-to-end smoke + write-gate quartet integration test — both still unshipped. The
+  quartet needs Phase 1A.future `NanRatioExceededError` + `SchemaMismatchError` to land before it can be
+  fully wired (currently 2 of 4 typed-error classes exist).
+
+**Workspace prek-race observed twice this session (PM@0c2a0cca + PM@5c876f9d):** both commits had author
+`semver-rollout[bot]` + bundled cross-agent file sets despite my surgical `git add` of one file. The
+`5c876f9d` commit message even acknowledges the pattern with a `[QG-BYPASS: prek-race with parallel agent]`
+suffix — workspace-known issue. My commit messages remained accurate to the work I shipped; the bundling is
+collateral and didn't lose any of my edits.
+
+**For the next writegate-tab agent:** highest-leverage remaining items in priority order: (1) Wire the typed
+badge `onBadgeClick` to mount `LeafSchemaModal` (single small edit in `DataStatusTab.tsx`); (2) Phase 5
+`measure-honest-coverage.py` to populate the baseline table cells; (3) MDPS chain-bundle
+`expected_root_clusters` wiring per the Phase 2.B routing finding (Option α — refactor
+`engine/orchestrator.py:1940` callsite to use `record_captured` instead of `writer_manifest.add()` so the
+existing Phase 1A `MissingClusterValidationError` guard fires correctly).
+
+---
+
 ## Coordination with sibling plans
 
 > **2026-05-06 update**: this plan is now the **umbrella** for the honest-coverage + shard-granularity work-package. See
