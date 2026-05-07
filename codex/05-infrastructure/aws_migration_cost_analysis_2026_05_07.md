@@ -4,6 +4,19 @@ scope: [admin, engineer]
 
 # AWS Migration Cost Analysis — 2026-05-07
 
+> [!IMPORTANT]
+> **Recommendation SUPERSEDED 2026-05-07.** This document's "defer AWS to Q3 2026" conclusion is **superseded** by
+> the dual-cloud decision recorded in
+> [`plans/active/aws_migration_defi_first_2026_05_07.plan.md`](../../plans/active/aws_migration_defi_first_2026_05_07.plan.md)
+> § "Operator answers" + Phase 0 (commit `893a9da4`). The cost-analysis numbers in this doc remain valid as a research
+> artefact, but the recommendation paragraph is replaced by: **AWS dual-cloud-active for DeFi + CeFi-instruments by
+> 2026-05-23, with sports / predictions / tradfi / cefi-historical staying GCP-resident; Phase 9 dual-write expansion
+> post-May-23.**
+>
+> The bottom-line cost numbers (GCP ~$8.3-12.5k/mo, AWS list ~$8.8-13.3k/mo, +5-7% delta) are NOT load-bearing for
+> the May-23 decision because the operator confirmed ≥$40k of AWS credits over 11 months covers the DeFi+CeFi-instr
+> run-rate.
+
 > **Status**: research deliverable. Unblocks `master_to_live_defi_2026_05_23.plan.md` work-stream-D (D.1–D.5 AWS↔GCP
 > cloud parity). Operator-facing go/no-go input for the May-23 cycle. **Pricing flag**: list pricing as of 2026-Q1,
 > sourced from public pricing pages and workspace invoice snapshots. Verify against actuals (GCP billing console + AWS
