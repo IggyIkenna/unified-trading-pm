@@ -140,10 +140,19 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
   strict-mode + Phase 2's whole consumer migration. Already substantially shipped (UAC@4a25b07 + UAC@2f40c9d +
   UAC@7a3299a + UTL@d7902f6 + UTL@4354276c) — closes the remaining sports vocabulary alignment + the 8-service consumer
   wires.
+- **Phase 1A.3 sports vocabulary decision** (operator ~30 min): the resolution-approach pick (mapping table /
+  tuple-typed required_inputs / namespaced names) GATES Phase 2A consumer migration for features-sports-service. Until
+  this decision lands, features-sports cannot be wired into the UAC DAG, and the
+  `assert_no_lookahead_for_feature_group` helper degrades to a silent no-op on sports calculators. Hard floor for
+  features-sports correctness — pull forward into Phase 1A finalization.
 - **Phase 3A+3B quick-wins** (row-group pruning + column push-down + DuckDB lazy joins): pure Python, self-contained, no
   risk to live trading correctness. ~1-3 day spike unlocks the 5-10× consolidation-sidecar target downstream.
 - **Phase 4D** (strategy-service calibrated-signal consumption + cost-aware filtering): live trading prereq for May-23
-  Group F (Trading prerequisites). Hard floor.
+  Group F (Trading prerequisites). Hard floor. **Acceptance criterion** (was missing pre-deep-audit): a strategy-service
+  `pytest` integration test with mock ml-inference calibrated output + cost-aware filtering enabled, asserting (a)
+  signal pass-through respects calibrated confidence thresholds and (b) cost-aware filter drops signals where
+  `expected_alpha < execution_cost_bps`. Sub-criterion: shadow-mode wiring on at least one archetype (e.g.
+  `carry_staked_basis`) producing live-vs-mocked diff before automation flip.
 - **Everything else** (consolidation sidecar, FeatureBatchHandler base, deployment-ui drill-down, multi-task training,
   hierarchical inference, phantom audit extension): post-May-23.
 
@@ -193,7 +202,9 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
 - [ ] [TEST] P1. **Closed-set guarantee test** — assert each of the 36 sports feature_groups has ≥1 input, every input's
       `(asset_group, data_type)` is in `AVAILABILITY_AT_SEMANTICS`, every `available_at_rule` matches the registry. Plus
       a per-source multiplicity check.
-- [ ] [DOCS] P1. **Update temporary-states bullet** at line ~363 from "actionable as Phase 1A.3" → "fully closed
+- [ ] [DOCS] P1. **Update temporary-states bullet** in the `## Temporary states + their canonical follow-up plans`
+      section (search "External-sentiment-API live-read pass-throughs" or "features-volatility-service +
+      features-cross-instrument-service stubs") from "actionable as Phase 1A.3" → "fully closed
       <commit-sha>" with link to the lift commit.
 
 ### 1B — UTL (3 todos shipped, 0 open)
@@ -262,8 +273,8 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
 - [ ] [AGENT] P2. **UTL `unified_trading_library/feature_service_base/batch_handler.py`** — `FeatureBatchHandler[T]`
       generic base lifting the (DataLoader, Calculator, FeatureWriter, ManifestWriter, ManifestFreshnessCache,
       write-gate) wiring. Per-service hooks: `load_inputs(shard_key) -> InputBundle`, `compute(inputs) -> OutputBundle`,
-      `expected_clusters(shard_key) -> dict | None`. [BLOCKED-ON `ManifestFreshnessCache` from Phase 1B — shipped, so
-      unblocked]
+      `expected_clusters(shard_key) -> dict | None`. **UNBLOCKED 2026-05-07** — `ManifestFreshnessCache` shipped per
+      Phase 1B (UTL@`d7902f6`); ready to start.
 - [ ] [AGENT] P2. Refactor Delta-One, Onchain, Sports, Volatility BatchHandlers to extend the base. Net delete ~200 LOC
       each. Behavior-preserving — diff existing batch outputs.
 
@@ -438,7 +449,8 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
 
 - [ ] [AGENT] P0. **mlr-p4-strategy-calibrated-signals**: Update strategy-service to consume calibrated confidences
       (GENUINELY_PENDING — strategy-service grep `calibrated.*confidence|consume.*calibrated|calibration.*signal` → 0
-      hits). Ownership overlaps with `consolidated_strategy_and_ui:Group D`. **Live trading prereq for May-23.**
+      hits). Ownership overlaps with `strategy_and_dart_master_2026_05_07` Phase 3.4 (slv-p2-* lifecycle items) — was
+      `consolidated_strategy_and_ui:Group D` pre-2026-05-07 umbrella consolidation. **Live trading prereq for May-23.**
 - [ ] [AGENT] P0. **mlr-p4-cost-aware-strategy**: Add cost-aware signal filtering in strategy-service (GENUINELY_PENDING
       — execution-service has `services/execution_cost_estimator.py` and `v2/cost_models.py` (the producer side);
       strategy-service has no consumer wiring). **Live trading prereq for May-23.**
@@ -530,8 +542,9 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
   any of those, treat as a writegate amendment not a fork.
 - **master_to_live_defi_2026_05_23**: Phase 4D is the May-23 hard floor (Group F live trading prereqs). Phase 1A is
   highest-leverage 1-day spike that gates everything downstream.
-- **consolidated_strategy_and_ui_2026_04_15**: Phase 4D `strategy-service calibrated-signal consumption` overlaps with
-  that plan's Group D — coordinate ownership before starting.
+- **strategy_and_dart_master_2026_05_07** (was `consolidated_strategy_and_ui_2026_04_15` pre-2026-05-07 umbrella
+  consolidation): Phase 4D `strategy-service calibrated-signal consumption` overlaps with that plan's Phase 3.4
+  (slv-p2-* lifecycle items + slv-p3-research-shell) — coordinate ownership before starting.
 
 ## Closed items (from sources, retained for audit trail)
 

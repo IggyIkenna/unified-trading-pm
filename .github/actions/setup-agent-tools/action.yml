@@ -1,0 +1,39 @@
+name: Setup Agent CI Tools
+description: >
+  Install Node.js + Claude Code CLI globally so agent workflows
+  (plan-alignment-agent, agent-audit, etc.) can call `claude` from any
+  step. Replaces the per-repo inline install pattern that was added when
+  this composite action was missing — see features-delta-one-service /
+  strategy-service / features-sports-service prior fixes (2026-05-07).
+
+inputs:
+  node-version:
+    description: Node.js version to install
+    required: false
+    default: "20"
+  claude-cli-version:
+    description: Pin a specific @anthropic-ai/claude-code version (default = latest)
+    required: false
+    default: "latest"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Claude Code CLI
+      shell: bash
+      run: |
+        npm install -g @anthropic-ai/claude-code@${{ inputs.claude-cli-version }} 2>&1 | tail -5 || {
+          echo "❌ npm install -g @anthropic-ai/claude-code@${{ inputs.claude-cli-version }} failed"
+          exit 1
+        }
+
+    - name: Verify claude CLI on PATH
+      shell: bash
+      run: |
+        which claude || { echo "❌ claude CLI not on PATH"; exit 1; }
+        claude --version || { echo "❌ claude CLI failed to run"; exit 1; }

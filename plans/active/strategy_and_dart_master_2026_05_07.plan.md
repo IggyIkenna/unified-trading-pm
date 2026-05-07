@@ -145,6 +145,10 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ### 1.5 Phase 9 — Coverage matrix follow-up
 
+> **May-23 gating note** (deep audit 2026-05-07): the parity test below feeds Phase 2.2 manual-trade gate Playwright
+> assertions — without the markdown↔TS drift detector, Phase 2.2 acceptance assertions silently pass on stale matrix
+> mismatches. Phase 1.5 SHOULD ship before Phase 2.2 verification runs to keep coverage truth-set honest.
+
 - [ ] [TEST] P1. Add `unified-trading-system-ui/tests/unit/lib/architecture-v2/coverage.test.ts` — markdown ↔ TS parity
       test: parse `category-instrument-coverage.md` at test time and assert every matrix row matches a cell in
       `ARCHETYPE_COVERAGE`. Detects drift early.
@@ -191,6 +195,11 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 > Implements block-list entry BL-10 from `category-instrument-coverage.md`. Unblocks every `-dated-` slot. Codex spec at
 > `codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
+>
+> **May-23 gating clarification** (deep audit 2026-05-07): the May-23 lead archetype `carry_staked_basis` (and
+> hedging-leg `leveraged_funding_arb`) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8
+> roll mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes
+> live). Stays P1, but does NOT gate the May-23 cutover.
 
 - [ ] [CODE] P1. **UAC registry + event contract.** Implement gap #11 from `uac-registry-gaps.md`:
       `UnderlyingDeclaration`, `RollTriggerPolicy`, `REPRESENTATIVE_FUTURE_REGISTRY` tuple.
@@ -235,7 +244,10 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 - [ ] [CODE] P1. META_BROKER router for Unity with child-book attribution + Unity TCP adapter.
 - [ ] [CODE] P1. MEV router (Flashbots + MEV Blocker + Manifold; Bloxroute excluded).
 - [ ] [CODE] P1. Cost-model artifact loader (`cost_model/*` registry).
-- [ ] [CODE] P1. `AccountInstruction` orchestrator (non-benchmarked, operator-driven).
+- [x] [CODE] P1. `AccountInstruction` orchestrator (non-benchmarked, operator-driven). **SHIPPED 2026-05-07** —
+      verified via deep audit at `execution-service/execution_service/v2/account_orchestrator.py`
+      `AccountInstructionOrchestrator` class with `dispatch()` method (validates + routes). Remaining 1.9 minimum-subset
+      items (11 action handlers, policy registry, Layer 3 pre-flight) still pending; orchestrator itself done.
 
 #### Allocator service (8 archetype engines)
 
@@ -263,28 +275,34 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ### 2.1 Polish items (open)
 
-- [ ] [AGENT] P0. **Phase 5 widget vocabulary SSOT** (§4.9). Every `DartWidgetMeta.id` maps 1:1 to a canonical surface
-      name from `unified-trading-system-ui/docs/reference/common-tools.md` (30 manual surfaces) or
+> **Priority-vs-criticality clarification** (deep audit 2026-05-07): the 7 polish items below carry P0/P1/HUMAN
+> priority labels, but ONLY Phase 2.2 (6-persona Playwright matrix) is on the May-23 critical path. The 5 P0-tagged
+> items here are post-May-23 quality work — re-tagged P2 below to align priority with criticality. Original P0 reflects
+> "cockpit-architecture importance," not "live-trading deadline." If May-23 hard floor work needs an agent, it pulls
+> from Phase 2.2 + Phase 1.9 fold-in subset, not from this list.
+
+- [ ] [AGENT] P2. **Phase 5 widget vocabulary SSOT** (§4.9, was P0). Every `DartWidgetMeta.id` maps 1:1 to a canonical
+      surface name from `unified-trading-system-ui/docs/reference/common-tools.md` (30 manual surfaces) or
       `automation-common-tools.md` (18 automated surfaces). Phase 5 ships with a `canonicalSurfaceName` field; v2
-      archetype expansion reuses widgets without rename churn.
-- [ ] [AGENT] P0. **Cross-cutting widget conventions** (§4.11). Ten conventions propagated as `DartWidgetMeta`
+      archetype expansion reuses widgets without rename churn. **DEFERRED post-May-23**.
+- [ ] [AGENT] P2. **Cross-cutting widget conventions** (§4.11, was P0). Ten conventions propagated as `DartWidgetMeta`
       extensions (`freshnessSla`, `nativeUnit`, `drilldownScope`, hotkey contract, audit-on-mutate, replay-time-binding,
-      etc.). Lands alongside Phase 5.
-- [ ] [AGENT] P0. **Layer 2 minimum proof signals** — six irreducible badges (data-freshness pill, last-update
+      etc.). Lands alongside Phase 5. **DEFERRED post-May-23**.
+- [ ] [AGENT] P2. **Layer 2 minimum proof signals** (was P0) — six irreducible badges (data-freshness pill, last-update
       timestamp, maturity badge, visibility-state badge, demo-data badge, report/reconciliation placeholder link). Built
       alongside Phases 7-8. Add **two more** post-§4.8: **release-bundle audit pill** (current strategy version + active
-      runtime overrides count) and **reproducibility pill** (training data hash known / unknown).
-- [ ] [HUMAN] P1. **v2 archetype-expansion roadmap** (§4.10). v1 = 8 presets covering 6 archetype clusters; v2 names 7
-      missing archetype presets (Market-Making · Equity LS · Rates · Macro · FX · Energy · Event-Driven) + Firm-Risk
-      Aggregate Console for David. Not blocking v1.
-- [ ] [HUMAN] P0. **Doc alignment** (§25.A.7) — propagate vocabulary into PM codex (`14-playbooks/dart`,
+      runtime overrides count) and **reproducibility pill** (training data hash known / unknown). **DEFERRED post-May-23**.
+- [ ] [HUMAN] P2. **v2 archetype-expansion roadmap** (§4.10, was P1). v1 = 8 presets covering 6 archetype clusters; v2
+      names 7 missing archetype presets (Market-Making · Equity LS · Rates · Macro · FX · Energy · Event-Driven) +
+      Firm-Risk Aggregate Console for David. Not blocking v1. **DEFERRED post-May-23**.
+- [ ] [HUMAN] P2. **Doc alignment** (§25.A.7, was P0) — propagate vocabulary into PM codex (`14-playbooks/dart`,
       `14-playbooks/audiences-and-journeys`, `09-strategy/architecture-v2/*`, `08-workflows/*`, `02-data/*`,
       `GLOSSARY.md`, `00-SSOT-INDEX.md`) + UI-repo docs (`context/AGENT_UI_STRUCTURE.md`, `context/CONTEXT_GUIDE.md`,
-      `context/CONFIG_REFERENCE.md`, `docs/TIER_ZERO.md`).
-- [ ] [HUMAN] P1. **IR presentation copy alignment** (§25.A.2) — board / platform / investment / plan decks +
-      competitive-landscape SSOT + briefings YAML + `service-labels.ts`.
-- [ ] [HUMAN] P1. **Public website copy alignment** (§25.A.3) — homepage metadata + `_home-client.tsx`
-      Hero/MarketsUniverse/EngagementRoutes/WhyOdum + DART platform page + our-story.
+      `context/CONFIG_REFERENCE.md`, `docs/TIER_ZERO.md`). **DEFERRED post-May-23**.
+- [ ] [HUMAN] P2. **IR presentation copy alignment** (§25.A.2, was P1) — board / platform / investment / plan decks +
+      competitive-landscape SSOT + briefings YAML + `service-labels.ts`. **DEFERRED post-May-23**.
+- [ ] [HUMAN] P2. **Public website copy alignment** (§25.A.3, was P1) — homepage metadata + `_home-client.tsx`
+      Hero/MarketsUniverse/EngagementRoutes/WhyOdum + DART platform page + our-story. **DEFERRED post-May-23**.
 
 ### 2.2 Manual-trade gate verification (May-23 critical-path; from Phase 3 of umbrella scope)
 
@@ -365,7 +383,10 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 - [ ] [AGENT] P0. **slv-p3-research-shell**: Build strategy research shell in unified-trading-system-ui.
       `app/(platform)/services/research/` shipped with sub-routes (strategies, signals, features, ml, execution,
       allocate, quant, overview, strategy). Substantively shipped modulo UX polish; flip to DONE after a Playwright walk
-      verifies acceptance.
+      verifies acceptance. **Deep audit 2026-05-07**: Playwright walk NOT done — `tests/e2e/` has 24 spec.ts files but
+      none target `/services/research/` shell routes specifically (no `research-shell*` or `slv-p3*` named specs).
+      Recommend authoring `tests/e2e/research-shell.spec.ts` covering each sub-route's render + first-paint as a
+      pre-flip task; sub-component tests exist in `components/research/` directory but operator-flow walk is the gate.
 - [ ] [AGENT] P0. **slv-p3-risk-attribution**: Build risk attribution dashboard in unified-trading-system-ui. (workspace
       grep `RiskAttribution` returns only schema definitions in `context/` + plan files. No risk-attribution route
       shipped. **Live trading prereq for Group F.**)

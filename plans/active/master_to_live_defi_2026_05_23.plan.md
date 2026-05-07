@@ -432,20 +432,42 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 17. **Backtest fidelity** — real gas, real market impact, realistic matching engine for AMM pools / perpetuals / spots /
     transfers / atomic transfers / flash loans; cost+yield to smallest precision (codex
-    `04-architecture/backtest-groups.md`, `batch-live-symmetry.md`)
+    `04-architecture/backtest-groups.md`, `batch-live-symmetry.md`). **Deep audit 2026-05-07**: shipped matching engine
+    has 5 matcher classes (L0 Sports TOB, L1 TradFi, L2 CeFi, AMM, ALPHA_ZERO benchmark fills) at
+    `execution-service/execution_service/matching_engine/`. "Transfers" + "atomic transfers" are NOT separate matcher
+    classes — they're swap/settlement modes within the AMM matcher. Either fold transfers into the AMM matcher's scope
+    statement (current shipped reality) or open a follow-up to add a Transfers matcher (low-likelihood given DeFi
+    transfers are atomic-by-default on-chain). Recommend folding into AMM matcher scope.
 18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured so
-    the live-trading config is informed, not guessed
+    the live-trading config is informed, not guessed. **Deep audit 2026-05-07**: no dedicated 2-year batch backtest
+    runner script found. `strategy-service/scripts/` has `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py`
+    (May 5+7) — tracing/simulation, not config-grid sweep. P0 follow-up: author
+    `strategy-service/scripts/run_2yr_config_grid_backtest.py` for `carry_staked_basis` + `leveraged_funding_arb`
+    archetypes; emit P&L variance distribution per archetype config dimension.
 19. **Treasury / custody integration** — Copper for DeFi side (codex `04-architecture/copper-custody-integration.md`);
-    CEFFU for Binance institutional flow; cross-wallet transfer paths verified
+    CEFFU for Binance institutional flow; cross-wallet transfer paths verified. **Deep audit 2026-05-07**: CEFFU
+    standalone codex doc DOES NOT YET EXIST at `codex/04-architecture/`. Copper page exists (`copper-custody-integration.md`).
+    P0 follow-up tracked under work-stream F (`codex/04-architecture/ceffu-custody-integration.md` peer to Copper page).
 20. **Live testnet replicates prod** — Tenderly fork / forked-mainnet for DeFi; Binance testnet / Bybit testnet for
-    CeFi; same config code path, no faked data
+    CeFi; same config code path, no faked data. **Deep audit 2026-05-07**: no testnet-specific branch paths or env
+    toggles found in execution-service yet. Per-venue testnet wiring pending — verify each connector's testnet endpoint
+    list before live cutover. Tenderly fork fixtures shipped per `execution-service/tests/integration/conftest.py` (per
+    `CLAUDE.md` "DeFi integration tests" rule) — DeFi side has the testbed, CeFi side has not been validated end-to-end.
 21. **Reconciliation suite** — batch-vs-live reconciliation working (codex
     `09-strategy/cross-cutting/pnl-attribution.md` + `batch-live-reconciliation-service`); P&L attribution decomposed
-    per source; per-trade reconciliation
+    per source; per-trade reconciliation. **Deep audit 2026-05-07**: pnl-attribution-service ships `--mode batch` CLI
+    (verified at `pnl-attribution-service/pnl_attribution_service/__main__.py:288` + `cli/parser.py`). However,
+    `batch-live-reconciliation-service` A column = ✗ in the matrix below (service scaffolded but NOT code-complete).
+    Phase 2.E.3 of writegate plan + this Group F item depend on the service being shipped. P0 follow-up: ship the
+    minimum-viable reconciliation surface (per-archetype P&L diff, per-trade fill comparison) before May-23 cutover.
 22. **Trading guardrails** — circuit breakers configured per archetype; kill switches wired (codex
     `04-architecture/autonomous-recovery-matrix.md`); alerting-service rules cover live data-freshness + P&L deviation +
     position breaches (codex `04-architecture/alerting-batch-live.md`); auto-recovery for known transient failure
-    classes
+    classes. **Deep audit 2026-05-07**: UAC `AlertCode` taxonomy shipped (UAC@`d00326d` per PM@`7624ab21`) but
+    alerting-service rules have NOT YET imported AlertCode — `grep "AlertCode" alerting-service/` returns 0 hits. Rules
+    exist (`data_freshness_rules.py`, `defi_rules.py`, `margin_rules.py`) but are not yet wired to the new closed-set
+    taxonomy. P0 follow-up: alerting_service_live_rules Phase 2 includes the consumer wiring; coordinate ETA against
+    May-23 alerting-rehearsal gate.
 
 #### Folded operational-validation todos (from `consolidated_operational_validation_2026_04_15`)
 
@@ -547,10 +569,24 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 > longer points at archived `consolidated_operational_validation`); (f) deployment-api now points at
 > `deployment_api_work_stream_a_2026_05_07` (Phase 1 UAC types shipped UAC@`a70b3f6`).
 
+> **Deep-audit follow-ups 2026-05-07** — column status caveats discovered during the deep audit but NOT yet flipped in
+> the matrix above pending verification (file under work-stream G next housekeeping pass): (i) **alerting-service F
+> column ✗**: F column rule says "live trading prereq for alerting-service" — A column flipped ✗ → ◐ on UAC AlertCode
+> ship, but F column remains ✗ correctly because rules-engine consumer wiring has not landed (`grep AlertCode
+> alerting-service/` returns 0 hits as of 2026-05-07 evening). Stays ✗ until alerting Phase 2 lands. (ii)
+> **strategy-service + execution-service F columns ✗**: matching engine (5 matchers) shipped + carry_staked_basis
+> tracing scripts present, but live-trading wiring pending (Phase 1.9 fold-in residuals + Phase 4D consumption). Could
+> argue ◐ partial, but the conservative ✗ reflects "live trade has not yet executed" — keep ✗ until first paper-trade
+> smoke completes (Agent 4 Day 5 item). (iii) **batch-live-reconciliation-service A column ✗**: no service code shipped
+> yet — folded item-21 extends Group F inline, but the actual reconciliation surface (`pnl-attribution-service` +
+> `batch-live-reconciliation-service`) needs a minimum-viable shipment before May-23. Stays ✗ correctly.
+
 ### Tier 2 — backfill catch-up + ML readiness ladder (NOT live by May 23)
 
 `features-sports-service` (→ ML), `features-calendar-service` (TradFi → ML), `features-delta-one-service` (TradFi → ML),
-`features-commodity-service` (TradFi → ML). Group A–E required by May 23; Group F/G n/a until next archetype lands.
+`features-commodity-service` (TradFi → ML), `features-multi-timeframe-service` (cross-asset multi-timeframe
+aggregation; deep audit 2026-05-07 found this repo previously unlisted). Group A–E required by May 23; Group F/G n/a
+until next archetype lands.
 
 ### Tier 3 — post-launch enablement (after May 23)
 
@@ -843,12 +879,16 @@ Agent 5):
 - [ ] Close TradFi MVP residuals (cluster-validation wiring at `record_captured`)
 - [ ] Close DeFi data-pipeline blockers (features-onchain LookaheadBiasError + lending_rates write-gate)
 - [ ] Close sports phantom recovery — frees VM-quota for DeFi + AWS work
-- [ ] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
+- [x] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
       PBMS / R&E / pnl-attribution extend `defi_e2e_pipeline_2026_04_30`; batch-live-recon extends
-      `consolidated_operational_validation_2026_04_15`)
-- [ ] **Plan hygiene sweep (Day 1 quick-win)** — archive 18 self-tagged superseded plans; backfill missing frontmatter
+      `consolidated_operational_validation_2026_04_15`). **DONE 2026-05-07** —
+      [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) opened; Phase 1 UAC
+      AlertCode taxonomy shipped (UAC@`d00326d` per PM@`7624ab21`); 4 plan extensions tracked under work-stream E.
+- [x] **Plan hygiene sweep (Day 1 quick-win)** — archive 18 self-tagged superseded plans; backfill missing frontmatter
       (`last_updated` / `asset_group` / `locked_by` / 5 plans with no frontmatter at all); re-tag cluster children with
-      `parent:` field — work-stream G
+      `parent:` field — work-stream G. **DONE 2026-05-06** — Stage 1 archived 17 self-tagged superseded plans
+      (one deferred per "Ready for [unlock-plan]" rule); per-plan checkboxes flipped under work-stream G § "Archive
+      Stage 1".
 - [ ] Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A)
 - [ ] Decide research-service repo question (work-stream C)
 - [ ] AWS migration cost analysis (work-stream D.1) → user signs off scope
