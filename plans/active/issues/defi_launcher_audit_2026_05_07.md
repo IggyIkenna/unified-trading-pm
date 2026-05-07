@@ -175,3 +175,127 @@ launchers.
 - Inspect `_data_status_rollup_worker` (deployment-api) for the rollup-vs-manifest discrepancy that produced the
   original "60%" claim.
 - Re-launch the defi forward-poll VM (operator decision per no-fire-and-forget rule + cost-aware launching).
+
+---
+
+## 2026-05-07 PM follow-up — data-status drilldown breakdown + truncation audit (Claude session)
+
+**Operator finding 2026-05-07:** the data-status panel shows different coverage % at the top-level vs in the breakdowns,
+AND the breakdowns appear to display only 20 or 50 shards rather than the full set. Audit answers each from code-side
+evidence:
+
+### Q1-redux: total-vs-breakdown discrepancy (RESOLVED — two code paths, two denominators)
+
+The top-level coverage % and the drill-down breakdown coverage % are **served by different code paths reading different
+sources** with **different denominators**:
+
+| Layer                    | Code path                                                                                                      | Source                                                                            | Denominator                                                                                                                                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Top-level (panel header) | [`_slice_rollup_to_window`](../../../../deployment-api/deployment_api/services/data_status_service.py)         | Offline rollup blob (gzipped JSON in `gs://...uts-shared-deployment-api-rollup/`) | **Pre-computed expected universe** (calendar-clipped per `venue_trading_calendar`, source-coverage-clipped per UAC `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` / `CHAIN_GENESIS_DATES`) |
+| Drill-down breakdown     | [`get_hierarchical_drilldown`](../../../../deployment-api/deployment_api/services/data_status_hierarchical.py) | Live `read_availability_index(bucket)` — manifest parquet                         | **Manifest row count** (only what the writer physically recorded)                                                                                                                                |
+
+**Where they diverge:** any `(shard_key, day)` in the rollup's expected universe that has **no manifest row at all**
+(not `captured`, not `empty_confirmed`, not `attempted_failed` — just absent) gets counted in the rollup denominator but
+missed by the drill-down. Today this happens for:
+
+- DeFi pre-genesis chain dates (ARBITRUM pre-2021-08-31, BASE pre-2023-07-13, etc.) where the orchestrator pre-skips
+  with no row written.
+- Sports pre-`SOURCE_COVERAGE_START` dates per source.
+- Paused-league windows in `KNOWN_COVERAGE_GAPS`.
+- Calendar non-trading days (TradFi holidays / weekends) where the orchestrator pre-skips.
+
+**Active fix path (in flight):** the **writegate-honest-coverage Phase 2.E.2** work
+([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md))
+mandates `record_expected_empty(reason=EXPECTED_*)` for every calendar-pre-skip case, so every expected
+`(shard_key, day)` gets a manifest row. Once that ships across all five asset_groups, both code paths converge on the
+same denominator. **Until then the drift is expected.**
+
+Some Phase 2.E.2 work has shipped this session (instruments-service@8b5eca3 TradFi calendar pre-skips +
+features-sports@a215e36 post-fetch tagging + UAC@2a970c5 `non_trading_day_reason` SSOT). DeFi pre-genesis + sports
+pre-coverage + paused-league cases remain.
+
+### Q2-redux: "20 or 50 shards" truncation (RESOLVED — three caps, one user-facing)
+
+Three actual cap sources, each in a different layer:
+
+| #   | Layer                                 | Symbol                            | Cap          | Where                                                                                                                                                                                            |
+| --- | ------------------------------------- | --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **deployment-service venue-detail**   | `top_instruments: df.head(30)`    | **30**       | [`manifest_reader.py:584`](../../../../deployment-service/deployment_service/cli/utils/manifest_reader.py#L584) — venue detail panel **sample** of instruments                                   |
+| 2   | deployment-api per-league detail      | `missing_dates: missing_pf[:50]`  | **50**       | [`data_status_service.py:602`](../../../../deployment-api/deployment_api/services/data_status_service.py#L602) — missing-dates **sample list**, `missing_count` field has the correct full count |
+| 3   | deployment-api hierarchical drilldown | `_MAX_CHILDREN_PER_NODE = 10_000` | **10,000**   | [`data_status_hierarchical.py:61`](../../../../deployment-api/deployment_api/services/data_status_hierarchical.py#L61) — defensive ceiling, paginated via `child_offset`/`child_limit`           |
+| 4   | deployment-ui drilldown page          | `topPageSize = 200`               | **200/page** | [`HierarchicalShardDrilldown.tsx:70`](../../../../deployment-ui/src/components/HierarchicalShardDrilldown.tsx#L70) — has "Load next N of T remaining" button                                     |
+
+**The cap you're seeing is #1** — venue detail's `top_instruments` is a 30-instrument **sample**, not the full
+instrument list. For venues like BINANCE-FUTURES with 5000+ perp instruments, the panel only ever shows the first 30
+sorted by `instrument_key`. There's no pagination and no "showing 30 of 5000" label. This pre-dates the hierarchical
+drilldown's `child_offset`/`child_limit` shipping.
+
+**Cap #2** (50 missing dates) is just a sample preview — the COUNT (`missing_count`) is correct and used for the
+percentage. Not a real coverage issue, just a UI preview truncation.
+
+**Caps #3 + #4** are well-shaped (10k defensive ceiling, 200/page with load-more).
+
+**Already-shipped finding 3** — bundled-type drilldown collapse (`options_chain` / `futures_chain` with empty
+`instrument_id`) was fixed by `_coalesce_instrument_id_from_underlying`
+([`data_status_hierarchical.py:233`](../../../../deployment-api/deployment_api/services/data_status_hierarchical.py#L233))
+— read-time virtualization that promotes `underlying → instrument_id` so bundled rows surface at the per-root level
+(BTC, ETH for Deribit options; ESH4, NQH4 for CME futures). No further work needed there.
+
+**In-flight finding 4** — 2.35M-row manifest causing CEFI/DEFI 502s. Per
+[deployment-api@5bcea1d4](https://github.com/IggyIkenna/deployment-api/commit/5bcea1d4) handoff: pagination work in
+flight on `data_status_hierarchical.py` (`child_offset` / `child_limit` / `_MAX_CHILDREN_PER_NODE=10000` /
+underlying-column virtualization) by another agent. Listed in
+[`data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md)
+Phase 6 + handled by another agent's commit. Don't duplicate.
+
+### Actionable todos — to be added to the existing data-status-drilldown plan
+
+The existing
+[`data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md)
+covers Phase 6 pagination + bundled-root virtualization. **The audit findings above add three deltas not covered there**
+— proposing for inclusion when that plan's owner next touches it (or as a small standalone follow-up plan if the
+operator prefers):
+
+- [ ] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated `top_instruments`:
+      add `instrument_offset: int = 0` + `instrument_limit: int | None = None` query params to the venue-detail
+      endpoint; default `instrument_limit = 200` (matches drilldown UI page size); return
+      `total_instruments_unfiltered: int` so the UI can render "showing N–M of T" + a load-more button. Bump cap from 30
+      → 200 (or remove with explicit pagination). Document that this is the venue-detail panel's instrument sample,
+      distinct from the hierarchical drilldown's `instrument_id` axis.
+- [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx` — add pagination controls to the `top_instruments` rendering
+      ([`VenueDetailPanel.tsx:200-208`](../../../../deployment-ui/src/components/VenueDetailPanel.tsx#L200)). When
+      `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count label. Mirror
+      the pattern from `HierarchicalShardDrilldown.tsx:218`.
+- [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
+      preview but the UI should label it as "sample of 50 / total N missing" rather than "the missing dates". Pure doc /
+      UI label fix, not a behaviour change.
+- [ ] **[codex]** P1. Document the rollup-vs-drilldown denominator divergence in
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
+      so future operators don't re-discover this. State explicitly: top-level % uses pre-computed expected universe
+      (rollup), drill-down % uses manifest row count, they converge once writegate Phase 2.E.2 ships
+      `record_expected_empty` for all calendar-pre-skip cases across all 5 asset_groups.
+- [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
+      can render a tooltip explaining where each number came from and why they may differ until writegate Phase 2.E.2
+      fully lands. Defensive observability — no behaviour change.
+
+These are P1/P2 not P0 because:
+
+- The percentages are correct given their respective denominators (no math bug).
+- The "20 or 50" truncation is a sample-preview cap, not a count cap — the full counts are correct.
+- Writegate Phase 2.E.2 (in flight) will close the rollup-vs-drilldown divergence as a side effect.
+
+**The operator's audit confirms the existing plan's diagnosis** — Phase 6 pagination work shipped by another agent (per
+`5bcea1d4` handoff) addresses the per-instrument lazy-load. The deltas above add the venue-detail-panel sample cap + the
+cross-path denominator documentation that the existing plan didn't cover.
+
+### What this follow-up audit did NOT do
+
+- Re-test against a running deployment-api / deployment-ui locally — relied on code-reading. Recommend a Playwright pass
+  with the deployment stack at `localhost:5183` once the existing Phase 6 work is verified shipped to confirm
+  user-visible breakdown matches the corrected denominator.
+- Trace the rollup's per-asset-group expected-universe enumeration in detail (which UAC SSOTs each asset_group's rollup
+  uses for `expected_dates`). Out of scope for the truncation question; relevant for writegate Phase 2.E.2
+  cross-asset-group rollout.
+- Investigate whether the rollup blob itself is stale (last-rebuild timestamp). If the rollup is N hours old and
+  manifest writes have landed since, the divergence is rollup-staleness, not denominator drift. Worth checking the
+  rollup blob's `built_at` timestamp on the next divergence.
