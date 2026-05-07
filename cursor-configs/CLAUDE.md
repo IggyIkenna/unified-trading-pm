@@ -845,27 +845,45 @@ Markdown checkbox: `- [x]` for done, `- [ ]` for pending. Format: `- [x] [SCRIPT
 `- [ ] [AGENT] P0. Fix...`. This ensures Cursor Plan Mode renders filled vs hollow circles correctly. See
 `plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
 
-## Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
+## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
+
+This rule has TWO mutually-reinforcing halves. Both are non-negotiable. Violating either breaks parallel-agent
+coordination and loses work.
+
+### Half 1 — Commit + push at every shippable unit
+
+A "shippable unit" is the smallest meaningful slice of work that QGs cleanly on its own — a helper + its tests, one
+adapter migration, one reconciler, one consumer wire-in. **The moment a shippable unit is green, commit + push.**
+Do not batch shippable units across a session waiting for a "natural pause."
+
+- **Pushed = real.** A local-only commit is invisible to every other agent + every CI gate + every running VM that
+  pulls from `live-defi-rollout`. Until you `git push`, your work doesn't exist as far as the rest of the workspace
+  is concerned.
+- **The cadence is per-shippable-unit, not per-hour or per-session.** Five shippable units in one session = five
+  commit+push cycles, not one. Each cycle is small enough to revert cleanly if a downstream agent flags a regression
+  half an hour later.
+- **No "I'll commit after the next thing."** That's how 2-hour-old uncommitted work gets clobbered by a quickmerge
+  stash, an auto-formatter pass, or another agent's `git add <file>` accidentally hoovering up your unstaged hunks
+  (reference incident: PM@961980db — a teammate's local-uncommitted audit section got bundled into another agent's
+  plan-flip commit because the second agent staged the whole file instead of `git add -p`-ing their own hunks).
+- **End-of-session commits are a smell.** If you find yourself with 4 hours of uncommitted work as you're writing
+  the handoff, the rule was already violated.
+- **`live-defi-rollout` is the working branch.** VMs pull from it; CI runs against it. Push directly per the
+  workspace dirty-deps rule (`git add <my-files> && git commit --no-verify && git push origin live-defi-rollout`)
+  rather than waiting for a quickmerge → main promotion cycle.
+
+### Half 2 — Flip the plan checkbox in the same logical unit
 
 When working through a plan, you MUST flip the `- [ ]` checkbox to `- [x]` for each todo **as soon as the underlying
 work is shipped (committed + pushed)** — not at the end of the session, not "after the next agent picks it up", not
 batched into a single sweep at handoff time. The flip happens in the same logical unit of work as the code commit:
 
-1. Ship the code commit (or commits) that complete the todo.
+1. Ship the code commit (or commits) that complete the todo. **Push it.**
 2. Edit the plan file: `- [ ] [SCRIPT] P0. Description...` → `- [x] [SCRIPT] P0. Description... (commit-sha + brief evidence)`.
-3. Commit the plan flip in the PM repo with a `plan(...)` prefix referencing the work commits.
-4. Push.
+3. Commit the plan flip in the PM repo with a `plan(...)` prefix referencing the work commits. **Push it.**
+4. Only then move to the next todo.
 
-**Why this is non-negotiable:**
-
-- The plan is the operator's read-only view of "what's left." If checkboxes lag the actual state, the operator can't
-  trust them, and parallel agents re-do work that's already shipped.
-- Two agents reading the same plan must see the same in-flight state. Stale checkboxes cause work-stealing collisions
-  (two agents implementing the same item in parallel).
-- "I'll flip everything at the end" routinely loses items. Someone gets summoned mid-session, context fills up, the
-  flip never happens, and the next agent reads the plan as if nothing was done.
-
-**Don't flip a checkbox unless the work is actually shipped.** Local commits don't count; pushed commits do. If the
+**Don't flip a checkbox unless the work is actually shipped.** Pushed commits count; local commits do NOT. If the
 work is half-done (e.g. helper shipped but consumer wiring deferred), flip only the half that landed and append a
 `**DEFERRED**:` note to the unshipped half explaining why.
 
@@ -882,9 +900,22 @@ plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary of what shi
 Plan: <plan-filename>.
 ```
 
+### Why both halves are non-negotiable
+
+- The plan is the operator's read-only view of "what's left." If checkboxes lag the actual state, the operator can't
+  trust them, and parallel agents re-do work that's already shipped.
+- Two agents reading the same plan must see the same in-flight state. Stale checkboxes cause work-stealing collisions
+  (two agents implementing the same item in parallel).
+- "I'll commit + flip everything at the end" routinely loses items. Someone gets summoned mid-session, context fills
+  up, the auto-formatter clobbers an unstaged file, the flip never happens, and the next agent reads the plan as if
+  nothing was done.
+- Per-shippable-unit pushes are the ONLY way the workspace's parallel-agent + per-VM-pull-from-`live-defi-rollout`
+  + manifest-concurrency-protocol model works. A 4-hour uncommitted block is invisible to everything else and
+  blocks no work but yours.
+
 This applies to every plan in `plans/active/` and every working session — tier completions, partial flips inside a
-tier, even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
-matching plan flip.
+tier, even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without
+the matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
 
 ## Citadel-Grade Planning Standards
 

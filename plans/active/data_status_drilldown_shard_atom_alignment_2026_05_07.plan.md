@@ -22,6 +22,10 @@ repo_gates:
     code: C2
     deployment: none
     business: none
+  - repo: unified-api-contracts
+    code: C2
+    deployment: none
+    business: none
   - repo: unified-trading-pm
     code: C2
     deployment: none
@@ -120,6 +124,40 @@ for MTDS or for DeFi.
   `--shard-key={asset_group}|{venue}|{data_type}| {instrument_type}|{instrument_id_or_root}|{day}`.
 - MTDS CLI gains the missing flags so the surgical re-run is actually expressible — see Phase 4.
 
+## Why the chain rollup misleads today (added 2026-05-07 — operator screenshot)
+
+The DEFI panel header reads `49138 / 295927 shards 73.5%` (asset-group-level, manifest-row count); the per-chain rows
+underneath read e.g. `ARBITRUM 32/54 (59%)` / `AURORA 1/5 (20%)` / `ETHEREUM 1964/2319 (85%)`. Two different math
+regimes labelled with the same word "shards":
+
+1. **Header** — counts manifest rows directly (close to a true shard count).
+2. **Chain row** — `_build_chain_breakdown()` in
+   [`deployment-api/deployment_api/services/data_status_service.py:4827-4886`](deployment-api/deployment_api/services/data_status_service.py#L4827-L4886)
+   computes `dates_found / dates_expected` where `dates_found = len(unique_dates_with_any_captured_row)` and
+   `dates_expected = len(union_of_per_venue_expected_trading_dates)`. The within-day fan-out
+   (`protocol × data_type × instrument_id`) is **discarded entirely**. A chain row with 3 protocols × 5 data_types ×
+   ~1700 days ≈ 25k true shards collapses to a unique-date count.
+
+Suspicious tells in the screenshot — **7 chains all reporting EXACTLY `32/54`** and **6 chains all reporting EXACTLY
+`1/5`** — confirm a degenerate fallback denominator (line 4861 `min(v_dates)` → `start_date` when
+`get_venue_start_date()` returns `None` for DeFi protocol-suffixed venues). The expected window collapses to a tiny
+shared default rather than reflecting per-chain × per-protocol launch dates.
+
+Compounding bug: there is no `PROTOCOL_LAUNCH_DATES` SSOT in UAC. `CHAIN_GENESIS_DATES` clips pre-chain-launch days
+correctly via `_mtds_expected_dates_cached` (line 1156-1164), but pre-protocol-launch days (e.g. Aave V3 Arbitrum
+launched 2022-03, not 2021-08-31 chain genesis) are not clipped — so even if we fix the chain row math, the leaf-shard
+denominator will still be inflated.
+
+The fix is two pieces:
+
+- **Replace the chain-row math** with `Σ leaf shards` (numerator = manifest rows with `capture_status=captured`;
+  denominator = expected `(chain, venue, data_type, instrument_id_or_protocol_id, day)` tuples per the codex shard atom)
+  so the chain row and the asset-group header use the same regime.
+- **Land `PROTOCOL_LAUNCH_DATES` in UAC** so the leaf denominator clips pre-protocol-launch days the way
+  `CHAIN_GENESIS_DATES` already clips pre-chain-genesis days.
+
+Both belong in this plan — they are the math behind the drill-down hierarchy this plan ships.
+
 ## Pre-audit blast radius
 
 **deployment-api** (~3 endpoints + 1 helper):
@@ -154,6 +192,22 @@ for MTDS or for DeFi.
 - `--shard-key` parser: splits the pipe-delimited form
   `{asset_group}|{venue}|{data_type}|{instrument_type}|{instrument_id_or_root}|{day}` into individual filter flags so
   existing handler dispatch logic doesn't need to change. ~30 LOC helper.
+
+**unified-api-contracts** (added 2026-05-07):
+
+- `unified_api_contracts/registry/chain_env.py` (or new `registry/protocol_launch.py` co-located with
+  `CHAIN_GENESIS_DATES`) — add `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` keyed by `(chain, protocol)` →
+  `YYYY-MM-DD` launch date. ~50 LOC + 30 LOC unit tests. Initial seed: AAVEV3 (Arbitrum 2022-03-16, Optimism 2022-08-04,
+  Polygon 2022-03-16, Avalanche 2022-03-16, Base 2023-08-09, Ethereum 2022-03-14), AAVEV2 (Ethereum 2020-12-01),
+  UNISWAPV3 (Ethereum 2021-05-04, Arbitrum 2021-08-31, Optimism 2021-12-16, Polygon 2021-12-21, Base 2023-08-09), CURVE
+  (Ethereum 2020-01-19), COMPOUND (Ethereum 2018-09-27), LIDO (Ethereum 2020-12-19), JITO (Solana 2022-08-15), MARINADE
+  (Solana 2021-08-02), ROCKETPOOL (Ethereum 2021-11-08), JUPITER (Solana 2024-01-31), RAYDIUM (Solana 2021-02-21).
+  Greenfield additions populate as adapters land.
+- New helper `get_protocol_launch_date(chain: str, protocol: str) -> str | None` mirroring `get_chain_genesis_date`.
+  Returns `None` if not declared (caller falls back to `CHAIN_GENESIS_DATES` for the chain).
+- Sanity test: every `(chain, protocol)` pair declared in `VENUES_BY_ASSET_GROUP["defi"]` has a `PROTOCOL_LAUNCH_DATES`
+  entry OR an explicit `# pending-investigation` skip list (so adding a new protocol without a launch date is a CI
+  failure, not silent NaN).
 
 **unified-trading-pm** (codex docs + plan):
 
@@ -202,6 +256,25 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 1 — deployment-api hierarchical drill-down endpoint
 
+- [ ] [unified-api-contracts] P0 (NEW 2026-05-07). Land `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` SSOT in
+      `unified_api_contracts/registry/chain_env.py` (or sibling `protocol_launch.py`). Helper
+      `get_protocol_launch_date(chain, protocol) -> str | None`. Sanity test: every `VENUES_BY_ASSET_GROUP["defi"]`
+      entry that resolves to a `(chain, protocol)` pair MUST have a launch date OR be on an explicit
+      pending-investigation skip list. Block `CHAIN_GENESIS_DATES`-only fallback in callers — they should
+      `max(chain_genesis, protocol_launch)`.
+- [ ] [deployment-api] P0 (NEW 2026-05-07 — supersedes the date-only chain math). Rewrite `_build_chain_breakdown()` in
+      `data_status_service.py:4827-4886` to count true leaf shards. Numerator =
+      `len(filtered[(filtered.chain == chain) & (filtered.capture_status == "captured")])`; denominator = expected
+      `(chain, venue, data_type, instrument_id_or_protocol_id, day)` tuple count from the per-asset_group expected
+      universe. Use `get_protocol_launch_date(chain, protocol)` to clip the per-protocol denominator. Existing
+      `dates_found` / `dates_expected` keys stay in the payload for backward-compat but ALSO emit `shards_found` /
+      `shards_expected` as the canonical fields. UI consumers switch to the new fields in Phase 2. Add unit tests
+      asserting `shards_expected` ≫ `dates_expected` for ARBITRUM-AAVEV3 (5 data_types × ~1100 days ≈ 5500 vs ~1100
+      dates).
+- [ ] [deployment-api] P0 (NEW 2026-05-07). Wire `_mtds_expected_dates_cached` (`data_status_service.py:1164`) to use
+      `max(chain_genesis, protocol_launch_date)` — pre-protocol-launch days clip exactly like pre-chain-genesis already
+      does. Unit test: AAVEV3-ARBITRUM 2021-08-31 → 2022-03-15 returns empty expected (chain genesis but protocol not
+      launched yet); 2022-03-16 onward returns expected dates.
 - [ ] [deployment-api] P0. New service method
       `data_status_drilldown.get_hierarchical_drilldown(service, asset_group,     window_start, window_end)` returning a
       tree shaped per the codex shard atom. Each leaf has
@@ -219,6 +292,13 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 2 — deployment-ui hierarchical drill-down component
 
+- [ ] [deployment-ui] P0 (NEW 2026-05-07). Replace the chain-row label `"shards"` with the new canonical fields: consume
+      `shards_found` / `shards_expected` from the Phase 1 rewrite (and the asset-group header reads the same fields).
+      The "X dates missing" sub-pill stays date-scoped and uses `dates_found` / `dates_expected` so both signals are
+      visible. Search the UI for hardcoded "shards" / "dates" mislabels — `DataStatusTab.tsx`,
+      `BreakdownsAccordion.tsx`, `CategoryHeader.tsx` — and align label-to-field exactly. Visual smoke: ARBITRUM should
+      now read e.g. `5500 / 8400 shards (65%)` not `32/54 shards (59%)`, AND `1084 dates missing` becomes whatever the
+      new chain-clipped denominator yields (e.g. ~200 instead of 1084).
 - [ ] [deployment-ui] P0. New `HierarchicalShardDrilldown.tsx` component. Recursive: each level renders a list of
       expandable items; on expand fires `getHierarchicalDrilldown(...)` with the next-level filter set. Empty levels (no
       captured + no expected) collapse to "no data" badge.
