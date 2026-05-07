@@ -219,6 +219,28 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [AGENT] P7. (`p7-success-criteria`) Phase 7 — Validate workspace-wide success criteria. [AUDIT 2026-05-07:
       BLOCKED-ON infrastructure_master:Phase-6-plan6-check]
 
+### Streaming-finalize follow-ups (folded-in 2026-05-07 from `streaming_finalize_lift_and_downsize_2026_05_06`)
+
+The streaming-finalize work-stream (UTL@`75d16f28` lift, MTDS@`b12ecb5` kraken slash→hyphen + UTL refactor,
+deployment-service launcher downsize) shipped Items 1/3/5; Item 4 (DEX historical replay) has its own active plan at
+`dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md`. **Two follow-ups carry over and live here.**
+
+- [ ] [HUMAN] P2. **Block-size tuning bench** for `TARDIS_STREAM_BLOCK_SIZE_MB` env var. Run sweep across {1, 2, 4, 8,
+      16} MiB on Coinbase BTC-USD heavy day; plot peak RSS vs row count vs output parquet size. Pick the workspace
+      default (likely 2 MiB → ~2 GB peak with ~5-10% larger output). Currently shipped knob defaults to 8 MiB clamped
+      [1, 64]; exposed as VM-launch metadata via `setup-data-pipeline-vm.sh` per MTDS@`dae9bc4`. **Why HUMAN:** needs an
+      operator on a 16 GB / 32 GB / 64 GB VM matrix to gather the empirical curve before tuning the default. The knob
+      surfacing was the prerequisite; this bench is the calibration follow-up. [AUDIT 2026-05-07: FRESH — non-blocking
+      for May 23 cutover; cost-saving and reliability optimization]
+- [ ] [AGENT] P3. **Reuse `StreamingShardFinalizer` UTL helper** when adding the next bulk-CSV-style adapter (Databento
+      bulk endpoints, future Tardis-style providers). Import path:
+      `from unified_trading_library.io import StreamingShardFinalizer`. Pass an adapter-specific `shard_router` callback
+      that takes a row-group DataFrame and yields `(shard_key, shard_path, shard_df, metadata)` tuples; the finalizer
+      handles writer-pool lifecycle + bounded peak memory + FD-leak guarantees. **Do NOT copy-paste**
+      `tardis_adapter._tardis_cefi_shard_router` per the workspace rule "[UTL] = cross-service runtime utilities; do not
+      duplicate per-service." Reference: UTL@`75d16f28` shipped + MTDS Tardis adapter migrated. [AUDIT 2026-05-07:
+      DEFERRED — fires only when next adapter is added]
+
 ### Audit findings 2026-05-07 — folded from session wrapper
 
 **Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` rows B.2 + C.13 (added 2026-05-07 from
