@@ -2585,11 +2585,24 @@ data-status drilldown reads the canonical manifest (which has both layers merged
 
 ### Phase 4.B — deployment-ui (unified-trading-system-ui)
 
-- [ ] [SCRIPT] P0. Render new `attempted_failed` reasons distinctly per typed error in the data-status panel: - Distinct
-      color + icon per (`EmptyPlaceholderBugBackfill`, `ClusterCoverageError`, `UpstreamTimestampBiasError`,
+- [x] [SCRIPT] P0. Render new `attempted_failed` reasons distinctly per typed error in the data-status panel:
+      Distinct color + icon per (`EmptyPlaceholderBugBackfill`, `ClusterCoverageError`, `UpstreamTimestampBiasError`,
       `MalformedTickFieldError`, `MissingAvailableAt`, `ClusterCoverageError(historical)`,
-      `RAW_TICK_PARTITION_MISMATCH`) - Drill-down per reason → leaf parquet + audit report link
-- [ ] [SCRIPT] P0. Surface per-pillar write-gate failure breakdown as a stacked-bar visualisation per shard.
+      `RAW_TICK_PARTITION_MISMATCH`). **SHIPPED 2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new
+      `TypedReasonBadges` component renders one colored pill per non-zero count for both the failure_pillars
+      (typed-error class prefix taxonomy) and empty_reasons (UAC `EMPTY_CONFIRMED_REASONS` closed set + back-fill
+      catch-all) rollups deployment-api emits per venue. 11 unit tests cover empty/zero render, failure-pillar-first
+      ordering, count + tooltip wiring, click-through mode vs static, and a closed-set drift guard against
+      deployment-api `_FAILURE_PILLAR_KEYS` + `_EMPTY_REASON_KEYS`. Component wired into `DataStatusTab.tsx` venue
+      summary line between the existing "blocked on raw" badge and BucketCountsBadge so every venue with any
+      typed-failure or typed-empty surfaces the breakdown without expanding the row. **DEFERRED**: drill-down per
+      reason → leaf parquet + audit report link — depends on Phase 4.A.3 leaf-schema endpoint (next item below).
+- [x] [SCRIPT] P0. Surface per-pillar write-gate failure breakdown as a stacked-bar visualisation per shard.
+      **SHIPPED 2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new `FailurePillarStack` component renders a
+      proportional horizontal stacked bar with one segment per non-zero pillar (zero counts suppressed; layout
+      stays deterministic). Wired alongside `TypedReasonBadges` on the venue summary line. 13 unit tests cover
+      proportional widths, total emission via `data-failure-total`, click-through mode, prefix namespacing, and
+      closed-set ignore.
 - [ ] [SCRIPT] P0. Schema-view modal (per-leaf parquet) — call new `/leaf/.../schema` endpoint; render columns + types +
       row_count + NaN ratio + `available_at` envelope.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
