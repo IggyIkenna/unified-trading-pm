@@ -98,26 +98,42 @@ should treat current numbers as a conservative floor.
 Adding a venue or LST to `VENUE_COLLATERAL_MATRIX` automatically expands the catalog's eligible slots on next
 regeneration. No engine code changes, no catalog code changes — just a new matrix row.
 
-Today's matrix (2026-05-05):
+Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
+[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](../../../../plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)):
 
-| perp_venue                                              | LST acceptance                                  | catalog rows produced |
-| ------------------------------------------------------- | ----------------------------------------------- | --------------------- |
-| DRIFT                                                   | jitoSOL (10% haircut), mSOL (10% haircut)       | 2 rows                |
-| HYPERLIQUID                                             | none (USDC-only) — explicit accepted=False rows | 0 rows                |
-| BINANCE / BYBIT / OKX / DERIBIT / ASTER / GMX           | none — explicit accepted=False rows             | 0 rows                |
-| BINANCE-FUTURES / BYBIT-FUTURES / KRAKEN-FUTURES / etc. | none — explicit accepted=False rows             | 0 rows                |
+| perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (post-Stream A flip) |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| DRIFT                                                                                                            | JitoSOL (10% haircut), mSOL (10% haircut)                                                                  | 2 rows                                     |
+| DERIBIT                                                                                                          | stETH (7.5% haircut, X:PM/X:SM, offsets ETH-perp directly — effective 2026-01-13)                          | 1 row                                      |
+| BYBIT (UTA)                                                                                                      | stETH + METH + USDe (UTA cross-collateral; haircuts per Bybit margin-spec page)                            | up to 3 rows                               |
+| OKX (multi-currency / portfolio margin)                                                                          | wstETH (multi-currency-margin discount-rate list; haircut TBD per Stream A live probe)                     | 1 row                                      |
+| HYPERLIQUID (L1)                                                                                                 | none (USDC-only) — explicit `accepted=False` rows                                                          | 0 rows                                     |
+| BINANCE (Multi-Assets Mode)                                                                                      | none — `BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT` only; cross-collateral feature retired                      | 0 rows                                     |
+| ASTER                                                                                                            | none — USDT/USDF/asBNB only                                                                                | 0 rows                                     |
+| GMX                                                                                                              | none — per-market collateral set excludes LSTs                                                             | 0 rows                                     |
+| BINANCE-FUTURES / BYBIT-FUTURES / OKX-FUTURES / KRAKEN-FUTURES / BITFINEX-FUTURES / BITGET-FUTURES (Tardis-CeFi) | none — linear-USDT or coin-margined only; LST acceptance lives at the spot-UTA layer not the futures layer | 0 rows                                     |
 
-Today's slot count = 2: `CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod` +
-`CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod`. Honest — DRIFT is the only venue that accepts an LST as
-cross-margin in production today.
+**Effective slot count post-Stream A flip = ~7** (DRIFT/JitoSOL + DRIFT/mSOL + Deribit/stETH + Bybit/stETH +
+Bybit/METH + Bybit/USDe-as-stable-not-LST + OKX/wstETH; final count depends on Stream A live-probe haircut
+verifications). This **supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
 
-**Phase 7a audit (operator-side):** the matrix should encode each individual (LST, perp_venue) tuple — eETH/weETH ≠
-stETH/wstETH ≠ rETH ≠ cbETH. Aave V3 takes weETH at 72.5% LTV but stETH only via the wstETH wrapper, and Hyperliquid
-takes neither. Treating "ETH LSTs" as one bucket would lose every deployment decision the matrix is supposed to make.
-Negative rows (`accepted=False`) are explicit so absences are self-documenting; positive rows wait on per-venue
-verification with haircut citations from the venue's risk-engine UI or docs URL. When Aevo / Lyra-V2 / dYdX /
-Hyperliquid ship LST-margin support, flip the relevant row to `accepted=True` with a haircut citation in `notes` —
-catalog regeneration on import expands the slot list automatically.
+**Why the prior claim was stale.** The 2026-05-05 SSOT comment in `unified-api-contracts/.../venue_collateral.py`
+asserting _"NO production ETH-perp venue accepts an ETH LST as direct cross-margin today"_ predated three live venue
+updates: Deribit's 2026-01-13 stETH cross-collateral haircut cut from 15% → 7.5% with explicit "stETH offsets ETH
+derivative positions" wording; Bybit's 2024-02 stETH/METH UTA collateral additions and 2024-12-19 USDe addition (ratio
+published to UTA spec page); and OKX's multi-currency-margin discount-rate list including wstETH. The doc-level
+correction ships in this codex update; the matrix-level correction (with verified haircuts) ships in Stream A of the
+named plan above.
+
+**Phase 7a audit (operator-side) — STATUS: re-opened 2026-05-07.** The matrix encodes each individual (LST, perp_venue)
+tuple — eETH/weETH ≠ stETH/wstETH ≠ rETH ≠ cbETH. Aave V3 takes weETH at 72.5% LTV but stETH only via the wstETH
+wrapper, and Hyperliquid takes neither. Treating "ETH LSTs" as one bucket would lose every deployment decision the
+matrix is supposed to make. Negative rows (`accepted=False`) are explicit so absences are self-documenting; positive
+rows ship after Stream A's per-venue live-probe with haircut citations from the venue's risk-engine UI or docs URL.
+Stream A's audit playbook lives at
+[`codex/14-playbooks/defi/venue-collateral-2026-05-07.md`](../../../14-playbooks/defi/venue-collateral-2026-05-07.md)
+(to be created by Stream A). Continuous-audit cadence (monthly?) is deferred to a separate plan named in Stream E
+follow-throughs.
 
 ## Catalog axis (slot labels)
 
@@ -129,11 +145,12 @@ Examples (2026-05-05):
   CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod
 ```
 
-2 slots today (DRIFT/JitoSOL + DRIFT/mSOL); the count grows organically as Phase 7a lands verified ETH-LST acceptance
-rows. `f` is fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no
-spare USDC bucket. Built by `_build_carry_staked_basis` in
+**Pre-2026-05-07:** 2 slots (DRIFT/JitoSOL + DRIFT/mSOL). **Post-Stream A flip:** ~7 slots once Deribit/stETH +
+Bybit/stETH + Bybit/METH + OKX/wstETH (haircut-verified per Stream A live probe) land. `f` is fixed at `100` (= 1.0)
+because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no spare USDC bucket. Built by
+`_build_carry_staked_basis` in
 [`strategy-service/.../target_universe/catalog.py`](../../../../strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py)
-from the matrix at module import.
+from the matrix at module import — slot expansion is automatic once the matrix entries flip to `accepted=True`.
 
 ## Config schema
 

@@ -244,3 +244,105 @@ These were checked and are consistent:
    exist by May 13 (Week 2 start) for the second-archetype work to begin.
 5. **Issues #4 + #5** can ship as part of the LeveragedLegController plan's Phase 4 backport — add codex doc edits to
    each Phase 4.x sub-todo's GATE.
+
+---
+
+## 2026-05-07 PM follow-up — operator review + venue-matrix re-verification (Claude session)
+
+**This section supersedes the original Issues #1, #3, #4, #5 wording above where it conflicts. Issue #2 stands as
+written.** Operator (Ikenna) reviewed the audit on 2026-05-07; below captures (a) the corrected understanding of which
+venues actually accept ETH LSTs as cross-margin today (`venue_collateral.py` SSOT is stale), (b) operator confirmations
+on the canonical-name + leverage decisions, and (c) the named successor plan that holds the actionable todos.
+
+### Issue #1 — REFRAMED: SSOT is stale, not the conclusion
+
+The original audit relied on `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` which carries
+explicit `accepted=False` rows for stETH/wstETH on every named venue, with a comment dated 2026-05-05: _"NO production
+ETH-perp venue accepts an ETH LST as direct cross-margin today."_ **Re-verified 2026-05-07 against live venue docs and
+this is wrong:**
+
+- **DERIBIT** — stETH IS accepted as cross-collateral with a **7.5% haircut** (reduced from 15% on
+  [2026-01-13](https://insights.deribit.com/exchange-updates/portfolio-margin-improvements-for-steth-and-cross-collateral-haircuts/)).
+  stETH is grouped within ETH's bucket in the Extended Risk Matrix; **stETH holdings can directly offset ETH derivative
+  positions** (i.e. margin an ETH-PERP short). Applies to X:PM (cross-collateral portfolio margin) and X:SM accounts;
+  S:PM (segregated PM) is unaffected.
+- **BYBIT** — stETH and METH have been UTA-collateral-eligible since
+  [Feb 2024](https://announcements.bybit.com/article/collateral-value-ratio-adjustments-for-steth-and-meth-blt8fc7ba628f15dd27/);
+  USDe since
+  [Dec 2024](https://announcements.bybit.com/article/collateral-value-ratio-adjustments-for-usde-blt093009fa8ea0dacc/).
+  Bybit UTA supports 70+ assets as cross-collateral; LST-as-perp-margin works with the published collateral value ratio.
+- **OKX** — wstETH is on the multi-currency-margin / portfolio-margin discount-rate list (per OKX help-center
+  cross-margin docs); confirmation of haircut pending live API probe.
+- **BINANCE** — Multi-Assets Mode currently lists `BTC / ETH / BNB / XRP / ADA / DOT / SOL / USDC / USDT` only with
+  5–10% haircuts. **No LST support today** in Multi-Assets Mode (cross-collateral feature was retired). This venue
+  remains unsuitable for `carry_staked_basis` LST_AS_MARGIN.
+- **HYPERLIQUID** — main L1 still USDC-only (correct in SSOT). HIP-3 builder-deployed perp DEXes can use USDe / BTC /
+  ETH / etc. as their quote/collateral asset; not relevant to the L1 perp short hedge.
+- **ASTER** — USDT / USDF / asBNB only; no ETH LSTs.
+- **DRIFT** — JitoSOL / mSOL accepted with 10% haircut (correct in SSOT, already shipping 2 catalog rows).
+
+**Net implication.** `carry_staked_basis` can launch on **DRIFT (Solana) + Deribit + Bybit + OKX** as of today, NOT just
+DRIFT. The "6 perp venues" master-plan list is partly wrong (Binance and Aster don't accept ETH LSTs; Hyperliquid L1
+doesn't), but the strategy is **NOT venue-blocked** the way Issue #1 claimed. Phase 7a venue-matrix audit is real work
+that needs doing — but as a SSOT correction, not as a launch-gating dependency.
+
+**Resolution owner:** UAC `venue_collateral.py` SSOT correction + codex `carry-staked-basis.md` venue table update.
+Tracked in the new plan named below.
+
+### Issue #2 — CONFIRMED CORRECT (operator 2026-05-07)
+
+Codex is right: `f = 1.0` only, **2 slots** (DRIFT/JitoSOL + DRIFT/mSOL today; expanding to Deribit/Bybit/OKX once Issue
+#1 SSOT correction lands). The 22-slot version was a SPLIT_STAKE-era artefact that was retired with the deletion.
+Whichever side of the code is still emitting 22 slots needs trimming.
+
+### Issue #3 — RESOLVED: it's `ARBITRAGE_PRICE_DISPERSION` (operator 2026-05-07)
+
+Operator decision: `leveraged_funding_arb` is **a configuration variant of `ARBITRAGE_PRICE_DISPERSION`**, not a new
+archetype. Reasoning: funding-rate spread IS the price dispersion in this case (cross-venue funding = cross-venue
+forward-pricing differential), and leverage is an orthogonal axis applicable to any arbitrage strategy (scaled via
+`target_leverage` per Drift P1 #5). The engine `ArbitragePriceDispersionHierarchicalEngine` already exists and supports
+the LEADER_HEDGE mode that funding arb requires.
+
+**Action to align docs / plans / code:**
+
+- Codex `arbitrage-price-dispersion.md` — make "Funding-rate dispersion arb | LEADER_HEDGE" a first-class supported
+  scenario with its own config-schema variant (not a one-line mention). Resolve the circular cross-reference with
+  `carry-basis-perp.md` by removing the "Not in this archetype" line that points outward, leaving the paired claim in
+  `carry-basis-perp.md` only.
+- Codex `carry-basis-perp.md` — keep its "Not in this archetype: cross-venue funding arb → `ARBITRAGE_PRICE_DISPERSION`"
+  line; that becomes authoritative.
+- Master plan + `defi_master_2026_05_07.plan.md` — rename `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with a
+  config-variant suffix where useful, e.g. `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged`).
+- Strategy-service catalog — confirm `_build_arbitrage_price_dispersion` (or equivalent) emits the
+  funding-dispersion-leveraged slots; if not, add the config-variant rows.
+
+### Drift P1 #4 — CONFIRMED: codex updates to align with LeveragedLegController (operator 2026-05-07)
+
+Codex archetype docs (`carry-staked-basis.md`, `carry-basis-perp.md`, `arbitrage-price-dispersion.md`,
+`recursive-staked.md`, etc.) need their "Token / position flow" + "Execution semantics" sections rewritten to reference
+`LegController.update` instead of bespoke `_build_legs`. Archetype-specific math (`target_leverage` derivation,
+`target_net_delta` source) stays in the doc; the hand-built leg-listing goes. Even if the code backports defer, the docs
+ship now to keep doc/plan/code in sync per the workspace rule.
+
+### Drift P1 #5 — CONFIRMED: extend archetype config schemas (operator 2026-05-07)
+
+Add `target_leverage` + `target_net_delta` + the volatility-cap clamp behaviour to the affected archetype docs' config
+schemas. Without these, deployment-UI strategy builders, paper-trade configs, and operator runbooks have no surface to
+set leverage. Schemas to extend: `arbitrage-price-dispersion.md`, `carry-basis-perp.md`, plus any other archetype that
+uses leverage (i.e. all of them, since `LeveragedLegController` is workspace-wide).
+
+### Named successor plan
+
+Actionable todos for all of the above tracked in:
+[`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](../../ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md).
+
+Plan covers four parallel streams:
+
+1. **Stream A — venue_collateral.py SSOT correction** (UAC) — live API verification of Deribit / Bybit / OKX LST
+   collateral haircuts → patch matrix entries → update codex venue table.
+2. **Stream B — `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` canonicalisation** (UAC + codex + plans
+   - strategy-service) — rename across all surfaces, codex doc rewrite, catalog rows.
+3. **Stream C — LeveragedLegController codex doc backport** (codex archetypes/) — rewrite leg-flow sections in 11
+   archetype docs even when the code backport defers.
+4. **Stream D — `target_leverage` / `target_net_delta` config schema extensions** (codex archetypes/) — extend
+   config-schema sections, paired with deployment-UI form-field surface.
