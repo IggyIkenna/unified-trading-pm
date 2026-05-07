@@ -2258,6 +2258,128 @@ to date. Cross-repo touch:
 deployment-api/UI. Manifest backfill ships v2 catalog reads per-asset-group (sports first since fixtures
 catalog is most mature, prediction last since `PREDICTION_GROUPS` is still empty in UAC).
 
+#### Phase 3.D.5 — Per-asset-group catalog SSOT model (operator directive 2026-05-07 msg 7, COMPREHENSIVE)
+
+The operator extended the architecture beyond cefi/defi/tradfi to cover every asset_group AND the typed-
+reason-taxonomy growth process. Reproduced here so the per-asset-group catalog tasks (Wave 3 above)
+honour the right shape:
+
+**1. Sports fixtures = instruments.** The API-Football fixtures catalog (in
+`gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…`) IS the per-day source-of-
+truth for "what fixtures should exist on day D for league L." Downstream sources (footystats, understat,
+transfermarkt, sfi, odds_api, weather) gate their expected universe on this catalog with per-source
+exception rules:
+
+* **understat coverage rules** — encoded as a per-(league, season) inclusion list. Understat covers
+  EPL/La Liga/Serie A/Bundesliga/Ligue 1; for other leagues we don't expect xG data. UAC SSOT to add:
+  `UNDERSTAT_COVERED_LEAGUES: dict[str, dict[str, tuple[str, str]]]` mapping league_id → season →
+  (start_date, end_date). Days outside coverage → `EXPECTED_INSTRUMENT_NOT_LISTED` (or new
+  `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` if more specific).
+* **transfermarkt transfer windows** — UAC SSOT to add: `TRANSFER_WINDOWS: list[tuple[str, str, str]]`
+  (window_name, start, end) for the canonical summer + winter windows per league family. Outside the
+  window: `EXPECTED_OUTSIDE_TRANSFER_WINDOW`. Inside: enumerate (league, day) tuples we expect transfer
+  data for.
+* **footystats per-league season bounds** — UAC SSOT to add:
+  `FOOTYSTATS_LEAGUE_SEASONS: dict[str, list[tuple[str, str, str]]]` mapping league_key → list of
+  (season_id, season_start, season_end). Days outside any active season → `EXPECTED_PRE_SEASON` or
+  `EXPECTED_POST_SEASON` (new reasons). Days within a season → expect data.
+* **fixture_events / fixture_stats / lineups** — gated by per-fixture `kickoff_time`. Events / stats /
+  lineups only expected during/after the match window per fixture (already partly encoded via
+  `available_at` stamping rules).
+* **per-source-rate-limited skips** — when a source's rate limit forces us to defer a fixture's data
+  fetch, that's `attempted_failed/RateLimitError`, NOT `empty_confirmed`. Captured in the typed-reason
+  expansion process below.
+
+**2. Prediction markets = same model.**
+
+* Per-market lifecycle (`market_created_at`, `resolution_time`, `settlement_time`) lives in
+  instruments-service catalog (per `predictions_master_2026_05_07.plan.md`).
+* Pre-`market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED` (per-market grain).
+* Post-`settlement_time` → `EXPECTED_INSTRUMENT_DELISTED`.
+* Within active window with no trades that day → `empty_confirmed/SOURCE_RETURNED_ZERO` (legit per
+  msg 6 — sparse trading is fine for prediction markets, distinct from "genuinely missing").
+* Per-canonical-question-group (HOURLY=24/day, DAILY=1, ELECTION=1-over-months) cluster expectations
+  enforced at `record_captured` via cluster validation.
+
+**3. Typed-reason-taxonomy expansion process (operator framing — system robustness ratchet).**
+
+> "If an instrument has empty data, we still need to be able to record why it's empty, as long as we
+> write a clear reason. ... Over time as we find more and more reasons that shouldn't fail with
+> `empty_confirmed` (like auth for example or rate limits that shouldn't be empty_confirmed), we can do
+> it. It's basically how we figure out our system is robust or not."
+
+Today UAC `EmptyConfirmedReason` enum has 12 values (HOLIDAY / WEEKEND / PAUSED_LEAGUE /
+PRE_SOURCE_COVERAGE_START / PRE_GENESIS_CHAIN / PRE_VENUE_LAUNCH / INSTRUMENT_NOT_LISTED /
+INSTRUMENT_DELISTED / PARTIAL_HALF_DAY / DEPRECATED_DATA_TYPE / REFDATA_CADENCE_CHANGE /
+SOURCE_RETURNED_ZERO). Each operator-flagged "this should never have been empty_confirmed" finding adds:
+
+* A new typed `attempted_failed` error class (or extends an existing one) — e.g.
+  `RateLimitError` / `AuthenticationError` / `MalformedSourceResponseError` /
+  `UpstreamCorrelationIDDuplicate` — distinct from the EmptyConfirmedReason set.
+* A migration pass to flip historical rows that were silently empty_confirmed but should have been
+  attempted_failed under the new typed reason. Mirrors `reconcile_blank_error_reason_rows.py`
+  (Wave 2.M).
+* A reader-side classifier extension so consumer services (data-status panel, ML training, strategy)
+  can distinguish "auth-failure-retry-pending" from "honest-no-data" in their per-status policy.
+
+**Process — when an operator flags a "shouldn't be empty_confirmed" pattern:**
+
+1. File a finding doc in `plans/active/issues/<short-name>_<YYYY_MM_DD>.md` per the Findings Triage
+   Discipline rule. Include sample row, suspected root cause, suggested typed-reason class.
+2. Add the typed error class to UAC honest_coverage.py exports.
+3. Add a UTL migration script (templated on `reconcile_blank_error_reason_rows.py`) that flips
+   historical rows. Run scan-only; operator approves; --apply-flips.
+4. Update the adapter that was silently writing empty_confirmed to call `record_failed` with the
+   typed error.
+5. Codify the typed reason in CLAUDE.md "Three-category empty-output decision" rule expansion.
+
+**Tasks for the per-asset-group catalog SSOT extension (Wave 3.S — sports / prediction):**
+
+- [ ] [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — codify
+      `UNDERSTAT_COVERED_LEAGUES`, `TRANSFER_WINDOWS`, `FOOTYSTATS_LEAGUE_SEASONS`, plus a uniform
+      `is_expected_for_source(source, league_id, day) -> tuple[bool, str|None]` helper that returns
+      (is_expected, reason_if_not). Mirrors the chain_env / venue_launch_dates / source_coverage_start
+      pattern.
+- [ ] [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Or use `EXPECTED_INSTRUMENT_NOT_LISTED` semantically
+      with these as classifier-internal — operator preference.)
+- [ ] [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
+      `instruments-store-sports-{pid}/fixtures/…` per-day fixtures catalog; cross-product with
+      `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields
+      `expected_unattempted` rows for the shards we DO expect; emits `empty_confirmed` with the right
+      EXPECTED_* for shards we DON'T expect.
+- [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group
+      lifecycle (depends on UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.plan.md`).
+      Yields `expected_unattempted` for active markets, `EXPECTED_INSTRUMENT_NOT_LISTED` /
+      `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
+- [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules
+      table + the typed-reason-taxonomy expansion process.
+
+**Wave 3.M — illiquid-instrument carve-out (operator msg 6 reminder).** Far-OTM options that don't
+trade for multiple days should write **0-volume candles with LTP-from-prior-day**, NOT `empty_confirmed`.
+This is an MTDS / MDPS adapter behaviour change, separate from the manifest classification work:
+
+- [ ] [SCRIPT] P1. Audit MTDS options-chain adapters — per-cluster per-day output. If a cluster has 0
+      trades for the day but the contract is alive (per options expiry calendar), write 0-volume
+      candles with prior-day LTP. ManifestWriter receives the candles and records `captured` (real
+      OHLC, just zero-volume).
+- [ ] [SCRIPT] P1. MDPS options-candle-builder follow-on — same shape; if the upstream parquet has the
+      0-volume candle row, MDPS doesn't need to "fill" it. If MDPS sees absence (no parquet), it
+      cascades upstream's `expected_unattempted` per Wave 3.
+
+**Manifest column hygiene (operator msg 7 reaffirm).** No new manifest columns needed. `attempted_at`
+already encodes "checked_at"; combined with `error_reason` it tells us "we tried at T and got X". The
+event log (GCS) provides the lifecycle audit trail. **If a future case arises where checked_at and
+created_at semantically diverge** (e.g. an enumerator pre-write vs an actual fetch attempt), we'd add
+a new column at THAT point — not preemptively. Today the consolidator's last-writer-wins on identical
+row_key naturally bumps `attempted_at` to the most recent write.
+
+**Empty-files-vs-manifest-rows reaffirm (operator msg 6).** No fake parquet files for absence. Manifest
+absence rows + the typed reason ARE the SSOT instruction. Each downstream service reads the manifest
+and applies its own policy (NaN-fill, fail period, propagate, skip) per the typed reason. Adding new
+fake-data conventions has audit costs that compound over time; manifest absence is the clear single
+instruction.
+
 #### Phase 3.D.5 — Operator's reasoning trail (2026-05-07 evening, kept for audit context)
 
 The operator walked through the v1/v2 architecture in three steps. Reproduced here verbatim so the
