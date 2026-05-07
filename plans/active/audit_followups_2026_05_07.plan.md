@@ -20,6 +20,16 @@ engineer-hour for all 6.
 P2 (post-May-23 housekeeping; not on the live-trading critical path) but recommended to land before the next workspace
 audit so the anomalies don't echo into future sessions.
 
+## Codex SSOTs
+
+This plan tracks line-edit followups against an audit document (no code changes). The driving SSOT for every anomaly
+below is the audit itself; cite it before making any plan-or-codex line edit:
+
+- [`plans/active/_AUDIT_2026_05_07_dependency_graph.md`](_AUDIT_2026_05_07_dependency_graph.md) — workspace dependency
+  graph audit (2026-05-07); §6 enumerates the 6 anomalies this plan resolves
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Anomaly fixes
 
 ### #1 — Master plan body references folded plans (audit §6 #2)

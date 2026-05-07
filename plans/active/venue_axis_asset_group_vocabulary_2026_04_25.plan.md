@@ -47,6 +47,22 @@ isProject: false
 
 # Venue axis (asset group) vocabulary
 
+## Codex SSOTs
+
+This plan implements / extends the following SSOT documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) § "Asset-group vocabulary" — primary SSOT for the
+  vocabulary rules (CLI flag `--asset-group`, env vars `VM_ASSET_GROUP` / `MDPS_ASSET_GROUP`, Python symbols
+  `VENUES_BY_ASSET_GROUP` / `DATA_TYPES_BY_ASSET_GROUP` / `MarketAssetGroup`, hive-key `asset_group=` canonical vs
+  legacy `category=`, the lowercase dict-key exception)
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) —
+  manifest hive partition keys (`asset_group=` canonical, `category=` legacy) + reader fallback discipline
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — per-asset-group
+  bucket layout + path templates the vocabulary touches
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

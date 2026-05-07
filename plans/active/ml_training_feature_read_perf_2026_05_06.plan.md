@@ -35,6 +35,22 @@ isProject: false
 
 # ML training feature-read perf — surgical wins
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
+  features → ml-training reader lineage; this plan reduces wall-clock at the ml-training read boundary
+- [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) — QG discipline for
+  the perf changes (basedpyright, ruff, coverage floor on the rewritten reader path)
+- [`codex/06-coding-standards/performance-targets.md`](../../codex/06-coding-standards/performance-targets.md) —
+  service-level perf targets (the 2-4× target lives here)
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  the DuckDB lazy-join must preserve honest-absence semantics; outer-merge-equivalent behaviour required
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

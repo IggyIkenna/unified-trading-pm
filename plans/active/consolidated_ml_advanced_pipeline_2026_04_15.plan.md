@@ -44,6 +44,21 @@ isProject: false
 
 # Consolidated ML Advanced Pipeline
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
+  features → ml-training/ml-inference lineage; calibration / Bayesian tuning / hierarchical inference all sit on this
+  chain
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+  symmetry; ml-training (batch) and ml-inference (live) MUST share the same feature-read path + same calibration
+- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md) — code-path
+  symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

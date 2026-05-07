@@ -47,6 +47,22 @@ isProject: false
 
 # Consolidated Operational Validation
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) — alerting baseline (severity matrix,
+  routing, escalation) — the operational-validation gates assert against this contract
+- [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) — batch vs live
+  alerting symmetry; cluster E2E + scheduling-gap tests must exercise both modes
+- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md) —
+  runtime-tier matrix (Tier 0/1/2 local + staging + prod) — pipeline scheduling + QG sweeps run per tier
+- [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — manual-trade
+  booking + reconciliation contract that the trade-booking QG validates
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

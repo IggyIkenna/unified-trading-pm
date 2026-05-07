@@ -23,6 +23,18 @@ related_plans:
 
 # TradFi Master — asset_group umbrella
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) — manifest v5 semantics + `record_captured` / `record_empty` / `record_failed` discipline (TradFi calendar pre-skip + ES.OPT cluster validation)
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) — TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream NaN tolerances
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — TradFi GCS bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
+- [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md) — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

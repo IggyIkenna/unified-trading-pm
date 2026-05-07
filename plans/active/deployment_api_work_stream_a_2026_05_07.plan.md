@@ -35,6 +35,24 @@ isProject: false
 
 # deployment-api work-stream-A — programmatic VM launch + live event tail
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/03-observability/lifecycle-events.md`](../../codex/03-observability/lifecycle-events.md) — STARTED / STOPPED /
+  FAILED event schema + bucket layout (`gs://{pid}-events/events/{service}/{YYYY-MM-DD}/{vm-name}/hour={H}/*.jsonl`);
+  the live-tail endpoint reads from this surface
+- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — workspace
+  rule that all VM launchers live under `deployment-service/scripts/vm/`; the programmatic-launch endpoint shells out to
+  these scripts via the `_SERVICE_LAUNCHER_SCRIPTS` registry
+- [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) — VM
+  tarball deploy modes (tarball / tarball-from-local / sibling-clone) the launcher modal exposes
+- [`codex/03-observability/coordination-events.md`](../../codex/03-observability/coordination-events.md) — coordination
+  event semantics; the live-tail endpoint preserves correlation_id chains across VM lifecycle
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Why this plan exists
 
 The master plan `master_to_live_defi_2026_05_23.plan.md` audit (PM commit `12ce828a`, 2026-05-06) names

@@ -22,6 +22,19 @@ related_plans:
 
 # Predictions Master — asset_group umbrella
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes;
+drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) — manifest v5 schema + canonical-question-group cluster validation at `record_captured`
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) — lifecycle-bounded absence reasons for prediction shards + downstream NaN handling
+- [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — prediction GCS path layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
+- [`codex/09-strategy/cross-cutting/prediction-markets.md`](../../codex/09-strategy/cross-cutting/prediction-markets.md) — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group SSOT
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)
