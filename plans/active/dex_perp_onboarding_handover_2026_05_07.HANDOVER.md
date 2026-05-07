@@ -124,14 +124,196 @@ Verify whether Pacifica accepts JitoSOL / mSOL as cross-margin. Two outcomes:
   New `CARRY_STAKED_BASIS@jito-pacifica-solana-...` slot auto-generates next catalog regen.
 - **NO** → add explicit `accepted=False` row (the matrix is supposed to encode negatives explicitly per the audit spec).
 
-### C. EXTENDED-STARKNET: deeper REST research OR Starknet event subgraph (P2 — currently no historical OHLCV path)
+### C. EXTENDED-STARKNET historical replay — full sub-plan (was P2; promoted to P1)
 
-EXTENDED returned 404 on all `/candles` / `/klines` candidate paths. Next-agent paths (in priority):
+EXTENDED returned 404 on all `/candles` / `/klines` candidate paths in the 2026-05-07 probe. The full system surface is
+mostly already wired — UAC + MTDS live REST + manifest + data-status + deployment-ui all know about EXTENDED-STARKNET.
+The two genuine gaps are: (i) a Starknet RPC template in UAC, and (ii) the MTDS historical adapter + routing branch.
 
-1. Read `docs.extended.exchange` docs for the documented historical endpoint (might be auth-gated).
-2. Failing that: build a Starknet event subgraph against the Extended Settlement contract. Unlike Lighter (validium with
-   sequencer-internal blocks), Extended IS Starknet-native — settlement events SHOULD be on-chain readable. Add
-   `STARKNET_RPC_TEMPLATE` to UAC `CHAIN_RPC_TEMPLATES` (currently only zkSync + Solana there).
+#### C.1 — Audit: current state of EXTENDED-STARKNET across the stack
+
+| Layer                        | Status     | Reference                                                                                                               |
+| ---------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **UAC venue registration**   | ✓ EXISTS   | `market_data_categories.py:185`, `venue_mapping.py:88` (in `all_cefi_onchain_clob_venues`)                              |
+| **UAC provider mapping**     | ✓ EXISTS   | `venue_mapping.py:181` — `"EXTENDED-STARKNET": "extended_api"`                                                          |
+| **UAC start_date**           | ✓ EXISTS   | `venue_mapping.py:227` — `"EXTENDED-STARKNET": "2024-10-01"`                                                            |
+| **UAC instrument_types**     | ✓ EXISTS   | `venue_instrument_config.py:43` — `"EXTENDED-STARKNET": ["PERPETUAL"]`                                                  |
+| **UAC valid data_types**     | ✓ EXISTS   | inherits cefi DATA_TYPES_BY_ASSET_GROUP (incl. `ohlcv_1m` per UAC `e890022`)                                            |
+| **UAC Starknet RPC**         | ✗ MISSING  | `_defi_chain_data.py` has zkSync + Solana mainnet/testnet only — no Starknet entry                                      |
+| **MTDS live adapter**        | ✓ EXISTS   | `umi_tick_provider.py:1007 _fetch_extended_rest` (live REST, ~30-day rolling, no historical)                            |
+| **MTDS historical adapter**  | ✗ MISSING  | no `_fetch_extended_history` / `_fetch_extended_candles`                                                                |
+| **MTDS routing**             | ⚠ PARTIAL | `umi_tick_provider.py:180` routes ALL data_types to live REST; no `(EXTENDED, ohlcv_1m) → historical` branch            |
+| **Manifest writes**          | ✓ READY    | once historical adapter returns canonical-schema rows, `PartitionedTickWriter` records captured shards automatically    |
+| **deployment-api rollup**    | ✓ READY    | new `(EXTENDED-STARKNET, ohlcv_1m)` rows surface via the multi-axis SHARD_AXIS_MATRIX (cefi → instrument_id) breakdowns |
+| **deployment-ui drill-down** | ✓ READY    | BreakdownsAccordion renders new venue+data_type combos from /coverage-summary breakdowns; no UI code change needed      |
+
+**Conclusion**: every system layer is ready except UAC Starknet RPC plumbing + the MTDS historical adapter + routing.
+Last-mile work, scoped tightly.
+
+#### C.2 — Phase 0: empirical research from a Tokyo VM (research-first, code-second)
+
+Before writing any code, run these probes on a same-region GCE VM (asia-northeast1-c):
+
+- [ ] **Read Extended Exchange API docs** at `https://docs.extended.exchange/` (or canonical equivalent). Look for:
+      `/candles`, `/klines`, `/markets/{symbol}/candles`, `/markets/{symbol}/history`, `/funding/history`,
+      `/trades/history`. The 2026-05-07 probe tested a few paths and got 404; docs may reveal the correct one.
+- [ ] **Probe likely Extended REST endpoints** with known-good params (BTC-USD on a recent date). Variants: -
+      `https://api.extended.exchange/api/v1/markets/BTC-USD/candles?interval=1m&from=<ms>&to=<ms>` -
+      `/api/v1/info/markets/BTC-USD/candles`, `/api/v1/info/candles`, `/api/v1/info/klines` - `/api/v1/klines`,
+      `/api/v1/candles`, `/api/v1/ohlcv`, `/api/v1/bars` - Try ISO 8601 timestamps + paging params (`limit`, `cursor`,
+      `next`)
+- [ ] **Identify Extended's Settlement contract on Starknet mainnet** via: - Extended's docs / GitHub for canonical
+      contract addresses - StarkScan (`https://starkscan.co/`) for the Extended contract namespace - Sourcify-style
+      verifiers for ABIs
+- [ ] **Probe the contract's event-emit pattern** via Alchemy Starknet `starknet_getEvents` for one block range: -
+      Per-trade `Trade` / `Settlement` event signatures - Event field shape (price, qty, side, timestamp, market_id) -
+      Volume sanity check vs live REST output for the same window
+- [ ] **Decide path**: REST `/candles` (if discovered) or Starknet event replay. Document chosen path in this section
+      with empirical evidence + per-endpoint payload shapes.
+
+#### C.3 — Phase 1: UAC Starknet RPC template (only if Phase 0 → event-replay path)
+
+Add to
+[`_defi_chain_data.py`](../../../../unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py):
+
+```python
+"starknet-mainnet": ChainData(
+    chain_id="0x534e5f4d41494e",  # SN_MAIN
+    rpc_url_template="https://starknet-mainnet.g.alchemy.com/v2/{api_key}",
+    explorer_template="https://starkscan.co/",
+    ...,
+),
+"starknet-sepolia": ChainData(
+    chain_id="0x534e5f5345504f4c4941",  # SN_SEPOLIA
+    rpc_url_template="https://starknet-sepolia.g.alchemy.com/v2/{api_key}",
+    ...,
+),
+```
+
+If the historical path is undocumented REST, **skip this phase entirely** — UAC needs nothing.
+
+#### C.4 — Phase 2: MTDS historical adapter (mirror Lighter + Pacifica shape)
+
+Mirror the now-shipped Lighter + Pacifica adapters (`umi_tick_provider.py:1216 _fetch_lighter_candles`,
+`_fetch_pacifica_candles` ~line 808). Two implementation forks based on Phase 0:
+
+**Fork (a) — REST `/candles` path:**
+
+```python
+async def _fetch_extended_candles(
+    date: str,
+    resolution: str = "1m",
+    instrument_ids: list[str] | None = None,
+    writer: ChunkWriter | None = None,
+    ...,
+) -> pd.DataFrame:
+    """Fetch Extended historical OHLCV bars via the discovered /candles endpoint.
+    Schema matches the canonical ohlcv_1m row shape (same as Lighter + Pacifica).
+    """
+    # Mirror Pacifica's body, swap /kline → /candles, swap symbol/interval params,
+    # swap field-name mapping to Extended's response shape.
+```
+
+**Fork (b) — Starknet event replay path:**
+
+```python
+async def _fetch_extended_history(
+    date: str,
+    instrument_ids: list[str] | None = None,
+    writer: ChunkWriter | None = None,
+    ...,
+) -> pd.DataFrame:
+    """Replay Extended trades from Starknet contract events for one UTC day.
+    Aggregates per-block events into 1-minute OHLCV bars.
+
+    Uses Alchemy Starknet starknet_getEvents:
+        from_block / to_block bounded by a Starknet timestamp-to-block helper.
+        keys[0] = Trade event hash; address = Extended Settlement contract.
+    """
+    # 1. Resolve UTC day → starknet block range.
+    # 2. starknet_getEvents in 1000-event pages until end_block.
+    # 3. Decode each event using the ABI from Phase 0 — extract
+    #    (market_id, price, size, side, timestamp).
+    # 4. Aggregate to 1-minute OHLCV bars per market.
+    # 5. Emit the canonical ohlcv_1m row schema.
+```
+
+Schema MUST match the canonical shape (verified end-to-end for Lighter):
+`symbol, instrument_id, venue, instrument_type, data_type, timeframe, ts_event, ts_init, open, high, low, close, volume, trade_count`.
+
+Reuse the shared `_get_with_429_retry` helper (MTDS `d898985`).
+
+Add 4 unit tests mirroring `test_lighter_candles.py` / `test_pacifica_candles.py`: routing, schema parity, day-boundary
+clipping, error handling.
+
+#### C.5 — Phase 3: MTDS routing wire-up
+
+Same pattern Lighter + Pacifica use. Edit `umi_tick_provider.py:180`:
+
+```python
+if venue_upper == "EXTENDED-STARKNET":
+    if data_types and "ohlcv_1m" in data_types and len(data_types) == 1:
+        return await _fetch_extended_history(  # or _candles, per Phase 2 fork
+            date=date,
+            instrument_ids=instrument_ids,
+            writer=writer,
+            max_instruments=max_instruments,
+            failed_per_instrument=failed_per_instrument,
+        )
+    return await _fetch_extended_rest(...)  # existing live path
+```
+
+This unblocks routing the same way UAC `e890022` unblocked Lighter + Pacifica.
+
+#### C.6 — Phase 4: end-to-end system-flow verification (UAC → MTDS write → manifest → data-status → UI)
+
+Lighter + Pacifica proved this path on 2026-05-07 — system layers should already work. Verify explicitly for Extended:
+
+- [ ] Single-day smoke from a Tokyo VM (`EXTENDED-STARKNET, ohlcv_1m, 2025-06-01` or earliest valid date).
+- [ ] Verify parquet at:
+      `gs://market-data-tick-cefi-{PROJECT}/raw_tick_data/by_date/day=2025-06-01/asset_group=cefi/venue=EXTENDED-STARKNET/instrument_type=perpetual/data_type=ohlcv_1m/{symbol}.parquet`
+- [ ] Read parquet — exactly 1440 rows of 1m bars, all timestamps within `[2025-06-01 00:00, 2025-06-02 00:00)` UTC.
+- [ ] Manifest `record_captured` row exists for
+      `(asset_group=cefi, venue=EXTENDED-STARKNET, data_type=ohlcv_1m, instrument_type=perpetual, instrument_id=BTC-USD, day=2025-06-01)`.
+- [ ] deployment-api `/api/data-status/manifest?venue=EXTENDED-STARKNET&data_type=ohlcv_1m&day=2025-06-01` returns the
+      captured row.
+- [ ] deployment-api `/api/data-status/coverage-summary?service=mtds&asset_group=cefi` includes EXTENDED-STARKNET in
+      breakdowns dict with non-zero captured count.
+- [ ] deployment-ui drill-down: open data-status panel for `service=mtds, asset_group=cefi`, drill into
+      EXTENDED-STARKNET, see `ohlcv_1m` row populated.
+
+#### C.7 — Phase 5: backfill VM launch
+
+Once Phase 4 single-day smoke is green, launch full backfill (2024-10-01 → today):
+
+```bash
+RUN_TS="$(date +%Y%m%d-%H%M%S)"
+gcloud compute instances create "cefi-extended-starknet-ohlcv-${RUN_TS}" \
+  --project=central-element-323112 --zone=asia-northeast1-c \
+  --machine-type=e2-highmem-2 \
+  --image-family=ubuntu-2404-lts-amd64 --image-project=ubuntu-os-cloud \
+  --boot-disk-size=50GB --scopes=cloud-platform \
+  --metadata="startup-script-url=gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh,\
+VM_TASK=cefi-backfill,VM_SERVICE=market_tick_data_service,VM_OPERATION=download,\
+VM_ASSET_GROUP=CEFI,VM_VENUE=EXTENDED-STARKNET,\
+VM_START_DATE=2024-10-01,VM_END_DATE=$(date +%Y-%m-%d),\
+VM_DATA_TYPES=ohlcv_1m,VM_FORCE=true,VM_SHUTDOWN_ON_COMPLETION=true"
+```
+
+`cefi-extended-` prefix already in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` (line 131) — no watchdog update needed.
+Refresh tarball before launch: `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI`.
+
+ETA: REST `/candles` path = 20-40 min (similar to Lighter); Starknet event replay = 1-3 hours (block-by-block iteration
+heavier).
+
+#### C.8 — Done when
+
+- Phase 0 deliverable committed (chosen path documented with empirical evidence).
+- `_fetch_extended_history`/`_candles` shipped + 4 unit tests green.
+- Routing branch wired.
+- Phase 4 system-flow verification green (parquet → manifest → data-status → deployment-ui).
+- Backfill VM ran end-to-end with non-zero captures across 2024-10-01 → today.
+- This Item C section flipped to ✓ in the open-items list at the top of this handover.
 
 ### D. Scale up Lighter symbol coverage beyond top-5 (P2 — when needed)
 
