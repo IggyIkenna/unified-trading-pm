@@ -719,12 +719,15 @@ skipping write. Adapter migrations done for sports + cefi + defi + tradfi this s
 ([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
 Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
 
-**Half 2 — Backward-fill the expected universe** (NOT YET BUILT — tracked in plan; codified here 2026-05-07). Enumerate
-the expected universe per asset*group and write
-`record_expected_empty(reason=EXPECTED*\*)`rows for every tuple that has no manifest row today. The existing reconciler at`instruments-service/scripts/reconcile_expected_absence_reasons.py`
-(shipped 2026-05-07 late3) handles **legacy null-reason rows** but does **NOT enumerate the universe**. The v2
-expected-universe enumerator that DOES enumerate is the deferred follow-up; it requires per-asset-group cross-product
-over UAC SSOTs:
+**Half 2 — Backward-fill the expected universe** (SHIPPED 2026-05-07 — PM@79e47874 + PM@341bb285).
+`instruments-service/scripts/enumerate_expected_universe.py` (Phase 3.D.4 — instruments-service@8e404c8 / @d1c9928 /
+@a936a28) walks the per-asset-group cross-product over UAC SSOTs + service catalogs and writes
+`record_expected_empty(reason=EXPECTED_<X>)` rows for every tuple that has no manifest row. **1,455,901 rows
+written + merged into canonical** across all 5 asset_groups (TradFi 35,033 + Sports 13,176 + CeFi 119,152 +
+Prediction 2,280 + DeFi 1,286,260). The reconciler at
+`instruments-service/scripts/reconcile_expected_absence_reasons.py` (shipped 2026-05-07 late3) is the complementary
+pass that stamps reasons on **legacy null-reason rows that already have a manifest entry**; the enumerator covers
+the **rows that have no manifest entry at all**. Per-asset-group cross-product:
 
 | Asset group | Expected-universe inputs (UAC + service catalogs)                                                                                                                              |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -740,20 +743,25 @@ Operators sometimes propose a separate `not_attempted` capture*status to mark ex
 workspace chose `empty_confirmed + error_reason=EXPECTED*\*` instead. Both are functionally identical — the
 denominator-divergence closure depends on the row EXISTING, not on the specific status value:
 
-- **Workspace approach**: `capture_status=empty_confirmed`,
-  `error_reason=EXPECTED_PRE_GENESIS_CHAIN | EXPECTED_HOLIDAY | EXPECTED_PRE_SOURCE_COVERAGE_START | …`. Reuses the
-  existing `empty_confirmed` plumbing (downstream services already branch on it for NaN-fills, denominator counting).
-  Closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS` (per CLAUDE.md "Reason taxonomy codified 2026-05-07").
-  Consumer-class behaviour documented in
-  [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md).
+- **Workspace approach (shipped)**: `capture_status=empty_confirmed`,
+  `error_reason=EXPECTED_PRE_GENESIS_CHAIN | EXPECTED_HOLIDAY | EXPECTED_PRE_SOURCE_COVERAGE_START | EXPECTED_PRE_VENUE_LAUNCH | EXPECTED_INSTRUMENT_NOT_LISTED | EXPECTED_WEEKEND | …`.
+  Reuses the existing `empty_confirmed` plumbing (downstream services already branch on it for NaN-fills, denominator
+  counting). Closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS` (per CLAUDE.md "Reason taxonomy codified
+  2026-05-07"); `EXPECTED_PRE_VENUE_LAUNCH` added 2026-05-07 at UAC@ac218dc with the new
+  `unified_api_contracts.registry.venue_launch_dates` SSOT (20 CeFi venues + 2 Prediction venues). Consumer-class
+  behaviour documented in [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md).
 
 - **Hypothetical "not_attempted" approach**: separate status enum value. Identical effect (manifest carries the row,
   drilldown counts it, rollup denominator matches). Would have required updating every downstream consumer to branch on
   the new status. Net: more code change, same outcome.
 
-The **absence-of-row semantic** ("not in expected universe") is preserved either way. Once Half 2 ships, manifest
-absence definitively means "outside expected universe" (e.g. a pre-2021-08-31 row for an Arbitrum tuple is absent
-because Arbitrum didn't exist; the rollup's expected denominator clips pre-genesis dates so the % stays honest).
+The **absence-of-row semantic** ("not in expected universe") is preserved either way. With Half 2 shipped (2026-05-07),
+manifest absence now definitively means "outside expected universe" — e.g. a pre-2021-08-31 row for an Arbitrum tuple
+is present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the
+rollup's expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
+`gs://market-data-tick-defi-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
+(sample: `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
+`EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` — Saturday).
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 
