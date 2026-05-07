@@ -25,28 +25,28 @@ against 37 currently-running VMs, and cross-referenced sibling plans for blocker
 
 ## 1. Per-plan status snapshot
 
-| Plan                                                       | Total todos<br>unchecked | Mis-marked<br>→ flipped DONE | In-flight<br>(VMs running) | Blocked-by<br>(plans) | Stale | Recommendation                                                                                                                   |
-| ---------------------------------------------------------- | -----------------------: | ---------------------------: | -------------------------: | --------------------: | ----: | -------------------------------------------------------------------------------------------------------------------------------- |
-| **master_to_live_defi_2026_05_23**                         |                      110 |                            5 |                         ~6 |                   ~70 |   ~10 | needs-scoping; 3 keystone unblocks (work-stream A endpoints, alerting plan, AWS cost analysis) cascade through ~50 BLOCKED items |
-| **writegate_honest_coverage_endtoend_2026_05_06**          |                       87 |                           15 |                          1 |                     1 |     1 | keep active; Phase 4.A typed-error rendering = highest leverage next                                                             |
-| **dart_ux_cockpit_refactor_2026_04_29**                    |                        7 |                            0 |                          0 |                     0 |     0 | substantively shipped; 7 polish/SSOT items not live-blocking                                                                     |
-| **strategy_architecture_v2_finalization_2026_04_19**       |                       67 |                            9 |                          0 |                     1 |     4 | rescope: split into 4 successor plans (post-V1-RETIRE cleanup, futures-roll, UI service-split fold-in, Unity UAT)                |
-| **manifest_migration_master_2026_05_07**                   |                       18 |                            0 |                          0 |                     8 |     0 | keep active; convert to codex SSOT after Stage 4                                                                                 |
-| **cefi_master_2026_05_07**                                 |                       22 |                            4 |                12 (24 VMs) |                     6 |     2 | keep active; VM-tied work draining 2026-05-08 to 2026-05-09                                                                      |
-| **defi_master_2026_05_07**                                 |                       32 |                            2 |                          0 |                     6 |     0 | **TOP-PRIORITY P0** (May-23 headline)                                                                                            |
-| **tradfi_master_2026_05_07**                               |                       18 |                            1 |                 5+ (5 VMs) |                     2 |     2 | keep active; P1 batch-only this cycle                                                                                            |
-| **sports_master_2026_05_07**                               |                       70 |                            0 |                  3 (4 VMs) |                    22 |     0 | keep active; heavy P0 surface, cross-plan coupling                                                                               |
-| **predictions_master_2026_05_07**                          |                       35 |                            1 |                          0 |                    13 |     0 | keep active; P1, 14 P0 items in 16 days = tight                                                                                  |
-| **infrastructure_master_2026_05_07**                       |                       30 |                            0 |            33 (live tests) |                    17 |     4 | keep active; 9 actionable + 17 blocked                                                                                           |
-| **venue_axis_asset_group_vocabulary_2026_04_25**           |                        3 |                            0 |                          0 |                     1 |     0 | **archive-ready** after folding 3 absorbed items into umbrellas                                                                  |
-| **instruments_and_market_tick_data_completion_2026_05_01** |                       22 |                            0 |         26 (sports + cefi) |                    13 |     2 | keep active; gates master operator-facing data-status                                                                            |
-| **mtds_per_instrument_download_api_2026_04_24**            |                       11 |                            1 |                          0 |                     6 |     1 | keep active; Phase 1.5 critical-path for May-23 (DeFi multi-chain)                                                               |
-| **feature_dag_uac_ssot_and_features_coverage_2026_05_06**  |                       11 |                            0 |                          0 |                     7 |     0 | keep active; Phase 1A is highest-leverage 1-day work                                                                             |
-| **features_consolidation_and_drilldown_2026_05_06**        |                       14 |                            0 |                          0 |                     4 |     0 | keep active; P2/P3, post-May-23                                                                                                  |
-| **ml_training_feature_read_perf_2026_05_06**               |                       11 |                            0 |                          0 |                     0 |     0 | keep active; 1-3 day pure-win, post-May-23                                                                                       |
-| **consolidated_ml_advanced_pipeline_2026_04_15**           |                       17 |                            1 |                          0 |                     4 |     0 | rescope; ~70% partially done; cross-asset-group ML scaffolding (no umbrella covers)                                              |
-| **consolidated_operational_validation_2026_04_15**         |                       11 |                            0 |                33 (inputs) |                     9 |     0 | keep active; cross-cutting, fold into master Group F or successor post-May-23                                                    |
-| **consolidated_strategy_and_ui_2026_04_15**                |                       32 |                            1 |                          0 |                     8 |     0 | rescope; supersession candidate flagged in plan body itself                                                                      |
+| Plan                                                       | Total todos`<br>`unchecked | Mis-marked`<br>`→ flipped DONE | In-flight`<br>`(VMs running) | Blocked-by`<br>`(plans) | Stale | Recommendation                                                                                                                   |
+| ---------------------------------------------------------- | -------------------------: | -----------------------------: | ---------------------------: | ----------------------: | ----: | -------------------------------------------------------------------------------------------------------------------------------- |
+| **master_to_live_defi_2026_05_23**                         |                        110 |                              5 |                           ~6 |                     ~70 |   ~10 | needs-scoping; 3 keystone unblocks (work-stream A endpoints, alerting plan, AWS cost analysis) cascade through ~50 BLOCKED items |
+| **writegate_honest_coverage_endtoend_2026_05_06**          |                         87 |                             15 |                            1 |                       1 |     1 | keep active; Phase 4.A typed-error rendering = highest leverage next                                                             |
+| **dart_ux_cockpit_refactor_2026_04_29**                    |                          7 |                              0 |                            0 |                       0 |     0 | substantively shipped; 7 polish/SSOT items not live-blocking                                                                     |
+| **strategy_architecture_v2_finalization_2026_04_19**       |                         67 |                              9 |                            0 |                       1 |     4 | rescope: split into 4 successor plans (post-V1-RETIRE cleanup, futures-roll, UI service-split fold-in, Unity UAT)                |
+| **manifest_migration_master_2026_05_07**                   |                         18 |                              0 |                            0 |                       8 |     0 | keep active; convert to codex SSOT after Stage 4                                                                                 |
+| **cefi_master_2026_05_07**                                 |                         22 |                              4 |                  12 (24 VMs) |                       6 |     2 | keep active; VM-tied work draining 2026-05-08 to 2026-05-09                                                                      |
+| **defi_master_2026_05_07**                                 |                         32 |                              2 |                            0 |                       6 |     0 | **TOP-PRIORITY P0** (May-23 headline)                                                                                            |
+| **tradfi_master_2026_05_07**                               |                         18 |                              1 |                   5+ (5 VMs) |                       2 |     2 | keep active; P1 batch-only this cycle                                                                                            |
+| **sports_master_2026_05_07**                               |                         70 |                              0 |                    3 (4 VMs) |                      22 |     0 | keep active; heavy P0 surface, cross-plan coupling                                                                               |
+| **predictions_master_2026_05_07**                          |                         35 |                              1 |                            0 |                      13 |     0 | keep active; P1, 14 P0 items in 16 days = tight                                                                                  |
+| **infrastructure_master_2026_05_07**                       |                         30 |                              0 |              33 (live tests) |                      17 |     4 | keep active; 9 actionable + 17 blocked                                                                                           |
+| **venue_axis_asset_group_vocabulary_2026_04_25**           |                          3 |                              0 |                            0 |                       1 |     0 | **archive-ready** after folding 3 absorbed items into umbrellas                                                                  |
+| **instruments_and_market_tick_data_completion_2026_05_01** |                         22 |                              0 |           26 (sports + cefi) |                      13 |     2 | keep active; gates master operator-facing data-status                                                                            |
+| **mtds_per_instrument_download_api_2026_04_24**            |                         11 |                              1 |                            0 |                       6 |     1 | keep active; Phase 1.5 critical-path for May-23 (DeFi multi-chain)                                                               |
+| **feature_dag_uac_ssot_and_features_coverage_2026_05_06**  |                         11 |                              0 |                            0 |                       7 |     0 | keep active; Phase 1A is highest-leverage 1-day work                                                                             |
+| **features_consolidation_and_drilldown_2026_05_06**        |                         14 |                              0 |                            0 |                       4 |     0 | keep active; P2/P3, post-May-23                                                                                                  |
+| **ml_training_feature_read_perf_2026_05_06**               |                         11 |                              0 |                            0 |                       0 |     0 | keep active; 1-3 day pure-win, post-May-23                                                                                       |
+| **consolidated_ml_advanced_pipeline_2026_04_15**           |                         17 |                              1 |                            0 |                       4 |     0 | rescope; ~70% partially done; cross-asset-group ML scaffolding (no umbrella covers)                                              |
+| **consolidated_operational_validation_2026_04_15**         |                         11 |                              0 |                  33 (inputs) |                       9 |     0 | keep active; cross-cutting, fold into master Group F or successor post-May-23                                                    |
+| **consolidated_strategy_and_ui_2026_04_15**                |                         32 |                              1 |                            0 |                       8 |     0 | rescope; supersession candidate flagged in plan body itself                                                                      |
 
 **Totals**: ~628 unchecked todos audited / ~40 mis-marked → flipped DONE / ~38 in-flight VM-tied / ~150 cross-plan
 blocked / ~26 stale.
@@ -277,49 +277,37 @@ Closest candidates (not yet — listed for follow-up tracking):
    writegate, dart, strategy). Reflog shows 2 separate `reset: moving to HEAD` events. The 16 surviving plans were
    committed + pushed (commit `dada46d1`) immediately to lock them in. Workspace rule "plan-checkbox-flips MUST happen
    at ship time" (CLAUDE.md hard rule per `896c9bc5`) is exactly this lesson.
-
 2. **Plan-body references to folded plans**: `master_to_live_defi` body references `defi_e2e_pipeline_2026_04_30`,
    `leveraged_leg_controller_ 2026_05_01`, `defi_pipeline_extension_2026_05_01` as live plans — all folded into
    `defi_master_2026_05_07` per Stage 7 batch consolidation. Work-stream-E EXTEND items + critical-path Week-1 alerting
    line need updating to point at `defi_master:Fork 1`.
-
 3. **Service readiness matrix in master plan** lists `manual_trade_booking_reconciliation_2026_03_22` as "to archive"
    but Stage 1 already archived it. Matrix row should now reference only
    `consolidated_operational_validation_2026_04_15`.
-
 4. **Plan-hygiene work-stream G** assumes ~148 active plans with 140/142/31 affected — Stage 7 batch consolidation
    reduced active/ to ~25 plans, so item counts are obsolete; script scope must re-derive.
-
 5. **Stale module-path reference in manifest_migration_master**: line 473 cites
    `unified_api_contracts.canonical.crosscutting.empty_confirmed_ reasons.EMPTY_CONFIRMED_REASONS` — actual canonical
    module is `honest_coverage.py`. Fix on next ship.
-
 6. **MDPS-1440-NaN reproduction-test** in infrastructure_master is STALE (superseded by writegate Phase 2.A adapter
    migrations + reconciler `MDPS@d3be0ef`).
-
 7. **Phase 3 of strategy_architecture_v2 is entirely STALE**: V1-RETIRE bypassed the 14-21d shadow window per operator
    directive. All 4 OPS items in Phase 3 should be dropped in next housekeeping.
-
 8. **mlr-p3-shap-inference (consolidated_ml_advanced_pipeline)**: SHAP wiring shipped (UAC `InferenceRequest.explain` +
    `inference_shap.py` + orchestrator wiring). Plan body says "no schema field" but verified at
    `internal/domain/ml/schemas.py:605`. Flipped to DONE.
-
 9. **cda-p2-microstructure (consolidated_strategy_and_ui)**:
    `features-delta-one-service/.../calculators/microstructure.py` + tests shipped. Flipped to DONE.
-
 10. **features-cross-instrument paired-dispersion stack** (UAC@`0e7ba95` +
     features-cross-instrument@`d1da107`/`071604f`/etc.) belongs to **strategy v2 Phase 9**, NOT to feature_dag plan.
     Confusion risk: anyone reading "features-cross-instrument shipped" in commit logs may falsely flip feature_dag items
     as DONE.
-
 11. **manifest_migration_master is NOT superseded by writegate Phase 3.D.2** reader-side fallback. Read-side fallback
     (UTL@`c5c2669e` + deployment-api@`176c599`) classifies legacy null-reason rows on read; manifest_migration_master
     scripts are the WRITE-side back-fill. Both required.
-
 12. **Lighter `block_height` on-chain replay is INFEASIBLE** (sequencer- internal, NOT zkSync L1).
     `defi_master:dex_historical_replay_*` section needs marking STALE / BLOCKED-ON
     `dex_perp_onboarding_handover Item C`.
-
 13. **`alerting-service-live-rules_2026_*.plan.md` does not exist anywhere** in active/ai/archive.
     master_to_live_defi:work-stream-E references it as the alerting plan — must be authored before any Week-2 Group F
     alerting verification.
