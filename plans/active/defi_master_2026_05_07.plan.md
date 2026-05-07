@@ -156,6 +156,41 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/copper-custody-integration.md`.
 
+### Audit findings 2026-05-07 — folded from session wrapper
+
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.9. Operator inspected DEFI pool
+drilldown after the 4-candidate-probe fix shipped (deployment-api@`0384eab`); AAVE_V3-ARBITRUM still surfaces "no schema
+yet" with 0 on-disk parquets across all 4 layout candidates even though the manifest claims `1781/1785 captured`.
+
+#### C.9 — AAVE_V3-ARBITRUM phantom rows reconcile
+
+This is a textbook phantom-rows scenario per CLAUDE.md `§ Manifest phantom audit`: manifest says `captured` but the
+parquet doesn't exist at any canonical path. The orchestrator's `_should_skip_shard` will trust the manifest forever
+unless reconciled. Either (a) parquets really don't exist (writer bug — needs root-cause + re-fetch), or (b) parquets
+exist at a 5th layout the prober doesn't know about (extend the prober + the audit's drift-axis enumeration).
+
+- [ ] [SCRIPT] P0. Run `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`
+      from a same-region GCE VM (`asia-northeast1-c` per CLAUDE.md "Always run on a same-region GCE VM" — cross-region
+      18× slower). VM name `defi-phantom-recon-{ts}`; add prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first.
+- [ ] [AGENT] P0. Triage the dry-run output for AAVE_V3-ARBITRUM specifically:
+  - [ ] If the audit reports phantom rows for AAVE_V3-ARBITRUM at one of the 5 known drift axes (hive-vocab,
+        instrument_type casing, empty schema-4 instrument_type, path-prefix drift, chain-bundle equivalence): the audit
+        already handles it; re-run with `--apply` to flip the rows to `record_failed(reason=PHANTOM_ROW_RECONCILED)`.
+  - [ ] If the audit reports 0 phantom rows for AAVE_V3-ARBITRUM but deployment-ui still shows 0 on-disk parquets: the
+        prober's drift-axis enumeration is incomplete — extend it with a 5th axis (likely a per-protocol path prefix or
+        a versioned-protocol-name axis like `AAVE_V3` vs `AAVE-V3` vs `aave-v3`) and re-run. Document the new axis in
+        `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe".
+  - [ ] If neither (a) nor (b) holds: parquets genuinely don't exist on disk. The DEFI pool writer (likely
+        `dex_pools_handler` or the AAVE-specific lending-indices writer in MTDS) recorded `captured` without
+        successfully writing the parquet. Diagnose the writer; backfill via a dedicated VM scoped to AAVE_V3-ARBITRUM
+        for the manifest's claimed 1781 dates.
+- [ ] [VERIFY] P0. After reconcile + (if needed) backfill: re-walk the deployment-ui DEFI panel; AAVE_V3-ARBITRUM pool
+      drilldown either shows real schema OR returns honest absence with all 4 (now 5) probed paths surfaced via the
+      backend `probed_paths` field (deployment-api@`4ca4bb7`).
+- [ ] [DOC] P0. Update `codex/02-data/availability-manifest-and-data-status.md` with the new drift axis (if any) +
+      record the AAVE_V3-ARBITRUM incident in the reconciliation-incident log alongside the 2026-04-29 + 2026-05-04
+      entries already there.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See

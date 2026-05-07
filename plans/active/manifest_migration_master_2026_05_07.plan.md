@@ -394,6 +394,81 @@ Per CLAUDE.md `§ Two teammates × multiple parallel agents`:
 - The DIRTY-FILE EXCLUSION on `unified-trading-library/tests/unit/test_availability_stamping.py` (Stage 1 Phase 3
   constraint) is the canonical example — still flagged as do-not-touch until owner commits.
 
+## Audit findings 2026-05-07 — refdata cadence + cross-source flatten audit (folded from session wrapper)
+
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` rows C.1 / C.8 / C.11. Operator surfaced
+two refdata data_types (LEAGUES, TEAMS) using daily-shard cadence even though their source data changes per-season at
+most. Plus a cross-source flatten audit follow-up to api_football B.1.
+
+### Refdata cadence SSOT (groups C.1 + C.11)
+
+The workspace currently has no SSOT for refdata cadence. Every data_type defaults to per-day shards regardless of
+whether the source changes daily. Result: 3046 daily LEAGUES shards (UAC `LeagueDefinition` already covers the static
+fields), 3046 daily TEAMS shards (squad changes per-season at most), 1 VENUES shard (correct, singleton). This is a
+manifest-shape regression: per-day-when-not-needed inflates the shard universe + denominators + storage cost without
+adding signal.
+
+- [ ] [SCRIPT] P0. UAC contract extension: add `cadence: "singleton" | "per_season" | "per_day"` field to
+      `unified_api_contracts.internal.schemas.SchemaContract` (or wherever the contract registry lives). Cadence drives
+      both the writer's shard atom AND the data-status panel's expected denominator.
+- [ ] [SCRIPT] P0. **C.1 LEAGUES kill** — UAC `LeagueDefinition` already declares `league_id`, `name`, `country`,
+      `league_type`; `provider_league_ids.py:689` `get_provider_league_id(canonical_league_id, provider)` handles
+      per-season FOOTYSTATS_SEASON_IDS. The only field NOT in UAC is `logo_url`. Lift `logo_url` into UAC
+      `LeagueDefinition` (or a sibling `LeagueAssets` mapping if any other consumer needs it). Then:
+  - [ ] Migration shape: flip every existing LEAGUES manifest row →
+        `record_empty(reason=EXPECTED_DEPRECATED_DATA_TYPE, attempted_at=now)` + delete the daily parquets.
+  - [ ] Remove the orchestrator scheduler entry that emits LEAGUES daily.
+  - [ ] Remove the LEAGUES UAC `data_type` registration (or mark it `cadence=singleton` with a single canonical parquet
+        if any reader still depends on the data_type itself).
+  - [ ] Update `codex/02-data/sports-data-source-coverage-matrix.md` to note LEAGUES is now UAC-resident refdata.
+- [ ] [SCRIPT] P0. **C.11 TEAMS refdata cadence** — TEAMS already carries 7 `venue_*` columns (the venue-of-home-team
+      enrichment). VENUES (1/1 singleton) only adds the OpenMeteo lat/lon geo overlay. Decide: fold VENUES into TEAMS
+      (drop the singleton, TEAMS columns absorb lat/lon) OR keep VENUES as a pure geo-enrichment overlay and document
+      that it's authoritative for OpenMeteo joins only.
+  - [ ] Migrate TEAMS adapter from per-day to per-(team, season). Shard atom:
+        `(asset_group=sports, source=api_football, data_type=teams, league_id, season, fetch_day_when_changed)` where
+        the writer only emits a new shard when `pq.read_schema(prev).fingerprint != normalize(payload).fingerprint`.
+  - [ ] Migration shape: flip 3046 daily TEAMS manifest rows →
+        `record_empty(reason=EXPECTED_REFDATA_CADENCE_CHANGE, attempted_at=now)` + delete daily parquets, then write the
+        new per-(league, season) shards from one canonical fetch per (league, season).
+  - [ ] data-status panel: render cadence-aware denominators — `cadence=per_season` data_type expected denominator =
+        (leagues × active_seasons), not (leagues × days).
+
+### Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC `EMPTY_CONFIRMED_REASONS`
+
+- [ ] [SCRIPT] P0. UAC `unified_api_contracts.canonical.crosscutting.empty_confirmed_reasons.EMPTY_CONFIRMED_REASONS`
+      gains two new closed-set values: `EXPECTED_DEPRECATED_DATA_TYPE` (for C.1 LEAGUES kill),
+      `EXPECTED_REFDATA_CADENCE_CHANGE` (for C.11 TEAMS migration). Aligns with the writegate Phase 2.E reason taxonomy
+      SSOT.
+
+### C.8 — Cross-source dropped-data audit (stub-normalizer pattern catch-all)
+
+api_football minimal-flattening (sports_master B.1) is one source where stub-normalizer pattern was found. Audit every
+other source's normalizer for the same pattern: 3-line pass-through that stamps an ID and returns the raw dict without
+unpacking nested arrays. PyArrow silently drops the fields on write because they fail schema inference.
+
+Targets to audit (per-source, per-normalizer):
+
+- [ ] [AGENT] P0. **footystats** — `unified_api_contracts/external/footystats/normalize.py` — every `normalize_*`
+      function. Especially `normalize_predictions`, `normalize_odds`, `normalize_fixture_stats` (if any).
+- [ ] [AGENT] P0. **understat** — `unified_api_contracts/external/understat/normalize.py` — per-shot XG endpoint
+      normalizer; per-player-stats normalizer.
+- [ ] [AGENT] P0. **soccer_football_info (SFI)** — `unified_api_contracts/external/soccer_football_info/normalize.py` —
+      beyond progressive (already validated), check fixture-result + standings normalizers.
+- [ ] [AGENT] P0. **transfermarkt** — flagged for PLAYER*VALUES per C.4 in sports_master. Audit `normalize_player*\*`
+      and any other transfer-market-related endpoints (transfers, contract changes, market value history).
+- [ ] [AGENT] P0. **DeFi adapters** — `market-tick-data-service/market_tick_data_service/adapters/dex_*` —
+      `dex_pools_handler`, `dex_swaps_handler`, `lending_indices_handler`. Confirm per-pool / per-swap / per-asset rows
+      unpack to `list[dict]` with all subgraph fields preserved (subgraph responses commonly have nested
+      `pool { token0 { ... } }` structures that fail naive pyarrow inference).
+- [ ] [AGENT] P0. Per-source: read normalize.py, confirm nested arrays unpack to `list[dict]`, confirm pyarrow doesn't
+      drop fields silently. For each finding: file a follow-up flatten todo here under the same sports_master B.1
+      pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity). DeFi findings file under
+      `defi_master_2026_05_07.plan.md` instead (asset_group ownership).
+- [ ] [TEST] P0. Add `tests/test_normalizer_no_stub_pass_through.py` to UAC: AST-walks every `external/*/normalize.py`
+      function, asserts the function body has at least one nested-array unpack OR an explicit
+      `# stub-pass-through-acknowledged` comment with a justification. Catches regression at QG.
+
 ## Anti-patterns (DO NOT)
 
 - Do NOT add a "fallback reader" to read both old and new manifest shapes — workspace rule "Manifest migration NOT

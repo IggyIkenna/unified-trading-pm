@@ -196,6 +196,111 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [ ] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators.
 - [ ] [AGENT] P1. Apply UAC `KNOWN_COVERAGE_GAPS` for documented date-range provider outages.
 
+### Audit findings 2026-05-07 — folded from session wrapper
+
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` rows B.1 / C.2 / C.3 / C.4 / C.6 / C.7 /
+C.10. Operator inspected the deployment-ui data-status panel + schema modals; the findings below all surfaced as
+sports-asset_group writer / contract / cadence issues.
+
+#### B.1 — API-Football payload flattening (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES)
+
+Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.plan.md` (5 phases). Owner-side todo:
+
+- [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
+      normalizers (`normalize_fixture_stats`, `normalize_fixture_event`, `normalize_lineup`, `normalize_injury`) with
+      real flatteners that unpack the nested `statistics: [...]` / `events: [...]` /
+      `startXI: [...] + substitutes: [...]` / `players: [...]` arrays into per-row records.
+- [ ] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
+      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`.
+- [ ] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer.
+- [ ] [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
+      `record_failed(reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING, attempted_at=now)`, delete the thin parquets, then
+      re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
+      (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
+      — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
+- [ ] [TEST] P0. Cassette parity test (`unified-api-contracts/tests/test_cassette_schema_parity.py` extension):
+      flattened normalizer output matches the per-row UAC schema for each of the 4 data_types.
+- [ ] [VERIFY] P0. After re-fetch VM completes for one league × one season, open deployment-ui schema modal for each of
+      the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
+      starting-XI per slot, etc.).
+
+#### C.2 — ODDS in instruments-service: provenance audit + canonical-home decision
+
+The `data_type=odds` row appears under instruments-service in deployment-ui. Three plausible writers: odds_api (which
+should live in MTDS, not instruments-service), `footystats_odds` (separate UAC normalizer per SSOT), api_football's
+`/odds` endpoint. UAC has no contract for `(asset_group=sports, source=∅, data_type=odds)`.
+
+- [ ] [AGENT] P0. Trace the writer for `data_type=odds` in instruments-service: `git blame` / `rg "data_type.*odds"`
+      across `instruments-service/instruments_service/`. Identify which normalizer + orchestrator path produces the row
+      and which API endpoint feeds it.
+- [ ] [AGENT] P0. Decide canonical home: MTDS for market-typed odds (matches the asset*group=cefi `data_type=ohlcv*\*`
+      convention — odds are price-equivalent ticks); instruments-service ONLY if these rows are pre-game pricing
+      reference (analogous to options-chain definitions, not actual market ticks).
+- [ ] [SCRIPT] P0. If verdict = MTDS-owned: migrate writer + flip manifest rows → `record_failed(reason=WRONG_OWNER)` +
+      delete parquets + re-fetch via MTDS adapter. If verdict = instruments-service-owned (refdata): seed UAC contract
+      with the source-specific schema + add `cadence` field per rule C.11 below.
+- [ ] [DOC] P0. Document the outcome in `codex/02-data/sports-data-source-coverage-matrix.md` under a new
+      `# Odds     provenance` section.
+
+#### C.3 — PREDICTIONS vs ODDS schema-modal clarity (doc-only)
+
+footystats publishes BOTH `/odds` (market odds) and `/predictions` (model-output predicted probabilities, odds-like).
+The two data_types collide visually in the data-status panel without a clear distinction.
+
+- [ ] [DOC] P1. Update UAC schema descriptions (footystats normalizer comments + UAC `data_type` registry descriptions)
+      to call out provenance + computed-vs-market distinction. Add a one-liner in
+      `codex/02-data/sports-data-source-coverage-matrix.md` under `# footystats data_types` section so deployment-ui
+      schema modal renders the disambiguation.
+
+#### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
+
+Same minimal-flattening pattern as B.1. Current PLAYER_VALUES carries team-level aggregates (`squad_size`,
+`player_count`); per-player `market_value_eur` is dropped at write-time.
+
+- [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/transfermarkt/normalize.py` — extend `normalize_player_values` to
+      emit per-(team, player, season, fetch_day) rows with `player_id`, `player_name`, `position`, `age`,
+      **`market_value_eur`**, `contract_until`, `current_club_id`, `nationality_iso`.
+- [ ] [SCRIPT] P0. UAC contract: bump PLAYER_VALUES schema to per-player shape; old team-aggregate becomes a derived
+      view in features-sports OR is dropped if features-sports is happy rolling per-player at compute time.
+- [ ] [SCRIPT] P0. Migration shape: same flip-to-failed + delete + re-fetch pattern as B.1; Transfermarkt's
+      per-team-per-season endpoint is already isolated, no upstream impact.
+- [ ] [TEST] P0. Cassette parity test for the new per-player shape.
+
+#### C.6 + C.10 — `match_end_time` cascade implementation (groups together)
+
+The cascade is codified in CLAUDE.md (api_football native → SFI freeze → footystats/understat → kickoff+120min
+low-confidence fallback) but no writer implements it. Load-bearing for odds-settlement timing + post-match
+`available_at` stamping.
+
+- [ ] [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
+      compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
+      response. Add `match_end_time` column to UAC FIXTURES contract.
+- [ ] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
+      snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
+      UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
+      `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives).
+- [ ] [SCRIPT] P0. **Step 3**: UTL helper
+      `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
+      in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
+      low-confidence `kickoff + 120min` fallback. Returns the timestamp + provenance string.
+- [ ] [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
+      (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
+      write-time, equal-to-live-pipeline-arrival" rule.
+- [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape.
+- [ ] [VERIFY] P0. After ship + smoke, deployment-ui schema modal for FIXTURES / SFI_PROGRESSIVE_STATS / FIXTURE_STATS
+      shows `match_end_time` column populated for completed fixtures.
+
+#### C.7 — Sanity-sweep STANDINGS / WEATHER / XG / MATCHES schema modals
+
+Targeted audit, lower priority than the explicit flattens above. XG (per-shot events from understat) is the most likely
+follow-up flatten target; STANDINGS and MATCHES are probably already correct.
+
+- [ ] [AGENT] P1. Open the deployment-ui schema modal for each of STANDINGS / WEATHER / XG / MATCHES; log column count
+      vs. source-payload signal density (e.g. understat per-shot endpoint returns `xG`, `xA`, `minute`, `player_id`,
+      `situation`, `shotType`, `lastAction`; if the parquet only carries match-aggregate xG, that's a flatten miss).
+- [ ] [AGENT] P1. For any data_type with column-count < signal density: file a follow-up flatten todo here under the
+      same B.1 pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity).
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Sports GCS path SSOT** (CLAUDE.md): use `unified_api_contracts.sports.candidate_parquet_paths` — NEVER hardcode

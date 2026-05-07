@@ -148,6 +148,43 @@ legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder
 - [ ] [AGENT] P1. Per-(canonical_question_group, day) completion %: HOURLY = 24 expected/day, DAILY = 1, ELECTION = 1
       over months/years.
 
+### Audit findings 2026-05-07 — folded from session wrapper
+
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.12. Operator inspected the
+deployment-ui prediction panel + saw POLYMARKET tagged "out of scope" (badge driven by UAC
+`VENUE_DATA_TYPE_CAPABILITIES` declaring `data_type=prediction_canonical_question_group` while MTDS still writes legacy
+per-base-asset shape `BTC` / `ETH` / `SPX`). Per user direction 2026-05-07: NOT actually out of scope — small Polymarket
+dataset means full migration is feasible in one VM run.
+
+#### C.12 — POLYMARKET "out of scope" badge resolution + synthetic OTHER bucket
+
+The Phase 1 critical-path todos above already cover the canonical-question-group classifier + lifecycle ingestion +
+adapter migration. The two items below close the loop on the deployment-ui panel surface specifically:
+
+- [ ] [SCRIPT] P0. **Synthetic `OTHER` canonical-question-group bucket** — the classifier MUST map every Polymarket
+      `conditionId` (and Kalshi ticker) to SOME canonical group. Markets that don't fit the curated registry
+      (`BTC_UP_DOWN_HOURLY`, `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `ELECTION_PRESIDENT_2028`, etc.) get mapped to
+      `OTHER`. Rationale per user direction 2026-05-07: small Polymarket dataset means we can audit `OTHER` membership
+      after each backfill VM run and promote frequently-seen patterns to first-class groups. Treating `OTHER` as a known
+      catch-all bucket is honest absence; treating those markets as "out of scope" hides them from the panel and from
+      the classifier audit loop.
+  - [ ] UAC `PREDICTION_GROUPS` registry seeding (Phase 1 critical-path item) MUST include `OTHER` as a special-case
+        entry from day one. Cluster validation for `OTHER` is per-day count > 0 (any markets fall through), not a target
+        count.
+  - [ ] Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId` to
+        `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion.
+  - [ ] Data-status panel renders `OTHER` as a normal canonical-question-group bucket (not "out of scope"). Hover
+        tooltip: "Markets not yet mapped to a curated canonical question group — review event stream + promote recurring
+        patterns to first-class groups."
+- [ ] [VERIFY] P0. Phase 1 timeline check against 2026-05-23 master deadline: 14/37 done (38%) as of 2026-05-07. The 14
+      remaining P0 items in Phase 1 + Phase 2 + Phase 3 (lifecycle ingestion + classifier + adapter migration + parquet
+      rewrite + manifest reflip) need to ship in ~16 days. Per user direction: small dataset means migration is
+      feasible. Block Phase 5 baseline + ratchet until POLYMARKET no longer renders "out of scope" in deployment-ui.
+- [ ] [VERIFY] P0. After Phase 1 ships: re-walk deployment-ui prediction panel; POLYMARKET drill-down renders as
+      `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
+      CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
+      groups.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Prediction market lifecycle timing** (CLAUDE.md): NO ticks before `market_created_at`, NO ticks after

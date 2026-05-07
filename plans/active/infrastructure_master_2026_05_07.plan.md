@@ -117,6 +117,77 @@ reconcilers + `mtds-s4-10` rescan complete.
       build issue.
 - [ ] [AGENT] P7. (`p7-success-criteria`) Phase 7 — Validate workspace-wide success criteria.
 
+### Audit findings 2026-05-07 — folded from session wrapper
+
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` rows B.2 + C.13 (added 2026-05-07 from
+operator screenshot). Operator surfaced two related drill-down issues during the deployment-ui walkthrough: (1) the
+hierarchy depth doesn't match the codex shard-key matrix per asset_group, and (2) drill-down terminates at different
+depths for different (service, venue, data_type) combinations — some land at per-day download icons + schema modal
+(working correctly), others stop one level short (broken).
+
+#### B.2 — Drill-down hierarchy must match codex shard-key matrix per asset_group
+
+Plan in `plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` (5 phases). Owner-side todos:
+
+- [ ] [AGENT] P0. **Phase 1 audit** — walk the deployment-ui data-status panel for each (service, asset_group) and
+      compare the rendered drill-down hierarchy against the codex shard-key matrix in CLAUDE.md
+      `§ Per-asset-group shard-key matrix`. Expected matrix:
+  - CeFi spot/perp: `venue → data_type → instrument_type → instrument_id → day`
+  - CeFi options/futures: `venue → data_type → options_chain|futures_chain → root → day`
+  - TradFi futures: `venue → data_type → instrument_type → root → day`
+  - TradFi ETFs: `venue → data_type → instrument_type → instrument_id → day`
+  - TradFi options: `venue → data_type → options_chain → root → day` (11-cluster ES.OPT taxonomy)
+  - DeFi: `chain → venue|protocol → data_type → instrument_id|protocol_id → day`
+  - Sports: `source → data_type → league_id → fixture_id|day_aggregate → day`
+  - Prediction: `venue → data_type → canonical_question_group → market_id → day`
+- [ ] [SCRIPT] P0. **Phase 2 deployment-api endpoint** — extend `/api/data-status/drilldown` to return the per-axis
+      hierarchy keyed on the SSOT matrix (not per-service overrides). Source: UAC `data_status_axis_matrix.PRIMARY_AXIS`
+      (already wired into `_select_coverage_group_axis` per data-status multi-axis Phase 0). Add nested-axis support so
+      the response is `dict[axis, dict[value, dict[axis, ...]]]` to arbitrary depth (the matrix above tops out at 5
+      levels per asset_group).
+- [ ] [SCRIPT] P0. **Phase 3 deployment-ui component** — replace the current hardcoded 2-level drill-down
+      (`venue → data_type`) with a recursive renderer that walks the per-asset_group axis chain from the
+      `/api/config/shard-axis-matrix` endpoint (already shipped in deployment-api@`85053fe`). Each level is collapsible;
+      the leaf level always shows per-day download icons + schema modal trigger.
+- [ ] [SCRIPT] P0. **Phase 4 per-shard download + missing-day surfacing** — every leaf node renders one icon-per-day
+      with hover tooltip showing `attempted_at` / `error_reason` / `probed_paths` for missing days. Backend
+      `probed_paths` field shipped deployment-api@`4ca4bb7`; UI must surface it.
+- [ ] [SCRIPT] P0. **Phase 5 MTDS CLI shard-targeting flags** — `market-tick-data-service` CLI gains `--shard-key`
+      (compound key string per asset_group), `--instrument-type`, `--root`, `--instrument-id`, `--day`,
+      `--canonical-question-group`. Operator clicking a missing-day download icon in the UI gets a copy-paste-ready CLI
+      invocation that recovers exactly that shard atom (no broader collateral re-fetch).
+
+#### C.13 — Drill-down DEPTH consistency audit (operator finding 2026-05-07 from MTDS TRADFI screenshot)
+
+Per the operator's screenshot of the deployment-ui MTDS / TRADFI panel:
+
+- **Working correctly** (CBOE `ohlcv_15m`): drill-down lands at per-day download icons (each day rendered as a green/red
+  box with download arrow) + clicking a day opens the schema modal — `2,159 rows / 1493 days, 99.6% schema`.
+- **Broken** (CME `combo` instrument_type → underlyings `12 / 13 / 23 / 3C / 3P / 3W / BO / BTC / BX / C12 / ...`): each
+  underlying root is collapsible to per-data_type bars (`ohlcv_1m 1572/2318 68%`, `trades 1/2318 0%`) but does NOT go
+  deeper to per-day download icons. Operator can see "BO has 68% ohlcv_1m and 0% trades" but cannot click into a
+  specific missing day to download or to surface its `error_reason`.
+
+This is a **B.2 sub-class**: same shard-atom-alignment work but scoped to a specific UI inconsistency where the
+hierarchy renders correctly down to the second-to-last level but stops short of the per-day leaf. The B.2 plan above
+covers the renderer change; this todo group adds the AUDIT step that catalogues every offending (service, asset_group,
+venue, data_type) combination so Phase 3 can verify the fix is comprehensive (not just "works for CBOE ohlcv_15m").
+
+- [ ] [AGENT] P0. Walk the deployment-ui data-status panel across all 5 asset_groups × all services × all venues × all
+      data_types. For each combination, record:
+  - Drill-down depth reached before the renderer stops adding levels.
+  - Whether the leaf level renders per-day download icons.
+  - Whether the schema modal triggers from the leaf.
+  - Compare the actual depth to the codex shard-key matrix expected depth.
+- [ ] [DOC] P0. Output a coverage matrix at `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`
+      listing every (service, asset*group, venue, data_type) tuple as one of: `WORKING` /
+      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/    `MISSING_DOWNLOAD_ICON`. Reference incidents
+      (CBOE ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot.
+- [ ] [VERIFY] P0. After B.2 Phase 3 deployment-ui renderer ships: re-walk the same audit; every entry in the matrix
+      flips to `WORKING`. Block Phase 5 (MTDS CLI shard-targeting) sign-off until the matrix is 100% green.
+- [ ] [VERIFY] P0. Schema modal works at every leaf — confirm via Playwright walk (B.2 Phase 3's Playwright coverage
+      extends here).
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Shard-granularity SSOT (CRITICAL)** (CLAUDE.md): shard atom MUST match writer / manifest / data-status / pre-flight
