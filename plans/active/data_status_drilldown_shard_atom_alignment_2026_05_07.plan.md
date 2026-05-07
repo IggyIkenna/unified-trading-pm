@@ -551,6 +551,32 @@ and the UI does not paginate — operators cannot reach the truncated tail. **Tw
       the expected denominator. Owner: data-status multi-axis stream per
       `infrastructure_master_2026_05_07.plan.md`.
 
+### Phase 7 — Carried follow-ups from `defi_launcher_audit_2026_05_07` (NEW 2026-05-07)
+
+The launcher-audit issue surfaced 5 todos not covered by Phase 6 (which targets the **hierarchical drilldown** axis,
+distinct from the **venue-detail panel** + **per-league detail** + **rollup vs manifest** widgets). The codex
+documentation todo already shipped at PM@372e23aa. The remaining 4 are carried here for ownership transfer:
+
+- [ ] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated
+      `top_instruments` on the venue-detail endpoint. Add `instrument_offset: int = 0` +
+      `instrument_limit: int | None = None` query params; default `instrument_limit = 200` (matches drilldown UI
+      page size); return `total_instruments_unfiltered: int` so the UI can render "showing N–M of T" + a
+      load-more button. Bump cap from 30 → 200 (or remove with explicit pagination). Distinct from the
+      hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail panel sample.
+      Source: [`issues/defi_launcher_audit_2026_05_07.md`](issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
+- [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the
+      `top_instruments` rendering. When `total_instruments_unfiltered > top_instruments.length`, render
+      "Show more (N remaining)" + count label. Mirror the pattern from `HierarchicalShardDrilldown.tsx:218`
+      shipped in Phase 6. Source: launcher-audit § Q5 todo 2.
+- [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a
+      sample preview but the UI should label it "sample of 50 / total N missing" rather than "the missing
+      dates". Pure label fix, no behaviour change. Source: launcher-audit § Q5 todo 3.
+- [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response
+      so the UI can render a tooltip explaining where each number came from and why they may differ until
+      writegate Phase 3.D.4 `--apply-write` lands per asset_group. Defensive observability — no behaviour
+      change. Source: launcher-audit § Q5 todo 5. Closes once writegate Phase 3.D.4 `--apply-write` ships
+      across all 5 asset_groups (rollup and manifest converge).
+
 ### Confirmed correct (no drift)
 
 - `MANIFEST_SCHEMA_VERSION = 7` + `_ROW_KEY_COLUMNS` includes `asset_group`, `fixture_id`,

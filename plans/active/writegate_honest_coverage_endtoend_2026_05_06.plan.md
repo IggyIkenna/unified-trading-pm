@@ -1802,6 +1802,33 @@ percentages.
 **Successor / co-ordination**: Phase 3.D.4 is paired with the per-asset-group **forward-write** Phase 2.E.2 work already
 in flight — once both halves ship per asset_group, that asset_group's denominator is closed permanently.
 
+#### Phase 3.D.4 — Open follow-ups discovered during 2026-05-07 scan-only sweep
+
+The all-5-asset_group scan-only sweep surfaced three follow-up items not covered in the original Phase 3.D.4 task list:
+
+- [ ] [SCRIPT] P0. **DeFi cap bump rerun.** DeFi scan-only halted on default `--max-writes-per-run=100000` (rc=5,
+      `ENUMERATOR_FAILED reason=max_writes_exceeded`). Manifest already has 313,365 rows; the cross-product enumerator
+      finds at least 100,001 absent (chain × protocol × data_type × pre-launch-date) tuples. The 100k limit is a
+      halt-safety, not the actual count. Need a relaunch with `--max-writes-per-run 1_000_000` (or chunked-by-chain
+      enumeration) to see the real distribution before `--apply-write`. Two viable shapes:
+      (a) one-off SSH-driven invocation on a freshly launched VM with the higher cap;
+      (b) launcher enhancement (next item) — third positional arg passes through to the script.
+- [ ] [SCRIPT] P0. **Launcher pass-through for `--max-writes-per-run` (and other flags).**
+      `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` currently hardcodes
+      `--asset-group <group>` + optional `--apply-write`; the shipped script also supports `--start-date`,
+      `--end-date`, `--bucket`, `--max-writes-per-run`, `--report-dir`. Add a third positional arg
+      `EXTRA_ARGS=""` (or named `--max-writes <N>`) wired into `BACKFILL_CMD` so cap-bumped reruns don't need
+      ad-hoc SSH or one-off launchers. Mirrors the pattern in `launch-mtds-*-backfill-vm.sh` which accepts pass-through
+      env vars (e.g. `FORCE=1`).
+- [ ] [SCRIPT] P1. **CSV report upload to GCS before VM auto-shutdown.** The enumerator writes its CSV report to
+      `tempfile.gettempdir()` (i.e. `/tmp` on the VM), which is local disk and is destroyed when
+      `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes the VM. Operator can read distribution-by-reason from the events
+      log + run.log (those persist), but row-by-row inspection requires SSH-before-shutdown which is a race. Add a
+      `--gcs-report-bucket` flag to the script (or environment-driven) so the CSV gets uploaded to
+      `gs://deployment-scripts-{pid}/enumerator-reports/{vm_name}/<asset_group>-<ts>.csv` before exit. Low priority
+      because the events log already captures the distribution; needed only if the operator wants to inspect specific
+      candidate rows.
+
 ---
 
 ## Phase 4 — Data-status UI + alerts (parallel with Phase 2 after Phase 1 lands)

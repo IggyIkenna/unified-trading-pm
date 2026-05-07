@@ -278,11 +278,13 @@ operator prefers):
 - [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
       preview but the UI should label it as "sample of 50 / total N missing" rather than "the missing dates". Pure doc /
       UI label fix, not a behaviour change.
-- [ ] **[codex]** P1. Document the rollup-vs-drilldown denominator divergence in
+- [x] **[codex]** P1 (shipped PM@372e23aa 2026-05-07). Documented the rollup-vs-drilldown denominator divergence
+      in
       [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
-      so future operators don't re-discover this. State explicitly: top-level % uses pre-computed expected universe
-      (rollup), drill-down % uses manifest row count, they converge once writegate Phase 2.E.2 ships
-      `record_expected_empty` for all calendar-pre-skip cases across all 5 asset_groups.
+      § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)". Closure (Half 2 — backward-fill via
+      Phase 3.D.4 enumerator) tracked in
+      [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+      § Phase 3.D.4. Scan-only sweep complete 2026-05-07; `--apply-write` per asset_group pending operator gate.
 - [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
       can render a tooltip explaining where each number came from and why they may differ until writegate Phase 2.E.2
       fully lands. Defensive observability — no behaviour change.
