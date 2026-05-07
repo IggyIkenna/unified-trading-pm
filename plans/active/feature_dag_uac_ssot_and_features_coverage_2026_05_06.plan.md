@@ -230,11 +230,19 @@ and `from unified_trading_library.manifest import ManifestFreshnessCache`.
 
 - [ ] [AGENT] P1. **features-sports-service BatchHandler**: instantiate `ManifestFreshnessCache(ttl_seconds=60)` at
       handler init; call `cache.is_now_captured(row_key)` before any expensive remote call (per-source API fetch).
-      Reference: CLAUDE.md "Manifest concurrency principle" rule. [AUDIT 2026-05-07: BLOCKED-ON
-      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1B.]
+      Reference: CLAUDE.md "Manifest concurrency principle" rule. **DEFERRED 2026-05-07** — Phase 1B unblocks the
+      cache infra, but the BatchHandler already has a `_should_skip_attempted(feature_group)` helper at
+      [`batch_handler.py:479`](../../../features-sports-service/features_sports_service/cli/handlers/batch_handler.py#L479)
+      keyed by `table_name` (sports `TABLE_SCHEMAS` vocabulary). That table-name vocabulary is NOT aligned with the
+      Phase 1A `EXPECTED_FEATURE_GROUPS_BY_SERVICE['features-sports-service']` calculator-output vocabulary (sports
+      tables = raw entities like `fixtures` / `lineups` / `odds_snapshot`; calculators = `team_form` / `xg_features` /
+      etc.). A clean wire-in needs the manifest row_key shape rationalised first — successor: the same sports
+      vocabulary alignment plan flagged in this plan's "Temporary states" section (sports
+      `BuilderEntry.required_inputs` lift). Pick up after that lands.
 - [ ] [AGENT] P1. **features-volatility-service orchestrator**: same. Skip if manifest already says captured; avoids
-      redundant IV-surface fits under concurrent backfill. [AUDIT 2026-05-07: BLOCKED-ON
-      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1B.]
+      redundant IV-surface fits under concurrent backfill. **DEFERRED 2026-05-07** — features-volatility-service's
+      `BuilderRegistry` is a placeholder per audit 2026-05-07 (no calculators registered yet); `EXPECTED_FEATURE_GROUPS_BY_SERVICE['features-volatility-service']` is empty. Cache adoption is meaningless until the orchestrator ships
+      live IV-surface fits. Pick up alongside features-volatility's BuilderRegistry rollout.
 
 ### 2C — deployment-api denominator clip
 
