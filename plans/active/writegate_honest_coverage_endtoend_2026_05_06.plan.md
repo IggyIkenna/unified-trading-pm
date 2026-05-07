@@ -1484,20 +1484,33 @@ The fix is **two-layer defensive**:
       Per-VM shard write at `_index/per_vm/{VM_NAME}.parquet` — consolidator merges into canonical manifest.
 - [x] [SCRIPT] P0. Idempotent — `_build_null_reason_mask` only matches rows with empty `error_reason`; re-runs after
       a flip find 0 candidates and no-op. Classifier functions are pure (deterministic on input).
-- [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the decision matrix.
-      **DEFERRED**: in-process classifier smoke verified via `python -c` at commit time, but per-branch fixture-based
-      tests not yet written. Add when Phase 3.D.2 reader-side fallback lands so the same classification logic powers
-      both write-side reconciler + read-side fallback (single test fixture covers both).
+- [x] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the decision matrix
+      (UTL@c5c2669e — `tests/unit/test_legacy_reason_classifier.py` 19 unit tests covering every classifier branch
+      + closed-set output guarantee. Single SSOT shared with read-side fallback.)
 
 #### Phase 3.D.2 — Reader-side fallback in every consumer service
 
-- [ ] [SCRIPT] P0. New helper in UTL (or per-service): `classify_legacy_empty_row(row_key, day) -> str` — consults the
-      same calendar/coverage SSOTs the writer uses. Returns one of the `EXPECTED_*` or `SOURCE_RETURNED_ZERO` codes.
-- [ ] [SCRIPT] P0. Per-consumer-service: when reading a manifest row with `capture_status=empty_confirmed` AND
+- [x] [SCRIPT] P0. New helper in UTL: `classify_legacy_empty_row(asset_group, row) -> str` — consults the same
+      calendar/coverage SSOTs the writer uses. Returns one of the `EXPECTED_*` or `SOURCE_RETURNED_ZERO` codes.
+      (UTL@c5c2669e + instruments-service@21aef51 — Tier 3D.1 reconciler refactored to import from this single
+      SSOT, killing the 116-LOC inline duplicate.)
+- [x] [SCRIPT] P0. Per-consumer-service: when reading a manifest row with `capture_status=empty_confirmed` AND
       `error_reason` empty, call `classify_legacy_empty_row(...)` to derive the reason at read time. Apply the
-      consumer-class audit rule (NaN-fill / skip / etc.) using the classified reason.
-- [ ] [TEST] P0. Per-consumer test: feed a legacy row (no `error_reason`) → assert reader applies the right
-      consumer-class action.
+      consumer-class audit rule (NaN-fill / skip / etc.) using the classified reason. (deployment-api@176c599 —
+      `_gcs_metadata` + `lookup_capture_status_for_shard` both wired. **Audit finding**: the other 7 services in
+      the original list — execution-service / ml-training-service / ml-inference-service / strategy-service /
+      features-volatility / features-cross-instrument / features-onchain — do NOT directly read `capture_status`
+      / `error_reason` columns from the manifest in production code paths. They consume manifest state via UTL
+      `check_data_available` / `check_shard_freshness` / `dependency_check` helpers, and the empty_confirmed
+      branching they need is presence/absence-of-row, not reason-of-empty. So deployment-api is the only consumer
+      service that surfaces `error_reason` in a UI-visible way; wiring it covers the operator-visible fallback.
+      The features-\* services have a `scripts/smoke_matrix.py` that mentions `capture_status` but it's a
+      smoke-test harness, not a production read site.)
+- [x] [TEST] P0. Per-consumer test: feed a legacy row (no `error_reason`) → assert reader applies the right
+      consumer-class action. (deployment-api@176c599 — `tests/unit/test_legacy_reason_classifier_wiring.py`
+      8 tests covering both wired sites with TradFi weekend / DeFi pre-genesis / sports pre-source-coverage-start /
+      preserve-existing-reason / asset_group=None backwards compat / unknown asset_group skip / captured-row skip
+      / mocked manifest read.)
 
 #### Phase 3.D.3 — Operator runbook + sequencing
 
