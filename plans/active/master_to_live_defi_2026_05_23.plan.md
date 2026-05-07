@@ -47,10 +47,9 @@ from today, 2026-05-06):
 
 1. **`carry_staked_basis`** — _ultimate priority_ — recursive LST staking + CeFi/DeFi perp short hedge. Locked plan:
    `carry_staked_basis_structure_axis_2026_05_04`.
-2. **`leveraged_funding_arb`** — cross-venue funding-rate spread trade. Lead plan:
-   `defi_master_2026_05_07` (umbrella that folds in `defi_pipeline_extension_2026_05_01`,
-   `leveraged_leg_controller_2026_05_01`, and `defi_e2e_pipeline_2026_04_30` per the 2026-05-07 consolidation; historical
-   detail preserved in `plans/archive/`).
+2. **`leveraged_funding_arb`** — cross-venue funding-rate spread trade. Lead plan: `defi_master_2026_05_07` (umbrella
+   that folds in `defi_pipeline_extension_2026_05_01`, `leveraged_leg_controller_2026_05_01`, and
+   `defi_e2e_pipeline_2026_04_30` per the 2026-05-07 consolidation; historical detail preserved in `plans/archive/`).
 
 Both archetypes hedge on a 6-venue perp universe spanning CeFi (Bybit, Deribit, Binance, OKX) and DeFi perp DEXs
 (Hyperliquid, Aster) — **all six must be live**. TradFi / Sports / Prediction stay batch-only this cycle — but their ML
@@ -256,8 +255,8 @@ consolidation target post-cutover.
 1. ✓ **Lead DeFi archetypes — both `carry_staked_basis` (ultimate priority) AND `leveraged_funding_arb` (cross-venue
    funding spread) by May 23.** Recursive LST staking is part of the carry_staked_basis archetype. Linked plans:
    `carry_staked_basis_structure_axis_2026_05_04` and `defi_master_2026_05_07` (umbrella that folds in
-   `defi_pipeline_extension_2026_05_01` + `leveraged_leg_controller_2026_05_01` + `defi_e2e_pipeline_2026_04_30` per
-   the 2026-05-07 consolidation).
+   `defi_pipeline_extension_2026_05_01` + `leveraged_leg_controller_2026_05_01` + `defi_e2e_pipeline_2026_04_30` per the
+   2026-05-07 consolidation).
 2. ✓ **CeFi/DeFi perp venue scope — six venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster.** Hyperliquid +
    Aster are DeFi perp DEXs but live alongside the CeFi venues. CEFFU manual handoff acceptable for Binance flows on
    May 23.
@@ -385,13 +384,13 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 ### Group B — Data correctness (always-on)
 
-> **2026-05-07 in flight:** writegate Phase 3.D.4 expected-universe enumerator scan-only sweep complete across all
-> 5 asset_groups (deployment-service@dcc5c87 launcher + instruments-service@8e404c8 script). TradFi (35,033) +
-> Sports (13,176) ready for `--apply-write` pending operator gate; DeFi halted on default 100k cap (>100,001
-> absent candidates) — needs `--max-writes-per-run` bump; CeFi + Prediction stubs awaiting catalog work. Closes
-> the rollup-vs-drilldown denominator gap once all `--apply-write` runs land. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-> § Phase 3.D.4.
+> **2026-05-07 in flight:** writegate Phase 3.D.4 expected-universe enumerator scan-only sweep complete across all 5
+> asset_groups (deployment-service@dcc5c87 launcher + instruments-service@8e404c8 script). TradFi (35,033) + Sports
+> (13,176) ready for `--apply-write` pending operator gate; DeFi halted on default 100k cap (>100,001 absent candidates)
+> — needs `--max-writes-per-run` bump; CeFi + Prediction stubs awaiting catalog work. Closes the rollup-vs-drilldown
+> denominator gap once all `--apply-write` runs land. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
+> Phase 3.D.4.
 
 4. **Smoke test** — representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end
 5. **Manifest hookup + cluster validation** — `ManifestWriter.record_{captured,empty,failed}` with
@@ -454,46 +453,47 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 **Pipeline scheduling remaining code** (extends items 21–22 — live-trading scheduler + trigger backend):
 
 - [ ] [AGENT] P1. `ups-p2-run-tag-mtds-calendar`: Wire `--run-tag` into MTDS GCS output path + features-calendar-service
-      (PARTIALLY_DONE — CLI flag exists at MTDS `cli/main.py:288`; needs threading into GCS output path templates +
-      features-calendar adoption). Not on May-23 critical path. _(folded from consolidated_operational_validation_2026_04_15)_
+      (PARTIALLY*DONE — CLI flag exists at MTDS `cli/main.py:288`; needs threading into GCS output path templates +
+      features-calendar adoption). Not on May-23 critical path. *(folded from
+      consolidated*operational_validation_2026_04_15)*
 - [ ] [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch
-      (PARTIALLY_DONE — local subprocess works, cloud placeholder). Confirmed at deployment-service
+      (PARTIALLY*DONE — local subprocess works, cloud placeholder). Confirmed at deployment-service
       `deployment_service/sports_trigger_periodic.py` + `sports_trigger_scheduler.py` + `sports_trigger_state.py`;
-      cloud-dispatch shim is the named gap. _(folded from consolidated_operational_validation_2026_04_15)_
+      cloud-dispatch shim is the named gap. *(folded from consolidated*operational_validation_2026_04_15)*
 
 **E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
 
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
-      `cefi_master_2026_05_07` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists
-      at deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
+      `cefi_master_2026_05_07` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists at
+      deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
       BLOCKED-ON `sports_master_2026_05_07`; writegate Tier 2A sports adapters shipped at MDPS@5b52d0b; trigger
       scheduler shipped at deployment-service `sports_trigger_*` (cloud-dispatch placeholder per `ups-p4` above).
       _(folded from consolidated_operational_validation_2026_04_15)_
-- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON
-      `defi_master_2026_05_07` (umbrella for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON `defi_master_2026_05_07`
+      (umbrella for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
       BLOCKED-ON `tradfi_master_2026_05_07`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0;
-      `DATABENTO_API_KEY` presence is the human-side credential gate.
-      _(folded from consolidated_operational_validation_2026_04_15)_
+      `DATABENTO_API_KEY` presence is the human-side credential gate. _(folded from
+      consolidated_operational_validation_2026_04_15)_
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
-      `predictions_master_2026_05_07` (canonical_question_group migration in flight).
-      _(folded from consolidated_operational_validation_2026_04_15)_
+      `predictions_master_2026_05_07` (canonical*question_group migration in flight). *(folded from
+      consolidated*operational_validation_2026_04_15)*
 - [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
       preceding per-cluster e2e tests. _(folded from consolidated_operational_validation_2026_04_15)_
 
 **Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
 
 - [ ] [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet without `data_types`
-      column. instruments-service production code grep for `data_types` returns 0 hits; references remain only in
-      legacy ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is GCS cleanup of
-      legacy parquets that still carry the column — operator-driven backfill rerun.
-      _(folded from consolidated_operational_validation_2026_04_15)_
+      column. instruments-service production code grep for `data_types` returns 0 hits; references remain only in legacy
+      ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is GCS cleanup of legacy
+      parquets that still carry the column — operator-driven backfill rerun. _(folded from
+      consolidated_operational_validation_2026_04_15)_
 - [ ] [AGENT] P1. `rdt-p4-workspace-qg`: Run `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup
       above to validate the column removal. _(folded from consolidated_operational_validation_2026_04_15)_
 - [ ] [AGENT] P1. `mtb-p6e-final-qg-sweep`: Full QG sweep across all 6 affected repos. Final QG gate; depends on every
-      preceding "qg" item plus the cluster e2e tests being passable on a representative day's data.
-      _(folded from consolidated_operational_validation_2026_04_15)_
+      preceding "qg" item plus the cluster e2e tests being passable on a representative day's data. _(folded from
+      consolidated_operational_validation_2026_04_15)_
 
 ### Group G — Operator UX (live-only)
 
@@ -661,16 +661,15 @@ gap.
 - [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
       **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor +
       child-venue attribution already shipped per plan body).
-- [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit
-      **risk-and-exposure intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live
-      closure).
+- [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **risk-and-exposure
+      intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live closure).
 - [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **pnl-attribution
       `--operation compute --mode live` todo** alongside the existing batch CLI.
 - [x] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
       items**. **DONE 2026-05-07**: source plan archived; its 11 unchecked todos (incl. batch-vs-live cluster E2E)
       folded into master Group F — see "Folded operational-validation todos" subsection above.
-      `manual_trade_booking_reconciliation_2026_03_22` was already archived 2026-05-06 (Stage 1 plan-hygiene sweep);
-      its successor surface is now master Group F (live-trading prereqs).
+      `manual_trade_booking_reconciliation_2026_03_22` was already archived 2026-05-06 (Stage 1 plan-hygiene sweep); its
+      successor surface is now master Group F (live-trading prereqs).
 
 ### F · Codex SSOT gaps to fill alongside the work
 
@@ -742,6 +741,53 @@ self-superseded artefacts.
 - [ ] [SCRIPT] Add `parent: sports_fixtures_truthset_recovery_2026_05_06` to phantom-recovery + recon plans
 - [ ] [SCRIPT] Merge or formal child-link `shard_dimension_naming_asset_group_ssot_2026_04_25` under
       `venue_axis_asset_group_vocabulary_2026_04_25`
+
+---
+
+## Recent shipments + open successor plans (2026-05-07 session)
+
+**Shipped this session** — backfill throughput unblock + observability uplift:
+
+- **MTDS Tardis adapter parallelization** — UTL@`50ad40ef` `ParallelPerSymbolRunner` (387 LOC + 12 tests) +
+  UTL@`c5da8abe` + UTL@`3a204c03` (multi-callback `ResourceProfiler` + 11 tests) + MTDS@`28db65a` (Tardis adapter swap
+  spot/perp + futures-chain) + MTDS@`452f105` (`_ACTIVE_RESOURCE_PROFILER` accessor wiring + 3 tests). Per-symbol
+  fan-out went sequential → 16-way concurrent with shard-level failure isolation, RSS pause-not-cancel on 75% memory
+  warning, and an in-flight byte budget gate. Atomicity preserved via existing staged-temp + atomic-rename +
+  close-time-upload chain (verified across `tardis_stream_processor.py:172-244`, `streaming_writer.py:315-377`,
+  `streaming_shard_finalizer.py:241-269`). Observed post-bounce: previously-slow heavy futures shards
+  (cefi-bitfinex-futures-2025-heavy, cefi-kraken-futures-2025-heavy, etc.) drained to `STOPPED` clean in 5-11 minutes vs
+  hours-to-days yesterday.
+- **MDPS launcher tradfi-aware defaults** — deployment-service@`02ee6d6` auto-applies `MACHINE_TYPE=e2-highmem-8` +
+  `--max-workers=2` for tradfi MDPS launches (band-aid for OOM signature seen on `mdps-tradfi-2025` 2026-05-07).
+- **Tier3 cefi heavy default bumped** — deployment-service@`69071db` `e2-highmem-2` → `e2-highmem-4` (4 vCPU clears the
+  CPU-saturation bottleneck post-parallelization; cost delta trivial because VMs now finish in 5-11 min).
+- **BITGET coverage_start declared** — UAC@`c354d07` `date(2024, 11, 8)` per Tardis `availableSince` probe. Tardis
+  bitget-futures has 0 data pre-2024-11-08 across all 910 perps; Bitget native covers 2019-07-10 forward but only via
+  OHLC endpoints (no per-trade ticks). Pre-cutoff manifest rows now classified `EXPECTED_PRE_SOURCE_COVERAGE_START` via
+  Tier 3D.1 reconciler.
+- **7 verified plan checkbox flips** across 5 active plans — PM@`88d2abc4` (incident #4 of foot-gun rule: bundled into
+  parallel-agent's commit; docs-only, content correct).
+
+**Successor plans for partial implementations (per CLAUDE.md "Temporary state must have a named successor plan" rule):**
+
+- [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.plan.md) (PM@`c0ccc8ad`) —
+  covers DEFERRED Units 1+3 from this session: incremental flush in `_streaming_write_per_tf` (via UTL
+  `canonical_writer` `open_candle_writer` / `close_candle_writer` lifecycle so shard atomicity is preserved across
+  N-symbol batches) + MDPS-side ResourceProfiler `on_memory_warning` admission control on the ThreadPoolExecutor.
+  Band-aid (deployment-service@`02ee6d6` launcher) shipped this session; architectural fix retires it. Optional Phase 3:
+  replace `_read_tick_data` eager full-load with `pyarrow.parquet.ParquetFile.iter_batches()` row-group streaming
+  (consumer audit: `_process_standard_timeframe`, `_extract_instrument_info`, `_validate_*` all need iterator
+  adaptation).
+- [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.plan.md) (PM@`c0ccc8ad`) —
+  covers Databento adapter improvements identified during the parallelization audit: pass `path=<tempfile>` to
+  `client.timeseries.get_range(...)` at `databento_adapter.py:509-517` + iterate `to_df(count=N)` chunks (eliminates
+  full-DBN BytesIO + full-DataFrame materialisation peak). Phase 2: parallelise outer `(data_type, dataset)` loop via
+  `asyncio.gather` (bounded by existing `Semaphore(100)`). Phase 3 (gated on 2nd consumer): UTL `streaming_dbn_writer`
+  helper bridging Databento `path=<tmp>` mode into `StreamingParquetWriter.write_chunk`. Different antipattern than
+  Tardis (Databento bundles up to 2000 symbols per call, no per-symbol loop) — separate fix shape.
+
+**Memory entry**: `memory/project_mtds_parallelization_fix_2026_05_07.md` (Claude session-local auto-memory) captures
+the full session for future agents.
 
 ---
 
