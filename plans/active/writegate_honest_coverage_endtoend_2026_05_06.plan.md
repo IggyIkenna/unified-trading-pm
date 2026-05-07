@@ -2691,10 +2691,13 @@ Wave 3.T (tradfi) and Wave 3.P (prediction) — distinct asset_group surfaces.
       15 unit tests cover loading state, fetch error, unavailable response with error_reason, missing-available_at
       contract violation, successful payload with per-column NaN ratio rendering + boundary inclusivity for the
       color thresholds, oversize-parquet truncated hint, plus pure-helper tests for `nanRatioColor` +
-      `formatNanRatio`. **DEFERRED to follow-up commit**: mounting the modal into a click-target on the venue
-      summary row — separate layout edit so the modal can be reviewed + reverted independently. Pairs with the
-      Phase 4.B.1 `TypedReasonBadges` `onBadgeClick` callback already plumbed through (the badge click is the
-      natural drill-down trigger to open this modal).
+      `formatNanRatio`. **CLICK-MOUNT SHIPPED 2026-05-08 deployment-ui@9837dd1**: `TypedReasonBadges`
+      `onBadgeClick` is now wired in `DataStatusTab.tsx` to set a `leafSchemaCoord` state slot; clicking any
+      typed-reason pill on a venue summary line opens the `LeafSchemaModal` for that venue's representative
+      leaf parquet (most-recent captured day from `foundList`, first `data_type` from `subData.data_types`,
+      AUTO `instrument_type` — deployment-api's `/leaf-stats` route resolves the leaf parquet via
+      `_gcs_path_for_shard` + the AUTO sentinel resolution path). The full UTL → API → UI typed-error → leaf-
+      parquet drill-down loop is now operator-visible end-to-end without any pre-flight intervention.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
 
 QG between Phase 4 and Phase 5: UI smoke-test (Tier 0 + Tier 1) — every new color/badge/drill-down renders correctly
@@ -2787,14 +2790,17 @@ Phase 2.A residual, Phase 5 honest-coverage baseline.
   coordination than Items 1/2/3. Plan flags this as a follow-up paired with the Phase 1A.future error-class
   additions. Leaving for the next writegate-tab session.
 
-**Phase 4.B residual — NOT picked up this session:**
+**Phase 4.B residual — partial:**
 
-- Phase 4.B item 4: live-vs-historical envelope badge (waits on Phase 4.A item 4).
-- Drill-down click-through from the `TypedReasonBadges` `onBadgeClick` callback into the new
-  `LeafSchemaModal` — the badge component already supports the click handler (interactive button mode), and
-  the modal is mounted-ready, but the layout edit that wires the click into the modal mount lives in
-  `DataStatusTab.tsx`. Single small edit; deferred to a follow-up commit so the badges + modal can be reviewed
-  + reverted independently.
+- Phase 4.B item 4: live-vs-historical envelope badge (waits on Phase 4.A item 4). Still NOT shipped.
+- ~~Drill-down click-through from the `TypedReasonBadges` `onBadgeClick` callback into the new
+  `LeafSchemaModal`~~ — **SHIPPED 2026-05-08 deployment-ui@9837dd1.** Single layout edit in
+  `DataStatusTab.tsx`: adds `leafSchemaCoord` state alongside the existing `shardDetailCoord` pattern, an
+  `onBadgeClick` handler that builds the representative leaf coord (most-recent captured day + first
+  data_type + AUTO instrument_type) from `foundList` + `subData.data_types`, and a conditional
+  `<LeafSchemaModal />` render next to the existing `ShardDetailModal` mount. Build green; no new tests on
+  this edit (the modal + badge components carry 39 unit tests between them). Full UTL → API → UI typed-error
+  → leaf-parquet drill-down loop now operator-visible end-to-end.
 
 **Phase 5 residual — table population script:**
 
@@ -2818,12 +2824,16 @@ Phase 2.A residual, Phase 5 honest-coverage baseline.
 suffix — workspace-known issue. My commit messages remained accurate to the work I shipped; the bundling is
 collateral and didn't lose any of my edits.
 
-**For the next writegate-tab agent:** highest-leverage remaining items in priority order: (1) Wire the typed
-badge `onBadgeClick` to mount `LeafSchemaModal` (single small edit in `DataStatusTab.tsx`); (2) Phase 5
-`measure-honest-coverage.py` to populate the baseline table cells; (3) MDPS chain-bundle
-`expected_root_clusters` wiring per the Phase 2.B routing finding (Option α — refactor
-`engine/orchestrator.py:1940` callsite to use `record_captured` instead of `writer_manifest.add()` so the
-existing Phase 1A `MissingClusterValidationError` guard fires correctly).
+**For the next writegate-tab agent:** with the click-mount shipped 2026-05-08 (deployment-ui@9837dd1), the
+remaining priorities collapse to: (1) MDPS chain-bundle `expected_root_clusters` wiring per the Phase 2.B
+routing finding — Option α refactor of `engine/orchestrator.py:1940` callsite to use `record_captured`
+instead of `writer_manifest.add()` so the existing Phase 1A `MissingClusterValidationError` guard fires
+correctly for ES.OPT 11-cluster + futures_chain bundles; (2) Phase 5 `measure-honest-coverage.py` operator
+script to populate the baseline doc's table cells (must run on a same-region GCE VM — cross-region listing
+18× slower); (3) Phase 4.A item 4 + Phase 4.B item 4 live-vs-historical envelope alert (multi-repo: UAC +
+UTL + 3 services); (4) Phase 5 follow-ups — `honest-coverage-ratchet.sh` CI gate, LookaheadBiasError end-to-
+end smoke, write-gate quartet integration test (waits on Phase 1A.future `NanRatioExceededError` +
+`SchemaMismatchError` typed-error classes).
 
 ---
 
