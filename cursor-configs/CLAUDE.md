@@ -1014,6 +1014,35 @@ fixes them.
 If you're not sure whether it's big, surface it. The cost of one extra paragraph in a chat summary is far lower than
 the cost of an operator missing a P0 finding for hours.
 
+### Temporary exception — QG-failure findings on someone else's code (2026-05-07 → ~2026-05-09)
+
+**While Ikenna sweeps through workspace QG cleanup (target completion 2026-05-08, latest 2026-05-09), QG-failure
+findings on someone else's code are EXEMPT from the case-3 / case-4 / case-5 documentation requirement.** Don't
+file issue docs or annotate plans for `ruff N811` / `basedpyright reportUnknown` / similar lint or type-check
+failures discovered while running QG against another agent's code. They'll be cleaned up in bulk by the QG sweep
+— individual annotations would just create churn that gets blanket-resolved.
+
+Examples that are EXEMPT during this window:
+
+- `ruff N811 in tests/internal/unit/test_prediction_market_taxonomy.py:605` (ComsicTrader's code, surfaced
+  2026-05-07 while running UAC QG for an unrelated Phase 1 verification).
+- `basedpyright reportAttributeAccessIssue` / `reportUnknownMemberType` in someone else's module that you only
+  read because QG ran across the whole repo.
+- Any blanket lint / type-check pass failure that's clearly broad enough to be a workspace-wide cleanup pass.
+
+What is **NOT** exempt during this window (still apply cases 3/4/5 normally):
+
+- **Case 1** still applies — your own QG failures on your own code → fix yourself, no exemption.
+- **Non-QG findings** discovered via probes, spot-checks, manifest reads, event-stream inspection, runtime
+  behaviour — these are real findings, not lint noise. Data correctness, in-flight VM bugs, SSOT contradictions,
+  silent-zero captures, partial-bundle shapes — all stay case 1-5 normally regardless of whether QG also
+  surfaces them.
+- **Big findings** that happen to be visible via QG too — if it's case-5-big (e.g. a basedpyright failure that
+  reveals an actual API-shape contradiction across repos), it's still big, still operator-notify, still issue doc.
+
+**Lift this exception** once QG is workspace-clean (operator signal). At that point all QG-failure findings revert
+to standard case-1-to-5 routing.
+
 ### Issue-doc format
 
 Mirror the existing precedents (e.g. `defi_archetypes_doc_plan_drift_2026_05_07.md`). The minimum frontmatter:

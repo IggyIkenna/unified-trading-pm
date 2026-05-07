@@ -93,21 +93,6 @@ adapters; a reproduction-test is no longer meaningful.
       and flip to `[x]` if appropriate (or leave `[ ]` with STALE marker).
 - [ ] [QG] P2. Verify infrastructure_master audit header `Stale` count is correct after this flip.
 
-### #7 — UAC ruff N811 in test_prediction_market_taxonomy.py:605 (case-3 finding 2026-05-07)
-
-[`unified-api-contracts/tests/internal/unit/test_prediction_market_taxonomy.py:605`](../../../unified-api-contracts/tests/internal/unit/test_prediction_market_taxonomy.py)
-fails ruff with `N811 Constant CLASSIFIER_STABILITY_HASH imported as non-constant second_read`. The
-`from ... import CLASSIFIER_STABILITY_HASH as second_read` rename trips ruff's constant-naming rule. Surfaced
-2026-05-07 while running UAC quality-gates for the Phase 1 backfill-types verification (work-stream-A); blocked
-the lint pass even though the actual Phase 1 test code (`test_deployment_extensions.py`) was clean. Authored by
-ComsicTrader (Ikenna) in `5f76bd42` 2026-05-06 — case-3 finding per the Findings Triage Discipline (HARD RULE) in
-CLAUDE.md (outside my plan scope, fits this housekeeping plan).
-
-- [ ] [SCRIPT] P2. UAC: rename `second_read` → `CLASSIFIER_STABILITY_HASH_SECOND_READ` (or
-      `# noqa: N811` with a comment explaining the deliberate alias) at
-      `tests/internal/unit/test_prediction_market_taxonomy.py:605`. Verify lint pass green via
-      `cd unified-api-contracts && bash scripts/quality-gates.sh tests/internal/unit/test_prediction_market_taxonomy.py`.
-
 ### #6 — strategy_architecture_v2 Phase 3 entirely STALE (audit §6 #7)
 
 [`strategy_architecture_v2_finalization_2026_04_19.plan.md`](strategy_architecture_v2_finalization_2026_04_19.plan.md)
