@@ -6,7 +6,9 @@ overview: |
   client config E2E, UI walkthrough alignment, UI sync hardening.
 type: mixed
 epic: epic-code-completion
-status: active
+status: archived
+archived: 2026-05-07
+superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
 
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
@@ -52,6 +54,8 @@ source_plans:
 
 isProject: false
 ---
+
+> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.plan.md`](../active/strategy_and_dart_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 > **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
 > `PLAN_FORMAT.md`. 4 todos flipped to `[x]` with cited commit evidence; 32 remain open. Strategy lifecycle work has

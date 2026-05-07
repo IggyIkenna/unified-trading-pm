@@ -1,14 +1,16 @@
 ---
 name: Strategy Architecture v2 — Finalization + Factory Cutover
-status: active
+status: archived
 owner: iggy
 started: 2026-04-19
-locked_by: live-defi-rollout
-locked_since: 2026-04-19
+archived: 2026-05-07
 supersedes:
   plans/active/strategy_architecture_v2_2026_04_17.plan.md (85/85 complete; this plan carries the open residuals
   forward)
+superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
 ---
+
+> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.plan.md`](../active/strategy_and_dart_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 # Strategy Architecture v2 — Finalization + Factory Cutover
 

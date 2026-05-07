@@ -1,15 +1,17 @@
 ---
 name: DART UX Refactor — From Route Tree to Guided Cross-Asset Trading Cockpit
-status: active
+status: archived
 owner: ikenna
 created: 2026-04-29
-locked_by: live-defi-rollout
-locked_since: 2026-04-29
+archived: 2026-05-07
 codex_ref: codex/14-playbooks/dart/dart-terminal-vs-research.md
 supersedes:
   codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c).
   This plan addresses the structural reasons the navigation still feels like a headache instead of FOMO.
+superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
 ---
+
+> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.plan.md`](../active/strategy_and_dart_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 # DART UX Refactor — From Route Tree to Guided Cross-Asset Trading Cockpit
 
