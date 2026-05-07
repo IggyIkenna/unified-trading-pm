@@ -436,13 +436,48 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 Targeted audit, lower priority than the explicit flattens above. XG (per-shot events from understat) is the most likely
 follow-up flatten target; STANDINGS and MATCHES are probably already correct.
 
-- [ ] [AGENT] P1. Open the deployment-ui schema modal for each of STANDINGS / WEATHER / XG / MATCHES; log column count
-      vs. source-payload signal density (e.g. understat per-shot endpoint returns `xG`, `xA`, `minute`, `player_id`,
-      `situation`, `shotType`, `lastAction`; if the parquet only carries match-aggregate xG, that's a flatten miss).
-      [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P1. For any data_type with column-count < signal density: file a follow-up flatten todo here under the
-      same B.1 pattern (UAC normalizer + contract + manifest flip + re-fetch + cassette parity). [AUDIT 2026-05-07:
-      BLOCKED-ON sports_master:C.7 audit above]
+- [x] [AGENT] P1. **AUDIT COMPLETE 2026-05-07** (Phase 2 round 4). Code-level audit of UAC normalizers (no deployment-ui
+      visit needed — source-payload signal density is in the dataclass schemas). Findings:
+  - **WEATHER (open_meteo) — OK.** `normalize_open_meteo_weather_multi`
+    (`unified_api_contracts/external/open_meteo/normalize.py:44`) explicitly emits one record per metric (temperature,
+    humidity, wind_speed, precipitation). NO flatten miss; close-out item.
+  - **STANDINGS (api_football) — STUB-PASS-THROUGH.** `normalize_api_football_standing`
+    (`unified_api_contracts/external/api_football/normalize.py:367`): `return {"league_id": ..., "season": ..., **raw}`.
+    Same C.8 stub-normalizer pattern as B.1. The api_football `/standings` endpoint returns nested
+    `league.standings: [[...]]` array with team/league/all/home/away nested objects; PyArrow flattens inconsistently or
+    drops the nested array silently. **Follow-up #1 below.**
+  - **XG (understat) — SEVERELY TRUNCATED (BIGGEST MISS).** `normalize_understat_feature_record`
+    (`unified_api_contracts/external/understat/normalize.py:261-279`): only captures `value=xg` from each shot, drops
+    the full UnderstatShot payload (~15+ fields per shot — minute, player_id, player_name, situation, shot_type, result,
+    x/y coordinates, last_action, season, h_team, a_team, h_a, date, h_goals, a_goals). **Follow-up #2 below.**
+  - **MATCHES (footystats) — PARTIAL FIELD-MAPPING.** `normalize_footystats_match`
+    (`unified_api_contracts/external/footystats/normalize.py:26-114`): populates ~25 CanonicalFixture fields but
+    hardcodes 15+ to `None` (referee, halftime goals, shots*on_target, fouls, yellow/red cards, shots_blocked, offsides,
+    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying**
+    `team_a*_`/    `team*b*_`for shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py).     Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`).
+    Smaller scope than full flatten; just rewire the field assignments. **Follow-up #3 below.**
+- [ ] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
+      nested `league.standings: [[...]]` array into per-(league, team, season, position) row records with full stats
+      subobjects (all/home/away each have played/win/draw/lose/goals/goalsAgainst/goalDifference/points). Same migration
+      shape as B.1: flip manifest STANDINGS rows → `attempted_failed reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING` + delete
+      thin parquets + re-fetch via dedicated VM (`af-backfill-standings-{ts}` if isolated, or fold into
+      af-backfill-flatten-{ts} from B.1). Cassette parity test extension to lock the flat shape.
+- [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** UAC `normalize_understat_feature_record` is
+      currently ONE feature value per shot. Replace with `normalize_understat_shot` returning a flat dict with all ~15
+      fields: `xg`, `xa`, `minute`, `player_id`, `player_name`, `situation` (open_play / set_piece / penalty),
+      `shot_type` (header / left_foot / right_foot / other), `result` (goal / saved / missed / blocked / post), `x`,
+      `y`, `last_action`, `home_or_away` (h / a), `assist_player_id`, `season`, `match_id`. Lift `feature_name=shot_xg`
+      callers to read from the `xg` column instead. Same B.1 migration shape (flip + delete + re-fetch via dedicated
+      `us-backfill-shots-flatten-{ts}` VM + cassette parity). features-sports consumers updated to read per-shot
+      dimensions; XG features become much richer (position-on-pitch, shot-quality decomposition, set-piece vs open-play
+      splits).
+- [ ] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
+      replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
+      FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
+      via raw-payload sample). Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new
+      normalizer + re-fetching going forward writes populated columns from now on; historical rows stay None-populated
+      and are NaN-tolerant); if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full
+      B.1-shape migration (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
 ## Anti-patterns + workspace-rule cross-references
 
