@@ -170,6 +170,35 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       gate clean + features-onchain Docker rebuild. [AUDIT 2026-05-07: FRESH — final intent-test gate before live
       cutover; gates merge of carry-tracer Phase 9 work into main]
 
+#### Reference — multi-coin / multi-funding / multi-venue decision architecture (folded-in 2026-05-07 from `carry_tracer_pipeline_handoff_2026_05_06`)
+
+The decision of "what to trade for an archetype" lives in **4 layers** within strategy-service. Apply to any new
+archetype before adding new specs:
+
+1. **Catalog** (`strategy-service/.../target_universe/catalog.py`) — menu of available specs. Adding a new spec is a row
+   addition, not a code change. CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs added per user direction
+   2026-05-06: keep all 7 existing CARRY_BASIS_DATED specs, ADD NASDAQ-IBIT/CME-MBT (BTC ETF vs micro BTC),
+   NASDAQ-ETHA/CME-MET (ETH ETF vs micro ETH), DERIBIT spot-vs-dated (BTC + ETH intra-Deribit basis), GLD/USO/UNG/
+   SPY/QQQ-vs-CME-futures (placeholders for databento ETF coverage). ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs
+   DERIBIT-dated + CME-MET vs DERIBIT-dated (cross-venue same-expiry).
+2. **Features** — per-(spec, day) metric values. Calculator owns schema; tracer reads canonical columns directly.
+   Canonical schema for lst_yields = `protocol`, `asset`, `staking_apy_bps` (already bps, not fraction); for
+   lending_rates = `protocol`, `chain`, `asset`, `supply_apy`, `borrow_apy` (column-form, NOT instrument_id parsing).
+   features-onchain@`7f1b2a1` shipped these canonical columns; the prior tracer-side schema-adapter shim
+   (strategy@`666dc2d`) is now deleted as a result.
+3. **Allocator** (`strategy-service/.../portfolio_allocator/archetypes.py`, `BaseRankAllocator` + 7 archetype
+   subclasses) — universe filter, score metric, threshold (default 250 bps = 2.5% APY), top-N, capital-weighting. **This
+   is the opportunity-decision layer.** `CarryBasisPerpRankAllocator` is the canonical multi-coin / multi-venue example
+   (3-stage hierarchical: per-coin avg → cross-coin weighting → per-venue weighting within each coin). Adding new
+   specs/calculators does NOT require allocator changes — they consume the same shape.
+4. **Strategy engine** (`strategy-service/engine/strategies/v2/*_engine.py`) — entry triggers, exit triggers, roll on
+   expiry, rotation cost gating. Per-archetype subclass.
+
+The `paired_price_dispersion` calculator in features-cross-instrument-service is the cross-asset-group greenfield that
+powers BOTH CARRY_BASIS_DATED (one leg spot/ETF, other dated future, held to convergence) and ARBITRAGE_PRICE_DISPERSION
+(both legs futures of same expiry on different venues, exit on convergence). Single calculator, two consumers; the
+per-archetype filter logic is in the catalog spec rows, not duplicated in the calculator.
+
 ### Lighter / Extended / Pacifica historical replay (`dex_historical_replay_*`)
 
 - [x] [AGENT] P0. Lighter zkSync mainnet matching contract address + ABI parse (`Trade` event). [AUDIT 2026-05-07: DONE
