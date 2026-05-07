@@ -93,9 +93,10 @@ related_plans:
     `SchemaContract.cadence` from UAC.
   - **§ Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC**: FRESH. Verified neither code
     present in `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` (which is the actual home of
-    `EmptyConfirmedReason` StrEnum + `EMPTY_CONFIRMED_REASONS` frozenset). NOTE — plan path
-    `crosscutting.empty_confirmed_reasons` is stale; the canonical module is `honest_coverage.py`. Update path when
-    shipping.
+    `EmptyConfirmedReason` StrEnum + `EMPTY_CONFIRMED_REASONS` frozenset). The canonical module is
+    `unified_api_contracts.canonical.crosscutting.honest_coverage` (StrEnum + frozenset both exported there); any
+    legacy reference to `crosscutting.empty_confirmed_reasons` is stale and superseded by `honest_coverage`. Plan body
+    below uses the canonical path.
   - **§ C.8 footystats normalizer audit**: FRESH. Verified `external/footystats/normalize.py` exists.
   - **§ C.8 understat normalizer audit**: FRESH. Verified `external/understat/normalize.py` exists.
   - **§ C.8 SFI normalizer audit**: FRESH. Verified `external/soccer_football_info/normalize.py` exists.

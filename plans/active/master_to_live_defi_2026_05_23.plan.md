@@ -47,9 +47,10 @@ from today, 2026-05-06):
 
 1. **`carry_staked_basis`** — _ultimate priority_ — recursive LST staking + CeFi/DeFi perp short hedge. Locked plan:
    `carry_staked_basis_structure_axis_2026_05_04`.
-2. **`leveraged_funding_arb`** — cross-venue funding-rate spread trade. Locked plan:
-   `defi_pipeline_extension_2026_05_01` (leveraged_leg_controller_2026_05_01 archived 2026-05-06; folded into
-   `defi_e2e_pipeline_2026_04_30` — full plan shipped per memory project_leveraged_leg_controller_2026_05_01.md).
+2. **`leveraged_funding_arb`** — cross-venue funding-rate spread trade. Lead plan:
+   `defi_master_2026_05_07` (umbrella that folds in `defi_pipeline_extension_2026_05_01`,
+   `leveraged_leg_controller_2026_05_01`, and `defi_e2e_pipeline_2026_04_30` per the 2026-05-07 consolidation; historical
+   detail preserved in `plans/archive/`).
 
 Both archetypes hedge on a 6-venue perp universe spanning CeFi (Bybit, Deribit, Binance, OKX) and DeFi perp DEXs
 (Hyperliquid, Aster) — **all six must be live**. TradFi / Sports / Prediction stay batch-only this cycle — but their ML
@@ -254,8 +255,9 @@ consolidation target post-cutover.
 
 1. ✓ **Lead DeFi archetypes — both `carry_staked_basis` (ultimate priority) AND `leveraged_funding_arb` (cross-venue
    funding spread) by May 23.** Recursive LST staking is part of the carry_staked_basis archetype. Linked plans:
-   `carry_staked_basis_structure_axis_2026_05_04`, `defi_pipeline_extension_2026_05_01`,
-   `leveraged_leg_controller_2026_05_01`.
+   `carry_staked_basis_structure_axis_2026_05_04` and `defi_master_2026_05_07` (umbrella that folds in
+   `defi_pipeline_extension_2026_05_01` + `leveraged_leg_controller_2026_05_01` + `defi_e2e_pipeline_2026_04_30` per
+   the 2026-05-07 consolidation).
 2. ✓ **CeFi/DeFi perp venue scope — six venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster.** Hyperliquid +
    Aster are DeFi perp DEXs but live alongside the CeFi venues. CEFFU manual handoff acceptable for Binance flows on
    May 23.
@@ -435,6 +437,56 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     position breaches (codex `04-architecture/alerting-batch-live.md`); auto-recovery for known transient failure
     classes
 
+#### Folded operational-validation todos (from `consolidated_operational_validation_2026_04_15`)
+
+These 11 todos were folded in 2026-05-07 from `consolidated_operational_validation_2026_04_15` (now archived). They
+extend items 17–22 with concrete operational-validation work — pipeline scheduling completeness, per-cluster E2E
+batch-vs-live reconciliation, and final infra QG sweeps — that gates `master Group F` closure.
+
+**Pipeline scheduling remaining code** (extends items 21–22 — live-trading scheduler + trigger backend):
+
+- [ ] [AGENT] P1. `ups-p2-run-tag-mtds-calendar`: Wire `--run-tag` into MTDS GCS output path + features-calendar-service
+      (PARTIALLY_DONE — CLI flag exists at MTDS `cli/main.py:288`; needs threading into GCS output path templates +
+      features-calendar adoption). Not on May-23 critical path. _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [AGENT] P1. `ups-p4-sports-trigger-backend-dispatch`: Sports trigger scheduler cloud backend dispatch
+      (PARTIALLY_DONE — local subprocess works, cloud placeholder). Confirmed at deployment-service
+      `deployment_service/sports_trigger_periodic.py` + `sports_trigger_scheduler.py` + `sports_trigger_state.py`;
+      cloud-dispatch shim is the named gap. _(folded from consolidated_operational_validation_2026_04_15)_
+
+**E2E cluster tests** (extends item 21 — batch-vs-live reconciliation per cluster):
+
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-cefi`: E2E test — CEFI cluster (T+1, live 1h, reconciliation). BLOCKED-ON
+      `cefi_master_2026_05_07` + writegate Tier 2C cefi adapters (shipped at MDPS@b9f9328); cefi cluster YAML exists
+      at deployment-service `configs/clusters/cefi.yaml`. _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-sports`: E2E test — SPORTS cluster (T+1, trigger scheduler, feature validation).
+      BLOCKED-ON `sports_master_2026_05_07`; writegate Tier 2A sports adapters shipped at MDPS@5b52d0b; trigger
+      scheduler shipped at deployment-service `sports_trigger_*` (cloud-dispatch placeholder per `ups-p4` above).
+      _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-defi`: E2E test — DEFI cluster (T+1 single day). BLOCKED-ON
+      `defi_master_2026_05_07` (umbrella for all DEFI work). _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-tradfi`: E2E test — TRADFI cluster (T+1 single day, needs `DATABENTO_API_KEY`).
+      BLOCKED-ON `tradfi_master_2026_05_07`; writegate Tier 2E tradfi adapters shipped at MDPS@e9520a0;
+      `DATABENTO_API_KEY` presence is the human-side credential gate.
+      _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-prediction`: E2E test — PREDICTION cluster (T+1 single day). BLOCKED-ON
+      `predictions_master_2026_05_07` (canonical_question_group migration in flight).
+      _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [HUMAN+AGENT] P0. `ups-p8-e2e-full`: E2E test — FULL cluster (all categories for 1 date). BLOCKED-ON the 5
+      preceding per-cluster e2e tests. _(folded from consolidated_operational_validation_2026_04_15)_
+
+**Infrastructure cleanup** (extends item 22 — final QG sweep before live cutover):
+
+- [ ] [HUMAN] P1. `rdt-p4-gcs-cleanup`: Run instruments-service backfill to regenerate parquet without `data_types`
+      column. instruments-service production code grep for `data_types` returns 0 hits; references remain only in
+      legacy ETL scripts (`scripts/aggregate_legacy_es_opt_trades.py`) and test code. Remaining work is GCS cleanup of
+      legacy parquets that still carry the column — operator-driven backfill rerun.
+      _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [AGENT] P1. `rdt-p4-workspace-qg`: Run `quality-gates.sh` on all 5 affected repos. Depends on the GCS cleanup
+      above to validate the column removal. _(folded from consolidated_operational_validation_2026_04_15)_
+- [ ] [AGENT] P1. `mtb-p6e-final-qg-sweep`: Full QG sweep across all 6 affected repos. Final QG gate; depends on every
+      preceding "qg" item plus the cluster e2e tests being passable on a representative day's data.
+      _(folded from consolidated_operational_validation_2026_04_15)_
+
 ### Group G — Operator UX (live-only)
 
 23. **DART manual-trade gate** — DART terminal in UTS-UI visualizes the strategy archetype end-to-end; operator first
@@ -461,10 +513,10 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 | ml-training-service               | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | consolidated_ml_advanced_pipeline_2026_04_15, ml_training_feature_read_perf_2026_05_06 (ml_pipeline_revolution_2026_04_11 archived 2026-05-06)                                                                                                                                  |
 | ml-inference-service              | ◐      | ◐      | ◐         | n/a        | ◐     | n/a       | n/a  | consolidated_ml_advanced_pipeline_2026_04_15                                                                                                                                                                                                                                    |
 | strategy-service                  | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | strategy_architecture_v2_finalization_2026_04_19, carry_staked_basis_structure_axis_2026_05_04                                                                                                                                                                                  |
-| execution-service                 | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | defi_phase3_infrastructure_2026_03_30, leveraged_leg_controller_2026_05_01                                                                                                                                                                                                      |
-| position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (PBMS dual projection / fill attributor / child-venue attribution)                                                                                                                                                                          |
-| risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (R&E intent subscriber — extend with explicit live-wiring todo)                                                                                                                                                                             |
-| pnl-attribution-service           | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_e2e_pipeline_2026_04_30 Fork 1 (compute --mode batch CLI; extend with live-mode wiring todo)                                                                                                                                                                               |
+| execution-service                 | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | defi_phase3_infrastructure_2026_03_30, defi_master_2026_05_07 (folds in `leveraged_leg_controller_2026_05_01`)                                                                                                                                                                  |
+| position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; PBMS dual projection / fill attributor / child-venue attribution)                                                                                                                                       |
+| risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; R&E intent subscriber — extend with explicit live-wiring todo)                                                                                                                                          |
+| pnl-attribution-service           | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; compute --mode batch CLI; extend with live-mode wiring todo)                                                                                                                                            |
 | alerting-service                  | ✗      | n/a    | ◐         | n/a        | ◐     | ✗         | n/a  | **(NO PLAN — only genuine gap; new plan needed)**                                                                                                                                                                                                                               |
 | batch-live-reconciliation-service | ✗      | n/a    | ◐         | n/a        | ◐     | ◐         | n/a  | consolidated_operational_validation_2026_04_15 (extend with live-cutover items)                                                                                                                                                                                                 |
 | deployment-api                    | ✓      | n/a    | ◐         | n/a        | ◐     | n/a       | n/a  | deployment_ui_e2e_uat_2026_04_01                                                                                                                                                                                                                                                |
@@ -598,16 +650,19 @@ gap.
 - [x] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
       `live-defi-rollout`. References checklist Groups F + G. (verified 2026-05-07:
       plans/active/alerting_service_live_rules_2026_05_07.plan.md exists)
-- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit todos for **position-balance-monitor live-mode
-      wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor + child-venue attribution already shipped
-      per plan body).
-- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit **risk-and-exposure intent-subscriber live-wiring
-      todo** (currently flagged as one of 5 wiring holes blocking live closure).
-- [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit **pnl-attribution `--operation compute --mode live`
-      todo** alongside the existing batch CLI.
-- [ ] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
-      items** (matches plan's existing operational-validation surface; archive
-      `manual_trade_booking_reconciliation_2026_03_22` which is self-tagged superseded by it).
+- [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
+      **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor +
+      child-venue attribution already shipped per plan body).
+- [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit
+      **risk-and-exposure intent-subscriber live-wiring todo** (currently flagged as one of 5 wiring holes blocking live
+      closure).
+- [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit **pnl-attribution
+      `--operation compute --mode live` todo** alongside the existing batch CLI.
+- [x] [EXTEND] `consolidated_operational_validation_2026_04_15` — add explicit **batch-live-reconciliation live-cutover
+      items**. **DONE 2026-05-07**: source plan archived; its 11 unchecked todos (incl. batch-vs-live cluster E2E)
+      folded into master Group F — see "Folded operational-validation todos" subsection above.
+      `manual_trade_booking_reconciliation_2026_03_22` was already archived 2026-05-06 (Stage 1 plan-hygiene sweep);
+      its successor surface is now master Group F (live-trading prereqs).
 
 ### F · Codex SSOT gaps to fill alongside the work
 
@@ -657,10 +712,14 @@ self-superseded artefacts.
 
 **Frontmatter backfill (one-shot script):**
 
-- [ ] [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (140 plans affected)
-- [ ] [SCRIPT] Same script populates `asset_group` inferred from filename + body (142 plans affected)
-- [ ] [SCRIPT] Same script populates `locked_by: live-defi-rollout` for the 31 plans missing it (verify each is actually
-      mid-flight first; otherwise leave unset)
+- [ ] [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (re-derive count at script
+      time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the surface is now
+      `~20 active/` + `~73 ai/` + ~437 `archive/` — most missing `last_updated` rows are in `archive/` and `ai/`)
+- [ ] [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive count at script time;
+      original 2026-05-06 audit said 142 plans across active+ai+archive)
+- [ ] [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it (re-derive count at script
+      time; original 2026-05-06 audit said 31 plans active-only; verify each is actually mid-flight first; otherwise
+      leave unset)
 - [ ] [SCRIPT] Add YAML frontmatter to 5 plans that have none (`_sports_phantom_fixtures_recovery_handover_2026_05_06`,
       `dashboard_services_grid_collapse_2026_04_21`, `defi-strategy-ui-verification`, `tiered_help_chatbot_2026_03_22`,
       `universe_ssot_fix_2026_04_20`)

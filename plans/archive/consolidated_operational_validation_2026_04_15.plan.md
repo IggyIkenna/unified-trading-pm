@@ -41,6 +41,8 @@ source_plans:
 isProject: false
 ---
 
+> **ARCHIVED 2026-05-07** — folded into [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md) Group F (live-trading) + Group G (operator UX). All 11 open todos preserved in master with `(folded from consolidated_operational_validation_2026_04_15)` traceability suffix. This file is the historical SSOT.
+
 > **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
 > `PLAN_FORMAT.md`. 2 todos flipped to `[x]` with cited commit evidence; 11 remain open. See
 > `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors (operational_validation block ~line 209).
