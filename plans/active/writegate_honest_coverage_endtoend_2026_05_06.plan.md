@@ -1595,10 +1595,21 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
 
 ### Phase 4.A — deployment-api
 
-- [ ] [SCRIPT] P0. New per-pillar write-gate failure breakdown in `data_status_service.py`: - Aggregate
+- [x] [SCRIPT] P0. New per-pillar write-gate failure breakdown in `data_status_service.py`: - Aggregate
       `attempted_failed` rows by `error_reason` → return per-shard breakdown - New columns: `failed_row_count`,
       `failed_nan_ratio`, `failed_schema`, `failed_cluster`, `failed_timestamp_bias`, `failed_malformed`,
-      `failed_empty_placeholder_backfill`
+      `failed_empty_placeholder_backfill`. **SHIPPED 2026-05-07 deployment-api@453836d**: helper
+      `_compute_failure_pillar_counts(df)` buckets `error_reason` strings by typed-error class prefix into the closed
+      taxonomy `_FAILURE_PILLAR_KEYS`. Pillars wired today: `failed_timestamp_bias` (UpstreamTimestampBiasError),
+      `failed_malformed` (MalformedTickFieldError), `failed_cluster` (ClusterCoverageError +
+      MissingClusterValidationError), `failed_lookahead_bias` (LookaheadBiasError), `failed_other` (catch-all for
+      unrecognised reprs — surfaces future error classes BEFORE the taxonomy is updated, so new failure modes don't
+      silently disappear). Placeholder pillars seeded for `failed_nan_ratio`, `failed_schema`,
+      `failed_empty_placeholder_backfill`, `failed_missing_available_at` per the plan column list — they show count=0
+      until those typed-error classes ship in writegate Phase 1A.future. Surfaced on the venue entry as
+      `failure_pillars: dict[str, int]` alongside existing `capture_status_counts`. 8 unit tests cover empty df,
+      missing-columns, every registered prefix, unrecognised-prefix routing to `failed_other`, NaN handling, and
+      pillar-key contract guard.
 - [ ] [SCRIPT] P0. New endpoint `GET /data-status/{service}/leaf/{shard_key}/schema` — returns per-leaf-parquet schema
       view: columns, types, row_count, per-column non_null_count, per-column NaN ratio, `available_at`
       min/max/null_count.
