@@ -1761,9 +1761,14 @@ sub-phase ships the enumerator that physically writes those rows.
       `VM_PREFIX_TO_BUCKET` (heartbeat-only `None` — script writes per-VM manifest shards, no per-asset-group bucket
       signal needed). Watchdog VM relaunched (`vm-zombie-watchdog-20260507-145047`) so the new prefix is live.
       Tarballs + setup-data-pipeline-vm.sh refreshed via `create-code-tarballs.sh --all` (2026-05-07 13:49 UTC).
-- [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the enumerator's classifier
-      dispatch. Test the cross-product enumeration shape (right rows present, wrong rows absent) with mocked manifest +
-      UAC SSOT fixtures.
+- [x] [TEST] P0 (shipped 2026-05-07, instruments-service@a2d4f00). Per-asset-group unit test
+      `tests/unit/scripts/test_enumerate_expected_universe.py` — 24 tests covering `_enumerate_tradfi` /
+      `_enumerate_defi` / `_enumerate_sports` / `_enumerate_cefi` / `_enumerate_prediction` + helpers
+      (`_build_present_set` / `_row_key`) + cross-asset-group invariants (every reason in
+      `EMPTY_CONFIRMED_REASONS`; every row has identifier + date + reason; `_ENUMERATORS` covers all 5).
+      Verifies right rows present (Saturday → `EXPECTED_WEEKEND`; ARBITRUM 2018 → `EXPECTED_PRE_GENESIS_CHAIN`;
+      LIGHTER 2024-01-01 → `EXPECTED_PRE_VENUE_LAUNCH`) AND wrong rows absent (post-launch dates yield zero pre-skip
+      rows). Test results: 24 passed in 1.11s. Hooks (ruff lint + format) green.
 - [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete — see banner table above; PM@79e47874). DeFi scan-only first
       halted on the default `--max-writes-per-run=100000` cap (`expected-universe-enum-defi-20260507-145714`, rc=5 +
       `ENUMERATOR_FAILED reason=max_writes_exceeded`). Default raised to 1M (instruments-service@d1c9928) and launcher
