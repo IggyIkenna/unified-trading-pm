@@ -8,6 +8,148 @@ last_update: 2026-05-07T11:30Z
 
 # Active Plan Audit — 2026-05-07
 
+## Session close-out 2026-05-07T12:30Z — durable handover
+
+This is the close-out summary. The active PM plans now capture every piece of work going forward for the 2026-05-23
+deadline. Anyone picking up after this session reads §"Where every piece of work lives" below to find the right plan,
+then checks the per-plan `## Audit 2026-05-07` header for status.
+
+### Decisions taken in-session (binding)
+
+1. **Dual-cloud-active is the steady state.** Not a transitional cutover. Both GCP and AWS run in parallel. Backfills
+   hit both. Live deployments chosen ad-hoc per archetype / use case based on cost / latency / credit trade-offs. GCP
+   stays first-class; AWS is added alongside, not replacing. Captured in
+   [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.plan.md) §"Operator answers"
+   (commit `893a9da4` + Phase 0 flips).
+
+2. **AWS scope for May-23**: DeFi + CeFi-instruments. Everything else (sports / predictions / tradfi / cefi-historical)
+   stays GCP-resident with opportunistic dual-write expansion post-May-23 as Phase 9.
+
+3. **Credit budget**: ≥$40k over 11 months = ~$3,636/mo sustainable. Comfortably covers DeFi+CeFi-instruments AWS
+   run-rate. No service / region / account locks expected (Phase 1 smoke test confirms).
+
+4. **Custody**: Copper + CEFFU AWS-compatible — wallet hosts can run AWS-resident.
+
+5. **UI/API co-locates with data** (data-locality principle). UI on AWS when serving AWS-resident DeFi data; UI on GCP
+   when serving GCP-resident sports/predictions/tradfi. `CROSS_CLOUD_EGRESS_DETECTED` AlertCode added to alerting
+   taxonomy as safety net.
+
+6. **AWS Q3-defer recommendation** (in
+   [`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md))
+   is **superseded** by the dual-cloud plan above. The cost analysis as a research artefact is preserved (numbers still
+   valid) but the recommendation paragraph is replaced.
+
+### Where every piece of work lives (for May-23)
+
+The 23 active plans (20 audited 2026-05-07 + 3 new keystones) cover everything.
+
+| Concern                                                                                     | Plan                                                                                                                               |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Live-trading critical path / Group A-G readiness                                            | [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md)                                                 |
+| Manifest write-side honesty (record_empty / record_failed / record_expected_empty)          | [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)                   |
+| Manifest legacy-row migration (write-side back-fill)                                        | [`manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md)                                     |
+| Strategy engine v2 finalization (V1-RETIRE done, futures-roll + Unity UAT remain)           | [`strategy_architecture_v2_finalization_2026_04_19.plan.md`](strategy_architecture_v2_finalization_2026_04_19.plan.md)             |
+| DART operator UX (substantively shipped, 7 polish items)                                    | [`dart_ux_cockpit_refactor_2026_04_29.plan.md`](dart_ux_cockpit_refactor_2026_04_29.plan.md)                                       |
+| **CeFi backfills, venues, instruments, date ranges**                                        | [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md)                                                                 |
+| **DeFi backfills, protocols, chains, LST tokens, 6 perp-venue hedges**                      | [`defi_master_2026_05_07.plan.md`](defi_master_2026_05_07.plan.md)                                                                 |
+| **TradFi backfills, ES.OPT 11-cluster, Databento, MDPS**                                    | [`tradfi_master_2026_05_07.plan.md`](tradfi_master_2026_05_07.plan.md)                                                             |
+| **Sports backfills, 6 sources, leagues, fixture/odds/lineups/weather**                      | [`sports_master_2026_05_07.plan.md`](sports_master_2026_05_07.plan.md)                                                             |
+| **Predictions / Polymarket / Kalshi canonical-question-group**                              | [`predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md)                                                   |
+| **Shard granularity SSOT, data-status drilldown, deployment-build infra**                   | [`infrastructure_master_2026_05_07.plan.md`](infrastructure_master_2026_05_07.plan.md)                                             |
+| Asset-group vocabulary (3 absorbed items remain)                                            | [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](venue_axis_asset_group_vocabulary_2026_04_25.plan.md)                     |
+| Instruments-service + MTDS completion                                                       | [`instruments_and_market_tick_data_completion_2026_05_01.plan.md`](instruments_and_market_tick_data_completion_2026_05_01.plan.md) |
+| MTDS per-instrument download API                                                            | [`mtds_per_instrument_download_api_2026_04_24.plan.md`](mtds_per_instrument_download_api_2026_04_24.plan.md)                       |
+| Feature DAG UAC SSOT + LookaheadBiasError honesty                                           | [`feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`](feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md)   |
+| Features consolidation + drilldown (P2/P3)                                                  | [`features_consolidation_and_drilldown_2026_05_06.plan.md`](features_consolidation_and_drilldown_2026_05_06.plan.md)               |
+| ML training feature-read perf (1-3 day pure-win)                                            | [`ml_training_feature_read_perf_2026_05_06.plan.md`](ml_training_feature_read_perf_2026_05_06.plan.md)                             |
+| ML advanced pipeline (cross-asset-group ML scaffolding)                                     | [`consolidated_ml_advanced_pipeline_2026_04_15.plan.md`](consolidated_ml_advanced_pipeline_2026_04_15.plan.md)                     |
+| Cluster e2e operational validation (cross-cutting)                                          | [`consolidated_operational_validation_2026_04_15.plan.md`](consolidated_operational_validation_2026_04_15.plan.md)                 |
+| Strategy-and-UI consolidation (rescope candidate)                                           | [`consolidated_strategy_and_ui_2026_04_15.plan.md`](consolidated_strategy_and_ui_2026_04_15.plan.md)                               |
+| **NEW: Alerting live rules SSOT + thresholds + paging + rehearsal**                         | [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)                                 |
+| **NEW: deployment-api work-stream-A endpoints (`/api/backfill/launch` + `/api/vm/events`)** | [`deployment_api_work_stream_a_2026_05_07.plan.md`](deployment_api_work_stream_a_2026_05_07.plan.md)                               |
+| **NEW: AWS dual-cloud buildout DeFi+CeFi-instruments first**                                | [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.plan.md)                                       |
+
+### Anomalies from §6 still open (not yet captured in any plan)
+
+These were surfaced in the original audit but have no dedicated home plan and are not yet folded into a parent.
+**Recommend authoring a single follow-up `audit_followups_2026_05_07.plan.md`** to track these so they don't fall off
+the radar.
+
+| #      | Anomaly                                                                                                                                                     | Suggested home                                          |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| §6 #2  | master plan body references folded `defi_e2e_pipeline_2026_04_30` / `leveraged_leg_controller_2026_05_01` / `defi_pipeline_extension_2026_05_01`            | master plan body fix (housekeeping commit)              |
+| §6 #3  | service-readiness matrix lists already-archived `manual_trade_booking_reconciliation_2026_03_22`                                                            | master plan body fix                                    |
+| §6 #4  | plan-hygiene work-stream-G item counts (140/142/31) obsolete after Stage 7 batch consolidation                                                              | master plan body re-derive against active/+ai/= ~25+111 |
+| §6 #5  | `manifest_migration_master` line 473 cites stale module path `unified_api_contracts.canonical.crosscutting.empty_confirmed_reasons.EMPTY_CONFIRMED_REASONS` | manifest_migration_master line edit                     |
+| §6 #6  | MDPS-1440-NaN reproduction-test in infrastructure_master is STALE                                                                                           | infrastructure_master line edit                         |
+| §6 #7  | strategy v2 Phase 3 entirely STALE (V1-RETIRE bypassed shadow window)                                                                                       | strategy_architecture_v2 line edit                      |
+| §6 #11 | `manifest_migration_master` is NOT superseded by writegate 3D.2 — both required (write-side vs read-side)                                                   | already captured in audit doc; no action                |
+| §6 #12 | Lighter `block_height` on-chain replay infeasible (sequencer-internal)                                                                                      | defi_master Lighter section already STALE               |
+
+### Dual-cloud changes that should propagate INTO existing plans
+
+The dual-cloud-active policy decision touches multiple plans. Recommend a follow-up housekeeping commit (or per-plan
+edits as work progresses):
+
+- `master_to_live_defi:work-stream-D` — replace "AWS↔GCP cloud parity Q3-deferred" with "dual-cloud-active per
+  `aws_migration_defi_first` plan; DeFi production live on AWS by 2026-05-23, sports/predictions/tradfi GCP-resident
+  with Phase 9 dual-write expansion."
+- `defi_master:carry_staked_basis-live` — note live deploy is AWS-resident. Add Phase 0 link to AWS plan.
+- `defi_master:leveraged_funding_arb-live` — same.
+- `cefi_master` — add note that CeFi-instruments dual-writes to AWS; CeFi historical stays GCP-resident.
+- `infrastructure_master` — flip "AWS infra deferred to Q3" to "AWS infra critical-path May-23 (DeFi+CeFi-instruments
+  only)."
+- `manifest_migration_master` — add Phase 1.5.A bucket-name parity reference; manifest reads must work on both backends.
+- `alerting_service_live_rules` — add `CROSS_CLOUD_EGRESS_DETECTED` AlertCode + threshold to Phase 1 taxonomy (already
+  noted in AWS plan §"Data locality principle").
+
+### Workspace rules that should land (post-this-session)
+
+These are cross-cutting policies surfaced in this session. Should become CLAUDE.md / codex SSOT entries:
+
+1. **Cloud-agnostic policy**: every script touching cloud accepts `--cloud {gcp,aws}` flag with default from
+   `CLOUD_PROVIDER` env. No `gcloud storage`/`gsutil`/`google.cloud.storage` without an AWS branch. Pattern doc:
+   `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-script-pattern.md` (Phase 1.5.D ships this).
+2. **Data-locality principle**: UI/API co-locates with the data it reads. Cross-cloud egress on every dashboard request
+   is a bug, alerted via `CROSS_CLOUD_EGRESS_DETECTED`. Add to CLAUDE.md alongside existing "Batch = Live" architecture
+   rule.
+3. **Bucket name SSOT discipline**: every parquet read/write computes bucket from `cloud-providers.yaml` via UCI
+   factory, never inline string formatting. Already implicit but should be explicit rule.
+4. **Plan-checkbox-flip cadence**: per existing CLAUDE.md `896c9bc5` hard rule. The 4 plans whose markers got reset in
+   the audit (master/writegate/dart/strategy) demonstrate why immediate commit+push matters.
+
+### Concrete next-session entry points (priority-ordered)
+
+1. **Operator: confirm AWS Phase 1 smoke test green** —
+   `cd instruments-service && CLOUD_PROVIDER=aws AWS_DEFAULT_REGION=ap-northeast-1 python -m instruments_service --health-check`.
+   Single highest-leverage validation. ~1h.
+2. **Operator: kick off Harsh Phase 1 review** of `alerting_service_live_rules` UAC `AlertCode` taxonomy. Async; sets up
+   Phase 2-9 of alerting plan.
+3. **Operator: run `bash deployment-service/scripts/aws/setup-defi-buckets.sh`** (Phase 2 of AWS plan, after script
+   lands).
+4. **Drain 24 cefi backfill VMs** (ETA 2026-05-08/09 per §4) before launching cross-asset manifest rescan or AWS
+   data-migration via Storage Transfer Service.
+5. **Open `audit_followups_2026_05_07.plan.md`** for the 7 anomalies above. ~1h author.
+6. **Land cloud-agnostic-script-pattern codex doc** (workspace rule #1 above). ~1h.
+7. **Implement `deployment-api` work-stream-A endpoints** per
+   [`deployment_api_work_stream_a_2026_05_07.plan.md`](deployment_api_work_stream_a_2026_05_07.plan.md) 3-phase plan.
+   1-2 days.
+
+### What this session shipped (close-out manifest)
+
+| #   | Artefact                                                                         | Path                                                                | Commit        |
+| --- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------- |
+| 1   | 16-plan audit pass (per-todo + per-plan headers)                                 | `plans/active/*.plan.md` (16 plans)                                 | `dada46d1`    |
+| 2   | Cross-plan dependency graph + critical path synthesis                            | `plans/active/_AUDIT_2026_05_07_dependency_graph.md`                | `12ce828a`    |
+| 3   | Alerting service live-rules plan (keystone #1)                                   | `plans/active/alerting_service_live_rules_2026_05_07.plan.md`       | `3712c640`    |
+| 4   | Deployment-api work-stream-A sub-plan (keystone #2, parallel agent)              | `plans/active/deployment_api_work_stream_a_2026_05_07.plan.md`      | `c6fe668d`    |
+| 5   | AWS migration cost analysis (codex doc — Q3-defer recommendation now superseded) | `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md` | `4973dd71`    |
+| 6   | Audit doc keystone-status update                                                 | (this file)                                                         | `e7bbcc36`    |
+| 7   | AWS dual-cloud DeFi-first plan (keystone #3, supersedes #5 recommendation)       | `plans/active/aws_migration_defi_first_2026_05_07.plan.md`          | `893a9da4`    |
+| 8   | Audit doc final close-out (this section)                                         | (this file)                                                         | (next commit) |
+
+---
+
 ## Update 2026-05-07T11:30Z — 3 keystone unblocks scoped/landed
 
 The 3 operator action items flagged in §7 are now closed-or-scoped:

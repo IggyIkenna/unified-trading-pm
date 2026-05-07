@@ -34,6 +34,32 @@ That analysis was wrong on three counts confirmed 2026-05-07T11:45Z:
 Same codebase, same GitHub repos, no fork. Workspace is already set up to run on either cloud; what's missing is the
 actual switch + data + secrets + remaining bucket creation + Pub/Sub parity + UI/API co-location.
 
+## Operator answers — Phase 0 inputs (2026-05-07T12:15Z)
+
+Operator confirmed in-conversation; folded into plan as binding constraints:
+
+1. **AWS credit**: **≥$40k** available in account `427895769566`. Use-by window: **11 months** (so ~$3,636/month
+   sustainable burn to fully utilize). Current GCP DeFi-only run-rate is ~$2-3k/mo subset of the ~$8-12k/mo workspace
+   total; DeFi + CeFi-instruments scope at full utilization fits comfortably under the credit budget.
+2. **Restrictions**: **probably no service / region / account locks**. Phase 1 smoke test will surface any account-level
+   service quotas if they exist.
+3. **Scope**: **DeFi-first PLUS CeFi-instruments**. DeFi archetypes (`carry_staked_basis`, `leveraged_funding_arb`)
+   hedge across 6 CeFi perp venues (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster), so CeFi-instruments
+   reference data is on the critical path. CeFi historical tick data stays GCP-resident (Phase 9 deferred). Note:
+   existing AWS buckets already cover `unified-trading-instruments-cefi-427895769566`, so no new bucket creation needed
+   for this scope-add.
+4. **Custody**: **Copper + CEFFU are AWS-compatible** ✅. Wallet hosts can run AWS-resident.
+5. **Dual-cloud policy**: **dual-cloud-active is the steady state, not transitional.** Backfills run on both clouds in
+   parallel. Live deployments pick a cloud **ad-hoc per use case** based on cost / latency / credit-burn trade-offs. GCP
+   stays a first-class option indefinitely; AWS is added alongside, not replacing.
+6. **Dual-cloud duration**: **indefinite.** No GCP archive after May-23 soak.
+
+This refactors the plan from "migration → cutover" to "**dual-cloud buildout**" — Phase 5 establishes dual-write (not
+one-time copy), Phase 7 becomes sustained-state setup not 24h validation gate, Phase 8 lives as "DeFi-on-AWS for
+May-23 + per-archetype live-deployment choice ongoing." Phase 9 deferral remains accurate but the framing changes:
+sports/predictions/tradfi/cefi-historical add to AWS over time as opportunistic credit-utilization, not as a forced
+migration.
+
 ## Data locality principle
 
 **UI + API co-locates with the data it reads.** Deploying the UI/API layer on one cloud while data lives on another pays
@@ -123,20 +149,15 @@ the 8 missing-ECR repos (8 file additions). `cloudbuild.yaml` ↔ `buildspec.aws
 
 ## Phased execution DAG
 
-### Phase 0 — Operator confirms credit + scope (1 hour, BLOCKS Phase 1+)
+### Phase 0 — Operator confirms credit + scope (1 hour, BLOCKS Phase 1+) — **DONE 2026-05-07T12:15Z**
 
-Without these inputs the plan can't be sequenced confidently.
-
-- [ ] [HUMAN] P0. Operator: confirm AWS credit amount in `427895769566` account ($) + expiry/use-by date + any service /
-      region / account restrictions. Capture in `unified-trading-pm/codex/11-project-management/aws-credits-tracking.md`
-      (new).
-- [ ] [HUMAN] P0. Operator: confirm scope decision — (i) DeFi-only May-23 cutover with full workspace deferred to
-      post-deadline, (ii) DeFi-first cutover with full workspace migrated in parallel by May-23, (iii) full workspace
-      cutover by May-23 with DeFi as headline. **Recommendation: option (i)** — minimum scope to hit deadline with
-      quality margin.
-- [ ] [HUMAN] P0. Operator: confirm dual-cloud-active vs. cutover policy — does GCP stay live as fallback for DeFi
-      during the 7-day soak, or is AWS the only live path on 2026-05-23T09:00 UTC? **Recommendation: dual-cloud-active**
-      for the 7-day soak, then GCP-archive after.
+- [x] [HUMAN] P0. AWS credit confirmed: **≥$40k** in `427895769566`, **11-month** use-by window, **no
+      service/region/account locks**. Sustainable burn ~$3,636/mo to fully utilize. Captured inline §"Operator answers".
+- [x] [HUMAN] P0. Scope = **DeFi + CeFi-instruments first**. DeFi archetypes hedge across 6 CeFi perp venues so
+      CeFi-instruments reference data is on critical path. CeFi historical tick data + sports + predictions + tradfi
+      stay GCP-resident with Phase 9 dual-write expansion as opportunistic credit-utilization.
+- [x] [HUMAN] P0. Dual-cloud policy = **dual-cloud-active is the steady state, not transitional**. Backfills run on
+      both. Live deployment chosen ad-hoc per use case. No GCP archive after May-23 soak.
 
 ### Phase 1 — Cloud-agnostic runtime smoke test (1 day, GATES Phase 4+)
 
