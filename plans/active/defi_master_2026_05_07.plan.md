@@ -224,6 +224,82 @@ right view.
 
 **Real residual concerns from this re-verification** (down-graded from "planning-critical" to legit operator items):
 
+### Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM stopped after diagnosis)
+
+VM `mtds-lending-indices-20260507-140418` was launched 2026-05-07 14:04 IST and **stopped 2026-05-07 ~15:30 IST**
+after spot-checking the per-VM shard revealed silent data-quality issues. Despite emitting 8,000+
+`INSTRUMENT_PROCESSED` events + writing 4,459 manifest rows, only 4 of 8 (venue, chain) pairs were producing
+captured rows; the rest were silently writing `empty_confirmed` for dates where data should exist. The VM was
+stopped for diagnosis + bug fixes before re-launch — losing ~1,080 captured rows of progress (Arbitrum/Avalanche/
+Optimism/Polygon AAVE V3 days for 2022-Q4) is acceptable because re-running after the bug fixes is the cleaner
+path; re-runs of those days will pick up the same data.
+
+**Per-(venue, chain) outcome from per-VM shard** (cross-referenced with `_index/per_vm/mtds-lending-indices-20260507-140418.parquet` 4,459 rows):
+
+| venue / chain | captured | empty_confirmed | verdict |
+| --- | --- | --- | --- |
+| AAVEV3 / ARBITRUM | 269 | 74 | ✅ working |
+| AAVEV3 / OPTIMISM | 270 | 73 | ✅ working |
+| AAVEV3 / POLYGON | 272 | 71 | ✅ working |
+| AAVEV3 / AVALANCHE | 270 | 73 | ✅ working |
+| AAVEV3 / **ETHEREUM** | **0** | **343** | ❌ **silent zero** — bug |
+| AAVEV3 / BASE | 0 | 343 | ⚠️ likely correct (pre-launch in 2022) |
+| AAVEV3 / LINEA | 0 | 343 | ⚠️ likely correct (LINEA mainnet 2023) |
+| AAVEV3 / BSC | 0 | 343 | ⚠️ likely correct |
+| COMPOUNDV3 / ETHEREUM | 107 | — | ✅ working |
+| COMPOUNDV3 / ARBITRUM/BASE/OPTIMISM | 0 | 0 (skipped) | ❌ **subgraph schema error** |
+
+**Bug 1 — AAVE V3 ETHEREUM silent zero** (P0 for `carry_staked_basis`, the most-relevant chain):
+
+Run.log shows `instruments-store-defi parquet missing for aave_v3/ETHEREUM/2022-12-08; falling back to subgraph
+discovery` then `Wrote 0 rows`. The instruments-store-defi metadata is missing for ETHEREUM (404s for early 2022
+dates) AND the subgraph fallback is misconfigured for ETHEREUM specifically — other chains (Arbitrum, Optimism,
+Polygon, Avalanche) have working subgraph fallbacks with the same code. Investigation target:
+`market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (or equivalent) +
+the per-chain subgraph endpoint config. Likely a chain→subgraph URL mapping bug or a missing schema mapping
+for the Ethereum subgraph response shape.
+
+**Bug 2 — COMPOUND V3 multi-chain subgraph schema error**:
+
+Run.log shows `Subgraph query errors for Ff7ha9ELmpmg81D6nYxy4t8aGP26dPztqD1LDJNPqjLS: [{'message': "Type 'Query'
+has no field 'marketDailySnapshots'"}]` for COMPOUND_V3 on ARBITRUM/BASE/OPTIMISM. The Messari subgraph schema
+has been updated upstream + the MTDS GraphQL query is stale. Investigation target: the same handler's
+COMPOUND_V3 GraphQL query — likely the field is renamed (e.g. `marketHourlySnapshots` or
+`marketSnapshots`) or moved into a different entity. **Side effect**: VM records these as `empty_confirmed` per
+the writegate three-category model (subgraph returned 0 rows, no exception) — but per writegate Phase 2.A spirit
+this should be `attempted_failed` because the GraphQL error means we DIDN'T actually probe the data.
+
+**Bug 3 — `instruments-store-defi` metadata missing for early 2022 dates**:
+
+Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some
+chains and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early
+DeFi protocol launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...`
+returns 404 for AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-service` DeFi
+instrument-discovery script + its launch-date floor handling.
+
+**Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
+
+```bash
+PID=central-element-323112
+VM=mtds-lending-indices-{ts}  # the actual VM name
+gcloud storage cp gs://lending-indices-${PID}/_index/per_vm/${VM}.parquet /tmp/per_vm.parquet
+python3 -c "
+import pandas as pd
+df = pd.read_parquet('/tmp/per_vm.parquet')
+print(f'Total rows: {len(df):,}')
+m = df.groupby(['venue','chain','capture_status']).size().unstack(fill_value=0)
+print(m)
+# Spot any (venue, chain) with 0 captured but non-zero empty_confirmed → silent-zero candidate
+silent_zeros = m[(m.get('captured', 0) == 0) & (m.get('empty_confirmed', 0) > 100)]
+if len(silent_zeros) > 0:
+    print(f'\\n⚠️ Silent-zero candidates (captured=0 but empty_confirmed>100):')
+    print(silent_zeros)
+"
+gcloud storage cat gs://deployment-scripts-${PID}/vm-logs/${VM}/run.log | grep -E "Subgraph query error|metadata unavailable|Wrote 0 rows" | head -20
+```
+
+Do this verification BEFORE assuming the VM is producing useful data based on event-stream alone.
+
 1. **Solana coverage is genuinely thin** — `lst-rates-{pid}` has 784 SOLANA rows over a 2-year window (~monthly
    cadence). `carry_staked_basis` Solana leg won't have daily granularity until this is filled. Pyth wiring
    (separate item) is necessary-not-sufficient.
