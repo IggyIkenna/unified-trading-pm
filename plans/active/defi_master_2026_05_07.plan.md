@@ -193,58 +193,63 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
-> **PLANNING-CRITICAL CORRECTION 2026-05-07** — The "Ethereum 85% / Solana 99.9% / Arb/Base/Polygon 60%" headline numbers
-> below are EMPIRICALLY WRONG per the per-chain coverage diagnosis run 2026-05-07 from
-> `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` (313,365 manifest rows,
-> schema_version=6, last write 2026-05-05 13:44 UTC). Operator-actionable Qs raised to Ikenna in the same agent run.
+> **CORRECTION 2026-05-07 — earlier "PLANNING-CRITICAL" claim retracted.** A sub-agent + main-agent jointly misread the
+> DeFi manifest layout, surfaced an alarming "Arb/Base/Polygon at 0%" finding, and pushed it as a planning-critical
+> correction. Re-verification by walking ALL DeFi buckets shows the original plan numbers are defensible — the misread
+> was reading only ONE bucket (the asset-group canonical) instead of the 10+ per-data_type buckets where Arb/Base/
+> Polygon data actually lives. Codex now documents the multi-bucket DeFi layout to prevent repeat misreads — see
+> [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+> § "DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture".
 
-**Real coverage as of 2026-05-07 manifest read:**
+**Verified DeFi bucket layout (2026-05-07)** — full list with `_index/availability_index.parquet` confirmed present:
 
-| chain | claimed | actual captured | actual cov % | days_missing per data_type | window observed |
+| Bucket | Rows | Chains | Last write |
+| --- | --- | --- | --- |
+| `market-data-tick-defi-{pid}` (asset-group, Phase-1 + Phase-2 mixed) | 313,365 | ETH + SOLANA | 2026-05-05 13:44 |
+| `lending-indices-{pid}` | 37,000 | ETH + 9 EVM (Opt/Base/Arb/Scroll/Avax/Linea/BSC/Polygon/zkSync) | 2026-05-05 00:56 |
+| `dex-swaps-{pid}` | 46,491 | ETH + 7 EVM | 2026-05-05 00:56 |
+| `evm-defi-{pid}` | 22,633 | ETH + Arb/Base/Opt/Polygon | 2026-05-05 10:06 |
+| `instruments-store-defi-{pid}` | 127,896 | 7+ chains | 2026-05-05 07:25 |
+| `gas-fees-{pid}` | 11,988 | ETH + 9 EVM | 2026-05-05 00:55 |
+| `oracle-prices-{pid}` | 7,032 | ETH + Arb/Base/Opt/Polygon | 2026-05-05 00:55 |
+| `perp-funding-{pid}` | 5,575 | HYPERLIQUID + ASTER | 2026-05-05 00:55 |
+| `solana-defi-{pid}` | 5,028 | SOLANA | 2026-04-13 15:09 (older) |
+| `lst-rates-{pid}` | 4,356 | ETH + SOLANA | 2026-05-05 00:55 |
+
+**deployment-api correctly handles the split**: `data_status_service.py:2802` `_BUCKET_CATEGORY_OVERRIDES` routes
+each per-data_type to its dedicated bucket; `_canonicalise_defi_data_types()` at line 991 normalises the dual
+kebab/snake_case `data_type` vocabulary at read-time. No data-status code bug. The original plan numbers (Ethereum 85%
+/ Solana 99.9% / Arb-Base-Polygon 60%) are likely reading the per-bucket panels in the deployment-ui, which IS the
+right view.
+
+**Real residual concerns from this re-verification** (down-graded from "planning-critical" to legit operator items):
+
+1. **Solana coverage is genuinely thin** — `lst-rates-{pid}` has 784 SOLANA rows over a 2-year window (~monthly
+   cadence). `carry_staked_basis` Solana leg won't have daily granularity until this is filled. Pyth wiring
+   (separate item) is necessary-not-sufficient.
+2. **Kebab/snake `data_type` vocab inconsistency** — most per-data_type DeFi buckets contain BOTH forms for the SAME
+   data (e.g. `lending-indices-{pid}` has 24,976 kebab + 12,024 snake_case rows). Read-time canonicaliser handles it
+   today but it's a real follow-up: write a one-shot migration to rewrite kebab → snake then delete the
+   canonicaliser. No named successor plan yet — could be filed as a small follow-up under
+   `manifest_migration_master_2026_05_07`.
+3. **`solana-defi-{pid}` is 3+ weeks stale** — last write 2026-04-13. Worth confirming whether that handler is
+   intentionally paused or has been broken.
+4. **`launch-mtds-perp-funding-backfill-vm.sh`** is referenced in CLAUDE.md but missing from
+   `deployment-service/scripts/vm/`. `leveraged_funding_arb` blocker — file as a small follow-up to author it.
+
+**Single-VM launch recommendation** (unchanged from earlier):
+
+| Rank | Launcher | Window | Expected rows | ETA | Status |
 | --- | --- | --- | --- | --- | --- |
-| ETHEREUM | 85% | 312,511 rows | **~20%** (varies by data_type) | ~2,400 | 2024-05-02 → 2026-01-23 (most data_types stale) |
-| SOLANA | 99.9% | 169 rows | **1.3% lst_rates / 1.4% lending** | 2,212-2,214 | 2022-11-01 → 2025-01-16 (monthly cadence!) |
-| ARBITRUM | 60% | **0 rows** | **0%** | n/a — never run | n/a |
-| BASE | 60% | **0 rows** | **0%** | n/a — never run | n/a |
-| POLYGON | 60% | **0 rows** | **0%** | n/a — never run | n/a |
-
-**Operator-actionable questions** (raise to Ikenna BEFORE next launches):
-
-1. Was the original "60%" claim reading a different bucket / a non-canonical manifest?
-2. If Arb/Base/Polygon were truly never backfilled, do the existing MTDS DeFi launchers default to Ethereum-only via
-   UAC `CHAIN_RPC_TEMPLATES` (silently no-op for other chains)? Multi-chain launchers may need their `--chain` flag /
-   per-chain venue iteration audited before they'll actually write Arb/Base/Polygon shards.
-3. **Ethereum forward-poll stopped 2026-01-23** for most data_types (only `vault_share_price` is current at
-   2026-05-03). Was forward-poll paused intentionally, or is it broken? No point backfilling history if forward-poll
-   is broken — the gap will just reopen.
-4. SOLANA cadence is monthly (30-32 captured dates over a 2-year window). Either intentional (one-day-per-month
-   snapshots) or the backfill was sparse. `carry_staked_basis` Solana leg cannot run on 1.3% coverage regardless of
-   Pyth wiring.
-
-**988-dates-missing claim is undercounted by ~3×** — real Ethereum-only gap is ~2,400 days × 9 data_types ≈ 21,600
-manifest rows.
-
-**Top-priority single-VM launches** (for whichever operator-cleared question 1+2 first):
-
-| Rank | Launcher | Window | Expected rows | ETA |
-| --- | --- | --- | --- | --- |
-| 1 | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07` | full history | ~9,668 (writes 4 data_types in one go: rate_indices/utilization/risk_params/oracle_prices) | ~3h |
-| 2 | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | already at 33% (highest); sDAI/sUSDe/sFRAX/sUSDS = carry-archetype critical | parallel-safe to #1 |
-
-**Rank 1 already in flight**: `mtds-lending-indices-20260507-140418` launched 2026-05-07 14:04 IST, ETA 17:00-19:00 IST.
-
-**Out-of-launcher-dir flag** (raised by agent): `launch-mtds-perp-funding-backfill-vm.sh` is referenced in CLAUDE.md
-"Singleton-locked launchers" + "VM Naming Convention" sections but does NOT exist in `deployment-service/scripts/vm/`.
-Either it lives in a different path or the launcher hasn't been authored — `leveraged_funding_arb` blocker if so. Flag
-to Ikenna.
-
-**Source agent run**: per-chain DeFi coverage diagnosis sub-agent 2026-05-07 (analysis script at `/tmp/defi_coverage_analysis.py` — research-only, not committed).
+| 1 | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07` | full history | ~9,668 | ~3h | **In flight** as `mtds-lending-indices-20260507-140418` since 14:04 IST |
+| 2 | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | high carry-archetype value | parallel-safe | not yet launched |
 
 - [ ] [AGENT] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done), Arbitrum / Base / Polygon
-      (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. **DIAGNOSIS-CORRECTED 2026-05-07
-      — see PLANNING-CRITICAL block above; original % claims invalidated; operator Qs gating next launches.** [AUDIT
-      2026-05-07: FRESH — actionable post-rollup-rerun, but blocked on Ikenna's confirmation that Arb/Base/Polygon
-      launchers actually write multi-chain shards before fanning out]
+      (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. **2026-05-07 NOTE: original
+      headline percentages are defensible if reading the deployment-ui's per-bucket panels — see
+      CORRECTION block above. Earlier "0%" claim was a single-bucket misread, not reality.** [AUDIT 2026-05-07:
+      FRESH — actionable; the in-flight `mtds-lending-indices-20260507-140418` VM is doing the right work. After it
+      drains, run vault-share-price as the parallel-safe runner-up.]
 
 ### DeFi DEX-perp adapters from `cefi_venue_universe_expansion` (re-classified to DeFi)
 

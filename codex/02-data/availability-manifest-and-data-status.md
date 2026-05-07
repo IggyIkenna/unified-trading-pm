@@ -46,6 +46,91 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 Services write to the manifest via `ManifestWriter` (UTL). The deployment-api reads it via `read_availability_index()`.
 The deployment-ui renders it as the data status page.
 
+### ⚠️ DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture
+
+A common misread (incident 2026-05-07 — sub-agent + main-agent both miscounted): MTDS DeFi data is **split across
+multiple GCS buckets by `(asset_group=defi, data_type)`**. Reading only the "canonical" `market-data-tick-defi-{pid}`
+bucket and concluding "Arb/Base/Polygon are at 0%" is **wrong** — those chains have data in the per-data_type buckets.
+
+**Bucket layout** (verified 2026-05-07 by listing every DeFi-named bucket in
+`gs://central-element-323112` + reading each `_index/availability_index.parquet`):
+
+| Bucket pattern                                | Carries data_types                                                                                                                | Phase | Chains observed                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------ |
+| `market-data-tick-defi-{pid}` (asset-group)   | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `rate_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2  | ETHEREUM + SOLANA                                            |
+| `lending-indices-{pid}`                       | `lending_indices`                                                                                                                 | 1     | ETHEREUM + 9 EVM chains (Optimism / Base / Arbitrum / Scroll / Avalanche / Linea / BSC / Polygon / zkSync) |
+| `dex-swaps-{pid}`                             | `dex_swaps`                                                                                                                       | 1     | ETHEREUM + 7 EVM chains                                      |
+| `dex-pools-{pid}` (override-targeted)         | `dex_pools`                                                                                                                       | 1     | (per-pool granularity)                                       |
+| `oracle-prices-{pid}`                         | `oracle_prices`                                                                                                                   | 1     | ETHEREUM + Arbitrum / Base / Optimism / Polygon              |
+| `gas-fees-{pid}`                              | `gas_fees`                                                                                                                        | 1     | ETHEREUM + 9 EVM chains                                      |
+| `lst-rates-{pid}`                             | `lst_rates`                                                                                                                       | 1     | ETHEREUM + SOLANA                                            |
+| `perp-funding-{pid}`                          | `perp_funding`                                                                                                                    | 1     | HYPERLIQUID, ASTER (DEX perps)                               |
+| `liquidations-{pid}` (override-targeted)      | `liquidations`                                                                                                                    | 1     | EVM                                                          |
+| `evm-defi-{pid}`                              | `evm_defi`, `lending_indices`                                                                                                     | mixed | ETHEREUM + 4 EVM chains                                      |
+| `solana-defi-{pid}`                           | `solana_defi`                                                                                                                     | mixed | SOLANA                                                       |
+| `instruments-store-defi-{pid}`                | (instruments metadata, multi-chain)                                                                                               | n/a   | 7+ chains                                                    |
+
+**deployment-api routes correctly** — see `data_status_service.py`
+[`_BUCKET_CATEGORY_OVERRIDES`](../../deployment-api/deployment_api/services/data_status_service.py)
+(line 2802) which explicitly maps `(market-tick-data-service, gas-fees|evm-defi|solana-defi|dex-pools|dex-swaps|lending-indices|liquidations|lst-rates|oracle-prices|perp-funding) → {data_type}-{pid}`. The
+[`_MTDS_DEFI_SUB_DIMENSIONS`](../../deployment-api/deployment_api/services/data_status_service.py) list (line 2818)
+enumerates the Phase-1 sub-buckets so the data-status panel queries each one. **If you're computing DeFi coverage,
+read every bucket — not just the canonical asset-group one.**
+
+#### Why two manifest layouts coexist
+
+1. **Phase-1 per-data_type buckets** (`gas-fees`, `lending-indices`, etc.) — older sub-bucket pattern; per-data_type
+   manifest is independent of the asset-group rollup. New DeFi data_types ship to dedicated buckets so the The Graph /
+   Subgraph / chain-specific RPC adapters can rate-limit independently and operators can drill in via per-bucket
+   coverage panels.
+2. **Phase-2 event-typed handlers + eigenlayer_rewards** (`liquidation_events`, `flash_loan_events`, etc.) — newer
+   pattern; lands in the canonical `market-data-tick-defi-{pid}` bucket (no override needed; default
+   `_BUCKET_TEMPLATES` entry picks them up).
+
+#### Vocabulary inconsistency to know about (kebab-case vs snake_case)
+
+Many DeFi buckets contain BOTH `data_type=lending-indices` (kebab-case, older write path) AND
+`data_type=lending_indices` (snake_case, newer + UAC-canonical) for the SAME data. Concrete numbers
+(verified 2026-05-07):
+
+* `lending-indices-{pid}`: 24,976 kebab-case + 12,024 snake_case rows
+* `dex-swaps-{pid}`: 28,171 kebab + 18,320 snake
+* `lst-rates-{pid}`: 1,560 kebab + 2,796 snake
+* `oracle-prices-{pid}`: 1,926 kebab + 5,106 snake
+* `perp-funding-{pid}`: 3,298 kebab + 2,277 snake
+
+The deployment-api handles this via
+[`_canonicalise_defi_data_types()`](../../deployment-api/deployment_api/services/data_status_service.py)
+(line 991) which read-time normalises kebab → snake. Per the function's docstring, "safe to remove once the
+corresponding one-shot manifest migration runs (Plan B follow-up — currently no successor plan)" — so this is a real
+follow-up: write a migration script that rewrites kebab `data_type` values in place across the 5 affected buckets,
+then delete the canonicaliser. Aligns with the workspace "Manifest migration, NOT fallback" rule.
+
+#### Operator verification recipe — exhaustive bucket walk
+
+When in doubt about DeFi coverage, walk every manifest:
+
+```bash
+PID=central-element-323112
+for B in dex-swaps evm-defi gas-fees lending-indices lst-rates market-data-tick-defi oracle-prices perp-funding solana-defi instruments-store-defi; do
+  gcloud storage cp gs://${B}-${PID}/_index/availability_index.parquet /tmp/${B}.parquet 2>&1 | grep -i error
+done
+python3 -c "
+import pandas as pd
+from pathlib import Path
+for p in sorted(Path('/tmp').glob('*-central-element-*.parquet')):
+    pass  # iterate equivalent
+for B in ['dex-swaps','evm-defi','gas-fees','lending-indices','lst-rates','market-data-tick-defi','oracle-prices','perp-funding','solana-defi','instruments-store-defi']:
+    df = pd.read_parquet(f'/tmp/{B}.parquet')
+    print(f'{B}: {len(df):,} rows · chains={sorted(df[\"chain\"].dropna().unique())}'  if 'chain' in df.columns else f'{B}: {len(df):,} rows')
+"
+```
+
+Reference incident: **2026-05-07** — a per-chain coverage diagnosis sub-agent read only `market-data-tick-defi`,
+concluded Arb/Base/Polygon were at 0%, surfaced as "PLANNING-CRITICAL CORRECTION" to the operator. Wrong call —
+those chains have ~1k-5k rows each in the per-data_type buckets. The codex section above is the durable answer so
+future agents don't repeat this misread.
+
 ### SSOT Locations
 
 | Component                                            | Location                                                                                                                                                                                            |
