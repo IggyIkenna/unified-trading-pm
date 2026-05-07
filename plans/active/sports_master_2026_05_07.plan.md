@@ -346,19 +346,26 @@ The `data_type=odds` row appears under instruments-service in deployment-ui. Thr
 should live in MTDS, not instruments-service), `footystats_odds` (separate UAC normalizer per SSOT), api_football's
 `/odds` endpoint. UAC has no contract for `(asset_group=sports, source=∅, data_type=odds)`.
 
-- [ ] [AGENT] P0. Trace the writer for `data_type=odds` in instruments-service: `git blame` / `rg "data_type.*odds"`
-      across `instruments-service/instruments_service/`. Identify which normalizer + orchestrator path produces the row
-      and which API endpoint feeds it. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. Decide canonical home: MTDS for market-typed odds (matches the asset*group=cefi `data_type=ohlcv*\*`
-      convention — odds are price-equivalent ticks); instruments-service ONLY if these rows are pre-game pricing
-      reference (analogous to options-chain definitions, not actual market ticks). [AUDIT 2026-05-07: FRESH —
-      actionable]
-- [ ] [SCRIPT] P0. If verdict = MTDS-owned: migrate writer + flip manifest rows → `record_failed(reason=WRONG_OWNER)` +
-      delete parquets + re-fetch via MTDS adapter. If verdict = instruments-service-owned (refdata): seed UAC contract
-      with the source-specific schema + add `cadence` field per rule C.11 below. [AUDIT 2026-05-07: BLOCKED-ON
-      sports_master:C.2 trace + verdict above]
-- [ ] [DOC] P0. Document the outcome in `codex/02-data/sports-data-source-coverage-matrix.md` under a new
-      `# Odds     provenance` section. [AUDIT 2026-05-07: BLOCKED-ON sports_master:C.2 verdict]
+- [x] [AGENT] P0. Traced the writer for `data_type=ODDS` in instruments-service:
+      `instruments-service/instruments_service/engine/orchestrator.py:4760-4900`. Source = footystats
+      `get_fixture_odds_snapshot()`
+      (instruments-service/instruments_service/reference_data/adapters/sports/adapters/footystats.py:270). The
+      footystats adapter's `get_odds()` is a deprecated stub that logs "use get_fixture_odds_snapshot() instead" — no
+      api_football odds path. Pre-match snapshot, 68 markets, `data_available_at = kickoff - 72h`. Path:
+      `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_odds/league={L}/footystats_odds.parquet`.
+- [x] [AGENT] P0. Decided canonical home: **instruments-service ODDS = pre-match refdata-style snapshot, KEEP**.
+      Reasoning: it's not "market-typed odds" (not intra-day-ticking) — it's a one-shot opening snapshot per (league,
+      date) used by features-sports for backtest training. The intra-day movement counterpart is MTDS `odds_api` which
+      writes 8 horizon buckets (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0) under data_type `odds_horizon_bucket`. The
+      two are different-purpose data and SHOULD coexist in their current homes. NO migration; NO merge. The data-status
+      panel renders them separately under their respective service nodes.
+- [x] [SCRIPT] P0. **No code change required** (verdict = instruments-service-owned refdata; no UAC contract change
+      needed beyond the already-existing FootyStats schema declarations). The `cadence` field per C.11 still applies as
+      a separate workspace-wide refdata-cadence migration; instruments-service ODDS is per-(league, date) which already
+      matches the per-day shard atom — no cadence drift to fix.
+- [x] [DOC] P0. Documented the outcome in `codex/02-data/sports-data-source-coverage-matrix.md` § 4 (resolved the "ODDS
+      duplication" open question), § 2.2 (clarified `ODDS` here = footystats snapshot only), and § 5 changelog.
+      Schema-modal disambiguation under C.3 below.
 
 #### C.3 — PREDICTIONS vs ODDS schema-modal clarity (doc-only)
 

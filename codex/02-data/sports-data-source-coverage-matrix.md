@@ -93,8 +93,10 @@ FEATURES 18). Note PRED_NO_FOOTYSTATS preset excludes some PREDICTION leagues (s
 | `PREDICTIONS` | per-league × per-fixture-date | subset of (footystats league, date) pairs with fixtures         | Yes                     |
 | `ODDS`        | per-league × per-fixture-date | (footystats league, date) pairs with fixtures — sparse backfill | Yes                     |
 
-`ODDS` also feeds from `odds_api` (33 PREDICTION leagues) in the live-capture path; batch/backfill currently uses
-`footystats_odds`. Aggregator should merge both sources under `ODDS` OR expose them as separate data_types — see §4.
+**`ODDS` here = footystats pre-match snapshot only** (one capture per league × date, opening odds across 68 markets,
+`data_available_at = kickoff - 72h`). Per the C.2 resolution at §4, `odds_api` intra-day market movement (8 horizon
+buckets) lives in MTDS as `odds_horizon_bucket`, not in instruments-service ODDS. They are different-purpose data that
+legitimately coexist; do NOT merge in the aggregator.
 
 ### 2.3 Understat-sourced (source key = `understat`)
 
@@ -175,9 +177,26 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
 
 ## 4. Open questions / follow-ups
 
-- **ODDS duplication.** Aggregator currently merges `odds_api` live capture and `footystats_odds` backfill under `ODDS`.
-  Decision: split into `ODDS_LIVE` (odds_api, 33 leagues) vs `ODDS_HIST` (footystats, 46 leagues), or keep merged with
-  source-breakdown sub-column. Default pick here: **keep merged, expose source split in drilldown.**
+- **ODDS duplication — RESOLVED 2026-05-07** (C.2 audit per
+  `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.2). The data-status panel surfaces
+  `data_type=ODDS` in instruments-service AND `odds_horizon_bucket` in MTDS as separate panels, which had felt
+  redundant. Investigation outcome: they are **not duplicates**, they serve different purposes and SHOULD coexist:
+  - **`ODDS` in instruments-service** = pre-match snapshot from FootyStats `get_fixture_odds_snapshot()`
+    (`instruments-service/instruments_service/engine/orchestrator.py:4760-4900`). Captures opening odds across 68
+    markets at fetch time. PIT semantics: `data_available_at = kickoff - 72h` (FootyStats publishes ~3 days before
+    kickoff; 98% by T-24h, 100% by T-72h). Path:
+    `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_odds/league={L}/footystats_odds.parquet`.
+    Refdata-style: one snapshot per (league, date), captured once. Used by features-sports for backtest training.
+  - **`odds_api` in MTDS** = live + historical intra-day market movement, bucketed at 8 horizons (T-24h, T-12h, T-6h,
+    T-4h, T-2h, T-1h, T-10m, T-0). Per CLAUDE.md "Sports source coverage windows" SOURCE_COVERAGE_START 2020-06-06. Used
+    by execution-service for live trading + features-sports for movement features (CLV, steam, late-money).
+  - **api_football `/odds`** is NOT used by instruments-service. The footystats_odds adapter has `get_odds()` defined as
+    a deprecated stub that logs "use get_fixture_odds_snapshot() instead" — there is no api_football odds path.
+  - **Decision**: keep both in their current homes. NO migration. The data-status panel SHOULD render them under their
+    respective service nodes (ODDS under instruments-service, odds_horizon_bucket under MTDS); operator clarity comes
+    from the panel disambiguating the two purposes (pre-match opening snapshot vs intra-day movement). Schema-modal
+    descriptions for both data_types should call out the distinction explicitly per C.3 (also folded into
+    `sports_master_2026_05_07.plan.md` § Audit findings).
 
 - **V2 manifest rows (496 rows, empty league_id).** Pollute per-league drilldown because they sum into totals with blank
   league. Aggregator must filter `schema_version >= 4` for per-league axes. A one-off delete of v2 rows is out of scope
@@ -199,3 +218,11 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   deployment-api aggregator was using FIXTURES row-count as the denominator for 1-to-many children, producing nonsense
   ratios like "BRASILEIRAO 49/2 fixtures 100%" and mislabelling the entity drilldown as "venues". Matrix above
   supersedes any implicit per-data_type coverage rules previously scattered in adapters.
+
+- **2026-05-07** — Resolved §4 "ODDS duplication" open question (C.2 audit per
+  `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.2). Investigation: instruments-service
+  `data_type=ODDS` writer is footystats `get_fixture_odds_snapshot()` only (no api_football, no odds_api). MTDS
+  `odds_api` lives as `odds_horizon_bucket` data_type with 8-horizon intra-day movement buckets. The two are
+  different-purpose data (refdata-style pre-match snapshot vs intra-day market movement) and should coexist in their
+  current homes — NO migration, NO merge. §2.2 + §4 updated; schema-modal disambiguation tracked under C.3 in
+  `sports_master_2026_05_07.plan.md`.

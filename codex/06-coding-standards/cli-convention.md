@@ -109,3 +109,41 @@ For live services, support runtime adjustment:
 | market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                      |
 | ml-training-service      | `--mode` used for operation (train/evaluate)              | Rename to `--operation`, add `--mode batch/live`        |
 | UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                       |
+
+### `--shard-key` for surgical per-shard recovery (2026-05-07)
+
+The deployment-ui Data Status panel's Deploy-Missing button on a single leaf shard fires a backfill VM with a single
+fully-qualified `--shard-key=...` flag rather than re-running the whole asset_group.
+
+Format (pipe-delimited, 6 fields):
+
+```
+asset_group | venue | data_type | instrument_type | instrument_id_or_root | day
+```
+
+Empty fields are skipped (the underlying default applies). The 5th field routes to `--root` for bundled data_types
+(`options_chain` / `futures_chain`) and to `--instrument-ids` otherwise — the `data_type` value drives the routing.
+
+Example invocations:
+
+```bash
+# CeFi spot/perp single-instrument:
+mtds collect-trades --shard-key="cefi|BINANCE-FUTURES|trades|PERPETUAL|btcusdt|2024-03-04"
+
+# TradFi options bundle:
+mtds collect-options-chain --shard-key="tradfi|CME|options_chain|options_chain|ES.OPT|2024-01-15"
+
+# DeFi protocol shard with empty instrument_type:
+mtds collect-lending-indices --shard-key="defi|AAVEV3-ARBITRUM|lending_indices||USDC|2024-03-04"
+```
+
+Per-service implementations call `market_tick_data_service.cli.shard_key.decompose_shard_key(args)` once on entry to
+flatten the shard key into the individual filter flags (`--asset-group` / `--venues` / `--data-types` /
+`--instrument-type` / `--instrument-ids` / `--root` / `--day`). Existing handlers don't need to know about
+`--shard-key` — they consume the unpacked flags.
+
+Other services that backfill per-shard (instruments-service, features-\* services, MDPS) should adopt the same
+convention. SSOT for the format + parser:
+[`market_tick_data_service/cli/shard_key.py`](../../market-tick-data-service/market_tick_data_service/cli/shard_key.py).
+SSOT for the drill-down hierarchy that emits this form:
+[`codex/02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md).

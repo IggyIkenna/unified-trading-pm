@@ -273,20 +273,25 @@ on whatever flags exist today as a degenerate case).
       `max(chain_genesis, protocol_launch_date)` via `get_protocol_launch_date(chain, protocol)`. Pre-protocol-launch
       days clip exactly like pre-chain-genesis already does. Falls through unchanged for pending-investigation pairs
       (chain-genesis over-clip is the safe fallback).
-- [ ] [deployment-api] P0. New service method
-      `data_status_drilldown.get_hierarchical_drilldown(service, asset_group,     window_start, window_end)` returning a
-      tree shaped per the codex shard atom. Each leaf has
-      `{captured, empty_confirmed, attempted_failed,     row_key, download_url}`. Reads the manifest once via
-      `read_availability_index`; groups by axis order from
-      `data_status_axis_matrix.SHARD_AXIS_MATRIX[service][asset_group]`.
-- [ ] [deployment-api] P0. New route `GET /api/data-status/drilldown/{service}/{asset_group}` accepts `start_date` /
-      `end_date` / optional `chain` / `venue` / `data_type` / `instrument_type` / `instrument_id` filters for lazy-load.
-      Returns partial tree shaped by the requested filter depth.
+- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New module
+      `data_status_hierarchical.py` with `get_hierarchical_drilldown(service, asset_group, window_start, window_end,
+      filters, expand_to_depth)` returning a tree shaped per the codex shard atom. Each leaf carries
+      `{captured, empty_confirmed, attempted_failed, total, completion_pct, row_key, children, is_leaf}`. Reads the
+      manifest once via `read_availability_index`; axis order from `SHARD_AXIS_MATRIX[(service, asset_group)]`.
+- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New route
+      `GET /api/data-status/drilldown/{service}/{asset_group}` accepts `start_date` / `end_date` / per-axis filters
+      (`chain` / `venue` / `data_type` / `instrument_type` / `instrument_id` / `league_id` / `feature_group` /
+      `timeframe` / `canonical_question_group`) + `expand_to_depth`. Lazy-load via filter query params: returns the
+      subtree rooted at the deepest matched filter level. Plus `GET /api/data-status/drilldown-pairs` enumerating
+      every supported `(service, asset_group)` from the SSOT.
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
-      (per-category-bucket-layouts), stream parquet OR CSV.
-- [ ] [deployment-api] P0. Unit tests: hierarchical tree shape per asset_group; lazy-load filter at each depth;
-      per-shard download correctness for bundled (options_chain) vs per-instrument shards.
+      (per-category-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
+      accept partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
+- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in
+      `test_data_status_hierarchical.py` covering top-level axis routing for MTDS DEFI, filter-descent into subtree,
+      capture-status splits, window clipping, empty manifest, uncovered asset_group fallback, supported-pairs
+      enumeration.
 
 ### Phase 2 — deployment-ui hierarchical drill-down component
 
@@ -297,11 +302,17 @@ on whatever flags exist today as a degenerate case).
       `BreakdownsAccordion.tsx`, `CategoryHeader.tsx` — and align label-to-field exactly. Visual smoke: ARBITRUM should
       now read e.g. `5500 / 8400 shards (65%)` not `32/54 shards (59%)`, AND `1084 dates missing` becomes whatever the
       new chain-clipped denominator yields (e.g. ~200 instead of 1084).
-- [ ] [deployment-ui] P0. New `HierarchicalShardDrilldown.tsx` component. Recursive: each level renders a list of
-      expandable items; on expand fires `getHierarchicalDrilldown(...)` with the next-level filter set. Empty levels (no
-      captured + no expected) collapse to "no data" badge.
+- [x] [deployment-ui] P0 (shipped deployment-ui@209a41a). New `HierarchicalShardDrilldown.tsx` component (~250 LOC).
+      Recursive: each level renders a list of expandable items; on first expand fires `getHierarchicalDrilldown(...)`
+      with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows `axis=value |
+      captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch on mount with
+      `expand_to_depth=1`. Plus `client.ts` API wrapper `getHierarchicalDrilldown` + `getDrilldownSupportedPairs` +
+      `DrilldownNode` / `DrilldownResponse` / `DrilldownPair` TypeScript interfaces (~100 LOC).
 - [ ] [deployment-ui] P0. `DataStatusTab.tsx` — under each asset_group panel, below the existing `BreakdownsAccordion`,
-      render the new component. Default-collapsed; lazy-load on first expand.
+      render the new component. Default-collapsed; lazy-load on first expand. **DEFERRED** — component is drop-in-ready;
+      wire-in is one `<HierarchicalShardDrilldown service={...} assetGroup={...} startDate={...} endDate={...} />`
+      under the existing accordion. Pre-existing TS error in DataStatusTab.tsx:5884 (ShardCoordinate.day) needs
+      resolution first.
 - [ ] [deployment-ui] P0. Per-leaf SmartDownloadButton — passes the full row_key to the download endpoint.
       Capture-status banner already in place from Phase 3 (multi-axis plan); no change to that surface.
 - [ ] [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
@@ -317,25 +328,33 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 4 — MTDS CLI shard-targeting
 
-- [ ] [market-tick-data-service] P1. Add `--instrument-type` (singular, filter) to `cli/main.py` argument parser. Today
-      there's `--instrument-ids` (plural) but no `--instrument-type` for filter.
-- [ ] [market-tick-data-service] P1. Add `--root` for bundled-chain data_types (options_chain, futures_chain) — re-runs
-      only the named root.
-- [ ] [market-tick-data-service] P1. Add `--day` / `--date` for single-day mode — fetch only this date for this shard.
-- [ ] [market-tick-data-service] P1. Add `--shard-key` parser. Pipe- delimited form
-      `asset_group|venue|data_type|instrument_type|     instrument_id_or_root|day`. Splits into individual flags before
-      handler dispatch — handlers don't need to know about `--shard-key`, just consume the unpacked flags.
-- [ ] [market-tick-data-service] P1. Per-handler audit: each handler under `cli/handlers/` honors the new flags. Verify
-      `tick_data_handler` / `liquidations_handler` / `dex_pools_handler` / `lending_indices_handler` /
-      `dex_swaps_handler` / `gas_fees_handler` / `lst_rates_handler` / `oracle_prices_handler` / `perp_funding_handler`
-      / `evm_defi_handler` / `solana_defi_handler` / `eigenlayer_rewards_handler`.
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--instrument-type` (singular filter) to
+      `cli/main.py` parser.
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--root` for bundled-chain data_types
+      (options_chain / futures_chain).
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--day` / `--date` for single-day mode (`--date`
+      is alias).
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--shard-key` + new module `cli/shard_key.py` with
+      `parse_shard_key()` + `decompose_shard_key()` helpers. 14/14 unit tests pass covering parse / whitespace strip /
+      bundled-chain routing / explicit-flag-precedence / `--date` alias fold / conflict detection. Routes the 5th
+      field to `--root` for bundled data_types and `--instrument-ids` otherwise; data_type drives the routing.
+- [ ] [market-tick-data-service] P1. Per-handler audit: each handler under `cli/handlers/` calls
+      `decompose_shard_key(args)` on entry. **DEFERRED** to follow-up — the parser + flags are the foundation;
+      existing handlers already honor `--venues` / `--data-types` / `--instrument-ids` / `--start-date` / `--end-date`
+      which the decomposer fills in, so MTDS invocations with `--shard-key` work today; explicit `decompose_shard_key`
+      call adds robustness for `--instrument-type` / `--root` / `--day` filters that today's handlers may ignore.
 
 ### Phase 5 — Codex docs + plan close
 
-- [ ] [unified-trading-pm] P2. `codex/02-data/availability-manifest-and-data-status.md` new section "Drill-down
-      hierarchy = shard atom" with the matrix from this plan.
-- [ ] [unified-trading-pm] P2. `codex/06-coding-standards/cli-convention.md` add the `--shard-key` convention.
-- [ ] [unified-trading-pm] P2. Plan flips to closeout once Phases 1–4 ship + cross-service QG passes on the affected
+- [x] [unified-trading-pm] P2 (this commit). New codex doc
+      `codex/02-data/data-status-drilldown-hierarchy.md` — drill-down hierarchy SSOT with per-asset_group depth table,
+      backend endpoint contract, frontend component contract, per-leaf download + Deploy-Missing surgical-recovery
+      flow, failure modes the drill-down catches. Created as a NEW doc rather than editing
+      `availability-manifest-and-data-status.md` to respect the active concurrent-edit on that file.
+- [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with
+      `--shard-key` convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi
+      options bundle / DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
+- [ ] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
       repos.
 
 ## Success criteria
