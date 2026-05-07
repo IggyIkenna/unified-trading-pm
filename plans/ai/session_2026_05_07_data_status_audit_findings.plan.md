@@ -258,10 +258,59 @@ lifecycle plan, but isn't currently named. Add as its own slice or fold into B.1
 
 #### C.7 — Other sports data_types — quick sanity sweep
 
-Per the screenshot: STANDINGS (33515/33527), TEAMS (3046/3049), VENUES (1/1), WEATHER (70899/70998), XG (12785/12805),
-MATCHES (101524/101572). Audit each schema modal for column count + signal density. Some should be small (TEAMS, VENUES
-= static refdata). Others (XG = per-match per-shot xG events) need real content to be useful — verify they're not
-minimal-flattened.
+Per the screenshot: STANDINGS (33515/33527), WEATHER (70899/70998), XG (12785/12805), MATCHES (101524/101572). Audit
+each schema modal for column count + signal density. XG (= per-match per-shot xG events) needs real content to be useful
+— verify it's not minimal-flattened. STANDINGS and MATCHES likely OK but worth a sanity check. TEAMS + VENUES moved to
+C.11 below (separate finding: refdata daily-shard anti-pattern).
+
+#### C.11 — TEAMS daily-shard refdata anti-pattern (same shape as LEAGUES C.1; VENUES is correct)
+
+User screenshot 2026-05-07 surfaced the count asymmetry:
+
+- **VENUES**: 1/1 shards (singleton — written once, persists forever). Schema = `id`, `venue_id`, `name`, `address`,
+  `city`, `country`, `capacity`, `surface`, `image`, **`latitude`**, **`longitude`**, **`altitude`**,
+  `data_available_at`. The lat/lon/altitude trio is OpenMeteo geocoder enrichment over the api_football base; that's the
+  only thing VENUES carries that TEAMS doesn't.
+- **TEAMS**: 3046/3049 shards (daily). Schema = `team_id`, `team_name`, `team_code`, `team_country`, `team_founded`,
+  `team_national`, `team_logo`, **`venue_id`**, **`venue_name`**, **`venue_address`**, **`venue_city`**,
+  **`venue_capacity`**, **`venue_surface`**, **`venue_image`**, `season`, `af_league_id`, `data_available_at`.
+
+Two findings:
+
+1. **TEAMS already carries 7 `venue_*` columns** — every venue field VENUES has except the OpenMeteo geo overlay
+   (lat/lon/altitude). VENUES could be killed entirely and the geo enrichment lifted to either: (a) a UAC
+   `VenueGeoEnrichment` static SSOT (geocode-once-on-discovery, not stored as a daily shard); (b) a small joinable
+   parquet keyed on `venue_id` written ONCE per venue.
+2. **TEAMS is daily-sharded but the data is per-(team, season), not per-day.** The schema includes `season` (int64) —
+   that IS the natural cadence. Re-fetching + re-writing the same 1000+ teams daily is the same "refdata-as-timeseries"
+   anti-pattern as LEAGUES (C.1). Mid-season changes (transfers, name changes, venue moves) are real but rare;
+   per-(team, season) shards with on-change updates is the right shape.
+
+**Action — refdata cadence SSOT**: codify a workspace rule that refdata data_types use one of three shard atoms:
+
+- **Singleton** (`shards = 1`): venue catalogue, league registry — UAC-canonical refdata that maps identifiers across
+  sources. VENUES is currently here (correct shape, just maybe redundant with TEAMS).
+- **Per-(entity, season)** (`shards = entities × seasons`): team metadata, fixture rosters — varies per-season,
+  occasional mid-season change writes. TEAMS and PLAYER_VALUES belong here, not in daily-shard land.
+- **Per-day** (`shards = days`): only for genuinely-time-varying snapshots (FIXTURE_STATS post-match, PLAYER_STATS
+  per-fixture, TICKS, FUNDING, etc.).
+
+Migration shape (mirrors C.1 LEAGUES kill but for TEAMS):
+
+1. Audit which downstream consumers actually need TEAMS-on-day-X (likely none — they want TEAMS-for-season-Y). Confirm
+   via `grep` across features-sports / strategy-service / instruments-service.
+2. Flip every existing TEAMS-daily manifest row to `record_empty(reason=EXPECTED_DEPRECATED_DATA_TYPE)` (extend reason
+   taxonomy if needed); rewrite the TEAMS adapter to write per-(team, season) singleton parquets keyed on
+   `(season, team_id)`; delete the old per-day parquets.
+3. UAC contract gains `cadence: "per_season"` field (or similar) so the data-status panel renders the right denominator
+   (`shards = teams × seasons` instead of `shards = days`).
+4. VENUES: either kill (fold into TEAMS) OR keep purely as the geo-enrichment overlay parquet (singleton, joinable on
+   `venue_id`). Decide based on whether OpenMeteo lat/lon/altitude is worth a separate maintenance surface.
+
+**Why this matters for the data-status panel**: the count asymmetry the user observed (VENUES=1 vs TEAMS=3000+) is
+misleading because the SAME data is being represented at two different cadences. An operator can't tell at a glance
+whether VENUES is "complete" (it is) or "broken" (it isn't — it's just singleton). Once both sit on per-(entity, season)
+cadence with cadence-aware denominators, the panel tells the truth.
 
 #### C.8 — Cross-source dropped-data audit (footystats / understat / DeFi)
 
@@ -289,20 +338,21 @@ exist, run the phantom-rows reconciler
 
 ### D. Migration / decision matrix per finding
 
-| #    | Action                                  | Migration shape                                                                                                                     | Owner plan                                      |
-| ---- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| B.1  | Flatten api_football                    | flip manifest → `attempted_failed reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING` + delete parquets + re-fetch                            | api_football plan                               |
-| B.2  | Hierarchical drill-down                 | additive — no migration                                                                                                             | drill-down plan                                 |
-| C.1  | Kill LEAGUES daily dump                 | `record_empty reason=EXPECTED_DEPRECATED_DATA_TYPE` + delete parquets + remove orchestrator + UAC contract + lift `logo_url` to UAC | TBD                                             |
-| C.2  | Resolve ODDS provenance                 | depends on outcome — may be a kill (duplicate of MTDS) OR a path-drift fix                                                          | TBD                                             |
-| C.3  | Document PREDICTIONS vs ODDS            | doc-only (codex); maybe rename data_type if confusing                                                                               | TBD                                             |
-| C.4  | Flatten PLAYER_VALUES                   | same shape as B.1 — flip + delete + re-fetch with per-player flatten                                                                | TBD                                             |
-| C.5  | (None — already correct)                | n/a                                                                                                                                 | n/a                                             |
-| C.6  | Audit SFI_PROGRESSIVE_STATS             | TBD pending audit                                                                                                                   | TBD                                             |
-| C.7  | Sanity sweep other sports data_types    | TBD per-data_type                                                                                                                   | TBD                                             |
-| C.8  | Cross-source normalizer audit           | TBD per-source                                                                                                                      | TBD                                             |
-| C.9  | AAVE_V3 phantom-rows                    | run reconcile_phantom_manifest_rows_all.py --asset-group defi                                                                       | TBD                                             |
-| C.10 | `match_end_time` cascade implementation | additive write-time column on FIXTURES + SFI freeze detection + UTL resolver helper                                                 | TBD (load-bearing for odds-settlement features) |
+| #    | Action                                                                      | Migration shape                                                                                                                     | Owner plan                                                              |
+| ---- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| B.1  | Flatten api_football                                                        | flip manifest → `attempted_failed reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING` + delete parquets + re-fetch                            | api_football plan                                                       |
+| B.2  | Hierarchical drill-down                                                     | additive — no migration                                                                                                             | drill-down plan                                                         |
+| C.1  | Kill LEAGUES daily dump                                                     | `record_empty reason=EXPECTED_DEPRECATED_DATA_TYPE` + delete parquets + remove orchestrator + UAC contract + lift `logo_url` to UAC | TBD                                                                     |
+| C.2  | Resolve ODDS provenance                                                     | depends on outcome — may be a kill (duplicate of MTDS) OR a path-drift fix                                                          | TBD                                                                     |
+| C.3  | Document PREDICTIONS vs ODDS                                                | doc-only (codex); maybe rename data_type if confusing                                                                               | TBD                                                                     |
+| C.4  | Flatten PLAYER_VALUES                                                       | same shape as B.1 — flip + delete + re-fetch with per-player flatten                                                                | TBD                                                                     |
+| C.5  | (None — already correct)                                                    | n/a                                                                                                                                 | n/a                                                                     |
+| C.6  | Audit SFI_PROGRESSIVE_STATS                                                 | TBD pending audit                                                                                                                   | TBD                                                                     |
+| C.7  | Sanity sweep other sports data_types                                        | TBD per-data_type                                                                                                                   | TBD                                                                     |
+| C.8  | Cross-source normalizer audit                                               | TBD per-source                                                                                                                      | TBD                                                                     |
+| C.9  | AAVE_V3 phantom-rows                                                        | run reconcile_phantom_manifest_rows_all.py --asset-group defi                                                                       | TBD                                                                     |
+| C.10 | `match_end_time` cascade implementation                                     | additive write-time column on FIXTURES + SFI freeze detection + UTL resolver helper                                                 | TBD (load-bearing for odds-settlement features)                         |
+| C.11 | TEAMS daily-shard kill + per-(team, season) rewrite + VENUES dedup decision | flip-to-empty + adapter rewrite + UAC `cadence` field on contract + data-status denominator update                                  | TBD (groups with C.1 LEAGUES — same refdata-as-timeseries anti-pattern) |
 
 ## What this plan does
 
