@@ -446,7 +446,7 @@ identical whether the source was silent or the pipeline had never run. `write_wi
 **Script SSOT:** `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (multi-asset-group; the older
 `reconcile_phantom_manifest_rows.py` is sports-only and being phased out).
 
-**Five drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
+**Seven drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
 
 1. **Hive-vocab drift** — `category=` (legacy) vs `asset_group=` (post-2026-04 rename) coexist on disk; both probed.
 2. **`instrument_type` casing** — manifest holds `PERPETUAL` / `perpetual` interchangeably; disk only has lowercase.
@@ -459,6 +459,20 @@ identical whether the source was silent or the pipeline had never run. `write_wi
    both shapes as a safety net.
 5. **Chain-bundle equivalence** — manifest `instrument_type=option` / `future` (row-level) vs disk `options_chain` /
    `futures_chain` (writer bundles them per `tardis_shared.finalise_rows_and_path`); audit accepts either form.
+6. **DeFi protocol-name underscore drift** (added 2026-05-07 — C.9 audit) — manifest spells protocols as `AAVEV3` /
+   `UNISWAPV3` / `COMPOUNDV3` (post-canonicalisation, no underscore between protocol and version). Pre-2026-04 writers
+   used the underscored form `AAVE_V3` / `UNISWAP_V3` / `COMPOUND_V3`. Both spellings coexist on disk under different
+   `venue=` segments. The audit probes both via `_defi_protocol_variants` (a regex transform inserting/removing the
+   underscore between the alphabetic prefix and the `V<digits>` version suffix). **Reference incident**: 2026-05-07
+   AAVEV3 dry-run reported 29,782 phantoms (the entire AAVEV3 dataset) BEFORE this axis was added. After: 0 phantoms.
+7. **DeFi migrated-bundle wildcard** (added 2026-05-07 — C.9 audit) — `migrate_mtds_defi_legacy_venue_underscore.py`
+   produced `ticks_migrated_*.parquet` bundle files at the combined-venue prefix
+   (`raw_tick_data/by_date/day=*/asset_group=defi/venue=PROTOCOL-CHAIN/`) WITHOUT the trailing
+   `instrument_type=*/data_type=*/` segments. The bundle holds ALL data_types for that (date, protocol, chain) tuple in
+   one parquet. The audit's standard `data_type={dt}/` substring check fails because the bundle path has no such
+   substring; the wildcard accepts any `ticks_migrated_*.parquet` file under a matching combined-venue prefix as
+   evidence of capture for any (data_type, instrument_type). DeFi-only — the migration bundle pattern is not used by
+   other asset_groups.
 
 **Plus**: schema-v4 vestigial empty-data_type rows are filtered out of audit scope (informational pre-v5 markers, not
 real shards).
@@ -504,7 +518,9 @@ DeFi has additional drift axes (legacy `venue=PROTOCOL-CHAIN/` overload, no-asse
 the 9-segment Polymarket layout. Both are encoded in `ASSET_GROUP_CONFIG.prefix_tpls`.
 
 **History benchmark**: 2026-05-04 cefi audit reduced phantom count from 130,897 (false-positive baseline pre-fixes) →
-354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry.
+354 real (99.7% reduction). Real phantoms were flipped to `attempted_failed` so backfill VMs auto-retry. **2026-05-07
+defi audit (C.9)** reduced AAVEV3 false-positives from 29,782 (entire dataset, would have destroyed all manifest
+state if `--apply` had run) → 0 after axes 6 + 7 landed.
 
 ### Audit-script gotchas — adapter-specific path duality
 
@@ -537,8 +553,37 @@ Per-adapter quirks future audits MUST handle to avoid false-positive flips destr
   `entity=player_values/season=*/`). Lock test:
   `unified-api-contracts/tests/unit/sports/test_gcs_paths_player_values.py`. The `candidate_parquet_paths` helper probes
   a 3-year season window when no explicit `season` is passed (covers transfer-window overlap).
-- **DeFi venue-overload + chain-bundle** — already encoded in `reconcile_phantom_manifest_rows_all.py` 5-axis drift
-  handling (path-prefix, chain-bundle equivalence, hive-vocab, instrument_type casing, schema-v4 empty).
+- **DeFi venue-overload + chain-bundle + protocol-name underscore + migrated-bundle wildcard** — encoded in
+  `reconcile_phantom_manifest_rows_all.py` 7-axis drift handling. Axes 6 (`_defi_protocol_variants` for
+  `AAVEV3`↔`AAVE_V3` etc.) and 7 (migrated `ticks_migrated_*.parquet` bundles at the combined-venue prefix accepted as
+  capture-evidence for any data_type) added 2026-05-07 — see § "Phantom audit — re-runnable recipe" axes 6 + 7 above.
+
+### Rollup-side metric inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07
+
+**Symptom (per the C.9 wrapper-tracker investigation 2026-05-07)**: the deployment-api offline rollup at
+`gs://central-element-323112-data-status-rollups/market-tick-data-service/full.json.gz` emits per-(combined-venue)
+DEFI entries where `dates_found` is non-zero for venues that have ZERO rows in the canonical manifest. Example:
+
+```
+AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0, empty_confirmed: 0, attempted_failed: 0}
+```
+
+`dates_found = 31` but `capture_status_counts` is all-zero — a contradiction. The canonical manifest has zero
+`(venue=AAVEV3, chain=ARBITRUM)` rows; all 29,782 AAVEV3 rows are on chain `ETHEREUM`. The "31" is a stale or
+miscomputed value coming from a different source than `capture_status_counts`.
+
+**Likely cause**: the rollup worker's per-(combined-venue) computation conflates the EXPECTED denominator window
+(clipped to chain genesis per `_mtds_expected_dates_cached`) with the FOUND-on-disk count, OR a stale per-VM shard
+reference, OR a default initialisation that was never overwritten when the manifest had zero rows for that combo.
+
+**Impact**: deployment-ui shows misleading per-(venue, chain) progress bars (e.g. AAVEV3-ARBITRUM "0.51% complete"
+implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
+evidence and no manifest evidence.
+
+**Action**: file under `infrastructure_master_2026_05_07.plan.md` § Data-status multi-axis follow-up — the rollup
+worker must derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected
+denominator. Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading.
+Owner: data-status multi-axis stream.
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
 canonical phantom-audit blast radius.

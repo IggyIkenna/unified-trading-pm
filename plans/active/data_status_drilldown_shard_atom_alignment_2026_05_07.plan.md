@@ -256,12 +256,12 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 1 — deployment-api hierarchical drill-down endpoint
 
-- [ ] [unified-api-contracts] P0 (NEW 2026-05-07). Land `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` SSOT in
-      `unified_api_contracts/registry/chain_env.py` (or sibling `protocol_launch.py`). Helper
-      `get_protocol_launch_date(chain, protocol) -> str | None`. Sanity test: every `VENUES_BY_ASSET_GROUP["defi"]`
-      entry that resolves to a `(chain, protocol)` pair MUST have a launch date OR be on an explicit
-      pending-investigation skip list. Block `CHAIN_GENESIS_DATES`-only fallback in callers — they should
-      `max(chain_genesis, protocol_launch)`.
+- [x] [unified-api-contracts] P0 (NEW 2026-05-07 — shipped UAC@0169a0a). Land
+      `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` SSOT in `unified_api_contracts/registry/chain_env.py`. Helper
+      `get_protocol_launch_date(chain, protocol) -> str | None`. Sanity test (14/14 pass): every `ALL_DEFI_VENUES` entry
+      that resolves to a `(chain, protocol)` pair has a launch date OR is on `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`
+      skip list (33 pairs pending follow-up; 41 declared). Composition contract `max(chain_genesis, protocol_launch)`
+      documented + tested.
 - [ ] [deployment-api] P0 (NEW 2026-05-07 — supersedes the date-only chain math). Rewrite `_build_chain_breakdown()` in
       `data_status_service.py:4827-4886` to count true leaf shards. Numerator =
       `len(filtered[(filtered.chain == chain) & (filtered.capture_status == "captured")])`; denominator = expected
