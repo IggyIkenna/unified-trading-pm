@@ -2208,14 +2208,27 @@ instruction for "what's actually there", per-service flexibility for "how to han
 - [x] [VM-LAUNCH] P0 (launcher shipped deployment-service@f72686b 2026-05-07).
       `deployment-service/scripts/vm/launch-blank-reason-recon-vm.sh` — singleton-locked GCE launcher
       mirroring `launch-defi-phantom-recon-vm.sh`. Watchdog prefix `blank-reason-recon-` registered.
-- [ ] [VM-LAUNCH] P0. Run the migration scan-only + --apply-flips on canonical CeFi manifest
-      (the 5 RED ALERT VMs were CeFi-only). **2026-05-07 evening — initial scan revealed 1.24M rows
-      (52.45% of cefi manifest) carry blank error_reason. Re-scan in flight with the enhanced
-      classifier (post-UTL@7276cca1 venue-launch-aware) for cleaner distribution.** Operator gate:
-      review distribution → green-light --apply-flips with `--max-flips-per-run` bumped to ≥1.5M.
-- [ ] [VM-LAUNCH] P0. Extend the migration sweep to defi / sports / tradfi / prediction manifests.
-      One VM per asset_group; parallelisable with --force. Each likely surfaces analogous historical
-      bad rows from prior silent-fallback bugs.
+- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — `blank-reason-recon-cefi-20260507-173136`).
+      **CeFi `--apply-flips` complete: 1,238,229 rows flipped.** Distribution: 1,238,079
+      attempted_failed/LegacyBlankErrorReasonError + 150 empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH
+      (mostly post-2018-launch venues — BYBIT pre-Dec-2018, HYPERLIQUID pre-2023). Per-VM shard at
+      `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/blank-reason-recon-cefi-20260507-173136.parquet`.
+      Consolidator merging into canonical within ~5min.
+- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — 4 parallel VMs). **All 5 asset_groups
+      `--apply-flips` complete. Total: 3,114,843 rows flipped across 5,457,181 manifest rows
+      (57.07% of all manifests had blank error_reason).** Per-asset-group:
+      * **cefi** — 1,238,229 flipped (1,238,079 attempted_failed + 150 EXPECTED_PRE_VENUE_LAUNCH)
+      * **sports** — 1,868,285 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse-fixtures
+        legit per msg 6; sports CAN have legit empty days)
+      * **tradfi** — 7,603 flipped (5,159 attempted_failed + 2,225 EXPECTED_WEEKEND + 219
+        EXPECTED_HOLIDAY)
+      * **defi** — 685 flipped (100% attempted_failed/LegacyBlankErrorReasonError)
+      * **prediction** — 41 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse trading legit)
+      All 5 per-VM shards uploaded; consolidator merging into canonical manifests within ~5min.
+      Net effect: ~1.25M cefi/defi/tradfi rows flagged for re-attempt by orchestrator (catches the
+      silent-fallback adapter paths via the new UTL@68b3804a blank-reason guard); ~1.87M sports +
+      few-K tradfi/prediction empty-with-typed-reason rows now properly classified for downstream
+      consumer policy decisions.
 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
