@@ -5,15 +5,17 @@ You are the next agent. The prior session (this one) shipped A2 + A3 part 1 of t
 
 ## What this session shipped
 
-| Commit    | Repo                              | What                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| --------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `954575a` | features-cross-instrument-service | A2 — `futures_roll_resolver.py` + 26 tests. `(root, as_of_date) → FrontMonth(symbol, expiry, days_to_expiry)`. Covers 4 listing cycles: CME quarterly (HMUZ), CME monthly (all 12), COMEX gold (GJMQVZ), DERIBIT crypto last-Friday, NASDAQ/NYSE ETF pass-through. Roll-on-DTE cushion advances on day-of-roll. Round-trips with UAC `parse_futures_expiry`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `2804f47` | features-cross-instrument-service | A3 part 1 — `catalog_pair_builder.py` + 12 tests. `(archetype, params, as_of) → list[PairSpec]`. Bridges 4 catalog shapes: commodity / equity-index ETF / crypto spot-dated / cross-venue match-expiry. Skips `databento_pending`. Out-of-scope shapes (lending arb, sports books) return empty list. Also registered `spx`/`ndx` in `ROOT_CYCLES` as `is_etf=True` (CBOE cash indices).                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `190bea1` | features-cross-instrument-service | A3 part 2 — `paired_dispatch.py` + 30 tests + `batch_handler` wiring. Venue-aware `to_delta_one_instrument_id(venue, root, symbol, expiry) → "{VENUE}:{INSTRUMENT_TYPE}:{SYMBOL}"` formatter calibrated against probed delta-one shapes (`BINANCE-FUTURES:PERPETUAL:BTC-USDT`, `NASDAQ:EQUITY:AAPL-USD`); predicted shapes for CME / DERIBIT-dated / COINBASE / CBOE / ICE / NYMEX. `run_paired_price_dispersion(catalog_rows, date, sc, project_id)` orchestrates: catalog → builder → multi-asset-group delta-one read → resolver → kernel. `_compute_one_group()` extracted from `_process_features` for complexity gate; routes `paired_price_dispersion` to dispatcher. Bug fix: `_pair_specs_to_resolver_specs` now infers per-leg expiry — cash/spot leg uses `date.max` sentinel, dated leg uses spec expiry (basis pairs were dropping cash leg before). |
+| Commit    | Repo                              | What                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `954575a` | features-cross-instrument-service | A2 — `futures_roll_resolver.py` + 26 tests. `(root, as_of_date) → FrontMonth(symbol, expiry, days_to_expiry)`. Covers 4 listing cycles: CME quarterly (HMUZ), CME monthly (all 12), COMEX gold (GJMQVZ), DERIBIT crypto last-Friday, NASDAQ/NYSE ETF pass-through. Roll-on-DTE cushion advances on day-of-roll. Round-trips with UAC `parse_futures_expiry`.                             |
+| `2804f47` | features-cross-instrument-service | A3 part 1 — `catalog_pair_builder.py` + 12 tests. `(archetype, params, as_of) → list[PairSpec]`. Bridges 4 catalog shapes: commodity / equity-index ETF / crypto spot-dated / cross-venue match-expiry. Skips `databento_pending`. Out-of-scope shapes (lending arb, sports books) return empty list. Also registered `spx`/`ndx` in `ROOT_CYCLES` as `is_etf=True` (CBOE cash indices). |
+| `190bea1` | features-cross-instrument-service | A3 part 2 (initial) — `paired_dispatch.py` + 30 tests + `batch_handler` wiring. `run_paired_price_dispersion(catalog_rows, date, sc, project_id)` orchestrates: catalog → builder → multi-asset-group delta-one read → resolver → kernel. `_compute_one_group()` extracted from `_process_features`. Bug fix: per-leg expiry inferred — cash/spot leg uses `date.max` sentinel.          |
+| `6217382` | unified-api-contracts             | UAC `PAIRED_DISPERSION_CATALOG` SSOT — 18 catalog rows (13 active + 5 databento_pending), lifted from strategy-service. Exported via `unified_api_contracts.internal.architecture_v2`.                                                                                                                                                                                                   |
+| `543a0bb` | features-cross-instrument-service | A3 part 2 (follow-ups) — formatter delegates to UAC `build_instrument_id` (the canonical SSOT); per-venue prediction tables removed. `_load_catalog_rows_for_paired_dispatch` reads from UAC. Test assertions updated to canonical UAC IDs (`CME:FUTURE:MBT-20260619`, `DERIBIT:FUTURE:BTC-20260626`, `NASDAQ:ETF:IBIT`, `CBOE:INDEX:SPX`, `ICE:COMMODITY:CL`).                          |
 
-Total: 68 new tests, all pass. 3 commits pushed to `live-defi-rollout` on features-cross-instrument-service. No QG
-regressions introduced (3 mode-handler test failures are pre-existing on origin per session-start audit). Coverage
-cleared: 79.12% (was 77.81% session-start, target 79%).
+Total: 68 new tests, all pass. 5 commits pushed to `live-defi-rollout` (4 in features-cross-instrument-service + 1 in
+unified-api-contracts). No QG regressions introduced (3 mode-handler test failures are pre-existing on origin per
+session-start audit). Coverage cleared: 79.13% (was 77.81% session-start, target 79%).
 
 ## What's still on the original 4-phase handoff
 
@@ -33,19 +35,22 @@ FORCE=1 SKIP_DEPENDENCY_CHECK=1 \
 Wait for STARTED → DATA_INGESTION_STARTED → PROCESSING events. Verify a sample `lending_rates` parquet has populated
 `protocol`/`chain`/`asset`/ `supply_apy`/`borrow_apy` columns. Required BEFORE A4 (tracer shim delete).
 
-**A3 part 2 — batch_handler dispatch wiring** ✅ SHIPPED `190bea1`. After probing the GCS layout (see "GCS layout
-verified" below), wired the dispatcher reading from features-delta-one (NOT raw_tick_data — delta-one already provides
-the OHLCV close prices the kernel needs). Two open follow-ups:
+**A3 part 2 — batch_handler dispatch wiring** ✅ SHIPPED `190bea1` + `543a0bb` + UAC `6217382`. Both follow-ups
+RESOLVED:
 
-1. **Catalog source**: `_load_catalog_rows_for_paired_dispatch` returns `[]` until the strategy-service catalog is
-   exposed via UAC (cross-service dependency would violate the import graph). Until then, the dispatch produces an empty
-   kernel output (which the writegate handles as honest absence). Lift required: copy the `CARRY_BASIS_DATED` +
-   `ARBITRAGE_PRICE_DISPERSION` row builders from
-   `strategy-service/strategy_service/engine/ strategies/v2/target_universe/catalog.py` into UAC, then point the loader
-   at the UAC SSOT.
-2. **Calibrate `_LEG_TO_DELTA_ONE_ID`** when CME / DERIBIT-dated / COINBASE / CBOE / ICE / NYMEX delta-one parquets
-   first land. The formatter is calibrated against the empirical shapes available 2026-05-07
-   (`BINANCE-FUTURES:PERPETUAL:BTC-USDT`, `NASDAQ:EQUITY:AAPL-USD`); other shapes are predicted.
+1. **Catalog source RESOLVED**: UAC `PAIRED_DISPERSION_CATALOG` (architecture_v2 module) holds the 18 paired_dispersion
+   catalog rows (13 active + 5 databento_pending). `_load_catalog_rows_for_paired_dispatch` reads from there. Lifted
+   from strategy-service per the workspace SSOT rule.
+2. **Formatter calibration RESOLVED**: `_LEG_TO_DELTA_ONE_ID` (predicted shapes) replaced with
+   `_LEG_TO_INSTRUMENT_TYPE` + delegation to UAC `build_instrument_id`. UAC is now the single source of truth for
+   canonical instrument IDs. Eight venues calibrated. Empirical examples produced by UAC:
+   - `BINANCE-FUTURES:PERPETUAL:BTC-USDT`
+   - `CME:FUTURE:MBT-20260619` (was predicted `CME:FUTURES_CHAIN:MBTM6`)
+   - `DERIBIT:FUTURE:BTC-20260626` (was predicted `DERIBIT:DATED_FUTURE:BTC-26JUN26`)
+   - `DERIBIT:PERPETUAL:BTC` (was predicted `DERIBIT:PERPETUAL:BTC-PERPETUAL`)
+   - `NASDAQ:ETF:IBIT` (was predicted `NASDAQ:EQUITY:IBIT-USD`)
+   - `CBOE:INDEX:SPX` (was predicted `CBOE:INDEX:SPX-USD`)
+   - `ICE:COMMODITY:CL` (was predicted `ICE:FUTURES:CL-USD`)
 
 ### GCS layout verified (probed 2026-05-07)
 
