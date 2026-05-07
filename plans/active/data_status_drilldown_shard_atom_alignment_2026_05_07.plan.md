@@ -422,6 +422,87 @@ latest branch code. Successor plan TBD; Phase 3's preview shape is sufficient fo
 - The DEFI data_type-as-venue overloading bug (`GAS_FEES` / `LST_RATES` / `ORACLE_PRICES` rows that look like venues) —
   separate data-quality cleanup, not a UI rendering issue.
 
+## Audit findings 2026-05-07 evening (drilldown + summary alignment per codex shard atoms)
+
+End-to-end audit of deployment-UI drilldowns + Cloud Run rollup summaries vs the codex
+shard-key matrix for MTDS + every features-\* service. Three real drifts found, one
+fixed in this session, two recorded as named-successor follow-ups.
+
+### Fixed this session
+
+- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-onchain-service", DEFI)]`
+      referenced ``protocol_id`` as a shard axis. ``protocol_id`` is **NOT** in UTL
+      ``_ROW_KEY_COLUMNS`` (manifest_writer.py) — i.e. not a real manifest column. The
+      hierarchical-drilldown ``_filter_manifest`` silently no-ops on axes missing from
+      the manifest DataFrame, so every features-onchain DEFI drilldown collapsed at that
+      level. Per the codex DeFi shard atom
+      ``(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)``
+      the per-instrument / per-protocol slot is the canonical ``instrument_id`` column —
+      switched the axis to ``instrument_id``. 32/32 unit tests pass.
+
+### Open drifts (named successors)
+
+- [ ] [UAC + deployment-api] P1. **Drilldown depth excludes DISPLAY axes.**
+      `_resolve_axis_order` in `deployment-api/deployment_api/services/data_status_hierarchical.py`
+      consumes only `SHARD_AXIS_MATRIX` axes — but the codex tree at
+      `availability-manifest-and-data-status.md` § "Data Status Page Tree Hierarchy"
+      includes display columns as navigation levels (e.g. MTDS CeFi: `venue → instrument_type
+      → data_type → dates`; MTDS Sports: `league → bookmaker(venue) → dates`). Today the
+      drilldown returns SHARD-only depth (`venue → instrument_id → data_type → date` for
+      MTDS CeFi), missing `instrument_type` as a navigation level. The hierarchical
+      service's own docstring at line 11 contradicts the implementation.
+      **Successor decision**: introduce a new per-(service, asset_group) `DRILLDOWN_AXIS_ORDER`
+      SSOT in UAC that codifies the codex tree (the merge of SHARD + DISPLAY axes in the
+      codex-defined order, not the SHARD-then-DISPLAY default). `_resolve_axis_order` reads
+      from `DRILLDOWN_AXIS_ORDER` first, falls back to `SHARD_AXIS_MATRIX` for unmapped pairs.
+      Out of scope this session: requires per-pair codex-tree codification + UI smoke walk.
+
+- [ ] [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis
+      but not a real manifest column.** Same bug class as the protocol_id drift — appears
+      in `SHARD_AXIS_MATRIX` for prediction asset_group across instruments-service / MTDS /
+      MDPS / features-cross-instrument, but is NOT in UTL `_ROW_KEY_COLUMNS`. **Named successor**:
+      `predictions_master_2026_05_07.plan.md` (predictions Plan A — adds the column +
+      Polymarket lifecycle). Until that lands, drilldown silently no-ops at the
+      canonical_question_group level for every prediction service. NOT a regression — this is
+      the codified temporary state per CLAUDE.md "Temporary state must have a named successor
+      plan" rule.
+
+- [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in
+      `SHARD_AXIS_MATRIX` exists in UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist
+      of v8-pending-columns like `canonical_question_group`). Would have caught both
+      `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
+      lands so the allowlist isn't mostly-empty.
+
+- [ ] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md`
+      § "Schema v6 (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today
+      (added `fixture_id`, `job_id` per the multi-axis correction 2026-05-06). The doc's
+      "v5 → v6" + "Per-VM shard layout" sections document v7 columns but the heading +
+      version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes.
+
+- [ ] [deployment-api / codex finding] P1. **Rollup-side metric inconsistency** (already
+      flagged in `availability-manifest-and-data-status.md` § "Rollup-side metric
+      inconsistency 2026-05-07 — open finding"). The offline rollup at
+      `gs://*-data-status-rollups/{service}/full.json.gz` emits per-(combined-venue) DEFI
+      entries where `dates_found` is non-zero for venues that have ZERO matching manifest
+      rows (e.g. `AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,
+      empty_confirmed: 0, attempted_failed: 0}`). The "31" comes from a different source
+      than `capture_status_counts`. Per the codex finding, the rollup worker's
+      per-(combined-venue) `dates_found` must derive from the manifest row count, not from
+      the expected denominator. Owner: data-status multi-axis stream per
+      `infrastructure_master_2026_05_07.plan.md`.
+
+### Confirmed correct (no drift)
+
+- `MANIFEST_SCHEMA_VERSION = 7` + `_ROW_KEY_COLUMNS` includes `asset_group`, `fixture_id`,
+  `job_id`, `chain`, `instrument_id`, etc. Earlier audit-agent claim that `asset_group`
+  was missing was **wrong** — verified directly at
+  `unified-trading-library/unified_trading_library/manifest_writer.py:687-717`.
+- 15 services in the Cloud Run rollup worker hardcoded list match the SHARD_AXIS_MATRIX
+  service set; 62 (service, asset_group) pairs declared, all covered.
+- `SHARD_AXIS_MATRIX` correctly refines the codex shard-key matrix per the multi-axis
+  correction (e.g. instrument_type demoted to DISPLAY for MTDS, sports fixture_id /
+  prediction market_id row-level not shard).
+
 ## References
 
 - `unified-trading-pm/cursor-configs/CLAUDE.md` § "Per-asset-group shard-key matrix"
