@@ -189,17 +189,25 @@ QG gate between phases.
 
 ### 1B — UTL
 
-- [ ] [AGENT] P0. **`unified_trading_library/manifest/freshness.py::ManifestFreshnessCache(ttl_seconds=60)`**. Methods:
+- [x] [AGENT] P0. **`unified_trading_library/manifest/freshness.py::ManifestFreshnessCache(ttl_seconds=60)`**. Methods:
       `is_now_captured(row_key) -> bool`, `refresh()` on TTL expiry, `bulk_load(skip_set)` at startup. Reference impl:
       `/tmp/fill_missing_ohlcv.py` `_refresh_captured_cache` + `_is_now_captured`. Tests must cover concurrent-write
       race: two workers picking up same row_key from a stale skip-set; one's `is_now_captured` returns True after the
-      other's `record_captured`; loser skips. [AUDIT 2026-05-07: FRESH — actionable; verified absent: no
-      `unified_trading_library/manifest/` package exists; UTL grep `ManifestFreshnessCache` → 0 hits. UTL has
-      `manifest_writer.py`/`manifest_consolidator.py` flat at top level — when adding `manifest/freshness.py` consider
-      moving these into a `manifest/` sub-package or just create `manifest_freshness.py` flat.]
-- [ ] [AGENT] P0. **Public API**: re-export from `unified_trading_library.manifest`. Document the 60s TTL default and
-      the trade-off explicit in CLAUDE.md (don't drop below 30s — burns GCS reads). [AUDIT 2026-05-07: FRESH — depends
-      on preceding todo.]
+      other's `record_captured`; loser skips. **SHIPPED 2026-05-07 UTL@d7902f6**: shipped as
+      `unified_trading_library/manifest_freshness.py` (flat path matching the existing
+      `manifest_writer.py`/`manifest_consolidator.py` convention; aligns with the audit suggestion that the manifest/
+      sub-package isn't worth carving for one new module). Class wraps `read_availability_index(bucket)` with a
+      row-key-shaped `frozenset` membership for O(1) per-row lookups. Thread-safe via internal `threading.Lock`. Read
+      failure preserves the prior captured set (better to over-fetch than to silently over-skip). 17 unit tests
+      including the canonical concurrent-write race scenario (two threads sharing a `threading.Barrier`; loser sees
+      winner's write after TTL expiry).
+- [x] [AGENT] P0. **Public API**: re-export from `unified_trading_library.manifest`. Document the 60s TTL default and
+      the trade-off explicit in CLAUDE.md (don't drop below 30s — burns GCS reads). **SHIPPED 2026-05-07 UTL@d7902f6**:
+      `from unified_trading_library import ManifestFreshnessCache, DEFAULT_TTL_SECONDS` works (top-level facade; no
+      `unified_trading_library.manifest` sub-namespace per the flat-path convention chosen above). 60s TTL default
+      documented in module docstring + DEFAULT_TTL_SECONDS docstring with the "<30s burns GCS reads" + ">60s tolerates
+      slightly stale skip decisions" trade-off. CLAUDE.md "Manifest concurrency principle" already documents the
+      60s default — no edit needed.
 
 **Phase 1 success**: UAC + UTL pass quickmerge; downstream services can
 `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS, EXPECTED_FEATURE_GROUPS_BY_SERVICE, FEATURE_COVERAGE_START`
