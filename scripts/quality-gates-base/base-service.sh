@@ -1328,6 +1328,50 @@ else
     log_success "STEP 5.63: All setup_events() entry-points paired with run_lifecycle / ServiceBootstrap / explicit RUN events"
 fi
 
+# STEP 5.64 — Preflight short-circuits MUST emit PREFLIGHT_SKIPPED
+#
+# Reference incident 2026-05-07: features-onchain-defi-backfill VM emitted
+# only STARTED -> VALIDATION_COMPLETED -> STOPPED in 9 seconds with NO
+# PROCESSING events. The VM's _preflight_guard fired (skip-if-exists,
+# dependency-check-fail, or date-out-of-range — operator could not tell
+# which from the event stream alone). PREFLIGHT_SKIPPED with a structured
+# PreflightSkipReason resolves silent skips so dashboards can distinguish
+# (a) skip-if-exists from (b) dep-fail from (c) date-out-of-range from
+# (d) calendar-non-trading-day from (e) concurrent-VM-owns-shard.
+#
+# Detection: any service source containing one of the canonical preflight
+# patterns (`_preflight_guard`, `should_skip_date`, `_check_dependencies`,
+# `check_shard_freshness` directly invoked outside ManifestWriter) MUST
+# also import / call `emit_preflight_skip` (UTL helper) at every short-
+# circuit return site. The check is grep-based; refinements (per-return-
+# branch coverage) live in a follow-up if needed.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
+    _PREFLIGHT_PATTERN_FILES=$(rg -l --type py \
+        -e '_preflight_guard|should_skip_date|_check_dependencies|check_shard_freshness' \
+        --glob '!tests/**' --glob '!scripts/**' \
+        "$SOURCE_DIR/" 2>/dev/null || true)
+    if [ -n "$_PREFLIGHT_PATTERN_FILES" ]; then
+        # Service has at least one preflight-guard pattern. Confirm the
+        # service ALSO emits PREFLIGHT_SKIPPED somewhere.
+        _EMIT_FILES=$(rg -l --type py \
+            -e 'emit_preflight_skip\(|PREFLIGHT_SKIPPED' \
+            --glob '!tests/**' --glob '!scripts/**' \
+            "$SOURCE_DIR/" 2>/dev/null || true)
+        if [ -z "$_EMIT_FILES" ]; then
+            log_fail "STEP 5.64: Service has preflight-guard patterns but no emit_preflight_skip / PREFLIGHT_SKIPPED — silent skips will be invisible in the event stream. Files with preflight patterns:"
+            printf "  %s\n" $_PREFLIGHT_PATTERN_FILES
+            log_fail "         Fix: import emit_preflight_skip from unified_trading_library + PreflightSkipReason from unified_api_contracts.internal; emit at every preflight return-True / dependency-raise / skip-date branch. SSOT: features-onchain-service/cli/handlers/batch_handler.py:_preflight_guard (commit reference 2026-05-07)."
+            V=$(( V + 1 ))
+        else
+            log_success "STEP 5.64: Preflight short-circuits emit PREFLIGHT_SKIPPED (silent-skip visibility per UTL emit_preflight_skip)"
+        fi
+    else
+        log_success "STEP 5.64: skipped (no preflight-guard patterns in this service)"
+    fi
+else
+    log_success "STEP 5.64: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
