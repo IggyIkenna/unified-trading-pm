@@ -519,12 +519,12 @@ back-fills behind it.
       (deployment-ui@8056995 — `getShardAxisMatrix(service)` API wrapper + `ShardAxisMatrixResponse` interface;
       `DataStatusTab.tsx` fetches alongside coverage-summary and renders `BreakdownsAccordion` under each asset_group
       card with the axes UAC declares for that pair.)
-- [ ] [deployment-ui] P3. Cell-grid query passes `secondary_axis` + filter params (`league_id`,
+- [x] [deployment-ui] P3. Cell-grid query passes `secondary_axis` + filter params (`league_id`,
       `canonical_question_group`, `job_id`, `chain`) when the user picks one. Empty matrix from the API → "no shards
-      captured for this filter yet" empty-state, not an error. **Partially shipped** in deployment-ui@8056995:
-      `getDataStatusManifest` accepts the 6 new params and the BreakdownsAccordion `onSelectValue` callback is in place.
-      Wiring the cell-grid component to actually re-issue with the secondary axis + render the empty-state placeholder
-      lives in a follow-up sub-slice of Phase 3.
+      captured for this filter yet" empty-state, not an error. (deployment-ui@`0fbd28b` —
+      `manifestFilter: { axis,     value }` state in `DataStatusTab.tsx`, `onSelectValue` handler on
+      `BreakdownsAccordion`, `getDataStatusManifest` threads `secondary_axis` + per-axis filter param, `useEffect`
+      re-fetches on filter change, active-filter banner with "Clear filter" button surfaces the active state.)
 - [x] [deployment-ui] P3. Per-service tab matrix coverage: walk every service in `SHARD_AXIS_MATRIX` and confirm the tab
       renders the right axes per asset_group (especially the experiment-based services where today's manifests are
       mostly empty — we want the job_id selector visible-but-empty so it's obvious how to navigate once data lands).
@@ -589,6 +589,37 @@ back-fills behind it.
 - Phase 5 gate: Cloud Run cron tick rebuilds the rollup; the deployed UI shows the new breakdowns within 10 minutes of
   image promote.
 - Phase 6 gate: workspace QG sweep clean; end-to-end smoke green.
+
+## DEFI canonicalisation closeout (2026-05-07)
+
+Closed out the DeFi legacy-underscore venue thread that crossed this plan's scope. UTL `ManifestWriter._coerce_row_key`
+now canonicalises legacy underscore venues at write time via UAC `LEGACY_DEFI_VENUE_ALIASES`; the 2026-05-07 MTDS
+manifest migration rewrote 411,620 historical rows. The deployment-api read-time fallback
+(`_canonicalise_defi_manifest`) is gone.
+
+Commits:
+
+- unified-api-contracts@`405cbf5` — LST/yield protocols + `DEFI_VENUE_PHASE` marker added to `ALL_DEFI_VENUES`.
+- unified-api-contracts@`f22f4b1` — `CHAIN_GENESIS_DATES` SSOT in `chain_env.py` (B.3 / P1-C).
+- unified-trading-library@`248058bb` — write-time DeFi canonicalisation hook in `_coerce_row_key`.
+- unified-trading-library@`25ded4f3` — extends the hook to `ManifestWriter.add()` (the success-capture path was
+  initially missed; smoke test confirmed the bug, fix shipped same session).
+- market-tick-data-service@`8c3c2c7` — one-shot manifest migration `migrate_mtds_defi_legacy_venue_underscore.py`;
+  executed live across 11 DEFI buckets, 411,620 rows rewritten, idempotence verified.
+- deployment-api@`64d2be9` — read-time fallback removal; `_canonicalise_defi_manifest` split into
+  `_canonicalise_defi_data_types` (data_type alias normalisation only).
+- deployment-api@`14bbff9` — wires `CHAIN_GENESIS_DATES` into `_mtds_expected_dates_cached` so per-chain pre-launch
+  dates clip out of the DEFI panel's expected denominator.
+- unified-trading-pm@`56850b0c` — codex doc refresh: 3 docs trim stale references to legacy underscore venue forms.
+
+Live re-probe across 11 DEFI buckets confirms 0 residual legacy-underscore DeFi-venue rows; only intentional canonical
+underscores (TRADER_JOEV2 per UAC `ALL_DEFI_VENUES`) and pre-existing data-type-as-venue bugs (`GAS_FEES` / `LST_RATES`
+/ `ORACLE_PRICES`) remain — both out of scope.
+
+Successor for DEFI hyphenated-`data_type` normalisation: still read-time in deployment-api
+(`_canonicalise_defi_data_types`); manifests in 6 buckets (`lending-indices`, `dex-pools`, `dex-swaps`, `lst-rates`,
+`oracle-prices`, `perp-funding`) still carry hyphenated `data_type` values. No paired migration script for that side yet
+— natural Plan B follow-up.
 
 ## Temporary states + their canonical follow-up plans
 
