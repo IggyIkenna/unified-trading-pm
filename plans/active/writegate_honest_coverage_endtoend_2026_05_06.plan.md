@@ -2691,10 +2691,22 @@ against seeded fixtures.
       `count(manifest_rows where capture_status == "captured")` - Honest empty =
       `count(capture_status == "empty_confirmed")` (NOT in numerator, but tracked as legitimate absence) - Failed =
       `count(capture_status == "attempted_failed")` per error_reason (NOT in numerator)
-- [ ] [SCRIPT] P0. Document the post-merge baseline at
-      `unified-trading-pm/codex/02-data/honest_coverage_baseline_2026_05.md`: - Per-(service, asset_group, data_type)
-      baseline % - Per-error_reason failure breakdown - Set as the ratchet floor — future merges that drop coverage
-      below this % fail QG (per parent plan §"coverage_ratchet_policy")
+- [x] [SCRIPT] P0. Document the post-merge baseline at
+      `unified-trading-pm/codex/02-data/honest_coverage_baseline_2026_05.md`: Per-(service, asset_group, data_type)
+      baseline %, per-error_reason failure breakdown, set as the ratchet floor — future merges that drop coverage
+      below this % fail QG (per parent plan §"coverage_ratchet_policy"). **SHIPPED 2026-05-07 PM@5c876f9d** (bundled
+      due to workspace prek-race; baseline doc edits authored same session): doc promoted from `status=planned` to
+      `status=draft` with the full methodology + ratchet design + table schema. Sections covered: exact formulas
+      for the 4-state capture taxonomy (`captured` / `empty_confirmed_with_reason` / `empty_unclassified` /
+      `attempted_failed` / `expected_unattempted`) + 3 derived percentages (`honest_coverage_pct` /
+      `attempt_coverage_pct` / `unclassified_drag_pct`) + the sanity invariant; baseline-table column schema (one
+      seed row per asset_group, per-data_type rows TBD via measurement script); ratchet schedule (±0.5pp default
+      tolerance, monthly cadence, 99% long-term floor); QG ratchet implementation outline; override procedure with
+      explicit override-log section. **DEFERRED**: per-data_type rows + numeric cells — populated by an operator-run
+      measurement script on a same-region GCE VM. Reference impl: TBD
+      `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (writegate Phase 5 follow-up — needs same-region VM
+      + cross-asset-group manifest read). Once cells are filled, the QG ratchet at
+      `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` reads this doc as the frozen baseline.
 - [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
 - [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
