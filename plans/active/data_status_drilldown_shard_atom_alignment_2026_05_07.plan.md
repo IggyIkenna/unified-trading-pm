@@ -321,10 +321,27 @@ on whatever flags exist today as a degenerate case).
 ### Phase 3 — Per-shard download + missing surfacing
 
 - [ ] [deployment-api] P1. `/coverage-summary` extended with leaf-shard counts (rolled up per axis level) so the UI can
-      show "23 missing instrument-shards" inside the BTCUSDT branch instead of just at the venue level.
-- [ ] [deployment-ui] P1. Deploy-Missing button on a leaf node fires a surgical CLI invocation with `--shard-key=...`
-      (Phase 4 supplies the flag). Pre-Phase-4 fallback: degrades to the existing service-wide invocation with a banner
-      explaining "fine-grained recovery requires MTDS shard-key flag".
+      show "23 missing instrument-shards" inside the BTCUSDT branch instead of just at the venue level. **DEFERRED** —
+      partially covered by the Phase 1 `/drilldown` endpoint which already returns per-axis-level captured /
+      empty_confirmed / attempted_failed / total counts; coverage-summary extension is a UI-rollup-driven follow-up.
+- [x] [deployment-api] P1 (shipped deployment-api@f8bc3d8). Deploy-Missing preview endpoint:
+      `POST /api/data-status/deploy-missing-preview` takes a leaf `row_key` + composes the canonical 6-field
+      `--shard-key=...` plus the bash invocation the operator copies + runs from their authenticated terminal. Plus
+      `GET /api/data-status/deploy-missing-services` for the UI button-render gate. New module
+      `deployment_api/services/deploy_missing.py` registers the per-service launcher script paths
+      (`launch-mtds-backfill-vm.sh`, `launch-mdps-backfill-vm.sh`, etc.) and shell-quotes the shard_key. 10/10 unit
+      tests pass.
+- [ ] [deployment-ui] P1. Deploy-Missing button on a leaf node calls
+      `POST /api/data-status/deploy-missing-preview` with the leaf `row_key` and renders the returned `command` in a
+      copy-to-clipboard widget + per-shard `notes` (bundled vs per-instrument routing, tarball-refresh reminder).
+      **DEFERRED** to follow-up — wire-in is a small `<DeployMissingButton row_key={...} />` consumer of the new
+      endpoint; pre-existing TS error in DataStatusTab.tsx blocks the visual-smoke walk.
+
+**Auto-launch deferred** — the Deploy-Missing endpoint ships in **preview mode** (operator copies + runs the command
+from their authenticated terminal) rather than auto-launching VMs from the API server. Auto-launch needs an
+operations review of the deployment-api -> gcloud `roles/compute.instanceAdmin.v1` security boundary + a paired
+tarball-refresh step (`deployment-service/scripts/vm/create-code-tarballs.sh`) to ensure the new VM picks up the
+latest branch code. Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout's MVP needs.
 
 ### Phase 4 — MTDS CLI shard-targeting
 
