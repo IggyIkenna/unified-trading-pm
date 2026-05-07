@@ -1682,39 +1682,39 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
 
 #### Phase 3.D.4 — Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)
 
-> **2026-05-07 expected-universe enumerator `--apply-write` sweep (Phase 3.D.4) — ALL 5 asset_groups committed.
-> Total rows written: 1,455,901.**
+> **2026-05-07 expected-universe enumerator `--apply-write` sweep (Phase 3.D.4) — ALL 5 asset_groups committed. Total
+> rows written: 1,455,901.**
 >
-> | asset_group | VM name                                              | state       | rows written | distribution                                                                                          |
-> | ----------- | ---------------------------------------------------- | ----------- | ------------:| ----------------------------------------------------------------------------------------------------- |
-> | tradfi      | `expected-universe-enum-tradfi-20260507-154607`      | **WRITTEN** |       35,033 | 32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`                                                  |
-> | sports      | `expected-universe-enum-sports-20260507-154819`      | **WRITTEN** |       13,176 | 13,176 `EXPECTED_PRE_SOURCE_COVERAGE_START`                                                           |
-> | cefi        | `expected-universe-enum-cefi-20260507-154922`        | **WRITTEN** |      119,152 | 119,152 `EXPECTED_PRE_VENUE_LAUNCH` (NEW reason — UAC@ac218dc) across 13 post-2018 venues             |
-> | prediction  | `expected-universe-enum-prediction-20260507-155030`  | **WRITTEN** |        2,280 | 2,280 `EXPECTED_PRE_VENUE_LAUNCH` (POLYMARKET 974 + KALSHI 1306) — UAC@ac218dc                        |
-> | defi        | `expected-universe-enum-defi-20260507-155353`        | **WRITTEN** |    1,286,260 | 688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED` (protocol launches)   |
+> | asset_group | VM name                                             | state       | rows written | distribution                                                                                        |
+> | ----------- | --------------------------------------------------- | ----------- | -----------: | --------------------------------------------------------------------------------------------------- |
+> | tradfi      | `expected-universe-enum-tradfi-20260507-154607`     | **WRITTEN** |       35,033 | 32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`                                                |
+> | sports      | `expected-universe-enum-sports-20260507-154819`     | **WRITTEN** |       13,176 | 13,176 `EXPECTED_PRE_SOURCE_COVERAGE_START`                                                         |
+> | cefi        | `expected-universe-enum-cefi-20260507-154922`       | **WRITTEN** |      119,152 | 119,152 `EXPECTED_PRE_VENUE_LAUNCH` (NEW reason — UAC@ac218dc) across 13 post-2018 venues           |
+> | prediction  | `expected-universe-enum-prediction-20260507-155030` | **WRITTEN** |        2,280 | 2,280 `EXPECTED_PRE_VENUE_LAUNCH` (POLYMARKET 974 + KALSHI 1306) — UAC@ac218dc                      |
+> | defi        | `expected-universe-enum-defi-20260507-155353`       | **WRITTEN** |    1,286,260 | 688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED` (protocol launches) |
 >
 > **Total rows merged into per-VM shards: 1,455,901.** Consolidator daemon merges per-VM shards into canonical
 > `_index/availability_index.parquet` within ~5min of each VM shutdown.
 >
 > **What changed since the scan-only sweep earlier today (PM@dae6d40d):**
 >
-> * UAC@ac218dc — added `EXPECTED_PRE_VENUE_LAUNCH` to `EmptyConfirmedReason` enum + new
+> - UAC@ac218dc — added `EXPECTED_PRE_VENUE_LAUNCH` to `EmptyConfirmedReason` enum + new
 >   `unified_api_contracts.registry.venue_launch_dates` SSOT (20 CeFi venues + 2 Prediction venues).
-> * instruments-service@d1c9928 — replaced CeFi + Prediction enumerator stubs with real per-venue pre-launch
+> - instruments-service@d1c9928 — replaced CeFi + Prediction enumerator stubs with real per-venue pre-launch
 >   implementations using the new SSOT. Bumped `--max-writes-per-run` default from 100k to 1M.
-> * deployment-service@38b7a58 — launcher accepts a third positional arg passing through to
->   `--max-writes-per-run` so cap-bumped reruns don't need ad-hoc launchers.
+> - deployment-service@38b7a58 — launcher accepts a third positional arg passing through to `--max-writes-per-run` so
+>   cap-bumped reruns don't need ad-hoc launchers.
 >
 > **DeFi cap-bump path:** the first `--apply-write` defi VM (`-145024`) also hit the 1M default cap — DeFi's true
-> universe is ~1.28M absent rows. Re-launched (`-155353`) with the new launcher's third positional arg
-> `5000000` (deployment-service@38b7a58 pass-through) and completed cleanly in 26.3s. The default 1M cap stays
-> in place as a halt-safety; operators bump per-asset-group when the universe genuinely exceeds it.
+> universe is ~1.28M absent rows. Re-launched (`-155353`) with the new launcher's third positional arg `5000000`
+> (deployment-service@38b7a58 pass-through) and completed cleanly in 26.3s. The default 1M cap stays in place as a
+> halt-safety; operators bump per-asset-group when the universe genuinely exceeds it.
 >
-> **Per-VM shard isolation** (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=…`) is wired into the launcher metadata for
-> every run. All VMs ran on `asia-northeast1-c` `e2-standard-4` + 50GB and auto-shut down on completion. Per-VM
-> shard upload paths logged on each ENUMERATOR_COMPLETED event:
-> `gs://market-data-tick-{asset_group}-{pid}/_index/per_vm/expected-universe-enum-{asset_group}-{ts}.parquet`
-> (sports uses `instruments-store-sports-{pid}` instead).
+> **Per-VM shard isolation** (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=…`) is wired into the launcher metadata for every
+> run. All VMs ran on `asia-northeast1-c` `e2-standard-4` + 50GB and auto-shut down on completion. Per-VM shard upload
+> paths logged on each ENUMERATOR_COMPLETED event:
+> `gs://market-data-tick-{asset_group}-{pid}/_index/per_vm/expected-universe-enum-{asset_group}-{ts}.parquet` (sports
+> uses `instruments-store-sports-{pid}` instead).
 
 **Why this exists.** Phase 3.D.1 reconciler stamps reasons on `empty_confirmed AND error_reason IS NULL` rows (legacy
 backfill), but does **NOT enumerate the expected universe** — tuples that have NO manifest row at all stay absent. This
@@ -1743,12 +1743,10 @@ sub-phase ships the enumerator that physically writes those rows.
 
 - [x] [SCRIPT] P0 (shipped instruments-service@8e404c8). NEW
       `instruments-service/scripts/enumerate_expected_universe.py` — accepts
-      `--asset-group {defi | sports | tradfi | cefi | prediction}` flag, walks the asset_group's expected universe
-      per the matrix above, reads the canonical manifest ONCE (manifest concurrency principle), filters to tuples with
-      NO manifest row, writes `record_expected_empty(reason=EXPECTED_*)` rows via UTL `record_expected_empty` helper.
-      Default scan-only (CSV report); `--apply-write` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=...` per the
-      per-VM shard isolation rule. `--max-writes-per-run` default 100k halt safety. Mirrors the safety scaffolding of
-      `reconcile_expected_absence_reasons.py`.
+      `--asset-group {defi | sports | tradfi | cefi | prediction}` flag, walks the asset*group's expected universe per
+      the matrix above, reads the canonical manifest ONCE (manifest concurrency principle), filters to tuples with NO
+      manifest row, writes
+      `record_expected_empty(reason=EXPECTED*\*)`rows via UTL`record_expected_empty`helper.     Default scan-only (CSV report);`--apply-write`requires`MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=...`per the     per-VM shard isolation rule.`--max-writes-per-run`default 100k halt safety. Mirrors the safety scaffolding of    `reconcile_expected_absence_reasons.py`.
 - [ ] [SCRIPT] P0. Per-asset-group reason classifier dispatch — DeFi → `EXPECTED_PRE_GENESIS_CHAIN` +
       `EXPECTED_INSTRUMENT_NOT_LISTED`; Sports → `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SOURCE_COVERAGE_START`; TradFi
       → `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`; CeFi → `EXPECTED_INSTRUMENT_NOT_LISTED` +
@@ -1758,43 +1756,39 @@ sub-phase ships the enumerator that physically writes those rows.
       `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` — follows
       `launch-defi-phantom-recon-vm.sh` pattern (singleton lock per `expected-universe-enum-` prefix in
       `asia-northeast1-c`, `e2-standard-4` + 50GB, `VM_TASK=expected-universe-enum` metadata routes through the
-      `mdps-backfill | features-backfill | phantom-recon | expected-universe-enum` elif in
-      `setup-data-pipeline-vm.sh`). Added `expected-universe-enum-` prefix to
-      `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` (heartbeat-only `None` — script
-      writes per-VM manifest shards, no per-asset-group bucket signal needed). Watchdog VM relaunched
-      (`vm-zombie-watchdog-20260507-145047`) so the new prefix is live. Tarballs + setup-data-pipeline-vm.sh
-      refreshed via `create-code-tarballs.sh --all` (2026-05-07 13:49 UTC).
+      `mdps-backfill | features-backfill | phantom-recon | expected-universe-enum` elif in `setup-data-pipeline-vm.sh`).
+      Added `expected-universe-enum-` prefix to `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+      `VM_PREFIX_TO_BUCKET` (heartbeat-only `None` — script writes per-VM manifest shards, no per-asset-group bucket
+      signal needed). Watchdog VM relaunched (`vm-zombie-watchdog-20260507-145047`) so the new prefix is live.
+      Tarballs + setup-data-pipeline-vm.sh refreshed via `create-code-tarballs.sh --all` (2026-05-07 13:49 UTC).
 - [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the enumerator's classifier
       dispatch. Test the cross-product enumeration shape (right rows present, wrong rows absent) with mocked manifest +
       UAC SSOT fixtures.
-- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete — see banner table above; PM@79e47874). DeFi
-      scan-only first halted on the default `--max-writes-per-run=100000` cap
-      (`expected-universe-enum-defi-20260507-145714`, rc=5 + `ENUMERATOR_FAILED reason=max_writes_exceeded`). Default
-      raised to 1M (instruments-service@d1c9928) and launcher cap pass-through shipped (deployment-service@38b7a58);
-      the second `--apply-write` run still hit 1M, so a third run with `5000000` via the new pass-through completed
-      cleanly in 26.3s on `expected-universe-enum-defi-20260507-155353` — final 1,286,260 rows
-      (688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`). Per-VM shard merged into
-      canonical 18:07 UTC after consolidator P0 fix shipped (PM@341bb285 + instruments-service@a936a28).
-- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete for tradfi / sports / cefi / prediction; PM@79e47874).
-      Per the banner table above:
-      - **TradFi** — 35,033 rows written (32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`) on
-        `expected-universe-enum-tradfi-20260507-154607`.
-      - **Sports** — 13,176 rows written (all `EXPECTED_PRE_SOURCE_COVERAGE_START`) on
-        `expected-universe-enum-sports-20260507-154819`.
-      - **CeFi** — 119,152 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928, no longer a stub:
-        all `EXPECTED_PRE_VENUE_LAUNCH` across 13 post-2018 venues) on `expected-universe-enum-cefi-20260507-154922`.
-      - **Prediction** — 2,280 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928: POLYMARKET 974
-        + KALSHI 1306 `EXPECTED_PRE_VENUE_LAUNCH`) on `expected-universe-enum-prediction-20260507-155030`.
-        Per-instrument lifecycle (`PREDICTION_GROUPS` registry) tracked separately under
-        `predictions_master_2026_05_07.plan.md`.
-      Each VM emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC
-      merged all 5 per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at
-      PM@341bb285 after the `ArrowTypeError` on `instrument_count` was patched).
-- [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui —
-      with all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and
-      drilldown % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel.
-      Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is
-      the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
+- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete — see banner table above; PM@79e47874). DeFi scan-only first
+      halted on the default `--max-writes-per-run=100000` cap (`expected-universe-enum-defi-20260507-145714`, rc=5 +
+      `ENUMERATOR_FAILED reason=max_writes_exceeded`). Default raised to 1M (instruments-service@d1c9928) and launcher
+      cap pass-through shipped (deployment-service@38b7a58); the second `--apply-write` run still hit 1M, so a third run
+      with `5000000` via the new pass-through completed cleanly in 26.3s on
+      `expected-universe-enum-defi-20260507-155353` — final 1,286,260 rows (688,220 `EXPECTED_PRE_GENESIS_CHAIN` +
+      598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`). Per-VM shard merged into canonical 18:07 UTC after consolidator P0 fix
+      shipped (PM@341bb285 + instruments-service@a936a28).
+- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete for tradfi / sports / cefi / prediction; PM@79e47874). Per
+      the banner table above: - **TradFi** — 35,033 rows written (32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`)
+      on `expected-universe-enum-tradfi-20260507-154607`. - **Sports** — 13,176 rows written (all
+      `EXPECTED_PRE_SOURCE_COVERAGE_START`) on `expected-universe-enum-sports-20260507-154819`. - **CeFi** — 119,152
+      rows written (real impl per UAC@ac218dc + instruments-service@d1c9928, no longer a stub: all
+      `EXPECTED_PRE_VENUE_LAUNCH` across 13 post-2018 venues) on `expected-universe-enum-cefi-20260507-154922`. -
+      **Prediction** — 2,280 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928: POLYMARKET 974 +
+      KALSHI 1306 `EXPECTED_PRE_VENUE_LAUNCH`) on `expected-universe-enum-prediction-20260507-155030`. Per-instrument
+      lifecycle (`PREDICTION_GROUPS` registry) tracked separately under `predictions_master_2026_05_07.plan.md`. Each VM
+      emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all
+      5 per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285
+      after the `ArrowTypeError` on `instrument_count` was patched).
+- [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui — with
+      all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and drilldown
+      % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel. Fine-grained
+      per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is the v2
+      universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [ ] [DOCS] P0. Update
       [`codex/02-data/expected-absence-backfill-runbook.md`](../../codex/02-data/expected-absence-backfill-runbook.md)
       with the v2 enumerator section: invocation, expected per-asset-group volume, sequencing, verification steps.
@@ -1818,14 +1812,14 @@ in flight — once both halves ship per asset_group, that asset_group's denomina
 
 The all-5-asset_group scan-only sweep surfaced three follow-up items not covered in the original Phase 3.D.4 task list:
 
-- [x] [SCRIPT] P0 (shipped 2026-05-07, instruments-service@d1c9928). **DeFi cap bump.** Default
-      `--max-writes-per-run` raised from 100k to 1M. `--apply-write` defi run still hit 1M cap (true universe
-      ~1.286M rows); relaunched with `5000000` via the new launcher pass-through (next item). Final defi
-      written count: 1,286,260 rows (688,220 EXPECTED_PRE_GENESIS_CHAIN + 598,040 EXPECTED_INSTRUMENT_NOT_LISTED).
+- [x] [SCRIPT] P0 (shipped 2026-05-07, instruments-service@d1c9928). **DeFi cap bump.** Default `--max-writes-per-run`
+      raised from 100k to 1M. `--apply-write` defi run still hit 1M cap (true universe ~1.286M rows); relaunched with
+      `5000000` via the new launcher pass-through (next item). Final defi written count: 1,286,260 rows (688,220
+      EXPECTED_PRE_GENESIS_CHAIN + 598,040 EXPECTED_INSTRUMENT_NOT_LISTED).
 - [x] [SCRIPT] P0 (shipped 2026-05-07, deployment-service@38b7a58). **Launcher pass-through for
-      `--max-writes-per-run`.** Third positional arg on `launch-expected-universe-enumerator-vm.sh` validates
-      as positive integer + appends `--max-writes-per-run <N>` to `BACKFILL_CMD`. Empty/missing falls through
-      to script default (1M). Used to ship the defi 5M-cap rerun without an ad-hoc launcher.
+      `--max-writes-per-run`.** Third positional arg on `launch-expected-universe-enumerator-vm.sh` validates as
+      positive integer + appends `--max-writes-per-run <N>` to `BACKFILL_CMD`. Empty/missing falls through to script
+      default (1M). Used to ship the defi 5M-cap rerun without an ad-hoc launcher.
 - [ ] [SCRIPT] P1. **CSV report upload to GCS before VM auto-shutdown.** The enumerator writes its CSV report to
       `tempfile.gettempdir()` (i.e. `/tmp` on the VM), which is local disk and is destroyed when
       `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes the VM. Operator can read distribution-by-reason from the events
@@ -1839,29 +1833,28 @@ The all-5-asset_group scan-only sweep surfaced three follow-up items not covered
 
 **User directive 2026-05-07 (post Phase 3.D.4 apply-write completion):**
 
-> "are all our mtds asset groups only checking for missing data based on what instruments are declared in
-> instruments services? this should be the convention"
+> "are all our mtds asset groups only checking for missing data based on what instruments are declared in instruments
+> services? this should be the convention"
 >
-> "for odds api in mtds i guess equivalent is checking fixtures that exist in fixtures (that's originally come
-> from API Football, but we just get them from GCS.)"
+> "for odds api in mtds i guess equivalent is checking fixtures that exist in fixtures (that's originally come from API
+> Football, but we just get them from GCS.)"
 
-**The architectural model.** The `(instruments-service catalog) × (data_types) × (dates_in_window)` cross-product
-IS the expected universe — at every per-(venue, instrument_id, day) grain. Today's Phase 3.D.4 enumerator covers
-the **coarse "venue/chain/source didn't exist yet"** layer (38,033 tradfi calendar rows + 13,176 sports
-pre-coverage rows + 119,152 cefi pre-venue-launch rows + 2,280 prediction pre-venue-launch rows + 1,286,260
-defi pre-genesis-and-pre-protocol-launch rows = **1,455,901 total**). It does NOT yet enumerate the
-**fine-grained per-instrument lifecycle** (instrument listed/delisted/expired) which is much larger and
-requires reading the per-asset-group instruments-service catalog.
+**The architectural model.** The `(instruments-service catalog) × (data_types) × (dates_in_window)` cross-product IS the
+expected universe — at every per-(venue, instrument_id, day) grain. Today's Phase 3.D.4 enumerator covers the **coarse
+"venue/chain/source didn't exist yet"** layer (38,033 tradfi calendar rows + 13,176 sports pre-coverage rows + 119,152
+cefi pre-venue-launch rows + 2,280 prediction pre-venue-launch rows + 1,286,260 defi pre-genesis-and-pre-protocol-launch
+rows = **1,455,901 total**). It does NOT yet enumerate the **fine-grained per-instrument lifecycle** (instrument
+listed/delisted/expired) which is much larger and requires reading the per-asset-group instruments-service catalog.
 
-**v1 (shipped today)** is honest as far as it goes — it correctly marks every coarse "didn't exist yet" tuple.
-**v2 (this phase)** layers per-instrument lifecycle on top so EVERY `(asset_group, venue, data_type,
-instrument_id, day)` tuple in the manifest's expected universe is either `captured` / `empty_confirmed` /
-`attempted_failed` — no silent absence.
+**v1 (shipped today)** is honest as far as it goes — it correctly marks every coarse "didn't exist yet" tuple. **v2
+(this phase)** layers per-instrument lifecycle on top so EVERY `(asset_group, venue, data_type, instrument_id, day)`
+tuple in the manifest's expected universe is either `captured` / `empty_confirmed` / `attempted_failed` — no silent
+absence.
 
-**Convention to codify in CLAUDE.md after this phase ships:** _"MTDS missing-data checks for any asset_group
-MUST derive their expected universe from the instruments-service catalog for that asset_group, NOT from
-inline / hardcoded lists. Adding a new venue / data_type / instrument anywhere in the workspace = adding
-it to the instruments-service catalog (the SSOT) and the enumerator picks it up automatically next run."_
+**Convention to codify in CLAUDE.md after this phase ships:** _"MTDS missing-data checks for any asset_group MUST derive
+their expected universe from the instruments-service catalog for that asset_group, NOT from inline / hardcoded lists.
+Adding a new venue / data_type / instrument anywhere in the workspace = adding it to the instruments-service catalog
+(the SSOT) and the enumerator picks it up automatically next run."_
 
 **Per-asset-group catalog read sources (the SSOT inputs to v2 enumeration):**
 
@@ -1873,94 +1866,87 @@ it to the instruments-service catalog (the SSOT) and the enumerator picks it up 
 | sports      | `gs://instruments-store-sports-{pid}/fixtures/…` (API-Football fixtures catalog, also team / league / season catalogs)       | `(asset_group=sports, source, data_type, league_id, fixture_id-or-day-aggregate, day)`  | `kickoff_time`, `league_active_window` (off-season pauses), `fixture_status` (postponed / cancelled), bookmaker `available_from` per `(odds_api, league)` pair |
 | prediction  | `gs://instruments-store-prediction-{pid}/…` (per-canonical-question-group catalog)                                           | `(asset_group=prediction, venue, data_type, canonical_question_group, day)`             | `market_created_at` (per market_id), `resolution_time`, `settlement_time`, canonical-question-group active window (HOURLY / DAILY / ELECTION cycles)           |
 
-**Tasks.** Sequential per asset_group — start with the asset_group whose catalog is most mature (sports
-fixtures + tradfi Databento) and end with the asset_group whose catalog needs the most work (defi +
-prediction).
+**Tasks.** Sequential per asset_group — start with the asset_group whose catalog is most mature (sports fixtures +
+tradfi Databento) and end with the asset_group whose catalog needs the most work (defi + prediction).
 
-- [ ] [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must
-      expose a uniform `list_instruments(asset_group, start_date, end_date) -> Iterator[CatalogRow]` shape —
-      same columns as the manifest's row_key (`venue`, `chain`, `data_type`, `instrument_type`,
-      `instrument_id`, `league_id`, ...) plus the lifecycle columns (`available_from`, `available_to`,
-      `expiry`, etc.). Define the contract in
-      `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream
-      consumers (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one
-      shape.
-- [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is
-      already in `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
+- [ ] [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must expose a
+      uniform `list_instruments(asset_group, start_date, end_date) -> Iterator[CatalogRow]` shape — same columns as the
+      manifest's row_key (`venue`, `chain`, `data_type`, `instrument_type`, `instrument_id`, `league_id`, ...) plus the
+      lifecycle columns (`available_from`, `available_to`, `expiry`, etc.). Define the contract in
+      `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream consumers
+      (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one shape.
+- [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is already in
+      `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
       `unified_api_contracts.sports.candidate_parquet_paths` SSOT). For odds_api: cross-product
-      `(league_id, fixture_id, bookmaker, market_type) × dates` filtered by
-      `kickoff_time ∈ [day_00:00, day_23:59]`. Reasons:
-      `EXPECTED_INSTRUMENT_NOT_LISTED` for fixtures-not-yet-scheduled,
-      `EXPECTED_PAUSED_LEAGUE` for off-season windows (existing reason, currently unused by enumerator),
-      `EXPECTED_PRE_SOURCE_COVERAGE_START` for pre-bookmaker-coverage dates (existing reason). Wire into
-      `_enumerate_sports` replacing today's per-source-only branch.
+      `(league_id, fixture_id, bookmaker, market_type) × dates` filtered by `kickoff_time ∈ [day_00:00, day_23:59]`.
+      Reasons: `EXPECTED_INSTRUMENT_NOT_LISTED` for fixtures-not-yet-scheduled, `EXPECTED_PAUSED_LEAGUE` for off-season
+      windows (existing reason, currently unused by enumerator), `EXPECTED_PRE_SOURCE_COVERAGE_START` for
+      pre-bookmaker-coverage dates (existing reason). Wire into `_enumerate_sports` replacing today's per-source-only
+      branch.
 - [ ] [SCRIPT] P0. **CeFi v2 enumerator** — read per-venue instrument catalog from
-      `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical
-      Tardis-derived layout is — needs an `instruments-service`-side audit). Cross-product
-      `(venue, instrument_type, instrument_id, data_type) × dates` filtered by
-      `available_from ≤ day ≤ available_to`. Today's `EXPECTED_PRE_VENUE_LAUNCH` becomes a special-case of
-      `EXPECTED_INSTRUMENT_NOT_LISTED` (every instrument's `available_from` ≥ venue launch date by
-      definition). For options/futures: bundled-by-root cluster atoms — `EXPECTED_INSTRUMENT_NOT_LISTED`
-      gates per-root-day. For perp futures: `EXPECTED_INSTRUMENT_DELISTED` when contract expires.
-- [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which
-      generates 35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
-      `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento
-      instruments catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at);
-      futures + options chains get per-root + cluster-day enumeration with weekly + standard expiries.
-      Calendar non-trading days remain `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason
-      taxonomy.
-- [ ] [SCRIPT] P0. **DeFi v2 enumerator** — extend today's PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES
-      cross-product with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list of
-      pools/instruments that get added/removed over time (Aave V3 listing/delisting individual reserves,
-      Uniswap V3 pool deployments, Curve gauge additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED`
-      blanket-marks 598,040 rows for "protocol on chain hadn't launched yet"; v2 makes that
-      per-(chain, protocol, instrument_id, day) so we mark individual pools/positions correctly.
+      `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical Tardis-derived
+      layout is — needs an `instruments-service`-side audit). Cross-product
+      `(venue, instrument_type, instrument_id, data_type) × dates` filtered by `available_from ≤ day ≤ available_to`.
+      Today's `EXPECTED_PRE_VENUE_LAUNCH` becomes a special-case of `EXPECTED_INSTRUMENT_NOT_LISTED` (every instrument's
+      `available_from` ≥ venue launch date by definition). For options/futures: bundled-by-root cluster atoms —
+      `EXPECTED_INSTRUMENT_NOT_LISTED` gates per-root-day. For perp futures: `EXPECTED_INSTRUMENT_DELISTED` when
+      contract expires.
+- [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which generates
+      35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
+      `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento instruments
+      catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at); futures + options
+      chains get per-root + cluster-day enumeration with weekly + standard expiries. Calendar non-trading days remain
+      `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason taxonomy.
+- [ ] [SCRIPT] P0. **DeFi v2 enumerator** — extend today's PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES cross-product
+      with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list of pools/instruments that get
+      added/removed over time (Aave V3 listing/delisting individual reserves, Uniswap V3 pool deployments, Curve gauge
+      additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED` blanket-marks 598,040 rows for "protocol on chain
+      hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we mark individual
+      pools/positions correctly.
 - [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
       `predictions_master_2026_05_07.plan.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
-      `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor;
-      v2 adds canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years)
-      so per-day coverage of recurring groups is honest.
-- [ ] [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset_groups, add a new
-      Key-Rules-Quick-Reference bullet:
-      _"MTDS / instruments-service / data-status missing-data checks for ANY asset_group derive their
-      expected universe from the instruments-service catalog for that asset_group, NOT from inline /
-      hardcoded venue / data_type / date lists. The catalog IS the SSOT for `what should exist`. Adding a
-      new venue / data_type / instrument = adding to the instruments-service catalog; downstream
-      enumerators + data-status panel + MTDS preflight + MDPS dependency-gate pick it up automatically."_
+      `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor; v2 adds
+      canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years) so per-day coverage
+      of recurring groups is honest.
+- [ ] [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset*groups, add a new
+      Key-Rules-Quick-Reference bullet: *"MTDS / instruments-service / data-status missing-data checks for ANY
+      asset*group derive their expected universe from the instruments-service catalog for that asset_group, NOT from
+      inline / hardcoded venue / data_type / date lists. The catalog IS the SSOT for `what should exist`. Adding a new
+      venue / data_type / instrument = adding to the instruments-service catalog; downstream enumerators + data-status
+      panel + MTDS preflight + MDPS dependency-gate pick it up automatically."*
 
-**Coordination with parallel plans** — Phase 3.D.5 touches the same instruments-service catalog
-infrastructure as the per-asset-group umbrella plans. Reference cross-plan banners (CLAUDE.md "Cross-Plan
-Coordination Banners" rule) — the Phase 3.D.5 v2 enumerator must align with:
+**Coordination with parallel plans** — Phase 3.D.5 touches the same instruments-service catalog infrastructure as the
+per-asset-group umbrella plans. Reference cross-plan banners (CLAUDE.md "Cross-Plan Coordination Banners" rule) — the
+Phase 3.D.5 v2 enumerator must align with:
 
-* `cefi_master_2026_05_07.plan.md` — CeFi instrument catalog scope + lifecycle field schema
-* `predictions_master_2026_05_07.plan.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
-* `sports_master_2026_05_07.plan.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
-* `tradfi_master_2026_05_07.plan.md` — Databento instrument catalog scope + cluster taxonomy
-* `defi_master_2026_05_07.plan.md` — per-pool catalog expansion (currently sparse)
+- `cefi_master_2026_05_07.plan.md` — CeFi instrument catalog scope + lifecycle field schema
+- `predictions_master_2026_05_07.plan.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
+- `sports_master_2026_05_07.plan.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
+- `tradfi_master_2026_05_07.plan.md` — Databento instrument catalog scope + cluster taxonomy
+- `defi_master_2026_05_07.plan.md` — per-pool catalog expansion (currently sparse)
 
-Each asset_group's v2 enumerator implementation lives under instruments-service/scripts/, but the catalog
-schema + read interface lives in UAC. The v1 enumerator stays in place during the v2 buildout — v2 is a
-strictly additive layer; v1's coarse rows stay correct (just less complete than v2 will be).
+Each asset_group's v2 enumerator implementation lives under instruments-service/scripts/, but the catalog schema + read
+interface lives in UAC. The v1 enumerator stays in place during the v2 buildout — v2 is a strictly additive layer; v1's
+coarse rows stay correct (just less complete than v2 will be).
 
-**Why ship v1 first then v2** — v1 is a one-day shippable unit that closes the rollup-vs-drilldown gap for
-the largest "didn't exist yet" slice (1.45M rows). v2 is multi-week work that requires per-asset-group
-catalog audits + schema agreement. Operator gets immediate denominator-divergence relief from v1 while v2
-is built; no v2 prerequisite blocks v1's value.
+**Why ship v1 first then v2** — v1 is a one-day shippable unit that closes the rollup-vs-drilldown gap for the largest
+"didn't exist yet" slice (1.45M rows). v2 is multi-week work that requires per-asset-group catalog audits + schema
+agreement. Operator gets immediate denominator-divergence relief from v1 while v2 is built; no v2 prerequisite blocks
+v1's value.
 
 #### Phase 3.D.5 — Hierarchical SSOT model (operator framing 2026-05-07 evening, REVISED)
 
-The operator clarified the architecture (revising the earlier v1-vs-v2 trade-off framing): v1 and v2 are
-**hierarchical layers of one model**, not competing approaches. Two SSOTs, one manifest:
+The operator clarified the architecture (revising the earlier v1-vs-v2 trade-off framing): v1 and v2 are **hierarchical
+layers of one model**, not competing approaches. Two SSOTs, one manifest:
 
-* **UAC = single SSOT for "is `(asset_group, venue/chain, day)` structurally possible"** — the coarse
-  availability axis (chain genesis, venue launch, source coverage start, calendar non-trading days). Cheap,
-  idempotent, doesn't move when instruments evolve. Owned by UAC `*_LAUNCH_DATES` /
-  `CHAIN_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`.
-* **instruments-service = single SSOT for "given that triple is possible, what instruments are live"** —
-  the per-instrument universe. Time-dependent (perp futures listed/delisted/expired, fixtures created
-  per-kickoff, prediction market_ids cycled per canonical-question-group). Updates whenever the catalog
-  discovers new instruments.
+- **UAC = single SSOT for "is `(asset_group, venue/chain, day)` structurally possible"** — the coarse availability axis
+  (chain genesis, venue launch, source coverage start, calendar non-trading days). Cheap, idempotent, doesn't move when
+  instruments evolve. Owned by UAC `*_LAUNCH_DATES` / `CHAIN_GENESIS_DATES` / `SOURCE_COVERAGE_START` /
+  `venue_trading_calendar`.
+- **instruments-service = single SSOT for "given that triple is possible, what instruments are live"** — the
+  per-instrument universe. Time-dependent (perp futures listed/delisted/expired, fixtures created per-kickoff,
+  prediction market_ids cycled per canonical-question-group). Updates whenever the catalog discovers new instruments.
 
 **They compose, they don't replace each other:**
 
@@ -1978,63 +1964,60 @@ expected_universe(venue, data_type, day):
                 yield (..., capture_status=expected_unattempted)         # v2 layer (NEW status)
 ```
 
-**The 4th `capture_status` value: `expected_unattempted` (NEW, operator direction 2026-05-07).** Today the
-manifest only has 3 capture_status values (`captured` / `empty_confirmed` / `attempted_failed`) and they all
-imply "we tried." Per the operator: _"so we do need to write the instrument definition instruments into the
-manifest enumeration so that we can write them as something that indicates that we haven't tried them yet,
-but they should exist."_
+**The 4th `capture_status` value: `expected_unattempted` (NEW, operator direction 2026-05-07).** Today the manifest only
+has 3 capture*status values (`captured` / `empty_confirmed` / `attempted_failed`) and they all imply "we tried." Per the
+operator: *"so we do need to write the instrument definition instruments into the manifest enumeration so that we can
+write them as something that indicates that we haven't tried them yet, but they should exist."\_
 
-`expected_unattempted` is distinct from `empty_confirmed` (which means "we tried, source returned 0 / the
-day is structurally empty per calendar/genesis/coverage rules") and from `attempted_failed` (which means
-"we tried, got an exception"). Pre-populated by v2 enumerator from the instruments-service catalog; flipped
-to `captured` (or `empty_confirmed` / `attempted_failed`) by MTDS when it actually fetches. The manifest
-becomes the to-do list — what stays as `expected_unattempted` IS the work backlog, no separate worklist
-needed.
+`expected_unattempted` is distinct from `empty_confirmed` (which means "we tried, source returned 0 / the day is
+structurally empty per calendar/genesis/coverage rules") and from `attempted_failed` (which means "we tried, got an
+exception"). Pre-populated by v2 enumerator from the instruments-service catalog; flipped to `captured` (or
+`empty_confirmed` / `attempted_failed`) by MTDS when it actually fetches. The manifest becomes the to-do list — what
+stays as `expected_unattempted` IS the work backlog, no separate worklist needed.
 
 **Coverage % at every drilldown level becomes meaningful and sums right:**
 
-* `captured` count = data exists on disk
-* `empty_confirmed` count = honest absence (pre-launch, weekend, holiday, paused-league, source-zero)
-* `attempted_failed` count = something broke (with typed error_reason)
-* `expected_unattempted` count = work backlog (catalog says it should exist, MTDS hasn't tried)
-* Coverage % = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. The
-  denominator is the catalog × dates universe, not "rows in manifest" — the universe is fully enumerated.
+- `captured` count = data exists on disk
+- `empty_confirmed` count = honest absence (pre-launch, weekend, holiday, paused-league, source-zero)
+- `attempted_failed` count = something broke (with typed error_reason)
+- `expected_unattempted` count = work backlog (catalog says it should exist, MTDS hasn't tried)
+- Coverage % = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. The denominator is
+  the catalog × dates universe, not "rows in manifest" — the universe is fully enumerated.
 
 **🚨 RED ALERT context (2026-05-07 evening, parallel-agent finding).** 5 CeFi VMs wrote manifest rows with
-`capture_status=empty_confirmed` and **blank** `error_reason` (violating the 2026-05-07 writegate Phase 2.E
-taxonomy that requires every empty_confirmed row to carry a typed reason). Implausible coverage gaps:
+`capture_status=empty_confirmed` and **blank** `error_reason` (violating the 2026-05-07 writegate Phase 2.E taxonomy
+that requires every empty_confirmed row to carry a typed reason). Implausible coverage gaps:
 
-| VM                                | total | empty_confirmed | captured | error_reason |
-| --------------------------------- | ----: | --------------: | -------: | ------------ |
-| `bitfinex-spot-2020-heavy`        |   200 |      192 (96%)  |        8 | all blank    |
-| `bitfinex-spot-2024-heavy`        |   600 |      576 (96%)  |       24 | all blank    |
-| `bitget-futures-2025-light`       | 6,059 |    6,059 (100%) |        0 | all blank    |
-| `kraken-spot-2020-heavy`          |   250 |      240 (96%)  |       10 | all blank    |
-| `kraken-spot-2023-heavy`          |   550 |      528 (96%)  |       22 | all blank    |
+| VM                          | total | empty_confirmed | captured | error_reason |
+| --------------------------- | ----: | --------------: | -------: | ------------ |
+| `bitfinex-spot-2020-heavy`  |   200 |       192 (96%) |        8 | all blank    |
+| `bitfinex-spot-2024-heavy`  |   600 |       576 (96%) |       24 | all blank    |
+| `bitget-futures-2025-light` | 6,059 |    6,059 (100%) |        0 | all blank    |
+| `kraken-spot-2020-heavy`    |   250 |       240 (96%) |       10 | all blank    |
+| `kraken-spot-2023-heavy`    |   550 |       528 (96%) |       22 | all blank    |
 
-Bitfinex 2024 spot at 96% empty is implausible (continuous volume in 2024); Bitget futures 2025 at 100%
-empty is even worse. Pattern matches the lending-indices silent-zero bug from yesterday — **adapter
-returns no data, downstream emits empty_confirmed without reason instead of attempted_failed**.
+Bitfinex 2024 spot at 96% empty is implausible (continuous volume in 2024); Bitget futures 2025 at 100% empty is even
+worse. Pattern matches the lending-indices silent-zero bug from yesterday — **adapter returns no data, downstream emits
+empty_confirmed without reason instead of attempted_failed**.
 
-**The fix is the catalog-aware write-gate** (Wave 2 below). When MTDS attempts an instrument that
-instruments-service catalog says was alive on day D and the source returns nothing, the writer must
-REJECT `record_empty(reason=SOURCE_RETURNED_ZERO)` and force `record_failed(EmptyFromLiveInstrumentError)`.
-This converts silent "we tried, source said empty" into loud "catalog says alive, source said empty —
-investigate." Also fixes the silent-fallback failure mode (blank error_reason) — the writer guard rejects
-ANY `record_empty` that doesn't supply a `reason` per the existing closed-set taxonomy. Migration script
-rewrites the existing blank-reason empty_confirmed rows to attempted_failed with a typed
-`LegacyBlankErrorReasonError` reason so they get re-attempted on next VM run instead of silently passing.
+**The fix is the catalog-aware write-gate** (Wave 2 below). When MTDS attempts an instrument that instruments-service
+catalog says was alive on day D and the source returns nothing, the writer must REJECT
+`record_empty(reason=SOURCE_RETURNED_ZERO)` and force `record_failed(EmptyFromLiveInstrumentError)`. This converts
+silent "we tried, source said empty" into loud "catalog says alive, source said empty — investigate." Also fixes the
+silent-fallback failure mode (blank error_reason) — the writer guard rejects ANY `record_empty` that doesn't supply a
+`reason` per the existing closed-set taxonomy. Migration script rewrites the existing blank-reason empty_confirmed rows
+to attempted_failed with a typed `LegacyBlankErrorReasonError` reason so they get re-attempted on next VM run instead of
+silently passing.
 
 **Operator directive 2026-05-07 evening (Step 4 — codebase-wide cascade):**
 
-> "this concept applies for MDPS, features, ml strategy etc all services because they all have dependent
-> data, they all have an expected start. Obviously, their expected start single source of truth should be
-> based on the upstream expected start single source of truth as well, or use the same thing. There's no
-> point trying to get features for a venue which didn't exist. There's no point trying to do machine
-> learning for a time period where the venue didn't exist. This stuff should be done codebase-wide, and
-> the manifest and data status should be able to understand them and the services when they're looking
-> at their dependencies. They should be able to use them to understand as well. This isn't all new work.
-> A lot of the pipes are pretty much there. They just need tightening."
+> "this concept applies for MDPS, features, ml strategy etc all services because they all have dependent data, they all
+> have an expected start. Obviously, their expected start single source of truth should be based on the upstream
+> expected start single source of truth as well, or use the same thing. There's no point trying to get features for a
+> venue which didn't exist. There's no point trying to do machine learning for a time period where the venue didn't
+> exist. This stuff should be done codebase-wide, and the manifest and data status should be able to understand them and
+> the services when they're looking at their dependencies. They should be able to use them to understand as well. This
+> isn't all new work. A lot of the pipes are pretty much there. They just need tightening."
 
 **Cross-service cascade — every dependent service's expected start derives from its upstream's:**
 
@@ -2050,492 +2033,557 @@ instruments-service (catalog SSOT)
         the structural "is this triple even possible" floor that ALL layers honour first
 ```
 
-**At every layer the rule is the same:** if upstream marks a `(venue, data_type, day)` shard as
-`expected_unattempted` (catalog says it should exist) or `empty_confirmed` (catalog says it shouldn't),
-the downstream service must propagate that — features compute on `expected_unattempted` upstream → write
-own `expected_unattempted`; ML training window omits days where upstream is `expected_unattempted` (or
-loads the manifest backlog as the work-list); strategy doesn't signal for a venue that didn't exist on
-day D. **Cascade short-circuits silent waste.** A lot of code already does this in spirit (DependencyError
-fail-fast at boundaries, manifest pre-flight skip), it just needs tightening + a uniform read interface
-on the manifest.
+**At every layer the rule is the same:** if upstream marks a `(venue, data_type, day)` shard as `expected_unattempted`
+(catalog says it should exist) or `empty_confirmed` (catalog says it shouldn't), the downstream service must propagate
+that — features compute on `expected_unattempted` upstream → write own `expected_unattempted`; ML training window omits
+days where upstream is `expected_unattempted` (or loads the manifest backlog as the work-list); strategy doesn't signal
+for a venue that didn't exist on day D. **Cascade short-circuits silent waste.** A lot of code already does this in
+spirit (DependencyError fail-fast at boundaries, manifest pre-flight skip), it just needs tightening + a uniform read
+interface on the manifest.
 
 **Tasks for the new 4th capture_status (cross-repo blast radius — multi-day shippable):**
 
 - [x] [UAC + UTL] P0 (shipped UTL@68b3804a 2026-05-07). `EXPECTED_UNATTEMPTED` added as the 4th value of
-      `unified_trading_library.manifest_writer.CaptureStatus` enum (capture_status taxonomy lives in UTL,
-      not UAC — corrected from initial plan placement). Docstring spells out 4-state model + supersede
-      property. Coverage formula codified inline.
-- [x] [UTL] P0 (shipped UTL@68b3804a 2026-05-07). `ManifestWriter.record_expected_unattempted(row_key=,
-      attempted_at=)` helper added mirroring `record_empty` / `record_failed`. Per-VM shard isolation
-      via `_record_status` (same path as the other write methods). Last-writer-wins supersede happens
-      naturally via the consolidator's row_key dedup.
-- [ ] [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed`
-      last-writer-wins audit — verify the supersede path (prior `expected_unattempted` row → MTDS
-      writes `captured` for same row_key). Smoke test on a CeFi manifest after Wave 3 enumerator
-      lands. **DEFERRED** — manifest-consolidator already does last-writer-wins on row_key (existing
-      design), so the new `expected_unattempted` rows participate naturally. Audit pass + unit test
-      for the supersede path remain.
-- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi /
-      tradfi / defi / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument
-      whose `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a
-      stronger status. Today's v1 keeps writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` etc.
-- [ ] [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes
-      `expected_unattempted` count. Surface the breakdown in the response payload (`captured`,
-      `empty_confirmed`, `attempted_failed`, `expected_unattempted` as 4 buckets). Backwards-compat: if
-      `expected_unattempted` count is 0, response shape unchanged.
-- [ ] [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction
-      2026-05-07: _"data status in deployment ui needs to be able to visualise that to the instrument
-      granularity breakdown so we can visually see, per instrument, which days are available and which are
-      missing. Since there can be so many instruments, I think there's already something in the UI that
-      groups them and we can click to see more, click to see more, etc. It needs to be the same with days
-      as well so that we can see all the days available vs missing."_
-      * Today's drilldown lands at `(venue, data_type, instrument_type, instrument_id)` and shows
-        `X days captured of Y total` — aggregate. Operator wants to drill **into the days dimension** per
-        instrument to see which specific days are captured / empty / failed / unattempted.
-      * Per-instrument pagination already exists (Phase 6 shipped per
-        `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — 200 instruments per page,
-        load-more button). Mirror that pattern at the day grain: per-instrument-leaf, render a calendar /
-        list of days with status badges (4 colours for the 4 capture_status values), paginate
-        chronologically.
-      * Layout suggestion: per-instrument click expands to a year × 12-month grid (visual calendar) where
-        each cell shows the day's status colour. Hover for details (error_reason, attempted_at, file size
-        if captured). Click a day → leaf actions (re-deploy that day's shard, download the parquet,
-        inspect the failure reason).
-      * Pagination at the day grain may be unnecessary if rendered as a calendar (8 years × 365 = ~2920
-        days per instrument fits a single tall page). For instrument-types with thousands of expiring
-        contracts (options chains), the per-cluster bundle drilldown already collapses; per-day for the
-        bundle root is the relevant grain.
+      `unified_trading_library.manifest_writer.CaptureStatus` enum (capture_status taxonomy lives in UTL, not UAC —
+      corrected from initial plan placement). Docstring spells out 4-state model + supersede property. Coverage formula
+      codified inline.
+- [x] [UTL] P0 (shipped UTL@68b3804a 2026-05-07).
+      `ManifestWriter.record_expected_unattempted(row_key=,     attempted_at=)` helper added mirroring `record_empty` /
+      `record_failed`. Per-VM shard isolation via `_record_status` (same path as the other write methods).
+      Last-writer-wins supersede happens naturally via the consolidator's row_key dedup.
+- [ ] [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed` last-writer-wins audit —
+      verify the supersede path (prior `expected_unattempted` row → MTDS writes `captured` for same row_key). Smoke test
+      on a CeFi manifest after Wave 3 enumerator lands. **DEFERRED** — manifest-consolidator already does
+      last-writer-wins on row_key (existing design), so the new `expected_unattempted` rows participate naturally. Audit
+      pass + unit test for the supersede path remain.
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi / tradfi / defi
+      / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument whose
+      `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a stronger status.
+      Today's v1 keeps writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` etc.
+- [ ] [deployment-api] P0. Coverage-calculation update: per-shard coverage denominator includes `expected_unattempted`
+      count. Surface the breakdown in the response payload (`captured`, `empty_confirmed`, `attempted_failed`,
+      `expected_unattempted` as 4 buckets). Backwards-compat: if `expected_unattempted` count is 0, response shape
+      unchanged.
+- [ ] [deployment-ui] P0. **Per-instrument × per-day drilldown visualisation.** Operator direction 2026-05-07: _"data
+      status in deployment ui needs to be able to visualise that to the instrument granularity breakdown so we can
+      visually see, per instrument, which days are available and which are missing. Since there can be so many
+      instruments, I think there's already something in the UI that groups them and we can click to see more, click to
+      see more, etc. It needs to be the same with days as well so that we can see all the days available vs missing."_ _
+      Today's drilldown lands at `(venue, data_type, instrument_type, instrument_id)` and shows
+      `X days captured of Y total` — aggregate. Operator wants to drill **into the days dimension** per instrument to
+      see which specific days are captured / empty / failed / unattempted. _ Per-instrument pagination already exists
+      (Phase 6 shipped per `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — 200 instruments per page,
+      load-more button). Mirror that pattern at the day grain: per-instrument-leaf, render a calendar / list of days
+      with status badges (4 colours for the 4 capture_status values), paginate chronologically. _ Layout suggestion:
+      per-instrument click expands to a year × 12-month grid (visual calendar) where each cell shows the day's status
+      colour. Hover for details (error_reason, attempted_at, file size if captured). Click a day → leaf actions
+      (re-deploy that day's shard, download the parquet, inspect the failure reason). _ Pagination at the day grain may
+      be unnecessary if rendered as a calendar (8 years × 365 = ~2920 days per instrument fits a single tall page). For
+      instrument-types with thousands of expiring contracts (options chains), the per-cluster bundle drilldown already
+      collapses; per-day for the bundle root is the relevant grain.
 - [ ] [DOCS] P0. Update
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the
-      `expected_unattempted` → `captured` supersede semantics.
-- [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference:
-      _"manifest `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` /
-      `attempted_failed` / `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`,
-      `SOURCE_COVERAGE_START`, `venue_trading_calendar`) own the coarse 'is this triple structurally
-      possible' axis. instruments-service catalog owns the fine 'given alive, what instruments exist on
-      this day' axis. Both layers write to the manifest; MTDS's `captured` writes supersede prior
-      `expected_unattempted` rows by row_key. Coverage % at every drilldown level = `captured / (captured +
-      empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe."_
+      to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
+      `captured` supersede semantics.
+- [ ] [DOCS] P0. After the cross-repo ship lands, codify in CLAUDE.md Key-Rules-Quick-Reference: _"manifest
+      `capture_status` is a 4-state closed set: `captured` / `empty_confirmed` / `attempted_failed` /
+      `expected_unattempted`. UAC SSOTs (`*_LAUNCH_DATES`, `*_GENESIS_DATES`, `SOURCE_COVERAGE_START`,
+      `venue_trading_calendar`) own the coarse 'is this triple structurally possible' axis. instruments-service catalog
+      owns the fine 'given alive, what instruments exist on this day' axis. Both layers write to the manifest; MTDS's
+      `captured` writes supersede prior `expected_unattempted` rows by row_key. Coverage % at every drilldown level =
+      `captured / (captured +     empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full
+      universe."_
 
 **Wave 2 — catalog-aware write-gate (the RED ALERT fix). UTL guard rule + migration. CRITICAL P0.**
 
-- [x] [UAC] P0 (shipped UAC@e855051 2026-05-07). `EmptyFromLiveInstrumentError` +
-      `LegacyBlankErrorReasonError` typed exceptions added to
-      `unified_api_contracts.canonical.crosscutting.honest_coverage` exports. Both feed the writer
-      guard + migration script. Pattern mirrors `MissingClusterValidationError` /
-      `UpstreamTimestampBiasError`.
-- [ ] [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending
-      Wave 3 (depends on MTDS adapters wiring the `instrument_catalog` callable at construction).
-      `EmptyFromLiveInstrumentError` typed class shipped today (UAC@e855051); the writer-side guard is
-      a follow-up that requires MTDS / MDPS / features-* to pass the catalog reference. Until then the
-      blank-reason guard (next item, shipped) catches the most-common silent-fallback path.
+- [x] [UAC] P0 (shipped UAC@e855051 2026-05-07). `EmptyFromLiveInstrumentError` + `LegacyBlankErrorReasonError` typed
+      exceptions added to `unified_api_contracts.canonical.crosscutting.honest_coverage` exports. Both feed the writer
+      guard + migration script. Pattern mirrors `MissingClusterValidationError` / `UpstreamTimestampBiasError`.
+- [ ] [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending Wave 3 (depends on
+      MTDS adapters wiring the `instrument_catalog` callable at construction). `EmptyFromLiveInstrumentError` typed
+      class shipped today (UAC@e855051); the writer-side guard is a follow-up that requires MTDS / MDPS / features-\* to
+      pass the catalog reference. Until then the blank-reason guard (next item, shipped) catches the most-common
+      silent-fallback path.
 - [x] [UTL] P0 (shipped UTL@68b3804a 2026-05-07). **Reject blank `error_reason` writes loudly.**
       `ManifestWriter.record_empty(reason="")` now raises `LegacyBlankErrorReasonError` early, BEFORE the
-      `EMPTY_CONFIRMED_REASONS` membership check. Catches the silent-fallback bug pattern (RED ALERT
-      2026-05-07 — 5 CeFi VMs writing 96-100% empty rows with all blank reasons). Adapters MUST pass a
-      typed reason or call `record_failed` for unexpected absence.
-- [x] [TEST] P0 (smoke-tested 2026-05-07; full unit test pending). Smoke-tested 4 cases locally:
-      (a) blank reason → LegacyBlankErrorReasonError, (b) SOURCE_RETURNED_ZERO accepted, (c) bogus
-      reason → UnknownEmptyConfirmedReasonError, (d) record_expected_unattempted writes
-      capture_status=expected_unattempted. Full pytest unit test for the supersede path remains
-      a follow-up.
+      `EMPTY_CONFIRMED_REASONS` membership check. Catches the silent-fallback bug pattern (RED ALERT 2026-05-07 — 5 CeFi
+      VMs writing 96-100% empty rows with all blank reasons). Adapters MUST pass a typed reason or call `record_failed`
+      for unexpected absence.
+- [x] [TEST] P0 (smoke-tested 2026-05-07; full unit test pending). Smoke-tested 4 cases locally: (a) blank reason →
+      LegacyBlankErrorReasonError, (b) SOURCE_RETURNED_ZERO accepted, (c) bogus reason →
+      UnknownEmptyConfirmedReasonError, (d) record_expected_unattempted writes capture_status=expected_unattempted. Full
+      pytest unit test for the supersede path remains a follow-up.
 
-**Wave 2.M — Migration script for the existing bad rows.** The 5 RED ALERT VMs wrote ~7,659 blank-reason
-empty_confirmed rows to canonical CeFi manifest. Plus an unknown number of historical bad rows from
-prior silent-fallback bugs.
+**Wave 2.M — Migration script for the existing bad rows.** The 5 RED ALERT VMs wrote ~7,659 blank-reason empty_confirmed
+rows to canonical CeFi manifest. Plus an unknown number of historical bad rows from prior silent-fallback bugs.
 
 **Asset-group-specific empty_confirmed legitimacy (operator directive 2026-05-07 evening, msg 6):**
 
-> "sports and prediction markets are allowed to have empty_confirmed and reason like no match today or
-> something. cefi, defi, tradfi cannot have empty_confirmed. if its genuinely empty then it should be
-> on venue level like holiday or exchange issue or something. Illiquid ones like far OTM options are
-> not going to have any trades for multiple days, its possible but in that case it should be 0 volume
-> candles with LTP as current price."
+> "sports and prediction markets are allowed to have empty_confirmed and reason like no match today or something. cefi,
+> defi, tradfi cannot have empty_confirmed. if its genuinely empty then it should be on venue level like holiday or
+> exchange issue or something. Illiquid ones like far OTM options are not going to have any trades for multiple days,
+> its possible but in that case it should be 0 volume candles with LTP as current price."
 
-This codifies a per-asset-group rule the existing UTL `classify_legacy_empty_row` helper does NOT
-honour. Today the helper defaults `_classify_cefi` / `_classify_defi` blank-reason rows to
-`SOURCE_RETURNED_ZERO` (an empty_confirmed reason) — per the operator, this is WRONG. It silently
-grants cefi/defi rows legit-empty status when actually they should flip to `attempted_failed` to force
-re-attempt. **Audit finding 2026-05-07**: the existing `reconcile_expected_absence_reasons.py` (which
-uses the helper) has been retroactively stamping cefi/defi blank-reason rows as
-`empty_confirmed/SOURCE_RETURNED_ZERO` — propagating the silent-bug semantics into the manifest. Any
-rows touched by that reconciler in cefi/defi need a re-pass to flip to the correct shape.
+This codifies a per-asset-group rule the existing UTL `classify_legacy_empty_row` helper does NOT honour. Today the
+helper defaults `_classify_cefi` / `_classify_defi` blank-reason rows to `SOURCE_RETURNED_ZERO` (an empty_confirmed
+reason) — per the operator, this is WRONG. It silently grants cefi/defi rows legit-empty status when actually they
+should flip to `attempted_failed` to force re-attempt. **Audit finding 2026-05-07**: the existing
+`reconcile_expected_absence_reasons.py` (which uses the helper) has been retroactively stamping cefi/defi blank-reason
+rows as `empty_confirmed/SOURCE_RETURNED_ZERO` — propagating the silent-bug semantics into the manifest. Any rows
+touched by that reconciler in cefi/defi need a re-pass to flip to the correct shape.
 
-| asset_group  | Legit empty_confirmed at instrument-day? | Default for un-classifiable blank-reason rows                       |
-| ------------ | ---------------------------------------- | ------------------------------------------------------------------- |
-| sports       | YES — no fixtures today is normal        | `empty_confirmed/SOURCE_RETURNED_ZERO`                              |
-| prediction   | YES — no markets active that day         | `empty_confirmed/SOURCE_RETURNED_ZERO`                              |
-| cefi         | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
-| defi         | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
-| tradfi       | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
+| asset_group | Legit empty_confirmed at instrument-day? | Default for un-classifiable blank-reason rows                     |
+| ----------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| sports      | YES — no fixtures today is normal        | `empty_confirmed/SOURCE_RETURNED_ZERO`                            |
+| prediction  | YES — no markets active that day         | `empty_confirmed/SOURCE_RETURNED_ZERO`                            |
+| cefi        | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt |
+| defi        | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt |
+| tradfi      | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt |
 
 Venue-level legit empties for cefi/defi/tradfi (kept as `empty_confirmed` with typed reason):
 
-* `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` — calendar non-trading days (tradfi).
-* `EXPECTED_PARTIAL_HALF_DAY` — half-session days (tradfi).
-* `EXPECTED_PRE_VENUE_LAUNCH` — venue not yet operating (cefi/defi).
-* `EXPECTED_PRE_GENESIS_CHAIN` — chain not yet alive (defi).
-* `EXPECTED_INSTRUMENT_NOT_LISTED` — instrument's `available_from` is after the day (per-instrument
-  catalog read; Wave 3 will populate this from instruments-service).
-* `EXPECTED_INSTRUMENT_DELISTED` — instrument's `available_to` has passed.
+- `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` — calendar non-trading days (tradfi).
+- `EXPECTED_PARTIAL_HALF_DAY` — half-session days (tradfi).
+- `EXPECTED_PRE_VENUE_LAUNCH` — venue not yet operating (cefi/defi).
+- `EXPECTED_PRE_GENESIS_CHAIN` — chain not yet alive (defi).
+- `EXPECTED_INSTRUMENT_NOT_LISTED` — instrument's `available_from` is after the day (per-instrument catalog read; Wave 3
+  will populate this from instruments-service).
+- `EXPECTED_INSTRUMENT_DELISTED` — instrument's `available_to` has passed.
 
-**Illiquid-instrument carve-out (deferred to a separate adapter fix, NOT this migration).** Per the
-operator: illiquid options (far OTM, distant expiry) may have zero trades for multiple days. The
-correct manifest shape for those is NOT `empty_confirmed` — it's `captured` with 0-volume candles
-where OHLC carries LTP-from-prior-day. This is an MTDS / MDPS adapter behaviour change, not a
-manifest classification change. Tracked as a follow-up below (Wave 3.M).
+**Illiquid-instrument carve-out (deferred to a separate adapter fix, NOT this migration).** Per the operator: illiquid
+options (far OTM, distant expiry) may have zero trades for multiple days. The correct manifest shape for those is NOT
+`empty_confirmed` — it's `captured` with 0-volume candles where OHLC carries LTP-from-prior-day. This is an MTDS / MDPS
+adapter behaviour change, not a manifest classification change. Tracked as a follow-up below (Wave 3.M).
 
-**Manifest column hygiene (operator clarification msg 6):** the manifest already carries
-`attempted_at` (per the existing v5 schema) which is the "last time this data point was checked" /
-`checked_at` semantics. No new column needed. Updating an existing row's reason / status via
-the consolidator's last-writer-wins merge naturally bumps `attempted_at` to the new write — no
-schema change. Reconciler stamps + adapter writes both refresh the timestamp.
+**Manifest column hygiene (operator clarification msg 6):** the manifest already carries `attempted_at` (per the
+existing v5 schema) which is the "last time this data point was checked" / `checked_at` semantics. No new column needed.
+Updating an existing row's reason / status via the consolidator's last-writer-wins merge naturally bumps `attempted_at`
+to the new write — no schema change. Reconciler stamps + adapter writes both refresh the timestamp.
 
-**Empty-files-vs-manifest-rows (operator clarification msg 6):** writing fake-empty parquet files
-(0-volume candles, NaN OHLC bars) is NOT the right model — has bad implications for ML / features /
-strategy / execution backtests if consumers misinterpret. Manifest absence rows are the clear,
-service-decides-policy instruction. Each downstream service reads the manifest and decides per its
-own policy (NaN-fill, fail period, propagate, skip). Single SSOT for "what should exist", clear
-instruction for "what's actually there", per-service flexibility for "how to handle absence."
+**Empty-files-vs-manifest-rows (operator clarification msg 6):** writing fake-empty parquet files (0-volume candles, NaN
+OHLC bars) is NOT the right model — has bad implications for ML / features / strategy / execution backtests if consumers
+misinterpret. Manifest absence rows are the clear, service-decides-policy instruction. Each downstream service reads the
+manifest and decides per its own policy (NaN-fill, fail period, propagate, skip). Single SSOT for "what should exist",
+clear instruction for "what's actually there", per-service flexibility for "how to handle absence."
 
 - [x] [SCRIPT] P0 (shipped instruments-service@86804c7 + UTL@7eca2c20 + UTL@7276cca1 2026-05-07). NEW
-      `instruments-service/scripts/reconcile_blank_error_reason_rows.py` walks all 5 asset_group
-      manifests; finds rows where `capture_status=empty_confirmed AND (error_reason IS NULL OR
-      error_reason=='')`; classifies via the discriminated UTL helper
-      `classify_blank_reason_row(asset_group, row) -> tuple[capture_status, error_reason]`. Per
-      operator msg 6: sports/prediction → keep empty_confirmed/SOURCE_RETURNED_ZERO; cefi/defi/tradfi
-      → keep empty_confirmed/EXPECTED_* if classifier matches venue-level rule (PRE_VENUE_LAUNCH /
-      PRE_GENESIS_CHAIN / HOLIDAY / WEEKEND), else flip to attempted_failed/LegacyBlankErrorReasonError.
-      Classifier helper enhanced (UTL@7276cca1) to use UAC `CEFI_VENUE_LAUNCH_DATES` /
-      `PREDICTION_VENUE_LAUNCH_DATES` for pre-launch detection. Default scan-only; `--apply-flips`
-      requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>`. Halt-safety
+      `instruments-service/scripts/reconcile_blank_error_reason_rows.py` walks all 5 asset*group manifests; finds rows
+      where `capture_status=empty_confirmed AND (error_reason IS NULL OR     error_reason=='')`; classifies via the
+      discriminated UTL helper `classify_blank_reason_row(asset_group, row) -> tuple[capture_status, error_reason]`. Per
+      operator msg 6: sports/prediction → keep empty_confirmed/SOURCE_RETURNED_ZERO; cefi/defi/tradfi → keep
+      empty_confirmed/EXPECTED*\* if classifier matches venue-level rule (PRE_VENUE_LAUNCH / PRE_GENESIS_CHAIN / HOLIDAY
+      / WEEKEND), else flip to attempted_failed/LegacyBlankErrorReasonError. Classifier helper enhanced (UTL@7276cca1)
+      to use UAC `CEFI_VENUE_LAUNCH_DATES` / `PREDICTION_VENUE_LAUNCH_DATES` for pre-launch detection. Default
+      scan-only; `--apply-flips` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>`. Halt-safety
       `--max-flips-per-run=100k` default.
 - [x] [VM-LAUNCH] P0 (launcher shipped deployment-service@f72686b 2026-05-07).
-      `deployment-service/scripts/vm/launch-blank-reason-recon-vm.sh` — singleton-locked GCE launcher
-      mirroring `launch-defi-phantom-recon-vm.sh`. Watchdog prefix `blank-reason-recon-` registered.
-- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — `blank-reason-recon-cefi-20260507-173136`).
-      **CeFi `--apply-flips` complete: 1,238,229 rows flipped.** Distribution: 1,238,079
-      attempted_failed/LegacyBlankErrorReasonError + 150 empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH
-      (mostly post-2018-launch venues — BYBIT pre-Dec-2018, HYPERLIQUID pre-2023). Per-VM shard at
+      `deployment-service/scripts/vm/launch-blank-reason-recon-vm.sh` — singleton-locked GCE launcher mirroring
+      `launch-defi-phantom-recon-vm.sh`. Watchdog prefix `blank-reason-recon-` registered.
+- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — `blank-reason-recon-cefi-20260507-173136`). **CeFi `--apply-flips`
+      complete: 1,238,229 rows flipped.** Distribution: 1,238,079 attempted_failed/LegacyBlankErrorReasonError + 150
+      empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH (mostly post-2018-launch venues — BYBIT pre-Dec-2018, HYPERLIQUID
+      pre-2023). Per-VM shard at
       `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/blank-reason-recon-cefi-20260507-173136.parquet`.
       Consolidator merging into canonical within ~5min.
-- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — 4 parallel VMs). **All 5 asset_groups
-      `--apply-flips` complete. Total: 3,114,843 rows flipped across 5,457,181 manifest rows
-      (57.07% of all manifests had blank error_reason).** Per-asset-group:
-      * **cefi** — 1,238,229 flipped (1,238,079 attempted_failed + 150 EXPECTED_PRE_VENUE_LAUNCH)
-      * **sports** — 1,868,285 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse-fixtures
-        legit per msg 6; sports CAN have legit empty days)
-      * **tradfi** — 7,603 flipped (5,159 attempted_failed + 2,225 EXPECTED_WEEKEND + 219
-        EXPECTED_HOLIDAY)
-      * **defi** — 685 flipped (100% attempted_failed/LegacyBlankErrorReasonError)
-      * **prediction** — 41 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse trading legit)
-      All 5 per-VM shards uploaded; consolidator merging into canonical manifests within ~5min.
-      Net effect: ~1.25M cefi/defi/tradfi rows flagged for re-attempt by orchestrator (catches the
-      silent-fallback adapter paths via the new UTL@68b3804a blank-reason guard); ~1.87M sports +
-      few-K tradfi/prediction empty-with-typed-reason rows now properly classified for downstream
-      consumer policy decisions.
+- [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — 4 parallel VMs). **All 5 asset_groups `--apply-flips` complete.
+      Total: 3,114,843 rows flipped across 5,457,181 manifest rows (57.07% of all manifests had blank error_reason).**
+      Per-asset-group: _ **cefi** — 1,238,229 flipped (1,238,079 attempted_failed + 150 EXPECTED_PRE_VENUE_LAUNCH) _
+      **sports** — 1,868,285 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse-fixtures legit per msg 6;
+      sports CAN have legit empty days) _ **tradfi** — 7,603 flipped (5,159 attempted_failed + 2,225 EXPECTED_WEEKEND +
+      219 EXPECTED_HOLIDAY) _ **defi** — 685 flipped (100% attempted_failed/LegacyBlankErrorReasonError) \*
+      **prediction** — 41 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse trading legit) All 5 per-VM shards
+      uploaded; consolidator merging into canonical manifests within ~5min. Net effect: ~1.25M cefi/defi/tradfi rows
+      flagged for re-attempt by orchestrator (catches the silent-fallback adapter paths via the new UTL@68b3804a
+      blank-reason guard); ~1.87M sports + few-K tradfi/prediction empty-with-typed-reason rows now properly classified
+      for downstream consumer policy decisions.
 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
-- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with
-      the 4th capture_status. Each asset_group gets:
-      * Pre-venue/chain-launch dates → continue writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` /
-        `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today).
-      * Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW).
-      * Per-instrument-pre-listing dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`.
-      * Per-instrument-post-delisting dates → write `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
-- [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at
-      construction time. Each adapter passes a catalog reader for the venue it serves. Writes that hit
-      the catalog-aware guard get classified appropriately.
-- [ ] [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked
-      `expected_unattempted` upstream, MDPS writes its own `expected_unattempted` (no compute possible
-      without raw ticks). For shards marked `empty_confirmed/EXPECTED_*`, MDPS propagates the same reason
-      (e.g. `EXPECTED_PRE_VENUE_LAUNCH` upstream → `EXPECTED_PRE_VENUE_LAUNCH` downstream).
-- [ ] [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted`
-      / `empty_confirmed/EXPECTED_*` shards, write own row with the same status. The
-      `feature_group → required_inputs` DAG already encodes which features depend on which data_types;
-      the cascade walks that DAG.
-- [ ] [ml-training] P1. Training-window selector reads features manifest; omits days where any required
-      feature_group is `expected_unattempted` or `empty_confirmed/EXPECTED_*`. Training set size becomes
-      honest about the universe.
-- [ ] [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where
-      upstream is not `captured` or `empty_confirmed/SOURCE_RETURNED_ZERO`. (Honest source-zero is OK to
-      signal on; pre-launch / unattempted is not.)
-- [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via
-      the manifest pre-flight gate — this is an audit pass.)
-- [ ] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` —
-      per-service consumer-class audit table extension to include `expected_unattempted` and the
-      cascade-propagation contract.
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
+      capture_status. Each asset_group gets: _ Pre-venue/chain-launch dates → continue writing
+      `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today). _
+      Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW). _ Per-instrument-pre-listing
+      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. _ Per-instrument-post-delisting dates → write
+      `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
+- [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
+      adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
+      appropriately.
+- [ ] [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked `expected_unattempted` upstream,
+      MDPS writes its own `expected_unattempted` (no compute possible without raw ticks). For shards marked
+      `empty_confirmed/EXPECTED_*`, MDPS propagates the same reason (e.g. `EXPECTED_PRE_VENUE_LAUNCH` upstream →
+      `EXPECTED_PRE_VENUE_LAUNCH` downstream).
+- [ ] [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted` /
+      `empty_confirmed/EXPECTED_*` shards, write own row with the same status. The `feature_group → required_inputs` DAG
+      already encodes which features depend on which data_types; the cascade walks that DAG.
+- [ ] [ml-training] P1. Training-window selector reads features manifest; omits days where any required feature*group is
+      `expected_unattempted` or `empty_confirmed/EXPECTED*\*`. Training set size becomes honest about the universe.
+- [ ] [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where upstream is not
+      `captured` or `empty_confirmed/SOURCE_RETURNED_ZERO`. (Honest source-zero is OK to signal on; pre-launch /
+      unattempted is not.)
+- [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via the manifest
+      pre-flight gate — this is an audit pass.)
+- [ ] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
+      consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract.
 
-**Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan
-to date. Cross-repo touch:
+**Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan to date.
+Cross-repo touch:
 
-* UAC — capture_status enum extension (small)
-* UTL — `ManifestWriter` 4th method + supersede semantics (small-medium)
-* MTDS — verify that `record_captured` already supersedes prior writes by row_key (no change expected, but
-  audit needed)
-* deployment-api — coverage calc 4-bucket breakdown (small)
-* deployment-ui — per-instrument × per-day calendar visualization (medium-large; operator-flagged P0)
-* codex docs — manifest schema doc + CLAUDE.md rule (small)
-* downstream consumers — every code path that switches on `capture_status` needs a handler for the 4th
-  value (audit pass + small fixes per consumer)
+- UAC — capture_status enum extension (small)
+- UTL — `ManifestWriter` 4th method + supersede semantics (small-medium)
+- MTDS — verify that `record_captured` already supersedes prior writes by row_key (no change expected, but audit needed)
+- deployment-api — coverage calc 4-bucket breakdown (small)
+- deployment-ui — per-instrument × per-day calendar visualization (medium-large; operator-flagged P0)
+- codex docs — manifest schema doc + CLAUDE.md rule (small)
+- downstream consumers — every code path that switches on `capture_status` needs a handler for the 4th value (audit
+  pass + small fixes per consumer)
 
 **Suggested sequencing** — UAC + UTL first (schema landing), then enumerator + manifest backfill, then
-deployment-api/UI. Manifest backfill ships v2 catalog reads per-asset-group (sports first since fixtures
-catalog is most mature, prediction last since `PREDICTION_GROUPS` is still empty in UAC).
+deployment-api/UI. Manifest backfill ships v2 catalog reads per-asset-group (sports first since fixtures catalog is most
+mature, prediction last since `PREDICTION_GROUPS` is still empty in UAC).
 
 #### Phase 3.D.5 — Per-asset-group catalog SSOT model (operator directive 2026-05-07 msg 7, COMPREHENSIVE)
 
-The operator extended the architecture beyond cefi/defi/tradfi to cover every asset_group AND the typed-
-reason-taxonomy growth process. Reproduced here so the per-asset-group catalog tasks (Wave 3 above)
-honour the right shape:
+The operator extended the architecture beyond cefi/defi/tradfi to cover every asset_group AND the typed- reason-taxonomy
+growth process. Reproduced here so the per-asset-group catalog tasks (Wave 3 above) honour the right shape:
 
 **1. Sports fixtures = instruments.** The API-Football fixtures catalog (in
-`gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…`) IS the per-day source-of-
-truth for "what fixtures should exist on day D for league L." Downstream sources (footystats, understat,
-transfermarkt, sfi, odds_api, weather) gate their expected universe on this catalog with per-source
-exception rules:
+`gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…`) IS the per-day source-of- truth for
+"what fixtures should exist on day D for league L." Downstream sources (footystats, understat, transfermarkt, sfi,
+odds_api, weather) gate their expected universe on this catalog with per-source exception rules:
 
-* **understat coverage rules** — encoded as a per-(league, season) inclusion list. Understat covers
-  EPL/La Liga/Serie A/Bundesliga/Ligue 1; for other leagues we don't expect xG data. UAC SSOT to add:
-  `UNDERSTAT_COVERED_LEAGUES: dict[str, dict[str, tuple[str, str]]]` mapping league_id → season →
-  (start_date, end_date). Days outside coverage → `EXPECTED_INSTRUMENT_NOT_LISTED` (or new
-  `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` if more specific).
-* **transfermarkt transfer windows** — UAC SSOT to add: `TRANSFER_WINDOWS: list[tuple[str, str, str]]`
-  (window_name, start, end) for the canonical summer + winter windows per league family. Outside the
-  window: `EXPECTED_OUTSIDE_TRANSFER_WINDOW`. Inside: enumerate (league, day) tuples we expect transfer
-  data for.
-* **footystats per-league season bounds** — UAC SSOT to add:
-  `FOOTYSTATS_LEAGUE_SEASONS: dict[str, list[tuple[str, str, str]]]` mapping league_key → list of
-  (season_id, season_start, season_end). Days outside any active season → `EXPECTED_PRE_SEASON` or
-  `EXPECTED_POST_SEASON` (new reasons). Days within a season → expect data.
-* **fixture_events / fixture_stats / lineups** — gated by per-fixture `kickoff_time`. Events / stats /
-  lineups only expected during/after the match window per fixture (already partly encoded via
-  `available_at` stamping rules).
-* **per-source-rate-limited skips** — when a source's rate limit forces us to defer a fixture's data
-  fetch, that's `attempted_failed/RateLimitError`, NOT `empty_confirmed`. Captured in the typed-reason
-  expansion process below.
+- **understat coverage rules** — encoded as a per-(league, season) inclusion list. Understat covers EPL/La Liga/Serie
+  A/Bundesliga/Ligue 1; for other leagues we don't expect xG data. UAC SSOT to add:
+  `UNDERSTAT_COVERED_LEAGUES: dict[str, dict[str, tuple[str, str]]]` mapping league_id → season → (start_date,
+  end_date). Days outside coverage → `EXPECTED_INSTRUMENT_NOT_LISTED` (or new `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` if
+  more specific).
+- **transfermarkt transfer windows** — UAC SSOT to add: `TRANSFER_WINDOWS: list[tuple[str, str, str]]` (window_name,
+  start, end) for the canonical summer + winter windows per league family. Outside the window:
+  `EXPECTED_OUTSIDE_TRANSFER_WINDOW`. Inside: enumerate (league, day) tuples we expect transfer data for.
+- **footystats per-league season bounds** — UAC SSOT to add:
+  `FOOTYSTATS_LEAGUE_SEASONS: dict[str, list[tuple[str, str, str]]]` mapping league_key → list of (season_id,
+  season_start, season_end). Days outside any active season → `EXPECTED_PRE_SEASON` or `EXPECTED_POST_SEASON` (new
+  reasons). Days within a season → expect data.
+- **fixture_events / fixture_stats / lineups** — gated by per-fixture `kickoff_time`. Events / stats / lineups only
+  expected during/after the match window per fixture (already partly encoded via `available_at` stamping rules).
+- **per-source-rate-limited skips** — when a source's rate limit forces us to defer a fixture's data fetch, that's
+  `attempted_failed/RateLimitError`, NOT `empty_confirmed`. Captured in the typed-reason expansion process below.
 
 **2. Prediction markets = same model.**
 
-* Per-market lifecycle (`market_created_at`, `resolution_time`, `settlement_time`) lives in
-  instruments-service catalog (per `predictions_master_2026_05_07.plan.md`).
-* Pre-`market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED` (per-market grain).
-* Post-`settlement_time` → `EXPECTED_INSTRUMENT_DELISTED`.
-* Within active window with no trades that day → `empty_confirmed/SOURCE_RETURNED_ZERO` (legit per
-  msg 6 — sparse trading is fine for prediction markets, distinct from "genuinely missing").
-* Per-canonical-question-group (HOURLY=24/day, DAILY=1, ELECTION=1-over-months) cluster expectations
-  enforced at `record_captured` via cluster validation.
+- Per-market lifecycle (`market_created_at`, `resolution_time`, `settlement_time`) lives in instruments-service catalog
+  (per `predictions_master_2026_05_07.plan.md`).
+- Pre-`market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED` (per-market grain).
+- Post-`settlement_time` → `EXPECTED_INSTRUMENT_DELISTED`.
+- Within active window with no trades that day → `empty_confirmed/SOURCE_RETURNED_ZERO` (legit per msg 6 — sparse
+  trading is fine for prediction markets, distinct from "genuinely missing").
+- Per-canonical-question-group (HOURLY=24/day, DAILY=1, ELECTION=1-over-months) cluster expectations enforced at
+  `record_captured` via cluster validation.
 
 **3. Typed-reason-taxonomy expansion process (operator framing — system robustness ratchet).**
 
-> "If an instrument has empty data, we still need to be able to record why it's empty, as long as we
-> write a clear reason. ... Over time as we find more and more reasons that shouldn't fail with
-> `empty_confirmed` (like auth for example or rate limits that shouldn't be empty_confirmed), we can do
-> it. It's basically how we figure out our system is robust or not."
+> "If an instrument has empty data, we still need to be able to record why it's empty, as long as we write a clear
+> reason. ... Over time as we find more and more reasons that shouldn't fail with `empty_confirmed` (like auth for
+> example or rate limits that shouldn't be empty_confirmed), we can do it. It's basically how we figure out our system
+> is robust or not."
 
-Today UAC `EmptyConfirmedReason` enum has 12 values (HOLIDAY / WEEKEND / PAUSED_LEAGUE /
-PRE_SOURCE_COVERAGE_START / PRE_GENESIS_CHAIN / PRE_VENUE_LAUNCH / INSTRUMENT_NOT_LISTED /
-INSTRUMENT_DELISTED / PARTIAL_HALF_DAY / DEPRECATED_DATA_TYPE / REFDATA_CADENCE_CHANGE /
-SOURCE_RETURNED_ZERO). Each operator-flagged "this should never have been empty_confirmed" finding adds:
+Today UAC `EmptyConfirmedReason` enum has 12 values (HOLIDAY / WEEKEND / PAUSED_LEAGUE / PRE_SOURCE_COVERAGE_START /
+PRE_GENESIS_CHAIN / PRE_VENUE_LAUNCH / INSTRUMENT_NOT_LISTED / INSTRUMENT_DELISTED / PARTIAL_HALF_DAY /
+DEPRECATED_DATA_TYPE / REFDATA_CADENCE_CHANGE / SOURCE_RETURNED_ZERO). Each operator-flagged "this should never have
+been empty_confirmed" finding adds:
 
-* A new typed `attempted_failed` error class (or extends an existing one) — e.g.
-  `RateLimitError` / `AuthenticationError` / `MalformedSourceResponseError` /
-  `UpstreamCorrelationIDDuplicate` — distinct from the EmptyConfirmedReason set.
-* A migration pass to flip historical rows that were silently empty_confirmed but should have been
-  attempted_failed under the new typed reason. Mirrors `reconcile_blank_error_reason_rows.py`
-  (Wave 2.M).
-* A reader-side classifier extension so consumer services (data-status panel, ML training, strategy)
-  can distinguish "auth-failure-retry-pending" from "honest-no-data" in their per-status policy.
+- A new typed `attempted_failed` error class (or extends an existing one) — e.g. `RateLimitError` /
+  `AuthenticationError` / `MalformedSourceResponseError` / `UpstreamCorrelationIDDuplicate` — distinct from the
+  EmptyConfirmedReason set.
+- A migration pass to flip historical rows that were silently empty_confirmed but should have been attempted_failed
+  under the new typed reason. Mirrors `reconcile_blank_error_reason_rows.py` (Wave 2.M).
+- A reader-side classifier extension so consumer services (data-status panel, ML training, strategy) can distinguish
+  "auth-failure-retry-pending" from "honest-no-data" in their per-status policy.
 
 **Process — when an operator flags a "shouldn't be empty_confirmed" pattern:**
 
-1. File a finding doc in `plans/active/issues/<short-name>_<YYYY_MM_DD>.md` per the Findings Triage
-   Discipline rule. Include sample row, suspected root cause, suggested typed-reason class.
+1. File a finding doc in `plans/active/issues/<short-name>_<YYYY_MM_DD>.md` per the Findings Triage Discipline rule.
+   Include sample row, suspected root cause, suggested typed-reason class.
 2. Add the typed error class to UAC honest_coverage.py exports.
-3. Add a UTL migration script (templated on `reconcile_blank_error_reason_rows.py`) that flips
-   historical rows. Run scan-only; operator approves; --apply-flips.
-4. Update the adapter that was silently writing empty_confirmed to call `record_failed` with the
-   typed error.
+3. Add a UTL migration script (templated on `reconcile_blank_error_reason_rows.py`) that flips historical rows. Run
+   scan-only; operator approves; --apply-flips.
+4. Update the adapter that was silently writing empty_confirmed to call `record_failed` with the typed error.
 5. Codify the typed reason in CLAUDE.md "Three-category empty-output decision" rule expansion.
 
 **Tasks for the per-asset-group catalog SSOT extension (Wave 3.S — sports / prediction):**
 
-- [ ] [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — codify
-      `UNDERSTAT_COVERED_LEAGUES`, `TRANSFER_WINDOWS`, `FOOTYSTATS_LEAGUE_SEASONS`, plus a uniform
-      `is_expected_for_source(source, league_id, day) -> tuple[bool, str|None]` helper that returns
-      (is_expected, reason_if_not). Mirrors the chain_env / venue_launch_dates / source_coverage_start
-      pattern.
+- [ ] [UAC] P1. NEW `unified_api_contracts/registry/sports_per_source_rules.py` — codify `UNDERSTAT_COVERED_LEAGUES`,
+      `TRANSFER_WINDOWS`, `FOOTYSTATS_LEAGUE_SEASONS`, plus a uniform
+      `is_expected_for_source(source, league_id, day) -> tuple[bool, str|None]` helper that returns (is_expected,
+      reason_if_not). Mirrors the chain_env / venue_launch_dates / source_coverage_start pattern.
 - [ ] [UAC] P0. Two new EmptyConfirmedReason values: `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Or use `EXPECTED_INSTRUMENT_NOT_LISTED` semantically
-      with these as classifier-internal — operator preference.)
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Or use `EXPECTED_INSTRUMENT_NOT_LISTED` semantically with these as
+      classifier-internal — operator preference.)
 - [ ] [SCRIPT] P0. Extend the v2 enumerator (Phase 3.D.5 Wave 3 above) sports branch to read
       `instruments-store-sports-{pid}/fixtures/…` per-day fixtures catalog; cross-product with
-      `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields
-      `expected_unattempted` rows for the shards we DO expect; emits `empty_confirmed` with the right
-      EXPECTED_* for shards we DON'T expect.
-- [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group
-      lifecycle (depends on UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.plan.md`).
-      Yields `expected_unattempted` for active markets, `EXPECTED_INSTRUMENT_NOT_LISTED` /
-      `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
-- [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules
-      table + the typed-reason-taxonomy expansion process.
+      `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
+      the shards we DO expect; emits `empty_confirmed` with the right EXPECTED\_\* for shards we DON'T expect.
+- [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
+      UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.plan.md`). Yields `expected_unattempted` for active
+      markets, `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
+- [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
+      typed-reason-taxonomy expansion process.
 
 **Wave 3.M — Zero-activity-bars-during-market-hours (operator msg 6 + msg 8 — broadened scope).**
 
-Operator msg 8 (2026-05-07 evening, after Wave 2.M migration completed): _"when a instrument has
-ohlcv, trades or quotes/depth stuff during expected market hours for expected instrument definitions,
-marking them 0 for volume or trade volume but still recording them so that we know they're available
-so that if we're plotting for example a volatility smile we have all the instruments and we
-understand that it was zero volume as opposed to not collecting that instrument."_
+Operator msg 8 (2026-05-07 evening, after Wave 2.M migration completed): _"when a instrument has ohlcv, trades or
+quotes/depth stuff during expected market hours for expected instrument definitions, marking them 0 for volume or trade
+volume but still recording them so that we know they're available so that if we're plotting for example a volatility
+smile we have all the instruments and we understand that it was zero volume as opposed to not collecting that
+instrument."_
 
-**Use case — volatility smile.** When plotting a volatility smile across a venue's options chain,
-every strike must be visible. If a far-OTM strike skipped collection, the smile has a gap and the
-modeller can't tell "this strike was just illiquid" from "this strike wasn't captured." Zero-volume
-bars with prior-day LTP fill this gap honestly — the modeller sees ALL strikes, with volume=0
-flagging the illiquidity. Generalizes beyond options to any cross-instrument analysis where
-completeness matters (CeFi thin pairs, TradFi after-hours, sports zero-bookmaker-coverage hours).
+**Use case — volatility smile.** When plotting a volatility smile across a venue's options chain, every strike must be
+visible. If a far-OTM strike skipped collection, the smile has a gap and the modeller can't tell "this strike was just
+illiquid" from "this strike wasn't captured." Zero-volume bars with prior-day LTP fill this gap honestly — the modeller
+sees ALL strikes, with volume=0 flagging the illiquidity. Generalizes beyond options to any cross-instrument analysis
+where completeness matters (CeFi thin pairs, TradFi after-hours, sports zero-bookmaker-coverage hours).
 
 **Scope — the rule applies to EVERY (asset_group, data_type) where:**
 
-* The instrument is alive per instruments-service catalog AND
-* The day falls within the venue's expected market hours (per `venue_trading_calendar` /
-  `KNOWN_COVERAGE_GAPS` / source rules) AND
-* The data_type is one where "no activity but still tradeable" is a meaningful state — `ohlcv_*`,
-  `trades`, `book_snapshot_5`, `derivative_ticker`, `options_chain`, `futures_chain`,
-  `odds_snapshot` (sports — no bookmaker offered odds for an active fixture), etc.
+- The instrument is alive per instruments-service catalog AND
+- The day falls within the venue's expected market hours (per `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` / source
+  rules) AND
+- The data*type is one where "no activity but still tradeable" is a meaningful state —
+  `ohlcv*\*`, `trades`, `book_snapshot_5`, `derivative_ticker`, `options_chain`, `futures_chain`, `odds_snapshot`
+  (sports — no bookmaker offered odds for an active fixture), etc.
 
-**Manifest representation:** `capture_status=captured` (real bars on disk, just zero-volume).
-Distinct from `empty_confirmed` (we tried, source said empty / structurally empty), `attempted_failed`
-(error), `expected_unattempted` (catalog-known but not yet fetched). Volume = 0 in the parquet column
-tells the consumer "tradeable but no trades happened."
+**Manifest representation:** `capture_status=captured` (real bars on disk, just zero-volume). Distinct from
+`empty_confirmed` (we tried, source said empty / structurally empty), `attempted_failed` (error), `expected_unattempted`
+(catalog-known but not yet fetched). Volume = 0 in the parquet column tells the consumer "tradeable but no trades
+happened."
 
 **Per-data-type bar shape:**
 
-| data_type           | zero-activity bar shape                                                                                  |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_24h` | open=high=low=close=prior_LTP, volume=0, trade_count=0                                |
-| `trades`            | one row per minute (or interval) with price=prior_LTP, qty=0, side=none — preserves time-axis density   |
-| `book_snapshot_5`   | snapshot every interval with prior bid/ask kept, no new updates; trade_count_in_window=0                |
-| `derivative_ticker` | last-known funding/mark/index carried forward, last_trade=null, oi=prior_value                           |
-| `options_chain`     | per-cluster bundle: every root's per-strike row gets a zero-volume candle with prior LTP                |
-| `futures_chain`     | per-root bundle: every contract gets a zero-volume candle with prior LTP                                |
-| `odds_snapshot`     | per-bookmaker row with last-known odds carried forward, ts=hour-bucket, mark "stale=true" optional      |
+| data_type                              | zero-activity bar shape                                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_24h` | open=high=low=close=prior_LTP, volume=0, trade_count=0                                                |
+| `trades`                               | one row per minute (or interval) with price=prior_LTP, qty=0, side=none — preserves time-axis density |
+| `book_snapshot_5`                      | snapshot every interval with prior bid/ask kept, no new updates; trade_count_in_window=0              |
+| `derivative_ticker`                    | last-known funding/mark/index carried forward, last_trade=null, oi=prior_value                        |
+| `options_chain`                        | per-cluster bundle: every root's per-strike row gets a zero-volume candle with prior LTP              |
+| `futures_chain`                        | per-root bundle: every contract gets a zero-volume candle with prior LTP                              |
+| `odds_snapshot`                        | per-bookmaker row with last-known odds carried forward, ts=hour-bucket, mark "stale=true" optional    |
 
-**This is an MTDS / MDPS adapter behaviour change** (writes real data instead of `empty_confirmed`),
-separate from the manifest classification work but closely related — once Wave 2.M's blank-reason
-guard catches silent-fallback paths, the next adapter behaviour to fix is "what to do when source
-returns nothing for an active instrument." Wave 3.M is that fix.
+**This is an MTDS / MDPS adapter behaviour change** (writes real data instead of `empty_confirmed`), separate from the
+manifest classification work but closely related — once Wave 2.M's blank-reason guard catches silent-fallback paths, the
+next adapter behaviour to fix is "what to do when source returns nothing for an active instrument." Wave 3.M is that
+fix.
 
 **Tasks:**
 
-- [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market-
-      hours behaviour. Each adapter has a per-shard fetch loop; the post-fetch branch on "fetched
-      empty / source returned no rows" must distinguish:
-      (a) instrument NOT alive that day per catalog → write `empty_confirmed/EXPECTED_INSTRUMENT_*`
-      (b) instrument alive, day within market hours → **NEW:** write zero-volume bars with prior LTP,
-          record `captured` with real bar count > 0 (typically full interval grid for the day).
-      (c) instrument alive, day outside market hours (calendar non-trading) → write
-          `empty_confirmed/EXPECTED_HOLIDAY/WEEKEND` (existing flow).
-      Use the catalog-aware write-gate (Wave 2 `instrument_catalog` callable) to drive (a) vs (b)/(c).
-- [ ] [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single
-      `unified_trading_library.zero_activity_bars` helper that generates the right zero-activity
-      shape per data_type per the table above. Adapters call
-      `make_zero_activity_bars(data_type, instrument_id, day, prior_ltp, market_hours)` and write the
-      result through ManifestWriter. Avoids per-adapter inlined zero-bar logic drift.
-- [ ] [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the
-      previous day's `captured` parquet for the same instrument; if not available, fall back to the
-      most recent captured day in the manifest (lookback up to N days). UTL helper
-      `get_prior_ltp(asset_group, venue, instrument_id, day) -> Decimal | None`. None → still write
-      zero-activity bars but with `null` price (volume=0, trade_count=0; consumers can handle).
-- [ ] [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now
-      has zero-volume bars (post-Wave 3.M), MDPS sees them as `captured` and processes them through
-      the normal candle pipeline — output candles also have zero volume. No special logic; the
-      cascade handles it. **Audit needed**: confirm MDPS doesn't have a special-case "drop zero-volume
-      bars" filter that would re-introduce the gap.
-- [ ] [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol
-      that picks a recent options chain day, asserts the smile has all 11 ES.OPT clusters present
-      (per UAC `ES_OPTIONS_CLUSTERS`) — no missing strikes, even for far-OTM. Catches Wave 3.M
-      regressions automatically.
-- [ ] [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case:
-      **D. Source returned 0 ticks but instrument is alive per catalog AND day falls within
-      market hours** → write zero-activity bars with prior LTP, `record_captured` (real OHLC, zero
-      volume). Distinct from cases A/B/C — this is the "honest tradeable but no activity" path.
+- [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
+      Each adapter has a per-shard fetch loop; the post-fetch branch on "fetched empty / source returned no rows" must
+      distinguish: (a) instrument NOT alive that day per catalog → write `empty_confirmed/EXPECTED_INSTRUMENT_*` (b)
+      instrument alive, day within market hours → **NEW:** write zero-volume bars with prior LTP, record `captured` with
+      real bar count > 0 (typically full interval grid for the day). (c) instrument alive, day outside market hours
+      (calendar non-trading) → write `empty_confirmed/EXPECTED_HOLIDAY/WEEKEND` (existing flow). Use the catalog-aware
+      write-gate (Wave 2 `instrument_catalog` callable) to drive (a) vs (b)/(c).
+- [ ] [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single `unified_trading_library.zero_activity_bars`
+      helper that generates the right zero-activity shape per data_type per the table above. Adapters call
+      `make_zero_activity_bars(data_type, instrument_id, day, prior_ltp, market_hours)` and write the result through
+      ManifestWriter. Avoids per-adapter inlined zero-bar logic drift.
+- [ ] [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the previous day's
+      `captured` parquet for the same instrument; if not available, fall back to the most recent captured day in the
+      manifest (lookback up to N days). UTL helper
+      `get_prior_ltp(asset_group, venue, instrument_id, day) -> Decimal | None`. None → still write zero-activity bars
+      but with `null` price (volume=0, trade_count=0; consumers can handle).
+- [ ] [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now has zero-volume bars
+      (post-Wave 3.M), MDPS sees them as `captured` and processes them through the normal candle pipeline — output
+      candles also have zero volume. No special logic; the cascade handles it. **Audit needed**: confirm MDPS doesn't
+      have a special-case "drop zero-volume bars" filter that would re-introduce the gap.
+- [ ] [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol that picks a recent
+      options chain day, asserts the smile has all 11 ES.OPT clusters present (per UAC `ES_OPTIONS_CLUSTERS`) — no
+      missing strikes, even for far-OTM. Catches Wave 3.M regressions automatically.
+- [ ] [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case: **D. Source returned 0
+      ticks but instrument is alive per catalog AND day falls within market hours** → write zero-activity bars with
+      prior LTP, `record_captured` (real OHLC, zero volume). Distinct from cases A/B/C — this is the "honest tradeable
+      but no activity" path.
 
-**Manifest column hygiene (operator msg 7 reaffirm).** No new manifest columns needed. `attempted_at`
-already encodes "checked_at"; combined with `error_reason` it tells us "we tried at T and got X". The
-event log (GCS) provides the lifecycle audit trail. **If a future case arises where checked_at and
-created_at semantically diverge** (e.g. an enumerator pre-write vs an actual fetch attempt), we'd add
-a new column at THAT point — not preemptively. Today the consolidator's last-writer-wins on identical
-row_key naturally bumps `attempted_at` to the most recent write.
+**Manifest column hygiene (operator msg 7 reaffirm).** No new manifest columns needed. `attempted_at` already encodes
+"checked_at"; combined with `error_reason` it tells us "we tried at T and got X". The event log (GCS) provides the
+lifecycle audit trail. **If a future case arises where checked_at and created_at semantically diverge** (e.g. an
+enumerator pre-write vs an actual fetch attempt), we'd add a new column at THAT point — not preemptively. Today the
+consolidator's last-writer-wins on identical row_key naturally bumps `attempted_at` to the most recent write.
 
-**Empty-files-vs-manifest-rows reaffirm (operator msg 6).** No fake parquet files for absence. Manifest
-absence rows + the typed reason ARE the SSOT instruction. Each downstream service reads the manifest
-and applies its own policy (NaN-fill, fail period, propagate, skip) per the typed reason. Adding new
-fake-data conventions has audit costs that compound over time; manifest absence is the clear single
-instruction.
+**Empty-files-vs-manifest-rows reaffirm (operator msg 6).** No fake parquet files for absence. Manifest absence rows +
+the typed reason ARE the SSOT instruction. Each downstream service reads the manifest and applies its own policy
+(NaN-fill, fail period, propagate, skip) per the typed reason. Adding new fake-data conventions has audit costs that
+compound over time; manifest absence is the clear single instruction.
 
 #### Phase 3.D.5 — Operator's reasoning trail (2026-05-07 evening, kept for audit context)
 
-The operator walked through the v1/v2 architecture in three steps. Reproduced here verbatim so the
-final hierarchical-SSOT model (immediately above) is anchored to the reasoning that produced it:
+The operator walked through the v1/v2 architecture in three steps. Reproduced here verbatim so the final
+hierarchical-SSOT model (immediately above) is anchored to the reasoning that produced it:
 
-**Step 1 — initial trade-off framing.** Operator: _"Yeah, I guess the only downside of doing it based on
-instrument services is if instrument services haven't run yet, then what do you do? I guess it just means
-that we'd have to keep re-running it as instrument services expand. ... Whereas if you do it this way,
-you're going to get a whole bunch of empty data that you know is empty because you haven't run instrument
-services, but at least once instrument service is 100%, you can run it just a straight data status,
-because the manifest is already making sense. That's the trade-off, right?"_ — read as v1 vs v2 competing.
+**Step 1 — initial trade-off framing.** Operator: _"Yeah, I guess the only downside of doing it based on instrument
+services is if instrument services haven't run yet, then what do you do? I guess it just means that we'd have to keep
+re-running it as instrument services expand. ... Whereas if you do it this way, you're going to get a whole bunch of
+empty data that you know is empty because you haven't run instrument services, but at least once instrument service is
+100%, you can run it just a straight data status, because the manifest is already making sense. That's the trade-off,
+right?"_ — read as v1 vs v2 competing.
 
-**Step 2 — clarification toward a hybrid.** Operator: _"a perp instrument is a shard in itself ... so when
-you're doing a data status check on market tick data service how does it know that that instrument is
-missing if it doesn't use instrument service ... unified api contracts only tells us when a venue data
-type instrument type day shard should start but it doesn't tell us how many instruments we should expect
-in that ... I could understand a hybrid ... we could use the single source of truth for like venue
-instrument type data type availability on a daily basis, but then we'd still need instrument service for
-the deep dive."_ — recognises v1 and v2 are at different grains.
+**Step 2 — clarification toward a hybrid.** Operator: _"a perp instrument is a shard in itself ... so when you're doing
+a data status check on market tick data service how does it know that that instrument is missing if it doesn't use
+instrument service ... unified api contracts only tells us when a venue data type instrument type day shard should start
+but it doesn't tell us how many instruments we should expect in that ... I could understand a hybrid ... we could use
+the single source of truth for like venue instrument type data type availability on a daily basis, but then we'd still
+need instrument service for the deep dive."_ — recognises v1 and v2 are at different grains.
 
-**Step 3 — final synthesis.** Operator: _"so we do need to write the instrument definition instruments
-into the manifest enumeration so that we can write them as something that indicates that we haven't tried
-them yet, but they should exist."_ — proposes the 4th `capture_status` (`expected_unattempted`) that
-makes the manifest fully self-describing across both grains. **This is the implementation directive**
-captured as concrete tasks in the section above.
+**Step 3 — final synthesis.** Operator: _"so we do need to write the instrument definition instruments into the manifest
+enumeration so that we can write them as something that indicates that we haven't tried them yet, but they should
+exist."_ — proposes the 4th `capture_status` (`expected_unattempted`) that makes the manifest fully self-describing
+across both grains. **This is the implementation directive** captured as concrete tasks in the section above.
 
-**The contrast (kept for downstream consumer audits + future-agent reading) — what changed between
-"v1 alone vs v2 alone" and the final "v1 + v2 hierarchical with `expected_unattempted`":**
+**The contrast (kept for downstream consumer audits + future-agent reading) — what changed between "v1 alone vs v2
+alone" and the final "v1 + v2 hierarchical with `expected_unattempted`":**
 
-| Property                                        | v1 cross-product (shipped today)                                                         | v2 catalog-driven (Phase 3.D.5 above)                                                                            |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Granularity                                     | (asset_group, venue, data_type, day) — coarse, no per-instrument                         | (asset_group, venue, data_type, instrument_type, instrument_id, day) — fine, per-instrument                      |
-| What it marks as expected-empty                 | "venue / chain / source did not exist" — the floor of absence                            | All of v1's set PLUS per-instrument NOT_LISTED / DELISTED / EXPIRED / paused-league windows                      |
-| Idempotence vs catalog evolution                | **IDEMPOTENT** — chain genesis / venue launch dates rarely change; rerun only when SSOT itself changes | **NOT idempotent** — every catalog addition (new venue, new pool, new fixture, new market) requires a rerun     |
+| Property                                        | v1 cross-product (shipped today)                                                                                 | v2 catalog-driven (Phase 3.D.5 above)                                                                             |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Granularity                                     | (asset_group, venue, data_type, day) — coarse, no per-instrument                                                 | (asset_group, venue, data_type, instrument_type, instrument_id, day) — fine, per-instrument                       |
+| What it marks as expected-empty                 | "venue / chain / source did not exist" — the floor of absence                                                    | All of v1's set PLUS per-instrument NOT_LISTED / DELISTED / EXPIRED / paused-league windows                       |
+| Idempotence vs catalog evolution                | **IDEMPOTENT** — chain genesis / venue launch dates rarely change; rerun only when SSOT itself changes           | **NOT idempotent** — every catalog addition (new venue, new pool, new fixture, new market) requires a rerun       |
 | Sensitivity to instruments-service completeness | **insensitive** — works even when catalog is 0% populated, lets the manifest tell the truth about coarse absence | **sensitive** — under-marks if catalog is incomplete; over-marks if catalog includes deprecated/wrong instruments |
-| Operator workflow                               | Run once when SSOT changes (~quarterly cadence)                                          | Run on every catalog-update commit (~daily / weekly cadence) or wire as a post-instruments-service hook         |
-| Risk if not run                                 | Coarse "didn't exist" rows stay missing — rollup % off until a new venue's pre-launch dates land | Per-instrument rows stay missing — fine-grain denominator off but coarse layer is fine                          |
+| Operator workflow                               | Run once when SSOT changes (~quarterly cadence)                                                                  | Run on every catalog-update commit (~daily / weekly cadence) or wire as a post-instruments-service hook           |
+| Risk if not run                                 | Coarse "didn't exist" rows stay missing — rollup % off until a new venue's pre-launch dates land                 | Per-instrument rows stay missing — fine-grain denominator off but coarse layer is fine                            |
 
 **The right shape, given the trade-off, is BOTH layers running concurrently:**
 
-* **v1 (today's enumerator)** = always-live coarse layer. Re-runs when UAC `CHAIN_GENESIS_DATES` /
-  `PROTOCOL_LAUNCH_DATES` / `CEFI_VENUE_LAUNCH_DATES` / `PREDICTION_VENUE_LAUNCH_DATES` /
-  `SOURCE_COVERAGE_START` evolve (rare — quarterly-ish). Idempotent. The floor of expected-empty rows that
-  doesn't drift even if instruments-service is 0%.
-* **v2 (Phase 3.D.5 to-be-built)** = catalog-driven precision layer on top of v1. Re-runs when
-  instruments-service catalog evolves (frequent). Wire as a post-instruments-service hook so re-running is
-  automatic, not manual.
+- **v1 (today's enumerator)** = always-live coarse layer. Re-runs when UAC `CHAIN_GENESIS_DATES` /
+  `PROTOCOL_LAUNCH_DATES` / `CEFI_VENUE_LAUNCH_DATES` / `PREDICTION_VENUE_LAUNCH_DATES` / `SOURCE_COVERAGE_START` evolve
+  (rare — quarterly-ish). Idempotent. The floor of expected-empty rows that doesn't drift even if instruments-service is
+  0%.
+- **v2 (Phase 3.D.5 to-be-built)** = catalog-driven precision layer on top of v1. Re-runs when instruments-service
+  catalog evolves (frequent). Wire as a post-instruments-service hook so re-running is automatic, not manual.
 
-The two layers are **complementary, not competing**. v1 stays correct even when v2 is incomplete; v2 adds
-precision without replacing v1's coverage. Manifest-consolidator merges per-VM shards from both layers into
-the same canonical `_index/availability_index.parquet` — last-writer-wins on identical row_keys means a v2
-write for `(venue, data_type, instrument_id=X, day=D)` cleanly supersedes a v1 write for
-`(venue, data_type, instrument_id="", day=D)` if both ever collide (they don't with today's empty-string
-sentinel discipline, but the model is robust to future grain refinements).
+The two layers are **complementary, not competing**. v1 stays correct even when v2 is incomplete; v2 adds precision
+without replacing v1's coverage. Manifest-consolidator merges per-VM shards from both layers into the same canonical
+`_index/availability_index.parquet` — last-writer-wins on identical row_keys means a v2 write for
+`(venue, data_type, instrument_id=X, day=D)` cleanly supersedes a v1 write for
+`(venue, data_type, instrument_id="", day=D)` if both ever collide (they don't with today's empty-string sentinel
+discipline, but the model is robust to future grain refinements).
 
-**Codified as workspace convention (NEW Key-Rule):** the v2 enumerator is the SSOT for fine-grain
-expected-empty; v1 is the SSOT for coarse expected-empty. Neither replaces the other. Adding a new venue /
-data_type / instrument type goes into BOTH SSOTs — UAC `*_LAUNCH_DATES` / `*_GENESIS_DATES` for v1 if it's
-a new "structural" entity, AND the instruments-service catalog for v2's per-instrument enumeration. The
-data-status drilldown reads the canonical manifest (which has both layers merged) — no special-casing.
+**Codified as workspace convention (NEW Key-Rule):** the v2 enumerator is the SSOT for fine-grain expected-empty; v1 is
+the SSOT for coarse expected-empty. Neither replaces the other. Adding a new venue / data_type / instrument type goes
+into BOTH SSOTs — UAC `*_LAUNCH_DATES` / `*_GENESIS_DATES` for v1 if it's a new "structural" entity, AND the
+instruments-service catalog for v2's per-instrument enumeration. The data-status drilldown reads the canonical manifest
+(which has both layers merged) — no special-casing.
+
+#### Phase 3.D.5 Wave 3.X — Comprehensive expected-universe-dimensions matrix audit (operator msg 9, 2026-05-07 evening)
+
+Operator msg 9 (post Wave 2.M migration completion): _"What about missing instrument because there's no trades or no
+volume, or missing odds because there's no odds or something? Have we factored that in as well if that's during the
+expected range? ... If not, then all of that stuff should be in PM active plans. Check if it's not, then we should add
+it, and then we should get to doing it. migrations, backfills, tests, whatever needs to be done."_
+
+**The audit.** Below maps every dimension of "is this data point supposed to exist" against where the SSOT lives
+today, what status it's in, whether it's wired into the classifier / write-gate / cascade, and what gaps remain.
+Status legend: ✅ shipped + wired · ⚠️ shipped but unwired (needs consumer integration) · 🟡 partial · ❌ missing.
+
+**Sports / Prediction dimensions:**
+
+| # | Dimension                                            | UAC SSOT                                                            | Status | Classifier-aware? | Cascade-wired? | Gap                                                                          |
+| - | ---------------------------------------------------- | ------------------------------------------------------------------- | ------ | ----------------- | -------------- | ---------------------------------------------------------------------------- |
+| 1 | Per-fixture kickoff_time (session start)             | `instruments-store-sports/fixtures/…` catalog (not UAC — instruments-service catalog) | ✅ | ❌ — classifier doesn't read fixtures yet | ❌ | Wave 3.S v2 enumerator must read fixtures + emit per-(league, fixture, day) expected universe |
+| 2 | Per-fixture event windows (events / lineups / stats) | `availability_semantics.AVAILABILITY_AT_SEMANTICS` (per-data-type stamping rules)   | ✅ | ❌ | ⚠️ partial (lineups stamping is `kickoff-60min` already) | Wave 3.S enumerator must derive expected windows from kickoff per data_type |
+| 3 | Source coverage start (api_football, footystats etc.)| `unified_api_contracts.sports.SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`   | ✅ | ✅ (`_classify_sports`) | ✅ (clip in data_status) | None — fully wired                                                          |
+| 4 | Paused-league windows                                | `unified_api_contracts.sports.KNOWN_COVERAGE_GAPS` (currently empty dict)            | ⚠️ | ✅ helper exists | ✅ orchestrator pre-skips | Populate `KNOWN_COVERAGE_GAPS` per known incidents (e.g. EFL paused windows) |
+| 5 | Transfer windows per country                          | `unified_api_contracts.canonical.domain.sports.transfer_windows.TRANSFER_WINDOWS`     | ✅ | ❌ — classifier doesn't gate transfer_records | ⚠️ partial (features-sports uses it; data_status doesn't) | Wire `is_transfer_window_open` into `_classify_sports` → `EXPECTED_OUTSIDE_TRANSFER_WINDOW` (NEW reason) |
+| 6 | Per-league season bounds (footystats league_id changes)| `unified_api_contracts.sports.provider_league_ids.FOOTYSTATS_SEASON_IDS`            | ✅ | ❌ — no bounds check | ⚠️ partial | Add `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` reasons; classifier branch on (league, season) |
+| 7 | Understat per-league coverage list                    | ❌ MISSING                                                                            | ❌ | ❌ | ❌ | NEW UAC SSOT `UNDERSTAT_COVERED_LEAGUES: dict[league_id → list[season_id]]` (top-5 leagues only) |
+| 8 | Prediction canonical_question_group enum              | `unified_api_contracts.canonical.domain.predictions.canonical_groups.CanonicalQuestionGroup` + `CANONICAL_GROUP_METADATA` | ✅ | ❌ — `_classify_prediction` is venue-only today | ❌ | Wave 3.S extension: gate prediction shards on canonical-question-group lifecycle |
+| 9 | Prediction per-market lifecycle (created_at / settlement_time) | `unified_api_contracts.canonical.domain.predictions.lifecycle` module             | ✅ | ❌ | ❌ | Wave 3.S enumerator + MTDS CLOB capture must respect bounds                  |
+|10 | Prediction venue launch (POLYMARKET / KALSHI)         | `unified_api_contracts.registry.venue_launch_dates.PREDICTION_VENUE_LAUNCH_DATES`    | ✅ | ✅ (`_classify_prediction`) | ✅ (Wave 1 enumerator) | None                                                                      |
+
+**TradFi dimensions:**
+
+| # | Dimension                                       | UAC SSOT                                                              | Status | Classifier-aware? | Cascade-wired? | Gap                                                                                   |
+| - | ----------------------------------------------- | --------------------------------------------------------------------- | ------ | ----------------- | -------------- | ------------------------------------------------------------------------------------- |
+|11 | Venue trading calendar (weekend / holiday)      | `unified_api_contracts.registry.venue_trading_calendar`               | ✅ | ✅ (`_classify_tradfi`) | ✅ | None — fully wired                                                                    |
+|12 | **Half-day sessions** (Thanksgiving Friday, Christmas Eve, etc.) | ❌ — `EXPECTED_PARTIAL_HALF_DAY` enum exists but no calendar | ❌ | ❌ | ❌ | NEW UAC SSOT `HALF_DAY_SESSIONS: dict[venue, list[(date, close_time)]]` + classifier branch |
+|13 | **Intra-day session hours** (NYSE 9:30-16:00, CME 17:00-16:00 next-day, FX continuous) | ❌ — no session_open / session_close per venue | ❌ | ❌ | ❌ (today: classifier operates at day grain, doesn't gate intra-day windows) | NEW UAC SSOT `VENUE_SESSION_HOURS` + `EXPECTED_OUTSIDE_TRADING_HOURS` reason for ohlcv_15m / book_snapshot during off-hours |
+|14 | Per-instrument lifecycle (ETF listed_at, futures expiry, options last-trade-date) | `instruments-store-tradfi/…` catalog (instruments-service) | ⚠️ partial | ❌ — classifier only does day-level | ❌ | Wave 3 v2 enumerator must read TradFi catalog + emit per-instrument NOT_LISTED / DELISTED / EXPIRED |
+
+**CeFi dimensions:**
+
+| # | Dimension                          | UAC SSOT                                                                                       | Status | Classifier-aware? | Cascade-wired? | Gap                                                                                |
+| - | ---------------------------------- | ---------------------------------------------------------------------------------------------- | ------ | ----------------- | -------------- | ---------------------------------------------------------------------------------- |
+|15 | Venue launch dates                 | `unified_api_contracts.registry.venue_launch_dates.CEFI_VENUE_LAUNCH_DATES` (20 venues)         | ✅ | ✅ (`_classify_cefi` post UTL@7276cca1) | ✅ | None — Wave 1 shipped                                                              |
+|16 | Per-instrument lifecycle (perp listing, futures expiry, instrument_type changes) | `instruments-store-cefi/by_venue/{venue}/instruments.parquet` (Tardis-derived catalog) | ⚠️ partial | ❌ | ❌ | Wave 3 v2 enumerator + catalog-aware write-gate at MTDS adapters                 |
+
+**DeFi dimensions:**
+
+| # | Dimension                              | UAC SSOT                                                                  | Status | Classifier-aware? | Cascade-wired? | Gap                                                                        |
+| - | -------------------------------------- | ------------------------------------------------------------------------- | ------ | ----------------- | -------------- | -------------------------------------------------------------------------- |
+|17 | Chain genesis dates                    | `unified_api_contracts.registry.chain_env.CHAIN_GENESIS_DATES`            | ✅ | ✅ (`_classify_defi`) | ✅ | None                                                                       |
+|18 | Protocol launch dates per chain        | `unified_api_contracts.registry.chain_env.PROTOCOL_LAUNCH_DATES`          | ✅ | ⚠️ partial (Wave 1 enumerator uses it; classifier doesn't directly) | ✅ via enumerator | Wave 3 — extend `_classify_defi` to use PROTOCOL_LAUNCH_DATES for finer per-(chain, protocol) classification |
+|19 | Per-pool lifecycle (deployed_at, deactivated_at) | `instruments-store-defi/…` catalog (sparse, expansion in scope per `defi_master`) | ❌ | ❌ | ❌ | Wave 3 v2 enumerator + per-pool catalog expansion (defi_master plan)        |
+
+**Cross-cutting dimensions:**
+
+| # | Dimension                                                       | Where it should live                              | Status | Gap                                                                          |
+| - | --------------------------------------------------------------- | ------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
+|20 | Per-data-type zero-activity bar shapes (ohlcv 0-vol, trades 0-qty, book carry-forward, depth quotes carry-forward, derivative_ticker carry-forward, odds_snapshot carry-forward) | UTL `zero_activity_bars` helper (NEW)              | ❌ | Wave 3.M — full per-data-type template SSOT                                  |
+|21 | Catalog-aware write-gate at MTDS / MDPS / features-* adapters    | UTL `ManifestWriter.record_empty(instrument_catalog=…)` callable + adapter wiring | ⚠️ partial | UTL `EmptyFromLiveInstrumentError` shipped; adapters not yet wired to pass `instrument_catalog` reference at construction |
+|22 | Cross-service cascade — MDPS / features-* / ml / strategy / execution propagate `expected_unattempted` + `EXPECTED_*` from upstream manifest | Per-service manifest read + propagation logic | ❌ | Wave 3 cross-service cascade — multi-day                                    |
+|23 | Data-status panel reflects 4-state capture_status (4-bucket coverage) | deployment-api `data_status_service.py` + deployment-ui | ⚠️ partial | Wave 3 — 4-bucket coverage breakdown + per-instrument×per-day calendar viz   |
+|24 | GCS-side past data alignment with manifest semantics            | One-shot migration scripts + per-asset-group rescan | 🟡 in flight | Today's Wave 2.M migration covered the blank-reason rows. Future migrations as new typed reasons land per the taxonomy-expansion process |
+|25 | prior_LTP carry-forward source for zero-activity bars            | UTL `get_prior_ltp` helper + lookback-N-days fallback | ❌ | Wave 3.M task                                                                |
+
+**Net gap summary** — 11 dimensions need NEW SSOTs, classifier extensions, or UTL helpers; 6 dimensions need
+consumer-side wiring (cascade); 8 dimensions are fully shipped today.
+
+**Tasks added (incremental over existing Wave 3 / 3.S / 3.M):**
+
+- [ ] [UAC] P1. **Half-day sessions calendar.** NEW SSOT
+      `unified_api_contracts/registry/half_day_sessions.py` — `HALF_DAY_SESSIONS: dict[venue, list[(iso_date,
+      close_time_HHMM, reason)]]`. Populate per CME / NYSE / NASDAQ documented half-days (Thanksgiving Friday,
+      Christmas Eve, etc.). Wire `non_trading_day_reason` to also return `EXPECTED_PARTIAL_HALF_DAY` when applicable.
+- [ ] [UAC] P1. **Intra-day session hours.** NEW SSOT
+      `unified_api_contracts/registry/venue_session_hours.py` —
+      `VENUE_SESSION_HOURS: dict[venue, dict[weekday, list[(open_HHMM_TZ, close_HHMM_TZ)]]]`. Cover NYSE 9:30-16:00 ET,
+      CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc.
+      NEW `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`.
+      Used by ohlcv_15m / book_snapshot adapters to gate intra-day shards.
+- [ ] [UAC] P1. **Understat covered leagues + seasons.** NEW SSOT
+      `unified_api_contracts.canonical.domain.sports.understat_coverage.UNDERSTAT_COVERED_LEAGUES:
+      dict[league_id → list[season_id]]` with the 5 covered leagues (EPL / La Liga / Serie A / Bundesliga / Ligue 1)
+      and their season ranges. Classifier extension: pre-fixture-day check returns
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for understat shards outside this set.
+- [ ] [UAC] P1. **Per-league season bounds for footystats.** Extend `FOOTYSTATS_SEASON_IDS` with
+      season_start / season_end tuples (already partly available — needs explicit bounds-check helper
+      `get_footystats_season_window(league, day) -> tuple[start, end] | None`). NEW
+      `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` reasons; classifier branch.
+- [ ] [UAC] P1. Two new EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS` and
+      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and `EXPECTED_PRE_SEASON` and `EXPECTED_POST_SEASON` and
+      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (5 new typed reasons.)
+- [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer_windows,
+      footystats_season_bounds, understat_coverage) returning the appropriate typed `EXPECTED_*` reason. Same
+      discriminated `(capture_status, error_reason)` shape as today.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_tradfi` consumes the half-day calendar +
+      session hours SSOTs returning `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` where applicable.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle
+      SSOT returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
+      prediction-shard dates.
+- [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed
+      reasons. Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
+      (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy).
+- [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows
+      using the extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi +
+      685 defi rows to attempted_failed/LegacyBlankErrorReasonError, those rows that should actually be
+      typed (e.g. rows during understat-not-covered-league fixtures, cefi-perp pre-listing dates per
+      catalog) are recoverable on the next migration pass. New reconciler:
+      `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds attempted_failed/
+      LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
+      empty_confirmed/EXPECTED_* if a typed-reason rule fires (otherwise leaves as attempted_failed for
+      retry).
+
+**Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the
+reconciler depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and
+Wave 3.T (tradfi) and Wave 3.P (prediction) — distinct asset_group surfaces.
 
 ---
 
@@ -2570,22 +2618,21 @@ data-status drilldown reads the canonical manifest (which has both layers merged
       captured/attempted_failed exclusion, mixed aggregation, and a closed-set drift guard against UAC
       `EMPTY_CONFIRMED_REASONS` (caught 2 missing reasons during dev). Without this rollup, the Phase 2.E + Phase 3.D +
       Phase 3.B work that stamps typed reasons on every empty_confirmed row stays invisible to the operator.
-- [x] [SCRIPT] P0. New endpoint `GET /data-status/leaf-stats` — returns per-leaf-parquet live stats:
-      row_count, per-column non_null_count, per-column NaN ratio, `available_at` envelope (min/max/null_count), and
-      file size. Distinct from existing `/schema` endpoint (declared `SchemaContract` from UAC, not actual stats).
-      **SHIPPED 2026-05-07 deployment-api@3b0477a**: new `get_leaf_parquet_stats()` helper in
-      `services/shard_detail.py` (mirrors `get_shard_detail`'s resolution shape via `_gcs_path_for_shard` so a
-      single coordinate tuple lights all three views off the same parquet); new `LeafParquetStats` /
-      `LeafParquetColumnStat` / `LeafAvailableAtEnvelope` Pydantic models in `types/shard_detail.py`; new
-      `GET /api/data-status/leaf-stats` route in `routes/shard_detail.py`. Bounded at 500k rows with the
-      `truncated` flag set on oversize parquets. Never raises for data-level failures: missing path / corrupt
-      parquet / read errors all resolve to `available=False` with a typed `error_reason` so the UI can render
-      the diagnostic state without a 500. 7 unit tests cover unresolved path, parquet read failure, successful
-      read with per-column NaN ratios + available_at envelope, missing-`available_at`-column failure mode
-      (writegate Phase 1A.future `MissingAvailableAt`), oversize-parquet truncation, zero-row parquet (no
-      div-by-zero), and coord echo. **DEFERRED to follow-up commit**: TTL cache (currently each request
-      re-reads from GCS — fine for the schema-modal use case which is one-click-per-modal, not a hot path);
-      lift to a 5-min TTL cache once Phase 4.B.3 modal lands and reveals real query patterns.
+- [x] [SCRIPT] P0. New endpoint `GET /data-status/leaf-stats` — returns per-leaf-parquet live stats: row_count,
+      per-column non_null_count, per-column NaN ratio, `available_at` envelope (min/max/null_count), and file size.
+      Distinct from existing `/schema` endpoint (declared `SchemaContract` from UAC, not actual stats). **SHIPPED
+      2026-05-07 deployment-api@3b0477a**: new `get_leaf_parquet_stats()` helper in `services/shard_detail.py` (mirrors
+      `get_shard_detail`'s resolution shape via `_gcs_path_for_shard` so a single coordinate tuple lights all three
+      views off the same parquet); new `LeafParquetStats` / `LeafParquetColumnStat` / `LeafAvailableAtEnvelope` Pydantic
+      models in `types/shard_detail.py`; new `GET /api/data-status/leaf-stats` route in `routes/shard_detail.py`.
+      Bounded at 500k rows with the `truncated` flag set on oversize parquets. Never raises for data-level failures:
+      missing path / corrupt parquet / read errors all resolve to `available=False` with a typed `error_reason` so the
+      UI can render the diagnostic state without a 500. 7 unit tests cover unresolved path, parquet read failure,
+      successful read with per-column NaN ratios + available_at envelope, missing-`available_at`-column failure mode
+      (writegate Phase 1A.future `MissingAvailableAt`), oversize-parquet truncation, zero-row parquet (no div-by-zero),
+      and coord echo. **DEFERRED to follow-up commit**: TTL cache (currently each request re-reads from GCS — fine for
+      the schema-modal use case which is one-click-per-modal, not a hot path); lift to a 5-min TTL cache once Phase
+      4.B.3 modal lands and reveals real query patterns.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
       window AND `live_pipeline_already_wrote = true` → emit `LIVE_HISTORICAL_DOUBLE_WRITE` warning event.
       **Investigation 2026-05-07**: multi-repo write-time guard. Needs (a) a UAC `LIVE_HISTORICAL_DOUBLE_WRITE` event
@@ -2597,26 +2644,38 @@ data-status drilldown reads the canonical manifest (which has both layers merged
 
 ### Phase 4.B — deployment-ui (unified-trading-system-ui)
 
-- [x] [SCRIPT] P0. Render new `attempted_failed` reasons distinctly per typed error in the data-status panel:
-      Distinct color + icon per (`EmptyPlaceholderBugBackfill`, `ClusterCoverageError`, `UpstreamTimestampBiasError`,
+- [x] [SCRIPT] P0. Render new `attempted_failed` reasons distinctly per typed error in the data-status panel: Distinct
+      color + icon per (`EmptyPlaceholderBugBackfill`, `ClusterCoverageError`, `UpstreamTimestampBiasError`,
       `MalformedTickFieldError`, `MissingAvailableAt`, `ClusterCoverageError(historical)`,
-      `RAW_TICK_PARTITION_MISMATCH`). **SHIPPED 2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new
-      `TypedReasonBadges` component renders one colored pill per non-zero count for both the failure_pillars
-      (typed-error class prefix taxonomy) and empty_reasons (UAC `EMPTY_CONFIRMED_REASONS` closed set + back-fill
-      catch-all) rollups deployment-api emits per venue. 11 unit tests cover empty/zero render, failure-pillar-first
-      ordering, count + tooltip wiring, click-through mode vs static, and a closed-set drift guard against
-      deployment-api `_FAILURE_PILLAR_KEYS` + `_EMPTY_REASON_KEYS`. Component wired into `DataStatusTab.tsx` venue
-      summary line between the existing "blocked on raw" badge and BucketCountsBadge so every venue with any
-      typed-failure or typed-empty surfaces the breakdown without expanding the row. **DEFERRED**: drill-down per
-      reason → leaf parquet + audit report link — depends on Phase 4.A.3 leaf-schema endpoint (next item below).
-- [x] [SCRIPT] P0. Surface per-pillar write-gate failure breakdown as a stacked-bar visualisation per shard.
-      **SHIPPED 2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new `FailurePillarStack` component renders a
-      proportional horizontal stacked bar with one segment per non-zero pillar (zero counts suppressed; layout
-      stays deterministic). Wired alongside `TypedReasonBadges` on the venue summary line. 13 unit tests cover
-      proportional widths, total emission via `data-failure-total`, click-through mode, prefix namespacing, and
-      closed-set ignore.
-- [ ] [SCRIPT] P0. Schema-view modal (per-leaf parquet) — call new `/leaf/.../schema` endpoint; render columns + types +
-      row_count + NaN ratio + `available_at` envelope.
+      `RAW_TICK_PARTITION_MISMATCH`). **SHIPPED 2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new `TypedReasonBadges`
+      component renders one colored pill per non-zero count for both the failure_pillars (typed-error class prefix
+      taxonomy) and empty_reasons (UAC `EMPTY_CONFIRMED_REASONS` closed set + back-fill catch-all) rollups
+      deployment-api emits per venue. 11 unit tests cover empty/zero render, failure-pillar-first ordering, count +
+      tooltip wiring, click-through mode vs static, and a closed-set drift guard against deployment-api
+      `_FAILURE_PILLAR_KEYS` + `_EMPTY_REASON_KEYS`. Component wired into `DataStatusTab.tsx` venue summary line between
+      the existing "blocked on raw" badge and BucketCountsBadge so every venue with any typed-failure or typed-empty
+      surfaces the breakdown without expanding the row. **DEFERRED**: drill-down per reason → leaf parquet + audit
+      report link — depends on Phase 4.A.3 leaf-schema endpoint (next item below).
+- [x] [SCRIPT] P0. Surface per-pillar write-gate failure breakdown as a stacked-bar visualisation per shard. **SHIPPED
+      2026-05-07 deployment-ui@a7384a0 + @621f0b3**: new `FailurePillarStack` component renders a proportional
+      horizontal stacked bar with one segment per non-zero pillar (zero counts suppressed; layout stays deterministic).
+      Wired alongside `TypedReasonBadges` on the venue summary line. 13 unit tests cover proportional widths, total
+      emission via `data-failure-total`, click-through mode, prefix namespacing, and closed-set ignore.
+- [x] [SCRIPT] P0. Schema-view modal (per-leaf parquet) — call new `/leaf-stats` endpoint; render columns + types +
+      row_count + NaN ratio + `available_at` envelope. **SHIPPED 2026-05-07 deployment-ui@8f630a6**: new
+      `LeafSchemaModal` component renders three blocks: (1) header with gs:// URI + row count + column count +
+      file size + truncated hint when applicable; (2) `available_at` envelope (present/missing badge + min/max +
+      null count; missing renders as a writegate contract violation per CLAUDE.md "available_at is per-row,
+      write-time, equal to live-pipeline-arrival"); (3) per-column table with NaN-ratio color coding (muted at 0%,
+      yellow > 0%, amber ≥ 10%, red ≥ 50%). Companion `fetchLeafParquetStats()` API client + typed response shape
+      (`LeafParquetStatsResponse` / `LeafParquetColumnStat` / `LeafAvailableAtEnvelope`) added to `client.ts`.
+      15 unit tests cover loading state, fetch error, unavailable response with error_reason, missing-available_at
+      contract violation, successful payload with per-column NaN ratio rendering + boundary inclusivity for the
+      color thresholds, oversize-parquet truncated hint, plus pure-helper tests for `nanRatioColor` +
+      `formatNanRatio`. **DEFERRED to follow-up commit**: mounting the modal into a click-target on the venue
+      summary row — separate layout edit so the modal can be reviewed + reverted independently. Pairs with the
+      Phase 4.B.1 `TypedReasonBadges` `onBadgeClick` callback already plumbed through (the badge click is the
+      natural drill-down trigger to open this modal).
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
 
 QG between Phase 4 and Phase 5: UI smoke-test (Tier 0 + Tier 1) — every new color/badge/drill-down renders correctly
