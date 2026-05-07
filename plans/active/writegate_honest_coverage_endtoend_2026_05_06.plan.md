@@ -1462,24 +1462,32 @@ The fix is **two-layer defensive**:
 
 #### Phase 3.D.1 — `reconcile_expected_absence_reasons.py` per asset_group
 
-- [ ] [SCRIPT] P0. New script per asset_group (cefi / defi / tradfi / sports / prediction). Iterates the "expected
-      universe" per (service, asset_group, data_type) using: - Date range from `SOURCE_COVERAGE_START` (UAC) up to
-      today. - Instrument set from instruments-service per `(asset_group, data_type, day)` — accounts for listing +
-      delisting via `market_created_at` / `delisted_at` lifecycle. - Calendar via `venue_trading_calendar` (TradFi) +
-      `KNOWN_COVERAGE_GAPS` (sports paused leagues) + chain-genesis (DeFi).
-- [ ] [SCRIPT] P0. For each `(shard_key, day)` in the expected universe: - If manifest row exists with
-      `capture_status=captured` → leave alone. - If manifest row exists with `capture_status=attempted_failed` (typed
-      reason already there) → leave alone. - If manifest row exists with `capture_status=empty_confirmed` AND
-      `error_reason` is empty → classify (calendar lookup / coverage*start / paused league / source_returned_zero) and
-      stamp the right
-      `EXPECTED*\*`or`SOURCE*RETURNED_ZERO`reason via`record_empty(reason=...)`.     - If NO manifest row exists AND classification says "expected absence" → emit       `record_expected_empty(reason=EXPECTED*<X>)`.     - If NO manifest row exists AND classification says "should have been captured but wasn't" → emit       `record_failed(reason=NEVER_ATTEMPTED)`
-      so it surfaces in the deployment-ui breakdowns as a real gap.
-- [ ] [SCRIPT] P0. Same safety scaffolding as `reconcile_1440_nan_placeholders.py`: default scan-only mode,
-      `--apply-flips`, `--max-flips-per-run` default 100k, `MANIFEST_PER_VM_SHARDS=true` required for apply,
-      RECONCILER\_\* lifecycle events, CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`.
-- [ ] [SCRIPT] P0. Idempotent — re-runs detect "row already has the right reason" and no-op (don't re-write identical
-      rows). The decision matrix above is deterministic; same input → same output.
+- [x] [SCRIPT] P0. ~~New script per asset_group~~ → **single script with `--asset-group` dispatch + per-asset-group
+      classifier functions** shipped 2026-05-07 at `instruments-service/scripts/reconcile_expected_absence_reasons.py`
+      (commit `1f93745`). Iterates manifest rows directly (not "expected universe enumeration") — focus is on the
+      empty_confirmed-AND-null-reason subset which is the highest-leverage pass. Expected-universe enumeration for
+      "no row at all → record_expected_empty" deferred to Phase 3.D.1 v2 (needs cross-bucket join with
+      instruments-service catalog + lifecycle). Uses UAC SSOTs: `non_trading_day_reason()` (TradFi) +
+      `is_in_known_gap()` / `get_source_coverage_start()` (sports) + `get_chain_genesis_date()` (DeFi). Smoke-verified
+      classifiers with synthetic rows.
+- [x] [SCRIPT] P0. Decision matrix for empty_confirmed-AND-null-reason rows shipped (the highest-leverage pass).
+      Classification: TradFi → EXPECTED_HOLIDAY/WEEKEND via `non_trading_day_reason`; Sports → EXPECTED_PAUSED_LEAGUE
+      via `is_in_known_gap` / EXPECTED_PRE_SOURCE_COVERAGE_START via `get_source_coverage_start`; DeFi →
+      EXPECTED_PRE_GENESIS_CHAIN via `get_chain_genesis_date` (handles both `chain=` column AND legacy combined
+      `venue=PROTOCOL-CHAIN` suffix); CeFi/prediction default to SOURCE_RETURNED_ZERO. Captured + typed-failed rows
+      left alone. **Deferred to v2**: "no row at all → record_expected_empty" path — requires expected-universe
+      enumeration via cross-bucket join with instruments-service catalog (much larger surface).
+- [x] [SCRIPT] P0. Same safety scaffolding as `reconcile_1440_nan_placeholders.py`: default scan-only mode,
+      `--apply-flips`, `--max-flips-per-run` default 100k, `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` required for apply
+      (verified guard fires), RECONCILER\_\* lifecycle events with structured details, CSV audit at
+      `${TMPDIR}/recon-reasons-{asset_group}-{ts}.csv`, distribution summary printed for operator review before write.
+      Per-VM shard write at `_index/per_vm/{VM_NAME}.parquet` — consolidator merges into canonical manifest.
+- [x] [SCRIPT] P0. Idempotent — `_build_null_reason_mask` only matches rows with empty `error_reason`; re-runs after
+      a flip find 0 candidates and no-op. Classifier functions are pure (deterministic on input).
 - [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the decision matrix.
+      **DEFERRED**: in-process classifier smoke verified via `python -c` at commit time, but per-branch fixture-based
+      tests not yet written. Add when Phase 3.D.2 reader-side fallback lands so the same classification logic powers
+      both write-side reconciler + read-side fallback (single test fixture covers both).
 
 #### Phase 3.D.2 — Reader-side fallback in every consumer service
 
