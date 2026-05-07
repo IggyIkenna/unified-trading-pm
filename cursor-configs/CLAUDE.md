@@ -127,11 +127,30 @@ Read these before making ANY code changes:
   `codex/06-coding-standards/cli-convention.md`.
 - **Availability manifest v5 (honest-coverage)** — `ManifestWriter` writes proper shard columns (venue, chain,
   data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id,
-  client_id, instruction_type) PLUS `capture_status` (`captured` / `empty_confirmed` / `attempted_failed`),
-  `error_reason`, `attempted_at`. Adapters MUST distinguish empty-vs-failed:
-  `record_empty(row_key=..., attempted_at=...)` for legitimately-zero-rows,
-  `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions. **Never overload
-  `venue`** with non-venue data. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+  client_id, instruction_type) PLUS `capture_status` (4-state closed set: `captured` / `empty_confirmed` /
+  `attempted_failed` / **`expected_unattempted`** added 2026-05-07 evening per writegate Phase 3.D.5),
+  `error_reason`, `attempted_at`. Adapters MUST distinguish:
+  `record_captured(...)` for real-data writes; `record_empty(row_key=..., reason=<typed>)` for legitimately-zero
+  source responses (typed reason from `EMPTY_CONFIRMED_REASONS` REQUIRED — blank rejected loudly via
+  `LegacyBlankErrorReasonError` per UTL@68b3804a after the 2026-05-07 RED ALERT silent-fallback bug);
+  `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions;
+  `record_expected_unattempted(row_key=, attempted_at=)` for catalog-says-this-should-exist-but-not-fetched-yet
+  (pre-populated by v2 expected-universe enumerator from instruments-service catalog cross-product). **Never
+  overload `venue`** with non-venue data. **Asset-group-specific empty_confirmed legitimacy rule (operator
+  directive 2026-05-07 msg 6)**: sports / prediction CAN have empty_confirmed at instrument-day grain (no
+  fixtures today / no markets active is normal); cefi / defi / tradfi CANNOT — only venue-level rules
+  (HOLIDAY / WEEKEND / PRE_VENUE_LAUNCH / PRE_GENESIS_CHAIN / PARTIAL_HALF_DAY) make empty_confirmed legit.
+  Catalog-says-alive instrument-day with source-zero in cefi/defi/tradfi MUST flip to attempted_failed
+  (caught at write-side by the catalog-aware guard once Wave 3 wires the `instrument_catalog` reference at
+  MTDS adapter construction). **Two SSOTs for the manifest's expected universe**: UAC SSOTs
+  (`*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`) own the coarse
+  "is this `(asset_group, venue, day)` structurally possible" axis; instruments-service catalog owns the fine
+  "given alive, what instruments exist on this day" axis. Both layers write to the manifest; MTDS's
+  `record_captured` cleanly supersedes prior `expected_unattempted` rows by row_key. **Coverage % at every
+  drilldown level** = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` —
+  denominator is the full universe (catalog × dates × data_types). SSOTs:
+  `codex/02-data/availability-manifest-and-data-status.md` (manifest schema + 4-state taxonomy);
+  `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § Phase 3.D.5 (full architecture).
 - **Honest absence vs fake placeholders (CRITICAL — applies top-to-bottom across every service)** — when a service runs
   end-to-end, every output row must reflect REAL work OR a clearly-flagged honest gap. Three categories of "missing",
   each with a different action — wrong action = silent data corruption.
@@ -283,18 +302,30 @@ Read these before making ANY code changes:
   per-service phantom-audit drift probe AND UTL `manifest_audit` module (Plan B Q #5 lifts the script). When you find
   yourself maintaining two ways to do the same thing, kill one — don't add a third helper to "reconcile" them.
 
-- **Three-category empty-output decision (every per-shard adapter — MDPS / MTDS / features-\* / instruments-service)** —
+- **Four-category empty-output decision (every per-shard adapter — MDPS / MTDS / features-\* / instruments-service)** —
   Every condition that could produce an empty result resolves to ONE of: **A. Source returned 0 ticks for the requested
-  window** → `record_empty(row_key, attempted_at)` (honest absence); **B. Source returned ticks; ALL fall outside the
-  requested day after `interval_idx` filter** →
+  window** → `record_empty(row_key, reason=<typed>)` (honest absence; reason MUST be from
+  `EMPTY_CONFIRMED_REASONS` — blank rejected via `LegacyBlankErrorReasonError` per UTL@68b3804a); **B. Source returned
+  ticks; ALL fall outside the requested day after `interval_idx` filter** →
   `record_failed(UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks))` (UPSTREAM BUG — partition
   mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew; paired upstream fix at MTDS
   `raw_tick_hive.py` partitioner-validation); **C. Rows in window but downstream calc dropped all rows due to
   NaN/malformed source fields** → `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`
-  (data-quality bug worth diagnosing). NO silent NaN placeholder rows. The `_create_empty_output()`-style placeholder
-  method is **banned** from `base_adapter` and any equivalent base class. Reference incident: 2026-05-05 MDPS 1440 NaN
-  OHLC bars per day per (venue, data_type) for years passed manifest as `captured`. Plan:
-  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A deletes `_create_empty_output` workspace-wide.
+  (data-quality bug worth diagnosing); **D. Source returned 0 BUT instruments-service catalog says the instrument was
+  ALIVE on the day AND day falls within venue market hours** (operator directive 2026-05-07 msg 8) →
+  **NEW**: write zero-activity bars (O=H=L=C=prior_LTP, volume=0, trade_count=0 — shape per data_type) and
+  `record_captured` with the real bar count. Captures the "tradeable but illiquid" semantic distinct from "missing"
+  — critical for cross-instrument analyses like volatility smiles where every strike must be visible. The catalog-
+  aware write-gate (writer-side guard, Wave 2 of Phase 3.D.5) drives the (A) vs (D) split: when `instrument_catalog`
+  is wired and reports the instrument alive, blank-zero-source-response gets routed to (D). Until the writer-guard
+  ships, adapters use the manifest classifier helper `classify_blank_reason_row` to apply the same logic at the
+  manifest level. **For sports / prediction the (D) bar shape uses prior bookmaker odds / prior market mid as
+  carry-forward**; for cefi / defi / tradfi it's prior trade LTP. NO silent NaN placeholder rows. The
+  `_create_empty_output()`-style placeholder method is **banned** from `base_adapter` and any equivalent base class.
+  Reference incidents: 2026-05-05 MDPS 1440 NaN OHLC bars per day per (venue, data_type); 2026-05-07 RED ALERT (5
+  CeFi VMs writing 96-100% empty rows with all blank reasons — bitfinex/bitget/kraken). Plan:
+  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A + Phase 3.D.5 (Waves 1, 2, 2.M shipped
+  2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
 
   **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
   discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed set
