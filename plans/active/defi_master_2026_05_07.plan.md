@@ -102,11 +102,13 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ### Oracle prices + chain expansion (`consolidated_defi_data_pipeline` mtds-s3)
 
-- [ ] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana via Hermes (HTTPS pull, batch) + PythNet
+- [x] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana via Hermes (HTTPS pull, batch) + PythNet
       (Solana RPC, live). Solana-only scope. carry_staked_basis dependency. [AUDIT 2026-05-07: FRESH — actionable, P0
       BLOCKER for carry_staked_basis archetype; Pyth UNBANNED 2026-05-06 per CLAUDE.md but wiring not shipped]
-- [ ] [AGENT] P0. mtds-s3-6-multi-chain-oracle: Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon).
+      ✅ market-tick-data-service@cli/handlers/oracle_prices_handler.py (Pyth Hermes wired) 2026-05-07
+- [x] [AGENT] P0. mtds-s3-6-multi-chain-oracle: Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon).
       [AUDIT 2026-05-07: FRESH — actionable]
+      ✅ market-tick-data-service@cli/handlers/oracle_prices_handler.py (Chainlink Arb/Base/Optimism/Polygon via _CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
       [`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) — MUST run AFTER
