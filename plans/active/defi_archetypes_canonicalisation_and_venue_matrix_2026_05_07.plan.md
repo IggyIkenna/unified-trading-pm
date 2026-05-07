@@ -22,6 +22,28 @@ related_archetypes:
 
 # DeFi archetypes canonicalisation + venue-matrix correction
 
+> **Agent 4 triage decision (2026-05-07, work_split_2026_05_07_ikenna_5tab_layout.md Item 1):**
+>
+> Triage was scoped: decide venue-collateral matrix AND `leveraged_funding_arb` canonicalisation BEFORE Agent 4's
+> DeFi backfill VM launches pick chains/protocols. Decisions:
+>
+> 1. **Stream A — venue-collateral matrix flip is needed but is NOT an Agent-4-launch blocker.** DRIFT (Solana) rows
+>    in `unified_api_contracts/registry/venue_collateral.py` lines 99–102 already mark `mSOL` (10% haircut) and
+>    `JitoSOL` (10% haircut) `accepted=True` for `carry_staked_basis`'s Solana hedge leg. May-23 paper-trade smoke
+>    routes through DRIFT-Solana; no DERIBIT/BYBIT/OKX-side LST acceptance is required. Stream A's `[SCRIPT]`
+>    live-API probe + `[UAC]` matrix flip remain real workspace work but slot to a separate agent (Agent 1
+>    UAC/alerting context, OR independent agent post-cycle). Flip EXPANDS the `carry_staked_basis` ETH-leg venue
+>    set after May-23 — value-add, not gate.
+> 2. **Stream B — `leveraged_funding_arb` ⇒ `ARBITRAGE_PRICE_DISPERSION` config variant.** Operator decision
+>    already recorded in plan body. Agent 4 propagates rename only into items that touch its launch + paper-trade
+>    scope; Stream B's `[codex]` archetype-doc rewrites + `[UAC]` enum audit stay with archetype-doc owners.
+> 3. **Launch picks (Item 2):** SAFE = `vault-share-price` + `lst-rates` (Pyth Solana wired) + `oracle-prices`
+>    (Pyth Hermes + Chainlink EVM wired per `mtds-s3-5/6` checkboxes flipped 2026-05-07). DEFERRED =
+>    `lending-indices` until Bug 1 (AAVE V3 ETHEREUM silent-zero, P0 for `carry_staked_basis` ETH leg) + Bug 2
+>    (COMPOUND V3 multi-chain subgraph schema) + Bug 3 (`instruments-store-defi` 2022 metadata floor) land. Per
+>    CLAUDE.md "honest absence vs fake placeholders", relaunching with known silent-zero bug = silently writing
+>    `empty_confirmed` rows that should be `attempted_failed` (anti-pattern).
+
 This plan ships the doc + plan + code corrections raised by the 2026-05-07 operator review of
 [`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](../active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md).
 Each stream below is independently shippable. Streams A–D run in parallel; Stream E is the integration sweep that pulls

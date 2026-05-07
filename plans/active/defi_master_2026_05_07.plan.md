@@ -25,6 +25,51 @@ related_plans:
 
 # DeFi Master — asset_group umbrella
 
+## Agent 4 launch decision (2026-05-07, work_split_2026_05_07_ikenna_5tab_layout.md Item 2)
+
+> Triage from
+> [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)
+> § "Agent 4 triage decision". Carrying the launch-picks slice forward here so the agent reading defi_master in
+> isolation has the picks pinned.
+>
+> **SAFE TO LAUNCH NOW (this cycle):**
+>
+> - `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` — high carry-archetype value,
+>   parallel-safe, no known adapter bugs.
+> - `launch-mtds-lst-rates-backfill-vm.sh` — Pyth Solana wired (UAC unbanning 2026-05-06; mtds-s3-5 done); P0
+>   input for `carry_staked_basis`. Solana coverage genuinely thin (~monthly cadence per defi_master § "Real
+>   residual concerns") — backfill fills daily granularity.
+> - `launch-mtds-oracle-prices-backfill-vm.sh` (or equivalent for the Pyth Hermes + Chainlink multi-chain
+>   wiring) — mtds-s3-5 + mtds-s3-6 both flipped done 2026-05-07; first batch backfill exercises the
+>   just-shipped paths.
+>
+> **DEFERRED (P0 fix-first, not in this cycle):**
+>
+> - `launch-mtds-lending-indices-backfill-vm.sh` — last run `mtds-lending-indices-20260507-140418` stopped
+>   2026-05-07 ~15:30 IST after spot-checking surfaced Bug 1 (AAVE V3 ETHEREUM silent-zero — 0/343 captured for
+>   the most-relevant chain), Bug 2 (COMPOUND V3 multi-chain subgraph `marketDailySnapshots` field rename), Bug
+>   3 (`instruments-store-defi` metadata 404 for early 2022 dates). Relaunching without the fixes means
+>   re-writing `empty_confirmed` rows that per writegate Phase 2.A spirit should be `attempted_failed` — silent
+>   data corruption per CLAUDE.md "honest absence vs fake placeholders". Successor: a follow-up `[AGENT] P0`
+>   todo under "Lending-indices VM run-quality bugs" §; recommend Agent 1 (alerting context — owns subgraph
+>   error classification) or independent agent.
+>
+> **NOT IN AGENT 4 SCOPE THIS CYCLE:**
+>
+> - `launch-mtds-perp-funding-backfill-vm.sh` — referenced in CLAUDE.md but missing per defi_master § "Real
+>   residual concerns" #4. Adding this launcher is a dedicated [SCRIPT] task; not a launch in this cycle.
+> - DEX-perp `launch-cefi-onchain-forward-poll.sh` for LIGHTER/PACIFICA/EXTENDED — required pre-live but
+>   separate workstream (HANDOVER Item A). Not in Agent-4 cycle scope.
+>
+> **NAMING + DISCIPLINE:**
+>
+> - All Agent-4-launched VMs use `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>` per CLAUDE.md "Per-VM
+>   shard isolation".
+> - Each launch gets a no-fire-and-forget event-verification 90s post-launch + 10-15min re-check (CLAUDE.md "No
+>   fire-and-forget VM launches"). Stalled = kill + diagnose, not let-run.
+> - Per-VM shard inspection (4-pillar validation: row count > 0 / NaN ratio / schema / cluster coverage) before
+>   declaring "running cleanly" — same recipe as `mtds-lending-indices-20260507-140418` Bug-1-finding pattern.
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)

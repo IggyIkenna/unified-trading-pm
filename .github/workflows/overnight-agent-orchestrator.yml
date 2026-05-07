@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       tiers:
-        description: "Tiers to run (comma-separated: 0,1,2,3 — or 'all')"
+        description: "Tiers to run (only '0' / 'all' supported after T1/T2/T3 fold-in)"
         required: false
         default: "all"
       dry_run:
@@ -81,12 +81,9 @@ jobs:
           source scripts/agents/claude-api-health-precheck.sh
           check_claude_api_health
 
-      - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v6
-        with:
-          repository: IggyIkenna/unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          path: unified-trading-codex
+      # codex/ is folded into unified-trading-pm at codex/. Tier agents read
+      # codex/10-audit/repos/{repo}.yaml from the PM working tree on each
+      # target repo (tier agents already clone PM as a sibling).
 
       - name: Prepare readiness context for tier agents
         id: readiness-ctx
@@ -101,13 +98,13 @@ jobs:
           Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
 
           READINESS CONTEXT FOR THIS TIER:
-          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
+          - Readiness SSOT: unified-trading-pm/codex/10-audit/repos/{repo}.yaml for each repo
           - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
-          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
+          - After any quickmerge, update unified-trading-pm/codex/10-audit/repos/{repo}.yaml:
             Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
-            Commit the update to unified-trading-codex with:
-            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
-            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
+            Commit the update to unified-trading-pm with:
+            git -C ../unified-trading-pm add codex/10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-pm commit -m "chore: update {repo} readiness to CR5"
           - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
             Before any bump proposal, read this file and classify the actual change.
           - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
@@ -119,8 +116,7 @@ jobs:
         id: dispatch
         env:
           REPOS: >-
-            unified-api-contracts unified-internal-contracts unified-trading-library unified-cloud-interface
-            execution-algo-library matching-engine-library
+            unified-api-contracts unified-trading-library
           # Stagger dispatches to avoid GH API burst limits (1000 queue / 500 concurrent per org)
           DISPATCH_DELAY_SECONDS: "3"
         run: |
@@ -236,9 +232,6 @@ jobs:
 
           **Failing repos/results:** \`${T0_DETAILS}\`
 
-          T1, T2, T3 tiers were skipped because they depend on T0 passing.
-          Results from T1-T3 in any prior run are now unreliable until T0 is green.
-
           ### Action required
           1. Check the failing repos' quality-gates output in the run link below
           2. Fix the root cause in the failing repo(s)
@@ -249,272 +242,14 @@ jobs:
 
           echo "T0 escalation complete. Issue: ${ISSUE_URL:-N/A}"
 
-  # ── TIER 1: Contract + Config Tier ───────────────────────────────────────────
-  t1:
-    name: Tier 1 — Contracts & Config
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    needs: [t0]
-    if:
-      always() && (needs.t0.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '1') ||
-      github.event_name == 'schedule')
-    outputs:
-      results: ${{ steps.poll.outputs.results }}
-
-    steps:
-      - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v6
-        with:
-          repository: IggyIkenna/unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          path: unified-trading-codex
-
-      - name: Prepare readiness context for tier agents
-        id: readiness-ctx
-        run: |
-          CONTEXT_FILE=$(mktemp)
-          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
-          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
-          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
-          - Do NOT edit pyproject.toml to increase the MAJOR component
-          - Do NOT dispatch version-bump events with a higher MAJOR version
-          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
-          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
-
-          READINESS CONTEXT FOR THIS TIER:
-          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
-          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
-          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
-            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
-            Commit the update to unified-trading-codex with:
-            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
-            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
-          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
-            Before any bump proposal, read this file and classify the actual change.
-          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
-          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
-          READINESS_CONTEXT
-          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
-
-      - name: Dispatch agent-audit.yml to T1 repos
-        id: dispatch
-        env:
-          REPOS: >-
-            unified-reference-data-interface unified-config-interface unified-trading-library
-          DISPATCH_DELAY_SECONDS: "3"
-        run: |
-          echo "Dispatching to T1 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
-          for repo in $REPOS; do
-            echo "  → $GH_ORG/$repo"
-            gh workflow run agent-audit.yml \
-              --repo "$GH_ORG/$repo" \
-              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
-            sleep "$DISPATCH_DELAY_SECONDS"
-          done
-          sleep 15
-          echo "repos=$REPOS" >> $GITHUB_OUTPUT
-
-      - name: Poll T1 runs until complete
-        id: poll
-        if: inputs.dry_run != 'true'
-        env:
-          REPOS: ${{ steps.dispatch.outputs.repos }}
-        run: |
-          RESULTS=""
-          for repo in $REPOS; do
-            START=$(date +%s)
-            STATUS="unknown"
-            while true; do
-              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
-              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
-              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
-              sleep "$POLL_INTERVAL"
-            done
-            echo "$repo: $STATUS"
-            RESULTS="${RESULTS} ${repo}:${STATUS}"
-          done
-          echo "results=$RESULTS" >> $GITHUB_OUTPUT
-          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T1 FAILED: $RESULTS"; exit 1; } || echo "T1 PASSED"
-
-  # ── TIER 2: Interface Libraries ───────────────────────────────────────────────
-  t2:
-    name: Tier 2 — Interface Libraries
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    needs: [t1]
-    if:
-      always() && (needs.t1.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '2') ||
-      github.event_name == 'schedule')
-    outputs:
-      results: ${{ steps.poll.outputs.results }}
-
-    steps:
-      - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v6
-        with:
-          repository: IggyIkenna/unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          path: unified-trading-codex
-
-      - name: Prepare readiness context for tier agents
-        id: readiness-ctx
-        run: |
-          CONTEXT_FILE=$(mktemp)
-          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
-          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
-          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
-          - Do NOT edit pyproject.toml to increase the MAJOR component
-          - Do NOT dispatch version-bump events with a higher MAJOR version
-          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
-          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
-
-          READINESS CONTEXT FOR THIS TIER:
-          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
-          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
-          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
-            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
-            Commit the update to unified-trading-codex with:
-            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
-            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
-          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
-            Before any bump proposal, read this file and classify the actual change.
-          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
-          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
-          READINESS_CONTEXT
-          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
-
-      - name: Dispatch agent-audit.yml to T2 repos
-        id: dispatch
-        env:
-          REPOS: >-
-            unified-feature-calculator-library unified-market-interface unified-ml-interface
-            unified-trade-execution-interface unified-sports-execution-interface unified-defi-execution-interface
-          DISPATCH_DELAY_SECONDS: "3"
-        run: |
-          echo "Dispatching to T2 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
-          for repo in $REPOS; do
-            echo "  → $GH_ORG/$repo"
-            gh workflow run agent-audit.yml \
-              --repo "$GH_ORG/$repo" \
-              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
-            sleep "$DISPATCH_DELAY_SECONDS"
-          done
-          sleep 15
-          echo "repos=$REPOS" >> $GITHUB_OUTPUT
-
-      - name: Poll T2 runs until complete
-        id: poll
-        if: inputs.dry_run != 'true'
-        env:
-          REPOS: ${{ steps.dispatch.outputs.repos }}
-        run: |
-          RESULTS=""
-          for repo in $REPOS; do
-            START=$(date +%s)
-            STATUS="unknown"
-            while true; do
-              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
-              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
-              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
-              sleep "$POLL_INTERVAL"
-            done
-            echo "$repo: $STATUS"
-            RESULTS="${RESULTS} ${repo}:${STATUS}"
-          done
-          echo "results=$RESULTS" >> $GITHUB_OUTPUT
-          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T2 FAILED: $RESULTS"; exit 1; } || echo "T2 PASSED"
-
-  # ── TIER 3: Domain Client ─────────────────────────────────────────────────────
-  t3:
-    name: Tier 3 — Domain Client
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    needs: [t2]
-    if:
-      always() && (needs.t2.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '3') ||
-      github.event_name == 'schedule')
-    outputs:
-      results: ${{ steps.poll.outputs.results }}
-
-    steps:
-      - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v6
-        with:
-          repository: IggyIkenna/unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          path: unified-trading-codex
-
-      - name: Prepare readiness context for tier agents
-        id: readiness-ctx
-        run: |
-          CONTEXT_FILE=$(mktemp)
-          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
-          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
-          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
-          - Do NOT edit pyproject.toml to increase the MAJOR component
-          - Do NOT dispatch version-bump events with a higher MAJOR version
-          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
-          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
-
-          READINESS CONTEXT FOR THIS TIER:
-          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
-          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
-          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
-            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
-            Commit the update to unified-trading-codex with:
-            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
-            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
-          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
-            Before any bump proposal, read this file and classify the actual change.
-          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
-          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
-          READINESS_CONTEXT
-          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
-
-      - name: Dispatch agent-audit.yml to T3 repos
-        id: dispatch
-        env:
-          REPOS: unified-domain-client
-          DISPATCH_DELAY_SECONDS: "3"
-        run: |
-          echo "Dispatching to T3 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
-          for repo in $REPOS; do
-            echo "  → $GH_ORG/$repo"
-            gh workflow run agent-audit.yml \
-              --repo "$GH_ORG/$repo" \
-              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
-            sleep "$DISPATCH_DELAY_SECONDS"
-          done
-          sleep 15
-          echo "repos=$REPOS" >> $GITHUB_OUTPUT
-
-      - name: Poll T3 runs until complete
-        id: poll
-        if: inputs.dry_run != 'true'
-        env:
-          REPOS: ${{ steps.dispatch.outputs.repos }}
-        run: |
-          RESULTS=""
-          for repo in $REPOS; do
-            START=$(date +%s)
-            STATUS="unknown"
-            while true; do
-              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
-              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
-              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
-              sleep "$POLL_INTERVAL"
-            done
-            echo "$repo: $STATUS"
-            RESULTS="${RESULTS} ${repo}:${STATUS}"
-          done
-          echo "results=$RESULTS" >> $GITHUB_OUTPUT
-          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T3 FAILED: $RESULTS"; exit 1; } || echo "T3 PASSED"
-
   # ── TELEGRAM MORNING SUMMARY ──────────────────────────────────────────────────
+  # Tiers T1/T2/T3 were removed when their member repos were folded into
+  # unified-api-contracts (UAC) + unified-trading-library (UTL). Only T0
+  # remains as the "core libraries" tier.
   notify-summary:
     name: Telegram Morning Summary — Determine conclusion
     runs-on: ubuntu-latest
-    needs: [t0, t1, t2, t3]
+    needs: [t0]
     if: always()
     outputs:
       overall_conclusion: ${{ steps.conclusion.outputs.conclusion }}
@@ -524,25 +259,22 @@ jobs:
         id: conclusion
         env:
           T0_RESULT: ${{ needs.t0.result }}
-          T1_RESULT: ${{ needs.t1.result }}
-          T2_RESULT: ${{ needs.t2.result }}
-          T3_RESULT: ${{ needs.t3.result }}
         run: |
           # Determine overall conclusion
-          if [ "$T0_RESULT" = "success" ] && [ "$T1_RESULT" = "success" ] && [ "$T2_RESULT" = "success" ] && [ "$T3_RESULT" = "success" ]; then
+          if [ "$T0_RESULT" = "success" ]; then
             CONCLUSION="success"
           else
             CONCLUSION="failure"
           fi
 
-          MESSAGE="Overnight QG Report — T0 (libraries): ${T0_RESULT}, T1 (contracts): ${T1_RESULT}, T2 (interfaces): ${T2_RESULT}, T3 (domain): ${T3_RESULT}"
+          MESSAGE="Overnight QG Report — T0 (core libraries): ${T0_RESULT}"
 
           echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
           echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
 
   notify-telegram:
     name: Telegram Morning Summary — Send
-    needs: [t0, t1, t2, t3, notify-summary]
+    needs: [t0, notify-summary]
     if: always()
     uses: ./.github/workflows/notify-telegram.yml
     with:
@@ -557,7 +289,7 @@ jobs:
 
   notify-persist:
     name: Telegram Morning Summary — Persist
-    needs: [t0, t1, t2, t3, notify-summary, notify-telegram]
+    needs: [t0, notify-summary, notify-telegram]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
@@ -568,6 +300,4 @@ jobs:
       conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
-      details_json:
-        '{"t0": "${{ needs.t0.result }}", "t1": "${{ needs.t1.result }}", "t2": "${{ needs.t2.result }}", "t3": "${{
-        needs.t3.result }}"}'
+      details_json: '{"t0": "${{ needs.t0.result }}"}'
