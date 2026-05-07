@@ -2055,19 +2055,20 @@ on the manifest.
 
 **Tasks for the new 4th capture_status (cross-repo blast radius — multi-day shippable):**
 
-- [ ] [UAC] P0. Add `EXPECTED_UNATTEMPTED` (or `expected_unattempted`) value to the manifest
-      `CAPTURE_STATUS` enum / closed-set in
-      `unified_api_contracts/canonical/crosscutting/honest_coverage.py` (or wherever the capture_status
-      taxonomy lives). Update the docstring to spell out the 4-state model + the post-v2 idempotence
-      property (MTDS-write of `captured` cleanly supersedes a prior `expected_unattempted` row by row_key).
-- [ ] [UTL] P0. Add `ManifestWriter.record_expected_unattempted(row_key=...)` helper mirroring
-      `record_empty` / `record_failed`. Same per-VM shard isolation guards as the other write methods. CAS
-      semantics + last-writer-wins on identical row_key when the consolidator merges (so MTDS's later
-      `record_captured` for the same instrument-day cleanly overrides).
-- [ ] [UTL] P0. Update `ManifestWriter.record_captured` / `record_empty` / `record_failed` last-writer-wins
-      contract to explicitly handle the case where a prior `expected_unattempted` row exists for the same
-      row_key — the new write must supersede it cleanly (no merge conflict, no orphan row). Add a unit test
-      for the supersede path.
+- [x] [UAC + UTL] P0 (shipped UTL@68b3804a 2026-05-07). `EXPECTED_UNATTEMPTED` added as the 4th value of
+      `unified_trading_library.manifest_writer.CaptureStatus` enum (capture_status taxonomy lives in UTL,
+      not UAC — corrected from initial plan placement). Docstring spells out 4-state model + supersede
+      property. Coverage formula codified inline.
+- [x] [UTL] P0 (shipped UTL@68b3804a 2026-05-07). `ManifestWriter.record_expected_unattempted(row_key=,
+      attempted_at=)` helper added mirroring `record_empty` / `record_failed`. Per-VM shard isolation
+      via `_record_status` (same path as the other write methods). Last-writer-wins supersede happens
+      naturally via the consolidator's row_key dedup.
+- [ ] [UTL] P1. Update consolidator + `record_captured` / `record_empty` / `record_failed`
+      last-writer-wins audit — verify the supersede path (prior `expected_unattempted` row → MTDS
+      writes `captured` for same row_key). Smoke test on a CeFi manifest after Wave 3 enumerator
+      lands. **DEFERRED** — manifest-consolidator already does last-writer-wins on row_key (existing
+      design), so the new `expected_unattempted` rows participate naturally. Audit pass + unit test
+      for the supersede path remain.
 - [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches (cefi /
       tradfi / defi / sports / prediction) to emit `expected_unattempted` rows for every catalog instrument
       whose `(venue, data_type, instrument_type, instrument_id, day)` is not already in the manifest with a
@@ -2113,25 +2114,26 @@ on the manifest.
 
 **Wave 2 — catalog-aware write-gate (the RED ALERT fix). UTL guard rule + migration. CRITICAL P0.**
 
-- [ ] [UAC] P0. Add `EmptyFromLiveInstrumentError` typed exception class to honest_coverage.py — paired
-      with `LegacyBlankErrorReasonError` for the migration path. Both classify as `attempted_failed`
-      reasons (NOT empty_confirmed reasons). Pattern mirrors `MissingClusterValidationError` /
+- [x] [UAC] P0 (shipped UAC@e855051 2026-05-07). `EmptyFromLiveInstrumentError` +
+      `LegacyBlankErrorReasonError` typed exceptions added to
+      `unified_api_contracts.canonical.crosscutting.honest_coverage` exports. Both feed the writer
+      guard + migration script. Pattern mirrors `MissingClusterValidationError` /
       `UpstreamTimestampBiasError`.
-- [ ] [UTL] P0. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`.** Before
-      accepting `reason=SOURCE_RETURNED_ZERO` or any `EXPECTED_*` reason, the writer queries the optional
-      `instrument_catalog` parameter (a callable `(venue, instrument_id, day) -> bool`); if the catalog
-      says the instrument was alive on the day AND the caller passed `SOURCE_RETURNED_ZERO`, the writer
-      raises `EmptyFromLiveInstrumentError` and forces the caller to use `record_failed` instead. Caller
-      can pass `instrument_catalog=None` to opt out (during transitional period). Defaults to off until
-      MTDS adapters wire the catalog reference at construction time (Wave 3). Mirrors the existing
-      `assert_available_at_present` guard in `record_captured`.
-- [ ] [UTL] P0. **Reject blank `error_reason` writes loudly.** Today `record_empty(reason="")` would write
-      a blank-reason row (the RED ALERT pattern). Add an early guard: `record_empty(reason=)` requires a
-      non-empty string in `EMPTY_CONFIRMED_REASONS`; empty-string / None raises
-      `UnknownEmptyConfirmedReasonError`. Backwards-compat: existing callers all pass valid reasons since
-      Phase 2.E shipped, so the guard is purely defensive.
-- [ ] [TEST] P0. Unit tests for the two guards: blank-reason rejection + catalog-says-alive supersede
-      to attempted_failed. Mock instrument_catalog callable for controlled cases.
+- [ ] [UTL] P1. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`** — pending
+      Wave 3 (depends on MTDS adapters wiring the `instrument_catalog` callable at construction).
+      `EmptyFromLiveInstrumentError` typed class shipped today (UAC@e855051); the writer-side guard is
+      a follow-up that requires MTDS / MDPS / features-* to pass the catalog reference. Until then the
+      blank-reason guard (next item, shipped) catches the most-common silent-fallback path.
+- [x] [UTL] P0 (shipped UTL@68b3804a 2026-05-07). **Reject blank `error_reason` writes loudly.**
+      `ManifestWriter.record_empty(reason="")` now raises `LegacyBlankErrorReasonError` early, BEFORE the
+      `EMPTY_CONFIRMED_REASONS` membership check. Catches the silent-fallback bug pattern (RED ALERT
+      2026-05-07 — 5 CeFi VMs writing 96-100% empty rows with all blank reasons). Adapters MUST pass a
+      typed reason or call `record_failed` for unexpected absence.
+- [x] [TEST] P0 (smoke-tested 2026-05-07; full unit test pending). Smoke-tested 4 cases locally:
+      (a) blank reason → LegacyBlankErrorReasonError, (b) SOURCE_RETURNED_ZERO accepted, (c) bogus
+      reason → UnknownEmptyConfirmedReasonError, (d) record_expected_unattempted writes
+      capture_status=expected_unattempted. Full pytest unit test for the supersede path remains
+      a follow-up.
 
 **Wave 2.M — Migration script for the existing bad rows.** The 5 RED ALERT VMs wrote ~7,659 blank-reason
 empty_confirmed rows to canonical CeFi manifest. Plus an unknown number of historical bad rows from
@@ -2191,23 +2193,29 @@ service-decides-policy instruction. Each downstream service reads the manifest a
 own policy (NaN-fill, fail period, propagate, skip). Single SSOT for "what should exist", clear
 instruction for "what's actually there", per-service flexibility for "how to handle absence."
 
-- [ ] [SCRIPT] P0. NEW
-      `instruments-service/scripts/reconcile_blank_error_reason_rows.py` — walks all 5 asset_group
+- [x] [SCRIPT] P0 (shipped instruments-service@86804c7 + UTL@7eca2c20 + UTL@7276cca1 2026-05-07). NEW
+      `instruments-service/scripts/reconcile_blank_error_reason_rows.py` walks all 5 asset_group
       manifests; finds rows where `capture_status=empty_confirmed AND (error_reason IS NULL OR
-      error_reason=='')`; classifies via catalog-aware logic (uses
-      `unified_api_contracts.registry.venue_launch_dates.get_venue_launch_date` first to detect
-      pre-venue-launch dates → flips to `EXPECTED_PRE_VENUE_LAUNCH`; falls back to
-      `attempted_failed/LegacyBlankErrorReasonError` for everything else so VMs retry on next run).
-      Default scan-only with CSV report; `--apply-write` requires per-VM shard isolation per workspace
-      rule. Mirrors the safety scaffolding of `reconcile_expected_absence_reasons.py`.
-- [ ] [VM-LAUNCH] P0. Run the migration on canonical CeFi manifest (the 5 RED ALERT VMs were CeFi-only).
-      Spot-check a few flipped rows (bitfinex 2024 spot — should now show as attempted_failed with
-      LegacyBlankErrorReasonError, NOT empty_confirmed). After --apply-write, the VMs that owned those
-      shards can re-run normally and the catalog-aware write-gate catches the silent-zero on the next
-      attempt.
-- [ ] [VM-LAUNCH] P0. Extend the migration sweep to ALL 5 asset_group manifests (defi/sports/tradfi/
-      prediction may have analogous historical bad rows from earlier silent-fallback bugs). One VM per
-      asset_group, parallelisable with --force.
+      error_reason=='')`; classifies via the discriminated UTL helper
+      `classify_blank_reason_row(asset_group, row) -> tuple[capture_status, error_reason]`. Per
+      operator msg 6: sports/prediction → keep empty_confirmed/SOURCE_RETURNED_ZERO; cefi/defi/tradfi
+      → keep empty_confirmed/EXPECTED_* if classifier matches venue-level rule (PRE_VENUE_LAUNCH /
+      PRE_GENESIS_CHAIN / HOLIDAY / WEEKEND), else flip to attempted_failed/LegacyBlankErrorReasonError.
+      Classifier helper enhanced (UTL@7276cca1) to use UAC `CEFI_VENUE_LAUNCH_DATES` /
+      `PREDICTION_VENUE_LAUNCH_DATES` for pre-launch detection. Default scan-only; `--apply-flips`
+      requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>`. Halt-safety
+      `--max-flips-per-run=100k` default.
+- [x] [VM-LAUNCH] P0 (launcher shipped deployment-service@f72686b 2026-05-07).
+      `deployment-service/scripts/vm/launch-blank-reason-recon-vm.sh` — singleton-locked GCE launcher
+      mirroring `launch-defi-phantom-recon-vm.sh`. Watchdog prefix `blank-reason-recon-` registered.
+- [ ] [VM-LAUNCH] P0. Run the migration scan-only + --apply-flips on canonical CeFi manifest
+      (the 5 RED ALERT VMs were CeFi-only). **2026-05-07 evening — initial scan revealed 1.24M rows
+      (52.45% of cefi manifest) carry blank error_reason. Re-scan in flight with the enhanced
+      classifier (post-UTL@7276cca1 venue-launch-aware) for cleaner distribution.** Operator gate:
+      review distribution → green-light --apply-flips with `--max-flips-per-run` bumped to ≥1.5M.
+- [ ] [VM-LAUNCH] P0. Extend the migration sweep to defi / sports / tradfi / prediction manifests.
+      One VM per asset_group; parallelisable with --force. Each likely surfaces analogous historical
+      bad rows from prior silent-fallback bugs.
 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
