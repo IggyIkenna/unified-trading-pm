@@ -1767,28 +1767,34 @@ sub-phase ships the enumerator that physically writes those rows.
 - [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the enumerator's classifier
       dispatch. Test the cross-product enumeration shape (right rows present, wrong rows absent) with mocked manifest +
       UAC SSOT fixtures.
-- [x] [VM-LAUNCH] P0 (scan-only complete — see banner table above; `--apply-write` AWAITING OPERATOR GATE). DeFi
-      enumerator scan-only on `expected-universe-enum-defi-20260507-145714` halted on default
-      `--max-writes-per-run=100000` cap with rc=5 + `ENUMERATOR_FAILED reason=max_writes_exceeded`. Manifest
-      already has 313,365 rows; cross-product enumerator finds at least 100,001 absent (chain × protocol × data_type
-      × pre-launch dates) tuples. **DEFERRED**: re-scan with `--max-writes-per-run 1000000` (or chunk by chain) so
-      the operator can see the true distribution before `--apply-write`. The launcher currently hardcodes the script
-      flags; the cap-bump rerun needs a launcher enhancement (extra positional arg) or a one-off SSH on a freshly
-      launched VM. Tracked under § Phase 4 deferred items below.
-- [x] [VM-LAUNCH] P0 (scan-only complete for tradfi / sports / cefi / prediction; `--apply-write` AWAITING
-      OPERATOR GATE). Per the banner table above:
-      * **TradFi** — 35,033 candidates (32,825 EXPECTED_WEEKEND + 2,208 EXPECTED_HOLIDAY).
-      * **Sports** — 13,176 candidates (all `EXPECTED_PRE_SOURCE_COVERAGE_START`).
-      * **CeFi** — 0 candidates (stub WARNING fired as expected; needs instruments-service catalog read for
-        per-instrument lifecycle — separate sub-task below).
-      * **Prediction** — 0 candidates (stub WARNING fired; blocked on UAC `PREDICTION_GROUPS` registry per
-        `predictions_master_2026_05_07.plan.md`).
-      Each VM emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED events on
-      `gs://central-element-323112-events/events/instruments-service/2026-05-07/{vm_name}/...`. All four asset_group
-      VMs auto-shut down on completion (per `VM_SHUTDOWN_ON_COMPLETION=true`).
-- [ ] [VERIFY] P0. After each asset_group's `--apply-write` lands, re-check the rollup-vs-drilldown gap by spot-
-      checking 3-5 (venue, data_type) tuples across the date window. The two percentages should now agree (within rollup
-      cache TTL — default 5min).
+- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete — see banner table above; PM@79e47874). DeFi
+      scan-only first halted on the default `--max-writes-per-run=100000` cap
+      (`expected-universe-enum-defi-20260507-145714`, rc=5 + `ENUMERATOR_FAILED reason=max_writes_exceeded`). Default
+      raised to 1M (instruments-service@d1c9928) and launcher cap pass-through shipped (deployment-service@38b7a58);
+      the second `--apply-write` run still hit 1M, so a third run with `5000000` via the new pass-through completed
+      cleanly in 26.3s on `expected-universe-enum-defi-20260507-155353` — final 1,286,260 rows
+      (688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`). Per-VM shard merged into
+      canonical 18:07 UTC after consolidator P0 fix shipped (PM@341bb285 + instruments-service@a936a28).
+- [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete for tradfi / sports / cefi / prediction; PM@79e47874).
+      Per the banner table above:
+      - **TradFi** — 35,033 rows written (32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`) on
+        `expected-universe-enum-tradfi-20260507-154607`.
+      - **Sports** — 13,176 rows written (all `EXPECTED_PRE_SOURCE_COVERAGE_START`) on
+        `expected-universe-enum-sports-20260507-154819`.
+      - **CeFi** — 119,152 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928, no longer a stub:
+        all `EXPECTED_PRE_VENUE_LAUNCH` across 13 post-2018 venues) on `expected-universe-enum-cefi-20260507-154922`.
+      - **Prediction** — 2,280 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928: POLYMARKET 974
+        + KALSHI 1306 `EXPECTED_PRE_VENUE_LAUNCH`) on `expected-universe-enum-prediction-20260507-155030`.
+        Per-instrument lifecycle (`PREDICTION_GROUPS` registry) tracked separately under
+        `predictions_master_2026_05_07.plan.md`.
+      Each VM emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC
+      merged all 5 per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at
+      PM@341bb285 after the `ArrowTypeError` on `instrument_count` was patched).
+- [ ] [VERIFY] P0. Operator-side rollup-vs-drilldown spot-check on 3-5 (venue, data_type) tuples in deployment-ui —
+      with all 5 per-VM shards now merged into canonical (consolidator unblocked at PM@341bb285), the rollup % and
+      drilldown % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel.
+      Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is
+      the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [ ] [DOCS] P0. Update
       [`codex/02-data/expected-absence-backfill-runbook.md`](../../codex/02-data/expected-absence-backfill-runbook.md)
       with the v2 enumerator section: invocation, expected per-asset-group volume, sequencing, verification steps.

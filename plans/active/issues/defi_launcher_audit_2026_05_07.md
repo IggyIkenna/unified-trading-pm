@@ -13,12 +13,14 @@ locked_since: 2026-05-07
 
 # DeFi launcher audit — answers to the 3 operator-blocking Qs
 
-> **Cross-ref 2026-05-07: rollup-vs-drilldown denominator gap closure in flight via writegate Phase 3.D.4.**
-> The expected-universe enumerator scan-only sweep (deployment-service@dcc5c87 launcher +
-> instruments-service@8e404c8 script) completed across all 5 asset_groups; DeFi halted on the default
-> 100k cap (>100,001 absent candidates) — needs `--max-writes-per-run` bump. Once `--apply-write` lands per
-> asset_group, the denominator divergence covered in this audit's Q3 + the data-status drilldown plan's "open
-> drifts" stops biasing the rollup. Detail in
+> **Cross-ref 2026-05-07: writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE on all 5 asset_groups +
+> CONSOLIDATOR MERGE LANDED (PM@79e47874 + PM@341bb285).** 1,455,901 rows written + merged into canonical
+> 18:07-18:14 UTC: TradFi 35,033 + Sports 13,176 + CeFi 119,152 (real impl per UAC@ac218dc +
+> instruments-service@d1c9928, no longer a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260 (cap raised
+> 100k → 1M → 5M for this run via deployment-service@38b7a58 launcher pass-through). Consolidator P0
+> (`ArrowTypeError` on `instrument_count`) that briefly blocked tradfi / defi / prediction was resolved at
+> PM@341bb285 (script-side root cause + 4 in-place shard fixes). Q3's denominator divergence + the data-status
+> drilldown plan's "open drifts" stop biasing the rollup as soon as the rollup blob refreshes. Detail in
 > [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
 > § Phase 3.D.4.
 

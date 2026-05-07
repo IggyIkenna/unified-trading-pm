@@ -42,15 +42,15 @@ related:
 
 # Data-status drill-down + MTDS CLI shard-atom alignment
 
-> **Cross-ref 2026-05-07: rollup-vs-drilldown denominator gap closure in flight via writegate Phase 3.D.4.**
-> The expected-universe enumerator scan-only sweep across all 5 asset_groups landed today (deployment-service@dcc5c87
-> + instruments-service@8e404c8). TradFi (35,033 EXPECTED_WEEKEND + EXPECTED_HOLIDAY) + Sports (13,176
-> EXPECTED_PRE_SOURCE_COVERAGE_START) are ready for `--apply-write` pending operator gate. DeFi halted on the
-> default 100k cap (>100,001 absent candidates) — needs `--max-writes-per-run` bump before re-scan. CeFi +
-> Prediction stubs intentionally yield 0 rows; per-asset-group catalog work tracked in
-> `cefi_master_2026_05_07.plan.md` and `predictions_master_2026_05_07.plan.md`. Once `--apply-write` lands per
-> asset_group, the rollup (offline rollup blob) and drilldown (live manifest read) percentages will agree on
-> denominator for that asset_group. Detail in
+> **Cross-ref 2026-05-07: writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE on all 5 asset_groups +
+> CONSOLIDATOR MERGE LANDED.** 1,455,901 rows written + merged into canonical: TradFi 35,033 + Sports 13,176 + CeFi
+> 119,152 (real impl, no longer a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260
+> (`EXPECTED_PRE_GENESIS_CHAIN` + `EXPECTED_INSTRUMENT_NOT_LISTED`). Code shipped: deployment-service@dcc5c87 +
+> @38b7a58 (launcher + cap pass-through), instruments-service@8e404c8 + @d1c9928 + @a936a28
+> (script + real CeFi/Prediction enumerators + dtype-correct fill defaults), UAC@ac218dc (`EXPECTED_PRE_VENUE_LAUNCH`
+> enum + `venue_launch_dates` SSOT). Plan flips: PM@79e47874 (apply-write completion) + PM@341bb285 (consolidator P0
+> resolution). Consolidator cycles 18:07-18:14 UTC merged all 5 per-VM shards. Rollup-vs-drilldown denominator gap
+> closure is now observable on all 5 asset_groups; operator-side spot-check pending. Detail in
 > [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
 > § Phase 3.D.4 banner.
 

@@ -70,15 +70,17 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ## Current state (2026-05-07)
 
-> **DeFi expected-universe enumerator scan-only halted at default cap (writegate Phase 3.D.4).** VM
-> `expected-universe-enum-defi-20260507-145714` (deployment-service@dcc5c87 launcher,
-> instruments-service@8e404c8 script) ran scan-only on the canonical DeFi manifest (313,365 rows present) and
-> halted on the 100,001st absent (chain × protocol × data_type × pre-launch-date) tuple per the script's default
-> `--max-writes-per-run=100000` halt-safety. Operator next step: relaunch with bumped cap (e.g. 1M) to see the
-> full distribution before `--apply-write`. Detail in
+> **DeFi expected-universe `--apply-write` COMPLETE + CONSOLIDATOR MERGE LANDED (writegate Phase 3.D.4;
+> PM@79e47874 + PM@341bb285).** Final run `expected-universe-enum-defi-20260507-155353` (deployment-service@dcc5c87 /
+> @38b7a58 launcher with cap pass-through + instruments-service@8e404c8 / @d1c9928 / @a936a28 script) wrote
+> **1,286,260 rows** (688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`) in 26.3s;
+> per-VM shard merged into canonical 18:07 UTC. Default cap was raised 100k → 1M, then bumped to 5M for this run via
+> the new launcher pass-through. Consolidator P0 (`ArrowTypeError` on `instrument_count`) that briefly blocked the
+> merge was resolved at PM@341bb285 (script-side root cause + in-place shard fix). The 988-dates-missing
+> rollup-vs-drilldown panel signal closes for DeFi as soon as the rollup blob refreshes; operator spot-check pending.
+> Detail in
 > [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-> § Phase 3.D.4. Closing this enumerator backfill paired with the `--apply-write` run is what removes the
-> 988-dates-missing panel signal for DeFi rollup vs drilldown.
+> § Phase 3.D.4.
 
 - **2 DeFi archetypes** live spec'd; backtest pipeline working per `consolidated_defi_data_pipeline` Phase 6
   verifications.
