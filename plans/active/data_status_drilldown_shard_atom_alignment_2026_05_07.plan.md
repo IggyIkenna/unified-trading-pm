@@ -262,19 +262,17 @@ on whatever flags exist today as a degenerate case).
       that resolves to a `(chain, protocol)` pair has a launch date OR is on `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`
       skip list (33 pairs pending follow-up; 41 declared). Composition contract `max(chain_genesis, protocol_launch)`
       documented + tested.
-- [ ] [deployment-api] P0 (NEW 2026-05-07 — supersedes the date-only chain math). Rewrite `_build_chain_breakdown()` in
-      `data_status_service.py:4827-4886` to count true leaf shards. Numerator =
-      `len(filtered[(filtered.chain == chain) & (filtered.capture_status == "captured")])`; denominator = expected
-      `(chain, venue, data_type, instrument_id_or_protocol_id, day)` tuple count from the per-asset_group expected
-      universe. Use `get_protocol_launch_date(chain, protocol)` to clip the per-protocol denominator. Existing
-      `dates_found` / `dates_expected` keys stay in the payload for backward-compat but ALSO emit `shards_found` /
-      `shards_expected` as the canonical fields. UI consumers switch to the new fields in Phase 2. Add unit tests
-      asserting `shards_expected` ≫ `dates_expected` for ARBITRUM-AAVEV3 (5 data_types × ~1100 days ≈ 5500 vs ~1100
-      dates).
-- [ ] [deployment-api] P0 (NEW 2026-05-07). Wire `_mtds_expected_dates_cached` (`data_status_service.py:1164`) to use
-      `max(chain_genesis, protocol_launch_date)` — pre-protocol-launch days clip exactly like pre-chain-genesis already
-      does. Unit test: AAVEV3-ARBITRUM 2021-08-31 → 2022-03-15 returns empty expected (chain genesis but protocol not
-      launched yet); 2022-03-16 onward returns expected dates.
+- [x] [deployment-api] P0 (NEW 2026-05-07 — shipped deployment-api@a86e40a). Rewrite `_build_chain_breakdown()` in
+      `data_status_service.py` to count true leaf shards. Numerator = captured manifest rows in the chain; denominator
+      = `Σ over chain venues of (expected_dates × distinct (data_type, instrument_id) leaves observed for that
+      venue)`. Refactored into `_venue_expected_dates_for_chain` + `_shards_expected_for_chain` helpers (C901-clean).
+      Backward-compat: `dates_found` / `dates_expected` fields preserved. New canonical fields: `shards_found` /
+      `shards_expected`; `completion_pct` derives from shard ratio. 4 unit tests in `TestBuildChainBreakdownShardMath`
+      pass.
+- [x] [deployment-api] P0 (NEW 2026-05-07 — shipped deployment-api@a86e40a). Wire `_mtds_expected_dates_cached` to use
+      `max(chain_genesis, protocol_launch_date)` via `get_protocol_launch_date(chain, protocol)`. Pre-protocol-launch
+      days clip exactly like pre-chain-genesis already does. Falls through unchanged for pending-investigation pairs
+      (chain-genesis over-clip is the safe fallback).
 - [ ] [deployment-api] P0. New service method
       `data_status_drilldown.get_hierarchical_drilldown(service, asset_group,     window_start, window_end)` returning a
       tree shaped per the codex shard atom. Each leaf has
