@@ -511,17 +511,37 @@ adding signal.
 
 - [ ] [SCRIPT] P0. UAC contract extension: add `cadence: "singleton" | "per_season" | "per_day"` field to
       `unified_api_contracts.internal.schemas.SchemaContract` (or wherever the contract registry lives). Cadence drives
-      both the writer's shard atom AND the data-status panel's expected denominator.
-- [ ] [SCRIPT] P0. **C.1 LEAGUES kill** — UAC `LeagueDefinition` already declares `league_id`, `name`, `country`,
-      `league_type`; `provider_league_ids.py:689` `get_provider_league_id(canonical_league_id, provider)` handles
-      per-season FOOTYSTATS_SEASON_IDS. The only field NOT in UAC is `logo_url`. Lift `logo_url` into UAC
-      `LeagueDefinition` (or a sibling `LeagueAssets` mapping if any other consumer needs it). Then:
-  - [ ] Migration shape: flip every existing LEAGUES manifest row →
-        `record_empty(reason=EXPECTED_DEPRECATED_DATA_TYPE, attempted_at=now)` + delete the daily parquets.
-  - [ ] Remove the orchestrator scheduler entry that emits LEAGUES daily.
-  - [ ] Remove the LEAGUES UAC `data_type` registration (or mark it `cadence=singleton` with a single canonical parquet
-        if any reader still depends on the data_type itself).
-  - [ ] Update `codex/02-data/sports-data-source-coverage-matrix.md` to note LEAGUES is now UAC-resident refdata.
+      both the writer's shard atom AND the data-status panel's expected denominator. **DEFERRED** — C.1 LEAGUES kill
+      shipped without needing the cadence field (LEAGUES retired entirely, not migrated to a different cadence). C.11
+      TEAMS migration below DOES need this field; lifted into the C.11 todos.
+- [x] [SCRIPT] P0. **C.1 LEAGUES kill — SHIPPED 2026-05-07** (Phase 2 round 5):
+  - [x] Operator confirmed `logo_url` not important; UAC lift skipped (re-add to `LeagueDefinition` later if a UI ever
+        needs it). The other LEAGUES fields (league_id / name / country / league_type) are already in UAC
+        `LeagueDefinition` + `provider_league_ids` (FOOTYSTATS_SEASON_IDS / FOOTYSTATS_HISTORICAL_SEASON_IDS /
+        TRANSFERMARKT_IDS / etc.). features-sports schemas/output_schemas.py declares `LEAGUES_COLUMNS` but no actual
+        feature reads `logo_url` or other LEAGUES fields beyond what UAC provides — verified via workspace-wide rg
+        2026-05-07.
+  - [x] **Write-path kill** (instruments-service@`93efebf`): orchestrator no longer fetches `/leagues` from
+        api_football; no new manifest rows written. `LEAGUES` removed from `_sports_core_entities`
+        (orchestrator.py:1167) so freshness-check + fast-path logic no longer expects them.
+  - [x] **Migration script** (instruments-service@`e8efc3d`):
+        `instruments-service/scripts/migrate_leagues_kill_2026_05_07.py`. Default scan-only; `--apply` requires
+        `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>`; CSV audit; `--max-flips=100k` halt safety; idempotent
+        re-run. Live dry-run 2026-05-07 found 78,891 LEAGUES rows (vs ~3046 estimate) — 95 leagues × ~830 days.
+        **Operator action pending**: run with `--apply` from a same-region GCE VM to flip them all to
+        `empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`.
+  - [x] **UAC reasons SSOT** (unified-api-contracts@`97dccc3`): added `EXPECTED_DEPRECATED_DATA_TYPE` to
+        `EmptyConfirmedReason` + `EMPTY_CONFIRMED_REASONS` frozenset. UTL `record_empty(reason=...)` validates against
+        this set; new value flows through automatically.
+  - [ ] **Operator parquet deletion** (post-`--apply`): preserved as separate manual step for rollback. Run
+        `gcloud storage rm -r 'gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=leagues/'`
+        after a post-flip data-status panel re-walk confirms LEAGUES is gone everywhere.
+  - [ ] **features-sports cleanup follow-up**: `LEAGUES_COLUMNS` in
+        `features-sports-service/features_sports_service/schemas/output_schemas.py:193` + `export_leagues` in
+        `exporters/exports.py:111` + `get_fetched_leagues` in `cli/handlers/_fetch_runner.py:40` + cli batch_handler /
+        batch_write schema-map entries are dead-code post-Unit 3 (export returns empty df since no LEAGUES parquets get
+        written). Cosmetic cleanup; tests still pass with empty df. Filed as a separate cleanup unit when the rest of
+        C.11 lands (so the cadence-field SSOT can be applied to TEAMS at the same time).
 - [ ] [SCRIPT] P0. **C.11 TEAMS refdata cadence** — TEAMS already carries 7 `venue_*` columns (the venue-of-home-team
       enrichment). VENUES (1/1 singleton) only adds the OpenMeteo lat/lon geo overlay. Decide: fold VENUES into TEAMS
       (drop the singleton, TEAMS columns absorb lat/lon) OR keep VENUES as a pure geo-enrichment overlay and document
@@ -537,10 +557,12 @@ adding signal.
 
 ### Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC `EMPTY_CONFIRMED_REASONS`
 
-- [ ] [SCRIPT] P0. UAC `unified_api_contracts.canonical.crosscutting.empty_confirmed_reasons.EMPTY_CONFIRMED_REASONS`
-      gains two new closed-set values: `EXPECTED_DEPRECATED_DATA_TYPE` (for C.1 LEAGUES kill),
-      `EXPECTED_REFDATA_CADENCE_CHANGE` (for C.11 TEAMS migration). Aligns with the writegate Phase 2.E reason taxonomy
-      SSOT.
+- [x] [SCRIPT] P0. **SHIPPED 2026-05-07** (unified-api-contracts@`97dccc3`). Added both values to UAC
+      `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason` StrEnum; the
+      `EMPTY_CONFIRMED_REASONS` frozenset (line 110) is built from the StrEnum so both new values flow through
+      automatically. UTL `manifest_writer.py:1209` validates `reason in EMPTY_CONFIRMED_REASONS` — new values valid for
+      `record_empty(reason=...)` without UTL change. 3 unit tests added in `tests/unit/test_honest_coverage.py` covering
+      frozenset membership + EXPECTED\_-prefix conformance for `record_expected_empty` acceptance.
 
 ### C.8 — Cross-source dropped-data audit (stub-normalizer pattern catch-all)
 
