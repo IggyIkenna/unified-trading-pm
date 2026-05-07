@@ -1682,33 +1682,39 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
 
 #### Phase 3.D.4 — Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)
 
-> **2026-05-07 expected-universe enumerator scan-only sweep (Phase 3.D.4) — all 5 asset_groups complete:**
+> **2026-05-07 expected-universe enumerator `--apply-write` sweep (Phase 3.D.4) — ALL 5 asset_groups committed.
+> Total rows written: 1,455,901.**
 >
-> | asset_group | VM name                                              | state              | manifest rows | absent candidates | distribution                                                                                          |
-> | ----------- | ---------------------------------------------------- | ------------------ | -------------:| -----------------:| ----------------------------------------------------------------------------------------------------- |
-> | tradfi      | `expected-universe-enum-tradfi-20260507-145130`      | **COMPLETED**      |       105,928 |            35,033 | 32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`                                                  |
-> | defi        | `expected-universe-enum-defi-20260507-145714`        | **HALTED-AT-CAP**  |       313,365 |        >100,001\* | enumerator halted on default `--max-writes-per-run=100000` (rc=5); needs cap bump for full scan       |
-> | sports      | `expected-universe-enum-sports-20260507-145806`      | **COMPLETED**      |     2,662,519 |            13,176 | 13,176 `EXPECTED_PRE_SOURCE_COVERAGE_START`                                                           |
-> | cefi        | `expected-universe-enum-cefi-20260507-145823`        | **COMPLETED-STUB** |     2,357,481 |                 0 | enumerator yields 0 rows pending instruments-service catalog read (CeFi sub-task below)               |
-> | prediction  | `expected-universe-enum-prediction-20260507-145845`  | **COMPLETED-STUB** |        14,532 |                 0 | enumerator yields 0 rows blocked on UAC `PREDICTION_GROUPS` registry (`predictions_master` plan)      |
+> | asset_group | VM name                                              | state       | rows written | distribution                                                                                          |
+> | ----------- | ---------------------------------------------------- | ----------- | ------------:| ----------------------------------------------------------------------------------------------------- |
+> | tradfi      | `expected-universe-enum-tradfi-20260507-154607`      | **WRITTEN** |       35,033 | 32,825 `EXPECTED_WEEKEND` + 2,208 `EXPECTED_HOLIDAY`                                                  |
+> | sports      | `expected-universe-enum-sports-20260507-154819`      | **WRITTEN** |       13,176 | 13,176 `EXPECTED_PRE_SOURCE_COVERAGE_START`                                                           |
+> | cefi        | `expected-universe-enum-cefi-20260507-154922`        | **WRITTEN** |      119,152 | 119,152 `EXPECTED_PRE_VENUE_LAUNCH` (NEW reason — UAC@ac218dc) across 13 post-2018 venues             |
+> | prediction  | `expected-universe-enum-prediction-20260507-155030`  | **WRITTEN** |        2,280 | 2,280 `EXPECTED_PRE_VENUE_LAUNCH` (POLYMARKET 974 + KALSHI 1306) — UAC@ac218dc                        |
+> | defi        | `expected-universe-enum-defi-20260507-155353`        | **WRITTEN** |    1,286,260 | 688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED` (protocol launches)   |
 >
-> All five launched scan-only on `asia-northeast1-c` GCE VMs (`e2-standard-4` + 50GB) via
-> `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` (deployment-service@dcc5c87). Per-VM
-> shard isolation (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=…`) is wired into the launcher metadata for both
-> `--scan-only` and `--apply-write` modes; the script's runtime guard (rc=4 on missing env) is exercised on every
-> run. All VMs auto-shut down on completion.
+> **Total rows merged into per-VM shards: 1,455,901.** Consolidator daemon merges per-VM shards into canonical
+> `_index/availability_index.parquet` within ~5min of each VM shutdown.
 >
-> **Operator gate (Phase 2 → Phase 3 of the handoff):** review the per-asset-group distribution above + decide
-> `--apply-write` per asset_group. Tradfi + sports are the two asset_groups that will physically write rows on
-> `--apply-write` (~48k rows total). Defi needs `--max-writes-per-run` bumped to ≥500k (or chunked) before re-scan
-> + apply. Cefi + prediction stubs intentionally write nothing — the deferred catalog work below unblocks them.
+> **What changed since the scan-only sweep earlier today (PM@dae6d40d):**
 >
-> \* Defi cap-overflow: the enumerator's halt-safety branch in
-> [`enumerate_expected_universe.py:447-461`](../../../instruments-service/scripts/enumerate_expected_universe.py)
-> emits `ENUMERATOR_FAILED reason=max_writes_exceeded` on the 100,001st absent row and exits rc=5. Manifest is
-> larger than candidate count (313,365 vs ≥100,001) — manifest already contains many `(chain, protocol, data_type,
-> instrument_id, day)` tuples but the cross-product enumerator generates additional pre-genesis tuples per
-> `CHAIN_GENESIS_DATES` × `PROTOCOL_LAUNCH_DATES` that the manifest's present-set does not currently cover.
+> * UAC@ac218dc — added `EXPECTED_PRE_VENUE_LAUNCH` to `EmptyConfirmedReason` enum + new
+>   `unified_api_contracts.registry.venue_launch_dates` SSOT (20 CeFi venues + 2 Prediction venues).
+> * instruments-service@d1c9928 — replaced CeFi + Prediction enumerator stubs with real per-venue pre-launch
+>   implementations using the new SSOT. Bumped `--max-writes-per-run` default from 100k to 1M.
+> * deployment-service@38b7a58 — launcher accepts a third positional arg passing through to
+>   `--max-writes-per-run` so cap-bumped reruns don't need ad-hoc launchers.
+>
+> **DeFi cap-bump path:** the first `--apply-write` defi VM (`-145024`) also hit the 1M default cap — DeFi's true
+> universe is ~1.28M absent rows. Re-launched (`-155353`) with the new launcher's third positional arg
+> `5000000` (deployment-service@38b7a58 pass-through) and completed cleanly in 26.3s. The default 1M cap stays
+> in place as a halt-safety; operators bump per-asset-group when the universe genuinely exceeds it.
+>
+> **Per-VM shard isolation** (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=…`) is wired into the launcher metadata for
+> every run. All VMs ran on `asia-northeast1-c` `e2-standard-4` + 50GB and auto-shut down on completion. Per-VM
+> shard upload paths logged on each ENUMERATOR_COMPLETED event:
+> `gs://market-data-tick-{asset_group}-{pid}/_index/per_vm/expected-universe-enum-{asset_group}-{ts}.parquet`
+> (sports uses `instruments-store-sports-{pid}` instead).
 
 **Why this exists.** Phase 3.D.1 reconciler stamps reasons on `empty_confirmed AND error_reason IS NULL` rows (legacy
 backfill), but does **NOT enumerate the expected universe** — tuples that have NO manifest row at all stay absent. This
