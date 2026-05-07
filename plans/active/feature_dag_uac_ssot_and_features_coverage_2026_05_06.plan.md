@@ -165,25 +165,26 @@ QG gate between phases.
       `AVAILABILITY_AT_SEMANTICS` taxonomy (do NOT redefine — import). Export via `unified_api_contracts.features`
       facade. **SHIPPED 2026-05-07 UAC@4a25b07**: dataclass shape
       `InputReq(asset_group, data_type, available_at_rule, horizon, source=None)` — `(asset_group, data_type)` is the
-      lookup key into AVAILABILITY_AT_SEMANTICS (data_type alone is ambiguous: `trades` exists in cefi+tradfi+prediction).
-      32 feature_groups seeded: 2 onchain (lst_staking_yields, defillama_tvl) + 30 delta-one (price + microstructure +
-      S/R + enrichment + Phase-1 ML). Re-exported from `unified_api_contracts.canonical.domain.features` (and via the
-      `unified_api_contracts.features` facade by transitivity). 10 onchain + all sports feature_groups omitted pending
-      AVAILABILITY_AT_SEMANTICS defi-vocabulary follow-up (see "Temporary states" section below).
+      lookup key into AVAILABILITY_AT_SEMANTICS (data_type alone is ambiguous: `trades` exists in
+      cefi+tradfi+prediction). 32 feature_groups seeded: 2 onchain (lst_staking_yields, defillama_tvl) + 30 delta-one
+      (price + microstructure + S/R + enrichment + Phase-1 ML). Re-exported from
+      `unified_api_contracts.canonical.domain.features` (and via the `unified_api_contracts.features` facade by
+      transitivity). 10 onchain + all sports feature_groups omitted pending AVAILABILITY_AT_SEMANTICS defi-vocabulary
+      follow-up (see "Temporary states" section below).
 - [x] [AGENT] P0. **Per-service registry**. `EXPECTED_FEATURE_GROUPS_BY_SERVICE: dict[str, list[str]]` in
       `unified_api_contracts/canonical/domain/features/registry.py`. Source: each service's `app/calculators/` directory
       listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. **SHIPPED 2026-05-07
       UAC@4a25b07**: 5 services seeded — features-onchain (12), features-delta-one (33), features-sports (36),
-      features-volatility (empty stub per audit 2026-05-07), features-cross-instrument (empty stub pending BuilderRegistry
-      rollout). Used by data-status `_build_feature_group_breakdown` denominator clip.
+      features-volatility (empty stub per audit 2026-05-07), features-cross-instrument (empty stub pending
+      BuilderRegistry rollout). Used by data-status `_build_feature_group_breakdown` denominator clip.
 - [x] [AGENT] P0. **Per-feature-group coverage floor**. `FEATURE_COVERAGE_START: dict[tuple[str, str], date]` mirroring
       `SOURCE_COVERAGE_START` shape. Default = epoch when not declared. **SHIPPED 2026-05-07 UAC@4a25b07**: 6 onchain
       floors seeded (Aave V3 mainnet 2022-03-16, Lido stETH 2020-12-18, EigenLayer 2023-06-14, Morpho 2022-06-01).
       `get_feature_coverage_start(service, feature_group) -> date | None` returns None for unregistered pairs (no clip).
 - [x] [AGENT] P0. **Tests**. UAC unit tests assert: (a) every service in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` has a
       corresponding directory in workspace; (b) every entry in `FEATURE_REQUIRED_INPUTS` references a real
-      source/data_type from existing UAC registries; (c) DAG has no cycles. **SHIPPED 2026-05-07 UAC@4a25b07**: 15
-      tests in `tests/test_feature_dag_ssot.py` covering all 3 plan invariants + helper round-trips + frozen-dataclass
+      source/data_type from existing UAC registries; (c) DAG has no cycles. **SHIPPED 2026-05-07 UAC@4a25b07**: 15 tests
+      in `tests/test_feature_dag_ssot.py` covering all 3 plan invariants + helper round-trips + frozen-dataclass
       behaviour + FEATURE_COVERAGE_START sanity (range guard + every key references a registered feature_group). All
       pass; basedpyright clean; ruff clean.
 
@@ -206,8 +207,8 @@ QG gate between phases.
       `from unified_trading_library import ManifestFreshnessCache, DEFAULT_TTL_SECONDS` works (top-level facade; no
       `unified_trading_library.manifest` sub-namespace per the flat-path convention chosen above). 60s TTL default
       documented in module docstring + DEFAULT_TTL_SECONDS docstring with the "<30s burns GCS reads" + ">60s tolerates
-      slightly stale skip decisions" trade-off. CLAUDE.md "Manifest concurrency principle" already documents the
-      60s default — no edit needed.
+      slightly stale skip decisions" trade-off. CLAUDE.md "Manifest concurrency principle" already documents the 60s
+      default — no edit needed.
 
 **Phase 1 success**: UAC + UTL pass quickmerge; downstream services can
 `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS, EXPECTED_FEATURE_GROUPS_BY_SERVICE, FEATURE_COVERAGE_START`
@@ -215,54 +216,74 @@ and `from unified_trading_library.manifest import ManifestFreshnessCache`.
 
 ## Phase 2 — Service integrations (PARALLEL)
 
-### 2A — Replace per-service DAGs with UAC import
+### 2A — Replace per-service DAGs with UAC import + wire UTL lookahead helper
 
-- [ ] [AGENT] P1. **features-onchain-service**: delete local feature_group → required_inputs DAG; replace with
-      `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS`. Writegate's `assert_no_lookahead(...)`
-      already reads from this; just point at the new SSOT. [AUDIT 2026-05-07: BLOCKED-ON
-      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
-- [ ] [AGENT] P1. **features-sports-service**: same. [AUDIT 2026-05-07: BLOCKED-ON
-      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
-- [ ] [AGENT] P1. **features-delta-one-service**: same. [AUDIT 2026-05-07: BLOCKED-ON
-      feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.]
+- [x] [AGENT] P1. **UTL `assert_no_lookahead_for_feature_group(feature_group, inputs_df, target_ts)` helper**. Concrete
+      API for the workspace-wide lookahead-bias check. Reads UAC `FEATURE_REQUIRED_INPUTS[feature_group]` (29 groups),
+      computes `max_horizon` across declared inputs, raises `LookaheadBiasError` if any input row has
+      `available_at > target_ts - horizon`. Skips silently for unregistered feature_groups, empty df, or missing
+      `available_at` col (rollout-friendly degradation). 9 unit tests covering clean-pass / violation-raise /
+      unregistered-skip / empty / naive-tz / label / multi-violation. SHIPPED `unified-trading-library@4354276c`,
+      exposed via top-level facade. [AUDIT 2026-05-07: SHIPPED]
+- [ ] [AGENT] P1. **features-onchain-service**: delete local feature_group → required_inputs DAG (if any) + call
+      `assert_no_lookahead_for_feature_group(feature_group, inputs_df, target_ts)` at each calculator's input-load
+      boundary BEFORE compute. Sites: `app/calculators/*.py` (12 calculators) — insertion point is the start of
+      `calculate_features(raw_data)`. Each calculator must receive `available_at`-stamped raw_data — see prerequisite
+      todo below. [AUDIT 2026-05-07: BLOCKED-ON adapter-side `available_at` stamping prerequisite (next todo)]
+- [ ] [AGENT] P1. **features-sports-service**: same. Calculators in `features_sports_service/calculators/*.py`. Sports
+      `required_inputs` uses reference-entity-name vocabulary (`target_fixtures`, `fixtures_history`, etc.) NOT
+      `(asset_group, data_type)`. UAC `FEATURE_REQUIRED_INPUTS` deliberately omits sports — first task here is to decide
+      whether sports should be added to UAC SSOT (with reference-entity-name shape) OR sports keeps its own
+      `required_inputs` (and the helper skips sports). [AUDIT 2026-05-07: BLOCKED-ON UAC sports vocabulary decision]
+- [ ] [AGENT] P1. **features-delta-one-service**: same. Calculator sites in `features_delta_one_service/`. [AUDIT
+      2026-05-07: BLOCKED-ON adapter-side `available_at` stamping prerequisite (next todo)]
+- [ ] [AGENT] P0. **Adapter-side `available_at` write-time stamping prerequisite (B4 part 2 prerequisite)** — every
+      calculator's input adapter MUST stamp `available_at` per the workspace SSOT
+      `unified_trading_library.availability_stamping.stamp_available_at_*` (per `AVAILABILITY_AT_SEMANTICS` rules).
+      Without the stamp, `assert_no_lookahead_for_feature_group(...)` degrades to a silent no-op via the "missing col"
+      branch. Adapters needing stamping (sample): features-onchain DefiLlama / AAVE subgraph / Lido contract / Pyth
+      Solana / Chainlink EVM / DefiBalances; features-delta-one MTDS readers; features-volatility VIX / Yahoo readers;
+      features-cross-instrument multi-asset-group delta-one concat path. Sequence: adapter stamps → helper validates →
+      consumer trusts. Partial coverage already exists via writegate Phase 2.D `available_at` work. [AUDIT 2026-05-07:
+      FRESH — load-bearing prerequisite for B4 part 2 wiring above; tracks Phase 2.D writegate dependencies]
 
 ### 2B — Adopt `ManifestFreshnessCache`
 
 - [ ] [AGENT] P1. **features-sports-service BatchHandler**: instantiate `ManifestFreshnessCache(ttl_seconds=60)` at
       handler init; call `cache.is_now_captured(row_key)` before any expensive remote call (per-source API fetch).
-      Reference: CLAUDE.md "Manifest concurrency principle" rule. **DEFERRED 2026-05-07** — Phase 1B unblocks the
-      cache infra, but the BatchHandler already has a `_should_skip_attempted(feature_group)` helper at
+      Reference: CLAUDE.md "Manifest concurrency principle" rule. **DEFERRED 2026-05-07** — Phase 1B unblocks the cache
+      infra, but the BatchHandler already has a `_should_skip_attempted(feature_group)` helper at
       [`batch_handler.py:479`](../../../features-sports-service/features_sports_service/cli/handlers/batch_handler.py#L479)
       keyed by `table_name` (sports `TABLE_SCHEMAS` vocabulary). That table-name vocabulary is NOT aligned with the
       Phase 1A `EXPECTED_FEATURE_GROUPS_BY_SERVICE['features-sports-service']` calculator-output vocabulary (sports
       tables = raw entities like `fixtures` / `lineups` / `odds_snapshot`; calculators = `team_form` / `xg_features` /
-      etc.). A clean wire-in needs the manifest row_key shape rationalised first — successor: the same sports
-      vocabulary alignment plan flagged in this plan's "Temporary states" section (sports
-      `BuilderEntry.required_inputs` lift). Pick up after that lands.
+      etc.). A clean wire-in needs the manifest row_key shape rationalised first — successor: the same sports vocabulary
+      alignment plan flagged in this plan's "Temporary states" section (sports `BuilderEntry.required_inputs` lift).
+      Pick up after that lands.
 - [ ] [AGENT] P1. **features-volatility-service orchestrator**: same. Skip if manifest already says captured; avoids
       redundant IV-surface fits under concurrent backfill. **DEFERRED 2026-05-07** — features-volatility-service's
-      `BuilderRegistry` is a placeholder per audit 2026-05-07 (no calculators registered yet); `EXPECTED_FEATURE_GROUPS_BY_SERVICE['features-volatility-service']` is empty. Cache adoption is meaningless until the orchestrator ships
-      live IV-surface fits. Pick up alongside features-volatility's BuilderRegistry rollout.
+      `BuilderRegistry` is a placeholder per audit 2026-05-07 (no calculators registered yet);
+      `EXPECTED_FEATURE_GROUPS_BY_SERVICE['features-volatility-service']` is empty. Cache adoption is meaningless until
+      the orchestrator ships live IV-surface fits. Pick up alongside features-volatility's BuilderRegistry rollout.
 
 ### 2C — deployment-api denominator clip
 
 - [x] [AGENT] P1. **`data_status_service.py`**:
   - Add `_clip_dates_to_feature_coverage(service, feature_group, start, end)` mirroring the sports clip helper at lines
     39-50. Reads UAC `FEATURE_COVERAGE_START`.
-  - `_build_feature_group_breakdown` (line 3684): denominator = clipped_dates *
+  - `_build_feature_group_breakdown` (line 3684): denominator = clipped_dates \*
     `EXPECTED_FEATURE_GROUPS_BY_SERVICE[service]` (instead of inferring from what's been written).
     `found = captured + empty_confirmed`. `missing = attempted_failed`. Same shape as sports.
   - Endpoint `/data_status?check_feature_groups=true` (line 2288) returns honest expected/found/missing per
     feature_group. **SHIPPED 2026-05-07 deployment-api@9b51dfb**: implemented as a sibling method
-    `_build_feature_group_breakdown_uac` rather than overriding the existing `_build_feature_group_breakdown`
-    (the existing method has a duplicate at L5070 that does timeframe sub-grouping for the v4 detail breakdown
-    path; modifying the L4259 wrapper to take a `service` kwarg would have broken the L5427 caller because
-    Python class-body resolution lets the L5070 definition win at runtime). Call site at L4197
-    (features-* venue-entry rollup) now calls the UAC-aware sibling; existing L5427 caller (v4 detail
-    breakdown) keeps the legacy method. Imports use the `unified_api_contracts.features` facade per Citadel
-    rules. 8 unit tests in `tests/unit/test_feature_group_breakdown_uac.py` covering registered-service
-    UAC denominator, pre-floor-date clipping (Aave V3 2022-03-16), empty-EXPECTED stub fallback, and the
-    no-feature_group-column edge case.
+    `_build_feature_group_breakdown_uac` rather than overriding the existing `_build_feature_group_breakdown` (the
+    existing method has a duplicate at L5070 that does timeframe sub-grouping for the v4 detail breakdown path;
+    modifying the L4259 wrapper to take a `service` kwarg would have broken the L5427 caller because Python class-body
+    resolution lets the L5070 definition win at runtime). Call site at L4197 (features-\* venue-entry rollup) now calls
+    the UAC-aware sibling; existing L5427 caller (v4 detail breakdown) keeps the legacy method. Imports use the
+    `unified_api_contracts.features` facade per Citadel rules. 8 unit tests in
+    `tests/unit/test_feature_group_breakdown_uac.py` covering registered-service UAC denominator, pre-floor-date
+    clipping (Aave V3 2022-03-16), empty-EXPECTED stub fallback, and the no-feature_group-column edge case.
 
 **Phase 2 success**: per-service QG passes; data-status feature-coverage % matches honest expected/found/missing when
 verified against deployment-ui DataStatusTab on a representative shard.
@@ -318,31 +339,27 @@ completes.
     `eigenlayer_rewards` now registered in
     `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS` with the
     `tick_timestamp` semantic. 7 unit tests cover every new entry + the closed-set guarantee.
-  - **Half 2 shipped UAC@7a3299a**: 8 of the 10 deferred onchain feature_groups lifted into
-    `FEATURE_REQUIRED_INPUTS` — `aave_lending_rates` / `aave_utilization` / `aave_risk_params` /
-    `eigen_rewards` / `protocol_rewards` / `flash_loan_availability` / `aave_rate_impact` /
-    `onchain_regime`. Mapping derived from
-    `features_onchain_service.schemas.feature_builder_registry._metadata` SSOT. The remaining 2
-    (`fear_greed` + `macro_sentiment`) are intentionally NOT lifted — they're live HTTP pass-throughs
-    over Alternative.me + CoinGecko sentiment APIs that bypass the manifest entirely. Documented inline
-    in `required_inputs.py` + tracked as a separate "External-sentiment-API live-read pass-throughs"
-    bullet below. 3 new unit tests cover: every lifted entry, onchain_regime's 2-input structure, and
-    the explicit non-seeding of fear_greed + macro_sentiment.
+  - **Half 2 shipped UAC@7a3299a**: 8 of the 10 deferred onchain feature_groups lifted into `FEATURE_REQUIRED_INPUTS` —
+    `aave_lending_rates` / `aave_utilization` / `aave_risk_params` / `eigen_rewards` / `protocol_rewards` /
+    `flash_loan_availability` / `aave_rate_impact` / `onchain_regime`. Mapping derived from
+    `features_onchain_service.schemas.feature_builder_registry._metadata` SSOT. The remaining 2 (`fear_greed` +
+    `macro_sentiment`) are intentionally NOT lifted — they're live HTTP pass-throughs over Alternative.me + CoinGecko
+    sentiment APIs that bypass the manifest entirely. Documented inline in `required_inputs.py` + tracked as a separate
+    "External-sentiment-API live-read pass-throughs" bullet below. 3 new unit tests cover: every lifted entry,
+    onchain_regime's 2-input structure, and the explicit non-seeding of fear_greed + macro_sentiment.
 
-- **External-sentiment-API live-read pass-throughs (deferred, post-May-23 if needed).** `fear_greed`
-  (live HTTP fetch from Alternative.me) + `macro_sentiment` (live HTTP fetch from CoinGecko + DefiLlama)
-  bypass the manifest entirely — there's no upstream `(asset_group, data_type)` to enforce LookaheadBias
-  against. Two paths to close, both deferred:
+- **External-sentiment-API live-read pass-throughs (deferred, post-May-23 if needed).** `fear_greed` (live HTTP fetch
+  from Alternative.me) + `macro_sentiment` (live HTTP fetch from CoinGecko + DefiLlama) bypass the manifest entirely —
+  there's no upstream `(asset_group, data_type)` to enforce LookaheadBias against. Two paths to close, both deferred:
   - (a) Register `crypto_sentiment` and/or `macro_metrics` as DeFi data_types in
     `unified_api_contracts.registry.market_data_categories.DEFI_DATA_TYPES` + add availability_semantics
-    + write a captured-tick adapter (probably in MTDS) that snapshots the API output into a manifest
-    data_type on a sensible cadence. Then lift the calculators here.
-  - (b) Treat both calculators as out-of-band sentiment overlays that don't participate in
-    honest-coverage accounting at all (analogous to how options Greeks aren't manifest data_types).
-    Document the carve-out in the EXPECTED_FEATURE_GROUPS_BY_SERVICE comment so they don't appear in
-    the denominator either.
-  Decision deferred to a focused 2-hour session with the operator. Not a May-23 blocker — these are
-  enrichment features, not core trading signals.
+    - write a captured-tick adapter (probably in MTDS) that snapshots the API output into a manifest data_type on a
+      sensible cadence. Then lift the calculators here.
+  - (b) Treat both calculators as out-of-band sentiment overlays that don't participate in honest-coverage accounting at
+    all (analogous to how options Greeks aren't manifest data_types). Document the carve-out in the
+    EXPECTED_FEATURE_GROUPS_BY_SERVICE comment so they don't appear in the denominator either. Decision deferred to a
+    focused 2-hour session with the operator. Not a May-23 blocker — these are enrichment features, not core trading
+    signals.
 - **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity names
   (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
   feature*groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from

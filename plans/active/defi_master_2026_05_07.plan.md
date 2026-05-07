@@ -149,6 +149,27 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P0. features-onchain-service Docker image rebuild — Cloud Build emits new `:latest` tag with Phase
       changes. [AUDIT 2026-05-07: FRESH — actionable]
 
+#### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
+
+- [x] [VERIFY] P0. **Phase A gate — partial Stage 3 carry tracer** over 2026-04-03..04-09 across all 7 archetypes
+      (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
+      YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Expected: every archetype has non-empty `realised_apy_bps`.
+      CARRY_BASIS_DATED + cross-venue ARBITRAGE_PRICE_DISPERSION are the new ones lit by `futures_roll_resolver`
+      (features-cross-instrument@954575a) + `catalog_pair_builder` (954575a/2804f47/543a0bb) + UAC
+      `PAIRED_DISPERSION_CATALOG` SSOT (UAC@6217382). [AUDIT 2026-05-07: PARTIAL — features-onchain VM
+      `features-onchain-defi-backfill-20260507-105936` confirmed canonical columns ship in
+      `lending_rates/features.parquet` (protocol/chain/asset/supply_apy/borrow_apy populated, AAVE_V3 ARBITRUM USDC
+      1.62%/2.83%); A4 tracer shim deletion landed strategy@666dc2d; full per-day tracer invocation across the 7-day
+      window pending features-onchain Docker rebuild]
+- [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
+      archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
+      non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be
+      empty pre-databento-coverage / pre-Pacifica-launch dates — honest absence, not a bug); (b) `flow_of_funds_legs`
+      non-empty for the winning slot of each archetype; (c) NO silent NaN-only days (every day must show either real
+      data or manifest-recorded `record_expected_empty(reason=...)`). Depends on D1-D4 backfill completion + Phase A
+      gate clean + features-onchain Docker rebuild. [AUDIT 2026-05-07: FRESH — final intent-test gate before live
+      cutover; gates merge of carry-tracer Phase 9 work into main]
+
 ### Lighter / Extended / Pacifica historical replay (`dex_historical_replay_*`)
 
 - [x] [AGENT] P0. Lighter zkSync mainnet matching contract address + ABI parse (`Trade` event). [AUDIT 2026-05-07: DONE
@@ -175,6 +196,69 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       2026-05-07: DONE — MTDS@51fecd5 (ohlcv_1m via /kline); per MEMORY project_dex_perp_onboarding_2026_05_07]
 - [ ] [SCRIPT] P0. Backfill VMs for each new venue + schema-parity validation against the REST adapter. [AUDIT
       2026-05-07: PARTIAL — Lighter + Pacifica VMs ran successfully per MEMORY; Extended VM still pending]
+
+### DEX perp forward-poll handlers + collateral matrix (folded-in 2026-05-07 from `dex_perp_onboarding_handover`)
+
+Captures the open work items from
+[`dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`](dex_perp_onboarding_handover_2026_05_07.HANDOVER.md) Items A / B
+/ D / E / F as standard-format checkbox todos. The HANDOVER doc remains the narrative SSOT (with empirical findings per
+venue); these checkboxes track execution.
+
+Date ranges + venue specs:
+
+- **LIGHTER-ZKSYNC** (zkSync Era, validium settlement) — 170 perps, top-5 currently captured (BTC, ETH, SOL, HYPE, TON).
+  Historical OHLCV via `/candles` 2025-05-01 → today (manifest captured per session 2026-05-07). Per-trade history
+  unrecoverable (REST capped, no cursor; on-chain replay infeasible per `block_height` being sequencer-internal).
+  Forward-poll only path for live tape.
+- **PACIFICA-SOLANA** (Solana program-settled, Hyperliquid clone) — ~50+ perps, top-5 captured. Mainnet 2025-06-onwards.
+  50x leverage, USDC cross-margin (today). OHLCV via `/kline`.
+- **EXTENDED-STARKNET** (Starknet-native, batched-proof settlement) — ~10 BTC/ETH/SOL majors. Historical OHLCV path
+  unconfirmed (404 on `/candles`); see Item C below for research. Settlement events SHOULD be on-chain readable via
+  Starknet `getEvents`.
+
+Funding-rate APY observed empirically: PACIFICA BTC sometimes +50% APR vs Binance BTC perp +12% APR (~38% APR
+delta-neutral carry edge if captured). DEX-DEX funding-rate dispersion is the highest-edge cell in the entire strategy
+table per HANDOVER. Forward-poll wiring unblocks `CARRY_BASIS_PERP` + `ARBITRAGE_PRICE_DISPERSION` signal generation for
+these venues.
+
+- [ ] [AGENT] P0. **Forward-poll launcher** `deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh` covering
+      LIGHTER-ZKSYNC + PACIFICA-SOLANA + EXTENDED-STARKNET (+ HYPERLIQUID + ASTER for parity). Singleton-locked pattern
+      (mirror `launch-sfi-forward-poll.sh`). Polls `/funding` every 1-5 min → MTDS `data_type=perp_funding`;
+      `/recentTrades` every ~10s → live tape; `/orderBookOrders` / `/book` snapshots every ~30s → slippage-modeling
+      input. [AUDIT 2026-05-07: FRESH — required before live trading per HANDOVER Item A]
+- [ ] [AGENT] P0. **MTDS perp_funding adapter** for LIGHTER + PACIFICA + EXTENDED — venue iteration in
+      `mtds-perp-funding-` VM launcher; schema parity with existing Bybit / Binance / OKX / Deribit funding feed (per
+      UAC `data_type=perp_funding` shape). [AUDIT 2026-05-07: FRESH — required before forward-poll launcher works]
+- [ ] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
+      `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py`. Verify whether Pacifica accepts
+      JitoSOL / mSOL as cross-margin (live probe + docs check). YES → add row with haircut citation, unlocks
+      `CARRY_STAKED_BASIS@jito-pacifica-solana-...` slot (auto-generates next catalog regen). NO → add explicit
+      `accepted=False` row (matrix encodes negatives explicitly per audit spec). [AUDIT 2026-05-07: FRESH — HANDOVER
+      Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift]
+- [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
+      `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
+      Starknet event subgraph against the Extended Settlement contract — add `STARKNET_RPC_TEMPLATE` to UAC
+      `CHAIN_RPC_TEMPLATES` (currently only zkSync + Solana; Starknet needs adding). Falls back to forward-poll only if
+      both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
+      `cefi-extended-starknet-history-backfill-{ts}` VM]
+- [ ] [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
+      `_LIGHTER_BACKFILL_TOP_SYMBOLS = (BTC, ETH, SOL,     HYPE, TON)`; expand to top-30 (Lighter has 170 perps
+      including NVDA, USDCAD, BRENTOIL, XAU, XAG, SNDK exotics). Rate-limit budget already validated — 12 RPS handles
+      top-30 comfortably. Unlocks cross-asset stat-arb / FX-perp arb against CeFi FX. [AUDIT 2026-05-07: FRESH —
+      HANDOVER Item D; deferred pending strategy demand signal]
+- [ ] [DOC] P3. **Per-trade gap documentation in coverage matrix** — codex `02-data/pipeline-coverage-matrix.md`: mark
+      `data_type=trades` as "live-only, no historical" for LIGHTER / PACIFICA / EXTENDED. Downstream strategies that
+      need per-trade should use OHLCV bars OR forward-poll-built history (~few months, growing from forward-poll launch
+      date). [AUDIT 2026-05-07: FRESH — HANDOVER Item E; honest-coverage transparency]
+- [ ] [VERIFY] P0. **Final state verification of Lighter + Pacifica historical backfill VMs** —
+      `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. Manifest should show
+      `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
+
+      ```bash
+      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+      ```
+
+      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -203,79 +287,81 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 **Verified DeFi bucket layout (2026-05-07)** — full list with `_index/availability_index.parquet` confirmed present:
 
-| Bucket | Rows | Chains | Last write |
-| --- | --- | --- | --- |
-| `market-data-tick-defi-{pid}` (asset-group, Phase-1 + Phase-2 mixed) | 313,365 | ETH + SOLANA | 2026-05-05 13:44 |
-| `lending-indices-{pid}` | 37,000 | ETH + 9 EVM (Opt/Base/Arb/Scroll/Avax/Linea/BSC/Polygon/zkSync) | 2026-05-05 00:56 |
-| `dex-swaps-{pid}` | 46,491 | ETH + 7 EVM | 2026-05-05 00:56 |
-| `evm-defi-{pid}` | 22,633 | ETH + Arb/Base/Opt/Polygon | 2026-05-05 10:06 |
-| `instruments-store-defi-{pid}` | 127,896 | 7+ chains | 2026-05-05 07:25 |
-| `gas-fees-{pid}` | 11,988 | ETH + 9 EVM | 2026-05-05 00:55 |
-| `oracle-prices-{pid}` | 7,032 | ETH + Arb/Base/Opt/Polygon | 2026-05-05 00:55 |
-| `perp-funding-{pid}` | 5,575 | HYPERLIQUID + ASTER | 2026-05-05 00:55 |
-| `solana-defi-{pid}` | 5,028 | SOLANA | 2026-04-13 15:09 (older) |
-| `lst-rates-{pid}` | 4,356 | ETH + SOLANA | 2026-05-05 00:55 |
+| Bucket                                                               | Rows    | Chains                                                          | Last write               |
+| -------------------------------------------------------------------- | ------- | --------------------------------------------------------------- | ------------------------ |
+| `market-data-tick-defi-{pid}` (asset-group, Phase-1 + Phase-2 mixed) | 313,365 | ETH + SOLANA                                                    | 2026-05-05 13:44         |
+| `lending-indices-{pid}`                                              | 37,000  | ETH + 9 EVM (Opt/Base/Arb/Scroll/Avax/Linea/BSC/Polygon/zkSync) | 2026-05-05 00:56         |
+| `dex-swaps-{pid}`                                                    | 46,491  | ETH + 7 EVM                                                     | 2026-05-05 00:56         |
+| `evm-defi-{pid}`                                                     | 22,633  | ETH + Arb/Base/Opt/Polygon                                      | 2026-05-05 10:06         |
+| `instruments-store-defi-{pid}`                                       | 127,896 | 7+ chains                                                       | 2026-05-05 07:25         |
+| `gas-fees-{pid}`                                                     | 11,988  | ETH + 9 EVM                                                     | 2026-05-05 00:55         |
+| `oracle-prices-{pid}`                                                | 7,032   | ETH + Arb/Base/Opt/Polygon                                      | 2026-05-05 00:55         |
+| `perp-funding-{pid}`                                                 | 5,575   | HYPERLIQUID + ASTER                                             | 2026-05-05 00:55         |
+| `solana-defi-{pid}`                                                  | 5,028   | SOLANA                                                          | 2026-04-13 15:09 (older) |
+| `lst-rates-{pid}`                                                    | 4,356   | ETH + SOLANA                                                    | 2026-05-05 00:55         |
 
-**deployment-api correctly handles the split**: `data_status_service.py:2802` `_BUCKET_CATEGORY_OVERRIDES` routes
-each per-data_type to its dedicated bucket; `_canonicalise_defi_data_types()` at line 991 normalises the dual
-kebab/snake_case `data_type` vocabulary at read-time. No data-status code bug. The original plan numbers (Ethereum 85%
-/ Solana 99.9% / Arb-Base-Polygon 60%) are likely reading the per-bucket panels in the deployment-ui, which IS the
-right view.
+**deployment-api correctly handles the split**: `data_status_service.py:2802` `_BUCKET_CATEGORY_OVERRIDES` routes each
+per-data_type to its dedicated bucket; `_canonicalise_defi_data_types()` at line 991 normalises the dual
+kebab/snake_case `data_type` vocabulary at read-time. No data-status code bug. The original plan numbers (Ethereum 85% /
+Solana 99.9% / Arb-Base-Polygon 60%) are likely reading the per-bucket panels in the deployment-ui, which IS the right
+view.
 
 **Real residual concerns from this re-verification** (down-graded from "planning-critical" to legit operator items):
 
 ### Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM stopped after diagnosis)
 
-VM `mtds-lending-indices-20260507-140418` was launched 2026-05-07 14:04 IST and **stopped 2026-05-07 ~15:30 IST**
-after spot-checking the per-VM shard revealed silent data-quality issues. Despite emitting 8,000+
-`INSTRUMENT_PROCESSED` events + writing 4,459 manifest rows, only 4 of 8 (venue, chain) pairs were producing
-captured rows; the rest were silently writing `empty_confirmed` for dates where data should exist. The VM was
-stopped for diagnosis + bug fixes before re-launch — losing ~1,080 captured rows of progress (Arbitrum/Avalanche/
-Optimism/Polygon AAVE V3 days for 2022-Q4) is acceptable because re-running after the bug fixes is the cleaner
-path; re-runs of those days will pick up the same data.
+VM `mtds-lending-indices-20260507-140418` was launched 2026-05-07 14:04 IST and **stopped 2026-05-07 ~15:30 IST** after
+spot-checking the per-VM shard revealed silent data-quality issues. Despite emitting 8,000+ `INSTRUMENT_PROCESSED`
+events + writing 4,459 manifest rows, only 4 of 8 (venue, chain) pairs were producing captured rows; the rest were
+silently writing `empty_confirmed` for dates where data should exist. The VM was stopped for diagnosis + bug fixes
+before re-launch — losing ~1,080 captured rows of progress (Arbitrum/Avalanche/ Optimism/Polygon AAVE V3 days for
+2022-Q4) is acceptable because re-running after the bug fixes is the cleaner path; re-runs of those days will pick up
+the same data.
 
-**Per-(venue, chain) outcome from per-VM shard** (cross-referenced with `_index/per_vm/mtds-lending-indices-20260507-140418.parquet` 4,459 rows):
+**Per-(venue, chain) outcome from per-VM shard** (cross-referenced with
+`_index/per_vm/mtds-lending-indices-20260507-140418.parquet` 4,459 rows):
 
-| venue / chain | captured | empty_confirmed | verdict |
-| --- | --- | --- | --- |
-| AAVEV3 / ARBITRUM | 269 | 74 | ✅ working |
-| AAVEV3 / OPTIMISM | 270 | 73 | ✅ working |
-| AAVEV3 / POLYGON | 272 | 71 | ✅ working |
-| AAVEV3 / AVALANCHE | 270 | 73 | ✅ working |
-| AAVEV3 / **ETHEREUM** | **0** | **343** | ❌ **silent zero** — bug |
-| AAVEV3 / BASE | 0 | 343 | ⚠️ likely correct (pre-launch in 2022) |
-| AAVEV3 / LINEA | 0 | 343 | ⚠️ likely correct (LINEA mainnet 2023) |
-| AAVEV3 / BSC | 0 | 343 | ⚠️ likely correct |
-| COMPOUNDV3 / ETHEREUM | 107 | — | ✅ working |
-| COMPOUNDV3 / ARBITRUM/BASE/OPTIMISM | 0 | 0 (skipped) | ❌ **subgraph schema error** |
+| venue / chain                       | captured | empty_confirmed | verdict                                |
+| ----------------------------------- | -------- | --------------- | -------------------------------------- |
+| AAVEV3 / ARBITRUM                   | 269      | 74              | ✅ working                             |
+| AAVEV3 / OPTIMISM                   | 270      | 73              | ✅ working                             |
+| AAVEV3 / POLYGON                    | 272      | 71              | ✅ working                             |
+| AAVEV3 / AVALANCHE                  | 270      | 73              | ✅ working                             |
+| AAVEV3 / **ETHEREUM**               | **0**    | **343**         | ❌ **silent zero** — bug               |
+| AAVEV3 / BASE                       | 0        | 343             | ⚠️ likely correct (pre-launch in 2022) |
+| AAVEV3 / LINEA                      | 0        | 343             | ⚠️ likely correct (LINEA mainnet 2023) |
+| AAVEV3 / BSC                        | 0        | 343             | ⚠️ likely correct                      |
+| COMPOUNDV3 / ETHEREUM               | 107      | —               | ✅ working                             |
+| COMPOUNDV3 / ARBITRUM/BASE/OPTIMISM | 0        | 0 (skipped)     | ❌ **subgraph schema error**           |
 
 **Bug 1 — AAVE V3 ETHEREUM silent zero** (P0 for `carry_staked_basis`, the most-relevant chain):
 
-Run.log shows `instruments-store-defi parquet missing for aave_v3/ETHEREUM/2022-12-08; falling back to subgraph
-discovery` then `Wrote 0 rows`. The instruments-store-defi metadata is missing for ETHEREUM (404s for early 2022
-dates) AND the subgraph fallback is misconfigured for ETHEREUM specifically — other chains (Arbitrum, Optimism,
-Polygon, Avalanche) have working subgraph fallbacks with the same code. Investigation target:
-`market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (or equivalent) +
-the per-chain subgraph endpoint config. Likely a chain→subgraph URL mapping bug or a missing schema mapping
-for the Ethereum subgraph response shape.
+Run.log shows
+`instruments-store-defi parquet missing for aave_v3/ETHEREUM/2022-12-08; falling back to subgraph discovery` then
+`Wrote 0 rows`. The instruments-store-defi metadata is missing for ETHEREUM (404s for early 2022 dates) AND the subgraph
+fallback is misconfigured for ETHEREUM specifically — other chains (Arbitrum, Optimism, Polygon, Avalanche) have working
+subgraph fallbacks with the same code. Investigation target:
+`market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (or equivalent) + the
+per-chain subgraph endpoint config. Likely a chain→subgraph URL mapping bug or a missing schema mapping for the Ethereum
+subgraph response shape.
 
 **Bug 2 — COMPOUND V3 multi-chain subgraph schema error**:
 
-Run.log shows `Subgraph query errors for Ff7ha9ELmpmg81D6nYxy4t8aGP26dPztqD1LDJNPqjLS: [{'message': "Type 'Query'
-has no field 'marketDailySnapshots'"}]` for COMPOUND_V3 on ARBITRUM/BASE/OPTIMISM. The Messari subgraph schema
-has been updated upstream + the MTDS GraphQL query is stale. Investigation target: the same handler's
-COMPOUND_V3 GraphQL query — likely the field is renamed (e.g. `marketHourlySnapshots` or
-`marketSnapshots`) or moved into a different entity. **Side effect**: VM records these as `empty_confirmed` per
-the writegate three-category model (subgraph returned 0 rows, no exception) — but per writegate Phase 2.A spirit
-this should be `attempted_failed` because the GraphQL error means we DIDN'T actually probe the data.
+Run.log shows
+`Subgraph query errors for Ff7ha9ELmpmg81D6nYxy4t8aGP26dPztqD1LDJNPqjLS: [{'message': "Type 'Query' has no field 'marketDailySnapshots'"}]`
+for COMPOUND_V3 on ARBITRUM/BASE/OPTIMISM. The Messari subgraph schema has been updated upstream + the MTDS GraphQL
+query is stale. Investigation target: the same handler's COMPOUND_V3 GraphQL query — likely the field is renamed (e.g.
+`marketHourlySnapshots` or `marketSnapshots`) or moved into a different entity. **Side effect**: VM records these as
+`empty_confirmed` per the writegate three-category model (subgraph returned 0 rows, no exception) — but per writegate
+Phase 2.A spirit this should be `attempted_failed` because the GraphQL error means we DIDN'T actually probe the data.
 
 **Bug 3 — `instruments-store-defi` metadata missing for early 2022 dates**:
 
-Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some
-chains and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early
-DeFi protocol launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...`
-returns 404 for AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-service` DeFi
-instrument-discovery script + its launch-date floor handling.
+Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some chains
+and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early DeFi protocol
+launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...` returns 404 for
+AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery script +
+its launch-date floor handling.
 
 **Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
 
@@ -301,13 +387,12 @@ gcloud storage cat gs://deployment-scripts-${PID}/vm-logs/${VM}/run.log | grep -
 Do this verification BEFORE assuming the VM is producing useful data based on event-stream alone.
 
 1. **Solana coverage is genuinely thin** — `lst-rates-{pid}` has 784 SOLANA rows over a 2-year window (~monthly
-   cadence). `carry_staked_basis` Solana leg won't have daily granularity until this is filled. Pyth wiring
-   (separate item) is necessary-not-sufficient.
+   cadence). `carry_staked_basis` Solana leg won't have daily granularity until this is filled. Pyth wiring (separate
+   item) is necessary-not-sufficient.
 2. **Kebab/snake `data_type` vocab inconsistency** — most per-data_type DeFi buckets contain BOTH forms for the SAME
    data (e.g. `lending-indices-{pid}` has 24,976 kebab + 12,024 snake_case rows). Read-time canonicaliser handles it
-   today but it's a real follow-up: write a one-shot migration to rewrite kebab → snake then delete the
-   canonicaliser. No named successor plan yet — could be filed as a small follow-up under
-   `manifest_migration_master_2026_05_07`.
+   today but it's a real follow-up: write a one-shot migration to rewrite kebab → snake then delete the canonicaliser.
+   No named successor plan yet — could be filed as a small follow-up under `manifest_migration_master_2026_05_07`.
 3. **`solana-defi-{pid}` is 3+ weeks stale** — last write 2026-04-13. Worth confirming whether that handler is
    intentionally paused or has been broken.
 4. **`launch-mtds-perp-funding-backfill-vm.sh`** is referenced in CLAUDE.md but missing from
@@ -315,17 +400,17 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 **Single-VM launch recommendation** (unchanged from earlier):
 
-| Rank | Launcher | Window | Expected rows | ETA | Status |
-| --- | --- | --- | --- | --- | --- |
-| 1 | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07` | full history | ~9,668 | ~3h | **In flight** as `mtds-lending-indices-20260507-140418` since 14:04 IST |
-| 2 | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | high carry-archetype value | parallel-safe | not yet launched |
+| Rank | Launcher                                                             | Window       | Expected rows              | ETA           | Status                                                                  |
+| ---- | -------------------------------------------------------------------- | ------------ | -------------------------- | ------------- | ----------------------------------------------------------------------- |
+| 1    | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07`   | full history | ~9,668                     | ~3h           | **In flight** as `mtds-lending-indices-20260507-140418` since 14:04 IST |
+| 2    | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | high carry-archetype value | parallel-safe | not yet launched                                                        |
 
 - [ ] [AGENT] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done), Arbitrum / Base / Polygon
       (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. **2026-05-07 NOTE: original
-      headline percentages are defensible if reading the deployment-ui's per-bucket panels — see
-      CORRECTION block above. Earlier "0%" claim was a single-bucket misread, not reality.** [AUDIT 2026-05-07:
-      FRESH — actionable; the in-flight `mtds-lending-indices-20260507-140418` VM is doing the right work. After it
-      drains, run vault-share-price as the parallel-safe runner-up.]
+      headline percentages are defensible if reading the deployment-ui's per-bucket panels — see CORRECTION block above.
+      Earlier "0%" claim was a single-bucket misread, not reality.** [AUDIT 2026-05-07: FRESH — actionable; the
+      in-flight `mtds-lending-indices-20260507-140418` VM is doing the right work. After it drains, run
+      vault-share-price as the parallel-safe runner-up.]
 
 ### DeFi DEX-perp adapters from `cefi_venue_universe_expansion` (re-classified to DeFi)
 
@@ -387,9 +472,9 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       `$WORKSPACE/instruments-service`). VM `defi-phantom-recon-defi-20260507-141621` launched 14:16 IST, watchdog
       relaunched as `vm-zombie-watchdog-20260507-141056`. **Result 14:24 IST (rc=0, ~10 min runtime, 86,982 prefixes
       listed at 360/sec same-region GCE)**: 309,749 real captures + **2,931 phantom captures (0.94%)**. Top phantom
-      data_types: vault_share_price (1,633) + rewards (1,298). Top phantom venues: EIGENLAYER (1,298),
-      MORPHOVAULTS (851), YEARNV3 (782) — concentrated in features-onchain consumers (`eigen_rewards` +
-      `vault_share_price`), so they're real blockers, not prober drift. **Next step (operator)**: run
+      data_types: vault_share_price (1,633) + rewards (1,298). Top phantom venues: EIGENLAYER (1,298), MORPHOVAULTS
+      (851), YEARNV3 (782) — concentrated in features-onchain consumers (`eigen_rewards` + `vault_share_price`), so
+      they're real blockers, not prober drift. **Next step (operator)**: run
       `bash scripts/vm/launch-defi-phantom-recon-vm.sh defi --apply` to flip the 2,931 phantoms to `attempted_failed`,
       then re-run the affected MTDS DeFi backfills (eigen_rewards via `mtds-perp-funding`/equivalent and morpho/yearn
       `vault_share_price` via `launch-mtds-vault-share-price-backfill-vm.sh`).
