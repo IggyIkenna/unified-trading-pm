@@ -302,11 +302,13 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 - [ ] [AGENT] P1. Per-source completion %: api_football, footystats, transfermarkt, sfi, understat, open_meteo,
       odds_api. Surface to deployment-ui. [AUDIT 2026-05-07: BLOCKED-ON sports_master:recovery VM drain]
-- [ ] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators. [AUDIT 2026-05-07: FRESH —
-      actionable; deployment-api wiring needed (per MEMORY entry, deployment-api has B.3 per-chain clipping wired
-      analogously)]
-- [ ] [AGENT] P1. Apply UAC `KNOWN_COVERAGE_GAPS` for documented date-range provider outages. [AUDIT 2026-05-07: FRESH —
-      actionable]
+- [x] [AGENT] P1. Apply UAC `SOURCE_COVERAGE_START` clipping in data-status denominators. (verified 2026-05-07:
+      deployment-api/deployment_api/services/data_status_service.py:58 imports `clip_dates_to_source_coverage`, applied
+      at lines 451/494/621) [AUDIT 2026-05-07: FRESH — actionable; deployment-api wiring needed (per MEMORY entry,
+      deployment-api has B.3 per-chain clipping wired analogously)]
+- [x] [AGENT] P1. Apply UAC `KNOWN_COVERAGE_GAPS` for documented date-range provider outages. (verified 2026-05-07:
+      deployment-api/deployment_api/services/data_status_service.py:61 imports `is_in_known_gap`, applied at lines
+      460/505) [AUDIT 2026-05-07: FRESH — actionable]
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 

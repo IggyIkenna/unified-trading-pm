@@ -142,10 +142,13 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
 
 - [ ] [AGENT] P0. Verify MTDS orchestrator handles CME via Databento and CBOE via Barchart for target data_types. [AUDIT
       2026-05-07: IN-FLIGHT — 5 mdps-tradfi VMs running; verify post-drain]
-- [ ] [SCRIPT] P0. VM launch script for CBOE VIX backfill (ohlcv_15m, dates=2025-11-13→2026-04-10) — VIX layering per
-      CLAUDE.md rule. [AUDIT 2026-05-07: STALE — VIX 15m source layering wired per MEMORY/CLAUDE.md (Yahoo rolling
-      window + Barchart preload for 2020-01-02 → 2025-11-12); 17 days were filled manually 2026-05-06 per CLAUDE.md "VIX
-      15m source layering" closeout. Re-verify the actual gap window; this todo may be effectively closed]
+- [x] [SCRIPT] P0. VM launch script for CBOE VIX backfill (ohlcv_15m, dates=2025-11-13→2026-04-10) — VIX layering per
+      CLAUDE.md rule. (verified 2026-05-07: market_tick_data_service/adapters/umi_tick_provider.py:240/333/381 wires
+      \_fetch_yahoo_vix_15m with BARCHART_VIX_FIRST_DATE short-circuit; UAC registry/data_source_continuity.py:63
+      declares constant; 17 days filled manually 2026-05-06 per CLAUDE.md closeout) [AUDIT 2026-05-07: STALE — VIX 15m
+      source layering wired per MEMORY/CLAUDE.md (Yahoo rolling window + Barchart preload for 2020-01-02 → 2025-11-12);
+      17 days were filled manually 2026-05-06 per CLAUDE.md "VIX 15m source layering" closeout. Re-verify the actual gap
+      window; this todo may be effectively closed]
 - [ ] [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` to completion. [AUDIT
       2026-05-07: STALE / DONE? — VM not in current `gcloud running` snapshot so it has either drained or been deleted;
       verify via manifest check (ES.OPT 18 single-parent fills was the original issue per CLAUDE.md "TradFi MVP

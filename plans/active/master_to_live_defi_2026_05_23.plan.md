@@ -595,8 +595,9 @@ migration is gated by cost.
 The plan-vs-plan audit found 4 of 5 services already covered by existing plans. Only **alerting** is a genuine new-plan
 gap.
 
-- [ ] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
-      `live-defi-rollout`. References checklist Groups F + G.
+- [x] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
+      `live-defi-rollout`. References checklist Groups F + G. (verified 2026-05-07:
+      plans/active/alerting_service_live_rules_2026_05_07.plan.md exists)
 - [ ] [EXTEND] `defi_e2e_pipeline_2026_04_30` Fork 1 — add explicit todos for **position-balance-monitor live-mode
       wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor + child-venue attribution already shipped
       per plan body).
@@ -776,7 +777,8 @@ self-superseded artefacts.
       `codex/10-audit/repos/<service>.yaml`
 - [ ] All 9 drift-audit rows resolved (none remaining `⚠`)
 - [ ] `codex/00-SSOT-INDEX.md` updated to reference all new SSOT docs (work-streams D.6 + F)
-- [ ] `CLAUDE.md` cross-references this master plan in a new "Master Plan" section
+- [x] `CLAUDE.md` cross-references this master plan in a new "Master Plan" section (verified 2026-05-07:
+      .claude/CLAUDE.md line 22 has `## Master Plan — Live DeFi Trading by 2026-05-23` section)
 
 ---
 

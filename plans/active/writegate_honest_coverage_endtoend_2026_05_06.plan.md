@@ -943,9 +943,10 @@ opaque):
       are reintroduced (grep-based static check; can be fooled but catches the obvious). [AUDIT 2026-05-07: FRESH —
       actionable; no grep against `_create_empty_output|_handle_empty_tick_data` regression in
       unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.]
-- [ ] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. [AUDIT 2026-05-07: STALE —
-      semver-agent auto-fires on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped
-      post-merge bumps. This todo is bookkeeping; close at next push.]
+- [x] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. (verified 2026-05-07:
+      semver-agent auto-bumped on UTL@958634f9 + UTL@c5c2669e merges) [AUDIT 2026-05-07: STALE — semver-agent auto-fires
+      on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped post-merge bumps. This
+      todo is bookkeeping; close at next push.]
 
 QG between Phase 1A and Phase 2: UTL tests green; UTL pushed to live-defi-rollout; downstream consumers rebuild against
 new UTL pinned in workspace-manifest.json.
@@ -1141,20 +1142,17 @@ grep.
 - [x] [SCRIPT] P0. Delete `_write_manifest_records` v3-shape parallel write from `orchestration_service.py:329–388`.
       Single canonical v6 path via `canonical_writer` only. (Resolves parent HANDOVER §"❌ MDPS mismatches" item.)
       Shipped MDPS@e56d0e4 — method body deleted (-110 LOC), call site at line 242 removed, orphan UTL imports
-      (`ManifestWriter`, `validate_batch_completeness`) dropped.
-      **AUDIT-CORRECTION 2026-05-07**: the prior `**DEFERRED**` annotation worried that
-      `check_shard_freshness` at `orchestration_service.py:160` matched the v3 summary rows
-      (per-(date, data_type), empty venue + no instrument_id) and that deleting them would
-      force every-category re-processing. Re-investigation found that's NOT the case:
-      `check_shard_freshness(expected_venues=[<data_type>])` matches on the `data_type` column
-      (UTL `manifest_writer.py` ~line 2970) via the `venue == v | data_type == v` union, and
-      the per-instrument rows that `canonical_writer.write_candle_parquet` writes for every
-      shard ALREADY populate the `data_type` column. So the freshness check sees a fresh
-      shard from per-instrument rows alone — the summary rows were genuinely redundant.
-      Regression guard: `tests/unit/test_check_shard_freshness_granular_rows_only.py`
-      (3 tests asserting freshness check works correctly with ONLY per-instrument rows
-      present, including the missing-data_type and attempted_failed-only branches). Locked in
-      BEFORE the delete so any future regression fails CI loudly.
+      (`ManifestWriter`, `validate_batch_completeness`) dropped. **AUDIT-CORRECTION 2026-05-07**: the prior
+      `**DEFERRED**` annotation worried that `check_shard_freshness` at `orchestration_service.py:160` matched the v3
+      summary rows (per-(date, data_type), empty venue + no instrument_id) and that deleting them would force
+      every-category re-processing. Re-investigation found that's NOT the case:
+      `check_shard_freshness(expected_venues=[<data_type>])` matches on the `data_type` column (UTL `manifest_writer.py`
+      ~line 2970) via the `venue == v | data_type == v` union, and the per-instrument rows that
+      `canonical_writer.write_candle_parquet` writes for every shard ALREADY populate the `data_type` column. So the
+      freshness check sees a fresh shard from per-instrument rows alone — the summary rows were genuinely redundant.
+      Regression guard: `tests/unit/test_check_shard_freshness_granular_rows_only.py` (3 tests asserting freshness check
+      works correctly with ONLY per-instrument rows present, including the missing-data_type and attempted_failed-only
+      branches). Locked in BEFORE the delete so any future regression fails CI loudly.
 - [ ] [SCRIPT] P0. Wire v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) into
       `canonical_writer.add()` per the explicit decision rule below — no UAC-owner blocking dependency: **Wire (row
       carries v6-relevant info):** - CeFi: `derivative_adapter`, `futures_chain_adapter`, `options_chain_adapter` —
@@ -1544,20 +1542,16 @@ split.
       prediction_canonical_question_group are deferred (script returns exit 3 + RECONCILER_FAILED event with
       `reason=data_type_deferred`) until predictions Phase 1A + sports Phase 2.B's lifecycle SSOT lands. Shipped
       MTDS@ba5423f 2026-05-07.
-- [x] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw_tick parquets; for each instrument's
+- [x] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw*tick parquets; for each instrument's
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
       (this is upstream-bug detection, not data-quality fix). Shipped MTDS@a32433b —
-      `scripts/mtds_reconcile_partition_mismatch.py` (454 lines). Walks `raw_tick_data/by_date/day=*/...` via
-      ThreadPoolExecutor + pyarrow column-only reads; samples up to `--sample-size` rows (default 1000) per parquet
-      and counts ticks whose `tick_timestamp.date()` differs from the path partition `day=`. Probes 7 candidate
-      timestamp column names (`timestamp` / `ts` / `tick_timestamp` / `event_timestamp` / `block_timestamp` /
-      `trade_timestamp` / `kline_timestamp`); skips parquets without one. Output: CSV report at
-      `$TMPDIR/mtds-partition-mismatch-{asset_group}-{ts}.csv` + top-20 `(venue, data_type, day)` aggregate logged
-      for operator quick-look. **Stats-only by design** — does NOT flip manifest rows. Operator decides remediation
-      (typically: launch MTDS gapfill VM for the high-mismatch_pct tuples). RECONCILER_* events emitted via UTL
-      log_event. Filters: `--asset-group {cefi,defi,tradfi,prediction}` + optional `--venue` / `--data-type` /
-      `--day` for incremental review. Smoke-verified module loads + asset_group set + timestamp probe order.
+      `scripts/mtds_reconcile_partition_mismatch.py` (454 lines). Walks
+      `raw_tick_data/by_date/day=*/...`via     ThreadPoolExecutor + pyarrow column-only reads; samples up to`--sample-size`rows (default 1000) per parquet and     counts ticks whose`tick_timestamp.date()`differs from the path partition`day=`. Probes 7 candidate timestamp     column names (`timestamp`/`ts`/`tick_timestamp`/`event_timestamp`/`block_timestamp`/`trade_timestamp`/    `kline_timestamp`); skips parquets without one. Output: CSV report at     `$TMPDIR/mtds-partition-mismatch-{asset_group}-{ts}.csv`+ top-20`(venue,
+      data_type,
+      day)`aggregate logged for     operator quick-look. **Stats-only by design** — does NOT flip manifest rows. Operator decides remediation     (typically: launch MTDS gapfill VM for the high-mismatch_pct tuples). RECONCILER*\* events emitted via UTL     log_event. Filters:`--asset-group
+      {cefi,defi,tradfi,prediction}`+ optional`--venue`/`--data-type`/`--day` for incremental review. Smoke-verified
+      module loads + asset_group set + timestamp probe order.
 - [x] [SCRIPT] P0. `features_sports_reconcile_available_at.py` — for every features-sports parquet on disk, check if
       `available_at` column present + populated correctly per the new UAC semantic. If missing or wrong → flip manifest
       from `captured` to `attempted_failed[reason=MissingAvailableAt]`. Re-attempt happens via Phase 2.C re-run. Shipped
@@ -1707,20 +1701,18 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
       `failure_pillars: dict[str, int]` alongside existing `capture_status_counts`. 8 unit tests cover empty df,
       missing-columns, every registered prefix, unrecognised-prefix routing to `failed_other`, NaN handling, and
       pillar-key contract guard.
-- [x] [SCRIPT] P0. **Per-empty_reason breakdown — operator-visible payoff for Tier 3D.1/3D.2/3B/2.E.2.** Companion
-      to the `failure_pillars` rollup above; bundles `capture_status=empty_confirmed` rows by `error_reason` per the
-      closed taxonomy from
-      `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS` (11 known reasons +
-      `empty_unclassified` catch-all). **SHIPPED 2026-05-07 deployment-api@7d57056**: helper
+- [x] [SCRIPT] P0. **Per-empty_reason breakdown — operator-visible payoff for Tier 3D.1/3D.2/3B/2.E.2.** Companion to
+      the `failure_pillars` rollup above; bundles `capture_status=empty_confirmed` rows by `error_reason` per the closed
+      taxonomy from `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS` (11 known
+      reasons + `empty_unclassified` catch-all). **SHIPPED 2026-05-07 deployment-api@7d57056**: helper
       `_compute_empty_reason_counts(df)` exact-matches `error_reason` against `_EMPTY_REASON_KEYS`. Surfaced on the
       venue entry as `empty_reasons: dict[str, int]` alongside `failure_pillars`. The `empty_unclassified` catch-all
-      acts as a back-fill progress indicator — non-zero whenever a venue still has legacy null-reason rows the
-      Tier 3D.1 reconciler hasn't reached. 9 unit tests cover empty df, missing capture_status / error_reason
-      columns, every closed-set member routing to its bucket, unrecognised reason → unclassified, NULL/NaN/blank →
-      unclassified, captured/attempted_failed exclusion, mixed aggregation, and a closed-set drift guard against
-      UAC `EMPTY_CONFIRMED_REASONS` (caught 2 missing reasons during dev). Without this rollup, the
-      Phase 2.E + Phase 3.D + Phase 3.B work that stamps typed reasons on every empty_confirmed row stays invisible
-      to the operator.
+      acts as a back-fill progress indicator — non-zero whenever a venue still has legacy null-reason rows the Tier 3D.1
+      reconciler hasn't reached. 9 unit tests cover empty df, missing capture_status / error_reason columns, every
+      closed-set member routing to its bucket, unrecognised reason → unclassified, NULL/NaN/blank → unclassified,
+      captured/attempted_failed exclusion, mixed aggregation, and a closed-set drift guard against UAC
+      `EMPTY_CONFIRMED_REASONS` (caught 2 missing reasons during dev). Without this rollup, the Phase 2.E + Phase 3.D +
+      Phase 3.B work that stamps typed reasons on every empty_confirmed row stays invisible to the operator.
 - [ ] [SCRIPT] P0. New endpoint `GET /data-status/{service}/leaf/{shard_key}/schema` — returns per-leaf-parquet schema
       view: columns, types, row_count, per-column non_null_count, per-column NaN ratio, `available_at`
       min/max/null_count. **Investigation 2026-05-07**: distinct from existing `/schema` endpoint at

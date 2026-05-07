@@ -173,15 +173,18 @@ reconcilers + `mtds-s4-10` rescan complete.
       `features_calendar_service/engine/calendar_orchestrator.py:167-390` has 8+ `feature_group=` plumb-through sites;
       `engine/calculators/economic_events.py:56` declares `self.feature_group = "economic_events"`; flip after
       writer-test spot-check]
-- [ ] [features-cross-instrument / multi-timeframe] P1. Confirm `timeframe` populates correctly. [AUDIT 2026-05-07:
-      VERIFIED — `features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258` has
+- [x] [features-cross-instrument / multi-timeframe] P1. Confirm `timeframe` populates correctly. (verified 2026-05-07:
+      features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258 has timeframe=
+      write plumb) [AUDIT 2026-05-07: VERIFIED —
+      `features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258` has
       `timeframe=` write plumb; ready to flip]
-- [ ] [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`. [AUDIT
-      2026-05-07: VERIFIED — ml-training@`f7369f2` / ml-inference@`69d6313` / strategy@`90e00bb` / execution@`0b664d99`
-      shipped Phase 1B job_id writers (per master-plan-audit memory); ml-training `training_orchestrator.py:192-193/843`
-      + `final_training_handler.py:207` + `model_registry.py:270` plumb job_id; execution `save_operations.py:802`
-      plumbs job_id=run_id; strategy `cloud_strategy_storage.py:79-201` plumbs service_run_id; per-service unit-test
-      verification pending but writer code is in place]
+- [ ] [tests] P1. Per-service unit test: write under a `job_id`, assert manifest has populated `job_id`. **DEFERRED**:
+      tests pending — writer wiring shipped via ml-training@f7369f2 / ml-inference@69d6313 / strategy@90e00bb /
+      execution@0b664d99 [AUDIT 2026-05-07: VERIFIED — ml-training@`f7369f2` / ml-inference@`69d6313` /
+      strategy@`90e00bb` / execution@`0b664d99` shipped Phase 1B job_id writers (per master-plan-audit memory);
+      ml-training `training_orchestrator.py:192-193/843` + `final_training_handler.py:207` + `model_registry.py:270`
+      plumb job_id; execution `save_operations.py:802` plumbs job_id=run_id; strategy `cloud_strategy_storage.py:79-201`
+      plumbs service_run_id; per-service unit-test verification pending but writer code is in place]
 - [ ] [deployment-ui] P3. Visual regression smoke: Playwright walk across all 15 services × 5 asset_groups (where
       applicable). [AUDIT 2026-05-07: FRESH — actionable; deferred per CLAUDE.md DEFI canonicalisation closeout
       2026-05-07 ("B.2 Playwright walk across 15 services × 5 asset_groups deferred — needs full local stack + manual
