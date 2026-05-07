@@ -466,33 +466,32 @@ Read these before making ANY code changes:
   asset_group's pipeline), `--include <repo>` (one-off addition). **Bare invocation only re-tars CORE**
   (UAC/UTL/MTDS/deployment-service) — forgetting the flag silently runs stale code. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
-- **VM launcher script SSOT (codified 2026-05-07)** — Every script that runs `gcloud compute instances create` (or
-  the AWS `aws ec2 run-instances` equivalent) MUST live under `deployment-service/scripts/vm/`. No exceptions.
-  Ad-hoc launchers under `e2e-testing/scripts/`, `features-*-service/scripts/`, or any other repo are technical debt
-  and must be migrated. **Why:** the deployment-UI is the workspace SSOT for "how do we launch a VM"; the
-  Deploy-Missing button + the operational launchers all read from a single registry
-  (`_SERVICE_LAUNCHER_SCRIPTS` in `deployment-api/deployment_api/services/deploy_missing.py`). Scattered launchers
-  (a) bypass the registry so the UI can't render Deploy-Missing for them; (b) miss the workspace conventions
-  (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<unique-tag>`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`, the
-  `VM_PREFIX_TO_BUCKET` registry from the rule below); (c) drift in shape over time, breaking parallel-agent
-  reasoning. **Four ways the script reaches the VM** (UI exposes the first two as a mode toggle): (1) **Tarball**
-  (default + production) — `gs://deployment-scripts-${PID}/code/<tarball>.tar.gz` → `setup-data-pipeline-vm.sh`
-  extracts at boot. Refresh via `create-code-tarballs.sh --all`. (2) **Tarball-from-local** (developer path; UI
-  mode toggle) — bundles the operator's CURRENT local working tree (uncommitted edits included) before VM launch.
-  **ONLY works from the operator's workstation**, never from the deployment-api Cloud Run pod. The
-  `/data-status/deploy-missing-preview` endpoint emits a `LOCAL-ONLY + UNCOMMITTED CHANGES` warning when picked.
-  (3) **Sibling-clone** (local-stack dev) — workstation has every service repo cloned as siblings under
-  `${WORKSPACE_ROOT}` per workspace-manifest; CI / Cloud Run does NOT have sibling clones. (4) **Image** (future)
-  — bake launchers into a Docker image cached in Artifact Registry / ECR; deployment-api pulls + runs. Tracked in
-  `plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`. **Adding a new launcher:** file lives under
-  `deployment-service/scripts/vm/launch-{asset_group}-{flavor}-vm.sh`; register VM-name prefix in
-  `VM_PREFIX_TO_BUCKET`; register the script in `_SERVICE_LAUNCHER_SCRIPTS` if it should be reachable from the
+- **VM launcher script SSOT (codified 2026-05-07)** — Every script that runs `gcloud compute instances create` (or the
+  AWS `aws ec2 run-instances` equivalent) MUST live under `deployment-service/scripts/vm/`. No exceptions. Ad-hoc
+  launchers under `e2e-testing/scripts/`, `features-*-service/scripts/`, or any other repo are technical debt and must
+  be migrated. **Why:** the deployment-UI is the workspace SSOT for "how do we launch a VM"; the Deploy-Missing button +
+  the operational launchers all read from a single registry (`_SERVICE_LAUNCHER_SCRIPTS` in
+  `deployment-api/deployment_api/services/deploy_missing.py`). Scattered launchers (a) bypass the registry so the UI
+  can't render Deploy-Missing for them; (b) miss the workspace conventions (`MANIFEST_PER_VM_SHARDS=true`,
+  `VM_NAME=<unique-tag>`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`, the `VM_PREFIX_TO_BUCKET` registry from the rule below);
+  (c) drift in shape over time, breaking parallel-agent reasoning. **Four ways the script reaches the VM** (UI exposes
+  the first two as a mode toggle): (1) **Tarball** (default + production) —
+  `gs://deployment-scripts-${PID}/code/<tarball>.tar.gz` → `setup-data-pipeline-vm.sh` extracts at boot. Refresh via
+  `create-code-tarballs.sh --all`. (2) **Tarball-from-local** (developer path; UI mode toggle) — bundles the operator's
+  CURRENT local working tree (uncommitted edits included) before VM launch. **ONLY works from the operator's
+  workstation**, never from the deployment-api Cloud Run pod. The `/data-status/deploy-missing-preview` endpoint emits a
+  `LOCAL-ONLY + UNCOMMITTED CHANGES` warning when picked. (3) **Sibling-clone** (local-stack dev) — workstation has
+  every service repo cloned as siblings under `${WORKSPACE_ROOT}` per workspace-manifest; CI / Cloud Run does NOT have
+  sibling clones. (4) **Image** (future) — bake launchers into a Docker image cached in Artifact Registry / ECR;
+  deployment-api pulls + runs. Tracked in `plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`. **Adding a new
+  launcher:** file lives under `deployment-service/scripts/vm/launch-{asset_group}-{flavor}-vm.sh`; register VM-name
+  prefix in `VM_PREFIX_TO_BUCKET`; register the script in `_SERVICE_LAUNCHER_SCRIPTS` if it should be reachable from the
   Deploy-Missing UI button. **Migration in flight (2026-05-07):** 30 ad-hoc launchers under `e2e-testing/scripts/`
-  + `features-sports-service/scripts/` + the intra-repo `deployment-service/scripts/deploy-dashboard-gce-vm.sh`
-  pending migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`.
-  Until plan ships, Deploy-Missing UI button degrades to "no launcher registered" for those services; operators
-  run the ad-hoc script manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
-  `codex/05-infrastructure/vm-tarball-deployment.md`.
+  - `features-sports-service/scripts/` + the intra-repo `deployment-service/scripts/deploy-dashboard-gce-vm.sh` pending
+    migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`. Until plan
+    ships, Deploy-Missing UI button degrades to "no launcher registered" for those services; operators run the ad-hoc
+    script manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
+    `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **Singleton-locked launchers** — Adapters with shared API keys / per-IP rate limits use a singleton-lock pattern in
   the launcher (refuses launch if a same-prefix VM is RUNNING in the zone; `--force` bypass). Currently:
   `launch-sfi-forward-poll.sh`, `launch-mtds-prediction-backfill-vm.sh`. New rate-limited adapters should copy the
@@ -880,12 +879,12 @@ coordination and loses work.
 ### Half 1 — Commit + push at every shippable unit
 
 A "shippable unit" is the smallest meaningful slice of work that QGs cleanly on its own — a helper + its tests, one
-adapter migration, one reconciler, one consumer wire-in. **The moment a shippable unit is green, commit + push.**
-Do not batch shippable units across a session waiting for a "natural pause."
+adapter migration, one reconciler, one consumer wire-in. **The moment a shippable unit is green, commit + push.** Do not
+batch shippable units across a session waiting for a "natural pause."
 
-- **Pushed = real.** A local-only commit is invisible to every other agent + every CI gate + every running VM that
-  pulls from `live-defi-rollout`. Until you `git push`, your work doesn't exist as far as the rest of the workspace
-  is concerned.
+- **Pushed = real.** A local-only commit is invisible to every other agent + every CI gate + every running VM that pulls
+  from `live-defi-rollout`. Until you `git push`, your work doesn't exist as far as the rest of the workspace is
+  concerned.
 - **The cadence is per-shippable-unit, not per-hour or per-session.** Five shippable units in one session = five
   commit+push cycles, not one. Each cycle is small enough to revert cleanly if a downstream agent flags a regression
   half an hour later.
@@ -893,11 +892,11 @@ Do not batch shippable units across a session waiting for a "natural pause."
   stash, an auto-formatter pass, or another agent's `git add <file>` accidentally hoovering up your unstaged hunks
   (reference incident: PM@961980db — a teammate's local-uncommitted audit section got bundled into another agent's
   plan-flip commit because the second agent staged the whole file instead of `git add -p`-ing their own hunks).
-- **End-of-session commits are a smell.** If you find yourself with 4 hours of uncommitted work as you're writing
-  the handoff, the rule was already violated.
-- **`live-defi-rollout` is the working branch.** VMs pull from it; CI runs against it. Push directly per the
-  workspace dirty-deps rule (`git add <my-files> && git commit --no-verify && git push origin live-defi-rollout`)
-  rather than waiting for a quickmerge → main promotion cycle.
+- **End-of-session commits are a smell.** If you find yourself with 4 hours of uncommitted work as you're writing the
+  handoff, the rule was already violated.
+- **`live-defi-rollout` is the working branch.** VMs pull from it; CI runs against it. Push directly per the workspace
+  dirty-deps rule (`git add <my-files> && git commit --no-verify && git push origin live-defi-rollout`) rather than
+  waiting for a quickmerge → main promotion cycle.
 
 ### The mandatory pre-commit check (catches accidental bundling)
 
@@ -908,18 +907,29 @@ git status                 # full picture: modified, staged, untracked
 git diff --cached --stat   # NO PATH ARGUMENT — see the entire index
 ```
 
-If anything is in the staged set or working tree that isn't yours, surgically un-stage it (`git restore --staged <file>`)
-or `git stash --keep-index` the unrelated stuff before committing. **Never pass a `<path>` argument to
-`git diff --cached --stat`** — that filters the output to just that path and masks other staged hunks.
+If anything is in the staged set or working tree that isn't yours, surgically un-stage it
+(`git restore --staged <file>`) or `git stash --keep-index` the unrelated stuff before committing. **Never pass a
+`<path>` argument to `git diff --cached --stat`** — that filters the output to just that path and masks other staged
+hunks.
 
-Reference incidents (both 2026-05-07 PM repo, both bundled foreign work into a single agent's commit):
+Reference incidents (all 2026-05-07 PM repo, all from concurrent-agent overlap):
 
-* PM@961980db — bundled a teammate's local-uncommitted "Audit 2026-05-07" plan section because `git add <plan-file>`
+- PM@961980db — bundled a teammate's local-uncommitted "Audit 2026-05-07" plan section because `git add <plan-file>`
   picked up the whole current file state, including their unstaged hunks.
-* PM@611b9501 — bundled a teammate's `git mv` (plan promotion ai/→active/) because the agent only checked
-  `git diff --cached --stat <single-path>` and missed the rename already sitting in the index. **The very commit
-  that codified this rule was an instance of the foot-gun the rule warns about.** That's how easy it is to fall
-  into; do the full-status check.
+- PM@611b9501 — bundled a teammate's `git mv` (plan promotion ai/→active/) because the agent only checked
+  `git diff --cached --stat <single-path>` and missed the rename already sitting in the index. **The very commit that
+  codified this rule was an instance of the foot-gun the rule warns about.** That's how easy it is to fall into; do the
+  full-status check.
+- PM@34075d84 (later reset to PM@7de75819, this session's mirror-image incident) — a parallel-agent's auto-commit swept
+  up another agent's already-staged `git mv` renames into ITS commit, then the parallel agent reset its own commit and
+  re-committed (7de75819) without those renames. Net: the original agent's staged work was **silently wiped from the
+  index** without their `git mv` ever errroring, and they had to re-stage everything from disk. This is the inverse
+  failure of #1+#2: those bundled foreign work IN; this one let foreign reset take work OUT. **Lesson:** if `git status`
+  says "ahead by 1 commit" mid-session and you didn't make that commit, a concurrent agent has been moving HEAD — check
+  `git log origin/<branch>..HEAD` before any further git operation. After every `git mv` / `git rm` / `git add`, before
+  `git commit`, run `git diff --cached --name-status` to verify YOUR entries are still in the index. A parallel reset
+  can erase staged renames without surfacing any error. Recovery is straightforward (re-stage from disk) but only if you
+  notice — silent loss is the trap.
 
 ### Half 2 — Flip the plan checkbox in the same logical unit
 
@@ -928,16 +938,17 @@ work is shipped (committed + pushed)** — not at the end of the session, not "a
 batched into a single sweep at handoff time. The flip happens in the same logical unit of work as the code commit:
 
 1. Ship the code commit (or commits) that complete the todo. **Push it.**
-2. Edit the plan file: `- [ ] [SCRIPT] P0. Description...` → `- [x] [SCRIPT] P0. Description... (commit-sha + brief evidence)`.
+2. Edit the plan file: `- [ ] [SCRIPT] P0. Description...` →
+   `- [x] [SCRIPT] P0. Description... (commit-sha + brief evidence)`.
 3. Commit the plan flip in the PM repo with a `plan(...)` prefix referencing the work commits. **Push it.**
 4. Only then move to the next todo.
 
-**Don't flip a checkbox unless the work is actually shipped.** Pushed commits count; local commits do NOT. If the
-work is half-done (e.g. helper shipped but consumer wiring deferred), flip only the half that landed and append a
+**Don't flip a checkbox unless the work is actually shipped.** Pushed commits count; local commits do NOT. If the work
+is half-done (e.g. helper shipped but consumer wiring deferred), flip only the half that landed and append a
 `**DEFERRED**:` note to the unshipped half explaining why.
 
-**The flip belongs in a separate commit** in the PM repo (or bundled with other doc-only PM changes), with the
-canonical message shape:
+**The flip belongs in a separate commit** in the PM repo (or bundled with other doc-only PM changes), with the canonical
+message shape:
 
 ```
 plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary of what shipped>)
@@ -955,16 +966,16 @@ Plan: <plan-filename>.
   trust them, and parallel agents re-do work that's already shipped.
 - Two agents reading the same plan must see the same in-flight state. Stale checkboxes cause work-stealing collisions
   (two agents implementing the same item in parallel).
-- "I'll commit + flip everything at the end" routinely loses items. Someone gets summoned mid-session, context fills
-  up, the auto-formatter clobbers an unstaged file, the flip never happens, and the next agent reads the plan as if
-  nothing was done.
+- "I'll commit + flip everything at the end" routinely loses items. Someone gets summoned mid-session, context fills up,
+  the auto-formatter clobbers an unstaged file, the flip never happens, and the next agent reads the plan as if nothing
+  was done.
 - Per-shippable-unit pushes are the ONLY way the workspace's parallel-agent + per-VM-pull-from-`live-defi-rollout`
-  + manifest-concurrency-protocol model works. A 4-hour uncommitted block is invisible to everything else and
-  blocks no work but yours.
+  - manifest-concurrency-protocol model works. A 4-hour uncommitted block is invisible to everything else and blocks no
+    work but yours.
 
-This applies to every plan in `plans/active/` and every working session — tier completions, partial flips inside a
-tier, even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without
-the matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
+This applies to every plan in `plans/active/` and every working session — tier completions, partial flips inside a tier,
+even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
+matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
 
 ## Citadel-Grade Planning Standards
 
