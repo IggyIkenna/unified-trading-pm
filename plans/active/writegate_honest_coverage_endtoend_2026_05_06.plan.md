@@ -1285,20 +1285,21 @@ audit" carries the SSOT table.
 
 #### Phase 2.E.1 — UTL contract extension (block-everything; ships before per-service Phase 2.A migration)
 
-- [ ] [SCRIPT] P0. Extend `unified_trading_library/manifest_writer.py` `record_empty()` to accept an optional
+- [x] [SCRIPT] P0. Extend `unified_trading_library/manifest_writer.py` `record_empty()` to accept an optional
       `reason: str = ""` kwarg. The reason flows through to the manifest row's `error_reason` column verbatim. UTL
       validates `reason` against a closed set per `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS`
       enum (new); unknown reasons raise `UnknownEmptyConfirmedReasonError`. Existing callsites (no `reason` kwarg)
-      continue to work — `error_reason=""` preserved for back-compat.
-- [ ] [SCRIPT] P0. New UAC SSOT
+      continue to work — `error_reason=""` preserved for back-compat. Shipped UTL@958634f9 2026-05-07.
+- [x] [SCRIPT] P0. New UAC SSOT
       `unified_api_contracts/canonical/crosscutting/honest_coverage.EMPTY_CONFIRMED_REASONS` — `StrEnum` with the 9
       reason codes from the codex doc § "Reason taxonomy" matrix. Adding a new reason = adding it here AND to the
-      codex doc table AND to the per-service consumer-class audit.
-- [ ] [SCRIPT] P0. New UTL helper `record_expected_empty(row_key, reason, attempted_at)` — thin wrapper around
+      codex doc table AND to the per-service consumer-class audit. Shipped UAC@8867891 2026-05-07.
+- [x] [SCRIPT] P0. New UTL helper `record_expected_empty(row_key, reason, attempted_at)` — thin wrapper around
       `record_empty(row_key, reason=reason, attempted_at=attempted_at)` that asserts `reason.startswith("EXPECTED_")`
-      so calendar-pre-skip callsites don't accidentally emit `SOURCE_RETURNED_ZERO`.
-- [ ] [TEST] P0. UTL unit tests cover: known reason → row has `error_reason=<reason>`; unknown reason →
-      `UnknownEmptyConfirmedReasonError`; `record_expected_empty` rejects non-`EXPECTED_*` reasons.
+      so calendar-pre-skip callsites don't accidentally emit `SOURCE_RETURNED_ZERO`. Shipped UTL@958634f9 2026-05-07.
+- [x] [TEST] P0. UTL unit tests cover: known reason → row has `error_reason=<reason>`; unknown reason →
+      `UnknownEmptyConfirmedReasonError`; `record_expected_empty` rejects non-`EXPECTED_*` reasons. 14 tests in
+      `tests/unit/test_manifest_writer_record_empty_reason.py` shipped UTL@958634f9 2026-05-07.
 - [ ] [QG] P0. UTL `quality-gates.sh` step asserts every `record_empty(reason=...)` callsite outside UTL passes a
       reason from the closed set (static AST walk, mirrors STEP 5.64's bundled-data_type guard).
 
