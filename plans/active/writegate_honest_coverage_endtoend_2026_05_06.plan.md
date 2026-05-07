@@ -2137,6 +2137,60 @@ on the manifest.
 empty_confirmed rows to canonical CeFi manifest. Plus an unknown number of historical bad rows from
 prior silent-fallback bugs.
 
+**Asset-group-specific empty_confirmed legitimacy (operator directive 2026-05-07 evening, msg 6):**
+
+> "sports and prediction markets are allowed to have empty_confirmed and reason like no match today or
+> something. cefi, defi, tradfi cannot have empty_confirmed. if its genuinely empty then it should be
+> on venue level like holiday or exchange issue or something. Illiquid ones like far OTM options are
+> not going to have any trades for multiple days, its possible but in that case it should be 0 volume
+> candles with LTP as current price."
+
+This codifies a per-asset-group rule the existing UTL `classify_legacy_empty_row` helper does NOT
+honour. Today the helper defaults `_classify_cefi` / `_classify_defi` blank-reason rows to
+`SOURCE_RETURNED_ZERO` (an empty_confirmed reason) — per the operator, this is WRONG. It silently
+grants cefi/defi rows legit-empty status when actually they should flip to `attempted_failed` to force
+re-attempt. **Audit finding 2026-05-07**: the existing `reconcile_expected_absence_reasons.py` (which
+uses the helper) has been retroactively stamping cefi/defi blank-reason rows as
+`empty_confirmed/SOURCE_RETURNED_ZERO` — propagating the silent-bug semantics into the manifest. Any
+rows touched by that reconciler in cefi/defi need a re-pass to flip to the correct shape.
+
+| asset_group  | Legit empty_confirmed at instrument-day? | Default for un-classifiable blank-reason rows                       |
+| ------------ | ---------------------------------------- | ------------------------------------------------------------------- |
+| sports       | YES — no fixtures today is normal        | `empty_confirmed/SOURCE_RETURNED_ZERO`                              |
+| prediction   | YES — no markets active that day         | `empty_confirmed/SOURCE_RETURNED_ZERO`                              |
+| cefi         | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
+| defi         | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
+| tradfi       | NO at instrument-day — venue-level only  | `attempted_failed/LegacyBlankErrorReasonError` — force re-attempt   |
+
+Venue-level legit empties for cefi/defi/tradfi (kept as `empty_confirmed` with typed reason):
+
+* `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` — calendar non-trading days (tradfi).
+* `EXPECTED_PARTIAL_HALF_DAY` — half-session days (tradfi).
+* `EXPECTED_PRE_VENUE_LAUNCH` — venue not yet operating (cefi/defi).
+* `EXPECTED_PRE_GENESIS_CHAIN` — chain not yet alive (defi).
+* `EXPECTED_INSTRUMENT_NOT_LISTED` — instrument's `available_from` is after the day (per-instrument
+  catalog read; Wave 3 will populate this from instruments-service).
+* `EXPECTED_INSTRUMENT_DELISTED` — instrument's `available_to` has passed.
+
+**Illiquid-instrument carve-out (deferred to a separate adapter fix, NOT this migration).** Per the
+operator: illiquid options (far OTM, distant expiry) may have zero trades for multiple days. The
+correct manifest shape for those is NOT `empty_confirmed` — it's `captured` with 0-volume candles
+where OHLC carries LTP-from-prior-day. This is an MTDS / MDPS adapter behaviour change, not a
+manifest classification change. Tracked as a follow-up below (Wave 3.M).
+
+**Manifest column hygiene (operator clarification msg 6):** the manifest already carries
+`attempted_at` (per the existing v5 schema) which is the "last time this data point was checked" /
+`checked_at` semantics. No new column needed. Updating an existing row's reason / status via
+the consolidator's last-writer-wins merge naturally bumps `attempted_at` to the new write — no
+schema change. Reconciler stamps + adapter writes both refresh the timestamp.
+
+**Empty-files-vs-manifest-rows (operator clarification msg 6):** writing fake-empty parquet files
+(0-volume candles, NaN OHLC bars) is NOT the right model — has bad implications for ML / features /
+strategy / execution backtests if consumers misinterpret. Manifest absence rows are the clear,
+service-decides-policy instruction. Each downstream service reads the manifest and decides per its
+own policy (NaN-fill, fail period, propagate, skip). Single SSOT for "what should exist", clear
+instruction for "what's actually there", per-service flexibility for "how to handle absence."
+
 - [ ] [SCRIPT] P0. NEW
       `instruments-service/scripts/reconcile_blank_error_reason_rows.py` — walks all 5 asset_group
       manifests; finds rows where `capture_status=empty_confirmed AND (error_reason IS NULL OR
