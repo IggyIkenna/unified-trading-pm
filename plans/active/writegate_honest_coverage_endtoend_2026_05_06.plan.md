@@ -1812,20 +1812,14 @@ in flight — once both halves ship per asset_group, that asset_group's denomina
 
 The all-5-asset_group scan-only sweep surfaced three follow-up items not covered in the original Phase 3.D.4 task list:
 
-- [ ] [SCRIPT] P0. **DeFi cap bump rerun.** DeFi scan-only halted on default `--max-writes-per-run=100000` (rc=5,
-      `ENUMERATOR_FAILED reason=max_writes_exceeded`). Manifest already has 313,365 rows; the cross-product enumerator
-      finds at least 100,001 absent (chain × protocol × data_type × pre-launch-date) tuples. The 100k limit is a
-      halt-safety, not the actual count. Need a relaunch with `--max-writes-per-run 1_000_000` (or chunked-by-chain
-      enumeration) to see the real distribution before `--apply-write`. Two viable shapes:
-      (a) one-off SSH-driven invocation on a freshly launched VM with the higher cap;
-      (b) launcher enhancement (next item) — third positional arg passes through to the script.
-- [ ] [SCRIPT] P0. **Launcher pass-through for `--max-writes-per-run` (and other flags).**
-      `deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh` currently hardcodes
-      `--asset-group <group>` + optional `--apply-write`; the shipped script also supports `--start-date`,
-      `--end-date`, `--bucket`, `--max-writes-per-run`, `--report-dir`. Add a third positional arg
-      `EXTRA_ARGS=""` (or named `--max-writes <N>`) wired into `BACKFILL_CMD` so cap-bumped reruns don't need
-      ad-hoc SSH or one-off launchers. Mirrors the pattern in `launch-mtds-*-backfill-vm.sh` which accepts pass-through
-      env vars (e.g. `FORCE=1`).
+- [x] [SCRIPT] P0 (shipped 2026-05-07, instruments-service@d1c9928). **DeFi cap bump.** Default
+      `--max-writes-per-run` raised from 100k to 1M. `--apply-write` defi run still hit 1M cap (true universe
+      ~1.286M rows); relaunched with `5000000` via the new launcher pass-through (next item). Final defi
+      written count: 1,286,260 rows (688,220 EXPECTED_PRE_GENESIS_CHAIN + 598,040 EXPECTED_INSTRUMENT_NOT_LISTED).
+- [x] [SCRIPT] P0 (shipped 2026-05-07, deployment-service@38b7a58). **Launcher pass-through for
+      `--max-writes-per-run`.** Third positional arg on `launch-expected-universe-enumerator-vm.sh` validates
+      as positive integer + appends `--max-writes-per-run <N>` to `BACKFILL_CMD`. Empty/missing falls through
+      to script default (1M). Used to ship the defi 5M-cap rerun without an ad-hoc launcher.
 - [ ] [SCRIPT] P1. **CSV report upload to GCS before VM auto-shutdown.** The enumerator writes its CSV report to
       `tempfile.gettempdir()` (i.e. `/tmp` on the VM), which is local disk and is destroyed when
       `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes the VM. Operator can read distribution-by-reason from the events
@@ -1834,6 +1828,165 @@ The all-5-asset_group scan-only sweep surfaced three follow-up items not covered
       `gs://deployment-scripts-{pid}/enumerator-reports/{vm_name}/<asset_group>-<ts>.csv` before exit. Low priority
       because the events log already captures the distribution; needed only if the operator wants to inspect specific
       candidate rows.
+
+#### Phase 3.D.5 — Instruments-service-driven enumeration v2 (NEW 2026-05-07 — operator architectural directive)
+
+**User directive 2026-05-07 (post Phase 3.D.4 apply-write completion):**
+
+> "are all our mtds asset groups only checking for missing data based on what instruments are declared in
+> instruments services? this should be the convention"
+>
+> "for odds api in mtds i guess equivalent is checking fixtures that exist in fixtures (that's originally come
+> from API Football, but we just get them from GCS.)"
+
+**The architectural model.** The `(instruments-service catalog) × (data_types) × (dates_in_window)` cross-product
+IS the expected universe — at every per-(venue, instrument_id, day) grain. Today's Phase 3.D.4 enumerator covers
+the **coarse "venue/chain/source didn't exist yet"** layer (38,033 tradfi calendar rows + 13,176 sports
+pre-coverage rows + 119,152 cefi pre-venue-launch rows + 2,280 prediction pre-venue-launch rows + 1,286,260
+defi pre-genesis-and-pre-protocol-launch rows = **1,455,901 total**). It does NOT yet enumerate the
+**fine-grained per-instrument lifecycle** (instrument listed/delisted/expired) which is much larger and
+requires reading the per-asset-group instruments-service catalog.
+
+**v1 (shipped today)** is honest as far as it goes — it correctly marks every coarse "didn't exist yet" tuple.
+**v2 (this phase)** layers per-instrument lifecycle on top so EVERY `(asset_group, venue, data_type,
+instrument_id, day)` tuple in the manifest's expected universe is either `captured` / `empty_confirmed` /
+`attempted_failed` — no silent absence.
+
+**Convention to codify in CLAUDE.md after this phase ships:** _"MTDS missing-data checks for any asset_group
+MUST derive their expected universe from the instruments-service catalog for that asset_group, NOT from
+inline / hardcoded lists. Adding a new venue / data_type / instrument anywhere in the workspace = adding
+it to the instruments-service catalog (the SSOT) and the enumerator picks it up automatically next run."_
+
+**Per-asset-group catalog read sources (the SSOT inputs to v2 enumeration):**
+
+| asset_group | catalog source                                                                                                               | shard atom (per CLAUDE.md)                                                              | per-instrument lifecycle fields                                                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi        | `gs://instruments-store-cefi-{pid}/…` (Tardis-based per-venue instrument catalog)                                            | `(asset_group, venue, data_type, instrument_type, instrument_id, day)` — per-instrument | `available_from`, `available_to`, `expiry` (perp/futures contracts), `listed_at`, `delisted_at`                                                                |
+| tradfi      | `gs://instruments-store-tradfi-{pid}/…` (Databento per-venue instrument catalog: ETF tickers, futures roots, options chains) | `(asset_group=tradfi, venue, data_type, instrument_type, instrument_id-or-root, day)`   | `listed_at` (ticker first traded), `delisted_at` (delisted from the venue), `expiry` (futures + options), `last_trade_date` (options expiry per cluster)       |
+| defi        | `gs://instruments-store-defi-{pid}/…` (per-(chain, protocol) pool/instrument catalog) — currently sparse, expansion in scope | `(asset_group=defi, chain, venue/protocol, data_type, instrument_or_protocol_id, day)`  | `created_at` (pool / instrument deployed on chain), `deactivated_at` (pool drained / paused), `migration_target` (pool migrated to v2/v3)                      |
+| sports      | `gs://instruments-store-sports-{pid}/fixtures/…` (API-Football fixtures catalog, also team / league / season catalogs)       | `(asset_group=sports, source, data_type, league_id, fixture_id-or-day-aggregate, day)`  | `kickoff_time`, `league_active_window` (off-season pauses), `fixture_status` (postponed / cancelled), bookmaker `available_from` per `(odds_api, league)` pair |
+| prediction  | `gs://instruments-store-prediction-{pid}/…` (per-canonical-question-group catalog)                                           | `(asset_group=prediction, venue, data_type, canonical_question_group, day)`             | `market_created_at` (per market_id), `resolution_time`, `settlement_time`, canonical-question-group active window (HOURLY / DAILY / ELECTION cycles)           |
+
+**Tasks.** Sequential per asset_group — start with the asset_group whose catalog is most mature (sports
+fixtures + tradfi Databento) and end with the asset_group whose catalog needs the most work (defi +
+prediction).
+
+- [ ] [UAC] P0. **Catalog-read interface contract.** Every asset_group's instruments-service catalog must
+      expose a uniform `list_instruments(asset_group, start_date, end_date) -> Iterator[CatalogRow]` shape —
+      same columns as the manifest's row_key (`venue`, `chain`, `data_type`, `instrument_type`,
+      `instrument_id`, `league_id`, ...) plus the lifecycle columns (`available_from`, `available_to`,
+      `expiry`, etc.). Define the contract in
+      `unified_api_contracts/canonical/domain/instruments_catalog.py` (NEW) so the enumerator + downstream
+      consumers (data-status drilldown, MTDS pre-flight skip checks, MDPS dependency gate) all read from one
+      shape.
+- [ ] [SCRIPT] P0. **Sports v2 enumerator** — the lowest-risk first cut because the fixtures catalog is
+      already in `gs://instruments-store-sports-{pid}/fixtures/by_date/day=…/entity=fixtures/…` (per
+      `unified_api_contracts.sports.candidate_parquet_paths` SSOT). For odds_api: cross-product
+      `(league_id, fixture_id, bookmaker, market_type) × dates` filtered by
+      `kickoff_time ∈ [day_00:00, day_23:59]`. Reasons:
+      `EXPECTED_INSTRUMENT_NOT_LISTED` for fixtures-not-yet-scheduled,
+      `EXPECTED_PAUSED_LEAGUE` for off-season windows (existing reason, currently unused by enumerator),
+      `EXPECTED_PRE_SOURCE_COVERAGE_START` for pre-bookmaker-coverage dates (existing reason). Wire into
+      `_enumerate_sports` replacing today's per-source-only branch.
+- [ ] [SCRIPT] P0. **CeFi v2 enumerator** — read per-venue instrument catalog from
+      `gs://instruments-store-cefi-{pid}/by_venue/{venue}/instruments.parquet` (or whatever the canonical
+      Tardis-derived layout is — needs an `instruments-service`-side audit). Cross-product
+      `(venue, instrument_type, instrument_id, data_type) × dates` filtered by
+      `available_from ≤ day ≤ available_to`. Today's `EXPECTED_PRE_VENUE_LAUNCH` becomes a special-case of
+      `EXPECTED_INSTRUMENT_NOT_LISTED` (every instrument's `available_from` ≥ venue launch date by
+      definition). For options/futures: bundled-by-root cluster atoms — `EXPECTED_INSTRUMENT_NOT_LISTED`
+      gates per-root-day. For perp futures: `EXPECTED_INSTRUMENT_DELISTED` when contract expires.
+- [ ] [SCRIPT] P0. **TradFi v2 enumerator** — replace today's `non_trading_day_reason` cross-product (which
+      generates 35,033 calendar rows per (venue, data_type) without instrument granularity) with per-
+      `(venue, instrument_type, instrument_id-or-root, data_type, day)` enumeration driven by the Databento
+      instruments catalog. ETF / equity tickers get per-instrument lifecycle (NASDAQ-listed-at, delisted-at);
+      futures + options chains get per-root + cluster-day enumeration with weekly + standard expiries.
+      Calendar non-trading days remain `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` per the existing reason
+      taxonomy.
+- [ ] [SCRIPT] P0. **DeFi v2 enumerator** — extend today's PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES
+      cross-product with the per-pool instrument lifecycle. Each (chain, protocol) maintains a list of
+      pools/instruments that get added/removed over time (Aave V3 listing/delisting individual reserves,
+      Uniswap V3 pool deployments, Curve gauge additions, etc.). Today's `EXPECTED_INSTRUMENT_NOT_LISTED`
+      blanket-marks 598,040 rows for "protocol on chain hadn't launched yet"; v2 makes that
+      per-(chain, protocol, instrument_id, day) so we mark individual pools/positions correctly.
+- [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
+      `predictions_master_2026_05_07.plan.md`. Once that ships, cross-product
+      `(venue, canonical_question_group, market_id, data_type, day)` filtered by
+      `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor;
+      v2 adds canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years)
+      so per-day coverage of recurring groups is honest.
+- [ ] [DOCS] P0. **Codify the convention in CLAUDE.md.** After v2 ships across all 5 asset_groups, add a new
+      Key-Rules-Quick-Reference bullet:
+      _"MTDS / instruments-service / data-status missing-data checks for ANY asset_group derive their
+      expected universe from the instruments-service catalog for that asset_group, NOT from inline /
+      hardcoded venue / data_type / date lists. The catalog IS the SSOT for `what should exist`. Adding a
+      new venue / data_type / instrument = adding to the instruments-service catalog; downstream
+      enumerators + data-status panel + MTDS preflight + MDPS dependency-gate pick it up automatically."_
+
+**Coordination with parallel plans** — Phase 3.D.5 touches the same instruments-service catalog
+infrastructure as the per-asset-group umbrella plans. Reference cross-plan banners (CLAUDE.md "Cross-Plan
+Coordination Banners" rule) — the Phase 3.D.5 v2 enumerator must align with:
+
+* `cefi_master_2026_05_07.plan.md` — CeFi instrument catalog scope + lifecycle field schema
+* `predictions_master_2026_05_07.plan.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
+* `sports_master_2026_05_07.plan.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
+* `tradfi_master_2026_05_07.plan.md` — Databento instrument catalog scope + cluster taxonomy
+* `defi_master_2026_05_07.plan.md` — per-pool catalog expansion (currently sparse)
+
+Each asset_group's v2 enumerator implementation lives under instruments-service/scripts/, but the catalog
+schema + read interface lives in UAC. The v1 enumerator stays in place during the v2 buildout — v2 is a
+strictly additive layer; v1's coarse rows stay correct (just less complete than v2 will be).
+
+**Why ship v1 first then v2** — v1 is a one-day shippable unit that closes the rollup-vs-drilldown gap for
+the largest "didn't exist yet" slice (1.45M rows). v2 is multi-week work that requires per-asset-group
+catalog audits + schema agreement. Operator gets immediate denominator-divergence relief from v1 while v2
+is built; no v2 prerequisite blocks v1's value.
+
+#### Phase 3.D.5 — Architectural trade-off (operator framing 2026-05-07 evening)
+
+The operator captured the v1-vs-v2 trade-off cleanly:
+
+> "Yeah, I guess the only downside of doing it based on instrument services is if instrument services
+> haven't run yet, then what do you do? I guess it just means that we'd have to keep re-running it as
+> instrument services expand. ... Whereas if you do it this way, you're going to get a whole bunch of empty
+> data that you know is empty because you haven't run instrument services, but at least once instrument
+> service is 100%, you can run it just a straight data status, because the manifest is already making sense.
+> That's the trade-off, right?"
+
+**Yes, that is the trade-off** — and it's the right reason to keep v1 (cross-product) AS WELL AS v2
+(catalog-driven), not replace v1 with v2:
+
+| Property                                        | v1 cross-product (shipped today)                                                         | v2 catalog-driven (Phase 3.D.5 above)                                                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Granularity                                     | (asset_group, venue, data_type, day) — coarse, no per-instrument                         | (asset_group, venue, data_type, instrument_type, instrument_id, day) — fine, per-instrument                      |
+| What it marks as expected-empty                 | "venue / chain / source did not exist" — the floor of absence                            | All of v1's set PLUS per-instrument NOT_LISTED / DELISTED / EXPIRED / paused-league windows                      |
+| Idempotence vs catalog evolution                | **IDEMPOTENT** — chain genesis / venue launch dates rarely change; rerun only when SSOT itself changes | **NOT idempotent** — every catalog addition (new venue, new pool, new fixture, new market) requires a rerun     |
+| Sensitivity to instruments-service completeness | **insensitive** — works even when catalog is 0% populated, lets the manifest tell the truth about coarse absence | **sensitive** — under-marks if catalog is incomplete; over-marks if catalog includes deprecated/wrong instruments |
+| Operator workflow                               | Run once when SSOT changes (~quarterly cadence)                                          | Run on every catalog-update commit (~daily / weekly cadence) or wire as a post-instruments-service hook         |
+| Risk if not run                                 | Coarse "didn't exist" rows stay missing — rollup % off until a new venue's pre-launch dates land | Per-instrument rows stay missing — fine-grain denominator off but coarse layer is fine                          |
+
+**The right shape, given the trade-off, is BOTH layers running concurrently:**
+
+* **v1 (today's enumerator)** = always-live coarse layer. Re-runs when UAC `CHAIN_GENESIS_DATES` /
+  `PROTOCOL_LAUNCH_DATES` / `CEFI_VENUE_LAUNCH_DATES` / `PREDICTION_VENUE_LAUNCH_DATES` /
+  `SOURCE_COVERAGE_START` evolve (rare — quarterly-ish). Idempotent. The floor of expected-empty rows that
+  doesn't drift even if instruments-service is 0%.
+* **v2 (Phase 3.D.5 to-be-built)** = catalog-driven precision layer on top of v1. Re-runs when
+  instruments-service catalog evolves (frequent). Wire as a post-instruments-service hook so re-running is
+  automatic, not manual.
+
+The two layers are **complementary, not competing**. v1 stays correct even when v2 is incomplete; v2 adds
+precision without replacing v1's coverage. Manifest-consolidator merges per-VM shards from both layers into
+the same canonical `_index/availability_index.parquet` — last-writer-wins on identical row_keys means a v2
+write for `(venue, data_type, instrument_id=X, day=D)` cleanly supersedes a v1 write for
+`(venue, data_type, instrument_id="", day=D)` if both ever collide (they don't with today's empty-string
+sentinel discipline, but the model is robust to future grain refinements).
+
+**Codified as workspace convention (NEW Key-Rule):** the v2 enumerator is the SSOT for fine-grain
+expected-empty; v1 is the SSOT for coarse expected-empty. Neither replaces the other. Adding a new venue /
+data_type / instrument type goes into BOTH SSOTs — UAC `*_LAUNCH_DATES` / `*_GENESIS_DATES` for v1 if it's
+a new "structural" entity, AND the instruments-service catalog for v2's per-instrument enumeration. The
+data-status drilldown reads the canonical manifest (which has both layers merged) — no special-casing.
 
 ---
 
