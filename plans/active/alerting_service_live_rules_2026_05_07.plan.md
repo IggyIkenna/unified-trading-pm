@@ -75,7 +75,7 @@ Affected files / consumers when shipping:
 - [risk-and-exposure-service/](risk-and-exposure-service/) — emit alerts using UAC closed taxonomy
 - [position-balance-monitor-service/](position-balance-monitor-service/) — same
 - [execution-service/](execution-service/) — circuit-breaker subscriber + KILL_SWITCH emitter
-- [features-onchain/](features-onchain/) — emit `DEFI_HEALTH_FACTOR_CRITICAL`, `DEFI_AAVE_UTILIZATION_SPIKE`,
+- [features-onchain-service/](features-onchain-service/) — emit `DEFI_HEALTH_FACTOR_CRITICAL`, `DEFI_AAVE_UTILIZATION_SPIKE`,
   `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers
 - [unified-trading-system-ui/](unified-trading-system-ui/) (DART) — Active Alerts panel, Ack button, Escalate button
   (per e2e plan Frontend API Surface)

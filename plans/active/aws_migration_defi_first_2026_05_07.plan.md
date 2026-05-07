@@ -210,7 +210,7 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
 #### 1.5.B — Pub/Sub topic + subscription parity (SNS+SQS or EventBridge)
 
 GCP Pub/Sub powers cross-service messaging per
-[`plans/active/end-to-end-testing/020_alerting_service.md`](plans/active/end-to-end-testing/020_alerting_service.md):
+[`plans/active/end-to-end-testing/020_alerting_service.md`](./end-to-end-testing/020_alerting_service.md):
 `risk_alerts_circuit_breaker_triggers`, `balance_discrepancy_alerts`, `order_rejection_spikes`,
 `circuit_breaker_commands`, `service_stop_restart_triggers`, plus deployment-orchestration topics. AWS-side equivalent
 currently missing.

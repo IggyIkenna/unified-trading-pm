@@ -171,7 +171,8 @@ controller layer).
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       add a "LegController integration" sub-section. ATOMIC mode and LEADER_HEDGE mode both flow through
       `LegController.update` with mode-specific deadlines + compensation rules.
-- [ ] [codex] P0. [`recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/recursive-staked.md): same
+- [ ] [codex] P0.
+      [`carry-recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md): same
       rewrite for the recursive supply/borrow loop.
 - [ ] [codex] P1. Remaining 7 archetype docs in `codex/09-strategy/architecture-v2/archetypes/` — same rewrite. Per
       Citadel-grade `doc → plan → code` rule, ship even if the code backport for that archetype is deferred. Each doc
