@@ -309,34 +309,51 @@ features coverage end-to-end.
 
 ## Temporary states + their canonical follow-up plans
 
-Per workspace rule "Temporary state must have a named successor plan (no silent 'fix later')". Phase 1A
-(UAC@4a25b07) shipped a partial seed of `FEATURE_REQUIRED_INPUTS`; the gaps below must be closed before Phase 2A
-consumer migration completes.
+Per workspace rule "Temporary state must have a named successor plan (no silent 'fix later')". Phase 1A (UAC@4a25b07)
+shipped a partial seed of `FEATURE_REQUIRED_INPUTS`; the gaps below must be closed before Phase 2A consumer migration
+completes.
 
-- **AVAILABILITY_AT_SEMANTICS defi vocabulary gap — half closed 2026-05-07.**
+- **AVAILABILITY_AT_SEMANTICS defi vocabulary gap — fully closed 2026-05-07.**
   - **Half 1 shipped UAC@2f40c9d**: `lending_indices` / `risk_params` / `rewards` / `flash_loan_events` /
     `eigenlayer_rewards` now registered in
     `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS` with the
-    `tick_timestamp` semantic (matching every other DeFi entry — they're per-event on-chain reads). 7 unit tests
-    in `tests/unit/test_availability_semantics.py` cover every new entry + the closed-set output guarantee.
-  - **Half 2 still pending**: lift the 10 deferred onchain feature_groups (`aave_lending_rates`,
-    `aave_utilization`, `aave_risk_params`, `fear_greed`, `macro_sentiment`, `eigen_rewards`, `protocol_rewards`,
-    `flash_loan_availability`, `aave_rate_impact`, `onchain_regime`) into `FEATURE_REQUIRED_INPUTS` so
-    LookaheadBiasError enforces them. Each lift requires reading the calculator's actual upstream reads to
-    determine the precise `(asset_group, data_type, source)` shape. Deferred to a Phase 1A.2 follow-up commit
-    so the UAC unblock lands first and isn't held up by the calculator audit. Same plan, same temporary-states
-    section — replace this bullet with a full strikethrough when Half 2 lands.
-- **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity
-  names (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
-  feature_groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from
-  `FEATURE_REQUIRED_INPUTS`. Successor: open a `sports_feature_required_inputs_vocab_2026_<TBD>.plan.md` that maps
-  each sports entity-name to one or more `(source, data_type)` pairs (e.g. `"fixtures_history" → [("api_football",
-  "FIXTURES"), ("footystats", "FIXTURES")]`) and lifts them into UAC.
+    `tick_timestamp` semantic. 7 unit tests cover every new entry + the closed-set guarantee.
+  - **Half 2 shipped UAC@7a3299a**: 8 of the 10 deferred onchain feature_groups lifted into
+    `FEATURE_REQUIRED_INPUTS` — `aave_lending_rates` / `aave_utilization` / `aave_risk_params` /
+    `eigen_rewards` / `protocol_rewards` / `flash_loan_availability` / `aave_rate_impact` /
+    `onchain_regime`. Mapping derived from
+    `features_onchain_service.schemas.feature_builder_registry._metadata` SSOT. The remaining 2
+    (`fear_greed` + `macro_sentiment`) are intentionally NOT lifted — they're live HTTP pass-throughs
+    over Alternative.me + CoinGecko sentiment APIs that bypass the manifest entirely. Documented inline
+    in `required_inputs.py` + tracked as a separate "External-sentiment-API live-read pass-throughs"
+    bullet below. 3 new unit tests cover: every lifted entry, onchain_regime's 2-input structure, and
+    the explicit non-seeding of fear_greed + macro_sentiment.
+
+- **External-sentiment-API live-read pass-throughs (deferred, post-May-23 if needed).** `fear_greed`
+  (live HTTP fetch from Alternative.me) + `macro_sentiment` (live HTTP fetch from CoinGecko + DefiLlama)
+  bypass the manifest entirely — there's no upstream `(asset_group, data_type)` to enforce LookaheadBias
+  against. Two paths to close, both deferred:
+  - (a) Register `crypto_sentiment` and/or `macro_metrics` as DeFi data_types in
+    `unified_api_contracts.registry.market_data_categories.DEFI_DATA_TYPES` + add availability_semantics
+    + write a captured-tick adapter (probably in MTDS) that snapshots the API output into a manifest
+    data_type on a sensible cadence. Then lift the calculators here.
+  - (b) Treat both calculators as out-of-band sentiment overlays that don't participate in
+    honest-coverage accounting at all (analogous to how options Greeks aren't manifest data_types).
+    Document the carve-out in the EXPECTED_FEATURE_GROUPS_BY_SERVICE comment so they don't appear in
+    the denominator either.
+  Decision deferred to a focused 2-hour session with the operator. Not a May-23 blocker — these are
+  enrichment features, not core trading signals.
+- **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity names
+  (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
+  feature*groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from
+  `FEATURE_REQUIRED_INPUTS`. Successor: open a
+  `sports_feature_required_inputs_vocab_2026*<TBD>.plan.md`that maps each sports entity-name to one or more`(source,
+  data_type)`pairs (e.g.`"fixtures_history" → [("api_football", "FIXTURES"), ("footystats", "FIXTURES")]`) and lifts
+  them into UAC.
 - **features-volatility-service + features-cross-instrument-service stubs.** Both services have empty
-  `EXPECTED_FEATURE_GROUPS_BY_SERVICE` lists today — populate as their respective `BuilderRegistry` patterns
-  consolidate (volatility currently a placeholder per audit 2026-05-07; cross-instrument has 20+ calculators in dir
-  but no central registry yet). Successor: rolled into Phase 2A consumer-migration when those services adopt the
-  pattern.
+  `EXPECTED_FEATURE_GROUPS_BY_SERVICE` lists today — populate as their respective `BuilderRegistry` patterns consolidate
+  (volatility currently a placeholder per audit 2026-05-07; cross-instrument has 20+ calculators in dir but no central
+  registry yet). Successor: rolled into Phase 2A consumer-migration when those services adopt the pattern.
 
 ## Coordination with writegate
 
