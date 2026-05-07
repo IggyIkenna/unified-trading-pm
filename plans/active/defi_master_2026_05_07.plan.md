@@ -305,6 +305,9 @@ these venues.
       `carry_staked_basis` chain set first (Ethereum + Solana mostly done; Arbitrum + Base critical). [AUDIT 2026-05-07:
       FRESH — actionable; UAC@f22f4b1 CHAIN_GENESIS_DATES + UAC@0169a0a PROTOCOL_LAUNCH_DATES SSOTs help re-clip 988
       number downward]
+- [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path). [AUDIT
+      2026-05-07: FRESH — actionable; `grep poolGetSnapshots` returns 0 hits in workspace, confirming this DeFi-pool
+      query path migration has not yet shipped] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
@@ -536,3 +539,6 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 - `market_tick_data_to_100pct_2026_05_05.plan.md` (DeFi slice) — full plan archived after split per asset_group.
 - `cefi_venue_universe_expansion_2026_05_01.plan.md` (DEX-perp half) — Lighter / Extended / Pacifica re-classified to
   DeFi asset_group; CeFi venues (Bitfinex / Bitget / Kraken) lifted into `cefi_master`.
+- `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (1 absorbed item) — `poolGetSnapshots` historical-TVL DeFi-pool
+  query item lifted into "Tail-chain / mid-tier protocol coverage" above; remaining 2 absorbed items
+  (`venue_start_dates` deletion + dashboard SSOT verify) folded into `infrastructure_master_2026_05_07`.

@@ -15,10 +15,10 @@ folds_in:
   - shard_granularity_ssot_propagation_2026_05_06.HANDOVER # paired handover doc
   - data_status_multi_axis_shard_propagation_2026_05_06
   - deployment_service_build_infrastructure_repair_2026_04_22
+  - venue_axis_asset_group_vocabulary_2026_04_25 # 2 absorbed SSOT-cleanup items: venue_start_dates deletion + dashboard SSOT verify
 related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
-  - venue_axis_asset_group_vocabulary_2026_04_25
 ---
 
 ## Audit 2026-05-07
@@ -219,6 +219,22 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [AGENT] P7. (`p7-success-criteria`) Phase 7 — Validate workspace-wide success criteria. [AUDIT 2026-05-07:
       BLOCKED-ON infrastructure_master:Phase-6-plan6-check]
 
+### VenueMapping `venue_start_dates` cleanup (folded-in 2026-05-07 from `venue_axis_asset_group_vocabulary_2026_04_25`)
+
+The asset-group vocabulary plan absorbed two SSOT-cleanup items from the archived `venue_availability_ssot_2026_03_25`
+plan that ride on shard-axis infrastructure (venue start-date semantics + dashboard consumption). Both belong here
+since they touch the manifest / data-status SSOT chain, not the asset_group rename itself.
+
+- [ ] [AGENT] P0. Delete `venue_start_dates` from `VenueMapping` (old format) — replace with the canonical venue+date
+      shape (per the source plan's design doc). [AUDIT 2026-05-07: FRESH — actionable; 8+ deployment-service test sites
+      still reference `venue_start_dates` (`tests/conftest.py:392`,
+      `tests/unit/test_shard_calculator.py:486/513/543/577/623`, `test_shard_optimization.py:80/107/137/171`); deletion
+      is a real ~10-file change] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
+- [ ] [AGENT] P2. Data-status dashboard checks against same SSOT — confirm dashboard reads venue start dates from the
+      canonical source post-cleanup. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:VenueMapping-venue_start_dates-deletion;
+      cannot verify dashboard SSOT consumption until `venue_start_dates` is deleted from VenueMapping] (folded from
+      venue_axis_asset_group_vocabulary_2026_04_25)
+
 ### Streaming-finalize follow-ups (folded-in 2026-05-07 from `streaming_finalize_lift_and_downsize_2026_05_06`)
 
 The streaming-finalize work-stream (UTL@`75d16f28` lift, MTDS@`b12ecb5` kraken slash→hyphen + UTL refactor,
@@ -357,3 +373,6 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
 - `data_status_multi_axis_shard_propagation_2026_05_06.plan.md` — multi-axis breakdowns + filter params + v7 manifest;
   P1+ todos lifted above.
 - `deployment_service_build_infrastructure_repair_2026_04_22.plan.md` — Cloud Build + UTL base-image rebuild.
+- `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — 2 absorbed SSOT-cleanup items (`venue_start_dates` deletion
+  + dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master_2026_05_07`;
+  Waves A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.

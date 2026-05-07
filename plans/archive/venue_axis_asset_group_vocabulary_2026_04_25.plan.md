@@ -7,7 +7,9 @@ overview: |
   `unified-trading-pm/cursor-configs/CLAUDE.md` + this plan.
 type: mixed
 epic: epic-code-completion
-status: active
+status: archived
+archived_on: 2026-05-07
+archive_reason: 5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master umbrellas
 
 completion_gates:
   code: C3
@@ -44,6 +46,19 @@ depends_on: []
 
 isProject: false
 ---
+
+> **ARCHIVED 2026-05-07** — 5 main vocabulary waves (A/B/C/D/E) shipped per CLAUDE.md "Asset-group vocabulary"
+> section. The 3 remaining absorbed items folded into:
+>
+> - `venue_start_dates` deletion → [`infrastructure_master_2026_05_07.plan.md`](../active/infrastructure_master_2026_05_07.plan.md)
+>   § "VenueMapping `venue_start_dates` cleanup"
+> - Data-status dashboard SSOT verify → [`infrastructure_master_2026_05_07.plan.md`](../active/infrastructure_master_2026_05_07.plan.md)
+>   § "VenueMapping `venue_start_dates` cleanup" (paired with deletion)
+> - `poolGetSnapshots` historical TVL → [`defi_master_2026_05_07.plan.md`](../active/defi_master_2026_05_07.plan.md)
+>   § "Tail-chain / mid-tier protocol coverage"
+>
+> Each folded item carries a `(folded from venue_axis_asset_group_vocabulary_2026_04_25)` traceability suffix.
+> This file is the historical SSOT for the asset_group vocabulary migration.
 
 # Venue axis (asset group) vocabulary
 
