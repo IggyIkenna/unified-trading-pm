@@ -130,13 +130,15 @@ unit as code" hard rules.
 
 ### Day 1 — 2026-05-07
 
-- [ ] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`),
+- [x] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`),
   kill zombies via `VM_PREFIX_TO_BUCKET` registry; do **not** launch new cefi work. Plan:
-  [`cefi_master_2026_05_07`](cefi_master_2026_05_07.plan.md). Monitor only.
-- [ ] [SCRIPT] P0. Implement UAC types for backfill launch (`BackfillLaunchRequest` / `BackfillLaunchResult` /
+  [`cefi_master_2026_05_07`](cefi_master_2026_05_07.plan.md). Monitor only. (verified-via gcloud: zone has no
+  `cefi-*` instances 2026-05-07 — drain complete; only `mdps-tradfi-*` + watchdog + a STOPPING enumerator-VM remain.)
+- [x] [SCRIPT] P0. Implement UAC types for backfill launch (`BackfillLaunchRequest` / `BackfillLaunchResult` /
   `VMLifecycleEvent` / `VMEventListResult` / `BackfillLaunchTaskKind` StrEnum). Plan:
   [`deployment_api_work_stream_a_2026_05_07`](deployment_api_work_stream_a_2026_05_07.plan.md) Phase 1. Repo: UAC.
-  Why mechanical: Pydantic + StrEnum from a clear spec already in plan body.
+  (UAC@`a70b3f6` — Ikenna shipped Phase 1 a day early; 5 models + 23-value StrEnum with per-source sports +
+  per-asset_group forward-poll variants; 15 unit tests green via `.venv/bin/python -m pytest`.)
 
 ### Day 2 — 2026-05-08
 

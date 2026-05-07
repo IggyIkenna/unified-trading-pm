@@ -104,8 +104,9 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
 
 ## Phase 1 — UAC internal types (SEQUENTIAL prerequisite)
 
-- [ ] [SCRIPT] P0. Extend `unified_api_contracts/internal/deployment.py` with five Pydantic models +
-      `BackfillLaunchTaskKind` StrEnum.
+- [x] [SCRIPT] P0. Extend `unified_api_contracts/internal/deployment.py` with five Pydantic models +
+      `BackfillLaunchTaskKind` StrEnum. (UAC@`a70b3f6` — 23-value enum with per-source sports + per-asset_group
+      forward-poll variants, all 5 models shipped; 15 unit tests pass in 0.14s.)
 
   Models:
   - `BackfillLaunchTaskKind` StrEnum — closed set of supported launcher tasks: `cefi_backfill`, `tradfi_backfill`,
@@ -138,8 +139,10 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
     `gs://central-element-323112-events/.../*.jsonl` (sample captured 2026-05-07 from
     `instruments-service/2026-05-07/af-backfill-20260507-002914/hour=00/`).
 
-- [ ] [SCRIPT] P0. Re-export from `unified_api_contracts/internal/__init__.py` — add the 5 new symbols to the
-      existing `from unified_api_contracts.internal.deployment import (...)` block AND to `__all__`.
+- [x] [SCRIPT] P0. Re-export from `unified_api_contracts/internal/__init__.py` — add the 5 new symbols to the
+      existing `from unified_api_contracts.internal.deployment import (...)` block AND to `__all__`. (UAC@`a70b3f6`
+      shipped together with the deployment.py extension; verified
+      `from unified_api_contracts.internal import BackfillLaunchRequest, ...` resolves.)
 
 **Phase 1 success criteria:**
 
