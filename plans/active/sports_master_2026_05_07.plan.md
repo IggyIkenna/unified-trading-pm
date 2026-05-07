@@ -372,10 +372,20 @@ should live in MTDS, not instruments-service), `footystats_odds` (separate UAC n
 footystats publishes BOTH `/odds` (market odds) and `/predictions` (model-output predicted probabilities, odds-like).
 The two data_types collide visually in the data-status panel without a clear distinction.
 
-- [ ] [DOC] P1. Update UAC schema descriptions (footystats normalizer comments + UAC `data_type` registry descriptions)
-      to call out provenance + computed-vs-market distinction. Add a one-liner in
-      `codex/02-data/sports-data-source-coverage-matrix.md` under `# footystats data_types` section so deployment-ui
-      schema modal renders the disambiguation. [AUDIT 2026-05-07: FRESH — actionable doc-only]
+- [x] [DOC] P1. **SHIPPED 2026-05-07** (Phase 2 round 3 — doc-only). Updated UAC docstrings on
+      `unified_api_contracts/external/footystats/normalize.py`: - `normalize_footystats_odds`: now opens with "What this
+      is: real published bookmaker odds…" + cross-references `normalize_footystats_predictions` to call out the
+      model-output-vs-market-odds distinction. - `normalize_footystats_predictions`: rewritten as "Extract FootyStats
+      PROPRIETARY pre-match forecast fields" with explicit per-field documentation (potentials = likelihood scores, xG
+      prematch = expected-goals model, PPG = points-per-game projections); cross-references the odds normalizers + warns
+      "NOT to be confused with…". - `normalize_footystats_odds_snapshot`: short docstring pointing at
+      `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
+
+      Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
+      disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+      (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+      (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+      use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 

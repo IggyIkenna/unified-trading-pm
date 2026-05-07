@@ -98,6 +98,27 @@ FEATURES 18). Note PRED_NO_FOOTYSTATS preset excludes some PREDICTION leagues (s
 buckets) lives in MTDS as `odds_horizon_bucket`, not in instruments-service ODDS. They are different-purpose data that
 legitimately coexist; do NOT merge in the aggregator.
 
+**`PREDICTIONS` vs `ODDS` — disambiguation (C.3 audit 2026-05-07).** Both data_types render side-by-side in the
+deployment-ui data-status panel and both come from FootyStats, but they are **different classes of data**:
+
+- **`PREDICTIONS`** = FootyStats's PROPRIETARY pre-match forecast model. Carries `*_potential` fields (btts_potential,
+  o05/o15/o25/o35/o45_potential, corners_potential, cards_potential, offsides_potential, avg_potential), pre-match xG
+  (xg_prematch_home/away/total), and per-team PPG projections (pre_match_home_ppg / pre_match_away_ppg /
+  home_overall_ppg / away_overall_ppg). These are MODEL OUTPUT — likelihood scores produced by FootyStats's own
+  algorithm. They look odds-like but are NOT bookmaker quotes. Normalizer:
+  `unified_api_contracts/external/footystats/normalize.py:normalize_footystats_predictions`. Path:
+  `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_predictions/league={L}/footystats_predictions.parquet`.
+
+- **`ODDS`** = REAL bookmaker odds aggregated by FootyStats from named books. The pre-match snapshot variant captures 68
+  markets at `kickoff - 72h`. These are MARKET DATA — what bookmakers actually offered. Normalizers:
+  `normalize_footystats_odds` (per-row CanonicalOdds shape) and `normalize_footystats_odds_snapshot` (flat-row 68-market
+  pre-match). Path: `entity=footystats_odds/league={L}/footystats_odds.parquet`.
+
+**Implication for downstream consumers**: features-sports must NOT merge `PREDICTIONS` + `ODDS` into a single
+"opinion-on-the-match" column — they have different statistical properties (FootyStats model bias / quality vs market
+efficiency) and should be separate features. Strategy-service models that target ODDS as the prediction target should
+NEVER use PREDICTIONS as an input feature for the same fixture (same-source label leakage).
+
 ### 2.3 Understat-sourced (source key = `understat`)
 
 Expected leagues: 5 PREDICTION only — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1.
