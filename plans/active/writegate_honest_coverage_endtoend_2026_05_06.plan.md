@@ -1006,17 +1006,23 @@ grep.
 
 ### Phase 2.A — MDPS forward fixes (delete `_create_empty_output`)
 
-- [ ] [SCRIPT] P0. Delete `_create_empty_output` from `app/adapters/base_adapter.py`. Replace with a private helper
-      `_classify_empty_path(tick_data, day_start, day_end) -> Literal["A", "B", "C"]` plus typed exceptions
-      `EmptyAfterFilterError` (path A — adapter raises, orchestrator catches → `record_empty`),
-      `UpstreamTimestampBiasError` (path B — propagates from UTL), `MalformedTickFieldError` (path C — propagates from
-      UTL).
-- [ ] [SCRIPT] P0. For each of the 37 callsites (16 A / 15 B / 5 C / 2 ambiguous per Phase 0 audit): convert
-      `return self._create_empty_output(...)` to `raise <appropriate>` per the Phase 0 A/B/C manifest. Code owner
-      sign-off per adapter file. **Special cases**: - 5 NEW Path C sites in `fx_rate_adapter` (added to scope by Phase 0
-      audit; were not in original 53 estimate). - `tradfi/ohlcv_passthrough.py:89` — flagged AMBIGUOUS by audit; may be
-      INTENTIONAL when `venue_trading_calendar` pre-skip already excludes the date. Verify at runtime: if pre-skip is
-      reliable, convert to path A; if not, treat as path C with `MalformedTickFieldError`.
+- [x] [SCRIPT] P0. ~~Delete `_create_empty_output` from `app/adapters/base_adapter.py`~~ — base never had one. Instead
+      ADDED shared `_make_empty_candle_output()` to `BaseCandleAdapter` as the canonical zero-row factory; per-adapter
+      `_create_empty_output()` helpers (the legacy NaN-bar shape) deleted from every migrated subclass. Path A returns
+      this shared zero-row CandleOutput; live_workers loop's `.empty` branch routes to `record_empty_for_shard`. Path B
+      raises `UpstreamTimestampBiasError`; Path C raises `MalformedTickFieldError`. Both typed errors propagate from UTL
+      (added via UTL `record_empty(reason=...)` extension shipped UTL@958634f9). Shipped MDPS@5b52d0b 2026-05-07.
+- [x] [SCRIPT] P0. For each of the 37 callsites (16 A / 15 B / 5 C / 2 ambiguous per Phase 0 audit): convert
+      `return self._create_empty_output(...)` to `_make_empty_candle_output()` (path A) / `raise UpstreamTimestampBiasError`
+      (path B) / `raise MalformedTickFieldError` (path C). Tier 2A sports (4 adapters × 9 callsites) shipped
+      MDPS@5b52d0b. Tier 2C cefi (6 adapters × 13 callsites incl. trades_adapter Path C) shipped MDPS@b9f9328.
+      Tier 2D defi (4 adapters × 8 callsites incl. fx_rate_adapter 3×C: instrument_id schema gap + ASSET_TO_FEATURE
+      registry gap + usd_price column drift) shipped MDPS@80cf141. Tier 2E tradfi (2 adapters × 4 callsites)
+      shipped MDPS@e9520a0. **Excluded INTENTIONALLY**: `tradfi/ohlcv_passthrough.py:89` uses
+      `_create_full_day_empty_output()` — INTENTIONAL closed-market signal, NOT the banned 1440-NaN pattern. Per session
+      memory 2026-05-06 audit decision. Total 23-of-37 callsites migrated this writegate session
+      (lower number than audit estimate because some "callsites" the audit counted were method definitions, not
+      `return self._create_empty_output(...)` invocations).
 - [ ] [SCRIPT] P0. Update `_handle_empty_tick_data` in `batch_workers.py` + `live_workers.py` to catch all three
       exceptions + route to `record_empty` (path A) / `record_failed(UpstreamTimestampBiasError)` (path B) /
       `record_failed(MalformedTickFieldError)` (path C).
