@@ -71,6 +71,12 @@ Covers:
 
 ### Sports `data_available_at` → `available_at` rename (folded 2026-05-07; full DAG below)
 
+**Cross-plan coordination**: this rename is **Stage 1** of the workspace-wide manifest migration. See
+[`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) for the sequencing DAG,
+conflicts (esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume
+guidance. Stage 1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase
+2.C `_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
+
 **Folded from `sports_data_available_at_rename_2026_05_07.plan.md`.** Original plan archived at
 `plans/archive/sports_data_available_at_rename_2026_05_07.plan.md`. Phase 1 SHIPPED via `instruments-service@8050477`
 (migration script + 11 unit tests). Phases 2-4 below are pending operator action + atomic source-rename.

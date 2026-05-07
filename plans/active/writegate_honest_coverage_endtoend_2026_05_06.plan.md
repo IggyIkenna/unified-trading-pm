@@ -13,6 +13,7 @@ supersedes_phases:
   - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
   - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 2 raw-tables (sports
     available_at, paused — now scoped here)
+manifest_migration_coordinator: manifest_migration_master_2026_05_07.plan.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
 status: drafted
 ---
 
@@ -1013,15 +1014,15 @@ grep.
       raises `UpstreamTimestampBiasError`; Path C raises `MalformedTickFieldError`. Both typed errors propagate from UTL
       (added via UTL `record_empty(reason=...)` extension shipped UTL@958634f9). Shipped MDPS@5b52d0b 2026-05-07.
 - [x] [SCRIPT] P0. For each of the 37 callsites (16 A / 15 B / 5 C / 2 ambiguous per Phase 0 audit): convert
-      `return self._create_empty_output(...)` to `_make_empty_candle_output()` (path A) / `raise UpstreamTimestampBiasError`
-      (path B) / `raise MalformedTickFieldError` (path C). Tier 2A sports (4 adapters × 9 callsites) shipped
-      MDPS@5b52d0b. Tier 2C cefi (6 adapters × 13 callsites incl. trades_adapter Path C) shipped MDPS@b9f9328.
-      Tier 2D defi (4 adapters × 8 callsites incl. fx_rate_adapter 3×C: instrument_id schema gap + ASSET_TO_FEATURE
-      registry gap + usd_price column drift) shipped MDPS@80cf141. Tier 2E tradfi (2 adapters × 4 callsites)
-      shipped MDPS@e9520a0. **Excluded INTENTIONALLY**: `tradfi/ohlcv_passthrough.py:89` uses
+      `return self._create_empty_output(...)` to `_make_empty_candle_output()` (path A) /
+      `raise UpstreamTimestampBiasError` (path B) / `raise MalformedTickFieldError` (path C). Tier 2A sports (4 adapters
+      × 9 callsites) shipped MDPS@5b52d0b. Tier 2C cefi (6 adapters × 13 callsites incl. trades_adapter Path C) shipped
+      MDPS@b9f9328. Tier 2D defi (4 adapters × 8 callsites incl. fx_rate_adapter 3×C: instrument_id schema gap +
+      ASSET_TO_FEATURE registry gap + usd_price column drift) shipped MDPS@80cf141. Tier 2E tradfi (2 adapters × 4
+      callsites) shipped MDPS@e9520a0. **Excluded INTENTIONALLY**: `tradfi/ohlcv_passthrough.py:89` uses
       `_create_full_day_empty_output()` — INTENTIONAL closed-market signal, NOT the banned 1440-NaN pattern. Per session
-      memory 2026-05-06 audit decision. Total 23-of-37 callsites migrated this writegate session
-      (lower number than audit estimate because some "callsites" the audit counted were method definitions, not
+      memory 2026-05-06 audit decision. Total 23-of-37 callsites migrated this writegate session (lower number than
+      audit estimate because some "callsites" the audit counted were method definitions, not
       `return self._create_empty_output(...)` invocations).
 - [ ] [SCRIPT] P0. Update `_handle_empty_tick_data` in `batch_workers.py` + `live_workers.py` to catch all three
       exceptions + route to `record_empty` (path A) / `record_failed(UpstreamTimestampBiasError)` (path B) /

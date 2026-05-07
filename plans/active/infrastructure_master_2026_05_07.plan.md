@@ -68,6 +68,13 @@ Covers:
 
 ## Consolidated todos (P0/P1 only)
 
+**Cross-plan coordination**: this umbrella's raw-tables migration + `_ensure_timestamp` shim deletion are **Stage 4** of
+the workspace-wide manifest migration. See
+[`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) for sequencing DAG,
+conflicts, VM impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
+`_ensure_timestamp` shim DELETE is GATED on raw-tables migration completion; raw-tables migration runs AFTER Stage 3
+reconcilers + `mtds-s4-10` rescan complete.
+
 ### Shard granularity propagation (`shard_granularity_ssot_propagation`)
 
 - [ ] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
