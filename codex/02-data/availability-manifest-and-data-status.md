@@ -208,7 +208,13 @@ class AvailabilityRecord:
 
 - Services write ONLY the columns relevant to their shard dimensions. All others default to `""`.
 - **Never overload `venue`** with non-venue data. Use the proper column.
-- **`venue` for DeFi** = protocol name only (AAVE_V3, not AAVEV3-ETHEREUM). Chain goes in `chain` column.
+- **`venue` for DeFi** = protocol name only in canonical no-underscore form (AAVEV3, not AAVE_V3 nor AAVEV3-ETHEREUM).
+  Chain goes in `chain` column. Legacy underscore forms (AAVE_V3, UNISWAP_V3, …) are canonicalised at write time in UTL
+  `manifest_writer._coerce_row_key` + `.add()` via UAC `LEGACY_DEFI_VENUE_ALIASES`; the 2026-05-07 manifest migration
+  rewrote 411,620 historical rows in place
+  (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`). Read-time fallback removed in
+  deployment-api 2026-05-07 (commit 64d2be9). Intentional canonical underscores like `TRADER_JOEV2` survive per UAC
+  `ALL_DEFI_VENUES`.
 - **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
 - **No `data_source` column.** Track what the data IS (transfers, injuries, odds), not where it came from
   (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
@@ -399,7 +405,7 @@ Not all shards are expected every day:
 - **Sports fixtures:** A day with no fixtures in a league is NOT a missing shard. Denominator = fixture calendar.
 - **TradFi weekends:** Saturday/Sunday are not trading days. Denominator = trading calendar.
 - **Transfer windows:** Transfer data arrives on seasonal cadence, not daily.
-- **Chain start dates:** AAVE_V3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
+- **Chain start dates:** AAVEV3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
 - **New venues/bookmakers:** A bookmaker added in 2025-06 has no expected data before that date.
 
 ### Data Freshness
@@ -697,21 +703,21 @@ Currently-tracked temporary states relevant to the manifest:
 
 30 protocols × 11 chains = 57 venue combos. Key coverage:
 
-| Chain       | Protocol Count | Examples                                                                                       |
-| ----------- | -------------- | ---------------------------------------------------------------------------------------------- |
-| ETHEREUM    | 16             | AAVE_V3, UNISWAP_V3, UNISWAP_V4, CURVE, BALANCER, COMPOUND_V3, MORPHO, LIDO, ETHERFI, ...      |
-| BASE        | 8              | AAVE_V3, UNISWAP_V3, BALANCER, AERODROME_V3, COMPOUND_V3, MORPHO, PANCAKESWAP_V3, SUSHISWAP_V3 |
-| ARBITRUM    | 7              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CAMELOT_V3, SUSHISWAP, GMX                         |
-| AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOE_V2, GMX                                     |
-| OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROME_V2                                |
-| SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                                   |
-| POLYGON     | 3              | AAVE_V3, UNISWAP_V3, BALANCER                                                                  |
-| BSC         | 2              | AAVE_V3, PANCAKESWAP_V3                                                                        |
-| LINEA       | 1              | AAVE_V3                                                                                        |
-| HYPERLIQUID | 1              | HYPERLIQUID                                                                                    |
-| ASTER       | 1              | ASTER                                                                                          |
+| Chain       | Protocol Count | Examples                                                                                 |
+| ----------- | -------------- | ---------------------------------------------------------------------------------------- |
+| ETHEREUM    | 16             | AAVEV3, UNISWAPV3, UNISWAPV4, CURVE, BALANCER, COMPOUNDV3, MORPHO, LIDO, ETHERFI, ...    |
+| BASE        | 8              | AAVEV3, UNISWAPV3, BALANCER, AERODROMEV3, COMPOUNDV3, MORPHO, PANCAKESWAPV3, SUSHISWAPV3 |
+| ARBITRUM    | 7              | AAVEV3, UNISWAPV3, BALANCER, COMPOUNDV3, CAMELOTV3, SUSHISWAP, GMX                       |
+| AVALANCHE   | 6              | AAVEV3, BALANCER, CURVE, SUSHISWAPV3, TRADER_JOEV2, GMX                                  |
+| OPTIMISM    | 6              | AAVEV3, UNISWAPV3, BALANCER, COMPOUNDV3, CURVE, VELODROMEV2                              |
+| SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                             |
+| POLYGON     | 3              | AAVEV3, UNISWAPV3, BALANCER                                                              |
+| BSC         | 2              | AAVEV3, PANCAKESWAPV3                                                                    |
+| LINEA       | 1              | AAVEV3                                                                                   |
+| HYPERLIQUID | 1              | HYPERLIQUID                                                                              |
+| ASTER       | 1              | ASTER                                                                                    |
 
-Top multi-chain protocols: AAVE_V3 (8 chains), BALANCER (6), UNISWAP_V3 (5).
+Top multi-chain protocols: AAVEV3 (8 chains), BALANCER (6), UNISWAPV3 (5).
 
 ## Sports Bookmaker Venues (~21 Audited)
 

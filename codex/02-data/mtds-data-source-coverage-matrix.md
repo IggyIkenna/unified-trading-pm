@@ -248,10 +248,14 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
   duplicate in `all_cefi_venues` deduped.
 - ✅ **DEFI multi-chain expansion** (Phase 7 #4) — 58 canonical PROTOCOL-CHAIN venues registered across 11 chains
   (ETHEREUM / ARBITRUM / BASE / OPTIMISM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC / SOLANA).
-  `VENUE_DATA_TYPE_CAPABILITIES` filled for every new venue. `normalize_defi_venue(raw, chain=...)` resolves manifest's
-  split form `(venue=AAVE_V3, chain=POLYGON)` to canonical `AAVEV3-POLYGON`. Data-status aggregator also canonicalises
-  hyphenated DEFI data_types to underscore form (`lending-indices → lending_indices`) so the per-(venue, dt) filter
-  matches — lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up honestly.
+  `VENUE_DATA_TYPE_CAPABILITIES` filled for every new venue. **2026-05-07 closeout:** UTL
+  `ManifestWriter._coerce_row_key` + `.add()` canonicalise legacy underscore venues (`AAVE_V3 → AAVEV3`,
+  `UNISWAP_V3 → UNISWAPV3`, …) at write time via UAC `LEGACY_DEFI_VENUE_ALIASES`; the manifest migration
+  (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`) rewrote 411,620 historical rows.
+  Read-time venue fallback in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types
+  (`lending-indices → lending_indices`) still normalised at read-time via `_canonicalise_defi_data_types` — paired
+  data_type migration is the natural follow-up. Lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up
+  honestly.
 - ✅ **DeFi CLI handler ManifestWriter wiring** (Phase 7 #2) — `_defi_manifest.DefiManifestRecorder` helper plus 11
   handler wires (dex_pools / dex_swaps / lending_indices / oracle_prices / lst_rates / liquidations / gas_fee /
   perp_funding / evm_defi / solana_defi / eigenlayer_rewards). Live DeFi captures now emit honest v5 manifest rows
