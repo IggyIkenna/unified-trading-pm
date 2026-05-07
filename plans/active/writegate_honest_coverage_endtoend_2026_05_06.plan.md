@@ -1055,9 +1055,24 @@ grep.
       memory 2026-05-06 audit decision. Total 23-of-37 callsites migrated this writegate session (lower number than
       audit estimate because some "callsites" the audit counted were method definitions, not
       `return self._create_empty_output(...)` invocations).
-- [ ] [SCRIPT] P0. Update `_handle_empty_tick_data` in `batch_workers.py` + `live_workers.py` to catch all three
+- [x] [SCRIPT] P0. Update `_handle_empty_tick_data` in `batch_workers.py` + `live_workers.py` to catch all three
       exceptions + route to `record_empty` (path A) / `record_failed(UpstreamTimestampBiasError)` (path B) /
-      `record_failed(MalformedTickFieldError)` (path C). [AUDIT 2026-05-07: PARTIAL — `live_workers.py` shipped at MDPS@c924410 (3 categories wired in `_process_all_timeframes` lines 759-792: path A `record_empty_for_shard` + path B/C `except (UpstreamTimestampBiasError, MalformedTickFieldError)` → `record_failed_for_shard`). `batch_workers.py:192-285` handles path A only via `_handle_empty_tick_data` (record_empty for non-TRADFI fall-through, including prediction). Path B/C typed-error catches NOT yet wired in batch_workers run loop. ~2 hours to backport the live_workers pattern.]
+      `record_failed(MalformedTickFieldError)` (path C). **AUDIT-CORRECTION + TEST 2026-05-07 MDPS@f2f5428**: Re-read of
+      the orchestration mixin chain confirms path B/C ARE already covered in batch mode — the audit's "NOT yet wired
+      in batch_workers run loop" was based on inspecting `batch_workers.py` in isolation and missing the explicit MRO
+      override. Actual chain: `BatchOrchestrationMixin._process_files_parallel` (batch_workers.py:314) submits
+      `self._process_instrument_file` to a ThreadPoolExecutor; `CandleOrchestrationService._process_instrument_file`
+      (orchestration_service.py:87-104) explicitly overrides MRO to call `LiveOrchestrationMixin._process_instrument_file`,
+      which invokes `_process_all_timeframes` (live_workers.py:613) where the path B/C catch lives at line 780.
+      `batch_workers.py` does NOT (and SHOULD NOT) duplicate the catch — that would violate "no double SSOT".
+      `_handle_empty_tick_data` is path-A only by design; path B/C are typed exceptions that bubble to the per-timeframe
+      catch in the live mixin's compute loop. **Test gap closed**: 6 structural regression guards in
+      [`tests/unit/test_batch_workers_typed_error_routing.py`](../../../market-data-processing-service/tests/unit/test_batch_workers_typed_error_routing.py)
+      — assert the BatchOrchestrationMixin stub raises NotImplementedError, the override exists on
+      `CandleOrchestrationService.__dict__`, the override body references `LiveOrchestrationMixin`,
+      `live_workers.py` imports the typed errors, `batch_workers.py` does NOT (no double SSOT), and
+      `LiveOrchestrationMixin._process_all_timeframes` source contains the catch. Also covered live-mixin-side by
+      pre-existing `tests/unit/test_live_workers_typed_error_routing.py`.
 - [x] [SCRIPT] P0. **Phase 2.A scope expansion (Phase 0 audit finding 2026-05-06)**: fix prediction empty path silent
       drop. At `live_workers.py:268-271` + `batch_workers.py:199-228`, the prediction asset_group fall-through returns
       `success=True, candles_generated=0` with NO manifest record. Add
