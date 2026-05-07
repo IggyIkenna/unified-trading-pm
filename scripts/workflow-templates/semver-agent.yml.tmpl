@@ -59,7 +59,7 @@ jobs:
 
     steps:
       - name: Checkout repo at staging commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           token: ${{ secrets.GH_PAT }}
@@ -68,7 +68,7 @@ jobs:
       # codex/ is folded into unified-trading-pm at codex/ — clone it for the
       # readiness checklist when this template is rolled out to a non-PM repo.
       - name: Checkout unified-trading-pm (readiness checklist; codex/ lives inside PM)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.GH_ORG }}/unified-trading-pm
           path: ../unified-trading-pm

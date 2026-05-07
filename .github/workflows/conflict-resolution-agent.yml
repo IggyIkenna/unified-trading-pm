@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout PM for health check script
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           repository: IggyIkenna/unified-trading-pm
           token: ${{ secrets.GH_PAT }}

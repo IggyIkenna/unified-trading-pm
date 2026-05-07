@@ -85,7 +85,7 @@ jobs:
           fi
 
       - name: Checkout repo at staging commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           token: ${{ secrets.GH_PAT }}

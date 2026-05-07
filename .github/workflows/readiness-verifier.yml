@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
 
