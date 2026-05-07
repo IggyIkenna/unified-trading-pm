@@ -92,25 +92,44 @@ Phase numbering uses Citadel-grade convention; QG gate between phases.
 Closed-set taxonomy mirrors `EMPTY_CONFIRMED_REASONS` pattern. Routing rules read from UAC, not from inline
 default-factory.
 
-- [ ] [SCRIPT] P0. Add `AlertCode` StrEnum to `unified_api_contracts/internal/alerting/alerts.py` with all
-      currently-routed codes (KILL_SWITCH_DEFI_LIQUIDATION_RISK, KILL_SWITCH_PORTFOLIO_DRAWDOWN,
+- [x] [SCRIPT] P0. Add `AlertCode` StrEnum to
+      `unified_api_contracts/canonical/crosscutting/alerting/codes.py` (top-level facade
+      `unified_api_contracts.alerting`) with all currently-routed codes plus the 5 plan-required
+      additions (KILL_SWITCH_DEFI_LIQUIDATION_RISK, KILL_SWITCH_PORTFOLIO_DRAWDOWN,
       KILL_SWITCH_VENUE_DISCONNECT, CIRCUIT_BREAKER_OPEN, DEFI_HEALTH_FACTOR_CRITICAL, DEFI_WEETH_DEPEG,
-      DEFI_AAVE_UTILIZATION_SPIKE, DEFI_FUNDING_RATE_FLIP, DEFI_FEATURE_STALE, PREFLIGHT_FAILED, SERVICE_DEGRADED,
-      BALANCE_DRIFT, ORDER_REJECTION_SPIKE, MARGIN_THRESHOLD_BREACH, POSITION_DRIFT). Closed set.
-- [ ] [SCRIPT] P0. Add `AlertSeverity` StrEnum: `CRITICAL` (page now), `HIGH` (page within SLA), `WARN` (notify, no
-      page), `INFO` (log only).
-- [ ] [SCRIPT] P0. Add `AlertChannel` StrEnum: `PAGERDUTY`, `TELEGRAM`, `SLACK`, `EMAIL`, `LOG_ONLY`.
-- [ ] [SCRIPT] P0. Add `AlertRule` Pydantic model:
-      `code: AlertCode, severity: AlertSeverity, channels: list[AlertChannel], pattern: str (fnmatch), runbook_doc: str, threshold_key: str | None`.
-      Fail-loud on unknown code at construction.
-- [ ] [SCRIPT] P0. Add `LIVE_ALERT_RULES: tuple[AlertRule, ...]` SSOT in
-      `unified_api_contracts/internal/alerting/live_rules.py`. Lift the 10 patterns from
-      `alerting-service/config.py:_default_routing_rules` byte-for-byte, add the 5 new ones (BALANCE_DRIFT etc).
-- [ ] [SCRIPT] P0. Add `ALERT_THRESHOLDS: dict[str, AlertThreshold]` registry in
-      `unified_api_contracts/internal/alerting/thresholds.py`. Each entry:
-      `key, dtype, default_value, per_archetype_overrides, units, source_doc`.
-- [ ] [SCRIPT] P0. Threshold defaults seeded with these initial values (verified by Phase 7 quietness baseline; see §
-      "Threshold seeding rationale"):
+      DEFI_AAVE_UTILIZATION_SPIKE, DEFI_FUNDING_RATE_FLIP, DEFI_FEATURE_STALE, PREFLIGHT_FAILED,
+      SERVICE_DEGRADED, BALANCE_DRIFT, ORDER_REJECTION_SPIKE, MARGIN_THRESHOLD_BREACH, POSITION_DRIFT) +
+      CROSS_CLOUD_EGRESS_DETECTED added per audit 2026-05-07 §dual-cloud. Closed set, 39 codes.
+      Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Add `AlertSeverity` StrEnum: `CRITICAL` (page now), `HIGH` (page within SLA), `WARN`
+      (notify, no page), `INFO` (log only). `AlertSeverity.to_legacy_filter()` maps to the legacy
+      `severity_filter` field (`"critical"` / `"warning"` / None) so Phase 2 dispatchers don't need
+      migrating in lockstep. Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Add `AlertChannel` StrEnum: `PAGERDUTY`, `TELEGRAM`, `SLACK`, `EMAIL`, `LOG_ONLY`.
+      Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Add `AlertRule` Pydantic model with `code: AlertCode, severity: AlertSeverity,
+      channels: tuple[AlertChannel, ...], pattern: str (fnmatch), runbook_doc: str,
+      threshold_key: str | None, triggers_kill_switch: bool, description: str`. Construction-time
+      validators (`UnknownAlertCodeError` / `UnknownThresholdKeyError`) fail loud on unknown code,
+      unknown threshold_key, KILL_SWITCH-flag-on-non-KILL_SWITCH-code, empty channels, empty pattern.
+      `to_routing_dict()` renders the legacy default-factory shape so Phase 2 migration is
+      byte-equivalent. Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Add `LIVE_ALERT_RULES: tuple[AlertRule, ...]` SSOT in
+      `unified_api_contracts/canonical/crosscutting/alerting/rules.py`. 39 rules covering all 10
+      patterns from `alerting-service/config.py:_default_routing_rules` byte-for-byte + the 5 new
+      plan-required codes (BALANCE_DRIFT, ORDER_REJECTION_SPIKE, MARGIN_THRESHOLD_BREACH,
+      POSITION_DRIFT, DEFI_TX_SIMULATION_FAILED) + CROSS_CLOUD_EGRESS_DETECTED. Catch-all `*` last
+      so specific rules win. Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Add `ALERT_THRESHOLDS: dict[str, AlertThreshold]` registry in
+      `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. 10 thresholds with
+      explicit `ThresholdUnit` (BPS_OF_ONE / RATIO / USD / MINUTES / COUNT_PER_MINUTE),
+      `default_value` (Decimal), `per_archetype_overrides`, `source_doc` citation, `description`.
+      Resolves audit 2026-05-07 §3 #5 AAVE-bps ambiguity by pinning `defi_aave_utilization_spike_bps`
+      unit to `BPS_OF_ONE` with citation to Aave V3 InterestRateStrategy `optimalUsageRatio=0.95
+      RAY` for WETH/USDC/USDT/DAI. Per-archetype override added for `leveraged_funding_arb` (9000
+      bps_of_one = 90%, tighter signal). Shipped UAC@d00326d.
+- [x] [SCRIPT] P0. Threshold defaults seeded with these initial values (verified by Phase 7 quietness
+      baseline; see § "Threshold seeding rationale"). Shipped UAC@d00326d:
   - `defi_health_factor_critical`: 1.05 (Aave HF; below 1.0 triggers liquidation; 5% buffer)
   - `defi_weeth_depeg_bps`: 50 (0.5% from peg over 5min window)
   - `defi_aave_utilization_spike_bps`: 9500 (95% pool utilization; default-yield drops sharply above)
@@ -120,9 +139,18 @@ default-factory.
   - `order_rejection_spike_per_min`: 10 (rolling rate over 5min)
   - `margin_threshold_breach_bps`: 200 (2% from initial-margin-call line; broker-defined)
   - `position_drift_bps`: 100 (1% from target weight; rebalance trigger)
-- [ ] [SCRIPT] P0. UAC sanity tests: every `AlertRule.threshold_key` is in `ALERT_THRESHOLDS`; every `AlertRule.pattern`
-      matches at least one `AlertCode`; every catch-all is last; no duplicate codes. Failing test == bad config.
-- [ ] [QG] P0. UAC quality-gates pass + push.
+- [x] [SCRIPT] P0. UAC sanity tests in `tests/internal/unit/test_alerting_taxonomy.py` (31 tests):
+      every `AlertRule.threshold_key` in `ALERT_THRESHOLDS`; every `AlertRule.pattern` matches at
+      least one `AlertCode`; catch-all `*` last; no duplicate `(pattern, severity)` pairs;
+      `KILL_SWITCH_*` codes carry `triggers_kill_switch=True`; CRITICAL-severity rules include
+      PagerDuty channel; plan-required 15 codes present; `to_routing_dict()` legacy-shape parity;
+      AAVE-bps unit explicit; `AlertSeverity.to_legacy_filter()` round-trip. All 31 green. Shipped
+      UAC@d00326d.
+- [x] [QG] P0. UAC quality-gates pass + push (UAC@d00326d on origin/live-defi-rollout). Step-6
+      production-readiness validators surfaced 3 unrelated PM cross-ref BROKEN entries (defi_master
+      / data_status_drilldown / master_to_live_defi → issues/manifest_consolidator_arrow_typeerror)
+      that are pre-existing PM repo state owned by other agents per CLAUDE.md QG-failure-attribution
+      rule — UAC content gates (lint / format / tests / typecheck / codex / dead-code) all green.
 
 ### Phase 2 — Service migration to UAC SSOT (1 day, **PARALLEL** with Phase 1 once Phase 1 lands)
 
