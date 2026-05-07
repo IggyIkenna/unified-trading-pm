@@ -1994,6 +1994,65 @@ needed.
 * Coverage % = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. The
   denominator is the catalog × dates universe, not "rows in manifest" — the universe is fully enumerated.
 
+**🚨 RED ALERT context (2026-05-07 evening, parallel-agent finding).** 5 CeFi VMs wrote manifest rows with
+`capture_status=empty_confirmed` and **blank** `error_reason` (violating the 2026-05-07 writegate Phase 2.E
+taxonomy that requires every empty_confirmed row to carry a typed reason). Implausible coverage gaps:
+
+| VM                                | total | empty_confirmed | captured | error_reason |
+| --------------------------------- | ----: | --------------: | -------: | ------------ |
+| `bitfinex-spot-2020-heavy`        |   200 |      192 (96%)  |        8 | all blank    |
+| `bitfinex-spot-2024-heavy`        |   600 |      576 (96%)  |       24 | all blank    |
+| `bitget-futures-2025-light`       | 6,059 |    6,059 (100%) |        0 | all blank    |
+| `kraken-spot-2020-heavy`          |   250 |      240 (96%)  |       10 | all blank    |
+| `kraken-spot-2023-heavy`          |   550 |      528 (96%)  |       22 | all blank    |
+
+Bitfinex 2024 spot at 96% empty is implausible (continuous volume in 2024); Bitget futures 2025 at 100%
+empty is even worse. Pattern matches the lending-indices silent-zero bug from yesterday — **adapter
+returns no data, downstream emits empty_confirmed without reason instead of attempted_failed**.
+
+**The fix is the catalog-aware write-gate** (Wave 2 below). When MTDS attempts an instrument that
+instruments-service catalog says was alive on day D and the source returns nothing, the writer must
+REJECT `record_empty(reason=SOURCE_RETURNED_ZERO)` and force `record_failed(EmptyFromLiveInstrumentError)`.
+This converts silent "we tried, source said empty" into loud "catalog says alive, source said empty —
+investigate." Also fixes the silent-fallback failure mode (blank error_reason) — the writer guard rejects
+ANY `record_empty` that doesn't supply a `reason` per the existing closed-set taxonomy. Migration script
+rewrites the existing blank-reason empty_confirmed rows to attempted_failed with a typed
+`LegacyBlankErrorReasonError` reason so they get re-attempted on next VM run instead of silently passing.
+
+**Operator directive 2026-05-07 evening (Step 4 — codebase-wide cascade):**
+
+> "this concept applies for MDPS, features, ml strategy etc all services because they all have dependent
+> data, they all have an expected start. Obviously, their expected start single source of truth should be
+> based on the upstream expected start single source of truth as well, or use the same thing. There's no
+> point trying to get features for a venue which didn't exist. There's no point trying to do machine
+> learning for a time period where the venue didn't exist. This stuff should be done codebase-wide, and
+> the manifest and data status should be able to understand them and the services when they're looking
+> at their dependencies. They should be able to use them to understand as well. This isn't all new work.
+> A lot of the pipes are pretty much there. They just need tightening."
+
+**Cross-service cascade — every dependent service's expected start derives from its upstream's:**
+
+```
+instruments-service (catalog SSOT)
+    ├── MTDS         (per-(venue, day) → catalog filters fetch list)
+    │       └── MDPS         (per-(venue, day) → MTDS manifest gates compute)
+    │               └── features-*   (per-(venue/asset_group, day) → MDPS manifest gates calc)
+    │                       └── ml-training   (per-asset_group → features manifest gates training window)
+    │                       └── strategy      (per-archetype → features manifest gates signal generation)
+    │                       └── execution     (per-venue, day → strategy + position-balance)
+    └── UAC SSOTs (CHAIN_GENESIS, VENUE_LAUNCH, SOURCE_COVERAGE_START, venue_trading_calendar) —
+        the structural "is this triple even possible" floor that ALL layers honour first
+```
+
+**At every layer the rule is the same:** if upstream marks a `(venue, data_type, day)` shard as
+`expected_unattempted` (catalog says it should exist) or `empty_confirmed` (catalog says it shouldn't),
+the downstream service must propagate that — features compute on `expected_unattempted` upstream → write
+own `expected_unattempted`; ML training window omits days where upstream is `expected_unattempted` (or
+loads the manifest backlog as the work-list); strategy doesn't signal for a venue that didn't exist on
+day D. **Cascade short-circuits silent waste.** A lot of code already does this in spirit (DependencyError
+fail-fast at boundaries, manifest pre-flight skip), it just needs tightening + a uniform read interface
+on the manifest.
+
 **Tasks for the new 4th capture_status (cross-repo blast radius — multi-day shippable):**
 
 - [ ] [UAC] P0. Add `EXPECTED_UNATTEMPTED` (or `expected_unattempted`) value to the manifest
@@ -2051,6 +2110,82 @@ needed.
       this day' axis. Both layers write to the manifest; MTDS's `captured` writes supersede prior
       `expected_unattempted` rows by row_key. Coverage % at every drilldown level = `captured / (captured +
       empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe."_
+
+**Wave 2 — catalog-aware write-gate (the RED ALERT fix). UTL guard rule + migration. CRITICAL P0.**
+
+- [ ] [UAC] P0. Add `EmptyFromLiveInstrumentError` typed exception class to honest_coverage.py — paired
+      with `LegacyBlankErrorReasonError` for the migration path. Both classify as `attempted_failed`
+      reasons (NOT empty_confirmed reasons). Pattern mirrors `MissingClusterValidationError` /
+      `UpstreamTimestampBiasError`.
+- [ ] [UTL] P0. **Catalog-aware write-gate in `ManifestWriter.record_empty(reason=...)`.** Before
+      accepting `reason=SOURCE_RETURNED_ZERO` or any `EXPECTED_*` reason, the writer queries the optional
+      `instrument_catalog` parameter (a callable `(venue, instrument_id, day) -> bool`); if the catalog
+      says the instrument was alive on the day AND the caller passed `SOURCE_RETURNED_ZERO`, the writer
+      raises `EmptyFromLiveInstrumentError` and forces the caller to use `record_failed` instead. Caller
+      can pass `instrument_catalog=None` to opt out (during transitional period). Defaults to off until
+      MTDS adapters wire the catalog reference at construction time (Wave 3). Mirrors the existing
+      `assert_available_at_present` guard in `record_captured`.
+- [ ] [UTL] P0. **Reject blank `error_reason` writes loudly.** Today `record_empty(reason="")` would write
+      a blank-reason row (the RED ALERT pattern). Add an early guard: `record_empty(reason=)` requires a
+      non-empty string in `EMPTY_CONFIRMED_REASONS`; empty-string / None raises
+      `UnknownEmptyConfirmedReasonError`. Backwards-compat: existing callers all pass valid reasons since
+      Phase 2.E shipped, so the guard is purely defensive.
+- [ ] [TEST] P0. Unit tests for the two guards: blank-reason rejection + catalog-says-alive supersede
+      to attempted_failed. Mock instrument_catalog callable for controlled cases.
+
+**Wave 2.M — Migration script for the existing bad rows.** The 5 RED ALERT VMs wrote ~7,659 blank-reason
+empty_confirmed rows to canonical CeFi manifest. Plus an unknown number of historical bad rows from
+prior silent-fallback bugs.
+
+- [ ] [SCRIPT] P0. NEW
+      `instruments-service/scripts/reconcile_blank_error_reason_rows.py` — walks all 5 asset_group
+      manifests; finds rows where `capture_status=empty_confirmed AND (error_reason IS NULL OR
+      error_reason=='')`; classifies via catalog-aware logic (uses
+      `unified_api_contracts.registry.venue_launch_dates.get_venue_launch_date` first to detect
+      pre-venue-launch dates → flips to `EXPECTED_PRE_VENUE_LAUNCH`; falls back to
+      `attempted_failed/LegacyBlankErrorReasonError` for everything else so VMs retry on next run).
+      Default scan-only with CSV report; `--apply-write` requires per-VM shard isolation per workspace
+      rule. Mirrors the safety scaffolding of `reconcile_expected_absence_reasons.py`.
+- [ ] [VM-LAUNCH] P0. Run the migration on canonical CeFi manifest (the 5 RED ALERT VMs were CeFi-only).
+      Spot-check a few flipped rows (bitfinex 2024 spot — should now show as attempted_failed with
+      LegacyBlankErrorReasonError, NOT empty_confirmed). After --apply-write, the VMs that owned those
+      shards can re-run normally and the catalog-aware write-gate catches the silent-zero on the next
+      attempt.
+- [ ] [VM-LAUNCH] P0. Extend the migration sweep to ALL 5 asset_group manifests (defi/sports/tradfi/
+      prediction may have analogous historical bad rows from earlier silent-fallback bugs). One VM per
+      asset_group, parallelisable with --force.
+
+**Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
+
+- [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with
+      the 4th capture_status. Each asset_group gets:
+      * Pre-venue/chain-launch dates → continue writing `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` /
+        `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today).
+      * Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW).
+      * Per-instrument-pre-listing dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`.
+      * Per-instrument-post-delisting dates → write `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
+- [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at
+      construction time. Each adapter passes a catalog reader for the venue it serves. Writes that hit
+      the catalog-aware guard get classified appropriately.
+- [ ] [MDPS] P1. Cascade rule: MDPS reads the upstream MTDS manifest. For shards marked
+      `expected_unattempted` upstream, MDPS writes its own `expected_unattempted` (no compute possible
+      without raw ticks). For shards marked `empty_confirmed/EXPECTED_*`, MDPS propagates the same reason
+      (e.g. `EXPECTED_PRE_VENUE_LAUNCH` upstream → `EXPECTED_PRE_VENUE_LAUNCH` downstream).
+- [ ] [features-*] P1. Same cascade rule. Features compute reads MDPS manifest; for `expected_unattempted`
+      / `empty_confirmed/EXPECTED_*` shards, write own row with the same status. The
+      `feature_group → required_inputs` DAG already encodes which features depend on which data_types;
+      the cascade walks that DAG.
+- [ ] [ml-training] P1. Training-window selector reads features manifest; omits days where any required
+      feature_group is `expected_unattempted` or `empty_confirmed/EXPECTED_*`. Training set size becomes
+      honest about the universe.
+- [ ] [strategy] P1. Signal generation gates on features manifest; no signal for a `(venue, day)` where
+      upstream is not `captured` or `empty_confirmed/SOURCE_RETURNED_ZERO`. (Honest source-zero is OK to
+      signal on; pre-launch / unattempted is not.)
+- [ ] [execution] P2. Position / fill simulation respects upstream cascade. (Mostly already correct via
+      the manifest pre-flight gate — this is an audit pass.)
+- [ ] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` —
+      per-service consumer-class audit table extension to include `expected_unattempted` and the
+      cascade-propagation contract.
 
 **Coordination notes** — adding `expected_unattempted` is the largest schema change in the writegate plan
 to date. Cross-repo touch:
