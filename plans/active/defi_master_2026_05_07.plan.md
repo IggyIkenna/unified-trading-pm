@@ -193,9 +193,58 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
+> **PLANNING-CRITICAL CORRECTION 2026-05-07** — The "Ethereum 85% / Solana 99.9% / Arb/Base/Polygon 60%" headline numbers
+> below are EMPIRICALLY WRONG per the per-chain coverage diagnosis run 2026-05-07 from
+> `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` (313,365 manifest rows,
+> schema_version=6, last write 2026-05-05 13:44 UTC). Operator-actionable Qs raised to Ikenna in the same agent run.
+
+**Real coverage as of 2026-05-07 manifest read:**
+
+| chain | claimed | actual captured | actual cov % | days_missing per data_type | window observed |
+| --- | --- | --- | --- | --- | --- |
+| ETHEREUM | 85% | 312,511 rows | **~20%** (varies by data_type) | ~2,400 | 2024-05-02 → 2026-01-23 (most data_types stale) |
+| SOLANA | 99.9% | 169 rows | **1.3% lst_rates / 1.4% lending** | 2,212-2,214 | 2022-11-01 → 2025-01-16 (monthly cadence!) |
+| ARBITRUM | 60% | **0 rows** | **0%** | n/a — never run | n/a |
+| BASE | 60% | **0 rows** | **0%** | n/a — never run | n/a |
+| POLYGON | 60% | **0 rows** | **0%** | n/a — never run | n/a |
+
+**Operator-actionable questions** (raise to Ikenna BEFORE next launches):
+
+1. Was the original "60%" claim reading a different bucket / a non-canonical manifest?
+2. If Arb/Base/Polygon were truly never backfilled, do the existing MTDS DeFi launchers default to Ethereum-only via
+   UAC `CHAIN_RPC_TEMPLATES` (silently no-op for other chains)? Multi-chain launchers may need their `--chain` flag /
+   per-chain venue iteration audited before they'll actually write Arb/Base/Polygon shards.
+3. **Ethereum forward-poll stopped 2026-01-23** for most data_types (only `vault_share_price` is current at
+   2026-05-03). Was forward-poll paused intentionally, or is it broken? No point backfilling history if forward-poll
+   is broken — the gap will just reopen.
+4. SOLANA cadence is monthly (30-32 captured dates over a 2-year window). Either intentional (one-day-per-month
+   snapshots) or the backfill was sparse. `carry_staked_basis` Solana leg cannot run on 1.3% coverage regardless of
+   Pyth wiring.
+
+**988-dates-missing claim is undercounted by ~3×** — real Ethereum-only gap is ~2,400 days × 9 data_types ≈ 21,600
+manifest rows.
+
+**Top-priority single-VM launches** (for whichever operator-cleared question 1+2 first):
+
+| Rank | Launcher | Window | Expected rows | ETA |
+| --- | --- | --- | --- | --- |
+| 1 | `launch-mtds-lending-indices-backfill-vm.sh 2018-01-01 2026-05-07` | full history | ~9,668 (writes 4 data_types in one go: rate_indices/utilization/risk_params/oracle_prices) | ~3h |
+| 2 | `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` | full history | already at 33% (highest); sDAI/sUSDe/sFRAX/sUSDS = carry-archetype critical | parallel-safe to #1 |
+
+**Rank 1 already in flight**: `mtds-lending-indices-20260507-140418` launched 2026-05-07 14:04 IST, ETA 17:00-19:00 IST.
+
+**Out-of-launcher-dir flag** (raised by agent): `launch-mtds-perp-funding-backfill-vm.sh` is referenced in CLAUDE.md
+"Singleton-locked launchers" + "VM Naming Convention" sections but does NOT exist in `deployment-service/scripts/vm/`.
+Either it lives in a different path or the launcher hasn't been authored — `leveraged_funding_arb` blocker if so. Flag
+to Ikenna.
+
+**Source agent run**: per-chain DeFi coverage diagnosis sub-agent 2026-05-07 (analysis script at `/tmp/defi_coverage_analysis.py` — research-only, not committed).
+
 - [ ] [AGENT] P1. Per-chain MTDS to 100%: Ethereum (85%), Solana (99.9% — basically done), Arbitrum / Base / Polygon
-      (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. [AUDIT 2026-05-07: FRESH —
-      actionable post-rollup-rerun]
+      (60%). Per-protocol gap analysis from `consolidated_defi_data_pipeline` Phase 6. **DIAGNOSIS-CORRECTED 2026-05-07
+      — see PLANNING-CRITICAL block above; original % claims invalidated; operator Qs gating next launches.** [AUDIT
+      2026-05-07: FRESH — actionable post-rollup-rerun, but blocked on Ikenna's confirmation that Arb/Base/Polygon
+      launchers actually write multi-chain shards before fanning out]
 
 ### DeFi DEX-perp adapters from `cefi_venue_universe_expansion` (re-classified to DeFi)
 
