@@ -1,11 +1,11 @@
 name: Schema Changed Handler
 
-# Receives repository_dispatch from T0 library repos (UAC, UIC, UEI, UCI, UTL, URDI)
-# when a version bump includes changes to __init__.py exports or Pydantic model fields.
+# Receives repository_dispatch from T0 library repos (UAC, UTL) when a
+# version bump includes changes to __init__.py exports or Pydantic model fields.
 # Actions:
 #   (a) Clones the changed repo to read the actual diff
-#   (b) Searches cursor-rules/ and codex for references to changed symbols
-#   (c) If references found: dispatches rules-alignment-check to PM + manifest-updated to codex
+#   (b) Searches cursor-rules/ and codex/ (folded into PM) for references to changed symbols
+#   (c) If references found: dispatches rules-alignment-check to PM
 #   (d) Sends Telegram summary
 #
 # Payload shape:
@@ -140,10 +140,10 @@ jobs:
             # Search cursor-rules/
             RULES_HITS=$(grep -rl "$SYMBOL" cursor-rules/ 2>/dev/null | wc -l | tr -d ' ')
 
-            # Search codex (if checked out as sibling)
+            # Search codex/ (folded into this repo)
             CODEX_HITS=0
-            if [ -d "../unified-trading-codex" ]; then
-              CODEX_HITS=$(grep -rl "$SYMBOL" ../unified-trading-codex/ 2>/dev/null | wc -l | tr -d ' ')
+            if [ -d "codex" ]; then
+              CODEX_HITS=$(grep -rl "$SYMBOL" codex/ 2>/dev/null | wc -l | tr -d ' ')
             fi
 
             TOTAL_HITS=$((RULES_HITS + CODEX_HITS))
@@ -165,20 +165,6 @@ jobs:
             echo "matched_symbols=" >> "$GITHUB_OUTPUT"
             echo "No docs/rules reference changed symbols — no dispatch needed"
           fi
-
-      # ── CHECKOUT CODEX (for rg search if not already present) ──────────────
-      - name: Checkout unified-trading-codex
-        if: steps.parse.outputs.skip != 'true' && steps.extract-symbols.outputs.symbols != ''
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ env.GH_ORG }}/unified-trading-codex
-          path: ../unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          sparse-checkout: |
-            02-data/
-            06-coding-standards/
-            08-workflows/
-            10-audit/
 
       # ── DISPATCH: rules-alignment-check to PM ─────────────────────────────
       - name: Dispatch rules-alignment-check to PM
@@ -207,38 +193,12 @@ jobs:
             cat /tmp/dispatch_response.json 2>/dev/null || true
           fi
 
-      # ── DISPATCH: manifest-updated to codex ────────────────────────────────
-      - name: Dispatch manifest-updated to codex
-        if: steps.check-refs.outputs.refs_found == 'true'
-        run: |
-          set -euo pipefail
-
-          OWNER="${{ github.repository_owner }}"
-          TARGET="${OWNER}/unified-trading-codex"
-          REPO="${{ steps.parse.outputs.repo }}"
-          VERSION="${{ steps.parse.outputs.version }}"
-
-          echo "Dispatching manifest-updated to codex..."
-
-          HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${TARGET}/dispatches" \
-            -d "{\"event_type\": \"manifest-updated\", \"client_payload\": {\"source\": \"schema-changed-handler\", \"repo\": \"${REPO}\", \"version\": \"${VERSION}\", \"ref\": \"${{ github.sha }}\"}}")
-
-          if [ "$HTTP_STATUS" = "204" ]; then
-            echo "Dispatched manifest-updated to codex"
-          else
-            echo "WARNING: HTTP $HTTP_STATUS dispatching manifest-updated to codex"
-            cat /tmp/dispatch_response.json 2>/dev/null || true
-          fi
-
       # ── NO REFERENCES FOUND ────────────────────────────────────────────────
       - name: Log no references found
         if: steps.check-refs.outputs.refs_found != 'true' && steps.parse.outputs.skip != 'true'
         run: |
           echo "No docs/rules reference changed symbols in ${{ steps.parse.outputs.repo }} v${{ steps.parse.outputs.version }}"
-          echo "Skipping rules-alignment and codex-sync dispatches."
+          echo "Skipping rules-alignment dispatch."
 
   # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
   notify:

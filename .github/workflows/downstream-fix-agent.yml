@@ -127,18 +127,13 @@ jobs:
             "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/${BREAKING_REPO}.git" \
             "$BREAKING_REPO"
 
-          # Full PM checkout (sparse was only for health check)
+          # Full PM checkout (sparse was only for health check; codex/ now lives inside PM)
           rm -rf unified-trading-pm
           git clone --depth=1 \
             "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-pm.git" \
             unified-trading-pm
 
-          # Clone codex for standards context
-          git clone --depth=1 \
-            "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-codex.git" \
-            unified-trading-codex
-
-          echo "Cloned: $TARGET_REPO, $BREAKING_REPO, unified-trading-pm, unified-trading-codex"
+          echo "Cloned: $TARGET_REPO, $BREAKING_REPO, unified-trading-pm"
           ls -la
 
       # ── Step 4: Inject mandatory rules ────────────────────────────────────────

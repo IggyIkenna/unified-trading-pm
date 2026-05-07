@@ -135,16 +135,12 @@ jobs:
             "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/${REPO_NAME}.git" \
             "$REPO_NAME"
 
-          # Clone PM and codex as siblings (required by setup-workspace-from-manifest.sh)
+          # Clone PM as sibling (required by setup-workspace-from-manifest.sh; codex/ now lives inside PM)
           git clone --depth=1 \
             "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-pm.git" \
             unified-trading-pm
 
-          git clone --depth=1 \
-            "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-codex.git" \
-            unified-trading-codex
-
-          echo "Cloned: $REPO_NAME, unified-trading-pm, unified-trading-codex"
+          echo "Cloned: $REPO_NAME, unified-trading-pm"
           ls -la
 
       - name: Setup workspace (manifest-driven dep checkout)
