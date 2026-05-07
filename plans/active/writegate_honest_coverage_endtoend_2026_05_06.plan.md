@@ -2376,17 +2376,86 @@ SOURCE_RETURNED_ZERO). Each operator-flagged "this should never have been empty_
 - [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules
       table + the typed-reason-taxonomy expansion process.
 
-**Wave 3.M — illiquid-instrument carve-out (operator msg 6 reminder).** Far-OTM options that don't
-trade for multiple days should write **0-volume candles with LTP-from-prior-day**, NOT `empty_confirmed`.
-This is an MTDS / MDPS adapter behaviour change, separate from the manifest classification work:
+**Wave 3.M — Zero-activity-bars-during-market-hours (operator msg 6 + msg 8 — broadened scope).**
 
-- [ ] [SCRIPT] P1. Audit MTDS options-chain adapters — per-cluster per-day output. If a cluster has 0
-      trades for the day but the contract is alive (per options expiry calendar), write 0-volume
-      candles with prior-day LTP. ManifestWriter receives the candles and records `captured` (real
-      OHLC, just zero-volume).
-- [ ] [SCRIPT] P1. MDPS options-candle-builder follow-on — same shape; if the upstream parquet has the
-      0-volume candle row, MDPS doesn't need to "fill" it. If MDPS sees absence (no parquet), it
-      cascades upstream's `expected_unattempted` per Wave 3.
+Operator msg 8 (2026-05-07 evening, after Wave 2.M migration completed): _"when a instrument has
+ohlcv, trades or quotes/depth stuff during expected market hours for expected instrument definitions,
+marking them 0 for volume or trade volume but still recording them so that we know they're available
+so that if we're plotting for example a volatility smile we have all the instruments and we
+understand that it was zero volume as opposed to not collecting that instrument."_
+
+**Use case — volatility smile.** When plotting a volatility smile across a venue's options chain,
+every strike must be visible. If a far-OTM strike skipped collection, the smile has a gap and the
+modeller can't tell "this strike was just illiquid" from "this strike wasn't captured." Zero-volume
+bars with prior-day LTP fill this gap honestly — the modeller sees ALL strikes, with volume=0
+flagging the illiquidity. Generalizes beyond options to any cross-instrument analysis where
+completeness matters (CeFi thin pairs, TradFi after-hours, sports zero-bookmaker-coverage hours).
+
+**Scope — the rule applies to EVERY (asset_group, data_type) where:**
+
+* The instrument is alive per instruments-service catalog AND
+* The day falls within the venue's expected market hours (per `venue_trading_calendar` /
+  `KNOWN_COVERAGE_GAPS` / source rules) AND
+* The data_type is one where "no activity but still tradeable" is a meaningful state — `ohlcv_*`,
+  `trades`, `book_snapshot_5`, `derivative_ticker`, `options_chain`, `futures_chain`,
+  `odds_snapshot` (sports — no bookmaker offered odds for an active fixture), etc.
+
+**Manifest representation:** `capture_status=captured` (real bars on disk, just zero-volume).
+Distinct from `empty_confirmed` (we tried, source said empty / structurally empty), `attempted_failed`
+(error), `expected_unattempted` (catalog-known but not yet fetched). Volume = 0 in the parquet column
+tells the consumer "tradeable but no trades happened."
+
+**Per-data-type bar shape:**
+
+| data_type           | zero-activity bar shape                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_24h` | open=high=low=close=prior_LTP, volume=0, trade_count=0                                |
+| `trades`            | one row per minute (or interval) with price=prior_LTP, qty=0, side=none — preserves time-axis density   |
+| `book_snapshot_5`   | snapshot every interval with prior bid/ask kept, no new updates; trade_count_in_window=0                |
+| `derivative_ticker` | last-known funding/mark/index carried forward, last_trade=null, oi=prior_value                           |
+| `options_chain`     | per-cluster bundle: every root's per-strike row gets a zero-volume candle with prior LTP                |
+| `futures_chain`     | per-root bundle: every contract gets a zero-volume candle with prior LTP                                |
+| `odds_snapshot`     | per-bookmaker row with last-known odds carried forward, ts=hour-bucket, mark "stale=true" optional      |
+
+**This is an MTDS / MDPS adapter behaviour change** (writes real data instead of `empty_confirmed`),
+separate from the manifest classification work but closely related — once Wave 2.M's blank-reason
+guard catches silent-fallback paths, the next adapter behaviour to fix is "what to do when source
+returns nothing for an active instrument." Wave 3.M is that fix.
+
+**Tasks:**
+
+- [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market-
+      hours behaviour. Each adapter has a per-shard fetch loop; the post-fetch branch on "fetched
+      empty / source returned no rows" must distinguish:
+      (a) instrument NOT alive that day per catalog → write `empty_confirmed/EXPECTED_INSTRUMENT_*`
+      (b) instrument alive, day within market hours → **NEW:** write zero-volume bars with prior LTP,
+          record `captured` with real bar count > 0 (typically full interval grid for the day).
+      (c) instrument alive, day outside market hours (calendar non-trading) → write
+          `empty_confirmed/EXPECTED_HOLIDAY/WEEKEND` (existing flow).
+      Use the catalog-aware write-gate (Wave 2 `instrument_catalog` callable) to drive (a) vs (b)/(c).
+- [ ] [SCRIPT] P1. **Per-data-type bar-shape templates in UTL.** A single
+      `unified_trading_library.zero_activity_bars` helper that generates the right zero-activity
+      shape per data_type per the table above. Adapters call
+      `make_zero_activity_bars(data_type, instrument_id, day, prior_ltp, market_hours)` and write the
+      result through ManifestWriter. Avoids per-adapter inlined zero-bar logic drift.
+- [ ] [SCRIPT] P1. **prior_ltp source SSOT.** The "prior LTP" needs a uniform read source: query the
+      previous day's `captured` parquet for the same instrument; if not available, fall back to the
+      most recent captured day in the manifest (lookback up to N days). UTL helper
+      `get_prior_ltp(asset_group, venue, instrument_id, day) -> Decimal | None`. None → still write
+      zero-activity bars but with `null` price (volume=0, trade_count=0; consumers can handle).
+- [ ] [SCRIPT] P1. **MDPS options-candle-builder cascade follow-on.** If upstream MTDS parquet now
+      has zero-volume bars (post-Wave 3.M), MDPS sees them as `captured` and processes them through
+      the normal candle pipeline — output candles also have zero volume. No special logic; the
+      cascade handles it. **Audit needed**: confirm MDPS doesn't have a special-case "drop zero-volume
+      bars" filter that would re-introduce the gap.
+- [ ] [SCRIPT] P2. **Volatility-smile completeness QG check.** A smoke test in MDPS / features-vol
+      that picks a recent options chain day, asserts the smile has all 11 ES.OPT clusters present
+      (per UAC `ES_OPTIONS_CLUSTERS`) — no missing strikes, even for far-OTM. Catches Wave 3.M
+      regressions automatically.
+- [ ] [DOCS] P1. Update CLAUDE.md "Three-category empty-output decision" rule to add a 4th case:
+      **D. Source returned 0 ticks but instrument is alive per catalog AND day falls within
+      market hours** → write zero-activity bars with prior LTP, `record_captured` (real OHLC, zero
+      volume). Distinct from cases A/B/C — this is the "honest tradeable but no activity" path.
 
 **Manifest column hygiene (operator msg 7 reaffirm).** No new manifest columns needed. `attempted_at`
 already encodes "checked_at"; combined with `error_reason` it tells us "we tried at T and got X". The
