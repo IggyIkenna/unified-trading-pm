@@ -862,3 +862,46 @@ Don't start Phase 4 until Phase 3 is 18/18 PROMOTE. Don't start Phase 3 until
 Phase 1e passes (shadow mode actually has to work end-to-end, not just
 compile). Don't skip steps.
 ```
+
+---
+
+## Phase 3-11 implementation scope (folded from `strategy_architecture_v2_phase3_11_handoff_2026_04_17`)
+
+**Folded 2026-05-07.** Original plan archived at
+`plans/archive/strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md`. 60 open P1 todos at archive time; key
+work-streams summarised here. Refer to archive for the full per-todo detail.
+
+### Strategy migration + execution v2
+
+- [ ] [CODE] P1. Migrate 53 existing strategies to `(archetype, instance, config)` triples (Phase 11).
+- [ ] [CODE] P1. 11 action handlers, one per `InstructionActionV2`.
+- [ ] [CODE] P1. Policy registry reading artifact-versioned `ExecutionPolicy` docs.
+- [ ] [CODE] P1. Algo library registration with mandatory `benchmark_fill()` method.
+- [ ] [CODE] P1. Venue-account pre-flight (Layer 3 of 4-layer risk model) consuming PBMS + `VenueCapabilityV2`.
+- [ ] [CODE] P1. ATOMIC handler sub-modes: same-venue native, LEADER_HEDGE cross-venue, SEQUENCED_WITH_PACING.
+- [ ] [CODE] P1. `BenchmarkFillMode` per action type (arrival_mid, twap_window, pool_mid_at_block, ...).
+- [ ] [CODE] P1. META_BROKER router for Unity with child-book attribution + Unity TCP adapter.
+- [ ] [CODE] P1. MEV router (Flashbots + MEV Blocker + Manifold; Bloxroute excluded).
+- [ ] [CODE] P1. Cost-model artifact loader (`cost_model/*` registry).
+- [ ] [CODE] P1. `AccountInstruction` orchestrator (non-benchmarked, operator-driven).
+
+### Allocator service (8 archetype engines)
+
+- [ ] [CODE] P1. 8 allocator archetypes: FIXED, PNL_WEIGHTED, SHARPE_WEIGHTED, RISK_PARITY, KELLY, MIN_CVAR, [+2].
+- [ ] [CODE] P1. Per-client instance registry; cadence scheduler (DAILY / HOURLY / WEEKLY / ON_EVENT).
+- [ ] [CODE] P1. Guard rails: max_weight, min_weight, max_turnover, correlation_cap, family_diversification.
+- [ ] [CODE] P1. Shadow mode (primary + shadow instance per client); emits `AllocationDirective` events.
+- [ ] [CODE] P1. Reads NAVs + returns from PBMS; kill switches from risk-service.
+- [ ] [CODE] P1. Cross-share-class NAV conversion + audit log retention per directive.
+- [ ] [CODE] P1. Service scaffolding: ServiceBootstrap, Health API + `data_freshness`, typed config reloader, SM keys.
+
+### Strategy instance / venue-account dual projection
+
+- [ ] [CODE] P1. Dual projection: strategy-instance view + venue-account view.
+- [ ] [CODE] P1. Sum-equality invariant check; emit `VENUE_ACCOUNT_STRATEGY_SUM_DRIFT` on violation.
+- [ ] [CODE] P1. Fill attribution: match `fill_id → instruction_id → strategy_instance_id`.
+
+### Phase 11 — strategy migration + test cleanup
+
+See archived plan § Phase 11 for the 53-strategy migration spec + test bucket migration (Bucket A delete / Bucket B keep
+/ Bucket C migrate-and-keep).

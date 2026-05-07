@@ -259,10 +259,10 @@ Read these before making ANY code changes:
   compat shims" rules.
 
   **Companion plan + executor handover**: full per-service verify/fix/lift/build checklist with anti-patterns and
-  parallel-stream coordination notes in
-  `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (commit `d591416d`, locked
-  to `live-defi-rollout`). Sub-agents executing this work pick the rules up via this section + the handover doc
-  - SUB_AGENT_MANDATORY_RULES.md inheritance.
+  parallel-stream coordination notes in `unified-trading-pm/plans/active/infrastructure_master_2026_05_07.plan.md`
+  (umbrella) which folds-in `plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md` + its `.HANDOVER.md`
+  companion (commit `d591416d`). Sub-agents executing this work pick the rules up via this section + the umbrella + the
+  archived handover doc + SUB_AGENT_MANDATORY_RULES.md inheritance.
 
 - **Live = batch — same data, same fields, same timing semantics, different sources OK (CRITICAL — applies to every
   asset_group)** — Live and batch are operational modes of the SAME pipeline. They produce identical schemas, identical
@@ -291,25 +291,24 @@ Read these before making ANY code changes:
   mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew; paired upstream fix at MTDS
   `raw_tick_hive.py` partitioner-validation); **C. Rows in window but downstream calc dropped all rows due to
   NaN/malformed source fields** → `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`
-  (data-quality bug worth diagnosing). NO silent NaN placeholder rows. The
-  `_create_empty_output()`-style placeholder method is **banned** from `base_adapter` and any equivalent base class.
-  Reference incident: 2026-05-05 MDPS 1440 NaN OHLC bars per day per (venue, data_type) for years passed manifest as
-  `captured`. Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A deletes `_create_empty_output`
-  workspace-wide.
+  (data-quality bug worth diagnosing). NO silent NaN placeholder rows. The `_create_empty_output()`-style placeholder
+  method is **banned** from `base_adapter` and any equivalent base class. Reference incident: 2026-05-05 MDPS 1440 NaN
+  OHLC bars per day per (venue, data_type) for years passed manifest as `captured`. Plan:
+  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A deletes `_create_empty_output` workspace-wide.
 
   **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
-  discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed
-  set under UAC `EMPTY_CONFIRMED_REASONS`): `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PAUSED_LEAGUE` /
+  discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed set
+  under UAC `EMPTY_CONFIRMED_REASONS`): `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PAUSED_LEAGUE` /
   `EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED` /
-  `EXPECTED_INSTRUMENT_DELISTED` / `EXPECTED_PARTIAL_HALF_DAY` / `SOURCE_RETURNED_ZERO`. Every `(shard_key, day)`
-  in the expected universe gets a manifest row — calendar-pre-skip cases emit
-  `record_expected_empty(reason=EXPECTED_<X>)` instead of "no row at all." **NO parquet on disk for bad/partial-
-  expected days** — manifest reason IS the SSOT; downstream consumers read the manifest, not the parquet, to
-  determine absence semantics. Per-service consumer-class audit (execution skips / ML NaN-fills / rolling-window
-  features adjust denominator while keeping window size / same-day features NaN-fill / cross-instrument calcs
-  propagate per-leg) is the workspace contract — see [`codex/02-data/honest-absence-downstream-handling.md`](unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md)
-  § "Reason taxonomy (codified 2026-05-07)" + § "Per-service consumer-class audit." Plan: writegate Phase 2.E
-  ships UTL contract extension + per-service writer migration + per-service consumer-class audit.
+  `EXPECTED_INSTRUMENT_DELISTED` / `EXPECTED_PARTIAL_HALF_DAY` / `SOURCE_RETURNED_ZERO`. Every `(shard_key, day)` in the
+  expected universe gets a manifest row — calendar-pre-skip cases emit `record_expected_empty(reason=EXPECTED_<X>)`
+  instead of "no row at all." **NO parquet on disk for bad/partial- expected days** — manifest reason IS the SSOT;
+  downstream consumers read the manifest, not the parquet, to determine absence semantics. Per-service consumer-class
+  audit (execution skips / ML NaN-fills / rolling-window features adjust denominator while keeping window size /
+  same-day features NaN-fill / cross-instrument calcs propagate per-leg) is the workspace contract — see
+  [`codex/02-data/honest-absence-downstream-handling.md`](unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md)
+  § "Reason taxonomy (codified 2026-05-07)" + § "Per-service consumer-class audit." Plan: writegate Phase 2.E ships UTL
+  contract extension + per-service writer migration + per-service consumer-class audit.
 
 - **Cluster validation MANDATORY at `record_captured` for bundled shards (CRITICAL — runtime + static enforcement)** —
   For any `data_type ∈ unified_api_contracts.canonical.crosscutting.honest_coverage.BUNDLED_DATA_TYPES`,
@@ -347,8 +346,9 @@ Read these before making ANY code changes:
   informative for prediction). Cluster validation per `(canonical_question_group, day)` checks that all expected
   market_ids with active windows in that day are represented (HOURLY → 24 clusters expected, DAILY → 1, etc.).
   LookaheadBiasError respects per-market lifecycle: a feature compute at time T can only consume ticks where
-  `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`. Plan: predictions follow-up plan
-  `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`.
+  `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`. Plan: `predictions_master_2026_05_07.plan.md`
+  (asset_group umbrella; folds-in
+  `plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`).
 
 - **Temporary state must have a named successor plan (no silent "fix later")** — When a plan ships a partial
   implementation that is not the final shape (e.g. UAC `PREDICTION_GROUPS = {}` empty registry until
@@ -580,7 +580,8 @@ need on-chain Solana prices; Chainlink covers EVM only (Arb / Base / Polygon), n
 exists in workspace. Re-add Pyth via Hermes (HTTPS pull) for batch and PythNet (Solana RPC) for live. Scope: Solana-only
 price reads. Other chains continue using Chainlink. Decision recorded in
 `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` Q&A section +
-`consolidated_defi_data_pipeline_2026_04_15.plan.md` `mtds-s3-5-pyth-oracle` todo.
+`unified-trading-pm/plans/active/defi_master_2026_05_07.plan.md` (`mtds-s3-5-pyth-oracle` todo lifted from
+`plans/archive/consolidated_defi_data_pipeline_2026_04_15.plan.md`).
 
 ## Version Graduation (1.0.0 Process)
 
