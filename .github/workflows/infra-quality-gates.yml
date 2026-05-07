@@ -1,6 +1,6 @@
 name: Infrastructure Quality Gates (reusable)
 
-# Reusable QG for infra repos (PM, codex) that aren't Python services/libraries.
+# Reusable QG for infra repos (PM) that aren't Python services/libraries.
 # Handles: bash syntax, Python syntax, YAML validation, actionlint, shellcheck,
 # ruff, basedpyright, repo-specific quality-gates.sh, and ci-status dispatch.
 #
@@ -10,7 +10,7 @@ on:
   workflow_call:
     inputs:
       repo_name:
-        description: "Repository name (e.g. unified-trading-pm, unified-trading-codex)"
+        description: "Repository name (e.g. unified-trading-pm)"
         required: true
         type: string
       run_quality_gates_sh:
@@ -36,7 +36,7 @@ on:
       sibling_deps:
         description:
           "Space-separated sibling repos to clone for basedpyright (e.g. 'unified-trading-library
-          unified-internal-contracts')"
+          unified-api-contracts')"
         required: false
         type: string
         default: ""
@@ -117,7 +117,7 @@ jobs:
             echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
           fi
 
-      # ── Checkout siblings (PM needs codex, codex needs PM) ──────────────
+      # ── Checkout PM as sibling (codex/ now lives inside PM) ─────────────
       - name: Checkout PM (sibling)
         if: inputs.repo_name != 'unified-trading-pm'
         uses: actions/checkout@v6
@@ -125,16 +125,6 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/unified-trading-pm
           path: unified-trading-pm
-          token: ${{ secrets.GH_PAT }}
-          fetch-depth: 1
-
-      - name: Checkout Codex (sibling)
-        if: inputs.repo_name != 'unified-trading-codex'
-        uses: actions/checkout@v6
-        continue-on-error: true
-        with:
-          repository: ${{ github.repository_owner }}/unified-trading-codex
-          path: unified-trading-codex
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 1
 
