@@ -214,6 +214,45 @@ QG gate between phases.
 `from unified_api_contracts.features import FEATURE_REQUIRED_INPUTS, EXPECTED_FEATURE_GROUPS_BY_SERVICE, FEATURE_COVERAGE_START`
 and `from unified_trading_library.manifest import ManifestFreshnessCache`.
 
+### 1A.3 — Sports vocabulary alignment (consolidated from "Temporary states" 2026-05-07)
+
+Closes the sports-vocab gap that left 36 sports feature_groups in
+`EXPECTED_FEATURE_GROUPS_BY_SERVICE` but absent from `FEATURE_REQUIRED_INPUTS`. Per workspace rule "follow-ups
+consolidate into existing plans, not new plans" — the previous "open a separate plan" annotation is replaced by
+this concrete todo block. Sequence: pick approach → build resolver → lift entries → tests.
+
+- [ ] [AGENT] P1. **Pick the resolution approach.** Three options under consideration; ~30 min decision with the
+      operator. Append the chosen path under this todo as the "decided" line + flip to `[x]`:
+  - (a) **Mapping table** (cheapest) — UAC adds
+        `SPORTS_INPUT_NAME_TO_DATA_TYPE: dict[str, list[tuple[str, str]]]` keyed on the bare reference-entity name
+        (e.g. `"target_fixtures" → [("sports", "FIXTURES")]`,
+        `"fixtures_history" → [("sports", "FIXTURES")]` — multi-source pairs allowed). Pros: zero changes to
+        `BuilderEntry.required_inputs: list[str]`; clean lookup at the resolver. Cons: extra indirection layer.
+  - (b) **Tuple-typed required_inputs** (cleanest, more invasive) — change
+        `BuilderEntry.required_inputs: list[str]` → `list[tuple[str, str]]` and migrate every sports calculator's
+        declaration. Pros: same shape as `FEATURE_REQUIRED_INPUTS`. Cons: 36 calculator-side migrations + risk of
+        breaking other agents' in-flight features-sports work.
+  - (c) **Namespaced names** — adopt `"sports.FIXTURES"` as the single canonical input-name vocabulary; parse the
+        prefix at lookup time. Pros: backwards-compat (string shape unchanged); explicit at call sites. Cons:
+        runtime parsing + sports `BuilderEntry` still doesn't match `FEATURE_REQUIRED_INPUTS` shape.
+- [ ] [AGENT] P1. **Build the resolver** per the chosen approach. If (a): UAC `SPORTS_INPUT_NAME_TO_DATA_TYPE` dict
+      + `resolve_sports_input(name) -> list[InputReq]` helper. If (b): `BuilderEntry` migration + per-calculator
+      sweep. If (c): UAC `parse_namespaced_input(name) -> tuple[str, str]` helper + namespacing audit. Tests:
+      every sports `BuilderEntry.required_inputs` entry resolves to at least one registered
+      `(asset_group, data_type)` pair in `AVAILABILITY_AT_SEMANTICS`.
+- [ ] [AGENT] P1. **Lift the 36 sports feature_groups into `FEATURE_REQUIRED_INPUTS`** using the resolver. Mapping
+      derived from `features_sports_service` calculator registry — read each calculator's `required_inputs` list
+      and convert to `InputReq(asset_group="sports", data_type=<resolved>, available_at_rule=<from
+      AVAILABILITY_AT_SEMANTICS>, source=<from calculator metadata>)`. Multi-source entries (e.g. `FIXTURES` from
+      both api_football + footystats) emit one `InputReq` per source.
+- [ ] [TEST] P1. **Closed-set guarantee test** (similar to the defi `test_phase_1a_2_lift_8_onchain_feature_groups_seeded`
+      shape) — assert each of the 36 sports feature_groups has ≥ 1 input, every input's `(asset_group, data_type)`
+      is in `AVAILABILITY_AT_SEMANTICS`, every `available_at_rule` matches the registry. Plus a per-source
+      multiplicity check for the multi-source feature_groups.
+- [ ] [DOCS] P1. **Update temporary-states bullet** at line ~363 from "actionable as Phase 1A.3" → "fully closed
+      <commit-sha>" with link to the lift commit. Same flip pattern as the defi vocabulary gap above (Half 2
+      shipped UAC@7a3299a).
+
 ## Phase 2 — Service integrations (PARALLEL)
 
 ### 2A — Replace per-service DAGs with UAC import + wire UTL lookahead helper
@@ -360,13 +399,13 @@ completes.
     EXPECTED_FEATURE_GROUPS_BY_SERVICE comment so they don't appear in the denominator either. Decision deferred to a
     focused 2-hour session with the operator. Not a May-23 blocker — these are enrichment features, not core trading
     signals.
-- **Sports vocabulary alignment.** features-sports `BuilderEntry.required_inputs: list[str]` uses reference-entity names
-  (e.g. `"target_fixtures"`, `"fixtures_history"`) rather than `(asset_group, data_type)` pairs. 36 sports
-  feature*groups appear in `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from
-  `FEATURE_REQUIRED_INPUTS`. Successor: open a
-  `sports_feature_required_inputs_vocab_2026*<TBD>.plan.md`that maps each sports entity-name to one or more`(source,
-  data_type)`pairs (e.g.`"fixtures_history" → [("api_football", "FIXTURES"), ("footystats", "FIXTURES")]`) and lifts
-  them into UAC.
+- **Sports vocabulary alignment — actionable as Phase 1A.3 (this plan, todos below).** features-sports
+  `BuilderEntry.required_inputs: list[str]` uses reference-entity names (e.g. `"target_fixtures"`, `"fixtures_history"`)
+  rather than `(asset_group, data_type)` pairs. 36 sports feature_groups appear in
+  `EXPECTED_FEATURE_GROUPS_BY_SERVICE` for denominator counting but are absent from `FEATURE_REQUIRED_INPUTS`. Per
+  workspace rule "follow-ups consolidate into existing plans, not new plans" — this bullet is no longer a
+  successor-plan placeholder; it's actionable as Phase 1A.3 under §"Phase 1 — UAC + UTL foundations" below. Pick the
+  approach (mapping table / tuple-typed / namespaced names) in the first todo, then ship the lift in subsequent todos.
 - **features-volatility-service + features-cross-instrument-service stubs.** Both services have empty
   `EXPECTED_FEATURE_GROUPS_BY_SERVICE` lists today — populate as their respective `BuilderRegistry` patterns consolidate
   (volatility currently a placeholder per audit 2026-05-07; cross-instrument has 20+ calculators in dir but no central
