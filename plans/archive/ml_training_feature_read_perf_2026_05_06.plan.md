@@ -33,6 +33,8 @@ depends_on: []
 isProject: false
 ---
 
+> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.plan.md`](../active/ml_and_features_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
+
 # ML training feature-read perf — surgical wins
 
 ## Codex SSOTs
