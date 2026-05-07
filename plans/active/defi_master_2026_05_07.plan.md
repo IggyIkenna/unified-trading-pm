@@ -246,11 +246,17 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       combined-venue prefix accepted as evidence of capture for any data_type, since the bundle holds all data_types in
       one parquet). Helper unit-tested 12/12 cases PASS. Re-run on `--venues AAVEV3` shows 29782 → 0 phantoms (100%
       false-positive elimination). Manifest is clean for AAVEV3.
-- [ ] [VERIFY] P1. After ship: launch `defi-phantom-recon-{ts}` GCE VM in `asia-northeast1-c` (add prefix to
+- [x] [VERIFY] P1. After ship: launch `defi-phantom-recon-{ts}` GCE VM in `asia-northeast1-c` (add prefix to
       `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` first) running the full DEFI dry-run with the new prober. Compare
       pre-/post-fix phantom counts across all DEFI venues (UNISWAPV3 187k rows, MORPHO 45k, EIGENLAYER, MAKER, etc.).
-      Expected: large drop in false-positive count similar to the 2026-05-04 cefi 130k → 354 reduction. [AUDIT
-      2026-05-07: FRESH — actionable; instruments-service@e8393fc (Axes 6+7) shipped, VM relaunch is the next step]
+      Expected: large drop in false-positive count similar to the 2026-05-04 cefi 130k → 354 reduction. **SHIPPED
+      2026-05-07**: deployment-service@ea0c2ed authored `scripts/vm/launch-defi-phantom-recon-vm.sh` (new launcher,
+      singleton-locked, asset-group selectable, --dry-run by default), added `phantom-recon` VM_TASK route to
+      `setup-data-pipeline-vm.sh`, and added `defi-phantom-recon-` prefix to `vm_zombie_watchdog.py`. Path bug fix at
+      deployment-service@a6d3b8f (instruments tarball alias = `$WORKSPACE/instruments` not
+      `$WORKSPACE/instruments-service`). VM `defi-phantom-recon-defi-20260507-141621` launched 14:16 IST, watchdog
+      relaunched as `vm-zombie-watchdog-20260507-141056`. Awaiting full-DEFI phantom count vs the 354-residual cefi
+      benchmark — monitor active.
 - [x] [DOC] P0. Updated `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"
       to enumerate 7 drift axes (was 5); added rollup-side metric inconsistency finding under § "Rollup-side metric
       inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07"; updated history benchmark
