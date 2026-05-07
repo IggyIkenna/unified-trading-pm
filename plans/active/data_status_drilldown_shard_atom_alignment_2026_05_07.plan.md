@@ -493,20 +493,17 @@ and the UI does not paginate — operators cannot reach the truncated tail. **Tw
 
 ### Open drifts (named successors)
 
-- [ ] [UAC + deployment-api] P1. **Drilldown depth excludes DISPLAY axes.**
-      `_resolve_axis_order` in `deployment-api/deployment_api/services/data_status_hierarchical.py`
-      consumes only `SHARD_AXIS_MATRIX` axes — but the codex tree at
-      `availability-manifest-and-data-status.md` § "Data Status Page Tree Hierarchy"
-      includes display columns as navigation levels (e.g. MTDS CeFi: `venue → instrument_type
-      → data_type → dates`; MTDS Sports: `league → bookmaker(venue) → dates`). Today the
-      drilldown returns SHARD-only depth (`venue → instrument_id → data_type → date` for
-      MTDS CeFi), missing `instrument_type` as a navigation level. The hierarchical
-      service's own docstring at line 11 contradicts the implementation.
-      **Successor decision**: introduce a new per-(service, asset_group) `DRILLDOWN_AXIS_ORDER`
-      SSOT in UAC that codifies the codex tree (the merge of SHARD + DISPLAY axes in the
-      codex-defined order, not the SHARD-then-DISPLAY default). `_resolve_axis_order` reads
-      from `DRILLDOWN_AXIS_ORDER` first, falls back to `SHARD_AXIS_MATRIX` for unmapped pairs.
-      Out of scope this session: requires per-pair codex-tree codification + UI smoke walk.
+- [x] [UAC + deployment-api] P1 (shipped UAC@81de41a + deployment-api@18ac644 2026-05-07
+      late-evening). **Drilldown order aligned with codex shard atom — operator finding.**
+      Restored `instrument_type` to `SHARD_AXIS_MATRIX` for MTDS / MDPS CeFi+TradFi (it IS
+      shard-worthy: per-adapter failure isolation + per-VM-cluster concurrency); reordered
+      shard tuples so the drilldown follows the codex per-asset-group navigation flow:
+      * MTDS / MDPS CeFi+TradFi: `(venue, data_type, instrument_type, instrument_id)`
+      * MTDS / MDPS DeFi: `(venue, chain, data_type, instrument_id)` (instrument_type stays
+        display-only — POOL/LENDING/LST is redundant with data_type for navigation).
+      * Sports / prediction: unchanged.
+      A separate `DRILLDOWN_AXIS_ORDER` SSOT was NOT needed — the SHARD_AXIS_MATRIX is now
+      the codex tree. UAC tests 32/32 pass; deployment-api hierarchical tests 23/23 pass.
 
 - [ ] [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis
       but not a real manifest column.** Same bug class as the protocol_id drift — appears
