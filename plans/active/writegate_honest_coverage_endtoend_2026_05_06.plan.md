@@ -19,6 +19,37 @@ status: drafted
 
 # Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 
+## Audit 2026-05-07
+
+- **Audit run**: 2026-05-07 (parallel-agent pass over 87 unchecked todos)
+- **Verified**: 87 of 87 unchecked todos
+- **Mis-marked DONE → flipped**: 12 (multiple Phase 1A/1B helpers + Phase 2.A registry + scanner + MTDS partition validation + MTDS cluster wiring (ES.OPT slice) + Phase 2.A prediction empty-path silent-drop fix + ES.OPT lift + UTL availability_stamping helpers + assert_available_at_present wiring + CLAUDE.md cross-link + CLAUDE.md sync-to-mirrors + features-onchain partial-stub fixture_lineups; see per-line audit markers)
+- **In-flight (running VMs)**: 37 VMs at 03:30 UTC writing to manifest. CeFi historical (bitfinex/bitget/coinbase/hyperliquid/kraken ~24 VMs T+12-22h), TradFi mdps-tradfi-2021..2025 (5 VMs T+22h), Sports af/fs/sfi/us-backfill (4 VMs T+5h). They emit `record_empty(reason=...)` per Phase 2.E.1 contract IF tarballs include UTL@958634f9 + MDPS Tier 2A/C/D/E commits. **Untracked WIP detected**: `features-sports-service/scripts/features_sports_reconcile_available_at.py` (16718 bytes, untracked, dated 04:18 — another agent's in-flight work per "Two teammates" rule. NOT touched by this audit.)
+- **Blocked by**: predictions_master_2026_05_07 — Phase 2.A prediction silent-drop fix (line 1030) substantially shipped but row_key shape fully resolves only when canonical_question_group SSOT lands in predictions plan. Reconciler in Phase 3.A re-flips after.
+- **Blocks**:
+  - `defi_master_2026_05_07` (relies on writegate Phase 1A/2.A typed-error contract for DeFi reconcilers)
+  - `infrastructure_master_2026_05_07` (data_status_multi_axis Phase 2/3 needs writegate Phase 4.A typed-error rendering surface)
+  - `master_to_live_defi_2026_05_23` Group F trading prereqs (need honest manifest reasons for batch-vs-live reconciliation + alerting)
+- **Last meaningful commit**: instruments-service@21aef51 Tier 3D.2 reconciler refactor importing UTL classifier; UTL@c5c2669e classify_legacy_empty_row helper; deployment-api@176c599 reader-side wiring (3 commits chain shipped 2026-05-07)
+- **Recommendation**:
+  1. **HIGHEST LEVERAGE — Phase 4.A deployment-api typed-error rendering** (lines 1536-1544, 4 todos): unblocks operator visibility for the new reasons + prevents "we have honest data but can't see it" failure. Minimal scope, high value. Sequence before May 23.
+  2. **Phase 2.A residual** (lines 1027, 1030, 1038, 1040, 1058, 1060, 1062, 1064): batch_workers.py path B/C catch (live_workers shipped @c924410), `_write_manifest_records` v3-shape delete, v6 column wiring, MDPS chain-bundle cluster wiring, integration tests, QG green. ~3-4 days work.
+  3. **Phase 2.B residual** (lines 1095, 1102 partly DONE, 1108, 1110, 1126, 1135, 1137, 1140, 1142-1145): MTDS partitioner+cluster wiring shipped for ES.OPT only; broader bundle types + per-fixture sharding deferred. Can run parallel with #2.
+  4. **Phase 2.C** (lines 1163-1217): features-sports stub wiring + `_ensure_timestamp` deletion + per-table `available_at` migration. Self-contained; 2-3 days.
+  5. **Phase 3.A residual reconcilers** (lines 1404, 1408 in-flight, 1411, 1415): partition-mismatch + sports-available_at + boot-sequence wiring. Lower urgency than Phase 4.A.
+  6. **Phase 3.D.3 + Phase 5 baseline + Phase 4.B UI**: deferrable to post-Phase-4.A unblock.
+  7. **Phase 1C / 1A doc + QG steps** (lines 888, 890, 996, 1308): low-cost; fold into nearest commit cycle.
+- **Cross-plan blockers**: see "Cross-plan blockers" section below for downstream gating.
+
+### Cross-plan blockers detected
+
+- `writegate:Phase 4.A` BLOCKS `infrastructure_master:data_status_multi_axis Phase 2-3` (deployment-api/UI need typed-error reasons surfaced first)
+- `writegate:Phase 2.A` (line 1030 prediction silent-drop) blocked by `predictions_master:Phase 1A` (canonical_question_group SSOT for stable row_key)
+- `writegate:Phase 5 ratchet` BLOCKS `master_to_live_defi_2026_05_23:Group F trading prereqs` (batch-vs-live reconciliation needs honest baseline)
+- `writegate:Phase 2.D match_end_time cascade` (line 1246) BLOCKS `sports_master:strategy alpha measurement` (lookahead-bias gate needs accurate match-end timestamps)
+
+---
+
 **Branch:** `live-defi-rollout` **Goal:** Collapse two double-SSOT bugs (MDPS empty-handling, sports `available_at`
 stamping) and the partial-bundle silent-acceptance class into one cohesive contract change at
 `ManifestWriter.record_captured`. Forward + retrospective + UI + QG enforcement so post-merge backfill % across every
@@ -503,13 +534,13 @@ behavior.
       below.
 - [x] [AUDIT] P0. Multi-source coverage matrix per `(asset_group, data_type)`. **Done 2026-05-06.** See "Phase 0 audit
       findings — multi-source coverage matrix" below.
-- [ ] [AUDIT] P0. instruments-service sports schemas — confirm the columns to add (`announced_at` on fixtures;
+- [x] [AUDIT] P0. instruments-service sports schemas — confirm the columns to add (`announced_at` on fixtures;
       `event_time` on fixture_events; `report_time` on injuries; `match_end_time` on fixture_stats /
       fixture_player_stats). **PARTIAL via #0.4 audit**: features-sports audit revealed source-side blockers — see
       "Phase 0 audit findings — features-sports TABLE_TO_EXPORT inventory" §"Tables blocked on upstream source-field
       availability". Schema bumps still needed for `event_time` (derivable from `kickoff_utc + elapsed_min`); the
       remaining proposed columns (`announced_at`, `report_time`, `match_end_time`) cannot be sourced from current
-      providers — see findings below.
+      providers — see findings below. [AUDIT 2026-05-07: DONE — audit complete; amendments B/C/D applied to plan; only `event_time` survives as in-scope schema bump (Phase 2.D); `announced_at`/`report_time`/`match_end_time` deferred with low-confidence fallback shipping per amended Phase 2.D body.]
 
 QG between Phase 0 and Phase 1A/1B/1C: audit manifest reviewed by user; per-callsite A/B/C decisions signed off;
 SOURCE_PRIORITY tie-breaker rules confirmed for each (asset_group, data_type) where multi-source applies.
@@ -869,13 +900,13 @@ opaque):
       writing the parquet.
 - [x] [SCRIPT] P0. `manifest_writer.py:1098` rename `check_cluster_coverage` → `_check_cluster_coverage`. Remove from
       `__all__`. Internal-only.
-- [ ] [SCRIPT] P0. `availability_stamping.py` extend with: -
+- [x] [SCRIPT] P0. `availability_stamping.py` extend with: -
       `stamp_available_at_kickoff_offset(df, kickoff_col="kickoff_utc", minutes=60)` — for lineups -
       `stamp_available_at_post_match(df, kickoff_col="kickoff_utc", duration_min=120, scrape_latency_min=15)` — for
       fixture_stats / fixture_player_stats - `stamp_available_at_event_time(df, event_time_col="event_time")` — per-row
       pass-through, used for fixture_events + injuries (when row has its own time) -
       `stamp_available_at_announcement(df, announced_col="announced_at")` — for fixtures -
-      `stamp_available_at_explicit(df, fetch_completed_at: datetime)` — for 8 reference tables
+      `stamp_available_at_explicit(df, fetch_completed_at: datetime)` — for 8 reference tables [AUDIT 2026-05-07: DONE — UTL `unified_trading_library/availability_stamping.py` now exports 5 helpers: `stamp_available_at_lineups` (== kickoff_offset), `stamp_available_at_event_time`, `stamp_available_at_post_match`, `stamp_available_at_offset` (covers announcement/fixtures), `stamp_available_at_explicit`. Naming differs slightly from plan but behavioural surface is complete.]
 - [x] [SCRIPT] P0. New UTL helper `manifest_writer.assert_available_at_present(df: pd.DataFrame)` — raises
       `LookaheadBiasError` (existing) if `available_at` column missing or contains NaN. Called automatically from
       `record_captured` when not in cluster path.
@@ -886,8 +917,8 @@ opaque):
       `available_at`. - `record_empty` accepts `attempted_at` + writes manifest row only. - `record_failed` accepts each
       new typed error variant + writes appropriate `error_reason`.
 - [ ] [QG] P0. Add UTL `quality-gates.sh` step that fails if `_create_empty_output`-style placeholder return patterns
-      are reintroduced (grep-based static check; can be fooled but catches the obvious).
-- [ ] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge.
+      are reintroduced (grep-based static check; can be fooled but catches the obvious). [AUDIT 2026-05-07: FRESH — actionable; no grep against `_create_empty_output|_handle_empty_tick_data` regression in unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.]
+- [ ] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. [AUDIT 2026-05-07: STALE — semver-agent auto-fires on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped post-merge bumps. This todo is bookkeeping; close at next push.]
 
 QG between Phase 1A and Phase 2: UTL tests green; UTL pushed to live-defi-rollout; downstream consumers rebuild against
 new UTL pinned in workspace-manifest.json.
@@ -961,8 +992,8 @@ new UTL pinned in workspace-manifest.json.
       `("sports", "FIXTURE_STATS"|"FIXTURE_PLAYER_STATS")` → `match_end_time`; reference tables →
       `fetch_completed_at`. - CeFi / DeFi / TradFi / prediction seeds: TBD per Phase 0 audit (most are fetch-time /
       event-time straightforward).
-- [ ] [SCRIPT] P0. Lift instruments-service ES.OPT cluster lookup (`reference_data/options_cluster_lookup.py`) to UAC
-      `OPTIONS_CLUSTERS` registry. Delete the instruments-service module; update consumers.
+- [x] [SCRIPT] P0. Lift instruments-service ES.OPT cluster lookup (`reference_data/options_cluster_lookup.py`) to UAC
+      `OPTIONS_CLUSTERS` registry. Delete the instruments-service module; update consumers. [AUDIT 2026-05-07: DONE — instruments-service `reference_data/options_cluster_lookup.py` no longer exists (deleted); UAC `unified_api_contracts/registry/tradfi_symbology.py:539` owns `ES_OPTIONS_CLUSTERS` + `extract_es_options_cluster()` + `get_active_es_options_clusters_for_date()`; MTDS orchestrator uses UTL `get_active_es_options_clusters_for_date_from_snapshot` which delegates to UAC.]
 - [x] [TEST] P0. UAC unit tests: - Every entry in `BUNDLED_DATA_TYPES` has a corresponding entry in
       `DATA_TYPE_TO_CLUSTER_REGISTRY`. - Every registry symbol referenced in `DATA_TYPE_TO_CLUSTER_REGISTRY` resolves to
       a non-empty dict. - Every `(asset_group, data_type)` shipped by any service has an entry in
@@ -990,13 +1021,13 @@ QG between Phase 1B and Phase 2: UAC tests green; UAC pushed; consumer-pin propa
       **§ "`available_at` is per-row, write-time, equal to live-pipeline-arrival"**
       Every shard's parquet contains an `available_at` column. Each row's value = when the live pipeline would have actually had that row's information (per `UAC.AVAILABILITY_AT_SEMANTICS`). For multi-source data_types, the `UAC.SOURCE_PRIORITY` top entry determines the source whose timing is used. NEVER derived at read-time. Stamping helpers: `unified_trading_library.availability_stamping.stamp_available_at_*`. UTL's `record_captured` calls `assert_available_at_present` internally.
 
-- [ ] [DOCS] P0. Update existing CLAUDE.md "Honest absence vs fake placeholders" section with explicit cross-link to the
+- [x] [DOCS] P0. Update existing CLAUDE.md "Honest absence vs fake placeholders" section with explicit cross-link to the
       three-category decision; rewrite the "Reader/schema-drift bug" sub-bullet to call out path B (timestamp bias) as a
-      distinct sub-class.
+      distinct sub-class. [AUDIT 2026-05-07: DONE — CLAUDE.md line 309 carries explicit cross-link to `codex/02-data/honest-absence-downstream-handling.md`; line 286 "Three-category empty-output decision" rule references reason taxonomy + per-service consumer-class audit.]
 - [ ] [DOCS] P0. Update `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` to inherit the new sections
-      (it's a per-repo synced file).
-- [ ] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` (or the equivalent)
-      so per-repo `CLAUDE.md` mirrors pick up the new sections.
+      (it's a per-repo synced file). [AUDIT 2026-05-07: FRESH — actionable; SUB_AGENT_MANDATORY_RULES.md missing the four Phase 1C sections ("Live = batch", "Three-category empty-output decision", "Cluster validation mandatory", "available_at is per-row"). ~30 min to copy-paste the canonical text from CLAUDE.md.]
+- [x] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` (or the equivalent)
+      so per-repo `CLAUDE.md` mirrors pick up the new sections. [AUDIT 2026-05-07: DONE — verified MDPS `.claude/CLAUDE.md` mirror has 2 hits for "Three-category empty-output / live-pipeline-arrival"; sync ran successfully.]
 
 QG between Phase 1C and Phase 2: every per-repo `.claude/CLAUDE.md` (or symlink) contains the new sections; validated by
 grep.
@@ -1026,17 +1057,17 @@ grep.
       `return self._create_empty_output(...)` invocations).
 - [ ] [SCRIPT] P0. Update `_handle_empty_tick_data` in `batch_workers.py` + `live_workers.py` to catch all three
       exceptions + route to `record_empty` (path A) / `record_failed(UpstreamTimestampBiasError)` (path B) /
-      `record_failed(MalformedTickFieldError)` (path C).
-- [ ] [SCRIPT] P0. **Phase 2.A scope expansion (Phase 0 audit finding 2026-05-06)**: fix prediction empty path silent
+      `record_failed(MalformedTickFieldError)` (path C). [AUDIT 2026-05-07: PARTIAL — `live_workers.py` shipped at MDPS@c924410 (3 categories wired in `_process_all_timeframes` lines 759-792: path A `record_empty_for_shard` + path B/C `except (UpstreamTimestampBiasError, MalformedTickFieldError)` → `record_failed_for_shard`). `batch_workers.py:192-285` handles path A only via `_handle_empty_tick_data` (record_empty for non-TRADFI fall-through, including prediction). Path B/C typed-error catches NOT yet wired in batch_workers run loop. ~2 hours to backport the live_workers pattern.]
+- [x] [SCRIPT] P0. **Phase 2.A scope expansion (Phase 0 audit finding 2026-05-06)**: fix prediction empty path silent
       drop. At `live_workers.py:268-271` + `batch_workers.py:199-228`, the prediction asset_group fall-through returns
       `success=True, candles_generated=0` with NO manifest record. Add
       `record_empty(row_key=<full v6 key including     canonical_question_group + market_id>, attempted_at=<now>)` call
       so prediction empties surface in the manifest as honest absence. Coordinate row_key shape with Plan A predictions
       (canonical_question_group + market_id columns land via that plan). Until Plan A lands, use a placeholder row_key
       with current Polymarket per-base_asset shape; reconciler script (Phase 3.A new entry) re-flips these rows once
-      Plan A migrates the shape.
+      Plan A migrates the shape. [AUDIT 2026-05-07: DONE — both `live_workers._process_all_timeframes` (line 759 `record_empty_for_shard` per timeframe) and `batch_workers._handle_empty_tick_data:230-269` (non-TRADFI fall-through `record_empty_for_shard` per (instrument, timeframe) — including prediction) emit `record_empty` instead of silent return. Row_key uses placeholder per-base_asset shape per plan note; reconciler in Phase 3.A re-flips when canonical_question_group SSOT lands via predictions plan.]
 - [ ] [SCRIPT] P0. Delete `_write_manifest_records` v3-shape parallel write from `orchestration_service.py:329–388`.
-      Single canonical v6 path via `canonical_writer` only. (Resolves parent HANDOVER §"❌ MDPS mismatches" item.)
+      Single canonical v6 path via `canonical_writer` only. (Resolves parent HANDOVER §"❌ MDPS mismatches" item.) [AUDIT 2026-05-07: FRESH — actionable; `_write_manifest_records` still present at `market_data_processing_service/app/core/orchestration_service.py:283`, called from line 242. Mainline writer co-exists with canonical_writer (added MDPS@5363fd2). Need delete + caller refactor + downstream reader audit.]
 - [ ] [SCRIPT] P0. Wire v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) into
       `canonical_writer.add()` per the explicit decision rule below — no UAC-owner blocking dependency: **Wire (row
       carries v6-relevant info):** - CeFi: `derivative_adapter`, `futures_chain_adapter`, `options_chain_adapter` —
@@ -1050,25 +1081,25 @@ grep.
       `market_state_adapter`, etc.) — DEX spot has no margin_type; quote_asset is the second leg of the pool which is
       the data_type axis already. - All sports adapters — irrelevant. - All prediction adapters — irrelevant. Phase 5
       verification todo: UAC owner confirms the wired set matches the v6 schema spec; flag any data_type whose row
-      carries v6-relevant info we missed.
-- [ ] [SCRIPT] P0. Add missing data_types to `_CEFI_TRADFI_DEFI_DATA_TYPES` in `orchestration_scanner.py:46–72`
-      (`dex_pool_swaps`, `evm_defi_lending`, `evm_defi_amm`, `staking_yields`).
-- [ ] [SCRIPT] P0. Fix adapter registry imports — add `liquidity`, `market_state`, `fx_rates` to
-      `app/adapters/__init__.py` so decorators fire.
+      carries v6-relevant info we missed. [AUDIT 2026-05-07: FRESH — actionable; MDPS canonical_writer schema includes v6 columns but per-adapter population not yet audited. Tracked Open Question §3 also covers this. ~3-5 days work.]
+- [x] [SCRIPT] P0. Add missing data_types to `_CEFI_TRADFI_DEFI_DATA_TYPES` in `orchestration_scanner.py:46–72`
+      (`dex_pool_swaps`, `evm_defi_lending`, `evm_defi_amm`, `staking_yields`). [AUDIT 2026-05-07: DONE — `market_data_processing_service/app/core/orchestration_scanner.py:46-83` includes all 4 data_types (dex_pool_swaps:57, evm_defi_lending:68, evm_defi_amm:69, staking_yields:70).]
+- [x] [SCRIPT] P0. Fix adapter registry imports — add `liquidity`, `market_state`, `fx_rates` to
+      `app/adapters/__init__.py` so decorators fire. [AUDIT 2026-05-07: DONE — MDPS@72b2d5f registered missing chain + DeFi adapters; `app/adapters/__init__.py:34-36` imports `DefiFxRateAdapter`, `DefiLiquidityAdapter`, `DefiMarketStateAdapter`.]
 - [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into MDPS chain-bundle write paths
-      (futures_chain, options_chain). Use UAC `DATA_TYPE_TO_CLUSTER_REGISTRY` to look up the registry per data_type.
+      (futures_chain, options_chain). Use UAC `DATA_TYPE_TO_CLUSTER_REGISTRY` to look up the registry per data_type. [AUDIT 2026-05-07: FRESH — actionable; zero `expected_root_clusters` callsites in MDPS (`grep -r "expected_root_clusters" market_data_processing_service/` returns empty). MTDS has the wiring at orchestrator.py:2155 for ES.OPT only; MDPS chain-bundle adapters need parallel wiring. Couples to MTDS Phase 2.B item below.]
 - [ ] [TEST] P0. Per-adapter integration test: simulate path A / path B / path C; assert correct manifest verb fires;
-      assert NO 1440-row NaN parquet ever lands on disk.
+      assert NO 1440-row NaN parquet ever lands on disk. [AUDIT 2026-05-07: FRESH — actionable. Migration code shipped Tier 2A/C/D/E (MDPS@5b52d0b/b9f9328/80cf141/e9520a0); integration tests verifying the path-routing remain unwritten.]
 - [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
-      manifest reflects honest verb; spot-check 1 parquet per data_type; assert OHLC populated where claimed `captured`.
-- [ ] [QG] P0. MDPS quality-gates.sh green.
+      manifest reflects honest verb; spot-check 1 parquet per data_type; assert OHLC populated where claimed `captured`. [AUDIT 2026-05-07: IN-FLIGHT — VMs running 2026-05-07T03:30 UTC are end-to-end live tests (37 VMs CeFi/TradFi/Sports). Per the writegate contract they MUST emit honest record_empty/record_captured/record_failed. Validation is via deployment-ui post-completion review. Formal automated smoke harness not yet written.]
+- [ ] [QG] P0. MDPS quality-gates.sh green. [AUDIT 2026-05-07: FRESH — actionable; depends on resolution of items above. Last MDPS QG run: c924410 (auto-pass on push). Workspace-wide QG sweep is Phase 5 item.]
 
 ### Phase 2.B — MTDS partitioner validation + cluster wiring
 
-- [ ] [SCRIPT] P0. Add write-time partition-key validation to `raw_tick_hive.py`: assert
+- [x] [SCRIPT] P0. Add write-time partition-key validation to `raw_tick_hive.py`: assert
       `tick.timestamp.date() == day_partition_key` before writing each tick. On mismatch: log + emit
       `RAW_TICK_PARTITION_MISMATCH` event + reject the tick (do NOT write to GCS). Per-instrument shard-level isolation;
-      one instrument's mismatch doesn't kill the venue run.
+      one instrument's mismatch doesn't kill the venue run. [AUDIT 2026-05-07: DONE — `market_tick_data_service/raw_tick_hive.py:60-104` `validate_day_partition_alignment()` shipped; raises `UpstreamTimestampBiasError` on mismatch. Wired into `engine/orchestrator.py:1008` so writes route through the gate.]
 - [ ] [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into every MTDS bundle write site (paths
       corrected per audit 2026-05-06 amendment A — original plan listed non-existent files): -
       `market_interface/adapters/tradfi/tardis_adapter.py:870` `finalise_and_write_cefi_shards()` (Tardis CeFi
@@ -1405,9 +1436,15 @@ split.
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
       (this is upstream-bug detection, not data-quality fix).
-- [ ] [SCRIPT] P0. `features_sports_reconcile_available_at.py` — for every features-sports parquet on disk, check if
+- [x] [SCRIPT] P0. `features_sports_reconcile_available_at.py` — for every features-sports parquet on disk, check if
       `available_at` column present + populated correctly per the new UAC semantic. If missing or wrong → flip manifest
       from `captured` to `attempted_failed[reason=MissingAvailableAt]`. Re-attempt happens via Phase 2.C re-run.
+      Shipped features-sports@f123069 — `scripts/features_sports_reconcile_available_at.py` (462 lines). Walks
+      `sports_features/by_date/day=*/...` parquets via pyarrow footer reads; flips when the column is absent OR
+      100% null. Empty parquets with the column present are treated as honest-empty, not flipped. Default scan-only;
+      `--apply-flips` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` (verified guards fire with exit 4).
+      RECONCILER_* events, CSV audit, `--max-flips-per-run` 100k halt safety. Smoke-verified path parser handles
+      both per-league (`league={id}/feature_group={fg}/...`) and bare (`feature_group={fg}/...`) layouts.
 - [ ] [SCRIPT] P0. Pre-v5 / pre-v6 manifest row purge — wire
       `instruments-service/scripts/dedupe_manifest_schema_drift.py` + `purge_legacy_unsharded_manifest_rows.py` into the
       orchestrator boot sequence (per parent HANDOVER §"Migration items"). Delete the fallback readers that previously
