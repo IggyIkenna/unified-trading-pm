@@ -130,10 +130,15 @@ unit as code" hard rules.
 
 ### Day 1 — 2026-05-07
 
-- [x] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`),
+- [ ] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`),
   kill zombies via `VM_PREFIX_TO_BUCKET` registry; do **not** launch new cefi work. Plan:
-  [`cefi_master_2026_05_07`](cefi_master_2026_05_07.plan.md). Monitor only. (verified-via gcloud: zone has no
-  `cefi-*` instances 2026-05-07 — drain complete; only `mdps-tradfi-*` + watchdog + a STOPPING enumerator-VM remain.)
+  [`cefi_master_2026_05_07`](cefi_master_2026_05_07.plan.md). Monitor only.
+  **In-flight 2026-05-07 14:00 UTC**: 37 cefi VMs (bitfinex/bitget/kraken futures+spot 2020-2026) running in
+  asia-northeast1-c. Sample-checked 3 VMs: STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED events flowing,
+  ~4 min/date pace. **Concerns**: (a) PROCESSING_COMPLETED events lack `rows_captured` field — violates writegate
+  rule "adapters MUST emit row counts so silent-zero is detectable from event stream"; (b) frequent
+  `PROCESS_CPU_SATURATED` events on e2-highmem-2 (2 vCPU) suggest workload sized too tight for instance type.
+  **Next**: data-quality spot-check via per-VM manifest shard at T+30min after first VM hits STOPPED.
 - [x] [SCRIPT] P0. Implement UAC types for backfill launch (`BackfillLaunchRequest` / `BackfillLaunchResult` /
   `VMLifecycleEvent` / `VMEventListResult` / `BackfillLaunchTaskKind` StrEnum). Plan:
   [`deployment_api_work_stream_a_2026_05_07`](deployment_api_work_stream_a_2026_05_07.plan.md) Phase 1. Repo: UAC.
