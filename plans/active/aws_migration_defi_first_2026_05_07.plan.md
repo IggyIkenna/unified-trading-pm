@@ -282,14 +282,18 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 ### Phase 2 — Provision 10 missing DeFi buckets + IAM (½ day, **PARALLEL** with Phase 1.5 once 1.5.A finishes)
 
-- [ ] [SCRIPT] P0. Extend `deployment-service/configs/cloud-providers.yaml` to declare AWS bucket templates for:
+- [x] [SCRIPT] P0. Extend `deployment-service/configs/cloud-providers.yaml` to declare AWS bucket templates for:
       `dex-pools`, `dex-swaps`, `evm-defi`, `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`,
       `positions-store-defi`, `risk-store-defi`, `events`, `config-store`. Names:
-      `unified-trading-{kind}-{env}-{AWS_ACCOUNT_ID}` matching existing pattern.
-- [ ] [SCRIPT] P0. `deployment-service/scripts/setup-cloud-infra.sh --cloud aws --asset-group defi` — extend or invoke
+      `unified-trading-{kind}-{env}-{AWS_ACCOUNT_ID}` matching existing pattern. **SHIPPED 2026-05-07**:
+      deployment-service@7da2f3d adds parallel `gcp.storage` + `aws.storage` entries for all 10 keys (Agent 4 Item 3).
+- [x] [SCRIPT] P0. `deployment-service/scripts/setup-cloud-infra.sh --cloud aws --asset-group defi` — extend or invoke
       to provision the 10 buckets. If the script doesn't exist for AWS yet, write minimal Terraform or
       `aws s3api create-bucket` script under `deployment-service/scripts/aws/setup-defi-buckets.sh`. Use
-      `uts-terraform-state-...` bucket for state.
+      `uts-terraform-state-...` bucket for state. **SHIPPED 2026-05-07**: deployment-service@7da2f3d adds
+      `scripts/aws/setup-defi-buckets.sh` — idempotent (head-bucket before create), default dry-run, `--apply` for real,
+      ap-northeast-1 LocationConstraint branch, BlockPublicAccess + Versioning on creation. Operator next step: run
+      `bash scripts/aws/setup-defi-buckets.sh --apply` from authenticated AWS session (admin_od / 427895769566).
 - [ ] [SCRIPT] P0. Apply IAM bucket policies from `iam-bucket-policies.yaml` to AWS via `aws s3api put-bucket-policy`.
       The YAML SSOT references GCP `serviceAccount:*` principals; mirror as AWS IAM principals
       (`arn:aws:iam::*:role/*-prod`, etc.). Land an `iam-bucket-policies.aws.yaml` if the IAM model differs enough.
