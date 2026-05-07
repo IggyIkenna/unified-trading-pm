@@ -34,13 +34,9 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
-      - name: Checkout unified-trading-codex (readiness checklists)
-        # actions/checkout@v6 rejects paths outside $GITHUB_WORKSPACE, so use
-        # git clone directly to preserve the sibling layout WORKSPACE_ROOT expects.
-        run: |
-          git clone --depth 1 \
-            "https://x-access-token:${{ secrets.GH_PAT }}@github.com/IggyIkenna/unified-trading-codex.git" \
-            "${{ github.workspace }}/../unified-trading-codex"
+      # codex/ now lives inside unified-trading-pm — no separate clone needed.
+      # The check-repo-readiness.py invocations below pass --codex-path explicitly
+      # so the script does not look for a sibling unified-trading-codex/.
 
       - name: Checkout workspace repos for the specified tier
         # Clone only the repos in the tier being verified using the
@@ -71,11 +67,13 @@ jobs:
             python scripts/check-repo-readiness.py \
               --repo "${{ github.event.inputs.repo_filter }}" \
               --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              --codex-path "${{ github.workspace }}/codex" \
               2>&1 | tee readiness-report.txt || EXIT_CODE=$?
           else
             python scripts/check-repo-readiness.py \
               --tier "${{ github.event.inputs.tier || 'all' }}" \
               --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              --codex-path "${{ github.workspace }}/codex" \
               2>&1 | tee readiness-report.txt || EXIT_CODE=$?
           fi
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
