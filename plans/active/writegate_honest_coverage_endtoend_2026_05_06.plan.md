@@ -1789,13 +1789,18 @@ sub-phase ships the enumerator that physically writes those rows.
       % should agree within rollup cache TTL (~5 min). Pending the operator pass on the data-status panel. Fine-grained
       per-instrument lifecycle (cefi instrument-listed-since / prediction `PREDICTION_GROUPS` per-day) is the v2
       universe in Phase 3.D.5 below, not Phase 3.D.4.
-- [ ] [DOCS] P0. Update
+- [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Updated
       [`codex/02-data/expected-absence-backfill-runbook.md`](../../codex/02-data/expected-absence-backfill-runbook.md)
-      with the v2 enumerator section: invocation, expected per-asset-group volume, sequencing, verification steps.
-- [ ] [DOCS] P0. After all 5 asset_groups land, mark
+      from PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes
+      table (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard +
+      canonical merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement,
+      dtype-correct fill-default fix), re-run cadence, open follow-ups.
+- [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Marked
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **shipped** with the VM
-      commit shas + verification evidence.
+      § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM
+      commit shas (PM@79e47874 + PM@341bb285) + spot-check evidence (DeFi 688,220 EXPECTED_PRE_GENESIS_CHAIN sample
+      `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`; TradFi 35,050 EXPECTED_WEEKEND sample
+      `venue=BARCHART day=2018-01-06`).
 
 **QG between Phase 3.D.4 and Phase 4**: every asset_group's enumerator scan-only run reviewed by operator;
 `--apply-write` produces convergent rollup-vs-drilldown percentages on spot-checked tuples; codex doc updated to reflect
