@@ -4,17 +4,15 @@ role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
-companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: shard_granularity_ssot_propagation_2026_05_06.plan.md
+companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
+parent_plan: infrastructure_master_2026_05_07.plan.md # peer/umbrella; was shard_granularity_ssot_propagation, now folded
 related:
-  - predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md
-  - data_status_multi_axis_shard_propagation_2026_05_06.plan.md
-  - shard_granularity_ssot_propagation_2026_05_06.plan.md
-  - shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
+  - predictions_master_2026_05_07.plan.md # folds in predictions_canonical_question_group_polymarket_migration
+  - infrastructure_master_2026_05_07.plan.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
 supersedes_phases:
-  - shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
-  - shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 2 raw-tables (sports available_at, paused — now
-    scoped here)
+  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
+  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 2 raw-tables (sports
+    available_at, paused — now scoped here)
 status: drafted
 ---
 
@@ -1275,95 +1273,94 @@ isn't there." Two refinements over the original 3-category model in Phase 2.A �
    `EXPECTED_INSTRUMENT_NOT_LISTED`, `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PARTIAL_HALF_DAY`, or
    `SOURCE_RETURNED_ZERO`. Today the manifest writes `error_reason=None` for honest empty, losing the distinction.
 2. **No parquet for bad/partial-expected days.** Even when the data is "good but partial" (half-day session), the
-   default is NO parquet on disk + manifest row with the reason. Optional exception for partial-expected only when
-   the downstream consumer needs the rows directly + the parquet schema is honest about its short row count (no
-   NaN-fill to "complete" the day).
+   default is NO parquet on disk + manifest row with the reason. Optional exception for partial-expected only when the
+   downstream consumer needs the rows directly + the parquet schema is honest about its short row count (no NaN-fill to
+   "complete" the day).
 
-Phase 2.A per-adapter migration MUST emit the expanded reason taxonomy. Per-service consumer-class audit (which
-service handles which reason how) is the workspace-wide contract; the codex doc Section "Per-service consumer-class
-audit" carries the SSOT table.
+Phase 2.A per-adapter migration MUST emit the expanded reason taxonomy. Per-service consumer-class audit (which service
+handles which reason how) is the workspace-wide contract; the codex doc Section "Per-service consumer-class audit"
+carries the SSOT table.
 
 #### Phase 2.E.1 — UTL contract extension (block-everything; ships before per-service Phase 2.A migration)
 
 - [x] [SCRIPT] P0. Extend `unified_trading_library/manifest_writer.py` `record_empty()` to accept an optional
       `reason: str = ""` kwarg. The reason flows through to the manifest row's `error_reason` column verbatim. UTL
-      validates `reason` against a closed set per `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS`
-      enum (new); unknown reasons raise `UnknownEmptyConfirmedReasonError`. Existing callsites (no `reason` kwarg)
-      continue to work — `error_reason=""` preserved for back-compat. Shipped UTL@958634f9 2026-05-07.
-- [x] [SCRIPT] P0. New UAC SSOT
-      `unified_api_contracts/canonical/crosscutting/honest_coverage.EMPTY_CONFIRMED_REASONS` — `StrEnum` with the 9
-      reason codes from the codex doc § "Reason taxonomy" matrix. Adding a new reason = adding it here AND to the
-      codex doc table AND to the per-service consumer-class audit. Shipped UAC@8867891 2026-05-07.
+      validates `reason` against a closed set per
+      `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS` enum (new); unknown reasons
+      raise `UnknownEmptyConfirmedReasonError`. Existing callsites (no `reason` kwarg) continue to work —
+      `error_reason=""` preserved for back-compat. Shipped UTL@958634f9 2026-05-07.
+- [x] [SCRIPT] P0. New UAC SSOT `unified_api_contracts/canonical/crosscutting/honest_coverage.EMPTY_CONFIRMED_REASONS` —
+      `StrEnum` with the 9 reason codes from the codex doc § "Reason taxonomy" matrix. Adding a new reason = adding it
+      here AND to the codex doc table AND to the per-service consumer-class audit. Shipped UAC@8867891 2026-05-07.
 - [x] [SCRIPT] P0. New UTL helper `record_expected_empty(row_key, reason, attempted_at)` — thin wrapper around
-      `record_empty(row_key, reason=reason, attempted_at=attempted_at)` that asserts `reason.startswith("EXPECTED_")`
-      so calendar-pre-skip callsites don't accidentally emit `SOURCE_RETURNED_ZERO`. Shipped UTL@958634f9 2026-05-07.
+      `record_empty(row_key, reason=reason, attempted_at=attempted_at)` that asserts `reason.startswith("EXPECTED_")` so
+      calendar-pre-skip callsites don't accidentally emit `SOURCE_RETURNED_ZERO`. Shipped UTL@958634f9 2026-05-07.
 - [x] [TEST] P0. UTL unit tests cover: known reason → row has `error_reason=<reason>`; unknown reason →
       `UnknownEmptyConfirmedReasonError`; `record_expected_empty` rejects non-`EXPECTED_*` reasons. 14 tests in
       `tests/unit/test_manifest_writer_record_empty_reason.py` shipped UTL@958634f9 2026-05-07.
-- [ ] [QG] P0. UTL `quality-gates.sh` step asserts every `record_empty(reason=...)` callsite outside UTL passes a
-      reason from the closed set (static AST walk, mirrors STEP 5.64's bundled-data_type guard).
+- [ ] [QG] P0. UTL `quality-gates.sh` step asserts every `record_empty(reason=...)` callsite outside UTL passes a reason
+      from the closed set (static AST walk, mirrors STEP 5.64's bundled-data_type guard).
 
 #### Phase 2.E.2 — Per-service writer migration (parallel after 2.E.1; one commit per service)
 
-For each writer service in the order MTDS / MDPS / instruments-service / features-* / ml-* / strategy / execution:
+For each writer service in the order MTDS / MDPS / instruments-service / features-_ / ml-_ / strategy / execution:
 
 - [ ] [SCRIPT] P0. **Replace orchestrator pre-skip with manifest emission.** Where the orchestrator currently consults
-      `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` / `SOURCE_COVERAGE_START` and skips queueing the shard,
-      replace with `record_expected_empty(row_key, reason=EXPECTED_<X>)`. So the manifest carries a row for EVERY
+      `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` / `SOURCE_COVERAGE_START` and skips queueing the shard, replace
+      with `record_expected_empty(row_key, reason=EXPECTED_<X>)`. So the manifest carries a row for EVERY
       `(shard_key, day)` in the expected universe — no silent "no row at all" cases.
-- [ ] [SCRIPT] P0. **Per-adapter A/B/C migration upgrade**: where the original Phase 2.A scope said
-      `record_empty(...)` for path A (source returned zero), update to `record_empty(reason=SOURCE_RETURNED_ZERO)`
-      so downstream consumers can distinguish "we asked, source had nothing" from "we expected nothing."
+- [ ] [SCRIPT] P0. **Per-adapter A/B/C migration upgrade**: where the original Phase 2.A scope said `record_empty(...)`
+      for path A (source returned zero), update to `record_empty(reason=SOURCE_RETURNED_ZERO)` so downstream consumers
+      can distinguish "we asked, source had nothing" from "we expected nothing."
 - [ ] [SCRIPT] P0. **Partial-bundle / cluster-coverage failures**: the existing `ClusterCoverageError` flow under
-      `attempted_failed` stays. NEW: where a bundle is legitimately partial because some clusters didn't exist on
-      that date (e.g. ES.OPT before a weekly was listed), emit `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`
+      `attempted_failed` stays. NEW: where a bundle is legitimately partial because some clusters didn't exist on that
+      date (e.g. ES.OPT before a weekly was listed), emit `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`
       for the missing-cluster sub-shards instead of `attempted_failed`.
-- [ ] [TEST] P0. Per-service: feed a calendar-skipped day → assert manifest has the right `EXPECTED_*` row, NOT
-      "no row at all."
+- [ ] [TEST] P0. Per-service: feed a calendar-skipped day → assert manifest has the right `EXPECTED_*` row, NOT "no row
+      at all."
 
 #### Phase 2.E.3 — Per-service downstream-consumer-class audit (parallel after 2.E.2)
 
-For each downstream service, audit the read-path code against the codex SSOT § "Per-service consumer-class audit"
-table and fix any drift. The audit produces a yes/no answer per (consumer-class × reason) pair:
+For each downstream service, audit the read-path code against the codex SSOT § "Per-service consumer-class audit" table
+and fix any drift. The audit produces a yes/no answer per (consumer-class × reason) pair:
 
 - [ ] [AUDIT] P0. **execution-service**: every reading callsite (live trade emission + signal-broadcast) consults
-      manifest reason and skips trade for `EXPECTED_*` reasons; alerts + skips for `attempted_failed`. No "trade
-      anyway, NaN-fill the price" patterns.
+      manifest reason and skips trade for `EXPECTED_*` reasons; alerts + skips for `attempted_failed`. No "trade anyway,
+      NaN-fill the price" patterns.
 - [ ] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
-      `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn
-      to discount.
+      `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
+      discount.
 - [ ] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
       `attempted_failed` (live model can't infer through gaps).
-- [ ] [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**:
-      keep window size, adjust denominator for `EXPECTED_*` + `SOURCE_RETURNED_ZERO`, skip + emit
-      `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling
-      column.
-- [ ] [AUDIT] P0. **features-* — same-day single-sample calcs**: NaN-fill output OR emit
+- [ ] [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
+      window size, adjust denominator for `EXPECTED_*` + `SOURCE_RETURNED_ZERO`, skip + emit
+      `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling column.
+- [ ] [AUDIT] P0. **features-\* — same-day single-sample calcs**: NaN-fill output OR emit
       `record_empty(reason=NO_INPUT_AVAILABLE)` (per-calc choice; document in calc docstring).
 - [ ] [AUDIT] P0. **features-cross-instrument — paired/cross-leg calcs**: if EITHER leg `empty_confirmed`, emit
       `record_empty(reason=LEG_ABSENT_<which>)`; if EITHER leg `attempted_failed`, propagate
       `record_failed(reason=UPSTREAM_LEG_FAILED)`.
-- [ ] [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any
-      absence (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
-- [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has
-      data and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and
-      the other has `attempted_failed`, flag.
-- [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` / `EXPECTED_HOLIDAY`
-      / `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain rolling APY → assert
+- [ ] [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
+      (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
+- [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
+      and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the other has
+      `attempted_failed`, flag.
+- [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` / `EXPECTED_HOLIDAY` /
+      `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain rolling APY → assert
       `n_valid` per output row matches the expected (7 - n_excluded); run ml-training → assert NaN-fill +
       `data_quality_flag` shape; run execution → assert correct skip/trade decisions; run reconciliation → assert
       reason-agreement check.
 
 #### Phase 2.E.4 — Update CLAUDE.md "Three-category empty-output decision" rule
 
-- [ ] [DOCS] P0. CLAUDE.md "Three-category empty-output decision" section: update to reference the expanded
-      taxonomy + the codex doc § "Reason taxonomy" + the per-service consumer-class audit. The 3-category model
-      stays as the WRITE-side discipline (path A/B/C); the reason taxonomy is the EXPRESSION of those categories +
-      the calendar-pre-skip cases as structured manifest rows.
-- [ ] [DOCS] P0. CLAUDE.md cross-link from "Honest absence vs fake placeholders" → codex doc § "Reason taxonomy"
-      and § "Per-service consumer-class audit."
-- [ ] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` so all repos
-      see the updated rule.
+- [ ] [DOCS] P0. CLAUDE.md "Three-category empty-output decision" section: update to reference the expanded taxonomy +
+      the codex doc § "Reason taxonomy" + the per-service consumer-class audit. The 3-category model stays as the
+      WRITE-side discipline (path A/B/C); the reason taxonomy is the EXPRESSION of those categories + the
+      calendar-pre-skip cases as structured manifest rows.
+- [ ] [DOCS] P0. CLAUDE.md cross-link from "Honest absence vs fake placeholders" → codex doc § "Reason taxonomy" and §
+      "Per-service consumer-class audit."
+- [ ] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` so all repos see the
+      updated rule.
 
 ---
 
@@ -1386,8 +1383,8 @@ split.
       `attempted_failed[reason=ClusterCoverageError(historical)]` with the missing cluster set in the error_reason
       payload. Handles options_chain (ES.OPT 11-cluster), futures_chain. sports_fixture_bundle +
       prediction_canonical_question_group are deferred (script returns exit 3 + RECONCILER_FAILED event with
-      ``reason=data_type_deferred``) until predictions Phase 1A + sports Phase 2.B's lifecycle SSOT lands.
-      Shipped MTDS@ba5423f 2026-05-07.
+      `reason=data_type_deferred`) until predictions Phase 1A + sports Phase 2.B's lifecycle SSOT lands. Shipped
+      MTDS@ba5423f 2026-05-07.
 - [ ] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw_tick parquets; for each instrument's
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
@@ -1433,52 +1430,45 @@ user; no anomalies.
 
 ### Phase 3.D — Expanded-reason backfill (added 2026-05-07 — operator gap finding)
 
-**Why this exists.** Phase 2.E.1 ships UTL `record_empty(reason=...)` so NEW writes carry the expanded reason
-taxonomy. But existing manifest rows have `error_reason=None` for honest empty, and calendar-pre-skipped days
-have NO row at all. Without a retrospective backfill, the per-service consumer-class audit (NaN-fill for
-`EXPECTED_HOLIDAY`, etc.) only works for new data — historical reads land on rows the consumer can't classify.
+**Why this exists.** Phase 2.E.1 ships UTL `record_empty(reason=...)` so NEW writes carry the expanded reason taxonomy.
+But existing manifest rows have `error_reason=None` for honest empty, and calendar-pre-skipped days have NO row at all.
+Without a retrospective backfill, the per-service consumer-class audit (NaN-fill for `EXPECTED_HOLIDAY`, etc.) only
+works for new data — historical reads land on rows the consumer can't classify.
 
 The fix is **two-layer defensive**:
 
-1. **Retrospective backfill** (this Phase 3.D) — populate the manifest with reasons for every historical row +
-   generate missing rows for the calendar-pre-skip cases.
-2. **Reader-side fallback** (codified in the codex doc — see § "Reader-side fallback for legacy rows") — every
-   consumer service implements: "if `error_reason` is empty, consult `venue_trading_calendar` /
-   `SOURCE_COVERAGE_START` / `KNOWN_COVERAGE_GAPS` / instrument-listing windows to classify on the fly." This
-   makes the consumer code robust during migration AND future-proofs against any new asset_group whose backfill
-   hasn't run yet.
+1. **Retrospective backfill** (this Phase 3.D) — populate the manifest with reasons for every historical row + generate
+   missing rows for the calendar-pre-skip cases.
+2. **Reader-side fallback** (codified in the codex doc — see § "Reader-side fallback for legacy rows") — every consumer
+   service implements: "if `error_reason` is empty, consult `venue_trading_calendar` / `SOURCE_COVERAGE_START` /
+   `KNOWN_COVERAGE_GAPS` / instrument-listing windows to classify on the fly." This makes the consumer code robust
+   during migration AND future-proofs against any new asset_group whose backfill hasn't run yet.
 
 #### Phase 3.D.1 — `reconcile_expected_absence_reasons.py` per asset_group
 
-- [ ] [SCRIPT] P0. New script per asset_group (cefi / defi / tradfi / sports / prediction). Iterates the
-      "expected universe" per (service, asset_group, data_type) using:
-      - Date range from `SOURCE_COVERAGE_START` (UAC) up to today.
-      - Instrument set from instruments-service per `(asset_group, data_type, day)` — accounts for listing
-        + delisting via `market_created_at` / `delisted_at` lifecycle.
-      - Calendar via `venue_trading_calendar` (TradFi) + `KNOWN_COVERAGE_GAPS` (sports paused leagues) +
-        chain-genesis (DeFi).
-- [ ] [SCRIPT] P0. For each `(shard_key, day)` in the expected universe:
-      - If manifest row exists with `capture_status=captured` → leave alone.
-      - If manifest row exists with `capture_status=attempted_failed` (typed reason already there) → leave alone.
-      - If manifest row exists with `capture_status=empty_confirmed` AND `error_reason` is empty → classify
-        (calendar lookup / coverage_start / paused league / source_returned_zero) and stamp the right
-        `EXPECTED_*` or `SOURCE_RETURNED_ZERO` reason via `record_empty(reason=...)`.
-      - If NO manifest row exists AND classification says "expected absence" → emit
-        `record_expected_empty(reason=EXPECTED_<X>)`.
-      - If NO manifest row exists AND classification says "should have been captured but wasn't" → emit
-        `record_failed(reason=NEVER_ATTEMPTED)` so it surfaces in the deployment-ui breakdowns as a real gap.
+- [ ] [SCRIPT] P0. New script per asset_group (cefi / defi / tradfi / sports / prediction). Iterates the "expected
+      universe" per (service, asset_group, data_type) using: - Date range from `SOURCE_COVERAGE_START` (UAC) up to
+      today. - Instrument set from instruments-service per `(asset_group, data_type, day)` — accounts for listing +
+      delisting via `market_created_at` / `delisted_at` lifecycle. - Calendar via `venue_trading_calendar` (TradFi) +
+      `KNOWN_COVERAGE_GAPS` (sports paused leagues) + chain-genesis (DeFi).
+- [ ] [SCRIPT] P0. For each `(shard_key, day)` in the expected universe: - If manifest row exists with
+      `capture_status=captured` → leave alone. - If manifest row exists with `capture_status=attempted_failed` (typed
+      reason already there) → leave alone. - If manifest row exists with `capture_status=empty_confirmed` AND
+      `error_reason` is empty → classify (calendar lookup / coverage*start / paused league / source_returned_zero) and
+      stamp the right
+      `EXPECTED*\*`or`SOURCE*RETURNED_ZERO`reason via`record_empty(reason=...)`.     - If NO manifest row exists AND classification says "expected absence" → emit       `record_expected_empty(reason=EXPECTED*<X>)`.     - If NO manifest row exists AND classification says "should have been captured but wasn't" → emit       `record_failed(reason=NEVER_ATTEMPTED)`
+      so it surfaces in the deployment-ui breakdowns as a real gap.
 - [ ] [SCRIPT] P0. Same safety scaffolding as `reconcile_1440_nan_placeholders.py`: default scan-only mode,
       `--apply-flips`, `--max-flips-per-run` default 100k, `MANIFEST_PER_VM_SHARDS=true` required for apply,
-      RECONCILER_* lifecycle events, CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`.
-- [ ] [SCRIPT] P0. Idempotent — re-runs detect "row already has the right reason" and no-op (don't re-write
-      identical rows). The decision matrix above is deterministic; same input → same output.
+      RECONCILER\_\* lifecycle events, CSV audit at `gs://{pid}-reconciler-audit/{run_id}/`.
+- [ ] [SCRIPT] P0. Idempotent — re-runs detect "row already has the right reason" and no-op (don't re-write identical
+      rows). The decision matrix above is deterministic; same input → same output.
 - [ ] [TEST] P0. Per-asset-group unit test on a fixture day-set covering each branch of the decision matrix.
 
 #### Phase 3.D.2 — Reader-side fallback in every consumer service
 
-- [ ] [SCRIPT] P0. New helper in UTL (or per-service): `classify_legacy_empty_row(row_key, day) -> str` —
-      consults the same calendar/coverage SSOTs the writer uses. Returns one of the `EXPECTED_*` or
-      `SOURCE_RETURNED_ZERO` codes.
+- [ ] [SCRIPT] P0. New helper in UTL (or per-service): `classify_legacy_empty_row(row_key, day) -> str` — consults the
+      same calendar/coverage SSOTs the writer uses. Returns one of the `EXPECTED_*` or `SOURCE_RETURNED_ZERO` codes.
 - [ ] [SCRIPT] P0. Per-consumer-service: when reading a manifest row with `capture_status=empty_confirmed` AND
       `error_reason` empty, call `classify_legacy_empty_row(...)` to derive the reason at read time. Apply the
       consumer-class audit rule (NaN-fill / skip / etc.) using the classified reason.
@@ -1488,18 +1478,17 @@ The fix is **two-layer defensive**:
 #### Phase 3.D.3 — Operator runbook + sequencing
 
 The retrospective backfill is potentially several million row writes per asset_group (TradFi alone has ~190k
-weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeFi has ~few thousand chain-pre-
-genesis rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run
-`--apply-flips`:
+weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeFi has ~few thousand chain-pre- genesis
+rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run `--apply-flips`:
 
 - [ ] [DOCS] P0. Document the per-asset-group expected backfill volume in
-      `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to
-      verify volume, then `--apply-flips` per asset_group sequentially.
-- [ ] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side
-      fallback helper.
+      `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
+      volume, then `--apply-flips` per asset_group sequentially.
+- [ ] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
+      helper.
 
-QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback
-unit-tested; per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.
+QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback unit-tested;
+per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.
 
 ---
 
