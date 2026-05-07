@@ -480,9 +480,8 @@ be split in isolation.
 3. Update adapter imports to top-level.
 4. Run quality gates.
 
-**Repos:** unified-api-contracts, unified-market-interface  
-**Effort:** ~2–4 hours (mechanical)  
-**Risk:** Low (no behavior change)
+**Repos:** unified-api-contracts, unified-market-interface **Effort:** ~2–4 hours (mechanical) **Risk:** Low (no
+behavior change)
 
 ---
 
@@ -504,8 +503,7 @@ be split in isolation.
    - Add per-query response models where feasible.
    - For highly dynamic responses, use wrapper models for `data`/`errors`.
 
-**Repos:** unified-api-contracts, unified-market-interface  
-**Effort:** ~2–3 days (schema design + adapter updates)  
+**Repos:** unified-api-contracts, unified-market-interface **Effort:** ~2–3 days (schema design + adapter updates)
 **Risk:** Medium (schema mismatches can surface new failures; test coverage important)
 
 ---
@@ -520,9 +518,8 @@ be split in isolation.
 2. For each oversized method: extract helpers, split loops, move constants.
 3. Preserve behavior; add/run tests as needed.
 
-**Repos:** unified-market-interface  
-**Effort:** ~3–5 days (incremental refactors)  
-**Risk:** Low if done incrementally with tests
+**Repos:** unified-market-interface **Effort:** ~3–5 days (incremental refactors) **Risk:** Low if done incrementally
+with tests
 
 ---
 
