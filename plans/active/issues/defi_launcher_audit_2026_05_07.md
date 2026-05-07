@@ -13,6 +13,15 @@ locked_since: 2026-05-07
 
 # DeFi launcher audit — answers to the 3 operator-blocking Qs
 
+> **Cross-ref 2026-05-07: rollup-vs-drilldown denominator gap closure in flight via writegate Phase 3.D.4.**
+> The expected-universe enumerator scan-only sweep (deployment-service@dcc5c87 launcher +
+> instruments-service@8e404c8 script) completed across all 5 asset_groups; DeFi halted on the default
+> 100k cap (>100,001 absent candidates) — needs `--max-writes-per-run` bump. Once `--apply-write` lands per
+> asset_group, the denominator divergence covered in this audit's Q3 + the data-status drilldown plan's "open
+> drifts" stops biasing the rollup. Detail in
+> [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> § Phase 3.D.4.
+
 The 2026-05-07 PM commit `b8edd01` (planning-critical correction in `defi_master_2026_05_07.plan.md`) raised three
 operator-actionable questions to Ikenna gating next-stage launches. This doc answers each from code-side evidence, no VM
 launches required.

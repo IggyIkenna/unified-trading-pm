@@ -17,6 +17,15 @@ locked_since: 2026-05-07
 
 # DeFi archetypes — doc ↔ plan drift
 
+> **Cross-ref 2026-05-07:** Separate from this archetype-canonicalisation drift, the rollup-vs-drilldown
+> data-status denominator gap is being closed in parallel via writegate Phase 3.D.4 expected-universe
+> enumerator (deployment-service@dcc5c87 + instruments-service@8e404c8). Scan-only sweep across all 5
+> asset_groups complete; tradfi/sports ready for `--apply-write`, defi needs cap bump, cefi/prediction stubbed.
+> Detail in
+> [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> § Phase 3.D.4. The archetype-canonicalisation streams below (5 streams) are NOT blocked by the data-status
+> work and proceed in parallel.
+
 Cross-checked the May-23 cutover archetypes (`carry_staked_basis` + `leveraged_funding_arb`) between the master/umbrella
 plans and the codex archetype docs. **Concept is aligned, several mechanics are not.** Three contradictions are
 launch-blocking; two are forward-drift (plans ahead of docs, expected per the SSOT pattern but the doc updates haven't

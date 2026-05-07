@@ -385,6 +385,14 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 ### Group B — Data correctness (always-on)
 
+> **2026-05-07 in flight:** writegate Phase 3.D.4 expected-universe enumerator scan-only sweep complete across all
+> 5 asset_groups (deployment-service@dcc5c87 launcher + instruments-service@8e404c8 script). TradFi (35,033) +
+> Sports (13,176) ready for `--apply-write` pending operator gate; DeFi halted on default 100k cap (>100,001
+> absent candidates) — needs `--max-writes-per-run` bump; CeFi + Prediction stubs awaiting catalog work. Closes
+> the rollup-vs-drilldown denominator gap once all `--apply-write` runs land. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> § Phase 3.D.4.
+
 4. **Smoke test** — representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end
 5. **Manifest hookup + cluster validation** — `ManifestWriter.record_{captured,empty,failed}` with
    `expected_root_clusters` + `cluster_extractor` for bundled types (codex

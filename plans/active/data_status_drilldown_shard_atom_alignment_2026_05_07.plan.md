@@ -42,6 +42,18 @@ related:
 
 # Data-status drill-down + MTDS CLI shard-atom alignment
 
+> **Cross-ref 2026-05-07: rollup-vs-drilldown denominator gap closure in flight via writegate Phase 3.D.4.**
+> The expected-universe enumerator scan-only sweep across all 5 asset_groups landed today (deployment-service@dcc5c87
+> + instruments-service@8e404c8). TradFi (35,033 EXPECTED_WEEKEND + EXPECTED_HOLIDAY) + Sports (13,176
+> EXPECTED_PRE_SOURCE_COVERAGE_START) are ready for `--apply-write` pending operator gate. DeFi halted on the
+> default 100k cap (>100,001 absent candidates) — needs `--max-writes-per-run` bump before re-scan. CeFi +
+> Prediction stubs intentionally yield 0 rows; per-asset-group catalog work tracked in
+> `cefi_master_2026_05_07.plan.md` and `predictions_master_2026_05_07.plan.md`. Once `--apply-write` lands per
+> asset_group, the rollup (offline rollup blob) and drilldown (live manifest read) percentages will agree on
+> denominator for that asset_group. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> § Phase 3.D.4 banner.
+
 ## Why
 
 The deployment-ui data-status panel for `market-tick-data-service` (and to a smaller extent `instruments-service`) does

@@ -46,6 +46,13 @@ Stream E  —  Master plan + defi_master alignment sweep    [PM plans/active/]
 
 ## Stream A — `venue_collateral.py` SSOT correction
 
+> **Cross-ref 2026-05-07: rollup-vs-drilldown denominator-gap closure in flight (writegate Phase 3.D.4) is
+> separate from this stream.** Expected-universe enumerator scan-only sweep across all 5 asset_groups
+> complete (deployment-service@dcc5c87 + instruments-service@8e404c8); Stream A is independently shippable
+> and not blocked by it. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> § Phase 3.D.4.
+
 **Problem:** UAC `venue_collateral.py` carries a 2026-05-05 comment claiming _"NO production ETH-perp venue accepts an
 ETH LST as direct cross-margin today"_ and explicit `accepted=False` rows for stETH/wstETH on Deribit / Bybit / OKX. Web
 verification 2026-05-07 confirms this is **wrong**:
