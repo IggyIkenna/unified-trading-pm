@@ -845,6 +845,47 @@ Markdown checkbox: `- [x]` for done, `- [ ]` for pending. Format: `- [x] [SCRIPT
 `- [ ] [AGENT] P0. Fix...`. This ensures Cursor Plan Mode renders filled vs hollow circles correctly. See
 `plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
 
+## Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
+
+When working through a plan, you MUST flip the `- [ ]` checkbox to `- [x]` for each todo **as soon as the underlying
+work is shipped (committed + pushed)** — not at the end of the session, not "after the next agent picks it up", not
+batched into a single sweep at handoff time. The flip happens in the same logical unit of work as the code commit:
+
+1. Ship the code commit (or commits) that complete the todo.
+2. Edit the plan file: `- [ ] [SCRIPT] P0. Description...` → `- [x] [SCRIPT] P0. Description... (commit-sha + brief evidence)`.
+3. Commit the plan flip in the PM repo with a `plan(...)` prefix referencing the work commits.
+4. Push.
+
+**Why this is non-negotiable:**
+
+- The plan is the operator's read-only view of "what's left." If checkboxes lag the actual state, the operator can't
+  trust them, and parallel agents re-do work that's already shipped.
+- Two agents reading the same plan must see the same in-flight state. Stale checkboxes cause work-stealing collisions
+  (two agents implementing the same item in parallel).
+- "I'll flip everything at the end" routinely loses items. Someone gets summoned mid-session, context fills up, the
+  flip never happens, and the next agent reads the plan as if nothing was done.
+
+**Don't flip a checkbox unless the work is actually shipped.** Local commits don't count; pushed commits do. If the
+work is half-done (e.g. helper shipped but consumer wiring deferred), flip only the half that landed and append a
+`**DEFERRED**:` note to the unshipped half explaining why.
+
+**The flip belongs in a separate commit** in the PM repo (or bundled with other doc-only PM changes), with the
+canonical message shape:
+
+```
+plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary of what shipped>)
+
+* <repo>@<sha> — <one-line>
+* <repo>@<sha> — <one-line>
+* ... (cite every code commit the flips reference)
+
+Plan: <plan-filename>.
+```
+
+This applies to every plan in `plans/active/` and every working session — tier completions, partial flips inside a
+tier, even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
+matching plan flip.
+
 ## Citadel-Grade Planning Standards
 
 Every plan MUST follow these standards. Agents creating plans that don't meet these standards MUST be corrected.
