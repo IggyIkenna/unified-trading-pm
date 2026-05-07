@@ -118,6 +118,23 @@ Two related concerns from the user (2026-05-07):
 | `e2e-testing/scripts/prediction/` | 4 | `deployment-service/scripts/vm/` |
 | `e2e-testing/scripts/sports/` | 10 | `deployment-service/scripts/vm/` |
 | `features-sports-service/scripts/launch_parallel_backfill.sh` | 1 | `deployment-service/scripts/vm/` |
+| `deployment-service/scripts/deploy-dashboard-gce-vm.sh` | 1 | `deployment-service/scripts/vm/launch-dashboard-vm.sh` (intra-repo move; rename to match SSOT pattern) |
+| **Total** | **30** | |
+
+**Local scripts that are NOT VM launchers** (no migration; verified 2026-05-07 broad scan):
+
+* `instruments-service/scripts/local_*.sh`, `run_vm_backfill_e2e.sh`, `sports_chunked_backfill.sh`,
+  `rebuild_all_asset_groups.sh` — local-process orchestration. Some `bash`-exec launchers from
+  `deployment-service/scripts/vm/`; that's correct.
+* `market-tick-data-service/scripts/*.py` — Python migration / reconciliation scripts that run in the
+  caller's shell, no VM creation.
+* `market-data-processing-service/scripts/*.py` — same.
+* `features-*-service/scripts/setup.sh` + `smoke_matrix.py` — local dev / test scaffolding.
+* `ml-training-service` / `ml-inference-service` / `strategy-service` / `execution-service` /
+  `position-balance-monitor-service` / `risk-and-exposure-service` / `alerting-service` `scripts/setup.sh` —
+  install-only, no VM launches.
+* `features-sports-service/scripts/run_backfill.sh` — local orchestration that exec's
+  `launch_parallel_backfill.sh` (which DOES launch VMs and is in the migration list above).
 
 For each script:
 1. Read its current shape — many were written before the workspace conventions

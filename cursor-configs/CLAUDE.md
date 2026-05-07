@@ -466,6 +466,33 @@ Read these before making ANY code changes:
   asset_group's pipeline), `--include <repo>` (one-off addition). **Bare invocation only re-tars CORE**
   (UAC/UTL/MTDS/deployment-service) — forgetting the flag silently runs stale code. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
+- **VM launcher script SSOT (codified 2026-05-07)** — Every script that runs `gcloud compute instances create` (or
+  the AWS `aws ec2 run-instances` equivalent) MUST live under `deployment-service/scripts/vm/`. No exceptions.
+  Ad-hoc launchers under `e2e-testing/scripts/`, `features-*-service/scripts/`, or any other repo are technical debt
+  and must be migrated. **Why:** the deployment-UI is the workspace SSOT for "how do we launch a VM"; the
+  Deploy-Missing button + the operational launchers all read from a single registry
+  (`_SERVICE_LAUNCHER_SCRIPTS` in `deployment-api/deployment_api/services/deploy_missing.py`). Scattered launchers
+  (a) bypass the registry so the UI can't render Deploy-Missing for them; (b) miss the workspace conventions
+  (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<unique-tag>`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`, the
+  `VM_PREFIX_TO_BUCKET` registry from the rule below); (c) drift in shape over time, breaking parallel-agent
+  reasoning. **Four ways the script reaches the VM** (UI exposes the first two as a mode toggle): (1) **Tarball**
+  (default + production) — `gs://deployment-scripts-${PID}/code/<tarball>.tar.gz` → `setup-data-pipeline-vm.sh`
+  extracts at boot. Refresh via `create-code-tarballs.sh --all`. (2) **Tarball-from-local** (developer path; UI
+  mode toggle) — bundles the operator's CURRENT local working tree (uncommitted edits included) before VM launch.
+  **ONLY works from the operator's workstation**, never from the deployment-api Cloud Run pod. The
+  `/data-status/deploy-missing-preview` endpoint emits a `LOCAL-ONLY + UNCOMMITTED CHANGES` warning when picked.
+  (3) **Sibling-clone** (local-stack dev) — workstation has every service repo cloned as siblings under
+  `${WORKSPACE_ROOT}` per workspace-manifest; CI / Cloud Run does NOT have sibling clones. (4) **Image** (future)
+  — bake launchers into a Docker image cached in Artifact Registry / ECR; deployment-api pulls + runs. Tracked in
+  `plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`. **Adding a new launcher:** file lives under
+  `deployment-service/scripts/vm/launch-{asset_group}-{flavor}-vm.sh`; register VM-name prefix in
+  `VM_PREFIX_TO_BUCKET`; register the script in `_SERVICE_LAUNCHER_SCRIPTS` if it should be reachable from the
+  Deploy-Missing UI button. **Migration in flight (2026-05-07):** 30 ad-hoc launchers under `e2e-testing/scripts/`
+  + `features-sports-service/scripts/` + the intra-repo `deployment-service/scripts/deploy-dashboard-gce-vm.sh`
+  pending migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`.
+  Until plan ships, Deploy-Missing UI button degrades to "no launcher registered" for those services; operators
+  run the ad-hoc script manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
+  `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **Singleton-locked launchers** — Adapters with shared API keys / per-IP rate limits use a singleton-lock pattern in
   the launcher (refuses launch if a same-prefix VM is RUNNING in the zone; `--force` bypass). Currently:
   `launch-sfi-forward-poll.sh`, `launch-mtds-prediction-backfill-vm.sh`. New rate-limited adapters should copy the
