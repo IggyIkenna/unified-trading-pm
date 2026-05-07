@@ -2570,16 +2570,22 @@ data-status drilldown reads the canonical manifest (which has both layers merged
       captured/attempted_failed exclusion, mixed aggregation, and a closed-set drift guard against UAC
       `EMPTY_CONFIRMED_REASONS` (caught 2 missing reasons during dev). Without this rollup, the Phase 2.E + Phase 3.D +
       Phase 3.B work that stamps typed reasons on every empty_confirmed row stays invisible to the operator.
-- [ ] [SCRIPT] P0. New endpoint `GET /data-status/{service}/leaf/{shard_key}/schema` — returns per-leaf-parquet schema
-      view: columns, types, row_count, per-column non_null_count, per-column NaN ratio, `available_at`
-      min/max/null_count. **Investigation 2026-05-07**: distinct from existing `/schema` endpoint at
-      [`data_status.py:816`](../../../deployment-api/deployment_api/routes/data_status.py#L816), which returns the
-      DECLARED `SchemaContract` (column names + types from UAC, not actual stats). The new endpoint needs live parquet
-      introspection: resolve GCS path for the shard, download parquet, compute per-column non_null_count + NaN ratio +
-      available_at envelope. ~2 hour task: a `get_leaf_parquet_stats(...)` helper in
-      `deployment_api/services/data_status_drilldown.py` (mirrors `get_schema_for_shard`'s resolution shape) + route
-      handler + 5-min TTL cache + handling for parquet-missing / corrupt / very-large file cases. Successor is this same
-      plan item — pick up next focused session in the deployment-api repo.
+- [x] [SCRIPT] P0. New endpoint `GET /data-status/leaf-stats` — returns per-leaf-parquet live stats:
+      row_count, per-column non_null_count, per-column NaN ratio, `available_at` envelope (min/max/null_count), and
+      file size. Distinct from existing `/schema` endpoint (declared `SchemaContract` from UAC, not actual stats).
+      **SHIPPED 2026-05-07 deployment-api@3b0477a**: new `get_leaf_parquet_stats()` helper in
+      `services/shard_detail.py` (mirrors `get_shard_detail`'s resolution shape via `_gcs_path_for_shard` so a
+      single coordinate tuple lights all three views off the same parquet); new `LeafParquetStats` /
+      `LeafParquetColumnStat` / `LeafAvailableAtEnvelope` Pydantic models in `types/shard_detail.py`; new
+      `GET /api/data-status/leaf-stats` route in `routes/shard_detail.py`. Bounded at 500k rows with the
+      `truncated` flag set on oversize parquets. Never raises for data-level failures: missing path / corrupt
+      parquet / read errors all resolve to `available=False` with a typed `error_reason` so the UI can render
+      the diagnostic state without a 500. 7 unit tests cover unresolved path, parquet read failure, successful
+      read with per-column NaN ratios + available_at envelope, missing-`available_at`-column failure mode
+      (writegate Phase 1A.future `MissingAvailableAt`), oversize-parquet truncation, zero-row parquet (no
+      div-by-zero), and coord echo. **DEFERRED to follow-up commit**: TTL cache (currently each request
+      re-reads from GCS — fine for the schema-modal use case which is one-click-per-modal, not a hot path);
+      lift to a 5-min TTL cache once Phase 4.B.3 modal lands and reveals real query patterns.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
       window AND `live_pipeline_already_wrote = true` → emit `LIVE_HISTORICAL_DOUBLE_WRITE` warning event.
       **Investigation 2026-05-07**: multi-repo write-time guard. Needs (a) a UAC `LIVE_HISTORICAL_DOUBLE_WRITE` event

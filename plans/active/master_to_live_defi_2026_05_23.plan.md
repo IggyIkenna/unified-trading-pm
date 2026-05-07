@@ -386,13 +386,14 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 > **2026-05-07:** writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE across all 5 asset_groups +
 > CONSOLIDATOR MERGE LANDED (deployment-service@dcc5c87 / @38b7a58 + instruments-service@8e404c8 / @d1c9928 / @a936a28
-> + UAC@ac218dc; PM@79e47874 + PM@341bb285). 1,455,901 rows written + merged into canonical 18:07-18:14 UTC
-> (TradFi 35,033 + Sports 13,176 + CeFi 119,152 real impl + Prediction 2,280 real impl + DeFi 1,286,260). Consolidator
-> P0 (`ArrowTypeError` on `instrument_count`) was briefly blocking tradfi / defi / prediction; resolved at PM@341bb285
-> (script-side root cause + 4 in-place shard fixes). Rollup-vs-drilldown denominator gap closure now observable on all
-> 5 asset_groups; operator spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
-> Phase 3.D.4.
+>
+> - UAC@ac218dc; PM@79e47874 + PM@341bb285). 1,455,901 rows written + merged into canonical 18:07-18:14 UTC (TradFi
+>   35,033 + Sports 13,176 + CeFi 119,152 real impl + Prediction 2,280 real impl + DeFi 1,286,260). Consolidator P0
+>   (`ArrowTypeError` on `instrument_count`) was briefly blocking tradfi / defi / prediction; resolved at PM@341bb285
+>   (script-side root cause + 4 in-place shard fixes). Rollup-vs-drilldown denominator gap closure now observable on all
+>   5 asset_groups; operator spot-check pending. Detail in
+>   [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
+>   Phase 3.D.4.
 
 4. **Smoke test** — representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end
 5. **Manifest hookup + cluster validation** — `ManifestWriter.record_{captured,empty,failed}` with
@@ -520,9 +521,9 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 | features-onchain-service          | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | defi_master_2026_05_07 (folds in `consolidated_defi_data_pipeline_2026_04_15` + `defi_e2e_pipeline_2026_04_30`)                                                                                                                                                                 |
 | features-volatility-service       | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | ml_and_features_master_2026_05_07 (folds in `feature_dag_uac_ssot_and_features_coverage_2026_05_06`)                                                                                                                                                                            |
 | features-cross-instrument-service | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | ml_and_features_master_2026_05_07 (folds in `features_consolidation_and_drilldown_2026_05_06`)                                                                                                                                                                                  |
-| ml-training-service               | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | ml_and_features_master_2026_05_07 (folds in `consolidated_ml_advanced_pipeline_2026_04_15` + `ml_training_feature_read_perf_2026_05_06`; `ml_pipeline_revolution_2026_04_11` archived 2026-05-06)                                                                                |
+| ml-training-service               | ◐      | ◐      | ◐         | ◐          | ◐     | n/a       | n/a  | ml_and_features_master_2026_05_07 (folds in `consolidated_ml_advanced_pipeline_2026_04_15` + `ml_training_feature_read_perf_2026_05_06`; `ml_pipeline_revolution_2026_04_11` archived 2026-05-06)                                                                               |
 | ml-inference-service              | ◐      | ◐      | ◐         | n/a        | ◐     | n/a       | n/a  | ml_and_features_master_2026_05_07 (folds in `consolidated_ml_advanced_pipeline_2026_04_15`)                                                                                                                                                                                     |
-| strategy-service                  | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | strategy_and_dart_master_2026_05_07 (folds in `strategy_architecture_v2_finalization_2026_04_19`), defi_master_2026_05_07 Fork 1 (lead archetype; `carry_staked_basis_structure_axis_2026_05_04` archived 2026-05-07)                                                            |
+| strategy-service                  | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | strategy_and_dart_master_2026_05_07 (folds in `strategy_architecture_v2_finalization_2026_04_19`), defi_master_2026_05_07 Fork 1 (lead archetype; `carry_staked_basis_structure_axis_2026_05_04` archived 2026-05-07)                                                           |
 | execution-service                 | ◐      | ◐      | ◐         | n/a        | ◐     | ✗         | ✗    | defi_master_2026_05_07 (folds in `defi_phase3_infrastructure_2026_03_30` + `leveraged_leg_controller_2026_05_01`)                                                                                                                                                               |
 | position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; PBMS dual projection / fill attributor / child-venue attribution)                                                                                                                                       |
 | risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; R&E intent subscriber — extend with explicit live-wiring todo)                                                                                                                                          |
@@ -534,11 +535,17 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 | deployment-ui                     | ✓      | n/a    | n/a       | n/a        | n/a   | n/a       | n/a  | infrastructure_master_2026_05_07 (data-status work; `data_status_offline_rollup_2026_05_06` + `data_status_ui_fixes_2026_05_06` deferred to plans/ai/)                                                                                                                          |
 | unified-trading-system-ui         | ✓      | n/a    | n/a       | n/a        | n/a   | n/a       | n/a  | strategy_and_dart_master_2026_05_07 (folds in `consolidated_strategy_and_ui_2026_04_15` + `dart_ui_strategy_filtering_and_onboarding_2026_04_24`)                                                                                                                               |
 
-> **Action:** Cell values seeded from session memory + sub-plan inventory + 2026-05-06 plan-vs-plan audit. Verify via
-> per-service yamls in `codex/10-audit/repos/` before relying. Plan-vs-plan audit corrected the earlier "5 NO-PLAN"
-> claim: PBMS / R&E / pnl-attribution are already in `defi_e2e_pipeline_2026_04_30` Fork 1 (extend, don't open new);
-> batch-live-reconciliation folds into `consolidated_operational_validation_2026_04_15` (extend); only
-> **alerting-service** genuinely needs a new plan.
+> **Action:** Cell values seeded from session memory + sub-plan inventory + 2026-05-06 plan-vs-plan audit, refreshed
+> 2026-05-07 (Agent 5 Item 3) post-umbrella consolidation. Verify via per-service yamls in `codex/10-audit/repos/`
+> before relying. Refresh notes: (a) ml-training / ml-inference / features-volatility / features-cross-instrument now
+> point at `ml_and_features_master_2026_05_07` (folded 2026-05-07 from 4 archived source plans); (b) strategy-service /
+> unified-trading-system-ui now point at `strategy_and_dart_master_2026_05_07` (folded 2026-05-07 from 3 archived source
+> plans); (c) execution-service / PBMS / R&E / pnl-attribution all consolidate under `defi_master_2026_05_07` Fork 1
+> (folded `defi_phase3_infrastructure` + `leveraged_leg_controller` + `defi_e2e_pipeline`); (d) alerting-service
+> NO-LONGER-NO-PLAN — `alerting_service_live_rules_2026_05_07` shipped, Phase 1 UAC AlertCode taxonomy landed 2026-05-07
+> (UAC@`d00326d` per PM@`7624ab21`); (e) batch-live-reconciliation folded inline as Group F extension on 2026-05-07 (no
+> longer points at archived `consolidated_operational_validation`); (f) deployment-api now points at
+> `deployment_api_work_stream_a_2026_05_07` (Phase 1 UAC types shipped UAC@`a70b3f6`).
 
 ### Tier 2 — backfill catch-up + ML readiness ladder (NOT live by May 23)
 
@@ -790,6 +797,41 @@ self-superseded artefacts.
 
 **Memory entry**: `memory/project_mtds_parallelization_fix_2026_05_07.md` (Claude session-local auto-memory) captures
 the full session for future agents.
+
+**Afternoon shipments 2026-05-07** — writegate threading + governance + cross-tab parallel work (Agent 1 / Agent 2 /
+Agent 5):
+
+- **Writegate Phase 4.A typed-error rendering** — UTL classifier → deployment-api `error_reason` API field →
+  deployment-ui typed badge end-to-end. deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24
+  unit tests + client.ts TurboSubDimension extension) + deployment-ui@`621f0b3` (wire both into DataStatusTab venue
+  summary line). Closed-set drift guard test fails CI if deployment-api `_FAILURE_PILLAR_KEYS` or `_EMPTY_REASON_KEYS`
+  drift from UTL. Phase 4.B.1 + 4.B.2 checkboxes flipped per PM@`0c2a0cca` + PM@`21f8a277` (re-apply after foot-gun #3).
+- **Writegate Phase 3.D.4 `--apply-write` complete** — 1,455,901 rows landed in per-VM manifest shards across all 5
+  asset_groups (PM@`79e47874`): tradfi 35,033 / sports 13,176 / cefi 119,152 / prediction 2,280 / defi 1,286,260. CeFi
+  - Prediction now real impl (UAC@`ac218dc` + instruments-service@`d1c9928`), no longer stubs. **Canonical-merge
+    blocked** for tradfi / defi / prediction on consolidator P0 (`ArrowTypeError` on `instrument_count`); RESOLVED
+    PM@`341bb285` via instruments-service@`a936a28` + 4 in-place shard fixes (cast string → Int64/boolean per canonical
+    dtypes).
+- **Writegate Phase 3.D.5 Wave 1+2.M migration COMPLETE** — 3,114,843 rows flipped across all 5 asset_groups
+  (PM@`a541f51e` + PM@`937df64b`): UAC@`e855051` (typed errors) + UTL@`68b3804a` (4-state capture_status:
+  `EXPECTED_UNATTEMPTED` 4th value) + UTL@`7eca2c20` + UTL@`7276cca1` + instruments-service@`86804c7` +
+  deployment-service@`f72686b` + deployment-service@`327acf4`.
+- **UAC `AlertCode` taxonomy Phase 1 shipped** — UAC@`d00326d` (Agent 1 tab) per PM@`7624ab21`. Closed-set alert-code
+  StrEnum + threshold dataclass + severity-vs-alert-code separation. Phase 2-9 of
+  `alerting_service_live_rules_2026_05_07` pending.
+- **CLAUDE.md 4-state capture_status SSOT codified** — PM@`28e975b0` records `EXPECTED_UNATTEMPTED` as the 4th
+  capture_status value alongside `captured` / `empty_confirmed` / `attempted_failed`; 4-category empty-output decision
+  (A/B/C + new D for write-time-skip) documented for adapter authors.
+- **Agent-5 Item 1 — umbrella + master Group F+G phase-ordering audit shipped** (Agent-5 Item 1, work_split P1) —
+  ml_and_features_master gained explicit upstream sibling-blocker callout naming writegate Phase 2.D `available_at`
+  stamping; strategy_and_dart_master gained Phase-numbering note + fixed ambiguous "Phase 1.9 service-split fold-in"
+  descriptor → "Phase 3-11 fold-in residuals" + new Coordination-with-sibling-plans § naming hand-offs. Master Group F+G
+  fold-in (operational-validation extends items 17-22 inline) verified structurally coherent. Edits absorbed by
+  PM@`21f8a277` (writegate Phase 4.B re-apply commit, foot-gun #1 — semver-rollout bot's `git add` swept up Agent-5's
+  unstaged work). Service-readiness matrix staleness (10 rows) refreshed in this commit.
+- **Agent-5 Item 2 — `data_status_audit_findings` triage = STANDALONE** (Agent-5 Item 2, work_split P2) — PM@`2bd62a90`.
+  Tracker stays standalone (NOT folded into `infrastructure_master`); cross-master rollup spans 5 owner plans;
+  lifecycle-bounded — self-archives when all referenced master-plan todos go green.
 
 ---
 

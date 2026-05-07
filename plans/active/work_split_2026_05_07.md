@@ -133,8 +133,14 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       execution-service + strategy-service + position-balance-monitor-service interactions. Plan: defi_master. Repos:
       execution-service + strategy-service + position-balance-monitor-service. Why nuanced: multi-repo round-trip with
       real custody adapter calls.
-- [ ] [COORDINATION] P0. Master plan refresh: reflect Day 1-4 progress in critical-path § + flip Group F/G checkboxes
-      for what shipped this cycle. Plan: master. Repo: PM.
+- [x] [COORDINATION] P0. Master plan refresh: reflect Day 1-4 progress in critical-path § + flip Group F/G checkboxes
+      for what shipped this cycle. Plan: master. Repo: PM. **DONE 2026-05-07 (Agent 5)**: service-readiness matrix
+      refreshed (10 rows pointing at archived source plans → umbrella plans post-2026-05-07 consolidation:
+      ml_and_features_master / strategy_and_dart_master / defi_master / alerting_service_live_rules /
+      deployment_api_work_stream_a). Action paragraph below matrix updated with refresh notes (a)-(f). New "Afternoon
+      shipments 2026-05-07" sub-section added under "Recent shipments" capturing writegate Phase 4.A typed-error
+      rendering (Agent 2) + Phase 3.D.4 `--apply-write` complete (1.4M rows) + Phase 3.D.5 Wave 1+2.M migration COMPLETE
+      (3.1M rows) + UAC AlertCode Phase 1 (Agent 1) + 4-state capture_status SSOT + Agent-5 Items 1+2.
 
 ---
 
