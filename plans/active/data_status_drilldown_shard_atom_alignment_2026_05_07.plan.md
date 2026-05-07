@@ -440,6 +440,57 @@ fixed in this session, two recorded as named-successor follow-ups.
       the per-instrument / per-protocol slot is the canonical ``instrument_id`` column —
       switched the axis to ``instrument_id``. 32/32 unit tests pass.
 
+### Phase 6 — Per-instrument scroll/pagination + bundled root-grouping (NEW 2026-05-07 evening, operator-flagged)
+
+**Operator finding 2026-05-07 evening**: in the data-status drilldown, when `instrument_id` IS a shard
+axis (MTDS / MDPS CeFi PERPETUAL+SPOT, TradFi ETFs, DeFi per-instrument data_types), the UI shows only
+a subset of instruments. The manifest carries every shard, but the API caps each node's children at
+`_MAX_CHILDREN_PER_NODE = 500` (`deployment-api/deployment_api/services/data_status_hierarchical.py:57`)
+and the UI does not paginate — operators cannot reach the truncated tail. **Two related shape problems**:
+
+1. **No pagination at the per-instrument level.** Cap is silent; venues with 5000+ perp instruments
+   (e.g. BINANCE-FUTURES) lose the alphabetic tail. Manifest has them; drilldown hides them.
+2. **Bundled options/futures drilldown collapses at empty `instrument_id`.** For
+   `data_type ∈ {options_chain, futures_chain}` the manifest writer leaves `instrument_id=""` and
+   populates `underlying=<root>` (per
+   `availability-manifest-and-data-status.md` § "underlying vs instrument_id"). The drilldown's
+   `_children_for_axis` filters out empty-string values:
+   `values = sorted(v for v in rows[axis].astype(str).unique() if v != "" and v != "nan")`
+   so bundled shards never appear at the `instrument_id` level — operator sees zero leaves under
+   `data_type=options_chain` even though every root has manifest rows.
+
+#### Tasks
+
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). Add `child_offset: int = 0` and
+      `child_limit: int | None = None` query params to
+      `GET /api/data-status/drilldown/{service}/{asset_group}`. When `child_limit` is non-null,
+      slice the top-level children list at `[child_offset : child_offset + child_limit]`. Returns
+      `total_top_axis_children: int` (unfiltered count) so the UI can render "showing N–M of T" +
+      load-more.
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). New
+      `_coalesce_instrument_id_from_underlying` helper in `data_status_hierarchical.py` runs
+      before `_children_for_axis` to coalesce `instrument_id <- underlying` for rows where
+      `instrument_id` is empty. Read-time virtualisation: bundled-data_type rows surface as
+      children at the `instrument_id` level using their root (BTC, ETH for Deribit options; ESH4,
+      NQH4 for CME futures), matching the codex shard atom
+      `(venue, data_type, options_chain/futures_chain, root, day)`. Leaf row_key carries
+      `instrument_id=<root>`; manifest writer unchanged.
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). Bumped `_MAX_CHILDREN_PER_NODE` from
+      500 to 10_000. Cap remains a defensive bound; pagination is the primary mechanism.
+- [x] [deployment-ui] P0 (shipped deployment-ui@2f1e669). `HierarchicalShardDrilldown.tsx`
+      requests an initial `topPageSize=200` page; renders a "Show more (N remaining)" button at
+      the bottom of the tree when `total_top_axis_children > tree.length`, re-fetching with
+      `child_offset = tree.length` and appending. `client.ts` `getHierarchicalDrilldown` accepts
+      `child_offset` + `child_limit`; `DrilldownResponse` carries `total_top_axis_children`.
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). 6 new unit tests in
+      `TestPaginationAndBundledRootVirtualisation` covering total count, paged offset, last
+      partial page, no-limit default, bundled-options surfacing as roots, and per-instrument rows
+      unchanged by virtualisation. 19/19 pass.
+- [ ] [deployment-ui] P1. Visual smoke (Playwright) — BINANCE-FUTURES PERPETUAL drilldown shows
+      >500 instruments via load-more; CME `futures_chain` drilldown shows ESH4/NQH4/etc as roots;
+      DERIBIT `options_chain` drilldown shows BTC/ETH as roots. **DEFERRED** to follow-up turn
+      (operator-doable today via `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`).
+
 ### Open drifts (named successors)
 
 - [ ] [UAC + deployment-api] P1. **Drilldown depth excludes DISPLAY axes.**
