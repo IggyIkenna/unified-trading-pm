@@ -1697,6 +1697,20 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
       `failure_pillars: dict[str, int]` alongside existing `capture_status_counts`. 8 unit tests cover empty df,
       missing-columns, every registered prefix, unrecognised-prefix routing to `failed_other`, NaN handling, and
       pillar-key contract guard.
+- [x] [SCRIPT] P0. **Per-empty_reason breakdown — operator-visible payoff for Tier 3D.1/3D.2/3B/2.E.2.** Companion
+      to the `failure_pillars` rollup above; bundles `capture_status=empty_confirmed` rows by `error_reason` per the
+      closed taxonomy from
+      `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS` (11 known reasons +
+      `empty_unclassified` catch-all). **SHIPPED 2026-05-07 deployment-api@7d57056**: helper
+      `_compute_empty_reason_counts(df)` exact-matches `error_reason` against `_EMPTY_REASON_KEYS`. Surfaced on the
+      venue entry as `empty_reasons: dict[str, int]` alongside `failure_pillars`. The `empty_unclassified` catch-all
+      acts as a back-fill progress indicator — non-zero whenever a venue still has legacy null-reason rows the
+      Tier 3D.1 reconciler hasn't reached. 9 unit tests cover empty df, missing capture_status / error_reason
+      columns, every closed-set member routing to its bucket, unrecognised reason → unclassified, NULL/NaN/blank →
+      unclassified, captured/attempted_failed exclusion, mixed aggregation, and a closed-set drift guard against
+      UAC `EMPTY_CONFIRMED_REASONS` (caught 2 missing reasons during dev). Without this rollup, the
+      Phase 2.E + Phase 3.D + Phase 3.B work that stamps typed reasons on every empty_confirmed row stays invisible
+      to the operator.
 - [ ] [SCRIPT] P0. New endpoint `GET /data-status/{service}/leaf/{shard_key}/schema` — returns per-leaf-parquet schema
       view: columns, types, row_count, per-column non_null_count, per-column NaN ratio, `available_at`
       min/max/null_count. **Investigation 2026-05-07**: distinct from existing `/schema` endpoint at
