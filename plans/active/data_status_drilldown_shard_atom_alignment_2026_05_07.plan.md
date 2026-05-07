@@ -308,15 +308,19 @@ on whatever flags exist today as a degenerate case).
       captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch on mount with
       `expand_to_depth=1`. Plus `client.ts` API wrapper `getHierarchicalDrilldown` + `getDrilldownSupportedPairs` +
       `DrilldownNode` / `DrilldownResponse` / `DrilldownPair` TypeScript interfaces (~100 LOC).
-- [ ] [deployment-ui] P0. `DataStatusTab.tsx` — under each asset_group panel, below the existing `BreakdownsAccordion`,
-      render the new component. Default-collapsed; lazy-load on first expand. **DEFERRED** — component is drop-in-ready;
-      wire-in is one `<HierarchicalShardDrilldown service={...} assetGroup={...} startDate={...} endDate={...} />`
-      under the existing accordion. Pre-existing TS error in DataStatusTab.tsx:5884 (ShardCoordinate.day) needs
-      resolution first.
-- [ ] [deployment-ui] P0. Per-leaf SmartDownloadButton — passes the full row_key to the download endpoint.
-      Capture-status banner already in place from Phase 3 (multi-axis plan); no change to that surface.
+- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). `DataStatusTab.tsx` — under each asset_group panel, below
+      the existing `BreakdownsAccordion`, renders a default-collapsed `<details>` "Hierarchical drill-down (shard
+      atom)" wrapping `<HierarchicalShardDrilldown ... />`. Pre-existing TS error in `DataStatusTab.tsx:5884`
+      (ShardCoordinate.day) fixed inline by spreading `{ ...schemaModal, day: "" }` at the SchemaModal call site
+      (schema is venue-level, not per-day).
+- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). Per-leaf CSV download link — `↓ csv` anchor on every leaf
+      row builds the `/data-status/download-shard-csv` URL via the existing `buildShardDownloadUrl` helper using
+      the leaf's `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner
+      already in place from the multi-axis plan Phase 3; no change to that surface.
 - [ ] [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
-      depth matches the shard atom. Empty-state placeholders where writers haven't shipped.
+      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED** to a
+      follow-up Playwright walk; the local stack now renders the hierarchy at <http://localhost:5183/> so a manual
+      smoke is operator-doable today.
 
 ### Phase 3 — Per-shard download + missing surfacing
 
@@ -331,11 +335,13 @@ on whatever flags exist today as a degenerate case).
       `deployment_api/services/deploy_missing.py` registers the per-service launcher script paths
       (`launch-mtds-backfill-vm.sh`, `launch-mdps-backfill-vm.sh`, etc.) and shell-quotes the shard_key. 10/10 unit
       tests pass.
-- [ ] [deployment-ui] P1. Deploy-Missing button on a leaf node calls
+- [x] [deployment-ui] P1 (shipped deployment-ui@fc3268f). Deploy-Missing button on a leaf node calls
       `POST /api/data-status/deploy-missing-preview` with the leaf `row_key` and renders the returned `command` in a
-      copy-to-clipboard widget + per-shard `notes` (bundled vs per-instrument routing, tarball-refresh reminder).
-      **DEFERRED** to follow-up — wire-in is a small `<DeployMissingButton row_key={...} />` consumer of the new
-      endpoint; pre-existing TS error in DataStatusTab.tsx blocks the visual-smoke walk.
+      copy-to-clipboard widget + per-shard `notes` (bundled vs per-instrument routing, tarball-refresh reminder,
+      per-VM shard-isolation note). NEW `src/components/DeployMissingButton.tsx` + `postDeployMissingPreview()` /
+      `getDeployMissingServices()` API client methods + `DeployMissingPreviewResponse` interface. The button
+      renders ONLY when `node.captured == 0` (the user's "deploy missing" semantic — captured leaves don't need
+      recovery).
 
 **Auto-launch deferred** — the Deploy-Missing endpoint ships in **preview mode** (operator copies + runs the command
 from their authenticated terminal) rather than auto-launching VMs from the API server. Auto-launch needs an
@@ -355,11 +361,21 @@ latest branch code. Successor plan TBD; Phase 3's preview shape is sufficient fo
       `parse_shard_key()` + `decompose_shard_key()` helpers. 14/14 unit tests pass covering parse / whitespace strip /
       bundled-chain routing / explicit-flag-precedence / `--date` alias fold / conflict detection. Routes the 5th
       field to `--root` for bundled data_types and `--instrument-ids` otherwise; data_type drives the routing.
-- [ ] [market-tick-data-service] P1. Per-handler audit: each handler under `cli/handlers/` calls
-      `decompose_shard_key(args)` on entry. **DEFERRED** to follow-up — the parser + flags are the foundation;
-      existing handlers already honor `--venues` / `--data-types` / `--instrument-ids` / `--start-date` / `--end-date`
-      which the decomposer fills in, so MTDS invocations with `--shard-key` work today; explicit `decompose_shard_key`
-      call adds robustness for `--instrument-type` / `--root` / `--day` filters that today's handlers may ignore.
+- [x] [market-tick-data-service] P1 (shipped MTDS@8a4f3d6). Per-handler `decompose_shard_key` wire-in to 5
+      high-traffic handlers covering the full deploy-missing flow:
+      * `tick_data_handler` (CeFi spot/perp/options/futures + TradFi)
+      * `lending_indices_handler` (DeFi)
+      * `dex_pools_handler` (DeFi)
+      * `dex_swaps_handler` (DeFi)
+      * `perp_funding_handler` (DeFi)
+      Each handler's `preflight()` calls `decompose_shard_key(self.args)` as the first step so the unpacked filters
+      (`--venues` / `--data-types` / `--instrument-ids` / `--start-date` / `--end-date`) are visible to the rest
+      of `process()` + the orchestrator's `preflight_captured_atoms` skip path. Plus uniform `--instrument-ids`
+      routing for bundled data_types so the orchestrator's `_atom = _iid or _und` matching honors the filter for
+      both per-instrument AND bundled chain shards. 14/14 shard_key tests + 14/14 handler tests pass. Remaining
+      ~15 handlers (gas_fee, oracle_prices, lst_rates, evm_defi, solana_defi, eigenlayer_rewards, vault_share_price,
+      bridge_events, governance_events, mev_events, flash_loan_events, liquidations, liquidation_events,
+      staking_yields, position_data, token_transfers, data_manifest) wire the same one-liner as a follow-up.
 
 ### Phase 5 — Codex docs + plan close
 
