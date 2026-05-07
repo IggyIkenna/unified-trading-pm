@@ -74,6 +74,43 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 - **DERIBIT options/futures bundles**: pre-2024 backfill running; 2025/2026 light-VM relaunched 2026-05-06.
 - **MTDS CeFi shards**: deployment-UI shows partial coverage; full audit pending.
 
+### Tardis-venues backfill IN-FLIGHT (launched 2026-05-07 ~14:00 UTC, 37 VMs)
+
+37 cefi VMs running in `asia-northeast1-c` covering bitfinex/bitget/kraken × futures+spot × 2020-2026
+(`e2-highmem-2`). Sample event verification (3 VMs at T+30min): STARTED + PROCESSING_STARTED +
+PROCESSING_COMPLETED flowing properly, ~4 min/date pace.
+
+**Findings from per-VM manifest spot-check (Harsh, 2026-05-07 15:35 IST)** — concerns to feed back into writegate
++ shard-granularity follow-ups, NOT VM-blockers (the data IS being written, just the manifest shape is asymmetric):
+
+1. **Asymmetric manifest shard shape — captured rows are bundle-level, empty_confirmed rows are per-instrument.**
+   Verified across 2 VMs (`cefi-bitfinex-spot-2020-heavy-...` 200 rows, `cefi-kraken-spot-2020-heavy-...` 250 rows):
+   100% of `captured` rows have empty `instrument_id` + `instrument_count=8.3M` (BTC bundle), while 100% of
+   `empty_confirmed` rows have populated `instrument_id=BTCUSD/ETHUSD/...` + `instrument_count=0`. This **violates
+   the per-asset-group shard-key matrix** in CLAUDE.md "Shard-granularity SSOT" section
+   (`cefi spot/perp = (asset_group, venue, data_type, instrument_type, instrument_id, day) — per-instrument`).
+   The bundle-level captured row passes the rollup check but the data-status drilldown can't show per-instrument
+   coverage. **Owner: Ikenna writegate Phase 2.A residual** (per work-split D2). Reference incident shape: this is
+   the same class as TradFi MVP partial-bundle (ES.OPT 18 single-parent fills) and MDPS 1440-NaN-OHLC — captured
+   rows at the wrong granularity.
+
+2. **`PROCESSING_COMPLETED` event lacks `rows_captured` field.** Event details show only `date` — no row count, no
+   shard count, no duration. Workspace rule (CLAUDE.md "no fire-and-forget VM launches") says: _"Adapters MUST emit
+   per-instrument progress events with row counts so silent-success-with-zero-output is detectable from the event
+   stream alone."_ Currently silent-zero on a (venue, data_type, day) is invisible from events alone — operators
+   must read the per-VM manifest shard to verify. **Owner: MTDS adapter writegate wiring** (writegate Phase 2.E
+   per-source progress events).
+
+3. **`PROCESS_CPU_SATURATED` events frequent on `e2-highmem-2` (2 vCPU).** Sample VM had 16 saturation events in
+   ~30 min (process_cpu_percent peaks at 115.9%). Workload sized too tight for instance type — book_snapshot_5
+   parsing for SPOT_PAIR universe at heavy-tier saturates 2 vCPU. **Recommendation**: future cefi heavy-tier
+   relaunches should use `e2-highmem-4` (4 vCPU) or `e2-standard-8`. Not VM-blocking now (events still flow), but
+   wall-clock could be 30-50% faster on a wider instance.
+
+Sample-spotted concerns aside, the 37-VM sweep is producing data. Continue monitoring per CLAUDE.md verification
+protocol (90s STARTED + 10-15min progress + STOPPED at exit). Per-VM manifest shards merge into canonical via the
+manifest-consolidator daemon (already running per `manifest-consolidator-...` watchdog dict entry).
+
 ## Critical path
 
 | Workstream                                                | Status                            | Source plan / commit                                                 |
