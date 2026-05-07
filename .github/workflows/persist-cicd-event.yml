@@ -2,7 +2,7 @@ name: Persist CI/CD Event
 
 # Reusable workflow — called by any repo to persist a CI/CD event as JSONL.
 # Cloud-mode aware: writes to GCS (GCP), S3 (AWS), or logs-only (local/none).
-# Event schema matches GitHubWorkflowEvent from unified-internal-contracts.
+# Event schema matches GitHubWorkflowEvent from unified_api_contracts.internal.
 
 on:
   workflow_call:

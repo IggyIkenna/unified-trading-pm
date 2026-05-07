@@ -16,7 +16,7 @@ on:
         default: "3.13.9"
       dep_repos:
         description:
-          Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-config-interface")
+          Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-api-contracts")
         type: string
         default: ""
     secrets:

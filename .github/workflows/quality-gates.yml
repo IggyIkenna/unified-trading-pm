@@ -20,5 +20,5 @@ jobs:
       run_basedpyright: true
       run_actionlint: true
       run_flow_coverage: true
-      sibling_deps: "unified-trading-library unified-internal-contracts"
+      sibling_deps: "unified-trading-library unified-api-contracts"
     secrets: inherit
