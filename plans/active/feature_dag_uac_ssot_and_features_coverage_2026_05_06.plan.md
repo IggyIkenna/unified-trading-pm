@@ -238,17 +238,23 @@ and `from unified_trading_library.manifest import ManifestFreshnessCache`.
 
 ### 2C — deployment-api denominator clip
 
-- [ ] [AGENT] P1. **`data_status_service.py`**:
+- [x] [AGENT] P1. **`data_status_service.py`**:
   - Add `_clip_dates_to_feature_coverage(service, feature_group, start, end)` mirroring the sports clip helper at lines
     39-50. Reads UAC `FEATURE_COVERAGE_START`.
-  - `_build_feature_group_breakdown` (line 3684): denominator = clipped_dates ×
+  - `_build_feature_group_breakdown` (line 3684): denominator = clipped_dates *
     `EXPECTED_FEATURE_GROUPS_BY_SERVICE[service]` (instead of inferring from what's been written).
     `found = captured + empty_confirmed`. `missing = attempted_failed`. Same shape as sports.
   - Endpoint `/data_status?check_feature_groups=true` (line 2288) returns honest expected/found/missing per
-    feature_group. [AUDIT 2026-05-07: BLOCKED-ON feature_dag_uac_ssot_and_features_coverage_2026_05_06:Phase-1A.
-    Verified at `data_status_service.py:4259-4269` `_build_feature_group_breakdown` still uses
-    `_build_simple_dimension_breakdown(...)` — no UAC denominator clip + no `FEATURE_COVERAGE_START` import. Endpoint
-    `/data_status?check_feature_groups=` already exists (line 2405).]
+    feature_group. **SHIPPED 2026-05-07 deployment-api@9b51dfb**: implemented as a sibling method
+    `_build_feature_group_breakdown_uac` rather than overriding the existing `_build_feature_group_breakdown`
+    (the existing method has a duplicate at L5070 that does timeframe sub-grouping for the v4 detail breakdown
+    path; modifying the L4259 wrapper to take a `service` kwarg would have broken the L5427 caller because
+    Python class-body resolution lets the L5070 definition win at runtime). Call site at L4197
+    (features-* venue-entry rollup) now calls the UAC-aware sibling; existing L5427 caller (v4 detail
+    breakdown) keeps the legacy method. Imports use the `unified_api_contracts.features` facade per Citadel
+    rules. 8 unit tests in `tests/unit/test_feature_group_breakdown_uac.py` covering registered-service
+    UAC denominator, pre-floor-date clipping (Aave V3 2022-03-16), empty-EXPECTED stub fallback, and the
+    no-feature_group-column edge case.
 
 **Phase 2 success**: per-service QG passes; data-status feature-coverage % matches honest expected/found/missing when
 verified against deployment-ui DataStatusTab on a representative shard.
