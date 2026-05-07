@@ -91,14 +91,8 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Checkout unified-trading-codex (readiness checklist)
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ env.GH_ORG }}/unified-trading-codex
-          path: ../unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          sparse-checkout: |
-            10-audit/
+      # codex/ is folded into PM at codex/ — no separate clone needed; the readiness
+      # checklist is read from the PM working tree below.
 
       - name: Compute next semver via diff analysis
         id: compute
@@ -385,7 +379,7 @@ jobs:
 
           echo "Opening MAJOR bump approval issue for unified-trading-pm ($CURRENT → $NEXT)"
 
-          CHECKLIST_FILE="../unified-trading-codex/10-audit/repos/unified-trading-pm.yaml"
+          CHECKLIST_FILE="codex/10-audit/repos/unified-trading-pm.yaml"
           if [ -f "$CHECKLIST_FILE" ]; then
             CHECKLIST_BODY=$(head -80 "$CHECKLIST_FILE")
           else
@@ -416,7 +410,7 @@ jobs:
 
           ---
 
-          ## Current Readiness State (from unified-trading-codex)
+          ## Current Readiness State (from codex/10-audit/)
 
           \`\`\`yaml
           $CHECKLIST_BODY

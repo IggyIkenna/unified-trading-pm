@@ -65,14 +65,16 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Checkout unified-trading-codex (readiness checklist)
+      # codex/ is folded into unified-trading-pm at codex/ — clone it for the
+      # readiness checklist when this template is rolled out to a non-PM repo.
+      - name: Checkout unified-trading-pm (readiness checklist; codex/ lives inside PM)
         uses: actions/checkout@v6
         with:
-          repository: ${{ env.GH_ORG }}/unified-trading-codex
-          path: ../unified-trading-codex
+          repository: ${{ env.GH_ORG }}/unified-trading-pm
+          path: ../unified-trading-pm
           token: ${{ secrets.GH_PAT }}
           sparse-checkout: |
-            10-audit/
+            codex/10-audit/
 
       - name: Compute next semver via diff analysis
         id: compute
@@ -360,7 +362,7 @@ jobs:
 
           echo "Opening MAJOR bump approval issue for __REPO_NAME__ ($CURRENT → $NEXT)"
 
-          CHECKLIST_FILE="../unified-trading-codex/10-audit/repos/__REPO_NAME__.yaml"
+          CHECKLIST_FILE="../unified-trading-pm/codex/10-audit/repos/__REPO_NAME__.yaml"
           if [ -f "$CHECKLIST_FILE" ]; then
             CHECKLIST_BODY=$(head -80 "$CHECKLIST_FILE")
           else
@@ -391,7 +393,7 @@ jobs:
 
           ---
 
-          ## Current Readiness State (from unified-trading-codex)
+          ## Current Readiness State (from unified-trading-pm/codex/10-audit/)
 
           \`\`\`yaml
           $CHECKLIST_BODY
@@ -452,7 +454,7 @@ jobs:
           set -euo pipefail
 
           # Only dispatch for T0 library repos whose schema changes affect downstream consumers
-          T0_REPOS="unified-api-contracts unified-internal-contracts unified-events-interface unified-cloud-interface unified-trading-library unified-reference-data-interface"
+          T0_REPOS="unified-api-contracts unified-trading-library"
           if ! echo "$T0_REPOS" | grep -qw "__REPO_NAME__"; then
             echo "Not a T0 library repo — skipping schema-changed dispatch"
             exit 0
