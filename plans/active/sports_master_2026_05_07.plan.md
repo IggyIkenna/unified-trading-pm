@@ -152,15 +152,57 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 ### Fixture truthset recovery (`sports_fixtures_truthset_recovery`)
 
-- [ ] [HUMAN] P0. Operator triggers Phase 3 chain runner per the recovery script.
-- [ ] [AGENT] P0. Monitor + rescan + audit. Verify detached chain orchestrator completes; manifest reflects.
-- [ ] [AGENT] P0. Query deployment-api data-status: SPORTS attempted ≥50%, captured ≥45%.
+- [x] [HUMAN] P0. Operator triggers Phase 3 chain runner per the recovery script.
+- [x] [AGENT] P0. Monitor + rescan + audit. Verify detached chain orchestrator completes; manifest reflects.
+- [x] [AGENT] P0. Architecture: `--recovery-fixture-ids` CLI flag (instruments-service `cbb50fa` / `e900769` /
+      `7ce509e`), 4 non-api_football launchers plumbed (deployment-service `7453741`), throttle 0.1s → 0.067s for full
+      Mega tier (instruments-service `070f7e7`), UTL cache split (`bf41175c`).
+- [ ] [AGENT] P0. Monitor 5 parallel recovery VMs to STOPPED: `af-backfill-20260507-033214` (api_football all 4
+      entities), `us-backfill-20260507-010653` (understat XG), `fs-backfill-20260507-010724` (footystats MATCHES +
+      PREDICTIONS + ODDS), `weather-backfill-20260507-010923` (open_meteo WEATHER), `sfi-backfill-20260507-010938`
+      (SFI_PROGRESSIVE_STATS). Verify auto-shutdown on completion (`VM_SHUTDOWN_ON_COMPLETION=true`). Allowlist parquet:
+      `gs://instruments-store-sports-central-element-323112/_audits/fixtures_recovery_allowlist_20260506-153914.parquet`
+      (112,192 af_fixture_ids).
+- [ ] [OPERATOR] **P0. POST-RECOVERY PHANTOM DEDUP — REQUIRED.** Once ALL 5 recovery VMs above are STOPPED (or DELETED
+      via `VM_SHUTDOWN_ON_COMPLETION`), run the dedup script on a same-region VM (or laptop, GCS-only):
+
+      ```
+      cd instruments-service
+      python scripts/dedup_phantom_after_recovery.py --dry-run   # report counts
+      python scripts/dedup_phantom_after_recovery.py --apply     # commit
+      ```
+
+      **Why this exists**: recovery writes new `captured` rows with `venue=API_FOOTBALL` (api_football) while phantom
+      `empty_confirmed` rows carry `venue=""`. Different `venue` axis → `_merge_shard_frames` keeps BOTH rows in
+      canonical → data-status dashboard double-counts (sees same `(date, league_id, data_type)` cell as both
+      "captured" AND "empty_confirmed"). The script walks every shard (canonical + per-VM), identifies cells with
+      a captured-w/data row anywhere, and drops other rows in those cells.
+
+      **Pre-flight check**: VMs must be DONE before running, else we race the recovery writes:
+      ```
+      gcloud compute instances list \
+        --filter='(name~"^af-backfill-" OR name~"^us-backfill-" OR name~"^fs-backfill-" \
+                  OR name~"^weather-backfill-" OR name~"^sfi-backfill-") AND status=RUNNING' \
+        --zones=asia-northeast1-c
+      ```
+      Must return EMPTY.
+
+      **What the script does** (all sport per-fixture entities — handles api_football + footystats + understat +
+      sfi + open_meteo in one pass):
+        Targets: FIXTURES / FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES /
+                 XG / MATCHES / ODDS / PREDICTIONS / SFI_PROGRESSIVE_STATS / WEATHER
+        Logic: for any cell with a captured-w/data row, drop empty_confirmed / attempted_failed / captured-zero rows.
+        Backups: `_index/availability_index.{run_ts}.dedup_phantom.bak.parquet` per shard (canonical + per-VM).
+
+- [ ] [AGENT] P0. Query deployment-api data-status: SPORTS attempted ≥50%, captured ≥45%, **% empty drops** as phantoms
+      get dedup'd.
 - [ ] [AGENT] P0. Spot-check 3 random dates × 5 entities (INJURIES / FIXTURE_STATS / FIXTURE_LINEUPS / PLAYER_STATS /
       ODDS).
 - [ ] [AGENT] P0. Re-smoke after writer fix `f36651c` lands on forward-poll VM.
 - [ ] [AGENT] P0. Apply per-league empty-loop pattern (Bug 6 fix) to AF enrichment.
-- [ ] [HUMAN] P1. Phase 5 UI verification — clear deployment-api turbo cache + open SPORTS data-status.
-- [ ] [HUMAN] P1. After verification, delete manifest backup blobs (`*.bak.parquet`).
+- [ ] [HUMAN] P1. Phase 5 UI verification — clear deployment-api turbo cache + open SPORTS data-status. Verify `% empty`
+      figure has dropped from the ~70% baseline observed pre-recovery.
+- [ ] [HUMAN] P1. After verification, delete manifest backup blobs (`*.bak.parquet`, `*.dedup_phantom.bak.parquet`).
 
 ### Phantom recon + failure triage (`sports_phantom_recon_and_failure_triage`)
 
