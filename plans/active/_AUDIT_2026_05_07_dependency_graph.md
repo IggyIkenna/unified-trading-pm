@@ -3,9 +3,41 @@ type: audit-report
 audit_run: 2026-05-07
 scope: all active plans + 37 running VMs
 status: durable-reference
+last_update: 2026-05-07T11:30Z
 ---
 
 # Active Plan Audit — 2026-05-07
+
+## Update 2026-05-07T11:30Z — 3 keystone unblocks scoped/landed
+
+The 3 operator action items flagged in §7 are now closed-or-scoped:
+
+1. **Alerting plan**: shipped as
+   [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md) (commit
+   `3712c640`). 9 phases, 9-12 days (parallelisable to 7-8). Note: the alerting-**service** itself already exists with
+   multi-channel routing + KillSwitchBus subscriber via `7b74ed8` + MarginEvent consumer via `f4c308f`
+   - AWS-aware `buildspec.aws.yaml`. The plan covers the rules-SSOT + thresholds + paging targets + operator playbook +
+     rehearsal that were actually missing. Anomaly #13 ("alerting plan does not exist") in §6 is now superseded — the
+     SERVICE existed; the live-rules SSOT did not.
+
+2. **Deployment-api work-stream-A**: sub-plan landed as
+   [`deployment_api_work_stream_a_2026_05_07.plan.md`](deployment_api_work_stream_a_2026_05_07.plan.md) (commit
+   `c6fe668d` by parallel agent). 3 phases — UAC types (`BackfillLaunchRequest`, `BackfillLaunchResult`,
+   `VMLifecycleEvent`, `VMEventListResult`, `BackfillLaunchTaskKind` StrEnum), POST/GET endpoints, QG. Implementation
+   can start immediately.
+
+3. **AWS migration cost analysis**: shipped as
+   [`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md)
+   (commit `4973dd71`). Top-line: GCP ~$8.3-12.5k/mo, AWS list ~$8.8-13.3k/mo (+5-7%), 12-mo delta +$6-10k/yr —
+   **decision is not cost-driven**. **Recommendation: option (a) — defer full AWS parity to Q3 2026.** Scoped subset
+   (S3 + Secrets Manager + ECR) is shippable in 5-7 engineer-days but adds zero live-trading capability before May-23.
+
+**Net effect on critical path** (§3): items 1-3 of "Week 1 keystone unblocks" are now scoped — the work itself is the
+next ship. AWS work moves from "BLOCKED on cost analysis" to "DEFERRED to Q3 2026 per recommendation"; this removes ~10
+BLOCKED items from infrastructure_master + master:work-stream-D that were waiting on the report. Live-trading May-23
+path is now clear of upstream-doc gates — execution begins.
+
+---
 
 Cross-plan dependency graph + per-plan status snapshot. Companion to per-plan `## Audit 2026-05-07` headers +
 `[AUDIT 2026-05-07: ...]` per-todo markers inserted in 16 of 20 active plans (commit `dada46d1`, 2026-05-07).
