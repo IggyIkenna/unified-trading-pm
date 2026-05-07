@@ -1,9 +1,11 @@
 ---
 title: "Cross-Service E2E Readiness Audit"
 created: 2026-03-21
+archived: 2026-05-07
 source: service_control_surface_issues_2026_03_21.md + instruments-service E2E testing
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+status:
+  archived — load_dotenv override=False shipped across all listed services (verified 2026-05-07); residual items shipped
+  or superseded by writegate / Group F / instruments+MTDS-completion umbrellas
 ---
 
 # Cross-Service E2E Readiness Audit

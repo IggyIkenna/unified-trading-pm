@@ -1,9 +1,12 @@
 ---
 title: "Service Control Surface — Issues Found During Testing"
 created: 2026-03-21
+archived: 2026-05-07
 source_session: service_protocol_resolution testing
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+status:
+  archived — pattern-level load_dotenv / dry-run / EnvironmentMode / TestnetMode / asyncio-nesting / expired-instrument
+  fixes all shipped (verified 2026-05-07); remaining instruments-service-specific items folded into newer plans
+  (instruments+MTDS-completion umbrella, predictions_master)
 ---
 
 # Service Control Surface — Issues Found During Testing

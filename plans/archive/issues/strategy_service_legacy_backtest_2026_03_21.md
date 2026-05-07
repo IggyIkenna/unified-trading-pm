@@ -1,9 +1,9 @@
 ---
 title: "Strategy-Service Legacy Backtest Engine — Dead Architecture"
 created: 2026-03-21
+archived: 2026-05-07
 source_session: session_2_config_services coverage analysis
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+status: archived — fully shipped. Verified 2026-05-07: engine/core/backtest/{backtest,accurate_backtest,comprehensive_backtest,full_pipeline_backtest}_service.py all deleted; engine/backtest/{fill_simulator,flash_loan_simulator}.py deleted; engine/fill_source.py deleted (SimulatedFillSource gone). Strategy v2 architecture supersedes the dispatch concern.
 ---
 
 # Strategy-Service Legacy Backtest Engine — Dead Architecture
