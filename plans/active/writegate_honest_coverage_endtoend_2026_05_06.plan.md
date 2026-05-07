@@ -1312,19 +1312,28 @@ carries the SSOT table.
 
 For each writer service in the order MTDS / MDPS / instruments-service / features-_ / ml-_ / strategy / execution:
 
-- [ ] [SCRIPT] P0. **Replace orchestrator pre-skip with manifest emission.** Where the orchestrator currently consults
+- [x] [SCRIPT] P0. **Replace orchestrator pre-skip with manifest emission.** Where the orchestrator currently consults
       `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` / `SOURCE_COVERAGE_START` and skips queueing the shard, replace
       with `record_expected_empty(row_key, reason=EXPECTED_<X>)`. So the manifest carries a row for EVERY
-      `(shard_key, day)` in the expected universe — no silent "no row at all" cases.
-- [ ] [SCRIPT] P0. **Per-adapter A/B/C migration upgrade**: where the original Phase 2.A scope said `record_empty(...)`
+      `(shard_key, day)` in the expected universe — no silent "no row at all" cases. **2026-05-07**: shipped for
+      instruments-service@8b5eca3 (TradFi non-trading-day venue + per-venue + SFI pre-coverage-start + SFI known-gap
+      sites; new `databento.non_trading_day_reason()` helper) + UAC@2a970c5 (`registry.non_trading_day_reason()` SSOT
+      helper + 9 unit tests). MTDS verified consistent — its existing skip-without-row policy aligns with reconciler-
+      excludes-from-denominator (no migration needed). features-sports has no calendar pre-skip (consumer-side only).
+- [x] [SCRIPT] P0. **Per-adapter A/B/C migration upgrade**: where the original Phase 2.A scope said `record_empty(...)`
       for path A (source returned zero), update to `record_empty(reason=SOURCE_RETURNED_ZERO)` so downstream consumers
-      can distinguish "we asked, source had nothing" from "we expected nothing."
+      can distinguish "we asked, source had nothing" from "we expected nothing." **2026-05-07**: features-sports@a215e36
+      (4 post-fetch sites in batch_handler — TABLE_TO_EXPORT loop + odds_features + derived_features + fixture_features).
+      MDPS adapter A/B/C migration shipped 2026-05-07 in Tier 2A/C/D/E (commits 5b52d0b/b9f9328/80cf141/e9520a0); their
+      A-path uses zero-row CandleOutput (no record_empty call needed).
 - [ ] [SCRIPT] P0. **Partial-bundle / cluster-coverage failures**: the existing `ClusterCoverageError` flow under
       `attempted_failed` stays. NEW: where a bundle is legitimately partial because some clusters didn't exist on that
       date (e.g. ES.OPT before a weekly was listed), emit `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`
       for the missing-cluster sub-shards instead of `attempted_failed`.
-- [ ] [TEST] P0. Per-service: feed a calendar-skipped day → assert manifest has the right `EXPECTED_*` row, NOT "no row
-      at all."
+- [x] [TEST] P0. Per-service: feed a calendar-skipped day → assert manifest has the right `EXPECTED_*` row, NOT "no row
+      at all." **2026-05-07**: instruments-service `test_process_instruments_tradfi_non_trading_day_writes_manifest`
+      asserts `record_expected_empty.call_count > 0` + reason ∈ {EXPECTED_HOLIDAY, EXPECTED_WEEKEND}; UAC
+      `test_non_trading_day_reason.py` covers 9 cases of the discriminator helper.
 
 #### Phase 2.E.3 — Per-service downstream-consumer-class audit (parallel after 2.E.2)
 
