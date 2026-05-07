@@ -45,7 +45,7 @@ jobs:
 
           manifest = json.loads(Path("workspace-manifest.json").read_text())
           repos = manifest.get("repositories", manifest.get("repos", {}))
-          skip = {"unified-trading-pm", "unified-trading-codex"}
+          skip = {"unified-trading-pm"}
           quick = os.environ.get("QUICK", "false").lower() == "true"
 
           buildable = []

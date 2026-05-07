@@ -109,13 +109,13 @@ jobs:
                   reverse_graph.setdefault(dep_name, []).append(repo_name)
 
           # ── Find all transitively affected repos (forward walk) ──────────────
-          # Special case: PM or codex affect ALL repos (cascade-pm-all-tiers)
-          pm_all_tiers = source_repo in ("unified-trading-pm", "unified-trading-codex")
+          # Special case: PM (which now contains codex/) affects ALL repos
+          pm_all_tiers = source_repo == "unified-trading-pm"
 
           if pm_all_tiers:
               # All repos except the source itself are affected
               affected = set(repositories.keys()) - {source_repo}
-              print(f"PM/Codex cascade: ALL {len(affected)} repos affected")
+              print(f"PM cascade: ALL {len(affected)} repos affected")
           else:
               affected: set[str] = set()
               frontier = [source_repo]

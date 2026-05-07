@@ -40,7 +40,7 @@ jobs:
 
           manifest = json.loads(Path("unified-trading-pm/workspace-manifest.json").read_text())
           repos = manifest.get("repositories", {})
-          skip = {"unified-trading-pm", "unified-trading-codex"}
+          skip = {"unified-trading-pm"}
           pat = os.environ["GH_PAT"]
           owner = "IggyIkenna"
 
@@ -86,7 +86,7 @@ jobs:
 
           manifest = json.loads(Path("unified-trading-pm/workspace-manifest.json").read_text())
           action_ref = manifest.get("active_feature_branch") or "main"
-          skip = {"unified-trading-pm", "unified-trading-codex"}
+          skip = {"unified-trading-pm"}
           pat = os.environ["GH_PAT"]
           owner = "IggyIkenna"
           branch = os.environ.get("BRANCH", "main")
