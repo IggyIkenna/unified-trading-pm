@@ -542,18 +542,63 @@ adding signal.
         batch_write schema-map entries are dead-code post-Unit 3 (export returns empty df since no LEAGUES parquets get
         written). Cosmetic cleanup; tests still pass with empty df. Filed as a separate cleanup unit when the rest of
         C.11 lands (so the cadence-field SSOT can be applied to TEAMS at the same time).
-- [ ] [SCRIPT] P0. **C.11 TEAMS refdata cadence** — TEAMS already carries 7 `venue_*` columns (the venue-of-home-team
-      enrichment). VENUES (1/1 singleton) only adds the OpenMeteo lat/lon geo overlay. Decide: fold VENUES into TEAMS
-      (drop the singleton, TEAMS columns absorb lat/lon) OR keep VENUES as a pure geo-enrichment overlay and document
-      that it's authoritative for OpenMeteo joins only.
-  - [ ] Migrate TEAMS adapter from per-day to per-(team, season). Shard atom:
-        `(asset_group=sports, source=api_football, data_type=teams, league_id, season, fetch_day_when_changed)` where
-        the writer only emits a new shard when `pq.read_schema(prev).fingerprint != normalize(payload).fingerprint`.
-  - [ ] Migration shape: flip 3046 daily TEAMS manifest rows →
-        `record_empty(reason=EXPECTED_REFDATA_CADENCE_CHANGE, attempted_at=now)` + delete daily parquets, then write the
-        new per-(league, season) shards from one canonical fetch per (league, season).
-  - [ ] data-status panel: render cadence-aware denominators — `cadence=per_season` data_type expected denominator =
-        (leagues × active_seasons), not (leagues × days).
+- [x] [SCRIPT] P0. **C.11 TEAMS refdata cadence — Unit 1 SHIPPED 2026-05-07** (UAC SchemaContract foundation):
+  - [x] **UAC SchemaContract `cadence` field** (unified-api-contracts@`e12af89`): added
+        `cadence: Literal["singleton", "per_season", "per_day"]` to `SchemaContract` with `per_day` default for
+        back-compat across the dozens of existing per-day-cadence contracts. Stamped `SPORTS_TEAMS.cadence="per_season"`
+        and `SPORTS_VENUES.cadence="singleton"` to declare the canonical shape. 4 unit tests added in
+        `tests/test_sports_contracts.py` covering both stamped contracts + `per_day` default + back-compat invariant.
+  - [x] **VENUES vs TEAMS design decision**: keep VENUES as a separate `cadence=singleton` overlay (NOT folded into
+        TEAMS). Rationale: VENUES is the OpenMeteo geo-enrichment layer (lat/lon/altitude per venue) — its consumers
+        join on `venue_id` from TEAMS rows but the geo data is owned by OpenMeteo, not api_football. Folding would
+        couple the two refresh cadences (TEAMS roster changes per season vs VENUES geo changes essentially never)
+        unnecessarily. SPORTS_VENUES.cadence=singleton documents the intent.
+  - [x] **Migration script** (instruments-service@`53c67c4`):
+        `instruments-service/scripts/migrate_teams_cadence_2026_05_07.py`. Same pattern as the C.1 LEAGUES kill script.
+        Default scan-only; `--apply` requires per-VM shard isolation; CSV audit; `--max-flips=200k` halt safety;
+        idempotent re-run. Live dry-run 2026-05-07 found 103,525 TEAMS rows (3042 per league × ~34 leagues). Embeds
+        explicit `ORDER-OF-OPERATIONS CAUTION`: do NOT run `--apply` until the per-season writer (Unit 2 below) is live;
+        flipping legacy daily rows before the per-season writer ships leaves downstream consumers reading
+        `data_type=TEAMS` with empty results.
+- [ ] [SCRIPT] P0. **C.11 Unit 2 — instruments-service TEAMS adapter rewrite to per-(team, season)** (DEFERRED to next
+      session round; gates Unit 3 `--apply`). New shard atom:
+      `(asset_group=sports, source=api_football, data_type=teams, league_id, season, fetch_day_when_changed)` where the
+      writer only emits a new shard when the payload fingerprint differs from the previous (league, season) shard.
+      Implementation sketch:
+  - [ ] Add `_compute_teams_payload_fingerprint(df) -> str` helper (sorted-row SHA-256 over canonical columns — team_id,
+        team_name, team_code, team_country, team_founded, team_national, venue_id, venue_capacity, etc.; excludes
+        mutable provenance fields like `data_available_at`).
+  - [ ] On each TEAMS fetch: read the most recent (league, season) shard from GCS, compute fingerprint of the new
+        payload, compare. If unchanged, `record_empty(reason=EXPECTED_REFDATA_CADENCE_CHANGE)` for the day (signals
+        "fetched, no diff"). If changed, write new shard at
+        `entity=teams/league={L}/season={S}/teams_{fingerprint}.parquet` + `record_captured`.
+  - [ ] Read-side update: features-sports / strategy / any TEAMS reader picks the LATEST per-(league, season) shard
+        as-of the query date (most recent fetch_day_when_changed ≤ query_date). UTL helper
+        `unified_trading_library.refdata.get_latest_per_season_shard(data_type, league, season, as_of)` — cross-service
+        read pattern.
+  - [ ] Backfill: one-time fetch per active (league, season) tuple to populate the new shape. Probably ~95 leagues × ~10
+        seasons = ~950 fetches (vs current 3042 days × 34 leagues = ~103k captures). API quota fits in one VM run.
+  - [ ] `_should_fetch("leagues")` gate at orchestrator.py:3297 currently runs both LEAGUES (now killed) and TEAMS
+        fetches. Rename to `_should_fetch("teams")` for semantic clarity; CLI back-compat stays via the
+        `core_shorts = {"leagues", "teams", "standings", "injuries"}` set at orchestrator.py:3217.
+- [ ] [SCRIPT] P0. **C.11 Unit 4 — deployment-api cadence-aware denominators** (DEFERRED; gates the data-status panel
+      from rendering correctly under the new cadence). Implementation sketch:
+  - [ ] `deployment-api/services/data_status_service.py` per-(asset_group, data_type) denominator computation reads
+        `SchemaContract.cadence` from UAC. For `cadence=singleton` data_types (VENUES, future singletons): expected = 1
+        regardless of date range. For `cadence=per_season`: expected = leagues × active_seasons (compute via UAC
+        `LEAGUE_REGISTRY` + season calendar). For `cadence=per_day` (default): expected = leagues × days (current
+        behaviour; no change).
+  - [ ] Frontend: deployment-ui drill-down hierarchy reads `cadence` from `/api/config/shard-axis-matrix` so per-season
+        data_types render with `season` as a drill-down level (not `day`). Cross-references B.2 (drilldown depth audit,
+        infrastructure_master) — same hierarchy-renderer change covers both.
+  - [ ] Tests: 4-case parametrised test covering each cadence value (singleton / per_season / per_day) + a regression
+        test for the legacy default behaviour when contracts don't declare cadence.
+  - [ ] After this lands + Unit 2 + Unit 3 `--apply`: re-walk deployment-ui sports panel; TEAMS denominator drops from
+        ~80k phantom-missing days to ~(95 × N seasons) honest expected.
+- [ ] [SCRIPT] P1. **C.11 Unit 5 — operator parquet deletion** (FOLLOW-UP after Units 2+3+4 land + post-flip panel
+      re-walk confirms new cadence is rendering correctly):
+      `gcloud storage rm -r 'gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=teams/'` to drop
+      the legacy daily TEAMS parquets. Preserved as separate manual step for rollback path.
 
 ### Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC `EMPTY_CONFIRMED_REASONS`
 

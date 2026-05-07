@@ -314,6 +314,42 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 C.10. Operator inspected the deployment-ui data-status panel + schema modals; the findings below all surfaced as
 sports-asset_group writer / contract / cadence issues.
 
+#### Bonus — FootyStats per-season league-id drift-detection automation (filed 2026-05-07)
+
+Operator question 2026-05-07: "what in code actually triggers that change [`FOOTYSTATS_SEASON_IDS` refresh]. if its in
+the code how do we ship it automatically". Investigation found NO existing automation:
+
+- `unified-api-contracts/.github/workflows/weekly-validation.yml` runs API schema validation but does NOT touch
+  `FOOTYSTATS_SEASON_IDS`.
+- No tests in `unified-api-contracts/tests/` reference `FOOTYSTATS_SEASON_IDS`.
+- No script in instruments-service refreshes the dict.
+
+The "Refresh by calling FootyStats `/league-list` at season start" comment at
+`unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py:103` is a manual reminder.
+Real gap. Without automation, the dict drifts every August (European football season start) and downstream backfills
+silently fail to discover newly-listed leagues for the new season until someone notices the data-status panel showing no
+FIXTURES for those leagues.
+
+- [ ] [SCRIPT] P1. **FOOTYSTATS_SEASON_IDS drift-detection automation.** Extend
+      `unified-api-contracts/.github/workflows/weekly-validation.yml` (or a sibling cron workflow) with a job that:
+  - [ ] Calls FootyStats `/league-list` once per week
+  - [ ] Diffs the response's per-league season IDs against UAC's hardcoded `FOOTYSTATS_SEASON_IDS` dict
+  - [ ] If new league IDs detected (typically per-season at August / January for European / Brazilian seasons): opens a
+        PR with the dict update + appends new IDs to `FOOTYSTATS_HISTORICAL_SEASON_IDS` (append-only as seasons accrue).
+        PR title format `chore(provider-league-ids): footystats season refresh — {YYYY-MM-DD}`.
+  - [ ] Same shape for `TRANSFERMARKT_IDS` if Transfermarkt has analogous per-season drift (verify via spot-check live
+        API call).
+  - [ ] ~50-line Python helper in `unified-api-contracts/scripts/check_footystats_season_drift.py` driven by the GHA
+        cron. Calls `client.get_league_list()`, compares to `FOOTYSTATS_SEASON_IDS`, emits drift report + PR-creation
+        step.
+  - [ ] Test: mock the API response with a new fake league ID, assert the script flags it. Locked in
+        `tests/test_footystats_season_drift.py`.
+
+  **Why P1 (not P0)**: today's workflow has the operator manually refresh dicts at season start; this is a
+  reliability+ergonomics improvement, not a correctness fix. The dicts are correct as long as the operator remembers. P0
+  priority would be appropriate if we had a recent miss (probably the case but not yet documented as a specific
+  incident).
+
 #### B.1 — API-Football payload flattening (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES)
 
 Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.plan.md` (5 phases). Owner-side todo:
