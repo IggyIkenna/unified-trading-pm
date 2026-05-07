@@ -1375,16 +1375,19 @@ split.
 
 ### Phase 3.A — Manifest reconciliation scripts
 
-- [ ] [SCRIPT] P0. `mdps_reconcile_1440_nan_placeholders.py` — scan every MDPS-written parquet under
+- [x] [SCRIPT] P0. `mdps_reconcile_1440_nan_placeholders.py` — scan every MDPS-written parquet under
       `gs://{pid}-mdps-*/raw_candle_data/`; for each file, compute `nan_ratio_per_column` for OHLC columns; if all 4 of
       (open, high, low, close) are >95% NaN AND row_count == n_candles → flip manifest row from `captured` to
       `attempted_failed[reason=EmptyPlaceholderBugBackfill]`. Per-VM shard write (manifest concurrency rule).
       Idempotent + dry-run + scoped by `--asset-group` / `--data-type`. Re-attempt happens via existing MDPS backfill
-      flow once Phase 2.A lands.
-- [ ] [SCRIPT] P0. `mtds_reconcile_partial_bundles.py` — for every `data_type ∈ BUNDLED_DATA_TYPES` with on-disk
+      flow once Phase 2.A lands. Shipped MDPS@d3be0ef 2026-05-07.
+- [x] [SCRIPT] P0. `mtds_reconcile_partial_bundles.py` — for every `data_type ∈ BUNDLED_DATA_TYPES` with on-disk
       parquets, count clusters per UAC registry; if observed clusters < expected → flip manifest from `captured` to
       `attempted_failed[reason=ClusterCoverageError(historical)]` with the missing cluster set in the error_reason
-      payload. Handles options_chain (ES.OPT 11-cluster), futures_chain, sports_fixture_bundle. Per-VM shard write.
+      payload. Handles options_chain (ES.OPT 11-cluster), futures_chain. sports_fixture_bundle +
+      prediction_canonical_question_group are deferred (script returns exit 3 + RECONCILER_FAILED event with
+      ``reason=data_type_deferred``) until predictions Phase 1A + sports Phase 2.B's lifecycle SSOT lands.
+      Shipped MTDS@ba5423f 2026-05-07.
 - [ ] [SCRIPT] P0. `mtds_reconcile_partition_mismatch.py` — scan a sample of raw_tick parquets; for each instrument's
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
