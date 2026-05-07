@@ -37,12 +37,22 @@ if [ "$USE_RG" = true ]; then
 fi
 
 # Check 2: os.getenv() / os.environ usage (all forms banned — use UnifiedCloudConfig or get_secret_client)
+#
+# Lines containing `# config-bootstrap:` are intentional exceptions: workspace-
+# root discovery, log-level bootstrap, factory selection, and similar early-
+# init code paths that MUST run BEFORE UnifiedCloudConfig is loadable. Same
+# annotation honored by check_security.py + check_env_canon.py + alerting-
+# service main.py + UTL config_interface/_env_bootstrap.py. Files that
+# violate without an annotation still fail the gate.
 if [ "$USE_RG" = true ]; then
     echo -n "Checking for os.getenv() / os.environ usage... "
-    if rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" . >/dev/null 2>&1; then
+    _OS_ENV_HITS=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" . 2>/dev/null \
+        | grep -v "# config-bootstrap:" || true)
+    if [ -n "$_OS_ENV_HITS" ]; then
         echo -e "${RED}FAIL${NC}"
         echo -e "${YELLOW}Found os.getenv()/os.environ (use UnifiedCloudConfig for config; get_secret_client() for secrets):${NC}"
-        rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" . | head -5
+        echo "$_OS_ENV_HITS" | head -5
+        echo -e "${YELLOW}(annotated lines with '# config-bootstrap: <reason>' are skipped — see precedent in features-*-service/engine/mock_data_provider.py)${NC}"
         CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
     else
         echo -e "${GREEN}PASS${NC}"
@@ -91,39 +101,64 @@ if [ "$USE_RG" = true ]; then
 fi
 
 # Check 6: asyncio.run() in loops (simplified check)
+#
+# Excludes tests/ + scripts/ — these are one-shot entry-points where
+# asyncio.run() at the END of main() is the correct pattern (file
+# co-existing with `for`/`while` keywords used elsewhere in helper
+# functions or imports must NOT be flagged). Service runtime code
+# (everything outside tests/ + scripts/) should use asyncio.gather()
+# inside an async runtime, not asyncio.run() — those failures still
+# fire as before.
 if [ "$USE_RG" = true ]; then
     echo -n "Checking for asyncio.run() in loops... "
-    # This is a heuristic - look for asyncio.run in files that have for/while
-    FILES_WITH_ASYNCIO_RUN=$(rg "asyncio\.run\(" --type py --files-with-matches . 2>/dev/null || true)
+    FILES_WITH_ASYNCIO_RUN=$(rg "asyncio\.run\(" --type py \
+        --glob "!tests/**" --glob "!scripts/**" --glob "!examples/**" --files-with-matches . 2>/dev/null || true)
     if [ -n "$FILES_WITH_ASYNCIO_RUN" ]; then
+        _hit=""
         for file in $FILES_WITH_ASYNCIO_RUN; do
             if grep -q "for \|while " "$file" 2>/dev/null; then
-                echo -e "${YELLOW}WARN${NC}"
-                echo -e "${YELLOW}Found asyncio.run() in file with loops (verify not in loop - use asyncio.gather() instead):${NC}"
-                echo "  $file"
-                CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
+                _hit="$file"
                 break
             fi
         done
+        if [ -n "$_hit" ]; then
+            echo -e "${YELLOW}WARN${NC}"
+            echo -e "${YELLOW}Found asyncio.run() in file with loops (verify not in loop - use asyncio.gather() instead):${NC}"
+            echo "  $_hit"
+            CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
+        else
+            echo -e "${GREEN}PASS${NC}"
+        fi
     else
         echo -e "${GREEN}PASS${NC}"
     fi
 fi
 
 # Check 7: time.sleep() in async functions (simplified check)
+#
+# Same exclusions as asyncio.run() — tests/ + scripts/ + examples/ are
+# one-shot entry points where time.sleep() is fine. Service runtime
+# (everything else) should use asyncio.sleep() inside async funcs.
 if [ "$USE_RG" = true ]; then
     echo -n "Checking for time.sleep() in async code... "
-    FILES_WITH_TIME_SLEEP=$(rg "time\.sleep\(" --type py --files-with-matches . 2>/dev/null || true)
+    FILES_WITH_TIME_SLEEP=$(rg "time\.sleep\(" --type py \
+        --glob "!tests/**" --glob "!scripts/**" --glob "!examples/**" --files-with-matches . 2>/dev/null || true)
     if [ -n "$FILES_WITH_TIME_SLEEP" ]; then
+        _hit=""
         for file in $FILES_WITH_TIME_SLEEP; do
             if grep -q "async def" "$file" 2>/dev/null; then
-                echo -e "${YELLOW}WARN${NC}"
-                echo -e "${YELLOW}Found time.sleep() in file with async functions (verify not in async - use asyncio.sleep() instead):${NC}"
-                echo "  $file"
-                CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
+                _hit="$file"
                 break
             fi
         done
+        if [ -n "$_hit" ]; then
+            echo -e "${YELLOW}WARN${NC}"
+            echo -e "${YELLOW}Found time.sleep() in file with async functions (verify not in async - use asyncio.sleep() instead):${NC}"
+            echo "  $_hit"
+            CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
+        else
+            echo -e "${GREEN}PASS${NC}"
+        fi
     else
         echo -e "${GREEN}PASS${NC}"
     fi
