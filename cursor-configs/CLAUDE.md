@@ -872,6 +872,28 @@ Do not batch shippable units across a session waiting for a "natural pause."
   workspace dirty-deps rule (`git add <my-files> && git commit --no-verify && git push origin live-defi-rollout`)
   rather than waiting for a quickmerge → main promotion cycle.
 
+### The mandatory pre-commit check (catches accidental bundling)
+
+Before EVERY `git commit` in any repo where another agent might have staged or modified files in parallel, run:
+
+```bash
+git status                 # full picture: modified, staged, untracked
+git diff --cached --stat   # NO PATH ARGUMENT — see the entire index
+```
+
+If anything is in the staged set or working tree that isn't yours, surgically un-stage it (`git restore --staged <file>`)
+or `git stash --keep-index` the unrelated stuff before committing. **Never pass a `<path>` argument to
+`git diff --cached --stat`** — that filters the output to just that path and masks other staged hunks.
+
+Reference incidents (both 2026-05-07 PM repo, both bundled foreign work into a single agent's commit):
+
+* PM@961980db — bundled a teammate's local-uncommitted "Audit 2026-05-07" plan section because `git add <plan-file>`
+  picked up the whole current file state, including their unstaged hunks.
+* PM@611b9501 — bundled a teammate's `git mv` (plan promotion ai/→active/) because the agent only checked
+  `git diff --cached --stat <single-path>` and missed the rename already sitting in the index. **The very commit
+  that codified this rule was an instance of the foot-gun the rule warns about.** That's how easy it is to fall
+  into; do the full-status check.
+
 ### Half 2 — Flip the plan checkbox in the same logical unit
 
 When working through a plan, you MUST flip the `- [ ]` checkbox to `- [x]` for each todo **as soon as the underlying
