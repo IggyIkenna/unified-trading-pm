@@ -977,6 +977,93 @@ This applies to every plan in `plans/active/` and every working session — tier
 even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
 matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
 
+## Findings Triage Discipline (HARD RULE)
+
+When you discover an issue mid-task — a QG failure on someone else's code, a silent bug in a sample data row, a
+doc/code drift, an unexpected manifest shape, a stale codex SSOT, a missing test, anything that wasn't your todo but
+that you observed while doing your todo — the action you take depends on **scope** and **blast radius**. The default
+is wrong-action because most agents either over-fix (touch foreign work) or under-document (let the finding evaporate
+in chat). This rule pins the right action for each case so findings actually land somewhere durable + the right person
+fixes them.
+
+### Decision tree
+
+| Where the finding sits                                                                                  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **In-scope** — surfaced while running QG/tests on YOUR code, OR while editing a file you own           | **Fix it yourself.** Don't wait, don't flag, just ship the fix in the same commit (or an adjacent one). Your plan covers it; this is part of the work. Don't bounce a small fix to the issues folder just because it wasn't in the original todo — silent-bug-in-sample-data-row caught while writing tests is exactly what you should be catching.                                                                                    |
+| **Adjacent to your plan** — related to your active plan but not in the immediate todo                   | **Document + fix now or in next phase of YOUR plan.** Append a finding section to your plan body (or extend an existing tier with a new sub-todo); the plan owner is you, so the fix lands inside the same workstream. Don't punt to issues folder — that's for findings nobody owns; this one IS yours.                                                                                                                              |
+| **Outside your plan, fits another active plan**                                                         | **Find the right plan + document there.** Add a finding annotation to the relevant plan body (`cefi_master`, `writegate_*`, `defi_master`, etc.) with explicit owner pointer. The agent on that plan picks it up. **Do not fix yourself** — collision risk + the right plan owner needs to see the finding to make the architectural call. A small annotation in someone else's plan body is fine; a refactor of their code is not.   |
+| **Outside every active plan**                                                                           | **File an issue doc** in [`plans/active/issues/<short-name>_<YYYY_MM_DD>.md`](../plans/active/issues/). These get triaged at audit cadence + either folded into a plan or addressed standalone. Existing precedents: [`defi_archetypes_doc_plan_drift_2026_05_07.md`](../plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md), [`defi_launcher_audit_2026_05_07.md`](../plans/active/issues/defi_launcher_audit_2026_05_07.md). |
+| **Big / cross-cutting finding** (any of the "big" criteria below)                                       | **NOTIFY THE OPERATOR IMMEDIATELY** in the chat — surface it in the next message summary, not buried in a plan annotation. Then **also file an issue doc** per the row above (don't pick one or the other — do both). Operator-time-to-decide on a non-big finding is cheap; operator-time-lost on a big finding hidden in a plan body is expensive.                                                                                  |
+
+### What "big" means (any one of these qualifies)
+
+- Finding that breaks **data correctness** for ≥1 asset_group (silent-zero capture, schema drift on disk, manifest
+  phantom mass, lookahead-bias in features compute, batch/live divergence in the unified pipeline).
+- Finding on the **2026-05-23 live-DeFi deadline** critical path (anything in the master plan's Group F/G live-only
+  prerequisites, anything blocking a paper-trade or testnet smoke).
+- Finding that requires action across **≥2 repos** (UAC + a service consumer; an SSOT + multiple call-sites; a launcher
+  + the watchdog dict).
+- Finding that **contradicts a workspace SSOT** in CLAUDE.md / codex (the SSOT is wrong, OR the code is wrong — either
+  way, both can't be true; an agent reading the SSOT and an agent reading the code reach different conclusions).
+- Finding that would **change the work-split** (re-pri P0/P1, swap an item between owners, defer post-May-23, surface
+  a new prerequisite that wasn't in the 5-day cycle).
+- Finding that **contradicts an in-flight VM run** (silent-zero, wrong row-key shape, partial-bundle, missing
+  per-instrument progress events) — operators need to decide stop-VM vs let-it-finish-and-rescan within the run window.
+
+If you're not sure whether it's big, surface it. The cost of one extra paragraph in a chat summary is far lower than
+the cost of an operator missing a P0 finding for hours.
+
+### Issue-doc format
+
+Mirror the existing precedents (e.g. `defi_archetypes_doc_plan_drift_2026_05_07.md`). The minimum frontmatter:
+
+```markdown
+---
+title: "<short title — what's broken or drifting>"
+created: <YYYY-MM-DD>
+author: <harsh|ikenna|agent-id>
+source:
+  - <plan or codex doc that surfaced it>
+  - <code file:line if relevant>
+locked_by: live-defi-rollout
+locked_since: <YYYY-MM-DD>
+---
+
+# <Title>
+
+> **Severity**: <P0|P1|P2> — <one-line rationale>
+> **Blast radius**: <repos / plans / asset_groups affected>
+> **Suggested owner**: <plan or person if known; else "operator triage">
+
+## What I found
+
+<concrete evidence — file:line, sample data, command output, parquet row dump, diff>
+
+## Why it matters
+
+<correctness / perf / deadline / SSOT-drift impact>
+
+## Recommended decision
+
+<fold into plan X / new plan needed / standalone fix / discuss>
+```
+
+### Why this discipline matters
+
+- **No silent finding loss.** Every finding lands in EXACTLY ONE of: your code (fixed in-place), your plan (annotated +
+  fixed), the right plan (annotated + handed off), the issues folder (doc'd + triaged). The matrix is exhaustive — no
+  fifth option, no "I'll mention it later", no "the next agent will spot it too."
+- **Right person fixes it.** The plan owner has the context and surrounding code in their head. A drive-by fix from
+  another agent often misses architectural intent — the "Two teammates × multiple parallel agents" rule applies here.
+  Small annotations in someone else's plan body are fine + actively encouraged; refactors of their code are not.
+- **Big findings reach the operator fast.** Plan annotations are read at audit cadence (every few days); chat summaries
+  are read in minutes. A live-trading-deadline-affecting finding cannot wait for the next audit pass. The dual-path
+  (chat + issue doc) gives the operator immediate decision support AND a durable record after the chat scrolls away.
+- **No "drive-by perfection" excuse.** The rule explicitly assigns small fixes to you (case 1) so agents can't hide
+  behind "scope discipline" to skip obvious bug-fixes in their own code. If you ran tests and saw a failure on YOUR
+  code, fix it; don't punt to the next agent. The discipline cuts both ways.
+
 ## Citadel-Grade Planning Standards
 
 Every plan MUST follow these standards. Agents creating plans that don't meet these standards MUST be corrected.
