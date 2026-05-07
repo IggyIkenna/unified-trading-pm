@@ -1613,8 +1613,22 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
 - [ ] [SCRIPT] P0. New endpoint `GET /data-status/{service}/leaf/{shard_key}/schema` — returns per-leaf-parquet schema
       view: columns, types, row_count, per-column non_null_count, per-column NaN ratio, `available_at`
       min/max/null_count.
+      **Investigation 2026-05-07**: distinct from existing `/schema` endpoint at
+      [`data_status.py:816`](../../../deployment-api/deployment_api/routes/data_status.py#L816), which returns the
+      DECLARED `SchemaContract` (column names + types from UAC, not actual stats). The new endpoint needs live parquet
+      introspection: resolve GCS path for the shard, download parquet, compute per-column non_null_count + NaN ratio +
+      available_at envelope. ~2 hour task: a `get_leaf_parquet_stats(...)` helper in
+      `deployment_api/services/data_status_drilldown.py` (mirrors `get_schema_for_shard`'s resolution shape) +
+      route handler + 5-min TTL cache + handling for parquet-missing / corrupt / very-large file cases. Successor is
+      this same plan item — pick up next focused session in the deployment-api repo.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert: when historical-mode produces a `data_type` for a date in the live
       window AND `live_pipeline_already_wrote = true` → emit `LIVE_HISTORICAL_DOUBLE_WRITE` warning event.
+      **Investigation 2026-05-07**: multi-repo write-time guard. Needs (a) a UAC `LIVE_HISTORICAL_DOUBLE_WRITE` event
+      type addition, (b) UTL `manifest_writer` write-time guard that detects the double-write at `record_captured`
+      time, (c) MDPS / MTDS / instruments-service callsite passing `mode=batch|live` so the guard knows which side
+      we're on. Cross-cuts UAC + UTL + 3 services — bigger coordination than items 1/2. Successor is this same plan
+      item, paired with the Phase 1A.future error-class additions (`NanRatioExceededError`, `SchemaMismatchError`,
+      `EmptyPlaceholderBugBackfill`, `MissingAvailableAt`) so the new event class lands alongside its peers.
 
 ### Phase 4.B — deployment-ui (unified-trading-system-ui)
 
