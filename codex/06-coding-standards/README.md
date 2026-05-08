@@ -509,6 +509,149 @@ The 52-point checklist in `deployment-service/configs/checklist.template.yaml` c
 | Phase 6: Documentation             | Items 26-33 | README, architecture, schemas                                                                                                                                              |
 | Phase 7: Data Catalogue            | Items 34-37 | Shard enumeration, pipeline chain. ManifestWriter writes Parquet manifests; ManifestReader queries via DuckDB; deployment-service data-status --source manifest\|gcs\|auto |
 
+### Service Hardening: D1→D5 progression
+
+Each service follows this strict progression. Do NOT skip or reorder steps. **Invariant: never advance a tier until all
+items for the previous tier are green.**
+
+| Gate | Command                                  | What it catches                                               |
+| ---- | ---------------------------------------- | ------------------------------------------------------------- |
+| D1   | `bash scripts/quickmerge.sh --lint-only` | ruff formatting, import ordering, syntax errors               |
+| D2   | `bash scripts/quickmerge.sh --unit-only` | import errors, type errors (basedpyright), unit test failures |
+| D3   | `bash scripts/quickmerge.sh --qg-only`   | integration test failures, coverage gaps, QG violations       |
+| D4   | `bash scripts/quickmerge.sh --quick`     | full QG + git ops; skips act simulation                       |
+| D5   | `bash scripts/quickmerge.sh`             | full pipeline with act simulation — **TIER GREEN GATE**       |
+
+D5 is the only gate that counts for tier promotion. `--quick` alone is not sufficient.
+
+#### D1 — Ruff clean, no bare except, no print()
+
+Run per service: `ruff check <src_dir>/`
+
+- `ruff check <src_dir>/` exits 0 with no violations.
+- No `except:` (bare except) in production code — replace with `except <SpecificError> as e:` + log + reraise.
+- No `except Exception:` without reraise or typed error raise (silent swallows forbidden).
+- No `print(...)` in production source files — replace with `logger.debug(...)` or `logger.info(...)`.
+- No `os.getenv()` or `os.environ[KEY]` — replace with `UnifiedCloudConfig().<attr>` or `ConfigurationError`.
+- No legacy typing imports: `Dict`, `List`, `Optional`, `Tuple` from `typing` — use built-in `dict`, `list`, `X | None`,
+  `tuple`.
+- No `except ImportError` fallback imports — fail loud; no silent `pass` or `= None` fallbacks.
+- No `datetime.now()` or `datetime.utcnow()` without `tz=` — use `datetime.now(tz=timezone.utc)`.
+
+Automated scan commands:
+
+```bash
+# A: os.getenv violations
+rg "os\.getenv|os\.environ\[" src/ --type py --glob '!tests/**'
+# B: bare except
+rg "except:\s*$|except Exception:\s*$" src/ --type py --glob '!tests/**'
+# C: print() in production code
+rg "^\s*print\(" src/ --type py --glob '!tests/**'
+# D: naive datetime
+rg "datetime\.now\(\)|datetime\.utcnow\(\)" src/ --type py | grep -v "timezone\|tzinfo\|tz="
+# E: legacy typing imports
+rg "from typing import (Dict|List|Optional|Tuple)" src/ --type py
+# F: except ImportError fallbacks
+rg -A3 "except ImportError" src/ --type py | grep -B1 "pass|= None|= False"
+```
+
+#### D2 — basedpyright strict (or baseline frozen)
+
+Run per service: `run_timeout 120 basedpyright <src_dir>/`
+
+- `basedpyright <src_dir>/` exits 0, OR `.basedpyright-baseline.json` is present and suppresses only pre-existing
+  errors.
+- `pyrightconfig.json` sets `typeCheckingMode: "strict"`.
+- `pyproject.toml` has `[tool.basedpyright]` section with `reportAny = "error"` and `reportUnknown* = "error"`.
+- No new `# type: ignore` added to hide architectural violations — fix root cause instead.
+- No `Any` types in public API signatures — use specific types or `TypeVar`.
+
+#### D3 — Unit tests passing, coverage ≥ threshold
+
+Run per service: `pytest tests/unit/ -v --timeout=30`
+
+- All unit tests pass (`pytest tests/unit/ -v`).
+- Coverage meets or exceeds the threshold set in `pyproject.toml` `[tool.coverage.report]`.
+- `tests/unit/test_schema_robustness.py` exists (Layer 1 — Schema Robustness): required field missing →
+  `ValidationError`; optional field absent → passes; wrong type → fails.
+- No `pytest.skip()` without documented reason in `skipif` condition.
+- Integration tests (Layer 1.5) in `tests/integration/` pass: `pytest tests/integration/ -v --timeout=30`. Test naming:
+  `test_<component>_integration.py`. No live external calls — all external deps mocked. No live cloud resources.
+
+Coverage thresholds are set per-repo in `pyproject.toml`:
+
+```toml
+[tool.coverage.report]
+fail_under = 80  # minimum, adjust per-repo
+```
+
+#### D4 — /health + /readiness endpoints present
+
+Applies to all service repos with a running HTTP server (T4 services, T5 APIs).
+
+- `GET /health` endpoint returns `{"status": "healthy"}` with HTTP 200.
+- `GET /readiness` endpoint checks downstream deps (DB, PubSub, GCS) and returns HTTP 200 or 503.
+- Both endpoints present in the service's main FastAPI app.
+- Health probes wired in `deployment-service/configs/checklist.<service>.yaml`.
+- Cloud Run liveness/readiness probes configured in Terraform or `cloudbuild.yaml`.
+
+Standard implementation:
+
+```python
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "healthy"}
+
+@app.get("/readiness")
+async def readiness() -> dict[str, str]:
+    # Check critical downstream deps
+    try:
+        await check_pubsub_connection()
+        return {"status": "ready"}
+    except Exception as e:
+        logger.error("Readiness check failed: %s", e)
+        raise HTTPException(status_code=503, detail="not ready") from e
+```
+
+#### D5 — Integration tests passing, QG green (TIER GATE)
+
+D5 is the final gate. Full quickmerge with act simulation must pass.
+
+- `bash scripts/quickmerge.sh` (no flags) exits 0.
+- `bash scripts/quality-gates.sh` exits 0: ruff clean; basedpyright clean (or baseline frozen); all tests pass; coverage
+  above threshold; import smoke test passes (`python -c 'import <package_name>'` exits 0); no QG bypass audit
+  violations; file size check (no source files > 900 lines, excluding venv/archive).
+- act simulation passes (Cloud Build simulation).
+- No `ARCHITECTURAL_VIOLATION` suppressions remaining.
+- No `# type: ignore` to hide architectural violations.
+- Repo is committed to staging branch, not just local.
+
+#### QG structure verification (per repo)
+
+Every repo must have:
+
+| File                                              | Required             | Notes                                   |
+| ------------------------------------------------- | -------------------- | --------------------------------------- |
+| `scripts/quality-gates.sh`                        | Yes                  | Copy from canonical template if missing |
+| `.github/workflows/version-bump.yml`              | Yes                  | Triggers version cascade                |
+| `.github/workflows/update-dependency-version.yml` | Yes                  | Receives dep update dispatches          |
+| `.github/workflows/quality-gates.yml`             | Yes                  | CI QG on PR                             |
+| `pyproject.toml` with `[tool.ruff]`               | Yes                  | Line length 100-120, target py313       |
+| `pyproject.toml` with `[tool.basedpyright]`       | Yes                  | reportAny + reportUnknown\* = error     |
+| `.basedpyright-baseline.json`                     | If type errors exist | Suppresses pre-existing only            |
+| `pyrightconfig.json`                              | Yes                  | strict mode, py313                      |
+
+#### Tier promotion criteria
+
+| Tier | Repos                                                                                                       | Gate                      |
+| ---- | ----------------------------------------------------------------------------------------------------------- | ------------------------- |
+| T0   | unified-api-contracts, unified-trading-library, execution-algo-library, matching-engine-library             | All D5 before any T1      |
+| T1   | unified-trading-library (UTS), unified-config-interface (UCI)                                               | All D5 before any T2      |
+| T2   | unified-market-interface, execution-service, unified-ml-interface, unified-feature-calculator-library, etc. | All D5 before any T3      |
+| T3   | unified-domain-client (UDC)                                                                                 | D5 before any T4          |
+| T4   | 19 services (instruments-service → monitoring pipeline)                                                     | All D5 before T5          |
+| T6   | 11 UIs                                                                                                      | All D5 = Phase 3 complete |
+
 ---
 
 ## Detailed Standards
@@ -526,19 +669,19 @@ The 52-point checklist in `deployment-service/configs/checklist.template.yaml` c
 All CI tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mock
 fixtures eliminate live cloud calls:
 
-| Layer              | Tool                                      | Location                                                     |
-| ------------------ | ----------------------------------------- | ------------------------------------------------------------ |
-| GCP Pub/Sub        | `PUBSUB_EMULATOR_HOST`                    | `unified-cloud-interface/tests/conftest.py`                  |
-| GCS                | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | `unified-cloud-interface/tests/conftest.py`                  |
-| BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                    |
-| AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py` |
-| Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                          |
-| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py`  |
-| Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                               |
-| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                            |
-| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                   |
-| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                   |
-| Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                |
+| Layer              | Tool                                      | Location                                                                                              |
+| ------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| GCP Pub/Sub        | `PUBSUB_EMULATOR_HOST`                    | `unified-cloud-interface/tests/conftest.py`                                                           |
+| GCS                | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | `unified-cloud-interface/tests/conftest.py`                                                           |
+| BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                                                             |
+| AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py`                                          |
+| Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                                                                   |
+| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py` |
+| Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                                                                        |
+| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                                                                     |
+| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
+| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
+| Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                                                         |
 
 Full details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60) See also:
 [quality-gates.md](quality-gates.md) § GCP Emulator Configuration, AWS Moto, Credential-Free CI Gate
@@ -703,19 +846,19 @@ Usage rules:
 All CI tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mock
 fixtures eliminate live cloud calls:
 
-| Layer              | Tool                                      | Location                                                     |
-| ------------------ | ----------------------------------------- | ------------------------------------------------------------ |
-| GCP Pub/Sub        | `PUBSUB_EMULATOR_HOST`                    | `unified-cloud-interface/tests/conftest.py`                  |
-| GCS                | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | `unified-cloud-interface/tests/conftest.py`                  |
-| BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                    |
-| AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py` |
-| Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                          |
-| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py`  |
-| Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                               |
-| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                            |
-| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                   |
-| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                   |
-| Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                |
+| Layer              | Tool                                      | Location                                                                                              |
+| ------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| GCP Pub/Sub        | `PUBSUB_EMULATOR_HOST`                    | `unified-cloud-interface/tests/conftest.py`                                                           |
+| GCS                | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | `unified-cloud-interface/tests/conftest.py`                                                           |
+| BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                                                             |
+| AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py`                                          |
+| Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                                                                   |
+| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py` |
+| Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                                                                        |
+| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                                                                     |
+| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
+| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
+| Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                                                         |
 
 Full details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60) See also:
 [quality-gates.md](quality-gates.md) § GCP Emulator Configuration, AWS Moto, Credential-Free CI Gate
