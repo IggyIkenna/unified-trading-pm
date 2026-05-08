@@ -345,9 +345,8 @@ rules into every Task prompt. The mitigation Ikenna shipped 2026-05-08 PM:
 
 ### What sub-agents are FOR
 
-Per operator direction (Harsh told Ikenna 2026-05-08 PM): _"sub-agents should not be doing something that
-violates any claude rules; they should be used to audit and parallelise mechanical stuff only; and provide
-relevant rule to them so they dont go rogue."_
+Sub-agents must not perform any action that could violate workspace rules. They are scoped to audit and
+mechanical parallelisation only, with the relevant rules pasted into every Task prompt so they cannot drift.
 
 Use `Task` sub-agents for:
 
