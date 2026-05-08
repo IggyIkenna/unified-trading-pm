@@ -560,17 +560,18 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
-#### Tab 5 — `lending-indices-bugfix-tab` 🟢 IN FLIGHT (P0, ~4-6h, MTDS + instruments-service)
+#### Tab 5 — `lending-indices-bugfix-tab` ✅ DONE 2026-05-08 (P0, MTDS + instruments-service)
 
-- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md).
-- **Scope**: 3 P0 bug fixes — Bug 1 (AAVE V3 ETH silent-zero), Bug 2 (Compound V3 schema drift), Bug 3
-  (instruments-service launch-date floor handling). P0 blocker for `carry_staked_basis`; hand-off ahead
-  of Ikenna D4 DeFi launches.
-
-**Why now**: P0 blocker for `carry_staked_basis` (May-23 lead archetype) on Ethereum — Bug 1 = AAVE V3 ETH
-silent-zero. All 3 bugs already diagnosed in the issue doc. Friendly hand-off ahead of Ikenna's D4 DeFi
-launches (those depend on lending-indices working).
+- **Verified by main 2026-05-08 06:00 UTC** — all 3 cited commits exist + pushed to origin; issue doc has
+  DONE-2026-05-08 block. P0 blocker for `carry_staked_basis` cleared ahead of Ikenna's D4 launches.
+- **Code commits** (all pushed to origin per conditional rule):
+  - `instruments-service@1a90185` — Bug 3 fix: `get_protocol_floor_date()` now uses UAC `PROTOCOL_LAUNCH_DATES`
+    as SSOT (architectural fix — replaces hard-coded floor with cross-cutting source).
+  - `mtds@d2f365e` — Bugs 1 + 2: lending-indices subgraph schema drift discipline (AAVE V3 ETH silent-zero +
+    Compound V3 schema drift).
+  - `mtds@de9d5cf` — ruff format spacing fix on lending_indices_handler.
+- **QG**: agent reports clean on Tab 5's own code; pre-existing failures on parallel agents' code exempt per
+  CLAUDE.md temporary 2026-05-07 → 2026-05-09 exception.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
@@ -612,17 +613,20 @@ DONE-DEFINITION:
 REPORT-BACK: code commits + plan-flip commit per shippable unit; conditional push.
 ````
 
-#### Tab 6 — `defi-988-audit-tab` 🟢 IN FLIGHT (diagnostic-only, ~2-3h, PM only)
+#### Tab 6 — `defi-988-audit-tab` ✅ DONE 2026-05-08 (diagnostic-only, PM only)
 
-- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: `defi_master_2026_05_07.plan.md` § "Tail-chain coverage" → output is a new
-  `plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md` issue doc.
-- **Scope**: per-(chain, protocol, data_type) breakdown of the 988 missing DeFi dates, ranked by relevance
-  to May-23 archetypes (`carry_staked_basis` lead, `leveraged_funding_arb`). Diagnostic-only — no code edits.
-
-**Why now**: Prioritises Harsh's D4 P0 manifest rescan + Ikenna's D4 DeFi launch decisions. The current
-"988 dates missing" headline doesn't break down by `(chain, protocol, data_type)`; this audit produces the
-breakdown so D4 can target the `carry_staked_basis` chain set (Ethereum + Solana + Arbitrum + Base).
+- **Verified by main 2026-05-08 06:02 UTC** — audit doc filed (17,298 bytes substantial output) + defi_master
+  annotated; PM@fc52188 pushed.
+- **Code commits**: `PM@fc52188` — `docs(defi-988-audit): file Tab 6 actionable breakdown + annotate
+  defi_master`.
+- **Output**: [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md)
+  — per-(chain, protocol, data_type) breakdown probed across 10 DeFi GCS manifest buckets (9 v5 + 1 legacy)
+  cross-checked against UAC `CHAIN_GENESIS_DATES` + `PROTOCOL_LAUNCH_DATES` SSOTs. **Headline: 13,632
+  actionable rows of 1.3M non-captured** (the original "988 dates missing" framing was misleading — most
+  non-captured rows are legitimate pre-genesis / pre-launch). Top-5 priority list for D4 backfill listed
+  in the audit doc.
+- **Implication for D4 manifest rescan**: Harsh-side cross-asset rescan can now target the 13,632 actionable
+  rows specifically rather than blanket-rescanning DeFi.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
@@ -670,17 +674,18 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (issue doc) + 1 commit (defi_master annotation); conditional push.
 ````
 
-#### Tab 7 — `mtds-databento-streaming-tab` 🟢 IN FLIGHT (pure-win refactor, ~8-10h, MTDS only)
+#### Tab 7 — `mtds-databento-streaming-tab` ✅ DONE 2026-05-08 (pure-win refactor, MTDS only)
 
-- **Started**: 2026-05-08 05:23 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`mtds_databento_path_streaming_2026_05_07.plan.md`](mtds_databento_path_streaming_2026_05_07.plan.md) Phase 1.
-- **Scope**: chunked streaming refactor in `databento_adapter.py` — `path=<tempfile>` + `to_df(count=N)`
-  iteration; byte-identical output; bounds peak memory for ES.OPT-class days.
-
-**Why now**: Risk mitigation ahead of Ikenna's D4 DeFi launches + the post-cefi-drain TradFi + DeFi reruns.
-ES.OPT-class days currently spike >1GB peak RSS under eager-materialisation. Path-streaming bounds peak
-memory; SDK-supported (`path=<tempfile>` + `to_df(count=N)` chunking); byte-identical output. Pure refactor,
-low risk, big throughput payoff.
+- **Verified by main 2026-05-08 06:08 UTC** — both cited commits exist + pushed; QG Pass 1 lint+tests green
+  per agent report. Phases 2-4 correctly left unshipped per plan body's gate conditions.
+- **Code commits** (both pushed to origin):
+  - `mtds@d8358f9` — `feat(mtds): databento path-streaming + chunked to_df (Phase 1)` — replaces eager BytesIO
+    + DBNStore.to_df() materialisation in `download_batch_df` with SDK-supported `path=<tempfile>` +
+    `DBNStore.to_df(count=N)` chunked iteration. Bounds peak working-set memory for heavy CME GLBX.MDP3
+    ES.OPT days that previously spiked >1GB.
+  - `PM@ace8d3f` — `plan(mtds-databento-path-streaming): flip Phase 1 checkbox + DONE-2026-05-08 block`.
+- **Caveat per agent**: codex violations on untouched files are pre-existing (not Tab 7's code) — exempt
+  per CLAUDE.md temporary 2026-05-07 → 2026-05-09 QG-failure exception.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
