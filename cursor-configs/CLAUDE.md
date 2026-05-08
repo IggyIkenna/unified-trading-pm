@@ -1357,6 +1357,289 @@ When modifying shared libraries (UAC, UTL, UCI, UEI):
 - No re-definition of enums, dataclasses, or Pydantic models that already exist upstream
 - Pre-audit should catch self-declared duplicates and include them in the fix manifest
 
+## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
+
+**Why this exists.** Two human operators (Ikenna + Harsh) each run multiple parallel Claude Code / Cursor agents. A
+single human-day with 5 parallel agents at full saturation is closer to **~50 AI-days of work**; both sides combined
+yields **~100 AI-days/day**. Without an explicit daily split, the agents converge on the same critical-path files (UAC,
+master plans, deployment-api) and step on each other's commits via the shared working tree. The daily split is the
+operator's load-balancer: it pre-decides who owns what so the AI parallelism is additive, not collisional.
+
+**Cadence.** Daily. Each morning the operator (or main orchestrator agent on operator's behalf) drafts two new
+work-split plans for the day — one per side — sized so each absorbs ~5 days of solo AI work × 5-10 parallel agents =
+~25-50 AI-days per side. The plans live in `plans/active/work_split_<YYYY_MM_DD>_ikenna.md` and
+`plans/active/work_split_<YYYY_MM_DD>_harsh.md`. At end-of-day, the splits are archived to `plans/archive/` (the day's
+completed work flows back into the underlying master plans + codex docs as the durable record).
+
+### Split principle (which side gets which work)
+
+**Ikenna** owns work that is any of:
+
+- **Cross-cutting design** spanning 3+ repos (e.g. UAC schema + UTL helper + deployment-api + UI all in one shape)
+- **Trading-judgment / risk calls** (paper-trade smoke, kill-switch wiring, alert thresholds, archetype
+  canonicalisation)
+- **Governance / ratchet thinking** (workspace QG gates, baseline ratchets, version graduation, force-sync)
+- **Large migrations or refactors** that change the on-disk shape (manifest schema, GCS hive vocab, parquet column drop,
+  path-template change, multi-repo facade rename)
+- **Human-approval surface** (anything an operator has to sign off on — IAM proposals, Phase 0 security reviews, version
+  1.0 graduation, kill-switch rule activation, bucket-naming SSOT decisions)
+- **Coordination work** that touches the master plan or umbrella plans (because Ikenna is closer to the May-23 cutover
+  model)
+
+**Harsh** owns work that is any of:
+
+- **Implement-from-spec** (UAC types pre-designed → write the Pydantic models; UTL helper signature pre-designed → write
+  the helper; route handler with full behavioural contract → write the route)
+- **Run-script-and-verify** (launch backfill VMs and monitor; run reconcilers; rebase + push on shipped fixes;
+  smoke-test endpoints)
+- **Single-repo edits with crisp boundaries** (one repo, one feature surface, no UAC/UTL changes)
+- **Test execution + Playwright matrices** (DART personas, integration smokes, regression test coverage)
+- **Mechanical refactors** with zero design judgment (move launcher A → location B + register prefix; lint cleanup;
+  type-check fixes on someone else's code; docstring sweeps)
+- **Audits and probes** (read-only investigations that produce an issue doc but no code change)
+
+**Tie-breaker when an item could go either way**: if it touches >1 repo and the design isn't pre-spec'd, Ikenna; else
+Harsh. If it would require Harsh to make a closed-set design call (e.g. "decide the AlertCode taxonomy"), it's Ikenna.
+If Ikenna would just be running a script and watching events, it's Harsh.
+
+### Two valid working models per side (operator picks)
+
+**Model A — fixed thematic 5-tab clustering.** Operator pre-defines 5 fixed tabs by **coherent context cluster** (e.g.
+Tab 1 = alerting, Tab 2 = writegate, Tab 3 = enumerator, Tab 4 = DeFi launch, Tab 5 = PM governance). Each tab runs Opus
+at full window, owns its own done-definition, and fans out to sub-agents (Task tool / Explore / general-purpose) for
+mechanical multi-file work the master can spec cleanly. **Tabs run to their done-definition, not a calendar date** —
+agents finish faster than humans. Coverage guarantee: every parent-doc item is assigned to exactly one tab. Used when
+work clusters cleanly into 5 thematic groups; less overhead, predictable shape.
+
+**Model B — 1-main + dynamic spawned tabs.** One **main orchestrator agent** (Tab 1) does no implementation — only
+direction-setting + Q&A dispatch + plan-of-record curation + ping-ledger triage. Spawned tabs (Tab 2+) are **scoped
+implementers**: each runs one task end-to-end then goes quiet. Tab count varies by day (2 in the morning, 6 by
+afternoon, sometimes two agents on different phases of the same plan in parallel — fine). Used when the day's work is
+dynamic, when items keep emerging from incoming pings, or when the operator wants a single conversational dispatcher
+between themselves and N delegates.
+
+Both models obey the same universal mechanics below. Operator can mix them — Ikenna runs Model A, Harsh runs Model B —
+or both pick the same model on a given day. The split _plan_ shape adapts: Model A uses fixed tab numbering with per-tab
+sections; Model B uses a "Today's status → Tab registry" with dynamic entries.
+
+### Universal mechanics (apply to BOTH models)
+
+**Shared working tree (CRITICAL).** All Claude Code / Cursor sessions on one operator's machine share the same `.git/`
+
+- working tree + index. A local commit by any tab moves HEAD for every tab immediately. There is **no `git pull` step
+  needed between tabs on the same PC**. But: the **index (staged changes) is shared too** — if tab A runs
+  `git add foo.py` and tab B runs `git status` one second later, tab B sees `foo.py` staged. This is the foot-gun behind
+  every "I lost my staged work" incident in the workspace history. Pre-commit check (`git status` +
+  `git diff --cached --stat` no path arg) is **mandatory before EVERY commit** — see "Commit + Push + Flip Plan
+  Checkboxes" § "The mandatory pre-commit check." Use `git add -p` / `git add <specific-file>` for your hunks; never
+  `git add -A` / `git add .` / `git add <whole-shared-file>`.
+
+**Conditional push (the multi-agent safety valve).** Per the per-shippable-unit cadence in "Commit + Push + Flip Plan
+Checkboxes," every shippable unit gets a local commit. Before pushing, every agent runs:
+
+```bash
+git fetch origin <branch>
+git log --oneline <branch>..origin/<branch>   # incoming commits, if any
+```
+
+- **Zero incoming → push freely.** Default path; no operator approval needed.
+- **Any incoming → STOP, do NOT push.** Write a `🟡 BLOCKED` entry in your plan-of-record's `## Open questions` section
+  listing your local commits + the incoming ones. Append a one-liner ping in `_agent_pings.md`. Continue with anything
+  you CAN do; main + operator decide rebase / merge / cherry-pick / drop.
+
+**Plan-of-record + Q&A bus.** Every spawned tab has a single **plan-of-record** (e.g. `cefi_master.plan.md`,
+`writegate_honest_coverage.plan.md`, `defi_master.plan.md`) — that's where its todos live, where it flips checkboxes as
+it ships, and where it writes a `## Open questions` section for blockers. Q&A format:
+
+```markdown
+## Open questions
+
+### Q1 — [agent-tag, YYYY-MM-DD HH:MM] — short title
+
+**Status**: 🟡 BLOCKED — waiting for answer
+
+<full question with file:line context, what was tried, options considered>
+
+#### A1 — [main, YYYY-MM-DD HH:MM]
+
+**Status**: ✅ RESOLVED
+
+<answer + reasoning + commit-sha of anything shipped meanwhile>
+```
+
+Status badges (🟡 BLOCKED / ✅ RESOLVED) make scan-for-open-questions instant. Resolved Q&As get cleaned up at the daily
+ledger sweep — Q&A clutter is more costly than Q&A loss; the audit trail survives in commits + chat + the plan checkbox
+flips.
+
+**Ping ledger (`_agent_pings.md`).** Ephemeral doorbell — always ≤10 lines (active pings only). Format:
+
+```text
+[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10 word summary>; see <plan-of-record>.plan.md
+```
+
+Spawned agent appends a one-liner when it has a Q on its plan-of-record; main agent removes the line when the Q is
+answered. Zero history kept here. **Don't write Qs into the work-split plan itself** — those go on the agent's
+plan-of-record (the master / domain plan it's executing against).
+
+**Polling cadence (Model B main agent).** Main agent polls `_agent_pings.md` every **~1 min** while operator is active.
+When tabs go quiet (no pings 30+ min), stretch to 5 min. Main does NOT implement plan items — only direction +
+dispatch + curation. Anything taking >1 min in chat either delegates (spawn fresh tab) or backgrounds
+(`Task(run_in_background=true)`); main stays available for operator direction.
+
+**Sub-agent fan-out (within each tab, both models).** When N independent sub-agents fan out, send them in **a SINGLE
+message with N `Task` tool blocks** so they run concurrently. Sequential calls are wasted parallelism. Sub-agents
+inherit nothing — paste `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of every Task prompt
+(per "Sub-Agents & Autonomous Agents: Full Rules Required" rule).
+
+**Spawn prompt template (Model B).** When the main agent recommends a fresh tab, the prompt **must** include the
+orchestration preamble below so the spawned agent knows it's a delegate, not a peer. Copy this into every spawn:
+
+```text
+You are Tab N — a sub-agent spawned by <operator>'s main orchestrator agent (Tab 1, a separate
+Claude Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read in order:
+  1. <today's work-split plan> § "Bootstrap — read first if you're a spawned tab" — workflow rules.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards + this Daily
+     Work-Split Process section.
+  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  4. <PLAN-OF-RECORD-PATH> — your plan-of-record with todos + done-definition.
+
+Your agent-tag for ping-ledger entries: <agent-tag>.
+Your tab number: N (matches the entry header in the work-split plan).
+
+ORCHESTRATION RULES:
+  1. Shared working tree — no `git pull` needed between tabs; pre-commit check
+     (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
+     Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
+  2. Plan-doc Q&A flow — write blockers into <PLAN-OF-RECORD>'s `## Open questions` (status
+     🟡 BLOCKED), append ping in _agent_pings.md, continue with what you CAN do.
+  3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
+     incoming → push, any incoming → flag + escalate.
+  4. Plan-flip in same logical unit as code — checkbox flip + `<repo>@<sha>` evidence
+     stamped in body, NOT batched at session end.
+  5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.
+
+YOUR TASK: <full self-contained context — what to ship, repos owned, collision boundaries
+with other in-flight work, done-definition with verifiable bullet points>.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
+Final: append a "DONE-<YYYY-MM-DD>" block at the bottom of <PLAN-OF-RECORD> body listing
+every code + plan-flip commit sha. Then go quiet — don't pick up new work autonomously.
+```
+
+**Daily reset (each morning).** Main orchestrator (or operator solo if no main) runs:
+
+1. `git fetch origin live-defi-rollout && git log --oneline -25 origin/live-defi-rollout` — summarise incoming commits
+   since yesterday. Don't auto-pull; operator pulls explicitly when ready to sync.
+2. Re-read yesterday's work-split plans (where partial items roll forward) + `_agent_pings.md` for overnight pings.
+3. **Daily ledger sweep**: scan all `plans/active/*.plan.md` for `## Open questions` blocks. Remove ✅ RESOLVED Q&As
+   older than 24h. Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, re-prompt the spawned agent or
+   escalate. Verify `_agent_pings.md` has no orphan lines.
+4. **Draft today's two work-split plans** (one Ikenna, one Harsh) using the plan-shape template below. Pull in carryover
+   items from yesterday's partials. Add new items that emerged from incoming pings or audit findings. Size to ~25-50
+   AI-days per side (5 parallel agents × 5-10 days solo each).
+5. Report to operator: "Today's plan = X, Y, Z. Ikenna split has N items / M AI-days, Harsh split has P items / Q
+   AI-days. Ping ledger has K entries open. Local commits ready to push: J (or zero)."
+6. Wait for operator direction. Push the daily-reset commit per the conditional rule.
+
+### Daily work-split plan shape
+
+Every daily split plan (one per side) follows this skeleton. Frontmatter:
+
+```yaml
+---
+title: <Side>'s daily work-split — <YYYY-MM-DD> (<deadline-context>)
+type: coordination-doc
+status: active
+created: <YYYY-MM-DD>
+deadline: <upstream deadline if any>
+horizon: <1-day cycle | scope-bounded>
+companion_to: plans/active/work_split_<YYYY_MM_DD>_<other-side>.md
+locked_by: live-defi-rollout
+locked_since: <YYYY-MM-DD>
+---
+```
+
+Body sections:
+
+1. **Why this split exists today** — 2-4 lines: critical path for the cycle, what's queued from yesterday, what's new
+   from overnight incoming.
+2. **Working model** — A or B. Self-binding for the day so spawned agents know what shape to expect.
+3. **Today's status → Tab registry** (Model B) OR **5-tab assignment table** (Model A) — every item assigned to exactly
+   one tab; coverage guarantee. Each tab entry: identity, scope (P0/P1/P2 todos), plan-of-record, repos owned (collision
+   boundary), read-first list, sub-agent fan-out plan, collision risk vs other tabs + the other side, done-definition
+   with verifiable bullets.
+4. **Cross-tab handshakes** — hard sync gates between tabs (e.g. "Tab 3 must ship UAC AlertCode before Tab 5 reads it").
+   Operate independently otherwise.
+5. **Cross-side handshakes** — hard sync gates with the OTHER side's plan (e.g. "Harsh Tab 4 ships UAC types → Ikenna
+   Tab 2 consumes them in writegate Phase 4.A").
+6. **Collision-risk callouts** — per-file / per-repo collision warnings: which tabs touch the same file or directory,
+   and the mitigation (surgical `git add -p`, push-immediately + pull-before-next-edit, or serialised access with timing
+   handshake).
+7. **Spawn prompts** (Model B only) — full paste-ready prompt block per spawned tab using the template above.
+8. **Daily sync points** — EOD checkpoint (which gates green / red), what carries to tomorrow.
+9. **Defer post-deadline** (optional) — items both sides agree NOT to touch this cycle (P1+ items beyond scope). Short
+   list, citing the umbrella that owns them.
+
+**AI-day sizing.** Each tab/scope has an estimated AI-day budget in its entry (e.g. "~3 AI-days, 1 main agent + fan-out
+to 4 sub-agents"). Add the budgets per side; aim for ~25-50 AI-days per side per cycle. **Err toward beefier plans**
+(more items, fully spec'd) than thinner plans — under-utilisation is fine, under-specced collisions mid-cycle are not.
+We can always do less of a beefy plan over time; we cannot retroactively add scope to a thin one.
+
+### Cross-side coordination
+
+Both sides' work-split plans are **mutual companions** (`companion_to:` in frontmatter). Cross-side handshakes appear in
+BOTH plans (mirror-image entries) so neither operator misses the gate. When one side ships a hard-gate item (UAC type,
+UTL helper signature, route handler shape), they push immediately + the other side `git pull`s before the next consumer
+edit — same shape as cross-tab UAC handshakes within a side.
+
+**The other side's plan is read-only for you.** You don't edit your counterpart's split — that's their orchestration
+surface. Suggestions / corrections go via operator chat. The only allowed cross-edit: a 1-line cross-reference banner
+saying "your Tab N depends on our Tab M shipping Y" — the same Cross-Plan Coordination Banners pattern used for VMs and
+in-flight refactors.
+
+### End-of-cycle: archive + roll-forward
+
+At end-of-day:
+
+1. **Carryover items** that didn't ship → roll forward to tomorrow's split, citing yesterday's plan path.
+2. **Shipped items** → already reflected as `- [x]` in the underlying master plan(s) per "Commit + Push + Flip" HARD
+   RULE. Nothing extra to record.
+3. **Findings raised** → already in their respective places per "Findings Triage Discipline" (master plan,
+   `plans/active/issues/`, or fixed in-place).
+4. **Archive yesterday's work-split plans** to `plans/archive/`. They're durable history (who-owned-what on which day)
+   but the active surface is tomorrow's plans.
+
+Result: `plans/active/` always contains TODAY's two work-split plans + the durable master / domain / issue plans. The
+work-split plans are **the daily orchestration surface**, not the durable record — durable record is the master plan
+checkboxes + the codex SSOTs + the commit history.
+
+### Anti-patterns (don't)
+
+- **Don't** put Q&A into the work-split plan itself — that's main-agent-only writing surface. Q&A goes on the agent's
+  plan-of-record (the master / domain plan).
+- **Don't** mix the daily split with the master plan body — `master_to_live_defi_2026_05_23.plan.md` is the durable
+  readiness model; today's split is the daily orchestration surface. Both exist; neither replaces the other.
+- **Don't** write spawn prompts in chat — they belong in the work-split plan body so the operator can paste them
+  verbatim into a fresh Cursor / Claude Code tab without re-typing.
+- **Don't** carry over a 5-tab thematic shape (Model A) when the day's work is genuinely dynamic — switch to Model B (1
+  main + dynamic spawned). Pick per the day's character; don't lock in.
+- **Don't** size both sides at <10 AI-days per cycle — that's under-utilising the parallelism. The whole point of the
+  daily split is to absorb 5-10 parallel agents per side; thin plans waste the amplification.
+- **Don't** archive the work-split plan mid-cycle even if all checkboxes flip — leave it active until EOD so spawned
+  tabs (which may be running async) can still find their entry.
+
+### Composes with
+
+- "Commit + Push + Flip Plan Checkboxes" (per-shippable-unit cadence + pre-commit check)
+- "Cross-Plan Coordination Banners" (in-flight VM / refactor banners on plans the work-split touches)
+- "Capture Discoveries As Plan Todos Immediately" (mid-cycle findings → plan todos, not auto-memory)
+- "Findings Triage Discipline" (case-1-to-5 routing for surprises)
+- "Sub-Agents & Autonomous Agents: Full Rules Required" (every Task spawn pastes mandatory rules)
+- "Citadel-Grade Planning Standards" (the master plan body is what gets beefed up; daily split is orchestration)
+- "Two teammates × multiple parallel agents — don't edit unfamiliar files" (the foot-gun the daily split prevents)
+
 ## Sub-Agents & Autonomous Agents: Full Rules Required (MANDATORY)
 
 Sub-agents (Task tool, mcp_task) and autonomous agents (GHA workflows, Claude Code `--print`, Cursor background agents)
