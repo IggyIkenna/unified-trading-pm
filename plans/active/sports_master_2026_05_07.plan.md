@@ -25,6 +25,55 @@ related_plans:
 
 # Sports Master — asset_group umbrella
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest v5 schema + sports per-fixture-bundle cluster validation (`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE`
+  per-league-tier expected bookmaker sets); per-(source, data_type, league_id, day) shard atom
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  sports-specific empty_confirmed legitimacy: instrument-day-grain empty IS legit (no fixtures today / no markets active
+  is normal); paused-league windows (`KNOWN_COVERAGE_GAPS`) + pre-`SOURCE_COVERAGE_START` clip rules
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — sports
+  per-source folder layout per CLAUDE.md "Sports GCS path SSOT":
+  `sports_reference/by_date/day=*/entity={F}/league={L}/{F}.parquet`;
+  `candidate_parquet_paths(data_type, day, league_id)` is the canonical probe API
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+  unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
+  `kickoff − 60min`, fixture_stats / understat at `match_end_time`, weather at forecast-issue-time
+- [`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md)
+  — ML-directional event-settled archetype (sports prediction)
+- [`codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md)
+  — Market-making event-settled archetype
+- [`codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md)
+  — Rules-directional event-settled archetype
+- [`codex/09-strategy/architecture-v2/archetypes/event-driven.md`](../../codex/09-strategy/architecture-v2/archetypes/event-driven.md)
+  — Event-driven archetype foundation (cross-cutting; sports + predictions)
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
+## AI-day estimate
+
+- **Total**: ~10-12 ai-days net (XL umbrella; 112 todos enumerated, ~13% in-flight per 2026-05-07 audit).
+- **Workstream split**:
+  - Sports `data_available_at` → `available_at` rename Phases 2-4 + GCS migration: ~2 ai-days (Phase 1 shipped per
+    instruments-service@8050477; Phase 2 = operator-triggered GCE migration of millions of parquets)
+  - Sports honest-coverage Phases 1-2 + features-sports reconciler shipping: ~2 ai-days (legacy gap detector shipped per
+    features-sports@f123069; full reconciliation run + write-flips pending)
+  - Fixture truthset recovery — chain runner finalisation + dedup_phantom_after_recovery script: ~1.5 ai-days (~75% done
+    per audit)
+  - Phantom recon — SFI_STANDINGS + open-meteo + UAC date ranges: ~1 ai-day (operator decisions pending)
+  - 288M ODDS_API legacy row migration + MDPS bucketing: ~2 ai-days (scoped, not started)
+  - Sports MTDS slice to ≥99% (per-source ≥99% across all 6 source families): ~1.5 ai-days
+  - Sports predictions e2e (sports half — predictions ML half goes to predictions_master): ~1.5 ai-days
+- **Parallelism factor**: ~3x (the 6 sport sources have largely independent backfills; rename + honest-coverage +
+  recovery are independent workstreams). **~3-4 calendar days** wall-clock with 3+ parallel agents.
+- **Critical path to 2026-05-23 cutover**: features-pipeline-running (no live ML this cycle); rename Phase 2-4 +
+  honest-coverage Phase 2 are the gates that unblock features-pipeline. Live trading on sports is **post-May-23**;
+  master plan readiness floor is "DART manual-trade gate green" with batch features computing daily.
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)
@@ -88,14 +137,14 @@ Covers:
 
 ## Critical path
 
-| Workstream                                                         | Status                              | Source                                      |
-| ------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------- |
-| Sports `data_available_at` → `available_at` rename + GCS migration | Phase 1 shipped; Phase 2-4 pending  | `sports_data_available_at_rename`           |
-| Sports honest-coverage architecture (Phase 1+2)                    | Phase 1 partial                     | `features_sports_honest_coverage`           |
-| Fixture truthset recovery — chain runner + drift audit             | 75% done; operator action pending   | `sports_fixtures_truthset_recovery`         |
-| Phantom recon — SFI_STANDINGS + open-meteo + UAC date ranges       | partial; operator decisions pending | `sports_phantom_recon_and_failure_triage`   |
-| 288M ODDS_API legacy row migration + MDPS bucketing                | scoped; not started                 | `sports_predictions_e2e` (sports half)      |
-| Sports MTDS slice to ≥99%                                          | partial                             | `market_tick_data_to_100pct` (sports slice) |
+| Workstream                                                         | Status                              | Source                                      | Success gate                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sports `data_available_at` → `available_at` rename + GCS migration | Phase 1 shipped; Phase 2-4 pending  | `sports_data_available_at_rename`           | All sports parquets on disk carry the canonical `available_at` column; manifest entries reflect the rename; reader-side fallback path deleted; LookaheadBiasError fires correctly on stale `data_available_at`-only fixtures |
+| Sports honest-coverage architecture (Phase 1+2)                    | Phase 1 partial                     | `features_sports_honest_coverage`           | features-sports reconciler `--apply-flips` run completes; legacy null-reason `empty_confirmed` rows classified per UAC SSOT (`EXPECTED_PAUSED_LEAGUE` / `EXPECTED_PRE_SOURCE_COVERAGE_START` / `SOURCE_RETURNED_ZERO`)       |
+| Fixture truthset recovery — chain runner + drift audit             | 75% done; operator action pending   | `sports_fixtures_truthset_recovery`         | All 4 recovery VMs drained; `dedup_phantom_after_recovery.py` shipped + clean-run; phantom rate <1% per (league, source); chain runner emits `STARTED`+`PROCESSING_*` events for every fixture                               |
+| Phantom recon — SFI_STANDINGS + open-meteo + UAC date ranges       | partial; operator decisions pending | `sports_phantom_recon_and_failure_triage`   | `reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run` reports <0.5% phantom rate; UAC `SOURCE_COVERAGE_START` + `KNOWN_COVERAGE_GAPS` reflect every probed gap                                             |
+| 288M ODDS_API legacy row migration + MDPS bucketing                | scoped; not started                 | `sports_predictions_e2e` (sports half)      | Migration script ships per-VM-shard isolation; legacy rows re-keyed to canonical hive shape; MDPS bucketing reflects per-(league_id, day) instead of monolithic; coverage % unchanged post-migration (no data loss)          |
+| Sports MTDS slice to ≥99%                                          | partial                             | `market_tick_data_to_100pct` (sports slice) | data-status drilldown shows ≥99% per (source, data_type, league_id) within each league's `SOURCE_COVERAGE_START` clip; residual stamped with typed `EMPTY_CONFIRMED_REASONS`                                                 |
 
 ## Consolidated todos (P0/P1 only)
 
