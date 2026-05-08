@@ -94,9 +94,9 @@ related_plans:
   - **§ Add `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` to UAC**: FRESH. Verified neither code
     present in `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` (which is the actual home of
     `EmptyConfirmedReason` StrEnum + `EMPTY_CONFIRMED_REASONS` frozenset). The canonical module is
-    `unified_api_contracts.canonical.crosscutting.honest_coverage` (StrEnum + frozenset both exported there); any
-    legacy reference to `crosscutting.empty_confirmed_reasons` is stale and superseded by `honest_coverage`. Plan body
-    below uses the canonical path.
+    `unified_api_contracts.canonical.crosscutting.honest_coverage` (StrEnum + frozenset both exported there); any legacy
+    reference to `crosscutting.empty_confirmed_reasons` is stale and superseded by `honest_coverage`. Plan body below
+    uses the canonical path.
   - **§ C.8 footystats normalizer audit**: FRESH. Verified `external/footystats/normalize.py` exists.
   - **§ C.8 understat normalizer audit**: FRESH. Verified `external/understat/normalize.py` exists.
   - **§ C.8 SFI normalizer audit**: FRESH. Verified `external/soccer_football_info/normalize.py` exists.
@@ -125,6 +125,14 @@ related_plans:
     bullet list above.
 
 # Manifest Migration Master — cross-plan dependency sequencer
+
+> **🟡 IN-FLIGHT REFACTOR — GCS migration bundle 2026-05-08**
+>
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) bundles the
+> `pipeline_mode=` partition addition + `category=` → `asset_group=` rekey + 5-drift-axis cleanup into a SINGLE
+> overnight GCS walk. **This plan's Stage 1+2+3 must land BEFORE the bundle's Phase 3 starts** so we don't bundle work
+> still in flight elsewhere. The bundle's Phase 0 § (f) coordination check explicitly verifies which Stage 4 items are
+> in scope. Stage 4 residual sweeps coordinate with the bundle's Phase 6 (residual phantom cleanup).
 
 ## Why this exists
 
