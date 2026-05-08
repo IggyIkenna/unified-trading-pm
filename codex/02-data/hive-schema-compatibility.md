@@ -70,42 +70,32 @@ Hive/Presto/Athena, and migrate services incrementally with short-term dual sche
 
 ## Partitioning Strategy
 
-### Hive-Style Partitioning: `/year=YYYY/month=MM/day=DD/`
+> **SSOT pointer**: canonical per-asset-group path templates + hive-key vocabulary (`asset_group=` canonical vs
+> `category=` legacy) + reader fallback discipline live in
+> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). This section retains only the parquet+BQ
+> rationale specific to hive-compatible partitioning; for the per-service path templates and shard-atom shapes per
+> asset_group, consult the per-category-bucket-layouts SSOT.
 
-**Current style:** `/2024/02/12/`
+### Why hive-style partitioning (parquet + BigQuery rationale)
 
-**Hive style:** `/year=2024/month=02/day=12/`
+The workspace standardised on hive-style partition keys (`day=YYYY-MM-DD`, `venue=BINANCE`, `data_type=trades`) over
+positional partitioning (`/2024/02/12/...`) because hive-style is self-describing in the path AND is the partition
+syntax BigQuery's external-table reader expects without further configuration. The same parquet files on GCS are
+queryable as BigQuery external tables (cost-optimised — pay GCS storage rates instead of BQ storage rates) precisely
+because the partition key/value pairs are encoded in the directory names.
 
-**Why Hive style:**
-
-- **Metadata visibility:** Partition keys are self-describing
-- **Easier queries:** `SELECT * FROM table WHERE year=2024 AND month=02`
-- **Standard:** Expected by Hive, Presto, Athena
-
-**Example path:**
-
-```
-gs://unified-trading-market-data/
-  tick_data/
-    instrument=BTC-PERP/
-      year=2024/
-        month=02/
-          day=12/
-            part-00000.parquet
-            part-00001.parquet
-```
-
-**Partition dimensions:**
-
-1. **Date:** `year`, `month`, `day` (mandatory for all time-series data)
-2. **Instrument:** `instrument=BTC-PERP` (optional, for multi-instrument datasets)
-3. **Venue:** `venue=binance` (optional, for multi-venue datasets)
+- **Metadata visibility:** Partition keys are self-describing.
+- **Easier queries:** `SELECT * FROM table WHERE day='2024-02-12' AND venue='BINANCE'`.
+- **External-tool standard:** Expected by Hive, Presto, Athena, BigQuery external tables.
+- **Pruning:** Query engines skip partitions that don't match the WHERE clause without reading parquet footers.
 
 **Trade-off:**
 
-- **More partitions → Faster queries** (scan fewer files)
-- **More partitions → Slower writes** (more directories to manage)
-- **Recommendation:** Partition by date + instrument (if <100 instruments)
+- **More partitions → Faster queries** (scan fewer files).
+- **More partitions → Slower writes** (more directories to manage).
+- **Recommendation:** Use the per-asset-group shard-atom shapes documented in
+  [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md); they encode the workspace's chosen partition
+  cardinality per asset_group + data_type.
 
 ---
 

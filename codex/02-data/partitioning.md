@@ -53,23 +53,11 @@ gs://{bucket}/{prefix}/by_date/day={date}/{additional_dimensions}/{filename}.par
 
 ### Path Templates by Service
 
-| Service                                            | Bucket Template                    | Path Template                                                                                                             |
-| -------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| instruments-service                                | `instruments-store-{cat}-{proj}`   | `instrument_availability/by_date/day={date}/instruments.parquet`                                                          |
-| features-calendar-service (corporate-actions data) | `features-calendar-{proj}`         | `corporate_actions/by_date/day={date}/`                                                                                   |
-| market-tick-data-service                           | `market-data-tick-{cat}-{proj}`    | `raw_tick_data/by_date/day={date}/data_type={data_type}/instrument_type={asset_group}/venue={venue}/{instrument}.parquet` |
-| market-data-processing                             | `market-data-tick-{cat}-{proj}`    | `processed_candles/by_date/day={date}/timeframe={timeframe}/data_type={data_type}/{asset_group}/{instrument}.parquet`     |
-| features-delta-one                                 | `features-delta-one-{cat}-{proj}`  | `by_date/day={date}/feature_group={feature_group}/timeframe={timeframe}/{instrument}.parquet`                             |
-| features-volatility                                | `features-volatility-{cat}-{proj}` | `by_date/day={date}/feature_group={feature_group}/timeframe={timeframe}/{underlying}.parquet`                             |
-| features-onchain                                   | `features-onchain-{proj}`          | `by_date/day={date}/feature_group={feature_group}/features.parquet`                                                       |
-| features-calendar                                  | `features-calendar-{proj}`         | `calendar/category={type}/by_date/day={date}/features.parquet`                                                            |
-| features-sports                                    | `features-sports-{proj}`           | `by_date/day={date}/feature_group={feature_group}/horizon={horizon}/{fixture}.parquet`                                    |
-| ml-training (stage 1)                              | `ml-training-artifacts-{proj}`     | `stage1-preselection/model-{model_id}/training-period-{period}/selected_features.json`                                    |
-| ml-training (stage 2)                              | `ml-training-artifacts-{proj}`     | `stage2-hyperparams/model-{model_id}/training-period-{period}/best_hyperparams.json`                                      |
-| ml-training (final)                                | `ml-models-store-{proj}`           | `models/{model_id}/training-period-{period}/model.joblib`                                                                 |
-| ml-inference                                       | `ml-predictions-store-{proj}`      | `predictions/{mode}/{date}/`                                                                                              |
-| strategy-service                                   | `strategy-store-{proj}`            | `strategy_instructions/strategy_id={strategy_id}/day={date}/instructions.parquet`                                         |
-| execution-service                                  | `execution-store-{proj}`           | `results/date={date}/strategy_id={strategy_id}/instruction_type={type}/run_id={run_id}/`                                  |
+> **SSOT pointer**: per-service path templates + per-asset-group divergences live in
+> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). That doc is the canonical SSOT for bucket
+> templates (cefi / tradfi / defi / sports / prediction / instruments / features / ml / strategy / execution), shard
+> atom shapes per asset_group, hive-vocab compatibility (`category=` legacy vs `asset_group=` canonical), and reader
+> fallback discipline. Consult it before adding or modifying any path-template assumption in code.
 
 ---
 

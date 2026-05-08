@@ -26,23 +26,12 @@ end-to-end coverage.
 
 ## 0. Bucket Topology (ground truth from GCS, 2026-05-06)
 
-Per-asset-group buckets — there is no monolithic store:
-
-| Service             | Bucket pattern                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| instruments-service | `instruments-store-{ag}-central-element-323112`                                                              |
-| MTDS (raw tick)     | `market-data-tick-{ag}-central-element-323112` under `raw_tick_data/by_date/`                                |
-| MDPS (processed)    | **same MTDS bucket**, under `processed_candles/by_date/` (cefi/tradfi/defi) or `processed/by_date/` (sports) |
-
-### Hive-key drift on disk (live, currently)
-
-| Asset group        | Partition format                                                                                              | Status                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| cefi, defi         | `day=YYYY-MM-DD/asset_group={ag}/venue=…/instrument_type=…/data_type=…`                                       | canonical                                              |
-| sports, prediction | `day=YYYY-MM-DD/category={ag}/…`                                                                              | legacy on 100% of disk; readers rely on regex fallback |
-| tradfi             | `day-YYYY-MM-DD/data_type-…/instrument_type/venue/` (dashes, no `asset_group=`, instrument_type before venue) | non-Hive — schema diverges                             |
-
-Migration off `category=` for sports/prediction and re-Hive of tradfi are open follow-ups.
+> **SSOT pointer**: per-asset-group bucket patterns + path templates + hive-key vocabulary (canonical `asset_group=` vs
+> legacy `category=` + tradfi non-Hive shape) + per-asset-group migration status live in
+> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). This doc focuses on the per-service coverage
+> matrix (which service writes which `(asset_group, data_type, day)` tuple) and the manifest index files + consolidator
+> topology below — for "what does the path look like on disk for asset_group X" consult the per-category-bucket-layouts
+> SSOT.
 
 ### Manifest index files (per bucket)
 
