@@ -228,6 +228,92 @@ All three bugs resolved. Status: ✅ RESOLVED.
 
 ---
 
+## VALIDATION-2026-05-08 — Tab 9 (lending-indices-relaunch-tab)
+
+End-to-end validation of all three bugs via VM `mtds-lending-indices-20260508-114519`
+(launched 2026-05-08 06:15 UTC, STARTED 06:18 UTC, range 2022-01-01..2026-05-07).
+At T+123min (08:18 UTC) the per-VM shard had processed dates
+**2022-01-01 → 2023-03-20** (5,772 manifest rows) and is still RUNNING — the
+critical AAVE V3 ETH boundary at 2023-01-27 has been crossed.
+
+### Per-(venue, chain) outcome at T+123min
+
+| venue / chain         | captured | empty_confirmed | verdict                                                   |
+| --------------------- | -------- | --------------- | --------------------------------------------------------- |
+| AAVEV3 / ARBITRUM     | 370      | 74              | ✅ unchanged — L2 cohort 2022-03-16 launch                  |
+| AAVEV3 / AVALANCHE    | 371      | 73              | ✅ unchanged — L2 cohort 2022-03-16 launch                  |
+| AAVEV3 / OPTIMISM     | 371      | 73              | ✅ unchanged — UAC says 2022-08-04, real subgraph 2022-03-15 |
+| AAVEV3 / POLYGON      | 373      | 71              | ✅ unchanged — L2 cohort 2022-03-16 launch                  |
+| **AAVEV3 / ETHEREUM** | **53**   | 391             | ✅ **Bug 1 RESOLVED** — captured dates start exactly 2023-01-27 (53 captured rows post-launch over 2023-01-27 → 2023-03-20). UAC fix end-to-end verified by real subgraph data. |
+| AAVEV3 / BASE/LINEA/BSC | 0      | 444 each        | ✅ correct pre-launch (UAC: 2023-08-09 / 2024-09-26 / 2023-04-06)              |
+| COMPOUNDV3 / ETHEREUM | 208      | 236             | ✅ Bug 2 baseline preserved — captured starts 2022-08-25 launch boundary       |
+| COMPOUNDV3 / ARB/BASE/OPT | 0    | 444 each        | ⏳ correct pre-launch so far (UAC: 2023-04-13 / 2023-08-26 / 2024-02-15) — VM not yet at post-launch dates; defer Bug 2 multi-chain post-launch verdict to next run with new tarballs |
+| SPARK / ETHEREUM      | 1        | 443             | ✅ first captured row appears at the Spark mainnet boundary (2023-03-20)        |
+
+### Boundary verification — AAVE V3 ETHEREUM 2023-01-25 → 2023-02-05
+
+| date       | capture_status   | error_reason         |
+| ---------- | ---------------- | -------------------- |
+| 2023-01-25 | empty_confirmed  | SOURCE_RETURNED_ZERO |
+| 2023-01-26 | empty_confirmed  | SOURCE_RETURNED_ZERO |
+| **2023-01-27** | **captured** | (none)               |
+| 2023-01-28 | captured         | (none)               |
+| 2023-01-29 | captured         | (none)               |
+| 2023-01-30 | captured         | (none)               |
+| 2023-01-31 | captured         | (none)               |
+| 2023-02-01..02-05 | captured  | (none)               |
+
+The boundary lines up exactly with the 2023-01-27 08:00:11 UTC subgraph probe finding. UAC fix
+verified.
+
+### Done-definition checklist (per spawn-prompt + A1)
+
+- [x] **VM launched + STARTED event observed within ~3min of launch** (06:15 → STARTED 06:18 UTC).
+- [x] **AAVE V3 ETH writes captured rows post-launch** (53 captured rows over 2023-01-27 → 2023-03-20,
+      first at exactly 2023-01-27).
+- [x] **Compound V3 writes captured rows post-launch** (COMPOUND V3 ETH: 208 captured rows starting at
+      2022-08-25 mainnet boundary).
+- [⏳] **Compound V3 multi-chain (ARB/BASE/OPT) post-launch captured rows** — VM has not yet reached
+      ARB launch (2023-04-13). Per the issue body's original Bug 2 framing, the cascade-extension fix
+      from Tab 5 (`mtds@d2f365e`) routes schema-drift errors to `attempted_failed`. Defer empirical
+      verification to a future VM run with the refreshed tarballs (Tab 9 has shipped + verified all the
+      code paths via unit tests; the live multi-chain run is operator-owned).
+- [⚠️] **Pre-launch dates show `EXPECTED_PRE_GENESIS_CHAIN` not `SOURCE_RETURNED_ZERO`** — only partially
+      met. The currently-running VM was launched BEFORE the tarball refresh, so it's still using the
+      pre-fix code (every pre-launch date in the table above shows `error_reason=SOURCE_RETURNED_ZERO`).
+      The new short-circuit is verified by 2 unit tests in `test_lending_indices_handler.py`
+      (`test_process_skips_subgraph_for_pre_launch_date`, `test_process_runs_subgraph_for_post_launch_date`)
+      AND tarballs were refreshed at 07:00 UTC so any future relaunch picks it up. **Recommended**:
+      operator decides whether to stop+relaunch this VM with the new tarball (clean
+      `EXPECTED_PRE_GENESIS_CHAIN` taxonomy in the manifest) or accept the current
+      `SOURCE_RETURNED_ZERO` rows and reconcile via a future rerun. Post-launch captured rows are
+      identical between the two paths — the only difference is the empty-row taxonomy.
+- [x] **Status note appended to this issue doc** — this VALIDATION-2026-05-08 block.
+- [x] **No 🟡 BLOCKED on the Bug 1 reproducer** — Bug 1 was a UAC SSOT misdiagnosis; fixed end-to-end.
+      Q2 (PM push deferred) was operator-resolved 07:18 UTC (rebase deferred to a later batch).
+
+### Commits
+
+* `unified-api-contracts@6a64a56` — UAC SSOT correction (`("ETHEREUM","AAVEV3")` → `2023-01-27`) + test
+  updated. PUSHED.
+* `instruments-service@6ae50de` — `TestGetProtocolFloorDate` test updated to assert corrected floor.
+  PUSHED.
+* `market-tick-data-service@c6bdf96` — pre-floor-date short-circuit in
+  `lending_indices_handler.process()` + 2 new unit tests passing. PUSHED.
+* `unified-trading-pm@69ebe5b` — issue body reframing (Bug 1 = UAC SSOT misdiagnosis; Bugs 1+3 ✅
+  RESOLVED) + Q2 (push-blocked). LOCAL ONLY (Q2 operator-deferred — push will follow the rebase batch
+  per `_agent_pings.md` 07:18 UTC ack).
+* `unified-trading-pm@<this-commit>` — VALIDATION-2026-05-08 block. LOCAL ONLY (same Q2 path).
+
+### Tarball refresh
+
+* `gs://deployment-scripts-central-element-323112/code/*.tar.gz` refreshed 2026-05-08 07:00 UTC
+  with all 3 code commits. Future DeFi VM launches pick up the fix automatically.
+
+Tab 9 ships + goes quiet per the spawn-prompt close-out clause.
+
+---
+
 ## Open questions
 
 ### Q1 — [lending-indices-relaunch-tab, 2026-05-08 06:35 UTC] — Bug 1 NOT validated by Tab 9 relaunch; UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` likely wrong
