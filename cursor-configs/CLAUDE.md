@@ -1008,16 +1008,37 @@ matching plan flip, and reject sessions that have stale uncommitted work older t
 
 ## CI Verification After Every Push (HARD RULE)
 
-Every `git push` triggers remote CI on the affected repo. The repo's CI bot reports pass/fail to Telegram. **Anytime you
-commit and push, you MUST verify CI passed on the remote** — this is non-negotiable, applies to every repo, every push,
-every session.
+Every `git push` to a branch that **triggers remote CI** MUST be verified — the repo's CI bot reports pass/fail to
+Telegram. Verification is non-negotiable when CI runs; it's how we catch platform-specific failures (Python version
+drift, missing deps in CI image, network-blocked tests, etc.) before they rot the workspace.
+
+### Which pushes trigger CI (per current workflow trigger config)
+
+Per `.github/workflows/quality-gates.yml` and the existing branch policy ("feat/\* → QG only, no PR. staging →
+convergence. main → always stable"):
+
+- **Pushes to `main`** → trigger Quality Gates + downstream workflows. **Always verify.**
+- **Pull requests targeting `main`** → trigger Quality Gates on the PR head. **Verify on PR open + each new commit.**
+- **Pushes to `live-defi-rollout` and other `feat/*` feature branches** → **DO NOT trigger remote CI**. Quality is
+  enforced **locally** via `bash scripts/quality-gates.sh` before push, per the per-shippable-unit commit cadence in
+  the rule above.
+
+For feature-branch pushes the watcher's job is lighter: confirm the push landed on origin
+(`git rev-list --left-right --count HEAD...origin/<branch>` returns `0 0`) and stop. No CI run to wait for; no failure
+to diagnose. The merge-to-main step (via `quickmerge`'s eventual promotion or a manual `staging` PR) is when the full
+CI gate fires — watcher discipline kicks in fully at that step.
+
+If the workflow trigger config changes (e.g. CI starts firing on `live-defi-rollout` pushes), this section + the
+workflow yaml become the joint SSOT — update both in lockstep so the rule stays accurate.
 
 ### The discipline
 
-1. **Push.** That's the trigger.
-2. **Set up a background CI watcher** — spin up a sub-agent OR set a `ScheduleWakeup` timer for ~3-5 min after push to
-   check `gh run list --branch <branch> --repo <owner>/<repo> --limit 5` (or equivalent) for the latest run's status.
-   While the watcher runs, you proceed with other work — no blocking.
+1. **Push.** If pushing to a CI-triggering branch (`main` direct, or PR commits to `main`), CI runs. If pushing to
+   `live-defi-rollout` or other `feat/*`, CI does NOT run — confirm the push landed on origin
+   (`git rev-list --left-right --count HEAD...origin/<branch>` returns `0 0`) and stop here.
+2. **Set up a background CI watcher** (only when CI runs, per step 1) — spin up a sub-agent OR set a `ScheduleWakeup`
+   timer for ~3-5 min after push to check `gh run list --branch <branch> --repo <owner>/<repo> --limit 5` (or
+   equivalent) for the latest run's status. While the watcher runs, you proceed with other work — no blocking.
 3. **On CI pass**: nothing more required.
 4. **On CI fail**:
    - **Diagnose via remote logs first** — `gh run view <run-id> --log-failed --repo <owner>/<repo>`. The failure reason

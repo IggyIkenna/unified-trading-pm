@@ -27,4 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-[2026-05-08 07:30 UTC] deploy-missing-iam-proposal-tab — Tab 13 DRAFT shipped (3 proposals + DONE block); push blocked on PM (2 incoming) — see deploy_missing_auto_launch_2026_05_07.plan.md ## Open questions Q1
+_(empty — Tab 13 ✅ DONE 07:35 UTC; Tab 14 STARTED ping ack'd 07:36 UTC (clean boot, no flags). Tabs 2, 9, 11, 14 IN FLIGHT. Tab 12 still QUEUED.)_

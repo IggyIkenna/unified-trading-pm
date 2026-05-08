@@ -1261,13 +1261,20 @@ DONE-DEFINITION:
 REPORT-BACK: ≥8 small commits (1 per service); push per conditional rule.
 ````
 
-#### Tab 13 — deploy_missing Phase 0 IAM proposal draft 🟡 QUEUED (draft-only, ~1-2h, PM only)
+#### Tab 13 — `deploy-missing-iam-proposal-tab` ✅ DONE 2026-05-08 (draft-only, PM only)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 13 tasks"_.
-
-**Why now**: Tab 4 deferred this to avoid pre-empting operator decisions. Drafting the proposal now lets
-operator sign off (or amend) without an extra round-trip. Unblocks deploy_missing Phase 2 (the actual
-auto-launch endpoint that uses Tab 4's tarball-staleness helper + Tab 3's deployment-api endpoints).
+- **Verified by main 2026-05-08 07:35 UTC** — Tab 13's commits rebased onto origin cleanly (no file overlap
+  with the 2 incoming `98f1e16` + `6e952b6`). Tab 13's local-ahead SHAs after rebase: `6d44c73` + `fdc0bb9`.
+  Push lands in main's next push (this commit).
+- **Output** (no code changes — pure draft for operator review):
+  - New section `### Phase 0 — IAM scope + audit log + rate limit proposal (DRAFT for operator review)`
+    in deploy_missing plan body, between original Phase 0 todos and Phase 1.
+  - **Proposal 1 (IAM scope)**: custom role `roles/customDeployMissingLauncher` with zone/subnet/
+    image-family/runtime-SA scoping + per-launcher allow-list, vs blanket `roles/compute.instanceAdmin.v1`.
+  - **Proposal 2 (audit-log shape)**: schema dataclass + storage backend recommendation + retention.
+  - **Proposal 3 (rate-limit ceiling)**: per-operator-per-hour + project-wide numbers + 429 response shape.
+- **Phase 0 todos correctly left unchecked** until operator signs off on the proposals.
+- **Unblocks**: deploy_missing Phase 2 (auto-launch endpoint) once operator picks IAM granularity.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
@@ -1327,14 +1334,19 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (proposal section); push per conditional rule.
 ````
 
-#### Tab 14 — defi_master Fork 1 prep audit 🟡 QUEUED (P0 risk mitigation, ~2-3h, diagnostic)
+#### Tab 14 — `defi-fork1-prep-audit-tab` 🟢 IN FLIGHT (P0 risk mitigation, ~2-3h, diagnostic)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 14 tasks"_.
+- **Started**: 2026-05-08 07:30 UTC (STARTED ping ack'd 07:36 UTC; clean boot, no flags).
+- **Plan-of-record**: `defi_master_2026_05_07.plan.md` Fork 1 → output is a new
+  `plans/active/issues/defi_fork1_prep_audit_2026_05_08.md` issue doc.
+- **Scope**: 4-bug-class diagnostic audit on defi_master Fork 1 surface — Bug class 1 (silent-zero), Bug
+  class 2 (schema drift), Bug class 3 (launch-date floor handling), and **Bug class 4 (UAC PROTOCOL_LAUNCH_DATES
+  date drift, added per Tab 9's discovery)**. Critical pairs: AAVEV3 / BASE-LINEA-BSC-METIS-GNOSIS;
+  COMPOUNDV3 / all 4 chains; SPARK / ETHEREUM.
 
-**Why now**: Validates Tab 5's lending-indices fixes end-to-end on a sample query before Ikenna's D4 DeFi
-launches. Tab 9's relaunch validates the fix on a single VM run; Tab 14 audits the broader Fork 1 surface
-(Pyth Hermes, Chainlink multi-chain, Aave V3 Polygon/Arbitrum/Base in addition to ETH, Uniswap V3 swap
-fees, LST yields jitoSOL/mSOL/bSOL) for similar bug classes BEFORE D4 triggers a full backfill.
+**Why now**: Validates Tab 5's + Tab 9's lending-indices fixes end-to-end on the broader Fork 1 surface
+before Ikenna's D4 DeFi launches. Tab 9 already proved the AAVE V3 ETH case + handler short-circuit; Tab 14
+catches similar UAC SSOT date drift pattern across the OTHER (chain, protocol) pairs.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 

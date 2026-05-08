@@ -37,7 +37,9 @@ related:
 ## Open questions
 
 ### Q1 — [deploy-missing-iam-proposal-tab, 2026-05-08 07:30 UTC] — Push blocked: 2 incoming on origin/live-defi-rollout
-**Status**: 🟡 BLOCKED — main + operator pick rebase / merge / cherry-pick / drop
+**Status**: ✅ RESOLVED — main rebased the local stack cleanly (zero file overlap with the 2 incoming).
+Tab 13's commits are now `6d44c73` + `fdc0bb9` (rebased SHAs); push will go through in main's next push (this commit).
+Tab 13 going quiet per spawn protocol; no further action needed.
 
 PM origin/live-defi-rollout advanced by 2 commits (`98f1e16` plan(work_split):
 codify UAC chain_env.py SSOT handshake, `6e952b6` docs(plans): file issue 13 —
