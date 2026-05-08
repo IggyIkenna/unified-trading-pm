@@ -640,7 +640,7 @@ drift.
 
 ### Phase D.3 — Multi-axis correction body-text reconciliation — SEQUENTIAL after A.1, A.2 — P0
 
-- [ ] [SCRIPT] P0. **Resolved 2026-05-08 (Q1)**: banner is canonical. `fixture_id` (sports) and `market_id` (prediction)
+- [x] [SCRIPT] P0. **Resolved 2026-05-08 (Q1)**: banner is canonical. `fixture_id` (sports) and `market_id` (prediction)
       are row-level columns for UI display, NOT hive-partition shard axes. Verified independently via: (i) writegate
       plan line 98 (`fixture_id (display-axis only)`), (ii) writegate plan line 395 (`SPORTS_FIXTURE_CLUSTERS` is
       per-fixture aggregate cluster — clusters live inside files), and (iii) GCS reality at
@@ -650,18 +650,34 @@ drift.
       **No data migration needed.** Disk shape already matches banner. This phase
       is a doc-only sweep removing stale body text in 02-data.
 
+      **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
+      cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
+      commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
+      different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
+      bundled my staged D.3 hunks into their B.3 commit). Verify via
+      `git show c2bc6cd5 -- codex/02-data/availability-manifest-and-data-status.md codex/02-data/per-category-bucket-layouts.md codex/02-data/prediction-schema-paths.md`.
+      Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
+      corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
+      CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
+      `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
+      `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
+      scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
+      phases or follow-up).
+
   **Files to sweep**:
-  - [ ] `02-data/sports-scheduling-and-sharding.md:55-56` — delete the "Per-fixture shard atom" line claiming
-        `(asset_group=sports, source,     data_type, league_id, fixture_id, day)`. Replace with: shard atom is
-        `(asset_group=sports, source, data_type, league_id, day)`; `fixture_id` is a row-level column inside the
-        parquet; per-fixture cluster validation via UAC `SPORTS_FIXTURE_CLUSTERS` (greenfield).
-  - [ ] `02-data/availability-manifest-and-data-status.md:198-201` — same restatement to delete; add cross-link to the
-        cluster-validation rule.
-  - [ ] `02-data/per-category-bucket-layouts.md:101` — replace "per-fixture path" claim with the per-(league, day) path;
-        note that `fixture_id` rows are inside the file. (This file also gets renamed in Phase E.4.)
-  - [ ] `02-data/prediction-schema-paths.md:114` — replace `market_id` shard-axis claim with row-level column; note that
-        per-`canonical_question_group` cluster validation expects N market_ids (HOURLY=24 / DAILY=1 / ELECTION=1) within
-        the file.
+  - [x] `02-data/sports-scheduling-and-sharding.md` § 1 — already cleaned up at HEAD before D.3 started (parallel agent
+        landed it earlier this session); body now states banner-canonical
+        `(asset_group=sports, source, data_type, league_id, day)` with `fixture_id` as row-level column +
+        cluster-validation cross-link.
+  - [x] `02-data/availability-manifest-and-data-status.md` (sports paragraph + predictions-migration paragraph) —
+        replaced both stale shard-atom claims (sports + prediction) with banner-canonical shapes; cluster-validation
+        cross-link via `SPORTS_FIXTURE_CLUSTERS` + `PREDICTION_GROUPS` (commit `c2bc6cd5`).
+  - [x] `02-data/per-category-bucket-layouts.md` (lines 71 + 73 — table sibling rows) — replaced both SPORTS-post-target
+        and PREDICTION-post-target rows with banner-canonical paths (no `fixture=` / no `{market_id}.parquet`) +
+        row-level-column body text (commit `c2bc6cd5`).
+  - [x] `02-data/prediction-schema-paths.md` § Target (post-Plan A) — replaced `market_id` shard-axis claim with
+        row-level column; per-`canonical_question_group` cluster validation expects N market_ids per cadence (HOURLY=24
+        / DAILY=1 / ELECTION=1) INSIDE the file (commit `c2bc6cd5`).
 
   **Acceptance**: workspace-wide grep `(asset_group=sports.*fixture_id.*day)` and
   `(asset_group=prediction.*market_id.*day)` shard-axis claims return zero hits in codex/. CLAUDE.md "Per-asset-group
