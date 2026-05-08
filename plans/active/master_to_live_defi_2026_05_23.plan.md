@@ -3,7 +3,7 @@ plan_type: meta
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-06
-last_updated: 2026-05-06
+last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 name: master-to-live-defi-2026-05-23
@@ -23,7 +23,32 @@ overview:
   start writing code in the affected area.
 ---
 
-# Master Plan — Live DeFi Trading by 2026-05-23
+# May-23 Cutover Master — Live DeFi Trading by 2026-05-23
+
+## Epics index (May-23 cutover, restructured 2026-05-08)
+
+This plan is the **umbrella of epics**. Six domain epics + one cross-cutting epic carry the May-23 deliverables:
+
+| Epic                                                                                | May-23 scope         | Live/Batch |
+| ----------------------------------------------------------------------------------- | -------------------- | ---------- |
+| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet  | Live       |
+| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital | Live       |
+| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only        | Batch      |
+| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only        | Batch      |
+| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only        | Batch      |
+| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only        | Batch      |
+| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide       | Both       |
+
+Read [`plans/epics/README.md`](../epics/README.md) for the layer model + lifecycle. Each epic enumerates its sub-plans;
+this master plan retains the cross-master readiness checklist + audit + Q&A below.
+
+**Migration note (2026-05-08).** The 9 domain umbrella masters (`cefi_master`, `tradfi_master`, `sports_master`,
+`predictions_master`, `ml_and_features_master`, `strategy_and_dart_master`, `infrastructure_master`,
+`manifest_migration_master`, `instruments_live_master`) were moved from `plans/active/` to `plans/epics/` — references
+throughout the workspace updated in the same commit. `defi_master_2026_05_07` stays in `plans/active/` per operator
+direction (mid-flight + parallel-agent sensitivity).
+
+---
 
 ## What this plan is — three deliverables in one doc
 
@@ -771,8 +796,8 @@ a Group F item; ownership routes to the named agent/tab.
       tuple-typed required_inputs / (c) namespaced names. Currently deferred. Gates features-sports-service consumer
       migration (Phase 2A of ml_and_features_master) which in turn gates the `assert_no_lookahead_for_feature_group`
       helper from silently no-oping on sports calculators. Owner: operator + Agent 2 (writegate / consumer-migration).
-      Already filed in [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.plan.md) Phase 1A.3; this
-      todo is the cross-tab visibility marker against May-23 critical path.
+      Already filed in [`ml_and_features_master_2026_05_07`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase
+      1A.3; this todo is the cross-tab visibility marker against May-23 critical path.
 - [ ] [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
       Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the DeFi side per
       `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end. Owner: Agent 4

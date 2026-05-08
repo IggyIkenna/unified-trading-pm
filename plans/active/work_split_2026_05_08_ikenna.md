@@ -308,9 +308,10 @@ rollup-vs-drilldown denominator-divergence (codex SSOT codified 2026-05-07).
 **Plan-of-record**:
 [`gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
 
-- [`manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md)
+- [`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
 - [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
-  3.D.4 v2 + [`infrastructure_master_2026_05_07.plan.md`](infrastructure_master_2026_05_07.plan.md) v6→v7 schema.
+  3.D.4 v2 + [`infrastructure_master_2026_05_07.plan.md`](../epics/infrastructure_master_2026_05_07.plan.md) v6→v7
+  schema.
 
 **Scope (5 items, P0)**:
 
@@ -348,7 +349,7 @@ rescan VM operation to Harsh Tab 4.
 - CLAUDE.md sections: "Manifest migration, NOT fallback" rule, "Honest absence vs fake placeholders", "Per-VM shard
   isolation for concurrent backfills", "Manifest concurrency principle", "Manifest phantom audit"
 - [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
-- [`plans/active/manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md)
+- [`plans/epics/manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
 - [`codex/02-data/pipeline-mode-partition.md`](../../codex/02-data/pipeline-mode-partition.md)
 - [`codex/02-data/chunk-safe-manifest-migrations.md`](../../codex/02-data/chunk-safe-manifest-migrations.md)
@@ -716,7 +717,7 @@ BEFORE doing anything else, read in order:
      § "Manifest concurrency principle", § "Manifest phantom audit".
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 3 — GCS migration + manifest cluster".
   3. plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md (primary).
-  4. plans/active/manifest_migration_master_2026_05_07.plan.md.
+  4. plans/epics/manifest_migration_master_2026_05_07.plan.md.
   5. plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md § Phase 3.D.4 v2.
 
 Your agent-tag: gcs-manifest-migration-tab. Your tab number: 3.

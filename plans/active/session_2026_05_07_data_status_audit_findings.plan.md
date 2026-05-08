@@ -103,12 +103,12 @@ correctly. If anything regressed (or new findings surface), they extend this tra
 
 ## References
 
-- `plans/active/sports_master_2026_05_07.plan.md` — owner of B.1 + C.2/C.3/C.4/C.6/C.7/C.10
-- `plans/active/predictions_master_2026_05_07.plan.md` — owner of C.12 (POLYMARKET migration)
+- `plans/epics/sports_master_2026_05_07.plan.md` — owner of B.1 + C.2/C.3/C.4/C.6/C.7/C.10
+- `plans/epics/predictions_master_2026_05_07.plan.md` — owner of C.12 (POLYMARKET migration)
 - `plans/active/defi_master_2026_05_07.plan.md` — owner of C.9 (AAVE_V3 phantom rows)
-- `plans/active/manifest_migration_master_2026_05_07.plan.md` — owner of C.1 + C.8 + C.11 (refdata cadence +
-  cross-source flatten)
-- `plans/active/infrastructure_master_2026_05_07.plan.md` — owner of B.2 (deployment-ui drill-down)
+- `plans/epics/manifest_migration_master_2026_05_07.plan.md` — owner of C.1 + C.8 + C.11 (refdata cadence + cross-source
+  flatten)
+- `plans/epics/infrastructure_master_2026_05_07.plan.md` — owner of B.2 (deployment-ui drill-down)
 - `plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — folded into B.2 owner
 - `plans/ai/api_football_minimal_flattening_removal_2026_05_07.plan.md` — folded into B.1 owner
 - Live deployment-ui screenshots inspected this session (FIXTURE_STATS, FIXTURE_LINEUPS, ODDS, LEAGUES, PLAYER_VALUES,

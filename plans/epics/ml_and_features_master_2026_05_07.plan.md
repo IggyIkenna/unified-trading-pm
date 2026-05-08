@@ -32,16 +32,17 @@ locked_since: 2026-05-07
 
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation + live-pipeline activation 2026-05-08**
 >
-> [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.plan.md) merges the 8 separate
-> features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that plan
-> lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate)
-> into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership: this plan owns
-> FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
+> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.plan.md) merges the 8
+> separate features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that
+> plan lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN
+> write-gate) into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership:
+> this plan owns FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) builds on the
-> consolidated repo for live-mode features compute. This plan's batch features compute work continues in parallel.
-> Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide parquet for
-> ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship pre-May-23.
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md) builds
+> on the consolidated repo for live-mode features compute. This plan's batch features compute work continues in
+> parallel. Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide
+> parquet for ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship
+> pre-May-23.
 
 > **Consolidation 2026-05-07**: this umbrella folds 4 previously-standalone plans
 > (`feature_dag_uac_ssot_and_features_coverage` / `features_consolidation_and_drilldown` /
@@ -144,9 +145,9 @@ Phase 5 (phantom audit + sanity replay)
 
 **Upstream sibling-blocker.** Phase 2A consumer migration depends on adapter-side `available_at` write-time stamping
 landing across the per-source MDPS / MTDS / features-input adapter surface. That stamping work is owned by
-[`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase 2.D
-(per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage exists
-today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
+[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
+2.D (per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage
+exists today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
 migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progressing.
 
 - **Phase 1A** (UAC `FEATURE_REQUIRED_INPUTS` SSOT): 1-day pure-win, gates writegate's `LookaheadBiasError`
@@ -246,16 +247,15 @@ so whichever direction the operator picks, the next agent (or this one) can ship
 proposal: the per-service wire-in approach itself is no longer the plan.
 
 **Why deferred** — Ikenna's plan-consolidation work (PM@`78918e1` 2026-05-08) shipped a new plan
-[`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md) (P0, deadline
-2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a single
-`features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4 cross-family
-helpers into UTL** — including the exact one Tab 12 was wiring:
+[`features_repo_consolidation_2026_05_08.plan.md`](../active/features_repo_consolidation_2026_05_08.plan.md) (P0,
+deadline 2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a
+single `features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4
+cross-family helpers into UTL** — including the exact one Tab 12 was wiring:
 
-> "(c) **`LookaheadBiasError` strict-mode gate** — per-row enforcement that
-> `input.available_at <= target_ts - horizon`. Currently fires in 3 of 8 features-\* repos with subtle differences
-> in horizon resolution; **lift into a single `assert_no_lookahead_for_feature_group(...)` helper** that reads horizon
-> from the UAC feature-DAG SSOT (per `ml_and_features_master` Phase 1A)."
-> — `features_repo_consolidation_2026_05_08.plan.md` Phase 5 §(c)
+> "(c) **`LookaheadBiasError` strict-mode gate** — per-row enforcement that `input.available_at <= target_ts - horizon`.
+> Currently fires in 3 of 8 features-\* repos with subtle differences in horizon resolution; **lift into a single
+> `assert_no_lookahead_for_feature_group(...)` helper** that reads horizon from the UAC feature-DAG SSOT (per
+> `ml_and_features_master` Phase 1A)." — `features_repo_consolidation_2026_05_08.plan.md` Phase 5 §(c)
 
 **What this means concretely**:
 

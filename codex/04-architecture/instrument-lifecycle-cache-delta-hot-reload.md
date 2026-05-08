@@ -7,7 +7,7 @@ scope: [engineer, admin]
 > **STATUS** — Workspace pattern doc codified during the live-pipeline activation 2026-05-08. Work plan in
 > [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
 > Phase 10. Coordinated with
-> [`instruments_live_master_2026_05_08`](../../plans/active/instruments_live_master_2026_05_08.plan.md). If this doc
+> [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.plan.md). If this doc
 > disagrees with the active plans, the plans win.
 
 ## TL;DR
@@ -125,7 +125,7 @@ Banner each plan with the other to keep the work coordinated.
 - Plan:
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
   Phase 10.
-- Plan: [`instruments_live_master_2026_05_08`](../../plans/active/instruments_live_master_2026_05_08.plan.md) —
+- Plan: [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.plan.md) —
   publish-side owner.
 - Pattern reference: `unified-trading-library/unified_trading_library/api_key_reloader.py` — same shape for API keys.
 - Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —

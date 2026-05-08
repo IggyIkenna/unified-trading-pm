@@ -2,6 +2,8 @@
 name: cefi-master
 slug: cefi_master_2026_05_07
 date: 2026-05-07
+deadline: 2026-05-23
+last_updated: 2026-05-08
 owner: claude-code
 status: active
 priority: P0
@@ -352,6 +354,24 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
       Extended pending per dex_perp_onboarding_handover_2026_05_07.HANDOVER.md Item C; this todo is the move-out
       announcement which IS DONE]
 
+## `available_at` adapter stamping (coordinated)
+
+> **Coordinator:**
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> Phase 1. Audit 2026-05-08 found CeFi adapters lack explicit per-adapter `available_at` stamping wiring per UAC
+> `AVAILABILITY_AT_SEMANTICS`. Without it, `assert_available_at_present` in `ManifestWriter.record_captured()` is dead
+> code for cefi shards.
+
+- [ ] [SCRIPT] P0. **Per-adapter `available_at` stamping for CeFi**. For every CeFi adapter (Bybit, Binance, OKX,
+      Deribit, Bitfinex, Bitget, Coinbase, Hyperliquid, Kraken, Aster) across `ohlcv_*` / `trades` / `funding_rate` /
+      `perp_*` / `options_chain` / `futures_chain`: stamp
+      `available_at = tick_timestamp + source_priority_scrape_latency` per UAC `SOURCE_PRIORITY` (tick-level), or
+      `available_at = bar_close_boundary` (bar-level — depends on coordinator Phase 0 MDPS bar boundary contract).
+      Insert call before `record_captured`. Mirror precedent in `features-sports/_enforce_pit_sports`.
+- [ ] [SCRIPT] P1. **CeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~5 cefi feature_groups (volatility,
+      liquidity, microstructure, perp_basis, options_iv) need registry entries. Source-of-truth:
+      `features-cefi-service/calculators/` metadata. Coordinator Phase 4.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Live = batch**: same code path; only fill source differs (cefi_master shares the unified pipeline; no live-only
@@ -364,11 +384,11 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](./writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md).
 - Shard granularity:
-  [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](./shard_granularity_ssot_propagation_2026_05_06.plan.md).
+  [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md).
 - Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 

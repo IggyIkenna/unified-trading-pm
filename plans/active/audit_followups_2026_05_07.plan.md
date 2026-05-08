@@ -78,13 +78,13 @@ Master plan work-stream-G claims "140/142/31 plans affected" but Stage 7 batch c
 
 ### #4 — manifest_migration_master stale module path (audit §6 #5)
 
-[`manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md) ~line 473 cites
+[`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md) ~line 473 cites
 `unified_api_contracts.canonical.crosscutting.empty_confirmed_reasons.EMPTY_CONFIRMED_REASONS`. The actual canonical
 module is `unified_api_contracts.canonical.crosscutting.honest_coverage` (verified 2026-05-07 via UAC@`8867891` —
 `EMPTY_CONFIRMED_REASONS` lives there now).
 
 - [x] [SCRIPT] P2. Find the line:
-      `grep -n "empty_confirmed_reasons" plans/active/manifest_migration_master_2026_05_07.plan.md`. Replace with
+      `grep -n "empty_confirmed_reasons" plans/epics/manifest_migration_master_2026_05_07.plan.md`. Replace with
       `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS`. (PM@8d33d97 — verified
       already resolved: manifest_migration_master line 96-99 explicitly notes canonical path is `honest_coverage` and
       legacy `empty_confirmed_reasons` path is stale and superseded; no stale module-path import remains, only the
@@ -97,10 +97,10 @@ module is `unified_api_contracts.canonical.crosscutting.honest_coverage` (verifi
 
 ### #5 — infrastructure_master STALE MDPS-1440-NaN reproduction-test (audit §6 #6)
 
-[`infrastructure_master_2026_05_07.plan.md`](infrastructure_master_2026_05_07.plan.md) includes a "MDPS-1440-NaN
-reproduction-test" todo that's superseded by the writegate Phase 2.A adapter migrations (MDPS@`5b52d0b`/`b9f9328`/
-`80cf141`/`e9520a0`) + reconciler MDPS@`d3be0ef`. The 1440-NaN placeholder anti-pattern has been ripped out of the
-adapters; a reproduction-test is no longer meaningful.
+[`infrastructure_master_2026_05_07.plan.md`](../epics/infrastructure_master_2026_05_07.plan.md) includes a
+"MDPS-1440-NaN reproduction-test" todo that's superseded by the writegate Phase 2.A adapter migrations
+(MDPS@`5b52d0b`/`b9f9328`/ `80cf141`/`e9520a0`) + reconciler MDPS@`d3be0ef`. The 1440-NaN placeholder anti-pattern has
+been ripped out of the adapters; a reproduction-test is no longer meaningful.
 
 - [x] [SCRIPT] P2. Find the MDPS-1440-NaN todo in infrastructure_master. Mark with
       `[AUDIT 2026-05-07: STALE — superseded by writegate Phase 2.A adapter migrations (MDPS@5b52d0b/b9f9328/80cf141/e9520a0) + reconciler MDPS@d3be0ef. _create_empty_output() ripped out of all adapters.]`

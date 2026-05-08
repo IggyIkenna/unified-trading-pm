@@ -1,0 +1,103 @@
+---
+plan_type: epic
+asset_group: sports
+owner: ikenna
+created: 2026-05-08
+last_updated: 2026-05-08
+locked_by: live-defi-rollout
+locked_since: 2026-05-08
+name: sports-ml-may-23-2026
+parent: master_to_live_defi_2026_05_23
+status: active
+deadline: 2026-05-23
+---
+
+# Epic — Sports ML (May 23 2026)
+
+## Why this epic exists
+
+Sports ML prediction ships **backtest-only** for May 23, but unlike S&P prediction (which only goes up to ML training),
+this epic goes **all the way through strategy backtest + execution backtest** as well. ML signal + strategy + execution
+all backtest in the unified pipeline. No live trading.
+
+The deliverable is a complete backtested sports ML archetype: instruments → odds → features → ML model → strategy
+decision → execution-with-fills (matching engine). Every layer must work end-to-end in batch, and bugs/backfills/schema
+fixes are inclusive at every layer.
+
+## End-state at May 23 (success criteria)
+
+- [ ] **Sports ML model trains end-to-end in batch** on representative history.
+- [ ] **Strategy backtest** of the ML signal runs end-to-end through the unified pipeline (no standalone backtest
+      engine, no inline settlement) — strategy interacts with position-balance-monitor, risk-and-exposure, and
+      execution-service per the unified `Batch = Live` rule.
+- [ ] **Execution backtest** runs through the matching engine (Sports L0 TOB matcher, per matching_engine SSOT) —
+      simulated fills with accurate slippage / commission / latency / venue liquidity, NOT face-value odds.
+- [ ] **Sports data pipeline clean** end-to-end: instruments (URDI sports/) + odds (api_football, footystats, odds_api,
+      etc.) + features (features-sports) — no phantom rows, no NaN placeholders, manifest 100% honest, all
+      `available_at` columns correctly stamped per row.
+- [ ] **Honest-coverage baseline** for sports manifest: ratchet established + monitored.
+- [ ] **Phantom recovery complete** for sports fixtures (truthset rebuild + capture-status reclassification finished).
+- [ ] **Strategy + execution layers fixed where needed** — bugs across all 3 layers (ML + strategy + execution) caught
+      in this cycle.
+
+## What's IN scope
+
+- Full backtest pipeline for sports ML: instruments → odds → features → ML training → ML inference → strategy →
+  execution → position + risk + P&L attribution.
+- Sports data backfill end-to-end: api_football, footystats, transfermarkt, understat, soccer_football_info, open_meteo,
+  odds_api, MDPS odds horizon bucket.
+- Sports phantom-recovery + honest-coverage close-outs.
+- Sports `available_at` rename + per-row stamping (kickoff − 60min for lineups, event-time for events, match_end_time
+  for post-match stats, etc.).
+- Sports execution backtest with L0 TOB matcher (real fills, not face-value).
+- 2-year-equivalent backtest config grid for the sports ML archetype.
+
+## What's OUT of scope (shipping later)
+
+- **Live trading** — backtest-only this cycle.
+- **Live odds capture** — batch-only is sufficient for the ML deliverable (forward-poll continues but is not gating).
+- **Multiple ML archetypes** — one sports ML archetype is the bar.
+- **Production deployment** of the sports model — backtest-runnable is the deliverable.
+
+## Sub-plans this epic consumes
+
+| Path                                                                                                                                | Role                                                                       | Status |
+| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------ |
+| [`sports_master_2026_05_07`](./sports_master_2026_05_07.plan.md)                                                                    | Sports umbrella (data pipeline + features + ML + strategy + execution)     | Active |
+| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.plan.md)                                                  | ML lifecycle + features umbrella                                           | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.plan.md)                                              | Strategy v2 + DART manual-trade lane                                       | Active |
+| [`active/api_football_minimal_flattening_removal_2026_05_07`](../active/api_football_minimal_flattening_removal_2026_05_07.plan.md) | api_football odds schema cleanup                                           | Active |
+| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)           | Write-gate / honest-coverage umbrella                                      | Active |
+| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.plan.md)                         | Features-repo consolidation (features-sports merges into features-service) | Active |
+| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)               | Live-pipeline activation — batch portion is required here                  | Active |
+| [`manifest_migration_master_2026_05_07`](./manifest_migration_master_2026_05_07.plan.md)                                            | Manifest schema v6                                                         | Active |
+
+## Cross-epic handshakes
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (sports ML archetype + venues), infrastructure
+  baseline, UI replication of backtest harness.
+- **Shares with:** `cefi_ml_may_23_2026`, `sp_prediction_may_23_2026`, `prediction_markets_may_23_2026` share ML
+  lifecycle (training pipeline, model registry, drift detection, batch backtest harness). Wins here propagate.
+- **Provides to:** `prediction_markets_may_23_2026` may consume sports ML signals as inputs to sports-betting
+  prediction-market strategies (Polymarket fixture markets).
+
+## Cross-cutting concerns inherited
+
+See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). Specific to this epic:
+
+- **Strategy catalogue (HARD)**: sports ML archetype × all sports venues + bookmaker combos enumerated.
+- **Infrastructure**: features-service consolidation, manifest honesty, matching engine fidelity for sports L0 TOB.
+
+## Open questions
+
+- [ ] **Which sports ML archetype?** Match-outcome prediction? Goal-scorer prediction? In-play live-odds? Operator-pick.
+- [ ] **Which leagues are in scope** for the ML signal? All-leagues universal model, or top-tier subset
+      (EPL/LaLiga/Serie A/Bundesliga/MLS)?
+- [ ] **Bookmaker scope**: which odds sources for execution backtest? odds_api closing prices? MDPS odds horizon bucket
+      for in-play snapshots?
+
+## See also
+
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.plan.md) — May-23 cutover master
+- [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md)
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md)

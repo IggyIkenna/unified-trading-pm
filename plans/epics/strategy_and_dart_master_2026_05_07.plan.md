@@ -197,9 +197,9 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 > `codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
 >
 > **May-23 gating clarification** (deep audit 2026-05-07): the May-23 lead archetype `carry_staked_basis` (and
-> hedging-leg `leveraged_funding_arb`) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8
-> roll mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes
-> live). Stays P1, but does NOT gate the May-23 cutover.
+> hedging-leg `leveraged_funding_arb`) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8 roll
+> mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes live).
+> Stays P1, but does NOT gate the May-23 cutover.
 
 - [ ] [CODE] P1. **UAC registry + event contract.** Implement gap #11 from `uac-registry-gaps.md`:
       `UnderlyingDeclaration`, `RollTriggerPolicy`, `REPRESENTATIVE_FUTURE_REGISTRY` tuple.
@@ -244,8 +244,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 - [ ] [CODE] P1. META_BROKER router for Unity with child-book attribution + Unity TCP adapter.
 - [ ] [CODE] P1. MEV router (Flashbots + MEV Blocker + Manifold; Bloxroute excluded).
 - [ ] [CODE] P1. Cost-model artifact loader (`cost_model/*` registry).
-- [x] [CODE] P1. `AccountInstruction` orchestrator (non-benchmarked, operator-driven). **SHIPPED 2026-05-07** —
-      verified via deep audit at `execution-service/execution_service/v2/account_orchestrator.py`
+- [x] [CODE] P1. `AccountInstruction` orchestrator (non-benchmarked, operator-driven). **SHIPPED 2026-05-07** — verified
+      via deep audit at `execution-service/execution_service/v2/account_orchestrator.py`
       `AccountInstructionOrchestrator` class with `dispatch()` method (validates + routes). Remaining 1.9 minimum-subset
       items (11 action handlers, policy registry, Layer 3 pre-flight) still pending; orchestrator itself done.
 
@@ -275,9 +275,9 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ### 2.1 Polish items (open)
 
-> **Priority-vs-criticality clarification** (deep audit 2026-05-07): the 7 polish items below carry P0/P1/HUMAN
-> priority labels, but ONLY Phase 2.2 (6-persona Playwright matrix) is on the May-23 critical path. The 5 P0-tagged
-> items here are post-May-23 quality work — re-tagged P2 below to align priority with criticality. Original P0 reflects
+> **Priority-vs-criticality clarification** (deep audit 2026-05-07): the 7 polish items below carry P0/P1/HUMAN priority
+> labels, but ONLY Phase 2.2 (6-persona Playwright matrix) is on the May-23 critical path. The 5 P0-tagged items here
+> are post-May-23 quality work — re-tagged P2 below to align priority with criticality. Original P0 reflects
 > "cockpit-architecture importance," not "live-trading deadline." If May-23 hard floor work needs an agent, it pulls
 > from Phase 2.2 + Phase 1.9 fold-in subset, not from this list.
 
@@ -291,7 +291,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 - [ ] [AGENT] P2. **Layer 2 minimum proof signals** (was P0) — six irreducible badges (data-freshness pill, last-update
       timestamp, maturity badge, visibility-state badge, demo-data badge, report/reconciliation placeholder link). Built
       alongside Phases 7-8. Add **two more** post-§4.8: **release-bundle audit pill** (current strategy version + active
-      runtime overrides count) and **reproducibility pill** (training data hash known / unknown). **DEFERRED post-May-23**.
+      runtime overrides count) and **reproducibility pill** (training data hash known / unknown). **DEFERRED
+      post-May-23**.
 - [ ] [HUMAN] P2. **v2 archetype-expansion roadmap** (§4.10, was P1). v1 = 8 presets covering 6 archetype clusters; v2
       names 7 missing archetype presets (Market-Making · Equity LS · Rates · Macro · FX · Energy · Event-Driven) +
       Firm-Risk Aggregate Console for David. Not blocking v1. **DEFERRED post-May-23**.

@@ -103,9 +103,9 @@ per-market_id lifecycle timestamps (`market_created_at`, `resolution_time`, `set
 because Phase 1 ingestion shipped 2026-05-07 (instruments-service@98bb167, MTDS@b904785) but Phase 2+3 (adapter
 migration + reader/feature/strategy consumers) was deferred.
 
-**Plan-of-record**: [`instruments_live_master_2026_05_08.plan.md`](instruments_live_master_2026_05_08.plan.md)
+**Plan-of-record**: [`instruments_live_master_2026_05_08.plan.md`](../epics/instruments_live_master_2026_05_08.plan.md)
 
-- [`predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md) Phase 2+3 +
+- [`predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2+3 +
   [`instruments_and_market_tick_data_completion_2026_05_01.plan.md`](instruments_and_market_tick_data_completion_2026_05_01.plan.md)
   (catalog-aware writer-guard).
 
@@ -116,8 +116,8 @@ migration + reader/feature/strategy consumers) was deferred.
       phase: Cloud Scheduler cron config + audit job that reconciles per-asset_group catalog vs manifest at midnight +
       deployment-UI tab integration to surface live status. ~5 AI-days (1 per phase).
 - [ ] [SCRIPT] P0. **Predictions Phase 2 — MTDS Polymarket/Kalshi lifecycle gating + UMI tick provider data_type
-      rename** — per [`predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md) Phase 2 deferred
-      from Tab 10 yesterday. Per CLAUDE.md "Prediction market lifecycle timing": MTDS CLOB capture must respect
+      rename** — per [`predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2
+      deferred from Tab 10 yesterday. Per CLAUDE.md "Prediction market lifecycle timing": MTDS CLOB capture must respect
       lifecycle bounds (NO ticks before `market_created_at`, NO new ticks after `settlement_time`). Rename
       `umi_tick_provider.py:225` + `orchestrator.py:1990-1995` `data_type` → `prediction_canonical_question_group`.
       Per-market_id manifest rows + cluster-coverage gate. ~2 AI-days.
@@ -139,8 +139,8 @@ Ikenna touches DeFi adapters), deployment-ui (instruments-live tab integration; 
 
 - CLAUDE.md sections: "Prediction market lifecycle timing", "Per-asset-group shard-key matrix", "Honest absence vs fake
   placeholders", "Four-category empty-output decision", "Cluster validation MANDATORY at record_captured"
-- [`plans/active/instruments_live_master_2026_05_08.plan.md`](instruments_live_master_2026_05_08.plan.md)
-- [`plans/active/predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md) Phase 2+3
+- [`plans/epics/instruments_live_master_2026_05_08.plan.md`](../epics/instruments_live_master_2026_05_08.plan.md)
+- [`plans/epics/predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2+3
 - [`plans/active/instruments_and_market_tick_data_completion_2026_05_01.plan.md`](instruments_and_market_tick_data_completion_2026_05_01.plan.md)
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
 - [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
@@ -178,7 +178,8 @@ per resolved Tab 12 Q1.
 
 **Plan-of-record**: [`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md)
 
-- [`ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) Phase 2A/2B + Phase 3.
+- [`ml_and_features_master_2026_05_07.plan.md`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase 2A/2B +
+  Phase 3.
 
 **Scope (4 items, P0)**:
 
@@ -209,7 +210,7 @@ per resolved Tab 12 Q1.
   architecture decision), "Plans must capture full codebase impact upfront", "Post-Plan-Phase Codex Audit HARD RULE",
   "Shard-granularity SSOT" ([UAC] vs [UTL] vs [per-service] layer discipline)
 - [`plans/active/features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md)
-- [`plans/active/ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) Phase 2A
+- [`plans/epics/ml_and_features_master_2026_05_07.plan.md`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase 2A
   - 2B + 3
 - [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
   (Ikenna Tab 2's plan — read for Phase 4-7 dependency surface)
@@ -303,11 +304,11 @@ unified-config-interface (env-resolution), Firebase config files. **Hands off** 
 **Identity**: you own the day-2/3 OPS thread. Cefi VM drain monitoring + post-drain reconcilers across all 5
 asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work.
 
-**Plan-of-record**: [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md) (cefi drain) +
-[`tradfi_master_2026_05_07.plan.md`](tradfi_master_2026_05_07.plan.md) (TradFi MDPS post-drain) +
-[`manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md) Stage 4 (rescan)
+**Plan-of-record**: [`cefi_master_2026_05_07.plan.md`](../epics/cefi_master_2026_05_07.plan.md) (cefi drain) +
+[`tradfi_master_2026_05_07.plan.md`](../epics/tradfi_master_2026_05_07.plan.md) (TradFi MDPS post-drain) +
+[`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md) Stage 4 (rescan)
 
-- [`sports_master_2026_05_07.plan.md`](sports_master_2026_05_07.plan.md) (per-source reconciler hook) +
+- [`sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md) (per-source reconciler hook) +
   [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
 
 **Scope (4 items, P0-P1)**:
@@ -317,9 +318,9 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       sample-checked spot-shard via per-VM manifest at T+30min after each VM hits STOPPED. Drain report to operator +
       Ikenna Tab 5 (master plan refresh) before EOD. ~1 AI-day.
 - [ ] [SCRIPT] P0. **TradFi MDPS post-drain ES.OPT 11-cluster validation rerun** — 5 mdps-tradfi-2021/22/23/24/25 VMs
-      running per [`tradfi_master`](tradfi_master_2026_05_07.plan.md). After drain, rerun cluster-coverage gate on
-      TradFi MDPS shards; flag any partial bundles via the existing `MissingClusterValidationError` guard; fix in place
-      if any flag. ~1 AI-day.
+      running per [`tradfi_master`](../epics/tradfi_master_2026_05_07.plan.md). After drain, rerun cluster-coverage gate
+      on TradFi MDPS shards; flag any partial bundles via the existing `MissingClusterValidationError` guard; fix in
+      place if any flag. ~1 AI-day.
 - [ ] [SCRIPT] P0. **Cross-asset manifest rescan post-CeFi drain (Stage 4 of manifest_migration_master)** — Ikenna Tab 3
       designs the schema flip + ships rescan launcher. You operate the launcher
       (`reconcile_phantom_manifest_rows_all.py     --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run` per
@@ -327,9 +328,9 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       `--apply-write`. Banner-add to 5+ active plans on launch + banner-remove on completion. ~1.5 AI-days.
 - [ ] [SCRIPT] P1. **Sports per-source reconciler hook + features_sports_reconcile_available_at hook into per-source
       backfill VM exit-step** — sports_master Tab 3B Phase per
-      [`sports_master_2026_05_07.plan.md`](sports_master_2026_05_07.plan.md). Hook fires after each per-source backfill
-      VM completes; flips manifest captured → attempted_failed[error="MISSING_AVAILABLE_AT"] on parquets with absent or
-      100% null available_at column. ~1 AI-day.
+      [`sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md). Hook fires after each per-source
+      backfill VM completes; flips manifest captured → attempted_failed[error="MISSING_AVAILABLE_AT"] on parquets with
+      absent or 100% null available_at column. ~1 AI-day.
 - [ ] [SCRIPT] P0. **defi_988 13,632 actionable rows targeted backfill** — Tab 6 yesterday's audit (PM@fc52188 →
       [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md))
       identified the top-5 priority list. Launch targeted backfill VMs per (chain, protocol, data_type) tuple. Per
@@ -346,10 +347,11 @@ code edits to Ikenna Tab 1.
 
 - CLAUDE.md sections: "VM tarball deployment", "VM Naming Convention", "Singleton-locked launchers", "No fire-and-forget
   VM launches", "Manifest concurrency principle", "Manifest phantom audit", "Per-VM shard isolation"
-- [`plans/active/cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md)
-- [`plans/active/tradfi_master_2026_05_07.plan.md`](tradfi_master_2026_05_07.plan.md)
-- [`plans/active/manifest_migration_master_2026_05_07.plan.md`](manifest_migration_master_2026_05_07.plan.md) Stage 4
-- [`plans/active/sports_master_2026_05_07.plan.md`](sports_master_2026_05_07.plan.md) Tab 3B
+- [`plans/epics/cefi_master_2026_05_07.plan.md`](../epics/cefi_master_2026_05_07.plan.md)
+- [`plans/epics/tradfi_master_2026_05_07.plan.md`](../epics/tradfi_master_2026_05_07.plan.md)
+- [`plans/epics/manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
+  Stage 4
+- [`plans/epics/sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md) Tab 3B
 - [`plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md)
 
 **Sub-agent fan-out**:
@@ -556,8 +558,8 @@ BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — workspace rules + § "Daily Work-Split Process".
   2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
   3. plans/active/work_split_2026_05_08_harsh.md § "TAB 1 — Instruments-live + lifecycle ingestion".
-  4. plans/active/instruments_live_master_2026_05_08.plan.md (primary plan-of-record).
-  5. plans/active/predictions_master_2026_05_07.plan.md Phase 2+3.
+  4. plans/epics/instruments_live_master_2026_05_08.plan.md (primary plan-of-record).
+  5. plans/epics/predictions_master_2026_05_07.plan.md Phase 2+3.
 
 Your agent-tag: instruments-live-tab. Your tab number: 1.
 
@@ -584,7 +586,7 @@ BEFORE doing anything else, read in order:
      § "Post-Plan-Phase Codex Audit HARD RULE".
   2. plans/active/work_split_2026_05_08_harsh.md § "TAB 2 — Features-repo consolidation".
   3. plans/active/features_repo_consolidation_2026_05_08.plan.md (primary).
-  4. plans/active/ml_and_features_master_2026_05_07.plan.md Phase 2A/2B + Phase 3.
+  4. plans/epics/ml_and_features_master_2026_05_07.plan.md Phase 2A/2B + Phase 3.
 
 Your agent-tag: features-consolidation-tab. Your tab number: 2.
 
@@ -625,10 +627,10 @@ BEFORE doing anything else, read in order:
      § "VM Naming Convention", § "Singleton-locked launchers", § "No fire-and-forget VM
      launches", § "Manifest concurrency principle", § "Manifest phantom audit".
   2. plans/active/work_split_2026_05_08_harsh.md § "TAB 4 — Per-asset_group VM ops".
-  3. plans/active/cefi_master_2026_05_07.plan.md (cefi drain).
-  4. plans/active/tradfi_master_2026_05_07.plan.md (TradFi MDPS post-drain).
-  5. plans/active/manifest_migration_master_2026_05_07.plan.md Stage 4 (rescan).
-  6. plans/active/sports_master_2026_05_07.plan.md (per-source reconciler hook).
+  3. plans/epics/cefi_master_2026_05_07.plan.md (cefi drain).
+  4. plans/epics/tradfi_master_2026_05_07.plan.md (TradFi MDPS post-drain).
+  5. plans/epics/manifest_migration_master_2026_05_07.plan.md Stage 4 (rescan).
+  6. plans/epics/sports_master_2026_05_07.plan.md (per-source reconciler hook).
   7. plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (top-5 priority list).
 
 Your agent-tag: vm-ops-tab. Your tab number: 4.

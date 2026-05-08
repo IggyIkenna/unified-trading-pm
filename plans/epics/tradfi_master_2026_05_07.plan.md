@@ -2,6 +2,8 @@
 name: tradfi-master
 slug: tradfi_master_2026_05_07
 date: 2026-05-07
+deadline: 2026-05-23
+last_updated: 2026-05-08
 owner: claude-code
 status: active
 priority: P1
@@ -279,6 +281,23 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 * [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
       captured percentage approaches 100% for the listing window. Phases 1-5 in CME sub-plan unblocked.
 
+## `available_at` adapter stamping (coordinated)
+
+> **Coordinator:**
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME options chain + ES.OPT 11-cluster
+> bundles need per-cluster `available_at = cluster_bar_close_time` (depends on coordinator Phase 0 MDPS bar boundary
+> contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling + honest gap per CLAUDE.md "VIX 15m
+> source layering") needs `available_at` stamped at the per-source emission timestamp, NOT bar timestamp.
+
+- [ ] [SCRIPT] P0. **Per-adapter `available_at` stamping for TradFi**. Databento (futures + ETFs + options), Polygon,
+      Yahoo Finance VIX 15m fallback, Barchart historical preload. Tick-level: `available_at = tick_ts + scrape_latency`
+      per UAC `SOURCE_PRIORITY`. Bar-level: `available_at = bar_close_boundary` (Phase 0 dependency). Stamp per-cluster
+      for ES.OPT 11-cluster bundles (each cluster has its own close time when its last constituent leg's tick lands).
+- [ ] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
+      butterfly, calendar_spread, vix_basis, etc.). Source-of-truth: `features-tradfi-service/calculators/` metadata.
+      Coordinator Phase 4.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **VIX 15m source layering** (CLAUDE.md): Barchart preload + Yahoo rolling + honest gap. MTDS routing in
@@ -290,7 +309,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.

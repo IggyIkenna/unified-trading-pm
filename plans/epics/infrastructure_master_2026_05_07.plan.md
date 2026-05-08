@@ -2,6 +2,8 @@
 name: infrastructure-master
 slug: infrastructure_master_2026_05_07
 date: 2026-05-07
+deadline: 2026-05-23
+last_updated: 2026-05-08
 owner: claude-code
 status: active
 priority: P0
@@ -418,11 +420,11 @@ sub-plan; this section is a pointer.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](./writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md).
 - Asset_group vocabulary:
-  [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](./venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
+  [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
 - Per-asset-group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `sports_master_2026_05_07`, `predictions_master_2026_05_07`.
 - Manifest SSOT codex: `codex/02-data/availability-manifest-and-data-status.md`.

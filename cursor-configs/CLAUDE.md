@@ -277,7 +277,7 @@ Read these before making ANY code changes:
   compat shims" rules.
 
   **Companion plan + executor handover**: full per-service verify/fix/lift/build checklist with anti-patterns and
-  parallel-stream coordination notes in `unified-trading-pm/plans/active/infrastructure_master_2026_05_07.plan.md`
+  parallel-stream coordination notes in `unified-trading-pm/plans/epics/infrastructure_master_2026_05_07.plan.md`
   (umbrella) which folds-in `plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md` + its `.HANDOVER.md`
   companion (commit `d591416d`). Sub-agents executing this work pick the rules up via this section + the umbrella + the
   archived handover doc + SUB_AGENT_MANDATORY_RULES.md inheritance.

@@ -4,6 +4,7 @@ asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
 last_updated: 2026-05-08
+deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 name: instruments-live-master-2026-05-08
@@ -650,8 +651,8 @@ isProject: false
 
 > **🟢 SIBLING — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 10
-> consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase
+> 10 consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
 > `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
 > add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +
 > per-service wiring in MTDS/MDPS/features-service). Codex pattern doc:

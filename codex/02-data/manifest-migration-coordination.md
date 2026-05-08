@@ -2,9 +2,12 @@
 title: Manifest Migration Coordination
 status: planned
 created: 2026-05-07
-authoritative_for: How a workspace-wide manifest migration (schema bump, vocab change, hive-key change) coordinates across cross-asset rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so concurrent agents don't clobber the migration.
+authoritative_for:
+  How a workspace-wide manifest migration (schema bump, vocab change, hive-key change) coordinates across cross-asset
+  rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so
+  concurrent agents don't clobber the migration.
 referenced_by:
-  - plans/active/manifest_migration_master_2026_05_07.plan.md
+  - plans/epics/manifest_migration_master_2026_05_07.plan.md
 related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
@@ -12,15 +15,15 @@ related:
 
 # Manifest Migration Coordination
 
-> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in
-> as the next manifest-schema bump (v5 → v6) is planned + executed.
+> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
+> the next manifest-schema bump (v5 → v6) is planned + executed.
 
 ## Purpose
 
 When the manifest schema or canonical row shape changes (the precedent: v3 → v5 with `capture_status` + `error_reason`
-columns), there is a multi-day window where adapters on `live-defi-rollout` write the new shape, the consolidator
-daemon merges per-VM shards, and any concurrent backfill VMs in flight could write the OLD shape. This doc is the SSOT
-for sequencing that change so we never have a moment where canonical manifest drifts irrecoverably.
+columns), there is a multi-day window where adapters on `live-defi-rollout` write the new shape, the consolidator daemon
+merges per-VM shards, and any concurrent backfill VMs in flight could write the OLD shape. This doc is the SSOT for
+sequencing that change so we never have a moment where canonical manifest drifts irrecoverably.
 
 ## Scope
 
@@ -48,9 +51,12 @@ for sequencing that change so we never have a moment where canonical manifest dr
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`manifest_migration_master`](../../plans/active/manifest_migration_master_2026_05_07.plan.md).
-- **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md), [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
-- **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM, migration scripts in `instruments-service/scripts/`.
+- **Plan(s) implementing this:**
+  [`manifest_migration_master`](../../plans/epics/manifest_migration_master_2026_05_07.plan.md).
+- **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
+  [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
+- **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM,
+  migration scripts in `instruments-service/scripts/`.
 
 ## Open questions
 

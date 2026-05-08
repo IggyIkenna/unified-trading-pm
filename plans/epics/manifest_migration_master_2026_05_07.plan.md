@@ -2,6 +2,8 @@
 name: manifest-migration-master
 slug: manifest_migration_master_2026_05_07
 date: 2026-05-07
+deadline: 2026-05-23
+last_updated: 2026-05-08
 owner: claude-code
 status: active
 priority: P0
@@ -128,11 +130,11 @@ related_plans:
 
 > **🟡 IN-FLIGHT REFACTOR — GCS migration bundle 2026-05-08**
 >
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) bundles the
-> `pipeline_mode=` partition addition + `category=` → `asset_group=` rekey + 5-drift-axis cleanup into a SINGLE
-> overnight GCS walk. **This plan's Stage 1+2+3 must land BEFORE the bundle's Phase 3 starts** so we don't bundle work
-> still in flight elsewhere. The bundle's Phase 0 § (f) coordination check explicitly verifies which Stage 4 items are
-> in scope. Stage 4 residual sweeps coordinate with the bundle's Phase 6 (residual phantom cleanup).
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
+> bundles the `pipeline_mode=` partition addition + `category=` → `asset_group=` rekey + 5-drift-axis cleanup into a
+> SINGLE overnight GCS walk. **This plan's Stage 1+2+3 must land BEFORE the bundle's Phase 3 starts** so we don't bundle
+> work still in flight elsewhere. The bundle's Phase 0 § (f) coordination check explicitly verifies which Stage 4 items
+> are in scope. Stage 4 residual sweeps coordinate with the bundle's Phase 6 (residual phantom cleanup).
 
 ## Why this exists
 
@@ -290,13 +292,13 @@ This is the operator-visible view — what the human needs to do, when, in what 
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
 - Write-gate (Stage 2 + 3):
-  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](./writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md).
 - Sports rename (Stage 1): [`sports_master_2026_05_07.plan.md`](./sports_master_2026_05_07.plan.md) § Sports
   `data_available_at` → `available_at` rename.
 - Predictions Phase 3 migration: [`predictions_master_2026_05_07.plan.md`](./predictions_master_2026_05_07.plan.md).
-- Final rescan: [`defi_master_2026_05_07.plan.md`](./defi_master_2026_05_07.plan.md) § mtds-s4-10.
+- Final rescan: [`defi_master_2026_05_07.plan.md`](../active/defi_master_2026_05_07.plan.md) § mtds-s4-10.
 - Raw tables + `_ensure_timestamp` deletion:
   [`infrastructure_master_2026_05_07.plan.md`](./infrastructure_master_2026_05_07.plan.md).
 - Workspace rule: CLAUDE.md `§ Manifest migration, NOT fallback` — when manifest drifts from canonical shape, write a

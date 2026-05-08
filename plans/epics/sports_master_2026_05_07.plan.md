@@ -2,6 +2,8 @@
 name: sports-master
 slug: sports_master_2026_05_07
 date: 2026-05-07
+deadline: 2026-05-23
+last_updated: 2026-05-08
 owner: claude-code
 status: active
 priority: P1
@@ -733,11 +735,11 @@ features silently miss bookmaker × market gaps.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Sports rename plan (KEPT ACTIVE — its own DAG):
-  [`sports_data_available_at_rename_2026_05_07.plan.md`](./sports_data_available_at_rename_2026_05_07.plan.md).
+  [`sports_data_available_at_rename_2026_05_07.plan.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.
 
 ## Folded plans (archived 2026-05-07)

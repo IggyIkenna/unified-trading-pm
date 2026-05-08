@@ -93,17 +93,17 @@ This is the canonical index of all active plans. Plans are organized by domain.
   per-cluster expiry; cme_polymarket_event_arb strategy archetype + cross-venue execution routing). Migrated from
   archived 26KB RFC `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.
 
-- [instruments_live_master_2026_05_08.plan.md](instruments_live_master_2026_05_08.plan.md) — **Activation surface for
-  instruments-live across all 5 asset_groups** (cefi 15-min CCXT replacing Tardis-T+1; tradfi 15-min Polygon/Yahoo
-  replacing Databento for live; sports trigger-driven — daily fixture re-poll + per-league season-roll → teams /
-  mappings + annual transfer-window → players + weather cascade pre-kickoff; predictions 15-min market-discovery). Live
-  writes to SAME GCS path as batch (no separate live path); T+1 is retrospective audit / comparison job, NOT a backfill.
-  Cloud Scheduler activation per-trigger + new deployment-UI "Scheduled Jobs" tab listing every cron invocation with
-  last-run / next-fire / recent events / Telegram-alert-on-fail. Critical Phase A.9–A.11 codifies the preflight DAG
-  (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically by live and batch — typed
-  `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to Telegram with the specific
-  missing-upstream named in the message. References (does NOT duplicate) the existing codex SSOTs
-  (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
+- [instruments_live_master_2026_05_08.plan.md](../epics/instruments_live_master_2026_05_08.plan.md) — **Activation
+  surface for instruments-live across all 5 asset_groups** (cefi 15-min CCXT replacing Tardis-T+1; tradfi 15-min
+  Polygon/Yahoo replacing Databento for live; sports trigger-driven — daily fixture re-poll + per-league season-roll →
+  teams / mappings + annual transfer-window → players + weather cascade pre-kickoff; predictions 15-min
+  market-discovery). Live writes to SAME GCS path as batch (no separate live path); T+1 is retrospective audit /
+  comparison job, NOT a backfill. Cloud Scheduler activation per-trigger + new deployment-UI "Scheduled Jobs" tab
+  listing every cron invocation with last-run / next-fire / recent events / Telegram-alert-on-fail. Critical Phase
+  A.9–A.11 codifies the preflight DAG (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically
+  by live and batch — typed `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to
+  Telegram with the specific missing-upstream named in the message. References (does NOT duplicate) the existing codex
+  SSOTs (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
   `sports-live-odds-connectivity`, `runtime-tiers-and-deployment`) and 8 active issues for data-correctness deltas.
   Sibling-of (NOT child-of) `master_to_live_defi_2026_05_23` — only Phase D (cefi 15-min CCXT) + Phase F.3 (AWS
   EventBridge mirror) are on the May-23 critical path; the rest is post-cutover.

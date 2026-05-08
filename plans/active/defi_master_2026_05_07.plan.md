@@ -218,8 +218,8 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       (Chainlink Arb/Base/Optimism/Polygon via \_CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
-      [`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) — MUST run AFTER
-      all Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup +
+      [`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md) — MUST run
+      AFTER all Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup +
       Predictions Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across
       services. NO VM pause needed — consolidator handles concurrent writes per CLAUDE.md
       `§ Manifest     concurrency principle`. [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage
