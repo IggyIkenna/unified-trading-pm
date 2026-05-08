@@ -524,11 +524,20 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 22. **Trading guardrails** — circuit breakers configured per archetype; kill switches wired (codex
     `04-architecture/autonomous-recovery-matrix.md`); alerting-service rules cover live data-freshness + P&L deviation +
     position breaches (codex `04-architecture/alerting-batch-live.md`); auto-recovery for known transient failure
-    classes. **Deep audit 2026-05-07**: UAC `AlertCode` taxonomy shipped (UAC@`d00326d` per PM@`7624ab21`) but
-    alerting-service rules have NOT YET imported AlertCode — `grep "AlertCode" alerting-service/` returns 0 hits. Rules
-    exist (`data_freshness_rules.py`, `defi_rules.py`, `margin_rules.py`) but are not yet wired to the new closed-set
-    taxonomy. P0 follow-up: alerting_service_live_rules Phase 2 includes the consumer wiring; coordinate ETA against
-    May-23 alerting-rehearsal gate.
+    classes. **Tab 5 (Agent 5) cycle 2026-05-08 progress** (refresh from 2026-05-07 baseline): Phase 2 service migration
+    SHIPPED (alerting-service@`b025e83` consumes UAC `LIVE_ALERT_RULES`); Phase 3 envelope `code: AlertCode` field
+    SHIPPED (UAC@`2636815` Option A) + 3-service consumer migration (execution-service@`624c36a8` yield_recon +
+    funding_recon, position-balance-monitor@`d206ab3` reconciliation_engine + fee_recon, risk-and-exposure@`915f0de`
+    RiskMonitor); Phase 6 15 per-AlertCode operator runbooks SHIPPED (PM@`45b854d5`+`6fad278e`+`db99a3ef`+`b40d405a`+
+    `ac40983b`); Phase 5 DART Active Alerts panel + per-alert detail modal + severity widget + Playwright ack-flow
+    SHIPPED (unified-trading-system-ui@`e9559565`); Phase 2 KillSwitchBus publisher hook + per-event scope
+    (GLOBAL/VENUE/ARCHETYPE) SHIPPED (UAC@`3793310`+`2541a47` field; alerting-service@`8eda37c` hook + 5 integration
+    tests); CeFi ML lifecycle alert codes SHIPPED (UAC@`6c4784f` — 6 ML codes + 5 ML thresholds + 6 ML rules). Group F
+    item 22 column flipped ✗ → ◐. **Pending**: Phase 4 paging-target Secret Manager wiring (operator-driven); Phase 7
+    quietness baseline 48h staging dry-run (operator-driven); Phase 8 live rehearsal (operator-driven); Phase 9 go-live
+    on 2026-05-23 (operator-driven). features-onchain emission sites for `DEFI_HEALTH_FACTOR_CRITICAL` /
+    `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` / `DEFI_WEETH_DEPEG` deferred per
+    Sub-B finding (calculators not yet wired; defi_master Fork 1 territory).
 
 #### Folded operational-validation todos (from `consolidated_operational_validation_2026_04_15`)
 
@@ -611,7 +620,7 @@ Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 2
 | position-balance-monitor-service  | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; PBMS dual projection / fill attributor / child-venue attribution)                                                                                                                                       |
 | risk-and-exposure-service         | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; R&E intent subscriber — extend with explicit live-wiring todo)                                                                                                                                          |
 | pnl-attribution-service           | ◐      | ◐      | ◐         | n/a        | ◐     | ◐         | n/a  | defi_master_2026_05_07 Fork 1 (folds in `defi_e2e_pipeline_2026_04_30`; compute --mode batch CLI; extend with live-mode wiring todo)                                                                                                                                            |
-| alerting-service                  | ◐      | n/a    | ◐         | n/a        | ◐     | ✗         | n/a  | alerting_service_live_rules_2026_05_07 (Phase 1 UAC AlertCode taxonomy shipped UAC@`d00326d` per PM@`7624ab21`; Phase 2-9 pending)                                                                                                                                              |
+| alerting-service                  | ◐      | n/a    | ◐         | n/a        | ◐     | ◐         | n/a  | alerting_service_live_rules_2026_05_07 (Phase 1 UAC AlertCode taxonomy UAC@`d00326d`; Phase 2 service migration alerting-service@`b025e83`; Phase 3 envelope `code: AlertCode` field UAC@`2636815` + 3-service consumer migration; Phase 5 DART unified-trading-system-ui@`e9559565`; Phase 6 15 per-code runbooks PM@`45b854d5`+`6fad278e`+`db99a3ef`+`b40d405a`+`ac40983b`; Phase 2 KillSwitchBus publisher hook UAC@`3793310`+`2541a47` + alerting-service@`8eda37c`; Phase 4/7/8/9 pending)                                                                                                                                              |
 | batch-live-reconciliation-service | ✗      | n/a    | ◐         | n/a        | ◐     | ◐         | n/a  | master_to_live_defi_2026_05_23 Group F (folded from `consolidated_operational_validation_2026_04_15` 2026-05-07; cluster e2e + final QG sweep extend items 17-22 inline)                                                                                                        |
 | deployment-api                    | ✓      | n/a    | ◐         | n/a        | ◐     | n/a       | n/a  | deployment_api_work_stream_a_2026_05_07 (Phase 1 UAC types shipped UAC@`a70b3f6`; Phase 2 endpoints + Phase 3 QG pending)                                                                                                                                                       |
 | deployment-service                | ✓      | n/a    | ◐         | n/a        | ◐     | n/a       | n/a  | infrastructure_master_2026_05_07 (folds in `deployment_service_build_infrastructure_repair_2026_04_22`)                                                                                                                                                                         |
