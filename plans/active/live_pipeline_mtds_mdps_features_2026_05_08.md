@@ -1121,6 +1121,48 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
 - **`defi_master_2026_05_07`** — DeFi-side critical-path consumer of this work. The 2 archetypes need this plan's Phase
   6 cross-cutting features by 2026-05-21. Banner mutually.
 
+## Deferred work after 2026-05-08 PM Tab 2 session
+
+The 2026-05-08 PM/evening Tab 2 session shipped UTL primitives (Phase 8 / 10 / 12 + writegate Phase 5 helper) + codex
+design docs (Phase 9 alerting tier-up + CeFi ML live-serving + ML alerting rules). Service-side wire-in is DEFERRED and
+tracked here so the next agent picks up cleanly without re-reading session notes.
+
+| Phase                                  | Status as of 2026-05-08 PM          | Successor / blocker                                                                                                               |
+| -------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 3 — MTDS websocket streaming rollout   | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-FEATURES-CONSOLIDATION — gates on Harsh Tab 2 `features_repo_consolidation_2026_05_08` Phase 1-4 completing        |
+| 4 — MDPS streaming aggregation cluster | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-FEATURES-CONSOLIDATION — same gate                                                                                 |
+| 5 — features-service asset-scoped      | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-FEATURES-CONSOLIDATION — same gate                                                                                 |
+| 6 — features-service cross-cutting     | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-FEATURES-CONSOLIDATION — same gate                                                                                 |
+| 7 — Replay subsystem integration test  | `todo` (checkbox `- [ ]`)           | UTL helper at UTL@f24e651b ready; integration test deferred until MTDS+MDPS live-mode wired                                       |
+| 8 — Health-API extension               | `done` (UTL helper at UTL@d08c50c3) | Per-service `data_freshness` callback wire-in (1-liner per service) ships with Phase 3/4/5 rollouts                               |
+| 9 — Alerting tier-up                   | `design-shipped`                    | DEFERRED-TO-TAB-5 — design contract in `codex/05-infrastructure/live-pipeline-architecture.md` § "Live-pipeline alerting tier-up" |
+| 10 — Instrument cache-delta hot-reload | `done` (UTL helper at UTL@54d658e8) | Per-service consumer wire-in ships with Phase 3/4/5 rollouts                                                                      |
+| 11 — deployment-UI live tab            | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-FEATURES-CONSOLIDATION + needs `/api/live-status` endpoint                                                         |
+| 12 — Batch-vs-live reconciliation      | `helper-shipped` (UTL@908b1647)     | deployment-api scheduled job + 7-day cutover-gate run DEFERRED-TO-POST-CUTOVER (needs 7d of live-mode parquet first)              |
+| 13 — VM launchers + watchdog           | `todo` (checkbox `- [ ]`)           | DEFERRED-AFTER-PHASE-3-4-5 — launcher shape depends on which services landed live-mode                                            |
+| 14 — Codex SSOT updates                | `todo` (checkbox `- [ ]`)           | PARTIALLY-COMPLETE — 2026-05-08 PM session updated 3 docs; full sweep deferred to plan-completion audit                           |
+| 15 — Workspace QG sweep + 7-day smoke  | `todo` (checkbox `- [ ]`)           | DEFERRED — gates on Phases 3-13 completing                                                                                        |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **`available_at` + lookahead-bias chain (Tab 2 share = links 0/3/4/5/8)**: No phases shipped this session. Open in
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phases
+  0 / 3 / 4 / 5 / 8. Link 7 (`assert_available_at_present`) was already COVERED per that plan's status table (no action
+  required).
+- **Writegate Phase 5 ratchet**: Helper `unified_trading_library/honest_coverage_ratchet.py` shipped at UTL@59996210;
+  baseline cell population (operator runs `measure-honest-coverage.py` on same-region GCE VM) + base-service.sh QG STEP
+  wiring still open in
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
+- **CeFi ML live-serving wiring**: Design doc shipped at `codex/14-playbooks/ml/cefi-ml-live-serving.md`; the
+  features-service live ML inference compute path + UAC `MODEL_PATH_TEMPLATES` SSOT + UTL `ModelArtefactReloader`
+  - per-event `model_version` stamping all open in the
+    [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) (line 35-37 success criteria) — Harsh Tab 2
+    wires the implementation per epic.
+- **CeFi ML alerting wiring**: Design doc shipped at `codex/14-playbooks/alerting/ml-alerting-rules.md` with 4 proposed
+  AlertCode entries (`ML_SIGNAL_STALE`, `ML_MODEL_DRIFT_DETECTED`, `ML_PNL_DEVIATION`, `ML_INFERENCE_LATENCY_SLO`); Tab
+  5 wires the actual alerting-service rule structure + KillSwitchBus rule entries per
+  [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md).
+
 ## Temporary states + their canonical follow-up plans
 
 - **In-process MDPS→features handoff** is intentionally deferred (Phase 5.2) — initial rollout uses Redis Stream hop

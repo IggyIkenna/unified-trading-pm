@@ -3106,6 +3106,16 @@ against seeded fixtures.
 
 ## Phase 5 — Validation + honest-coverage baseline
 
+> **2026-05-08 PM Tab 2 update**: UTL ratchet helper SHIPPED at UTL@59996210 —
+> `unified_trading_library/honest_coverage_ratchet.py` provides `compute_coverage_table(manifest_rows)`
+> (per-(asset_group, data_type) aggregation per the formula below) +
+> `assert_no_regression(observed, baseline, tolerance_pp=0.5, floor_pp=99.0)` raising `HonestCoverageRegressionError`
+> listing every breach. 10 unit tests cover aggregation, zero-total handling, floor breach, tolerance breach,
+> within-tolerance pass, missing-from-observed → zero, new-cell pass-through, multi-cell breach listing, and missing-key
+> row skip. **Still open**: populating real per-cell baseline numbers (operator runs `measure-honest-coverage.py` on a
+> same-region GCE VM — helper consumes the output) + base-service.sh QG STEP wiring (calls helper on PR commits to
+> `main`). Helper is the primitive; the script + STEP wire-in remain.
+
 - [ ] [SCRIPT] P0. Per-service end-to-end coverage measurement (post-reconcile): - Denominator =
       `expected_dates × expected_instruments × expected_data_types` clipped by `SOURCE_COVERAGE_START` /
       `KNOWN_COVERAGE_GAPS` / `venue_trading_calendar` - Numerator =
