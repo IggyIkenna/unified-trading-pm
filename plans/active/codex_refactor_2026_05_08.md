@@ -793,9 +793,15 @@ drift.
 
 ### Phase F.3 — Severity tier glossary — PARALLEL — P1
 
-- [ ] [SCRIPT] P1. Per audit (14-playbooks A): codex enum (CRITICAL/HIGH/WARN/INFO) vs PagerDuty (P0/P1/P2/P3) vs
+- [x] [SCRIPT] P1. Per audit (14-playbooks A): codex enum (CRITICAL/HIGH/WARN/INFO) vs PagerDuty (P0/P1/P2/P3) vs
       `AlertSeverity.WARN` (Python). Add a single glossary table at top of `14-playbooks/alerting/README.md` (or
-      `03-observability/alerting.md`) mapping all three. Other docs cite.
+      `03-observability/alerting.md`) mapping all three. Other docs cite. **SHIPPED 2026-05-08** — glossary added to
+      `14-playbooks/alerting/README.md` § "Severity glossary" mapping all three vocabularies (UAC `AlertSeverity`
+      CRITICAL/HIGH/WARN/INFO ↔ PagerDuty P0/P1/P2/P3 ↔ routing ↔ time-to-ack ↔ examples). Cross-links added in
+      `03-observability/alerting.md` (replaces inline severity table), `14-playbooks/alerting/pagerduty-escalation-policy.md`
+      (top banner + reshape "Severity tiers" section to defer to glossary; preserves the operational P0-vs-P1
+      sub-distinction inside CRITICAL), and `14-playbooks/alerting/threshold-tuning.md` (top banner citing glossary
+      from the WARNING-only deploy step).
 
 ### Phase F.4 — `aws_migration_cost_analysis_2026_05_07.md` extract + archive — PARALLEL — P2
 
