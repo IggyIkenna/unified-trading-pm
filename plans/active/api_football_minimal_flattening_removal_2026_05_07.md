@@ -36,6 +36,13 @@ related:
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 ---
 
+> **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
+>
+> Per operator direction this session — `available_at` stamping wiring (Phase 3 scope: fixture_stats → match_end_time / fixture_events → event_time / lineups → kickoff−60min / injuries → report_time) executes as part of the umbrella's per-asset_group cascade — NOT in isolation. Source-specific stamping rule (UAC SSOT) + per-adapter `available_at` column write + UTL `record_captured` enforcement co-evolve.
+>
+> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
+
+
 # api_football minimal-flattening removal
 
 ## Why

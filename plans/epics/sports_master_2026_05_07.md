@@ -25,6 +25,13 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
 ---
 
+> **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
+>
+> **Phase 1-2 stamping refs ONLY** (sports adapter `available_at` per-source cascade: lineups / fixture_events / injuries / pre-match odds / post-match xG+stats / weather forecast-issue) are folded into the available_at umbrella. Other sports_master scope (backfills, source coverage, league enumeration) remains owned here.
+>
+> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+
+
 # Sports Master — asset_group umbrella
 
 ## Codex SSOTs

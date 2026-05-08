@@ -129,8 +129,9 @@ The pickup steps for the next agent (whoever picks up `cross_cutting_may_23_deli
      (Bybit/Deribit/Binance/OKX/Hyperliquid/Aster), ML_DIRECTIONAL_CONTINUOUS × 3 venues (OKX/Binance/Bybit) — applying
      the master Q&A 7 capital-scale resolution ($10k/venue, 5% drawdown, 20% breach, ARCHETYPE scope).
    - Re-export through `strategy.py` facade.
-6. **Update codex `strategy-summary.md`**: 8-family / 18-archetype baseline → 9-family / 46-archetype shape from current
-   `enums.StrategyFamily` + `StrategyArchetype` registry.
+6. **Update codex `strategy-summary.md`**: 8-family / 18-archetype baseline → 9-family / 53-archetype shape from current
+   `enums.StrategyFamily` + `StrategyArchetype` registry. (2026-05-08: codex SSOT now reflects 53 archetypes per the
+   2026-04-25 Phase 9 expansion — see strategy-summary.md "2026-05-08 drift correction" subsection.)
 7. **Rewrite `cross_cutting_may_23_deliverables_2026_05_08` plan body** deliverables #1 + #2 + #3 todos to reflect
    extension-not-greenfield path. Use the issue doc § "Recommended decision (extends Option A above)" as the canonical
    shape.

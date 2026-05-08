@@ -9,6 +9,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+> **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
+>
+> **Track E ONLY** (4 sports stamping helpers `stamp_available_at_lineups` / `stamp_available_at_injuries` / `stamp_available_at_post_match_cascade` / `stamp_available_at_odds_snapshot`) is folded into the available_at umbrella. **Tracks A + D** are folded into the `manifest_evolution_master` umbrella (above). Track E executes as part of the available_at umbrella's per-asset_group cascade — NOT in isolation.
+>
+> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
+
+
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
