@@ -302,20 +302,38 @@ launch, launch informs AWS bucket-naming, all three feed paper-trade smoke.
 
 **Scope (4 items, must be executed in this order)**:
 
-- [ ] [COORDINATION] P1. **Triage first** —
+- [x] [COORDINATION] P1. **Triage first** —
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md).
       Decide venue-collateral matrix BEFORE the launch picks chains/protocols. Repo: PM. Output: a documented decision
-      pinned at the top of the canonicalisation plan + the defi_master Fork 1 plan.
-- [ ] [TRADING] P0. Launch first DeFi backfill VMs (Aave / Uniswap / LST yields / Pyth + Chainlink). Plan:
+      pinned at the top of the canonicalisation plan + the defi_master Fork 1 plan. **SHIPPED 2026-05-07** by Agent 4
+      (PM@6742d8fd, picked up by parallel-agent commit). DRIFT-Solana mSOL/JitoSOL accepted=True at 10% haircut so
+      `carry_staked_basis` Solana hedge leg is unblocked at the matrix level; DERIBIT/BYBIT/OKX ETH-LST flips deferred
+      to a separate agent (Agent 1 UAC context or independent). Stream B `leveraged_funding_arb` →
+      `ARBITRAGE_PRICE_DISPERSION` config variant decision propagated.
+- [x] [TRADING] P0. Launch first DeFi backfill VMs (Aave / Uniswap / LST yields / Pyth + Chainlink). Plan:
       [`defi_master_2026_05_07`](defi_master_2026_05_07.plan.md) Fork 1. Repos: MTDS + deployment-service. First run
       with the just-shipped Pyth Hermes + Chainlink multi-chain paths. Per-chain VM event verification mandatory.
-- [ ] [INFRA-DESIGN] P1. aws_migration Phase 2 — dual-bucket setup + Storage Transfer Service config + bucket-naming
+      **SHIPPED 2026-05-08** by Agent 4: launched 3 VMs (vault-share-price + lst-rates + gas-fees, 2020-01-01..today),
+      caught DefiManifestRecorder blank-reason regression (writegate Phase 3.D.5 Wave 2.M missed DEFI side), shipped
+      MTDS@d19d76c fix (DefiManifestRecorder.record_empty(reason=) required + 28-callsite migration across 20 handlers
+      + 7 unit tests) per `plans/active/issues/defi_manifest_recorder_blank_reason_2026_05_07.md`, refreshed tarballs,
+      relaunched: mtds-{vault-share-price,lst-rates,gas-fees}-20260508-010{050,105,121}. Lending-indices VM remains
+      DEFERRED (Bug 1 AAVE V3 ETHEREUM silent-zero + Bug 2 COMPOUND V3 subgraph schema + Bug 3 instruments-store-defi
+      2022 metadata floor) per `plans/active/issues/lending_indices_handler_bugs_2026_05_07.md`.
+- [x] [INFRA-DESIGN] P1. aws_migration Phase 2 — dual-bucket setup + Storage Transfer Service config + bucket-naming
       SSOT discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.plan.md)
       Phase 2. Repos: deployment-service + UCI. Codex SSOT to populate:
       [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md).
-- [ ] [TRADING+INTEGRATION] P0. carry_staked_basis paper-trade smoke (Solana Pyth + jitoSOL/mSOL hedging) — verify
+      **SHIPPED 2026-05-07** by Agent 4: deployment-service@7da2f3d (cloud-providers.yaml +10 keys both gcp.storage +
+      aws.storage; `scripts/aws/setup-defi-buckets.sh` idempotent provisioning), PM@bd8d272b (codex SSOT 7 sections
+      populated). Operator next step: `bash scripts/aws/setup-defi-buckets.sh --apply` from authenticated AWS session.
+- [-] [TRADING+INTEGRATION] P0. carry_staked_basis paper-trade smoke (Solana Pyth + jitoSOL/mSOL hedging) — verify
       execution-service + strategy-service + position-balance-monitor-service interactions. Plan: defi_master. Repos:
-      execution-service + strategy-service + position-balance-monitor-service.
+      execution-service + strategy-service + position-balance-monitor-service. **PARTIAL 2026-05-08** by Agent 4 —
+      pre-flight Pyth Hermes endpoint reachable (HTTP 200, 2.3s); full smoke BLOCKED on (a) MTDS@d19d76c VMs draining
+      successfully to verify lst-rates Solana coverage post-fix, (b) features-onchain Docker rebuild (defi_master gate),
+      (c) 4-service QG passes (defi_master gate). Successor: pick up after VM drain confirms manifest captures
+      empty-vs-captured rows correctly + features-onchain rebuild lands.
 
 **Repos owned (collision boundary)**: MTDS (DeFi adapters + backfill paths only — Agent 2 owns MDPS, no overlap),
 deployment-service `scripts/vm/launch-defi-*` + `setup-defi-buckets.sh` (Agent 3 owns the enumerator launcher, no
