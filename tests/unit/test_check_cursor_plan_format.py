@@ -120,7 +120,7 @@ todos:
 
 class TestValidatePlan:
     def test_valid_plan(self, tmp_path: Path) -> None:
-        plan = tmp_path / "test.md.md"
+        plan = tmp_path / "test.md"
         plan.write_text(
             "---\n"
             "name: Test Plan\n"
@@ -137,14 +137,14 @@ class TestValidatePlan:
         assert not errors
 
     def test_missing_frontmatter(self, tmp_path: Path) -> None:
-        plan = tmp_path / "no-fm.md.md"
+        plan = tmp_path / "no-fm.md"
         plan.write_text("# No frontmatter\nJust a plan.")
         errors = MOD.validate_plan(plan)
         assert len(errors) >= 1
         assert any("frontmatter" in e for e in errors)
 
     def test_missing_name(self, tmp_path: Path) -> None:
-        plan = tmp_path / "no-name.md.md"
+        plan = tmp_path / "no-name.md"
         plan.write_text(
             "---\noverview: A plan\nisProject: true\ntodos:\n  - id: 1\n    content: foo\n    status: done\n---\nBody\n"
         )
@@ -152,7 +152,7 @@ class TestValidatePlan:
         assert any("name" in e for e in errors)
 
     def test_missing_overview(self, tmp_path: Path) -> None:
-        plan = tmp_path / "no-overview.md.md"
+        plan = tmp_path / "no-overview.md"
         plan.write_text(
             "---\nname: Plan\nisProject: true\ntodos:\n  - id: 1\n    content: foo\n    status: done\n---\nBody\n"
         )
@@ -160,7 +160,7 @@ class TestValidatePlan:
         assert any("overview" in e for e in errors)
 
     def test_missing_isProject(self, tmp_path: Path) -> None:
-        plan = tmp_path / "no-isproject.md.md"
+        plan = tmp_path / "no-isproject.md"
         plan.write_text(
             "---\nname: Plan\noverview: An overview\ntodos:\n  - id: 1\n    content: foo\n    status: done\n---\nBody\n"
         )
@@ -168,13 +168,13 @@ class TestValidatePlan:
         assert any("isProject" in e for e in errors)
 
     def test_missing_todos(self, tmp_path: Path) -> None:
-        plan = tmp_path / "no-todos.md.md"
+        plan = tmp_path / "no-todos.md"
         plan.write_text("---\nname: Plan\noverview: An overview\nisProject: true\n---\nBody without todos list\n")
         errors = MOD.validate_plan(plan)
         assert any("todos" in e.lower() for e in errors)
 
     def test_unreadable_file(self, tmp_path: Path) -> None:
-        plan = tmp_path / "unreadable.md.md"
+        plan = tmp_path / "unreadable.md"
         # File doesn't exist
         errors = MOD.validate_plan(plan)
         assert len(errors) == 1

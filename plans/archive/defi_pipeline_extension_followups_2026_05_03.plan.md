@@ -174,7 +174,7 @@ Phase 6 — CODEX ratchet ratchet-down (PARALLEL within phase)
 Phase 7 — Closeout (SEQUENTIAL after all phases)
    ├─ 7.1 Workspace QG sweep across all 7 repos
    ├─ 7.2 Memory: project_defi_pipeline_extension_followups_closeout_2026_05_03.md
-   ├─ 7.3 Update parent plan (defi_pipeline_extension_2026_05_01.md.md) — flip
+   ├─ 7.3 Update parent plan (defi_pipeline_extension_2026_05_01.md) — flip
    │      remaining ``[ ]`` todos to ``[x]`` for items this plan resolves
    └─ 7.4 GATE — all repo_gates at C5; plan eligible for archive
 ```
@@ -203,7 +203,7 @@ Phase 7 — Closeout (SEQUENTIAL after all phases)
 
 ## What this plan does NOT do
 
-- Does NOT add the live MEV sandwich engine — gated on the separate `mempool_feed_integration_2026_06_01.md.md` stub
+- Does NOT add the live MEV sandwich engine — gated on the separate `mempool_feed_integration_2026_06_01.md` stub
   (still paused).
 - Does NOT extend coverage to non-EVM chains beyond Solana — Bitcoin / Cosmos / Polkadot are out of scope until the
   business case clears.
@@ -344,7 +344,7 @@ Phase 7 — Closeout (SEQUENTIAL after all phases)
   - [x] [AGENT] P2. Memory updated: phase-1 / phase-2 / phase-4 / phase-5 / phase-6 / closeout entries plus the index
         pointer. status: done.
 - id: p7-3-parent-plan-flip content: |
-  - [x] [AGENT] P2. Parent plan `defi_pipeline_extension_2026_05_01.md.md` items resolved by this follow-up are
+  - [x] [AGENT] P2. Parent plan `defi_pipeline_extension_2026_05_01.md` items resolved by this follow-up are
         documented in the closeout memory; the parent plan's own status is governed by its own status field — no
         cross-plan flip required. status: done.
 - id: p7-4-gate content: |

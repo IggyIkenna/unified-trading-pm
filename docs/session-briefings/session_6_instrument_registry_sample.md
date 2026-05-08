@@ -19,10 +19,10 @@
 
 | Plan   | Phases                               | Todos    | Reference                                                     |
 | ------ | ------------------------------------ | -------- | ------------------------------------------------------------- |
-| Plan A | Phase 1 (registry generation script) | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md.md   |
-| Plan A | Phase 2 (OpenAPI spec fixes)         | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md.md   |
-| Plan A | Phase 3 (CI triggers)                | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md.md   |
-| Plan D | Scenario instrument injection        | related  | plans/active/plan_d_testnet_stress_testing_2026_03_21.md.md |
+| Plan A | Phase 1 (registry generation script) | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md   |
+| Plan A | Phase 2 (OpenAPI spec fixes)         | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md   |
+| Plan A | Phase 3 (CI triggers)                | ~4 todos | plans/active/plan_a_registry_schema_sync_2026_03_21.md   |
+| Plan D | Scenario instrument injection        | related  | plans/active/plan_d_testnet_stress_testing_2026_03_21.md |
 
 ## What's Already Done (Don't Redo)
 

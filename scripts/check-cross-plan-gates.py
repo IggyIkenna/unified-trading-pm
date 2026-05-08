@@ -62,7 +62,7 @@ GATES: list[dict[str, str | list[str]]] = [
 def find_plan_file(pattern: str) -> Path | None:
     """Find the first plan file matching the regex pattern."""
     regex = re.compile(pattern)
-    for plan_file in sorted(PLANS_DIR.glob("*.md.md")):
+    for plan_file in sorted(PLANS_DIR.glob("*.md")):
         if regex.search(plan_file.name):
             return plan_file
     return None

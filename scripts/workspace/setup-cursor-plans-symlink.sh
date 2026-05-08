@@ -21,7 +21,7 @@ if [ -L "$SYMLINK_PATH" ]; then
     ls -la "$SYMLINK_PATH"
     echo ""
     echo "Plan files:"
-    ls -la "$TARGET_DIR"/*.md.md 2>/dev/null || echo "(none)"
+    ls -la "$TARGET_DIR"/*.md 2>/dev/null || echo "(none)"
     exit 0
   fi
   rm "$SYMLINK_PATH"
@@ -30,9 +30,9 @@ fi
 
 if [ -d "$SYMLINK_PATH" ]; then
   # It's a regular directory (not a symlink)
-  if [ -n "$(find "$SYMLINK_PATH" -maxdepth 1 -name "*.md.md" 2>/dev/null | head -1)" ]; then
-    echo "[MOVE] Moving .md.md files to target..."
-    for f in "$SYMLINK_PATH"/*.md.md; do
+  if [ -n "$(find "$SYMLINK_PATH" -maxdepth 1 -name "*.md" 2>/dev/null | head -1)" ]; then
+    echo "[MOVE] Moving .md files to target..."
+    for f in "$SYMLINK_PATH"/*.md; do
       [ -e "$f" ] && mv "$f" "$TARGET_DIR/"
     done
   fi
@@ -82,4 +82,4 @@ echo "Verification:"
 ls -la "$SYMLINK_PATH"
 echo ""
 echo "Plan files:"
-ls -la "$TARGET_DIR"/*.md.md 2>/dev/null || echo "(none)"
+ls -la "$TARGET_DIR"/*.md 2>/dev/null || echo "(none)"

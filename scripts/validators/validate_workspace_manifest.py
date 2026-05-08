@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.13
 """Validate workspace-manifest.json against schema and topological order.
 
-Phase 1: plans_to_deployable_unified_audit.md.md
+Phase 1: plans_to_deployable_unified_audit.md
 GATE: workspace-manifest.json validates with zero errors; topological order valid.
 
 Usage:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3.13
-"""Validate no broken relative links in plans/active/*.md.md.
+"""Validate no broken relative links in plans/active/*.md.
 
-Phase 0b: plans_to_deployable_unified_audit.md.md
-GATE: no broken relative links in any active plans/active/ .md.md file.
+Phase 0b: plans_to_deployable_unified_audit.md
+GATE: no broken relative links in any active plans/active/ .md file.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ def main() -> int:
         return 0
 
     broken: list[tuple[str, str]] = []
-    for path in plans_dir.glob("*.md.md"):
+    for path in plans_dir.glob("*.md"):
         content: str = path.read_text()
         for m in re.finditer(r"\]\(([^)]+)\)", content):
             link = m.group(1).strip()
@@ -64,7 +64,7 @@ def main() -> int:
         for f, link in broken:
             print(f"BROKEN: {f} -> {link}", file=sys.stderr)
         return 1
-    print("OK: No broken links in plans/active/*.md.md")
+    print("OK: No broken links in plans/active/*.md")
     return 0
 
 
