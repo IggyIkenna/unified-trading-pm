@@ -2,12 +2,6 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # VM Tarball Deployment — SSOT
 
 **Status**: canonical. All backfill, migration, forward-poll, and smoke VMs in GCE use this pattern. Docker images are
@@ -111,14 +105,15 @@ The README now calls this out in bold.
 **features-service consolidation (2026-05-08)**: the 8 prior `features-*-service` repos collapse to a single
 [`features-service`](../../../features-service/) repo (sub-packages per family). Tarball implications:
 
-- `--asset-group CEFI|DEFI|TRADFI|SPORTS|PREDICTION` now includes the single `features-service/` repo (rather
-  than the 8 prior `features-*-service` repos). The category-to-repo bash arrays in `create-code-tarballs.sh`
-  reflect this on Phase 8A landing.
+- `--asset-group CEFI|DEFI|TRADFI|SPORTS|PREDICTION` now includes the single `features-service/` repo (rather than the 8
+  prior `features-*-service` repos). The category-to-repo bash arrays in `create-code-tarballs.sh` reflect this on Phase
+  8A landing.
 - VM boot invocation changes from `python -m features_<X>_service ...` (8 distinct entry-points) to
   `python -m features_service --feature-family <X> ...` (single CLI dispatcher).
-- The `features-` VM prefix in `VM_PREFIX_TO_BUCKET` is registered ONCE for the consolidated launcher
-  (replacing 8 per-family prefixes that would otherwise drift).
-- Architecture SSOT: [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+- The `features-` VM prefix in `VM_PREFIX_TO_BUCKET` is registered ONCE for the consolidated launcher (replacing 8
+  per-family prefixes that would otherwise drift).
+- Architecture SSOT:
+  [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
 
 ---
 
