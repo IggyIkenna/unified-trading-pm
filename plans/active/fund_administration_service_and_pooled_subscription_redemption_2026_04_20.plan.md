@@ -57,6 +57,23 @@ depends_on: []
 
 # Context
 
+> **Cross-plan position 2026-05-08**: this plan is **POST-2026-05-23 P2**. Fund administration + pooled subscription /
+> redemption is institutional infrastructure that does **NOT** block the May-23 live-DeFi cutover. The cutover model is
+> single-wallet operator-funded; pooled subscription is a Q3 2026 follow-on. Owner: Ikenna (operator + governance); not
+> assigned in current daily splits ([`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md) +
+> [`work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md) defer this plan in their "Defer post-cutover"
+> sections).
+>
+> **Master plan position**: NOT on [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md)
+> critical path. May-23 readiness ladder is Group A-G; fund administration is Group H+ (post-cutover scope).
+> **Re-prioritise post-cutover** when the operator picks up institutional client onboarding work — at that point this
+> plan moves to active-priority status + gets daily-split assignment per CLAUDE.md "Daily Work-Split Process".
+>
+> **Successor plan when this plan picks up**: this plan IS its own completion (no further successor needed). Per
+> CLAUDE.md "Citadel-Grade Planning Standards §3 — No Technical Debt", every phase's exit criteria is the final
+> production shape; no fold-into-umbrella is required because this plan's domain (fund administration) is orthogonal to
+> the May-23 live-trading umbrellas.
+
 ## Why this plan
 
 **User correction 2026-04-20:** the briefing copy + codex drift previously suggested a universal "treasury wallet + Odum
