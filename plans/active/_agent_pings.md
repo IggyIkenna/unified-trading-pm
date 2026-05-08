@@ -39,3 +39,7 @@ decision summary".
 [2026-05-08 ~now UTC] uac-strategy-catalogue-ids-tab6a — cross_cutting #1+#2 already shipped under UAC architecture_v2,
 plan-body design would create parallel SSOTs + collide with live `strategy.py` facade — operator triage needed; see
 issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md + cross_cutting_may_23_deliverables_2026_05_08.md.
+
+[2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract fully shipped UAC+UTL (honest_coverage.py:188 +
+lifecycle.py:103 + manifest_writer.py:1948); Harsh Tab 1 MTDS writer migration unblocked, no Ikenna-side work pending;
+see predictions_master_2026_05_07.md.
