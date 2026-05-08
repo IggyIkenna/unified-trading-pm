@@ -16,7 +16,7 @@ scope: [engineer, admin]
 
 ## Where to go first
 
-- **Architecture v2 README**: [`architecture-v2/README.md`](architecture-v2/README.md) — full taxonomy (8 families × 18
+- **Architecture v2 README**: [`architecture-v2/README.md`](architecture-v2/README.md) — full taxonomy (9 families × 53
   archetypes × 7 axes × 10 cross-cutting concerns) + Capital Flow Lifecycle.
 - **Migration audit**: [`architecture-v2/MIGRATION.md`](architecture-v2/MIGRATION.md) — every legacy doc / code module /
   config mapped to its v2 placement. Nothing is silently dropped.

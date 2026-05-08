@@ -39,10 +39,13 @@ May-23 are **enrichments of those existing surfaces**, not greenfield UI.
 
 ## 2. StrategyInstruction action-type scope decision matrix
 
-The strategy layer emits a polymorphic `StrategyInstruction` with **11 action types** (see
-[`strategy-summary.md`](../strategy-summary.md) § "Execution primitives"): `TRADE`, `SWAP`, `LEND`, `BORROW`, `STAKE`,
-`UNSTAKE`, `QUOTE`, `TRANSFER`, `BRIDGE`, `ATOMIC`, `CANCEL`. DART must replicate each of these in manual mode for any
-archetype that emits it on the May-23 critical path.
+The strategy layer emits a polymorphic `StrategyInstruction` whose actions are enumerated by the UAC SSOT
+`unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2` (currently 14 members: `TRADE`, `SWAP`,
+`LEND`, `BORROW`, `STAKE`, `UNSTAKE`, `QUOTE`, `TRANSFER`, `BRIDGE`, `ATOMIC`, `CANCEL`, `CONVERT_DUST`, `LP_MINT`,
+`LP_BURN`). DART must replicate each action that a May-23 critical-path archetype emits in manual mode. The matrix
+below covers the 11 actions in scope for the May-23 cycle; `CONVERT_DUST` + `LP_MINT` + `LP_BURN` ride alongside the
+DeFi LP archetype activation per
+[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
 
 **Legend**: ✅ = required for May-23 cutover (live archetypes that emit this action). ◐ = backtest exec validation only
 (archetype emits this action but archetype is backtest-only this cycle). ✗ = post-May-23 (no live or backtest archetype
@@ -64,15 +67,16 @@ emits this action this cycle, OR the action lives in a deferred archetype family
 
 ## 3. Per-archetype manual-fallback map
 
-The 18 canonical archetypes in [`../architecture-v2/archetypes/`](../architecture-v2/archetypes/) (the codex
-`strategy-summary.md` SSOT lists 18; the UAC `internal/architecture_v2/enums.py` registry is at 46 archetypes after the
-2026-04-25 PORTFOLIO + MEV + VOL expansions — the 18-list maps to the May-23-relevant subset). Each archetype's
-manual-fallback requirement is enumerated below.
+The full canonical archetype set lives in UAC
+`unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` (the SSOT). This spec materialises the
+**May-23 live + immediate-backtest subset** of those archetypes — the live carry leads, their backtest siblings, and
+the manual surfaces those archetypes emit. Each archetype's manual-fallback requirement is enumerated below.
 
-> **Note on enum drift.** Codex `strategy-summary.md` 18-archetype baseline is stale relative to UAC enum's 46. See
-> [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
-> for the codex update todo. This spec uses the codex 18-archetype names (since the May-23 manual surfaces only need the
-> live + immediate-backtest archetype subset); post-May-23 the spec extends to the full 46.
+> **Scope note.** Post-May-23 archetypes (full Phase 9 expansions: MEV, DeFi LP, market-making sub-variants, full vol
+> surface, prediction MM, cross-domain event arb, portfolio sleeves) extend this spec under
+> [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md)
+> § post-May-23 archetypes. The UAC enum is the always-authoritative count; this doc cites the live + backtest subset
+> by name.
 
 ### Live archetypes for May-23 (manual surface = ✅ required)
 
@@ -268,7 +272,7 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
   stale relative to UAC v2 enum's 9-family / 46-archetype shape — see issue doc above).
 - [`codex/09-strategy/architecture-v2/README.md`](../architecture-v2/README.md) — architecture-v2 SSOT entry point.
 
-### 18 archetype docs referenced by this spec
+### Archetype docs referenced by this spec (May-23 live + backtest subset)
 
 - [`carry-staked-basis.md`](../architecture-v2/archetypes/carry-staked-basis.md) — **live May-23 lead**.
 - [`carry-basis-perp.md`](../architecture-v2/archetypes/carry-basis-perp.md) — **live May-23**.

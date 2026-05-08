@@ -14,9 +14,17 @@ scope: [engineer, admin]
 > types" sections in individual archetype docs. Those per-archetype docs link back here and keep only the archetype's
 > rows from the table below.
 >
-> **Scope:** For every one of the 18 v2 strategy archetypes, every `(category, instrument_type)` cell is declared
-> SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled
-> representative `slot_label` examples.
+> **Scope:** For every one of the 53 v2 strategy archetypes (per UAC
+> `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` SSOT), every `(category, instrument_type)`
+> cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and
+> fully-spelled representative `slot_label` examples.
+>
+> **Matrix-completeness banner (2026-05-08).** This doc was authored at the 2026-04-19 18-archetype baseline. The
+> tables below currently cover the May-23 live + immediate-backtest archetype subset. The Phase 9 expansions (4 MEV +
+> 1 cross-domain event arb + 5 new MARKET_MAKING_* + 3 DEFI_LP_* + 17 expanded VOL_* + 4 PORTFOLIO_*) are catalogued
+> in UAC; their full per-cell matrix rows are tracked under
+> [`plans/active/codex_refactor_2026_05_08.md`](../../../plans/active/codex_refactor_2026_05_08.md) Phase A.4 + the
+> per-archetype materialisation in Phase B.
 >
 > **Sources:** `strategy-service/strategy_service/engine/strategies/v2/`, UAC `registry/capability_declarations/`,
 > [`02-venues/venue-registry-reference.md`](../../02-venues/venue-registry-reference.md),
@@ -1421,6 +1429,12 @@ summary:
 
 - **2026-04-19** — First version. All 18 archetypes × 4 categories × 8 instrument types populated with representative
   slot_labels. 21 block-list entries. 10 UAC registry gaps identified. Companion doc `uac-registry-gaps.md` pending.
+- **2026-05-08** — Refresh stub: scope updated to "53 archetypes" per UAC `StrategyArchetype` SSOT (PM@d6d0cd57
+  refreshed `strategy-summary.md`); the 18-archetype matrix body is preserved as the May-23 live + immediate-backtest
+  subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
+- **2026-05-08** — Refresh stub: scope updated to "53 archetypes" per UAC `StrategyArchetype` SSOT (PM@d6d0cd57
+  refreshed `strategy-summary.md`); the 18-archetype matrix body is preserved as the May-23 live + immediate-backtest
+  subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
 - **2026-04-19 (same day)** — Added dated-future rolls architecture: continuous-underlying concept,
   representative-future resolution via features, `REPRESENTATIVE_FUTURE_CHANGED` event contract, futures-roll as ATOMIC
   combo (listed or synthesized), circuit breakers. Slot-label convention now distinguishes rolling (`-dated-`) from

@@ -85,8 +85,8 @@ parquets are backfilled with their defaults; **no migration needed for reads**.
 ML/strategy/execution `job_id`, UTL@`ed658e9b`). The v8 design (`pipeline_mode` + `service_emission_state` +
 `last_emission_decision_at` + `expected_window_completeness_pct`) is in
 [`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
-See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is
-a brief recap.
+See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is a
+brief recap.
 
 `AvailabilityRecord` columns (defaults `""` unless noted):
 
