@@ -1458,14 +1458,28 @@ Every plan MUST declare explicit success criteria per phase:
 - **Business gates**: B1-B6 (if applicable)
 - The final phase MUST include workspace-wide QG validation of all affected repos
 
-### 6. Downstream Consumer Updates
+### 6. Downstream Consumer Updates (extended 2026-05-08 to cover non-library refactors)
 
-When modifying shared libraries (UAC, UTL, UCI, UEI):
+When modifying shared libraries (UAC, UTL, UCI, UEI) **OR removing/renaming any publicly-imported symbol from any
+service or peripheral repo** (e.g. strategy-service `cli.handlers.batch_utils.get_strategy_factories` removal in
+V1-RETIRE Phase 2 2026-05-01):
 
-- Pre-audit identifies EVERY downstream consumer
-- Plan includes explicit fix items for each affected repo
+- Pre-audit identifies EVERY downstream consumer across the **entire workspace** — not just service repos. Include:
+  - Service-internal consumers (`*_service/*/`)
+  - Peripheral script directories (`e2e-testing/scripts/`, `*_service/scripts/`, `deployment-service/scripts/`)
+  - Sample notebooks, ad-hoc one-off scripts, smoke harnesses
+- Plan includes explicit fix items for each affected repo / script directory
 - No "fix later" — all consumers updated in the same plan
 - Quality gates run on each affected downstream repo
+- **`grep` across the workspace for the removed/renamed symbol is mandatory**; the AST-walk pattern from QG STEP 5.64
+  (workspace-wide callsite enumeration) is the canonical implementation shape
+- Reviewers reject PRs that remove/rename a public symbol without including a workspace-grep audit table in the plan
+
+**Why this extension exists**: 2026-05-01 → 2026-05-08 silent rot of `e2e-testing/scripts/defi/colocated_engine.py`
+(broken import of `get_strategy_factories`). The original § 6 only covered shared libraries (UAC/UTL/UCI/UEI), so
+strategy-service's V1-RETIRE Phase 2 refactor didn't fire the rule. The non-service consumer (`colocated_engine.py`)
+broke silently for 7 days because it was outside any QG. Reference:
+`plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md`.
 
 ### 7. Single Source of Truth
 
@@ -1473,6 +1487,139 @@ When modifying shared libraries (UAC, UTL, UCI, UEI):
 - No service should self-declare types that exist in contracts libraries
 - No re-definition of enums, dataclasses, or Pydantic models that already exist upstream
 - Pre-audit should catch self-declared duplicates and include them in the fix manifest
+
+## Runbook Execution-Owner SSOT (HARD RULE codified 2026-05-08)
+
+Every operator-runnable runbook, smoke harness, manifest-rescan script, alerting drill, demo run, or rehearsal
+procedure MUST declare an explicit periodic-execution path. Without one, the runbook silently rots — its imports
+break against an evolving codebase + nobody notices until the operator panics at cutover. Reference incident:
+2026-05-01 → 2026-05-08 silent rot of `e2e-testing/scripts/defi/colocated_engine.py` paper-trade harness (7 days).
+
+### What every runbook MUST declare
+
+Frontmatter (or in the first paragraph) of every runbook in `plans/active/issues/<runbook>.md` or every operator-driven
+todo in a master plan body:
+
+```yaml
+execution:
+  owner: <named Tab in current work-split | service maintainer | cron schedule>
+  cadence: <daily | weekly | monthly | per-PR | per-deploy | one-shot>
+  verifier: <event-stream signature | exit code | manifest spot-check | downstream side-effect>
+  last_executed: <YYYY-MM-DD or "NEVER" — required field>
+```
+
+**No exceptions** — runbooks without all 4 fields are review-blocking. If the runbook is genuinely one-shot
+(e.g. "run this once after the migration ships"), declare `cadence: one-shot` + `last_executed: NEVER` and remove
+the runbook to `plans/archive/` after the one-shot fires.
+
+### Where execution actually happens (closed set)
+
+Every runbook's `owner` resolves to ONE of these execution paths — no others:
+
+1. **Cron VM** in `deployment-service/scripts/vm/` with a singleton-locked launcher + watchdog dict registration
+   (e.g. forward-poll VMs, manifest-consolidator, vm-zombie-watchdog itself).
+2. **Daily Tab assignment** in tomorrow's `work_split_<YYYY_MM_DD>_*.md` — explicit todo with the runbook path
+   referenced + a verifiable done-definition.
+3. **QG-wired smoke** — runbook's smoke runs as part of `bash scripts/quality-gates.sh` for the consumer service.
+   Catches drift on every PR (sub-minute feedback loop).
+4. **Cron-triggered ScheduleWakeup** — Tab agent schedules a periodic wakeup that re-runs the runbook + verifies
+   done-definition. Lower-overhead than cron VM for runbooks that fit in <5min.
+
+### Reviewer enforcement
+
+PRs that ship a new runbook without an `execution:` block are blocked. PRs that change a runbook's `last_executed`
+date without showing actual run evidence (event-stream link, commit sha of verification, etc.) are blocked. The
+`runbook_execution_governance_gaps_2026_05_08.md` issue doc is the canonical reference for why this rule exists.
+
+### Composes with
+
+- `Findings Triage Discipline` — case-1-to-5 routing applies when a periodic execution surfaces a finding; the runbook
+  itself doesn't need to file an issue doc, but its execution does.
+- `No fire-and-forget VM launches` — extends the VM rule to scripts/runbooks. The same event-stream verification
+  contract applies (STARTED + progress + STOPPED).
+- `Citadel-Grade Planning § 6 Downstream Consumer Updates` — runbooks ARE downstream consumers; the extended § 6 rule
+  catches refactors that break them.
+
+## Peripheral Script Directories Under Primary-Consumer QG (HARD RULE codified 2026-05-08)
+
+Every peripheral script directory that imports from a service's Python package MUST be wired into THAT service's
+`scripts/quality-gates.sh` so basedpyright + ruff + import-resolution catch breakage at PR time, not at runtime
+7 days later.
+
+### Concrete mapping
+
+| Peripheral script dir | Primary consumer service | QG path |
+|----------------------|--------------------------|---------|
+| `e2e-testing/scripts/defi/` (`colocated_engine.py`, etc.) | strategy-service (imports `strategy_service.cli.handlers.*`) | `strategy-service/scripts/quality-gates.sh` runs basedpyright on this dir |
+| `e2e-testing/scripts/sports/` | features-sports-service / mtds (imports `features_sports_service.*` / `market_tick_data_service.*`) | features-sports-service QG |
+| `e2e-testing/scripts/prediction/` | mtds + features-onchain (imports `market_tick_data_service.*` / `features_onchain_service.*`) | mtds QG (primary) |
+| `*_service/scripts/migration_*.py` | own service | own service QG (already covered) |
+| `deployment-service/scripts/vm/*.sh` | bash; no Python imports | bash-syntax check in deployment-service QG |
+| `unified-trading-pm/scripts/*.py` | PM library + various services | PM QG |
+
+### What "wired into QG" means concretely
+
+The consumer service's `scripts/quality-gates.sh` adds a step that:
+
+1. `cd ../e2e-testing/scripts/<asset_group>/` (or equivalent peripheral dir).
+2. `basedpyright` on every `.py` file. Asserts every import resolves.
+3. `ruff check` on every `.py` file.
+4. (Optional) Smoke-execute the harness in `--dry-run` mode if available.
+
+If the peripheral repo isn't a sibling at QG time (CI), skip the step with a clear message — but locally + on the
+operator's workstation it MUST run. The intent is to catch import-rot in <1 minute on the next PR, not in 7 days when
+the operator runs the harness.
+
+### Why this rule exists
+
+`colocated_engine.py:306` imports `from strategy_service.cli.handlers.batch_utils import get_strategy_factories`.
+That symbol was removed by strategy-service's V1-RETIRE Phase 2 refactor (2026-05-01). basedpyright would have caught
+the ImportError instantly if it had run on `colocated_engine.py` — but `e2e-testing/scripts/` was outside any service's
+QG. 7 days passed with the harness silently broken. Reference:
+`plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md`.
+
+### Composes with
+
+- `Citadel-Grade Planning § 6` extension above — Pre-Audit + this QG wiring are the two halves of preventing the rot.
+- `Runbook Execution-Owner SSOT` above — the QG wiring catches static-import drift; the execution-owner SSOT catches
+  runtime drift (e.g. external API changes that don't fail typecheck but fail at fetch-time).
+
+## Master Plan Continuous-Verification Column (HARD RULE codified 2026-05-08)
+
+Every success criterion in the master plan's per-service readiness checklist (Groups A-G; 23 items per
+`master_to_live_defi_2026_05_23.md`) MUST declare its **continuous verification path** — what cron / Tab / QG runs
+between checkpoint deadlines to keep the criterion green.
+
+### Why
+
+Master plan success criteria are checkpointed at cutover (May-23 for live-DeFi). A criterion that goes red 3 weeks
+before the deadline is invisible until the operator manually walks every item — too late. The continuous-verification
+column makes silent rot detectable on day 1 instead of day 22.
+
+### Required column
+
+The master plan readiness table MUST have this shape (one row per item):
+
+| Group | Item | Cutover Success Criterion | **Continuous Verification** | Last verified |
+|-------|------|---------------------------|-----------------------------|----------------|
+| F | 17 | paper-trade smoke green at May-23 | Daily cron VM `mtds-paper-smoke-` + Tab 5 sweep | 2026-05-08 |
+| F | 18 | batch-vs-live recon green at May-23 | Daily cron + alerting rule for delta > 5bps | 2026-05-07 |
+| F | 19 | Copper + CEFFU treasury wired | Live-only — no continuous; manual sign-off | n/a |
+
+If an item's continuous verification is genuinely "manual sign-off only" (live-only operator-judgment items), declare
+`Continuous Verification: manual` + `Last verified: <YYYY-MM-DD or NEVER>`.
+
+### Reviewer enforcement
+
+Master plan refresh PRs that don't update the `Last verified` column for changed items are review-blocked. Items
+where `Last verified` is older than the declared cadence trigger a P0 alerting rule (Tab 5 governance owns the alert).
+
+### Composes with
+
+- `Runbook Execution-Owner SSOT` above — the master plan's continuous-verification column points at the runbook's
+  `execution.owner` field. They MUST agree.
+- `Findings Triage Discipline` — when a continuous verifier surfaces a regression, it's a Case 5 big finding by
+  default (since master plan items are by definition on the May-23 critical path).
 
 ## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
 
