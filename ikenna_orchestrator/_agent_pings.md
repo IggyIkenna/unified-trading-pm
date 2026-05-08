@@ -31,4 +31,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(empty — orchestration directory bootstrapped 2026-05-08, no Ikenna-side spawns yet today.)_
+[2026-05-08 21:21 UTC] wave-8-basefc-validationflip — DONE audit; 74 calcs (not 12), paradigm split, 3-step migration; NO code shipped (foreign WIP on UTL registry.py + scope multi-day); successor plan needed post-Phase-6; see plans/active/issues/basefc_validation_flip_audit_2026_05_08.md (PM@142f7289)
