@@ -319,10 +319,13 @@ drift.
   - [ ] `(UTS)` alias → `(UTL)` (unified-trading-services rename completed). Affected:
         `06-coding-standards/service-hardening-checklist.md:213`. Strike `unified-trading-services` from any
         service-list (it's a library not a service): `06-coding-standards/cod-deadlock-verification-report.md:39`.
-  - [ ] `unified-feature-calculator-library` references — verify against `features_repo_consolidation_2026_05_08.md`
-        whether the library survives as inner-package or consolidated. Affected:
-        `06-coding-standards/feature-service-pattern.md:24,173,194`,
-        `06-coding-standards/service-hardening-checklist.md:214`, `06-coding-standards/pre-sprint-baseline.md:73`.
+  - [ ] `unified-feature-calculator-library` is **archived** (verified 2026-05-08, see Q4 resolution). Repo lives only
+        at `archive/unified-feature-calculator-library/`; zero non-archive imports; `BaseFeatureServiceV2` migrated into
+        `unified-trading-library` (UTL). Sweep all codex refs: `unified-feature-calculator-library` →
+        `unified-trading-library`. Affected: `06-coding-standards/feature-service-pattern.md:24,173,194`,
+        `06-coding-standards/service-hardening-checklist.md:214`, `06-coding-standards/pre-sprint-baseline.md:73`. ALSO
+        remove the stale `workspace-manifest.json:2163` entry as part of Phase B.3 acceptance (workspace-manifest is not
+        a codex doc but the entry creates downstream confusion; flag in commit body).
   - [ ] `unified-trading-codex/` path prefix → `unified-trading-pm/codex/`. Affected:
         `06-coding-standards/feature-service-pattern.md:196,197`,
         `06-coding-standards/service-hardening-checklist.md:225-227`,
@@ -497,22 +500,32 @@ drift.
 
 ### Phase D.3 — Multi-axis correction body-text reconciliation — SEQUENTIAL after A.1, A.2 — P0
 
-- [ ] [SCRIPT] P0. The MULTI_AXIS_CORRECTION banner declares `fixture_id` and `market_id` are row-level columns NOT
-      shard axes. But the same files contain pre-correction body text. Sweep body text to match banner.
+- [ ] [SCRIPT] P0. **Resolved 2026-05-08 (Q1)**: banner is canonical. `fixture_id` (sports) and `market_id` (prediction)
+      are row-level columns for UI display, NOT hive-partition shard axes. Verified independently via: (i) writegate
+      plan line 98 (`fixture_id (display-axis only)`), (ii) writegate plan line 395 (`SPORTS_FIXTURE_CLUSTERS` is
+      per-fixture aggregate cluster — clusters live inside files), and (iii) GCS reality at
+      `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2025-10-15/entity=footystats_odds/`
+      where the deepest partition is `league=BRASILEIRAO/`, with no `fixture=...` subdirectory anywhere.
 
-  **Files to update** (verified in audit 1c):
-  - [ ] `02-data/sports-scheduling-and-sharding.md:55-56` — "Per-fixture shard atom (writegate Phase 2.B):
-        `(asset_group=sports, source, data_type, league_id, fixture_id, day)`" — `fixture_id` is shard axis here.
-        Reconcile with banner OR confirm with operator that writegate Phase 2.B made it canonical.
-  - [ ] `02-data/availability-manifest-and-data-status.md:198-201` — same restatement.
-  - [ ] `02-data/per-category-bucket-layouts.md:101` — per-fixture path.
-  - [ ] `02-data/prediction-schema-paths.md:114` — `market_id` shown as shard axis.
+      **No data migration needed.** Disk shape already matches banner. This phase
+      is a doc-only sweep removing stale body text in 02-data.
 
-  **Operator decision required**: which is canonical — banner (row-level) or body (shard-axis)? Cross-check with
-  `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.B + UTL `manifest_writer.py` `record_captured` shard_key
-  signature for sports/prediction.
+  **Files to sweep**:
+  - [ ] `02-data/sports-scheduling-and-sharding.md:55-56` — delete the "Per-fixture shard atom" line claiming
+        `(asset_group=sports, source,     data_type, league_id, fixture_id, day)`. Replace with: shard atom is
+        `(asset_group=sports, source, data_type, league_id, day)`; `fixture_id` is a row-level column inside the
+        parquet; per-fixture cluster validation via UAC `SPORTS_FIXTURE_CLUSTERS` (greenfield).
+  - [ ] `02-data/availability-manifest-and-data-status.md:198-201` — same restatement to delete; add cross-link to the
+        cluster-validation rule.
+  - [ ] `02-data/per-category-bucket-layouts.md:101` — replace "per-fixture path" claim with the per-(league, day) path;
+        note that `fixture_id` rows are inside the file. (This file also gets renamed in Phase E.4.)
+  - [ ] `02-data/prediction-schema-paths.md:114` — replace `market_id` shard-axis claim with row-level column; note that
+        per-`canonical_question_group` cluster validation expects N market_ids (HOURLY=24 / DAILY=1 / ELECTION=1) within
+        the file.
 
-  **Acceptance**: banner + body text agree; one shard-atom shape per asset_group documented.
+  **Acceptance**: workspace-wide grep `(asset_group=sports.*fixture_id.*day)` and
+  `(asset_group=prediction.*market_id.*day)` shard-axis claims return zero hits in codex/. CLAUDE.md "Per-asset-group
+  shard-key matrix" remains the workspace SSOT.
 
 ### Phase D.4 — Custody triplet → custody-providers.md SSOT — SEQUENTIAL after A.1 — P1
 
@@ -660,7 +673,7 @@ drift.
 
 ## LAYER E — Heavy structural moves (sequential; operator-decision required per move)
 
-### Phase E.1 — Topology 7-doc cluster reorganisation — OPERATOR APPROVAL — P1
+### Phase E.1 — Topology 7-doc cluster reorganisation — SEQUENTIAL after Layer A — P1
 
 - [ ] [DOC] P1 (BLOCKED on operator approval — heaviest blast radius). Per audit C4,
       `04-architecture/{RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE, service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster, PROTOCOL-INJECTION}`
@@ -678,7 +691,7 @@ drift.
   **Why blocked**: heaviest cross-doc impact. Operator should explicitly approve before this lands; consider deferring
   past May-23 cutover.
 
-### Phase E.2 — 14-playbooks split into 3 directories — OPERATOR APPROVAL — P2
+### Phase E.2 — 14-playbooks split into 3 directories — SEQUENTIAL after E.3 — P1
 
 - [ ] [DOC] P2 (BLOCKED on operator approval — workspace-wide doc-tree change). Per audit S1, `14-playbooks/` mixes 4
       genres. Proposed split:
@@ -692,7 +705,7 @@ drift.
   **Why blocked**: top-level directory rename; affects every codex doc cross-linking into 14-playbooks/ and every
   CLAUDE.md reference.
 
-### Phase E.3 — 09-strategy cross-cutting collapse — OPERATOR APPROVAL — P2
+### Phase E.3 — 09-strategy cross-cutting collapse — PARALLEL — P1
 
 - [ ] [DOC] P2 (BLOCKED on operator approval). Per audit S2, two parallel `cross-cutting/` directories in 09-strategy:
   - Move v2-content (`dart-manual-trade-spec`, `operational-modes-matrix`, `pnl-attribution`, `prediction-markets`,
@@ -703,12 +716,12 @@ drift.
 
   **Why blocked**: cross-doc impact + ambiguity if other agents are mid-flight in these dirs.
 
-### Phase E.4 — Filename rename: per-category-bucket-layouts → per-asset-group-bucket-layouts — OPERATOR APPROVAL — P1
+### Phase E.4 — Filename rename: per-category-bucket-layouts → per-asset-group-bucket-layouts — PARALLEL — P1
 
 - [ ] [DOC] P1 (BLOCKED on operator approval). Per audit S3 + workspace asset_group vocabulary rule. The file body uses
       both `category` and `asset_group` inconsistently. Rename + body-sweep.
 
-### Phase E.5 — Audit-style doc moves out of 06-coding-standards — OPERATOR APPROVAL — P2
+### Phase E.5 — Audit-style doc moves out of 06-coding-standards — PARALLEL — P1
 
 - [ ] [DOC] P2. Move `cod-deadlock-verification-report.md` (Feb 2026 dated, stale)
   - `orphan-audit.md` (UI architecture concern) out of `06-coding-standards/`. Either to `codex/15-audits/` (NEW
@@ -812,47 +825,62 @@ DELETED codex docs by this plan:
 
 ---
 
-## Open questions
+## Open questions — ALL RESOLVED 2026-05-08
 
-### Q1 — [main, 2026-05-08] — Multi-axis correction: banner or body canonical?
+### Q1 — Multi-axis correction: banner is canonical (Option A — row-level columns)
 
-**Status**: 🟡 BLOCKED — operator answer needed before Phase D.3.
+**Status**: ✅ RESOLVED 2026-05-08.
 
-The MULTI_AXIS_CORRECTION banner declares `fixture_id` (sports) and `market_id` (prediction) are row-level, NOT shard
-axes. But ~5 docs in 02-data have body text saying the writegate Phase 2.B contract uses them as shard axes. Which is
-canonical?
+Three independent sources of truth all agree:
 
-**Decision criteria**: cross-check with `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.B + UTL
-`manifest_writer.py` `record_captured` shard_key signature for sports
+1. **writegate plan line 98**:
+   `data_status_multi_axis_shard_propagation_2026_05_06.md ... Read/display side: fixture_id (display-axis only) + job_id manifest columns`.
+2. **writegate plan line 395**: greenfield `SPORTS_FIXTURE_CLUSTERS` is a per-fixture aggregate **cluster** (bookmakers
+   per fixture) — clusters live inside files, not as separate folders.
+3. **GCS reality** (verified 2026-05-08 against
+   `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2025-10-15/entity=footystats_odds/`):
+   actual on-disk structure is per-(day, entity, league) parquet with no `fixture=...` subdirectory anywhere. fixture_id
+   is a row-level column inside the file.
 
-- prediction. If shard_key includes `fixture_id`/`market_id`, the body is correct and the banner is stale. If not, the
-  banner is correct and the body is stale.
+**No data migration is needed.** Disk reality already matches Option A. Phase D.3 is purely a codex doc-sweep removing
+stale body text in ~5 02-data docs that contradict the banner.
 
-### Q2 — [main, 2026-05-08] — POST_PLAN_BANNER sweep: per-directory or workspace-wide single commit?
+Same logic applies to prediction `market_id`: it's a row-level column, with cluster validation per
+`(canonical_question_group, day)` enforcing expected market_ids inside the file (HOURLY=24 / DAILY=1 / ELECTION=1 —
+already documented in `09-strategy/cross-cutting/prediction-markets.md` per PM@d212f4e6).
 
-**Status**: 🟡 BLOCKED — operator preference.
+### Q2 — POST_PLAN_BANNER sweep cadence: per-directory (7 commits)
 
-~250 files. Single-commit workspace-wide sweep is cleaner audit history. Per-directory sweep is safer if a commit breaks
-(smaller revert surface).
+**Status**: ✅ RESOLVED 2026-05-08 (operator).
 
-**Default**: per-directory (one commit per dir; 7 commits total).
+Per-directory cadence: one commit per codex sub-directory. Smaller revert surface if any commit breaks; cleaner per-dir
+audit history.
 
-### Q3 — [main, 2026-05-08] — Heavy structural moves (E.1/E.2/E.3/E.4/E.5): pre or post May-23?
+### Q3 — Heavy structural moves: ship all pre-May-23
 
-**Status**: 🟡 BLOCKED — operator decision.
+**Status**: ✅ RESOLVED 2026-05-08 (operator).
 
-These have cross-doc blast radius. Pre-May-23: agents touching these dirs collide with the rename. Post-May-23: cleanup
-happens after the cutover.
+E.1 (topology 7-doc cluster), E.2 (14-playbooks split), E.3 (09-strategy cross-cutting collapse), E.4 (per-asset-group
+filename rename), E.5 (audit-doc moves out of 06-cs) all ship pre-May-23. The "BLOCKED on operator approval" tag on each
+Layer E phase has been removed; phases proceed as PARALLEL or SEQUENTIAL P1 as noted per phase.
 
-**Recommendation**: defer E.1 + E.2 + E.5 to post-May-23. Ship E.3 + E.4 pre-May-23 as they are smaller and fix
-correctness drift (the dual cross-cutting/ + the category/asset_group filename inconsistency).
+### Q4 — `unified-feature-calculator-library` is archived (moot point)
 
-### Q4 — [main, 2026-05-08] — `unified-feature-calculator-library` survival post-features-consolidation?
+**Status**: ✅ RESOLVED 2026-05-08.
 
-**Status**: 🟡 BLOCKED — verify against `features_repo_consolidation_2026_05_08.md`.
+Verification:
 
-Phase B.3 sweep needs to know whether the library survives as inner-package or is fully consolidated. Operator or
-features-consolidation plan author to confirm.
+- Repo does NOT exist as a sibling under workspace root.
+- `archive/unified-feature-calculator-library/` is the only remaining copy.
+- Zero non-archive imports of `unified_feature_calculator_library` exist (workspace-wide grep confirmed; only internal
+  test imports inside the archive).
+- All `BaseFeatureServiceV2` imports across the workspace come from `unified-trading-library` (UTL) — meaning
+  `BaseFeatureServiceV2` was migrated into UTL when the library was archived.
+- `workspace-manifest.json:2163` still mentions it (stale entry — flagged for cleanup in Phase B.3).
+
+**Resolution**: Phase B.3 sweep adds `unified-feature-calculator-library` → `unified-trading-library` rewrites for every
+codex doc reference. Stale workspace-manifest.json entry is also removed as a side-effect (tracked in Phase B.3
+acceptance criteria).
 
 ---
 
