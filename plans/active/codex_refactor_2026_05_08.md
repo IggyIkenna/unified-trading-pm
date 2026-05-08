@@ -29,13 +29,13 @@ depends_on:
   - master-to-live-defi-2026-05-23
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ✅ ALL 35 PHASES SHIPPED 2026-05-08 — see `codex_refactor_g1_audit_2026_05_08.md` for verification report.
+# ✅ ALL 35 + 4 RESIDUAL PHASES SHIPPED 2026-05-08 — see `codex_refactor_g1_audit_2026_05_08.md` for the audit
+# verification report + Phase H residual sweep section below for the closing follow-up sweep.
 #
 # Headline: 34 prior phases verify clean structurally (all deletions on disk, all renames done, all SSOT consolidations
-# landed). Layer A acceptance gates ✅ except documented historical/changelog references. P0 follow-up needed before
-# archival: 116 cross-doc links to deleted `14-playbooks/` paths still live in 43 codex files (E.2 directory move
-# shipped without the incoming-link-rewrite half) + 2 stale CLAUDE.md refs. Recommend Phase H sweep OR migrate the
-# residual link-debt to a successor plan before this plan archives.
+# landed). Layer A acceptance gates ✅ except documented historical/changelog references. The G.1 audit's P0 follow-up
+# (CLAUDE.md stale refs + 116-hit `14-playbooks/` link sweep + D.3 multi-axis residuals + B.3 stale-repo residuals)
+# all SHIPPED in Phase H — see "Phase H" section below for commit-sha evidence.
 # ─────────────────────────────────────────────────────────────────────────────
 
 repo_gates:
@@ -252,17 +252,18 @@ drift.
       codex docs claiming PubSub-only or embedded-only need banners pointing at the new SSOT.
 
   **Files updated**:
-  - [x] `04-architecture/runtime-deployment-topology.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules; Core
-        Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service) explicitly.
-        Cross-links to `05-infrastructure/live-pipeline-architecture.md` + `03-observability/coordination-events.md`.
+  - [x] `04-architecture/runtime-deployment-topology.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules;
+        Core Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service)
+        explicitly. Cross-links to `05-infrastructure/live-pipeline-architecture.md` +
+        `03-observability/coordination-events.md`.
   - [x] `04-architecture/batch-live-symmetry.md` — TL;DR transport row updated to "Redis Stream (inner-loop) + PubSub
         (cross-service)"; "Live: PubSub as Message Bus" section retitled to "Redis Stream (inner-loop) + PubSub
         (cross-service) as Message Bus" with the per-transport-class breakdown. POST-2026-05-08 SSOT banner cross-links
         the live-pipeline + coordination-events docs.
-  - [x] `04-architecture/runtime-deployment-topology.md` — "Live Deployment" section retitled to "Redis Stream
-        Cascade + Consolidated features-service"; package-embedding diagram explicitly framed as historical
-        (pre-2026-05-08); post-2026-05-08 update block at end of "Key characteristics" describes the XADD / XREADGROUP
-        cascade contract + cross-links live-pipeline-architecture + features-service-architecture.
+  - [x] `04-architecture/runtime-deployment-topology.md` — "Live Deployment" section retitled to "Redis Stream Cascade +
+        Consolidated features-service"; package-embedding diagram explicitly framed as historical (pre-2026-05-08);
+        post-2026-05-08 update block at end of "Key characteristics" describes the XADD / XREADGROUP cascade contract +
+        cross-links live-pipeline-architecture + features-service-architecture.
   - [x] `04-architecture/README.md` — "two distinct concerns" framing rewritten: feature calculation runs in the
         consolidated features-service (asset-scoped + cross-cutting), data transport split between Redis Stream
         (inner-loop) + PubSub (cross-service). Cross-links live-pipeline-architecture + features-service-architecture.
@@ -873,7 +874,8 @@ drift.
 
 ### Phase E.1 — Topology 7-doc cluster reorganisation — SEQUENTIAL after Layer A — P1 — SHIPPED 2026-05-08
 
-- [x] [DOC] P1. Per audit C4, `04-architecture/{RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE, service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster, PROTOCOL-INJECTION}`
+- [x] [DOC] P1. Per audit C4,
+      `04-architecture/{RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE, service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster, PROTOCOL-INJECTION}`
       → 3 docs. **SHIPPED 2026-05-08** in 4 commits (3 content + 1 plan flip):
   - **Commit 1** (PM@14a3ab5f): merged TIER-ARCHITECTURE + PROTOCOL-INJECTION → `tier-and-import-architecture.md` (380
     lines; rename from TIER-ARCHITECTURE.md preserving 58% similarity history; PROTOCOL-INJECTION folded in as Part 2).
@@ -900,9 +902,9 @@ drift.
   (instruments_live_master) + root TOPOLOGY-DAG.md.
 
   **Foot-gun #1 incident note**: commit 1 (PM@14a3ab5f) bundled 15 foreign files from a parallel agent's Phase E.2
-  in-flight 14-playbooks → 14-customer-journeys + 16-strategy-playbooks rename. Content of MY changes is correct per
-  the commit message; foreign work landed under the same commit hash. Workspace dirty-deps rule applied — pushed
-  rather than reverting and losing parallel agent's progress.
+  in-flight 14-playbooks → 14-customer-journeys + 16-strategy-playbooks rename. Content of MY changes is correct per the
+  commit message; foreign work landed under the same commit hash. Workspace dirty-deps rule applied — pushed rather than
+  reverting and losing parallel agent's progress.
 
 ### Phase E.2 — 14-playbooks split into 3 directories — SEQUENTIAL after E.3 — P1 — SHIPPED 2026-05-08
 
@@ -916,9 +918,10 @@ drift.
 
   **Step 2 — `15-runbooks/` NEW** (PM@10438c32 + cross-repo: UI@48aa8dce + SIT@dd1ea4e + UAC@86e8109) — moved alerting/
   (per-alert-code runbooks + glossary + rehearsal + threshold-tuning + pagerduty-escalation), instruments-live/ (T+1
-  audit discrepancy runbook), smoke-testing-playbook.md, backfill-completion-playbook.md. NEW codex/15-runbooks/README.md
-  describing scope (live-trading on-call runbooks), what does + does NOT live here, cross-link conventions
-  (execution: frontmatter required per HARD RULE). Workspace-wide ref rewrite across PM (37 files) + 3 foreign repos.
+  audit discrepancy runbook), smoke-testing-playbook.md, backfill-completion-playbook.md. NEW
+  codex/15-runbooks/README.md describing scope (live-trading on-call runbooks), what does + does NOT live here,
+  cross-link conventions (execution: frontmatter required per HARD RULE). Workspace-wide ref rewrite across PM (37
+  files) + 3 foreign repos.
 
   **Step 3 — `16-strategy-playbooks/` NEW** (PM@fcafcb77 — residual + parallel-agent-absorbed PM@14a3ab5f / 15afa55e /
   4e7baf09 / e5944816; cross-repo: UI@a500e656 + UTL@54ac8daa + UAC@56a68a7 + strategy-service@bb3dd22) — moved defi/
@@ -929,12 +932,12 @@ drift.
 
   **Foot-gun #1 attribution**: structural git mv of step-3 4 subdirs + 16-strategy-playbooks/README.md were absorbed
   into parallel-agent commits PM@14a3ab5f (README) + PM@15afa55e (4 subdirs). Step-3 ref-rewrites in cme_polymarket_arb
-  + defi_master plans absorbed into PM@4e7baf09 + PM@e5944816 (parallel-agent's Phase E.4 sweep). Content correct under
-  foreign commit hashes; PM@fcafcb77 covers the residual ref-rewrites that weren't absorbed.
+  - defi_master plans absorbed into PM@4e7baf09 + PM@e5944816 (parallel-agent's Phase E.4 sweep). Content correct under
+    foreign commit hashes; PM@fcafcb77 covers the residual ref-rewrites that weren't absorbed.
 
   **CLAUDE.md updates**: no refs in `cursor-configs/CLAUDE.md` pointed at content moved to 15-runbooks/ or
-  16-strategy-playbooks/ — the 2 remaining `14-playbooks/` refs (line 119 shared-core/ + line 926 authentication/)
-  point at content that stayed in 14-customer-journeys/ and is unaffected by Phase E.2 steps 2 + 3.
+  16-strategy-playbooks/ — the 2 remaining `14-playbooks/` refs (line 119 shared-core/ + line 926 authentication/) point
+  at content that stayed in 14-customer-journeys/ and is unaffected by Phase E.2 steps 2 + 3.
 
 ### Phase E.3 — 09-strategy cross-cutting collapse — PARALLEL — P1 — SHIPPED 2026-05-08
 
@@ -961,11 +964,12 @@ drift.
       `codex/02-data/per-category-bucket-layouts.md` → `codex/02-data/per-asset-group-bucket-layouts.md` + body sweep
       (table headers `Category` → `Asset-group`; legacy-vs-canonical hive-key clarifications added inline; legacy
       `category=` preservation note retained per workspace asset-group-vocabulary rule). Workspace-wide cross-doc
-      rewrites: 21 active doc / plan files updated (15 codex docs across 02-data/, 04-architecture/, 06-coding-standards/
-      + the POST_PLAN_REALITY scoreboard; 6 plan files in plans/active/ and plans/epics/). `plans/active/codex_refactor`
-      historical Phase E.4 references retained as audit trail; `plans/archive/`, `plans/ai/`, `plans/handover/` and the
-      auto-generated `_generated/scope-manifest.json` left untouched per scope; `codex/15-runbooks/` and the
-      `codex/16-strategy-playbooks/` move are foreign in-flight reorgs not in scope of this rename.
+      rewrites: 21 active doc / plan files updated (15 codex docs across 02-data/, 04-architecture/,
+      06-coding-standards/ + the POST_PLAN_REALITY scoreboard; 6 plan files in plans/active/ and plans/epics/).
+      `plans/active/codex_refactor` historical Phase E.4 references retained as audit trail; `plans/archive/`,
+      `plans/ai/`, `plans/handover/` and the auto-generated `_generated/scope-manifest.json` left untouched per scope;
+      `codex/15-runbooks/` and the `codex/16-strategy-playbooks/` move are foreign in-flight reorgs not in scope of this
+      rename.
 
 ### Phase E.5 — Audit-style doc moves out of 06-coding-standards — PARALLEL — P1 — SHIPPED 2026-05-08
 
@@ -1076,8 +1080,8 @@ drift.
   (high-impact, every session boot reads CLAUDE.md). **P1 follow-ups**: D.3 multi-axis text residuals in 5+ docs, B.3
   stale-repo refs in ~6 doc bodies, 5 stale `[ ]` checkboxes in this plan's "Codex SSOT updates" sub-list (lines 1076,
   1091, 1092, 1099, 1100 — work shipped, tracking checkboxes overlooked). Per "Plan Archival HARD RULE" + "Capture
-  Discoveries As Plan Todos Immediately": these become new plan todos in a Phase H sweep OR migrate to a successor
-  plan before this plan archives.
+  Discoveries As Plan Todos Immediately": these become new plan todos in a Phase H sweep OR migrate to a successor plan
+  before this plan archives.
 
 ---
 
@@ -1091,7 +1095,8 @@ NEW docs created mid-execution (if any phase generates them): add to this sectio
 
 NEW codex docs explicitly created by this plan:
 
-- [x] `codex/04-architecture/batch-live-architecture.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified extant in G.1 audit)
+- [x] `codex/04-architecture/batch-live-architecture.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified extant in
+      G.1 audit)
 - [x] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1 SHIPPED 2026-05-08 PM@14a3ab5f)
 - [x] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1 SHIPPED 2026-05-08 PM@11fe6a37 — content created
       by prior agent; deletions + ref-rewrites in this commit)
@@ -1106,16 +1111,20 @@ DELETED codex docs by this plan:
 - [x] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)
 - [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
 - [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
-- [x] `codex/04-architecture/copper-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted in G.1 audit)
-- [x] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted in G.1 audit)
+- [x] `codex/04-architecture/copper-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted
+      in G.1 audit)
+- [x] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted
+      in G.1 audit)
 - [x] `codex/06-coding-standards/error-handling.md` (Phase D.5 SHIPPED 2026-05-08 — deletion absorbed into parallel
       agent's `3da88fed`)
 - [x] `codex/06-coding-standards/validation-patterns.md` (Phase D.5 SHIPPED 2026-05-08 — same)
 - [x] `codex/06-coding-standards/schema-validation.md` (Phase D.5 SHIPPED 2026-05-08 — same)
 - [ ] `codex/06-coding-standards/service-structure-standards.md` (Phase D.7 — KEPT as forwarder stub per B.4 audit; not
       deleted)
-- [x] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1 audit)
-- [x] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1 audit)
+- [x] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1
+      audit)
+- [x] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1
+      audit)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
 - [x] Topology 7-doc cluster (Phase E.1 SHIPPED 2026-05-08): RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE,
       service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster,
@@ -1180,6 +1189,75 @@ Verification:
 **Resolution**: Phase B.3 sweep adds `unified-feature-calculator-library` → `unified-trading-library` rewrites for every
 codex doc reference. Stale workspace-manifest.json entry is also removed as a side-effect (tracked in Phase B.3
 acceptance criteria).
+
+---
+
+## Phase H — residual sweep (2026-05-08 G.1 follow-up)
+
+After Phase G.1 (audit) flagged 4 categories of residual reference-debt that the prior 35 phases left behind, Phase H
+ships the closing sweep so the parent plan can archive cleanly. Each H.X is a discrete shippable unit with its own
+commit; the plan-flip rides as a final separate commit.
+
+- [x] **H.1 [SCRIPT] P0** — Fix `cursor-configs/CLAUDE.md` `14-playbooks/` stale refs (lines 119 + 926). HIGH-impact
+      because CLAUDE.md is loaded into every Claude Code session boot — any agent reading the Signal Leasing rule or
+      firebase-local rule today would hit a 404. Both targets verified on disk under `14-customer-journeys/`. Shipped:
+      PM@84b6a20a (`docs(claude): Phase H.1 — fix 14-playbooks/ stale refs in CLAUDE.md (lines 119 + 926)`).
+
+- [x] **H.2 [SCRIPT] P0** — Workspace-wide `14-playbooks/` link rewrite across `codex/`, `plans/active/`,
+      `plans/epics/`, `cursor-configs/`. Single Python regex pass with most-specific-first ordering: `alerting/` /
+      `instruments-live/` / `smoke-testing-playbook.md` / `backfill-completion-playbook.md` → `15-runbooks/...`; `defi/`
+      / `strategy/` / `ml/` / `infra-spec/` → `16-strategy-playbooks/...`; `cross-cutting/` →
+      `14-customer-journeys/playbook-concepts/`; everything else → `14-customer-journeys/...`. Total: 425 lines
+      rewritten across 64 files. Final acceptance: workspace-wide `grep '14-playbooks/'` returns 0 hits in scope (only
+      the binary `codex/14-playbooks.zip` archive remains, preserved). Shipped: PM@67a575e1 (foot-gun #1 — parallel
+      agent's prek-hook commit absorbed the staged H.2 content into its own
+      `docs(plans): features-repo-consolidation Wave 7 follow-up` message; content is correct, attribution is muddled
+      per workspace 2026-05-06 incident pattern).
+
+- [x] **H.3 [SCRIPT] P1** — D.3 multi-axis residual sweep: 5 codex docs still asserted `fixture_id` (sports) +
+      `market_id` (prediction) as hive-partition shard axes despite the Q1 row-level resolution already documented in
+      top-of-file banners on `shard-level-failure-isolation.md` lines 15-23. Body content aligned with banner SSOT:
+      Sports + Prediction matrix rows merged + corrected to row-level treatment with cluster-validation enforcing
+      per-fixture / per-market coverage within each shard. Files: `04-architecture/shard-level-failure-isolation.md`
+      (lines 121, 123); `05-infrastructure/deployment-clusters-live-vs-batch.md` (lines 109, 111, 264);
+      `02-data/shard-granularity-cefi.md` (line 194); `02-data/partitioning.md` (line 30 area);
+      `POST_PLAN_REALITY_2026_05_06.md` (lines 130, 162). Shipped: PM@1253e44a (parallel agent absorbed the content
+      edits, foot-gun #1 again) + PM@4331d337
+      (`docs(codex): Phase H.3 — D.3 multi-axis residual sweep     prettier-reformat residuals` — the prettier
+      table-column-padding cleanup the prek hook applied).
+
+- [x] **H.4 [SCRIPT] P1** — B.3 residual stale-repo refs in newly-created consolidated docs. Per workspace SSOT
+      (CLAUDE.md): `unified-internal-contracts/` (repo) → `unified_api_contracts.internal` (Python module path; the repo
+      was eliminated and merged into UAC's internal/ sub-package); `unified-feature-calculator-library` (repo) →
+      `unified-trading-library` (the `feature_calculator/` sub-package; the repo was rolled into UTL). Updated:
+      `06-coding-standards/quality-gates-codex-compliance-snippet.sh:176` warning string;
+      `06-coding-standards/README.md:650` T2 tier table cell (UMI archival + UFCL merge note + (UTS) annotation
+      dropped); `04-architecture/batch-live-architecture.md:117` embedded-package reference; and
+      `04-architecture/runtime-deployment-topology.md:541, 806` SSOT callouts. Excluded (intentional):
+      `10-audit/_archive/unified-internal-contracts.yaml` (archived audit checklist) +
+      `05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md:168` (explicit "ELIMINATED" annotation).
+      Shipped: PM@7fe393e5 (`docs(codex): Phase H.4 — B.3 residual sweep`).
+
+### Phase H acceptance
+
+- ✅ `grep -rln '14-playbooks/' codex/ plans/active/ plans/epics/ cursor-configs/ 2>/dev/null | grep -v '\.zip$'`
+  returns zero hits.
+- ✅ CLAUDE.md (workspace + per-repo via symlink) has zero stale `14-playbooks/` refs.
+- ✅ All 5 D.3 multi-axis residuals body-content aligned with their top-of-file banner SSOT.
+- ✅ All 4 B.3 stale-repo residuals migrated to `unified_api_contracts.internal` / `unified-trading-library` per
+  workspace SSOT.
+
+### Phase H foot-gun observations (for the workspace incident ledger)
+
+- **Foot-gun #1 incident — prek-hook + parallel-agent bundling.** Three of Phase H's content-edit commits got absorbed
+  by parallel agents' prek-running prettier hooks (PM@67a575e1 absorbed H.2; PM@1253e44a absorbed H.3 content; my own
+  H.1 + H.3-residuals + H.4 commits succeeded after surgical re-staging). Pattern matches the 2026-05-06 incident
+  classes documented in CLAUDE.md "Half 2 commit hijacking" / `docs(plans): plan-flip-as-you-ship`. Mitigation that
+  worked: surgical `git restore --staged` of foreign files + targeted `git stash push --keep-index` before commit; on
+  absorption, accept the muddled attribution and document via this Phase H section + the auto-memory.
+- **Foot-gun #2 incident — prek prettier silent reformat → re-stage loop.** Every H.3 + H.4 commit required a re-stage
+  cycle after prettier reformatted markdown tables / line-wraps. Stable pattern: stage → commit (fails) → re-stage
+  (working tree now contains prettier output) → commit (passes).
 
 ---
 
