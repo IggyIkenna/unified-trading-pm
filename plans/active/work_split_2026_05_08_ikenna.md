@@ -970,10 +970,12 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
   (post-2026-05-23 P2 per cross-plan position banner)
 - [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.md) (deferred unless last 2 todos
   verifiable today)
-- [`api_football_minimal_flattening_removal_2026_05_07`](api_football_minimal_flattening_removal_2026_05_07.md)
-  (sports-pipeline plumbing — picks up post-May-23)
-- [`data_status_comprehensive_test_coverage_2026_05_07`](data_status_comprehensive_test_coverage_2026_05_07.md)
-  (regression-test net — post-May-23)
+<!-- CORRECTION 2026-05-08 audit: removed cross-side scope contradictions per audit cluster 7.
+     api_football_minimal_flattening_removal + data_status_comprehensive_test_coverage are P0 in-scope
+     for Harsh Tab 5 ("the dragon" mechanical refactor) — not deferred this cycle. Both plans must agree;
+     Harsh's side wins because it has the implementation tab assignment. -->
+<!-- moved: api_football_minimal_flattening_removal_2026_05_07.md → owned by Harsh Tab 5 sa5.APIFootball -->
+<!-- moved: data_status_comprehensive_test_coverage_2026_05_07.md → owned by Harsh Tab 5 (item #2) -->
 
 ## Spawn prompts (paste-ready per tab)
 

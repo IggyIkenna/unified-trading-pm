@@ -85,11 +85,15 @@ data-status UI flags every Understat shard for La Liga as a possible coverage ho
       `UNDERSTAT_COVERED_LEAGUES: frozenset[str]` containing the 5 league_ids Understat actually covers (per published
       Understat coverage). Helper: `does_understat_cover(league_id: str) -> bool`. Cite source: scrape of Understat's
       per-league index page as of 2026-05-08.
-- [ ] [UAC] P0. NEW `unified_api_contracts/canonical/domain/sports/transfer_windows.py` —
-      `TRANSFER_WINDOWS:     dict[str, list[tuple[date, date]]]` keyed by country_code → list of (window_open,
-      window_close) ranges per the country's published transfer registration windows (FIFA + national-FA rules). Seed
+- [ ] [UAC] P0. EXTEND `unified_api_contracts/canonical/domain/sports/transfer_windows.py` —
+      **CORRECTION 2026-05-08 audit**: file already EXISTS with a different API (`is_transfer_window_open` /
+      `get_transfer_windows_for_year` / `most_recent_window_close`). Re-scoped: ADD
+      `TRANSFER_WINDOWS: dict[str, list[tuple[date, date]]]` keyed by country_code → list of (window_open,
+      window_close) ranges per the country's published transfer registration windows (FIFA + national-FA rules) +
+      `is_within_transfer_window(country_code: str, day: date) -> bool` helper. Seed
       with EU countries (England, Spain, Italy, Germany, France) + USA (MLS-specific summer/winter windows) + Japan
-      (J.League windows). Helper: `is_within_transfer_window(country_code: str, day: date) -> bool`.
+      (J.League windows). Wire `legacy_reason_classifier` to the new dict (existing API remains for callers that
+      need year-scoped queries).
 - [ ] [UAC] P0. EXTEND `unified_api_contracts/sports/provider_league_ids.py` — add `season_start: date` +
       `season_end: date` fields to the existing `FOOTYSTATS_SEASON_IDS` dict entries. Source: footystats per-league
       season pages. Helpers: `get_footystats_season_bounds(league_id: str, season: str) -> tuple[date, date]` +

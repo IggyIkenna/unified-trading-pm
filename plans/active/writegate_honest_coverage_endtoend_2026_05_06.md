@@ -1084,10 +1084,14 @@ QG between Phase 1B and Phase 2: UAC tests green; UAC pushed; consumer-pin propa
       distinct sub-class. [AUDIT 2026-05-07: DONE — CLAUDE.md line 309 carries explicit cross-link to
       `codex/02-data/honest-absence-downstream-handling.md`; line 286 "Three-category empty-output decision" rule
       references reason taxonomy + per-service consumer-class audit.]
-- [ ] [DOCS] P0. Update `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` to inherit the new sections
+- [x] [DOCS] P0. Update `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` to inherit the new sections
       (it's a per-repo synced file). [AUDIT 2026-05-07: FRESH — actionable; SUB_AGENT_MANDATORY_RULES.md missing the
       four Phase 1C sections ("Live = batch", "Three-category empty-output decision", "Cluster validation mandatory",
       "available_at is per-row"). ~30 min to copy-paste the canonical text from CLAUDE.md.]
+      **OBSOLETED 2026-05-08** — SUB_AGENT_MANDATORY_RULES.md is now a symlink to CLAUDE.md (codified 2026-05-08
+      per the new CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required" section). Sync is automatic;
+      no manual copy-paste needed. See per-repo `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks rolled out via
+      `scripts/rollout-agent-symlinks.sh`.
 - [x] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` (or the equivalent)
       so per-repo `CLAUDE.md` mirrors pick up the new sections. [AUDIT 2026-05-07: DONE — verified MDPS
       `.claude/CLAUDE.md` mirror has 2 hits for "Three-category empty-output / live-pipeline-arrival"; sync ran
