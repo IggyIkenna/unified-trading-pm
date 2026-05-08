@@ -581,32 +581,43 @@ todos:
 
   - id: phase-9-codex-ssot-updates
     content: |
-      - [ ] [AGENT] P0. Phase 9 — Codex SSOT updates. PARALLEL with Phase 8.
+      - [x] [AGENT] P0. Phase 9 — Codex SSOT updates. PARALLEL with Phase 8.
 
         Per the workspace "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase
         creates the consolidation architecture doc + updates 5 existing docs.
 
-        New + updated docs:
-        1. **NEW** `codex/04-architecture/features-service-architecture.md` (no plan-draft stub yet — write
-           in this phase) — describes the consolidated repo shape, per-family sub-package layout, the
-           `feature_family` UAC enum, the cross-family helpers lifted to UTL, the per-family deployment
-           flavor matrix (which families colocate with which asset_group's MDPS vs which run as
-           cross-cutting). 4-5 paragraphs + a routing table.
-        2. **UPDATE** `codex/06-coding-standards/feature-service-pattern.md` — replace per-repo references with
-           sub-package references; add a "Adding a new feature_family" recipe pointing at
-           `features-service/features_service/<f>/__init__.py` exporting `run(args)`.
-        3. **UPDATE** `codex/06-coding-standards/cli-convention.md` — extend the standardised CLI flag
-           catalogue with `--feature-family`.
-        4. **UPDATE** `codex/02-data/data-status-drilldown-hierarchy.md` — add the feature_family axis to the
-           drilldown order.
-        5. **UPDATE** `codex/00-SSOT-INDEX.md` — register the new architecture doc under "Architecture".
-        6. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — replace the 8 features-* launcher
-           rows with the consolidated `launch-features-<flavor>.sh` row.
+        New + updated docs (all shipped 2026-05-08 PM by Wave-3 Tab PM-CODEX):
+        1. **NEW** `codex/04-architecture/features-service-architecture.md` — PM@2e5ca4e7. Replaces 4.5KB
+           stub with full SSOT: 8 family sub-package layout, CLI dispatch contract, Health-API aggregator,
+           UAC FeatureFamily enum + manifest column, 7 UTL Phase 5 lifts table, deployment topology
+           (asset-scoped colocated + cross-cutting flavors), migration history, anti-patterns table.
+        2. **UPDATE** `codex/06-coding-standards/feature-service-pattern.md` — PM@9edb649c. Updated "5-6
+           separate" → "8 separate" predecessor repos enumerated by name; added cross-link to architecture
+           SSOT; new 7-step "Adding a new feature_family" recipe (UAC enum first, sub-package shim, calculator
+           class, Health-API freshness callback, ManifestWriter, tests, no new launcher).
+        3. **UPDATE** `codex/06-coding-standards/cli-convention.md` — PM@e0121b42. Added --feature-family row
+           to optional axes table (UAC FeatureFamily enum 8 members); new "--feature-family for the
+           consolidated features-service (2026-05-08)" section with full dispatcher contract.
+        4. **UPDATE** `codex/02-data/data-status-drilldown-hierarchy.md` — PM@f5be06ce. Replaced 5 per-repo
+           features rows with 9-row block (1 consolidated header + 8 per-family sub-rows showing
+           feature_family as outermost axis); new blockquote callout introducing feature_family axis.
+        5. **UPDATE** `codex/00-SSOT-INDEX.md` — PM@1d0ee16e. Registered features-service-architecture.md
+           under Architecture section with full row body summary.
+        6. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — PM@f128e8c9. New "features-service
+           consolidation (2026-05-08)" section enumerating 8-to-1 launcher collapse (single
+           launch-features-vm.sh parameterised by --feature-family + --asset-group); single `features-`
+           prefix in VM_PREFIX_TO_BUCKET; tarball impact callout.
+
+        Bonus update (helpful cross-link, not in original 6-item list):
+        7. **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — PM@20a4910a. New paragraph block
+           noting tarball-side implications of the 8-to-1 features-* repo consolidation:
+           --asset-group flag includes single features-service/ (not 8 per-family repos); VM boot:
+           python -m features_service --feature-family X (replaces 8 distinct entry-points).
 
         QG: `unified-trading-pm` quality-gates.sh clean. Plan-health agent picks up the SSOT additions on the
         next run.
-    status: todo
-    note: ""
+    status: done
+    note: "shipped 2026-05-08 PM Wave-3 Tab PM-CODEX; 7 commits PM@2e5ca4e7 / 9edb649c / e0121b42 / f5be06ce / f128e8c9 / 20a4910a / 1d0ee16e"
 
   - id: phase-10-workspace-wide-qg-sweep
     content: |
