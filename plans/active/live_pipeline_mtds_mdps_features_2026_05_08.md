@@ -122,8 +122,8 @@ todos:
             whether any are using Streams or just KV; Phase 2 needs to know whether to add `redis>=5.0` (Streams
             require ≥5) to UTL's deps or whether it's already present.
         Output committed under `plans/active/issues/`. Subsequent phases reference the artifact.
-    status: todo
-    note: ""
+    status: done
+    note: "PM@12483f5b — 408-line audit doc shipped 2026-05-08 by tab2-pre-audit sub-agent. Covers all 7 audit subsections (a-g) with file:line / commit-sha / count evidence + 10 cross-cutting Phase-3-13 sub-todos + per-consumer wire-in tables for Phases 8 + 10. Notable: MTDS RSS-pause WIRED 2026-05-08 (cli/main.py:103-128) — auto-memory `project_mtds_parallelization_fix_2026_05_07` 'RSS-pause PENDING' claim is now stale; `redis>=5.0` already declared in UTL pyproject."
 
   - id: phase-1-uac-streaming-events
     content: |
@@ -192,8 +192,8 @@ todos:
         (4) `emission_policy` defaults to `PUBLISHED_OK` when not specified.
 
         QG: UAC quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "UAC@8bc3f2a (PipelineMode SSOT) + UAC@b643c9a (Phase 1 streaming events: CandleBoundaryCrossedEvent / CandleComputedEvent / InstrumentCacheRefreshTriggerEvent + EmissionOutcome closed-set + parse_timeframe + 17 unit tests) + UAC@b02335d (top-level facade: PipelineMode + is_batch / is_live / source_string_for / pipeline_mode_for_source surfaced from `unified_api_contracts` per Citadel Import Rules). Module at `unified_api_contracts/events/streaming.py`. CandleComputedEvent carries BOTH `emission_policy` (POLICY) AND orthogonal `emission_outcome` (OUTCOME — PUBLISHED_OK / PUBLISHED_DEGRADED / STALE_DATA / BLOCKED). All events default `pipeline_mode` to LIVE_WEBSOCKET. **QG state 2026-05-08 PM (RESOLVED)**: foreign blockers cleared — ORACLE_COVERAGE_START shipped at UAC@3adee82 (Tab 1 DeFi-launch); EN DASH at alerting/thresholds.py:60 already replaced by HYPHEN-MINUS. Issue `plans/active/issues/uac_utl_qg_blockers_2026_05_08.md` marked RESOLVED."
 
   - id: phase-2a-utl-redis-streams-client
     content: |
@@ -239,8 +239,8 @@ todos:
         confirms they're not already present.
 
         QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "UTL@f24e651b — `unified_trading_library/streaming/redis_stream.py` (StreamPublisher + StreamConsumerGroup; XADD + MAXLEN ~ + XREADGROUP + XACK + XAUTOCLAIM + idempotent XGROUP CREATE) + `replay.py`. 6 unit tests via fakeredis. Event-class-agnostic (generic BaseModel TypeVar). fakeredis>=2.20 added to pyproject (flat-deps). `redis>=5.0` already present. Companion UTL@87134364 added pipeline_mode kwarg to ManifestWriter (gcs_migration plan Phase 1B). UTL QG blocked by foreign UAC breakage at conftest import — see `plans/active/issues/uac_utl_qg_blockers_2026_05_08.md`."
 
   - id: phase-2b-utl-utc-aligned-scheduler
     content: |
@@ -280,8 +280,8 @@ todos:
         (5) timeframe parsing — supports "15s", "1m", "5m", "15m", "1h", "1d" (canonical workspace set).
 
         QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "UTL@8c67df5d — `unified_trading_library/streaming/utc_aligned_scheduler.py` ships UTCAlignedScheduler async class + BoundaryTick frozen dataclass; supports 15s/1m/5m/15m/1h/1d timeframes; recomputes next-fire time against datetime.now(UTC) each iteration (NTP-tolerant); 5 tests via freezegun. UTL@858f3c84 — package `unified_trading_library.streaming.__init__.py` now publishes UTCAlignedScheduler + BoundaryTick + StreamPublisher + StreamConsumerGroup + ReplayPublisher + ReplayWatermarkKV from one import surface (Citadel facade pattern)."
 
   - id: phase-2c-utl-replay-cascade-helpers
     content: |
@@ -322,8 +322,8 @@ todos:
             both seen by consumer with no gap and no duplicate.
 
         QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "UTL@f24e651b — `unified_trading_library/streaming/replay.py` ships ReplayPublisher.publish_window (preserves original period_end + refuses publish for period_end ≤ current_watermark) + ReplayPublisher.finalize (advances per-shard watermark KV; rejects backwards) + ReplayWatermarkKV at `replay_watermark.{shard_key}` → ISO-8601 UTC. 4 unit tests via fakeredis (publish-window round-trip, finalize-advance, double-publish-protection, watermark-tail-handoff). UTL@858f3c84 lifted ReplayPublisher + ReplayWatermarkKV into the `unified_trading_library.streaming` package surface."
 
   - id: phase-3-mtds-streaming-rollout
     content: |
