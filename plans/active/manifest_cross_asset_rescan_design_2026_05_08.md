@@ -38,39 +38,39 @@ Three classes per (manifest_row, on-disk parquet) disagreement:
 
 ### A — Mutable (rescan auto-flips to match disk)
 
-| Field            | Reason it's mutable                                                                       |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `capture_status` | Disk parquet existence vs manifest row state — reconcile to disk reality.                 |
-| `error_reason`   | Backfilled when reconciler classifies via UAC `EMPTY_CONFIRMED_REASONS` / typed-error.    |
-| `attempted_at`   | Stamped at rescan time when missing on legacy rows.                                       |
-| `path` column    | Path-template drift between manifest's stamped path and disk's canonical path.            |
+| Field            | Reason it's mutable                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `capture_status` | Disk parquet existence vs manifest row state — reconcile to disk reality.              |
+| `error_reason`   | Backfilled when reconciler classifies via UAC `EMPTY_CONFIRMED_REASONS` / typed-error. |
+| `attempted_at`   | Stamped at rescan time when missing on legacy rows.                                    |
+| `path` column    | Path-template drift between manifest's stamped path and disk's canonical path.         |
 
 ### B — Immutable (rescan must respect, NOT flip)
 
-| Field                    | Reason it's immutable                                                              |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `pipeline_mode`          | Write-time fact set by writer per UAC `PipelineMode` SSOT. Rescan can't infer.     |
-| `available_at` (per-row) | Per-row column on parquet; respects `LookaheadBiasError` invariants.               |
-| `service_emission_state` | Set by emission-policy hook at write-and-publish boundary, not by rescan walk.     |
+| Field                    | Reason it's immutable                                                          |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `pipeline_mode`          | Write-time fact set by writer per UAC `PipelineMode` SSOT. Rescan can't infer. |
+| `available_at` (per-row) | Per-row column on parquet; respects `LookaheadBiasError` invariants.           |
+| `service_emission_state` | Set by emission-policy hook at write-and-publish boundary, not by rescan walk. |
 
 ### C — Triage (rescan flags disagreement, operator decides)
 
-| Field         | Reason it goes to triage                                                                                                |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `asset_group` | Hive-vocab disagreement (`category=` vs `asset_group=` in path) — auto-fix per drift axis 1, not triage.                |
-| `venue` / `data_type` / `instrument_type` / `instrument_id` | Row-key column drift between manifest and disk path — operator decides which is authoritative. |
-| `chain`                                                     | DeFi-specific row_key axis; mismatch between manifest and disk is structural.                  |
+| Field                                                       | Reason it goes to triage                                                                                 |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `asset_group`                                               | Hive-vocab disagreement (`category=` vs `asset_group=` in path) — auto-fix per drift axis 1, not triage. |
+| `venue` / `data_type` / `instrument_type` / `instrument_id` | Row-key column drift between manifest and disk path — operator decides which is authoritative.           |
+| `chain`                                                     | DeFi-specific row_key axis; mismatch between manifest and disk is structural.                            |
 
 Triage rows go to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` with shape:
-`{manifest_row_key, disk_path, disagreement_class, rescan_recommendation}`. Operator reviews + signs off in the
-rescan plan body via a follow-up `## Rescan triage decisions` section.
+`{manifest_row_key, disk_path, disagreement_class, rescan_recommendation}`. Operator reviews + signs off in the rescan
+plan body via a follow-up `## Rescan triage decisions` section.
 
 ## Per-asset-group rules
 
 Rescan applies per-asset-group rules per CLAUDE.md "Per-asset-group shard-key matrix":
 
-- **cefi**: per-instrument shard atom — rescan checks each instrument's parquet; auto-fixes instrument_type casing
-  drift (PERPETUAL → perpetual per drift axis 2).
+- **cefi**: per-instrument shard atom — rescan checks each instrument's parquet; auto-fixes instrument_type casing drift
+  (PERPETUAL → perpetual per drift axis 2).
 - **cefi options/futures**: per-root bundle — rescan checks chain-bundle equivalence (option ↔ options_chain per drift
   axis 5) — auto-fix.
 - **tradfi**: rescan respects `venue_trading_calendar` pre-skips; non-trading days stay `empty_confirmed` with
@@ -79,7 +79,8 @@ Rescan applies per-asset-group rules per CLAUDE.md "Per-asset-group shard-key ma
   `empty_confirmed` with `error_reason=EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_PRE_VENUE_LAUNCH`.
 - **sports**: per-fixture shard — rescan respects `SOURCE_COVERAGE_START` + `KNOWN_COVERAGE_GAPS`; pre-cutoff days stay
   `empty_confirmed` with `error_reason=EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_PAUSED_LEAGUE`.
-- **prediction**: per-canonical_question_group — rescan respects market lifecycle (`market_created_at` / `settlement_time`).
+- **prediction**: per-canonical_question_group — rescan respects market lifecycle (`market_created_at` /
+  `settlement_time`).
 
 ## Concurrency safety
 
@@ -109,8 +110,8 @@ Per CLAUDE.md "Cross-Plan Coordination Banners":
 
 ## Launcher script (queued; not shipped this session)
 
-The rescan VM launcher (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) is required per CLAUDE.md
-"VM launcher script SSOT". Spec for the launcher (for the follow-up sub-agent):
+The rescan VM launcher (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) is required per CLAUDE.md "VM
+launcher script SSOT". Spec for the launcher (for the follow-up sub-agent):
 
 - VM name: `cross-asset-rescan-{RUN_TS}` (per CLAUDE.md "VM Naming Convention").
 - Default zone: `asia-northeast1-c` (same-region per CLAUDE.md phantom-audit recipe — 18× faster).
@@ -137,18 +138,18 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
 ## Open questions
 
-- Q1 — operator-approval edge cases for class C triage: bundle all class-C rows into one weekly review, or per-rescan-run
-  signoff? Default: per-run signoff in this plan body's `## Rescan triage decisions` section.
+- Q1 — operator-approval edge cases for class C triage: bundle all class-C rows into one weekly review, or
+  per-rescan-run signoff? Default: per-run signoff in this plan body's `## Rescan triage decisions` section.
 - Q2 — runtime cost estimate per asset_group: depends on bucket sizes from gcs_migration Phase 0 audit. Defer to that
   audit run.
 - Q3 — coordination with in-flight gcs_migration Phase 3 VM execution: the rescan must run AFTER gcs_migration Phase 3
-  + Phase 6 phantom cleanup, not before. Otherwise we'd rescan pre-migration paths and produce false triage cases.
+  - Phase 6 phantom cleanup, not before. Otherwise we'd rescan pre-migration paths and produce false triage cases.
 
 ## Cross-plan coordination
 
 - `gcs_migration_bundle_pipeline_mode_2026_05_08` — STRICT BLOCKER: rescan runs AFTER Phase 3 + Phase 6 of that plan.
 - `manifest_migration_master_2026_05_07` — parent. Stage 4 includes this rescan.
-- `writegate_honest_coverage_endtoend_2026_05_06` Phase 4 (typed-error rendering) — consumes `error_reason` populated
-  by class A flips during the rescan.
-- `manifest_v7_schema_migration_design_2026_05_08` (sibling Tab 3 design) — rescan must respect new v8 immutable
-  columns (`service_emission_state`).
+- `writegate_honest_coverage_endtoend_2026_05_06` Phase 4 (typed-error rendering) — consumes `error_reason` populated by
+  class A flips during the rescan.
+- `manifest_v7_schema_migration_design_2026_05_08` (sibling Tab 3 design) — rescan must respect new v8 immutable columns
+  (`service_emission_state`).
