@@ -1077,3 +1077,101 @@ working tree across agent sessions until the main agent integrates + pushes.
 5. Sub-agent's last reported state was "All 15 tests pass" before the QG step. Verify smoke + tests still green
    (`python -m features_service --version` + `pytest tests/unit/test_cli_dispatch.py`), run QG, commit + push.
 6. Continue with Phase 4.4 / F2 / F6 per plan + work-split scope.
+
+## Continuation 2026-05-08 PM (Ikenna's main agent, parallel-tab session)
+
+Operator directive: complete the full codebase-wide consolidation in this session (deployment-ui, VM scripts, codex
+docs in canonical features-service style, full functional migration, quality gates, workspace manifest, deployment
+topology DAG SSOT, internal+external dependency integration, plus residuals from active plans + `plans/epics/`).
+Operator confirmed: (a) Phase 7 archival fires AFTER Phase 6 parity-green; (b) ml_and_features residuals (Phase
+2A/2B + Phase 3) FOLD INTO this session; (c) up to 5 parallel sub-agents authorised. Picking up where Harsh's Tab 2
+stopped on 2026-05-08 evening.
+
+### Carry-over reality check (verified on Ikenna's machine, 2026-05-08 PM)
+
+- **Harsh's Phase 4.2 stash is NOT here.** Stashes don't cross machines. `git stash list` in features-service =
+  empty; local HEAD = `d8136d72`, divergence vs `origin/live-defi-rollout` = `0 0`. Decision: redo Phase 4.2 from
+  scratch on Ikenna's side. cli/main.py is still the Phase 2 stub (`STUB — Phase 2 skeleton`).
+- **F2 is a NO-OP.** `features_service/onchain/config.py` already imports `UnifiedCloudConfig` and extends it
+  (subtree merge brought modern shape). Audit was reading pre-merge legacy state. Mark resolved with no code change.
+- **F6 is real.** 2 `manifest.add(` call sites in `features_service/sports/cli/handlers/batch_handler.py`
+  L797, L805; precise audit during F6 fix wave confirms the exact set across 8 families.
+- **Workspace-manifest registration**: shipped now in this Wave 1.
+
+### Wave-decomposed execution plan (5-parallel-agent cap)
+
+Shared `.git/` working tree on Ikenna's machine forces wave structure: agents touching the same repo must work on
+disjoint files OR run serially.
+
+| Wave | Owner | Scope | Parallelism |
+| ---- | ----- | ----- | ----------- |
+| 1 | main (this agent) | Continuation header + workspace-manifest registration + F2 no-op flip | serial, ~30 min |
+| 2 | 3 sub-agents | Phase 4.2 (cli/) ‖ Phase 4.4 (api/) ‖ F6 (manifest add→record_captured) | 3-way parallel; disjoint dirs |
+| 3 | main + 1 sub-agent | Phase 5 — UTL helper lifts | 2 agents serially per helper |
+| 4 | main | Phase 6 parity test → Phase 7 archive (gated on parity-green) | serial |
+| 5 | 5 sub-agents | Phase 8A (deployment-service) ‖ Phase 8B-api (deployment-api) ‖ Phase 8B-ui (deployment-ui) ‖ Phase 9 (PM codex) ‖ ml_and_features Phase 3 (ml-training-service) | 5-way parallel; different repos |
+| 6 | main | Phase 10 workspace QG sweep + session-end scoreboard + plan flips | serial |
+
+Cross-cutting discipline: per-shippable-unit commit+push, stage-by-name OR pathspec form, bundle Edit→commit→push,
+plan-flip in same logical unit, conditional push, deferred-work scoreboard at session-end.
+
+### Cross-plan residuals folded in this session (per operator answer)
+
+- **ml_and_features Phase 2A/2B** (8-service `assert_no_lookahead_for_feature_group` adoption) → Wave 3 Phase 5.
+- **ml_and_features Phase 3** (parquet column-pruning, ml-training-service) → Wave 5 parallel sub-agent.
+
+
+## Continuation 2026-05-08 PM (Ikenna's main agent, parallel-tab session)
+
+Operator directive: complete the full codebase-wide consolidation in this session (deployment-ui, VM scripts, codex
+docs in canonical features-service style, full functional migration, quality gates, workspace manifest, deployment
+topology DAG SSOT, internal+external dependency integration, plus residuals from active plans + `plans/epics/`).
+Operator confirmed: (a) Phase 7 archival fires AFTER Phase 6 parity-green; (b) ml_and_features residuals (Phase
+2A/2B + Phase 3) FOLD INTO this session; (c) up to 5 parallel sub-agents authorised. Picking up where Harsh's Tab 2
+stopped on 2026-05-08 evening.
+
+### Carry-over reality check (verified on Ikenna's machine, 2026-05-08 PM)
+
+- **Harsh's Phase 4.2 stash is NOT here.** Stashes don't cross machines — Harsh's `stash@{0}` lives on his working
+  tree. Ikenna's `features-service/.git` shows `git stash list` = empty. Local HEAD = `d8136d72`, divergence vs
+  `origin/live-defi-rollout` = `0 0`. **Decision**: redo Phase 4.2 from scratch on Ikenna's side (cli/main.py is
+  still the Phase 2 stub per inspection — `STUB — Phase 2 skeleton`. Family `run()` entry-points to be added
+  to each `features_service/<family>/__init__.py`; new `tests/unit/test_cli_dispatch.py` to be written.
+- **F2 is a NO-OP.** `features_service/onchain/config.py` already imports `UnifiedCloudConfig` (line 13) and
+  extends it (line 17) — the subtree merge brought the modern shape. Audit was reading the legacy
+  `features-onchain-service` repo state pre-merge. Mark F2 resolved with no code change.
+- **F6 is real.** `grep` finds 2 `manifest.add(` call sites in
+  `features_service/sports/cli/handlers/batch_handler.py` lines 797, 805. Other families' `.add(` calls in the
+  loose grep are dict/list/set call false-positives but a precise audit during the F6 fix wave confirms the
+  exact set.
+- **Workspace-manifest registration**: pending (Phase 2 hand-off step 2 above) — being shipped now in this Wave 1.
+
+### Wave-decomposed execution plan (5-parallel-agent cap)
+
+Shared `.git/` working tree on Ikenna's machine forces wave structure: agents touching the same repo must work on
+disjoint files OR run serially. Wave plan:
+
+| Wave | Owner | Scope | Parallelism |
+| ---- | ----- | ----- | ----------- |
+| 1 | main (this agent) | Continuation header + workspace-manifest.json registration + F2 no-op flip | serial, ~30 min |
+| 2 | 3 sub-agents | Phase 4.2 (`features_service/cli/`) ‖ Phase 4.4 (`features_service/api/`) ‖ F6 (`<family>/calculator.py` + manifest call sites) | 3-way parallel; disjoint dirs |
+| 3 | main + 1 sub-agent | Phase 5 — UTL helper lifts (UTL repo + 8-way de-dup across families) | 2 agents on UTL/features-service serially per helper |
+| 4 | main | Phase 6 parity test → Phase 7 archive (gated on parity-green) | serial |
+| 5 | 5 sub-agents | Phase 8A (deployment-service) ‖ Phase 8B-api (deployment-api) ‖ Phase 8B-ui (deployment-ui) ‖ Phase 9 (PM codex) ‖ ml_and_features Phase 3 (ml-training-service) | 5-way parallel; different repos |
+| 6 | main | Phase 10 workspace QG sweep + session-end scoreboard + plan flips | serial |
+
+Cross-cutting discipline (every wave):
+- **Per-shippable-unit commit + push** — no batching. Wave-2 agents commit each shippable unit before main
+  fans out Wave 3.
+- **Stage by name** — no `git add -A`; pre-commit `git status` + `git diff --cached --stat` (no path arg) check.
+- **Bundle Edit→add→commit→push into ONE Bash call** per Foot-gun #4 mitigation — prek-restore race guard.
+- **Plan-flip in same logical unit as code commit** — plan checkbox flips ride with the work, not at session end.
+- **Conditional push** — every push fetches first, zero incoming → push, any incoming → STOP + flag.
+- **Deferred-work scoreboard at session-end** per HARD RULE Half 3 if any item lands non-final.
+
+### Cross-plan residuals folded in this session (per operator answer)
+
+- **ml_and_features Phase 2A/2B** (8-service `assert_no_lookahead_for_feature_group` strict-mode adoption) —
+  folded into Wave 3 Phase 5 (LookaheadBiasError strict-mode adoption is the same surface).
+- **ml_and_features Phase 3** (parquet column-pruning quick-win in ml-training-service) — folded into Wave 5 as a
+  parallel sub-agent against ml-training-service. Independent of consolidation; same wave for parallelism only.

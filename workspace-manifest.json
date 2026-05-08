@@ -74,6 +74,7 @@
     "execution-service": "0.1.1",
     "features-cross-instrument-service": "0.1.1",
     "features-multi-timeframe-service": "0.1.1",
+    "features-service": "0.1.0",
     "features-sports-service": "0.1.0",
     "fund-administration-service": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
@@ -816,6 +817,73 @@
         "feature-computation",
         "standard"
       ]
+    },
+    "features-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.167,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": 70,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      },
+      "github_url": "https://github.com/IggyIkenna/features-service",
+      "completion_path": "cross-cutting",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "defi",
+        "tradfi",
+        "sports",
+        "prediction",
+        "feature-computation",
+        "consolidation",
+        "standard"
+      ],
+      "consolidates": [
+        "features-calendar-service",
+        "features-commodity-service",
+        "features-cross-instrument-service",
+        "features-delta-one-service",
+        "features-multi-timeframe-service",
+        "features-onchain-service",
+        "features-sports-service",
+        "features-volatility-service"
+      ],
+      "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. The 8 source repos remain in workspace-manifest as status=active until Phase 7 archival (gated on Phase 6 parity-green); flip to status=consolidated-into-features-service when archive lands."
     },
     "fund-administration-service": {
       "type": "service",
@@ -1749,6 +1817,7 @@
           "features-delta-one-service",
           "features-multi-timeframe-service",
           "features-onchain-service",
+          "features-service",
           "features-sports-service",
           "features-volatility-service",
           "fund-administration-service",
