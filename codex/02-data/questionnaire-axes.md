@@ -178,5 +178,5 @@ Enforced in `QuestionnaireResponse.model_validate`:
   questionnaire is step 3.
 - [`../14-playbooks/demo-ops/staging-demo-setup.md`](../14-playbooks/demo-ops/staging-demo-setup.md) — demo provider
   preseeds questionnaire payloads by persona id for email-based login.
-- [`../04-architecture/service-family-scope.md`](../04-architecture/service-family-scope.md) — `service_family` gates
+- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — `service_family` gates
   tile visibility via rule 12.

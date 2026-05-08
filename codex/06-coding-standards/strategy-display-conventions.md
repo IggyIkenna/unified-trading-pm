@@ -120,7 +120,7 @@ Consumers of this classification:
 - `/briefings/dart-signals-in` — `DartTierComparisonTable` feature matrix.
 
 SSOT for the wider DART Full vs Signals-In feature matrix:
-[`../04-architecture/service-family-scope.md`](../04-architecture/service-family-scope.md).
+[`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md).
 
 ---
 

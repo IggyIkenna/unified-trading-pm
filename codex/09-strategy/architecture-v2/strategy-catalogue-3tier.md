@@ -363,7 +363,7 @@ does not include.
 more unlock with DART Full. **[Upgrade]**" — the CTA links to `/contact?service=dart-full&action=upgrade`.
 
 SSOT for the full feature matrix:
-[`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md).
+[`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md).
 
 ---
 
@@ -383,7 +383,7 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
 - [`strategy-questionnaire-mapping.md`](./strategy-questionnaire-mapping.md) — 11-axis → filter derivation SSOT.
 - [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md) — 7-step client onboarding
   sequence; Explore tab is step 4's landing surface.
-- [`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md) — DART Full vs
+- [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md) — DART Full vs
   Signals-In feature matrix + locked-section design + DemoPlanToggle.
 - [`../../06-coding-standards/strategy-display-conventions.md`](../../06-coding-standards/strategy-display-conventions.md)
   — never-render-raw-IDs rule + archetype / family bespoke names used in every card.

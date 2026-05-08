@@ -13,7 +13,7 @@ scope: [sales, engineer, admin]
 > [`signup-signin-workflow.md`](./signup-signin-workflow.md),
 > [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md),
 > [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md),
-> [`../04-architecture/service-family-scope.md`](../04-architecture/service-family-scope.md).
+> [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md).
 
 ---
 
@@ -132,7 +132,7 @@ isn't in the meeting.
 
 | Actor  | Action                                                                                                                                                                                                                                                                                                                          |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | Approves signup in `/admin/organizations/[id]`. Sets entitlements (per resolved commercial path — see [`service-family-scope.md`](../04-architecture/service-family-scope.md)). Uploads or collects regulatory docs via `/api/onboarding/upload` (see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) §5). |
+| Ikenna | Approves signup in `/admin/organizations/[id]`. Sets entitlements (per resolved commercial path — see [`commercial-service-families.md`](../04-architecture/commercial-service-families.md)). Uploads or collects regulatory docs via `/api/onboarding/upload` (see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) §5). |
 | Client | Completes signup form → Firebase Auth user created (initially disabled, `pending_approval`). After Ikenna approves, logs in with real credentials → lands on dashboard gated to paid entitlements.                                                                                                                              |
 | System | `user-management-api` creates `Firebase Auth` user + Firestore `/users/{uid}` profile; attaches `questionnaire_response_id` from the envelope. `unified-trading-api` reads entitlements; `services/*` tabs render per entitlement + service-family-scope. `DemoPlanToggle` no longer renders (it's demo-provider-only).         |
 
@@ -150,7 +150,7 @@ auth + data provenance differ (see
   — 11-axis → catalogue-filter derivation.
 - [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   — Reality / FOMO tab roles, admin universe / editor surfaces.
-- [`../04-architecture/service-family-scope.md`](../04-architecture/service-family-scope.md) — DART Full vs Signals-In
+- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — DART Full vs Signals-In
   feature matrix, locked-section design, demo plan toggle.
 - [`../14-playbooks/demo-ops/staging-demo-setup.md`](../14-playbooks/demo-ops/staging-demo-setup.md) — staging demo
   persona onboarding checklist.

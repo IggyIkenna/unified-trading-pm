@@ -11,7 +11,7 @@ scope: [admin, sales, engineer]
 > **Companion docs:** [`demo-restriction-profiles.md`](./demo-restriction-profiles.md),
 > [`dart-demo-modes.md`](./dart-demo-modes.md),
 > [`../experience/staging-demo-journey.md`](../experience/staging-demo-journey.md),
-> [`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md),
+> [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md),
 > [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md).
 
 ---
@@ -246,6 +246,6 @@ If a prospect churns or goes dark, archive rather than delete — prior meeting 
 - [`demo-restriction-profiles.md`](./demo-restriction-profiles.md) — per-tile locking model this persona system feeds.
 - [`dart-demo-modes.md`](./dart-demo-modes.md) — broader-platform / turbo / deep-dive flavours that layer on top of the
   persona.
-- [`../../04-architecture/service-family-scope.md`](../../04-architecture/service-family-scope.md) — the feature matrix
+- [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md) — the feature matrix
   the two tiers expose.
 - [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md) — end-to-end 7-step sequence.

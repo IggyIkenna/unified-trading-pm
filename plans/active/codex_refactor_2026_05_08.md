@@ -1066,7 +1066,7 @@ DELETED codex docs by this plan:
 - [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
 - [ ] Topology 7-doc cluster (Phase E.1, IF approved): `RUNTIME_TOPOLOGY_DECISIONS.md`, `tier-and-import-architecture.md`,
-      `service-family-scope.md`, `deployment-topology-diagrams.md`, `pipeline-service-layers.md`,
+      `commercial-service-families.md`, `deployment-topology-diagrams.md`, `pipeline-service-layers.md`,
       `api-services-cluster.md`, `tier-and-import-architecture.md`.
 
 ---

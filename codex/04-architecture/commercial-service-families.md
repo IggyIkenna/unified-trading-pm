@@ -2,10 +2,17 @@
 scope: [engineer, admin, sales]
 ---
 
-# Service-Family Scope — DART Full vs Signals-In (+ IM, Reg Umbrella)
+# Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
 
-> **Status:** canonical (2026-04-24) **Owner:** UI Architecture + Sales **SSOT for:** DART Full vs Signals-In feature
-> matrix, locked-section design, DemoPlanToggle; UI consumers:
+> **Created 2026-05-08** (Phase E.1 of `plans/active/codex_refactor_2026_05_08.md`) — renamed from
+> `service-family-scope.md`. The rename clarifies scope: this doc is the **commercial / UX** service-family SSOT (which
+> commercial shape is sold to whom, what feature matrix each tier unlocks, locked-section UI design, demo plan toggle).
+> It is NOT an architecture-tier doc — for the import-tier model + protocol-injection contract see
+> [`tier-and-import-architecture.md`](tier-and-import-architecture.md); for runtime / deployment topology see
+> [`runtime-deployment-topology.md`](runtime-deployment-topology.md).
+
+> **Status:** canonical (2026-04-24, renamed 2026-05-08) **Owner:** UI Architecture + Sales **SSOT for:** DART Full vs
+> Signals-In feature matrix, locked-section design, DemoPlanToggle; UI consumers:
 > `unified-trading-system-ui/components/shell/service-tabs.tsx`,
 > `unified-trading-system-ui/app/(platform)/services/dart/locked/page.tsx`,
 > `unified-trading-system-ui/components/demo/DemoPlanToggle.tsx`,
@@ -166,3 +173,7 @@ typically don't see the strategy catalogue at all. Rule 12 enforces the route-al
   — plan-tier classification driving the tier badges.
 - [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   §14 — FOMO tier badges + Signals-In upgrade banner.
+- [`tier-and-import-architecture.md`](tier-and-import-architecture.md) — import-tier model + protocol-injection contract
+  (architecture-tier scoping, distinct from this doc's commercial scoping).
+- [`runtime-deployment-topology.md`](runtime-deployment-topology.md) — runtime + deployment topology (cluster shapes,
+  service interactions, message flows).
