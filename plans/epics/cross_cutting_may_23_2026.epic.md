@@ -107,7 +107,7 @@ trading goal directly.
 | [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)                                         | Write-gate / honest-coverage umbrella                                                                                                                                                                                         | Active |
 | [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)                                 | `available_at` end-to-end chain coordinator (MDPS bar boundary + per-asset-group adapter stamping + `FEATURE_REQUIRED_INPUTS` expansion + Tab 12 deferral tracker + QG static check + e2e test)                               | Active |
 | [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                             | AWS↔GCP parity (DeFi-first scope, generalises post-May-23)                                                                                                                                                                   | Active |
-| [`active/deployment_api_work_stream_a_2026_05_07`](../active/deployment_api_work_stream_a_2026_05_07..md                                                     | deployment-api work stream A                                                                                                                                                                                                  | Active |
+| [`active/deployment_api_work_stream_a_2026_05_07`](../active/deployment_api_work_stream_a_2026_05_07.md)                                                     | deployment-api work stream A                                                                                                                                                                                                  | Active |
 | [`active/deployment_ui_lifecycle_tabs_2026_05_08`](../active/deployment_ui_lifecycle_tabs_2026_05_08.md)                                                     | deployment-UI lifecycle tabs (live observability)                                                                                                                                                                             | Active |
 | [`active/deploy_missing_auto_launch_2026_05_07`](../active/deploy_missing_auto_launch_2026_05_07.md)                                                         | Deploy-Missing UI auto-launch                                                                                                                                                                                                 | Active |
 | [`active/launcher_scripts_consolidation_into_deployment_service_2026_05_07`](../active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md) | Launcher script SSOT consolidation                                                                                                                                                                                            | Active |
@@ -119,7 +119,7 @@ trading goal directly.
 | [`active/mtds_databento_path_streaming_2026_05_07`](../active/mtds_databento_path_streaming_2026_05_07.md)                                                   | MTDS streaming + speed                                                                                                                                                                                                        | Active |
 | [`active/mdps_streaming_and_backpressure_2026_05_07`](../active/mdps_streaming_and_backpressure_2026_05_07.md)                                               | MDPS streaming + speed                                                                                                                                                                                                        | Active |
 | [`active/mtds_per_instrument_download_api_2026_04_24`](../active/mtds_per_instrument_download_api_2026_04_24.md)                                             | MTDS per-instrument download API                                                                                                                                                                                              | Active |
-| [`active/instruments_and_market_tick_data_completion_2026_05_01`](../active/instruments_and_market_tick_data_completion_2026_05_01..md                       | Instruments + MTDS completion                                                                                                                                                                                                 | Active |
+| [`active/instruments_and_market_tick_data_completion_2026_05_01`](../active/instruments_and_market_tick_data_completion_2026_05_01.md)                       | Instruments + MTDS completion                                                                                                                                                                                                 | Active |
 | [`active/ml_pipeline_ui_integration_2026_04_16`](../active/ml_pipeline_ui_integration_2026_04_16..md                                                         | ML pipeline UI integration (DART → ML training trigger)                                                                                                                                                                       | Active |
 
 ## Cross-epic handshakes
@@ -132,7 +132,7 @@ trading goal directly.
 
 - [x] ✓ **Strategy catalogue completeness — RESOLVED 2026-05-08.** **Archetype-level completeness for May 23**, with
       venue / instrument-type drill-down lookups deferred to post-cutover. The v2 catalogue
-      (`internal/architecture_v2/enums.py` 9-family / 46-archetype + `archetype_capability.py`
+      (`internal/architecture_v2/enums.py` 9-family / 53-archetype + `archetype_capability.py`
       `ARCHETYPE_CAPABILITY_REGISTRY`) already covers every archetype currently traded or backtested. Only May-23 live
       archetypes need fully-seeded `ArchetypeConfig` (CARRY_STAKED_BASIS Solana + Ethereum; CARRY_BASIS_PERP × 6 perp
       venues; ML_DIRECTIONAL_CONTINUOUS × 3 venues OKX/Binance/Bybit). Backtest-only archetypes consume catalogue rows
@@ -155,7 +155,8 @@ trading goal directly.
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`codex/04-architecture/cloud-agnostic-migration.md`](../../codex/04-architecture/cloud-agnostic-migration.md)
 - [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md)
-- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) (the 8-family / 18-archetype
-  catalogue baseline)
+- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — 9-family / 53-archetype
+  catalogue (per 2026-05-08 codex drift-correction; pre-2026-05-08 doc said 8/18 — that was the 2026-04-17 baseline
+  before the Phase 9 expansion). UAC `internal/architecture_v2/enums.StrategyArchetype` is the SSOT.
 - [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
 - [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)
