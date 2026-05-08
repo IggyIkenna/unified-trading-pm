@@ -2,12 +2,6 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # Batch = Live: Unified Pipeline Architecture
 
 This document describes the unified pipeline architecture where batch (backtest) and live execution share the same code
@@ -165,14 +159,36 @@ These violations of the batch=live principle were identified and corrected:
 
 ---
 
+## Instruments-live exception
+
+Instruments-service runs live but does NOT use a `pipeline_mode=live` partition — instruments are reference data, not
+ticks. Live-mode writes to the **same GCS path** as batch; T+1 is a retrospective audit, not a parallel backfill.
+Detail: [`instruments-live-architecture.md`](instruments-live-architecture.md) +
+[`instruments-preflight-chain.md`](instruments-preflight-chain.md). Live = batch invariant for instruments is mechanical
+(same schema, same `available_at`, same code path; only source adapter swapped).
+
+---
+
 ## References
 
+- **Code-path symmetry**: [`batch-live-symmetry.md`](batch-live-symmetry.md) (UTC midnight alignment, `pipeline_mode`
+  partition for ticks, instruments-as-reference-data section)
+- **Live pipeline architecture**:
+  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) (MTDS
+  standalone + MDPS+features-asset-scoped colocated topology, Redis Stream cascade)
+- **Replay subsystem**: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) (smooth
+  handoff replay → live)
+- **Pipeline-mode partition (data, not instruments)**:
+  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
+- **Instruments live = batch**: [`instruments-live-architecture.md`](instruments-live-architecture.md)
+- **Auto-recovery + kill-switches**: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md)
+- **Alerting parity**: [`alerting-batch-live.md`](alerting-batch-live.md)
+- **Strategy hot-reload**: [`live-strategy-config-hot-reload.md`](live-strategy-config-hot-reload.md)
+- **Cloud switch**: [`seamless-cloud-switch.md`](seamless-cloud-switch.md)
 - **Matching engine**: `execution-service/execution_service/matching_engine/`
   - Sports: `sports_matching.py` (`SportsMatchingEngine`, `BetOrder`, `PortfolioSummary`)
   - Unified: `engine.py` (`MatchingEngine`, `BookType`, matchers)
 - **Backtest engine**: `strategy-service/strategy_service/engine/strategies/sports/backtest_engine.py`
-  - `run_backtest()`, `run_walk_forward()`, `BacktestResult`, `WalkForwardResult`
-- **BatchExecutionMode**: `unified-api-contracts/unified_api_contracts/internal/execution.py`
-  - `BENCHMARK` and `SIMULATED` enum values
-- **Batch-live symmetry**: `codex/04-architecture/batch-live-symmetry.md` (data transport patterns)
+- **BatchExecutionMode**: `unified-api-contracts/unified_api_contracts/internal/execution.py` (`BENCHMARK` and
+  `SIMULATED` enum values)
 - **E2E validation**: `e2e-testing/tests/integration/test_unified_sports_backtest.py`
