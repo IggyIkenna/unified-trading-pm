@@ -371,11 +371,16 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       running per [`tradfi_master`](../epics/tradfi_master_2026_05_07.md). After drain, rerun cluster-coverage gate on
       TradFi MDPS shards; flag any partial bundles via the existing `MissingClusterValidationError` guard; fix in place
       if any flag. ~1 AI-day.
-- [ ] [SCRIPT] P0. **Cross-asset manifest rescan post-CeFi drain (Stage 4 of manifest_migration_master)** — Ikenna Tab 3
-      designs the schema flip + ships rescan launcher. You operate the launcher
-      (`reconcile_phantom_manifest_rows_all.py     --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run` per
-      CLAUDE.md "Manifest phantom audit") on a same-region GCE VM. Run dry-run first, operator review CSV, then
-      `--apply-write`. Banner-add to 5+ active plans on launch + banner-remove on completion. ~1.5 AI-days.
+- [ ] [SCRIPT] P0. **Cross-asset manifest rescan post-CeFi drain (Stage 4 of manifest_migration_master)** — Ownership
+      split (codified 2026-05-08 audit): **Ikenna T3 sa3.Rescan-launcher writes the rescan launcher script** (in
+      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region
+      GCE VM. Sequence: (1) Ikenna T3 ships launcher + announces RESOLVED in
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open
+      questions`; (2) Tab 4 here pulls + runs `--dry-run` per asset_group
+      (`reconcile_phantom_manifest_rows_all.py --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run` per
+      CLAUDE.md "Manifest phantom audit"); (3) operator reviews CSV; (4) Tab 4 runs `--apply-write`; (5) Ikenna T3
+      handles edge cases / triage file. Banner-add to 5+ active plans on launch + banner-remove on completion. ~1.5
+      AI-days.
 - [ ] [SCRIPT] P1. **Sports per-source reconciler hook + features_sports_reconcile_available_at hook into per-source
       backfill VM exit-step** — sports_master Tab 3B Phase per
       [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md). Hook fires after each per-source backfill
@@ -641,15 +646,46 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
       Slice b couples to assert_no_lookahead_for_feature_group; ml-features-phase2a wires it into 8 services.
       Coordinate: Harsh ships per-service wires; Ikenna reads the wires + extends ServiceEmissionPolicy state to reflect
       lookahead-bias-checked status.
+- [ ] **MDPS `base_adapter.py` 3-way collision — HARD SEQUENCE (codified 2026-05-08 audit)**: three sub-agents touch
+      this file across two operators. To prevent the documented foot-gun pattern (PM@961980db / @611b9501 / @34075d84)
+      where parallel `git add` / reset wipes staged hunks, enforce:
+      1. **Harsh T2 features-consolidation Phase 1-4 ships FIRST** — extracts features-cefi/tradfi compute paths into
+         `features-service/`, replacing existing MDPS `base_adapter.py` calls. Master sa2.P3-rewrite is the only writer
+         in this window.
+      2. **Ikenna T2 sa2.P4-cefi (live-pipeline) wires SECOND** — adds pipeline_mode partition + replay subsystem
+         hooks to MDPS `base_adapter.py` AFTER Harsh T2 has finished its rewrite sweep + pushed.
+      3. **Harsh T2 sa2.PhaseAB×8 (lookahead-bias) wires THIRD** — adds `assert_no_lookahead_for_feature_group` calls
+         at compute entry, on top of the live-pipeline-wired version.
+      Each step waits for the previous step's RESOLVED block in
+      [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) /
+      [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md) `## Open
+      questions`. **No surgical `git add -p` in parallel** — sequence enforced via plan-of-record signaling.
 - [ ] **Harsh Tab 3 (deployment-ui-lifecycle-tabs auth re-shape) → Ikenna Tab 5 (deploy_missing audit-log
       integration)**: audit-log integration wraps the auth re-shape. Hard ordering: Harsh ships auth re-shape Phase D;
       Ikenna ships audit-log on top.
-- [ ] **Harsh Tab 4 (per-asset_group VM ops + reconcilers) → Ikenna Tab 3 (cross-asset rescan design)**: Harsh runs the
-      rescan; Ikenna designs the schema flip. Coordinate: Ikenna ships design + ships rescan launcher script; Harsh runs
-      the launcher + reports findings; Ikenna handles edge cases.
-- [ ] **Harsh Tab 5 (UAC additions) → Ikenna Tab 1 (UAC drift fixes)**: Harsh's `api_football` / `cme_polymarket_arb` /
-      `hard_schema_enforcement` add UAC columns/enums; Ikenna flips `PROTOCOL_LAUNCH_DATES`. Different files, different
-      lines; surgical `git add -p` mandatory if both edit UAC in the same window.
+- [ ] **Harsh Tab 4 (per-asset_group VM ops + reconcilers) → Ikenna Tab 3 (cross-asset rescan design + LAUNCHER)**:
+      Ownership clarified — **Ikenna T3 sa3.Rescan-launcher writes the rescan launcher script** (in
+      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region
+      GCE VM. Sequence: Ikenna T3 ships design + launcher + announces RESOLVED in
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open questions`
+      → Harsh T4 runs `--dry-run` per asset_group → operator reviews CSV → Harsh T4 runs `--apply-write` → Ikenna T3
+      handles edge-case triage file.
+- [ ] **UAC editor priority queue (codified 2026-05-08 audit)**: Up to 4+ sub-agents could touch UAC simultaneously
+      (Harsh T2 sa2.P5-uac-col `feature_family` column; Harsh T5 sa5.HardSchema schema_v6 column adds, sa5.APIFootball
+      `external/api_football/normalize.py`, sa5.CMEPolyArb `canonical/strategy/cme_polymarket_arb_archetype.py`; Ikenna
+      T1 already-shipped `chain_env.py` `PROTOCOL_LAUNCH_DATES`; Ikenna T6 NEW `canonical/strategy/catalogue.py` +
+      `ids.py` + `canonical/client/model.py`). The conditional-push rule catches collisions at push time but earlier
+      serialization is cheaper. **Priority queue (top → bottom; each waits for previous to RESOLVED in
+      cross_cutting_may_23_deliverables_2026_05_08.md `## Open questions`)**:
+      1. Ikenna T6 NEW dirs (`canonical/strategy/catalogue.py`, `ids.py`, `canonical/client/model.py`) — brand-new
+         files, zero overlap risk; ships first.
+      2. Ikenna T1 `chain_env.py` flips — already shipped UAC@6c873e4; remaining drift fixes in same window.
+      3. Harsh T2 sa2.P5-uac-col `feature_family` column in `canonical/feature/family.py` (NEW dir).
+      4. Harsh T5 sa5.HardSchema `canonical/manifest/schema_v6.py` column adds.
+      5. Harsh T5 sa5.APIFootball `external/api_football/normalize.py:377-381`.
+      6. Harsh T5 sa5.CMEPolyArb `canonical/strategy/cme_polymarket_arb_archetype.py` — same DIR as Ikenna T6 (#1)
+         but DIFFERENT FILE; serialize after Ikenna T6 ships catalogue + ids files so the dir state is stable.
+      Each editor pre-commit-checks `git diff --cached --name-only` matches their assigned file subset exactly.
 - [ ] **Ikenna Tab 6 (UAC strategy SSOTs + DART scope) → Harsh Tab 6 (consumer wiring + DART UI)**: cross_cutting epic
       deliverables #1-#4. **Hard ordering**: Ikenna T6 ships UAC catalogue + ID + client schemas + DART codex spec
       first; Harsh T6 consumes after. **Mitigation**: Harsh T6 can scaffold the strategy ID refactor sweep (identify
@@ -659,18 +695,23 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
 ## Collision-risk callouts (file-level)
 
 - **deployment-service `scripts/vm/` directory**: Tab 4 (launches existing) + Tab 5 (creates new) share the dir.
-  Different files. Pre-commit `git diff --cached --name-only` verifies.
-- **MDPS `base_adapter.py`**: Ikenna Tab 2 (live-pipeline) + Harsh Tab 2 (ml-features-phase2a-wires). Different layers.
-  Pre-commit name-only + `git add -p` mandatory.
-- **UAC**: Tab 5 (api_football + cme_polymarket + hard_schema) + Ikenna Tab 1 (PROTOCOL_LAUNCH_DATES) + Tab 3
-  (deployment-UI lifecycle UAC SSOT). 3 distinct subsystems; no overlap.
+  Different files. Pre-commit `git diff --cached --name-only` verifies. Tab 5 ships any new prefix in
+  `VM_PREFIX_TO_BUCKET` BEFORE Tab 4 launches with that prefix; Tab 5 relaunches the watchdog VM after every batch
+  of prefix adds (CLAUDE.md "VM Naming Convention").
+- **MDPS `base_adapter.py`** (3-way collision — see HARD SEQUENCE in Cross-side handshakes above): Harsh T2
+  features-consolidation rewrite FIRST → Ikenna T2 sa2.P4-cefi live-pipeline wiring SECOND → Harsh T2 sa2.PhaseAB×8
+  lookahead-bias wires THIRD. Sequence enforced via plan-of-record signaling, NOT parallel `git add -p`.
+- **UAC** (4+ editor priority queue — see HARD QUEUE in Cross-side handshakes above): Ikenna T6 NEW dirs first →
+  Ikenna T1 drift fixes → Harsh T2 `feature_family` column → Harsh T5 schema/normalize/archetype adds in order.
+  Each editor pre-commit-checks `git diff --cached --name-only` matches assigned subset exactly.
 - **deployment-api `auth_middleware.py` + new launch endpoint**: Tab 3 (auth re-shape + new launch endpoint) + Ikenna
   Tab 5 (audit-log on top). Sequence enforced.
 - **8 features-\* source repos**: Tab 2 (consolidation source repos). Tab 4 wires hook into features-sports exit-step
   (one of the 8). Coordinate during Phase 4 import-path migration.
 - **`live-defi-rollout` push race**: per CLAUDE.md conditional push rule. Pre-commit `git status` +
   `git diff --cached --stat` (no path arg) MANDATORY before EVERY commit. Use `git add -p` / `git add <specific-file>`
-  only.
+  only. Branch does NOT trigger remote CI — every shippable unit's local `bash scripts/quality-gates.sh` Pass 1 is
+  the ONLY quality gate (per top-of-file CI gate reminder).
 
 ## Daily sync points
 
