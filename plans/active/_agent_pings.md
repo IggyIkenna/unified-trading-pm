@@ -28,3 +28,5 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 # Active pings
 
 _(empty — STARTED pings ack'd 2026-05-08 06:18 UTC for Tabs 9 (06:12), 10 (06:13), 11 (06:15). All clean boots, no flags. 4 tabs IN FLIGHT (2/9/10/11). Tabs 12/13/14 still QUEUED pending operator review.)_
+
+[2026-05-08 06:39 UTC] predictions-phase1-ingestion-tab — DONE Tab 10 — Phase 1 instruments-service half shipped (instruments-service@98bb167 + b904785, PM@7343b93 + 8526f99); Phase 2 MTDS half explicitly deferred per plan body's "Temporary states" section. See predictions_master_2026_05_07.plan.md ## DONE-2026-05-08.
