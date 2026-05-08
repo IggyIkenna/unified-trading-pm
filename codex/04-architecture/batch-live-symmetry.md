@@ -202,6 +202,48 @@ handler. Business logic lives in the service engine, shared by both modes — on
 
 ---
 
+## UX surface — how the symmetry shows up to the operator
+
+The batch=live engineering invariant has a direct UX consequence in deployment-UI: the operator-facing surface for batch
+and live mode is structurally identical, never two parallel UIs. Reinforces the engineering invariant via the
+operator-facing UX so an operator inferring the system shape from the UI lands on the same model the code enforces.
+
+What is identical:
+
+- **Same Data-Status tab** — single tab, one widget tree.
+- **Same drilldown depth** — per-shard staleness + per-day coverage + leaf parquet schema-view, identical hierarchy in
+  both modes.
+- **Same parquet schema-view** — same `LeafSchemaModal` mounting, same column inspector, same per-row preview.
+- **Same event-tail** — per-shard event stream surface; mode does not branch the event-source path.
+
+What is different — exactly one operator-visible thing:
+
+- **Data-Status mode-toggle position** — `Batch` / `Scheduled-Today` / `Live` (per
+  [`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) Phase B.5).
+  Mode=Batch answers "is the historical backfill complete?"; mode=Live answers "is the live pipeline writing fresh
+  data?". **Same SHAPE, different TIME-SLICE** — the toggle invalidates the `/api/data-status` query key and refetches;
+  no widget tree branch, no new bucket convention, no parallel component.
+
+Concrete consequences for implementers:
+
+- Phase B.5 implementation **must not** branch the widget tree by mode. Only the query-key changes. If you find yourself
+  introducing a `<BatchDataStatus />` and a `<LiveDataStatus />` peer pair, you've broken the invariant — refactor back
+  to a single component with a mode prop.
+- A new `LiveFreshnessPanel` (Phase B.6) is added when `mode=Live`, but it is a **peer panel**, not a replacement — both
+  render together when mode=Live, layered above the same drilldown. The freshness math reads the existing `available_at`
+  per-row column; no new write path.
+- "Strategy / execution / ML signals + metrics in live mode" do **not** belong in Data-Status — those live in Monitor →
+  Experiments / Live per the [`deployment-ui-architecture`](../05-infrastructure/deployment-ui-architecture.md) scope
+  split. Data-Status is data + pricing correctness only, regardless of mode.
+- Operator inferring the system shape from the UI: "live mode is a different time-slice of the same data path" — never
+  "live mode is a different system."
+
+Plan provenance:
+[`deployment_ui_lifecycle_tabs_2026_05_08`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.4
+added this section.
+
+---
+
 ## Related Documents
 
 | Document                                                           | Description                                                   |
