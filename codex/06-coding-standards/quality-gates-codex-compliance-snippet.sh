@@ -173,7 +173,7 @@ if [ "$USE_RG" = true ]; then
         . 2>/dev/null | grep -v '\.venv' || true)
     if [ -n "$DOMAIN_LOCAL" ]; then
         echo -e "${YELLOW}WARN${NC}"
-        echo -e "${YELLOW}Domain contracts found in service source — should live in unified-internal-contracts domain/<service>/${NC}"
+        echo -e "${YELLOW}Domain contracts found in service source — should live in unified_api_contracts.internal domain/<service>/${NC}"
         echo -e "${YELLOW}See: 02-data/schema-governance.md, plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b${NC}"
         echo "$DOMAIN_LOCAL" | head -5
         # Warning only until existing violations are remediated per Plan #0c

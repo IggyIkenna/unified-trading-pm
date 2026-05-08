@@ -114,12 +114,12 @@ integration test strategy.
 
 Every repo falls into exactly one category. The name MUST reflect the category:
 
-| Category           | Naming Pattern                                    | Deploys?             | Owns Domain Data?                              | Examples                                             |
-| ------------------ | ------------------------------------------------- | -------------------- | ---------------------------------------------- | ---------------------------------------------------- |
+| Category           | Naming Pattern                                    | Deploys?             | Owns Domain Data?                              | Examples                                                                                       |
+| ------------------ | ------------------------------------------------- | -------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | **library**        | `*-interface`, `*-library`, `unified-*-interface` | No                   | No — provides protocols, schemas, utilities    | `market-tick-data-service/market_tick_data_service/market_interface`, `execution-algo-library` |
-| **service**        | `*-service`                                       | Yes (Cloud Run / VM) | Yes — produces and persists domain data to GCS | `instruments-service`, `ml-training-service`         |
-| **ui**             | `*-ui`                                            | Yes (static hosting) | No — never reads GCS or PubSub directly        | `trading-analytics-ui`, `deployment-ui`              |
-| **infrastructure** | named by function                                 | Depends              | No                                             | `ibkr-gateway-infra`, `deployment-engine`            |
+| **service**        | `*-service`                                       | Yes (Cloud Run / VM) | Yes — produces and persists domain data to GCS | `instruments-service`, `ml-training-service`                                                   |
+| **ui**             | `*-ui`                                            | Yes (static hosting) | No — never reads GCS or PubSub directly        | `trading-analytics-ui`, `deployment-ui`                                                        |
+| **infrastructure** | named by function                                 | Depends              | No                                             | `ibkr-gateway-infra`, `deployment-engine`                                                      |
 
 **Rule:** If something doesn't fit a pattern, the architecture is wrong — restructure it, don't rename to hide the
 mismatch.
@@ -210,10 +210,11 @@ the transport channel in live mode.
 **Redis Stream vs PubSub — when to pick which.** The inner-loop live cascade (MTDS → MDPS → features-service) uses
 **Redis Stream** because it requires (a) ordered per-shard delivery, (b) consumer-group semantics for parallel
 consumers, (c) replay from a checkpoint when a consumer restarts. PubSub is fire-and-forget and would lose the ordering
-+ replay guarantees the cascade depends on. Cross-service fan-out (instruments-service catalogue refresh signals,
-strategy → execution signals, alerting fan-out to multiple subscribers) uses **PubSub** because the workload is async
-broadcast to N unrelated consumers — Redis Stream's consumer-group model would over-engineer that case. Full cascade
-contract: [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
+
+- replay guarantees the cascade depends on. Cross-service fan-out (instruments-service catalogue refresh signals,
+  strategy → execution signals, alerting fan-out to multiple subscribers) uses **PubSub** because the workload is async
+  broadcast to N unrelated consumers — Redis Stream's consumer-group model would over-engineer that case. Full cascade
+  contract: [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
 
 ### Exceptions
 
@@ -538,8 +539,8 @@ Every dataset has exactly ONE authoritative producer. Consumers read from GCS (b
 | risk_metrics              | risk-and-exposure-service         | `risk/by_date/`              | `risk-metrics`                           |
 | pnl_reports               | pnl-attribution-service           | `pnl/by_date/`               | `pnl-updates`                            |
 
-**API Contract Schemas (SSOT: unified-internal-contracts + unified-api-contracts):** Full field-level types, Correlation
-ID, and Client Order ID are defined in:
+**API Contract Schemas (SSOT: `unified_api_contracts.internal` + `unified-api-contracts`):** Full field-level types,
+Correlation ID, and Client Order ID are defined in:
 
 - `unified_api_contracts.internal/schemas/` — internal service-to-service contracts
 - `unified-api-contracts/` — external API schemas and VCR mocks
@@ -803,10 +804,10 @@ publisher be fast, let consumers be correct.
 
 ---
 
-## 17. Error Retry Policy (SSOT: unified-internal-contracts)
+## 17. Error Retry Policy (SSOT: `unified_api_contracts.internal`)
 
-Error categories and recovery strategies are defined in `unified_api_contracts.internal/schemas/errors.py` (`ErrorCategory`
-and `ErrorRecoveryStrategy` enums). The topology layer references, not duplicates, those definitions.
+Error categories and recovery strategies are defined in `unified_api_contracts.internal/schemas/errors.py`
+(`ErrorCategory` and `ErrorRecoveryStrategy` enums). The topology layer references, not duplicates, those definitions.
 
 | Error Category | Strategy           | Max Retries | Backoff             | After Exhaustion        |
 | -------------- | ------------------ | ----------- | ------------------- | ----------------------- |
@@ -1057,8 +1058,8 @@ graph TD
 > pre-2026-05-08 shape. The current shape is: one **MTDS** cluster (sharded by v5 shard atom), one **MDPS +
 > features-service-asset-scoped** colocated cluster per asset_group, plus one **features-service-cross-cutting** cluster
 > that subscribes to multiple asset_group streams. Same code path as batch (per
-> [`batch-live-architecture.md`](batch-live-architecture.md)); only the trigger source swaps from Cloud Scheduler to Redis
-> Stream events.
+> [`batch-live-architecture.md`](batch-live-architecture.md)); only the trigger source swaps from Cloud Scheduler to
+> Redis Stream events.
 
 ### Pre-2026-05-08 historical: package-embedding shape
 
@@ -1160,11 +1161,11 @@ graph TB
 - GCS is for persistence only, not for inter-service communication
 
 > **Post-2026-05-08 update.** The package-embedding shape is replaced by the Redis Stream cascade. Inter-service
-> communication on the hot path is now `XADD streaming.{asset_group}.candle_boundary_crossed` →
-> `XREADGROUP` → `XADD streaming.{asset_group}.candle_computed` → `XADD streaming.{asset_group}.features_computed`.
-> features-service is **one consolidated repo** deployed in two flavors (asset-scoped colocated with MDPS + cross-cutting
-> standalone), per [`features-service-architecture.md`](features-service-architecture.md). GCS remains
-> persistence-only; the inner-loop cascade is Redis Stream. The full design lives in
+> communication on the hot path is now `XADD streaming.{asset_group}.candle_boundary_crossed` → `XREADGROUP` →
+> `XADD streaming.{asset_group}.candle_computed` → `XADD streaming.{asset_group}.features_computed`. features-service is
+> **one consolidated repo** deployed in two flavors (asset-scoped colocated with MDPS + cross-cutting standalone), per
+> [`features-service-architecture.md`](features-service-architecture.md). GCS remains persistence-only; the inner-loop
+> cascade is Redis Stream. The full design lives in
 > [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
 
 ---
@@ -1595,12 +1596,12 @@ All API services in this cluster conform to the following pattern. Deviations ar
 
 ## SSOT Cross-References
 
-| Topic                                | Location                                                                           |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| Repo registry (cluster=api-services) | `unified-trading-pm/workspace-manifest.json`                                       |
+| Topic                                | Location                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| Repo registry (cluster=api-services) | `unified-trading-pm/workspace-manifest.json`                                          |
 | UI → API wiring                      | `unified-trading-pm/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`                  |
 | Runtime topology diagram             | `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`        |
 | Build order (L6 node)                | `unified-trading-pm/codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg`                 |
 | Quality gates                        | `unified-trading-pm/codex/06-coding-standards/quality-gates.md`                       |
 | Test-in-image CI                     | `unified-trading-pm/codex/06-coding-standards/quality-gates.md` (Cloud Build section) |
-| Auth middleware                      | `unified_trading_services.GoogleOAuthMiddleware`                                   |
+| Auth middleware                      | `unified_trading_services.GoogleOAuthMiddleware`                                      |

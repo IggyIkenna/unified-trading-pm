@@ -54,21 +54,21 @@ All other `os.environ` / `os.getenv()` access in service code is banned. Use `ge
 
 ## Document Map
 
-| Topic                                                                              | Canonical Doc                                                                              |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Running quality gates / CI setup                                                   | [quality-gates.md](quality-gates.md)                                                       |
-| Developer formatting setup (VSCode, pre-commit)                                    | [formatting-standards.md](formatting-standards.md)                                         |
-| Forbidden code patterns                                                            | [STANDARDS.md](STANDARDS.md)                                                               |
-| Config class patterns                                                              | [configuration-management.md](configuration-management.md)                                 |
-| Testing patterns                                                                   | [testing.md](testing.md)                                                                   |
-| Integration testing layers (0–3)                                                   | [integration-testing-layers.md](integration-testing-layers.md)                             |
-| File/function size limits                                                          | [file-splitting-guide.md](file-splitting-guide.md)                                         |
-| Validation + errors (4-category empty, write-gate quartet, schema, available_at)   | [validation-and-errors.md](validation-and-errors.md)                                       |
-| Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning) |
-| Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                             |
-| Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                         |
-| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)    |
-| Service orchestration patterns (import contract, handler-orchestrator split, etc.) | [service-orchestration-patterns.md](service-orchestration-patterns.md)                     |
+| Topic                                                                              | Canonical Doc                                                                                           |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Running quality gates / CI setup                                                   | [quality-gates.md](quality-gates.md)                                                                    |
+| Developer formatting setup (VSCode, pre-commit)                                    | [formatting-standards.md](formatting-standards.md)                                                      |
+| Forbidden code patterns                                                            | [STANDARDS.md](STANDARDS.md)                                                                            |
+| Config class patterns                                                              | [configuration-management.md](configuration-management.md)                                              |
+| Testing patterns                                                                   | [testing.md](testing.md)                                                                                |
+| Integration testing layers (0–3)                                                   | [integration-testing-layers.md](integration-testing-layers.md)                                          |
+| File/function size limits                                                          | [file-splitting-guide.md](file-splitting-guide.md)                                                      |
+| Validation + errors (4-category empty, write-gate quartet, schema, available_at)   | [validation-and-errors.md](validation-and-errors.md)                                                    |
+| Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning)              |
+| Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                                          |
+| Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                                      |
+| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md) |
+| Service orchestration patterns (import contract, handler-orchestrator split, etc.) | [service-orchestration-patterns.md](service-orchestration-patterns.md)                                  |
 
 ---
 
@@ -643,14 +643,14 @@ Every repo must have:
 
 #### Tier promotion criteria
 
-| Tier | Repos                                                                                                       | Gate                      |
-| ---- | ----------------------------------------------------------------------------------------------------------- | ------------------------- |
-| T0   | unified-api-contracts, unified-trading-library, execution-algo-library, matching-engine-library             | All D5 before any T1      |
-| T1   | unified-trading-library (UTS), unified-config-interface (UCI)                                               | All D5 before any T2      |
-| T2   | unified-market-interface, execution-service, unified-ml-interface, unified-feature-calculator-library, etc. | All D5 before any T3      |
-| T3   | unified-domain-client (UDC)                                                                                 | D5 before any T4          |
-| T4   | 19 services (instruments-service → monitoring pipeline)                                                     | All D5 before T5          |
-| T6   | 11 UIs                                                                                                      | All D5 = Phase 3 complete |
+| Tier | Repos                                                                                                                                                                               | Gate                      |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| T0   | unified-api-contracts, unified-trading-library, execution-algo-library, matching-engine-library                                                                                     | All D5 before any T1      |
+| T1   | unified-trading-library, unified-config-interface (UCI)                                                                                                                             | All D5 before any T2      |
+| T2   | execution-service, unified-ml-interface, etc. (market-tick-data-service `market_interface` sub-package replaces archived UMI; `unified-feature-calculator-library` merged into UTL) | All D5 before any T3      |
+| T3   | unified-domain-client (UDC)                                                                                                                                                         | D5 before any T4          |
+| T4   | 19 services (instruments-service → monitoring pipeline)                                                                                                                             | All D5 before T5          |
+| T6   | 11 UIs                                                                                                                                                                              | All D5 = Phase 3 complete |
 
 ---
 

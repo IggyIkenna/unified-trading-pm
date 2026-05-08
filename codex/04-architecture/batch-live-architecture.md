@@ -58,8 +58,8 @@ Data flow:
 > [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Trigger
 > cascade" + [`../03-observability/coordination-events.md`](../03-observability/coordination-events.md). PubSub remains
 > the right transport for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution,
-> alerting). Where this doc says "PubSub" below, read it as "the live transport family — Redis Stream for the
-> inner-loop cascade, PubSub for cross-service fan-out."
+> alerting). Where this doc says "PubSub" below, read it as "the live transport family — Redis Stream for the inner-loop
+> cascade, PubSub for cross-service fan-out."
 
 ---
 
@@ -90,8 +90,8 @@ Service B reads from that path on its next scheduled run.
 
 Inter-service data flow in live mode uses two complementary async transports:
 
-- **Redis Stream** — the inner-loop cascade between MTDS → MDPS → features-service. Consumer-group semantics
-  (`XADD` / `XREADGROUP`) provide ordered per-shard delivery + replay-from-checkpoint when a consumer restarts. See
+- **Redis Stream** — the inner-loop cascade between MTDS → MDPS → features-service. Consumer-group semantics (`XADD` /
+  `XREADGROUP`) provide ordered per-shard delivery + replay-from-checkpoint when a consumer restarts. See
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
   full CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED cascade contract.
 - **PubSub** — cross-service async broadcast (instruments-service catalogue refresh, strategy → execution signals,
@@ -114,7 +114,8 @@ part of its batch run. The feature values exist as files on object storage.
 The strategy process (and execution process) imports the feature calculator library directly as a Python package.
 Feature computation happens in the same process, in memory, with no network call for the calculation itself.
 
-- `unified-feature-calculator-library` is imported as a dependency, not called via HTTP.
+- `unified-trading-library` (the `feature_calculator/` sub-package — formerly `unified-feature-calculator-library`,
+  merged into UTL) is imported as a dependency, not called via HTTP.
 - No RPC to a feature service during the hot path.
 - Latency for the calculation is CPU-bound only — no serialization, no network round-trip.
 
@@ -200,21 +201,21 @@ must exclude MLTR from its scope.
 Current batch/live symmetry state across all pipeline services. Updated as part of
 `live_batch_protocol_completeness_2026_03_10` plan + post-A.6 fix (execution-service is batch+live, not batch-only):
 
-| Service                        | Code | Batch Handler           | Live Handler           | `--mode` CLI flag | Test Coverage       | Notes                                                                                                                                                                                                                                                  |
-| ------------------------------ | ---- | ----------------------- | ---------------------- | ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| features-commodity-service     | FCS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Wired in `cli/main.py` (p1-todo-05)                                                                                                                                                                                                                    |
-| features-volatility-service    | FVS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                                                              |
-| features-onchain-service       | FOS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                                                              |
-| features-sports-service        | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is future work (p1-todo-10)                                                                                                                                                                                                               |
-| market-tick-data-service       | MTDS | `DownloadBatchHandler`  | n/a (download-only)    | batch             | unit: batch handler | Download service — no live streaming mode                                                                                                                                                                                                              |
-| market-data-processing-service | MDPS | `process_candles`       | `LiveModeHandler`      | batch / live      | parser tests        | Lazy-imported; wired via `_mode_dispatch`                                                                                                                                                                                                              |
-| instruments-service            | INS  | `InstrumentsBatchMode`  | n/a (catalogue-only)   | batch             | parser tests        | `--run-mode` renamed to `--mode` (p1-todo-09); see §9 instruments-live exception                                                                                                                                                                       |
-| strategy-service               | STR  | `StrategyBatchHandler`  | `StrategyLiveHandler`  | batch / live      | unit: both modes    | `LiveHandler` facade added (p1-todo-13)                                                                                                                                                                                                                |
-| ml-inference-service           | MLIN | `BatchInferenceHandler` | `LiveInferenceHandler` | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                                                           |
-| ml-training-service            | MLTR | `TrainingHandler`       | **EXEMPT**             | batch only        | unit: batch handler | Batch-only by design (see exemption above)                                                                                                                                                                                                             |
-| execution-service              | EXS  | `MatchingEngineHandler` | `ExecutionLiveHandler` | batch / live      | unit + integration  | Batch = matching engine fills (UAC `BatchExecutionMode`); live = real venue. Per CLAUDE.md "Batch = Live: Unified Pipeline Architecture" — execution alpha = live fills P&L − simulated fills P&L (see §6 below).                                      |
-| risk-service                   | RSK  | `RiskBatchHandler`      | `RiskLiveHandler`      | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                                                           |
-| alerting-service               | ALS  | n/a                     | `AlertingHandler`      | live only         | integration         | Event-driven only; no batch mode                                                                                                                                                                                                                       |
+| Service                        | Code | Batch Handler           | Live Handler           | `--mode` CLI flag | Test Coverage       | Notes                                                                                                                                                                                                             |
+| ------------------------------ | ---- | ----------------------- | ---------------------- | ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| features-commodity-service     | FCS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Wired in `cli/main.py` (p1-todo-05)                                                                                                                                                                               |
+| features-volatility-service    | FVS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
+| features-onchain-service       | FOS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
+| features-sports-service        | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is future work (p1-todo-10)                                                                                                                                                                          |
+| market-tick-data-service       | MTDS | `DownloadBatchHandler`  | n/a (download-only)    | batch             | unit: batch handler | Download service — no live streaming mode                                                                                                                                                                         |
+| market-data-processing-service | MDPS | `process_candles`       | `LiveModeHandler`      | batch / live      | parser tests        | Lazy-imported; wired via `_mode_dispatch`                                                                                                                                                                         |
+| instruments-service            | INS  | `InstrumentsBatchMode`  | n/a (catalogue-only)   | batch             | parser tests        | `--run-mode` renamed to `--mode` (p1-todo-09); see §9 instruments-live exception                                                                                                                                  |
+| strategy-service               | STR  | `StrategyBatchHandler`  | `StrategyLiveHandler`  | batch / live      | unit: both modes    | `LiveHandler` facade added (p1-todo-13)                                                                                                                                                                           |
+| ml-inference-service           | MLIN | `BatchInferenceHandler` | `LiveInferenceHandler` | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
+| ml-training-service            | MLTR | `TrainingHandler`       | **EXEMPT**             | batch only        | unit: batch handler | Batch-only by design (see exemption above)                                                                                                                                                                        |
+| execution-service              | EXS  | `MatchingEngineHandler` | `ExecutionLiveHandler` | batch / live      | unit + integration  | Batch = matching engine fills (UAC `BatchExecutionMode`); live = real venue. Per CLAUDE.md "Batch = Live: Unified Pipeline Architecture" — execution alpha = live fills P&L − simulated fills P&L (see §6 below). |
+| risk-service                   | RSK  | `RiskBatchHandler`      | `RiskLiveHandler`      | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
+| alerting-service               | ALS  | n/a                     | `AlertingHandler`      | live only         | integration         | Event-driven only; no batch mode                                                                                                                                                                                  |
 
 ### Handler pattern reference
 
@@ -261,8 +262,9 @@ Concrete consequences for implementers:
   render together when mode=Live, layered above the same drilldown. The freshness math reads the existing `available_at`
   per-row column; no new write path.
 - "Strategy / execution / ML signals + metrics in live mode" do **not** belong in Data-Status — those live in Monitor →
-  Experiments / Live per the [`../05-infrastructure/deployment-ui-architecture.md`](../05-infrastructure/deployment-ui-architecture.md)
-  scope split. Data-Status is data + pricing correctness only, regardless of mode.
+  Experiments / Live per the
+  [`../05-infrastructure/deployment-ui-architecture.md`](../05-infrastructure/deployment-ui-architecture.md) scope
+  split. Data-Status is data + pricing correctness only, regardless of mode.
 - Operator inferring the system shape from the UI: "live mode is a different time-slice of the same data path" — never
   "live mode is a different system."
 
@@ -373,8 +375,8 @@ These violations of the batch=live principle were identified and corrected:
    `SportsMatchingEngine.settle_all()`. Fixed: all settlement goes through the engine.
 2. **Custom P&L calculation** — Backtest engines that computed their own P&L instead of reading from
    `PortfolioSummary.total_pnl`. Fixed: `BacktestResult` reads P&L from the engine summary.
-3. **Manual position tracking** — Maintaining a separate list of open/closed bets outside the engine. Fixed: engine
-   owns the bet lifecycle (`_open_bets` / `_settled_bets`). The `BankrollState` in strategy-service is retained only for
+3. **Manual position tracking** — Maintaining a separate list of open/closed bets outside the engine. Fixed: engine owns
+   the bet lifecycle (`_open_bets` / `_settled_bets`). The `BankrollState` in strategy-service is retained only for
    staking context (compute_stake needs it) and max drawdown tracking, not for settlement.
 4. **Category-specific backtest engines** — Building a standalone sports backtest that bypasses execution-service.
    Fixed: `strategy_service.engine.strategies.sports.backtest_engine` imports and uses
