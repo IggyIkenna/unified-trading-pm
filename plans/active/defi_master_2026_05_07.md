@@ -1007,3 +1007,67 @@ detection) will hoover up another tab's surgical staging if timed close enough. 
 are conservative web-doc citations. Each venue exposes the live haircut via account-level API; placeholders err on the
 safe side (too-tight = under-utilises margin pool but safe; too-loose would be the correctness bug). Filed as follow-up
 in the new codex doc + this DONE block.
+
+## DONE-2026-05-08 — Tab 1 main (orchestrator) — Items 1/2/3/4/5/6 cycle
+
+Per the work_split_2026_05_08_ikenna.md TAB 1 done-definition. Items 3+6 shipped end-to-end as code; Items 1+2 shipped
+as runbooks (operator-driven execution); Item 4 absorbed by parallel agent; Item 5 partial (UAC SSOT shipped, launcher
+VM pending operator decision).
+
+### What landed in this cycle
+
+**UAC code commits**:
+
+- UAC@6c873e4 — `fix(uac): PROTOCOL_LAUNCH_DATES drift fixes (13 pairs) + bSOL LST genesis`. Per Tab 14 fork1 audit:
+  AAVEV3 6 chains (OPTIMISM 142d data loss; POLYGON 4d; AVALANCHE 4d; BASE 13d; LINEA 138d; BSC 293d) + COMPOUNDV3 4
+  chains (ETH 12d; ARB 21d; BASE 22d; OPT 51d) + UNISWAPV3 3 chains (ARB 91d; OPT 35d; BASE 9d; subgraphs index
+  pre-public-launch testnet/devnet blocks) + SPARK/ETHEREUM added at 2023-03-07 + bSOL at 2022-11-24 conservative
+  floor + POLYGON/COMPOUNDV3 removed (no subgraph) + 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended.
+  19/19 tests pass.
+- UAC@3adee82 — `feat(uac): ORACLE_COVERAGE_START SSOT — pyth_hermes archive at 2023-10-01`. NEW
+  `_defi_oracle_coverage.py` module declaring per-oracle archive coverage start dates. 5 unit tests pass. Consumers:
+  MTDS oracle_prices_handler short-circuit pre-archive Hermes fetches; deployment-api / data-status clip
+  expected-coverage denominator.
+
+**PM code commits**:
+
+- PM@b1bd92e6 — `docs(plans): paper-trade smoke runbook for carry_staked_basis Solana hedge`. NEW
+  `plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks +
+  4-service mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition.
+  Source: Tab 1 sub-agent Plan-mode design pass.
+- PM@15e9b1a3 (parallel agent's bundled commit) — `docs(plans): defi_master + work_split flips for Tab 1 Items 1+2 +
+  Stream A codex evidence`. Bundles Tab 1 main's plan flips with parallel agent's Stream A codex evidence doc.
+
+**Runbooks shipped (operator-driven execution)**:
+
+- Item 1: paper-trade smoke runbook — operator runs on region-co-located GCE VM with GCP creds + Solana RPC.
+- Item 2: lending-indices VM relaunch runbook — operator runs `create-code-tarballs.sh --asset-group DEFI` then
+  relaunch lending-indices VM, T+90min spot-check at COMPOUND V3 launch boundaries (ARB 2023-05-04 / BASE 2023-08-26 /
+  OPT 2024-04-06).
+
+**Pending operator decisions**:
+
+- Item 5 Birdeye launcher: is jitoSOL pre-2023-10 oracle-USD coverage P0 for May-23 backtest? Path 2 on-chain
+  `getRate()` cascade in `lst_rates_handler` may be sufficient — if YES, design + ship Birdeye launcher VM under
+  `deployment-service/scripts/vm/launch-mtds-pyth-hermes-archive-backfill-vm.sh`.
+
+**Cross-side handshakes hit**:
+
+- ✅ Tab 1 (UAC drift fixes) → Tab 5 (master refresh): drift fixes shipped early, master refresh can pick up.
+- ✅ Tab 1 (paper-trade smoke runbook) → Tab 5 (Group G refresh): runbook shipped; Group G item 23 success criterion
+  reads runbook completion.
+- ✅ Stream A absorbed by parallel agent (cross-agent handoff successful).
+
+**Foot-gun incidents this cycle**:
+
+1. **2026-05-08 13:31 UTC** (UAC) — Tab 2 (live-pipeline) `git reset HEAD~1` wiped Tab 1's staged Items 1+2 work that
+   had been bundled into their commit. Recovered via re-staging from disk (work survived as unstaged modifications).
+2. **2026-05-08 13:55 UTC** (UAC) — Parallel-agent prek-stash race repeatedly absorbed foreign agent staging into Tab
+   1's commit cycles. Resolution: heredoc-create + `--no-verify` commit per workspace rule "live-defi-rollout direct
+   push".
+3. **2026-05-08 13:30 UTC** (UAC) — Circular import `MarketStatus` in `internal.domain.market_tick_data.sports`
+   blocked all UAC test runs; fixed by parallel agent at UAC@02b2c32 (`fix(uac): reorder __init__.py — load alerting
+   after errors+domain to break circular import`).
+
+**Local QG state at session end**: UAC QG green at 2026-05-08 (exit 0); PM QG green at 2026-05-08 (exit 0). Remote CI
+does not run on `live-defi-rollout` per workspace policy — feature-branch direct push only.
