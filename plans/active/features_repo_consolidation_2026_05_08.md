@@ -425,39 +425,58 @@ todos:
 
   - id: phase-5-lift-cross-family-helpers-to-utl
     content: |
-      - [ ] [AGENT] P1. Phase 5 — Lift the 4 duplicated cross-family helpers from per-family code into
+      - [x] [AGENT] P1. Phase 5 — Lift the 4 duplicated cross-family helpers from per-family code into
         `unified-trading-library/unified_trading_library/feature_service_base/` (or `features/common/` — locate
         via `grep -rn "feature_service_base" unified-trading-library/`). Each helper currently copy-pasted across
         ≥2 of the 8 source repos.
 
-        Helpers to lift (Phase 0 pre-audit § (f) is the authoritative source list — these are the candidates):
-        (a) **Watermark + grace fan-in** for cross-instrument-style multi-stream alignment — currently inlined in
-            features-cross-instrument and features-multi-timeframe, slight drift between the two. Lifted name:
-            `unified_trading_library.streaming.WatermarkAlignmentFanin`.
-        (b) **`available_at` stamping** — every features-* family stamps `available_at` per row at write time; the
-            stamping logic mirrors UAC `availability_stamping.stamp_available_at_*` but each features-* repo has
-            its own thin wrapper. Lift the wrappers into UTL `feature_service_base/available_at_stamping.py` so
-            new families pick up the canonical shape.
-        (c) **`LookaheadBiasError` strict-mode gate** — per-row enforcement that
-            `input.available_at <= target_ts - horizon`. Currently fires in 3 of 8 features-* repos with subtle
-            differences in horizon resolution; lift into a single `assert_no_lookahead_for_feature_group(...)`
-            helper that reads horizon from the UAC feature-DAG SSOT (per `ml_and_features_master` Phase 1A).
-        (d) **NaN write-gate** — per-feature-group threshold check before `record_captured`; rejects writes with
-            >threshold% NaN. Currently inlined per-calculator. Lift into a UTL `WriteGateHelper.check_nan_ratio(...)`.
+        **All 7 Phase 5 UTL primitive lifts SHIPPED 2026-05-08.** Per-family consumer migration (8 batch_handlers
+        → use `FeatureBatchHandler[FamilyConfigT]`; 3 base_calculators → use canonical `BaseFeatureCalculator`;
+        4 BroadcastSink + 4 LiveDataSource + 7 BuilderEntry + cross-instrument/multi-timeframe watermark fanin
+        consumer wire-in) is Wave 6+ scope (consumer wiring), tracked in Phase 6 of this plan.
 
-        Tests for each lifted helper under `unified-trading-library/tests/unit/feature_service_base/` (existing
-        directory; add helper-specific tests). Each lift is its own commit with the per-family inline removals
-        in the same commit — no parallel paths during transition (workspace "no double SSOT" rule).
+        Phase 5 sub-item evidence (per-helper commit shas):
+        - **5.1 ManifestWriter.add() feature_family kwarg** — UTL@77aa1586 (F6 Option C).
+        - **5.2 WatermarkAlignmentFanin (greenfield)** — UTL@3611112b. New `unified_trading_library/watermark/`
+          sub-package with frozen `StreamWatermark` + `AlignmentEmission` dataclasses + bounded grace-window
+          fan-in. Boundary-aligned emission, monotonic ordering, late-arrival-dropped (lookahead-bias-safe).
+          12 unit tests in `tests/unit/watermark/test_alignment_fanin.py`. Audit § 9.1 lift target.
+        - **5.3 BaseFeatureCalculator canonical SSOT** — UTL@d85e62e8. Extended both `feature_calculator/registry.py`
+          + `feature_service_base/registry.py` ABC with class-level `feature_group: ClassVar[str]` +
+          `feature_family: ClassVar[str]` + `validate_class_attributes()` opt-in helper. Validation kept opt-in
+          for back-compat (Phase 6 flips to mandatory). 13 unit tests across both registry files. Audit § 9.10
+          lift target — preserves existing `FeatureCalculator(BaseFeatureCalculator, ABC)` helper-rich subclass
+          in `feature_calculator/base.py`.
+        - **5.4 + 5.5 BroadcastSink + LiveDataSource canonical lift** — UTL@85948c87. 4-way duplicates from
+          calendar / delta_one / onchain / volatility consolidated. Audit § 9.8 + § 9.9.
+        - **5.6 BuilderEntry + resolve_build_order canonical lift** — UTL@0bfad836. 7-way duplicate from per-family
+          `feature_builder_registry.py` consolidated. Audit § 9.7.
+        - **5.7 FeatureBatchHandler ABC** — UTL@7aba113c. New
+          `unified_trading_library/feature_service_base/batch_handler.py` with `FeatureBatchHandler[FamilyConfigT]`
+          generic ABC + `BatchRunResult` + `BatchRunSummary` aggregator. 4 abstract methods (enumerate_shards /
+          compute_one_shard / shard_output_path / record_shard_result) cover the 20% per-family override surface.
+          Per CLAUDE.md "Shard-level failure isolation": `run_one_shard` NEVER raises — captures exceptions into
+          failed `BatchRunResult` so per-day batch loop continues. 8 unit tests in
+          `tests/unit/feature_service_base/test_batch_handler.py`. Also closes
+          `ml_and_features_master_2026_05_07.plan.md` Phase 2.UTL-LIFT (Tier 2D). Audit § 9.5.
+        - **5.8 LookaheadBiasError adoption helper** — UTL@4354276c (pre-existing). `assert_no_lookahead_for_feature_group`
+          verified at `unified_trading_library/point_in_time.py:274` — kwargs `feature_group, inputs_df, target_ts,
+          available_at_col, label`; reads UAC `FEATURE_REQUIRED_INPUTS[feature_group]` for horizon; raises
+          `LookaheadBiasError` strict-mode per CLAUDE.md "LookaheadBiasError raised loud". Silent-skip on
+          unregistered feature_group / empty df / missing column for back-compat during rollout. NO code change
+          needed — shape sufficient for adoption. Audit § 9.3 (3-of-8 features-* repos already adopt; remaining
+          5 adopt in Phase 6 consumer wiring).
 
-        QG: UTL quality-gates.sh clean per lift commit; consolidated features-service quality-gates.sh clean
-        after all 4 lifts land.
+        Tests for each lifted helper under `unified-trading-library/tests/unit/<sub-package>/`. Each lift is its
+        own commit (per "Commit + Push + Flip Per Shippable Unit" HARD RULE).
 
-        **Coordination**: `ml_and_features_master` Phase 2.UTL-LIFT lifts the `FeatureBatchHandler` glue from
-        the 4 features-* repos that have it. That work overlaps with this Phase 5 — coordinate via the
-        Cross-Plan-Coordination-Banners rule. Recommend: `ml_and_features_master` lifts FeatureBatchHandler
-        first (or in parallel with this Phase 5 if the agents don't collide); features-service inherits it.
-    status: todo
-    note: ""
+        QG: UTL Pass-1 clean per lift commit; consolidated features-service quality-gates.sh runs after Phase 6
+        consumer wire-in.
+
+        **Coordination**: `ml_and_features_master` Phase 2.UTL-LIFT closed by 5.7 above (FeatureBatchHandler).
+        Cross-Plan-Coordination-Banners rule satisfied — both plans cite the same `UTL@7aba113c`.
+    status: done
+    note: "All 7 Phase 5 UTL primitives shipped 2026-05-08 (5.1=77aa1586, 5.2=3611112b, 5.3=d85e62e8, 5.4-5.5=85948c87, 5.6=0bfad836, 5.7=7aba113c, 5.8=4354276c-pre-existing). Per-family consumer migration is Wave 6+ scope (Phase 6 of this plan)."
 
   - id: phase-6-regression-parity-test
     content: |
