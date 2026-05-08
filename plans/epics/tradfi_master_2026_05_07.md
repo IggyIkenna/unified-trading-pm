@@ -284,7 +284,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
 > Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME options chain + ES.OPT 11-cluster
 > bundles need per-cluster `available_at = cluster_bar_close_time` (depends on coordinator Phase 0 MDPS bar boundary
 > contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling + honest gap per CLAUDE.md "VIX 15m
@@ -309,7 +309,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.

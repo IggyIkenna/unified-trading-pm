@@ -176,7 +176,7 @@ Covers:
 ### Manifest + parquet migration
 
 **Cross-plan coordination**: Polymarket parquet rewrite + manifest reflip is **Stage 3** of the workspace-wide manifest
-migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md.md) for
+migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for
 sequencing DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window;
 resume ONLY after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not
 legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
@@ -314,7 +314,7 @@ before CME arb can link.
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
 > Phase 1. Predictions stamping is **lifecycle-bounded**: every prediction-market tick must have
 > `available_at = max(tick_ts, market_created_at)` and must NOT carry rows past `market_settlement_time`. Depends on
 > Phase 1 (canonical-question-group + lifecycle ingestion) of THIS plan AND on coordinator Phase 0 (MDPS bar boundary
@@ -340,7 +340,7 @@ before CME arb can link.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `sports_master_2026_05_07`.
 - Sports half of e2e: `sports_master_2026_05_07.md` (288M ODDS_API row migration + MDPS bucketing + FSS).

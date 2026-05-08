@@ -130,7 +130,7 @@ related_plans:
 
 > **🟡 IN-FLIGHT REFACTOR — GCS migration bundle 2026-05-08**
 >
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md.md)
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 > bundles the `pipeline_mode=` partition addition + `category=` → `asset_group=` rekey + 5-drift-axis cleanup into a
 > SINGLE overnight GCS walk. **This plan's Stage 1+2+3 must land BEFORE the bundle's Phase 3 starts** so we don't bundle
 > work still in flight elsewhere. The bundle's Phase 0 § (f) coordination check explicitly verifies which Stage 4 items
@@ -292,15 +292,15 @@ This is the operator-visible view — what the human needs to do, when, in what 
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Write-gate (Stage 2 + 3):
-  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md).
-- Sports rename (Stage 1): [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md.md) § Sports
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
+- Sports rename (Stage 1): [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § Sports
   `data_available_at` → `available_at` rename.
-- Predictions Phase 3 migration: [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md.md).
-- Final rescan: [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md.md) § mtds-s4-10.
+- Predictions Phase 3 migration: [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md).
+- Final rescan: [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) § mtds-s4-10.
 - Raw tables + `_ensure_timestamp` deletion:
-  [`infrastructure_master_2026_05_07.md`](./infrastructure_master_2026_05_07.md.md).
+  [`infrastructure_master_2026_05_07.md`](./infrastructure_master_2026_05_07.md).
 - Workspace rule: CLAUDE.md `§ Manifest migration, NOT fallback` — when manifest drifts from canonical shape, write a
   one-time migration script and **remove** the fallback reader. No compat shims.
 - Workspace rule: CLAUDE.md `§ Per-VM shard isolation for concurrent backfills`.

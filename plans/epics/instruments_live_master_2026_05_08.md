@@ -651,7 +651,7 @@ isProject: false
 
 > **🟢 SIBLING — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md) Phase
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase
 > 10 consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
 > `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
 > add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +

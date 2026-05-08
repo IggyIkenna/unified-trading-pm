@@ -66,14 +66,14 @@ can progress (where we can fix things, we still fix them) but are not gating for
 
 | Path                                                                                                                                        | Role                                                                                               | Status |
 | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
-| [`tradfi_master_2026_05_07`](./tradfi_master_2026_05_07.md.md)                                                                            | TradFi data pipeline umbrella (instruments + MTDS + MDPS + features for ES/MES/ETFs/SPX)           | Active |
-| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md.md)                                                          | ML lifecycle + features umbrella (training pipeline, calendar features, Bitcoin cross-asset feats) | Active |
+| [`tradfi_master_2026_05_07`](./tradfi_master_2026_05_07.md)                                                                            | TradFi data pipeline umbrella (instruments + MTDS + MDPS + features for ES/MES/ETFs/SPX)           | Active |
+| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md)                                                          | ML lifecycle + features umbrella (training pipeline, calendar features, Bitcoin cross-asset feats) | Active |
 | [`active/instruments_and_market_tick_data_completion_2026_05_01`](../active/instruments_and_market_tick_data_completion_2026_05_01..md | Instruments + MTDS completion (full backfill, manifest honesty)                                    | Active |
-| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md)                   | Write-gate / honest-coverage umbrella — gates manifest honesty for every TradFi shard              | Active |
-| [`manifest_migration_master_2026_05_07`](./manifest_migration_master_2026_05_07.md.md)                                                    | Manifest schema v6 + migration coordination                                                        | Active |
-| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md.md)                                 | Features-repo consolidation (pre-req for clean features pipeline)                                  | Active |
-| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md)                       | Live-pipeline activation (batch-mode is also covered here; live mode itself OUT of scope)          | Active |
-| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md.md)                                                      | Strategy v2 — progressed-not-gated for this epic                                                   | Active |
+| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)                   | Write-gate / honest-coverage umbrella — gates manifest honesty for every TradFi shard              | Active |
+| [`manifest_migration_master_2026_05_07`](./manifest_migration_master_2026_05_07.md)                                                    | Manifest schema v6 + migration coordination                                                        | Active |
+| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md)                                 | Features-repo consolidation (pre-req for clean features pipeline)                                  | Active |
+| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md)                       | Live-pipeline activation (batch-mode is also covered here; live mode itself OUT of scope)          | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md)                                                      | Strategy v2 — progressed-not-gated for this epic                                                   | Active |
 
 ## Cross-epic handshakes
 
@@ -107,6 +107,6 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md)
 - [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md)

@@ -32,13 +32,13 @@ locked_since: 2026-05-07
 
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation + live-pipeline activation 2026-05-08**
 >
-> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md.md) merges the 8
+> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md) merges the 8
 > separate features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that
 > plan lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN
 > write-gate) into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership:
 > this plan owns FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md) builds
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) builds
 > on the consolidated repo for live-mode features compute. This plan's batch features compute work continues in
 > parallel. Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide
 > parquet for ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship
@@ -145,7 +145,7 @@ Phase 5 (phantom audit + sanity replay)
 
 **Upstream sibling-blocker.** Phase 2A consumer migration depends on adapter-side `available_at` write-time stamping
 landing across the per-source MDPS / MTDS / features-input adapter surface. That stamping work is owned by
-[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md) Phase
+[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase
 2.D (per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage
 exists today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
 migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progressing.
@@ -247,7 +247,7 @@ so whichever direction the operator picks, the next agent (or this one) can ship
 proposal: the per-service wire-in approach itself is no longer the plan.
 
 **Why deferred** — Ikenna's plan-consolidation work (PM@`78918e1` 2026-05-08) shipped a new plan
-[`features_repo_consolidation_2026_05_08.md`](../active/features_repo_consolidation_2026_05_08.md.md) (P0,
+[`features_repo_consolidation_2026_05_08.md`](../active/features_repo_consolidation_2026_05_08.md) (P0,
 deadline 2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a
 single `features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4
 cross-family helpers into UTL** — including the exact one Tab 12 was wiring:
@@ -693,7 +693,7 @@ respectively).
 ## `available_at` + lookahead-bias coordination (2026-05-08 audit)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md).
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md).
 > Audit 2026-05-08 confirmed: UTL
 > `assert_no_lookahead_for_feature_group(feature_group, inputs_df: pl.DataFrame, target_ts)` already takes target_ts and
 > gracefully no-ops when feature_group absent / df empty / column missing

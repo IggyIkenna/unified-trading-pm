@@ -153,7 +153,7 @@ Covers:
 ### Sports `data_available_at` → `available_at` rename (folded 2026-05-07; full DAG below)
 
 **Cross-plan coordination**: this rename is **Stage 1** of the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md.md) for the sequencing DAG,
+[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for the sequencing DAG,
 conflicts (esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume
 guidance. Stage 1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase
 2.C `_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
@@ -726,7 +726,7 @@ features silently miss bookmaker × market gaps.
 ## `available_at` + lookahead-bias coordination (2026-05-08 audit)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md).
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md).
 > Sports is the canonical reference precedent: features-sports `_enforce_pit_sports`
 > ([data/writer.py:42-72](../../../features-sports-service/features_sports_service/data/writer.py#L42-L72)) shows the
 > writer-boundary `PointInTimeEnforcer(strict=True)` pattern other features-\* services should mirror. Sports historical
@@ -751,7 +751,7 @@ features silently miss bookmaker × market gaps.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Sports rename plan (KEPT ACTIVE — its own DAG):

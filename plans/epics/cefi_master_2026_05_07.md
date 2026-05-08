@@ -357,7 +357,7 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
 > Phase 1. Audit 2026-05-08 found CeFi adapters lack explicit per-adapter `available_at` stamping wiring per UAC
 > `AVAILABILITY_AT_SEMANTICS`. Without it, `assert_available_at_present` in `ManifestWriter.record_captured()` is dead
 > code for cefi shards.
@@ -384,9 +384,9 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Shard granularity:
   [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.md).
 - Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,

@@ -59,10 +59,10 @@ where it lands. This epic is now **price arbitrage only**, fully backtest.
 
 | Path                                                                                                                                        | Role                                               | Status |
 | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------ |
-| [`tradfi_master_2026_05_07`](./tradfi_master_2026_05_07.md.md)                                                                            | TradFi data pipeline umbrella (CME futures + ETFs) | Active |
+| [`tradfi_master_2026_05_07`](./tradfi_master_2026_05_07.md)                                                                            | TradFi data pipeline umbrella (CME futures + ETFs) | Active |
 | [`active/instruments_and_market_tick_data_completion_2026_05_01`](../active/instruments_and_market_tick_data_completion_2026_05_01..md | Instruments + MTDS completion (CME + ETF backfill) | Active |
-| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md.md)                                                      | Strategy v2 + backtest harness                     | Active |
-| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md)                   | Write-gate / honest-coverage umbrella              | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md)                                                      | Strategy v2 + backtest harness                     | Active |
+| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)                   | Write-gate / honest-coverage umbrella              | Active |
 
 ## Cross-epic handshakes
 
@@ -87,6 +87,6 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`codex/04-architecture/backtest-groups.md`](../../codex/04-architecture/backtest-groups.md)
 - [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md)

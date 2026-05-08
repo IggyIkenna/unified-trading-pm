@@ -119,7 +119,7 @@ Covers:
 
 **Cross-plan coordination**: this umbrella's raw-tables migration + `_ensure_timestamp` shim deletion are **Stage 4** of
 the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md.md) for sequencing DAG,
+[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing DAG,
 conflicts, VM impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
 `_ensure_timestamp` shim DELETE is GATED on raw-tables migration completion; raw-tables migration runs AFTER Stage 3
 reconcilers + `mtds-s4-10` rescan complete.
@@ -420,9 +420,9 @@ sub-plan; this section is a pointer.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Asset_group vocabulary:
   [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.md).
 - Per-asset-group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
