@@ -42,7 +42,7 @@ related:
 PM origin/live-defi-rollout advanced by 2 commits (`98f1e16` plan(work_split):
 codify UAC chain_env.py SSOT handshake, `6e952b6` docs(plans): file issue 13 —
 hardcoded on-chain-derivable values) while Tab 13 was drafting the proposal
-section. My local commit landed at `<TBD-this-commit>` on top of `33d56f8`
+section. My local commit landed at `1f0ad01` on top of `33d56f8`
 which is now 2 behind origin; fast-forward to origin is clean (origin only
 moved forward, no diverged history when I started). Per Bootstrap §
 "Push discipline" conditional-push rule I have NOT pushed. Recommended
@@ -617,7 +617,7 @@ Tab 4 (`deploy-missing-tarball-refresh-tab`) shipped the full Phase 1 surface in
   - `tests/unit/conftest.py` — pre-registered `tarball_staleness` on the fake services
     package, mirroring the `deploy_missing` / `data_status_hierarchical` pattern.
 
-**Plan-flip commit**: PM@<TBD-this-commit>.
+**Plan-flip commit**: PM@1f0ad01.
 
 **Test gates**: deployment-api QG Pass 1 — 2406/2406 in-scope tests pass; coverage 70.94%
 (gate 70%); ruff format + ruff check + basedpyright clean on new files. 1 pre-existing
@@ -668,7 +668,7 @@ Each proposal cross-references Phase 1's tarball-refresh wiring
 (`deployment-api@faac20a` `tarball_staleness.py`) + Phase 2's auto-launch
 endpoint (lines 161-168) so the implementation seam is explicit.
 
-**Plan-flip commit**: PM@<TBD-this-commit>.
+**Plan-flip commit**: PM@1f0ad01.
 
 **What's next**: operator reviews proposals + amends; on sign-off, the three
 Phase 0 audit todos flip `- [x]` and Phase 2 wiring proceeds with the
