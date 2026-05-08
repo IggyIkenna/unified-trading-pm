@@ -861,23 +861,38 @@ drift.
 
 ## LAYER E — Heavy structural moves (sequential; operator-decision required per move)
 
-### Phase E.1 — Topology 7-doc cluster reorganisation — SEQUENTIAL after Layer A — P1
+### Phase E.1 — Topology 7-doc cluster reorganisation — SEQUENTIAL after Layer A — P1 — SHIPPED 2026-05-08
 
-- [ ] [DOC] P1 (BLOCKED on operator approval — heaviest blast radius). Per audit C4,
-      `04-architecture/{RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE, service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster, PROTOCOL-INJECTION}`
-      → 3 docs.
+- [x] [DOC] P1. Per audit C4, `04-architecture/{RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE, service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster, PROTOCOL-INJECTION}`
+      → 3 docs. **SHIPPED 2026-05-08** in 4 commits (3 content + 1 plan flip):
+  - **Commit 1** (PM@14a3ab5f): merged TIER-ARCHITECTURE + PROTOCOL-INJECTION → `tier-and-import-architecture.md` (380
+    lines; rename from TIER-ARCHITECTURE.md preserving 58% similarity history; PROTOCOL-INJECTION folded in as Part 2).
+    Deleted both sources. 12 cross-doc rewrites (codex/00-SSOT-INDEX, codex/13-codex-governance, 06-coding-standards/×2,
+    04-architecture/×4, 05-infrastructure/unified-libraries/×2, 08-workflows/×1, plans/active/×1, root TOPOLOGY-DAG).
+  - **Commit 2** (PM@eed59a97): renamed `service-family-scope.md` → `commercial-service-families.md` (179 lines, 88%
+    similarity rename). Top-of-file note disambiguates from architecture-tier scoping. 7 cross-doc rewrites.
+  - **Commit 3** (PM@11fe6a37): deleted RUNTIME_TOPOLOGY_DECISIONS, deployment-topology-diagrams, pipeline-service-
+    layers, api-services-cluster (4 sources). The merged target `runtime-deployment-topology.md` (1606 lines, 88K, 4
+    Parts: Pipeline Layers / Architectural Decisions / Deployment Diagrams / API Services Cluster) was already on disk
+    from a prior agent; commit recorded as rename of RUNTIME_TOPOLOGY_DECISIONS.md (66% similarity). 16 cross-doc
+    rewrites.
 
-  **Target shape**:
-  - `04-architecture/tier-and-import-architecture.md` (TIER-ARCHITECTURE + PROTOCOL-INJECTION + import rules).
+  **Target shape ACHIEVED**:
+  - `04-architecture/tier-and-import-architecture.md` (TIER-ARCHITECTURE + PROTOCOL-INJECTION + import rules TL;DR).
   - `04-architecture/runtime-deployment-topology.md` (RUNTIME_TOPOLOGY §1-9 + deployment-topology-diagrams +
     api-services-cluster + pipeline-service-layers).
-  - `04-architecture/commercial-service-families.md` (rename from service-family-scope; this is commercial/UX, not
-    architecture).
+  - `04-architecture/commercial-service-families.md` (renamed from service-family-scope; commercial/UX scoping).
 
-  **Blast radius**: ~30 references across 02-data, 05-infra, 09-strategy, 14-playbooks. Full grep + per-file rewrite.
+  **Blast radius shipped**: 35 cross-doc rewrites across codex/ (00-SSOT-INDEX, 02-data, 04-architecture,
+  05-infrastructure/unified-libraries, 06-coding-standards, 08-workflows, 09-strategy/architecture-v2,
+  13-codex-governance, 14-customer-journeys/demo-ops) + plans/active/ (codex_refactor, deployment_ui_lifecycle_tabs,
+  gcs_migration_bundle_pipeline_mode, master_to_live_defi, live_pipeline_mtds_mdps_features) + plans/epics/
+  (instruments_live_master) + root TOPOLOGY-DAG.md.
 
-  **Why blocked**: heaviest cross-doc impact. Operator should explicitly approve before this lands; consider deferring
-  past May-23 cutover.
+  **Foot-gun #1 incident note**: commit 1 (PM@14a3ab5f) bundled 15 foreign files from a parallel agent's Phase E.2
+  in-flight 14-playbooks → 14-customer-journeys + 16-strategy-playbooks rename. Content of MY changes is correct per
+  the commit message; foreign work landed under the same commit hash. Workspace dirty-deps rule applied — pushed
+  rather than reverting and losing parallel agent's progress.
 
 ### Phase E.2 — 14-playbooks split into 3 directories — SEQUENTIAL after E.3 — P1
 
@@ -1041,9 +1056,10 @@ NEW docs created mid-execution (if any phase generates them): add to this sectio
 NEW codex docs explicitly created by this plan:
 
 - [ ] `codex/04-architecture/batch-live-architecture.md` (Phase D.6, replaces 2)
-- [ ] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1, IF approved)
-- [ ] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1, IF approved)
-- [ ] `codex/04-architecture/commercial-service-families.md` (Phase E.1, IF approved)
+- [x] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1 SHIPPED 2026-05-08 PM@14a3ab5f)
+- [x] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1 SHIPPED 2026-05-08 PM@11fe6a37 — content created
+      by prior agent; deletions + ref-rewrites in this commit)
+- [x] `codex/04-architecture/commercial-service-families.md` (Phase E.1 SHIPPED 2026-05-08 PM@eed59a97)
 - [x] `codex/06-coding-standards/validation-and-errors.md` (Phase D.5, replaces 3) — SHIPPED 2026-05-08 PM@e8ef9671
 
 DELETED codex docs by this plan:
@@ -1065,9 +1081,10 @@ DELETED codex docs by this plan:
 - [ ] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6, replaced)
 - [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
-- [ ] Topology 7-doc cluster (Phase E.1, IF approved): `runtime-deployment-topology.md`, `tier-and-import-architecture.md`,
-      `commercial-service-families.md`, `runtime-deployment-topology.md`, `runtime-deployment-topology.md`,
-      `runtime-deployment-topology.md`, `tier-and-import-architecture.md`.
+- [x] Topology 7-doc cluster (Phase E.1 SHIPPED 2026-05-08): RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE,
+      service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster,
+      PROTOCOL-INJECTION → 3 SSOTs (runtime-deployment-topology.md, tier-and-import-architecture.md,
+      commercial-service-families.md). PM@14a3ab5f + PM@eed59a97 + PM@11fe6a37.
 
 ---
 
