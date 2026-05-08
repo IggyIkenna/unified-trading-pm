@@ -185,24 +185,44 @@ reader, ML model store, features-onchain calculators, every parquet read/write s
 bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatches cause silent reads from wrong location
 — exactly the empty-placeholder anti-pattern CLAUDE.md warns about.
 
-- [ ] [SCRIPT] P0. `grep -rn "central-element-323112\|gs://" --include="*.py" --include="*.sh"` across all service
+- [x] [SCRIPT] P0. `grep -rn "central-element-323112\|gs://" --include="*.py" --include="*.sh"` across all service
       repos. Each hit must either (a) come from `cloud-providers.yaml` SSOT via UCI lookup, (b) be in test fixtures
       using the same convention, or (c) be flagged for fix. Capture findings in
       `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`.
+      **DONE 2026-05-08** (Tab 4): ~1961 hits across 80+ files; 95% UCI-resolved (compliant), 85 sites already
+      `# noqa: gs-uri`-marked awaiting Wave 2 sweep, 70 untriaged anti-patterns remain. Findings in
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md)
+      § "Inline-string bucket-name audit (2026-05-08)" § 1.
 - [ ] [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate AWS
       hardcodes. Same discipline.
-- [ ] [SCRIPT] P0. **`cloud-providers.yaml` parity check**: for every bucket key under `gcp.storage.*`, the same key
+- [x] [SCRIPT] P0. **`cloud-providers.yaml` parity check**: for every bucket key under `gcp.storage.*`, the same key
       MUST exist under `aws.storage.*`. Diff surfaces missing keys (e.g. `dex-pools`, `dex-swaps`, `evm-defi`,
       `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`, `positions-store-defi`, `risk-store-defi`, `events`,
       `config-store` — 10 missing per Gap inventory above). Land yaml extension to close the gap.
-- [ ] [SCRIPT] P0. **Bucket-name SUFFIX drift check**: GCS has `pnl-store-central-element-323112-defi` (asset_group as
+      **DONE 2026-05-08** (Tab 4): probed `deployment-service/configs/cloud-providers.yaml` — 24 keys, zero drift.
+      Phase 2 (deployment-service@`7da2f3d`) already closed all 10 documented gaps. Documented in
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 2.
+- [x] [SCRIPT] P0. **Bucket-name SUFFIX drift check**: GCS has `pnl-store-central-element-323112-defi` (asset_group as
       suffix) but cloud-providers.yaml AWS template uses `unified-trading-pnl-store-defi-{env}-{account}` (asset_group
       as infix). Resolve to ONE canonical structure (recommend the AWS template form) + commit a one-time GCS bucket
       rename migration script if needed. Without this, manifest readers querying by
       `bucket_template_key='pnl-store-defi'` will return different buckets per backend.
+      **DONE 2026-05-08** (Tab 4): drift documented; **resolution: keep both shapes, hide asymmetry behind UTL
+      `cloud_interface.bucket_naming.resolve_bucket_name()`** (UTL@`780a9575`). Yaml internally maps each `kind`
+      to per-cloud templates; on-disk GCS data stays put (PB-scale rename has no benefit). See
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 3
+      + [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2.
+      **NEW BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape
+      vs `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed.
+      Filed at [`issues/aws_phase_1_smoke_blockers_2026_05_08.md`](issues/aws_phase_1_smoke_blockers_2026_05_08.md).
 - [ ] [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
       `grep -rn "f\"gs://\|f'gs://\|f\"s3://\|f's3://" --include="*.py"` to find anti-patterns. Fix to
       `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`.
+      **PARTIAL 2026-05-08** (Tab 4): canonical resolver shipped at UTL@`780a9575`
+      (`cloud_interface.bucket_naming.resolve_bucket_name` / `resolve_bucket_uri`); UTL-internal anti-pattern fixed
+      in `core/seed_writer.py` (4 sites at lines 167/180/192/204). **Remaining**: ~70 untriaged
+      `f"gs://"`/`f"s3://"` sites + ~30 module-level `BUCKET = "..."` constants → Wave 2 consumer sweep
+      (post-2026-05-08).
 - [ ] [SCRIPT] P0. **Manifest writer audit**: `ManifestWriter.add()` / `record_captured()` / `record_empty()` /
       `record_failed()` paths must compute bucket from UCI, not from a literal. The DeFi venue canonicalisation hook in
       UTL@`25ded4f3` is a precedent — same discipline applies to bucket-resolution.
@@ -519,3 +539,56 @@ sports/predictions/tradfi/cefi GCP-resident until post-deadline rollout.
   recommendation in `aws_migration_cost_analysis_2026_05_07.md`.
 - **Recommendation**: kickoff immediately on Phase 0 operator input; Phase 1 smoke test is single highest leverage to
   confirm the cloud-agnostic claim before betting May-23 on it.
+
+## DONE-2026-05-08-tab4 — AWS migration cluster
+
+Tab 4 (AWS migration + cloud-agnostic governance) of `work_split_2026_05_08_ikenna.md` close-out. 3 sub-agents
+fanned out for research + artefact production; parent (this tab) audited + committed serially per the foot-gun
+mitigation discipline in CLAUDE.md "Daily Work-Split Process". Foot-gun #3 fired once: parallel agent's reset
+wiped sub-agent A's first-attempt codex doc edits; re-applied serially.
+
+**Code commits**:
+
+- `unified-trading-library@780a9575` — `feat(cloud_interface): bucket_naming.py SSOT resolver — yaml-backed
+  (cloud, asset_group, kind) lookup`. New 352-line module + 35 passing tests + companion fix in
+  `core/seed_writer.py` (4 sites at lines 167/180/192/204 routed through `_format_uri()` cache pattern).
+
+**PM commits** (this batch, see commit metadata):
+
+- Codex extension: `codex/05-infrastructure/cloud-agnostic-script-pattern.md` — added §§ 4.1 (4-cloud-tier
+  discipline), 4.2 (bucket-naming SSOT — UTL `cloud_interface.bucket_naming`), 4.3 (dual-bucket dual-write rule
+  with operator-decided hard-fail-on-partial-write resolution table), 4.4 (Storage Transfer Service config pattern
+  with gcloud + datasync skeletons + 0.01% parity invariant), 4.5 (per-asset_group migration sequencing —
+  defi → cefi-instruments → rest deferred Phase 9).
+- Codex audit: `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` — added § "Inline-string bucket-name
+  audit (2026-05-08)" with 5 subsections (gs:// literal classification, yaml parity check confirming zero drift,
+  SUFFIX drift resolution to keep both shapes hidden behind resolver, companion follow-ups, AWS Phase 1 smoke
+  readiness 🟢/🟡 ratings).
+- Issue doc: `plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md` — bucket-name SSOT triple-drift
+  surfaced; operator triage call between (a) rename buckets, (b) refactor `BUCKET_PREFIXES`, (c) accept
+  per-purpose model. Tab 4 recommends (c). Includes paste-ready band-aid smoke recipe.
+- Issue doc: `plans/active/issues/utl_qg_failures_post_pipeline_mode_2026_05_08.md` — UTL `bash scripts/quality-gates.sh`
+  red on `live-defi-rollout` with 25 failures + 2 errors; ALL traced via `git log` to other agents' commits
+  (87134364 manifest_writer pipeline_mode, 8c67df5d utc_aligned_scheduler, f24e651b streaming, 68b3804a
+  record_empty blank-reason). Tab 4's UTL@780a9575 commit attribution-clean per CLAUDE.md "QG failure
+  attribution".
+- Plan flips: AWS plan Phase 1.5.A — 3 of 5 P0 items DONE (gs://-literal audit ✓, yaml parity ✓, SUFFIX drift
+  resolution ✓), 1 PARTIAL (canonical resolver shipped + UTL-internal fix; consumer sweep deferred Wave 2).
+
+**Out of scope (deferred)**:
+
+- Phase 1 actual smoke run — requires AWS-authenticated operator workstation. Smoke recipe paste-ready in issue
+  doc; band-aid mode works, Citadel-grade requires SSOT triage.
+- Wave 2 consumer sweep (~70 anti-pattern sites) — post-cycle.
+- AWS Phase 4 prep (CeFi instruments dual-bucket) — design captured in plan body Phase 9 (post-May-23
+  opportunistic credit utilisation).
+- `constants.py:BUCKET_PREFIXES` deprecation in favour of `bucket_naming.resolve_bucket_name()` — follow-up.
+
+**Cycle-end attestation**:
+
+- Pre-commit checks (`git status` + `git diff --cached --stat` no path arg) run before every commit per CLAUDE.md
+  "mandatory pre-commit check".
+- Surgical staging via `git add <file>` only; no `git add -A` / `git add .`.
+- UTL push verified via `git rev-list --left-right --count HEAD...origin/live-defi-rollout` returning `0 0` post-push.
+- 35 new UTL tests pass (`pytest tests/cloud_interface/unit/test_bucket_naming.py -x` clean in 1.35s).
+- QG attribution to other agents documented + filed under issues per user's "flag in issues" directive.

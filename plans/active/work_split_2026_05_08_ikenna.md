@@ -66,12 +66,19 @@ split assigns sub-plan tactical work, not epic-level deliverables (the master pl
 
 ## Working model
 
-**Model A — fixed thematic 5-tab clustering.** The day's work clusters cleanly into 5 themes (DeFi launch,
-live-pipeline, GCS migration, AWS migration + governance, master refresh + alerting) so 5 fixed tabs absorb the load.
-Each tab runs Opus at full window with sub-agent fan-out for mechanical multi-file work. Tabs run to their
-done-definition, not a calendar end-of-day — agents finish faster than humans.
+**Model A — fixed thematic 6-tab clustering.** The day's work clusters cleanly into 6 themes (DeFi launch + Fork 1
+completion, live-pipeline + writegate Phase 5, GCS migration + manifest cluster, AWS migration + cloud-agnostic
+governance, alerting + master refresh + governance, cross-cutting design) so 6 fixed tabs absorb the load. Each tab
+runs Opus at full window with sub-agent fan-out for mechanical multi-file work. Tabs run to their done-definition, not
+a calendar end-of-day — agents finish faster than humans.
 
-## Coverage guarantee — 5 tabs absorb today's Ikenna-side scope
+> **CI gate reminder (workspace-wide).** Per CLAUDE.md § "CI Verification After Every Push": pushes to
+> `live-defi-rollout` do **NOT** trigger remote CI. With ~6 parallel tab agents + many sub-agents pushing all day, the
+> ONLY quality gate is each shippable unit's local `bash scripts/quality-gates.sh` (Pass 1) before push. There is no
+> remote safety net catching platform-specific failures on this branch. Confirm push landed on origin
+> (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` returns `0 0`) per shippable unit.
+
+## Coverage guarantee — 6 tabs absorb today's Ikenna-side scope
 
 | Source                                                | Item                                                                                                                                | Tab |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --- |
@@ -1174,7 +1181,7 @@ Per CLAUDE.md § "Daily Work-Split Process — Universal mechanics":
 
 ## Done definition (whole layout)
 
-When all 5 tabs hit their per-tab done-definition, today's Ikenna split is complete. Tab 5 then runs the master refresh
+When all 6 tabs hit their per-tab done-definition, today's Ikenna split is complete. Tab 5 then runs the master refresh
 capturing the cycle's shipped work. EOD: archive this plan to `plans/archive/work_split_2026_05_08_ikenna.md`
 
 - draft tomorrow's `work_split_2026_05_09_ikenna.md` per the daily reset protocol.

@@ -66,13 +66,20 @@ are **read-mostly** + don't duplicate sub-plans; this split assigns sub-plan tac
 
 ## Working model
 
-**Model A — fixed thematic 5-tab clustering**, but with a pre-baked option to switch to Model B (1 main + dynamic
+**Model A — fixed thematic 6-tab clustering**, but with a pre-baked option to switch to Model B (1 main + dynamic
 spawned tabs) mid-cycle if more items emerge from incoming pings or audit findings. Yesterday Harsh ran Model B (12
-spawned tabs by EOD); today Model A is the starting shape because the carryover items cluster cleanly into 5 themes. If
-Harsh prefers Model B's flexibility, treat the 5 tabs below as the day's initial scope and spawn additional tabs as work
-clarifies — same universal mechanics either way.
+spawned tabs by EOD); today Model A is the starting shape because the carryover items cluster cleanly into 6 themes
+(instruments-live + lifecycle, features-repo consolidation, deployment-UI lifecycle, per-asset_group VM ops, mechanical
+refactor cluster, cross-cutting build). If Harsh prefers Model B's flexibility, treat the 6 tabs below as the day's
+initial scope and spawn additional tabs as work clarifies — same universal mechanics either way.
 
-## Coverage guarantee — 5 tabs absorb today's Harsh-side scope
+> **CI gate reminder (workspace-wide).** Per CLAUDE.md § "CI Verification After Every Push": pushes to
+> `live-defi-rollout` do **NOT** trigger remote CI. With ~6 parallel tab agents + many sub-agents pushing all day, the
+> ONLY quality gate is each shippable unit's local `bash scripts/quality-gates.sh` (Pass 1) before push. There is no
+> remote safety net catching platform-specific failures on this branch. Confirm push landed on origin
+> (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` returns `0 0`) per shippable unit.
+
+## Coverage guarantee — 6 tabs absorb today's Harsh-side scope
 
 | Source                                                                      | Item                                                                                                                                         | Tab |
 | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --- |
@@ -667,7 +674,7 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
 
 ## Daily sync points
 
-- **EOD T+0** (today, midnight UTC): Tabs 1-5 each report done-definition status to operator via plan-of-record
+- **EOD T+0** (today, midnight UTC): Tabs 1-6 each report done-definition status to operator via plan-of-record
   `## Open questions` resolved + DONE block. CeFi drain reports done.
 - **Tomorrow's daily reset**: 1 main-orchestrator-or-operator runs the daily reset per CLAUDE.md (fetch summary + Q&A
   sweep + draft tomorrow's split). Carryover items roll forward.
@@ -808,7 +815,7 @@ the full list. Per CLAUDE.md § "Daily Work-Split Process" universal mechanics.)
 
 ## Done definition (whole layout)
 
-When all 5 tabs hit their per-tab done-definition, today's Harsh split is complete. EOD: archive this plan to
+When all 6 tabs hit their per-tab done-definition, today's Harsh split is complete. EOD: archive this plan to
 `plans/archive/work_split_2026_05_08_harsh.md` + draft tomorrow's `work_split_2026_05_09_harsh.md` per the daily reset
 protocol.
 
