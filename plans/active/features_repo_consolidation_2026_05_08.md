@@ -589,7 +589,7 @@ todos:
 
   - id: phase-8b-deployment-api-ui-wiring
     content: |
-      - [ ] [AGENT] P1. Phase 8B — Update `deployment-api` + `deployment-ui` to surface `feature_family` as a
+      - [x] [AGENT] P1. Phase 8B — Update `deployment-api` + `deployment-ui` to surface `feature_family` as a
         first-class drilldown axis in the data-status tab, parallel to the existing `feature_group` axis.
 
         deployment-api:
@@ -630,15 +630,33 @@ todos:
         - 21 new Vitest specs across `FeatureFamilyBreakdown.test.tsx` + `FeatureFamilyFilter.test.tsx`.
           Full suite: 439 passed | 16 skipped. `vite build` clean.
 
-        **DEFERRED**: deployment-api half (filter param wiring on `/data-status/manifest`,
-        `/data-status/leaf-stats`, `/data-status/schema`; `feature_family` field propagation on
-        `TurboFeatureGroupStatus` / new `TurboFeatureFamilyStatus` rollup; Deploy-Missing CLI shape
-        update for `launch-features-<flavor>.sh --feature-family <name>`). Owned by parallel sibling
-        Tab 8B-api. Phase 8B fully closes when both halves land + `LeafSchemaModal` renders
-        `feature_family` alongside `feature_group` for features-service shards (UI hook is in place
-        via `fetchLeafParquetStats({feature_family})`; modal copy update pending API field).
-    status: helper-shipped
-    note: "2026-05-08 Tab 8B-ui shipped deployment-ui half (deployment-ui@6ce928e: types + 2 components + DataStatusTab wire + 21 tests); deployment-api half deferred to sibling Tab 8B-api"
+        **deployment-api half SHIPPED 2026-05-08 by Tab 8B-api (deployment-api@6605b97)**:
+        - `ShardCoord.feature_family: str | None` + `LeafParquetStats.feature_family: str | None`
+          Pydantic fields (`deployment_api/types/shard_detail.py`).
+        - `get_leaf_parquet_stats(feature_group=...)` extended kwarg + new `_resolve_feature_family`
+          helper in `services/shard_detail.py`: parquet's write-time `feature_family` column wins
+          (writer SSOT per UTL `MissingFeatureFamilyError`); falls back to UAC
+          `get_feature_family(feature_group)` mapping; multi-distinct-value parquets log a warning +
+          fall back to mapping rather than picking arbitrarily.
+        - `_stamp_feature_family` helper added to `data_status_hierarchical.py` — read-side fills
+          blank `feature_family` rows via UAC `FEATURE_GROUP_TO_FAMILY` so legacy / pre-Phase-8B
+          manifests respond to the new filter without a re-write.
+        - `_NON_AXIS_FILTERS = {"feature_family"}` — filter applies unconditionally (orthogonal to
+          `SHARD_AXIS_MATRIX`) so callers can slice by family across any features-* service.
+        - `feature_family` query param on `/api/data-status/drilldown`
+          (`routes/data_status.py`) + `feature_group` query param on `/api/data-status/leaf-stats`
+          (`routes/shard_detail.py`).
+        - 11 new unit tests (5 in `TestGetLeafParquetStats` + 6 in new `TestFeatureFamilyAxis`).
+          Per-repo QG: ruff clean on touched files, basedpyright clean on my added regions.
+
+        **REMAINING follow-ups (not Phase-8B-scope)**: Deploy-Missing CLI shape update for
+        `launch-features-<flavor>.sh --feature-family <name>` lives in deployment-service / Tab 8A
+        territory. **NICE-TO-HAVE**: wire `feature_family` into `TurboFeatureGroupStatus` rollups
+        in `data_status_turbo.py` for cached drilldown — current impl reads from the live
+        `availability_index` per request (correct contract); a turbo rollup column would speed up
+        the family-scoped aggregate path. Not P0 for May-23.
+    status: done
+    note: "2026-05-08 deployment-ui half shipped Tab 8B-ui (deployment-ui@6ce928e); deployment-api half shipped Tab 8B-api (deployment-api@6605b97 — Pydantic fields + service helper + drilldown stamper + filter wiring + 11 tests)."
 
   - id: phase-9-codex-ssot-updates
     content: |
