@@ -517,6 +517,161 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       and are NaN-tolerant); if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full
       B.1-shape migration (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
+### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`)
+
+Source issue archived to `plans/archive/issues/`. Critical lookahead-bias fix: today, post-match scores ride the same
+FIXTURES row as the schedule, and `available_at` uses an arbitrary `kickoff − 7d` heuristic instead of real announcement
+time. Every sports feature compute that joins FIXTURES on schedule fields can silently leak post-match scores into
+pre-match feature windows. Already covered for the match_end_time cascade by section C.6 above (Q4 of the related
+lifecycle issue); this sub-section covers the SCHEMA SPLIT (Q1 + Q3 of the lookahead-bias issue) which C.6 does NOT.
+
+**Cross-plan banner**: writegate Phase 2.D `available_at` strict-mode enforcement (already shipped) flips this to a
+hard-fail once the new schema lands — schema split MUST ship in a single workspace-wide commit so writegate doesn't
+break sports parquets mid-migration. Coordinate with `writegate_honest_coverage_endtoend_2026_05_06`. Reader-side join
+helper hides the split so consumers don't need to refactor (per issue's preferred approach).
+
+- [ ] [SCRIPT] P0. UAC: split `CanonicalFixture` into `CanonicalFixtureSchedule` (kickoff_time, league_id, home_team_id,
+      away_team_id, venue, status, scheduled fields) + `CanonicalFixtureOutcomes` (home_score_regulation,
+      away_score_regulation, home_score_after_extra_time, away_score_after_extra_time,
+      home_score_after_penalty_shootout, away_score_after_penalty_shootout, home_penalty_shootout_score,
+      away_penalty_shootout_score, went_to_extra_time, went_to_penalties, match_result, match_end_time). New
+      entity_types `FIXTURES_SCHEDULE` + `FIXTURES_OUTCOMES` replacing the single `FIXTURES`. Both written to same
+      `sports_reference/by_date/day=<day>/...` path with separate `entity=fixtures_schedule` /
+      `entity=fixtures_outcomes` sub-folders. Per-row `available_at` differs: SCHEDULE = `announced_at` (per-league
+      empirical floor — see workstream below); OUTCOMES = `match_end_time` (from C.6 cascade already shipped).
+- [ ] [SCRIPT] P0. UTL reader-side join helper
+      `unified_trading_library.fixtures.read_fixtures_joined(day, league_id) ->     pd.DataFrame` returns single fixture
+      row with both schedule + outcome columns + a `outcomes_available_at` column. Consumers see one DataFrame;
+      LookaheadBiasError fires per-row when feature compute timestamp < outcomes_available_at AND any outcome column is
+      read.
+- [ ] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of issue). 2-week observation window per
+      league; record api_football fixture-publication-time vs kickoff_time. Output: per-league
+      `ANNOUNCEMENT_FLOOR_HOURS` table in UAC `unified_api_contracts.canonical.crosscutting.availability_semantics`
+      (replacing the kickoff−7d heuristic). Default 14d for unobserved leagues; per-league override once observed.
+- [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
+      optional). footystats + SFI publication-time as fallback. Stamp at write-time during the migration.
+- [ ] [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into `entity=fixtures_schedule` +
+      `entity=fixtures_outcomes`. Script under `instruments-service/scripts/migrate_fixtures_split.py` mirroring the
+      existing `migrate_sports_available_at_column.py` pattern (idempotent, per-blob CAS, dry-run + apply).
+- [ ] [QG] P0. Coordinate with writegate Phase 2.D — schema split commit must ship same-day as writegate
+      strict-mode-flip-on-FIXTURES (avoid mid-migration hard-fail).
+
+### Cross-source fixture status verifier + status enum (migrated from `fixtures_postponed_cancelled_lifecycle_2026_05_08`)
+
+Source issue archived. Two failure modes: (1) api_football misflags postponed fixtures as cancelled (lineups + stats
+populated despite `cancelled` status — the match was played); (2) reference itself misses match data despite the match
+being played (cross-source data exists but never reconciled). Postponed-fixture identity behaviour empirically
+unverified — three plausible models (a/b/c — see issue body) need observation.
+
+**Cross-plan banner**: feeds Issue-1 `FIXTURES_OUTCOMES` schema (above) — must distinguish match-played-but-mis-flagged
+vs genuinely-cancelled rows BEFORE the OUTCOMES split lands so the OUTCOMES rows aren't poisoned by mis-flagged
+cancellations.
+
+- [ ] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — closed set: `SCHEDULED`, `LIVE`, `HALFTIME`, `FINISHED`,
+      `POSTPONED`, `CANCELLED`, `ABANDONED`, `SUSPENDED`, `INTERRUPTED`. Lives at
+      `unified_api_contracts/canonical/domain/sports/fixture_status.py`. Replace freeform string status across all
+      sports adapters.
+- [ ] [SCRIPT] P0. Cross-source verifier integration at instruments-service orchestrator commit-time. When api_football
+      reports `CANCELLED` BUT footystats / SFI / understat reports the fixture has match data (lineups + stats +
+      events): emit `FIXTURES_STATUS_DISCREPANCY` event (NEW UAC LifecycleEventType) + flip api_football status to
+      `POSTPONED_RESCHEDULED` (or whichever the cross-source ground truth indicates) at write-time + stamp
+      `status_provenance: "cross_source_override"` column. Manifest `record_failed(reason=REFERENCE_STATUS_DISCREPANCY)`
+      for the originally-mis-flagged row + `record_captured` for the corrected row.
+- [ ] [AGENT] P1. Empirical investigation — postponed-fixture identity. Pull 30 confirmed-postponed fixtures from
+      api_football across 2024-2026; confirm for each whether: (a) same `fixture_id` retained at the new kickoff, OR (b)
+      new `fixture_id` issued at reschedule, OR (c) original `fixture_id` deleted + replaced. Document the
+      empirically-correct model in `codex/02-data/sports-fixtures-lifecycle.md` (NEW codex doc; see codex todo below).
+- [ ] [AGENT] P0. NEW codex doc `unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md` capturing: status enum
+      taxonomy, postponed-fixture identity model (case a/b/c), cross-source verifier rules, FIXTURES_STATUS_DISCREPANCY
+      event semantics. SSOT for both this section + Issue-1 schema split.
+
+### Match HT/ET/PEN timestamps + score-distinction columns + pre-features extractor (Q5 + Q6 + Q7 from `instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08`)
+
+Source issue archived. Q1+Q2 (futures + options expiry) are migrated to `tradfi_master_2026_05_07` (Batch D); Q4 is
+already covered by the C.6 match_end_time cascade above; Q3 (predictions) is gold standard, no work. Q5+Q6+Q7 land here
+in sports_master Phase 3 (per operator decision 2026-05-08: tradfi_master owns Q1+Q2; sports_master owns Q4-Q7; operator
+chose Option (a) for Q7 — UTL helper at instruments-service write-time, NOT a separate pre-features extractor service).
+
+- [ ] [SCRIPT] P0. UAC `CanonicalFixtureSchedule` extension (Q5): `halftime_start_time`, `halftime_end_time`,
+      `extra_time_first_half_start_time`, `extra_time_first_half_end_time`, `extra_time_second_half_start_time`,
+      `extra_time_second_half_end_time`, `penalty_shootout_start_time`, `penalty_shootout_end_time`,
+      `whistle_full_time_at`. All nullable (regular matches don't have ET/penalties). Populate from api_football
+      `periods.first` / `periods.second` / `et` / `score.penalty.played_at` at write-time.
+- [ ] [SCRIPT] P0. UAC `CanonicalFixtureOutcomes` score-distinction columns (Q6): `home_score_regulation`,
+      `home_score_after_extra_time`, `home_score_after_penalty_shootout`, `home_penalty_shootout_score`,
+      `away_score_regulation`, `away_score_after_extra_time`, `away_score_after_penalty_shootout`,
+      `away_penalty_shootout_score`, `went_to_extra_time` (bool), `went_to_penalties` (bool), `match_result` (`home_win`
+      / `away_win` / `draw_regulation` / `home_win_after_et` / `away_win_after_et` / `home_win_after_pens` /
+      `away_win_after_pens` — closed StrEnum). Populate from api_football `score.fulltime` / `score.extratime` /
+      `score.penalty`. NEVER collapse pen-shootout score into single field.
+- [ ] [SCRIPT] P0. UTL helper `unified_trading_library.fixtures.extract_match_lifecycle(fixture_id) -> MatchLifecycle`
+      at instruments-service write-time (Q7 — operator chose Option (a) UTL helper, NOT separate service). Reads
+      api_football response, returns typed dataclass with all HT/ET/PEN timestamps + score-distinction columns. Called
+      by FIXTURES adapter at orchestrator commit. Avoids the circular dependency the issue's pre-features-extractor
+      option (b) introduced (features-sports would need to wait for instruments-service regardless).
+- [ ] [SCRIPT] P1. Deferred follow-up TODO: if features-sports HT-feature work grows past 3 calculators, extract
+      `match_lifecycle_extractor` into a dedicated pre-features service stage (Q7 option (b)). Not scoped now per
+      operator direction.
+- [ ] [TEST] P0. Unit tests for `extract_match_lifecycle` covering: regulation match (no ET/PEN), ET-only match, full
+      ET+PEN match, abandoned match (whistle_full_time_at NULL), missing-data fallback (low-confidence kickoff+90min).
+- [ ] [VERIFY] P0. After ship, deployment-ui schema modal for FIXTURES_SCHEDULE / FIXTURES_OUTCOMES shows all 9 new
+      timestamp columns + 11 new score-distinction columns populated for completed fixtures.
+
+### Per-fixture orchestrator iteration (migrated from `sports_per_fixture_anchored_cascade_2026_05_08`)
+
+Source issue archived. instruments-service orchestrator iterates per-league-per-day for FIXTURE_STATS / EVENTS / LINEUPS
+/ INJURIES instead of per-fixture-id. If api_football returns 11 of 12 fixtures, the 12th's missing stats produce ZERO
+manifest rows instead of per-fixture expected universe. Honest-coverage broken for sports.
+
+**Cross-plan banner**: writegate Phase 3.D.5 Wave 3 v2 enumerator must wire sports expected-universe = captured
+FIXTURES_SCHEDULE rows (Phase 4 of source issue documented this dependency). Coordinate with
+`writegate_honest_coverage_endtoend_2026_05_06`.
+
+- [ ] [SCRIPT] P0. Orchestrator refactor: per-fixture-id iteration for FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS
+      / INJURIES. Replace `for league_id in leagues: for date in dates: fetch(league, date)` with
+      `for fixture in     captured_fixtures_today(league_id, date): fetch(fixture.fixture_id)`. Pre-flight: depends on
+      FIXTURES_SCHEDULE rows existing for the (league, date) pair (validate via Phase A.10 preflight from
+      `instruments_live_master_2026_05_08`).
+- [ ] [SCRIPT] P0. Manifest row_key extension: `fixture_id` becomes a first-class shard axis for the 4 per-fixture
+      data_types. v6 ManifestWriter already supports arbitrary row_keys; just wire the column. Per-instrument shard atom
+      per CLAUDE.md "shard-granularity SSOT" — for sports per-fixture data, row_key =
+      `(asset_group, source,     data_type, league_id, fixture_id, day)`.
+- [ ] [SCRIPT] P0. Cluster validation at `record_captured` for bundled fixture-day parquets (per Phase 1A of writegate).
+      Add `FIXTURE_STATS` / `FIXTURE_EVENTS` / `FIXTURE_LINEUPS` / `INJURIES` to UAC `BUNDLED_DATA_TYPES` with
+      `expected_root_clusters = {league_id: count_of_fixtures_today}` extracted via FIXTURES_SCHEDULE join.
+- [ ] [SCRIPT] P0. One-shot manifest migration: existing per-league-per-day rows expanded into per-fixture rows. Script
+      under `instruments-service/scripts/migrate_per_fixture_manifest.py` mirroring existing migration patterns.
+      Idempotent; dry-run + apply.
+- [ ] [VERIFY] P0. Post-migration smoke: random sample of 20 (league, date) pairs across 2018-2026 — sum of per-fixture
+      rows == count of captured fixtures (no orphans, no duplicates).
+- [ ] [AGENT] P1. Open question — does api_football provide a per-fixture endpoint or only bulk? If only bulk, the
+      orchestrator's per-fixture iteration becomes a filter on a single bulk fetch (rate-limit budget unchanged). Verify
+      via the api_football docs + a smoke probe before committing the refactor shape.
+
+### EXPECTED_BOOKMAKER_MARKET_SETS NaN-fill enumeration (migrated from `odds_fixture_anchored_nan_fill_2026_05_08`)
+
+Source issue archived. Today's orchestrator fetches the day-level ODDS endpoint; no logic ensures every (fixture ×
+bookmaker × market_type) triple is enumerated. Missing triples produce zero rows instead of NaN-fill, violating the
+zero-volume-bar precedent from category-D MDPS pattern (CLAUDE.md "Honest absence" rule). Arbitrage / odds-movement
+features silently miss bookmaker × market gaps.
+
+- [ ] [AGENT] P1. Empirical audit per league tier: which bookmakers + markets are expected to be present per (fixture,
+      league_tier)? Output: UAC
+      `EXPECTED_BOOKMAKER_MARKET_SETS: dict[LeagueTier, dict[BookmakerKey,     list[MarketType]]]`. League tiers:
+      TIER_1_DOMESTIC (EPL/LaLiga/SerieA/Bundesliga/Ligue1), TIER_2_DOMESTIC, TIER_1_INTERNATIONAL (UCL/UEL), etc.
+      Empirical baseline: 2-week sample of fully-covered fixtures per tier.
+- [ ] [SCRIPT] P0. Orchestrator post-FIXTURES_SCHEDULE-capture step: for each fixture today, enumerate expected (fixture
+      × bookmaker × market) triples per `EXPECTED_BOOKMAKER_MARKET_SETS[tier]`; for each missing triple, write a
+      NaN-fill row with `record_captured` (NaN values per workspace honest-absence rule, NOT `record_empty` —
+      `record_empty` is for legitimately-absent source responses; NaN-fill is for "we expected this triple but the
+      source didn't return it").
+- [ ] [SCRIPT] P0. Cluster validation kwargs at `record_captured` for ODDS bundled writes:
+      `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate.
+- [ ] [AGENT] P1. Downstream consumer guidance — features-sports arbitrage / odds-movement calculators handle NaN rows:
+      arbitrage drops NaN bookmakers from the pricing comparison (already correct behavior); odds-movement treats NaN
+      snapshot as no-update (already correct). Document in `codex/02-data/honest-absence-downstream-handling.md` § "ODDS
+      NaN-fill semantics" (extend existing doc, not new).
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Sports GCS path SSOT** (CLAUDE.md): use `unified_api_contracts.sports.candidate_parquet_paths` — NEVER hardcode
