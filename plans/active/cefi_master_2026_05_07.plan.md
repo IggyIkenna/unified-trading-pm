@@ -175,6 +175,13 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 - 2026-05-08 05:15 UTC — sweep #6: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (6924 rows, latest 2023-06-22 ≈47% through year). No actions.
 - 2026-05-08 05:24 UTC — sweep #7: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4215 rows, latest 2026-04-16 ≈83% through partial-year window). No actions.
 - 2026-05-08 05:35 UTC — sweep #8: 22/23 alive (cefi-kraken-futures-2025 drained normally — 2nd completion), worst event_age 0m, sample VM cefi-bitget-futures-2025 100% captured (6950 rows, latest 2025-05-31 ≈42% through year). No actions.
+- 2026-05-08 05:45 UTC — sweep #9: 21/22 alive at sweep, then 20/24 by 05:46 UTC recheck (cefi-kraken-futures-2023 + cefi-kraken-spot-2021 both drained in close succession — 3rd + 4th completions); worst event_age 0m, sample VM cefi-kraken-futures-2021 100% captured (1438 rows, latest 2021-09-05 ≈68% through year). 20/24 = 83%, above 80% commit trigger. No actions.
+- 2026-05-08 05:55 UTC — sweep #10: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM cefi-bitfinex-futures-2025 100% captured (2997 rows, latest 2025-09-19 ≈72% through year). No actions.
+- 2026-05-08 06:05 UTC — sweep #11: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (7440 rows, latest 2023-07-04 ≈51% through year). No actions.
+- 2026-05-08 06:15 UTC — sweep #12: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-futures-2024 100% captured (2052 rows, latest 2024-12-19 ≈97% through year — close to its drain). No actions.
+- 2026-05-08 06:25 UTC — sweep #13: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2024 100% captured (4796 rows, latest 2024-06-07 ≈43% through year). No actions.
+- 2026-05-08 06:35 UTC — sweep #14: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4841 rows, latest 2026-05-01 ≈97% through partial-year window — closest to drain). No actions.
+- 2026-05-08 06:45 UTC — sweep #15: 19/24 alive (cefi-kraken-futures-2024 drained — 5th completion, was at ≈97% per sweep #12), worst event_age 0m, sample VM cefi-bitfinex-spot-2025 100% captured (4896 rows, latest 2025-06-11 ≈44% through year). **Fleet at 79.16% — crossed below 80% commit trigger.** Iteration-log catch-up commit follows.
 
 ## Critical path
 
