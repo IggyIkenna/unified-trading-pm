@@ -1074,8 +1074,8 @@ push. Tag P0-P3 + `**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**` 
 
 Goes in: same plan if scope-aligned, different active plan if more apt, `plans/active/issues/<slug>_<YYYY_MM_DD>.md` if
 no plan owns it yet. **Never just auto-memory. Never just chat summary.** Why: Claude Code sessions crash regularly
-(terminal OOM / sandbox kill / context fill); pre-crash capture survives. The plan should always reflect the ideal
-final solution shape so the operator keeps less in head + future agents inherit the full picture.
+(terminal OOM / sandbox kill / context fill); pre-crash capture survives. The plan should always reflect the ideal final
+solution shape so the operator keeps less in head + future agents inherit the full picture.
 
 ### End-of-cycle audit clause (added 2026-05-08 after Tab 5 EOD-summary regression)
 
@@ -1084,9 +1084,10 @@ surface where deferrals leak: the agent writes a "Deferred to next cycle" sectio
 items sound captured, but they're not `- [ ]` plan todos anywhere — so the next agent never sees them.
 
 **Before declaring a cycle done — the moment you start writing your end-of-cycle chat summary or DONE block — every
-deferral you list MUST already be a `- [ ]` plan todo (or a `**DEFERRED**` annotation on an existing todo) in
-`plans/active/`.** If you catch yourself listing an item in the summary that isn't a plan todo, STOP, add it as a plan
-todo (per the routing above), commit + push the plan-flip, THEN write the summary citing the todo's location.
+deferral you list MUST already be a `- [ ]` plan todo (or a
+`**DEFERRED**`annotation on an existing todo) in`plans/active/`.** If you catch yourself listing an item in the summary
+that isn't a plan todo, STOP, add it as a plan todo (per the routing above), commit + push the plan-flip, THEN write the
+summary citing the todo's location.
 
 Audit recipe at end-of-cycle:
 
@@ -1094,31 +1095,31 @@ Audit recipe at end-of-cycle:
    in scratch first.
 2. For each line item, run: `grep -n "<distinctive phrase>" plans/active/*.md plans/active/issues/*.md`. Match → cite
    the file:line in the summary. No match → STOP, add the todo, then resume.
-3. If the item lives only in chat (no plan, no issue doc), the rule fired and you violated it — fix BEFORE shipping
-   the summary.
+3. If the item lives only in chat (no plan, no issue doc), the rule fired and you violated it — fix BEFORE shipping the
+   summary.
 
 **Reviewers reject summaries with deferrals that grep-miss the active plans.** End-of-cycle is the single most common
-loss-of-work surface (operator reads the summary, trusts the deferrals are captured, next-cycle reset doesn't pick
-them up because they're not plan todos, three weeks later operator asks "what about X" and the answer is
+loss-of-work surface (operator reads the summary, trusts the deferrals are captured, next-cycle reset doesn't pick them
+up because they're not plan todos, three weeks later operator asks "what about X" and the answer is
 reconstruction-from-chat).
 
 Reference incident **2026-05-08 Tab 5 (Agent 5)**: end-of-cycle summary listed 4 deferrals — Phase 4/7/8/9, features-
-onchain emission sites, Sub-E codex ML category, Phase 8 rehearsal-script hook. Of the 4, 3 WERE already plan todos
-(I missed them by not grep-checking my own summary), 1 was NOT (Sub-E codex ML category — false-flipped `[x]` on the
-parent todo while Sub-E's actual codex doc was reverted by foot-gun #3 5+ times). Operator caught the gap with "are
-those in the plans" + "so that we know what to pick up." Cost: 15min audit + plan-todo addition. Avoidable cost: 30s
-grep at end-of-cycle.
+onchain emission sites, Sub-E codex ML category, Phase 8 rehearsal-script hook. Of the 4, 3 WERE already plan todos (I
+missed them by not grep-checking my own summary), 1 was NOT (Sub-E codex ML category — false-flipped `[x]` on the parent
+todo while Sub-E's actual codex doc was reverted by foot-gun #3 5+ times). Operator caught the gap with "are those in
+the plans" + "so that we know what to pick up." Cost: 15min audit + plan-todo addition. Avoidable cost: 30s grep at
+end-of-cycle.
 
 ### Anti-patterns
 
 - **"I'll mention it in chat — operator will catch it."** Chat scrolls. Operator-time-to-recall is expensive. Capture in
   a plan todo + reference the todo in chat.
 - **"Auto-memory will save it."** Auto-memory is a recall surface for ME, not a planning surface for the next agent
-  + the operator. Auto-memory entries don't become plan todos automatically; a plan-todo entry does become both.
-- **False checkbox flips.** A parent todo flipped `[x]` because "the UAC half shipped" is wrong if the codex half
-  was reverted. Flip the half that landed; leave the deferred half as `- [ ]` with `**DEFERRED**` annotation +
-  reason citation. Reference: line 155 of `alerting_service_live_rules_2026_05_07.md` — corrected 2026-05-08 from
-  false `[x]` (claimed codex update shipped) to split shape (UAC `[x]` + codex `[ ]` with foot-gun #3 citation).
+  - the operator. Auto-memory entries don't become plan todos automatically; a plan-todo entry does become both.
+- **False checkbox flips.** A parent todo flipped `[x]` because "the UAC half shipped" is wrong if the codex half was
+  reverted. Flip the half that landed; leave the deferred half as `- [ ]` with `**DEFERRED**` annotation + reason
+  citation. Reference: line 155 of `alerting_service_live_rules_2026_05_07.md` — corrected 2026-05-08 from false `[x]`
+  (claimed codex update shipped) to split shape (UAC `[x]` + codex `[ ]` with foot-gun #3 citation).
 - **End-of-cycle summary as planning surface.** Summary is a read-only narration of the cycle, not the durable record.
   Plan todos are the durable record.
 
@@ -1330,15 +1331,15 @@ the specific plan). Standard shape:
 ```markdown
 ## Deferred work after <YYYY-MM-DD> <session-tag> session
 
-The <YYYY-MM-DD> <session-tag> session shipped <one-line summary>. Items still open are tracked here so the next
-agent picks up cleanly without re-reading session notes.
+The <YYYY-MM-DD> <session-tag> session shipped <one-line summary>. Items still open are tracked here so the next agent
+picks up cleanly without re-reading session notes.
 
-| Phase / item                  | Status as of <YYYY-MM-DD>             | Successor / blocker                                            |
-| ----------------------------- | ------------------------------------- | -------------------------------------------------------------- |
-| Phase 3 — <name>              | `todo` (checkbox `- [ ]`)             | DEFERRED-AFTER-<gate-plan> Phase <N> completing                |
-| Phase 8 — <name>              | `done` (UTL@<sha> shipped)            | Per-service consumer wire-in ships with Phase X/Y rollouts     |
-| Phase 9 — <name>              | `design-shipped`                      | DEFERRED-TO-<other-tab> — design contract in <codex doc>       |
-| ...                                                                                                                  |
+| Phase / item     | Status as of <YYYY-MM-DD>  | Successor / blocker                                        |
+| ---------------- | -------------------------- | ---------------------------------------------------------- |
+| Phase 3 — <name> | `todo` (checkbox `- [ ]`)  | DEFERRED-AFTER-<gate-plan> Phase <N> completing            |
+| Phase 8 — <name> | `done` (UTL@<sha> shipped) | Per-service consumer wire-in ships with Phase X/Y rollouts |
+| Phase 9 — <name> | `design-shipped`           | DEFERRED-TO-<other-tab> — design contract in <codex doc>   |
+| ...              |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -1346,20 +1347,20 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 - ...
 ```
 
-**The rule fires at every session-end, every handoff, every "user is wrapping up" boundary** — not just plan
-archival. The scoreboard is a forward-index for the next agent + a cheap read for the operator deciding what to fund
-next. Pre-existing scoreboard from a prior session: extend the existing table (don't add a parallel one); the
-session-tag header stays the same OR add a new `## Deferred work after <next-date> <session-tag>` section if the
-prior section was already migrated to closed.
+**The rule fires at every session-end, every handoff, every "user is wrapping up" boundary** — not just plan archival.
+The scoreboard is a forward-index for the next agent + a cheap read for the operator deciding what to fund next.
+Pre-existing scoreboard from a prior session: extend the existing table (don't add a parallel one); the session-tag
+header stays the same OR add a new `## Deferred work after <next-date> <session-tag>` section if the prior section was
+already migrated to closed.
 
 **Belt-and-braces with Half 2.** Half 2's per-item `**DEFERRED**:` annotations remain mandatory (the per-item view).
-Half 3 adds the per-plan scoreboard view (the cross-item index). Both ship in the same logical unit as the
-session-end commit — NOT a separate "I'll add the scoreboard later" task. If the scoreboard isn't in the plan body,
-the session isn't over.
+Half 3 adds the per-plan scoreboard view (the cross-item index). Both ship in the same logical unit as the session-end
+commit — NOT a separate "I'll add the scoreboard later" task. If the scoreboard isn't in the plan body, the session
+isn't over.
 
-**When NOT to ship a scoreboard.** Trivial sessions that touch one item + ship it cleanly don't need a scoreboard —
-Half 2's per-item flip is sufficient. Heuristic: if your session updated 3+ phase statuses OR left 2+ items in
-non-final state, ship the scoreboard.
+**When NOT to ship a scoreboard.** Trivial sessions that touch one item + ship it cleanly don't need a scoreboard — Half
+2's per-item flip is sufficient. Heuristic: if your session updated 3+ phase statuses OR left 2+ items in non-final
+state, ship the scoreboard.
 
 ### Why all three halves are non-negotiable
 
@@ -1506,9 +1507,12 @@ workflow yaml become the joint SSOT — update both in lockstep so the rule stay
    - **Push again.** The CI watcher restarts.
 5. **CI failures are NOT issues to flag** — they're things to fix in real time. No issue doc, no plan annotation, no
    "I'll get to it later." A red CI on `live-defi-rollout` blocks the workspace; fix immediately.
-6. **The CI bot's own emoji is misleading**: the bot reports `Conclusion: success` when message DELIVERY succeeded, even
-   if the underlying CI run FAILED. Read past the emoji to the body — `deployment-api is FAILING` means CI is failing
-   regardless of the bot's success tick on its own message.
+6. **The CI bot reports the underlying repo's status, not its own delivery result.** `ci-status-update.yml` derives the
+   Telegram severity + conclusion from `client_payload.status`: `FAILING` → ❌ `Conclusion: failure` + `CRITICAL`
+   severity; everything else (`FEATURE_GREEN` / `STAGING_GREEN` / `LOCAL_PASS` / `SIT_VALIDATED`) → ✅
+   `Conclusion: success` + `INFO`. If the manifest-update job itself fails, the notification also flips to ❌ so a
+   degraded write never shows a green tick. (Pre-2026-05-08 the bot rendered ✅ for every successful manifest write
+   regardless of the underlying repo CI state — fixed in `.github/workflows/ci-status-update.yml`.)
 
 ### The pre-requisite: only commit YOUR work
 
