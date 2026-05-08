@@ -404,6 +404,17 @@ todos:
              freshness map. Health endpoint reachable at `:PORT/health` and returns
              `{"families": {"onchain": {...}, "delta_one": {...}, ...}, "loaded_families": [...]}`.
 
+             **SHIPPED 2026-05-08 (Tab B — Wave-2 Phase 4.4 in work-split terminology)**: features-service@726af91d.
+             Aggregator wires 8-family `_data_freshness` probes via lazy importlib resolution; aggregate shape is
+             `{"families": {...}, "loaded_families": [...], "healthy": bool}` (the `healthy` flag flips False if any
+             family probe raises but stays True for cold-start `stale=True, last_processed_date=None` per docstring).
+             Per CLAUDE.md "No double SSOT in data-saving methodology": no per-family `health.py` stubs were created —
+             each family's existing `_data_freshness` in `<family>/api/main.py` (subtree-merged from source repos) is
+             the SSOT; the aggregator imports those at runtime. delta_one's pre-existing `api/health.py` (full-health
+             shape, distinct from freshness) was left untouched. 11 tests in `tests/api/test_health_router.py` pass:
+             registry shape, cold-start aggregate, partial-progress, exception propagation, /health 200,
+             all-families-present, single-family-failure resilience, create_app routes, /readiness 200.
+
         4.6 — Single `scripts/quality-gates.sh` per workspace template; runs ruff + basedpyright + bandit + pytest +
              codex compliance over the WHOLE consolidated repo. Per-family pytest filtering via
              `pytest tests/<f>/` for development; CI runs the whole tree.
