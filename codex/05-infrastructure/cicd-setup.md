@@ -1,3 +1,13 @@
+---
+scope: [engineer, admin]
+---
+
+<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
+
+> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
+> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
+> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
+
 # CI/CD Setup
 
 > **SSOT**: `unified-trading-pm/docs/ci-cd-ssot.md`
@@ -14,6 +24,7 @@ Do not duplicate CI/CD setup steps here. Read the SSOT first.
 | -------------------------------------- | --------------------------------------------------------------------- |
 | Fix a quality gate check               | `unified-trading-pm/scripts/quality-gates-base/base-service.sh`       |
 | Fix a CI workflow step                 | `unified-trading-pm/.github/workflows/python-quality-gates.yml`       |
+| Customize CI Telegram alert / failure excerpt | `ci-cd-ssot.md` § 5c "Telegram Notification Flow"               |
 | Add a dep to a repo                    | `pyproject.toml` → `workspace-manifest.json` → `uv lock` → `uv sync`  |
 | Generate a new repo's CI workflow      | `rollout-quality-gates-ci-workflows.py --workflow-call --repo <name>` |
 | Re-pin action refs after branch change | Automatic via `rollout-action-ref.yml` on manifest push               |
