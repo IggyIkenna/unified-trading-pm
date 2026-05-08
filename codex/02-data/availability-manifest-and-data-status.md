@@ -280,7 +280,7 @@ class AvailabilityRecord:
     # v5 — honest-coverage Phase A (2026-04-19)
     # Distinguishes "tried + got nothing" from "tried + failed" from "didn't try".
     # ─────────────────────────────────────────────────────────────────────
-    capture_status: str = "captured"    # one of: captured / empty_confirmed / attempted_failed
+    capture_status: str = "captured"    # one of: captured / empty_confirmed / attempted_failed / expected_unattempted
     error_reason: str = ""              # classified failure code for attempted_failed rows
     attempted_at: str = ""              # ISO-8601 UTC start-of-attempt; "" = legacy unknown
 

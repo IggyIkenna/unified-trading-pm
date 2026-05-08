@@ -73,7 +73,7 @@ breakdown" panel (DeFi-aware: chain-only returns protocols list, composite retur
     "file_size_bytes":  int | None,
     "row_count":        int | None,
     "captured_at":      iso8601 | None,
-    "capture_status":   "captured" | "empty_confirmed" | "attempted_failed" | "missing",
+    "capture_status":   "captured" | "empty_confirmed" | "attempted_failed" | "expected_unattempted",
     "error_reason":     str | None,
   },
   "download_urls": {
