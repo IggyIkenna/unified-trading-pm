@@ -128,6 +128,53 @@ Some lifts ship in the same logical unit as Phase 5; others ride alongside Phase
 removal in same commit as the UTL lift, per the workspace "no double SSOT" rule). Phase 5 todo list owns the
 authoritative status table.
 
+### Canonical `ModeHandler` ABC (lifted 2026-05-08, UTL@abeb5bc3)
+
+Per-family CLI mode handlers (batch / live / target) inherit a single `ModeHandler` ABC at
+`unified_trading_library.feature_service_base.ModeHandler` (file `mode_handler.py`).
+
+**Why lifted.** Pre-2026-05-08, the 4 families `volatility / delta_one / onchain / sports` each shipped a structurally-
+identical local `ModeHandler` ABC at `features_service/<family>/cli/handlers/base_handler.py`. Same `__init__` (logger
++ `_resources` list), same `cleanup()` (walk resources calling `close()`/`cleanup()` and clear), same
+`_register_resource` / `_parse_date` helpers — only the typed `run()` signature differed per family (sports
+`**kwargs: object`; volatility 11-arg async; delta_one 16-arg async; onchain 9-arg async). The Wave 3b
+`FeatureBatchHandler` ABC didn't fit (per-shard 1-frame model vs the 16-arg async multi-feature_group orchestration
+families actually run); option α from
+[`plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md`](../../plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md)
+captured the lift target.
+
+**Canonical surface.** The lifted ABC accepts the **most permissive** run signature (`async def run(**kwargs: object)`)
+so subclasses are free to declare their own typed params via override without distorting the base contract. Lifecycle
+hooks (`__init__`, `cleanup`, `_register_resource`, `_parse_date`) are the SSOT. Cleanup uses dual-protocol
+(`_Closeable` with `close()`, `_Cleanupable` with `cleanup()`) — adopted from delta_one's superset shape. Resource
+cleanup errors route through UTL `classify_and_emit_error` with `_service_name` class var override (default
+`features-service`) so the EnhancedError envelope tags correctly per family.
+
+**Adoption status (2026-05-08):**
+
+| Family             | Status                          | Pre-lift parent                                                              | Notes                                                                                        |
+| ------------------ | ------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `volatility`       | UTL ModeHandler                 | local `features_service.volatility.cli.handlers.base_handler.ModeHandler`    | Migrated features-service@7335bbef; local copy deleted                                       |
+| `delta_one`        | UTL ModeHandler                 | local `features_service.delta_one.cli.handlers.base_handler.ModeHandler`     | Migrated features-service@7335bbef; local copy deleted                                       |
+| `onchain`          | UTL ModeHandler                 | local `features_service.onchain.cli.handlers.base_handler.ModeHandler`       | Migrated features-service@7335bbef; local copy deleted                                       |
+| `sports`           | UTL ModeHandler                 | local `features_service.sports.cli.handlers.base_handler.ModeHandler`        | Migrated features-service@7335bbef; local copy deleted                                       |
+| `commodity`        | bare `class BatchHandler:`      | none                                                                         | **Stays bare**: sync `run(start_date, end_date, commodity, dry_run)`; per-(commodity, day) shards; multi-factor compute with cross-factor coverage gating doesn't decompose to `enumerate_shards` + `compute_one_shard`. Adopting UTL ModeHandler would require either widening the ABC (distorting contract) or rewriting compute. Out of scope. |
+| `cross_instrument` | bare `class BatchHandler:`      | none                                                                         | **Stays bare**: async `run()` does `_ingest_data → _process_features → _gate_and_write` over feature_groups, NOT a per-shard fan-out. No natural shard_key axis. Force-fit would distort. Out of scope. |
+| `multi_timeframe`  | bare `class BatchHandler:`      | none                                                                         | **Stays bare**: 109 LOC compact compute; doesn't share lifecycle with the 4 ModeHandler families. Adoption would add ceremony with no shared logic to lift. Out of scope. |
+| `calendar`         | UTL `service_cli.BaseModeHandler` | UTL `unified_trading_library.service_cli.BaseModeHandler` (different lineage)| **Stays separate**: ServiceCLI-driven `args`+`runtime` injection lineage; not unified with `feature_service_base.ModeHandler` because the contract surfaces differ (config-driven vs CLI-args-driven). Out of scope. |
+
+The 3 bare-class families and `calendar` are documented design calls — the lift is **option α** for the 4 families with
+genuinely-overlapping local ABCs, NOT a force-fit across all 8. If a future bare-class family grows to need shared
+lifecycle, adoption is a small refactor (subclass + register resource + override `_service_name`); contract is open.
+
+**Cleanup-error envelope.** Subclasses MUST override `_service_name: str = "features-<family>-service"` so resource-
+cleanup failures surface in the right service tag in observability. Default falls back to `"features-service"` for
+silent-bug-detection; production families always override.
+
+**Composes with**: `BaseFeatureService` (live-stack lifecycle), `BaseFeatureCalculator` (compute logic), Health-API
+aggregator contract (registers handler builder via `BuilderEntry`), CLI dispatch contract (`get_handler_for_mode` /
+`get_handler_for_operation` per family).
+
 ## Deployment topology
 
 ONE Docker image. Per-VM `--feature-family` flag selects which sub-package runs at boot. Two deployment flavors:

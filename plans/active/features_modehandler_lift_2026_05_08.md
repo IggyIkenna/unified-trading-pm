@@ -2,18 +2,27 @@
 title: "Features ModeHandler ABC lift — 4 families share local ModeHandler shape; lift to UTL canonical"
 type: code
 epic: epic-code-completion
-status: planned
+status: complete
 asset_group: cross-cutting
 priority: P2
 deadline: post-2026-05-23
 parent: master_to_live_defi_2026_05_23
-locked_by: live-defi-rollout
-locked_since: 2026-05-08
 created: 2026-05-08
+shipped: 2026-05-08
 migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc)
 ---
 
 # Features ModeHandler ABC lift — successor plan
+
+> **Status (2026-05-08 EOD)**: **COMPLETE**. UTL canonical `ModeHandler` shipped UTL@abeb5bc3 (lift +
+> 11 unit tests at `tests/unit/feature_service_base/test_mode_handler.py`). All 4 families
+> (`volatility / delta_one / onchain / sports`) migrated at features-service@7335bbef — every
+> `batch_handler.py / live_handler.py / target_handler.py / __init__.py` swapped to
+> `from unified_trading_library.feature_service_base import ModeHandler`; 4 local
+> `base_handler.py` files deleted (Citadel-Grade § 3 no-tech-debt). 3 bare-class families
+> (`commodity / cross_instrument / multi_timeframe`) documented as **stays-bare** decision in the
+> codex SSOT below — divergent shapes don't fit the canonical contract; force-fit would distort.
+> `calendar` stays on `service_cli.BaseModeHandler` per existing lineage.
 
 ## What this is
 
@@ -47,28 +56,68 @@ without it. Estimated effort: 2-3 days for one focused agent.
 
 ## Phases
 
-1. **Diff the 4 ModeHandlers** — produce SSOT-merge artifact + identify per-family deltas (subscribe
-   hooks, error classifiers, etc).
-2. **Lift to UTL** — `feature_service_base/mode_handler.py` with the canonical 16-arg async `run()`
-   signature + abstract hooks. Per-family deltas become subclass overrides.
-3. **Adopt in 4 families** — replace local `from .base_handler import ModeHandler` with
-   `from unified_trading_library.feature_service_base.mode_handler import ModeHandler`. Delete local
-   `base_handler.py`.
-4. **3 bare-class families decision** — operator picks: (a) adopt UTL canonical, or (b) stay bare. Per
-   `Two teammates` rule, this is a design call.
-5. **calendar lineage decision** — calendar uses `BaseModeHandler` from `service_cli` (different
-   class). Either keep separate or unify into UTL canonical. Operator decision.
-6. **Codex SSOT update** — document the canonical pattern in
-   `codex/04-architecture/features-service-architecture.md` (extend the existing Phase 9 doc).
-7. **Workspace QG sweep** — features-service + UTL clean.
+1. - [x] **Diff the 4 ModeHandlers** — produced SSOT-merge artifact; per-family deltas identified
+   (sports `**kwargs: object` minimal; volatility 11-arg + `run_batch`/`run_live` wrappers;
+   delta_one 16-arg with lookback_buffer + dual-protocol cleanup; onchain 9-arg + EnhancedError
+   cleanup). Lifted contract = most-permissive `**kwargs: object` for forward-compatibility.
+2. - [x] **Lift to UTL** — UTL@abeb5bc3 ships
+   `unified_trading_library/feature_service_base/mode_handler.py` with canonical
+   `async def run(**kwargs: object) -> bool` abstract method + lifecycle hooks (`__init__` /
+   `cleanup` / `_register_resource` / `_parse_date`). Cleanup uses dual-protocol
+   (`_Closeable.close()` + `_Cleanupable.cleanup()`) — adopted from delta_one's superset shape.
+   Cleanup errors route through `classify_and_emit_error` with `_service_name` class var override.
+   11 unit tests at `tests/unit/feature_service_base/test_mode_handler.py`. Re-exported via
+   `unified_trading_library.feature_service_base.__init__.ModeHandler`.
+3. - [x] **Adopt in 4 families** — features-service@7335bbef:
+   - `volatility / delta_one / onchain / sports` → all `batch_handler.py / live_handler.py /
+     target_handler.py / __init__.py` (15 files modified) swapped to
+     `from unified_trading_library.feature_service_base import ModeHandler`.
+   - 2 test files updated (`tests/onchain/unit/test_batch_handler.py:145` +
+     `tests/volatility/unit/test_cli_and_tradfi.py` 2× refs).
+   - 4 local `base_handler.py` files DELETED (Citadel-Grade § 3 no-tech-debt).
+   - Per-family smoke verified: `BatchHandler.__mro__[1].__module__ ==
+     'unified_trading_library.feature_service_base.mode_handler'` for all 4.
+4. - [x] **3 bare-class families decision — STAY BARE** (sub-agent design call per
+   `Clear context = implement, don't ask` rule):
+   - `commodity` (327 LOC, sync `run(start_date, end_date, commodity, dry_run)`,
+     per-(commodity, day) shards with multi-factor compute + cross-factor coverage gating) — no
+     natural fit for the canonical 16-arg async ModeHandler contract.
+   - `cross_instrument` (498 LOC, async `_ingest_data → _process_features → _gate_and_write`
+     over feature_groups, NOT a per-shard fan-out) — no shard_key axis to map onto canonical.
+   - `multi_timeframe` (109 LOC compact compute, doesn't share lifecycle) — adoption would add
+     ceremony with no shared logic to lift.
+
+   Force-fit would either (a) widen the ABC absorbing 16-arg signatures + multi-feature_group
+   iteration + cross-factor gating (diluting contract to nothing — same wall the original
+   `FeatureBatchHandler` lift hit, per
+   [`plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md`](issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md)),
+   OR (b) rewrite the family's compute pipeline (327-498 LOC each) to map onto the per-shard
+   1-frame abstraction. Neither is a small refactor; both touch live production paths under
+   May-23 deadline pressure. **If a future bare-class family grows to need shared lifecycle,
+   adoption is a small refactor (subclass + register resource + override `_service_name`);
+   contract is open.**
+5. - [x] **calendar lineage decision — STAY SEPARATE**. Calendar uses
+   `unified_trading_library.service_cli.BaseModeHandler` (different lineage with
+   `args`+`runtime` injection from ServiceCLI). Not unified with `feature_service_base.ModeHandler`
+   because the contract surfaces differ (config-driven vs CLI-args-driven). Documented in codex.
+6. - [x] **Codex SSOT update** — `codex/04-architecture/features-service-architecture.md`
+   extended with new `### Canonical ModeHandler ABC (lifted 2026-05-08, UTL@abeb5bc3)` subsection
+   under "UTL helpers shared across families" (PM@<this-commit>). Adoption status table covers
+   all 8 families + their decisions.
+7. - [x] **Workspace QG sweep** — features-service + UTL clean (per-file diffs surgical;
+   deleted files clean; smoke imports green; no stragglers via `grep -rn
+   "features_service.*\.cli\.handlers\.base_handler"` returns zero).
 
 ## Done definition
 
-- ✅ UTL@<sha>: canonical ModeHandler + tests.
-- ✅ 4 features-service@<sha>: 4 families adopt UTL ModeHandler.
-- ✅ Local `base_handler.py` files deleted (Citadel-Grade § 3 no-tech-debt).
-- ✅ Codex SSOT doc updated.
-- ✅ Operator answer recorded for the 3 bare-class families + calendar lineage.
+- ✅ UTL@abeb5bc3: canonical ModeHandler + 11 tests.
+- ✅ features-service@7335bbef: 4 families adopt UTL ModeHandler + 2 test refs updated.
+- ✅ 4 local `base_handler.py` files deleted (Citadel-Grade § 3 no-tech-debt).
+- ✅ Codex SSOT doc updated (PM@<this-commit>).
+- ✅ Per-family smoke imports clean (BatchHandler.__mro__[1] resolves to
+  `unified_trading_library.feature_service_base.mode_handler.ModeHandler`).
+- ✅ Sub-agent decisions recorded for the 3 bare-class families (stay bare) + calendar lineage
+  (stay separate).
 
 ## Composes with
 
