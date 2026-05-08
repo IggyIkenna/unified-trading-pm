@@ -1,28 +1,39 @@
 <!--
-Lightweight ping ledger — the doorbell.
+Lightweight ping ledger — the WORKSPACE-SHARED CROSS-SIDE doorbell (Ikenna ↔ Harsh).
 
-Sub-agents append a one-liner here when they need attention from the main agent.
-The main agent polls this file every ~10 min via /loop, reads the referenced plan
-doc, answers in the plan doc's `## Open questions` section, then removes the line
-from this file.
+PER CLAUDE.md "Daily Work-Split Process" § "Ping ledger bifurcation (codified 2026-05-08)":
+this file is for CROSS-SIDE comms ONLY. Intra-side pings (one operator's main ↔ that
+operator's spawned tabs: STARTED acks, blocker Qs, DONE announcements) go in the
+per-side ledger:
+
+  - harsh_orchestrator/_agent_pings.md   (Harsh's main ↔ Harsh's spawned tabs)
+  - ikenna_orchestrator/_agent_pings.md  (Ikenna's main ↔ Ikenna's spawned tabs)
+
+Use this file ONLY for cross-side hard-gate signalling: a UAC contract landed that
+the other side was waiting on, a UTL helper signature shipped, an in-flight refactor
+banner needs broadcasting, a VM-launch banner (per CLAUDE.md "Cross-Plan Coordination
+Banners" HARD RULE), a paper-trade smoke result the other side is waiting on.
+
+Each side's main agent polls this file every ~1 min while their operator is active
+(stretches to ~5 min when ledger empty for 30+ min). The poster removes their own
+ping after the receiving side acks; cross-side comms are typically rare so this
+ledger should usually have <5 active entries. If it consistently has 10+, the
+bifurcation is being violated — intra-side noise is leaking into the cross-side
+surface.
 
 Format (one line per active ping):
   [YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
 
-Examples:
-  [2026-05-08 09:14 UTC] phase2-routes-tab — Q on subprocess.run timeout default; see deployment_api_work_stream_a_2026_05_07.plan.md
-  [2026-05-08 09:32 UTC] dart-playwright-tab — done with personas 1-3, blocked on persona 4 fixture; see strategy_and_dart_master_2026_05_07.plan.md
-  [2026-05-08 10:01 UTC] manifest-rescan-tab — silent-zero finding for prediction asset_group; see issues/prediction_silent_zero_2026_05_08.md
+Examples (cross-side hard-gate signalling):
+  [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract shipped UAC+UTL; Harsh Tab 1 MTDS migration unblocked; see predictions_master_2026_05_07.md
+  [2026-05-08 09:14 UTC] harsh-main — UAC AlertCode taxonomy SSOT shipped under canonical/alerting/; Ikenna Tab 6 alerting-phase2 unblocked; see alerting_service_live_rules_2026_05_07.md
+  [2026-05-08 11:00 UTC] ikenna-main — 🟢 VM RUNNING: 4 mtds-tradfi VMs launched (ETA 2026-05-09 06:00 UTC); see tradfi_master_2026_05_07.md
 
 This file is EPHEMERAL — entries are removed when handled. Full Q&A history lives
 in the referenced plan doc's `## Open questions` section (status badges 🟡 BLOCKED
 → ✅ RESOLVED).
 
-When this ledger consistently has 15-20+ active pings, signal Harsh to spawn a
-SECOND main agent in another tab; two main agents can divide the ledger using a
-[CLAIMED-BY: main-1] / [CLAIMED-BY: main-2] marker on each ping.
-
-Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Process" — Plan-of-record + Q&A bus / Ping ledger / Polling cadence subsections.
+Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Process" — Plan-of-record + Q&A bus / Ping ledger (with bifurcation paragraph) / Polling cadence subsections.
 -->
 
 # Active pings
