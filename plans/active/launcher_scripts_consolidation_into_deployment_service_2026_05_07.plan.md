@@ -277,21 +277,37 @@ refactor is mechanical-but-larger and doesn't affect Deploy-Missing UI registry 
 
 ### Phase 1 — Migrate scripts in waves
 
-- [ ] [deployment-service] P0. Wave A (4 scripts): `e2e-testing/scripts/common/` → `deployment-service/scripts/vm/`.
+- [x] [deployment-service] P0. Wave A (4 scripts): `e2e-testing/scripts/common/` → `deployment-service/scripts/vm/`.
+      (Tab 11, 2026-05-08, all 4 of 4 shipped: deployment-service@76f4ecc launch-mtds-backfill-vm.sh,
+      deployment-service@fbb3673 launch-instruments-backfill-vm.sh, deployment-service@ce99d43 launch-cefi-migration-vm.sh
+      + launch-defi-backfill-vm.sh.)
 - [ ] [deployment-service] P0. Wave B (10 scripts): `e2e-testing/scripts/defi/` → `deployment-service/scripts/vm/`.
       Cross-check against the bigger AWS migration plan (some DeFi launchers may need both GCE + EC2 variants).
+      **PARTIAL** (3 of 10 shipped Tab 11, 2026-05-08): deployment-service@5778811
+      (launch-mtds-{dex-pools,eigenlayer-rewards,solana-drift}-backfill-vm.sh). Remaining 7 deferred to
+      follow-up cycles per the audit table at the top of this plan body — most are duplicates of canonical
+      launch-mtds-* scripts already in deployment-service/scripts/vm/.
 - [ ] [deployment-service] P0. Wave C (4 scripts): `e2e-testing/scripts/prediction/` →
-      `deployment-service/scripts/vm/`.
+      `deployment-service/scripts/vm/`. **DEFERRED** (Tab 10 `predictions-phase1-ingestion-tab` in flight on the
+      prediction surface; held for collision-avoidance per Tab 11 audit table).
 - [ ] [deployment-service] P0. Wave D (10 scripts): `e2e-testing/scripts/sports/` →
       `deployment-service/scripts/vm/`. Some are sweep / fleet wrappers that orchestrate other launchers; preserve
       that orchestration shape.
-- [ ] [deployment-service] P0. Wave E (1 script): `features-sports-service/scripts/launch_parallel_backfill.sh` →
+      **PARTIAL** (2 of 10 shipped Tab 11, 2026-05-08): deployment-service@2e1d967 launch-mtds-sports-odds-backfill-vm.sh,
+      deployment-service@fc9211e launch-sports-instruments-reference-vm.sh.
+- [x] [deployment-service] P0. Wave E (1 script): `features-sports-service/scripts/launch_parallel_backfill.sh` →
       `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`.
+      (Tab 11, 2026-05-08, deployment-service@0215086.)
 - [ ] [e2e-testing / features-sports-service] P0. Update every callsite in source-repo `Makefile`s, READMEs,
-      pre-commit hooks, and dev-tier scripts that referenced the moved paths.
+      pre-commit hooks, and dev-tier scripts that referenced the moved paths. **DEFERRED** to follow-up cycle —
+      Tab 11 left deprecation banners on every moved file (per CLAUDE.md plan-body) but did not chase down
+      Makefile / README references; safe because the old files still work as redirects.
 - [ ] [deployment-service] P0. Add every newly-named launcher prefix to `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py`. **Relaunch the watchdog VM** after the dict edit (see CLAUDE.md "VM Naming
       Convention").
+      **PARTIAL** (Tab 11 added 17 new prefix entries across migrations #1-10 + relaunched watchdog VM
+      `vm-zombie-watchdog-20260508-121344` — covers the 10 launchers shipped this cycle. Remaining prefixes
+      land alongside their launchers in follow-up cycles.)
 
 ### Phase 2 — deployment-api launcher registry
 
@@ -358,3 +374,83 @@ refactor is mechanical-but-larger and doesn't affect Deploy-Missing UI registry 
 - `deploy_missing_auto_launch_2026_05_07.plan.md` — preview-mode → auto-launch successor.
 - CLAUDE.md "VM Naming Convention" — registers prefixes in `VM_PREFIX_TO_BUCKET`.
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
+
+## DONE-2026-05-08 — Tab 11 cycle (10 of 30 launchers shipped)
+
+Tab 11 (`launcher-consolidation-tab`) shipped 10 launcher migrations from `e2e-testing/scripts/` +
+`features-sports-service/scripts/` → `deployment-service/scripts/vm/` plus all supporting infrastructure
+edits (VM_PREFIX_TO_BUCKET registry, source-location deprecation banners, helper-script lifts).
+
+**Critical-path impact**: 2 of 3 missing-on-disk `_SERVICE_LAUNCHER_SCRIPTS` registry entries are now backed
+by real launcher scripts (`market-tick-data-service` + `instruments-service`); Deploy-Missing UI button no
+longer silently breaks for those services. The third missing entry (`features-onchain-service` →
+`launch-features-onchain-backfill-vm.sh`) has no e2e-testing equivalent and needs a fresh build in a
+follow-up cycle.
+
+**Code commits** (all pushed to `live-defi-rollout` per zero-incoming conditional):
+
+* deployment-service@76f4ecc — #1 launch-mtds-backfill-vm.sh + vm_mtds_backfill.sh + 5 watchdog prefixes
+  (mtds-backfill-{cefi/tradfi/defi/prediction/sports}-).
+* e2e-testing@8daba1a — #1 deprecation banner on launch_mtds_category_backfill_vm.sh.
+* deployment-service@fbb3673 — #2 launch-instruments-backfill-vm.sh + vm_instruments_backfill.sh + 4 watchdog
+  prefixes (instr-backfill-cefi-/instr-backfill-defi/tradfi/sports).
+* e2e-testing@2da6867 — #2 deprecation banner on launch_instruments_backfill_vms.sh.
+* deployment-service@0215086 — #3 launch-features-sports-parallel-backfill-vm.sh + watchdog prefix
+  (fss-backfill-vm-).
+* features-sports-service@06f6b30 — #3 deprecation banner on launch_parallel_backfill.sh.
+* deployment-service@2e1d967 — #4 launch-mtds-sports-odds-backfill-vm.sh + watchdog prefix
+  (mtds-backfill-odds-).
+* e2e-testing@deff088 — #4 deprecation banner on sports/launch_mtds_backfill_vm.sh.
+* deployment-service@fc9211e — #5 launch-sports-instruments-reference-vm.sh + vm_instruments_reference.sh +
+  watchdog prefix (sports-ref-v3-).
+* e2e-testing@db7ace3 — #5 deprecation banner on sports/launch_instruments_reference_v3.sh.
+* deployment-service@5778811 — #6-8 launch-mtds-{dex-pools,eigenlayer-rewards,solana-drift}-backfill-vm.sh +
+  3 watchdog prefixes (mtds-dex-pools-backfill, mtds-eigenlayer-rewards-backfill, mtds-solana-drift-backfill).
+* e2e-testing@43d8e49 — #6-8 deprecation banners on 3 DeFi launchers.
+* deployment-service@ce99d43 — #9-10 launch-{cefi-migration,defi-backfill}-vm.sh + watchdog prefix
+  (mtds-migrate-, heartbeat-only).
+* e2e-testing@4f1f92b — #9-10 deprecation banners on 2 common launchers.
+* PM@fc35b11 — Tab 11 audit + top-10 selection (Phase 0 flip).
+* PM (this commit) — Phase 1 partial flips + DONE-2026-05-08 block.
+
+**Watchdog VM**: relaunched as `vm-zombie-watchdog-20260508-121344` after all 17 new prefix entries landed —
+running watchdog only loads VM_PREFIX_TO_BUCKET at boot.
+
+**Deploy-Missing registry status** (`_SERVICE_LAUNCHER_SCRIPTS` audit at Tab 11 closeout):
+
+| Service slug | Registry path | On-disk status |
+|--------------|---------------|----------------|
+| market-tick-data-service | launch-mtds-backfill-vm.sh | ✅ EXISTS (Tab 11 #1) |
+| market-data-processing-service | launch-mdps-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+| instruments-service | launch-instruments-backfill-vm.sh | ✅ EXISTS (Tab 11 #2) |
+| features-onchain-service | launch-features-onchain-backfill-vm.sh | ❌ MISSING (deferred) |
+| features-delta-one-service | launch-features-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+| features-volatility-service | launch-features-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+| features-cross-instrument-service | launch-features-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+| features-sports-service | launch-features-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+| features-calendar-service | launch-features-backfill-vm.sh | ✅ EXISTS (pre-Tab 11) |
+
+**Smoke-test coverage**: every migrated launcher with a `--dry-run` flag was smoke-tested (`#1, #2, #3, #4,
+#5, #6, #7, #8, #10`). #9 (cefi-migration) has no `--dry-run`; passed `bash -n` syntax check only.
+
+**QG status (deployment-service Pass 1)**: pre-existing failures only — bandit B108 in
+`deployment_service/vm/heartbeat_cli.py:176` (semver-rollout[bot]@6f3476b7, 2026-05-01) and STEP 5.10 cloud-SDK
+import in `scripts/vm/vm_zombie_watchdog.py:72` (semver-rollout[bot]@fb73d5a0, 2026-05-05). Both pre-date
+Tab 11; exempt under the 2026-05-07 → 2026-05-09 QG-failure-on-others'-code window per CLAUDE.md.
+
+**Deferred (not in this cycle, by priority)**:
+
+- 2 of 3 missing-on-disk registry entries filled (#1, #2). Third (`launch-features-onchain-backfill-vm.sh`)
+  needs a fresh build — no e2e-testing equivalent. Files an issue doc as P1 follow-up if not picked up
+  organically.
+- 7 DeFi launchers (gas-fees / lending-indices / lst-rates / perp-funding / solana-gas / liquidations) — most
+  are duplicates of existing canonical `launch-mtds-{X}-backfill-vm.sh`; reconcile in a delete-vs-merge
+  follow-up rather than blind migrate.
+- 4 prediction launchers — deferred to avoid collision with Tab 10 in flight on the prediction surface.
+- 8 sports launchers (fss-features v1+v2+phase3, mdps-phase3-bucketing, mdps-reprocess, oddspapi-vm-backfill,
+  full-sweep wrappers, instruments-reference-vm v1) — partially superseded by canonical equivalents;
+  reconcile in follow-up.
+- 1 intra-repo move (`deployment-service/scripts/deploy-dashboard-gce-vm.sh` → `scripts/vm/launch-dashboard-vm.sh`)
+  — included in plan but defer-able since it's already inside deployment-service repo.
+- Callsite-update sweep (Makefiles / READMEs / dev-tier scripts) — every moved launcher has a deprecation
+  banner; old paths still work as redirects, so callsites keep functioning during the transition window.
