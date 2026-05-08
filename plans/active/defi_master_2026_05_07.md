@@ -918,11 +918,16 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 ### Open questions
 
-- [ ] **Manual-trade gating duration** (master plan Q&A 5). Default 3-day manual → 7-day automated. Resolve before
-      May 18.
-- [ ] **research-service repo decision** (master plan Q&A 6). Default: fold into deployment-api unless scope grows.
-- [ ] **Is `leveraged_funding_arb` strictly required for May 23, or fallback if carry slips?** Master plan risk register
-      says it can slip; confirm.
+- [x] ✓ **Manual-trade gating duration — RESOLVED 2026-05-08 (master Q&A 5).** **3 days manual → 7 days automated**
+      with kill-switch monitoring throughout. Stagger ≥1 day across archetypes (`carry_staked_basis` first,
+      `leveraged_funding_arb` second). Acceptance gate = `strategy_and_dart_master:Phase 2.2` Playwright matrix.
+      See `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **research-service repo decision — RESOLVED 2026-05-08 (master Q&A 6).** **Fold into deployment-api** for
+      May 23 scope.
+- [x] ✓ **`leveraged_funding_arb` strict P0 — RESOLVED 2026-05-08.** **Strict P0 — both archetypes required.** If
+      `leveraged_funding_arb` slips at the live-cutover gate, fall back to carry-only for the 7-day live window AND
+      ship `leveraged_funding_arb` live in the immediate post-cutover week — but build, smoke, and paper-trade
+      verification for both must complete by May 23.
 
 ## Anti-patterns + workspace-rule cross-references
 

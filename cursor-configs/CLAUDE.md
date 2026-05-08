@@ -1796,6 +1796,24 @@ where `Last verified` is older than the declared cadence trigger a P0 alerting r
 
 ## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
 
+**Main orchestrator bootstrap pointer (read first if you are a fresh main-agent session).** If you are running as a main
+orchestrator agent on either operator's machine, your first action is to read your side's LEDGER bootstrap section
+before doing anything else:
+
+- **Ikenna's main orchestrator** → read [`ikenna_orchestrator/LEDGER.md`](../ikenna_orchestrator/LEDGER.md) § "Bootstrap
+  — fresh main-agent chat" + [`ikenna_orchestrator/AGENT_ONBOARDING.md`](../ikenna_orchestrator/AGENT_ONBOARDING.md).
+- **Harsh's main orchestrator** → read [`harsh_orchestrator/LEDGER.md`](../harsh_orchestrator/LEDGER.md) § "Bootstrap —
+  fresh main-agent chat" + [`harsh_orchestrator/AGENT_ONBOARDING.md`](../harsh_orchestrator/AGENT_ONBOARDING.md).
+
+Each per-side `<side>_orchestrator/` directory contains: `AGENT_ONBOARDING.md` (boot-context pointer for spawned tabs),
+`LEDGER.md` (today's tab registry + open questions + recent done), `_agent_pings.md` (intra-side doorbell). The boot
+checklist runs `git status` + `git fetch` summary + ledger read in ~3-5 min, then the main agent acks to the operator
+"State: N tabs in flight, M intra-side pings, K cross-side pings, J local commits queued. Today's plan = X. Standing
+by." Skip this and you start blind to the operator's in-flight context.
+
+Spawned tab agents (Tab 2+) follow the same pattern but read AGENT_ONBOARDING first — see "Spawn prompt template
+(Model B)" subsection below for the canonical paste-ready prompt.
+
 **Why this exists.** Two human operators (Ikenna + Harsh) each run multiple parallel Claude Code / Cursor agents. A
 single human-day with 5 parallel agents at full saturation is closer to **~50 AI-days of work**; both sides combined
 yields **~100 AI-days/day**. Without an explicit daily split, the agents converge on the same critical-path files (UAC,
