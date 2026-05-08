@@ -679,6 +679,131 @@ commit message. This prevents premature removal of plans that are actively being
 - **Agent unlock protocol:** Agents may ASK the human to unlock a plan when all todos are done, but must NEVER unlock
   autonomously. If approved, agent removes `locked_by`/`locked_since` and includes `[unlock-plan]` in commit.
 
+## Plan Archival — preserve deferred work + unfinished operational steps (HARD RULE codified 2026-05-08)
+
+A plan archives when its primary scope is shipped. **The archive boundary is an audit boundary, not a deletion event.**
+Any item the plan deferred — `**DEFERRED**`, `**NICE-TO-HAVE**`, `**DEFERRED-PER-USER**`, "future work", "out of scope",
+"post-cutover", "stretch goal", a half-shipped item, a banned configuration that's still in code, OR a planned-but-
+unrun operation (deploy / backfill / migration / VM launch / data refresh / index rebuild) — MUST land in an active
+home before the archive commit ships. Otherwise the deferred work falls off the workspace radar; the operator asks
+again three weeks later; we burn an hour reconstructing what was deferred and why; the cycle repeats.
+
+### What counts as "deferred"
+
+Three categories — all three are in scope. Mixing them or losing the boundary between them is the failure mode.
+
+1. **Scope deferrals** (most common). The plan body cited an item it explicitly chose NOT to do this cycle: a
+   nice-to-have feature, a P2/P3 polish item, a follow-up sweep, a post-cutover revisit, an "out of scope" caveat. The
+   item is feature work, not operational work.
+2. **Operational gaps** (often invisible). The plan body declared work as done — feature complete, code merged, QGs
+   green — but the actual VM was never launched, the backfill was never started, the migration was never run, the
+   reindex was never triggered, the staging deploy was never promoted to prod. Code-shipped is not the same as
+   operationally-shipped. **The archive must distinguish "code shipped" from "operationally shipped" and never treat
+   them as interchangeable.** Reference incidents: writegate Phase 2.A `_create_empty_output()` deletion (code shipped
+   2026-05-07; banned-pattern AST sweep across services took another day to actually land); MDPS `1440-NaN-bar`
+   reconciler (code shipped 2026-05-05; the actual reconcile-then-rescan run on production manifests was a separate
+   operational step that a follow-up agent had to chase down because the plan said "done"); 2026-05-04 instruments-
+   service `00f6352` chunk worker (code shipped without per-VM shard isolation; operational gap not caught until 2 days
+   later when concurrent runs raced on the canonical CAS).
+3. **Half-shipped items**. The plan flipped a checkbox to `- [x]` for an item where only part of the work landed. The
+   `**DEFERRED**:` annotation on the unshipped half (per `Commit + Push + Flip` HARD RULE) is the hint — every such
+   annotation needs a home in an active plan, not just a comment that decays in the archive.
+
+### The discipline
+
+When you propose archiving a plan (status: complete, `locked_by` removal, move to `plans/archive/`), you MUST do all
+five steps as part of the same logical unit:
+
+1. **Audit the archiving plan**: scan the body for every `**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**`
+   / "post-cutover" / "out of scope" / "future work" / "stretch" / "follow-up" annotation. Count them. List them.
+2. **Audit operational completeness**: for every shipped item that touches operational state (VM launch / backfill /
+   migration / deploy / reindex / data refresh), verify the operation actually ran in production — not just that the
+   code shipped. Check event streams (`gs://{pid}-events/...`) / VM history / manifest state / deploy logs / migration
+   ledger. If the operation never ran, it's deferred operational work — same disposition as a scope deferral.
+3. **Migrate every deferred item to an active home**. Three valid dispositions, mutually exclusive:
+   - **(a) Fold into an existing active plan** that's the natural owner. The deferred item becomes a `- [ ]` todo in
+     that plan's body with a `**MIGRATED FROM:** <archived-plan-name>` provenance line. Pick the plan whose scope
+     matches; don't dump unrelated items into a convenient bucket.
+   - **(b) Spawn a new active plan** if no existing plan owns the scope. Plan filename `<slug>_<YYYY_MM_DD>.md` per the
+     Plan Filename Convention; frontmatter cites the archiving plan as `migrated_from:`; body opens with a 2-3 line
+     "What this is" paragraph explaining it's a deferred-work continuation.
+   - **(c) Write a `plans/active/issues/<slug>_<YYYY_MM_DD>.md` issue doc** if the deferred item isn't owner-clear yet
+     (needs operator triage to assign to a plan). Use the issue-doc shape from `Findings Triage Discipline`. Issue docs
+     must triage to (a) or (b) within ≤7 calendar days; an issue doc that sits unrouted >7 days is itself a finding.
+4. **Banner the archived plan** with a `## Deferred work — migrated to:` section enumerating every migrated item with
+   its destination (plan filename + section anchor). The archive-side banner is read-only after archival but it's the
+   forward index for anyone reading the archived plan: "this looked deferred, here's where it lives now."
+5. **Update CLAUDE.md or codex SSOTs** if any of the deferred items affected a workspace contract / pattern / SSOT.
+   Same shape as the `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in the same logical unit as the
+   archive commit, not "later."
+
+### Operational-step verification recipe
+
+Operational gaps are the easiest deferral to miss because the plan body looks complete. Quick verification probes:
+
+- **VM-launched-and-finished**: `gcloud compute instances list --filter="name~<prefix>" --format="value(status)"`
+  (look for absence) AND `gcloud storage ls gs://${PID}-events/events/<service>/<YYYY-MM-DD>/<vm-name>/` (look for
+  STARTED + STOPPED events with non-empty progress between them).
+- **Backfill ran to completion**: read the manifest at the expected coverage horizon — `captured` rows per
+  `(asset_group, venue, data_type, day)` matching the planned scope. Counting rows is not validation; populating rows
+  is. Probe a sample parquet to confirm it's not 1440-NaN placeholders (per `Honest absence vs fake placeholders`).
+- **Migration ran**: post-migration manifest / on-disk schema matches the new shape; ZERO rows in legacy shape; reader
+  fallback paths deleted. Migration scripts that say "run me once" (e.g.
+  `instruments-service/scripts/migrate_local_sfi_to_canonical.py`) need explicit operator confirmation they ran on
+  production buckets, not just locally.
+- **Deploy promoted**: `gcloud run services describe <service>` revision matches the latest commit on `main` (or
+  whichever branch the plan declared as the deploy source).
+
+If ANY probe shows the operation didn't run, the plan is NOT done — even if every code commit landed. Either run the
+operation now (and flip the checkbox + cite the operation evidence) or migrate the operational step to an active plan
+per step 3.
+
+### Why this matters
+
+- **Operator-time-to-recall is expensive.** When the operator asks "what about X — I thought we had X scoped
+  somewhere," reconstructing the answer from grep + git log + chat history takes 30+ minutes per incident.
+  Pre-archival migration is a 5-minute discipline that saves the 30-minute recall every time.
+- **Code-shipped vs operationally-shipped is the silent failure mode.** Plans that say "done" without verifying the
+  actual operation ran erode workspace trust in plan checkboxes. Once a few plans are caught with code-shipped-but-not-
+  operationally-shipped state, every subsequent plan checkbox becomes suspect to the next reader.
+- **Archive is forever.** Once a plan moves to `plans/archive/<slug>.plan.md` and `locked_by` clears, the deferred
+  work is invisible to active scanning (`grep DEFERRED plans/active/*.md` won't find it). The archive is the
+  archaeology layer; active is the search layer. Migrate deferred items BEFORE the archive boundary so they stay in
+  the search layer.
+- **Citadel-grade discipline.** Per `Citadel-Grade Planning Standards § 3 No Technical Debt` — every plan must close
+  cleanly without leaving phantom work. Half-archived plans with surviving deferrals are technical debt in the
+  planning layer.
+
+### Anti-patterns
+
+- **Archive-and-hope.** Plan archives, deferrals get dropped because "we'll remember." We won't. Operator asks 3
+  weeks later, time is wasted.
+- **Defer-without-naming.** A plan body says "post-cutover" without a specific successor plan filename. The
+  `Temporary state must have a named successor plan` rule already prohibits this for temporary states; this rule
+  extends it to every deferral type at archive time.
+- **Operational-rubber-stamp.** Marking an operation done because the code shipped, without checking the operation
+  actually ran. Especially common for "ran the migration" / "kicked off the backfill" / "deployed to prod" — the
+  verification probe takes <30s and catches multi-day silent failures.
+- **Issue-doc graveyard.** Writing every deferral as an `issues/` doc instead of folding into a real plan. Issue docs
+  are for unowned-yet items needing triage; they MUST resolve to a plan within 7 days. >7 days = the issue doc itself
+  is a deferred item that should have been migrated.
+- **Bulk-migrate-to-one-plan.** Dumping 15 unrelated deferrals into the same convenient destination plan because it's
+  easy. Each deferral goes to the plan whose scope owns it; no convenience-bucket plans.
+
+### Composes with
+
+- `Plan Locking` (above) — `locked_by` removal is the technical gate for archival; this rule is the content gate.
+- `Temporary state must have a named successor plan` — same shape, at-archive-time extension.
+- `Commit + Push + Flip Plan Checkboxes As You Ship Each Item` — half-shipped items get `**DEFERRED**:` annotations
+  during the plan's lifetime; this rule ensures those annotations migrate to an active home at archival.
+- `Findings Triage Discipline` — issue-doc disposition (case 5 of the matrix) is the same shape as case (c) here.
+- `Capture discoveries as plan todos immediately` — discoveries during a plan's lifetime get captured in real-time;
+  this rule ensures none are lost when the plan closes.
+- `Post-Plan-Phase Codex Audit` — codex updates at every phase boundary; this rule extends to the archive boundary
+  for any deferred items affecting a workspace contract.
+- `Citadel-Grade Planning Standards § 3 No Technical Debt` + `§ 7 Single Source of Truth` — archived plans with
+  surviving deferrals are debt; the migration discipline closes the loop.
+
 ## Workflow Templates (Canonical in PM)
 
 Per-repo GitHub Actions workflows are managed as **canonical templates** in PM, not flat copies:
