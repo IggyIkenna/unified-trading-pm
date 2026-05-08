@@ -353,11 +353,19 @@ else
 fi
 
 # STEP 5.11 — Block protocol-specific symbols in service code
+# 2026-05-08: Narrow exemption for the UAC SSOT file `canonical/crosscutting/cloud_target.py`
+#             which intentionally declares the CloudTarget StrEnum as the workspace SSOT
+#             (per deployment_ui_lifecycle_tabs_2026_05_08 Phase A.5). Other protocol-specific
+#             symbols (gcs_bucket / bigquery_dataset / upload_to_gcs_batch /
+#             StandardizedDomainCloudService) remain banned everywhere. If more legitimate UAC
+#             SSOT files surface that would otherwise trip this rule, expand the exemption
+#             list per-file (NOT the whole UAC repo — start narrow, broaden only on evidence).
 echo -n "STEP 5.11: Checking for protocol-specific symbols in service code... "
 PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
+    --glob '!**/canonical/crosscutting/cloud_target.py' \
     -l $SOURCE_DIR/ 2>/dev/null || true)
 if [ -n "$PROTOCOL_VIOLATIONS" ]; then
     echo -e "${RED}FAIL${NC}"
@@ -369,6 +377,7 @@ else
 fi
 
 # STEP 5.12 — Services must not hardcode cloud protocol names
+# 2026-05-08: same narrow exemption as STEP 5.11 — see comment above.
 echo -n "STEP 5.12: Checking for hardcoded protocol names in service source... "
 HARDCODED_PROTO=$(rg \
   'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
@@ -376,6 +385,7 @@ HARDCODED_PROTO=$(rg \
   --glob '!.venv*' --glob '!**/.venv*/**' \
   --glob '!tests' \
   --glob '!scripts/**' \
+  --glob '!**/canonical/crosscutting/cloud_target.py' \
   -l $SOURCE_DIR/ 2>/dev/null || true)
 if [ -n "$HARDCODED_PROTO" ]; then
     echo -e "${RED}FAIL${NC}"
