@@ -336,7 +336,7 @@ consolidation target post-cutover.
     rename to `available_at` + one-time GCS column rename in existing sports parquets (per "manifest migration not
     fallback" rule). Required before writegate Phase 2.C / `LookaheadBiasError` strict-mode flip — otherwise sports
     pipeline hard-fails on every record_captured call. **Dedicated plan shipped 2026-05-07**:
-    [`plans/active/sports_data_available_at_rename_2026_05_07.plan.md`](./sports_data_available_at_rename_2026_05_07.plan.md).
+    [`plans/active/sports_data_available_at_rename_2026_05_07.plan.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
     Pre-audit complete (35+ callsites enumerated across UAC / UTL / instruments-service / features-sports). 4-phase DAG:
     Phase 0 audit (shipped) → Phase 1 migration script (next concrete agent task) → Phase 2 operator-runs-migration
     (same-region GCE VM, paused FWD/BACKFILL VMs) → Phase 3 atomic 4-repo source rename → Phase 4 writegate Phase 2.C

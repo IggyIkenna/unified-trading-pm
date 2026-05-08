@@ -113,7 +113,7 @@ been ripped out of the adapters; a reproduction-test is no longer meaningful.
 
 ### #6 — strategy_architecture_v2 Phase 3 entirely STALE (audit §6 #7)
 
-[`strategy_architecture_v2_finalization_2026_04_19.plan.md`](strategy_architecture_v2_finalization_2026_04_19.plan.md)
+[`strategy_architecture_v2_finalization_2026_04_19.plan.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.plan.md)
 Phase 3 is the V2-shadow window (14-21d shadow before V1-retire). Operator bypassed it per directive _"if v2 tests pass,
 just delete the old stuff"_ (captured in audit). `STRATEGY_DISPATCH_MODE` Literal collapsed to `["v2_prod"]` only —
 `v2_shadow` itself retired in commits `8035162` + `a7f6f79`.

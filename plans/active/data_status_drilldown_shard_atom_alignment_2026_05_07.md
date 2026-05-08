@@ -44,15 +44,15 @@ related:
 
 > **Cross-ref 2026-05-07: writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE on all 5 asset_groups +
 > CONSOLIDATOR MERGE LANDED.** 1,455,901 rows written + merged into canonical: TradFi 35,033 + Sports 13,176 + CeFi
-> 119,152 (real impl, no longer a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260
-> (`EXPECTED_PRE_GENESIS_CHAIN` + `EXPECTED_INSTRUMENT_NOT_LISTED`). Code shipped: deployment-service@dcc5c87 +
-> @38b7a58 (launcher + cap pass-through), instruments-service@8e404c8 + @d1c9928 + @a936a28
-> (script + real CeFi/Prediction enumerators + dtype-correct fill defaults), UAC@ac218dc (`EXPECTED_PRE_VENUE_LAUNCH`
-> enum + `venue_launch_dates` SSOT). Plan flips: PM@79e47874 (apply-write completion) + PM@341bb285 (consolidator P0
-> resolution). Consolidator cycles 18:07-18:14 UTC merged all 5 per-VM shards. Rollup-vs-drilldown denominator gap
-> closure is now observable on all 5 asset_groups; operator-side spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-> § Phase 3.D.4 banner.
+> 119,152 (real impl, no longer a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260 (`EXPECTED_PRE_GENESIS_CHAIN` +
+> `EXPECTED_INSTRUMENT_NOT_LISTED`). Code shipped: deployment-service@dcc5c87 + @38b7a58 (launcher + cap pass-through),
+> instruments-service@8e404c8 + @d1c9928 + @a936a28 (script + real CeFi/Prediction enumerators + dtype-correct fill
+> defaults), UAC@ac218dc (`EXPECTED_PRE_VENUE_LAUNCH` enum + `venue_launch_dates` SSOT). Plan flips: PM@79e47874
+> (apply-write completion) + PM@341bb285 (consolidator P0 resolution). Consolidator cycles 18:07-18:14 UTC merged all 5
+> per-VM shards. Rollup-vs-drilldown denominator gap closure is now observable on all 5 asset_groups; operator-side
+> spot-check pending. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
+> Phase 3.D.4 banner.
 
 ## Why
 
@@ -275,9 +275,9 @@ on whatever flags exist today as a degenerate case).
       skip list (33 pairs pending follow-up; 41 declared). Composition contract `max(chain_genesis, protocol_launch)`
       documented + tested.
 - [x] [deployment-api] P0 (NEW 2026-05-07 — shipped deployment-api@a86e40a). Rewrite `_build_chain_breakdown()` in
-      `data_status_service.py` to count true leaf shards. Numerator = captured manifest rows in the chain; denominator
-      = `Σ over chain venues of (expected_dates × distinct (data_type, instrument_id) leaves observed for that
-      venue)`. Refactored into `_venue_expected_dates_for_chain` + `_shards_expected_for_chain` helpers (C901-clean).
+      `data_status_service.py` to count true leaf shards. Numerator = captured manifest rows in the chain; denominator =
+      `Σ over chain venues of (expected_dates × distinct (data_type, instrument_id) leaves observed for that     venue)`.
+      Refactored into `_venue_expected_dates_for_chain` + `_shards_expected_for_chain` helpers (C901-clean).
       Backward-compat: `dates_found` / `dates_expected` fields preserved. New canonical fields: `shards_found` /
       `shards_expected`; `completion_pct` derives from shard ratio. 4 unit tests in `TestBuildChainBreakdownShardMath`
       pass.
@@ -285,25 +285,24 @@ on whatever flags exist today as a degenerate case).
       `max(chain_genesis, protocol_launch_date)` via `get_protocol_launch_date(chain, protocol)`. Pre-protocol-launch
       days clip exactly like pre-chain-genesis already does. Falls through unchanged for pending-investigation pairs
       (chain-genesis over-clip is the safe fallback).
-- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New module
-      `data_status_hierarchical.py` with `get_hierarchical_drilldown(service, asset_group, window_start, window_end,
-      filters, expand_to_depth)` returning a tree shaped per the codex shard atom. Each leaf carries
+- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New module `data_status_hierarchical.py` with
+      `get_hierarchical_drilldown(service, asset_group, window_start, window_end,     filters, expand_to_depth)`
+      returning a tree shaped per the codex shard atom. Each leaf carries
       `{captured, empty_confirmed, attempted_failed, total, completion_pct, row_key, children, is_leaf}`. Reads the
       manifest once via `read_availability_index`; axis order from `SHARD_AXIS_MATRIX[(service, asset_group)]`.
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). New route
       `GET /api/data-status/drilldown/{service}/{asset_group}` accepts `start_date` / `end_date` / per-axis filters
       (`chain` / `venue` / `data_type` / `instrument_type` / `instrument_id` / `league_id` / `feature_group` /
       `timeframe` / `canonical_question_group`) + `expand_to_depth`. Lazy-load via filter query params: returns the
-      subtree rooted at the deepest matched filter level. Plus `GET /api/data-status/drilldown-pairs` enumerating
-      every supported `(service, asset_group)` from the SSOT.
+      subtree rooted at the deepest matched filter level. Plus `GET /api/data-status/drilldown-pairs` enumerating every
+      supported `(service, asset_group)` from the SSOT.
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
-      (per-category-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
-      accept partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
-- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in
-      `test_data_status_hierarchical.py` covering top-level axis routing for MTDS DEFI, filter-descent into subtree,
-      capture-status splits, window clipping, empty manifest, uncovered asset_group fallback, supported-pairs
-      enumeration.
+      (per-category-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already accept
+      partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
+- [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in `test_data_status_hierarchical.py`
+      covering top-level axis routing for MTDS DEFI, filter-descent into subtree, capture-status splits, window
+      clipping, empty manifest, uncovered asset_group fallback, supported-pairs enumeration.
 
 ### Phase 2 — deployment-ui hierarchical drill-down component
 
@@ -316,23 +315,24 @@ on whatever flags exist today as a degenerate case).
       new chain-clipped denominator yields (e.g. ~200 instead of 1084).
 - [x] [deployment-ui] P0 (shipped deployment-ui@209a41a). New `HierarchicalShardDrilldown.tsx` component (~250 LOC).
       Recursive: each level renders a list of expandable items; on first expand fires `getHierarchicalDrilldown(...)`
-      with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows `axis=value |
-      captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch on mount with
-      `expand_to_depth=1`. Plus `client.ts` API wrapper `getHierarchicalDrilldown` + `getDrilldownSupportedPairs` +
-      `DrilldownNode` / `DrilldownResponse` / `DrilldownPair` TypeScript interfaces (~100 LOC).
-- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). `DataStatusTab.tsx` — under each asset_group panel, below
-      the existing `BreakdownsAccordion`, renders a default-collapsed `<details>` "Hierarchical drill-down (shard
-      atom)" wrapping `<HierarchicalShardDrilldown ... />`. Pre-existing TS error in `DataStatusTab.tsx:5884`
-      (ShardCoordinate.day) fixed inline by spreading `{ ...schemaModal, day: "" }` at the SchemaModal call site
-      (schema is venue-level, not per-day).
-- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). Per-leaf CSV download link — `↓ csv` anchor on every leaf
-      row builds the `/data-status/download-shard-csv` URL via the existing `buildShardDownloadUrl` helper using
-      the leaf's `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner
-      already in place from the multi-axis plan Phase 3; no change to that surface.
+      with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows
+      `axis=value |     captured/total | completion_pct | empty/failed badges`. Leaf rows un-clickable. Top-level fetch
+      on mount with `expand_to_depth=1`. Plus `client.ts` API wrapper `getHierarchicalDrilldown` +
+      `getDrilldownSupportedPairs` + `DrilldownNode` / `DrilldownResponse` / `DrilldownPair` TypeScript interfaces (~100
+      LOC).
+- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). `DataStatusTab.tsx` — under each asset_group panel, below the
+      existing `BreakdownsAccordion`, renders a default-collapsed `<details>` "Hierarchical drill-down (shard atom)"
+      wrapping `<HierarchicalShardDrilldown ... />`. Pre-existing TS error in `DataStatusTab.tsx:5884`
+      (ShardCoordinate.day) fixed inline by spreading `{ ...schemaModal, day: "" }` at the SchemaModal call site (schema
+      is venue-level, not per-day).
+- [x] [deployment-ui] P0 (shipped deployment-ui@fc3268f). Per-leaf CSV download link — `↓ csv` anchor on every leaf row
+      builds the `/data-status/download-shard-csv` URL via the existing `buildShardDownloadUrl` helper using the leaf's
+      `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner already in place
+      from the multi-axis plan Phase 3; no change to that surface.
 - [ ] [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
-      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED** to a
-      follow-up Playwright walk; the local stack now renders the hierarchy at <http://localhost:5183/> so a manual
-      smoke is operator-doable today.
+      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED** to a follow-up
+      Playwright walk; the local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is
+      operator-doable today.
 
 ### Phase 3 — Per-shard download + missing surfacing
 
@@ -349,56 +349,52 @@ on whatever flags exist today as a degenerate case).
       tests pass.
 - [x] [deployment-ui] P1 (shipped deployment-ui@fc3268f). Deploy-Missing button on a leaf node calls
       `POST /api/data-status/deploy-missing-preview` with the leaf `row_key` and renders the returned `command` in a
-      copy-to-clipboard widget + per-shard `notes` (bundled vs per-instrument routing, tarball-refresh reminder,
-      per-VM shard-isolation note). NEW `src/components/DeployMissingButton.tsx` + `postDeployMissingPreview()` /
-      `getDeployMissingServices()` API client methods + `DeployMissingPreviewResponse` interface. The button
-      renders ONLY when `node.captured == 0` (the user's "deploy missing" semantic — captured leaves don't need
-      recovery).
+      copy-to-clipboard widget + per-shard `notes` (bundled vs per-instrument routing, tarball-refresh reminder, per-VM
+      shard-isolation note). NEW `src/components/DeployMissingButton.tsx` + `postDeployMissingPreview()` /
+      `getDeployMissingServices()` API client methods + `DeployMissingPreviewResponse` interface. The button renders
+      ONLY when `node.captured == 0` (the user's "deploy missing" semantic — captured leaves don't need recovery).
 
 **Auto-launch deferred** — the Deploy-Missing endpoint ships in **preview mode** (operator copies + runs the command
-from their authenticated terminal) rather than auto-launching VMs from the API server. Auto-launch needs an
-operations review of the deployment-api -> gcloud `roles/compute.instanceAdmin.v1` security boundary + a paired
-tarball-refresh step (`deployment-service/scripts/vm/create-code-tarballs.sh`) to ensure the new VM picks up the
-latest branch code. Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout's MVP needs.
+from their authenticated terminal) rather than auto-launching VMs from the API server. Auto-launch needs an operations
+review of the deployment-api -> gcloud `roles/compute.instanceAdmin.v1` security boundary + a paired tarball-refresh
+step (`deployment-service/scripts/vm/create-code-tarballs.sh`) to ensure the new VM picks up the latest branch code.
+Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout's MVP needs.
 
 ### Phase 4 — MTDS CLI shard-targeting
 
-- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--instrument-type` (singular filter) to
-      `cli/main.py` parser.
-- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--root` for bundled-chain data_types
-      (options_chain / futures_chain).
-- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--day` / `--date` for single-day mode (`--date`
-      is alias).
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--instrument-type` (singular filter) to `cli/main.py`
+      parser.
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--root` for bundled-chain data_types (options_chain /
+      futures_chain).
+- [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--day` / `--date` for single-day mode (`--date` is
+      alias).
 - [x] [market-tick-data-service] P1 (shipped MTDS@3e14163). Added `--shard-key` + new module `cli/shard_key.py` with
       `parse_shard_key()` + `decompose_shard_key()` helpers. 14/14 unit tests pass covering parse / whitespace strip /
-      bundled-chain routing / explicit-flag-precedence / `--date` alias fold / conflict detection. Routes the 5th
-      field to `--root` for bundled data_types and `--instrument-ids` otherwise; data_type drives the routing.
-- [x] [market-tick-data-service] P1 (shipped MTDS@8a4f3d6). Per-handler `decompose_shard_key` wire-in to 5
-      high-traffic handlers covering the full deploy-missing flow:
-      * `tick_data_handler` (CeFi spot/perp/options/futures + TradFi)
-      * `lending_indices_handler` (DeFi)
-      * `dex_pools_handler` (DeFi)
-      * `dex_swaps_handler` (DeFi)
-      * `perp_funding_handler` (DeFi)
-      Each handler's `preflight()` calls `decompose_shard_key(self.args)` as the first step so the unpacked filters
-      (`--venues` / `--data-types` / `--instrument-ids` / `--start-date` / `--end-date`) are visible to the rest
-      of `process()` + the orchestrator's `preflight_captured_atoms` skip path. Plus uniform `--instrument-ids`
-      routing for bundled data_types so the orchestrator's `_atom = _iid or _und` matching honors the filter for
-      both per-instrument AND bundled chain shards. 14/14 shard_key tests + 14/14 handler tests pass. Remaining
-      ~15 handlers (gas_fee, oracle_prices, lst_rates, evm_defi, solana_defi, eigenlayer_rewards, vault_share_price,
-      bridge_events, governance_events, mev_events, flash_loan_events, liquidations, liquidation_events,
-      staking_yields, position_data, token_transfers, data_manifest) wire the same one-liner as a follow-up.
+      bundled-chain routing / explicit-flag-precedence / `--date` alias fold / conflict detection. Routes the 5th field
+      to `--root` for bundled data_types and `--instrument-ids` otherwise; data_type drives the routing.
+- [x] [market-tick-data-service] P1 (shipped MTDS@8a4f3d6). Per-handler `decompose_shard_key` wire-in to 5 high-traffic
+      handlers covering the full deploy-missing flow: _ `tick_data_handler` (CeFi spot/perp/options/futures + TradFi) _
+      `lending_indices_handler` (DeFi) _ `dex_pools_handler` (DeFi) _ `dex_swaps_handler` (DeFi) \*
+      `perp_funding_handler` (DeFi) Each handler's `preflight()` calls `decompose_shard_key(self.args)` as the first
+      step so the unpacked filters (`--venues` / `--data-types` / `--instrument-ids` / `--start-date` / `--end-date`)
+      are visible to the rest of `process()` + the orchestrator's `preflight_captured_atoms` skip path. Plus uniform
+      `--instrument-ids` routing for bundled data_types so the orchestrator's `_atom = _iid or _und` matching honors the
+      filter for both per-instrument AND bundled chain shards. 14/14 shard_key tests + 14/14 handler tests pass.
+      Remaining ~15 handlers (gas_fee, oracle_prices, lst_rates, evm_defi, solana_defi, eigenlayer_rewards,
+      vault_share_price, bridge_events, governance_events, mev_events, flash_loan_events, liquidations,
+      liquidation_events, staking_yields, position_data, token_transfers, data_manifest) wire the same one-liner as a
+      follow-up.
 
 ### Phase 5 — Codex docs + plan close
 
-- [x] [unified-trading-pm] P2 (this commit). New codex doc
-      `codex/02-data/data-status-drilldown-hierarchy.md` — drill-down hierarchy SSOT with per-asset_group depth table,
-      backend endpoint contract, frontend component contract, per-leaf download + Deploy-Missing surgical-recovery
-      flow, failure modes the drill-down catches. Created as a NEW doc rather than editing
-      `availability-manifest-and-data-status.md` to respect the active concurrent-edit on that file.
-- [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with
-      `--shard-key` convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi
-      options bundle / DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
+- [x] [unified-trading-pm] P2 (this commit). New codex doc `codex/02-data/data-status-drilldown-hierarchy.md` —
+      drill-down hierarchy SSOT with per-asset_group depth table, backend endpoint contract, frontend component
+      contract, per-leaf download + Deploy-Missing surgical-recovery flow, failure modes the drill-down catches. Created
+      as a NEW doc rather than editing `availability-manifest-and-data-status.md` to respect the active concurrent-edit
+      on that file.
+- [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
+      convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
+      DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
 - [ ] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
       repos.
 
@@ -436,120 +432,102 @@ latest branch code. Successor plan TBD; Phase 3's preview shape is sufficient fo
 
 ## Audit findings 2026-05-07 evening (drilldown + summary alignment per codex shard atoms)
 
-End-to-end audit of deployment-UI drilldowns + Cloud Run rollup summaries vs the codex
-shard-key matrix for MTDS + every features-\* service. Three real drifts found, one
-fixed in this session, two recorded as named-successor follow-ups.
+End-to-end audit of deployment-UI drilldowns + Cloud Run rollup summaries vs the codex shard-key matrix for MTDS + every
+features-\* service. Three real drifts found, one fixed in this session, two recorded as named-successor follow-ups.
 
 ### Fixed this session
 
-- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-onchain-service", DEFI)]`
-      referenced ``protocol_id`` as a shard axis. ``protocol_id`` is **NOT** in UTL
-      ``_ROW_KEY_COLUMNS`` (manifest_writer.py) — i.e. not a real manifest column. The
-      hierarchical-drilldown ``_filter_manifest`` silently no-ops on axes missing from
-      the manifest DataFrame, so every features-onchain DEFI drilldown collapsed at that
-      level. Per the codex DeFi shard atom
-      ``(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)``
-      the per-instrument / per-protocol slot is the canonical ``instrument_id`` column —
-      switched the axis to ``instrument_id``. 32/32 unit tests pass.
+- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-onchain-service", DEFI)]` referenced `protocol_id`
+      as a shard axis. `protocol_id` is **NOT** in UTL `_ROW_KEY_COLUMNS` (manifest_writer.py) — i.e. not a real
+      manifest column. The hierarchical-drilldown `_filter_manifest` silently no-ops on axes missing from the manifest
+      DataFrame, so every features-onchain DEFI drilldown collapsed at that level. Per the codex DeFi shard atom
+      `(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)` the per-instrument /
+      per-protocol slot is the canonical `instrument_id` column — switched the axis to `instrument_id`. 32/32 unit tests
+      pass.
 
 ### Phase 6 — Per-instrument scroll/pagination + bundled root-grouping (NEW 2026-05-07 evening, operator-flagged)
 
-**Operator finding 2026-05-07 evening**: in the data-status drilldown, when `instrument_id` IS a shard
-axis (MTDS / MDPS CeFi PERPETUAL+SPOT, TradFi ETFs, DeFi per-instrument data_types), the UI shows only
-a subset of instruments. The manifest carries every shard, but the API caps each node's children at
-`_MAX_CHILDREN_PER_NODE = 500` (`deployment-api/deployment_api/services/data_status_hierarchical.py:57`)
-and the UI does not paginate — operators cannot reach the truncated tail. **Two related shape problems**:
+**Operator finding 2026-05-07 evening**: in the data-status drilldown, when `instrument_id` IS a shard axis (MTDS / MDPS
+CeFi PERPETUAL+SPOT, TradFi ETFs, DeFi per-instrument data_types), the UI shows only a subset of instruments. The
+manifest carries every shard, but the API caps each node's children at `_MAX_CHILDREN_PER_NODE = 500`
+(`deployment-api/deployment_api/services/data_status_hierarchical.py:57`) and the UI does not paginate — operators
+cannot reach the truncated tail. **Two related shape problems**:
 
-1. **No pagination at the per-instrument level.** Cap is silent; venues with 5000+ perp instruments
-   (e.g. BINANCE-FUTURES) lose the alphabetic tail. Manifest has them; drilldown hides them.
+1. **No pagination at the per-instrument level.** Cap is silent; venues with 5000+ perp instruments (e.g.
+   BINANCE-FUTURES) lose the alphabetic tail. Manifest has them; drilldown hides them.
 2. **Bundled options/futures drilldown collapses at empty `instrument_id`.** For
-   `data_type ∈ {options_chain, futures_chain}` the manifest writer leaves `instrument_id=""` and
-   populates `underlying=<root>` (per
-   `availability-manifest-and-data-status.md` § "underlying vs instrument_id"). The drilldown's
+   `data_type ∈ {options_chain, futures_chain}` the manifest writer leaves `instrument_id=""` and populates
+   `underlying=<root>` (per `availability-manifest-and-data-status.md` § "underlying vs instrument_id"). The drilldown's
    `_children_for_axis` filters out empty-string values:
-   `values = sorted(v for v in rows[axis].astype(str).unique() if v != "" and v != "nan")`
-   so bundled shards never appear at the `instrument_id` level — operator sees zero leaves under
-   `data_type=options_chain` even though every root has manifest rows.
+   `values = sorted(v for v in rows[axis].astype(str).unique() if v != "" and v != "nan")` so bundled shards never
+   appear at the `instrument_id` level — operator sees zero leaves under `data_type=options_chain` even though every
+   root has manifest rows.
 
 #### Tasks
 
 - [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). Add `child_offset: int = 0` and
-      `child_limit: int | None = None` query params to
-      `GET /api/data-status/drilldown/{service}/{asset_group}`. When `child_limit` is non-null,
-      slice the top-level children list at `[child_offset : child_offset + child_limit]`. Returns
-      `total_top_axis_children: int` (unfiltered count) so the UI can render "showing N–M of T" +
-      load-more.
-- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). New
-      `_coalesce_instrument_id_from_underlying` helper in `data_status_hierarchical.py` runs
-      before `_children_for_axis` to coalesce `instrument_id <- underlying` for rows where
-      `instrument_id` is empty. Read-time virtualisation: bundled-data_type rows surface as
-      children at the `instrument_id` level using their root (BTC, ETH for Deribit options; ESH4,
-      NQH4 for CME futures), matching the codex shard atom
-      `(venue, data_type, options_chain/futures_chain, root, day)`. Leaf row_key carries
+      `child_limit: int | None = None` query params to `GET /api/data-status/drilldown/{service}/{asset_group}`. When
+      `child_limit` is non-null, slice the top-level children list at `[child_offset : child_offset + child_limit]`.
+      Returns `total_top_axis_children: int` (unfiltered count) so the UI can render "showing N–M of T" + load-more.
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). New `_coalesce_instrument_id_from_underlying` helper in
+      `data_status_hierarchical.py` runs before `_children_for_axis` to coalesce `instrument_id <- underlying` for rows
+      where `instrument_id` is empty. Read-time virtualisation: bundled-data_type rows surface as children at the
+      `instrument_id` level using their root (BTC, ETH for Deribit options; ESH4, NQH4 for CME futures), matching the
+      codex shard atom `(venue, data_type, options_chain/futures_chain, root, day)`. Leaf row_key carries
       `instrument_id=<root>`; manifest writer unchanged.
-- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). Bumped `_MAX_CHILDREN_PER_NODE` from
-      500 to 10_000. Cap remains a defensive bound; pagination is the primary mechanism.
-- [x] [deployment-ui] P0 (shipped deployment-ui@2f1e669). `HierarchicalShardDrilldown.tsx`
-      requests an initial `topPageSize=200` page; renders a "Show more (N remaining)" button at
-      the bottom of the tree when `total_top_axis_children > tree.length`, re-fetching with
-      `child_offset = tree.length` and appending. `client.ts` `getHierarchicalDrilldown` accepts
-      `child_offset` + `child_limit`; `DrilldownResponse` carries `total_top_axis_children`.
+- [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). Bumped `_MAX_CHILDREN_PER_NODE` from 500 to 10_000. Cap
+      remains a defensive bound; pagination is the primary mechanism.
+- [x] [deployment-ui] P0 (shipped deployment-ui@2f1e669). `HierarchicalShardDrilldown.tsx` requests an initial
+      `topPageSize=200` page; renders a "Show more (N remaining)" button at the bottom of the tree when
+      `total_top_axis_children > tree.length`, re-fetching with `child_offset = tree.length` and appending. `client.ts`
+      `getHierarchicalDrilldown` accepts `child_offset` + `child_limit`; `DrilldownResponse` carries
+      `total_top_axis_children`.
 - [x] [deployment-api] P0 (shipped deployment-api@aecb6a8). 6 new unit tests in
-      `TestPaginationAndBundledRootVirtualisation` covering total count, paged offset, last
-      partial page, no-limit default, bundled-options surfacing as roots, and per-instrument rows
-      unchanged by virtualisation. 19/19 pass.
-- [ ] [deployment-ui] P1. Visual smoke (Playwright) — BINANCE-FUTURES PERPETUAL drilldown shows
-      >500 instruments via load-more; CME `futures_chain` drilldown shows ESH4/NQH4/etc as roots;
-      DERIBIT `options_chain` drilldown shows BTC/ETH as roots. **DEFERRED** to follow-up turn
-      (operator-doable today via `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`).
+      `TestPaginationAndBundledRootVirtualisation` covering total count, paged offset, last partial page, no-limit
+      default, bundled-options surfacing as roots, and per-instrument rows unchanged by virtualisation. 19/19 pass.
+- [ ] [deployment-ui] P1. Visual smoke (Playwright) — BINANCE-FUTURES PERPETUAL drilldown shows >500 instruments via
+      load-more; CME `futures_chain` drilldown shows ESH4/NQH4/etc as roots; DERIBIT `options_chain` drilldown shows
+      BTC/ETH as roots. **DEFERRED** to follow-up turn (operator-doable today via
+      `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`).
 
 ### Open drifts (named successors)
 
-- [x] [UAC + deployment-api] P1 (shipped UAC@81de41a + deployment-api@18ac644 2026-05-07
-      late-evening). **Drilldown order aligned with codex shard atom — operator finding.**
-      Restored `instrument_type` to `SHARD_AXIS_MATRIX` for MTDS / MDPS CeFi+TradFi (it IS
-      shard-worthy: per-adapter failure isolation + per-VM-cluster concurrency); reordered
-      shard tuples so the drilldown follows the codex per-asset-group navigation flow:
-      * MTDS / MDPS CeFi+TradFi: `(venue, data_type, instrument_type, instrument_id)`
-      * MTDS / MDPS DeFi: `(venue, chain, data_type, instrument_id)` (instrument_type stays
-        display-only — POOL/LENDING/LST is redundant with data_type for navigation).
-      * Sports / prediction: unchanged.
-      A separate `DRILLDOWN_AXIS_ORDER` SSOT was NOT needed — the SHARD_AXIS_MATRIX is now
-      the codex tree. UAC tests 32/32 pass; deployment-api hierarchical tests 23/23 pass.
+- [x] [UAC + deployment-api] P1 (shipped UAC@81de41a + deployment-api@18ac644 2026-05-07 late-evening). **Drilldown
+      order aligned with codex shard atom — operator finding.** Restored `instrument_type` to `SHARD_AXIS_MATRIX` for
+      MTDS / MDPS CeFi+TradFi (it IS shard-worthy: per-adapter failure isolation + per-VM-cluster concurrency);
+      reordered shard tuples so the drilldown follows the codex per-asset-group navigation flow: _ MTDS / MDPS
+      CeFi+TradFi: `(venue, data_type, instrument_type, instrument_id)` _ MTDS / MDPS DeFi:
+      `(venue, chain, data_type, instrument_id)` (instrument_type stays display-only — POOL/LENDING/LST is redundant
+      with data_type for navigation). \* Sports / prediction: unchanged. A separate `DRILLDOWN_AXIS_ORDER` SSOT was NOT
+      needed — the SHARD_AXIS_MATRIX is now the codex tree. UAC tests 32/32 pass; deployment-api hierarchical tests
+      23/23 pass.
 
-- [ ] [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis
-      but not a real manifest column.** Same bug class as the protocol_id drift — appears
-      in `SHARD_AXIS_MATRIX` for prediction asset_group across instruments-service / MTDS /
-      MDPS / features-cross-instrument, but is NOT in UTL `_ROW_KEY_COLUMNS`. **Named successor**:
-      `predictions_master_2026_05_07.plan.md` (predictions Plan A — adds the column +
-      Polymarket lifecycle). Until that lands, drilldown silently no-ops at the
-      canonical_question_group level for every prediction service. NOT a regression — this is
-      the codified temporary state per CLAUDE.md "Temporary state must have a named successor
-      plan" rule.
+- [ ] [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis but not a real manifest
+      column.** Same bug class as the protocol_id drift — appears in `SHARD_AXIS_MATRIX` for prediction asset_group
+      across instruments-service / MTDS / MDPS / features-cross-instrument, but is NOT in UTL `_ROW_KEY_COLUMNS`.
+      **Named successor**: `predictions_master_2026_05_07.plan.md` (predictions Plan A — adds the column + Polymarket
+      lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level for every prediction
+      service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
+      successor plan" rule.
 
-- [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in
-      `SHARD_AXIS_MATRIX` exists in UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist
-      of v8-pending-columns like `canonical_question_group`). Would have caught both
-      `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
+- [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
+      UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist of v8-pending-columns like `canonical_question_group`).
+      Would have caught both `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
       lands so the allowlist isn't mostly-empty.
 
-- [ ] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md`
-      § "Schema v6 (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today
-      (added `fixture_id`, `job_id` per the multi-axis correction 2026-05-06). The doc's
-      "v5 → v6" + "Per-VM shard layout" sections document v7 columns but the heading +
-      version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes.
+- [ ] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
+      (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today (added `fixture_id`, `job_id` per the
+      multi-axis correction 2026-05-06). The doc's "v5 → v6" + "Per-VM shard layout" sections document v7 columns but
+      the heading + version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes.
 
-- [ ] [deployment-api / codex finding] P1. **Rollup-side metric inconsistency** (already
-      flagged in `availability-manifest-and-data-status.md` § "Rollup-side metric
-      inconsistency 2026-05-07 — open finding"). The offline rollup at
-      `gs://*-data-status-rollups/{service}/full.json.gz` emits per-(combined-venue) DEFI
-      entries where `dates_found` is non-zero for venues that have ZERO matching manifest
-      rows (e.g. `AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,
-      empty_confirmed: 0, attempted_failed: 0}`). The "31" comes from a different source
-      than `capture_status_counts`. Per the codex finding, the rollup worker's
-      per-(combined-venue) `dates_found` must derive from the manifest row count, not from
-      the expected denominator. Owner: data-status multi-axis stream per
-      `infrastructure_master_2026_05_07.plan.md`.
+- [ ] [deployment-api / codex finding] P1. **Rollup-side metric inconsistency** (already flagged in
+      `availability-manifest-and-data-status.md` § "Rollup-side metric inconsistency 2026-05-07 — open finding"). The
+      offline rollup at `gs://*-data-status-rollups/{service}/full.json.gz` emits per-(combined-venue) DEFI entries
+      where `dates_found` is non-zero for venues that have ZERO matching manifest rows (e.g.
+      `AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,     empty_confirmed: 0, attempted_failed: 0}`).
+      The "31" comes from a different source than `capture_status_counts`. Per the codex finding, the rollup worker's
+      per-(combined-venue) `dates_found` must derive from the manifest row count, not from the expected denominator.
+      Owner: data-status multi-axis stream per `infrastructure_master_2026_05_07.plan.md`.
 
 ### Phase 7 — Carried follow-ups from `defi_launcher_audit_2026_05_07` (NEW 2026-05-07)
 
@@ -557,37 +535,35 @@ The launcher-audit issue surfaced 5 todos not covered by Phase 6 (which targets 
 distinct from the **venue-detail panel** + **per-league detail** + **rollup vs manifest** widgets). The codex
 documentation todo already shipped at PM@372e23aa. The remaining 4 are carried here for ownership transfer:
 
-- [ ] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated
-      `top_instruments` on the venue-detail endpoint. Add `instrument_offset: int = 0` +
-      `instrument_limit: int | None = None` query params; default `instrument_limit = 200` (matches drilldown UI
-      page size); return `total_instruments_unfiltered: int` so the UI can render "showing N–M of T" + a
-      load-more button. Bump cap from 30 → 200 (or remove with explicit pagination). Distinct from the
-      hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail panel sample.
-      Source: [`issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
-- [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the
-      `top_instruments` rendering. When `total_instruments_unfiltered > top_instruments.length`, render
-      "Show more (N remaining)" + count label. Mirror the pattern from `HierarchicalShardDrilldown.tsx:218`
-      shipped in Phase 6. Source: launcher-audit § Q5 todo 2.
-- [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a
-      sample preview but the UI should label it "sample of 50 / total N missing" rather than "the missing
-      dates". Pure label fix, no behaviour change. Source: launcher-audit § Q5 todo 3.
-- [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response
-      so the UI can render a tooltip explaining where each number came from and why they may differ until
-      writegate Phase 3.D.4 `--apply-write` lands per asset_group. Defensive observability — no behaviour
-      change. Source: launcher-audit § Q5 todo 5. Closes once writegate Phase 3.D.4 `--apply-write` ships
-      across all 5 asset_groups (rollup and manifest converge).
+- [ ] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated `top_instruments` on
+      the venue-detail endpoint. Add `instrument_offset: int = 0` + `instrument_limit: int | None = None` query params;
+      default `instrument_limit = 200` (matches drilldown UI page size); return `total_instruments_unfiltered: int` so
+      the UI can render "showing N–M of T" + a load-more button. Bump cap from 30 → 200 (or remove with explicit
+      pagination). Distinct from the hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail
+      panel sample. Source: [`issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) §
+      Q5 todo 1.
+- [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
+      rendering. When `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count
+      label. Mirror the pattern from `HierarchicalShardDrilldown.tsx:218` shipped in Phase 6. Source: launcher-audit §
+      Q5 todo 2.
+- [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
+      preview but the UI should label it "sample of 50 / total N missing" rather than "the missing dates". Pure label
+      fix, no behaviour change. Source: launcher-audit § Q5 todo 3.
+- [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
+      can render a tooltip explaining where each number came from and why they may differ until writegate Phase 3.D.4
+      `--apply-write` lands per asset_group. Defensive observability — no behaviour change. Source: launcher-audit § Q5
+      todo 5. Closes once writegate Phase 3.D.4 `--apply-write` ships across all 5 asset_groups (rollup and manifest
+      converge).
 
 ### Confirmed correct (no drift)
 
-- `MANIFEST_SCHEMA_VERSION = 7` + `_ROW_KEY_COLUMNS` includes `asset_group`, `fixture_id`,
-  `job_id`, `chain`, `instrument_id`, etc. Earlier audit-agent claim that `asset_group`
-  was missing was **wrong** — verified directly at
+- `MANIFEST_SCHEMA_VERSION = 7` + `_ROW_KEY_COLUMNS` includes `asset_group`, `fixture_id`, `job_id`, `chain`,
+  `instrument_id`, etc. Earlier audit-agent claim that `asset_group` was missing was **wrong** — verified directly at
   `unified-trading-library/unified_trading_library/manifest_writer.py:687-717`.
-- 15 services in the Cloud Run rollup worker hardcoded list match the SHARD_AXIS_MATRIX
-  service set; 62 (service, asset_group) pairs declared, all covered.
-- `SHARD_AXIS_MATRIX` correctly refines the codex shard-key matrix per the multi-axis
-  correction (e.g. instrument_type demoted to DISPLAY for MTDS, sports fixture_id /
-  prediction market_id row-level not shard).
+- 15 services in the Cloud Run rollup worker hardcoded list match the SHARD_AXIS_MATRIX service set; 62 (service,
+  asset_group) pairs declared, all covered.
+- `SHARD_AXIS_MATRIX` correctly refines the codex shard-key matrix per the multi-axis correction (e.g. instrument_type
+  demoted to DISPLAY for MTDS, sports fixture_id / prediction market_id row-level not shard).
 
 ## References
 
