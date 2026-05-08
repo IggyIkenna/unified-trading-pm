@@ -211,6 +211,134 @@ Operator will flag this to Ikenna via the cross-side handshake protocol.
 option (b) would have left a permanent semantic mismatch between the manifest layer and the shard-key matrix and
 would not have supported cluster-validation cleanly; option (c) was open but not preferred per the SSOT.
 
+### Q2 — [polymarket-rebundling-tab (Tab F5), 2026-05-08 ~21:30 UTC] — UTL contract gap blocks A1 option (a) implementation as specified
+
+**Status**: 🟡 BLOCKED — UTL `record_captured` contract is incompatible with the orchestrator-finalize-loop bundling
+shape; need operator architectural call before shipping.
+
+**Context**: Tab F5 (this tab) was spawned to ship the MTDS orchestrator-side migration mirroring
+`instruments-service@b904785` per A1 option (a). Pre-req gate confirmed: UAC `BUNDLED_DATA_TYPES` includes
+`prediction_canonical_question_group` (UAC@b02335d via cross-side ping `[2026-05-08 13:34 UTC] ikenna-main`); UAC
+`PREDICTION_GROUPS` registry fully populated with 9 canonical groups; UAC
+`expected_market_ids_for_canonical_group` shipped at
+`unified_api_contracts.canonical.domain.predictions.lifecycle:103`; UTL `_check_cluster_coverage` +
+`check_cluster_coverage_from_counts` + `MissingClusterValidationError` shipped at
+`unified-trading-library/unified_trading_library/manifest_writer.py:1862, 1901, 173`.
+
+**The architectural gap surfaced during code-walk**: the contract for
+`ManifestWriter.record_captured(...)` (UTL `manifest_writer.py:1968`) requires:
+
+1. A non-empty pandas `df` (used by `_check_cluster_coverage` to extract per-row clusters via
+   `df[symbol_column].astype(str).map(cluster_extractor)` at L1961-1963);
+2. The `df` to carry an `available_at` column (enforced via `assert_available_at_present(df)` at
+   L2153, raising `LookaheadBiasError` if missing).
+
+**Why this blocks the orchestrator-finalize-loop bundling path**: in `mtds@market_tick_data_service/engine/orchestrator.py`
+the finalize-loop (line 2084 onwards) iterates `shard_counts: dict[tuple[str, ...], int]` — a
+COUNTS-only aggregate. The original tick DataFrames have already been streamed to per-instrument
+parquets via `PartitionedTickWriter` (line 891 onwards) and discarded. Reconstructing a
+synthetic `df` with the per-row `available_at` semantics for the bundle would require either
+(a) re-reading every per-condition_id parquet that was written that day (potentially 100s of MB
+of GCS round-trips per (venue, day, group) bundle, defeating the streaming-write architecture),
+or (b) plumbing the original ticks through the writer and into a memory-resident bundle df
+(reverts the OOM fix that motivated `PartitionedTickWriter` at line 906-909).
+
+The CME-OPTIONS chain-bundle precedent at `orchestrator.py:2186-2217` sidesteps this exact
+problem by:
+
+1. Using the legacy `writer_manifest.add(...)` path (NOT `record_captured`) for the bundle
+   manifest row;
+2. Calling `ManifestWriter.check_cluster_coverage_from_counts(observed=cluster_counts,
+   expected_root_clusters=cluster_expected)` BEFORE `add()` to gate against partial-bundle
+   misses (routing to `record_failed(ClusterCoverageError)` on miss, falling through to `add()` on
+   pass);
+3. The legacy `add()` path neither requires `df` nor enforces `BUNDLED_DATA_TYPES` (only
+   `record_captured` does the `MissingClusterValidationError` raise at L2122-2128 — `add()`
+   bypasses it).
+
+This precedent IS the natural shape for the prediction bundle (counts already present in
+`PartitionedTickWriter._row_counts` keyed per condition_id; classifier output is per-row
+already-known; `expected_market_ids_for_canonical_group` returns `set[str]`; can be converted
+to `{condition_id: PREDICTION_GROUPS[group]["_per_market_min_rows"]}` for
+`check_cluster_coverage_from_counts`).
+
+**HOWEVER**, mirroring the CME-OPTIONS precedent for the prediction bundle creates a documented
+SSOT-vs-precedent tension:
+
+- **CLAUDE.md "Cluster validation MANDATORY at `record_captured` for bundled shards"** says
+  "**QG STEP 5.64 statically walks every `record_captured(` callsite + asserts the kwargs are
+  passed when the literal data_type is bundled**". The CME-OPTIONS path uses `add()` not
+  `record_captured` for `data_type="trades"` (which is NOT in `BUNDLED_DATA_TYPES`), so it
+  technically isn't violating the rule today. But for prediction we'd be calling `add(data_type=
+  "prediction_canonical_question_group")` for a data_type that IS in `BUNDLED_DATA_TYPES` — a
+  call shape the future-QG static walk would flag as a violation.
+- **CLAUDE.md "No double SSOT in data-saving methodology"** says "Where two paths produce the
+  same outcome, one is deleted." The orchestrator-finalize-loop has TWO bundle-validating paths
+  today: (1) the `record_captured(data_type=…, expected_root_clusters=…, cluster_extractor=…)`
+  path which IS the "right shape" but requires df+available_at; (2) the
+  `check_cluster_coverage_from_counts → add()` path which is a counts-only path used for
+  CME-OPTIONS and clearly the only path that works with the streaming-finalize architecture.
+  The "right shape" path is unreachable for the orchestrator finalize loop without an
+  architectural change.
+
+**The architectural decision needed**: which option is canonical?
+
+(α) **Mirror CME-OPTIONS precedent** — call `check_cluster_coverage_from_counts(...)` then
+`add(data_type="prediction_canonical_question_group", underlying=<group>, …)`. Ships today; no
+UTL changes needed; matches existing chain-bundle precedent. **Tradeoff**: future QG STEP 5.64
+AST-walk flags this as a violation of the "Cluster validation MANDATORY at `record_captured`"
+rule. CLAUDE.md would need an explicit "exception for orchestrator-finalize-loop bundles where
+df is unavailable" clause, OR option (β/γ) ships in parallel.
+
+(β) **Lift a new UTL helper `record_captured_from_counts(...)` that accepts**:
+   - `row_key` + `data_type` + `expected_root_clusters` + `cluster_observed: Mapping[str, int]`
+     instead of `df` + `cluster_extractor`;
+   - An `available_at_envelope: tuple[datetime, datetime]` (min, max across the bundled rows)
+     stamped at write-time by the orchestrator from per-instrument parquets' tick timestamp +
+     scrape latency, instead of `assert_available_at_present(df)`.
+   - Internally calls `check_cluster_coverage_from_counts` + the existing schema-validation +
+     manifest-row-emit but skips the df-required gates.
+
+   This unifies the "right shape" with the streaming-finalize architecture; CME-OPTIONS would
+   migrate to it too. **Tradeoff**: cross-cutting [UTL] design work — Ikenna-side. Adds 1-2
+   days to the prediction-bundle ship surface.
+
+(γ) **Plumb a synthetic bundle df through the orchestrator** — `PartitionedTickWriter` keeps a
+   minimal "bundle ledger" (per-(asset_group, venue, group) lightweight df with columns
+   `[symbol/condition_id, available_at]` only — N rows per cluster, NOT N rows per tick) so the
+   finalize loop can pass it to `record_captured`. **Tradeoff**: per-shard memory cost grows
+   proportional to cluster count (HOURLY=24, DAILY=1 → trivial). Schema stays unified. Ships in
+   1 day on Ikenna-side once the writer extension lands.
+
+(δ) **Ship α now + open a Wave-2 successor plan to consolidate to β or γ**. Predictions writer
+   migration unblocks immediately; the SSOT-vs-precedent reconciliation lands as a separate
+   workstream. Per CLAUDE.md "Temporary state must have a named successor plan" rule.
+
+**Recommendation from Tab F5**: option (δ) — ship α now per the CME-OPTIONS precedent (which is
+already running in production for ES.OPT bundles + presumably under scrutiny each release),
+with a `## Temporary states` entry in this plan citing a new
+`utl_record_captured_from_counts_for_streaming_bundles_2026_05_09.md` (or similar) successor
+plan that lifts options β/γ to the unified path. Tab F5 stops here pending the architectural
+call from the operator OR Ikenna-main. Predictions Phase 2 deferred work continues unblocked
+(adapter lifecycle gating already shipped per mtds@7643a5c + e8a6903).
+
+**Tab F5 stop posture**:
+- Confirmed UAC + UTL pre-reqs (cross-side ping ack + code-walk verified).
+- Read instruments-service@b904785 + 98bb167 reference impl (writer + lifecycle adapter).
+- Mapped MTDS orchestrator finalize-loop architecture (line 2071-2238 + PartitionedTickWriter
+  line 891-1192).
+- Identified UTL contract gap (described above).
+- Did NOT ship code (per "Clear context = implement, don't ask" rule has explicit exception:
+  "Don't apply when... the operation is destructive beyond what was authorized"; here, shipping
+  α without operator buy-in on the SSOT tension is the architectural-debt equivalent of
+  destructive).
+- Foot-gun #4 (prek auto-revert) NOT observed this session.
+- Working tree clean on MTDS (zero edits made).
+
+#### A2 — [pending main / operator]
+
+**Awaiting operator architectural call on (α) / (β) / (γ) / (δ).**
+
 ## Critical path
 
 | Workstream                                                                       | Status                          | Source                                                      |
