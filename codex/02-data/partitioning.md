@@ -180,7 +180,8 @@ Used by market-tick-data-service and market-data-processing-service:
 **Bundled data_types require cluster validation** at `ManifestWriter.record_captured` per writegate plan Phase 1A
 (`expected_root_clusters` + `cluster_extractor` kwargs MANDATORY; UTL guard raises `MissingClusterValidationError` if
 absent; QG STEP 5.64 statically checks). See
-[`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md) `§2 Write-gate quartet at record_captured`.
+[`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
+`§2 Write-gate quartet at record_captured`.
 
 ### instrument_type
 

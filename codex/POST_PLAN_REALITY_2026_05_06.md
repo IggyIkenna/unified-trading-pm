@@ -66,8 +66,8 @@ to be read with this doc as the override.
 
 Read these before any doc edit + before any code change in the affected scopes:
 
-- [`writegate_honest_coverage_endtoend_2026_05_06.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
-  — primary contract change to `ManifestWriter.record_captured` covering MDPS empty-output A/B/C, cluster validation
+- [`writegate_honest_coverage_endtoend_2026_05_06.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) —
+  primary contract change to `ManifestWriter.record_captured` covering MDPS empty-output A/B/C, cluster validation
   mandatory, sports per-fixture_id sharding, sports `available_at` correctness, MDPS v6 columns wiring, retrospective
   migration. Status: drafted, Phase 0 audit synthesised, Phase 2.B amendment F pending Ikenna review.
 - [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
@@ -127,11 +127,11 @@ Read these before any doc edit + before any code change in the affected scopes:
 
 ### Sports (per-fixture)
 
-- **Shard atom**: `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is a row-level column
-  inside the parquet, NOT a shard axis (per Q1 resolution; supersedes the earlier 2026-05-06 per-fixture sharding
-  proposal). Per-fixture data_types (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
+- **Shard atom**: `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is a row-level column inside
+  the parquet, NOT a shard axis (per Q1 resolution; supersedes the earlier 2026-05-06 per-fixture sharding proposal).
+  Per-fixture data*types (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
   `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`) use cluster validation
-  (`cluster_extractor=lambda row: row["fixture_id"]` or `bookmaker` for ODDS_*) to enforce per-fixture coverage within
+  (`cluster_extractor=lambda row: row["fixture_id"]` or `bookmaker` for ODDS*\*) to enforce per-fixture coverage within
   the parquet. Aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, etc. share the same shard atom (no
   cluster validation needed for inherently-aggregate data). Avoids ~10× manifest-row inflation vs treating `fixture_id`
   as a shard axis.
@@ -163,8 +163,8 @@ Read these before any doc edit + before any code change in the affected scopes:
 - **Post-plan shard atom**:
   `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` —
   `market_id` is a row-level column inside the parquet, NOT a shard axis (per Q1 resolution). Cluster validation with
-  `cluster_extractor=lambda row: row["market_id"]` enforces per-canonical-question coverage within the bundle.
-  Migration in Plan A predictions.
+  `cluster_extractor=lambda row: row["market_id"]` enforces per-canonical-question coverage within the bundle. Migration
+  in Plan A predictions.
 - **Canonical question groups**: `CanonicalQuestionGroup` enum (UAC) — `BTC_UP_DOWN_HOURLY` (24/day),
   `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `ELECTION_PRESIDENT_2028`, etc. Long tail handled by classifier with
   stability hash; headline markets handled by `POLYMARKET_CONDITION_ID_TO_GROUP` / `KALSHI_TICKER_TO_GROUP` overrides.
@@ -195,7 +195,7 @@ before believing anything specific in the linked doc.
 | `02-data/prediction-schema-paths.md`               | Pre-canonical_question_group; describes per-base_asset Polymarket sharding                                                                                                                            |
 | `04-architecture/sports-integration-plan.md`       | Pre-(per-fixture sharding)                                                                                                                                                                            |
 | `04-architecture/asset-class-ownership.md`         | Sports section pre-(per-fixture sharding)                                                                                                                                                             |
-| `06-coding-standards/validation-and-errors.md`     | Merged 2026-05-08 (D.5) — supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output decision + cluster validation pillar both included.   |
+| `06-coding-standards/validation-and-errors.md`     | Merged 2026-05-08 (D.5) — supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output decision + cluster validation pillar both included.  |
 | `00-SSOT-INDEX.md`                                 | Top-level pointer doc — needs to surface this post-plan doc + the active plans                                                                                                                        |
 
 ---
