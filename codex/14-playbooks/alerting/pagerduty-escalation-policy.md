@@ -4,6 +4,11 @@ scope: [engineer, operator, on-call]
 
 # PagerDuty escalation policy
 
+> **Severity vocabulary SSOT** — see [`README.md` § Severity glossary](README.md#severity-glossary) for the canonical
+> mapping between the UAC `AlertSeverity` codex enum and PagerDuty incident priorities. This doc owns the *operational*
+> escalation chain (timing, on-call rotation, ack protocol, P0 vs P1 sub-distinction within `CRITICAL`); the glossary
+> owns the codex-enum ↔ P-tier ↔ routing mapping.
+
 ## Why
 
 Live trading runs continuously. When an alerting-rule fires that requires human action (data-correctness break, kill-
@@ -13,12 +18,18 @@ entirely. This doc names the workspace escalation policy.
 
 ## Severity tiers
 
-| Severity | Examples                                                                                        | Routing                                          | Time-to-ack |
-| -------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------- |
-| P0       | Kill-switch armed; data-correctness fail blocking live trades; cloud switch validation failure  | Telegram `live-defi` group + PagerDuty primary  | 5 min       |
-| P1       | T+1 audit discrepancy beyond tolerance; instruments-live preflight repeatedly failing           | Telegram `live-defi` group + PagerDuty primary  | 15 min      |
-| P2       | Per-shard missing data > threshold; ML model staleness; non-critical kill-switch flag          | Telegram `live-defi` group only                  | 1 hour      |
-| P3       | Coverage drop within ratchet tolerance; backfill VM auto-shutdown                               | Telegram `data-pipeline` group only             | informational|
+The codex-enum / PagerDuty-priority / routing / examples mapping lives in the glossary
+([`README.md` § Severity glossary](README.md#severity-glossary)). This section captures only the operational
+sub-distinction *inside* the `CRITICAL` row that the escalation chain below depends on:
+
+- **P0** (`AlertSeverity.CRITICAL`, kill-switch / data-correctness / cloud-switch family) — 5-min ack target.
+- **P1** (`AlertSeverity.CRITICAL`, T+1 audit / instruments-live preflight / non-kill-switch CRITICAL family) — 15-min
+  ack target.
+- **P2** (`AlertSeverity.HIGH`) — 1-hour ack target.
+- **P3** (`AlertSeverity.WARN`) — informational; no ack SLA.
+
+`AlertSeverity.INFO` does not enter the PagerDuty escalation chain (Telegram `data-pipeline` group only). See the
+glossary for the full set of routing examples per tier.
 
 ## Escalation chain (P0 / P1)
 

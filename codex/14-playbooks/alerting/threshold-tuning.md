@@ -18,6 +18,12 @@ related:
 > units) shipped 2026-05-07 at UAC@d00326d. Phase 7 (quietness baseline) tunes the values
 > against 48-hour live data; Phase 8 (rehearsal) validates pages fire correctly.
 
+> **Severity vocabulary SSOT** — when a threshold is paired with a `severity=AlertSeverity.<MEMBER>` declaration, see
+> [`README.md` § Severity glossary](README.md#severity-glossary) for the canonical CRITICAL / HIGH / WARN / INFO ↔
+> PagerDuty P0 / P1 / P2 / P3 ↔ routing mapping. Phase 5's "Deploy in WARNING-only mode" step uses
+> `AlertSeverity.WARN` (per the glossary) — once the threshold is tuned the rule's severity moves up to HIGH or
+> CRITICAL per the rule owner's call.
+
 ## Purpose
 
 Every alert threshold answers a question: "above what value does this become important?" Wrong thresholds either page

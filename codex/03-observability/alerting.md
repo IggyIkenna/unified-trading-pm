@@ -23,12 +23,15 @@ deprecated.
 
 ## Alert Severity Tiers
 
-| Tier | Severity | Channel                                   | When                                                      |
-| ---- | -------- | ----------------------------------------- | --------------------------------------------------------- |
-| T1   | CRITICAL | PagerDuty P1 + Telegram                   | Human intervention may be required. Positions at risk.    |
-| T2   | HIGH     | PagerDuty P2 + Telegram                   | Autonomous recovery in progress on a significant issue.   |
-| T3   | WARNING  | Telegram only                             | Autonomous recovery succeeded or minor issue detected.    |
-| T4   | INFO     | Telegram only (suppressed at high volume) | Routine recovery actions (individual retries, throttles). |
+> **Severity vocabulary SSOT** — see
+> [`14-playbooks/alerting/README.md` § Severity glossary](../14-playbooks/alerting/README.md#severity-glossary) for the
+> canonical mapping between the UAC `AlertSeverity` codex enum (CRITICAL / HIGH / WARN / INFO), PagerDuty incident
+> priorities (P0 / P1 / P2 / P3), time-to-ack targets, routing channels, and worked examples. The tier labels used in
+> the recovery matrix below (`T1 CRITICAL` / `T2 HIGH` / `T3 WARNING` / `T4 INFO`) are display aliases for the codex
+> enum members of the same name.
+
+`T3 WARNING` in the matrix below corresponds to `AlertSeverity.WARN` in code (the codex enum spells it `WARN`, not
+`WARNING`). All other display names match the enum.
 
 ---
 
