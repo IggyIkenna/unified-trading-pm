@@ -93,5 +93,5 @@ Retry on transient failures:
 ## Related
 
 - `04-architecture/kill-switch-circuit-breaker.md` — circuit breaker interplay with retries
-- `06-coding-standards/error-handling.md` — `EnhancedError` wrapping on final failure
+- `06-coding-standards/validation-and-errors.md` — `EnhancedError` wrapping on final failure (§6 per-shard try/except)
 - Phase 3 plan: `topology-with-retry-decorator` (T1)

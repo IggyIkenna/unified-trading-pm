@@ -104,4 +104,4 @@ raise an error — this is a monitoring signal, not a hard failure.
 
 - Phase 3 plan: `topology-timestamp-ordering` (T4 Batch B — MTDH)
 - `02-data/` — data schema standards including timestamp fields
-- `06-coding-standards/validation-patterns.md` — Pydantic validators for timestamps
+- `06-coding-standards/validation-and-errors.md` — Pydantic validators for timestamps + write-gate quartet

@@ -242,7 +242,7 @@ progress + STOPPED/FAILED at exit; events stream to
 - `MANIFEST_PER_VM_SHARD_WRITE` (per-VM shard parquet landed)
 - `MULTI_WORKER_WITHOUT_SHARD_ISOLATION` (UTL guard fired)
 - `ADAPTER_FETCH_FAILED` (canonical per-shard failure event with classified error)
-- `DATA_ALIGNMENT_VIOLATION` (timestamp-alignment-gate fired — per `06-coding-standards/validation-patterns.md`)
+- `DATA_ALIGNMENT_VIOLATION` (timestamp-alignment-gate fired — per `06-coding-standards/validation-and-errors.md` §5)
 - `UPSTREAM_TIMESTAMP_BIAS` (path B in three-category empty-output decision)
 - `WRITE_GATE_FAILED` (any of the 4 pillars failed)
 
@@ -257,8 +257,8 @@ progress + STOPPED/FAILED at exit; events stream to
 - **deployment-service shard alignment + GCS path templates**:
   [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
 - **Three-category empty-output decision**:
-  [`06-coding-standards/error-handling.md`](../06-coding-standards/error-handling.md)
+  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
 - **Cluster validation + 4-pillar write-gate**:
-  [`06-coding-standards/validation-patterns.md`](../06-coding-standards/validation-patterns.md)
+  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
 - **Active plan**:
   [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)

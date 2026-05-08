@@ -5,8 +5,8 @@ scope: [engineer]
 # Service Hardening Checklist — D1→D5 Validation
 
 **Owner:** Phase 3 — Service Hardening & Integration **SSOT:**
-`unified-trading-pm/plans/archive/phase3_service_hardening_integration.plan.md` **Invariant:** Never advance a tier until
-all items for the previous tier are green.
+`unified-trading-pm/plans/archive/phase3_service_hardening_integration.plan.md` **Invariant:** Never advance a tier
+until all items for the previous tier are green.
 
 ---
 
@@ -201,14 +201,14 @@ Every repo must have:
 
 ## Tier Promotion Criteria
 
-| Tier | Repos                                                                                                                                                                                                                                                                                                                                                      | Gate                      |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| T0   | unified-api-contracts (incl. internal subpackage), unified-trading-library, execution-algo-library, matching-engine-library                                                                                                                                                                                                                                | All D5 before any T1      |
-| T1   | unified-trading-library (UTL), unified-config-interface (UCI)                                                                                                                                                                                                                                                                                              | All D5 before any T2      |
+| Tier | Repos                                                                                                                                                                                                                                                                                                                                                                                     | Gate                      |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| T0   | unified-api-contracts (incl. internal subpackage), unified-trading-library, execution-algo-library, matching-engine-library                                                                                                                                                                                                                                                               | All D5 before any T1      |
+| T1   | unified-trading-library (UTL), unified-config-interface (UCI)                                                                                                                                                                                                                                                                                                                             | All D5 before any T2      |
 | T2   | market-tick-data-service/market_tick_data_service/market_interface, execution-service (formerly unified-trade-execution-interface), unified-ml-interface, unified-trading-library, position-balance-monitor-service (formerly unified-position-interface), execution-service (formerly unified-defi-execution-interface), execution-service (formerly unified-sports-execution-interface) | All D5 before any T3      |
-| T3   | unified-domain-client (UDC)                                                                                                                                                                                                                                                                                                                                | D5 before any T4          |
-| T4   | 19 services (instruments-service → monitoring pipeline)                                                                                                                                                                                                                                                                                                    | All D5 before T5          |
-| T6   | 11 UIs                                                                                                                                                                                                                                                                                                                                                     | All D5 = Phase 3 complete |
+| T3   | unified-domain-client (UDC)                                                                                                                                                                                                                                                                                                                                                               | D5 before any T4          |
+| T4   | 19 services (instruments-service → monitoring pipeline)                                                                                                                                                                                                                                                                                                                                   | All D5 before T5          |
+| T6   | 11 UIs                                                                                                                                                                                                                                                                                                                                                                                    | All D5 = Phase 3 complete |
 
 ---
 
@@ -218,4 +218,4 @@ Every repo must have:
 - Phase 3 plan: `unified-trading-pm/plans/archive/phase3_service_hardening_integration.plan.md`
 - Quality gates template: `unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh`
 - Integration testing layers: `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
-- Error handling standards: `unified-trading-pm/codex/06-coding-standards/error-handling.md`
+- Validation + errors standards: `unified-trading-pm/codex/06-coding-standards/validation-and-errors.md`
