@@ -34,37 +34,35 @@ related_plans:
 >
 > **SAFE TO LAUNCH NOW (this cycle):**
 >
-> - `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` — high carry-archetype value,
->   parallel-safe, no known adapter bugs.
-> - `launch-mtds-lst-rates-backfill-vm.sh` — Pyth Solana wired (UAC unbanning 2026-05-06; mtds-s3-5 done); P0
->   input for `carry_staked_basis`. Solana coverage genuinely thin (~monthly cadence per defi_master § "Real
->   residual concerns") — backfill fills daily granularity.
-> - `launch-mtds-oracle-prices-backfill-vm.sh` (or equivalent for the Pyth Hermes + Chainlink multi-chain
->   wiring) — mtds-s3-5 + mtds-s3-6 both flipped done 2026-05-07; first batch backfill exercises the
->   just-shipped paths.
+> - `launch-mtds-vault-share-price-backfill-vm.sh 2020-01-01 2026-05-07` — high carry-archetype value, parallel-safe, no
+>   known adapter bugs.
+> - `launch-mtds-lst-rates-backfill-vm.sh` — Pyth Solana wired (UAC unbanning 2026-05-06; mtds-s3-5 done); P0 input for
+>   `carry_staked_basis`. Solana coverage genuinely thin (~monthly cadence per defi_master § "Real residual concerns") —
+>   backfill fills daily granularity.
+> - `launch-mtds-oracle-prices-backfill-vm.sh` (or equivalent for the Pyth Hermes + Chainlink multi-chain wiring) —
+>   mtds-s3-5 + mtds-s3-6 both flipped done 2026-05-07; first batch backfill exercises the just-shipped paths.
 >
 > **DEFERRED (P0 fix-first, not in this cycle):**
 >
-> - `launch-mtds-lending-indices-backfill-vm.sh` — last run `mtds-lending-indices-20260507-140418` stopped
->   2026-05-07 ~15:30 IST after spot-checking surfaced Bug 1 (AAVE V3 ETHEREUM silent-zero — 0/343 captured for
->   the most-relevant chain), Bug 2 (COMPOUND V3 multi-chain subgraph `marketDailySnapshots` field rename), Bug
->   3 (`instruments-store-defi` metadata 404 for early 2022 dates). Relaunching without the fixes means
->   re-writing `empty_confirmed` rows that per writegate Phase 2.A spirit should be `attempted_failed` — silent
->   data corruption per CLAUDE.md "honest absence vs fake placeholders". Successor: a follow-up `[AGENT] P0`
->   todo under "Lending-indices VM run-quality bugs" §; recommend Agent 1 (alerting context — owns subgraph
->   error classification) or independent agent.
+> - `launch-mtds-lending-indices-backfill-vm.sh` — last run `mtds-lending-indices-20260507-140418` stopped 2026-05-07
+>   ~15:30 IST after spot-checking surfaced Bug 1 (AAVE V3 ETHEREUM silent-zero — 0/343 captured for the most-relevant
+>   chain), Bug 2 (COMPOUND V3 multi-chain subgraph `marketDailySnapshots` field rename), Bug 3
+>   (`instruments-store-defi` metadata 404 for early 2022 dates). Relaunching without the fixes means re-writing
+>   `empty_confirmed` rows that per writegate Phase 2.A spirit should be `attempted_failed` — silent data corruption per
+>   CLAUDE.md "honest absence vs fake placeholders". Successor: a follow-up `[AGENT] P0` todo under "Lending-indices VM
+>   run-quality bugs" §; recommend Agent 1 (alerting context — owns subgraph error classification) or independent agent.
 >
 > **NOT IN AGENT 4 SCOPE THIS CYCLE:**
 >
-> - `launch-mtds-perp-funding-backfill-vm.sh` — referenced in CLAUDE.md but missing per defi_master § "Real
->   residual concerns" #4. Adding this launcher is a dedicated [SCRIPT] task; not a launch in this cycle.
-> - DEX-perp `launch-cefi-onchain-forward-poll.sh` for LIGHTER/PACIFICA/EXTENDED — required pre-live but
->   separate workstream (HANDOVER Item A). Not in Agent-4 cycle scope.
+> - `launch-mtds-perp-funding-backfill-vm.sh` — referenced in CLAUDE.md but missing per defi_master § "Real residual
+>   concerns" #4. Adding this launcher is a dedicated [SCRIPT] task; not a launch in this cycle.
+> - DEX-perp `launch-cefi-onchain-forward-poll.sh` for LIGHTER/PACIFICA/EXTENDED — required pre-live but separate
+>   workstream (HANDOVER Item A). Not in Agent-4 cycle scope.
 >
 > **NAMING + DISCIPLINE:**
 >
-> - All Agent-4-launched VMs use `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>` per CLAUDE.md "Per-VM
->   shard isolation".
+> - All Agent-4-launched VMs use `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>` per CLAUDE.md "Per-VM shard
+>   isolation".
 > - Each launch gets a no-fire-and-forget event-verification 90s post-launch + 10-15min re-check (CLAUDE.md "No
 >   fire-and-forget VM launches"). Stalled = kill + diagnose, not let-run.
 > - Per-VM shard inspection (4-pillar validation: row count > 0 / NaN ratio / schema / cluster coverage) before
@@ -115,17 +113,16 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ## Current state (2026-05-07)
 
-> **DeFi expected-universe `--apply-write` COMPLETE + CONSOLIDATOR MERGE LANDED (writegate Phase 3.D.4;
-> PM@79e47874 + PM@341bb285).** Final run `expected-universe-enum-defi-20260507-155353` (deployment-service@dcc5c87 /
-> @38b7a58 launcher with cap pass-through + instruments-service@8e404c8 / @d1c9928 / @a936a28 script) wrote
-> **1,286,260 rows** (688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`) in 26.3s;
-> per-VM shard merged into canonical 18:07 UTC. Default cap was raised 100k → 1M, then bumped to 5M for this run via
-> the new launcher pass-through. Consolidator P0 (`ArrowTypeError` on `instrument_count`) that briefly blocked the
-> merge was resolved at PM@341bb285 (script-side root cause + in-place shard fix). The 988-dates-missing
-> rollup-vs-drilldown panel signal closes for DeFi as soon as the rollup blob refreshes; operator spot-check pending.
-> Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-> § Phase 3.D.4.
+> **DeFi expected-universe `--apply-write` COMPLETE + CONSOLIDATOR MERGE LANDED (writegate Phase 3.D.4; PM@79e47874 +
+> PM@341bb285).** Final run `expected-universe-enum-defi-20260507-155353` (deployment-service@dcc5c87 / @38b7a58
+> launcher with cap pass-through + instruments-service@8e404c8 / @d1c9928 / @a936a28 script) wrote **1,286,260 rows**
+> (688,220 `EXPECTED_PRE_GENESIS_CHAIN` + 598,040 `EXPECTED_INSTRUMENT_NOT_LISTED`) in 26.3s; per-VM shard merged into
+> canonical 18:07 UTC. Default cap was raised 100k → 1M, then bumped to 5M for this run via the new launcher
+> pass-through. Consolidator P0 (`ArrowTypeError` on `instrument_count`) that briefly blocked the merge was resolved at
+> PM@341bb285 (script-side root cause + in-place shard fix). The 988-dates-missing rollup-vs-drilldown panel signal
+> closes for DeFi as soon as the rollup blob refreshes; operator spot-check pending. Detail in
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
+> Phase 3.D.4.
 
 - **2 DeFi archetypes** live spec'd; backtest pipeline working per `consolidated_defi_data_pipeline` Phase 6
   verifications.
@@ -161,11 +158,11 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 - [x] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana via Hermes (HTTPS pull, batch) + PythNet
       (Solana RPC, live). Solana-only scope. carry_staked_basis dependency. [AUDIT 2026-05-07: FRESH — actionable, P0
-      BLOCKER for carry_staked_basis archetype; Pyth UNBANNED 2026-05-06 per CLAUDE.md but wiring not shipped]
-      ✅ market-tick-data-service@cli/handlers/oracle_prices_handler.py (Pyth Hermes wired) 2026-05-07
+      BLOCKER for carry_staked_basis archetype; Pyth UNBANNED 2026-05-06 per CLAUDE.md but wiring not shipped] ✅
+      market-tick-data-service@cli/handlers/oracle_prices_handler.py (Pyth Hermes wired) 2026-05-07
 - [x] [AGENT] P0. mtds-s3-6-multi-chain-oracle: Extend oracle_prices to multi-chain EVM (Chainlink on Arb/Base/Polygon).
-      [AUDIT 2026-05-07: FRESH — actionable]
-      ✅ market-tick-data-service@cli/handlers/oracle_prices_handler.py (Chainlink Arb/Base/Optimism/Polygon via _CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
+      [AUDIT 2026-05-07: FRESH — actionable] ✅ market-tick-data-service@cli/handlers/oracle_prices_handler.py
+      (Chainlink Arb/Base/Optimism/Polygon via \_CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
       [`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) — MUST run AFTER
@@ -350,15 +347,14 @@ these venues.
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
-> **Audit 2026-05-08 (Tab 6, defi-988-audit-tab)**: per-(chain, protocol, data_type) breakdown +
-> top-5 priority list filed at
-> [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
-> TL;DR: 1.3M non-captured rows across 10 DeFi buckets but **99% are SSOT-correct pre-genesis/pre-launch
-> clipping**; only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5
-> lending-indices fixes resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot
-> V3) resolve ~1.4k; (3) UAC `PROTOCOL_LAUNCH_DATES` tightening for vault protocols (YEARN V3 / Morpho Vaults
-> / Ethena vault) reclassifies ~6.9k from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER
-> perp-funding adapter has **zero captured rows** (correctness risk if ASTER on May-23 hedge-leg path).
+> **Audit 2026-05-08 (Tab 6, defi-988-audit-tab)**: per-(chain, protocol, data_type) breakdown + top-5 priority list
+> filed at [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
+> TL;DR: 1.3M non-captured rows across 10 DeFi buckets but **99% are SSOT-correct pre-genesis/pre-launch clipping**;
+> only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5 lending-indices fixes
+> resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) resolve ~1.4k; (3) UAC
+> `PROTOCOL_LAUNCH_DATES` tightening for vault protocols (YEARN V3 / Morpho Vaults / Ethena vault) reclassifies ~6.9k
+> from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER perp-funding adapter has **zero captured rows**
+> (correctness risk if ASTER on May-23 hedge-leg path).
 
 - [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
@@ -465,13 +461,14 @@ AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-ser
 its launch-date floor handling.
 
 **RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
-[`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) carries
-the canonical RESOLVED block. Code commits:
-- `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT
-  first; AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy) to 2022-03-14 (UAC mainnet deploy).
-- `market-tick-data-service@d2f365e` — Bugs 1+2: `_query_and_parse` cascade extended to AAVE V3 (native →
-  Messari fallback); new `SubgraphSchemaError` distinguishes schema-drift from transient errors so cascade
-  re-raises through `record_failed` (writegate Phase 2.A) instead of swallowing as `record_empty`.
+[`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) carries the
+canonical RESOLVED block. Code commits:
+
+- `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT first;
+  AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy) to 2022-03-14 (UAC mainnet deploy).
+- `market-tick-data-service@d2f365e` — Bugs 1+2: `_query_and_parse` cascade extended to AAVE V3 (native → Messari
+  fallback); new `SubgraphSchemaError` distinguishes schema-drift from transient errors so cascade re-raises through
+  `record_failed` (writegate Phase 2.A) instead of swallowing as `record_empty`.
 - `market-tick-data-service@de9d5cf` — ruff format spacing follow-up.
 
 After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`) the
@@ -481,11 +478,11 @@ lending-indices VM is ready to re-launch. Operator-owned step.
 data-source surface BEFORE Ikenna's D4 launches. Results filed at
 [`issues/defi_fork1_prep_audit_2026_05_08.md`](issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR: Bug classes 1-3 are
 ✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct). **Bug class 4 — UAC
-PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator spawn 4 sequential
-fix tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC entry) all
-mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10 oracle-USD
-backfill blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` — coverage
-gap. **Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC + MTDS +
+PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator spawn 4 sequential fix
+tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC entry) all mirroring
+Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10 oracle-USD backfill
+blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` — coverage gap.
+**Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC + MTDS +
 instruments-service; on May-23 critical path).
 
 **Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
@@ -607,6 +604,181 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       to enumerate 7 drift axes (was 5); added rollup-side metric inconsistency finding under § "Rollup-side metric
       inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07"; updated history benchmark
       with the 2026-05-07 AAVEV3 29782 → 0 reduction.
+
+### 988-missing-dates audit residuals (migrated from `defi_988_missing_dates_audit_2026_05_08`)
+
+Source issue archived. Audit identified 13.6k actionable (non-legit) missing rows across 7 buckets. Priorities #1+#5
+fold into the lending-indices section above; priorities #2-#4 below remain pending. Coordinate with
+`writegate_honest_coverage_endtoend_2026_05_06` Phase 2.E (honest-absence taxonomy depends on correct launch dates
+shipping with the Fork-1 prep batches below).
+
+- [ ] [SCRIPT] P0. **Priority #2 — DEX swaps subgraph schema-mismatch fix.** Per-protocol detailed roadmap: PancakeSwap
+      V3 (BSC/Ethereum/Arbitrum), SushiSwap V3 (Ethereum/Polygon/Arbitrum/Optimism), Aerodrome (Base), Camelot
+      (Arbitrum). For each: probe current Messari subgraph endpoint shape; rewrite query if schema drifted (most likely:
+      pool entity field renames since 2024 indexer upgrade); per-row `record_failed(SCHEMA_DRIFT)` for rows where the
+      protocol responded but the canonical field set isn't extractable; cassette parity test locks the new shape. ~1.8k
+      blank-reason rows clear once fix lands.
+- [ ] [HUMAN+AGENT] P0. **Priority #3 — PROTOCOL_LAUNCH_DATES SSOT tightening for Ethereum vault protocols.** Standalone
+      action: probe each pre-2023 vault entry (RocketPool, Lido, etc.) for actual on-chain genesis vs UAC declaration;
+      flip mis-declared rows to `expected_pre_protocol_launch`. ~6.9k pre-launch misclassified rows. Operator decision:
+      which protocols block (carry_staked_basis depends on Lido + jitoSOL) vs deferrable (smaller LSTs).
+- [ ] [HUMAN] P0. **Priority #4 — ASTER chain genesis + perp-funding adapter audit.** Operator go/no-go decision: ASTER
+      has 0 perp-funding rows but UAC declares it as a venue. Either: (a) confirm ASTER pre-genesis →
+      `expected_pre_genesis_chain` for the bad date range; OR (b) confirm ASTER genesis was earlier and the perp-funding
+      adapter has a routing bug (which CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate" rule flags as a likely
+      cause). ~0.8k blank rows pending decision.
+- [ ] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
+      (which is Ethereum-AAVEV3 UAC fix). LINEA + BSC AAVE V3 deployments have routing config absent from the MTDS
+      lending-indices handler — verify chain-to-subgraph mapping in
+      `market_tick_data_service/adapters/lending_indices/`, add LINEA + BSC entries with correct subgraph URLs (Messari
+      graph-network IDs), smoke-test 1 day per chain.
+
+### Chain coverage + CLOB-on-chain venues (migrated from `defi_chain_coverage_and_clob_venues_2026_05_08`)
+
+Source issue archived. Hyperliquid L1 chain identity missing from UAC enum (blocks omni-chain transfers, SOR,
+reconciliation); Lighter/Pacifica/Extended lack instruments-service discovery adapters (writegate v2 enumerator can't
+derive expected universe). 5-phase remediation. Operator decision required on asset_group classification.
+
+**Cross-plan banner**: coordinate with `dex_perp_onboarding_handover_2026_05_07.HANDOVER` Items A/C/E and writegate
+Phase 3.D.5 v2 enumerator (must handle CLOB venues).
+
+- [ ] [SCRIPT] P0. **Phase 1 — UAC ChainKind extension.** Add `HYPERLIQUID_L1` + `STARKNET` chain entries to UAC
+      `unified_api_contracts.canonical.crosscutting._defi.ChainKind` enum. Add `CHAIN_RPC_TEMPLATES` entries
+      (Hyperliquid L1 and Starknet endpoints). Add `bridge_to` graph capturing which chains can bridge to which
+      (Hyperliquid L1 ↔ Arbitrum via native bridge; Starknet ↔ Ethereum via STARK proof bridge).
+- [ ] [SCRIPT] P0. **Phase 2 — instruments-service CLOB discovery adapters.** Lighter (zkSync) / Pacifica (Solana) /
+      Extended (Starknet). Per-instrument catalog rows in instruments-store-defi:
+      `(asset_group=defi, chain, venue,     instrument_type=PERP, instrument_id, contract_address, base_asset, quote_asset, decimals, listed_at)`.
+      Adapters probe each venue's discovery endpoint (Lighter `/markets`, Pacifica `/markets`, Extended `/markets`);
+      emit record_captured per instrument.
+- [ ] [SCRIPT] P0. **Phase 3 — strategy-service `allowed_chains` constraint enforcement.** Per-archetype config gains
+      `allowed_chains: list[ChainKind]`; strategy refuses to size positions on chains outside the list.
+      carry_staked_basis defaults: ETHEREUM + SOLANA + ARBITRUM. leveraged_funding_arb defaults: all 6 perp venues'
+      chains.
+- [ ] [HUMAN] P1. **Phase 4 — asset_group classification decision (operator).** CLOB-on-chain venues (Lighter / Pacifica
+      / Extended) sit at the boundary between DeFi (on-chain settlement) and CeFi (centralised order book matching). Two
+      options: (a) extend DeFi asset_group to include them (current default; minor mental tension); (b) new `clob_dex`
+      asset_group (clean separation but workspace-wide vocabulary churn — cuts across UAC `VENUES_BY_ASSET_GROUP`, MDPS
+      bucket layouts, deployment-ui drilldown). Issue's recommendation was option (b); operator reaffirms or overrides.
+      **Decision needed before Phase 5 below ships.**
+- [ ] [SCRIPT] P1. **Phase 5 — Extended unblocking.** Starknet RPC template + OHLCV adapter for Extended. Blocked until
+      Phase 1 ships Starknet chain entry + Phase 4 asset_group decision.
+
+### Hardcoded on-chain-derivable values audit (migrated from `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`)
+
+Source issue archived. 3-category model: (A) immutable historical facts (token decimals, chain genesis, factory
+addresses, protocol launch dates) — should derive from on-chain or pin to SSOT script; (B) slow-changing governance
+parameters (LTV, liquidation threshold, rate-curve kinks) — refresh hourly/daily into time-versioned parquet (covered
+separately by governance-refresh section below); (C) real-time reads (current rates, liquidity, prices) — read live.
+AAVEV3 ETHEREUM date was 49 days wrong (corrected 2023-01-27); systematic audit of remaining values needed.
+
+**Cross-plan dependency**: this section's Phase 3 (Cat B fallback removal) MUST ship AFTER governance-refresh section's
+Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
+
+- [ ] [SCRIPT] P0. **Phase 1 — `derive_protocol_launch_dates.py` SSOT script** under
+      `unified-api-contracts/scripts/derive_protocol_launch_dates.py`. For each entry in UAC `PROTOCOL_LAUNCH_DATES`:
+      derive from on-chain (factory.created_at block; Aave InitializeReserve event; etc.); compare against current UAC
+      declaration; print drift. Pre-commit gate: any change to `PROTOCOL_LAUNCH_DATES` must run this script and include
+      its output as a citation comment per entry (`# DERIVED 2026-05-08 from <chain> block <N> tx <hash>`).
+- [ ] [SCRIPT] P0. **Phase 2 — Cat A audit beyond AAVEV3.** Token decimals (every entry in UAC `TOKEN_DECIMALS`), chain
+      genesis (every chain in `CHAIN_GENESIS_DATES`), factory addresses (Uniswap, SushiSwap, PancakeSwap, Curve, Aave,
+      Compound). Probe on-chain; compare; flag drift. Output: `defi_cat_a_audit_2026_05_08_report.md` under
+      `unified-api-contracts/audits/`.
+- [ ] [SCRIPT] P0. **Phase 3 — Cat B fallback removal from aave_risk_calculator.** Replace inline LTV / liquidation-
+      threshold constants with reads from governance-params parquet (Phase 2 of governance-refresh section).
+      `LookaheadBiasError` raised loud if feature timestamp < params asof. **BLOCKED-ON governance-refresh Phase 2.**
+- [ ] [SCRIPT] P1. **Phase 4 — Cat C test-fixture modernization.** e2e block numbers in
+      `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
+      via a cron VM that probes recent finalized block per chain. Sports bankroll test fixture similar.
+- [ ] [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` lint rule for new hardcoded addresses/block-numbers.** New STEP
+      adds AST-walk asserting any new contract address or block number in
+      `unified_api_contracts/canonical/domain/_defi.py` or related modules carries the `# DERIVED <date> from <source>`
+      citation comment. Fails CI otherwise.
+
+### Fork-1 prep — UAC date drift fixes (migrated from `defi_fork1_prep_audit_2026_05_08`)
+
+Source issue archived. 13 UAC date drifts identified in Fork-1 scope: AAVEV3 OPTIMISM/BASE/LINEA/BSC (141d-293d drift),
+COMPOUNDV3 ETHEREUM/BASE (12d-22d silent data loss), UNISWAPV3 ARBITRUM/OPTIMISM (91d-35d), SPARK missing (add + remove
+from PENDING), bSOL missing from `LST_TOKEN_GENESIS`, Pyth Hermes archive gap (2022-11 → 2023-10).
+
+**Critical sequencing**: all 4 batches touch `unified_api_contracts/canonical/domain/_defi.py` chain_env block — batches
+MUST merge sequentially in the recommended order (no concurrent PRs) to avoid UAC change-queue collisions. **Cross-plan
+dependency**: feeds writegate Phase 2.E EXPECTED_PRE_GENESIS_CHAIN taxonomy + manifest consolidator
+auto-row-reclassification.
+
+- [ ] [SCRIPT] P0. **Batch A — AAVEV3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
+      on-chain verification via Phase 1 script of hardcoded-values audit above; cite block + tx in comment. Single PR,
+      single commit, push to `live-defi-rollout`.
+- [ ] [SCRIPT] P0. **Batch B — COMPOUNDV3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
+      pattern as Batch A. Sequenced AFTER Batch A.
+- [ ] [SCRIPT] P0. **Batch C — UNISWAPV3 multi-chain dates.** Fix ARBITRUM (91d), OPTIMISM (35d). Same pattern,
+      sequenced AFTER Batch B.
+- [ ] [SCRIPT] P0. **Batch D — SPARK + bSOL.** Add SPARK to `PROTOCOL_LAUNCH_DATES` (currently missing despite being in
+      PENDING list); remove from PENDING; add bSOL to `LST_TOKEN_GENESIS` + `LST_VENUE_TO_TOKENS`. Sequenced AFTER Batch
+      C.
+- [ ] [HUMAN+AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** UAC oracle-coverage module
+      (NEW) declares Pyth Hermes archive availability per feed: jitoSOL feed has Hermes data starting 2023-10-XX,
+      Pythnet RPC data going further back but not archived consistently. Operator go/no-go: do we backtest jitoSOL
+      pre-2023-10 (uses Pythnet replay, slow + expensive) or clip the backtest window to 2023-10+? Default: clip.
+- [ ] [SCRIPT] P1. **Latent Bug-class-3 local fallback drift sweep.** Adjacent to case-2 (UAC PROTOCOL_LAUNCH_DATES vs
+      instruments-service local fallback dict). Sweep for any local fallback that overrides UAC values without explicit
+      comment; remove the override or document why it survives. Deferred POST-batches A-D.
+
+### Governance parameters refresh (migrated from `defi_protocol_governance_parameters_refresh_2026_05_08`)
+
+Source issue archived. Aave/Compound/Morpho parameters (LTV, liquidation threshold, rate-curve kinks, borrow caps)
+frozen at discovery time today; no refresh path. Live trading risk: governance change between discovery + execution
+silently mis-prices positions.
+
+**Cross-plan ordering**: Phase 2 (time-versioned parquet) MUST ship BEFORE the hardcoded-values audit's Phase 3 (Cat B
+fallback removal). Documented above.
+
+- [ ] [SCRIPT] P0. **Phase 1 — Per-protocol event listener.** Aave V3: listen for `ReserveDataUpdated` +
+      `BorrowCapChanged` + `SupplyCapChanged` events. Compound V3: listen for IRM-change events. Morpho: curator
+      `MarketParamsUpdated` events. Per-event: write to time-versioned parquet (Phase 2). Implementation: extend MTDS
+      DeFi adapters with an event-listener mode (separate from current snapshot-poll mode).
+- [ ] [SCRIPT] P0. **Phase 2 — Time-versioned governance_params parquet schema.** Path:
+      `gs://market-data-tick-defi-{pid}/governance_params/by_protocol/protocol={p}/chain={c}/by_date/day={d}/...parquet`.
+      Schema: `{protocol, chain, asset, param_name, param_value, asof_block, asof_timestamp, governance_tx_hash}`. Asof
+      lookups via `read_governance_params_asof(protocol, chain, asset, asof: datetime)` UTL helper — asof <= timestamp
+      filter, latest row wins. NO future-dated rows ever returned (LookaheadBiasError if attempted).
+- [ ] [SCRIPT] P0. **Phase 3 — features-onchain APR calculator migration.** Replace inline LTV / IR constants with asof
+      reads from governance_params parquet (Phase 2). LookaheadBiasError check at every read. **GATES Cat B fallback
+      removal in hardcoded-values audit Phase 3.**
+- [ ] [SCRIPT] P0. **Phase 4 — strategy-service sizing migration.** Historical-asof in batch (read params at the
+      historical compute timestamp); current-asof in live (read latest available). Strategy onboarding checklist gains a
+      "governance dependency declaration" requirement.
+- [ ] [SCRIPT] P1. **Phase 5 — Snapshot space monitoring (proactive).** Cloud Scheduler job (registered via
+      `deployment_ui_lifecycle_tabs_2026_05_08` Phase D) polls Snapshot.org governance spaces (aavedao, comp-vote,
+      morpho) every 6h; emits `GOVERNANCE_PROPOSAL_LIVE` event when a parameter-change proposal opens; alert routes to
+      operator-on-call.
+- [ ] [SCRIPT] P0. **NEW UAC LifecycleEventType `GOVERNANCE_PARAMS_CHANGED`** emitted by Phase 1 listener at every
+      change. Payload: `{protocol, chain, asset, param_name, old_value, new_value, asof_block, governance_tx_hash}`.
+
+### Lending-indices Bug 2 — Compound V3 multi-chain Messari schema (migrated from `lending_indices_handler_bugs_2026_05_07`)
+
+Source issue archived. Bugs 1 + 3 already resolved (UAC `PROTOCOL_LAUNCH_DATES` correction shipped via Tab 9; floor-date
+math + reason-routing per CLAUDE.md taxonomy shipped). Bug 2 (Messari subgraph schema error for Compound V3 multi-chain)
+remains open. Folds into the existing "Lending-indices VM run-quality bugs" section above as a P0 todo.
+
+- [ ] [SCRIPT] P0. **Bug 2 — Messari Compound V3 subgraph query rewrite.** Probe current schema of Compound V3 subgraph
+      endpoint per chain (Ethereum, Base, others); identify the field renames since the indexer upgrade that the current
+      MTDS query depends on. Rewrite query, add per-row `record_failed(SCHEMA_DRIFT)` for any row where the response
+      shape deviates from the canonical contract (so we never write garbage). Cassette parity test locks the new shape.
+      Smoke 1 day per chain post-rewrite.
+- [ ] [AGENT] P1. **Verification recipe automation.** Post-VM-launch silent-zero detector — Cloud Scheduler job that
+      checks the last 24h of lending-indices manifest rows for unexpected zero-rows-per-instrument; alerts via Telegram
+      if a venue × chain pair flatlines. Generalisable to other DeFi handlers; not just lending. Coordinate with
+      `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor.
+
+### Coordination banner — defi_master 6-perp-venue list update
+
+> 🟡 IN-FLIGHT REFACTOR — `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream A is re-verifying the
+> 6-perp-venue list referenced throughout this plan; the current list (Bybit/Deribit/Binance/OKX/Hyperliquid/Aster) may
+> be stale per the 2026-05-07 audit (issue archived to
+> `plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`). RE-VERIFY any venue-list reference in this plan
+> against the canonicalisation plan's Stream A output before committing changes that depend on the list. Banner will be
+> removed by canonicalisation plan owner once Stream A ships.
 
 ## Anti-patterns + workspace-rule cross-references
 
