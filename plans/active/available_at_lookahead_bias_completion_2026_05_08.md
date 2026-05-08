@@ -7,15 +7,29 @@ last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 name: available-at-lookahead-bias-completion-2026-05-08
+title: "available_at + lookahead-bias master — SINGLE OWNER for all stamping work"
+folds_in:
+  - api_football_minimal_flattening_removal_2026_05_07  # Phase 3 stamping wiring scope
+  - wave3x_residual_ssots_2026_05_08                    # Track E sports stamping helpers
+  - sports_master_2026_05_07                            # Phase 1-2 per-adapter wiring scope
+  # Implicit children (no separate plan): every CeFi/DeFi/TradFi tick adapter that needs
+  # tick.timestamp + UAC SOURCE_PRIORITY scrape latency stamping per CLAUDE.md
+  # "available_at semantics".
 overview: >-
-  Meta-plan owning the end-to-end `available_at` + lookahead-bias contract across the workspace. Audit 2026-05-08 found
-  ~60% chain coverage with the gaps being implicit (assumed to roll downhill from one master plan to the next) rather
-  than explicitly owned. This plan makes every chain link explicit, references the existing owners where coverage is
-  real, and owns the gap items directly. Chain has 11 links: (0) MDPS bar timestamp + available_at semantics, (1)
-  per-asset-group adapter stamping, (2) historical parquet backfill, (3) reader propagation, (4) UAC
-  FEATURE_REQUIRED_INPUTS expansion, (5) UAC AVAILABILITY_AT_SEMANTICS coverage audit, (6) calculator/writer-boundary
-  enforcement (Tab 12), (7) ManifestWriter assert_available_at_present guard, (8) QG static check, (9) e2e integration
-  test, (10) honest-empty parquet safeguard. Audit fully detailed in body § "Audit 2026-05-08".
+  **SINGLE-OWNER UMBRELLA for all `available_at` stamping work across the workspace** (codified
+  2026-05-08 per operator direction "same with available_at ownership do the same"). Stamping
+  helpers do NOT execute in isolation — the source-specific stamping rule (UAC SSOT) +
+  per-adapter `available_at` column write + UTL `record_captured` enforcement
+  (`assert_available_at_present`) co-evolve as one atomic unit per asset_group. Audit 2026-05-08
+  found ~60% chain coverage with the gaps being implicit (assumed to roll downhill from one
+  master plan to the next) rather than explicitly owned. This plan makes every chain link
+  explicit, references the existing owners where coverage is real, and owns the gap items
+  directly. Chain has 11 links: (0) MDPS bar timestamp + available_at semantics, (1)
+  per-asset-group adapter stamping, (2) historical parquet backfill, (3) reader propagation,
+  (4) UAC FEATURE_REQUIRED_INPUTS expansion, (5) UAC AVAILABILITY_AT_SEMANTICS coverage audit,
+  (6) calculator/writer-boundary enforcement (Tab 12), (7) ManifestWriter
+  assert_available_at_present guard, (8) QG static check, (9) e2e integration test, (10)
+  honest-empty parquet safeguard. Audit fully detailed in body \xA7 "Audit 2026-05-08".
 
 type: mixed
 epic: epic-code-completion
