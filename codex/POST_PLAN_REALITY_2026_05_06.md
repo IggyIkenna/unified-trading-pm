@@ -66,7 +66,7 @@ to be read with this doc as the override.
 
 Read these before any doc edit + before any code change in the affected scopes:
 
-- [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+- [`writegate_honest_coverage_endtoend_2026_05_06.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
   — primary contract change to `ManifestWriter.record_captured` covering MDPS empty-output A/B/C, cluster validation
   mandatory, sports per-fixture_id sharding, sports `available_at` correctness, MDPS v6 columns wiring, retrospective
   migration. Status: drafted, Phase 0 audit synthesised, Phase 2.B amendment F pending Ikenna review.
@@ -127,12 +127,14 @@ Read these before any doc edit + before any code change in the affected scopes:
 
 ### Sports (per-fixture)
 
-- **Shard atom**: `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)` — **per-fixture
-  sharding** is the canonical shape (NOT per-(bookmaker, league); confirmed user direction 2026-05-06). Per-fixture
-  data_types: `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
-  `FIXTURE_PLAYER_STATS`, `INJURIES` (when fixture-scoped). Aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`,
-  `REFEREES`, etc. shard at day-aggregate. League is a higher-level rollup grouping for data-status panel filtering, NOT
-  the shard atom.
+- **Shard atom**: `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is a row-level column
+  inside the parquet, NOT a shard axis (per Q1 resolution; supersedes the earlier 2026-05-06 per-fixture sharding
+  proposal). Per-fixture data_types (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
+  `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`) use cluster validation
+  (`cluster_extractor=lambda row: row["fixture_id"]` or `bookmaker` for ODDS_*) to enforce per-fixture coverage within
+  the parquet. Aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, etc. share the same shard atom (no
+  cluster validation needed for inherently-aggregate data). Avoids ~10× manifest-row inflation vs treating `fixture_id`
+  as a shard axis.
 - **`available_at` per data_type**:
   - `fixtures` → `announced_at` (currently low-confidence `kickoff_utc − 7d` fallback; named successor
     `sports_forward_poll_timestamps_2026_<TBD>.plan.md`)
@@ -159,9 +161,10 @@ Read these before any doc edit + before any code change in the affected scopes:
 
 - **Current shard atom**: `data_type=<base_asset>` (BTC / ETH / SPX / FOOTBALL / OTHER). **Stale**.
 - **Post-plan shard atom**:
-  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`
-  — bundled by canonical_question_group. cluster_extractor = `lambda row: row["market_id"]`. Migration in Plan A
-  predictions.
+  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` —
+  `market_id` is a row-level column inside the parquet, NOT a shard axis (per Q1 resolution). Cluster validation with
+  `cluster_extractor=lambda row: row["market_id"]` enforces per-canonical-question coverage within the bundle.
+  Migration in Plan A predictions.
 - **Canonical question groups**: `CanonicalQuestionGroup` enum (UAC) — `BTC_UP_DOWN_HOURLY` (24/day),
   `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `ELECTION_PRESIDENT_2028`, etc. Long tail handled by classifier with
   stability hash; headline markets handled by `POLYMARKET_CONDITION_ID_TO_GROUP` / `KALSHI_TICKER_TO_GROUP` overrides.

@@ -23,12 +23,16 @@ scope: [engineer, admin]
   partitioned by that axis. Legacy term: "category". **Canonical hive vocab (post-2026-04 rename)**: `asset_group=` for
   new writes; `category=` is legacy-preserved on disk (do NOT rekey existing data per workspace CLAUDE.md
   `§ Asset-group vocabulary`). Readers try canonical `asset_group=` first then fall back to legacy `category=`.
-- **Per-fixture sports sharding** (writegate Phase 2.B, post-2026-05-06): per-fixture data*types (ODDS*\_, FIXTURE\_\_,
-  INJURIES) shard at `fixture_id` granularity. League stays as a higher-level rollup grouping for data-status panel
-  filtering, NOT the shard atom.
-- **Predictions canonical_question_group** (predictions Plan A, post-2026-05-06): Polymarket / Kalshi shards at
-  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`
-  with per-market lifecycle bounds.
+- **Sports per-fixture row-level shape** (writegate Phase 2.B, post-2026-05-06; Q1 resolution): per-fixture data*types
+  (ODDS*\_, FIXTURE\_\_, INJURIES) shard at `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is
+  a row-level column NOT a shard axis. Cluster validation (`cluster_extractor=bookmaker`) enforces per-fixture coverage
+  within the parquet. Avoids ~10× manifest-row inflation.
+- **Predictions canonical_question_group** (predictions Plan A, post-2026-05-06; Q1 resolution): Polymarket / Kalshi
+  shards at
+  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` —
+  `market_id` is a row-level column NOT a shard axis. Cluster validation (`cluster_extractor=market_id`) enforces
+  per-canonical-question coverage. Per-market lifecycle bounds enforced via row-level `market_created_at` /
+  `settlement_time` columns.
 - **Additional dimensions** vary by service: timeframe, data_type, instrument_type, feature_group, fixture_id,
   canonical_question_group, etc.
 - **Hive-style partitioning**: `key=value/` directory structure for partition pushdown in queries.

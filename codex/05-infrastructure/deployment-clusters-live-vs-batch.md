@@ -106,9 +106,8 @@ Shard atom = full v6 row key per asset_group:
 | **TradFi ETFs**          | `(asset_group=tradfi, venue, data_type, instrument_type, instrument_id, day)`                                                            |
 | **TradFi options**       | `(asset_group=tradfi, venue, data_type, options_chain, root, day)` — ES.OPT 11-cluster + `combo_type` + `leg_weights`                    |
 | **DeFi**                 | `(asset_group=defi, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)`                                                |
-| **Sports per-fixture**   | `(asset_group=sports, source, data_type, league_id, fixture_id, day)` for ODDS*\*, FIXTURE*\*, INJURIES                                  |
-| **Sports day-aggregate** | `(asset_group=sports, source, data_type, league_id, day)` for STANDINGS, LEAGUES, TEAMS, etc.                                            |
-| **Prediction**           | `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`               |
+| **Sports**               | `(asset_group=sports, source, data_type, league_id, day)` for ALL sports data_types (ODDS*\*, FIXTURE*\*, INJURIES, STANDINGS, LEAGUES, TEAMS, etc.) — `fixture_id` is row-level column NOT shard axis (per Q1 resolution; cluster validation enforces per-fixture coverage within parquet) |
+| **Prediction**           | `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` — `market_id` is row-level column NOT shard axis (per Q1 resolution; cluster_extractor=market_id validates per-canonical-question coverage)                              |
 
 **What "a shard" means in the data-pipeline tier**: one day's worth of one (instrument OR root OR fixture OR
 canonical_question_group) for one (data_type / timeframe / feature_group) for one venue/chain. Daily granularity is
@@ -261,8 +260,9 @@ cluster state regardless of which mechanism deployed the cluster or which type t
 
 ## Active migrations relevant to deployment clusters
 
-- **Per-fixture sports sharding** (writegate Phase 2.B): sports per-fixture data_types shard at `fixture_id` granularity
-  in batch + live clusters. Reader paths in MDPS sports adapter, features-sports input pipeline, deployment-UI
+- **Sports per-fixture row-level migration** (writegate Phase 2.B; Q1 resolution): sports per-fixture data_types stay
+  sharded at `(league_id, day)` granularity but expose `fixture_id` as a row-level column with cluster validation
+  enforcing per-fixture coverage. Reader paths in MDPS sports adapter, features-sports input pipeline, deployment-UI
   drill-down all migrating in lockstep.
 - **Polymarket canonical_question_group migration** (predictions Plan A): MTDS prediction adapter migrating shard atom
   from `data_type=<base_asset>` to `data_type=prediction_canonical_question_group`. GCS reconciler in batch cluster

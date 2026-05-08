@@ -190,8 +190,9 @@ Every CeFi bundle parquet row carries `available_at = tick.timestamp + scrape_la
 **However, post-2026-05-06 writegate plan extends related concepts to all asset groups**:
 
 - **Sports per-fixture bundles** (`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE`): cluster validation MANDATORY with
-  `cluster_extractor=lambda row: row["bookmaker"]` and `SPORTS_FIXTURE_CLUSTERS` per league-tier. Per-fixture sharding
-  `(asset_group=sports, source, data_type, league_id, fixture_id, day)`.
+  `cluster_extractor=lambda row: row["bookmaker"]` and `SPORTS_FIXTURE_CLUSTERS` per league-tier. Shard atom is
+  `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is a row-level column NOT a shard axis (per
+  Q1 resolution); cluster validation enforces per-fixture coverage within the parquet.
 - **Predictions** (`prediction_canonical_question_group`): cluster validation MANDATORY with
   `cluster_extractor=lambda row: row["market_id"]` and `PREDICTION_GROUPS` per cadence (HOURLY=24/day, DAILY=1/day,
   etc.). Per-market lifecycle bounds.
