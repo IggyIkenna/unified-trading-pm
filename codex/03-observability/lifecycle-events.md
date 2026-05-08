@@ -89,6 +89,74 @@ Additionally, per-event required fields (from `REQUIRED_EVENT_FIELDS` per event 
 
 ---
 
+## Conditional event types (live-pipeline / instruments-live / ML / strategy)
+
+Beyond the 12 mandatory per-run lifecycle events, the workspace defines event TYPES that fire conditionally during a
+service's run. They share the
+`service_name / event_type / timestamp / correlation_id / service_version / local_timestamp` envelope and add typed
+`metadata.details` per event.
+
+### Instruments-live (7 codes)
+
+Per [`../04-architecture/instruments-live-architecture.md`](../04-architecture/instruments-live-architecture.md) +
+[`instruments-preflight-chain.md`](../04-architecture/instruments-preflight-chain.md):
+
+| Event                                   | When                                                              |
+| --------------------------------------- | ----------------------------------------------------------------- |
+| `INSTRUMENTS_LIVE_TRIGGER_FIRED`        | A scheduled trigger started a refresh                             |
+| `INSTRUMENTS_LIVE_TRIGGER_FAILED`       | A trigger errored                                                 |
+| `INSTRUMENTS_LIVE_SOURCE_DEGRADED`      | Primary source returned degraded data; auto-switch to secondary   |
+| `INSTRUMENTS_LIVE_SCHEMA_DRIFT`         | Adapter output schema diverged from canonical; circuit-broken     |
+| `INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY` | T+1 audit detected live≠batch beyond tolerance                    |
+| `INSTRUMENTS_LIVE_PREFLIGHT_FAILED`     | Pre-flight detected stale upstream; trigger skipped, alert paged  |
+| `INSTRUMENTS_LIVE_UPSTREAM_STALE`       | Upstream-staleness monitor early warning (no downstream fire yet) |
+
+`PREFLIGHT_FAILED` payload:
+`{asset_group, trigger_name, missing_dependencies: [{entity_type, expected_max_age, actual_age, last_seen_at}], correlation_id}`
+— the `missing_dependencies` list is what the alerting rule routes on so the operator sees the named upstream blocking
+the trigger.
+
+### Live-pipeline (4 codes)
+
+Per [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) +
+[`../04-architecture/alerting-batch-live.md`](../04-architecture/alerting-batch-live.md):
+
+| Event                                 | When                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| `LIVE_PIPELINE_CANDLE_NOT_COMPUTED`   | Candle boundary fired but the downstream calculator did not produce a row |
+| `LIVE_PIPELINE_REPLAY_HANDOFF_FAILED` | Replay-to-live handoff did not validate state continuity                  |
+| `LIVE_PIPELINE_HOT_RELOAD_REJECTED`   | Cache-delta hot-reload found unsafe diff and refused                      |
+| `LIVE_PIPELINE_UTC_MIDNIGHT_DRIFT`    | A service crossed UTC midnight without alignment                          |
+
+### ML lifecycle (5 codes)
+
+Per [`../04-architecture/ml-experiment-lifecycle.md`](../04-architecture/ml-experiment-lifecycle.md):
+
+| Event                      | When                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| `ML_TRAINING_FAILED`       | Training run errored; ML manifest row flipped to retired             |
+| `ML_VALIDATION_FAILED`     | Out-of-sample backtest failed target metrics                         |
+| `ML_MODEL_STALENESS`       | Champion model older than per-family threshold                       |
+| `ML_INFERENCE_LATENCY`     | Inference path exceeded SLO                                          |
+| `ML_FEATURE_INPUT_MISSING` | Required feature not available; inference falls through to safe-mode |
+
+### Strategy hot-reload (1 code)
+
+Per [`../04-architecture/live-strategy-config-hot-reload.md`](../04-architecture/live-strategy-config-hot-reload.md):
+
+| Event                      | When                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| `STRATEGY_CONFIG_RELOADED` | `StrategyConfigReloader` applied a config delta; payload is the diff |
+
+### Per-instrument progress (silent-success-with-zero-output detector)
+
+Adapters that fan out across instruments MUST emit per-instrument progress events with row counts so a clean
+`STARTED → STOPPED` pair with no intermediate `INSTRUMENT_PROCESSED` events surfaces as broken. Reference incident
+2026-05-05: 21 MDPS VMs emitted clean lifecycle but produced 1440 NaN OHLC bars/day for years — absence of intermediate
+progress events with row counts was the silent-success signal that should have caught it.
+
+---
+
 ## State Machine — Valid Transitions
 
 ```

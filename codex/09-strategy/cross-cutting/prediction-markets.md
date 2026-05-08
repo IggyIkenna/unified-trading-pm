@@ -66,6 +66,44 @@ class PredictionMarketCategory(StrEnum):
 
 SSOT: `strategy-service/engine/strategies/prediction/prediction_mapping.py`
 
+### canonical_question_group SSOT (UAC `PREDICTION_GROUPS`)
+
+Recurring market lifecycles (e.g. "BTC up/down hourly", "S&P up/down daily", "US presidential election 2028") cycle
+through MULTIPLE `market_id`s over time. Polymarket creates a fresh `market_id` for each cycle: HOURLY = 24/day, DAILY =
+1/day, ELECTION = 1 over months/years. The `canonical_question_group` is the workspace SSOT that ties these recurring
+market_ids together for cross-instance analysis (volatility smiles across hourly bins, dispersion across daily strikes,
+cross-platform arb pairing).
+
+UAC SSOT: `unified_api_contracts.canonical.crosscutting.prediction_groups.PREDICTION_GROUPS` — closed-set enum mapping
+each canonical question name to its component market_ids per cycle window.
+
+### Per-market lifecycle timestamps
+
+Every prediction-market `market_id` carries three lifecycle timestamps in instruments-service:
+
+| Timestamp           | Meaning                                     |
+| ------------------- | ------------------------------------------- |
+| `market_created_at` | When the market was listed on the venue     |
+| `resolution_time`   | When the outcome is determined (event-time) |
+| `settlement_time`   | When payouts complete; market is closed     |
+
+MTDS CLOB capture respects lifecycle bounds — NO ticks before `market_created_at`, NO new ticks after `settlement_time`.
+A `LookaheadBiasError` at compute-time honours per-market lifecycle: a feature compute at time T can only consume ticks
+where `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`.
+
+### Cluster validation per (canonical_question_group, day)
+
+For BUNDLED prediction data_types, `ManifestWriter.record_captured` requires `expected_root_clusters` +
+`cluster_extractor` per the workspace cluster-validation rule
+([`../../02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md) §
+"Cluster validation MANDATORY at record_captured"). Per `(canonical_question_group, day)`: HOURLY → 24 expected
+market_ids, DAILY → 1, ELECTION → 1 spanning weeks/months. Under-coverage triggers `record_failed(ClusterCoverageError)`
+instead of `record_captured`.
+
+Lifecycle + canonical-group detail:
+[`../../02-data/prediction-schema-paths.md`](../../02-data/prediction-schema-paths.md) +
+[`../../04-architecture/instruments-live-architecture.md`](../../04-architecture/instruments-live-architecture.md).
+
 ### Proposed: Three-Tier Classification
 
 Every prediction market should be classified along three dimensions:

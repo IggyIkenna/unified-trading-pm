@@ -47,6 +47,34 @@ includes `DATA_READY`, `PREDICTIONS_READY`, `STRATEGY_SIGNALS_READY`.
 
 ---
 
+## Redis Stream cascade (inner-loop live pipeline)
+
+The cross-service coordination above uses Pub/Sub for at-least-once cross-service signalling. The **live-pipeline inner
+loop** (MTDS → MDPS → features-service candle cascade) uses **Redis Streams** for sub-second tick-to-feature latency.
+Per [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md):
+
+| Event                     | Producer | Consumer         | Latency target |
+| ------------------------- | -------- | ---------------- | -------------- |
+| `CANDLE_BOUNDARY_CROSSED` | MTDS     | MDPS             | < 100 ms       |
+| `CANDLE_COMPUTED`         | MDPS     | features-service | < 200 ms       |
+
+Why Redis Streams for the inner loop:
+
+- **Sub-second latency** — Pub/Sub adds ~150-300 ms of cross-region round-trip; Redis Streams within a colocated cluster
+  is < 10 ms.
+- **Ordered consumer groups** — features-service replays the cascade exactly once per (asset_group, candle boundary) via
+  consumer-group `XREADGROUP` semantics.
+- **Replay handoff** — replay-subsystem
+  ([`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)) re-emits `CANDLE_COMPUTED`
+  events from a historical bookmark on warm-up; live tail picks up where replay leaves off via the same Redis Stream
+  consumer group.
+
+**The two transports coexist.** Pub/Sub remains the SSOT for cross-service signalling that doesn't need sub-second
+latency (`INSTRUMENTS_READY`, `PREDICTIONS_READY`, kill-switch publisher hook events, lifecycle events). Redis Streams
+is scoped to the inner-loop candle cascade.
+
+---
+
 ## Wiring Map -- Publishers and Subscribers
 
 ### Financial Pipeline (CeFi/TradFi/DeFi)

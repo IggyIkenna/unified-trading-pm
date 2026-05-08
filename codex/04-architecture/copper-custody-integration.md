@@ -15,6 +15,20 @@ split across multiple parties (Copper, client, backup) and never assembled — s
 
 **Why Copper:** Regulatory compliance, insurance, no single point of key compromise, sub-2-second signing latency.
 
+## Custody coverage (Copper + CEFFU)
+
+The workspace runs two custody integrations in parallel:
+
+- **Copper.co** (this doc) — covers DeFi (every chain) + non-Binance CeFi (Bybit, OKX, Deribit, Kraken, Aster,
+  Hyperliquid). MPC-based, pluggable via `CustodyProvider`.
+- **CEFFU** ([`ceffu-custody-integration.md`](ceffu-custody-integration.md)) — covers Binance institutional CeFi
+  custody. Different protocol, different signing flow, but same `CustodyProvider` interface. Required because Binance
+  routes institutional flows through CEFFU rather than Copper.
+
+A position can be backed by either provider depending on venue. position-balance-monitor reads custody per (venue,
+asset) pair from the registry; strategy + execution code never branch on provider. Adding a new custodian (e.g.
+Fireblocks, Anchorage) means a new `CustodyProvider` implementation + a registry entry; zero strategy changes.
+
 ## API Architecture
 
 ### Authentication (HMAC-SHA256)

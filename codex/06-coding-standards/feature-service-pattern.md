@@ -4,10 +4,25 @@ scope: [engineer]
 
 # Feature Service Pattern
 
+## Consolidation status
+
+The pre-2026-05-08 layout had 5–6 separate `features-*-service` repos (features-onchain-service, features-volatility-
+service, features-cross-instrument-service, features-sports-service, features-prediction-service). The current target
+state is a single workspace repo `features-service` with sub-packages per domain
+([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md)).
+`BaseFeatureServiceV2` becomes the per-sub-package base class within `features-service`, not the per-repo base class.
+The pattern below applies inside the consolidated repo: each sub-package owns its calculators; each calculator extends
+`BaseFeatureServiceV2`. The deployment topology
+([`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md))
+splits the consolidated repo into one VM-per-asset_group (colocated with MDPS) plus one features-cross-cutting VM.
+
+The `feature_family` axis (UAC enum) is the primary shard key inside the consolidated repo and surfaces in the data-
+status drilldown — see [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md).
+
 ## Overview
 
 `BaseFeatureServiceV2` (exported from `unified-feature-calculator-library`, Tier 2) is the mandatory abstract base class
-for all `features-*-service` repos. It eliminates repeated boilerplate by providing:
+for all features sub-packages within `features-service`. It eliminates repeated boilerplate by providing:
 
 - `UnifiedCloudConfig` singleton wiring (via `@lru_cache`)
 - `GCSEventSink` setup and UEI lifecycle events (`STARTED` / `STOPPED`)
