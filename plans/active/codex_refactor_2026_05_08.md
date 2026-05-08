@@ -396,28 +396,53 @@ drift.
 
   **Acceptance**: zero hits for the renamed paths in codex/; no removed-providers list contains Pyth.
 
-### Phase B.4 — Stub-doc cleanup (06-coding-standards) — PARALLEL — P2
+### Phase B.4 — Stub-doc cleanup (06-coding-standards) — PARALLEL — P2 — TRIAGED 2026-05-08 (all 12 KEEP, expansion deferred to B.4-bis)
 
-- [ ] [SCRIPT] P2. 12 stub docs in `06-coding-standards/` under 500 bytes — per S5.4 these would block their own QG
-      gate. Each: delete OR expand to meaningful SSOT.
+- [x] [SCRIPT] P2. 12 stub docs in `06-coding-standards/` under 500 bytes triaged. **Workspace-wide grep audit** of
+      incoming references found that EVERY stub is cited as the canonical SSOT by at least one `.cursor/rules/*.mdc`
+      file via a `CODEX: 06-coding-standards/<stub>.md` pointer (e.g. `test-quality-standards.mdc:12` cites
+      `testing.md`; `service-structure-standards.mdc:12` cites `service-structure-standards.md`;
+      `architecture/thin-adapters.mdc:12` cites `thin-adapters-pattern.md`). Disposition: **all 12 KEEP** as forwarder
+      stubs. Deletion would break cursor-rules' CODEX pointers without simultaneously rewriting them; that rewrite is
+      out of scope for B.4 (would touch ~15 cursor-rules files + the codex 00-SSOT-INDEX + ssot-reference-mapping +
+      MASTER_READINESS_LIVE_DEFI_2026_05_23.md). Expansion (replacing the "see README.md" pointer with substantive
+      content) is the right path forward and is deferred to a follow-up phase, since each stub's expansion needs
+      domain-aware content the per-file canonical home (README.md) doesn't yet break out as standalone sections.
 
-  **Operator decision required per file** — list:
-  - [ ] `06-coding-standards/accurate-codebase-analysis.md` (482 bytes) — delete or expand.
-  - [ ] `06-coding-standards/audit-remediation-guide.md` (528 bytes) — delete or expand.
-  - [ ] `06-coding-standards/code-cleanup-deslop.md` (477 bytes) — delete or expand.
-  - [ ] `06-coding-standards/config-types.md` (468 bytes) — delete or expand.
-  - [ ] `06-coding-standards/contribution-guide.md` (474 bytes) — delete or expand.
-  - [ ] `06-coding-standards/cursor-rules-system.md` (475 bytes) — delete or expand.
-  - [ ] `06-coding-standards/file-splitting-guide.md` (476 bytes) — delete or expand.
-  - [ ] `06-coding-standards/sub-agent-workflow.md` (506 bytes) — delete or expand.
-  - [ ] `06-coding-standards/testing.md` (527 bytes) — delete or expand.
-  - [ ] `06-coding-standards/thin-adapters-pattern.md` (507 bytes) — delete or expand.
-  - [ ] `06-coding-standards/token-optimization.md` (474 bytes) — delete or expand.
-  - [ ] `06-coding-standards/service-structure-standards.md` (13 lines after revert) — already a stub; either delete
-        (content was meant to live in README per audit C7 below) or expand.
+  **Per-stub disposition** (all KEEP — every stub has incoming refs that treat it as canonical SSOT):
+  - [x] `accurate-codebase-analysis.md` (482 B) — KEEP. Cited by `.cursor/rules/core/accurate-codebase-analysis.mdc`.
+  - [x] `audit-remediation-guide.md` (528 B) — KEEP. Cited by `.cursor/rules/workflow/audit-remediation-strategy.mdc`.
+  - [x] `code-cleanup-deslop.md` (477 B) — KEEP. Cited by `.cursor/rules/ui/ui-smoke-tests-and-deslop.mdc`.
+  - [x] `config-types.md` (468 B) — KEEP. Cited by `.cursor/rules/config/config-store-usage.mdc` +
+        `unified-trading-system-ui/context/CONFIG_REFERENCE.md`.
+  - [x] `contribution-guide.md` (474 B) — KEEP. Cited by `.cursor/rules/core/codex-maintenance.mdc` +
+        `unified-trading-system-ui/context/codex/README.md`.
+  - [x] `cursor-rules-system.md` (475 B) — KEEP. Cited by `.cursor/rules/README.md` + 3 other rules.
+  - [x] `file-splitting-guide.md` (476 B) — KEEP. Cited by `.cursor/rules/quality-gates/code-quality-limits.mdc:12`.
+  - [x] `sub-agent-workflow.md` (506 B) — KEEP. Cited by `.cursor/rules/core/sub-agent-workflow-standard.mdc:20` +
+        `parallel-agent-execution.mdc:12`.
+  - [x] `testing.md` (527 B) — KEEP. Cited by `.cursor/rules/testing/test-quality-standards.mdc:12+70` +
+        `core/gcp-auth-in-tests.mdc:90` (with deep-link anchors!) + `codex/00-SSOT-INDEX.md:196` +
+        `10-audit/ssot-reference-mapping.md:77`. **Highest-leverage expansion target.**
+  - [x] `thin-adapters-pattern.md` (507 B) — KEEP. Cited by `.cursor/rules/architecture/thin-adapters.mdc:12`.
+  - [x] `token-optimization.md` (474 B) — KEEP. Cited by `.cursor/rules/core/token-optimization.mdc`.
+  - [x] `service-structure-standards.md` (513 B / 13 lines) — KEEP. Cited by
+        `.cursor/rules/architecture/service-structure-standards.mdc:12` +
+        `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md:116`. Per audit C7 the content was meant to live in
+        README; the stub stays as forwarder until the README breaks out a service-structure section.
 
-  **Acceptance**: no codex doc under 500 bytes (excluding intentional README stubs documented as such in
-  `_ssot-rules/`).
+  **No incoming-ref rewrites.** Decision rule per plan body: "If the stub describes a real concern with no canonical
+  home elsewhere: leave it (mark as KEEP in your report) and note in the plan flip body that it needs expansion in a
+  future phase." Each stub points at a real canonical home (README.md or similar) that DOES exist, but the cursor-rules
+  CODEX pointers expect to land on the stub itself, so the forwarder shape is what makes the cross-reference contract
+  work today. **DEFERRED**: Phase B.4-bis (greenfield item) — expand the highest-leverage stubs (`testing.md` first
+  since it has deep-link anchors `#mocking-get_secret_client-in-unit-tests-canonical-pattern` +
+  `#gcp-authentication-in-tests-standard` that cursor-rules deep-link into) to substantive standalone SSOTs. Order
+  candidates by incoming-ref count: testing (4) > service-structure-standards (3) > sub-agent-workflow (2) > others.
+
+  **Acceptance status**: original acceptance criterion "no codex doc under 500 bytes" remains UNMET; the 12 stubs are
+  intentional forwarders with incoming SSOT-pointer contracts that require expansion (not deletion) to clear.
+  Acceptance is moved to B.4-bis when expansion lands.
 
 ### Phase B.5 — SOURCE_COVERAGE_START dedup — PARALLEL — P2
 
@@ -776,14 +801,17 @@ drift.
 
 ## LAYER F — Cosmetic + index updates (parallel; ship anytime)
 
-### Phase F.1 — quality-gates.md ToC — PARALLEL — P2
+### Phase F.1 — quality-gates.md ToC — PARALLEL — P2 — SHIPPED 2026-05-08 (PM@28ca221b)
 
-- [ ] [SCRIPT] P2. `quality-gates.md` is 1667 lines / 73K with no top-of-file ToC.
+- [x] [SCRIPT] P2. `quality-gates.md` is 1667 lines / 73K with no top-of-file ToC. (PM@28ca221b)
 
   **Implementation**:
-  - [ ] Add numbered ToC at top linking to STEP 5.X anchors.
-  - [ ] Cross-reference STEP numbers from CLAUDE.md (5.10/5.11/5.22/5.34/5.61/5.62/5.64/5.66) into a single "QG STEP
-        cross-reference" table.
+  - [x] Add numbered ToC at top linking to STEP 5.X anchors. 26-section ToC enumerating every `## ` heading with anchor
+        slugs; positioned immediately after `# Quality Gates` H1, before TL;DR. (PM@28ca221b)
+  - [x] Cross-reference STEP numbers from CLAUDE.md (5.10/5.11/5.22/5.34/5.61/5.62/5.64/5.66) into a single "QG STEP
+        cross-reference" table. Table has 4 columns: STEP, topic, this-doc anchor, canonical enforcement file
+        (`scripts/quality-gates-base/base-service.sh` or `base-library.sh`), CLAUDE.md cross-ref. Steps without a
+        dedicated section here (5.34/5.61/5.62/5.64/5.66) point at the enforcement file directly. (PM@28ca221b)
 
 ### Phase F.2 — UI infra rename + collapse — PARALLEL — P2
 
