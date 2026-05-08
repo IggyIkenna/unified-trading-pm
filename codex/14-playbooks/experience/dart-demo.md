@@ -162,5 +162,5 @@ has combined DART + IM or DART + Reg Umbrella intent, the companion demo is sche
 - Demo restriction profiles: [../demo-ops/demo-restriction-profiles.md](../demo-ops/demo-restriction-profiles.md)
 - Demo modes: [../demo-ops/dart-demo-modes.md](../demo-ops/dart-demo-modes.md)
 - DeFi demo specifics:
-  [../../../plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md)
+  [../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)
 - Playwright spec: `unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts` (DART persona)

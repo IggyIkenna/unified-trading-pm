@@ -17,7 +17,7 @@ Prerequisite reading:
 - `codex/02-data/mtds-data-source-coverage-matrix.md` — honest-coverage denominator model, § 2 / § 4 / § 8.
 - `codex/02-data/availability-manifest-and-data-status.md` — v5 shard schema (`instrument_id` column, `capture_status`
   enum).
-- `plans/active/mtds_per_instrument_sentinels_2026_04_21.plan.md` — Phase 8 execution DAG (Waves 8B-8F).
+- `plans/archive/mtds_per_instrument_sentinels_2026_04_21.plan.md` — Phase 8 execution DAG (Waves 8B-8F).
 
 ## 1. Why cap the Tier-3 fan-out?
 

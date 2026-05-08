@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service + every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner + target completion date.
 referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_06.plan.md
+  - plans/active/aws_migration_defi_first_2026_05_07.md
 related:
   - codex/05-infrastructure/cloud-agnostic-script-pattern.md
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
@@ -41,7 +41,7 @@ migration plan has a concrete punch list rather than "we'll find them as we go."
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_06.plan.md).
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md), [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:** TBD audit script — likely `unified-trading-pm/scripts/audit/cloud-agnostic-audit.sh`.
 

@@ -417,5 +417,5 @@ violation. The only legitimate per-env difference is the values in config + the 
 - [`_ssot-rules/12-service-family-scope-rules.md`](../_ssot-rules/12-service-family-scope-rules.md) —
   `UserContext.audience` + custom-claims mapping
 - [stage-3c-derivation-engine.md](stage-3c-derivation-engine.md) §1.2 — `cost()` formula + rule 07/08 enforcement
-- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md)
+- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)
   — runtime topology SSOT

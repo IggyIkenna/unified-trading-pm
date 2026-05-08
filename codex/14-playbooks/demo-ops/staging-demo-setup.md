@@ -7,7 +7,7 @@ scope: [admin, sales, engineer]
 > **Status:** canonical (2026-04-24) **Owner:** Sales + UI Architecture **SSOT for:**
 > `unified-trading-system-ui/lib/auth/personas.ts`, `unified-trading-system-ui/lib/auth/demo-provider.ts`,
 > `unified-trading-system-ui/components/demo/DemoPlanToggle.tsx`. **Plan:**
-> [`../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+> [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`demo-restriction-profiles.md`](./demo-restriction-profiles.md),
 > [`dart-demo-modes.md`](./dart-demo-modes.md),
 > [`../experience/staging-demo-journey.md`](../experience/staging-demo-journey.md),
@@ -34,7 +34,7 @@ This is an operational playbook — _how_ to configure a demo. For the _what_ (c
 > the toggle now writes a localStorage flag that overlays entitlements on top of any user regardless of auth provider.
 > UAT can graduate to real Firebase once the operator provisions the `odum-staging` project. See
 > [`../../08-workflows/environment-mode-philosophy.md`](../../08-workflows/environment-mode-philosophy.md) §Axis 2 and
-> [`../../../plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md`](../../../plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md)
+> [`../../../plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md`](../../../plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md)
 > Phase A for the operator checklist.
 
 ---

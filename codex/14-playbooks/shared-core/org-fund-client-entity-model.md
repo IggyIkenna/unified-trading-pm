@@ -134,7 +134,7 @@ See
 [../implementation-mapping/demo-email-and-provisioning-flow.md](../implementation-mapping/demo-email-and-provisioning-flow.md)
 for the sales-to-provisioning flow. Short version: onboarding creates one `organisation`, one or more `fund` records,
 one or more `client` records, and one or more `api_key_set` records. The user-management-ui (referenced in
-[../../../plans/active/user_management_merge_2026_03_23.plan.md](../../../plans/active/user_management_merge_2026_03_23.plan.md))
+[../../../plans/ai/user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md))
 is the operating surface for this; the experience playbooks describe the shape, the impl plan specifies the build.
 
 ## Cross-references
@@ -150,5 +150,5 @@ is the operating surface for this; the experience playbooks describe the shape, 
   structure-specific views
 - [../experience/regulatory-umbrella-briefing.md](../experience/regulatory-umbrella-briefing.md) — pb2c uses this model
 - [../experience/dart-briefing.md](../experience/dart-briefing.md) — pb2b uses this model
-- [share-class architecture plan](../../../plans/active/share_class_architecture_2026_04_01.plan.md)
-- [user-management merge plan](../../../plans/active/user_management_merge_2026_03_23.plan.md)
+- [share-class architecture plan](../../../plans/archive/share_class_architecture_2026_04_01.plan.md)
+- [user-management merge plan](../../../plans/ai/user_management_merge_2026_03_23.plan.md)

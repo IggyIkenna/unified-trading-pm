@@ -7,7 +7,7 @@ scope: [engineer, admin]
 Status: **canonical** — source of truth for the day-to-day governance of DART forked strategy versions. All runbooks +
 UI copy must mirror this document.
 
-Parent plan: `plans/active/dart_exclusive_subscription_research_fork_2026_04_21.plan.md`. Architecture SSOT:
+Parent plan: `plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md`. Architecture SSOT:
 [`codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md`](../../09-strategy/architecture-v2/dart-exclusive-research-fork.md).
 
 Cross-refs:
@@ -157,7 +157,7 @@ Failures at any step are tier-1 incidents; page the on-call + open a post-mortem
 ## 8. Links
 
 - Parent plan:
-  [dart_exclusive_subscription_research_fork_2026_04_21.plan.md](../../../plans/active/dart_exclusive_subscription_research_fork_2026_04_21.plan.md)
+  [dart_exclusive_subscription_research_fork_2026_04_21.plan.md](../../../plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md)
 - Architecture: [dart-exclusive-research-fork.md](../../09-strategy/architecture-v2/dart-exclusive-research-fork.md)
 - Maturity ladder: [strategy-lifecycle-maturity.md](../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md)
 - Odum-paper runs: [odum-paper-client-zero.md](odum-paper-client-zero.md)

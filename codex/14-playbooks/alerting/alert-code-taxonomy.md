@@ -8,7 +8,7 @@ authoritative_for:
   stable operator runbook entry, threshold owner, and severity. Phase 1 shipped UAC@d00326d; Phase 2 (alerting-service
   consumption) shipped alerting-service@b025e83.
 referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md
+  - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
   - codex/14-playbooks/alerting/operator-playbook.md
   - codex/14-playbooks/alerting/threshold-tuning.md
@@ -193,7 +193,7 @@ tier is needed (e.g. `OBSERVE` between `WARN` and `INFO`), update both `AlertSev
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.plan.md).
+  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`operator-playbook`](./operator-playbook.md), [`threshold-tuning`](./threshold-tuning.md),
   [`rehearsal-procedure`](./rehearsal-procedure.md),
   [`live-deployment-monitoring`](../../05-infrastructure/live-deployment-monitoring.md).

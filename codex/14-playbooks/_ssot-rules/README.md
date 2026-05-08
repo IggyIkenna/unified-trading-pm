@@ -93,8 +93,8 @@ other experience playbooks and create commercial-model / demo-ops / shared-core 
 3 specs the infra (UAC combo registry + derivation engine) that implements the rules at runtime.
 
 - Stage 1 plan:
-  [`plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md)
+  [`plans/ai/playbook_ssot_stage_1_rules_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_1_rules_2026_04_19.plan.md)
 - Stage 2 plan:
-  [`plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
+  [`plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
 - Stage 3 plan:
-  [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
+  [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)

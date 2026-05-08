@@ -9,7 +9,7 @@ scope: [engineer, admin]
 ## Multi-axis correction banner (canonical)
 
 > **Multi-axis correction (2026-05-06)** — per
-> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
+> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
 > a column belongs in the **shard atom** ONLY IF it earns it via failure isolation OR memory ceiling OR concurrency
 > orthogonality. Otherwise it's a **display axis** (row-level column for filter/group, NOT a manifest row per value).
 > This refines the per-asset-group shard atoms below:
@@ -195,14 +195,15 @@ Per-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time
 respects lifecycle bounds. LookaheadBiasError per-market-aware. Until Plan A lands, Polymarket continues to write
 per-base_asset shards; the data_type slot in BUNDLED_DATA_TYPES is reserved.
 
-**Sports per-fixture sharding** (writegate plan Phase 2.B): sports per-fixture data_types (`ODDS_SNAPSHOT`,
-`ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`
-when fixture-scoped) shard at full v5/v6 spec `(asset_group=sports, source, data_type, league_id, fixture_id, day)`
-(per-fixture). Aggregate data_types (`STANDINGS`, `LEAGUES`, `TEAMS`, etc.) shard at day-aggregate. **League is a
-higher-level rollup grouping for data-status panel filtering, NOT the shard atom.** Without per-fixture sharding, can't
-drill down on missing fixtures or fixture-specific stats; ML predictions are fixture-level. Anything that breaks (MTDS
-reader paths, MDPS sports adapter, features-sports input pipeline, deployment-ui drill-down) is fixed within the
-writegate plan.
+**Sports per-(league, day) sharding** (writegate plan Phase 2.B + multi-axis correction banner above): all sports
+data_types — fixture-native (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
+`FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES` when fixture-scoped) AND day-aggregate (`STANDINGS`, `LEAGUES`,
+`TEAMS`, etc.) — shard at `(asset_group=sports, source, data_type, league_id, day)`. **`fixture_id` is a row-level
+column inside the parquet, NOT a hive-partition shard axis** (per the [canonical banner above](#multi-axis-correction-banner-canonical))
+— per-fixture detail at drill-down comes from reading the parquet rows, not from a separate manifest row. Avoids ~10×
+manifest inflation. Per-fixture cluster validation enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL
+`MissingClusterValidationError` (see banner) — clusters are checked INSIDE the per-(league, day) parquet at write time.
+ML predictions remain fixture-level because features-sports-service reads the parquet rows.
 
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
 
@@ -509,6 +510,41 @@ Not all shards are expected every day:
 - **Chain start dates:** AAVEV3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
 - **New venues/bookmakers:** A bookmaker added in 2025-06 has no expected data before that date.
 
+### Source coverage start dates (canonical) — `SOURCE_COVERAGE_START` SSOT
+
+> **Runtime SSOT**: `unified_api_contracts.sports.SOURCE_COVERAGE_START` (+ per-`(source, data_type)` overrides in
+> `DATA_TYPE_COVERAGE_START`). This codex table is the **canonical literal-values mirror** — every other codex doc
+> references this section, never redeclares the dates. If UAC moves, update this table in lockstep; downstream docs
+> auto-stay-correct because they cross-link.
+
+Sources have launch dates. Data-status must clip pre-launch dates from expected denominators or those days falsely
+render as `missing`. Adapters use `clip_dates_to_source_coverage(source, start, end, data_type=...)` and pass
+`source_key=` through helpers like `_sports_expected_dates_for_league`.
+
+| Source                                     | `data_types` covered                                                                                                                            | `coverage_start` |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------: |
+| `api_football`                             | LEAGUES, TEAMS, VENUES, FIXTURES, INJURIES, STANDINGS                                                                                           |       2018-01-01 |
+| `api_football` (override)                  | FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS                                                                                    |       2020-06-06 |
+| `footystats`                               | MATCHES, footystats_odds, footystats_predictions                                                                                                |       2019-01-01 |
+| `understat`                                | XG                                                                                                                                              |       2015-01-16 |
+| `transfermarkt`                            | PLAYER_VALUES                                                                                                                                   |       2019-01-01 |
+| `soccer_football_info` (override)          | SFI_PROGRESSIVE_STATS                                                                                                                           |       2020-01-01 |
+| `open_meteo`                               | WEATHER                                                                                                                                         |       2019-03-02 |
+| `odds_api`                                 | odds (MTDS `odds_horizon_bucket`)                                                                                                               |       2020-06-06 |
+| `mdps_odds_horizon_bucket`                 | bucketed odds movement                                                                                                                          |       2020-06-06 |
+
+**Per-`(source, data_type)` overrides** live in `DATA_TYPE_COVERAGE_START`. Currently:
+
+- `("soccer_football_info", "SFI_PROGRESSIVE_STATS") = 2020-01-01` — SFI's progressive endpoint returns empty for every
+  match before this date (probed 2026-04-30).
+- `("api_football", {FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS}) = 2020-06-06` — endpoints have data
+  back to 2017-10 per live probes 2026-05-01 but our backfill never captured 2018–2020 due to pre-flight skips, and
+  downstream `odds_api` also starts 2020-06-06 so pre-cutoff per-fixture data has no trading value.
+
+**Documented date-range gaps** (provider outages, paused leagues) go in `KNOWN_COVERAGE_GAPS` (currently empty) and are
+filtered by `is_in_known_gap(source, data_type, iso_date)` — data-status drops them from the denominator and the
+orchestrator pre-skips them so VMs don't waste rate-limit quota grinding through known-empty range.
+
 ### Data Freshness
 
 The `written_at` column records when each manifest entry was written. This enables:
@@ -731,7 +767,7 @@ The closure has two halves, both required:
 **Half 1 — Forward-write `record_expected_empty(reason=EXPECTED_*)`** (writegate Phase 2.E.2 — partly shipped
 2026-05-07). Every NEW empty case at adapter / orchestrator level emits a manifest row with structured reason instead of
 skipping write. Adapter migrations done for sports + cefi + defi + tradfi this session
-([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
 Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
 
 **Half 2 — Backward-fill the expected universe** (SHIPPED 2026-05-07 — PM@79e47874 + PM@341bb285).

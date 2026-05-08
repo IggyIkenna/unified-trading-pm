@@ -340,7 +340,7 @@ A data-type is "done" when:
 ## Pre-requisites that block execution today
 
 The drilldown UI has known bugs that make this playbook hard to execute. They are tracked in the active plan
-`plans/active/instruments_and_market_tick_data_completion_2026_05_01.plan.md`:
+`plans/archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md`:
 
 - CSV download returns headers-only (won't verify shard content).
 - Day-shard list capped at 60 days (can't see the rest of a 2,500-day window).

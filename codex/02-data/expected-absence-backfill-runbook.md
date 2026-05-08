@@ -4,7 +4,7 @@ status: shipped
 created: 2026-05-07
 authoritative_for: Per-asset-group runbook for back-filling `record_expected_empty(reason=...)` rows over legacy null-reason manifest entries AND for enumerating the structurally-empty universe (chain pre-genesis / venue pre-launch / source pre-coverage / non-trading-day) that has no manifest row at all. Pairs the on-the-fly UTL `classify_legacy_empty_row()` helper with two batch passes that materialise the closed-set `EXPECTED_<REASON>` taxonomy on disk.
 referenced_by:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
 related:
   - codex/02-data/honest-absence-downstream-handling.md
   - codex/02-data/availability-manifest-and-data-status.md
@@ -122,7 +122,7 @@ After each VM shutdown:
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+- **Plan(s) implementing this:** [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
   § Phase 3.D.4 (enumerator) + § Phase 3.D.1/3.D.2 (reconciler).
 - **Related codex SSOTs:** [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md),
   [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md) § "Rollup-vs-drilldown

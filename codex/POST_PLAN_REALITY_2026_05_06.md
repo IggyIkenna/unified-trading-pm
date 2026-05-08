@@ -66,11 +66,11 @@ to be read with this doc as the override.
 
 Read these before any doc edit + before any code change in the affected scopes:
 
-- [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+- [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
   — primary contract change to `ManifestWriter.record_captured` covering MDPS empty-output A/B/C, cluster validation
   mandatory, sports per-fixture_id sharding, sports `available_at` correctness, MDPS v6 columns wiring, retrospective
   migration. Status: drafted, Phase 0 audit synthesised, Phase 2.B amendment F pending Ikenna review.
-- [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
+- [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
   — Polymarket + Kalshi shard migration to canonical_question_group; UAC `CanonicalQuestionGroup` enum + classifier with
   stability hash; per-market lifecycle timestamps in instruments-service; MTDS adapter migration with cluster
   validation; GCS migration of existing per-base_asset parquets.
@@ -81,7 +81,7 @@ Read these before any doc edit + before any code change in the affected scopes:
 - [`shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`](plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md)
   — parent HANDOVER. Phase 0 audit findings synthesised. Item 1 (cluster validation) and parent Phase 1 Tier 1 #1 +
   Phase 1 Tier 2 raw-tables marked SUPERSEDED with link to writegate plan.
-- [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](plans/active/shard_granularity_ssot_propagation_2026_05_06.plan.md)
+- [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md)
   — parent plan. Some phases superseded (linked).
 
 ---

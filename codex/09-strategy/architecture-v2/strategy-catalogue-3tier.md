@@ -10,7 +10,7 @@ scope: [engineer, admin]
 > `unified-trading-system-ui/app/(ops)/admin/strategy-universe/page.tsx`,
 > `unified-trading-system-ui/app/(ops)/admin/strategy-lifecycle-editor/page.tsx`,
 > `unified-trading-system-ui/app/(platform)/services/strategy-catalogue/page.tsx`. **Plan:**
-> [`plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
+> [`plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
 > **Depends on:** [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) ·
 > [`dashboard-services-grid.md`](./dashboard-services-grid.md) · [`performance-overlay.md`](./performance-overlay.md)
 
@@ -387,9 +387,9 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
   Signals-In feature matrix + locked-section design + DemoPlanToggle.
 - [`../../06-coding-standards/strategy-display-conventions.md`](../../06-coding-standards/strategy-display-conventions.md)
   — never-render-raw-IDs rule + archetype / family bespoke names used in every card.
-- [`../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/active/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
+- [`../../../plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
   — the plan this doc is the SSOT for.
-- [`../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+- [`../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
   — plan for the questionnaire-seeding + tier-badge + upgrade-banner additions (§11-§14).
 - [`performance-overlay.md`](./performance-overlay.md) — the chart primitive embedded in FOMO tearsheets.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — §4.5 declares Strategy Catalogue is a cross-cutting

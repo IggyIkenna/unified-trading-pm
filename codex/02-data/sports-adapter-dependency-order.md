@@ -15,7 +15,7 @@ matrix below.
 **Cross-references**:
 
 - Per-category bucket & path layouts: `codex/02-data/per-category-bucket-layouts.md`
-- Smoke matrix plan: `plans/active/institutional_smoke_matrix_2026_04_20.plan.md` § Phase 3
+- Smoke matrix plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md` § Phase 3
 - Availability manifest schema: `codex/02-data/availability-manifest-and-data-status.md`
 - Shard-level failure isolation (shard-level, NOT pre-flight): `codex/04-architecture/shard-level-failure-isolation.md`
 - Implementation: `instruments-service/instruments_service/reference_data/sports_dependency.py`

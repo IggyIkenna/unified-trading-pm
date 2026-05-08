@@ -69,7 +69,7 @@ Both demos walk the same screens. Framing differences captured in the playbook d
 ## Primary content sources
 
 - Implementation plan:
-  [client_lifecycle_platform_2026_04_05.plan.md](../../../plans/active/client_lifecycle_platform_2026_04_05.plan.md)
+  [client_lifecycle_platform_2026_04_05.plan.md](../../../plans/archive/client_lifecycle_platform_2026_04_05.plan.md)
 - Share class architecture:
   [../../04-architecture/share-class-architecture.md](../../04-architecture/share-class-architecture.md)
 

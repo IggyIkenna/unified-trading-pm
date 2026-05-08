@@ -5,7 +5,7 @@ created: 2026-05-07
 updated: 2026-05-07
 authoritative_for: How alert thresholds are set, who owns each threshold, when they get reviewed. Avoids the "alert on a number nobody can defend" failure mode that produces noise + alert fatigue. Phase 1 (UAC SSOT + 10 seed thresholds) shipped UAC@d00326d.
 referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md
+  - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
   - codex/14-playbooks/alerting/alert-code-taxonomy.md
   - codex/14-playbooks/alerting/operator-playbook.md
@@ -126,13 +126,13 @@ Phase 7 ships this as `alerting-service/scripts/replay_threshold.py`.
 
 If a code generates >10 false positives per 24-hour window during Phase 7 quietness baseline, the
 threshold is auto-flagged for review. Threshold-research sub-agent (planned in
-[`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.plan.md))
+[`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md))
 proposes a tightened value with citation; operator approves before merge.
 
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.plan.md).
+  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`alert-code-taxonomy`](./alert-code-taxonomy.md),
   [`operator-playbook`](./operator-playbook.md),
   [`rehearsal-procedure`](./rehearsal-procedure.md).

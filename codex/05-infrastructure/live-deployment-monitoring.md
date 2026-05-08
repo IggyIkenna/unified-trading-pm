@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch) trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so silent stalls are visible within minutes.
 referenced_by:
-  - plans/active/master_to_live_defi_2026_05_23.plan.md
+  - plans/active/master_to_live_defi_2026_05_23.md
 related:
   - codex/05-infrastructure/vm-tarball-deployment.md
   - codex/14-playbooks/alerting/operator-playbook.md
@@ -45,7 +45,7 @@ events to the same downstream consumers via the unified-events-interface).
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.plan.md) work-stream B.
+- **Plan(s) implementing this:** [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
 - **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md), [`alerting/operator-playbook`](../14-playbooks/alerting/operator-playbook.md).
 - **Code:** `unified-trading-library/events/`, `unified-events-interface/`, alerting-service (TBD).
 

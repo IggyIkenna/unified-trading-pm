@@ -6,7 +6,7 @@ status: reference
 codified: 2026-05-07
 sources:
   - plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived)
-  - plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
+  - plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)
 ---
 
@@ -67,6 +67,6 @@ part that's easy to miss.
 
 ## Related docs
 
-- `plans/active/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` — the original provisioning plan.
+- `plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` — the original provisioning plan.
 - `codex/08-workflows/environment-mode-philosophy.md` § Axis 2 (staging vs prod).
 - `codex/05-infrastructure/auth-setup.md` — Firebase Auth patterns.

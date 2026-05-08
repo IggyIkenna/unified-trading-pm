@@ -5,7 +5,7 @@ scope: [engineer]
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
 
 **Status:** Active (2026-04-28) **Implementation plan:**
-[`plans/active/dart_terminal_research_split_2026_04_28.plan.md`](../../../plans/active/dart_terminal_research_split_2026_04_28.plan.md)
+[`plans/ai/dart_terminal_research_split_2026_04_28.plan.md`](../../../plans/ai/dart_terminal_research_split_2026_04_28.plan.md)
 **Repo:** `unified-trading-system-ui` **Branch:** `live-defi-rollout`
 
 ## Why this exists

@@ -110,11 +110,11 @@ Step-by-step flow in [../authentication/firebase-production.md](../authenticatio
 
 ## Related plans
 
-- [user_management_merge_2026_03_23.plan.md](../../../plans/active/user_management_merge_2026_03_23.plan.md) —
+- [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md) —
   provisioning workflows
-- [share_class_architecture_2026_04_01.plan.md](../../../plans/active/share_class_architecture_2026_04_01.plan.md) —
+- [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md) —
   share class structure
-- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md)
+- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)
   — client isolation per SLA tier
 
 ## Related codex

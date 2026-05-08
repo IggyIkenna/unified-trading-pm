@@ -170,15 +170,11 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 
 ### SPORTS
 
-| source               | data_types (entities)                                        | coverage_start        |
-| -------------------- | ------------------------------------------------------------ | --------------------- |
-| api_football         | LEAGUES, TEAMS, VENUES, FIXTURES, INJURIES, STANDINGS        | 2018-01-01            |
-| api_football         | FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS | 2020-06-06 (override) |
-| footystats           | MATCHES, footystats_odds, footystats_predictions             | 2019-01-01            |
-| understat            | XG                                                           | 2015-01-16            |
-| transfermarkt        | PLAYER_VALUES                                                | 2019-01-01            |
-| soccer_football_info | SFI_PROGRESSIVE_STATS                                        | 2020-01-01 (override) |
-| open_meteo           | WEATHER                                                      | 2019-03-02            |
+> **Coverage-start values**: see
+> [`availability-manifest-and-data-status.md` § Source coverage start dates (canonical)](./availability-manifest-and-data-status.md#source-coverage-start-dates-canonical--source_coverage_start-ssot)
+> (UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START` runtime SSOT). Sources covered:
+> `api_football`, `footystats`, `understat`, `transfermarkt`, `soccer_football_info`, `open_meteo`. Per-`(source, data_type)`
+> overrides for SFI_PROGRESSIVE_STATS and api_football per-fixture data_types live in the same canonical table.
 
 ### PREDICTION
 
@@ -239,10 +235,14 @@ MBP-1 quotes dropped 2026-04-30; tbbo supersedes.
 
 ### SPORTS
 
-| source                                             | mtds raw data_type              | coverage_start |
-| -------------------------------------------------- | ------------------------------- | -------------- |
-| ODDS_API                                           | odds                            | 2020-06-06     |
-| PINNACLE / BETFAIR / DRAFTKINGS / FANDUEL / BET365 | odds (via ODDS_API aggregation) | 2024-01-01     |
+> **Coverage-start values**: see
+> [`availability-manifest-and-data-status.md` § Source coverage start dates (canonical)](./availability-manifest-and-data-status.md#source-coverage-start-dates-canonical--source_coverage_start-ssot)
+> for `ODDS_API` / `mdps_odds_horizon_bucket` (SSOT for the literal date).
+
+| source                                             | mtds raw data_type              | coverage_start                |
+| -------------------------------------------------- | ------------------------------- | ----------------------------- |
+| ODDS_API                                           | odds                            | per canonical SOURCE_COVERAGE |
+| PINNACLE / BETFAIR / DRAFTKINGS / FANDUEL / BET365 | odds (via ODDS_API aggregation) | 2024-01-01 (per-bookmaker)    |
 
 ### PREDICTION
 

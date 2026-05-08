@@ -7,7 +7,7 @@ scope: [engineer, admin]
 > **Status:** canonical (2026-04-21) **Owner:** Strategy Architecture v2 + Platform Ops **SSOT for:**
 > `unified-api-contracts/unified_api_contracts/internal/domain/client/registry.py` seed rows (`odum-paper`,
 > `odum-live`). **Plan:**
-> [`plans/active/strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../../../plans/active/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
+> [`plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../../../plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
 > **Cross-refs:**
 > [`../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md`](../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md)
 > ·

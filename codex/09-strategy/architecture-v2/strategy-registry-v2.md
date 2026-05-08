@@ -10,7 +10,7 @@ scope: [engineer, admin]
 This document records the post-v1-delete shape of the strategy registry — the **one** place in Python that resolves
 `strategy_id → (name, family, category, archetype)` for downstream consumers. v1 `StrategyFamily` (17 values), v1
 `StrategyArchetype` (13 values), the 55-entry `_DEFAULT_STRATEGIES` catalogue and the `StrategyDefinition` dataclass in
-its old shape were deleted on 2026-04-21 per `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` todo
+its old shape were deleted on 2026-04-21 per `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` todo
 `p1-kill-v1-strategyfamily-uac`. The v2 replacement is described here.
 
 ## Where the data comes from

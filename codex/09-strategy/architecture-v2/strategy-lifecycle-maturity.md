@@ -8,7 +8,7 @@ scope: [engineer, admin]
 > `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/lifecycle.py`,
 > `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py` (5-dim rewrite),
 > `unified-api-contracts/unified_api_contracts/registry/venue_set_variants/`. **Plan:**
-> [`plans/active/strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../../../plans/active/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
+> [`plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../../../plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
 > **Depends on (consumers):** [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) ·
 > [`performance-overlay.md`](./performance-overlay.md) · [`dashboard-services-grid.md`](./dashboard-services-grid.md) ·
 > [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)

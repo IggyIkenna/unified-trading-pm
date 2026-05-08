@@ -10,7 +10,7 @@ scope: [engineer, admin]
 > implementation is a Stage 3E G1 refactor item.
 >
 > **Parent plan:**
-> [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
+> [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
 > § Phase 3C.
 >
 > **Inputs:**

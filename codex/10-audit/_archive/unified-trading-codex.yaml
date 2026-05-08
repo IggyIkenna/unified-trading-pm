@@ -98,7 +98,7 @@ business_readiness:
     br1_acceptance_criteria:
       status: "pass"
       criteria: "Plan owning this repo has measurable acceptance criteria"
-      plan_ref: "unified-trading-pm/plans/active/repo_readiness_semver_hardening_2026_03_11.plan.md"
+      plan_ref: "unified-trading-pm/plans/archive/repo_readiness_semver_hardening_2026_03_11.plan.md"
       evidence: "Plan #63 registered. Codex 10-audit SSOT creation is the acceptance criterion."
       notes: ""
     br2_circuit_breaker:

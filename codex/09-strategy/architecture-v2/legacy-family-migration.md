@@ -4,7 +4,7 @@ scope: [engineer, admin]
 
 # Legacy Family String Migration Report
 
-**Audit driver:** `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` § `p8-audit-legacy-family-strings`.
+**Audit driver:** `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` § `p8-audit-legacy-family-strings`.
 
 **Scope:** Find every lowercase / v1-era family string (`basis-trade`, `mean-reversion`, `sports-arb`, `prediction-ml`,
 etc.) used as a route slug, filter value, or user-visible display label in `unified-trading-system-ui`. Migrate to v2
@@ -68,7 +68,7 @@ updating the display components would break ~400 tests and break the v1 trading 
 "clean-break when all 60+ repos are available; temporary co-existence when not", and per the explicit comment in
 `legacy-mapping.ts`, this is a Phase 11 deliverable.
 
-**Tracking:** add a follow-up plan `plans/active/strategy_fixture_v2_regeneration_<date>.plan.md` when Phase 11 work
+**Tracking:** add a follow-up plan `plans/active/strategy_fixture_v2_regeneration_<date>.md` when Phase 11 work
 begins.
 
 ### 1.3 Intentional v1 identifiers — NOT TARGETS
@@ -102,7 +102,7 @@ tracked. No further route-slug / display-label migrations are viable until Phase
 
 ### 2.1 v1 strategy-registry.ts equivalency audit (2026-04-21 Wave 6 re-verdict)
 
-**Audit driver:** `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` § follow-up Task C — user directive
+**Audit driver:** `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` § follow-up Task C — user directive
 2026-04-21 "we don't need v1 strategies anymore as long as we are sure they are at least as maturely integrated in v2".
 Wave 6 Task A/B/C resolved each of the six 2026-04-21 gaps as follows.
 
@@ -205,7 +205,7 @@ Mapping is `v1_archetype` + asset-class inference → `v2_family.v2_archetype` +
 
 **Status:** MIGRATION COMPLETE. All 6 original gaps resolved (3 retired + 3 mapped to existing v2 cells). Follow-up plan
 `strategy_fixture_v2_regeneration_<date>.plan.md` was ABSORBED into
-`plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 — no separate plan authored. v1
+`plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 — no separate plan authored. v1
 `lib/strategy-registry.ts` + `legacyFamilyToV2()` deleted in this wave.
 
 ---

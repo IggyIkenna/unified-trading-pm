@@ -76,7 +76,7 @@ The lint rule `no-hardcoded-terminology` (planned, P11.7 follow-up) will flag th
 ## §5 — Cross-references
 
 - DART UI plan:
-  [`../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+  [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
   §Phase 11
 - Glossary: [`../../../unified-trading-system-ui/lib/glossary.ts`](../../../unified-trading-system-ui/lib/glossary.ts)
   (in-app hover definitions, complementary to TERMS)

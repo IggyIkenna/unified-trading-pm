@@ -201,5 +201,5 @@ Until the plan ships:
 - [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
 - [`plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md)
   — preview → auto-launch successor.
-- [`plans/active/aws_migration_defi_first_2026_05_07.plan.md`](../../plans/active/aws_migration_defi_first_2026_05_07.plan.md)
+- [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
   — bigger AWS S3 / ECR / EC2-launcher work.

@@ -91,7 +91,7 @@ instruments-service and market-tick-data-service both define InstrumentDefinitio
 | DeltaOneFeatureRecord, FeatureSnapshotRequest  | UIC features.py | TBD                                 |
 | CircuitBreakerEventMessage, HealthAlertMessage | UIC pubsub.py   | TBD                                 |
 
-See: unified-trading-pm/plans/active/orphan-contracts-utilization.plan.md
+See: unified-trading-pm/plans/archive/orphan-contracts-utilization.plan.md
 
 ---
 

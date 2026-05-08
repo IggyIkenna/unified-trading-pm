@@ -7,7 +7,7 @@ ssot: true
 
 > **SSOT:** UAC `unified_api_contracts.internal.instrument_volatility` — `MaxUnderlyingMove`,
 > `INSTRUMENT_VOLATILITY_REGISTRY`, `derive_max_safe_leverage()`. Plan:
-> `plans/active/defi_pipeline_extension_2026_05_01.plan.md` Phase 1+2+3.
+> `plans/archive/defi_pipeline_extension_2026_05_01.plan.md` Phase 1+2+3.
 
 ## Why this exists
 

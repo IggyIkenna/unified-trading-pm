@@ -55,4 +55,4 @@ bleed; drift > `depeg_exit_bps` means exit immediately.**
 
 ## Plan
 
-`plans/active/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.2.
+`plans/archive/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.2.

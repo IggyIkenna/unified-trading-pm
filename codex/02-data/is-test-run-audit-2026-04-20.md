@@ -6,7 +6,7 @@ scope: [engineer, admin]
 
 **Purpose**: Per-service inventory of how `IS_TEST_RUN=true` (env var) → `-test-` bucket suffix is honoured. Written as
 the Phase 1 deliverable of the institutional smoke matrix plan
-(`plans/active/institutional_smoke_matrix_2026_04_20.plan.md`). Pairs with the per-category bucket SSOT
+(`plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`). Pairs with the per-category bucket SSOT
 (`per-category-bucket-layouts.md`).
 
 **Status**: canonical reference for Phase 2 (per-service smoke scripts). Updated post-propagation.
@@ -136,7 +136,7 @@ under `gs://{prefix}-{category}-test-{project_id}/...`. The Phase 6 end-to-end v
 ## Cross-references
 
 - Per-category bucket layouts SSOT: `codex/02-data/per-category-bucket-layouts.md`
-- Plan: `plans/active/institutional_smoke_matrix_2026_04_20.plan.md`
+- Plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`
 - UTL helper: `unified_trading_library/core/cloud_constants.py:215` (`get_write_bucket_name`)
 - MDPS dep-checker: `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`
 - `setup-buckets.py` (existing test-bucket provisioner):

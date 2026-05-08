@@ -103,7 +103,7 @@ Monthly BTC ML revenue through 2026:
 simultaneously; narrow initial scope per counterparty. Expansion-driven growth modelled in 2027.
 
 Backend enablement dependency: external-broadcast refactor per
-[`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
+[`../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
 
 | Sep | Oct | Nov | Dec |
 | --- | --- | --- | --- |
@@ -131,7 +131,7 @@ Sums (£k):
 
 **Revision note (2026-04-20)**: Signal leasing revised from £12-24k/mo ramp (previous modelling) to £4k/mo flat Sept-Dec
 (~$5k combined from 2 narrow-scope counterparties live simultaneously Sept 2026 per
-`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`). Annual revenue impact: **-£56k**
+`../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`). Annual revenue impact: **-£56k**
 (from £692k to ~£636k). Net-of-cost impact with cascaded 10%-of-revenue profit-share: year-end cash moves from ~£464k to
 **~£413k** — still well above £150k reserve floor; no funding implication. P&L + cumulative-cash tables below are
 post-revision.

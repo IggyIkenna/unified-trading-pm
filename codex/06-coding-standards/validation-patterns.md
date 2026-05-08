@@ -220,10 +220,10 @@ df_safe = df[df["available_at"] <= target_ts - horizon]
 ## Related
 
 - **Active write-gate plan**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
 - **Active predictions migration plan**:
-  [`plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
-- **InstrumentsWriteGate plan**: `plans/active/instruments_service_write_gate_validation_2026_04_22.plan.md`
+  [`plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
+- **InstrumentsWriteGate plan**: `plans/ai/instruments_service_write_gate_validation_2026_04_22.plan.md`
 - **Upstream lookahead-bias rule**:
   [`02-data/sports-scheduling-and-sharding.md` §5](../02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)
 - **Manifest semantics + write-gate quartet**:

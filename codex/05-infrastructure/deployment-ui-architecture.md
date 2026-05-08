@@ -5,9 +5,9 @@ owner: ikenna
 status: stub
 codified: 2026-05-08
 sources:
-  - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md (Phase A.3 — this doc)
-  - plans/active/instruments_live_master_2026_05_08.plan.md (Phase G delegates UI scope here)
-  - plans/active/master_to_live_defi_2026_05_23.plan.md
+  - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
+  - plans/epics/instruments_live_master_2026_05_08.md (Phase G delegates UI scope here)
+  - plans/active/master_to_live_defi_2026_05_23.md
   - codex/04-architecture/deployment-topology-diagrams.md
   - codex/05-infrastructure/launcher-script-ssot.md
   - codex/05-infrastructure/runtime-tiers-and-deployment.md
@@ -299,20 +299,20 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
   pattern that backs the cloud-toggle. deployment-api boots with both clouds; UI dispatches per-request.
 - [`codex/05-infrastructure/firebase-split-topology.md`](firebase-split-topology.md) — env-tier hosting for
   trading-system-UI. The deployment-UI follows the same pattern (Phase H of the activation plan).
-- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md)
+- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md)
   — the active plan that owns the activation work this doc captures.
-- [`plans/active/deploy_missing_auto_launch_2026_05_07.plan.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.plan.md)
+- [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.md)
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
-- [`plans/active/instruments_live_master_2026_05_08.plan.md`](../../plans/active/instruments_live_master_2026_05_08.plan.md)
+- [`plans/epics/instruments_live_master_2026_05_08.md`](../../plans/epics/instruments_live_master_2026_05_08.md)
   — Phase G of that plan delegates UI scope here.
-- [`plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md) —
+- [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) —
   the 6 long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster registry
   on first commit; staging deploy + drain test are part of master's D3 gate.
 
 ## Plan provenance
 
 Codified by Phase A.3 of
-[`deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md).
+[`deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md).
 That plan owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases
 ship, this doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read
 the SSOT, not the old service-axis-organised topology.

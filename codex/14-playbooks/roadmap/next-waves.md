@@ -106,7 +106,7 @@ implementation before pb3a/pb3b demos are meaningful.
 
 - **Owner**: user-management-ui
 - **Existing plan**:
-  [user_management_merge_2026_03_23.plan.md](../../../plans/active/user_management_merge_2026_03_23.plan.md) (Phase 1-5
+  [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md) (Phase 1-5
   mostly done)
 - **Blocked by**: staging Firebase (1a)
 - **Unblocks**: admin can actually provision demo prospects end-to-end

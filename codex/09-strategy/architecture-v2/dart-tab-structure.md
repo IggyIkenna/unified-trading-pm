@@ -7,7 +7,7 @@ scope: [engineer, admin]
 Status: **canonical** — source of truth for UI lifecycle-nav shape and DART sub-tab visibility. All UI implementations
 must mirror this document; drift is a bug.
 
-Parent plan: `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` (Phase 11).
+Parent plan: `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` (Phase 11).
 
 Cross-refs:
 

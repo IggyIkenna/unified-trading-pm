@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Per-AlertCode operator response — ack / escalate / kill-switch / runbook-link. The doc the on-call operator opens when their phone rings; tells them what to do for every code.
 referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md
+  - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
   - codex/14-playbooks/alerting/alert-code-taxonomy.md
   - codex/14-playbooks/alerting/threshold-tuning.md
@@ -47,7 +47,7 @@ runbook per AlertCode.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.plan.md).
+- **Plan(s) implementing this:** [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`alert-code-taxonomy`](./alert-code-taxonomy.md), [`threshold-tuning`](./threshold-tuning.md), [DART playbook](../dart/).
 - **Code:** alerting-service (TBD), DART manual-trade-gate UI.
 

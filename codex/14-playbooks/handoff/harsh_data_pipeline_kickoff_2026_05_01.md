@@ -17,7 +17,7 @@ workspace; nothing on Ikenna's local machine is required.
 
 1. **[backfill-completion-playbook.md](../backfill-completion-playbook.md)** — operational SSOT. Cutoffs, MVP target,
    bundling/schema invariants, special cases (VIX, sports odds-API), credentials policy, known gotchas.
-2. **[active plan: instruments_and_market_tick_data_completion_2026_05_01.plan.md](../../../plans/active/instruments_and_market_tick_data_completion_2026_05_01.plan.md)**
+2. **[active plan: instruments_and_market_tick_data_completion_2026_05_01.plan.md](../../../plans/archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md)**
    — phased execution DAG. Phase 0 unblockers → Phase 1 sports → Phase 2 cefi → Phase 3 tradfi → Phase 4 prediction →
    Phase 5 defi → Phase 6 verification.
 3. **`.claude/CLAUDE.md` at workspace root** — the workspace-wide rules. Especially the Key Rules section, which has

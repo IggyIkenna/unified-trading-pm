@@ -4,7 +4,7 @@ scope: [engineer, admin]
 
 # Value-Betting Archetype Decision (2026-04-21)
 
-**Context:** Audit driver for this decision — `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6
+**Context:** Audit driver for this decision — `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6
 Task B. The v1 strategy registry (`unified-trading-system-ui/lib/strategy-registry.ts`) had two entries —
 `SPORTS_NFL_VALUE_BET_EVT_GAME` + `SPORTS_MLB_VALUE_BET_EVT_GAME` — that the Wave 5 equivalency audit flagged as **GAP
 (semantics)** because v2 lacks a dedicated `VALUE_BETTING` archetype.

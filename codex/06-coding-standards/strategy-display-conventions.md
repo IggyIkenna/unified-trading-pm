@@ -10,7 +10,7 @@ scope: [engineer]
 >
 > **Status:** canonical (2026-04-24) **Owner:** UI Architecture **SSOT for:**
 > `unified-trading-system-ui/lib/strategy-display.ts`. **Plan:**
-> [`../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+> [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`strategy-identity-versioning.md`](./strategy-identity-versioning.md) (naming of the underlying
 > IDs), [`../09-strategy/architecture-v2/README.md`](../09-strategy/architecture-v2/README.md) (the 8 families + 18
 > archetypes this formats).

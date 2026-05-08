@@ -42,7 +42,7 @@ Sales person uses user-management-ui to create a demo user:
 The user-management-ui writes to the staging entitlement registry and provisions Firebase staging credentials.
 
 Reference:
-[`../../../plans/active/user_management_merge_2026_03_23.plan.md`](../../../plans/active/user_management_merge_2026_03_23.plan.md)
+[`../../../plans/ai/user_management_merge_2026_03_23.plan.md`](../../../plans/ai/user_management_merge_2026_03_23.plan.md)
 tracks the user-management-ui build.
 
 ### Step 4 — Welcome email
@@ -125,5 +125,5 @@ Until Stage 3E lands, the flow is semi-automated as described.
 - [persona-and-user-prototype-mapping.md](persona-and-user-prototype-mapping.md) — persona fixtures
 - [route-mapping.md](route-mapping.md) — routes to verify pre-session
 - [`../authentication/firebase-staging.md`](../authentication/firebase-staging.md) — Firebase staging auth
-- [`../../../plans/active/user_management_merge_2026_03_23.plan.md`](../../../plans/active/user_management_merge_2026_03_23.plan.md)
+- [`../../../plans/ai/user_management_merge_2026_03_23.plan.md`](../../../plans/ai/user_management_merge_2026_03_23.plan.md)
   — user-management-ui build

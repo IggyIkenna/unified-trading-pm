@@ -8,7 +8,7 @@ scope: [engineer, sales, admin]
 > `unified-trading-system-ui/lib/questionnaire/resolve-persona.ts::seedFiltersFromQuestionnaire()`,
 > `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py::QuestionnaireResponse`,
 > `unified-trading-system-ui/lib/questionnaire/types.ts::QuestionnaireResponse`. **Plan:**
-> [`plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+> [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`../../02-data/questionnaire-axes.md`](../../02-data/questionnaire-axes.md),
 > [`../../08-workflows/prospect-questionnaire-flow.md`](../../08-workflows/prospect-questionnaire-flow.md),
 > [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md).

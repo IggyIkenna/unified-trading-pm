@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # Instrument Lifecycle = Event-Publish + Downstream Cache-Delta Hot-Reload (workspace pattern)
 
 > **STATUS** — Workspace pattern doc codified during the live-pipeline activation 2026-05-08. Work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 > Phase 10. Coordinated with
 > [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.plan.md). If this doc
 > disagrees with the active plans, the plans win.
@@ -123,7 +123,7 @@ Banner each plan with the other to keep the work coordinated.
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 10.
 - Plan: [`instruments_live_master_2026_05_08`](../../plans/epics/instruments_live_master_2026_05_08.plan.md) —
   publish-side owner.

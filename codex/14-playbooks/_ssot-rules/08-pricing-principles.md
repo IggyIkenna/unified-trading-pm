@@ -198,7 +198,7 @@ Rule 08 shapes three Stage-3 design decisions:
 - [`04-dart-commercial-axes.md`](04-dart-commercial-axes.md) — axis resolution picks which blocks are in scope per cell
 - [`10-strategy-instruction-schema-principles.md`](10-strategy-instruction-schema-principles.md) — instruction-schema
   fit depth becomes a pricing dimension inside blocks 5 and 7 (instructions integration + execution layer)
-- [Stage 2 `commercial-model/pricing-building-blocks.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
+- [Stage 2 `commercial-model/pricing-building-blocks.md`](../../../plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
   — numbers populate here
-- [Stage 3 Phase 3C derivation engine](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) —
+- [Stage 3 Phase 3C derivation engine](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) —
   `cost(combo, tier)` formula

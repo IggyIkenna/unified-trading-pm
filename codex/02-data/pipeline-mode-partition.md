@@ -90,7 +90,7 @@ output. See `live_pipeline` Phase 12 for the full reconciliation gate criteria.
 ## Migration history
 
 Bundled migration 2026-05-XX per
-[`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md).
+[`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 Three migrations rode together:
 
 1. Add `pipeline_mode=` segment to every existing batch parquet, applying the source-priority entry's value (e.g.
@@ -128,7 +128,7 @@ plan's Phase 8.
 ## Cross-references
 
 - Plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Foundation: [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) — manifest
   schema + 4-state taxonomy + reason taxonomy.
 - Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —

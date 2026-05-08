@@ -6,7 +6,7 @@ created_by: Agent-5 deep-audit follow-up to Group F item 19
 ---
 
 > **STUB — content owners pending.** Created 2026-05-07 as a deep-audit follow-up to
-> [`../../plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md)
+> [`../../plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 > Group F item 19 (Treasury / custody integration). The Copper-side companion at
 > [`copper-custody-integration.md`](copper-custody-integration.md) is the reference shape; CEFFU coverage parallels it
 > for Binance institutional flow. Content authors: whoever owns Binance institutional wiring (defi_master Fork 1
@@ -86,7 +86,7 @@ interface used for Copper applies here — switching providers is a config chang
 - [`custody-providers.md`](custody-providers.md) — catalogue of supported / candidate custody providers.
 - [`wallet-hierarchy-and-capital-flow.md`](wallet-hierarchy-and-capital-flow.md) — strategy-instance / venue-account
   capital-flow contract.
-- [`../../plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md)
+- [`../../plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
   § Group F item 19 — live-trading prereq tracking.
-- [`../../plans/active/defi_master_2026_05_07.plan.md`](../../plans/active/defi_master_2026_05_07.plan.md) Fork 1 —
+- [`../../plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md) Fork 1 —
   Binance perp hedging-leg ownership.

@@ -5,7 +5,7 @@ scope: [engineer, admin, sales]
 # Rule 11 — Codex scope registry (per-audience documentation surface)
 
 > **Status:** active — Stage 3E G1.9 landing commit. **Parent plan:**
-> `plans/active/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`. **Spec reference:**
+> `plans/archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`. **Spec reference:**
 > `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9.
 
 ## Why this rule exists

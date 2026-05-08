@@ -29,7 +29,7 @@ private mempool).
 
 The workspace does NOT currently collect a mempool feed. Bloxroute was removed and is on the Removed-providers list
 (workspace `CLAUDE.md`). Live sandwich execution is therefore impossible until a mempool feed is wired back. That work
-is the deferred Phase 9 plan `plans/active/mempool_feed_integration_2026_06_01.plan.md` (status: paused, un-pause
+is the deferred Phase 9 plan `plans/archive/mempool_feed_integration_2026_06_01.plan.md` (status: paused, un-pause
 trigger documented in the plan frontmatter).
 
 ## What the tracer DOES do
@@ -78,6 +78,6 @@ be paired with the mempool-feed-integration plan shipping Phase 1.
 
 ## Plan
 
-Theoretical tracer landed in Phase 5.4 of `plans/active/defi_pipeline_extension_2026_05_01.plan.md`.
+Theoretical tracer landed in Phase 5.4 of `plans/archive/defi_pipeline_extension_2026_05_01.plan.md`.
 
-Live execution gated on `plans/active/mempool_feed_integration_2026_06_01.plan.md` (paused).
+Live execution gated on `plans/archive/mempool_feed_integration_2026_06_01.plan.md` (paused).

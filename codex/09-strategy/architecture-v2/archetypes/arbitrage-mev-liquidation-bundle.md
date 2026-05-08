@@ -88,4 +88,4 @@ execution-service `aave_flash_bundle.py` consumes the payload and packs it into 
 
 ## Plan
 
-`plans/active/defi_pipeline_extension_2026_05_01.plan.md` Phase 5.1.
+`plans/archive/defi_pipeline_extension_2026_05_01.plan.md` Phase 5.1.

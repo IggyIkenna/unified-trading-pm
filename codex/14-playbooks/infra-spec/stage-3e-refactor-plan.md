@@ -6,11 +6,11 @@ scope: [engineer, admin]
 
 > **Purpose.** The authoritative post-Stage-3 refactor backlog. Every gap surfaced in
 > [`stage-3a-current-infra-audit.md`](stage-3a-current-infra-audit.md) has a refactor item here. Every item names enough
-> context that a future author (human or agent) can spawn a follow-up `plans/active/*.plan.md` against it without
+> context that a future author (human or agent) can spawn a follow-up `plans/active/*.md` against it without
 > re-doing the Stage 3 analysis.
 >
 > **Parent plan:**
-> [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
+> [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
 > § Phase 3E.
 >
 > **Supersedes:** [`../roadmap/next-waves.md`](../roadmap/next-waves.md) (pointer-only; content preserved).
@@ -48,7 +48,7 @@ Each item below has:
 | **Blockers**                | Hard prereqs (must ship before this can)                                                |
 | **Group**                   | G1 / G2 / G3                                                                            |
 | **Owner**                   | Primary team / service                                                                  |
-| **Proposed follow-up plan** | Filename the future `plans/active/<name>.plan.md` will take                             |
+| **Proposed follow-up plan** | Filename the future `plans/active/<name>.md` will take                                  |
 | **Unlocks playbooks**       | Experience playbooks this item enables (per [`../experience/`](../experience/) targets) |
 
 ---
@@ -252,7 +252,7 @@ Each item below has:
 - **Group.** G1
 - **Owner.** UAC + strategy-service + UI + user-management-ui
 - **Proposed follow-up plan.**
-  [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
+  [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
   — **SHIPPED 2026-04-20** (UAC `e4a9e72`, strategy-service `429ff53`, ui `ce53f4d`, user-management-ui `93f7a76`).
 - **Unlocks playbooks.** pb3a / pb3b / pb3c (questionnaire becomes the entry point to each demo walkthrough); feeds
   account-intelligence-record CRM (G2.11).
@@ -277,7 +277,7 @@ Each item below has:
 - **Group.** G1
 - **Owner.** UAC + codex + strategy-service + UI
 - **Proposed follow-up plan.**
-  [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
+  [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
   — **SHIPPED 2026-04-20**.
 - **Unlocks playbooks.** pb3a / pb3c (hard scope on DART vs Reg Umbrella route access); validates G1.4 persona matrix.
 
@@ -295,7 +295,7 @@ Each item below has:
 - **Group.** G1
 - **Owner.** UI
 - **Proposed follow-up plan.**
-  [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
+  [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
   — **SHIPPED 2026-04-20**.
 - **Unlocks playbooks.** pb1 `marketing-journey.md` (consistent public-site framing), pb2b `dart-briefing.md` +
   `regulatory-umbrella-briefing.md` (briefing hero polish).
@@ -314,7 +314,7 @@ Each item below has:
 - **Group.** G1
 - **Owner.** UAC + strategy-service + demo-ops
 - **Proposed follow-up plan.**
-  [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
+  [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
   — **SHIPPED 2026-04-20** (commit `147c773`).
 - **Unlocks playbooks.** pb3c `dart-demo.md` (upsell path tease), pb3b `investment-management-demo.md` (flavour
   widening).
@@ -333,7 +333,7 @@ Each item below has:
 - **Group.** G1 (markdown); G1 stretch (HTML, after G1.4).
 - **Owner.** codex / presentations
 - **Proposed follow-up plan.**
-  [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+  [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
   — **SHIPPED 2026-04-20** (markdown + HTML stretch both landed post-G1.4).
 - **Unlocks playbooks.** Operator-level communication of the Stage-3E roadmap to stakeholders.
 
@@ -356,7 +356,7 @@ Each item below has:
 - **Group.** G2
 - **Owner.** user-management-api + UI
 - **Proposed follow-up plan.** `org_scoped_jwt_claims_2026_06.plan.md` (folds existing
-  [user_management_merge_2026_03_23.plan.md](../../../plans/active/user_management_merge_2026_03_23.plan.md) scope).
+  [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md) scope).
 - **Unlocks playbooks.** All playbooks requiring non-demo-fixture auth.
 
 ### 2.2 Per-client API key issuance
@@ -475,7 +475,7 @@ Each item below has:
 - **Group.** G2
 - **Owner.** UAC + strategy-service
 - **Proposed follow-up plan.** `fund_business_unit_registry_2026_07.plan.md` (folds existing
-  [share_class_architecture_2026_04_01.plan.md](../../../plans/active/share_class_architecture_2026_04_01.plan.md)
+  [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md)
   scope).
 - **Unlocks playbooks.** pb3b `investment-management-demo.md` (per-fund reporting), pb3a `regulatory-demo.md` (per-firm
   reporting).
@@ -514,7 +514,7 @@ Each item below has:
 - **Group.** G2
 - **Owner.** UI + strategy-service
 - **Proposed follow-up plan.** `phase_10_7_allocator_split_2026_07.plan.md` (folds existing
-  [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/active/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md)).
+  [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/ai/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md)).
 - **Unlocks playbooks.** pb3b `investment-management-demo.md` (IM allocator surface), pb3c `dart-demo.md`
   (trading-platform allocator surface).
 
@@ -700,21 +700,21 @@ G3 — later (polish + automation)
 
 ---
 
-## 6. Cross-links to existing `plans/active/*.plan.md`
+## 6. Cross-links to existing `plans/active/*.md`
 
 Some G1/G2 items fold existing active plans. Those plans either become sub-phases of new umbrella plans (per "Proposed
 follow-up plan" column) or are retired once their scope is absorbed.
 
 | Existing plan                                                                                                                                        | Status after Stage 3E                                  |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [user_management_merge_2026_03_23.plan.md](../../../plans/active/user_management_merge_2026_03_23.plan.md)                                           | Folded into 2.1 (JWT claims) + 2.2 (API keys)          |
-| [share_class_architecture_2026_04_01.plan.md](../../../plans/active/share_class_architecture_2026_04_01.plan.md)                                     | Folded into 2.8 (fund/business_unit registry)          |
-| [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md)     | Referenced by 2.6 (staging Firebase)                   |
-| [defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md)                                         | Referenced by 1.4 + 2.7 (demo personas + provisioning) |
-| [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/active/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md) | Folded into 2.10 (Phase 10.7 allocator split)          |
+| [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md)                                           | Folded into 2.1 (JWT claims) + 2.2 (API keys)          |
+| [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md)                                     | Folded into 2.8 (fund/business_unit registry)          |
+| [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)     | Referenced by 2.6 (staging Firebase)                   |
+| [defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)                                         | Referenced by 1.4 + 2.7 (demo personas + provisioning) |
+| [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/ai/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md) | Folded into 2.10 (Phase 10.7 allocator split)          |
 | [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md)                           | Referenced by 2.6 (ticket #12 is staging Firebase)     |
-| [coverage_ratchet_policy_2026_04_19.plan.md](../../../plans/active/coverage_ratchet_policy_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
-| [coverage_uplift_bottom5_2026_04_19.plan.md](../../../plans/active/coverage_uplift_bottom5_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
+| [coverage_ratchet_policy_2026_04_19.plan.md](../../../plans/archive/coverage_ratchet_policy_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
+| [coverage_uplift_bottom5_2026_04_19.plan.md](../../../plans/ai/coverage_uplift_bottom5_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
 
 ---
 
@@ -733,7 +733,7 @@ follow-up plan" column) or are retired once their scope is absorbed.
 
 ## 8. Reporting + success criteria
 
-Per-G progression is tracked in `plans/active/<proposed-follow-up-plan-name>.plan.md` Phase sections. Stage 3E itself is
+Per-G progression is tracked in `plans/active/<proposed-follow-up-plan-name>.md` Phase sections. Stage 3E itself is
 complete when:
 
 - All 14 G1 items have a tracked follow-up plan spawned or explicitly deferred with reason.

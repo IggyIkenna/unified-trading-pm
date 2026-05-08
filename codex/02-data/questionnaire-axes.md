@@ -7,8 +7,8 @@ scope: [engineer, sales, admin]
 > **Status:** canonical (2026-04-24) **Owner:** UI Architecture + UAC Architecture **SSOT for:**
 > `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py::QuestionnaireResponse`,
 > `unified-trading-system-ui/lib/questionnaire/types.ts::QuestionnaireResponse`. **Plans:**
-> [`plans/active/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/active/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md),
-> [`plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md).
+> [`plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md),
+> [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md).
 > **Companion docs:** [`../08-workflows/prospect-questionnaire-flow.md`](../08-workflows/prospect-questionnaire-flow.md)
 > (form + admin playback + docs flow),
 > [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)

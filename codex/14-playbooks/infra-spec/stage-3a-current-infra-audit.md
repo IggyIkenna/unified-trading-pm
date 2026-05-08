@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # Stage 3A — Current-infra audit
 
 > **Parent plan:**
-> [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md).
+> [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md).
 > **Scope:** Ship a single paste-able snapshot of what already exists in the workspace that the playbook SSOT can depend
 > on, and what needs to be built before the one-registry-four-derivations engine (Stage 3C) can land.
 >

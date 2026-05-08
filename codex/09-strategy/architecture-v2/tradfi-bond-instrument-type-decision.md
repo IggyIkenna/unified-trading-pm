@@ -4,7 +4,7 @@ scope: [engineer, admin]
 
 # TradFi Bond Instrument-Type Decision (2026-04-21)
 
-**Context:** Audit driver — `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 Task C. The v1
+**Context:** Audit driver — `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` Wave 6 Task C. The v1
 strategy registry has one entry, `TRADFI_BOND_MEAN_REV_HUF_1D` (name: "Bond Mean Reversion"), that the Wave 5
 equivalency audit flagged as **GAP (cell)** because UAC `archetype_capability_manifest.json` had no TradFi·bond
 SUPPORTED cell under `STAT_ARB_PAIRS_FIXED`.

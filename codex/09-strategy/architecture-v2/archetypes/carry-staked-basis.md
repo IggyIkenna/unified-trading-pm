@@ -293,7 +293,7 @@ No engine, catalog, or strategy code change needed.
 ## See also
 
 - Plan:
-  [`plans/active/carry_staked_basis_structure_axis_2026_05_04.plan.md`](../../../../plans/active/carry_staked_basis_structure_axis_2026_05_04.plan.md)
+  [`plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md`](../../../../plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md)
 - Family: [`carry-and-yield.md`](../families/carry-and-yield.md)
 - Recursive variant: [`carry-recursive-staked.md`](carry-recursive-staked.md)
 - Venue collateral SSOT:

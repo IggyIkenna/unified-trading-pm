@@ -95,7 +95,7 @@ business_readiness:
     br1_acceptance_criteria:
       status: "pass"
       criteria: "Plan owning this repo has measurable acceptance criteria"
-      plan_ref: "plans/active/repo_readiness_semver_hardening_2026_03_11.plan.md"
+      plan_ref: "plans/archive/repo_readiness_semver_hardening_2026_03_11.plan.md"
       evidence: "Plan #63 registered with completion_gates and repo_gates defined."
       notes: ""
     br2_circuit_breaker:

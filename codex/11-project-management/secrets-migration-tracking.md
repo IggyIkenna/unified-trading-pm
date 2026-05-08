@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks `secret_name / current_provider / target_provider / migration_status / consumer_services / owner / target_completion_date`.
 referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_06.plan.md
+  - plans/active/aws_migration_defi_first_2026_05_07.md
 related:
   - codex/05-infrastructure/cloud-agnostic-script-pattern.md
   - codex/04-architecture/interface-credential-convention.md
@@ -44,7 +44,7 @@ contract: who consumes it, what's its dual-write status, who owns the migration,
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_06.plan.md).
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](../05-infrastructure/cloud-agnostic-script-pattern.md), [`interface-credential-convention`](../04-architecture/interface-credential-convention.md).
 - **Code:** `unified-config-interface/`, `unified-trading-library/api_key_reloader.py`.
 

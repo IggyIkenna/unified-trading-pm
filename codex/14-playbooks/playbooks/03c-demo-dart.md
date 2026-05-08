@@ -161,4 +161,4 @@ CODE_AUDITED+ entries by default, with admin-only ability to reveal IM_RESERVED 
   [03b-demo-im.md](03b-demo-im.md)
 - Research briefing that led here: [02b-research-dart.md](02b-research-dart.md)
 - DeFi-specific demo flows:
-  [../../../plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md)
+  [../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)

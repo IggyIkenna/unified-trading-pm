@@ -155,7 +155,7 @@ but are no longer the authoritative readiness record.
 
 ## References
 
-- **Master tracker**: `unified-trading-pm/plans/active/code_readiness_master_plan_2026_03_11.plan.md`
+- **Master tracker**: `unified-trading-pm/plans/archive/code_readiness_master_plan_2026_03_11.plan.md`
 - **SSOT checklist doc**: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md`
 - **Semver v1 hardening**: `unified-trading-pm/cursor-rules/core/semver-v1-hardening.mdc`
 - **Repo readiness cursor rule**: `unified-trading-pm/cursor-rules/core/repo-readiness-checklist.mdc`

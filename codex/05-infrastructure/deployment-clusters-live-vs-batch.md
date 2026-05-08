@@ -7,7 +7,7 @@ scope: [engineer, admin]
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
 > **Multi-axis correction (2026-05-06)** — per
-> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
+> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
 > a column belongs in the **shard atom** ONLY IF it earns it via failure isolation OR memory ceiling OR concurrency
 > orthogonality. Otherwise it's a **display axis** (row-level column for filter/group, NOT a manifest row per value).
 > This refines the per-asset-group shard atoms below:
@@ -290,5 +290,5 @@ cluster state regardless of which mechanism deployed the cluster or which type t
 - **Runtime tiers + deployment**:
   [`05-infrastructure/runtime-tiers-and-deployment.md`](./runtime-tiers-and-deployment.md)
 - **Active plans**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md),
-  [`plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md),
+  [`plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)

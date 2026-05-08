@@ -4,7 +4,7 @@ scope: [engineer]
 
 # Run-Lifecycle Events Audit — 2026-05-05
 
-Phase 2 of `plans/active/run_lifecycle_events_ssot_2026_05_05.plan.md`. Identifies every long-running Python entry-point
+Phase 2 of `plans/archive/run_lifecycle_events_ssot_2026_05_05.plan.md`. Identifies every long-running Python entry-point
 in the workspace and classifies it on:
 
 - **Has UTL events?** (calls `setup_events` from `unified_trading_library.events`)

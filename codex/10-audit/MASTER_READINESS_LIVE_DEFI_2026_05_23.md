@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # Master Readiness — Live DeFi Trading by 2026-05-23
 
 **Status:** Active companion SSOT for the master plan. **Working plan (authoritative for current state + todos):**
-[`plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md)
+[`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 **Created:** 2026-05-06 **Locked to:** `live-defi-rollout`
 
 This file is the **codex SSOT companion** to the master plan. It owns the durable bits (readiness model, doc-touchpoint
@@ -131,7 +131,7 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit (mirror)
 
 The full table with current `⚠` flags and resolution paths lives in
-[the working plan](../../plans/active/master_to_live_defi_2026_05_23.plan.md#plan--doc--code-drift-audit). Update both
+[the working plan](../../plans/active/master_to_live_defi_2026_05_23.md#plan--doc--code-drift-audit). Update both
 when a row resolves.
 
 **Audit guideline going forward.** Whenever an agent touches a row in this table, the PR includes a one-line "drift
@@ -173,7 +173,7 @@ features-delta-one-service · features-commodity-service.
 ## Cross-references
 
 - Working plan:
-  [`plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md)
+  [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 - Repo readiness SSOT: [`REPO_READINESS_CHECKLIST.yaml`](./REPO_READINESS_CHECKLIST.yaml)
 - Per-service yamls: [`repos/`](./repos/)
 - Cross-cutting principles: [`POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)

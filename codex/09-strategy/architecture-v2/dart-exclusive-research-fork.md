@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # DART Exclusive Subscription + Research Fork + Version Lineage
 
 > **Status:** design (2026-04-21) **Owner:** Strategy Architecture v2 **Plan:**
-> [`plans/active/dart_exclusive_subscription_research_fork_2026_04_21.plan.md`](../../../plans/active/dart_exclusive_subscription_research_fork_2026_04_21.plan.md)
+> [`plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md`](../../../plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md)
 > **Depends on:** [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) ·
 > [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) · [`performance-overlay.md`](./performance-overlay.md)
 > · [`dart-tab-structure.md`](./dart-tab-structure.md) · [`dashboard-services-grid.md`](./dashboard-services-grid.md)

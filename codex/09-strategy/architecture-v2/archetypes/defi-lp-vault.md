@@ -52,4 +52,4 @@ NEUTRAL --apy >= min_apy--> DEPOSITED --apy < min_apy OR drawdown >= max-->  WIT
 
 ## Plan
 
-`plans/active/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.3.
+`plans/archive/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.3.

@@ -14,12 +14,15 @@ whether `record_empty` is expected.
 Cross-refs:
 
 - `codex/02-data/availability-manifest-and-data-status.md` — §Layer 2 table + v5 honest-coverage schema + UAC
-  denominator accessors.
+  denominator accessors. **Also the canonical literal-values mirror for `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START`**
+  (sports + `odds_api` source coverage starts) — this doc cross-links, never redeclares the dates.
 - `codex/02-data/sports-data-source-coverage-matrix.md` — sibling (SPORTS instruments-service).
 - `codex/02-data/per-category-bucket-layouts.md` — MTDS GCS path layouts per category.
 - `codex/02-data/partitioning.md` — Hive partitioning (venue / date / data_type / instrument_type / chain / league_id).
 - UAC: `unified_api_contracts.registry.venue_mapping.VenueMapping` — `all_cefi_venues`, `all_databento_venues`,
   `all_defi_venues`, `get_venue_start_date`, `is_venue_available_on_date`, `get_expected_trading_dates`.
+- UAC: `unified_api_contracts.sports.SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` — runtime SSOT for sports +
+  odds_api source-coverage-start dates; literal-values mirror in the availability-manifest doc above.
 - UAC: `unified_api_contracts.get_expected_data_types_for_venue(venue)` — per-venue expected data_types.
 - UAC: `unified_api_contracts.get_venue_data_type_start_date(venue, data_type)` — per-(venue, data_type) start date.
 

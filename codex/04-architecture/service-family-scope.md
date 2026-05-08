@@ -10,7 +10,7 @@ scope: [engineer, admin, sales]
 > `unified-trading-system-ui/app/(platform)/services/dart/locked/page.tsx`,
 > `unified-trading-system-ui/components/demo/DemoPlanToggle.tsx`,
 > `unified-trading-system-ui/app/(public)/briefings/[slug]/page.tsx`. **Plan:**
-> [`../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+> [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:**
 > [`../14-playbooks/_ssot-rules/12-service-family-scope-rules.md`](../14-playbooks/_ssot-rules/12-service-family-scope-rules.md)
 > (rule 12 — machine-readable route allowlist per family),

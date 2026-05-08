@@ -81,7 +81,7 @@ confusion with the `(Client, downstream)` signals-only DART cell, which is inbou
 
 - Commercial framing: `commercial-model/signal-leasing.md`
 - Architecture: `shared-core/signal-broadcast-architecture.md`
-- Plan of record: `plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`
+- Plan of record: `plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`
 
 ## Worked examples
 
@@ -221,7 +221,7 @@ contract.
 - [`03-same-system-principle.md`](03-same-system-principle.md) — all paths use the same underlying system
 - [`12-service-family-scope-rules.md`](12-service-family-scope-rules.md) — machine-readable scope enforcement per
   service family (paired with `12-service-family-scope-rules.yaml`)
-- [Stage 2 `commercial-model/dart-entry-points.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
+- [Stage 2 `commercial-model/dart-entry-points.md`](../../../plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md)
   — applies this rule to write the client-facing commercial doc
-- [Stage 3 Phase 3C `derivation-engine.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) —
+- [Stage 3 Phase 3C `derivation-engine.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md) —
   uses this matrix as one input to `demo_universe` and `prod_restrictions` formulas

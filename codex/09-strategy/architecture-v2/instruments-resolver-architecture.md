@@ -192,7 +192,7 @@ archetype, and `_ARCHETYPE_ALLOWED_CATEGORIES` to express category restrictions.
 ## §7 — Cross-references
 
 - DART UI plan addendum:
-  [`../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+  [`../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 - Catalogue 3-tier model: [`./strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md)
 - Questionnaire axes: [`../../02-data/questionnaire-axes.md`](../../02-data/questionnaire-axes.md)
 - Bucket isolation model:

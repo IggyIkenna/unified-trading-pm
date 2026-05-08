@@ -225,8 +225,8 @@ counterparty-outbound stays at the top level (it's a commercial product), the la
 
 ## §7 Plan + migration notes
 
-- **Plan:** `plans/active/dashboard_services_grid_collapse_2026_04_21.plan.md`
-- **Dep:** `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` (Phase 11 lifecycle-nav 8→4 collapse is the
+- **Plan:** `plans/archive/dashboard_services_grid_collapse_2026_04_21.plan.md`
+- **Dep:** `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` (Phase 11 lifecycle-nav 8→4 collapse is the
   sibling work)
 - **Clean break (Citadel rule 3):** 5 deleted top-level keys (`data`, `research`, `promote`, `observe`,
   `strategy-catalogue`) and 1 renamed (`signals` → `odum-signals`). No deprecation shim. Routes themselves survive

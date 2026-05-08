@@ -91,4 +91,4 @@ A future extension adds dedicated `LP_MINT` / `LP_BURN` enum values for clearer 
 
 ## Plan
 
-`plans/active/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.1.
+`plans/archive/defi_pipeline_extension_2026_05_01.plan.md` Phase 4.1.

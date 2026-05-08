@@ -9,7 +9,7 @@ scope: [sales, prospect]
 
 **Internal label:** pb1 (pre-first-call marketing) **Status:** Stage 2 live **Owner:** marketing **Restructure:** 5-path
 nav + light-auth briefings gate shipped under
-[`../../../plans/active/marketing_site_restructure_2026_04_20.plan.md`](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md).
+[`../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md`](../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md).
 
 ## Audience
 
@@ -220,6 +220,6 @@ follow-up orchestration from
 - Commercial entry points: [../commercial-model/dart-entry-points.md](../commercial-model/dart-entry-points.md)
 - Route mapping: [../implementation-mapping/route-mapping.md](../implementation-mapping/route-mapping.md)
 - Restructure plan:
-  [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)
+  [../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md](../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md)
 - Playwright specs: `unified-trading-system-ui/tests/e2e/playbooks/marketing-pre-first-call.spec.ts` +
   `marketing-site-restructure.spec.ts`

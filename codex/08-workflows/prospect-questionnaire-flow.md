@@ -11,7 +11,7 @@ scope: [engineer, sales]
 > `unified-trading-system-ui/app/(ops)/admin/organizations/[id]/page.tsx`,
 > `unified-trading-system-ui/lib/onboarding/doc-store.ts`,
 > `unified-trading-system-ui/app/api/onboarding/{upload,download,docs/list,docs/delete}/route.ts`. **Plan:**
-> [`plans/active/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/active/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md)
+> [`plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md)
 
 ---
 

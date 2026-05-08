@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3 cost projection + the cross-cloud migration time estimate (storage transfer hours).
 referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_06.plan.md
+  - plans/active/aws_migration_defi_first_2026_05_07.md
 related:
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
   - codex/02-data/availability-manifest-and-data-status.md
@@ -44,7 +44,7 @@ the cutover plan.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_06.plan.md).
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](../05-infrastructure/cloud-agnostic-build-lineage.md), [`availability-manifest-and-data-status`](../02-data/availability-manifest-and-data-status.md).
 - **Code:** TBD audit helper — likely a `gcloud storage du` wrapper script that materialises the table.
 

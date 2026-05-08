@@ -21,8 +21,8 @@ columns described in this doc are unchanged under v7. v8 (`pipeline_mode` + `ser
 Cluster validation as 4th write-gate pillar in progress (writegate Phase 1A + 2.B). **SSOT:**
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) for the canonical schema-version
 constant + full column list; this doc is the CeFi-specific v6 column rollout reference.
-`unified-trading-pm/plans/active/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
-`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`. **Related:**
+`unified-trading-pm/plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
+`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
 [partitioning.md](./partitioning.md),
 [04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
 [06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).

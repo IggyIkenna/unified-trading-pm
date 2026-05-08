@@ -413,4 +413,4 @@ gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast
 - Shard-level failure isolation (why VMs don't raise inside per-venue loops):
   [`04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
 - Coverage roadmap (how to use VM tarball deployment to reach ~100% honest coverage):
-  `plans/active/proper_coverage_roadmap_2026_04_20.plan.md`
+  `plans/archive/proper_coverage_roadmap_2026_04_20.plan.md`

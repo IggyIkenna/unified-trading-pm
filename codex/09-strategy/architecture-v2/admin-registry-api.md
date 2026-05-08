@@ -4,7 +4,7 @@ scope: [engineer, admin]
 
 # Admin Registry API — SSOT
 
-Phase 7 of `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` introduces three admin-only HTTP surfaces
+Phase 7 of `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` introduces three admin-only HTTP surfaces
 that let the UI `CatalogueTruthinessAdapter` reconcile UAC canonical lists against what is actually registered in
 backend services at runtime.
 
@@ -207,7 +207,7 @@ app.include_router(
 
 ## SSOT cross-refs
 
-- Plan: `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` — todo `p7-admin-backend-reachability-audit`
+- Plan: `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` — todo `p7-admin-backend-reachability-audit`
   (this page is the artefact).
 - Companion UI todo: `p7-admin-catalogue-backend-truthfulness`.
 - Router factories:

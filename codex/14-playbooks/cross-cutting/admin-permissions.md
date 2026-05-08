@@ -7,7 +7,7 @@ scope: [engineer, admin]
 > **SSOT.** This file carries the admin permission model that gates destructive admin-only operations in the Odum
 > Unified Trading System UI. Binary `role === "admin"` is NOT sufficient for destructive actions — callers must also
 > carry a specific `admin_permissions` grant. This file is cited by `cross-cutting/visibility-slicing.md`, the admin
-> fold-in plan (`plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Phase 6), and the admin bootstrap
+> fold-in plan (`plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` Phase 6), and the admin bootstrap
 > scripts.
 
 Admin accounts split into two classes:
@@ -131,4 +131,4 @@ The audit log is surfaced at `/ops/admin/audit-log` (see migrated page from user
 
 - `cross-cutting/visibility-slicing.md` — how admin sees everything while clients see slices.
 - `shared-core/signal-broadcast-architecture.md` — HMAC key rotation uses `admin:rotate_secret`.
-- `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md` Phase 6 — delivery plan.
+- `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` Phase 6 — delivery plan.

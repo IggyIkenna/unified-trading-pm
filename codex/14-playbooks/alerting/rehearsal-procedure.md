@@ -4,7 +4,7 @@ status: planned
 created: 2026-05-07
 authoritative_for: Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the operator-playbook entry to the documented action.
 referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md
+  - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
   - codex/14-playbooks/alerting/alert-code-taxonomy.md
   - codex/14-playbooks/alerting/operator-playbook.md
@@ -48,7 +48,7 @@ write-up flow works.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.plan.md).
+- **Plan(s) implementing this:** [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`alert-code-taxonomy`](./alert-code-taxonomy.md), [`operator-playbook`](./operator-playbook.md), [`threshold-tuning`](./threshold-tuning.md).
 - **Code:** alerting-service rehearsal endpoint (TBD).
 

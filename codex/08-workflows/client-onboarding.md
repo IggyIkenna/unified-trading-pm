@@ -8,7 +8,7 @@ scope: [sales, engineer, admin]
 > `unified-trading-system-ui/app/(public)/questionnaire/page.tsx`,
 > `unified-trading-system-ui/app/(platform)/services/strategy-catalogue/page.tsx`,
 > `unified-trading-system-ui/lib/auth/personas.ts`, `unified-trading-system-ui/lib/auth/demo-provider.ts`. **Plan:**
-> [`plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/active/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
+> [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md),
 > [`signup-signin-workflow.md`](./signup-signin-workflow.md),
 > [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md),

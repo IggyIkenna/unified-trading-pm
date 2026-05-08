@@ -8,7 +8,7 @@ authoritative_for:
   default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory
   pattern for SDK construction.
 referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_07.plan.md
+  - plans/active/aws_migration_defi_first_2026_05_07.md
 related:
   - codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
@@ -267,7 +267,7 @@ is (per the AWS migration plan Phase 1.5):
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.plan.md) Phase 1.5 + Phase 2.
+  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md) Phase 1.5 + Phase 2.
 - **Related codex SSOTs:** [`cloud-agnostic-audit-2026-05-07`](./cloud-agnostic-audit-2026-05-07.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:**

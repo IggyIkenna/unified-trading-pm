@@ -188,5 +188,5 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
   `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` (commit
   bc33700 adds `instrument_id`)
 - Sports odds / bm_time: `market-tick-data-service/docs/SPORTS_ODDS.md`
-- Coverage roadmap (uses this doc): `unified-trading-pm/plans/active/proper_coverage_roadmap_2026_04_20.plan.md`
+- Coverage roadmap (uses this doc): `unified-trading-pm/plans/archive/proper_coverage_roadmap_2026_04_20.plan.md`
 - VM tarball deployment: `codex/05-infrastructure/vm-tarball-deployment.md`

@@ -613,7 +613,7 @@ blockers:
         - dimension: slot.maturity
           in: [CODE_NOT_WRITTEN, CODE_WRITTEN, CODE_AUDITED]
     evidence:
-      - file: plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md
+      - file: plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md
       - file: memory/MEMORY.md
         note: "Strategy Architecture v2 finalization Phase 10.5 — external-visibility threshold = maturity ≥ BACKTESTED"
     resolvable_by_uac_addition: false

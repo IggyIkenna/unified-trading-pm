@@ -216,8 +216,10 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
     `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_odds/league={L}/footystats_odds.parquet`.
     Refdata-style: one snapshot per (league, date), captured once. Used by features-sports for backtest training.
   - **`odds_api` in MTDS** = live + historical intra-day market movement, bucketed at 8 horizons (T-24h, T-12h, T-6h,
-    T-4h, T-2h, T-1h, T-10m, T-0). Per CLAUDE.md "Sports source coverage windows" SOURCE_COVERAGE_START 2020-06-06. Used
-    by execution-service for live trading + features-sports for movement features (CLV, steam, late-money).
+    T-4h, T-2h, T-1h, T-10m, T-0). Coverage start per
+    [`availability-manifest-and-data-status.md` § Source coverage start dates (canonical)](./availability-manifest-and-data-status.md#source-coverage-start-dates-canonical--source_coverage_start-ssot)
+    (UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` runtime SSOT). Used by execution-service for live trading
+    + features-sports for movement features (CLV, steam, late-money).
   - **api_football `/odds`** is NOT used by instruments-service. The footystats_odds adapter has `get_odds()` defined as
     a deprecated stub that logs "use get_fixture_odds_snapshot() instead" — there is no api_football odds path.
   - **Decision**: keep both in their current homes. NO migration. The data-status panel SHOULD render them under their

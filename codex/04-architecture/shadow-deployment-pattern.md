@@ -113,13 +113,13 @@ decision is REJECT regardless of how the other instances look.
 
 ## How this interacts with the plan
 
-`plans/active/strategy_architecture_v2_2026_04_17.plan.md` had "Shadow deployment pattern specifics for archetype
+`plans/archive/strategy_architecture_v2_2026_04_17.plan.md` had "Shadow deployment pattern specifics for archetype
 upgrades" as a TBD. This doc + `shadow_deployment.py` + the 16 unit tests close that item.
 
 ## Persistence
 
 The evaluator is pure — it produces a `ShadowEvaluation` and returns it. Phase 2 of
-`plans/active/strategy_architecture_v2_finalization_2026_04_19.plan.md` adds the durable surfaces the decision needs to
+`plans/archive/strategy_architecture_v2_finalization_2026_04_19.plan.md` adds the durable surfaces the decision needs to
 land on so every PROMOTE / EXTEND / REJECT / ROLLBACK is auditable post-incident.
 
 ### Authoritative stores

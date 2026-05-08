@@ -15,7 +15,7 @@ scope: [engineer, admin]
 SSOT for prediction market data flowing through the unified trading system.
 
 **Active migration**: predictions Plan A
-([`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/active/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md))
+([`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md))
 migrates from per-base_asset shard atom (`data_type=BTC|ETH|SPX|FOOTBALL|OTHER`) to canonical_question_group bundled
 shard atom + per-market lifecycle. Both shapes documented below: legacy (pre-Plan A) + target (post-Plan A).
 

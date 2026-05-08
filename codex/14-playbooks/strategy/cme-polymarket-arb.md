@@ -14,7 +14,7 @@ scope: [strategist, engineer]
 > rule (see CLAUDE.md § "Post-Plan-Phase Codex Audit HARD RULE").
 
 **Plan SSOT**:
-[`plans/active/cme_polymarket_arb_2026_05_08.plan.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.plan.md).
+[`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
 
 **Source RFC**:
 [`plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`](../../../plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md)

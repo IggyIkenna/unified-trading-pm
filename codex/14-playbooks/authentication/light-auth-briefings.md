@@ -240,4 +240,4 @@ When restructuring Deep Dive (renames, additions, lock indicators), edit BOTH fi
 - Firebase staging (next tier up): [firebase-staging.md](firebase-staging.md)
 - Route mapping: [../implementation-mapping/route-mapping.md](../implementation-mapping/route-mapping.md)
 - Restructure plan:
-  [../../../plans/active/marketing_site_restructure_2026_04_20.plan.md](../../../plans/active/marketing_site_restructure_2026_04_20.plan.md)
+  [../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md](../../../plans/archive/marketing_site_restructure_2026_04_20.plan.md)

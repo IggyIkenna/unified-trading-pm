@@ -7,7 +7,7 @@ scope: [engineer, admin]
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
 > **Multi-axis correction (2026-05-06)** — per
-> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
+> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
 > a column belongs in the **shard atom** ONLY IF it earns it via failure isolation OR memory ceiling OR concurrency
 > orthogonality. Otherwise it's a **display axis** (row-level column for filter/group, NOT a manifest row per value).
 > This refines the per-asset-group shard atoms below:
@@ -261,4 +261,4 @@ progress + STOPPED/FAILED at exit; events stream to
 - **Cluster validation + 4-pillar write-gate**:
   [`06-coding-standards/validation-patterns.md`](../06-coding-standards/validation-patterns.md)
 - **Active plan**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)

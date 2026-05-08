@@ -120,7 +120,7 @@ downstream playbook they become the audience for. This section connects experien
 ## Stage 2 implications
 
 The Stage 2 dir rewrite
-([`plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md))
+([`plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md))
 replicates the pattern from [`../experience/im-decision-journey.md`](../experience/im-decision-journey.md) across the
 other eight experience playbooks. Stage 2 agents MUST run the nine-section completeness check against every doc they
 produce before commit.

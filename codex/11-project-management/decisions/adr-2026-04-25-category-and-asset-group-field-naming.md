@@ -76,8 +76,8 @@ instrument-type case-normalization remain as separate small-scope follow-ups.
 
 ## Related
 
-- `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — venue-axis vocabulary in
+- `unified-trading-pm/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — venue-axis vocabulary in
   UAC/UTL/MDPS/MTDS.
-- `unified-trading-pm/plans/active/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — global rename of shard
+- `unified-trading-pm/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — global rename of shard
   dimension metadata and consumers.
 - Implementation notes: `deployment-api` `DeployRequest` / `DeployMissingRequest` docstrings on the route models.

@@ -28,7 +28,7 @@ pre-production validation.
 
 | Resource             | Staging                                                                                                                                                                    | Production               |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| GCP project          | staging GCP project (per [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md)) | production GCP project   |
+| GCP project          | staging GCP project (per [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)) | production GCP project   |
 | Pub/Sub topics       | prefixed `staging-`                                                                                                                                                        | no prefix                |
 | BigQuery datasets    | `staging_<domain>`                                                                                                                                                         | `<domain>`               |
 | GCS buckets          | `odum-staging-<name>`                                                                                                                                                      | `odum-<name>`            |
@@ -60,5 +60,5 @@ Until that script exists, reset is manual via Firebase console + GCP console.
 - [production-odum-research-com.md](production-odum-research-com.md) — prod counterpart
 - [../authentication/firebase-staging.md](../authentication/firebase-staging.md) — auth details
 - [../playbooks/03-warm-prospect-demo.md](../playbooks/03-warm-prospect-demo.md) — how prospects use staging
-- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md)
+- [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)
   — runtime topology SSOT

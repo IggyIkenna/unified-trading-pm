@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # Data Lineage — MTDS → MDPS → features-\* → ml-training → ml-inference
 
 Status: active Last updated: 2026-04-18 Owner: data-pipeline agents 3 + 5 Related plan:
-`unified-trading-pm/plans/active/data_pipeline_completion_2026_04_18.plan.md` § Phase 10
+`unified-trading-pm/plans/archive/data_pipeline_completion_2026_04_18.plan.md` § Phase 10
 
 ## Purpose
 

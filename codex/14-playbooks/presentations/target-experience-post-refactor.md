@@ -29,11 +29,11 @@ reads_from: [_ssot-rules, experience, shared-core, commercial-model, demo-ops, i
 > G1.4 Wave F.
 >
 > **Parent plan:**
-> [`plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
+> [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
 > § Phase 3D.
 >
 > **This-refresh plan:**
-> [`plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+> [`plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
 >
 > **Inputs:**
 >
@@ -698,7 +698,7 @@ Wave grouping (2026-04-20, supersedes the original A/B/C split):
 ## Slide 17 — G1.10 Questionnaire-to-configuration flow
 
 Plan:
-[`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
+[`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)
 
 The prospect questionnaire is the **ingestion edge** of the derivation engine. Unauthenticated prospects fill out a
 multi-axis form at `/questionnaire`; sales operators replay the answers in `user-management-ui` before a demo. The
@@ -754,7 +754,7 @@ G1.4 / G1.7 / G1.13 / five-space-IA pipeline.
 ## Slide 18 — G1.11 Service-family scope rules
 
 Plan:
-[`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
+[`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)
 
 Today the rules about "who can see observe / reporting / research / promote surfaces" are scattered across route gating,
 demo-ops docs, and implicit audience assumptions. G1.11 lifts them into an explicit rule file
@@ -806,7 +806,7 @@ hard-gated by family; never implicit.
 ## Slide 19 — G1.12 Public-site IA polish (before / after)
 
 Plan:
-[`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
+[`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)
 
 Pure UI refactor. No routes added/removed, no auth changes, no backend. Consolidates the public-site navigation under a
 single `<SiteHeader>` component across 9 pages and enforces cut-through-noise formatting on `/briefings/*`.
@@ -843,7 +843,7 @@ The public site does **not** itself need LOCKED-VISIBLE (public is public), but 
 ## Slide 20 — G1.13 Demo upsell-overlay tempt-logic
 
 Plan:
-[`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
+[`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)
 
 When a prospect's questionnaire response is **vague** on a given axis (e.g. "all" venues, no strategy style), the demo
 restriction profile **widens by one step** on that axis — surfacing adjacent capability as LOCKED-VISIBLE chips. When
@@ -893,7 +893,7 @@ trust them and show only what they asked for.
 ## Slide 21 — G1.4 Persona combinatorial expansion (11 → 15-20)
 
 Plan:
-[`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/active/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)
+[`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)
 
 Today `unified-trading-system-ui/lib/auth/personas.ts` defines 11 personas. G1.4 expands to **15-20**, each
 parameterised across the G1.10 questionnaire dimensions, with deterministic `resolve_profile` output via G1.7 + G1.11.
@@ -936,7 +936,7 @@ stretch (Phase 14D).
 ## Slide 22 — MCP Playwright test discipline
 
 Plan:
-[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
+[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)
 (this plan) — plus pattern propagated across every sibling `refactor_g1_*_2026_04_20.plan.md`.
 
 Every G1 refactor plan ships **both** an MCP Playwright loop for dev and a durable spec for CI.
@@ -983,7 +983,7 @@ Rules:
 ## Slide 23 — Dev / staging parity
 
 Plan: cross-cutting rule applied by G1.4 / G1.7 / G1.10 / G1.13 (and reinforced by
-[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)).
+[`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)).
 
 The rule: **dev and staging must behave identically outside the auth source**. Anything that differs becomes an
 operational liability when sales operators rehearse in dev and then run the demo from staging.
@@ -1049,17 +1049,17 @@ uses real Firebase prod personas, and submits to production sinks. Dev ↔ stagi
 
 | Slide(s)           | G1 item                                   | Plan file                                                                                                                                                                                                    |
 | ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 9 (phase-binding)  | G1.1 Phase unification                    | [`refactor_g1_1_phase_unification_2026_04_20.plan.md`](../../../plans/active/refactor_g1_1_phase_unification_2026_04_20.plan.md)                                                                             |
-| 6 (access_control) | G1.2 Instruction-schema validation        | [`refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`](../../../plans/active/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md)                                     |
-| 8 (LOCKED-VISIBLE) | G1.3 LOCKED-VISIBLE UI service-tile mode  | [`refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`](../../../plans/active/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md)                                         |
-| 8, 13, 21          | G1.4 Persona combinatorial expansion      | [`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/active/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)                                                 |
-| 10                 | G1.5 ML Catalogue broken-hrefs cleanup    | [`refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md`](../../../plans/active/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md)                                             |
-| 6                  | G1.6 Derivation engine → strategy-service | [`refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`](../../../plans/active/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md) |
-| 8                  | G1.7 Restriction-profile engine           | [`refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`](../../../plans/active/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md)                                                           |
-| 3, 5               | G1.8 UAC ArchetypeCapabilityV2 (gap #1)   | [`refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md`](../../../plans/active/refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md)                                                         |
-| 16                 | G1.9 Codex scope registry                 | [`refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`](../../../plans/active/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md)                                                                       |
-| 17                 | G1.10 Questionnaire-to-configuration flow | [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)                                       |
-| 18                 | G1.11 Service-family scope rules          | [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)                                                         |
-| 19                 | G1.12 Public-site IA + briefings polish   | [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)                                       |
-| 20                 | G1.13 Demo upsell-overlay tempt-logic     | [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)                                               |
-| 22, 23             | G1.14 Presentation deck refresh (this)    | [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)                                                           |
+| 9 (phase-binding)  | G1.1 Phase unification                    | [`refactor_g1_1_phase_unification_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_1_phase_unification_2026_04_20.plan.md)                                                                             |
+| 6 (access_control) | G1.2 Instruction-schema validation        | [`refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md)                                     |
+| 8 (LOCKED-VISIBLE) | G1.3 LOCKED-VISIBLE UI service-tile mode  | [`refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md)                                         |
+| 8, 13, 21          | G1.4 Persona combinatorial expansion      | [`refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md)                                                 |
+| 10                 | G1.5 ML Catalogue broken-hrefs cleanup    | [`refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md)                                             |
+| 6                  | G1.6 Derivation engine → strategy-service | [`refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md) |
+| 8                  | G1.7 Restriction-profile engine           | [`refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md)                                                           |
+| 3, 5               | G1.8 UAC ArchetypeCapabilityV2 (gap #1)   | [`refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md)                                                         |
+| 16                 | G1.9 Codex scope registry                 | [`refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md)                                                                       |
+| 17                 | G1.10 Questionnaire-to-configuration flow | [`refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md)                                       |
+| 18                 | G1.11 Service-family scope rules          | [`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md)                                                         |
+| 19                 | G1.12 Public-site IA + briefings polish   | [`refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md)                                       |
+| 20                 | G1.13 Demo upsell-overlay tempt-logic     | [`refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md)                                               |
+| 22, 23             | G1.14 Presentation deck refresh (this)    | [`refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md)                                                           |

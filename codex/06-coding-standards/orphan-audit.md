@@ -8,7 +8,7 @@ scope: [engineer]
 > `unified-trading-system-ui/scripts/orphan-audit.ts`, `unified-trading-system-ui/scripts/.orphan-audit-baseline.json`,
 > `unified-trading-system-ui/scripts/.orphan-audit-whitelist.json`,
 > `unified-trading-system-ui/.github/workflows/orphan-audit.yml`. **Plan:**
-> [`plans/active/orphan_audit_policy_2026_04_21.plan.md`](../../plans/active/orphan_audit_policy_2026_04_21.plan.md)
+> [`plans/archive/orphan_audit_policy_2026_04_21.plan.md`](../../plans/archive/orphan_audit_policy_2026_04_21.plan.md)
 
 ---
 

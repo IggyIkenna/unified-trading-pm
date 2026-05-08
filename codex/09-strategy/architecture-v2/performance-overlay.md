@@ -8,7 +8,7 @@ scope: [engineer]
 > `unified-trading-system-ui/components/strategy-catalogue/PerformanceOverlay.tsx`,
 > `unified-trading-system-ui/components/strategy-catalogue/PerformanceOverlayStats.tsx`, `unified-trading-api` endpoint
 > `GET /api/v1/strategy-instances/{id}/performance`. **Plan:**
-> [`plans/active/performance_overlay_continuous_timeline_2026_04_21.plan.md`](../../../plans/active/performance_overlay_continuous_timeline_2026_04_21.plan.md)
+> [`plans/archive/performance_overlay_continuous_timeline_2026_04_21.plan.md`](../../../plans/archive/performance_overlay_continuous_timeline_2026_04_21.plan.md)
 > **Depends on:** [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) ·
 > [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
 > **Consumers:** [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) (FOMO tearsheets) · DART terminal

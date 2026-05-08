@@ -111,7 +111,7 @@ workspace-wide gate that "handles" missing data — by design.
   [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md).
 - Per-source `available_at` stamping (so downstream gating works): same doc, § _per-row, write-time `available_at`_.
 - Banned `_create_empty_output` placeholder method (writegate Phase 2.A workspace deletion):
-  [`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Feature calculator NaN tolerance + per-feature_group thresholds: UAC `feature_group → required_inputs` DAG SSOT.
 - TradFi calendar / market-hours SSOT: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.
 

@@ -15,7 +15,7 @@ Odum-enriched output),
 (schema-depth dimension reused for payload projection).
 
 **Plan SSOT:**
-[`signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md)
+[`signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md)
 — decisions D1–D10 locked, 8-repo scope, Phase 6 of 8.
 
 **Commercial framing:** [`../commercial-model/signal-leasing.md`](../commercial-model/signal-leasing.md) — pricing
@@ -220,5 +220,5 @@ the existing strategy-service deployment, so these are inherited:
   `ApiKeyReloader` hot-reload pattern
 - [`instruction-schema-fit-and-package-boundaries.md`](instruction-schema-fit-and-package-boundaries.md) — inbound DART
   instruction schema (direction contrast — not this doc)
-- [`../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md)
+- [`../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`](../../../plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md)
   — plan SSOT, D1–D10 locked, 8-repo scope

@@ -113,7 +113,7 @@ pipeline" in a signals-only demo is one profile toggle, not twenty individual sc
 ### Production entitlements compose from the same blocks
 
 The entitlement registry in Stage 3B
-([Stage 3 infra spec](../../../plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)) uses the same thirteen
+([Stage 3 infra spec](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)) uses the same thirteen
 identifiers. One list of blocks, four derivations (pricing / demo / prod / codex).
 
 ## Adding or removing a block

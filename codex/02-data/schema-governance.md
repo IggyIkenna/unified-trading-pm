@@ -305,7 +305,7 @@ The UIC Adoption Matrix tracks which terminal consumer services import each UIC 
   - Several event detail types (`DataBroadcastDetails`, `PersistenceStartedDetails`, etc.) — observability not yet wired
   - `CrossTimeframeFeatures`, `FeatureSnapshotRequest` — features services pending adoption
 
-See plan `plans/active/schema_governance_full_audit.plan.md` todos `p2-uic-adoption-matrix` and
+See plan `plans/archive/schema_governance_full_audit.plan.md` todos `p2-uic-adoption-matrix` and
 `p2-orphaned-uic-schemas` for remediation tracking.
 
 ---
@@ -407,7 +407,7 @@ downstream consumer can discover it from `unified_api_contracts.internal` withou
 
 - **Today**: many contracts are defined implicitly via Parquet column expectations or locally in service repos. These
   are in violation of the placement rules and will be migrated to `unified_api_contracts.internal` in the remediation
-  plan (see `plans/active/schema_contracts_full_audit.plan.md`).
+  plan (see `plans/archive/schema_contracts_full_audit.plan.md`).
 - **Target**: upstream service domain contract lives in `internal/domain/<service-name>/`; downstream reads the schema
   from `unified_api_contracts.internal` via UTL/UDC.
 

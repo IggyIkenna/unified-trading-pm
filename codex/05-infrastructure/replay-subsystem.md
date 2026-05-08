@@ -7,7 +7,7 @@ scope: [engineer, admin]
 > **STATUS** — covers the replay process that fills gap windows when the live pipeline loses data (intraday VM restart,
 > websocket disconnect exceeding reconnect grace, cluster bounce). Designed alongside the live-pipeline activation for
 > 2026-05-23. Full work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 > Phase 7. If this doc disagrees with the active plan, the plan wins.
 
 ## TL;DR
@@ -104,7 +104,7 @@ ships post-cutover for known transient failure classes).
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 7 (replay subsystem) + Phase 2C (UTL replay-cascade helpers).
 - Sibling: [`live-pipeline-architecture.md`](./live-pipeline-architecture.md).
 - Foundation: [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md).

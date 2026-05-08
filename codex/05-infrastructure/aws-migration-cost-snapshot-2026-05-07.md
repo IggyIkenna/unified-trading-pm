@@ -8,7 +8,7 @@ scope: [admin, engineer]
 > per-resource cost tables from
 > [`aws_migration_cost_analysis_2026_05_07.md`](../../plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 > for ongoing reference; the "defer AWS to Q3 2026" recommendation is replaced by the dual-cloud decision in
-> [`plans/active/aws_migration_defi_first_2026_05_07.plan.md`](../../plans/active/aws_migration_defi_first_2026_05_07.plan.md)
+> [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
 > § "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
 >
 > **Pricing flag**: list pricing as of 2026-Q1, sourced from public pricing pages and workspace invoice snapshots.

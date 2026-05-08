@@ -327,4 +327,4 @@ All handlers use `DefiManifestRecorder` to write honest-coverage entries:
 - `codex/02-data/instrument-pipeline-defi.md` — DeFi instrument discovery pipeline
 - `codex/02-data/per-category-bucket-layouts.md` — GCS bucket layout
 - `deployment-service/configs/venue_data_types.yaml` — expected data type declarations per venue
-- Plan: `plans/active/defi_data_types_completeness_2026_04_24.plan.md`
+- Plan: `plans/archive/defi_data_types_completeness_2026_04_24.plan.md`

@@ -4,7 +4,7 @@ status: draft
 created: 2026-05-07
 authoritative_for: The May-2026 honest-coverage baseline — per-(asset_group, data_type) target coverage % + ratchet schedule. Feeds the workspace QG gate that prevents coverage-regression PRs from landing on `live-defi-rollout`.
 referenced_by:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
 related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
@@ -192,7 +192,7 @@ _(empty as of 2026-05-07 baseline draft — first entries land when an actual ov
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase 5.
+- **Plan(s) implementing this:** [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md), [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md), [`expected-absence-backfill-runbook`](./expected-absence-backfill-runbook.md).
 - **Code:** TBD ratchet check — `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (measurement) +
   `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` (CI gate).

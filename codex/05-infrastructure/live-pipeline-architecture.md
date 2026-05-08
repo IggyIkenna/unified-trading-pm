@@ -6,10 +6,10 @@ scope: [engineer, admin]
 
 > **STATUS** — entry-point doc for the live (websocket-streaming) pipeline activated for the 2026-05-23 DeFi cutover.
 > Full design + phased work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md).
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md).
 > Dependent prerequisites:
-> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.plan.md) +
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md).
+> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) +
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plans, the plans win — flag conflicts to the user.
 
 ## TL;DR
@@ -180,11 +180,11 @@ UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_bat
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Pre-req plan:
-  [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.plan.md)
+  [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
 - Pre-req plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
   [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md),
   [`../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
