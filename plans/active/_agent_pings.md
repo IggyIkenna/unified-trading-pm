@@ -27,4 +27,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT.)_
+_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT. Beef-up sub-agent BLOCKED ping resolved via fast-forward rebase + push of sports_master beef-up.)_
