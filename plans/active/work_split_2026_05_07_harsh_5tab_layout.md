@@ -1229,9 +1229,15 @@ conditional rule.
 wires the 8 features-* / MDPS / strategy services to consume it via UTL `assert_no_lookahead_for_feature_group`
 helper. Workspace-wide ratchet — once shipped, every feature compute becomes lookahead-bias-checked at runtime.
 
-**Caveat — high collision risk**: 8 service touches. Better as a SINGLE focused tab (this one) than
-parallelized. If you spawn this in parallel with Tab 11 (which also touches `vm_zombie_watchdog.py` +
-deployment-service), watch for shared-file collisions on the deployment-service repo.
+**Caveat — collision risk on MDPS**: Ikenna's writegate Phase 2.A residual touches MDPS
+`batch_workers` / cluster-coverage wiring / `_write_manifest_records` deletion (writer-layer files). Tab 12
+touches MDPS feature compute calculators (different layer, different files). **File-level overlap is
+expected to be zero**, but both are in MDPS — so per-commit pre-commit check (`git status` + `git diff
+--cached --stat` no path arg + `git add -p` for any shared file) is critical. If `git status` shows
+unexpected MDPS-writer-layer changes from Ikenna while you're staging, those are NOT yours — surgically
+exclude with `git restore --staged <file>` before commit.
+
+**Tab 11 (launcher consolidation) finished 07:42 UTC** — no longer a collision concern.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
