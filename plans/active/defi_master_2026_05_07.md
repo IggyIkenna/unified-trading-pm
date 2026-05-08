@@ -107,8 +107,9 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 >
 > **NOT IN AGENT 4 SCOPE THIS CYCLE:**
 >
-> - `launch-mtds-perp-funding-backfill-vm.sh` — referenced in CLAUDE.md but missing per defi_master § "Real residual
->   concerns" #4. Adding this launcher is a dedicated [SCRIPT] task; not a launch in this cycle.
+> - `launch-mtds-perp-funding-backfill-vm.sh` — **CORRECTION 2026-05-08 audit**: launcher EXISTS at
+>   `deployment-service/scripts/vm/launch-mtds-perp-funding-backfill-vm.sh` (was previously declared missing).
+>   Adding/maintaining is a dedicated [SCRIPT] task; not a launch in this cycle.
 > - DEX-perp `launch-cefi-onchain-forward-poll.sh` for LIGHTER/PACIFICA/EXTENDED — required pre-live but separate
 >   workstream (HANDOVER Item A). Not in Agent-4 cycle scope.
 >
@@ -574,8 +575,10 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
    No named successor plan yet — could be filed as a small follow-up under `manifest_migration_master_2026_05_07`.
 3. **`solana-defi-{pid}` is 3+ weeks stale** — last write 2026-04-13. Worth confirming whether that handler is
    intentionally paused or has been broken.
-4. **`launch-mtds-perp-funding-backfill-vm.sh`** is referenced in CLAUDE.md but missing from
-   `deployment-service/scripts/vm/`. `leveraged_funding_arb` blocker — file as a small follow-up to author it.
+4. **`launch-mtds-perp-funding-backfill-vm.sh`** — **CORRECTION 2026-05-08 audit**: launcher EXISTS at
+   `deployment-service/scripts/vm/launch-mtds-perp-funding-backfill-vm.sh`. Earlier "missing" claim is stale.
+   `leveraged_funding_arb` blocker around perp-funding capture is therefore not a missing-launcher issue;
+   re-scope to "verify launcher is wired into `_SERVICE_LAUNCHER_SCRIPTS` registry + `VM_PREFIX_TO_BUCKET` watchdog".
 
 **Single-VM launch recommendation** (unchanged from earlier):
 
