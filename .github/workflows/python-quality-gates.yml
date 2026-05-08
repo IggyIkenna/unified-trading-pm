@@ -220,3 +220,18 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\"}}"
 
+
+  notify-failure:
+    name: Telegram — QG Failure
+    needs: [quality-gates]
+    if: always() && needs.quality-gates.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "QG FAILED — ${{ github.event.repository.name }} (${{ github.head_ref || github.ref_name }}). View: ${{
+        github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
