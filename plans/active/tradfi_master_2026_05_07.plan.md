@@ -25,13 +25,19 @@ related_plans:
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) — manifest v5 semantics + `record_captured` / `record_empty` / `record_failed` discipline (TradFi calendar pre-skip + ES.OPT cluster validation)
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) — TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream NaN tolerances
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — TradFi GCS bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
-- [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md) — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest v5 semantics + `record_captured` / `record_empty` / `record_failed` discipline (TradFi calendar pre-skip +
+  ES.OPT cluster validation)
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream
+  NaN tolerances
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — TradFi GCS
+  bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
+- [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+  — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 
@@ -181,6 +187,97 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       [AUDIT 2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
 - [ ] [AGENT] P1. After backfill VMs drain, run data-status rollup; confirm TradFi shards count vs expected. [AUDIT
       2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
+
+### Futures + options expiry schema (Q1+Q2 from `instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08`)
+
+Source issue archived. Q1+Q2 ownership operator-assigned 2026-05-08 to tradfi_master (Q4-Q7 went to sports_master). Q3
+(predictions) is the gold-standard reference — predictions schema already has `market_created_at` / `resolution_time` /
+`settlement_time` hard-required. Q1+Q2 below bring tradfi futures + options to the same bar.
+
+**Cross-plan banner**: this is breaking change to UAC schemas. Ships SEQUENCED with hard-schema-enforcement plan
+(`hard_schema_enforcement_2026_05_08` Phase 1 — futures expiry first, then workspace-wide enforcement). Reason:
+hard-schema enforcement workspace-wide flips `record_failed(SCHEMA_VALIDATION_FAILED)` per row when nullable fields that
+should be required have nulls; landing the workspace-wide enforcement BEFORE futures schemas become required would
+mass-fail every existing futures row.
+
+- [ ] [SCRIPT] P0. **Q1 — `CanonicalFuturesContract` schema** at `unified_api_contracts/canonical/domain/_tradfi.py`.
+      Hard-required fields: `expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`.
+      Each is a date or datetime with explicit timezone (CME Central Time for CME products; venue-local for non-CME).
+      NEW StrEnum `FuturesContractLifecyclePhase`: `LISTED`, `ACTIVE`, `IN_FIRST_NOTICE`, `IN_DELIVERY`, `EXPIRED`,
+      `SETTLED`. Populate from Databento metadata at instruments-service write-time. Without these fields, contract roll
+      detection breaks + odds settlement timing breaks (the issue's root concern).
+- [ ] [SCRIPT] P0. **Q2 — `CanonicalOptionsChainEntry.expiration` flip nullable → required.** Same module. Schema
+      already has the field but it's nullable; flip to required + back-fill from Databento metadata at write-time.
+      One-shot migration: walk existing options-chain manifest rows; for any row missing expiration, fail loud (do NOT
+      silently fill — operator decides whether to re-fetch or `record_failed(SCHEMA_INCOMPLETE_HISTORICAL)` per missing
+      row).
+- [ ] [SCRIPT] P0. **One-shot manifest migration script** under
+      `instruments-service/scripts/migrate_tradfi_expiry_schema.py` mirroring existing migration patterns (idempotent,
+      dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules).
+- [ ] [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands in tradfi-master scope
+      first; the workspace-wide hard-schema enforcement (under `hard_schema_enforcement_2026_05_08` plan) ships AFTER to
+      avoid mass-fail during transit. CLAUDE.md "Two teammates" rule applies — coordinate via shared cursor working
+      session if both repos are touched in the same window.
+- [ ] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
+      includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options- chain
+      rows have non-null expiration. Manifest queries return ZERO rows where these fields are null for data_type ∈
+      {FUTURES, OPTIONS_CHAIN}.
+
+### Databento session-type awareness (migrated from `databento_tradfi_session_type_awareness_2026_05_08`)
+
+Source issue archived. Complete blind spot today: no session-type enum in UAC; Databento adapter writes unmarked OHLCV
+(pre/post-market indistinguishable from regular trading); MDPS only has partial local labelling that doesn't propagate;
+volatility comments only, no runtime gates; plan coverage absent. Affects every TradFi consumer (features, strategy,
+execution, risk).
+
+**Cross-plan banner**: coordinate with `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08` migration (Batch E)
+— liquidity baselines must be axis-typed by session_type or they conflate pre-market thin volume with regular- session
+volume.
+
+- [ ] [SCRIPT] P0. **UAC `MarketSession` + `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT.** Closed sets:
+      `MarketSession ∈ {REGULAR, PRE_MARKET, POST_MARKET, OVERNIGHT, HALTED, CLOSED}`;
+      `SessionPhase ∈ {OPEN_AUCTION,     CONTINUOUS, CLOSE_AUCTION, AFTER_HOURS_AUCTION, NONE}`.
+      `VENUE_SESSION_SCHEDULE: dict[VenueKey,     list[SessionWindow]]` where `SessionWindow` carries
+      `(session, phase, weekday_mask, start_time, end_time,     tz)`. Lives at
+      `unified_api_contracts/canonical/crosscutting/market_session.py`.
+- [ ] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
+      the venue's `VENUE_SESSION_SCHEDULE`; stamp `session: MarketSession`, `phase: SessionPhase` on every OHLCV row at
+      write-time. NEW columns added to canonical OHLCV schema. Backfill: one-shot reclassification VM walks existing
+      OHLCV manifest rows, computes session per row from the existing timestamp, writes back. Same migration script
+      pattern as Q1+Q2 above.
+- [ ] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
+      opted in (overnight strategies / pre-market liquidity calculators); strategy-service per-archetype
+      `allowed_sessions: list[MarketSession]` with default `[REGULAR]`; execution-service `OutOfSessionOrderError`
+      raised when an order targets a venue × instrument outside the configured allowed_sessions; MDPS write-gate checks
+      session against the per-(venue, data_type) allowed-sessions config.
+- [ ] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
+      writes 1440 zero-volume bars per non-tradeable day; flip to `record_empty(reason=EXPECTED_NON_TRADING_SESSION)`
+      per workspace honest-absence rule. Manifest denominator math gets fixed automatically by the per-(venue, day)
+      session-typed expected universe.
+- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
+      empty reasons" section listing all 6 EXPECTED_NON_TRADING_SESSION sub-reasons (pre-market closed, post-market
+      closed, weekend, holiday, half-day-early-close, partial-halt). NEW
+      `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` (small doc) describes the standard pattern
+      for features-\* calculators that need overnight or pre-market data.
+
+### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`)
+
+Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
+the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural fixes spanning UAC + MTDS
+
+- strategy-service + execution) land in NEW sub-plan `cme_polymarket_arb_2026_05_08.plan.md` (see Cross-references
+  section below). Phases 1-5 are post-May-23 critical path.
+
+* [ ] [SCRIPT] P0. **Phase 0 — TradFi instruments-service backfill VM** for the 9 CME event-contract roots (ECES / ECBTC
+      / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E / ECNQ — full list in archived issue). VM launcher under
+      `deployment-service/scripts/vm/launch-tradfi-event-contract-backfill.sh` (per CLAUDE.md launcher SSOT rule). Range
+      `[2025-09-28, today]` (issue documents this is the listing window for the early roots; later roots have later
+      listing dates per archived issue's Phase 0 detail). Source: Databento metadata endpoint + per-day OHLCV. Writes to
+      existing tradfi instruments path (no new path). VM prefix `tradfi-event-contract-backfill-` added to
+      `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` (per CLAUDE.md VM Naming Convention rule) — register before first
+      launch.
+* [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
+      captured percentage approaches 100% for the listing window. Phases 1-5 in CME sub-plan unblocked.
 
 ## Anti-patterns + workspace-rule cross-references
 
