@@ -154,7 +154,9 @@ already supports LEADER_HEDGE mode.
       `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with config variant
       `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` where useful). Update the "Both archetypes" headline to
       use the canonical name.
-- [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md): same rename.
+- [x] [PM-plan] P0. Edit [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md): same rename. ✓ shipped 2026-05-08
+      (PM plan-flip alongside the audit-driven batch). L152-153 "2 DeFi archetypes live" now uses
+      `ARBITRAGE_PRICE_DISPERSION` with config variant note + cross-ref to this plan.
 - [ ] [UAC] P1. Verify `StrategyArchetype` enum in UAC: confirm `ARBITRAGE_PRICE_DISPERSION` exists and that
       `LEVERAGED_FUNDING_ARB` is **not** in the enum. If absent, no enum change needed; if mistakenly added, remove.
 - [ ] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under

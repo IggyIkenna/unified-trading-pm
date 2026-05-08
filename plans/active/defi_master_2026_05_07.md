@@ -150,7 +150,10 @@ Single source of truth for **DeFi asset_group** work toward live DeFi 2026-05-23
 Covers:
 
 - **2 DeFi archetypes live**: `carry_staked_basis` (lead — recursive LST staking + perp short hedge) +
-  `leveraged_funding_arb` (cross-venue funding spread). 7-day continuous run on real wallet.
+  `ARBITRAGE_PRICE_DISPERSION` (config variant `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` —
+  cross-venue funding spread; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation
+  2026-05-07, see [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)).
+  7-day continuous run on real wallet.
 - **2 DeFi perp DEXs live**: Hyperliquid + Aster. Plus historical-replay backfill for Lighter / Extended / Pacifica
   (originally scoped under CeFi venue expansion but they are DeFi by asset_group).
 - **DeFi data pipeline E2E**: features-onchain → strategy → execution. 8 archetypes pass Phase 1 batch e2e (per
