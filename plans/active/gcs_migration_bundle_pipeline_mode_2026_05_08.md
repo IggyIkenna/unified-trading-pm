@@ -464,7 +464,7 @@ todos:
 
   - id: phase-7-codex-ssot-updates
     content: |
-      - [ ] [AGENT] P0. Phase 7 — Codex SSOT updates. PARALLEL with Phase 6.
+      - [x] [AGENT] P0. Phase 7 — Codex SSOT updates. PARALLEL with Phase 6. **PARTIAL SHIPPED 2026-05-08.** 7.1+7.2 at `unified-trading-pm@e8530de8` (pipeline-mode-partition.md status table + commit shas; availability-manifest-and-data-status.md v8 pipeline_mode column). 7.3+7.4 at `@7ac15cf4` (data-status-drilldown-hierarchy.md outermost-partition note; 00-SSOT-INDEX.md pipeline-mode-partition register). Items requiring post-Phase-3 migration data (drift-class histogram, observed wall-clock per asset_group, pre/post phantom counts) deferred until Phase 3 runs. Asset-group-vocabulary doc-touch deferred — no dedicated codex doc exists; vocabulary lives in CLAUDE.md "Asset-group vocabulary" section + availability-manifest-and-data-status.md (already updated). CLAUDE.md "Asset-group vocabulary" section flip ("category= legacy preserved" → "RESOLVED") deferred until Phase 3 actually runs.
 
         Per the workspace "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase
         enhances the plan-driven stub created at plan-draft time + updates 5 existing docs.
@@ -679,3 +679,50 @@ Per phase — see each todo. Plan-level final gate:
 | 6th drift axis discovered post-migration                                 | Low                            | Phantom count > 0 after Phase 6   | Phase 6 includes per-asset-group root-cause; one-shot targeted fixes acceptable                             |
 | `manifest_migration_master` Stage 4 items collide with this plan's scope | Medium                         | Double-work or work-stealing      | Phase 0 § (f) coordination check is explicit; banner discipline                                             |
 | Snapshot bucket cost spikes                                              | Low                            | Per-VM-budget overrun             | Snapshot only `_index/` + sample leaf parquets, not the full bucket                                         |
+
+## DONE-2026-05-08 — Tab 3 (gcs-migration-manifest-tab) shipped
+
+Tab 3 of [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this session.
+Phases shipped on `live-defi-rollout`:
+
+| Phase / Item                                                 | Commit(s)                                                                       | Notes                                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Phase 0 — Pre-audit doc                                      | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (flip)                        | 521-line operator-runnable doc + 8 sections (a)–(h) tagged WORKSPACE-LOCAL vs REQUIRES VM RUN.     |
+| Phase 1A — UAC `PipelineMode` SSOT                           | `unified-api-contracts@8bc3f2a`                                                 | Closed-set StrEnum + helpers + `pipeline_mode_for_source` round-trip tests.                        |
+| Phase 1B — UTL `ManifestWriter` `pipeline_mode` kwarg        | `unified-trading-library@87134364`                                              | New kwarg on all 5 record\_\* methods + `_ROW_KEY_COLUMNS` extension + 11 unit tests.              |
+| Phase 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field       | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5` (flip)          | Option B (thin reader helper, no value-type change). 12 unit tests.                                |
+| Phase 2 — Canonical migration script                         | `unified-trading-pm@5a3c360a` (script + tests + conftest) + `@cc6fe4ce` (flip)  | 694-line script + 23 unit tests, dry-run by default, leverages UTL `manifest_migrations`.          |
+| Phase 5.1 — UTL `read_manifest_with_source_priority` reader  | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) | NEW `manifest_reader_fallback.py` 356 lines + 469-line tests. 5-level fallback chain.              |
+| Phase 7.1 + 7.2 — Codex (pipeline-mode-partition + manifest) | `unified-trading-pm@e8530de8`                                                   | Status table with all 6 shipped phases + commit shas; v8 pipeline_mode column in v5+ schema.       |
+| Phase 7.3 + 7.4 — Codex (drilldown + SSOT-INDEX)             | `unified-trading-pm@7ac15cf4`                                                   | pipeline_mode as outermost partition note; SSOT-INDEX register entry.                              |
+| Foot-gun #3 issue doc (workspace governance)                 | (content via `@351e0a2e` Tab 5 hijack but durable on origin)                    | Documents 4 foot-gun #3 incidents in this session + recommends `git commit -o <files>` mitigation. |
+| Manifest v7→v8 schema migration design (Tab 3 sep item 3)    | `unified-trading-pm@10ac1f5f`                                                   | DRAFT pending Tab 2 Phase 11 slice b spec for `ServiceEmissionStateEnum` closed-set values.        |
+| Expected_universe v2 design (Tab 3 sep item 4)               | `unified-trading-pm@6320a8b5`                                                   | Catalog-aware cross-bucket join, ~190M rows estimate.                                              |
+| Cross-asset rescan design (Tab 3 sep item 5)                 | `unified-trading-pm@cc67e904`                                                   | Class A/B/C flip schema; launcher script DEFERRED (sub-agent rate-limited).                        |
+
+**Pending (operator-gated or follow-up sub-agents):**
+
+- Phase 3 — Operator-gated VM execution (operator runs after Phase 0 audit results in §§(b)(c)(d)(e)(h)).
+- Phase 4 — Workspace-wide consumer sweep (parallel with Phase 3 per plan DAG).
+- Phase 5.2 — MTDS / MDPS path probers fallback (separate sub-agent).
+- Phase 5.3 — Sports + DeFi `candidate_parquet_paths` extension (separate sub-agent).
+- Phase 6 — Residual phantom cleanup (sequential after Phase 3.6).
+- Phase 8 — Reader fallback removal (T+30d, ~2026-06-15).
+- Phase 9 — Final workspace-wide QG sweep (sequential after Phase 6).
+- Cross-asset rescan launcher script + watchdog dict update (sub-agent rate-limited; design doc shipped at `cc67e904`).
+
+**Foot-gun #3 incidents this session (4 total — see
+[`issues/foot_gun_3_double_strike_2026_05_08.md`](issues/foot_gun_3_double_strike_2026_05_08.md)):**
+
+1. PM@`784f2bfe` — sub-agent's commit message says "Phase 0 pre-audit doc" but actual diff is +58 lines to Tab 1's
+   defi_master_2026_05_07.md (foreign content under sub-agent's message).
+2. PM@`12483f5b` — sub-agent's plan-flip commit (correct +/-8) but ALSO bundled Tab 4's
+   `live_pipeline_preaudit_2026_05_08.md` (+408 lines).
+3. PM@`351e0a2e` — Tab 5's deploy_missing commit hijacked Tab 3's foot_gun issue doc into ITS commit.
+4. Multiple commit attempts during Phase 7 + design-doc shipping where prek auto-stash + parallel-agent staging raced;
+   mitigated by `git commit -o <specific-files>` (Option C from the issue doc) which scoped commits regardless of
+   foreign staged work.
+
+**Sub-agents F + G** (Manifest v7 design + cross-asset rescan launcher) hit Anthropic API rate limit mid-session
+(`You've hit your limit · resets May 10 at 8pm`). Re-done in foreground (this main agent); launcher script for
+cross-asset rescan deferred.
