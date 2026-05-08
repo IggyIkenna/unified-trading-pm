@@ -833,6 +833,23 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
 > against the canonicalisation plan's Stream A output before committing changes that depend on the list. Banner will be
 > removed by canonicalisation plan owner once Stream A ships.
 
+## `available_at` adapter stamping (coordinated)
+
+> **Coordinator:**
+> [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> Phase 1. DeFi (non-onchain) adapters need explicit per-adapter `available_at` stamping; today only `lst_yields` raises
+> `LookaheadBiasError`. Without stamping per adapter, downstream `assert_no_lookahead_for_feature_group` is a silent
+> no-op for defi shards and the meta-plan's chain link 6 (Tab 12 wiring) cannot be verified.
+
+- [ ] [SCRIPT] P0. **Per-adapter `available_at` stamping for DeFi adapters**. DefiLlama TVL, AAVE lending rates, Pyth
+      Solana price feeds (Hermes batch + PythNet live), Chainlink (EVM oracle), staking-yield aggregators (jitoSOL /
+      mSOL / bSOL), perp-funding adapters (Hyperliquid, Lighter, Pacifica, Aster). Tick-level: stamp at observed-tick
+      timestamp + scrape latency per UAC `SOURCE_PRIORITY`. Bar/aggregate-level: stamp via boundary-rounded last-tick
+      timestamp (depends on coordinator Phase 0 MDPS bar boundary contract). Insert call before `record_captured`.
+- [ ] [SCRIPT] P1. **DeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. The 10 currently-registered cover defi
+      yields; cross-protocol carry, bridge-flow, MEV-leakage, gas-fee bands etc. likely need additions. Audit
+      `features-defi-service/` + `features-onchain-service/` calculator metadata. Coordinator Phase 4.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See

@@ -723,6 +723,22 @@ features silently miss bookmaker × market gaps.
       snapshot as no-update (already correct). Document in `codex/02-data/honest-absence-downstream-handling.md` § "ODDS
       NaN-fill semantics" (extend existing doc, not new).
 
+## `available_at` + lookahead-bias coordination (2026-05-08 audit)
+
+> **Coordinator:**
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md).
+> Sports is the canonical reference precedent: features-sports `_enforce_pit_sports`
+> ([data/writer.py:42-72](../../../features-sports-service/features_sports_service/data/writer.py#L42-L72)) shows the
+> writer-boundary `PointInTimeEnforcer(strict=True)` pattern other features-\* services should mirror. Sports historical
+> parquet backfill
+> ([`migrate_sports_available_at_column.py`](../../../features-sports-service/scripts/migrate_sports_available_at_column.py)
+> shipped 2026-05-07) is the canonical reconciler shape to generalize for cefi / defi / tradfi / predictions
+> (coordinator Phase 2).
+
+- [ ] [SCRIPT] P0. **Sports feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~60 sports feature_groups (form,
+      league_strength, fixture_xg, lineup_quality, market_consensus, etc.) need registry entries. Source-of-truth:
+      `features-sports-service/features_sports_service/calculators/` calculator metadata. Coordinator Phase 4.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Sports GCS path SSOT** (CLAUDE.md): use `unified_api_contracts.sports.candidate_parquet_paths` — NEVER hardcode

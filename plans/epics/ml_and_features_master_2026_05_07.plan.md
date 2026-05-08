@@ -690,6 +690,27 @@ respectively).
 | Phantom audit covers features manifest                                                                             | C5 (P5) |
 | Sanity replay passes on 3 representative shards                                                                    | B2 (P5) |
 
+## `available_at` + lookahead-bias coordination (2026-05-08 audit)
+
+> **Coordinator:**
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md).
+> Audit 2026-05-08 confirmed: UTL
+> `assert_no_lookahead_for_feature_group(feature_group, inputs_df: pl.DataFrame, target_ts)` already takes target_ts and
+> gracefully no-ops when feature_group absent / df empty / column missing
+> ([UTL point_in_time.py:274-393](../../../unified-trading-library/unified_trading_library/point_in_time.py#L274-L393)).
+> features-sports `_enforce_pit_sports` (data/writer.py:42-72) is the canonical writer-boundary precedent — mirror it.
+
+- [ ] [SCRIPT] P0. **UAC `FEATURE_REQUIRED_INPUTS` expansion across asset_groups**. Today 10 defi groups registered;
+      target ~90 (sports ~60 + cefi ~5 + tradfi ~8 + defi residual + predictions). Each unregistered feature_group makes
+      the lookahead-bias gate silently no-op. Coordinator Phase 4. Sub-todos lifted into the asset-group masters (cefi /
+      tradfi / predictions / sports / defi).
+- [ ] [TRACKED] P0. **Tab 12 wire-in (8 features-\* services) DEFERRED** per PM@cf9b9ba1 until coordinator Phase 0 (MDPS
+      bar boundary) + Phase 1 (per-asset-group adapter stamping) ship. Wire at writer boundary, NOT calculator boundary,
+      to avoid pd↔pl conversion (the precedent: features-sports `_enforce_pit_sports`). features-onchain's
+      `contextlib.suppress(LookaheadBiasError)`
+      ([feature_writer.py](../../../features-onchain-service/features_onchain_service/app/core/feature_writer.py)) is
+      the canary — flip the suppress to a raise once chain is live; that single edit verifies end-to-end.
+
 ## Coordination with sibling plans
 
 - **writegate_honest_coverage_endtoend_2026_05_06**: this umbrella consumes writegate's `LookaheadBiasError`,
