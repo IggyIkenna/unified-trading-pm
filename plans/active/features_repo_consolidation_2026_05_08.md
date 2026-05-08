@@ -594,8 +594,32 @@ todos:
 
         **Coordination**: `deployment_ui_lifecycle_tabs_2026_05_08` may overlap on data-status surface
         edits; banner that plan + this one mutually.
-    status: todo
-    note: ""
+
+        **deployment-ui half SHIPPED 2026-05-08 by Tab 8B-ui (deployment-ui@6ce928e)**:
+        - `FeatureFamily` TS union (8 UAC values) + `FEATURE_FAMILIES` array + `isFeatureFamily` guard
+          in `src/api/client.ts`.
+        - `TurboFeatureGroupStatus.feature_family?` + new `TurboFeatureFamilyStatus` rollup +
+          `TurboSubDimension.feature_families?` map.
+        - `feature_family` filter param on `getDataStatusManifest` / `fetchShardSchema` /
+          `fetchLeafParquetStats`.
+        - NEW `src/components/FeatureFamilyBreakdown.tsx` — drill-down rendering family → feature_groups
+          with `groupFeatureGroupsByFamily` client-side fallback when API hasn't rolled up server-side.
+          `__unknown__` bucket labelled "legacy / unstamped" for pre-Phase-8B rows.
+        - NEW `src/components/FeatureFamilyFilter.tsx` — multi-select dropdown over the 8 families.
+        - `DataStatusTab` mounts `FeatureFamilyBreakdown` when a feature_family axis is populated;
+          legacy `feature_groups` view preserved as fallback for non-features rows.
+        - 21 new Vitest specs across `FeatureFamilyBreakdown.test.tsx` + `FeatureFamilyFilter.test.tsx`.
+          Full suite: 439 passed | 16 skipped. `vite build` clean.
+
+        **DEFERRED**: deployment-api half (filter param wiring on `/data-status/manifest`,
+        `/data-status/leaf-stats`, `/data-status/schema`; `feature_family` field propagation on
+        `TurboFeatureGroupStatus` / new `TurboFeatureFamilyStatus` rollup; Deploy-Missing CLI shape
+        update for `launch-features-<flavor>.sh --feature-family <name>`). Owned by parallel sibling
+        Tab 8B-api. Phase 8B fully closes when both halves land + `LeafSchemaModal` renders
+        `feature_family` alongside `feature_group` for features-service shards (UI hook is in place
+        via `fetchLeafParquetStats({feature_family})`; modal copy update pending API field).
+    status: helper-shipped
+    note: "2026-05-08 Tab 8B-ui shipped deployment-ui half (deployment-ui@6ce928e: types + 2 components + DataStatusTab wire + 21 tests); deployment-api half deferred to sibling Tab 8B-api"
 
   - id: phase-9-codex-ssot-updates
     content: |
