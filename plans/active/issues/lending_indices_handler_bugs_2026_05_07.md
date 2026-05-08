@@ -22,6 +22,16 @@ locked_since: 2026-05-07
 > cross-protocol leg if it touches Compound V3.
 > **Suggested owner**: defi_master:Fork 1 (lending-indices handler) + instruments-service DeFi instrument
 > discovery.
+>
+> **STATUS RE-FRAMING (2026-05-08, Tab 9 Q1/A1)**: Bug 1's "silent zero" was a **UAC SSOT misdiagnosis**, NOT a
+> code bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` was `2022-03-14` (the L2 cohort date) when AAVE V3
+> on Ethereum mainnet actually deployed `2023-01-27`. The 11-month difference manifested as 343 days of
+> `empty_confirmed` for AAVE V3 ETH in the previous failed run — those days were genuinely pre-deployment, NOT
+> silent-zero. Tab 5's 2026-05-07 cascade fix (`mtds@d2f365e`) was correct work for OTHER chains/protocols (it
+> prevents silent-zero on schema-error days for Compound V3 multi-chain) but didn't fix AAVE V3 ETH because the
+> root cause was upstream of the cascade in UAC. Probe-verified 2026-05-08 via the AAVE V3 ETH subgraph
+> `Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g`: earliest `reserveParamsHistoryItems` event is 2023-01-27
+> 08:00:11 UTC (WETH reserve); 2022-03-14, 2022-12-08, 2023-01-26 all return 0 rows.
 
 ## Filing rationale
 
@@ -53,16 +63,39 @@ captured rows; the rest were silently writing `empty_confirmed` for dates where 
 | COMPOUNDV3 / ETHEREUM  | 107      | —               | ✅ working                            |
 | COMPOUNDV3 / ARB/BASE/OPT | 0     | 0 (skipped)     | ❌ **subgraph schema error — Bug 2**  |
 
-## Bug 1 — AAVE V3 ETHEREUM silent zero (P0)
+## Bug 1 — AAVE V3 ETHEREUM silent zero (P0) ✅ RESOLVED 2026-05-08 (Tab 9 — UAC SSOT misdiagnosis, not code bug)
 
-Run.log shows `instruments-store-defi parquet missing for aave_v3/ETHEREUM/2022-12-08; falling back to subgraph
-discovery` then `Wrote 0 rows`. The instruments-store-defi metadata is missing for ETHEREUM (404s for early 2022
-dates) AND the subgraph fallback is misconfigured for ETHEREUM specifically — other chains (Arbitrum, Optimism,
-Polygon, Avalanche) have working subgraph fallbacks with the same code.
+**Original framing (2026-05-07)**: Run.log shows `instruments-store-defi parquet missing for
+aave_v3/ETHEREUM/2022-12-08; falling back to subgraph discovery` then `Wrote 0 rows`. Other chains (Arbitrum,
+Optimism, Polygon, Avalanche) have working subgraph fallbacks with the same code; only ETHEREUM silent-zeroed.
 
-**Investigation target**: `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py`
-(or equivalent) + the per-chain subgraph endpoint config. Likely a chain→subgraph URL mapping bug or a missing
-schema mapping for the Ethereum subgraph response shape.
+**Actual root cause (Tab 9 2026-05-08)**: NOT a code bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")] =
+"2022-03-14"` (the L2 cohort date) was wrong — AAVE V3 on Ethereum mainnet actually deployed `2023-01-27`. So
+all 343 `empty_confirmed` days observed in the previous failed VM (2022-01-01 → 2022-12-09 ish) were genuinely
+pre-deployment; the AAVE V3 ETH subgraph correctly returned 0 rows because the protocol literally hadn't been
+deployed yet. The L2 chains (Arbitrum/Optimism/Polygon/Avalanche) all had real captured rows because they were
+all deployed in 2022-03 — the misalignment was Ethereum-specific.
+
+The 2026-05-07 cascade fix (Tab 5, `mtds@d2f365e`) was correct work for OTHER chains/protocols (it prevents
+silent-zero on schema-error days for Compound V3 multi-chain) but didn't fix AAVE V3 ETH because the root
+cause was upstream of the cascade in UAC.
+
+**Fixes shipped (Tab 9 2026-05-08)**:
+- `unified-api-contracts@6a64a56` — corrected `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` from
+  `"2022-03-14"` to `"2023-01-27"` with inline source citation (subgraph probe). UAC test
+  `tests/unit/test_protocol_launch_dates.py` updated.
+- `instruments-service@6ae50de` — `tests/unit/test_evm_creation_resolver.py` updated to assert the corrected
+  floor (Tab 5's `get_protocol_floor_date` correctly consults UAC SSOT, so no source change needed).
+- `market-tick-data-service@c6bdf96` — pre-floor-date short-circuit in `lending_indices_handler.process()` so
+  pre-launch dates emit `record_empty(reason="EXPECTED_PRE_GENESIS_CHAIN")` and skip the subgraph round-trip
+  entirely. Saves ~3 Graph API calls per pre-launch (chain, day) — across an 11-month pre-deploy window for
+  AAVE V3 ETH that's ~1000 wasted calls. 2 new unit tests pass (`test_process_skips_subgraph_for_pre_launch_date`,
+  `test_process_runs_subgraph_for_post_launch_date`). Also addresses Bug 3 routing.
+
+**Probe verification** (2026-05-08, Tab 9):
+- Subgraph `Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g` (AAVE V3 ETHEREUM)
+- Earliest `reserveParamsHistoryItems` event: 2023-01-27 08:00:11 UTC, WETH reserve.
+- 2022-03-14: 0 rows. 2022-12-08: 0 rows. 2023-01-26: 0 rows. 2023-01-27: 10+ rows starting 08:00:11 UTC.
 
 ## Bug 2 — COMPOUND V3 multi-chain Messari subgraph schema error (P0)
 
@@ -83,15 +116,33 @@ model (subgraph returned 0 rows, no exception) — but per writegate Phase 2.A s
 empty-output decision-tree mis-routing: this is case C (downstream calc dropped all rows due to malformed source
 fields → `record_failed(MalformedTickFieldError(...))`), not case A (source returned 0 rows).
 
-## Bug 3 — `instruments-store-defi` metadata missing for early 2022 dates
+## Bug 3 — `instruments-store-defi` metadata missing for early 2022 dates ✅ RESOLVED 2026-05-08 (Tab 5 + Tab 9 — two-part fix)
 
-Affects all (venue, chain) pairs equally for early 2022 dates. The fallback to subgraph discovery works for some
-chains and not others (see Bugs 1+2). The deeper question is whether instruments-service's lookback covers early
-DeFi protocol launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...`
+**Original framing (2026-05-07)**: Affects all (venue, chain) pairs equally for early 2022 dates. The fallback
+to subgraph discovery works for some chains and not others. Deeper question: does instruments-service's
+lookback cover early DeFi protocol launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/day=2022-12-08/...`
 returns 404 for AAVEV3/COMPOUNDV3/etc. across all chains.
 
-**Investigation target**: `instruments-service` DeFi instrument-discovery script + its launch-date floor
-handling.
+**Two-part fix shipped**:
+
+1. **Floor-date math (Tab 5, 2026-05-07, `instruments-service@1a90185`)**: `get_protocol_floor_date()` now
+   consults UAC `PROTOCOL_LAUNCH_DATES` as the canonical SSOT first, then falls back to local
+   `LENDING_PROTOCOL_DEPLOY_DATES` for protocols UAC doesn't yet track (spark/morpho/fluid/euler_v2/radiant/
+   venus/benqi). This correctly aligns instruments-service's discovery floor with UAC's launch-date SSOT —
+   when UAC entries are accurate, the metadata 404 issue resolves naturally because instruments-service
+   doesn't enumerate dates before the floor.
+
+2. **Reason-routing (Tab 9, 2026-05-08, `market-tick-data-service@c6bdf96`)**: pre-floor-date dates that DO
+   reach `lending_indices_handler.process()` now hit a pre-cascade short-circuit that emits
+   `record_empty(reason="EXPECTED_PRE_GENESIS_CHAIN")` per the writegate Phase 2.E reason taxonomy SSOT —
+   instead of the pre-fix `record_empty(reason="SOURCE_RETURNED_ZERO")` which mis-classified "didn't honestly
+   probe" as "tried and got 0". Per CLAUDE.md asset-group-specific `empty_confirmed` legitimacy rule, defi
+   pre-genesis days require a venue-level reason (`EXPECTED_PRE_GENESIS_CHAIN`), not the open-set
+   `SOURCE_RETURNED_ZERO`.
+
+The 404 itself isn't fixed by either part — instruments-store-defi parquet files don't exist for pre-launch
+dates and never will. Both fixes work AROUND the 404 by ensuring callers don't ask for dates before the launch
+floor (Tab 5's part) and by recording the right empty reason when callers DO ask (Tab 9's part).
 
 ## Verification recipe
 
@@ -328,3 +379,36 @@ is critical (`git status` + `git diff --cached --stat` no path arg).
 `PROTOCOL_LAUNCH_DATES`. If Ikenna is mid-edit on UAC chain_env.py, raise Q2 here.
 
 Once Tab 9 ships, append `VALIDATION-2026-05-08` block to this issue doc with the new commits, then go quiet.
+
+### Q2 — [lending-indices-relaunch-tab, 2026-05-08 07:05 UTC] — PM push blocked: 1 incoming commit on origin/live-defi-rollout
+**Status**: 🟡 BLOCKED — needs main/operator decision on rebase / merge / cherry-pick / drop
+
+UAC + MTDS + instruments-service all pushed cleanly (zero incoming). PM has incoming:
+
+- `origin/live-defi-rollout` ahead by 1: `150c1d5 docs(plans): file 9 issue docs surfacing data-correctness gaps for May 23 cutover`
+  (semver-rollout[bot] — operator-driven 9-issue audit batch, additive only — files all NEW under
+  `plans/active/issues/`, no overlap with this issue doc).
+- Local PM ahead by 2: `e870111 plan(D2): Tab 10 ✅ DONE verified; Tab 9 Q1 ✅ RESOLVED — scope extended to
+  ship UAC SSOT fix` (operator's A1 + work_split status flip) + `a687dc5 plan(cefi_master): sweep #15 — fleet
+  crossed below 80% commit trigger (19/24)` (Tab 2's cefi-babysit). Neither is mine — both are foreign work
+  picked up via the shared `.git/`.
+
+Tab 9's pending PM changes (uncommitted in working tree, ready to commit locally):
+- `plans/active/issues/lending_indices_handler_bugs_2026_05_07.md` — Bug 1 / Bug 3 reframing (UAC SSOT
+  misdiagnosis, not code bug) + Q2 (this entry) + pending VALIDATION-2026-05-08 block (Step 5 of A1).
+
+Per the workspace conditional-push rule (CLAUDE.md "Push discipline"): incoming exists → STOP, do NOT push,
+flag here. Tab 9 will commit LOCALLY only and continue with the remaining VM-validation work. Push of the
+PM stack (e870111 + a687dc5 + Tab 9's commits) needs main/operator to choose rebase / merge / cherry-pick /
+drop.
+
+**Recommended path** (minimal-collision, preserves all 3 agents' work):
+- `git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout` — replays the 3 local commits
+  (e870111, a687dc5, Tab 9's PM commit) on top of 150c1d5. No file-level conflicts expected (incoming is
+  purely additive on different files).
+- Then `git push origin live-defi-rollout`.
+
+Tab 9 holds off on the rebase per "Two teammates × multi-agent" rule (e870111 + a687dc5 are NOT mine; touching
+their commit hashes via rebase risks collision with the agents who authored them).
+
+UAC + MTDS + instruments-service commits are already pushed and unaffected by this PM-only block.
