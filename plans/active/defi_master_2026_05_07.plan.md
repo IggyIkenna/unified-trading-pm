@@ -25,6 +25,59 @@ related_plans:
 
 # DeFi Master — asset_group umbrella
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest v5 schema + DeFi `chain` first-class shard axis + `EXPECTED_PRE_GENESIS_CHAIN` /
+  `EXPECTED_PRE_VENUE_LAUNCH` reasons + DeFi protocol-launch-date pre-skip semantics
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  per-asset-group `empty_confirmed` legitimacy rule (DeFi: only venue-level reasons legit; instrument-day source-zero
+  must flip to `attempted_failed`); DeFi pre-genesis chain reasons + downstream NaN handling
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — DeFi GCS bucket
+  layout + `chain=` hive partition axis + per-protocol shard atom
+- [`codex/02-data/instrument-pipeline-defi.md`](../../codex/02-data/instrument-pipeline-defi.md) — DeFi
+  instruments-service catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT
+- [`codex/02-data/defi-data-types-catalog.md`](../../codex/02-data/defi-data-types-catalog.md) — DeFi data_type
+  enumeration (lending_rates / lst_yields / oracle_prices / vault_share_prices / perp_funding / ohlcv / dex_swaps)
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+  unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
+- [`codex/04-architecture/flash-loan-receiver.md`](../../codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash
+  loan deployment + `connect()` validation; required for `carry_staked_basis` recursive-staking unwind path
+- [`codex/04-architecture/interface-credential-convention.md`](../../codex/04-architecture/interface-credential-convention.md)
+  — DeFi connector credentials (`connector.connect(config={"wallet_private_key": pk, "rpc_url": url})`); contrasts CeFi
+  `get_order_adapter(api_key, api_secret)` shape
+- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — DeFi VM
+  launchers MUST live under `deployment-service/scripts/vm/` (forward-poll + backfill + per-chain replay launchers)
+- [`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+  — May-23 lead archetype (recursive LST staking + perp short hedge)
+- [`codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+  — May-23 hedge archetype (`leveraged_funding_arb` config variant — cross-venue funding-rate dispersion)
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
+## AI-day estimate
+
+- **Total**: ~10-12 ai-days net (XL umbrella); current state 78 todos enumerated, ~17% in-flight per 2026-05-07 audit.
+- **Workstream split**:
+  - Pyth Solana wiring + multi-chain oracle backfill: ~1.5 ai-days (one-shot wiring already shipped — left is one VM
+    backfill run + spot-check)
+  - 988-dates-missing diagnosis + per-chain pre-genesis backfill: ~2.5 ai-days (gated on
+    `manifest_migration_master:Stage 4` rescan)
+  - DEX-perp forward-poll + Lighter/Pacifica/Extended replay: ~2 ai-days (Extended Starknet still pending Phase 0
+    research; Lighter + Pacifica OHLCV shipped per MEMORY)
+  - 4-service QG pass (strategy / execution / risk-and-exposure / features-onchain): ~1 ai-day
+  - 8-archetype Phase 1 batch e2e + CARRY_RECURSIVE_STAKED PnL row: ~2 ai-days
+  - Copper sandbox + flash-loan-receiver deploy on testnet: ~1 ai-day
+  - Operational drift fixes (PROTOCOL_LAUNCH_DATES coverage — Tab 14 reported 13 of 17 protocols missing): ~1 ai-day
+- **Parallelism factor**: ~3x (workstreams largely independent — oracle / DEX-perp / archetype gates / Copper can
+  proceed in parallel agents), so **~3-4 calendar days wall-clock** if 3-4 agents in parallel + operator approvals on
+  the critical path.
+- **Critical path to 2026-05-23 cutover**: 4-service QG → CARRY_RECURSIVE_STAKED PnL row → Copper sandbox + flash-loan
+  testnet deploy → 7-day continuous run gate. Anything off this critical path is parallel-safe.
+
 ## Agent 4 launch decision (2026-05-07, [archived `work_split_2026_05_07_ikenna_5tab_layout`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md) Item 2)
 
 > Triage from
@@ -137,20 +190,20 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ## Critical path
 
-| Workstream                                                                      | Status                                                         | Source                                                   |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
-| `carry_staked_basis` archetype live (≥7 continuous days)                        | spec done; execution wiring pending                            | master plan + carry_staked_basis_structure_axis archived |
-| `leveraged_funding_arb` archetype live                                          | scoped; cross-venue funding spread integration pending         | `consolidated_defi_data_pipeline`                        |
-| Hyperliquid + Aster perp DEX live                                               | instruments + market-data live; execution validated on testnet | `consolidated_defi_data_pipeline`                        |
-| 988 dates missing in DeFi shards (per data-status panel)                        | manifest gap; per-chain breakdown above                        | `consolidated_defi_data_pipeline` (Phase 6 reverify)     |
-| Tail chains 25% coverage (Aurora / Celo / Fantom / Mantle / Metis / Moonbeam)   | per-chain protocols incomplete                                 | `consolidated_defi_data_pipeline`                        |
-| Mid-tier EVMs 60% coverage (Arb / Avax / Base / BSC / Linea / Op / Polygon)     | per-chain protocols incomplete                                 | `consolidated_defi_data_pipeline`                        |
-| Pyth Solana oracle wiring                                                       | unbanned 2026-05-06; integration pending                       | `consolidated_defi_data_pipeline` mtds-s3-5              |
-| Multi-chain oracle (Chainlink EVM)                                              | partial                                                        | `consolidated_defi_data_pipeline` mtds-s3-6              |
-| Lighter / Extended / Pacifica historical-replay backfill                        | scoped; ABI parsing per chain pending                          | `dex_historical_replay_*`                                |
-| 4-service QG pass (strategy / execution / risk-and-exposure / features-onchain) | pending                                                        | `defi_e2e_pipeline`                                      |
-| 8-archetype Phase 1 batch e2e                                                   | pending                                                        | `defi_e2e_pipeline`                                      |
-| Copper custody integration                                                      | wired DeFi-side; sandbox integration test pending              | `consolidated_defi_data_pipeline` Copper item            |
+| Workstream                                                                      | Status                                                         | Source                                                   | Success gate                                                                                                                                                 |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `carry_staked_basis` archetype live (≥7 continuous days)                        | spec done; execution wiring pending                            | master plan + carry_staked_basis_structure_axis archived | 7 continuous days on real wallet with PnL row per day in `pnl-store-{pid}/by_strategy/CARRY_STAKED_BASIS/...`; `min_health_factor` honoured every snapshot   |
+| `leveraged_funding_arb` archetype live                                          | scoped; cross-venue funding spread integration pending         | `consolidated_defi_data_pipeline`                        | Cross-venue funding signal generates fills on ≥2 perp venues over 24h; PnL row present in `by_strategy/LEVERAGED_FUNDING_ARB/...`                            |
+| Hyperliquid + Aster perp DEX live                                               | instruments + market-data live; execution validated on testnet | `consolidated_defi_data_pipeline`                        | `execution-service` testnet smoke ships 1 round-trip per venue; mainnet gated on Copper sandbox                                                              |
+| 988 dates missing in DeFi shards (per data-status panel)                        | manifest gap; per-chain breakdown above                        | `consolidated_defi_data_pipeline` (Phase 6 reverify)     | Post-`Stage 4 rescan-all-manifests`, per-chain coverage row reads 100% within `(genesis, today)` clip; remaining gaps stamped `EXPECTED_PRE_GENESIS_CHAIN`   |
+| Tail chains 25% coverage (Aurora / Celo / Fantom / Mantle / Metis / Moonbeam)   | per-chain protocols incomplete                                 | `consolidated_defi_data_pipeline`                        | Each tail chain shows ≥4/4 protocols captured for at least 1 sample day post-protocol-launch; rest stamped `EXPECTED_PRE_VENUE_LAUNCH`                       |
+| Mid-tier EVMs 60% coverage (Arb / Avax / Base / BSC / Linea / Op / Polygon)     | per-chain protocols incomplete                                 | `consolidated_defi_data_pipeline`                        | All 7 mid-tier chains show ≥80% coverage post-rescan; AAVE V3 in particular returns >0 rows per chain post-2023-01-27                                        |
+| Pyth Solana oracle wiring                                                       | unbanned 2026-05-06; integration pending                       | `consolidated_defi_data_pipeline` mtds-s3-5              | `mtds-lst-rates` VM run produces non-empty `oracle_prices` rows for jitoSOL/mSOL/bSOL with `protocol=pyth` 2022-11 → today; Hermes archive backfill verified |
+| Multi-chain oracle (Chainlink EVM)                                              | partial                                                        | `consolidated_defi_data_pipeline` mtds-s3-6              | `oracle_prices` non-empty for ETH/USD + BTC/USD on Arb/Base/Optimism/Polygon for any sample day in 2024-2026                                                 |
+| Lighter / Extended / Pacifica historical-replay backfill                        | scoped; ABI parsing per chain pending                          | `dex_historical_replay_*`                                | Lighter + Pacifica OHLCV non-empty 2024-08-01+ / 2025-06-01+ respectively; Extended pending Phase 0 empirical research before any VM launch                  |
+| 4-service QG pass (strategy / execution / risk-and-exposure / features-onchain) | pending                                                        | `defi_e2e_pipeline`                                      | `bash scripts/quality-gates.sh` passes in all 4 repos; basedpyright clean; ruff clean; CI green on `live-defi-rollout`                                       |
+| 8-archetype Phase 1 batch e2e                                                   | pending                                                        | `defi_e2e_pipeline`                                      | All 8 archetypes produce non-empty `realised_apy_bps` over 2026-04-03..04-09 sample window; `comparison.parquet` ships per archetype per day                 |
+| Copper custody integration                                                      | wired DeFi-side; sandbox integration test pending              | `consolidated_defi_data_pipeline` Copper item            | Sandbox ships 1 round-trip (deposit + signed-tx broadcast + withdraw) on testnet; flash-loan-receiver `eth_getCode` validation green on at least 1 chain     |
 
 ## Consolidated todos (P0 only — full P1+ list in folded children)
 
