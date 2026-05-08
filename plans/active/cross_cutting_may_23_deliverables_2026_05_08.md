@@ -77,9 +77,16 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 
 ### #3 Clients + Accounts
 
-- [ ] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
-- [ ] [DESIGN+UAC] **Capital allocation matrix declared** — per (client, archetype, venue) entry; respected at execution
-      time. Owner: Ikenna T6.
+- [x] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
+      (uac@3591037 — `canonical/domain/client/model.py` + `client.py` facade + 36 unit tests; Client + VenueAccount
+      frozen dataclasses; ClientId / AccountId TypeAliases; CLIENTS_SEED with 4 live CeFi venues + 3 DeFi chains;
+      secret-manager naming convention documented per onboarding-checklist Phase 1.2.)
+- [x] [DESIGN+UAC] **Capital allocation matrix declared** — per (client, archetype, venue) entry; respected at execution
+      time. Owner: Ikenna T6. (uac@3591037 — CapitalAllocation frozen dataclass with **post_init** bounds checks;
+      AllocationViolationError + validate_allocation_respect for execution-service fail-loud at order time;
+      is_within_allocation advisory for UI gates; CAPITAL_ALLOCATION_SEED for May-23 archetype slice;
+      get_capital_allocation + is_allocation_declared lookups; ArchetypeRef TypeAlias widens to StrategyArchetype | str
+      when 6.A's catalogue lands, single-edit migration.)
 - [ ] [SCRIPT] **Client-account-strategy tagging propagated** through every live trade + batch backtest result. Hooks
       into the strategy ID refactor sweep above. Owner: Harsh T6.
 
@@ -161,3 +168,14 @@ This plan owns the 4 cross-cutting deliverables; downstream consumers reference 
   — strategy onboarding flow that needs ID-attribution wiring
 - [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT
+
+## DONE-2026-05-08 (Tab 6.B) — Client model + capital allocation
+
+Sub-agent 6.B shipped deliverable #3 [DESIGN+UAC] tier:
+
+- **uac@3591037** `feat(uac): client model + capital allocation matrix SSOT — cross_cutting #3` —
+  `unified_api_contracts/canonical/domain/client/model.py` + `unified_api_contracts/client.py` facade +
+  `tests/unit/test_client_model.py` (36 unit tests passing, basedpyright clean, ruff clean).
+- Pushed to `live-defi-rollout` (verified `0 0` ahead/behind via `git rev-list --left-right --count HEAD...origin/...`).
+
+The [SCRIPT] **Client-account-strategy tagging propagated** sub-todo (Harsh T6) consumes this UAC and remains pending.
