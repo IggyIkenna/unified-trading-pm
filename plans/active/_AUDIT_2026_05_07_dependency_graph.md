@@ -35,9 +35,10 @@ then checks the per-plan `## Audit 2026-05-07` header for status.
    taxonomy as safety net.
 
 6. **AWS Q3-defer recommendation** (in
-   [`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md))
-   is **superseded** by the dual-cloud plan above. The cost analysis as a research artefact is preserved (numbers still
-   valid) but the recommendation paragraph is replaced.
+   [`plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md`](../archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md))
+   is **superseded** by the dual-cloud plan above. The per-resource cost numbers were extracted to
+   [`codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
+   for ongoing reference (numbers still valid); the recommendation paragraph is replaced.
 
 ### Where every piece of work lives (for May-23)
 
@@ -136,16 +137,16 @@ These are cross-cutting policies surfaced in this session. Should become CLAUDE.
 
 ### What this session shipped (close-out manifest)
 
-| #   | Artefact                                                                         | Path                                                                | Commit        |
-| --- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------- |
-| 1   | 16-plan audit pass (per-todo + per-plan headers)                                 | `plans/active/*.plan.md` (16 plans)                                 | `dada46d1`    |
-| 2   | Cross-plan dependency graph + critical path synthesis                            | `plans/active/_AUDIT_2026_05_07_dependency_graph.md`                | `12ce828a`    |
-| 3   | Alerting service live-rules plan (keystone #1)                                   | `plans/active/alerting_service_live_rules_2026_05_07.plan.md`       | `3712c640`    |
-| 4   | Deployment-api work-stream-A sub-plan (keystone #2, parallel agent)              | `plans/active/deployment_api_work_stream_a_2026_05_07.plan.md`      | `c6fe668d`    |
-| 5   | AWS migration cost analysis (codex doc — Q3-defer recommendation now superseded) | `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md` | `4973dd71`    |
-| 6   | Audit doc keystone-status update                                                 | (this file)                                                         | `e7bbcc36`    |
-| 7   | AWS dual-cloud DeFi-first plan (keystone #3, supersedes #5 recommendation)       | `plans/active/aws_migration_defi_first_2026_05_07.plan.md`          | `893a9da4`    |
-| 8   | Audit doc final close-out (this section)                                         | (this file)                                                         | (next commit) |
+| #   | Artefact                                                                                                                                                                                                                                                               | Path                                                                  | Commit        |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------- |
+| 1   | 16-plan audit pass (per-todo + per-plan headers)                                                                                                                                                                                                                       | `plans/active/*.plan.md` (16 plans)                                   | `dada46d1`    |
+| 2   | Cross-plan dependency graph + critical path synthesis                                                                                                                                                                                                                  | `plans/active/_AUDIT_2026_05_07_dependency_graph.md`                  | `12ce828a`    |
+| 3   | Alerting service live-rules plan (keystone #1)                                                                                                                                                                                                                         | `plans/active/alerting_service_live_rules_2026_05_07.plan.md`         | `3712c640`    |
+| 4   | Deployment-api work-stream-A sub-plan (keystone #2, parallel agent)                                                                                                                                                                                                    | `plans/active/deployment_api_work_stream_a_2026_05_07.plan.md`        | `c6fe668d`    |
+| 5   | AWS migration cost analysis (extracted to `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; original archived to `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` per codex_refactor F.4 — Q3-defer recommendation superseded) | `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` | `4973dd71`    |
+| 6   | Audit doc keystone-status update                                                                                                                                                                                                                                       | (this file)                                                           | `e7bbcc36`    |
+| 7   | AWS dual-cloud DeFi-first plan (keystone #3, supersedes #5 recommendation)                                                                                                                                                                                             | `plans/active/aws_migration_defi_first_2026_05_07.plan.md`            | `893a9da4`    |
+| 8   | Audit doc final close-out (this section)                                                                                                                                                                                                                               | (this file)                                                           | (next commit) |
 
 ---
 
@@ -168,10 +169,12 @@ The 3 operator action items flagged in §7 are now closed-or-scoped:
    can start immediately.
 
 3. **AWS migration cost analysis**: shipped as
-   [`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md)
-   (commit `4973dd71`). Top-line: GCP ~$8.3-12.5k/mo, AWS list ~$8.8-13.3k/mo (+5-7%), 12-mo delta +$6-10k/yr —
-   **decision is not cost-driven**. **Recommendation: option (a) — defer full AWS parity to Q3 2026.** Scoped subset
-   (S3 + Secrets Manager + ECR) is shippable in 5-7 engineer-days but adds zero live-trading capability before May-23.
+   [`plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md`](../archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
+   (commit `4973dd71`; per-resource cost snapshot extracted by codex_refactor F.4 to
+   [`codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)).
+   Top-line: GCP ~$8.3-12.5k/mo, AWS list ~$8.8-13.3k/mo (+5-7%), 12-mo delta +$6-10k/yr — **decision is not
+   cost-driven**. **Recommendation: option (a) — defer full AWS parity to Q3 2026.** Scoped subset (S3 + Secrets
+   Manager + ECR) is shippable in 5-7 engineer-days but adds zero live-trading capability before May-23.
 
 **Net effect on critical path** (§3): items 1-3 of "Week 1 keystone unblocks" are now scoped — the work itself is the
 next ship. AWS work moves from "BLOCKED on cost analysis" to "DEFERRED to Q3 2026 per recommendation"; this removes ~10

@@ -2,6 +2,17 @@
 scope: [admin, engineer]
 ---
 
+## Status — superseded 2026-05-08 by codex_refactor Phase F.4
+
+This research deliverable was extracted to a per-resource cost snapshot at
+[`codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](../../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
+and the original moved here for historical reference. The original "defer AWS to Q3 2026" recommendation was superseded
+earlier on 2026-05-07 by the dual-cloud decision in
+[`plans/active/aws_migration_defi_first_2026_05_07.md`](../../active/aws_migration_defi_first_2026_05_07.md). The
+per-resource cost tables remain useful for capacity planning and live-cloud-parity sizing; consult the snapshot for
+ongoing reference. Historical narrative (executive summary, GCP↔AWS service map, risk register, recommendation matrix,
+calculation appendix) preserved in this archive.
+
 # AWS Migration Cost Analysis — 2026-05-07
 
 > [!IMPORTANT] **Recommendation SUPERSEDED 2026-05-07.** This document's "defer AWS to Q3 2026" conclusion is

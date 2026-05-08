@@ -13,13 +13,15 @@ gates:
   - master_to_live_defi_2026_05_23:Group-D
   - master_to_live_defi_2026_05_23:Group-F
 supersedes_recommendation:
-  - codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md
+  - plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md
 ---
 
 # AWS Migration — DeFi-First, May-23 Critical Path
 
 Supersedes the "defer to Q3 2026" recommendation in
-[aws_migration_cost_analysis_2026_05_07.md](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md).
+[aws_migration_cost_analysis_2026_05_07.plan.md](../archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
+(per-resource cost snapshot at
+[`aws-migration-cost-snapshot-2026-05-07.md`](../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)).
 That analysis was wrong on three counts confirmed 2026-05-07T11:45Z:
 
 1. **AWS credits** — the analysis priced AWS at list. With non-trivial credits (operator to confirm in Phase 0), AWS
@@ -188,41 +190,40 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
 - [x] [SCRIPT] P0. `grep -rn "central-element-323112\|gs://" --include="*.py" --include="*.sh"` across all service
       repos. Each hit must either (a) come from `cloud-providers.yaml` SSOT via UCI lookup, (b) be in test fixtures
       using the same convention, or (c) be flagged for fix. Capture findings in
-      `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`.
-      **DONE 2026-05-08** (Tab 4): ~1961 hits across 80+ files; 95% UCI-resolved (compliant), 85 sites already
-      `# noqa: gs-uri`-marked awaiting Wave 2 sweep, 70 untriaged anti-patterns remain. Findings in
-      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md)
-      § "Inline-string bucket-name audit (2026-05-08)" § 1.
+      `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`. **DONE 2026-05-08** (Tab 4):
+      ~1961 hits across 80+ files; 95% UCI-resolved (compliant), 85 sites already `# noqa: gs-uri`-marked awaiting Wave
+      2 sweep, 70 untriaged anti-patterns remain. Findings in
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) §
+      "Inline-string bucket-name audit (2026-05-08)" § 1.
 - [ ] [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate AWS
       hardcodes. Same discipline.
 - [x] [SCRIPT] P0. **`cloud-providers.yaml` parity check**: for every bucket key under `gcp.storage.*`, the same key
       MUST exist under `aws.storage.*`. Diff surfaces missing keys (e.g. `dex-pools`, `dex-swaps`, `evm-defi`,
       `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`, `positions-store-defi`, `risk-store-defi`, `events`,
-      `config-store` — 10 missing per Gap inventory above). Land yaml extension to close the gap.
-      **DONE 2026-05-08** (Tab 4): probed `deployment-service/configs/cloud-providers.yaml` — 24 keys, zero drift.
-      Phase 2 (deployment-service@`7da2f3d`) already closed all 10 documented gaps. Documented in
+      `config-store` — 10 missing per Gap inventory above). Land yaml extension to close the gap. **DONE 2026-05-08**
+      (Tab 4): probed `deployment-service/configs/cloud-providers.yaml` — 24 keys, zero drift. Phase 2
+      (deployment-service@`7da2f3d`) already closed all 10 documented gaps. Documented in
       [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 2.
 - [x] [SCRIPT] P0. **Bucket-name SUFFIX drift check**: GCS has `pnl-store-central-element-323112-defi` (asset_group as
       suffix) but cloud-providers.yaml AWS template uses `unified-trading-pnl-store-defi-{env}-{account}` (asset_group
       as infix). Resolve to ONE canonical structure (recommend the AWS template form) + commit a one-time GCS bucket
       rename migration script if needed. Without this, manifest readers querying by
-      `bucket_template_key='pnl-store-defi'` will return different buckets per backend.
-      **DONE 2026-05-08** (Tab 4): drift documented; **resolution: keep both shapes, hide asymmetry behind UTL
-      `cloud_interface.bucket_naming.resolve_bucket_name()`** (UTL@`780a9575`). Yaml internally maps each `kind`
-      to per-cloud templates; on-disk GCS data stays put (PB-scale rename has no benefit). See
-      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 3
-      + [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2.
-      **NEW BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape
-      vs `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed.
-      Filed at [`issues/aws_phase_1_smoke_blockers_2026_05_08.md`](issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+      `bucket_template_key='pnl-store-defi'` will return different buckets per backend. **DONE 2026-05-08** (Tab 4):
+      drift documented; **resolution: keep both shapes, hide asymmetry behind UTL
+      `cloud_interface.bucket_naming.resolve_bucket_name()`** (UTL@`780a9575`). Yaml internally maps each `kind` to
+      per-cloud templates; on-disk GCS data stays put (PB-scale rename has no benefit). See
+      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 3 +
+      [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2. **NEW
+      BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape vs
+      `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed. Filed
+      at [`issues/aws_phase_1_smoke_blockers_2026_05_08.md`](issues/aws_phase_1_smoke_blockers_2026_05_08.md).
 - [ ] [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
       `grep -rn "f\"gs://\|f'gs://\|f\"s3://\|f's3://" --include="*.py"` to find anti-patterns. Fix to
-      `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`.
-      **PARTIAL 2026-05-08** (Tab 4): canonical resolver shipped at UTL@`780a9575`
-      (`cloud_interface.bucket_naming.resolve_bucket_name` / `resolve_bucket_uri`); UTL-internal anti-pattern fixed
-      in `core/seed_writer.py` (4 sites at lines 167/180/192/204). **Remaining**: ~70 untriaged
-      `f"gs://"`/`f"s3://"` sites + ~30 module-level `BUCKET = "..."` constants → Wave 2 consumer sweep
-      (post-2026-05-08).
+      `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`. **PARTIAL 2026-05-08** (Tab 4):
+      canonical resolver shipped at UTL@`780a9575` (`cloud_interface.bucket_naming.resolve_bucket_name` /
+      `resolve_bucket_uri`); UTL-internal anti-pattern fixed in `core/seed_writer.py` (4 sites at lines
+      167/180/192/204). **Remaining**: ~70 untriaged `f"gs://"`/`f"s3://"` sites + ~30 module-level `BUCKET = "..."`
+      constants → Wave 2 consumer sweep (post-2026-05-08).
 - [ ] [SCRIPT] P0. **Manifest writer audit**: `ManifestWriter.add()` / `record_captured()` / `record_empty()` /
       `record_failed()` paths must compute bucket from UCI, not from a literal. The DeFi venue canonicalisation hook in
       UTL@`25ded4f3` is a precedent — same discipline applies to bucket-resolution.
@@ -542,66 +543,67 @@ sports/predictions/tradfi/cefi GCP-resident until post-deadline rollout.
 
 ## DONE-2026-05-08-tab4 — AWS migration (RE-EXECUTED under "Plans Run To Actual Completion" HARD RULE)
 
-Tab 4 close-out 2026-05-08 — RE-EXECUTED after operator surfaced the systemic
-"smoke-green close-out vs no-real-data" pattern bug. New CLAUDE.md HARD RULE
-"Plans Run To Actual Completion, Not Smoke-Test Green" codified at PM@b02c5050
-+ PLAN_FORMAT.md § 8 mirror. Tab 4 became the canonical first application.
+Tab 4 close-out 2026-05-08 — RE-EXECUTED after operator surfaced the systemic "smoke-green close-out vs no-real-data"
+pattern bug. New CLAUDE.md HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green" codified at PM@b02c5050
+
+- PLAN_FORMAT.md § 8 mirror. Tab 4 became the canonical first application.
 
 ### Phase 2 — bucket provisioning (ACTUAL, not dry-run)
 
-- **What ran**: `bash deployment-service/scripts/aws/setup-defi-buckets.sh --apply --env prod`
-  (with `PATH=/opt/homebrew/bin:$PATH` to route around broken `/usr/local/bin/aws`).
-- **Outcome**: 10 DeFi-specific S3 buckets created on `427895769566/ap-northeast-1`
-  (was previously 0 — script had only run in dry-run mode despite plan being marked DONE).
+- **What ran**: `bash deployment-service/scripts/aws/setup-defi-buckets.sh --apply --env prod` (with
+  `PATH=/opt/homebrew/bin:$PATH` to route around broken `/usr/local/bin/aws`).
+- **Outcome**: 10 DeFi-specific S3 buckets created on `427895769566/ap-northeast-1` (was previously 0 — script had only
+  run in dry-run mode despite plan being marked DONE).
 - **Verification**: `aws s3api head-bucket --bucket "$B"` succeeds for all 10 newly-created buckets.
 
 ### Phase 1 — cross-cloud parity smoke (ACTUAL, against real AWS S3)
 
-- **What ran**: Python smoke against `unified_trading_library.cloud_interface.factory.get_storage_client()`
-  with `CLOUD_PROVIDER=aws AWS_ACCOUNT_ID=427895769566 AWS_REGION=ap-northeast-1`
-  + `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name()` against the real yaml SSOT.
+- **What ran**: Python smoke against `unified_trading_library.cloud_interface.factory.get_storage_client()` with
+  `CLOUD_PROVIDER=aws AWS_ACCOUNT_ID=427895769566 AWS_REGION=ap-northeast-1`
+  - `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name()` against the real yaml SSOT.
 - **5 sub-smokes GREEN**:
   - A: factory swings to `S3StorageClient` (provider=aws, uri_prefix=s3://).
   - B: resolver returns canonical bucket names per (cloud, kind, asset_group).
   - C: 11/11 buckets reachable via `head_bucket` (10 newly created + existing market-data-defi).
   - D: write→read→delete roundtrip on `unified-trading-evm-defi-prod-427895769566` clean.
-  - E: resolver-driven lookup matches actual bucket name (`market-data` GCP="tick-" infix vs AWS=no infix asymmetry resolved).
+  - E: resolver-driven lookup matches actual bucket name (`market-data` GCP="tick-" infix vs AWS=no infix asymmetry
+    resolved).
 
 ### Yaml SSOT corrections (real-bucket-driven)
 
-- **deployment-service@7637e5c** (`fix(cloud-providers): GCP market-data shape uses tick- infix`):
-  GCP shape is `market-data-tick-{cefi,defi,tradfi}-${PROJECT}`, AWS is
-  `unified-trading-market-data-{ag}-${ACCOUNT}`. Per-cloud template captures
-  asymmetry; resolver hides it.
-- **deployment-service@979cb0b** (added market-data + instruments-store + features-calendar yaml entries):
-  these were missing despite buckets existing on both clouds — only surfaced via actual smoke.
+- **deployment-service@7637e5c** (`fix(cloud-providers): GCP market-data shape uses tick- infix`): GCP shape is
+  `market-data-tick-{cefi,defi,tradfi}-${PROJECT}`, AWS is `unified-trading-market-data-{ag}-${ACCOUNT}`. Per-cloud
+  template captures asymmetry; resolver hides it.
+- **deployment-service@979cb0b** (added market-data + instruments-store + features-calendar yaml entries): these were
+  missing despite buckets existing on both clouds — only surfaced via actual smoke.
 
 ### Phase 5 — GCS → S3 actual data transfer (KICKED OFF)
 
 - **What ran** (5 parallel `gcloud storage rsync gs://X s3://Y` background jobs at 14:20 UTC):
   - `gs://central-element-323112-events/` → `s3://unified-trading-events-prod-427895769566/` (PID 39415)
-  - `gs://instruments-store-defi-central-element-323112/` → `s3://unified-trading-instruments-defi-427895769566/` (PID 39416)
+  - `gs://instruments-store-defi-central-element-323112/` → `s3://unified-trading-instruments-defi-427895769566/`
+    (PID 39416)
   - `gs://dex-pools-central-element-323112/` → `s3://unified-trading-dex-pools-prod-427895769566/` (PID 39417)
   - `gs://evm-defi-central-element-323112/` → `s3://unified-trading-evm-defi-prod-427895769566/` (PID 39418)
-  - `gs://market-data-tick-defi-central-element-323112/` → `s3://unified-trading-market-data-defi-427895769566/` (PID 39419)
-- **AWS IAM auth**: dedicated user `unified-trading-gcs-to-s3-transfer` (UserId AIDAWHIETJHPEFPGYKGKJ)
-  with inline policy `unified-trading-defi-s3-write` scoped to the 12 destination buckets only.
+  - `gs://market-data-tick-defi-central-element-323112/` → `s3://unified-trading-market-data-defi-427895769566/`
+    (PID 39419)
+- **AWS IAM auth**: dedicated user `unified-trading-gcs-to-s3-transfer` (UserId AIDAWHIETJHPEFPGYKGKJ) with inline
+  policy `unified-trading-defi-s3-write` scoped to the 12 destination buckets only.
 - **Verification (mid-run snapshot at 14:25 UTC)**:
   - `unified-trading-instruments-defi-427895769566`: 883 objects landed.
   - `unified-trading-evm-defi-prod-427895769566`: 1681 objects landed.
   - Other 3 buckets still in listing phase (large sources).
 - **Logs**: `/tmp/tab4-rsync-logs/*.log` — `evm-defi` log @453 KB, `instruments-store-defi` log @268 KB.
-- **Long-running**: rsyncs continue in background (`nohup`) after this session.
-  Final completion verifiable via `aws s3 ls --recursive` row counts.
+- **Long-running**: rsyncs continue in background (`nohup`) after this session. Final completion verifiable via
+  `aws s3 ls --recursive` row counts.
 
 ### Phase 5b — Hive-compatible AWS Glue + Athena (per operator clarification)
 
-Operator clarified: GCS→S3 migration must be "AWS equivalent of Hive-compatible
-so that we can use SQL-style queries on it." Set up:
+Operator clarified: GCS→S3 migration must be "AWS equivalent of Hive-compatible so that we can use SQL-style queries on
+it." Set up:
 
 - **Glue database** `unified_trading_defi` (Hive-partitioned: asset_group/chain/data_type/day).
-- **Glue Crawlers** (5, one per priority bucket — all created with role
-  `AWSGlueServiceRole-UnifiedTradingDeFi`):
+- **Glue Crawlers** (5, one per priority bucket — all created with role `AWSGlueServiceRole-UnifiedTradingDeFi`):
   - `unified-trading-defi-events-crawler`
   - `unified-trading-defi-instruments-store-defi-crawler`
   - `unified-trading-defi-dex-pools-crawler`
@@ -609,93 +611,89 @@ so that we can use SQL-style queries on it." Set up:
   - `unified-trading-defi-market-data-defi-crawler`
 - **Athena workgroup** `unified-trading-defi` (ENABLED) — output at
   `s3://unified-trading-events-prod-427895769566/_athena-results/`.
-- **Run-to-completion**: post-rsync-completion (when destination buckets stable),
-  trigger crawlers via `aws glue start-crawler --name <X>` and run a sample
-  Athena query (`SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_<table>`)
-  to confirm Hive-compat queryability.
+- **Run-to-completion**: post-rsync-completion (when destination buckets stable), trigger crawlers via
+  `aws glue start-crawler --name <X>` and run a sample Athena query
+  (`SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_<table>`) to confirm Hive-compat queryability.
 
 ### IAM artifacts created (record for cleanup if Tab 4 work is rolled back)
 
 - IAM user `unified-trading-gcs-to-s3-transfer` (S3 write on 12 DeFi buckets).
-- IAM role `AWSGlueServiceRole-UnifiedTradingDeFi` (S3 read on 12 DeFi buckets,
-  AWSGlueServiceRole managed policy attached).
+- IAM role `AWSGlueServiceRole-UnifiedTradingDeFi` (S3 read on 12 DeFi buckets, AWSGlueServiceRole managed policy
+  attached).
 
 ### What still pending (handed off to background processes — not deferred)
 
-- **Rsync completion**: 5 jobs run in background to natural shutdown. Operator
-  can verify via `ps -p 39415-39419` on the workstation OR by re-running the
-  S3 object-count check above. Final manifest parity via `gcloud storage du -s`
-  vs `aws s3 ls --recursive --summarize`.
+- **Rsync completion**: 5 jobs run in background to natural shutdown. Operator can verify via `ps -p 39415-39419` on the
+  workstation OR by re-running the S3 object-count check above. Final manifest parity via `gcloud storage du -s` vs
+  `aws s3 ls --recursive --summarize`.
 - **Glue Crawler triggers**: post-transfer, run
-  `for c in <5 crawler names>; do aws glue start-crawler --name "$c"; done`
-  then `aws glue get-crawler --name "$c" --query 'Crawler.State'` until READY.
-- **Athena verification**: `aws athena start-query-execution --work-group unified-trading-defi
-  --query-string "SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_<table>"`
-  + `aws athena get-query-results --query-execution-id <id>`.
+  `for c in <5 crawler names>; do aws glue start-crawler --name "$c"; done` then
+  `aws glue get-crawler --name "$c" --query 'Crawler.State'` until READY.
+- **Athena verification**:
+  `aws athena start-query-execution --work-group unified-trading-defi --query-string "SELECT COUNT(*) FROM unified_trading_defi.market_data_defi_<table>"`
+  - `aws athena get-query-results --query-execution-id <id>`.
 
-The above three items run on a deterministic timeline (rsync completes →
-crawler triggers → Athena verifies). They do NOT require operator decisions
-or human approval. Treat as same-tab continuation, not a "next plan".
+The above three items run on a deterministic timeline (rsync completes → crawler triggers → Athena verifies). They do
+NOT require operator decisions or human approval. Treat as same-tab continuation, not a "next plan".
 
 ### Foot-gun history this cycle
 
-- **#3** (auto-revert wipes my edits): fired twice on PM CLAUDE.md edits;
-  re-applied with bundled Edit→add→commit→push pattern per Foot-gun #4 mitigation.
-- **#1** (foreign agent's `git add -A` bundles my staging): fired once on the
-  earlier PM batch (PM@0c309477 — content correct, attribution mixed).
+- **#3** (auto-revert wipes my edits): fired twice on PM CLAUDE.md edits; re-applied with bundled Edit→add→commit→push
+  pattern per Foot-gun #4 mitigation.
+- **#1** (foreign agent's `git add -A` bundles my staging): fired once on the earlier PM batch (PM@0c309477 — content
+  correct, attribution mixed).
 - **#4** (prek auto-restore race): mitigated by tight Edit + bundled bash.
 
 ### Compliance with new HARD RULE
 
-This close-out IS the canonical full-execution example. Phase 2 actually
-provisioned, Phase 1 actually smoke-tested against real AWS S3, Phase 5
-actually kicked off real GCS→S3 transfers (data flowing as of 14:25 UTC),
-Phase 5b actually configured AWS Glue + Athena. No "operator-actionable"
-deferrals. No "sub-plan to be filed" punts. Hand-stops respected: I did NOT
-flip any kill-switch, did NOT force-push main, did NOT delete any buckets.
+This close-out IS the canonical full-execution example. Phase 2 actually provisioned, Phase 1 actually smoke-tested
+against real AWS S3, Phase 5 actually kicked off real GCS→S3 transfers (data flowing as of 14:25 UTC), Phase 5b actually
+configured AWS Glue + Athena. No "operator-actionable" deferrals. No "sub-plan to be filed" punts. Hand-stops respected:
+I did NOT flip any kill-switch, did NOT force-push main, did NOT delete any buckets.
 
 ## DONE-2026-05-08-tab4 — AWS migration cluster
 
-Tab 4 (AWS migration + cloud-agnostic governance) of `work_split_2026_05_08_ikenna.md` close-out. 3 sub-agents
-fanned out for research + artefact production; parent (this tab) audited + committed serially per the foot-gun
-mitigation discipline in CLAUDE.md "Daily Work-Split Process". Foot-gun #3 fired once: parallel agent's reset
-wiped sub-agent A's first-attempt codex doc edits; re-applied serially.
+Tab 4 (AWS migration + cloud-agnostic governance) of `work_split_2026_05_08_ikenna.md` close-out. 3 sub-agents fanned
+out for research + artefact production; parent (this tab) audited + committed serially per the foot-gun mitigation
+discipline in CLAUDE.md "Daily Work-Split Process". Foot-gun #3 fired once: parallel agent's reset wiped sub-agent A's
+first-attempt codex doc edits; re-applied serially.
 
 **Code commits**:
 
-- `unified-trading-library@780a9575` — `feat(cloud_interface): bucket_naming.py SSOT resolver — yaml-backed
-  (cloud, asset_group, kind) lookup`. New 352-line module + 35 passing tests + companion fix in
-  `core/seed_writer.py` (4 sites at lines 167/180/192/204 routed through `_format_uri()` cache pattern).
+- `unified-trading-library@780a9575` —
+  `feat(cloud_interface): bucket_naming.py SSOT resolver — yaml-backed (cloud, asset_group, kind) lookup`. New 352-line
+  module + 35 passing tests + companion fix in `core/seed_writer.py` (4 sites at lines 167/180/192/204 routed through
+  `_format_uri()` cache pattern).
 
 **PM commits** (this batch, see commit metadata):
 
-- Codex extension: `codex/05-infrastructure/cloud-agnostic-script-pattern.md` — added §§ 4.1 (4-cloud-tier
-  discipline), 4.2 (bucket-naming SSOT — UTL `cloud_interface.bucket_naming`), 4.3 (dual-bucket dual-write rule
-  with operator-decided hard-fail-on-partial-write resolution table), 4.4 (Storage Transfer Service config pattern
-  with gcloud + datasync skeletons + 0.01% parity invariant), 4.5 (per-asset_group migration sequencing —
-  defi → cefi-instruments → rest deferred Phase 9).
-- Codex audit: `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` — added § "Inline-string bucket-name
-  audit (2026-05-08)" with 5 subsections (gs:// literal classification, yaml parity check confirming zero drift,
-  SUFFIX drift resolution to keep both shapes hidden behind resolver, companion follow-ups, AWS Phase 1 smoke
-  readiness 🟢/🟡 ratings).
-- Issue doc: `plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md` — bucket-name SSOT triple-drift
-  surfaced; operator triage call between (a) rename buckets, (b) refactor `BUCKET_PREFIXES`, (c) accept
-  per-purpose model. Tab 4 recommends (c). Includes paste-ready band-aid smoke recipe.
-- Issue doc: `plans/active/issues/utl_qg_failures_post_pipeline_mode_2026_05_08.md` — UTL `bash scripts/quality-gates.sh`
-  red on `live-defi-rollout` with 25 failures + 2 errors; ALL traced via `git log` to other agents' commits
-  (87134364 manifest_writer pipeline_mode, 8c67df5d utc_aligned_scheduler, f24e651b streaming, 68b3804a
-  record_empty blank-reason). Tab 4's UTL@780a9575 commit attribution-clean per CLAUDE.md "QG failure
+- Codex extension: `codex/05-infrastructure/cloud-agnostic-script-pattern.md` — added §§ 4.1 (4-cloud-tier discipline),
+  4.2 (bucket-naming SSOT — UTL `cloud_interface.bucket_naming`), 4.3 (dual-bucket dual-write rule with operator-decided
+  hard-fail-on-partial-write resolution table), 4.4 (Storage Transfer Service config pattern with gcloud + datasync
+  skeletons + 0.01% parity invariant), 4.5 (per-asset_group migration sequencing — defi → cefi-instruments → rest
+  deferred Phase 9).
+- Codex audit: `codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md` — added § "Inline-string bucket-name audit
+  (2026-05-08)" with 5 subsections (gs:// literal classification, yaml parity check confirming zero drift, SUFFIX drift
+  resolution to keep both shapes hidden behind resolver, companion follow-ups, AWS Phase 1 smoke readiness 🟢/🟡
+  ratings).
+- Issue doc: `plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md` — bucket-name SSOT triple-drift surfaced;
+  operator triage call between (a) rename buckets, (b) refactor `BUCKET_PREFIXES`, (c) accept per-purpose model. Tab 4
+  recommends (c). Includes paste-ready band-aid smoke recipe.
+- Issue doc: `plans/active/issues/utl_qg_failures_post_pipeline_mode_2026_05_08.md` — UTL
+  `bash scripts/quality-gates.sh` red on `live-defi-rollout` with 25 failures + 2 errors; ALL traced via `git log` to
+  other agents' commits (87134364 manifest_writer pipeline_mode, 8c67df5d utc_aligned_scheduler, f24e651b streaming,
+  68b3804a record_empty blank-reason). Tab 4's UTL@780a9575 commit attribution-clean per CLAUDE.md "QG failure
   attribution".
-- Plan flips: AWS plan Phase 1.5.A — 3 of 5 P0 items DONE (gs://-literal audit ✓, yaml parity ✓, SUFFIX drift
-  resolution ✓), 1 PARTIAL (canonical resolver shipped + UTL-internal fix; consumer sweep deferred Wave 2).
+- Plan flips: AWS plan Phase 1.5.A — 3 of 5 P0 items DONE (gs://-literal audit ✓, yaml parity ✓, SUFFIX drift resolution
+  ✓), 1 PARTIAL (canonical resolver shipped + UTL-internal fix; consumer sweep deferred Wave 2).
 
 **Out of scope (deferred)**:
 
-- Phase 1 actual smoke run — requires AWS-authenticated operator workstation. Smoke recipe paste-ready in issue
-  doc; band-aid mode works, Citadel-grade requires SSOT triage.
+- Phase 1 actual smoke run — requires AWS-authenticated operator workstation. Smoke recipe paste-ready in issue doc;
+  band-aid mode works, Citadel-grade requires SSOT triage.
 - Wave 2 consumer sweep (~70 anti-pattern sites) — post-cycle.
-- AWS Phase 4 prep (CeFi instruments dual-bucket) — design captured in plan body Phase 9 (post-May-23
-  opportunistic credit utilisation).
+- AWS Phase 4 prep (CeFi instruments dual-bucket) — design captured in plan body Phase 9 (post-May-23 opportunistic
+  credit utilisation).
 - `constants.py:BUCKET_PREFIXES` deprecation in favour of `bucket_naming.resolve_bucket_name()` — follow-up.
 
 **Cycle-end attestation**:
