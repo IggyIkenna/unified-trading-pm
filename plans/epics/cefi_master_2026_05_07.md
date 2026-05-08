@@ -111,9 +111,9 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 **Not covered here** (out of asset_group scope):
 
 - TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master_2026_05_07.md`.
-- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master_2026_05_07.md`. Note:
-  Lighter / Extended / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're
-  DeFi by asset_group.
+- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master_2026_05_07.md`. Note: Lighter
+  / Extended / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're DeFi by
+  asset_group.
 - Sports / Predictions → see `sports_master_2026_05_07.md` / `predictions_master_2026_05_07.md`.
 - Cross-cutting concerns (writegate, shard-granularity, data-status, instruments+MTDS infra) → see master plan + the
   named cross-cutting plans.
@@ -274,8 +274,8 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 - 2026-05-08 11:41 UTC — sweep #39 (re-applied after Tab 5 pull --rebase silently dropped sweeps #16-#38 in working
   tree; recovered from prior conversation memory): 14/24 alive (58%, 10min plateau since #38, no new drains in gap).
   Worst event_age <1m. **Recovery commit follows immediately to avoid another loss.** No fleet actions.
-- 2026-05-08 11:54 UTC — sweep #40: 13/24 alive (54%, 1 new drain in 13min: cefi-bitfinex-futures-2025 11th
-  completion). Still in 40-60% band. No actions.
+- 2026-05-08 11:54 UTC — sweep #40: 13/24 alive (54%, 1 new drain in 13min: cefi-bitfinex-futures-2025 11th completion).
+  Still in 40-60% band. No actions.
 
 ## Critical path
 
@@ -372,8 +372,8 @@ These were originally scoped in `cefi_venue_universe_expansion`; deferring expan
 because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are already live.
 
 - [x] [DEFERRED-POST-CUTOVER] P2. Extended / Pacifica / Lighter DEX-perp venues — these are DeFi asset_group, not CeFi.
-      Move-out into `defi_master_2026_05_07.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical
-      via MTDS@10aa715/51fecd5/d898985/fc53a97 + UAC@e890022 (per MEMORY entry project_dex_perp_onboarding_2026_05_07);
+      Move-out into `defi_master_2026_05_07.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical via
+      MTDS@10aa715/51fecd5/d898985/fc53a97 + UAC@e890022 (per MEMORY entry project_dex_perp_onboarding_2026_05_07);
       Extended pending per dex_perp_onboarding_handover_2026_05_07.HANDOVER.md Item C; this todo is the move-out
       announcement which IS DONE]
 
@@ -397,36 +397,59 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 ## May-23 deliverable (folded from `cefi_ml_may_23_2026.epic` 2026-05-08)
 
-> **Folded epic** (operator direction 2026-05-08): May-23 deadline content originally in `plans/epics/cefi_ml_may_23_2026.epic.md` is consolidated here. Archived epic: [`plans/archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md).
+> **Folded epic** (operator direction 2026-05-08): May-23 deadline content originally in
+> `plans/epics/cefi_ml_may_23_2026.epic.md` is consolidated here. Archived epic:
+> [`plans/archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md).
 
-**Why:** Second live archetype for May 23 — continuous ML prediction signal tradable across OKX + Binance + Bybit on real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the live ML loop end-to-end.
+**Why:** Second live archetype for May 23 — continuous ML prediction signal tradable across OKX + Binance + Bybit on
+real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the live ML loop end-to-end.
 
 ### End-state at May 23 (success criteria)
 
 - [ ] **Continuous ML prediction signal live** on real capital across OKX + Binance + Bybit, ≥7 continuous days.
-- [ ] **End-to-end ML pipeline live**: live tick data → live features → live model inference → live strategy decision → live execution → live position + risk + P&L attribution.
-- [ ] **Backtest fidelity** for the same signal proven via 2-year batch backtest config grid (master plan Group F item 18).
-- [ ] **Live model lifecycle**: hot-reload of model artefacts without service restart; model-version traceability per trade; model-drift alerting.
+- [ ] **End-to-end ML pipeline live**: live tick data → live features → live model inference → live strategy decision →
+      live execution → live position + risk + P&L attribution.
+- [ ] **Backtest fidelity** for the same signal proven via 2-year batch backtest config grid (master plan Group F item
+      18).
+- [ ] **Live model lifecycle**: hot-reload of model artefacts without service restart; model-version traceability per
+      trade; model-drift alerting.
 - [ ] **Live alerting active**: signal-staleness + execution-quality + P&L deviation + position breaches.
 - [ ] **Kill switches + circuit breakers**: position-limit, P&L drawdown, signal-staleness, model-drift detection.
 - [ ] **DART manual override**: operator can pause / override / replicate any ML-driven trade.
 
 ### IN/OUT scope
 
-- **IN**: one ML archetype × OKX + Binance + Bybit live; full live ML pipeline; live model registry + hot-reload + version traceability; live alerting + kill switches; DART manual-trade replication; backtest fidelity proof (2-year config grid).
-- **OUT (post-May-23)**: additional CeFi venues; multiple concurrent ML archetypes; cross-asset-group ML signals; full AWS-side parity for live ML.
+- **IN**: one ML archetype × OKX + Binance + Bybit live; full live ML pipeline; live model registry + hot-reload +
+  version traceability; live alerting + kill switches; DART manual-trade replication; backtest fidelity proof (2-year
+  config grid).
+- **OUT (post-May-23)**: additional CeFi venues; multiple concurrent ML archetypes; cross-asset-group ML signals; full
+  AWS-side parity for live ML.
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, infrastructure baseline.
-- **Shares with:** `live_defi_rollout` (CeFi venue connectivity overlap on Bybit / Binance / OKX; same execution-service adapters + alerting rules).
-- **Provides to:** `sp_prediction` + `sports_ml` + `prediction_markets` (shared ML lifecycle infrastructure: model registry, training pipeline, drift detection, batch backtest harness).
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, infrastructure
+  baseline.
+- **Shares with:** `live_defi_rollout` (CeFi venue connectivity overlap on Bybit / Binance / OKX; same execution-service
+  adapters + alerting rules).
+- **Provides to:** `sp_prediction` + `sports_ml` + `prediction_markets` (shared ML lifecycle infrastructure: model
+  registry, training pipeline, drift detection, batch backtest harness).
 
 ### Open questions
 
-- [ ] **Which ML archetype family?** Master plan Q&A 7 defaulted "running on representative sample (not deployed in production)" for CeFi — this flips that to "deployed in production." Confirm specific archetype.
-- [ ] **Model retraining cadence**: continuous / daily / weekly? Affects features-pipeline staleness budgets + alerting thresholds.
-- [ ] **Capital scale**: trade size + position cap. Operator-set per archetype ID.
+- [x] ✓ **Which ML archetype family — RESOLVED 2026-05-08 (master Q&A 7).** **`ML_DIRECTIONAL_CONTINUOUS`** — continuous
+      directional prediction signal. Deployed in production on real capital ≥7 days. Venues: OKX + Binance + Bybit
+      (deepest liquidity, lowest unit cost; Deribit deferred to post-cutover). Wires through
+      `mlr-p4-strategy-calibrated-signals` + `mlr-p4-cost-aware-strategy` + live model registry / hot-reload / per-trade
+      `model_version` tagging — all P0 May-23-blockers. See `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **Model retraining cadence — RESOLVED 2026-05-08.** **Daily** — overnight retrain via ml-training (UTC
+      midnight + 30min buffer for tick-data settlement); ml-inference hot-reload picks up new model_version on next
+      day-open. Feature staleness budget = 24h hard ceiling, 6h soft target. Alerting thresholds: `ML_SIGNAL_STALENESS`
+      warns at 4h, criticals at 12h, kill-switch at 24h.
+- [x] ✓ **Capital scale — RESOLVED 2026-05-08.** **Starting allocation $10k notional per venue ($30k total)**. Position
+      cap per `ArchetypeConfig.position_cap_usd = 10000` per venue. Drawdown kill-switch `kill_switch_drawdown_pct = 5`.
+      Position breach kill-switch `kill_switch_position_breach_pct = 20`. `kill_switch_scope=ARCHETYPE` so a CeFi-ML
+      trip does NOT halt DeFi archetypes. Ramp 2× per week absent kill-switch trips, capped at $250k notional total by
+      post-cutover review.
 
 ## Anti-patterns + workspace-rule cross-references
 
@@ -450,8 +473,8 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 ## Folded plans (archived 2026-05-07)
 
-- `cefi_venue_universe_expansion_2026_05_01.md` — Tardis venues + DEX perps; CeFi todos lifted above; DEX perp
-  todos move to `defi_master`.
+- `cefi_venue_universe_expansion_2026_05_01.md` — Tardis venues + DEX perps; CeFi todos lifted above; DEX perp todos
+  move to `defi_master`.
 - `cefi_tradfi_tick_data_backfill_2026_04_10.md` — CeFi half lifted above; TradFi half lifted into `tradfi_master`.
-- `market_tick_data_to_100pct_2026_05_05.md` (CeFi slice) — full plan archived after splitting per asset_group;
-  CeFi slice is in this umbrella; other slices in their respective asset_group umbrellas.
+- `market_tick_data_to_100pct_2026_05_05.md` (CeFi slice) — full plan archived after splitting per asset_group; CeFi
+  slice is in this umbrella; other slices in their respective asset_group umbrellas.

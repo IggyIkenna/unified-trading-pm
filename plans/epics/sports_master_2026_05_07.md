@@ -768,9 +768,17 @@ features silently miss bookmaker × market gaps.
 
 ### Open questions
 
-- [ ] **Which sports ML archetype?** Match-outcome / goal-scorer / in-play live-odds? Operator-pick.
-- [ ] **Which leagues in scope?** All-leagues universal model, or top-tier subset (EPL/LaLiga/Serie A/Bundesliga/MLS)?
-- [ ] **Bookmaker scope**: which odds sources for execution backtest? odds_api closing prices? MDPS odds horizon bucket for in-play?
+- [x] ✓ **Which sports ML archetype — RESOLVED 2026-05-08.** **Match-outcome (1X2)**. Most data-rich label, best
+      signal-to-noise (FSS progressive + lineups + injuries + odds movement → home/draw/away), cleanest walk-forward
+      validation. Goal-scorer + in-play live-odds DEFERRED post-cutover. See
+      `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **Leagues in scope — RESOLVED 2026-05-08.** **Top-5 European tier** for May-23 backtest deliverable: EPL +
+      LaLiga + Serie A + Bundesliga + Ligue 1. Deepest historical coverage, tightest market-making, most consistent
+      fixture metadata. MLS + all-leagues DEFERRED post-cutover.
+- [x] ✓ **Bookmaker scope — RESOLVED 2026-05-08.** **odds_api closing prices for May-23 batch backtest** (consensus
+      market-implied probability at kickoff, no leakage since stamped `available_at = kickoff`). Top-5 bookmakers by
+      EXPECTED_BOOKMAKER_MARKET_SETS coverage (Bet365 + Pinnacle + 1xBet + Marathonbet + William Hill). Slippage:
+      1% over closing for liquid markets, 3% for thin. MDPS odds horizon bucket DEFERRED with in-play archetype.
 
 ## Anti-patterns + workspace-rule cross-references
 

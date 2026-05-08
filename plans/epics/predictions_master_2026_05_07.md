@@ -359,9 +359,19 @@ before CME arb can link.
 
 ### Open questions
 
-- [ ] **Which canonical question groups MUST land for May 23?** Operator-pick — BTC up-down hourly + SPX up-down daily seem strong candidates; election + CPI prints optional.
-- [ ] **CME event futures inventory**: which CME event futures in scope for cross-venue arb backtest?
-- [ ] **Opinion Trade integration depth**: API access + venue connector? Or static historical odds-only for backtest?
+- [x] ✓ **Canonical question groups for May 23 — RESOLVED 2026-05-08.** **3 canonical groups, backtest-only**:
+      `BTC_UP_DOWN_HOURLY` (24/day; HOURLY lifecycle), `SPX_UP_DOWN_DAILY` (1/day; cross-asset feed for tradfi S&P
+      prediction), `BTC_UP_DOWN_DAILY` (1/day; cross-asset feed for cefi_ml diagnostic calibration). ELECTION + CPI
+      DEFERRED post-cutover. See `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **CME event futures inventory — RESOLVED 2026-05-08.** **OUT for May-23 cross-venue arb.** The price-arb
+      May-23 deliverable per `tradfi_master:deliverable B` covers FUTURES products (CME same-day-expiry + ETF↔future
+      + cross-venue ETF). CME event-contracts (binary outcomes) need a separate MTDS adapter + instruments-service
+      catalog work; defer post-cutover. ONE cross-venue arb cell IN: Polymarket `SPX_UP_DOWN_DAILY` ↔ S&P
+      futures-implied probability (single cell, runs on existing Polymarket + Databento ES1, no new adapter) — track
+      as P1 inside this plan.
+- [x] ✓ **Opinion Trade integration depth — RESOLVED 2026-05-08.** **OUT for May 23.** No Opinion Trade integration
+      this cycle (neither static historical nor live venue connector). Backtest-only per master Q&A 7; Polymarket +
+      Kalshi static historical sufficient for the 3 picked canonical groups. Re-evaluate post-cutover.
 
 ## Anti-patterns + workspace-rule cross-references
 

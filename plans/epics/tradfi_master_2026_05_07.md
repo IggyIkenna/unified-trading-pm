@@ -349,9 +349,16 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ### Open questions (S&P prediction)
 
-- [ ] **C5 model shape stable?** Expected yes; this deliverable is data + ML pipeline, not model R&D.
-- [ ] **Calendar feature inputs**: which exact macro events? Minimum FOMC + NFP + CPI; PCE + retail sales optional.
-- [ ] **Bitcoin features at what granularity?** Daily / hourly / 15-min? Determines which CeFi/DeFi sources needed.
+- [x] ✓ **C5 model shape stable — RESOLVED 2026-05-08.** Yes — use existing C5 LightGBM hierarchical model family per
+      `ml_and_features_master:Phase 4A/B`. May-23 deliverable is data + ML pipeline shipping end-to-end on
+      representative sample (per master Q&A 7); model architecture R&D is post-cutover.
+- [x] ✓ **Calendar feature inputs — RESOLVED 2026-05-08.** **Minimum FOMC + NFP + CPI** for May-23 backtest. PCE +
+      retail sales DEFERRED post-cutover. Source: existing `unified-features-interface` calendar adapter; events
+      stamped `available_at = release_time`. Feature shape: binary `event_active` window flags (T-1d / T-0d / T+1d) +
+      numeric surprise vs. consensus.
+- [x] ✓ **Bitcoin features granularity — RESOLVED 2026-05-08.** **Hourly** for May-23 backtest. Source: Binance + OKX
+      BTC perp `ohlcv_1h` from CeFi MTDS (already shipped). Daily loses intraday signal; 15-min over-fits the S&P
+      daily horizon. Hourly is the sweet spot. CeFi adapter + data path already in place.
 
 ---
 
