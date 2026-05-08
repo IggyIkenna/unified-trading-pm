@@ -284,6 +284,65 @@ PREDICTION_GROUPS registry stub at UAC@bb24aba is `{}`. Add canonical groups for
 Estimate ~30+ new canonical groups to seed. Each requires CANONICAL_GROUP_METADATA entry (cadence, resolution_basis,
 settlement_lag).
 
+### Phase 5 (companion) — Cadence taxonomy expansion: 5MIN / 15MIN / WEEKLY / MONTHLY
+
+Operator note 2026-05-08: "Hourly, daily, weekly, monthly, sure, also five minutes, I think, or 15 minutes." Polymarket
+runs prediction markets at sub-hourly + supra-daily cadences. Today's `CanonicalQuestionGroup` enum supports HOURLY +
+DAILY only (per audit Q6 — `_CATEGORY_UNDERLYING_PERIOD_TO_GROUP` table and `CANONICAL_GROUP_METADATA` cadence field).
+
+Expand the cadence enum:
+
+- `FIVE_MIN` — `expected_market_ids_per_day = 288` (5min × 24h)
+- `FIFTEEN_MIN` — `expected_market_ids_per_day = 96` (15min × 24h)
+- `HOURLY` — already shipped (24/day)
+- `DAILY` — already shipped (1/day)
+- `WEEKLY` — `expected_market_ids_per_day` undefined (per-week-not-per-day grain) — OR introduce a
+  `cadence_period_days: int` field that defines `expected_per_period`
+- `MONTHLY` — same supra-daily issue
+- `IRREGULAR` — already shipped (event-driven, e.g. FOMC)
+
+The weekly/monthly grain breaks the per-day expected-market-ids assumption baked into the current Phase 1A schema. Two
+options:
+
+- (a) Translate weekly → "1 expected market per Monday-of-week" so per-day expected counts hold (most days = 0 expected,
+  Monday = 1).
+- (b) Introduce a separate cadence-period-aware shard atom: per-week or per-month bundle. More honest but more wiring.
+
+Default: option (a) for simplicity until weekly/monthly volume justifies (b).
+
+Per-canonical-group-per-cadence example expansion: `BTC_UP_DOWN_FIVE_MIN`, `BTC_UP_DOWN_FIFTEEN_MIN`,
+`BTC_UP_DOWN_WEEKLY`, `BTC_UP_DOWN_MONTHLY` — multiplies the ~30 groups above by additional cadence variants.
+
+### Phase 5 (companion) — Out-of-scope venue display for Kalshi + Opinion Trade
+
+Operator note 2026-05-08: "we can put opinion trade and kalshi inside the data status page just as not in scope flag so
+that we understand that we WILL eventually have them."
+
+Per audit Q7, the out-of-scope badge mechanism EXISTS:
+
+- [`deployment-api/.../data_status_service.py:4824`](../../../deployment-api/deployment_api/services/data_status_service.py#L4824)
+  computes `out_of_scope = not scope_in and not dt_is_processed` per (asset_group, venue, data_type).
+- [`deployment-ui/.../DataStatusTab.tsx:4326`](../../../deployment-ui/src/components/DataStatusTab.tsx#L4326) renders
+  the `out-of-scope-badge` test ID.
+- POLYMARKET in the screenshot already shows "out of scope" — the mechanism is UAC-registry-driven (venues outside the
+  expected coverage set).
+
+To surface Kalshi + Opinion Trade as planned-but-not-yet-captured:
+
+- Add KALSHI + OPINION_TRADE to UAC `VENUES_BY_ASSET_GROUP[prediction]` registry.
+- They have zero captured manifest rows → `dt_is_processed = False` → out_of_scope badge renders.
+- No backfill needed; just registry presence makes them visible.
+
+Optional polish: distinguish "out of scope" (legitimately outside coverage scope) from "planned" (will be onboarded) via
+a per-venue `coverage_status` enum: `IN_SCOPE` / `OUT_OF_SCOPE` / `PLANNED_ONBOARDING_<TARGET_DATE>` /
+`DEPRECATED_RETIRING_<TARGET_DATE>`. UI can render different badge variants per status. Kalshi (CFTC-regulated, US
+event-contract leader) + Opinion Trade (Indian prediction-market platform) both belong in PLANNED_ONBOARDING. Polymarket
+might transition from current "out of scope" badge to a more nuanced status once captured.
+
+The user's framing — "we WILL eventually have them" — means PLANNED is the right semantic, not OUT_OF_SCOPE which
+implies "intentionally excluded forever." Default ship: just add the registry entries with current OUT_OF_SCOPE badge as
+v1; introduce the PLANNED enum as v2 if the visual distinction matters.
+
 ## Acceptance criteria
 
 - [ ] Phase 2A: Polymarket + Kalshi adapters capture full-column metadata (clob_token_ids, description, oracle_address,
@@ -303,6 +362,13 @@ settlement_lag).
       per-base_asset shard rows.
 - [ ] Smoke test: drill into POLYMARKET → BTC → BTC_UP_DOWN_HOURLY → 2026-05-08; verify 24 expected market_ids with
       cluster coverage %, lifecycle bounds, parquet download for each.
+- [ ] Cadence taxonomy expanded: `FIVE_MIN`, `FIFTEEN_MIN`, `WEEKLY`, `MONTHLY` added to `CanonicalQuestionGroup`
+      cadence enum + `CANONICAL_GROUP_METADATA`; weekly/monthly handling per option (a) (Monday-of-week bundling) or
+      option (b) (cadence-period-aware shard atom) decided + implemented.
+- [ ] Kalshi + Opinion Trade registered in UAC `VENUES_BY_ASSET_GROUP[prediction]`; render with `out-of-scope-badge` per
+      existing mechanism (zero captured rows → `dt_is_processed=False` → badge fires automatically).
+- [ ] (Optional v2) Per-venue `coverage_status` enum (`IN_SCOPE` / `OUT_OF_SCOPE` / `PLANNED_ONBOARDING` /
+      `DEPRECATED_RETIRING`) lands in UAC + deployment-ui badge variants per status.
 
 ## Open questions
 
