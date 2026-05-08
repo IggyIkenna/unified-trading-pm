@@ -230,8 +230,20 @@ todos:
 
   - id: phase-2-migration-script-canonical
     content: |
-      - [ ] [AGENT] P0. Phase 2 — Canonical migration script.
+      - [x] [AGENT] P0. Phase 2 — Canonical migration script.
         SEQUENTIAL after Phase 1.
+        (unified-trading-pm@5a3c360a — `scripts/migration/gcs_migration_bundle_2026_05_08.py`
+        + `tests/test_gcs_migration_bundle.py` shipped with 23 unit tests; dry-run by
+        default; `assert_per_vm_shard_isolation` startup guard fires when `--apply` is
+        invoked without `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>`; HTTP
+        pool sized to `2*workers`; leverages UAC `pipeline_mode_for_source` + UTL
+        `manifest_migrations` per CLAUDE.md "no double SSOT" rule. Per-drift-class
+        coverage in tests: pipeline_mode insertion (LEFT of asset_group=),
+        category= → asset_group= rewrite, day=*/ → raw_tick_data/by_date/day=*/
+        prefix normalisation, PERPETUAL → perpetual casing, option → options_chain
+        chain-bundle equivalence; NOOP detection on canonical paths; idempotent;
+        crc32c mismatch triggers rollback (delete dest, keep source) → FAILED;
+        dry-run mode produces zero gcloud calls. Phase 3 VM fleet launch unblocked.)
 
         Site: `unified-trading-pm/scripts/migration/gcs_migration_bundle_2026_05_08.py` (NEW).
 
@@ -288,8 +300,8 @@ todos:
             files at `_index/per_vm/{VM_NAME}.parquet` with no clobbering.
 
         QG: PM quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "Shipped 2026-05-08 — see commit cited inline above."
 
   - id: phase-3-execution-plan-and-vm-launch
     content: |
