@@ -36,7 +36,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   per-asset-group `empty_confirmed` legitimacy rule (DeFi: only venue-level reasons legit; instrument-day source-zero
   must flip to `attempted_failed`); DeFi pre-genesis chain reasons + downstream NaN handling
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — DeFi GCS bucket
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — DeFi GCS bucket
   layout + `chain=` hive partition axis + per-protocol shard atom
 - [`codex/02-data/instrument-pipeline-defi.md`](../../codex/02-data/instrument-pipeline-defi.md) — DeFi
   instruments-service catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT

@@ -119,11 +119,11 @@ todos:
   - id: codex-update
     content: |
       - [x] [AGENT] P1. **Codex updates**: (1) extend
-        `codex/02-data/per-category-bucket-layouts.md` with the EVENT_CONTRACT shard atom shape; (2) extend
+        `codex/02-data/per-asset-group-bucket-layouts.md` with the EVENT_CONTRACT shard atom shape; (2) extend
         `codex/09-strategy/architecture-v2/category-instrument-coverage.md` with the cross-venue-arb pattern;
         (3) NEW codex doc `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` capturing the strategy archetype
         spec, basis-calc reference, leg-balancing assumptions, kill-switch rules. **SHIPPED 2026-05-08** as STUB —
-        per-category-bucket-layouts.md gained "TradFi EVENT_CONTRACT" bullet in the multi-axis correction banner
+        per-asset-group-bucket-layouts.md gained "TradFi EVENT_CONTRACT" bullet in the multi-axis correction banner
         (shard atom + cluster validation + folder-map ref); category-instrument-coverage.md Family 4
         ARBITRAGE_PRICE_DISPERSION gained "TradFi ↔ Prediction event_contract" coverage row + slot-label cluster
         cme-polymarket-{spx|btc}-up-down-daily-usd-prod; NEW codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md
@@ -208,7 +208,7 @@ Q1+Q2; Phase 5 depends on Phases 2-4).
 - **pm@&lt;next sha&gt;** — `plan(cme-polymarket-arb): flip Phase 1 + codex-update checkboxes; ship codex stubs`
   (this commit — flips Phase 1 and codex-update todos, extends 2 codex docs, creates 1 NEW codex playbook stub,
   appends this DONE block).
-  - `codex/02-data/per-category-bucket-layouts.md` — EXTENDED multi-axis correction banner with
+  - `codex/02-data/per-asset-group-bucket-layouts.md` — EXTENDED multi-axis correction banner with
     "TradFi EVENT_CONTRACT" shard atom bullet (root, resolution_date, day) + cluster validation kwargs +
     GCS subfolder reference.
   - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — EXTENDED Family 4
