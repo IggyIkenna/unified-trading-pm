@@ -281,9 +281,9 @@ and doesn't affect Deploy-Missing UI registry coverage).
       (e.g. `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh` vs the canonical
       `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`). (Tab 11 audit + top-10 table above; 20 of 30 deferred
       to follow-up cycles per LOW priority + collision-avoidance rules.)
-- [ ] [audit] P0. Document the rename mapping in
-      `unified-trading-pm/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`. Each row: old path → new
-      path → action (move / merge / delete).
+- [ ] [audit] P0. Document the rename mapping in `unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md` §
+      "Per-launcher migration table" (folded in from the deleted `launcher-script-consolidation-2026-05-07.md` tracker
+      via codex_refactor Phase C.3). Each row: old path → new path → action (move / merge / delete).
 
 ### Phase 1 — Migrate scripts in waves
 
@@ -337,9 +337,11 @@ and doesn't affect Deploy-Missing UI registry coverage).
 
 ### Phase 4 — Codex docs + plan close
 
-- [ ] [unified-trading-pm] P2. New codex doc `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`
-      documenting the consolidated launcher registry as the workspace SSOT. Add a "deployment-UI is the SSOT for
-      launching VMs" principle to `codex/05-infrastructure/vm-tarball-deployment.md`.
+- [x] [unified-trading-pm] P2. ~~New codex doc `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`~~
+      documenting the consolidated launcher registry as the workspace SSOT — landed as
+      `codex/05-infrastructure/launcher-script-ssot.md` (the standalone tracker was folded back in via codex_refactor
+      Phase C.3 to keep one canonical SSOT). Add a "deployment-UI is the SSOT for launching VMs" principle to
+      `codex/05-infrastructure/vm-tarball-deployment.md`.
 - [ ] [unified-trading-pm] P2. Plan flip closeout once Phases 0-3 ship + workspace-wide grep confirms no remaining
       `gcloud compute instances create` outside `deployment-service/scripts/vm/`.
 
