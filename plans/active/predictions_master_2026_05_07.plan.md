@@ -118,14 +118,25 @@ Covers:
       Polymarket + Kalshi adapters expose `classify_lifecycle()` + `get_market_lifecycles()` returning per-market
       `MarketLifecycle` rows keyed on UAC canonical_question_group; `available_from_datetime` /
       `available_to_datetime` stamped on the emitted InstrumentRecord — orchestrator MARKET_LIFECYCLE writer pending)
-- [ ] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle. [AUDIT
-      2026-05-07: FRESH — actionable]
-- [ ] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
+- [x] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle. [AUDIT
+      2026-05-07: FRESH — actionable] (instruments-service@b904785 — Polymarket + Kalshi prediction writer at
+      `engine/orchestrator.py:2128` now bundles by `canonical_question_group`; manifest emits
+      `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC `BUNDLED_DATA_TYPES` SSOT.
+      MARKET_LIFECYCLE separate parquet emit deferred to Phase 2 — lifecycle metadata is already discoverable
+      via `InstrumentRecord.available_from_datetime` / `available_to_datetime` stamped in 98bb167)
+- [x] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
       classifier; emit
       `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, market_id, day)`
-      shard atom. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [TEST] P0. instruments-service unit + integration tests for lifecycle ingestion + classifier integration. [AUDIT
-      2026-05-07: FRESH — actionable]
+      shard atom. [AUDIT 2026-05-07: FRESH — actionable] (instruments-service@b904785 — replaced with
+      `_extract_prediction_canonical_group(row)` calling
+      `classify_polymarket_to_canonical_group` / `classify_kalshi_to_canonical_group` from UAC; per-market_id
+      manifest row deferred to Phase 2 along with the bundle-level cluster-coverage gate at `record_captured`
+      that consumes `expected_market_ids_for_canonical_group` from the lifecycle reader)
+- [x] [TEST] P0. instruments-service unit + integration tests for lifecycle ingestion + classifier integration. [AUDIT
+      2026-05-07: FRESH — actionable] (instruments-service@98bb167 + b904785 — 14 lifecycle tests +
+      9 canonical-group shard tests; full unit suite 2267 passing post-change. Integration tests against
+      a live ManifestWriter on the orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate
+      verification)
 
 ### Adapter migration (MTDS — Polymarket + Kalshi)
 
@@ -273,3 +284,57 @@ adapter migration. The two items below close the loop on the deployment-ui panel
 - `sports_predictions_e2e_2026_05_05.plan.md` (predictions half) — ML training + arb_calculator + Group E/F gates;
   sports half went to `sports_master`.
 - `market_tick_data_to_100pct_2026_05_05.plan.md` (predictions slice) — full plan archived after split per asset_group.
+
+## Temporary states + their canonical follow-up plans
+
+Per CLAUDE.md "Temporary state must have a named successor plan" — Phase 1 (Tab 10) shipped a partial implementation;
+the items below are intentional deferrals named back to this plan (Phase 2 / 3) so reviewers can see scope, not silent
+"fix later" work:
+
+- **MARKET_LIFECYCLE separate parquet emit (instruments-service)** — Phase 1 wired
+  `PolymarketReferenceDataAdapter.get_market_lifecycles()` + `KalshiReferenceDataAdapter.get_market_lifecycles()` and
+  stamps `available_from_datetime` / `available_to_datetime` on the `InstrumentRecord` shard, but the orchestrator
+  doesn't yet write a separate `MARKET_LIFECYCLE` parquet (no adapter-instance pass-through plumbing today). Lifecycle
+  bounds are discoverable downstream via the `InstrumentRecord` slots; full lifecycle row (with `canonical_group` +
+  `current_status`) lands when the orchestrator gains an adapter-handle on the prediction venue branch. **Successor**:
+  this plan, Phase 2 — lifted into the "Adapter migration (MTDS — Polymarket + Kalshi)" tier as a sibling todo so it
+  ships alongside the MTDS lifecycle reader.
+- **Per-market_id manifest rows + cluster-coverage gate** — Phase 1's writer emits one manifest row per
+  `(venue, canonical_question_group, day)` bundle; per-market_id rows + `record_captured(expected_root_clusters=…)`
+  cluster-coverage gating wait for the MTDS Phase 2 lifecycle reader (`expected_market_ids_for_canonical_group`)
+  because the bundle-level cluster expectation is derived from the lifecycle table, not the instruments parquet.
+  **Successor**: this plan, Phase 2 — within the MTDS adapter-migration tier.
+- **Kalshi `KALSHI_TICKER_TO_GROUP` override seeding** — UAC override dict is empty per `unified_api_contracts/canonical/domain/predictions/classifiers.py`. Kalshi rows currently route to `OTHER`. Operator periodically reviews
+  the `OTHER_BUCKET_MEMBER_ADDED` event stream to identify recurring tickers worth promoting. **Successor**: this
+  plan, "Audit findings 2026-05-07 — folded from session wrapper" → C.12 OTHER-bucket-promotion subitem; lights up
+  once Phase 1 production data surfaces enough recurring tickers.
+
+## DONE-2026-05-08
+
+Tab 10 (predictions-phase1-ingestion-tab) shipped the Phase 1 instruments-service half — lifecycle ingestion in
+adapters + classifier-based shard atom in the writer:
+
+- instruments-service@`98bb167` — feat(predictions): per-market lifecycle ingestion in Polymarket + Kalshi adapters.
+  `classify_lifecycle()` + `get_market_lifecycles()` on both adapters; `available_from_datetime` /
+  `available_to_datetime` stamped on `InstrumentRecord` for downstream MTDS lifecycle gating + features-\* compute
+  per-market `LookaheadBiasError`. 14 unit tests pinning canonical-question-group routing, settlement_lag derivation,
+  status enum mapping, and silent-drop of unclassifiable markets.
+- instruments-service@`b904785` — feat(predictions): orchestrator emits prediction_canonical_question_group shard
+  atom. Replaces `_extract_prediction_shard(base_asset)` with classifier-based
+  `_extract_prediction_canonical_group(row)`; writer at `engine/orchestrator.py:2128` now bundles
+  Polymarket + Kalshi rows by `canonical_question_group` and emits manifest
+  `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC `BUNDLED_DATA_TYPES`. 9 additional
+  unit tests covering BTC/ETH HOURLY routing, OTHER fallback, Kalshi override-only path, and `_compute_prediction_shards`
+  aggregation across 24 BTC HOURLY + 1 SPX DAILY + 5 OTHER markets.
+- unified-trading-pm@`7343b93` — plan(predictions-master): flip Phase 1 lifecycle-ingestion checkbox citing
+  instruments-service@98bb167.
+
+Phase 2 deferrals (named per "Temporary states" above): MTDS Polymarket / Kalshi adapter lifecycle gating;
+`umi_tick_provider.py:225` + `orchestrator.py:1990-1995` data_type rename to
+`prediction_canonical_question_group`; `MARKET_LIFECYCLE` separate parquet emit; per-market_id manifest rows +
+`record_captured` cluster-coverage gate consuming `expected_market_ids_for_canonical_group` from the lifecycle
+reader.
+
+QG status: ruff clean on every file Tab 10 touched; basedpyright/pre-existing diagnostics outside Tab 10's
+edited line ranges (Ikenna's QG sweep cycle 2026-05-07 → 2026-05-09 per CLAUDE.md "Findings Triage Discipline" §
+"Temporary exception"). Full instruments-service unit suite (2267 tests) green post-change.
