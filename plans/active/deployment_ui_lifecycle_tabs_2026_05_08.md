@@ -76,7 +76,7 @@ todos:
 
   - id: a1-lifecycle-class-taxonomy-uac-ssot
     content: |
-      - [ ] [SCRIPT] P0. Add `LifecycleClass` StrEnum to UAC
+      - [x] [SCRIPT] P0. **DONE 2026-05-08 (UAC@ba94d05)**. Add `LifecycleClass` StrEnum to UAC
         `unified_api_contracts/canonical/crosscutting/lifecycle_class.py` with FOUR closed members:
         (1) `EPHEMERAL_BATCH` — data + pricing pipeline jobs (instruments, MTDS, MDPS, features-*); has start + end;
         progress measured in dates × shards captured/empty/failed. (2) `EPHEMERAL_EXPERIMENT` — ML training,
@@ -103,7 +103,7 @@ todos:
 
   - id: a3-codex-deployment-ui-architecture-ssot
     content: |
-      - [ ] [AGENT] P0. New codex doc `codex/05-infrastructure/deployment-ui-architecture.md` capturing the full
+      - [x] [AGENT] P0. **DONE 2026-05-08 (PM@ebe5cc09)**. New codex doc `codex/05-infrastructure/deployment-ui-architecture.md` capturing the full
         UX architecture: 6 top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness / Config); Monitor
         sub-tab structure (Backfill / Experiments / Live / Scheduled); the four orthogonal axes (lifecycle class /
         cloud target / environment / service); the env-resolution-by-domain rule (no in-UI env toggle); the
@@ -118,14 +118,14 @@ todos:
 
   - id: a4-codex-update-batch-live-symmetry-ux-section
     content: |
-      - [ ] [AGENT] P1. Extend `04-architecture/batch-live-symmetry.md` with a "UX surface" section explicit on how
+      - [x] [AGENT] P1. **DONE 2026-05-08 (PM@eb8a96ca)**. Extend `04-architecture/batch-live-symmetry.md` with a "UX surface" section explicit on how
         the symmetry shows up to the operator: same Data-Status tab, same drilldown depth, same parquet schema-view,
         same event-tail; the only operator-visible difference between live and batch is the Data-Status mode-toggle
         position. Reinforces the engineering invariant via the operator-facing UX.
 
   - id: a5-uac-cloud-target-and-environment-discriminators
     content: |
-      - [ ] [SCRIPT] P0. Confirm + extend the existing `CloudTarget` enum in deployment-ui `CloudProviderContext.tsx`
+      - [x] [SCRIPT] P0. **DONE 2026-05-08 (UAC@ba94d05)**. Confirm + extend the existing `CloudTarget` enum in deployment-ui `CloudProviderContext.tsx`
         and add a typed UAC mirror `unified_api_contracts/canonical/crosscutting/cloud_target.py` (already in scope).
         ALSO add `unified_api_contracts/canonical/crosscutting/environment_tier.py` as a 3-member StrEnum
         (`DEV` / `STAGING` / `PROD`) with helper `resolve_environment_from_hostname(hostname) -> EnvironmentTier`
@@ -653,3 +653,95 @@ Follows `unified-trading-pm/plans/PLAN_FORMAT.md`: 3-tier readiness model declar
 Cursor checkboxes on every todo; phased execution DAG with QG gates; parallelisation explicit; SSOT-first (codex docs in
 Phase A.3 + A.4 + H.1 own intent, plan owns activation); pre-audit complete (agent scout 2026-05-08 of deployment-ui +
 deployment-api).
+
+## Open questions
+
+### Q1 — [deployment-ui-tab, 2026-05-08 13:50 UTC] — STEP 5.11 + 5.12 QG-rule contradicts Phase A.5 SSOT
+
+**Status**: 🟡 BLOCKED — needs Ikenna or main routing decision (case-5 BIG finding per CLAUDE.md "Findings Triage
+Discipline").
+
+`unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh:357,374` — STEP 5.11 + 5.12 list `CloudTarget`
+as a banned protocol-specific symbol in service code (the rule was written when `CloudTarget` lived as a Protocol-leak
+in deployment-ui `CloudProviderContext.tsx`). Phase A.5 of THIS plan re-introduces `CloudTarget` as the UAC SSOT
+closed-set enum — the workspace SSOT shape (UAC owns the enum; services import via facade). Once Phase B+ consumers
+import `CloudTarget` from UAC, every consumer repo's QG STEP 5.11 will fire on the import line.
+
+**Why this is case-5 BIG**: contradicts a workspace SSOT (template QG rule vs plan body), affects ≥2 repos (template +
+every consumer), requires governance decision on the rule shape (Ikenna's territory per work-split).
+
+**Options**:
+
+1. Add a UAC-source-dir exemption to STEP 5.11 + 5.12 (`--glob '!unified-api-contracts/**'` or equivalent), then
+   propagate via `rollout-quality-gates-unified.py`. Surgical; preserves the rule's original intent (block
+   service-code-side hardcoding of `CloudTarget`) while letting UAC declare the symbol.
+2. Migrate the rule to import-only detection (`rg "from\s+\S+\s+import\s+CloudTarget"`) — semantically cleaner but
+   bigger change.
+3. Rename the new UAC symbol (e.g. `CloudProviderTarget`) — would require plan-body amendment and breaks the workspace
+   convention of mirroring deployment-ui type-alias names.
+
+**Recommendation**: option (1) — minimal change, preserves rule intent. Phase A.5 sub-agent's report flagged the same
+finding and suggested the same fix (per `feat(uac): LifecycleClass + CloudTarget + EnvironmentTier SSOTs` commit message
+in UAC@ba94d05).
+
+**Blast radius if unresolved**: every Phase B-H consumer importing `CloudTarget` from UAC will fail QG locally on their
+repo's STEP 5.11. CI is unaffected (feature-branch pushes don't trigger CI per CLAUDE.md). Deferred routing OK for ~1-2
+days; should land before Phase B starts wiring `CloudTarget` consumers.
+
+## DONE-2026-05-08 — Phase A foundation (4 of 5 items)
+
+Tab 3 (`deployment-ui-tab`) shipped 4 of 5 Phase A items via 4 parallel sub-agents at boot + 1 redo (A.4 was lost in a
+concurrent agent's PM rebase). Phase A.2 (deployment-service `VM_PREFIX_TO_BUCKET` typed-spec migration) deferred this
+session per operator priority direction (Phase A foundation only — A.2 depends on A.1 dataclass shape but is
+mechanically larger; defer to next session).
+
+**Code commits**:
+
+- `unified-api-contracts@ba94d05` — `feat(uac): LifecycleClass + CloudTarget + EnvironmentTier SSOTs (Phase A.1 + A.5)`.
+  - 8 files / 817 insertions.
+  - `canonical/crosscutting/lifecycle_class.py` — `LifecycleClass(StrEnum)` 4 closed members + `VmPrefixSpec` frozen
+    dataclass + 4 helpers (`classify_vm_name(name, registry)` longest-prefix match raising ValueError on unmatched +
+    `classify_cloud_run_service` for `live-*`/`*-api`/`*-ui` patterns + `classify_scheduled_job` always
+    SCHEDULED_RECURRING + `classify_experiment_run` always EPHEMERAL_EXPERIMENT). Module + per-helper docstrings. 19
+    unit tests (closed-set membership, frozen-dataclass roundtrip, longest-prefix preference, raise-on-unmatched).
+  - `canonical/crosscutting/cloud_target.py` — `CloudTarget(StrEnum)` 2 members `GCP`/`AWS` mirroring deployment-ui
+    `CloudProviderContext.tsx` string-literal type alias.
+  - `canonical/crosscutting/environment_tier.py` — `EnvironmentTier(StrEnum)` 3 members `DEV`/`STAGING`/`PROD` +
+    `resolve_environment_from_hostname` (case-insensitive: localhost/127.0.0.1/\*.local→DEV, staging.\*→STAGING,
+    otherwise→PROD; empty raises ValueError) + `resolve_environment_from_env` (typed `CLOUD_DEPLOYMENT_ENV` reader). 24
+    unit tests (3-member set, all hostname branches, case-insensitivity, env-var literals, error paths).
+  - Facade re-exports added at 3 levels (`canonical/crosscutting/__init__.py`, `canonical/domain/__init__.py`, top-level
+    `unified_api_contracts/__init__.py`) per the `ShareClass`/`RiskTaxonomy` precedent.
+
+- `unified-trading-pm@ebe5cc09` — `docs(codex): NEW deployment-ui-architecture.md SSOT (Phase A.3)`.
+  - 318 lines / 13 H2 sections capturing the full deployment-UI architecture: 6 top-level tabs, 4 Monitor sub-tabs, four
+    orthogonal axes (lifecycle / cloud / env / service), env-resolution-by-domain, cross-mode prefetch policy,
+    auth-always-available contract, scope split (Data Status vs Monitor), streaming-logs surface contract, Deploy =
+    fresh-only, NEW vs reused table, cross-references, plan provenance. Status: stub — full content lands as later plan
+    phases (B-H) ship. Frontmatter follows `firebase-split-topology.md` precedent (multi-source SSOT shape).
+
+- `unified-trading-pm@eb8a96ca` — `docs(codex): batch-live-symmetry adds UX-surface section (Phase A.4)`.
+  - +42 lines extending `04-architecture/batch-live-symmetry.md` with a
+    `## UX surface — how the symmetry shows up to the operator` section. Documents identical UX shape (same Data-Status
+    tab / drilldown / parquet schema-view / event-tail) + the single operator-visible difference (Data-Status
+    mode-toggle position; same SHAPE, different TIME-SLICE). Cross-references the new `deployment-ui-architecture.md`
+    SSOT. Note: an earlier sub-agent's edit was lost in a concurrent agent's working-tree rebase; this commit is the
+    redo.
+
+**Plan-flip commit**: this commit (PM).
+
+**Verification (per shippable unit, mine only)**:
+
+- UAC: basedpyright strict 0/0/0; ruff check + format clean on all 8 files; 43 unit tests (19 + 24) PASS. QG STEP 5.11 +
+  5.12 fail per Q1 above (NOT mine to fix; rule needs amendment per the plan body).
+- PM A.3: prettier-clean; 318 lines / 13 H2 sections.
+- PM A.4: prettier-clean; +42 insertions.
+
+**What's next** (carryover into next Tab 3 session):
+
+- Phase A.2 (deployment-service `VM_PREFIX_TO_BUCKET` typed-spec migration + `vm_zombie_watchdog.py` import + CLAUDE.md
+  "VM Naming Convention" rule update). Spec: extend dict from `{prefix: bucket}` to
+  `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}` per Phase A.2 todo content.
+- Q1 routing decision (Ikenna or main): land STEP 5.11 + 5.12 UAC-source exemption before Phase B+ consumers ship.
+- Phase B (UI re-shape: 6-tab shell + Monitor 4-sub-tab structure + Data-Status mode toggle + LiveFreshnessPanel +
+  StreamingLogsPanel + LifecyclePrefetchContext) — can start once Q1 lands.
