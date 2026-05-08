@@ -225,13 +225,27 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
 Wires existing alerting-service API endpoints (`GET /alerts/active`, `POST /alerts/{id}/acknowledge`,
 `POST /alerts/{id}/escalate` per e2e plan) into the DART cockpit operator surface.
 
-- [ ] [SCRIPT] P0. `unified-trading-system-ui/`: Active Alerts panel in DART top-bar — fetch `/alerts/active` every 10s,
-      badge count = unack-critical. Confirm against e2e plan §"Frontend API Surface".
-- [ ] [SCRIPT] P0. Per-alert detail modal: show code + severity + payload + runbook link (deep-link to codex playbook
-      doc). Ack button + Escalate button + Resolve button (server-side flow already exists per e2e plan).
-- [ ] [SCRIPT] P0. Severity breakdown pie-chart widget (per e2e plan).
-- [ ] [SCRIPT] P0. Persona Playwright test: `live-operator` persona walks the ack flow on a synthetic CRITICAL alert.
-      Asserts notification bell decrements + alert moves to `acknowledged` state.
+- [x] [SCRIPT] P0. `unified-trading-system-ui/`: Active Alerts panel in DART top-bar — fetch `/alerts/active` every 10s,
+      badge count = unack-critical. Confirm against e2e plan §"Frontend API Surface". (evidence:
+      unified-trading-system-ui@e9559565 — `notification-bell.tsx` poll interval 15s→10s via
+      `ACTIVE_ALERTS_POLL_INTERVAL_MS`, badge count filtered to `severity==="critical"` only, exposed
+      `data-critical-count` + `data-total-count` attrs for Playwright probes; lifecycle-nav already mounts the bell
+      across the platform shell incl. DART surface.)
+- [x] [SCRIPT] P0. Per-alert detail modal: show code + severity + payload + runbook link (deep-link to codex playbook
+      doc). Ack button + Escalate button + Resolve button (server-side flow already exists per e2e plan). (evidence:
+      unified-trading-system-ui@e9559565 — NEW `components/widgets/alerts/alert-detail-modal.tsx`; runbook URL
+      dispatched per `AlertType` to
+      `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/14-playbooks/alerting/{file}.md`; mounted from
+      NotificationBell on alert click; reusable from AlertsTable in Phase 6 wiring. Server-side `runbook_doc` payload
+      will supersede client-side dispatch when Phase 6 wires `AlertRule.runbook_doc`.)
+- [x] [SCRIPT] P0. Severity breakdown pie-chart widget (per e2e plan). (evidence: unified-trading-system-ui@e9559565 —
+      NEW `components/widgets/alerts/severity-breakdown-widget.tsx` using recharts PieChart over active-alert severity
+      counts; registered in `components/widgets/alerts/register.ts` as `alerts-severity-breakdown` widget.)
+- [x] [SCRIPT] P0. Persona Playwright test: `live-operator` persona walks the ack flow on a synthetic CRITICAL alert.
+      Asserts notification bell decrements + alert moves to `acknowledged` state. (evidence:
+      unified-trading-system-ui@e9559565 — NEW `tests/e2e/alerting-ack-flow.spec.ts`; `live-operator` persona added to
+      `tests/e2e/_shared/persona.ts`; spec drives `alert-003` HEALTH_FACTOR_CRITICAL through bell→modal→Ack and asserts
+      `data-critical-count` decrement + alert-row removal from active dropdown.)
 
 ### Phase 6 — Per-alert operator playbook (codex docs, 1-2 days, **PARALLEL** with Phases 3-5)
 
@@ -347,8 +361,9 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       received `KillSwitchEvent` within 5s + halts within 10s.
 - [ ] [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
-- [ ] [AGENT] P1. **Codex update**: `codex/14-playbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
-      hook semantics + `KillSwitchScope` field.
+- [x] [AGENT] P1. **Codex update**: `codex/14-playbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
+      hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
+      landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
 
 ### Tick-staleness + connectivity-gap event taxonomy (migrated portion of `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08` + `mtds_live_data_recovery_self_detect_2026_05_08`)
 
@@ -402,6 +417,52 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
 - ❌ Skipping rehearsal Phase 8 to hit deadline — KILL_SWITCH propagation MUST be verified end-to-end before live.
 - ❌ Going live without 48h quietness baseline (Phase 7) — alert fatigue causes real alerts to be ignored.
 - ❌ Editing `alerting-service/` without pair-coordinating with Harsh.
+
+## Open questions
+
+### Q1 — [alerting-phase2-publisher-hook, 2026-05-08 14:00 UTC] — UAC `rules.py` parallel-edit collision blocking `kill_switch_scope` field
+
+**Status**: 🟡 BLOCKED — operator-rescue commit PM@1cb53663 wiped my prior Q1 entry; restoring with updated context.
+
+**What happened**. Working through Migrated-issues §"Kill-switch publisher hook" 5-item scope:
+
+1. UAC `kill_switch_scope: KillSwitchScope | None` field on `AlertRule` + per-code seed in `LIVE_ALERT_RULES`
+   (LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE) + validator
+   `_validate_kill_switch_scope_matches_code_family` + new unit tests in
+   `tests/internal/unit/test_alerting_taxonomy.py`.
+2. alerting-service `notifiers/router.py` publisher hook + integration test.
+3. Codex update to `codex/14-playbooks/alerting/alert-code-taxonomy.md` § "Kill-switch publisher hook semantics".
+
+**Item 3 (codex doc) shipped** — design SSOT with full KillSwitchScope mapping, scope_key resolution table, failure-mode
+contract. Independent of UAC field landing.
+
+**Item 1 (UAC field)** — repeated `Edit` cycles on
+`unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py` got reverted to the on-disk
+pre-edit state within seconds of each apply (reapplied 4 times). UAC working tree shows multiple modified files from a
+parallel agent (`__init__.py`, `codes.py`, `thresholds.py`, internal/alerting/, etc.) — strongly suggests another tab is
+mid-refactor on the same surface. Per workspace foot-gun #3 rule (PM@7de75819 inverse, codified 2026-05-07) + the
+just-landed operator-rescue commit
+`PM@1cb53663 "docs(workspace): bundled snapshot — operator-rescue commit (parallel agents lost)"`, this is exactly the
+parallel-edit collision the workspace rules warn about. I stopped touching UAC after the 4th revert.
+
+**Item 2 (alerting-service router hook)** — written locally but not pushable: the integration tests exercise
+`rule.kill_switch_scope` directly + will fail without the UAC field. The router hook is defensive
+(`getattr(rule, "kill_switch_scope", None)` so it silently no-ops without the field) but tests need it. Holding the
+alerting-service edits LOCAL until UAC unblocks. Files written locally:
+
+- `alerting-service/alerting_service/notifiers/router.py` — `_find_kill_switch_rule`, `_resolve_scope_key`,
+  `_publish_kill_switch_event` helpers + wired call after channel dispatch.
+- `alerting-service/tests/integration/test_kill_switch_publisher_hook.py` — 5 tests (per-scope GLOBAL × 2, VENUE × 1,
+  non-kill-switch negative, subscriber-failure isolation).
+
+**Recommended decision**: confirm which agent owns UAC `rules.py` `kill_switch_scope` field. Once that lands on
+`live-defi-rollout`, the pickup is mechanical:
+
+1. UAC `rules.py` field + seed + validator + tests (15 min, blocked).
+2. alerting-service `router.py` + test → push (5 min, written locally, pending UAC).
+3. PM plan flip (Migrated-issues 5 todos) — codex doc todo can flip now since shipped, the rest when UAC lands.
+
+#### A1 — _waiting for operator / main_
 
 ## Open questions for operator
 
