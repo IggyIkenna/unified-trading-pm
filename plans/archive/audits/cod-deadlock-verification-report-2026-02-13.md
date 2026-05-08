@@ -2,6 +2,19 @@
 scope: [engineer]
 ---
 
+## Status: archived 2026-05-08 — point-in-time audit (2026-02-13), see `codex/06-coding-standards/quality-gates.md`
+
+This document is a **point-in-time verification snapshot** captured 2026-02-13. It is preserved for historical
+provenance only — service counts, "last updated" dates, and feature matrices reflect the workspace state at that moment
+and are not maintained. For the canonical, living description of the COD deadlock protection mechanism (git-aware mode,
+ratchet behaviour, per-service quality-gates pattern), see
+[`codex/06-coding-standards/quality-gates.md`](../../../codex/06-coding-standards/quality-gates.md).
+
+Moved out of `codex/06-coding-standards/` per `plans/active/codex_refactor_2026_05_08.md` Phase E.5 — audit-style
+reports do not belong in the coding-standards canon.
+
+---
+
 # COD Deadlock Protection - Verification Report
 
 **Date**: 2026-02-13 **Status**: ✅ **ALL SERVICES PROTECTED**
