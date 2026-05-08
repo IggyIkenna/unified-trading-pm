@@ -894,19 +894,37 @@ drift.
   the commit message; foreign work landed under the same commit hash. Workspace dirty-deps rule applied — pushed
   rather than reverting and losing parallel agent's progress.
 
-### Phase E.2 — 14-playbooks split into 3 directories — SEQUENTIAL after E.3 — P1
+### Phase E.2 — 14-playbooks split into 3 directories — SEQUENTIAL after E.3 — P1 — SHIPPED 2026-05-08
 
-- [ ] [DOC] P2 (BLOCKED on operator approval — workspace-wide doc-tree change). Per audit S1, `14-playbooks/` mixes 4
-      genres. Proposed split:
-  - `14-customer-journeys/` (rename) — experience/, playbooks/, commercial-model/, demo-ops/, authentication/,
-    environments/, page-triage/, presentations/, roadmap/, implementation-mapping/, \_ssot-rules/, glossary, IA, README,
-    dart/, shared-core/, cross-cutting/-as-playbook-concepts/.
-  - `15-runbooks/` (NEW) — alerting/, instruments-live/, smoke-testing-playbook, backfill-completion-playbook + future
-    per-archetype runbooks.
-  - `16-strategy-playbooks/` (NEW) — defi/, strategy/, ml/, infra-spec/.
+- [x] [DOC] P2. Per audit S1, `14-playbooks/` mixed 4 genres. **SHIPPED 2026-05-08** as 3 commits + cross-repo
+      collateral:
 
-  **Why blocked**: top-level directory rename; affects every codex doc cross-linking into 14-playbooks/ and every
-  CLAUDE.md reference.
+  **Step 1 — rename `14-playbooks/` → `14-customer-journeys/`** (PM@f21fa3e7) — 188 files renamed; original parent dir
+  retains experience/, playbooks/, commercial-model/, demo-ops/, authentication/, environments/, page-triage/,
+  presentations/, roadmap/, implementation-mapping/, \_ssot-rules/, glossary, IA, README, dart/, shared-core/,
+  cross-cutting/-as-playbook-concepts/.
+
+  **Step 2 — `15-runbooks/` NEW** (PM@10438c32 + cross-repo: UI@48aa8dce + SIT@dd1ea4e + UAC@86e8109) — moved alerting/
+  (per-alert-code runbooks + glossary + rehearsal + threshold-tuning + pagerduty-escalation), instruments-live/ (T+1
+  audit discrepancy runbook), smoke-testing-playbook.md, backfill-completion-playbook.md. NEW codex/15-runbooks/README.md
+  describing scope (live-trading on-call runbooks), what does + does NOT live here, cross-link conventions
+  (execution: frontmatter required per HARD RULE). Workspace-wide ref rewrite across PM (37 files) + 3 foreign repos.
+
+  **Step 3 — `16-strategy-playbooks/` NEW** (PM@fcafcb77 — residual + parallel-agent-absorbed PM@14a3ab5f / 15afa55e /
+  4e7baf09 / e5944816; cross-repo: UI@a500e656 + UTL@54ac8daa + UAC@56a68a7 + strategy-service@bb3dd22) — moved defi/
+  (venue-collateral playbook), strategy/ (cme-polymarket-arb), ml/ (cefi-ml-live-serving), infra-spec/ (Stage-3a-3e
+  refactor specs). NEW codex/16-strategy-playbooks/README.md describing scope (domain-specific strategy + infra
+  playbooks), distinction from 15-runbooks (on-call) + 14-customer-journeys (audience flows) + 09-strategy (canonical
+  architecture). Workspace-wide ref rewrite across PM + 4 foreign repos (33 files cross-repo total).
+
+  **Foot-gun #1 attribution**: structural git mv of step-3 4 subdirs + 16-strategy-playbooks/README.md were absorbed
+  into parallel-agent commits PM@14a3ab5f (README) + PM@15afa55e (4 subdirs). Step-3 ref-rewrites in cme_polymarket_arb
+  + defi_master plans absorbed into PM@4e7baf09 + PM@e5944816 (parallel-agent's Phase E.4 sweep). Content correct under
+  foreign commit hashes; PM@fcafcb77 covers the residual ref-rewrites that weren't absorbed.
+
+  **CLAUDE.md updates**: no refs in `cursor-configs/CLAUDE.md` pointed at content moved to 15-runbooks/ or
+  16-strategy-playbooks/ — the 2 remaining `14-playbooks/` refs (line 119 shared-core/ + line 926 authentication/)
+  point at content that stayed in 14-customer-journeys/ and is unaffected by Phase E.2 steps 2 + 3.
 
 ### Phase E.3 — 09-strategy cross-cutting collapse — PARALLEL — P1 — SHIPPED 2026-05-08
 
