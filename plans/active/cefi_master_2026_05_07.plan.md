@@ -172,6 +172,8 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 - 2026-05-08 04:46 UTC — sweep #3: 23/23 alive (no further drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2023 100% captured (4766 rows, latest 2023-06-04 ≈42% through year). No actions.
 - 2026-05-08 04:54 UTC — sweep #4: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2021 100% captured (3192 rows, latest 2021-04-22 ≈31% through year). No actions.
 - 2026-05-08 05:04 UTC — sweep #5: 23/23 alive, worst event_age 0m, sample VM cefi-bitget-futures-2025 100% captured (6617 rows, latest 2025-05-24 ≈40% through year). No actions.
+- 2026-05-08 05:15 UTC — sweep #6: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (6924 rows, latest 2023-06-22 ≈47% through year). No actions.
+- 2026-05-08 05:24 UTC — sweep #7: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4215 rows, latest 2026-04-16 ≈83% through partial-year window). No actions.
 
 ## Critical path
 

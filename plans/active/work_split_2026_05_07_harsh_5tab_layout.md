@@ -548,9 +548,13 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
-#### Tab 5 — DeFi lending-indices bug fixes 🟡 QUEUED (P0, ~4-6h, MTDS + instruments-service)
+#### Tab 5 — `lending-indices-bugfix-tab` 🟢 IN FLIGHT (P0, ~4-6h, MTDS + instruments-service)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 5 tasks"_.
+- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md).
+- **Scope**: 3 P0 bug fixes — Bug 1 (AAVE V3 ETH silent-zero), Bug 2 (Compound V3 schema drift), Bug 3
+  (instruments-service launch-date floor handling). P0 blocker for `carry_staked_basis`; hand-off ahead
+  of Ikenna D4 DeFi launches.
 
 **Why now**: P0 blocker for `carry_staked_basis` (May-23 lead archetype) on Ethereum — Bug 1 = AAVE V3 ETH
 silent-zero. All 3 bugs already diagnosed in the issue doc. Friendly hand-off ahead of Ikenna's D4 DeFi
@@ -596,9 +600,13 @@ DONE-DEFINITION:
 REPORT-BACK: code commits + plan-flip commit per shippable unit; conditional push.
 ````
 
-#### Tab 6 — DeFi 988-missing-dates audit 🟡 QUEUED (diagnostic-only, ~2-3h, no editing)
+#### Tab 6 — `defi-988-audit-tab` 🟢 IN FLIGHT (diagnostic-only, ~2-3h, PM only)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 6 tasks"_.
+- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: `defi_master_2026_05_07.plan.md` § "Tail-chain coverage" → output is a new
+  `plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md` issue doc.
+- **Scope**: per-(chain, protocol, data_type) breakdown of the 988 missing DeFi dates, ranked by relevance
+  to May-23 archetypes (`carry_staked_basis` lead, `leveraged_funding_arb`). Diagnostic-only — no code edits.
 
 **Why now**: Prioritises Harsh's D4 P0 manifest rescan + Ikenna's D4 DeFi launch decisions. The current
 "988 dates missing" headline doesn't break down by `(chain, protocol, data_type)`; this audit produces the
@@ -650,9 +658,12 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (issue doc) + 1 commit (defi_master annotation); conditional push.
 ````
 
-#### Tab 7 — MTDS Databento path-streaming Phase 1 🟡 QUEUED (pure-win refactor, ~8-10h, MTDS only)
+#### Tab 7 — `mtds-databento-streaming-tab` 🟢 IN FLIGHT (pure-win refactor, ~8-10h, MTDS only)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 7 tasks"_.
+- **Started**: 2026-05-08 05:23 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`mtds_databento_path_streaming_2026_05_07.plan.md`](mtds_databento_path_streaming_2026_05_07.plan.md) Phase 1.
+- **Scope**: chunked streaming refactor in `databento_adapter.py` — `path=<tempfile>` + `to_df(count=N)`
+  iteration; byte-identical output; bounds peak memory for ES.OPT-class days.
 
 **Why now**: Risk mitigation ahead of Ikenna's D4 DeFi launches + the post-cefi-drain TradFi + DeFi reruns.
 ES.OPT-class days currently spike >1GB peak RSS under eager-materialisation. Path-streaming bounds peak
@@ -695,9 +706,11 @@ DONE-DEFINITION:
 REPORT-BACK: 5-6 small commits per CLAUDE.md cadence; conditional push.
 ````
 
-#### Tab 8 — Audit followups cleanup 🟡 QUEUED (plan hygiene, ~1h, PM only)
+#### Tab 8 — `audit-followups-tab` 🟢 IN FLIGHT (plan hygiene, ~1h, PM only)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 8 tasks"_.
+- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`audit_followups_2026_05_07.plan.md`](audit_followups_2026_05_07.plan.md) items #1-#6.
+- **Scope**: 6 line-edit fixes — stale plan refs, archived plan listings, module path drifts, STALE markers.
 
 **Why now**: Filler-class work; pure win. 6 line-edit fixes to plan-doc anomalies surfaced in the 2026-05-07
 audit. Good first task for an idle tab.
