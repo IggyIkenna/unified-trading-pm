@@ -502,11 +502,18 @@ fi
 # ============================================================
 # STEP 5.11 — Block protocol-specific symbols
 # unified-config-interface cloud_config.py: field names are schema — documented bypass §2.6
+# unified-api-contracts: defines CloudTarget enum + facade re-exports as workspace SSOT
 # unified-trading-library: defines/deprecates these symbols — excluded as origin repo §2.6
 # ============================================================
 if [[ "$PACKAGE_NAME" = "unified-config-interface" ]]; then
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' --glob '!**/cloud_config.py' -l . 2>/dev/null || :)
+elif [[ "$PACKAGE_NAME" = "unified-api-contracts" ]]; then
+    # UAC defines CloudTarget as the workspace SSOT enum (canonical/crosscutting/cloud_target.py)
+    # and re-exports it from the top-level facade + canonical.crosscutting + canonical.domain.
+    # The other protocol-specific symbols (gcs_bucket, bigquery_dataset, etc.) are still blocked.
+    PROTOCOL_VIOLATIONS=$(rg "upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
+        --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)
 elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
     # UTL defines/deprecates these symbols — skip the origin and compat-layer files
     # domain_client/ sub-package (merged into UTL) uses these symbols legitimately
