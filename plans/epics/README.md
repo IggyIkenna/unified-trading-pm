@@ -33,17 +33,21 @@ master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master
 **Rule:** epics live above the granular masters; the May-23 cutover master sits above the epics. None of these layers
 duplicates content — each adds orchestration above the layer below.
 
-## The 7 epics
+## The May-23 deliverables (folded 2026-05-08)
 
-| Epic                                                                       | May-23 scope         | Live/Batch | Lead venues / archetypes                                                           |
-| -------------------------------------------------------------------------- | -------------------- | ---------- | ---------------------------------------------------------------------------------- |
-| [live_defi_rollout_may_23_2026](./live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet  | Live       | Staked-basis carry + vanilla-basis carry + cross-venue carry (CME↔CeFi↔DeFi)     |
-| [cefi_ml_may_23_2026](./cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital | Live       | Continuous ML prediction tradable across OKX + Binance + Bybit                     |
-| [sp_prediction_may_23_2026](./sp_prediction_may_23_2026.epic.md)           | BATCH ML only        | Batch      | CME S&P swing high/low ML model (SP + BTC + calendar features)                     |
-| [price_arbitrage_may_23_2026](./price_arbitrage_may_23_2026.epic.md)       | BACKTEST only        | Batch      | CME futures same-day-expiry arb + ETF↔future arb (TradFi)                         |
-| [sports_ml_may_23_2026](./sports_ml_may_23_2026.epic.md)                   | BACKTEST only        | Batch      | Sports ML prediction (odds + features → strategy → execution, all backtest)        |
-| [prediction_markets_may_23_2026](./prediction_markets_may_23_2026.epic.md) | BACKTEST only        | Batch      | Polymarket + Kalshi + Opinion Trade + CME event futures arb (full backtest)        |
-| [cross_cutting_may_23_2026](./cross_cutting_may_23_2026.epic.md)           | Workspace-wide       | Both       | Strategy catalogue, clients, strategy IDs, UI replication, infrastructure maturity |
+Per operator direction 2026-05-08, six same-domain epics were folded into their master plans (less indirection); only
+`cross_cutting` remains here as a standalone epic. Each May-23 deliverable now lives in its master plan's
+`## May-23 deliverable` section.
+
+| May-23 deliverable                      | Lives in master § "May-23 deliverable"                                         | Scope                | Live/Batch | Archived epic (archaeology)                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------ | -------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| Live DeFi rollout (carry archetypes)    | [`active/defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md)      | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)   |
+| CeFi ML                                 | [`cefi_master_2026_05_07.md`](./cefi_master_2026_05_07.md)                     | LIVE on real capital | Live       | [`archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md)                       |
+| S&P prediction (CME)                    | [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) (deliverable A) | BATCH ML only        | Batch      | [`archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md)           |
+| Price arbitrage (CME futures + ETFs)    | [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) (deliverable B) | BACKTEST only        | Batch      | [`archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md)       |
+| Sports ML                               | [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md)                 | BACKTEST only        | Batch      | [`archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md)                   |
+| Prediction markets                      | [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md)       | BACKTEST only        | Batch      | [`archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md) |
+| Cross-cutting (catalogue / IDs / infra) | [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md)     | Workspace-wide       | Both       | (still active — workspace-wide concerns spanning all domains; explicitly NOT folded)                  |
 
 ## How to use these epics
 
@@ -85,5 +89,5 @@ ships or is officially deferred. After May 23 cutover:
 - Epics whose end-state is partially shipped → split into a "shipped" archive entry + a "residual" follow-up plan in
   `plans/active/`.
 
-The May-23 cutover master (`master_to_live_defi_2026_05_23.md`) tracks epic-level completion in its readiness
-matrix; sub-plan tactical state stays in the sub-plans.
+The May-23 cutover master (`master_to_live_defi_2026_05_23.md`) tracks epic-level completion in its readiness matrix;
+sub-plan tactical state stays in the sub-plans.

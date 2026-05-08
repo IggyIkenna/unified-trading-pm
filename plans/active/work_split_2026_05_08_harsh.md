@@ -48,15 +48,15 @@ The 2026-05-08 plans-restructure landed the **epic layer** at [`plans/epics/`](.
 (per [`plans_workspace_organization_2026_05_08.md`](plans_workspace_organization_2026_05_08.md) +
 [`plans/epics/README.md`](../epics/README.md)). 7 epics own the May-23 cutover targets:
 
-| Epic                                                                                | May-23 scope                              | Side ownership                       |
-| ----------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------ |
-| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | Ikenna lead; Harsh implements pieces |
-| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Harsh Tab 2 + Ikenna)     |
-| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | **Harsh lead** (Tab 2 + 5)           |
-| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | **Harsh lead** (Tab 5)               |
-| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
-| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
-| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide                            | Both sides every tab                 |
+| Epic                                                                                  | May-23 scope                              | Side ownership                       |
+| ------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------ |
+| [`live_defi_rollout_may_23_2026`](../archive/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | Ikenna lead; Harsh implements pieces |
+| [`cefi_ml_may_23_2026`](../archive/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Harsh Tab 2 + Ikenna)     |
+| [`sp_prediction_may_23_2026`](../archive/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | **Harsh lead** (Tab 2 + 5)           |
+| [`price_arbitrage_may_23_2026`](../archive/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | **Harsh lead** (Tab 5)               |
+| [`sports_ml_may_23_2026`](../archive/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
+| [`prediction_markets_may_23_2026`](../archive/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
+| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)             | Workspace-wide                            | Both sides every tab                 |
 
 Harsh-side absorbs the implement-from-spec / mechanical / parallel-safe / single-repo / test-execution work for ALL 7
 epics; Ikenna-side owns the cross-cutting design + governance. The 4 BATCH/BACKTEST epics (sp_prediction +
@@ -222,14 +222,14 @@ per resolved Tab 12 Q1.
 - [ ] [SCRIPT] P0. **ml_and_features_master Phase 3 parquet column-pruning quick-win** — self-contained 1-3 day pure-win
       for ml-training-service. Memory + speed win on training reads. ~2 AI-days.
 - [ ] [LIVE-ML+SCRIPT] P0. **CeFi ML live-pipeline integration test + ML serving plumbing** — per
-      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md). Joint with Ikenna Tab 2 design
+      [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md). Joint with Ikenna Tab 2 design
       (model_registry SSOT + hot-reload pattern). Harsh-side ships: (a) features-service ML inference handler consuming
       the registry; (b) end-to-end integration test (live tick → live feature → live model inference → live strategy
       decision → live execution → fill → P&L attribution) for one continuous-ML archetype across OKX + Binance + Bybit;
       (c) live + batch backtest fidelity proof (2-year config grid → live config baseline per epic success criterion);
       (d) per-trade model_version + model_artefact_uri tagging in execution events. ~4 AI-days.
 - [ ] [LIVE-ML+SCRIPT] P0. **sp_prediction full backtest pipeline run** — per
-      [`sp_prediction_may_23_2026.epic.md`](../epics/sp_prediction_may_23_2026.epic.md). 2-year batch backtest of CME
+      [`sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md). 2-year batch backtest of CME
       S&P swing high/low ML model (SP + BTC + calendar features). Pre-req: Tab 4 TradFi MDPS post-drain validation
       green. Output: full backtest report with P&L attribution per archetype + per-feature SHAP attribution. ~2 AI-days.
 
@@ -462,18 +462,18 @@ sub-agents + master integration.
       [`cme_polymarket_arb_2026_05_08.md`](cme_polymarket_arb_2026_05_08.md). New archetype RFC-based; reference plan
       for similar arch wiring. ~2 AI-days.
 - [ ] [BACKTEST+SCRIPT] P0. **prediction_markets full backtest pipeline run** — per
-      [`prediction_markets_may_23_2026.epic.md`](../epics/prediction_markets_may_23_2026.epic.md). Polymarket + Kalshi +
-      Opinion Trade + CME event futures arb full backtest. Pre-req: Tab 1 Predictions Phase 2+3 complete (lifecycle
-      ingestion + canonical_question_group migration). Output: full backtest report. ~2 AI-days.
+      [`prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md). Polymarket +
+      Kalshi + Opinion Trade + CME event futures arb full backtest. Pre-req: Tab 1 Predictions Phase 2+3 complete
+      (lifecycle ingestion + canonical_question_group migration). Output: full backtest report. ~2 AI-days.
 - [ ] [BACKTEST+SCRIPT] P0. **sports_ml full backtest pipeline run** — per
-      [`sports_ml_may_23_2026.epic.md`](../epics/sports_ml_may_23_2026.epic.md). Sports ML prediction (odds + features →
-      strategy → execution, all backtest). Pre-req: Tab 5 api_football_minimal_flattening_removal + Tab 4 sports
+      [`sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md). Sports ML prediction (odds + features
+      → strategy → execution, all backtest). Pre-req: Tab 5 api_football_minimal_flattening_removal + Tab 4 sports
       per-source reconciler hook. Output: full backtest report per league tier. ~2 AI-days.
 - [ ] [BACKTEST+SCRIPT] P0. **price_arbitrage full backtest pipeline run** — per
-      [`price_arbitrage_may_23_2026.epic.md`](../epics/price_arbitrage_may_23_2026.epic.md). CME futures same-day-expiry
-      arb + ETF↔future arb (TradFi). Pre-req: Tab 4 TradFi MDPS post-drain ES.OPT 11-cluster validation green. Output:
-      full backtest report per arb pair. ~2 AI-days. (NOTE: cme_polymarket_arb above is a DIFFERENT archetype —
-      same-day-expiry CME arb here is the broader TradFi cohort.)
+      [`price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md). CME futures
+      same-day-expiry arb + ETF↔future arb (TradFi). Pre-req: Tab 4 TradFi MDPS post-drain ES.OPT 11-cluster validation
+      green. Output: full backtest report per arb pair. ~2 AI-days. (NOTE: cme_polymarket_arb above is a DIFFERENT
+      archetype — same-day-expiry CME arb here is the broader TradFi cohort.)
 
 **Repos owned (collision boundary)**: deployment-service `scripts/vm/` + `vm_zombie_watchdog.py` (you create files; Tab
 4 launches existing files — coordinate via handshake), all 7 plan-target repos (each plan touches distinct surface).

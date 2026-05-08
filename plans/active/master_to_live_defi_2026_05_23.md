@@ -27,20 +27,22 @@ overview:
 
 ## Epics index (May-23 cutover, restructured 2026-05-08)
 
-This plan is the **umbrella of epics**. Six domain epics + one cross-cutting epic carry the May-23 deliverables:
+This plan is the **umbrella of epics**. Per operator direction 2026-05-08, six same-domain epics were folded into their
+master plans (less indirection); only `cross_cutting` remains as a standalone epic. Each May-23 deliverable now lives in
+its master plan's `## May-23 deliverable` section.
 
-| Epic                                                                                | May-23 scope         | Live/Batch |
-| ----------------------------------------------------------------------------------- | -------------------- | ---------- |
-| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet  | Live       |
-| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital | Live       |
-| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only        | Batch      |
-| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only        | Batch      |
-| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only        | Batch      |
-| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only        | Batch      |
-| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide       | Both       |
+| May-23 deliverable                      | Lives in master § "May-23 deliverable"                                                                                   | Scope                | Live/Batch | Archived epic (archaeology)                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| Live DeFi rollout (carry archetypes)    | [`defi_master`](./defi_master_2026_05_07.md#may-23-deliverable-folded-from-live_defi_rollout_may_23_2026epic-2026-05-08) | LIVE on real wallet  | Live       | [`archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md)   |
+| CeFi ML                                 | [`cefi_master`](../epics/cefi_master_2026_05_07.md)                                                                      | LIVE on real capital | Live       | [`archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md)                       |
+| S&P prediction (CME)                    | [`tradfi_master`](../epics/tradfi_master_2026_05_07.md) (deliverable A)                                                  | BATCH ML only        | Batch      | [`archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md)           |
+| Price arbitrage (CME futures + ETFs)    | [`tradfi_master`](../epics/tradfi_master_2026_05_07.md) (deliverable B)                                                  | BACKTEST only        | Batch      | [`archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md)       |
+| Sports ML                               | [`sports_master`](../epics/sports_master_2026_05_07.md)                                                                  | BACKTEST only        | Batch      | [`archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md)                   |
+| Prediction markets                      | [`predictions_master`](../epics/predictions_master_2026_05_07.md)                                                        | BACKTEST only        | Batch      | [`archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md) |
+| Cross-cutting (catalogue / IDs / infra) | [`epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md)                                  | Workspace-wide       | Both       | (still active — workspace-wide concerns spanning all domains; explicitly NOT folded)                  |
 
-Read [`plans/epics/README.md`](../epics/README.md) for the layer model + lifecycle. Each epic enumerates its sub-plans;
-this master plan retains the cross-master readiness checklist + audit + Q&A below.
+Read [`plans/epics/README.md`](../epics/README.md) for the layer model + lifecycle. Each master plan enumerates its
+sub-plans; this master plan retains the cross-master readiness checklist + audit + Q&A below.
 
 **Migration note (2026-05-08).** The 9 domain umbrella masters (`cefi_master`, `tradfi_master`, `sports_master`,
 `predictions_master`, `ml_and_features_master`, `strategy_and_dart_master`, `infrastructure_master`,

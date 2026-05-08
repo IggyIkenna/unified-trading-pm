@@ -48,15 +48,15 @@ The 2026-05-08 plans-restructure landed the **epic layer** at [`plans/epics/`](.
 (per [`plans_workspace_organization_2026_05_08.md`](plans_workspace_organization_2026_05_08.md) +
 [`plans/epics/README.md`](../epics/README.md)). 7 epics own the May-23 cutover targets:
 
-| Epic                                                                                | May-23 scope                              | Side ownership                           |
-| ----------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------- |
-| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | **Ikenna lead** (Tab 1 + Tab 5)          |
-| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Ikenna Tab 2/5 + Harsh Tab 2) |
-| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | Harsh Tab 2 + 5                          |
-| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | Harsh Tab 5                              |
-| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | Harsh Tab 1 + 5                          |
-| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | Harsh Tab 1 + 5                          |
-| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide                            | **Both sides every tab**                 |
+| Epic                                                                                  | May-23 scope                              | Side ownership                           |
+| ------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+| [`live_defi_rollout_may_23_2026`](../archive/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | **Ikenna lead** (Tab 1 + Tab 5)          |
+| [`cefi_ml_may_23_2026`](../archive/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Ikenna Tab 2/5 + Harsh Tab 2) |
+| [`sp_prediction_may_23_2026`](../archive/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | Harsh Tab 2 + 5                          |
+| [`price_arbitrage_may_23_2026`](../archive/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | Harsh Tab 5                              |
+| [`sports_ml_may_23_2026`](../archive/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | Harsh Tab 1 + 5                          |
+| [`prediction_markets_may_23_2026`](../archive/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | Harsh Tab 1 + 5                          |
+| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)             | Workspace-wide                            | **Both sides every tab**                 |
 
 Ikenna-side covers the 2 LIVE epics (`live_defi_rollout` + `cefi_ml`) plus all `cross_cutting` infra (live-pipeline,
 writegate Phase 5, GCS migration, AWS, alerting, master plan refresh). Harsh-side covers the 4 BATCH/BACKTEST epics
@@ -240,8 +240,8 @@ prevents honest-coverage % regressions post-cutover. Both are governance-grade w
 - [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
 - [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
   (Ikenna-owned 11-link chain meta-plan for available_at + lookahead-bias contract — links 0/3/4/5/7/8 land here).
-- [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) (live-ML path activation for the May-23 CeFi ML
-  LIVE archetype — extends live_pipeline Phase 5-7 with model serving infra).
+- [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) (live-ML path activation for the May-23 CeFi
+  ML LIVE archetype — extends live_pipeline Phase 5-7 with model serving infra).
 
 **Scope (8 items, P0)**:
 
@@ -276,7 +276,7 @@ prevents honest-coverage % regressions post-cutover. Both are governance-grade w
       1 (per-asset-group adapter stamping) + Harsh Tab 2 (calculator/writer-boundary enforcement) + cross-tab handshake.
       ~3 AI-days for Ikenna Tab 2 share; ~5 AI-days plan-total.
 - [ ] [LIVE-ML+DESIGN] P0. **CeFi ML live-serving path activation** — per
-      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md). Extends live_pipeline Phase 5-7 with: (a)
+      [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md). Extends live_pipeline Phase 5-7 with: (a)
       live model artefact registry (UTL `model_registry.py` reads / GCS path SSOT); (b) hot-reload of model artefacts
       without service restart (mirror `InstrumentCacheDeltaReloader` pattern from Phase 10); (c) model-version
       traceability per trade (every `FEATURE_COMPUTED` event + every strategy decision tag includes model_version +
@@ -284,7 +284,7 @@ prevents honest-coverage % regressions post-cutover. Both are governance-grade w
       registry. **Joint with Harsh Tab 2** which wires the ML pipeline + integration test on the Harsh side. ~3 AI-days
       for Ikenna design + Harsh wiring share.
 - [ ] [DESIGN] P0. **CeFi ML model-drift alerting + ML signal lifecycle alerting** — per
-      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) success criterion "model-drift alerting
+      [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) success criterion "model-drift alerting
       wired through alerting-service". Extends Tab 5 alerting Phase 2-9 with ML-specific rules (signal-staleness
       threshold, model-drift detection, P&L deviation, ML inference latency SLO). Also wires DART manual-override of ML
       trades per epic success criterion. ~2 AI-days for Tab 2 (rule design); the wiring lands in Tab 5.
@@ -534,7 +534,7 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
       path. **Done**: 3 STATUS DRAFT proposals → STATUS DECIDED with operator sign-off recorded; Phase 1+ work
       unblocked; IAM/audit-log/rate-limit propagated. ~2 AI-days.
 - [ ] [LIVE-ML+ARCHITECTURE] P0. **CeFi ML alerting wiring + kill-switches + DART manual-override** — per
-      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) success criteria "Live alerting active" +
+      [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) success criteria "Live alerting active" +
       "Kill switches + circuit breakers wired per archetype" + "DART manual override". Wires Tab 2's design (this same
       plan §"Tab 2 item 8") through alerting-service routing rules + execution-service kill-switch consumers + DART
       pause/override/replicate UI via strategy_and_dart_master Phase 2.2. Without this, the May-23 LIVE cefi_ml epic
