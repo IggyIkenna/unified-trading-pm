@@ -133,14 +133,28 @@ Operations sign-off on:           →   create-code-tarballs.sh -> Cloud Build t
 
 ### Phase 1 — Tarball-refresh wiring
 
-- [ ] [deployment-service] P0. New script
+- [x] [deployment-service] P0. New script
       `deployment-service/scripts/vm/refresh-tarballs-for-shard-key.sh <asset_group>` that wraps
       `create-code-tarballs.sh --asset-group X` and emits a `TARBALLS_REFRESHED` event when complete.
-- [ ] [deployment-service] P0. Cloud Build trigger that runs the refresh script when invoked via REST. Returns the
-      build_id so the deployment-api can poll for success.
-- [ ] [deployment-api] P0. Pre-launch check: read the tarball's GCS object mtime, compare to
+      (deployment-service@a620e1f — accepts CEFI/TRADFI/DEFI/SPORTS/PREDICTION/ALL; emits
+      TARBALLS_REFRESH_REQUESTED / TARBALLS_REFRESHED / TARBALLS_REFRESH_FAILED to
+      gs://{pid}-events/events/deployment-service/...; correlation_id =
+      `tarball-refresh-<asset_group>-<RUN_TS>`. Smoke-tested via `--dry-run`.)
+- [x] [deployment-service] P0. Cloud Build trigger that runs the refresh script when invoked via REST. Returns the
+      build_id so the deployment-api can poll for success. (deployment-service@a620e1f —
+      `cloud-build/refresh-tarballs.cloudbuild.yaml` invokable via
+      `cloudbuild_v1.CloudBuildClient.create_build` or `gcloud builds submit
+      --config=...`. Substitutions: `_ASSET_GROUP`, `_BRANCH` (default live-defi-rollout),
+      `_BUCKET` (default deployment-scripts-${PID}). 30min timeout; HIGHCPU_8 machine.)
+- [x] [deployment-api] P0. Pre-launch check: read the tarball's GCS object mtime, compare to
       `git rev-parse HEAD` of `live-defi-rollout`; if stale, kick the Cloud Build and wait for completion before
-      proceeding.
+      proceeding. (deployment-api@faac20a — `deployment_api/services/tarball_staleness.py`:
+      `TarballStalenessChecker.{get_tarball_mtime, compute_bundle_oldest_mtime, is_stale,
+      trigger_refresh, poll_build, ensure_fresh}` + `RefreshResult` dataclass + Protocol-
+      based mocking for the Cloud Build invoker. Bundle membership mirrors
+      create-code-tarballs.sh per-asset_group lists. 27/27 unit tests pass; QG lint+
+      basedpyright clean; 70.94% coverage. **Standalone module** — Phase 2 wires it into
+      the auto-launch endpoint.)
 
 ### Phase 2 — deployment-api auto-launch endpoint
 
@@ -202,3 +216,55 @@ Operations sign-off on:           →   create-code-tarballs.sh -> Cloud Build t
     `mtds-shard-key-${hash}` prefix).
   - CLAUDE.md "no fire-and-forget VM launches" rule (verification protocol per VM).
   - CLAUDE.md "VM Naming Convention" section (must register the new prefix in `VM_PREFIX_TO_BUCKET`).
+
+## DONE-2026-05-08 — Phase 1 (tarball-refresh wiring)
+
+Tab 4 (`deploy-missing-tarball-refresh-tab`) shipped the full Phase 1 surface in one session.
+
+**Code commits**:
+
+- `deployment-service@a620e1f` — `feat(deployment-service): refresh-tarballs-for-shard-key.sh +
+  Cloud Build trigger config (Phase 1)`
+  - `scripts/vm/refresh-tarballs-for-shard-key.sh` — accepts CEFI/TRADFI/DEFI/SPORTS/PREDICTION/ALL;
+    forwards to `create-code-tarballs.sh` with the right flag form; emits structured
+    `TARBALLS_REFRESH_REQUESTED` / `TARBALLS_REFRESHED` / `TARBALLS_REFRESH_FAILED` events to
+    `gs://{pid}-events/events/deployment-service/...` matching `base_service.py:159` SSOT.
+    Smoke-tested via `--dry-run`.
+  - `cloud-build/refresh-tarballs.cloudbuild.yaml` — Cloud Build trigger invokable via REST
+    (`cloudbuild_v1.CloudBuildClient.create_build`) or CLI (`gcloud builds submit
+    --config=...`). Substitutions: `_ASSET_GROUP`, `_BRANCH` (default `live-defi-rollout`),
+    `_BUCKET` (default `deployment-scripts-${PROJECT_ID}`). 30-min timeout; `E2_HIGHCPU_8`.
+
+- `deployment-api@faac20a` — `feat(deployment-api): tarball staleness checker + Cloud Build
+  refresh trigger (Phase 1)`
+  - `deployment_api/services/tarball_staleness.py` — standalone helper module (NOT
+    route-wired). `TarballStalenessChecker` exposes `get_tarball_mtime`,
+    `compute_bundle_oldest_mtime`, `is_stale`, `trigger_refresh`, `poll_build`,
+    `ensure_fresh`. `RefreshResult` dataclass with status `FRESH` / `STALE_NO_TRIGGER`
+    / `REFRESHED` / `REFRESH_FAILED` / `POLL_TIMEOUT`. Protocol-based indirection over
+    GCS Blob + Cloud Build client so unit tests inject in-memory fakes. Naive datetime
+    raises loud (no silent UTC-vs-naive bugs).
+  - `tests/unit/test_tarball_staleness.py` — 27/27 tests pass; covers bundle membership,
+    mtime read, oldest-mtime aggregation, staleness compare, trigger-then-poll
+    orchestration, FRESH-skip-trigger, STALE-no-trigger gating, REFRESHED, REFRESH_FAILED,
+    POLL_TIMEOUT.
+  - `tests/unit/conftest.py` — pre-registered `tarball_staleness` on the fake services
+    package, mirroring the `deploy_missing` / `data_status_hierarchical` pattern.
+
+**Plan-flip commit**: PM@<TBD-this-commit>.
+
+**Test gates**: deployment-api QG Pass 1 — 2406/2406 in-scope tests pass; coverage 70.94%
+(gate 70%); ruff format + ruff check + basedpyright clean on new files. 1 pre-existing
+failure on `tests/unit/test_empty_reason_breakdown.py` (writegate Phase 4.A; semver-rollout[bot]
+2026-05-07) — exempt per CLAUDE.md temporary 2026-05-07 → 2026-05-09 QG-failure exception
+on others' code.
+
+**What's next**: Phase 0 security review (operator-owned) + Phase 2 endpoint wiring, both
+gated on the security review's IAM scope decision. The Phase 1 helper API is intentionally
+generic (`ensure_fresh(asset_group, latest_commit_timestamp)`) so the Phase 2 endpoint
+just calls it; no API churn expected.
+
+**Bonus deferred**: Phase 0 IAM-scope proposal not drafted in this session — operator
+review is the gating activity, and a unilateral IAM proposal from a sub-agent without
+operator alignment risks pre-empting the security review's decisions. Tab can pick this
+up after the operator names a target IAM granularity.
