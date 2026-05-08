@@ -1211,6 +1211,24 @@ batched into a single sweep at handoff time. The flip happens in the same logica
 is half-done (e.g. helper shipped but consumer wiring deferred), flip only the half that landed and append a
 `**DEFERRED**:` note to the unshipped half explaining why.
 
+**Every item your session touched but did NOT ship gets the same treatment**, not just half-shipped items. If your
+session attempted Phase 3 + Phase 4 + Phase 11 but they never landed (sub-agent failed, blocker surfaced, scope didn't
+fit, etc.), each of those items must have a body annotation explaining the blocker + successor — NOT a bare `- [ ]`
+checkbox with empty `note:`. A bare unticked item is indistinguishable from "no agent has looked at this yet"; an
+annotated unticked item says "agent X attempted, blocker Y, picks up at Z." The next agent needs that distinction to
+avoid duplicating wasted effort. The annotation shape:
+
+```yaml
+- [ ] [AGENT] P0. Phase N — <description>.
+      ...
+status: blocked        # or "deferred-after-<successor>" / "design-shipped" / "helper-shipped"
+note: "<YYYY-MM-DD> <agent-tag> attempted; blocker = <reason>; successor = <plan + phase>; resumes when <gate>."
+```
+
+Use `status:` values from the closed set: `todo` (unstarted, no agent has looked) / `done` / `design-shipped` (design
+contract landed, wiring open) / `helper-shipped` (primitive landed, consumer wiring open) / `blocked` (attempted, gate
+unmet) / `deferred-after-<successor>` (intentionally deferred behind a named gate).
+
 **The flip belongs in a separate commit** in the PM repo (or bundled with other doc-only PM changes), with the canonical
 message shape:
 
@@ -1231,7 +1249,53 @@ ways past it are `--no-verify` (banned per workspace rule "Never skip hooks") or
 is conventional-commits-clean, semantically accurate (the plan file IS a doc), and matches existing PM precedent
 (PM@e3457a08, PM@0e2eb08e, etc.). Codified 2026-05-08 after the PM@0e2eb08e Wave 4 flip surfaced the SSOT-vs-hook drift.
 
-### Why both halves are non-negotiable
+### Half 3 — Session-end deferred-work scoreboard (HARD RULE codified 2026-05-08)
+
+When a single session touches **multiple items** in one plan AND ends with any of those items in non-final state
+(blocked, deferred, half-shipped, design-only, helper-only), the plan body MUST contain a **single-place scoreboard**
+listing every touched item's status + successor + blocker before the session ends. Per-item `**DEFERRED**:` annotations
+are necessary but NOT sufficient — a future agent should NOT have to scan every checkbox in a 1000-line plan to know
+what's pending.
+
+**The scoreboard goes in the plan body** as a `## Deferred work after <YYYY-MM-DD> <session-tag> session` section,
+positioned just before `## Temporary states + their canonical follow-up plans` (or wherever follow-up sections live in
+the specific plan). Standard shape:
+
+```markdown
+## Deferred work after <YYYY-MM-DD> <session-tag> session
+
+The <YYYY-MM-DD> <session-tag> session shipped <one-line summary>. Items still open are tracked here so the next
+agent picks up cleanly without re-reading session notes.
+
+| Phase / item                  | Status as of <YYYY-MM-DD>             | Successor / blocker                                            |
+| ----------------------------- | ------------------------------------- | -------------------------------------------------------------- |
+| Phase 3 — <name>              | `todo` (checkbox `- [ ]`)             | DEFERRED-AFTER-<gate-plan> Phase <N> completing                |
+| Phase 8 — <name>              | `done` (UTL@<sha> shipped)            | Per-service consumer wire-in ships with Phase X/Y rollouts     |
+| Phase 9 — <name>              | `design-shipped`                      | DEFERRED-TO-<other-tab> — design contract in <codex doc>       |
+| ...                                                                                                                  |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **<topic>**: <one-line>; open in [`<other-plan>.md`](<other-plan>.md) Phase <N>.
+- ...
+```
+
+**The rule fires at every session-end, every handoff, every "user is wrapping up" boundary** — not just plan
+archival. The scoreboard is a forward-index for the next agent + a cheap read for the operator deciding what to fund
+next. Pre-existing scoreboard from a prior session: extend the existing table (don't add a parallel one); the
+session-tag header stays the same OR add a new `## Deferred work after <next-date> <session-tag>` section if the
+prior section was already migrated to closed.
+
+**Belt-and-braces with Half 2.** Half 2's per-item `**DEFERRED**:` annotations remain mandatory (the per-item view).
+Half 3 adds the per-plan scoreboard view (the cross-item index). Both ship in the same logical unit as the
+session-end commit — NOT a separate "I'll add the scoreboard later" task. If the scoreboard isn't in the plan body,
+the session isn't over.
+
+**When NOT to ship a scoreboard.** Trivial sessions that touch one item + ship it cleanly don't need a scoreboard —
+Half 2's per-item flip is sufficient. Heuristic: if your session updated 3+ phase statuses OR left 2+ items in
+non-final state, ship the scoreboard.
+
+### Why all three halves are non-negotiable
 
 - The plan is the operator's read-only view of "what's left." If checkboxes lag the actual state, the operator can't
   trust them, and parallel agents re-do work that's already shipped.
