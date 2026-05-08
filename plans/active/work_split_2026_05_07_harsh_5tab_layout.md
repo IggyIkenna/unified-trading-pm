@@ -950,12 +950,16 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
-#### Tab 9 — `lending-indices-relaunch-tab` 🟢 IN FLIGHT (operational, ~30min initial + monitor)
+#### Tab 9 — `lending-indices-relaunch-tab` 🟢 IN FLIGHT — scope extended to bug-fix (operational + code, ~30min + ~2-3h)
 
 - **Started**: 2026-05-08 06:12 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md).
-- **Scope**: refresh DEFI tarballs → relaunch VM → 90s STARTED + 10-15min progress + T+30min per-VM
-  manifest spot-check → validate Bug 1 (AAVE V3 ETH) emits captured rows now.
+- **BLOCKED Q1 raised 06:43 UTC, RESOLVED 06:55 UTC** — operator approved scope extension.
+- **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) Q1+A1.
+- **Original scope**: refresh DEFI tarballs → relaunch VM → 90s STARTED + 10-15min progress + T+30min per-VM
+  manifest spot-check → validate Bug 1 (AAVE V3 ETH) emits captured rows now. **Found Bug 1 still fires;
+  root-caused to UAC SSOT being wrong (AAVE V3 ETH mainnet 2023-01-27, not 2022-03-14 as UAC says).**
+- **Extended scope**: probe-verify UAC, correct chain_env.py:146 SSOT, add handler pre-floor-date
+  short-circuit (writegate Phase 2.E taxonomy fix), re-frame Bug 1 as misdiagnosis, re-verify done-def.
 
 **Why now**: Tab 5 fixed the 3 lending-indices P0 bugs this morning (instruments-service@1a90185 +
 mtds@d2f365e). Relaunching the VM closes the loop with real data — proves Bug 1 reproducer (AAVE V3
@@ -1026,13 +1030,29 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (validation note); push per conditional rule (fetch + zero incoming).
 ````
 
-#### Tab 10 — `predictions-phase1-ingestion-tab` 🟢 IN FLIGHT (P1, ~6-8h, instruments-service + MTDS)
+#### Tab 10 — `predictions-phase1-ingestion-tab` ✅ DONE 2026-05-08 (P1, instruments-service + MTDS)
 
-- **Started**: 2026-05-08 06:13 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md) Phase 1.
-- **Scope**: instruments-service writer for lifecycle timestamps (market_created_at / resolution_time /
-  settlement_time) + canonical_question_group membership + MTDS orchestrator shard-atom emit on the new
-  axis + integration tests (HOURLY canonical group cluster validation).
+- **Verified by main 2026-05-08 06:55 UTC** — all 5 cited commits exist + pushed to origin (instruments-service 0/0, PM 0/0).
+  Phase 2 (MTDS adapter migration + reader/feature/strategy) explicitly deferred per plan body's
+  "Temporary states + their canonical follow-up plans" section — that's the durable state, not a punt.
+- **Code commits** (all pushed to origin):
+  - `instruments-service@98bb167` — Polymarket + Kalshi adapter `classify_lifecycle()` +
+    `get_market_lifecycles()` returning per-market `MarketLifecycle` rows; `available_from_datetime` /
+    `available_to_datetime` stamped on `InstrumentRecord` + 14 unit tests.
+  - `instruments-service@b904785` — Orchestrator `_extract_prediction_canonical_group()` calls UAC
+    classifier; writer at `engine/orchestrator.py:2128` bundles by `canonical_question_group`; manifest
+    emits `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC
+    `BUNDLED_DATA_TYPES` SSOT + 9 unit tests; full 2267-test suite green.
+  - `PM@7343b93` + `PM@8526f99` — plan checkbox flips + DONE-2026-05-08 block + "Temporary states"
+    section naming Phase 2 follow-ups (MTDS Polymarket/Kalshi adapter lifecycle gating; data_type rename
+    in `umi_tick_provider.py:225` + `orchestrator.py:1990-1995`; MARKET_LIFECYCLE separate parquet;
+    per-market_id manifest rows + cluster-coverage gate).
+  - `PM@8bd1991` — DONE ping in `_agent_pings.md`.
+- **What's next** (Phase 2 — explicitly deferred):
+  - MTDS Polymarket / Kalshi adapter lifecycle gating (skip ticks outside [created_at, settlement_time]).
+  - UMI tick provider `data_type` rename to `prediction_canonical_question_group`.
+  - Per-market_id manifest rows + cluster-coverage gate.
+  - Reader / feature / strategy consumer migration.
 
 **Why now**: Phase 1A scaffolding shipped 2026-05-07 — UAC `canonical_question_group` SSOT
 (UAC@af2bc9b), Polymarket lifecycle aliases (UAC@58cc5f8), `DATA_TYPE_TO_CLUSTER_REGISTRY`

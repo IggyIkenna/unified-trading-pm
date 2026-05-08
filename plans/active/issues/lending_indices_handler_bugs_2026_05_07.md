@@ -180,7 +180,7 @@ All three bugs resolved. Status: ✅ RESOLVED.
 ## Open questions
 
 ### Q1 — [lending-indices-relaunch-tab, 2026-05-08 06:35 UTC] — Bug 1 NOT validated by Tab 9 relaunch; UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` likely wrong
-**Status**: 🟡 BLOCKED — needs operator decision before flipping Bug 1 / Bug 3 to ✅ VALIDATED
+**Status**: ✅ RESOLVED — operator (Harsh) approved Tab 9's recommended decision (4 items) and extended Tab 9's scope to ship the fix end-to-end. See A1 below.
 
 Tab 9 relaunched the VM as `mtds-lending-indices-20260508-114519` (range
 `2022-01-01..2026-05-07`, launched 06:15 UTC, STARTED 06:18 UTC). At T+17min
@@ -275,3 +275,56 @@ that work). Operator can decide stop-vs-continue.
 4. **Bug 2 verdict**: defer until VM reaches Compound V3 multi-chain post-launch dates (~T+90min on this run).
 
 Owner suggestion: defi_master Fork 1 (lending-indices handler) + UAC chain_env.py SSOT.
+
+#### A1 — [main, 2026-05-08 06:55 UTC]
+**Status**: ✅ RESOLVED — Tab 9 scope extended; ship the fix end-to-end.
+
+Operator direction (Harsh, 2026-05-08 chat): _"Ask Tab 9 to ship the fix themselves (extend their session)"_ —
+diagnostic context is fresh, work is highest-leverage if you keep going.
+
+**Extended Tab 9 scope** — ship all 4 items from your "Recommended decision":
+
+1. **Probe verification first** (proves UAC is wrong before changing it):
+   - Query `aave_v3_native` subgraph for `reserveParamsHistoryItems` on any date 2022-03-14 → 2023-01-26.
+   - If empty for the entire range → confirms UAC date is wrong + the silent-zero is genuine pre-deployment;
+     proceed with steps 2-5.
+   - If non-empty for any date → there's a different bug. Pause; raise Q2 here with the new evidence.
+
+2. **UAC SSOT correction** (P0): `unified_api_contracts/registry/chain_env.py:146`:
+   `("ETHEREUM", "AAVEV3"): "2022-03-14"` → `"2023-01-27"`. Add a comment citing the AAVE V3 Ethereum
+   mainnet deployment date + verification source (your subgraph probe). Run UAC quality-gates.sh to ensure
+   PROTOCOL_LAUNCH_DATES tests still pass.
+
+3. **Handler pre-floor-date short-circuit** (P0): in
+   `market_tick_data_service/cli/handlers/lending_indices_handler.py` `process()` method, BEFORE the
+   cascade:
+   ```python
+   if target_date < get_protocol_floor_date(chain, protocol):
+       record_expected_empty(reason="EXPECTED_PRE_GENESIS_CHAIN")
+       return
+   ```
+   Skips the subgraph round-trip entirely; correct writegate Phase 2.E taxonomy. Add a unit test asserting
+   the short-circuit fires for a pre-launch date.
+
+4. **Re-frame Bug 1 in this issue body** (status correction):
+   - Bug 1 was a UAC SSOT misdiagnosis, NOT a code bug. The 2026-05-07 cascade fix (Tab 5,
+     mtds@d2f365e) was correct work for OTHER chains/protocols (it does prevent the silent-zero on
+     legitimate post-launch zero-row days) but didn't fix AAVE V3 ETH because the actual root cause
+     was upstream of the cascade.
+   - Mark Bug 1 + Bug 3 ✅ VALIDATED with cross-references to your new commits.
+
+5. **Re-validate done-definition** (per your original spawn prompt):
+   - VM reaches 2023-01-27+ dates around T+45min from initial launch — sample at T+60min should show
+     captured rows for AAVE V3 ETH.
+   - Pre-launch dates show `EXPECTED_PRE_GENESIS_CHAIN` not `SOURCE_RETURNED_ZERO`.
+   - Compound V3 multi-chain post-launch rows captured.
+   - Append `VALIDATION-2026-05-08` block to this issue doc per the spawn-prompt REPORT-BACK clause.
+
+**Push policy**: per conditional rule (`git fetch` + zero incoming → push). UAC + MTDS + PM all touched;
+they're shared with parallel agents (esp. Ikenna's writegate-related work on MTDS / UAC). Pre-commit check
+is critical (`git status` + `git diff --cached --stat` no path arg).
+
+**Coordination with Ikenna's D4**: this fix lands BEFORE Ikenna's D4 DeFi launches consume
+`PROTOCOL_LAUNCH_DATES`. If Ikenna is mid-edit on UAC chain_env.py, raise Q2 here.
+
+Once Tab 9 ships, append `VALIDATION-2026-05-08` block to this issue doc with the new commits, then go quiet.
