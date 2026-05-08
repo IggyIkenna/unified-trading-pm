@@ -19,7 +19,8 @@ each calculator extends `BaseFeatureServiceV2`. The deployment topology
 splits the consolidated repo into one VM-per-asset_group (colocated with MDPS) plus one features-cross-cutting VM.
 
 The `feature_family` axis (UAC enum) is the primary shard key inside the consolidated repo and surfaces in the data-
-status drilldown — see [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md).
+status drilldown — see
+[`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group depth table".
 
 ### Adding a new feature_family
 

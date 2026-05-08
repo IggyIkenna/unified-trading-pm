@@ -630,8 +630,8 @@ that already shipped.
 
 ### Phase 4 — Codex docs + plan close
 
-- [ ] [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown-hierarchy.md` with the auto-launch flow
-      diagram + the IAM scope reference.
+- [ ] [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with the
+      auto-launch flow diagram + the IAM scope reference.
 - [ ] [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
       fired).
 

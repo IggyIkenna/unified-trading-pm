@@ -482,8 +482,8 @@ todos:
            dual-vocab is documented) — flip the legacy mention to "RESOLVED 2026-05-15 per
            `gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`"; reader fallback removal scheduled
            T+30 days.
-        4. **UPDATE** `codex/02-data/data-status-drilldown-hierarchy.md` — add `pipeline_mode` as the
-           outermost partition column in the drilldown (above asset_group).
+        4. **UPDATE** `codex/02-data/data-status-drilldown.md` § "Per-asset_group depth table" — add
+           `pipeline_mode` as the outermost partition column in the drilldown (above asset_group).
         5. **UPDATE** `codex/00-SSOT-INDEX.md` — register the new pipeline-mode-partition doc.
         6. **UPDATE** CLAUDE.md "Asset-group vocabulary" section — remove the "category= legacy preserved"
            statement; replace with "category= migrated to asset_group= 2026-05-15 per
@@ -571,8 +571,8 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
   same 5 fixes during the parquet walk so post-migration the audit reports zero phantoms.
 - CLAUDE.md "Manifest migration, NOT fallback" rule — fallback paths in readers are short-lived (≤30d per Phase 5
   contract); not a long-term coexistence pattern.
-- [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
-  drilldown order; Phase 7 adds pipeline_mode as outermost.
+- [`codex/02-data/data-status-drilldown.md`](../../codex/02-data/data-status-drilldown.md) § "Per-asset_group depth
+  table" — drilldown order; Phase 7 adds pipeline_mode as outermost.
 - [`codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`](../../codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md) —
   how migration VMs fit into the deployment topology.
 

@@ -52,7 +52,7 @@ frontend regressed silently" failure mode.
 
 - Drilldown depth audit:
   [`../02-data/deployment-ui-drilldown-depth-audit.md`](../02-data/deployment-ui-drilldown-depth-audit.md)
-- Drilldown hierarchy: [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md)
+- Drilldown SSOT (per-shard + hierarchical): [`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md)
 - Manifest schema:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Honest-absence rendering: [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)

@@ -105,8 +105,9 @@ Phase 1A landed in
   [`ManifestWriter.record_captured`](../../../unified-trading-library/src/unified_trading_library/manifest/) now
   accepts the column as a kwarg + populates it automatically when called from a features-service writer.
 
-Drilldown surface: see [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md)
-— `feature_family` is the top-level shard axis above `feature_group` for every features-service shard.
+Drilldown surface: see
+[`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group depth table" —
+`feature_family` is the top-level shard axis above `feature_group` for every features-service shard.
 
 ## UTL helpers shared across families (Phase 5 lifts)
 
@@ -188,7 +189,7 @@ Plan: [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../pla
   [`../06-coding-standards/feature-service-pattern.md`](../06-coding-standards/feature-service-pattern.md)
 - CLI convention (`--feature-family` flag): [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md)
 - Data-status drilldown (feature_family axis):
-  [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md)
+  [`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group depth table"
 - Manifest schema + write-gate:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Launcher SSOT: [`../05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md)
