@@ -383,18 +383,28 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
 
 **Cross-plan banner**: `master_to_live_defi_2026_05_23` Group F kill-switch verification depends on this hook landing.
 
-- [ ] [SCRIPT] P1. **Publisher hook in `alerting-service/notifiers/router.py`** after channel dispatch. When the router
+- [x] [SCRIPT] P1. **Publisher hook in `alerting-service/notifiers/router.py`** after channel dispatch. When the router
       fires an alert with code matching `KILL_SWITCH_*`, emit a typed `KillSwitchEvent` (already in UAC) to the
       `kill-switch-bus` Pub/Sub topic so execution-service / strategy-service / position-balance-monitor auto-halt
-      without operator intervention.
-- [ ] [SCRIPT] P1. **`kill_switch_scope: KillSwitchScope | None` field on AlertRule** for per-code scoping (GLOBAL halts
+      without operator intervention. (evidence: alerting-service@8eda37c — `_find_kill_switch_rule` +
+      `_resolve_scope_key` + `_publish_kill_switch_event` helpers + post-channel-dispatch wire; defensive isolation —
+      bus publish failures log + emit ADAPTER_FETCH_FAILED but never raise).
+- [x] [SCRIPT] P1. **`kill_switch_scope: KillSwitchScope | None` field on AlertRule** for per-code scoping (GLOBAL halts
       everything; VENUE halts only the named venue's adapters; ARCHETYPE halts only the named strategy archetype's
-      positions). UAC `KillSwitchScope` enum addition.
-- [ ] [SCRIPT] P1. **Integration test exercising end-to-end event emission**. Spawn alerting-service + a stub
+      positions). UAC `KillSwitchScope` enum addition. (evidence: UAC@3793310 + UAC@2541a47 — KillSwitchScope moved to
+      canonical/crosscutting/alerting/codes.py for cycle-free import; AlertRule.kill_switch_scope field with validator
+      requiring non-None for KILL_SWITCH_* codes + None for others; LIVE_ALERT_RULES split legacy KILL_SWITCH_*
+      wildcard into 3 atomic per-code rules — DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL,
+      VENUE_DISCONNECT=VENUE; KILL_SWITCH_ML_MODEL_FAILURE=ARCHETYPE.)
+- [x] [SCRIPT] P1. **Integration test exercising end-to-end event emission**. Spawn alerting-service + a stub
       execution-service subscriber; fire KILL_SWITCH_HEALTH_FACTOR_CRITICAL via a synthetic event; assert subscriber
-      received `KillSwitchEvent` within 5s + halts within 10s.
+      received `KillSwitchEvent` within 5s + halts within 10s. (evidence: alerting-service@8eda37c — 5 integration
+      tests at `tests/integration/test_kill_switch_publisher_hook.py`: per-scope happy paths × 3 + non-kill-switch
+      negative + subscriber-failure-isolation.)
 - [ ] [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
+      **DEFERRED**: rehearsal script (`alerting-service/scripts/inject_synthetic_alert.py`) doesn't exist yet —
+      Phase 8 rehearsal harness is itself a downstream item. Will land alongside the rehearsal script.
 - [x] [AGENT] P1. **Codex update**: `codex/14-playbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
@@ -533,3 +543,105 @@ pass.
   defi_master:carry_staked_basis-live, defi_master:leveraged_funding_arb, dart_ux_cockpit:Layer-2-badges
 - **Last meaningful commit**: this plan ships as the keystone unblock.
 - **Recommendation**: kickoff immediately after Harsh review of Phase 1 taxonomy.
+
+## DONE-2026-05-08 — Tab 5 (Agent 5) cycle shipments
+
+**Cycle ownership**: `work_split_2026_05_08_ikenna.md` Tab 5 — Alerting + master refresh + governance. Orchestrator
+spawned 6 parallel sub-agents (A-F) + dispatched a 7th (G) post-decision; 5 completed clean, 1 returned a case-5
+operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial).
+
+### Shipped artefacts (per-sub-agent + self-ship)
+
+- **Phase 1 — UAC alerting taxonomy** (already complete pre-cycle at UAC@`d00326d`).
+- **Phase 2 — Producer migration to UAC** (already complete pre-cycle at alerting-service@`b025e83`).
+- **Phase 3 producer-side (Option A envelope extension + 3 service consumer migrations)**:
+  - UAC@`2636815` (Sub-G Wave 1) — `code: AlertCode | None = None` field on AlertEvent + AlertMessage + DefiAlert
+    envelopes; lazy-import resolution.
+  - execution-service@`624c36a8` (Sub-G Wave 2) — yield_recon + funding_recon AlertEvents stamped with AlertCode.
+  - position-balance-monitor-service@`d206ab3` (Sub-G Wave 2) — reconciliation_engine + fee_reconciliation_engine
+    AlertEvents stamped with AlertCode.
+  - risk-and-exposure-service@`915f0de` (Sub-G Wave 2) — RiskMonitor._send_alert AlertMessage stamped with AlertCode.
+  - features-onchain-service: **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B
+    finding).
+- **Phase 5 — DART integration**:
+  - unified-trading-system-ui@`e9559565` (Sub-D) — AlertDetailModal + SeverityBreakdownWidget + notification-bell
+    poll-interval + critical-only badge filter + Playwright `live-operator` ack-flow spec. 19/19 vitest green.
+  - PM@`6a34d794` (bundled plan-flip via foot-gun #3 muddled attribution).
+- **Phase 6 — 15 per-AlertCode runbooks**:
+  - PM@`45b854d5` + `6fad278e` + `db99a3ef` + `b40d405a` + `ac40983b` (Sub-C) — `_template.md` + 15 per-code runbooks
+    (~200-400 lines each) + README.md index.
+  - UAC@`8e68a2b` (Sub-C) — `runbook_doc` field re-pointed to canonical slugs + 4 unit tests asserting Phase 6 slugs
+    present.
+- **CeFi ML alerting taxonomy**:
+  - UAC@`6c4784f` (Sub-E) — 6 ML alert codes (ML_SIGNAL_STALENESS / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION /
+    ML_INFERENCE_LATENCY_BREACH / ML_MODEL_VERSION_MISMATCH / KILL_SWITCH_ML_MODEL_FAILURE) + 5 ML thresholds
+    (PSI + MILLISECONDS units added) + 6 ML rules + 7 new tests (38 total passing).
+  - PM@`ab595616` (Sub-E plan-flip; bundled foreign attribution per foot-gun #1).
+- **Phase 2 KillSwitchBus publisher hook (Item 1)**:
+  - UAC@`3793310` (self-ship) — `kill_switch_scope: KillSwitchScope | None` field on AlertRule + validator (REQUIRED
+    for KILL_SWITCH_*; MUST be None for others); KillSwitchScope moved to canonical/crosscutting/alerting/codes.py
+    SSOT (re-export from internal/domain/deployment_service/isolation.py for backward compat); LIVE_ALERT_RULES
+    KILL_SWITCH_* wildcard split into 3 atomic per-code rules (LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL,
+    VENUE_DISCONNECT=VENUE) + ML_MODEL_FAILURE=ARCHETYPE; tests.
+  - UAC@`2541a47` (self-ship) — KillSwitchScope on top-level facade __init__.py + __all__ for clean import-pattern.
+  - alerting-service@`8eda37c` (self-ship) — `_find_kill_switch_rule` + `_resolve_scope_key` +
+    `_publish_kill_switch_event` helpers + post-channel-dispatch wire in `route_event`. Defensive isolation: bus
+    publish failures log + emit ADAPTER_FETCH_FAILED but never raise. 5 integration tests
+    (`tests/integration/test_kill_switch_publisher_hook.py`).
+- **Deploy_missing Phase 0 facilitation**:
+  - PM@`351e0a2e` (Sub-F) — `## Operator decision summary` section in `deploy_missing_auto_launch_2026_05_07.md`:
+    Decision 1 IAM scope (Option B custom role, zone-scoped); Decision 2 audit-log shape (BigQuery primary + Cloud
+    Logging mirror + GCS cold tier; 90d/5y); Decision 3 rate-limits (30/hr/200/day per-operator + 100/hr project +
+    6h per-shard idempotency). Phase 0 audit todos annotated awaiting operator sign-off; ping ledger entry filed.
+
+### Findings raised
+
+- **Case-5 (resolved)**: alerting Phase 3 envelope schema gap — issue doc at
+  `plans/active/issues/alerting_phase3_envelope_schema_gap_2026_05_08.md` § "RESOLVED 2026-05-08"; Option A operator
+  decision triggered the resolution chain landed under "Phase 3 producer-side" above.
+- **Case-3 (foreign QG)**: UAC `test_no_eth_perp_venue_accepts_eth_lst_today` — issue doc filed at
+  `plans/active/issues/uac_qg_test_no_eth_perp_venue_accepts_eth_lst_today_2026_05_08.md` (Stream A territory,
+  Tab 1 owner). Pre-existing; pushed past per CLAUDE.md "QG failure attribution".
+- **Case-3 (foreign QG)**: PM `validate_plan_links.py` AttributeError — issue doc at
+  `plans/active/issues/pm_validate_plan_links_attribute_error_2026_05_08.md`. Workspace-wide validator infrastructure
+  bug; PM-scripts-maintainer owner.
+
+### Foot-guns observed
+
+- **Foot-gun #3 cascade** hit multiple sub-agents during PM commits (auto-revert hook racing edits): Sub-B's issue
+  doc was wiped from disk by parallel-agent reset cycle (recreated as RESOLVED above); Sub-A's UAC `kill_switch_scope`
+  field was reverted 4 times before landing (operator-rescue commit PM@`1cb53663` cleaned up the cascade). Sub-E
+  noted same — codex `alert-code-taxonomy.md` ML-category section reverted 5+ times by `git checkout HEAD --` from
+  parallel agent. Codex update for ML category **DEFERRED** to next session when activity quiets.
+- **Foot-gun #1 muddled attribution**: 3 of my 8 commits got bundled into parallel-agent's auto-commit cycles
+  (content correct on origin; author attribution wrong). Per workspace precedent, ship-and-document, no rework.
+- **Sub-G usage cap**: hit Wave 2 of 4-wave plan; Wave 3 (Phase 3 emission sites for ORDER_REJECTION_SPIKE +
+  POSITION_DRIFT detectors) + Wave 4 (plan flips + issue doc finalisation) cap-cut. Self-ship picked up Wave 4 plan
+  flips + Sub-A's UAC field; Wave 3 emission sites still pending — flagged DEFERRED in Phase 3 above.
+
+### Item 4 — Master Group F+G refresh
+
+Pending in this session — runs after this commit lands. Group F item 22 alerting wiring flips ◐ → partial-complete
+with citation: alerting-service rules consume `LIVE_ALERT_RULES` SSOT (Phase 2 b025e83); Phase 3 envelope migration
+shipped end-to-end (Option A); Phase 2 KillSwitchBus publisher hook shipped (8eda37c); features-onchain emission
+sites + Phase 4-9 pending per cutover ladder.
+
+### Item 5 — Deploy_missing Phase 0
+
+PM@`351e0a2e` shipped operator decision summary; awaits operator sign-off (no agent can lock these decisions —
+operator-only gate per CLAUDE.md "Plans Run To Actual Completion HARD RULE" hard-stop list).
+
+### Item 6 — CeFi ML alerting + DART manual-override
+
+UAC additions shipped (UAC@`6c4784f`). DART manual-override UI + producer wiring (ml-inference-service emission
+sites for the new codes) **DEFERRED** to strategy_and_dart_master Phase 2.2 + features-onchain Fork 1 wiring per
+Sub-E finding.
+
+### Cycle metrics
+
+- 7 sub-agents dispatched (A-G); 5 completed clean, 1 BLOCKED+resolved (B), 1 partial-cap-cut (G).
+- ~12 commits across 4 repos (UAC × 3, alerting-service × 1, execution-service × 1, position-balance-monitor × 1,
+  risk-and-exposure × 1, unified-trading-system-ui × 1, PM × 4+).
+- 3 issue docs filed (1 RESOLVED in same cycle, 2 outstanding for cross-side / future-cycle).
+- Phase 5 + Phase 6 + Phase 1 + Phase 2 hook + Phase 3 envelope migration all GREEN; Phase 3 emission-site sweep +
+  Phase 4 (paging targets) + Phase 7 (quietness baseline) + Phase 8 (rehearsal) + Phase 9 (go-live) carry over.
