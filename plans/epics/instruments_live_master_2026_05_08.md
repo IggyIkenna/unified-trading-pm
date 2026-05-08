@@ -191,13 +191,16 @@ todos:
 
   - id: a8-utl-manifest-writer-live-mode-available-at-stamping
     content: |
-      - [ ] [SCRIPT] P1. Confirm `unified_trading_library.manifest_writer.ManifestWriter.record_captured` already
+      - [x] [SCRIPT] P1. Confirm `unified_trading_library.manifest_writer.ManifestWriter.record_captured` already
         accepts a per-row `available_at` column (it does, per writegate Phase 2.D shipped 2026-05-07) and add a unit
         test that exercises the live-mode write path explicitly: `available_at=now()` per row, same shard_key shape as
         batch, same parquet path. NO new code if the existing implementation already handles it; this is a
-        confirmation gate before Phase C/D/E adapters call it.
-    status: todo
-    note: ""
+        confirmation gate before Phase C/D/E adapters call it. (UTL@1f115bc6 — 4 unit tests in
+        `tests/unit/test_manifest_writer_live_mode_available_at.py`: live-mode happy path, multi-row monotonic
+        per-row stamping, null-cell still raises LookaheadBiasError, sports B.1 shard shape with
+        `available_at = announced_at`. All green.)
+    status: done
+    note: "UTL@1f115bc6 2026-05-08 sports-fixtures-repoll-tab; verified: existing assert_available_at_present gate at manifest_writer.py:2153 already enforces presence; no new functionality required."
 
   - id: a9-preflight-chain-ssot-live-equals-batch
     content: |
