@@ -12,6 +12,10 @@ locked_since: 2026-05-07
 
 # DefiManifestRecorder.record_empty() rejected by writegate Phase 3.D.5 — blank reason on every DeFi VM
 
+> **Status**: RESOLVED 2026-05-08 — MTDS@d19d76c shipped DefiManifestRecorder.record_empty(reason=) + 28-callsite
+> migration across 20 handlers + unit tests. 3 Agent-4 VMs relaunched with the fix
+> (mtds-{vault-share-price,lst-rates,gas-fees}-20260508-010{050,105,121}).
+>
 > **Severity**: P0 — DeFi data-correctness on May-23 live-deadline critical path. Same bug class as 2026-05-07 RED
 > ALERT (5 CeFi VMs) but on the DefiManifestRecorder side which Wave 2.M migration missed.
 > **Blast radius**: every DeFi backfill that hits a "source returned 0 rows" date — affects MTDS handlers vault-share-
