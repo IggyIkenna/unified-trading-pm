@@ -82,7 +82,7 @@ todos:
          PROTOCOL_EVENT_BUS_TOPIC_{ROUTING_KEY_UPPER}=<topic-name>
 
       5. Cross-refs: runtime-topology.yaml (wiring SSOT), UCI factory.py (implementation),
-         service_protocol_abstraction.plan.md (DataSink/EventBus ABC definitions).
+         service_protocol_abstraction.md (DataSink/EventBus ABC definitions).
     status: completed
 
   - id: udc-cloud-target-replace
@@ -156,15 +156,15 @@ todos:
 
   - id: codebuild-canary-run
     content:
-      "MOVED to aws_migration.plan.md todo codebuild-canary-run. Not PM-internal — PM is a devops repo, not a CodeBuild
+      "MOVED to aws_migration.md todo codebuild-canary-run. Not PM-internal — PM is a devops repo, not a CodeBuild
       target."
     status: completed
 
   - id: uci-plan-gap-close
     content: |
-      COMPLETED: uci_cloud_abstraction_complete.plan.md has zero pending todos (verified 2026-03-06).
+      COMPLETED: uci_cloud_abstraction_complete.md has zero pending todos (verified 2026-03-06).
       STEP 5.10/5.11 quality gate scan: zero violations in service sources.
-      codebuild-canary-run moved to aws_migration.plan.md — not a PM-internal gate.
+      codebuild-canary-run moved to aws_migration.md — not a PM-internal gate.
     status: completed
 
   - id: pm-runtime-topology-ssot-formal
@@ -204,20 +204,20 @@ todos:
       deployment-service/configs/runtime-topology.yaml is a partial local view only.
 
       Files to update (identified 2026-03-06):
-        - phase3_service_hardening_integration.plan.md
-        - multi_tf_cascade_signal_architecture.plan.md
-        - trading_system_audit_prompt.plan.md
+        - phase3_service_hardening_integration.md
+        - multi_tf_cascade_signal_architecture.md
+        - trading_system_audit_prompt.md
         - INDEX.md
-        - documentation_standards_enforcement.plan.md
-        - phase1_foundation_prep.plan.md
-        - ibkr_gateway_rollout.plan.md
-        - plans_to_deployable_unified_audit.plan.md
-        - topology_dag_pm_ssot.plan.md (workspace-manifest-dag-link todo — fixed above)
+        - documentation_standards_enforcement.md
+        - phase1_foundation_prep.md
+        - ibkr_gateway_rollout.md
+        - plans_to_deployable_unified_audit.md
+        - topology_dag_pm_ssot.md (workspace-manifest-dag-link todo — fixed above)
 
       Gate: grep 'deployment-service/configs/runtime-topology.yaml' across all active plan
       files returns zero matches (except where explicitly describing the partial local view).
-      VERIFIED 2026-03-06: remaining 2 references (trading_system_audit_prompt.plan.md,
-      plans_to_deployable_unified_audit.plan.md) both correctly describe it as a partial local
+      VERIFIED 2026-03-06: remaining 2 references (trading_system_audit_prompt.md,
+      plans_to_deployable_unified_audit.md) both correctly describe it as a partial local
       view — not as SSOT. Gate satisfied.
     status: completed
 
@@ -296,15 +296,15 @@ providers. No service ever reads `os.getenv("GCS_BUCKET")`.
 - [x] `rg "CloudTarget|StandardizedDomainCloudService" --type py` (excl .venv\*, archive, tests) returns zero matches
       across all repos — only hits are UTL/UDC (defining repos, expected) and a docstring comment in
       unified-ml-interface/model_registry.py (line 77, not an import)
-- [x] UCI plan `uci_cloud_abstraction_complete.plan.md` has zero pending todos
-- [x] Canary CodeBuild simulation — MOVED to aws_migration.plan.md (not PM-internal; PM is a devops repo with no
+- [x] UCI plan `uci_cloud_abstraction_complete.md` has zero pending todos
+- [x] Canary CodeBuild simulation — MOVED to aws_migration.md (not PM-internal; PM is a devops repo with no
       buildspec.aws.yaml)
 - [x] 00-SSOT-INDEX.md updated to reflect PM ownership of TOPOLOGY-DAG.md
 
 ## Related Plans
 
-- **Feeds into:** `uci_cloud_abstraction_complete.plan.md` (closes p0-utl-cloud-layer-symbol-deletion and
+- **Feeds into:** `uci_cloud_abstraction_complete.md` (closes p0-utl-cloud-layer-symbol-deletion and
   p2-cloud-build-configs)
-- **Depends on:** `service_protocol_abstraction.plan.md` (DataSink/routing_key ABCs)
-- **Depends on:** `phase2_library_tier_hardening.plan.md` (UTL must be D3+ before deletion)
-- **Companion:** `quality_gate_hardening.plan.md` (STEP 5.10/5.11 gates enforce no regressions)
+- **Depends on:** `service_protocol_abstraction.md` (DataSink/routing_key ABCs)
+- **Depends on:** `phase2_library_tier_hardening.md` (UTL must be D3+ before deletion)
+- **Companion:** `quality_gate_hardening.md` (STEP 5.10/5.11 gates enforce no regressions)

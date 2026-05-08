@@ -150,7 +150,7 @@
       "tests",
       "-v"
     ],
-    "files.autoSave": "onFocusChange",
+    "files.autoSave": "off",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",

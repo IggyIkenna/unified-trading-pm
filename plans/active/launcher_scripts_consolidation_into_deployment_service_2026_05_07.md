@@ -50,13 +50,13 @@ isProject: false
 
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation 2026-05-08**
 >
-> [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.plan.md) Phase 8A consolidates the
-> 8 per-family features-_ launchers into a single parameterised `launch-features-<flavor>.sh`. \*\*Skip features-_ repos
+> [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) Phase 8A consolidates the 8
+> per-family features-_ launchers into a single parameterised `launch-features-<flavor>.sh`. \*\*Skip features-_ repos
 > in this plan's launcher migration scope\*\* — they're being archived. Banner stays until features-repo Phase 7
 > archives the 8 source repos.
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 13 adds 4
-> new launchers (`launch-mtds-live-{ag}.sh`, `launch-mdps-features-live-{ag}.sh`, `launch-features-cross-cutting.sh`,
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 13 adds 4 new
+> launchers (`launch-mtds-live-{ag}.sh`, `launch-mdps-features-live-{ag}.sh`, `launch-features-cross-cutting.sh`,
 > `launch-replay-cascade.sh`) under `deployment-service/scripts/vm/`. Same per-launcher SSOT contract this plan
 > codifies; complementary scope.
 
@@ -112,7 +112,7 @@ Two related concerns from the user (2026-05-07):
      does have an S3 code path, but the hierarchical builder hard-codes `gs://`.
    - `deployment_api/services/deploy_missing.py` references `deployment-service/scripts/vm/` paths with no AWS-
      equivalent. The bigger AWS bucket parity / S3 client work is already in
-     [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.plan.md); this plan doesn't
+     [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.md); this plan doesn't
      duplicate it. Instead this plan (a) documents the deployment-api-specific call sites that need the unified facade;
      (b) enumerates the launcher-script migration; (c) tracks the deployment-UI AWS/GCP toggle hookup verification.
 

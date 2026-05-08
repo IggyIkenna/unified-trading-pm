@@ -10,8 +10,8 @@ priority: P0
 phase: in_progress
 domain: infrastructure
 related_plans:
-  - availability_manifest_v4_and_data_status_2026_04_13.plan.md
-  - manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md
+  - availability_manifest_v4_and_data_status_2026_04_13.md
+  - manifest_schema_v6_quote_margin_combo_2026_04_23.md
 ---
 
 # Manifest-429 Per-VM Sharding Architecture

@@ -173,7 +173,7 @@ All must exist. STOP if missing.
 ### Task
 
 Execute every checkbox in Phases A through E of this plan:
-`plans/active/refactor_g3_5_codex_sync_consistency_agents_2026_04_20.plan.md`
+`plans/active/refactor_g3_5_codex_sync_consistency_agents_2026_04_20.md`
 
 ### Read-set (mandatory)
 

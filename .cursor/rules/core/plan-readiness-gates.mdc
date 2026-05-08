@@ -15,7 +15,7 @@ SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`
 
 ## RULE: Required YAML Fields
 
-Every `.plan.md` file in `plans/active/` MUST include these fields in YAML frontmatter:
+Every `.md.md` file in `plans/active/` MUST include these fields in YAML frontmatter:
 - `type`: one of `code | infra | deployment | business | mixed`
 - `epic`: one of `epic-code-completion | epic-deployment | epic-business | epic-infra | none`
 - `completion_gates`: with `code`, `deployment`, and `business` subkeys

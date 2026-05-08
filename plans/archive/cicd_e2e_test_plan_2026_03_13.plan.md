@@ -141,7 +141,7 @@ todos:
       service repos recover. Acceptance: composite action inheritance works, versions propagate from PM, breakage is
       visible.
     status: pending
-    blocks: P0 in composite_action_qg_inheritance_2026_03_12.plan.md
+    blocks: P0 in composite_action_qg_inheritance_2026_03_12.md
 
   - id: test-staging-version-gate
     content: >
@@ -168,7 +168,7 @@ todos:
   - id: register-in-ssot-index
     content: >
       Add this plan to unified-trading-codex/00-SSOT-INDEX.md in the Plans section (after the conflict_resolution_agent
-      row). Entry format: | cicd_e2e_test_plan_2026_03_13.plan.md | E2E test plan for full CI/CD stack |
+      row). Entry format: | cicd_e2e_test_plan_2026_03_13.md | E2E test plan for full CI/CD stack |
       unified-trading-pm/plans/active/ |
     status: pending
 
@@ -244,6 +244,6 @@ bash scripts/quickmerge.sh "feat: test version gate" --to-staging --agent
   Inventory, Agent Cursor Rules sections)
 - `docs/repo-management/cicd-pipeline-definition.yaml` — YAML data source for visual diagram
 - `docs/repo-management/CI-CD-PIPELINE.html` — Interactive diagram (hover for node details)
-- `plans/active/conflict_resolution_agent_2026_03_13.plan.md` — Conflict agent implementation
-- `plans/active/full_autonomous_agent_ci.plan.md` — Audit agent + semver agent todos
-- `plans/active/work/cicd/composite_action_qg_inheritance_2026_03_12.plan.md` — Composite action plan
+- `plans/active/conflict_resolution_agent_2026_03_13.md` — Conflict agent implementation
+- `plans/active/full_autonomous_agent_ci.md` — Audit agent + semver agent todos
+- `plans/active/work/cicd/composite_action_qg_inheritance_2026_03_12.md` — Composite action plan

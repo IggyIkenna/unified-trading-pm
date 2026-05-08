@@ -3,7 +3,7 @@
 **Created:** 2026-03-21 **Type:** audit | **Status:** active (0/20) | **Scope:** Cross-lifecycle validation of shared
 routes, shared components, domain lane accuracy, and navigation consistency across all 7 lifecycle tabs.
 
-**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md`
+**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.md`
 (Phase 1)
 
 ---

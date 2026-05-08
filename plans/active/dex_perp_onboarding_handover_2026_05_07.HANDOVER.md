@@ -10,9 +10,9 @@ created: 2026-05-07
 This is the durable handover from the 2026-05-07 session that onboarded LIGHTER-ZKSYNC, PACIFICA-SOLANA, and
 EXTENDED-STARKNET. Companion to:
 
-- [`dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md`](dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md)
+- [`dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md`](../archive/dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md)
   — the working plan with empirical findings + per-venue API discoveries.
-- [`streaming_finalize_lift_and_downsize_2026_05_06.HANDOVER.md`](streaming_finalize_lift_and_downsize_2026_05_06.HANDOVER.md)
+- [`streaming_finalize_lift_and_downsize_2026_05_06.HANDOVER.md`](../archive/streaming_finalize_lift_and_downsize_2026_05_06.HANDOVER.md)
   — the prior session's closeout that also touched these venues.
 
 ## What kind of venues are these (the question that started this handover)

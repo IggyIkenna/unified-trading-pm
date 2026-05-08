@@ -207,7 +207,7 @@ SSOT CODEGEN PIPELINES (run when you change schemas/registries):
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 1 — Shell & Navigation
-YOUR PLAN: unified-trading-pm/plans/active/agent1_shell_navigation_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent1_shell_navigation_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-system-ui only
@@ -248,7 +248,7 @@ Mark each todo as done in the plan file when complete (change - [ ] to - [x]).
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 2 — Trading Service (Run)
-YOUR PLAN: unified-trading-pm/plans/active/agent2_trading_service_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent2_trading_service_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-system-ui: app/(platform)/dashboard/, app/(platform)/services/trading/*, app/(platform)/services/execution/*
@@ -288,7 +288,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 3 — Research & Build + Promote Services
-YOUR PLAN: unified-trading-pm/plans/active/agent3_research_build_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent3_research_build_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-system-ui: app/(platform)/services/research/*, app/(platform)/services/execution/*
@@ -322,7 +322,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 4 — Reports & Manage Services
-YOUR PLAN: unified-trading-pm/plans/active/agent4_reports_manage_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent4_reports_manage_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-system-ui: app/(platform)/services/reports/*, app/(platform)/services/manage/*
@@ -355,7 +355,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 5 — Backend API Service Layer
-YOUR PLAN: unified-trading-pm/plans/active/agent5_api_service_layer_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent5_api_service_layer_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-api (primary — full write access)
@@ -401,7 +401,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 6 — Mock Data Quality & Migration
-YOUR PLAN: unified-trading-pm/plans/active/agent6_mock_data_quality_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent6_mock_data_quality_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-api: mock_data/seed.py, mock_data/personas.py (create)
@@ -440,7 +440,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 7 — Observe & Admin/Ops Services
-YOUR PLAN: unified-trading-pm/plans/active/agent7_observe_admin_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent7_observe_admin_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-system-ui: app/(platform)/services/observe/*, app/(ops)/*
@@ -476,7 +476,7 @@ Read your plan file for detailed todos. Execute in phase order.
 {SHARED PREAMBLE}
 
 YOUR WORKSTREAM: Agent 8 — E2E Tests & Quality Gates
-YOUR PLAN: unified-trading-pm/plans/active/agent8_e2e_tests_quality_2026_03_22.plan.md
+YOUR PLAN: unified-trading-pm/plans/active/agent8_e2e_tests_quality_2026_03_22.md
 
 YOUR SCOPE:
 - unified-trading-api: scripts/quality-gates.sh, tests/

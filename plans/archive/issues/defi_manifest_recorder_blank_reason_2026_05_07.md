@@ -89,8 +89,7 @@ loud raise into a warning.log line — which is why the VM kept running but prod
 
 ## Recommended decision
 
-Fold into
-[`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md) as a
+Fold into [`writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md) as a
 Wave 2.M-extension item (the DEFI-side analogue of the cefi/sports migrations already shipped). The fix has 3 parts:
 
 1. **`DefiManifestRecorder.record_empty(reason: EmptyConfirmedReason)` signature change** — make `reason` a non-optional

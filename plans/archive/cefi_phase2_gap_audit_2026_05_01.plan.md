@@ -31,7 +31,7 @@ isProject: false
 # CeFi Phase 2 — gap audit + root-cause fix list
 
 This is the working doc for Phase 2 of the data-pipeline-completion epic
-(`instruments_and_market_tick_data_completion_2026_05_01.plan.md`). The parent plan says "relaunch
+(`instruments_and_market_tick_data_completion_2026_05_01.md`). The parent plan says "relaunch
 `launch-cefi-sharded-backfill.sh` for any year+venue+instrument shards still showing `attempted_failed`" — but a
 state-of-the-world audit on 2026-05-01 shows that doing so naively will only recover ~37% of the gap. The other 63% need
 code fixes first.
@@ -395,8 +395,8 @@ reclassification). That's 95% of Cluster B closed by a single orchestrator-level
 - [ ] [AGENT] P1. **Verify deployment-ui drilldown** for `asset_group=cefi` shows every (venue, year, data_type) cell
       green or yellow under the secondary-cutoff denominator.
 
-- [ ] [AGENT] P1. **Update parent plan** (`instruments_and_market_tick_data_completion_2026_05_01.plan.md`) Phase 2
-      todos to reference this audit + check off the items as they complete.
+- [ ] [AGENT] P1. **Update parent plan** (`instruments_and_market_tick_data_completion_2026_05_01.md`) Phase 2 todos to
+      reference this audit + check off the items as they complete.
 
 ## Where to ping Ikenna
 
@@ -426,7 +426,7 @@ Per the playbook's "playbook says X, code does Y" rule, the items below need a h
 - Trailing 17-day instruments-service ingest gap (operator confirmed throwaway — the daily ingest can pick that up
   anytime).
 - New CeFi venues beyond the existing universe.
-- Combo bundling (covered in `cefi_combo_capture_2026_04_29.plan.md` + the 2026-04-30 TradFi session migration).
+- Combo bundling (covered in `cefi_combo_capture_2026_04_29.md` + the 2026-04-30 TradFi session migration).
 
 ## Reference data captured during audit (2026-05-01 14:45 UTC)
 

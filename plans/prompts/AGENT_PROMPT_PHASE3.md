@@ -359,7 +359,7 @@ If any step fails: fix and re-run **that step**. Never skip forward. L3b passing
 
 ## Key Files
 
-- `unified-trading-pm/plans/active/phase3_service_hardening_integration.plan.md` — full task list
+- `unified-trading-pm/plans/active/phase3_service_hardening_integration.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `deployment-service/configs/runtime-topology.yaml` — runtime topology
 - `unified-trading-codex/08-workflows/service-pair-flows.md` — service-to-service data flows

@@ -58,13 +58,13 @@ isProject: false
 **Every internal team member must have the following provisioned before running this script:**
 
 - **Email (M365 Outlook)** — GitHub org invite and all internal comms go to this address. Without it, the developer
-  cannot accept GitHub membership or receive Slack invites. See `user_management_platform_2026_03_13.plan.md`.
+  cannot accept GitHub membership or receive Slack invites. See `user_management_platform_2026_03_13.md`.
 - **Slack** — CI/CD alerts, trading alerts, and incident channels are all Slack-based. Slack invite is sent to the M365
   email.
 - **GitHub org membership** — required to clone private repos. Invite is accepted via M365 email.
 
 If any of these are missing, use `user-management-ui` (once built) or ask an admin to run the provisioning steps in
-`user_management_platform_2026_03_13.plan.md` first.
+`user_management_platform_2026_03_13.md` first.
 
 ---
 
@@ -243,7 +243,7 @@ prod:     VCR_MODE=disabled  (real APIs, production keys)
 
 ### P3.2 — Cassette location
 
-After `api_keys_and_auth.plan.md` Phase 1–4 records cassettes, commit them to:
+After `api_keys_and_auth.md` Phase 1–4 records cassettes, commit them to:
 `unified-trading-pm/scripts/dev/vcr_cassettes/{venue}/{endpoint}.yaml`
 
 No secrets in cassette files — only response bodies, stripped of auth headers.
@@ -289,6 +289,6 @@ Checks (each prints PASS/FAIL):
 
 ## Dependencies
 
-- `broken_symlinks_remediation_2026_03_09.plan.md` (fix-broken-symlinks.sh must exist)
-- `api_keys_and_auth.plan.md` (VCR cassettes Phase 1–4 needed for full playback)
-- `mock_data_dev_project_seeding_2026_03_10.plan.md` (seed-dev-project.sh called in step 8)
+- `broken_symlinks_remediation_2026_03_09.md` (fix-broken-symlinks.sh must exist)
+- `api_keys_and_auth.md` (VCR cassettes Phase 1–4 needed for full playback)
+- `mock_data_dev_project_seeding_2026_03_10.md` (seed-dev-project.sh called in step 8)

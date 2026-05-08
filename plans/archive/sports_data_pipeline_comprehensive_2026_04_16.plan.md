@@ -16,15 +16,15 @@ repos:
 code_readiness: C4
 deployment_readiness: D0
 business_readiness: B1
-superseded_by: [sports_roadmap_master_execution_2026_04_21.plan.md]
+superseded_by: [sports_roadmap_master_execution_2026_04_21.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [sports_roadmap_master_execution_2026_04_21.plan.md](./sports_roadmap_master_execution_2026_04_21.plan.md).** Newer
-> master execution wrapper at §12.0 register is live SSOT; this umbrella has 0/67 vs roadmap's 18/3 Original scope
-> retained for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
+> [sports_roadmap_master_execution_2026_04_21.md](./sports_roadmap_master_execution_2026_04_21.md).** Newer master
+> execution wrapper at §12.0 register is live SSOT; this umbrella has 0/67 vs roadmap's 18/3 Original scope retained for
+> history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Sports Data Pipeline — Comprehensive Plan
 

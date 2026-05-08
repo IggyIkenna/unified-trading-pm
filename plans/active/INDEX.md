@@ -33,27 +33,26 @@ This is the canonical index of all active plans. Plans are organized by domain.
   ml_and_features_master Phase 2's feature-DATA consolidation (this is REPO consolidation). 10 phases, ~5d wall-clock
   with parallelism.
 
-- [gcs_migration_bundle_pipeline_mode_2026_05_08.md](gcs_migration_bundle_pipeline_mode_2026_05_08.md) —
-  **Bundled overnight GCS migration** that walks every parquet ONCE (millions across asset_groups) and applies the full
-  set of pending hive-vocab + partition-column changes in a single pass so the canonical manifest is rewritten once
-  instead of N times. Three migrations bundled: (1) NEW
-  `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive partition column; (2) finish the dual-vocab
-  `category=` → `asset_group=` rekey CLAUDE.md previously preserved as legacy-with-fallback; (3) sweep the 5 drift axes
-  from the 2026-05-04 phantom-audit incident (path-prefix, instrument_type casing, schema-4 empty instrument_type,
-  chain-bundle equivalence) so the 354 residual phantoms clear. Reader fallback ≤30 days post-migration then deleted.
-  Coordinates with manifest_migration_master_2026_05_07 Stage 1+2+3 (must complete first) + Stage 4 (folds in here). 9
-  phases including operator-gated VM fleet execution.
+- [gcs_migration_bundle_pipeline_mode_2026_05_08.md](gcs_migration_bundle_pipeline_mode_2026_05_08.md) — **Bundled
+  overnight GCS migration** that walks every parquet ONCE (millions across asset_groups) and applies the full set of
+  pending hive-vocab + partition-column changes in a single pass so the canonical manifest is rewritten once instead of
+  N times. Three migrations bundled: (1) NEW `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive
+  partition column; (2) finish the dual-vocab `category=` → `asset_group=` rekey CLAUDE.md previously preserved as
+  legacy-with-fallback; (3) sweep the 5 drift axes from the 2026-05-04 phantom-audit incident (path-prefix,
+  instrument_type casing, schema-4 empty instrument_type, chain-bundle equivalence) so the 354 residual phantoms clear.
+  Reader fallback ≤30 days post-migration then deleted. Coordinates with manifest_migration_master_2026_05_07 Stage
+  1+2+3 (must complete first) + Stage 4 (folds in here). 9 phases including operator-gated VM fleet execution.
 
-- [instrument_catalogue_availability_matrix_2026_04_29.md](instrument_catalogue_availability_matrix_2026_04_29.md)
-  — Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
+- [instrument_catalogue_availability_matrix_2026_04_29.md](instrument_catalogue_availability_matrix_2026_04_29.md) —
+  Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
   live/batch capability per `(asset_group × data_type × venue × instrument_type)`) with **live availability-manifest
   aggregation** (capture_status → coverage %). Publishes `instrument-catalogue.{json,md}` + `shard-dynamics.json`
   nightly to `gs://strategy-store-cefi-{pid}/catalogue/instrument/`. New UI matrix widget cross-links existing
   data-status drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC
   (sports already SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
 
-- [deployment_ui_lifecycle_tabs_2026_05_08.md](deployment_ui_lifecycle_tabs_2026_05_08.md) — **Cross-cutting
-  6-tab restructure** of deployment-UI organised around four orthogonal axes: lifecycle class (EPHEMERAL_BATCH /
+- [deployment_ui_lifecycle_tabs_2026_05_08.md](deployment_ui_lifecycle_tabs_2026_05_08.md) — **Cross-cutting 6-tab
+  restructure** of deployment-UI organised around four orthogonal axes: lifecycle class (EPHEMERAL_BATCH /
   EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE), cloud target (GCP / AWS), environment tier (DEV /
   STAGING / PROD — resolved by domain, never an in-UI toggle), service / asset_group. Tabs: Deploy (fresh deployments
   only) / Monitor (renamed from History; sub-tabs Backfill / Experiments / Live / Scheduled — runtime state of every
@@ -73,9 +72,9 @@ This is the canonical index of all active plans. Plans are organized by domain.
   deployment-UI/API itself). Sibling-of `instruments_live_master_2026_05_08`; Phase G of that plan delegates UI scope
   here.
 
-- [hard_schema_enforcement_2026_05_08.md](hard_schema_enforcement_2026_05_08.md) — **Workspace-wide hard
-  schema enforcement at the write boundary** (sub-plan of `infrastructure_master_2026_05_07`). Today only predictions
-  has hard-required lifecycle enforcement; every other asset_group leaves required fields nullable (base_currency /
+- [hard_schema_enforcement_2026_05_08.md](hard_schema_enforcement_2026_05_08.md) — **Workspace-wide hard schema
+  enforcement at the write boundary** (sub-plan of `infrastructure_master_2026_05_07`). Today only predictions has
+  hard-required lifecycle enforcement; every other asset_group leaves required fields nullable (base_currency /
   quote_currency / chain_id / contract_address / decimals / fixture_id / futures expiry) and the write path fails
   venue-shard-wide rather than per-row, masking partial-data bugs. Sports adapters minimal-flatten (18-30 columns
   dropped). 5 phases: UAC schema audit + nullable→required flips per asset_group; orchestrator per-row try/except
@@ -84,26 +83,26 @@ This is the canonical index of all active plans. Plans are organized by domain.
   Q1+Q2 futures-expiry ships (avoids mass-fail-during-transit). Migrated from archived issue
   `hard_schema_enforcement_at_write_boundary_2026_05_08.md`.
 
-- [cme_polymarket_arb_2026_05_08.md](cme_polymarket_arb_2026_05_08.md) — **CME × Polymarket cross-venue
-  event-arb** (post-May-23 critical path). 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG
-  / EC6E / ECNQ) are semantically identical to Polymarket binary outcomes; cross-venue basis is exploitable but
-  invisible today. Operator decision 2026-05-08 Option (a) split: Phase 0 catalog backfill in
-  `tradfi_master_2026_05_07`; Phases 1-5 here (InstrumentType.EVENT_CONTRACT enum; linked_canonical_question_group
-  cross-link blocked on predictions_master Phase 5 canonical-groups backfill; MTDS binary-outcome shard atom;
-  per-cluster expiry; cme_polymarket_event_arb strategy archetype + cross-venue execution routing). Migrated from
-  archived 26KB RFC `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.
+- [cme_polymarket_arb_2026_05_08.md](cme_polymarket_arb_2026_05_08.md) — **CME × Polymarket cross-venue event-arb**
+  (post-May-23 critical path). 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E /
+  ECNQ) are semantically identical to Polymarket binary outcomes; cross-venue basis is exploitable but invisible today.
+  Operator decision 2026-05-08 Option (a) split: Phase 0 catalog backfill in `tradfi_master_2026_05_07`; Phases 1-5 here
+  (InstrumentType.EVENT_CONTRACT enum; linked_canonical_question_group cross-link blocked on predictions_master Phase 5
+  canonical-groups backfill; MTDS binary-outcome shard atom; per-cluster expiry; cme_polymarket_event_arb strategy
+  archetype + cross-venue execution routing). Migrated from archived 26KB RFC
+  `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.
 
-- [instruments_live_master_2026_05_08.md](../epics/instruments_live_master_2026_05_08.md) — **Activation
-  surface for instruments-live across all 5 asset_groups** (cefi 15-min CCXT replacing Tardis-T+1; tradfi 15-min
-  Polygon/Yahoo replacing Databento for live; sports trigger-driven — daily fixture re-poll + per-league season-roll →
-  teams / mappings + annual transfer-window → players + weather cascade pre-kickoff; predictions 15-min
-  market-discovery). Live writes to SAME GCS path as batch (no separate live path); T+1 is retrospective audit /
-  comparison job, NOT a backfill. Cloud Scheduler activation per-trigger + new deployment-UI "Scheduled Jobs" tab
-  listing every cron invocation with last-run / next-fire / recent events / Telegram-alert-on-fail. Critical Phase
-  A.9–A.11 codifies the preflight DAG (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically
-  by live and batch — typed `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to
-  Telegram with the specific missing-upstream named in the message. References (does NOT duplicate) the existing codex
-  SSOTs (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
+- [instruments_live_master_2026_05_08.md](../epics/instruments_live_master_2026_05_08.md) — **Activation surface for
+  instruments-live across all 5 asset_groups** (cefi 15-min CCXT replacing Tardis-T+1; tradfi 15-min Polygon/Yahoo
+  replacing Databento for live; sports trigger-driven — daily fixture re-poll + per-league season-roll → teams /
+  mappings + annual transfer-window → players + weather cascade pre-kickoff; predictions 15-min market-discovery). Live
+  writes to SAME GCS path as batch (no separate live path); T+1 is retrospective audit / comparison job, NOT a backfill.
+  Cloud Scheduler activation per-trigger + new deployment-UI "Scheduled Jobs" tab listing every cron invocation with
+  last-run / next-fire / recent events / Telegram-alert-on-fail. Critical Phase A.9–A.11 codifies the preflight DAG
+  (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically by live and batch — typed
+  `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to Telegram with the specific
+  missing-upstream named in the message. References (does NOT duplicate) the existing codex SSOTs
+  (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
   `sports-live-odds-connectivity`, `runtime-tiers-and-deployment`) and 8 active issues for data-correctness deltas.
   Sibling-of (NOT child-of) `master_to_live_defi_2026_05_23` — only Phase D (cefi 15-min CCXT) + Phase F.3 (AWS
   EventBridge mirror) are on the May-23 critical path; the rest is post-cutover.
@@ -112,15 +111,14 @@ This is the canonical index of all active plans. Plans are organized by domain.
 
 ## DeFi Strategy Testing & Automation (NEW)
 
-**⭐ START HERE:** [defi-strategy-testing-quickstart.md](defi-strategy-testing-quickstart.md) — Quick reference +
-examples for testing any DeFi strategy
+**⭐ START HERE:** [defi-strategy-testing-quickstart.md](../archive/defi-strategy-testing-quickstart.md) — Quick
+reference + examples for testing any DeFi strategy
 
 **Detailed Plans:**
 
-- [defi-strategy-ui-verification.md](defi-strategy-ui-verification.md) — Phase 1: Verify UI widgets with
-  mocked data
-- [defi-strategy-e2e-automation.md](defi-strategy-e2e-automation.md) — Full pipeline: UI verification → test
-  generation → execution → regression protection
+- [defi-strategy-ui-verification.md](defi-strategy-ui-verification.md) — Phase 1: Verify UI widgets with mocked data
+- [defi-strategy-e2e-automation.md](defi-strategy-e2e-automation.md) — Full pipeline: UI verification → test generation
+  → execution → regression protection
 
 ---
 
@@ -164,13 +162,13 @@ examples for testing any DeFi strategy
 
 ### Data & Testing
 
-- [instruments_to_100pct_eod_2026_05_04.md](instruments_to_100pct_eod_2026_05_04.md) — instruments-service to
-  ≥99% honest coverage across all 5 asset groups (sibling to MTDS plan; epic: data-pipeline-completion).
-- [market_tick_data_to_100pct_2026_05_05.md](market_tick_data_to_100pct_2026_05_05.md) —
-  market-tick-data-service raw download to ≥99% honest coverage across all 5 asset groups. **GCS-truth-first**: Phase
-  0.1 inverse-phantom audit (parquet-on-disk-no-manifest-row) is a mandatory gate before any backfill VM launches —
-  prevents wasted Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild
-  (cheap) vs backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
+- [instruments_to_100pct_eod_2026_05_04.md](instruments_to_100pct_eod_2026_05_04.md) — instruments-service to ≥99%
+  honest coverage across all 5 asset groups (sibling to MTDS plan; epic: data-pipeline-completion).
+- [market_tick_data_to_100pct_2026_05_05.md](market_tick_data_to_100pct_2026_05_05.md) — market-tick-data-service raw
+  download to ≥99% honest coverage across all 5 asset groups. **GCS-truth-first**: Phase 0.1 inverse-phantom audit
+  (parquet-on-disk-no-manifest-row) is a mandatory gate before any backfill VM launches — prevents wasted
+  Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild (cheap) vs
+  backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
   `launch-mtds-prediction-backfill-vm.sh`, MTDS DeFi data-type launchers. Depends on instruments plan above.
 - agent6_mock_data_quality_2026_03_22.md — Mock data quality
 - agent8_e2e_tests_quality_2026_03_22.md — E2E testing
@@ -186,13 +184,13 @@ examples for testing any DeFi strategy
 
 ### Library Consolidation
 
-- fold_uei_into_utl_2026_04_17.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate
-  of both), migrate 30+ consumers, archive UEI repo
+- fold_uei_into_utl_2026_04_17.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate of
+  both), migrate 30+ consumers, archive UEI repo
 
 ### Strategy Lifecycle & Catalogue (NEW 2026-04-21)
 
-- performance_overlay_pbms_pnl_series_2026_04_22.md — Ship PBMS `GET /api/v1/accounts/{account_id}/pnl-series` +
-  UTA `HttpPbmPerformanceClient` so `<PerformanceOverlay>` uses real odum-paper / odum-live P&L streams (synth fallback
+- performance_overlay_pbms_pnl_series_2026_04_22.md — Ship PBMS `GET /api/v1/accounts/{account_id}/pnl-series` + UTA
+  `HttpPbmPerformanceClient` so `<PerformanceOverlay>` uses real odum-paper / odum-live P&L streams (synth fallback
   unchanged). Depends on archived performance overlay primitive plan.
 - dart_exclusive_subscription_research_fork_2026_04_21.md — Plan D: DART exclusive-subscription model
   (`StrategyInstanceSubscription` with `dart_exclusive`/`im_allocation`/`signals_in` types + exclusive-lock invariant),
@@ -203,16 +201,16 @@ examples for testing any DeFi strategy
 
 ### UI & Admin Unification
 
-- dashboard_services_grid_collapse_2026_04_21.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals ·
-  Reports · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and family/archetype filter
-  strip above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on archived
+- dashboard_services_grid_collapse_2026_04_21.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals · Reports
+  · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and family/archetype filter strip
+  above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on archived
   [`ui_unification_v2_sanitisation_2026_04_20.md`](../archive/ui_unification_v2_sanitisation_2026_04_20.md).
 
 ### Deployment Topology & Client Isolation
 
-- deployment_topology_and_client_isolation_2026_04_17.md — Per-service isolation policy (shared vs isolated), SLA
-  tiers (basic/standard/premium) with cost passthrough, runtime profiles (backtest/paper/mock-live/staging/prod)
-  collapsing 5 mode env vars, chaos + kill-switch primitives. runtime-topology.yaml v6→v7, UAC schemas, UTL readers,
+- deployment_topology_and_client_isolation_2026_04_17.md — Per-service isolation policy (shared vs isolated), SLA tiers
+  (basic/standard/premium) with cost passthrough, runtime profiles (backtest/paper/mock-live/staging/prod) collapsing 5
+  mode env vars, chaos + kill-switch primitives. runtime-topology.yaml v6→v7, UAC schemas, UTL readers,
   deployment-service/api/ui materialisation, downstream service wiring. 13 repos. **Progress as of 2026-04-17
   live-defi-rollout:** Phases 1 (SSOT), 2a/2b (deployment-service/api), 3a/3b/3c (UTL ChaosController + KillSwitchBus +
   ServiceBootstrap wiring + strategy/exec/risk subscribers), 4a (deployment-api runtime_profile env var fanout), 5 (18

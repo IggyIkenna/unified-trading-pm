@@ -5,15 +5,15 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: infrastructure_master_2026_05_07.plan.md # peer/umbrella; was shard_granularity_ssot_propagation, now folded
+parent_plan: infrastructure_master_2026_05_07.md # peer/umbrella; was shard_granularity_ssot_propagation, now folded
 related:
-  - predictions_master_2026_05_07.plan.md # folds in predictions_canonical_question_group_polymarket_migration
-  - infrastructure_master_2026_05_07.plan.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
+  - predictions_master_2026_05_07.md # folds in predictions_canonical_question_group_polymarket_migration
+  - infrastructure_master_2026_05_07.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
 supersedes_phases:
-  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
-  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md § Phase 1 Tier 2 raw-tables (sports
-    available_at, paused — now scoped here)
-manifest_migration_coordinator: manifest_migration_master_2026_05_07.plan.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
+  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused — now scoped here)
+  - plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at,
+    paused — now scoped here)
+manifest_migration_coordinator: manifest_migration_master_2026_05_07.md # Stage 2.A/2.B/2.C + Stage 3.A/3.B/3.C scoped here; coordinator owns cross-plan sequencing + VM impact + operator pause-resume gates
 status: drafted
 ---
 
@@ -90,12 +90,12 @@ interlocking PM plans into one execution surface. **Do not re-derive todos here*
 canonical source for its own todos. The umbrella's job is references, sequencing across the layered DAG, and
 coordination notes.
 
-| Plan file                                                                                                                                                                                         | Role                             | Owns                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`writegate_honest_coverage_endtoend_2026_05_06.plan.md`** (this file)                                                                                                                           | UMBRELLA                         | UTL `record_captured` 4-pillar gate; UAC SSOTs (BUNDLED_DATA_TYPES, source_priority, availability_semantics); MDPS `_create_empty_output` delete + 37-callsite A/B/C migration; MTDS partition validation; features-sports `available_at`; CLAUDE.md rules; UI typed-error rendering; reconcilers; ratchet |
-| [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)                                  | child                            | UAC predictions classifier + lifecycle module; instruments-service MARKET_LIFECYCLE writer; MTDS Polymarket / Kalshi adapter rekey to `prediction_canonical_question_group`; per-base_asset → canonical_group GCS rewrite; per-market lifecycle gating in features-cross-instrument                        |
-| [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md) + [`HANDOVER.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md) | parent / architectural rationale | Per-asset-group shard-key matrix; layer discipline (UAC/UTL/per-service); workspace `manifest.add()` → `record_captured()` migration directive (HANDOVER Item 1, mainline). Phase 1 Tier 1 #1 + Tier 2 raw-tables superseded by writegate Phase 2                                                          |
-| [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md)                                                                    | child                            | Read/display side:`fixture_id` (display-axis only) + `job_id` manifest columns; UAC `data_status_axis_matrix.py` SSOT; deployment-api `breakdowns` + `secondary_axis` filtering; deployment-ui DataStatusTab dropdowns + `BreakdownsAccordion`                                                             |
+| Plan file                                                                                                                                                                                                 | Role                             | Owns                                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`writegate_honest_coverage_endtoend_2026_05_06.md`** (this file)                                                                                                                                        | UMBRELLA                         | UTL `record_captured` 4-pillar gate; UAC SSOTs (BUNDLED_DATA_TYPES, source_priority, availability_semantics); MDPS `_create_empty_output` delete + 37-callsite A/B/C migration; MTDS partition validation; features-sports `available_at`; CLAUDE.md rules; UI typed-error rendering; reconcilers; ratchet |
+| [`predictions_canonical_question_group_polymarket_migration_2026_05_06.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.md)                                           | child                            | UAC predictions classifier + lifecycle module; instruments-service MARKET_LIFECYCLE writer; MTDS Polymarket / Kalshi adapter rekey to `prediction_canonical_question_group`; per-base_asset → canonical_group GCS rewrite; per-market lifecycle gating in features-cross-instrument                        |
+| [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.md) + [`HANDOVER.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md) | parent / architectural rationale | Per-asset-group shard-key matrix; layer discipline (UAC/UTL/per-service); workspace `manifest.add()` → `record_captured()` migration directive (HANDOVER Item 1, mainline). Phase 1 Tier 1 #1 + Tier 2 raw-tables superseded by writegate Phase 2                                                          |
+| [`data_status_multi_axis_shard_propagation_2026_05_06.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.md)                                                                             | child                            | Read/display side:`fixture_id` (display-axis only) + `job_id` manifest columns; UAC `data_status_axis_matrix.py` SSOT; deployment-api `breakdowns` + `secondary_axis` filtering; deployment-ui DataStatusTab dropdowns + `BreakdownsAccordion`                                                             |
 
 **Layered DAG across all four plans:**
 
@@ -220,15 +220,15 @@ These bind every todo in this plan. Workspace CLAUDE.md additions in Phase 1C co
 **Principle**: nothing in this plan accepts a temporary state as final. Every partial implementation lists its named
 successor plan that ships the proper fix. No "we'll fix it later" without a doc.
 
-| Temporary state shipped here                                                                                             | What it means                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Successor plan / phase                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BUNDLED_DATA_TYPES` includes `prediction_canonical_question_group` with `PREDICTION_GROUPS = {}` empty registry         | The slot is reserved + cluster guard is wired. No caller currently uses this data_type (Polymarket shards per-`base_asset` per current audit). When canonical_question_group SSOT lands, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Until then: any caller using this data_type fails loud → forces them to wait for the SSOT.                                                                                                                                           | [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md) — drafted 2026-05-06 |
-| (no temporary state on `match_end_time`)                                                                                 | `match_end_time` is detected from real source signals, not a constant. Detection cascade in Phase 2.D below: api_football native field → SFI progressive-stats freeze → footystats / understat fallbacks → last-resort `kickoff + 120min` only when all else missing (and that case marks the row with a low-confidence flag).                                                                                                                                                                                      | (in-scope)                                                                                                                                                                            |
-| MTDS v6 columns owner sign-off                                                                                           | Wired per the explicit decision rule (see Phase 2.A). UAC owner verifies completeness post-merge in case any data_type's row carries v6-relevant fields we missed.                                                                                                                                                                                                                                                                                                                                                  | In-plan Phase 5 verification todo.                                                                                                                                                    |
-| `SOURCE_PRIORITY` registry top-entry-only                                                                                | Phase 1B seeds the priority-1 source per `(asset_group, data_type)`. Multi-source merge (timestamp-availability > coverage > info-richness > merge-different-fields per user 2026-05-06) is its own design pass.                                                                                                                                                                                                                                                                                                    | `multi_source_priority_merge_2026_<TBD>.plan.md` (Tracked Open Questions §7)                                                                                                          |
-| MDPS / features-\* `feature_group → required_inputs[]` DAG inlined per-service                                           | Three services keep their local DAGs (features-onchain, features-sports, features-delta-one). Lookahead-bias enforcement still runs but reads from per-service DAG.                                                                                                                                                                                                                                                                                                                                                 | `feature_dag_uac_ssot_2026_<TBD>.plan.md` (Tracked Open Questions §2)                                                                                                                 |
-| `announced_at` / `report_time` / `match_end_time` ship with low-confidence default values + `*_confidence` audit columns | Phase 0 audit (2026-05-06) found these fields UNSOURCEABLE from currently-used providers (api_football `/injuries` no timestamp; no source exposes fixture announcement; SFI freeze IS available for match_end_time). Until forward-poll source lands, rows stamp with `kickoff_utc − 14d` (announced_at) / `kickoff_utc − injury_lead_time` (report_time) / `kickoff_utc + 120min` (match_end_time fallback when SFI/api_football miss). `*_confidence` audit columns surface low-default fixtures for re-attempt. | `sports_forward_poll_timestamps_2026_<TBD>.plan.md` (TBD; captures real-time scraping of announcement / injury / match-end timestamps from sources that DO expose them).              |
-| Prediction empty path patched with current Polymarket per-base_asset row_key                                             | Phase 2.A scope expansion fixes silent `success=True, candles_generated=0, NO manifest record` bug at `live_workers.py:268-271` with `record_empty(row_key)` call. Until Plan A predictions migrates shard atom to `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`, row_key uses current per-base_asset shape. Reconciler in Phase 3.A re-flips these rows once Plan A migrates shape.                                                              | [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md) — drafted 2026-05-06 |
+| Temporary state shipped here                                                                                             | What it means                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Successor plan / phase                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BUNDLED_DATA_TYPES` includes `prediction_canonical_question_group` with `PREDICTION_GROUPS = {}` empty registry         | The slot is reserved + cluster guard is wired. No caller currently uses this data_type (Polymarket shards per-`base_asset` per current audit). When canonical_question_group SSOT lands, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Until then: any caller using this data_type fails loud → forces them to wait for the SSOT.                                                                                                                                           | [`predictions_canonical_question_group_polymarket_migration_2026_05_06.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.md) — drafted 2026-05-06 |
+| (no temporary state on `match_end_time`)                                                                                 | `match_end_time` is detected from real source signals, not a constant. Detection cascade in Phase 2.D below: api_football native field → SFI progressive-stats freeze → footystats / understat fallbacks → last-resort `kickoff + 120min` only when all else missing (and that case marks the row with a low-confidence flag).                                                                                                                                                                                      | (in-scope)                                                                                                                                                                           |
+| MTDS v6 columns owner sign-off                                                                                           | Wired per the explicit decision rule (see Phase 2.A). UAC owner verifies completeness post-merge in case any data_type's row carries v6-relevant fields we missed.                                                                                                                                                                                                                                                                                                                                                  | In-plan Phase 5 verification todo.                                                                                                                                                   |
+| `SOURCE_PRIORITY` registry top-entry-only                                                                                | Phase 1B seeds the priority-1 source per `(asset_group, data_type)`. Multi-source merge (timestamp-availability > coverage > info-richness > merge-different-fields per user 2026-05-06) is its own design pass.                                                                                                                                                                                                                                                                                                    | `multi_source_priority_merge_2026_<TBD>.md` (Tracked Open Questions §7)                                                                                                              |
+| MDPS / features-\* `feature_group → required_inputs[]` DAG inlined per-service                                           | Three services keep their local DAGs (features-onchain, features-sports, features-delta-one). Lookahead-bias enforcement still runs but reads from per-service DAG.                                                                                                                                                                                                                                                                                                                                                 | `feature_dag_uac_ssot_2026_<TBD>.md` (Tracked Open Questions §2)                                                                                                                     |
+| `announced_at` / `report_time` / `match_end_time` ship with low-confidence default values + `*_confidence` audit columns | Phase 0 audit (2026-05-06) found these fields UNSOURCEABLE from currently-used providers (api_football `/injuries` no timestamp; no source exposes fixture announcement; SFI freeze IS available for match_end_time). Until forward-poll source lands, rows stamp with `kickoff_utc − 14d` (announced_at) / `kickoff_utc − injury_lead_time` (report_time) / `kickoff_utc + 120min` (match_end_time fallback when SFI/api_football miss). `*_confidence` audit columns surface low-default fixtures for re-attempt. | `sports_forward_poll_timestamps_2026_<TBD>.md` (TBD; captures real-time scraping of announcement / injury / match-end timestamps from sources that DO expose them).                  |
+| Prediction empty path patched with current Polymarket per-base_asset row_key                                             | Phase 2.A scope expansion fixes silent `success=True, candles_generated=0, NO manifest record` bug at `live_workers.py:268-271` with `record_empty(row_key)` call. Until Plan A predictions migrates shard atom to `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`, row_key uses current per-base_asset shape. Reconciler in Phase 3.A re-flips these rows once Plan A migrates shape.                                                              | [`predictions_canonical_question_group_polymarket_migration_2026_05_06.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.md) — drafted 2026-05-06 |
 
 Anything not listed here is intended as the final shape post-merge. If a reviewer finds a hidden temporary state, file
 it as a plan-amendment todo before merging.
@@ -434,11 +434,10 @@ every repo touched in Phase N.
 
 ## Concurrent in-flight stream — sports phantom FIXTURES recovery (2026-05-06)
 
-A separate stream is running in parallel to this plan, owned by the
-`sports_phantom_fixtures_recovery_2026_05_06.plan.md` plan AND its successor
-`sports_fixtures_truthset_recovery_2026_05_06.plan.md`. Be aware while executing this plan because the recovery touches
-the same `ManifestWriter` / orchestrator / `available_at` surfaces this plan modifies — the streams must not step on
-each other.
+A separate stream is running in parallel to this plan, owned by the `sports_phantom_fixtures_recovery_2026_05_06.md`
+plan AND its successor `sports_fixtures_truthset_recovery_2026_05_06.md`. Be aware while executing this plan because the
+recovery touches the same `ManifestWriter` / orchestrator / `available_at` surfaces this plan modifies — the streams
+must not step on each other.
 
 > **2026-05-06 cross-cluster sequencing note (Conflict 14 resolution).** Three plans touch features-sports
 > `available_at` from different angles: (a) this writegate plan (Phase 2.C deletes `_ensure_timestamp` + per-source
@@ -1003,7 +1002,7 @@ new UTL pinned in workspace-manifest.json.
       `"prediction_canonical_question_group"` — registry: `PREDICTION_GROUPS = {}` **EMPTY temporary state**. Slot
       reserved + cluster guard wired. NO caller currently uses this data*type (Polymarket shards per-`base_asset` per
       current audit). When canonical_question_group SSOT lands in
-      `prediction_canonical_question_group_uac_ssot_2026*<TBD>.plan.md`, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Documented in §"Temporary states + their canonical follow-up plans".     - `DATA_TYPE_TO_CLUSTER_REGISTRY:
+      `prediction_canonical_question_group_uac_ssot_2026*<TBD>.md`, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Documented in §"Temporary states + their canonical follow-up plans".     - `DATA_TYPE_TO_CLUSTER_REGISTRY:
       dict[str,
       str]`(data_type → registry symbol name).     -`OPTIONS_CLUSTERS`lifted from instruments-service (ES.OPT 11-cluster taxonomy as seed; per-root entries).     -`FUTURES_CLUSTERS`(greenfield; ES + MES seeds; spreads + butterflies per root).     -`SPORTS_FIXTURE_CLUSTERS` (greenfield; per-`league_tier`→ expected bookmaker set; tier-1 EU football seed; tier-2 / tier-3 expansion in this plan or follow-up).     -`PREDICTION_GROUPS
       = {}` (empty placeholder; gets populated by canonical_question_group SSOT plan).
@@ -1342,7 +1341,7 @@ grep.
       `stamp_available_at_post_match(df, "kickoff_utc", duration_min=120)` — **fallback only** since api*football
       `/injuries` exposes no timestamp (amendment C). Document as best-effort proxy until forward-poll-vs-backfill
       timestamp differentiation lands in instruments-service (separate plan
-      `sports_forward_poll_timestamps_2026*<TBD>.plan.md`).     - 8 reference tables → `stamp_available_at_explicit(df,
+      `sports_forward_poll_timestamps_2026*<TBD>.md`).     - 8 reference tables → `stamp_available_at_explicit(df,
       fetch_completed_at)`where `fetch_completed_at`    comes from`\_FETCH_COMPLETED_AT[table_name]` cache populated at
       fetch time.
 - [ ] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in `_fetch_runner.py` (verified
@@ -1382,7 +1381,7 @@ grep.
       "footystats_native", "understat_native",
       "low_default_kickoff_plus_120min"]`. Today: detection cascade lands per Phase 2.D below; rows that fall to last-resort get `low_default*\_`. SFI freeze-detection IS achievable today (re-uses halftime detector), so most fixtures resolve via cascade not fallback.     - `occurrence*time:
       timestamp_utc
-      nullable`(in `INJURIES_COLUMNS`) — populated when injury fixture's `fixture_events`table contains the injury event; else null. No fallback.     **Successor plan**:`sports_forward_poll_timestamps_2026*<TBD>.plan.md`— captures real-time scraping of announcement, injury report, and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor plan lands + retrospective backfill completes, the `\*\_confidence`
+      nullable`(in `INJURIES_COLUMNS`) — populated when injury fixture's `fixture_events`table contains the injury event; else null. No fallback.     **Successor plan**:`sports_forward_poll_timestamps_2026*<TBD>.md`— captures real-time scraping of announcement, injury report, and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor plan lands + retrospective backfill completes, the `\*\_confidence`
       audit columns surface low-default fixtures in data-status panel for re-attempt.
 - [ ] [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection IS achievable today)**. Cascade
       per-fixture (UAC `MATCH_END_TIME_DETECTORS` registry, source-priority ordered): 1. `api_football` —
@@ -1793,7 +1792,7 @@ sub-phase ships the enumerator that physically writes those rows.
       `EXPECTED_PRE_VENUE_LAUNCH` across 13 post-2018 venues) on `expected-universe-enum-cefi-20260507-154922`. -
       **Prediction** — 2,280 rows written (real impl per UAC@ac218dc + instruments-service@d1c9928: POLYMARKET 974 +
       KALSHI 1306 `EXPECTED_PRE_VENUE_LAUNCH`) on `expected-universe-enum-prediction-20260507-155030`. Per-instrument
-      lifecycle (`PREDICTION_GROUPS` registry) tracked separately under `predictions_master_2026_05_07.plan.md`. Each VM
+      lifecycle (`PREDICTION_GROUPS` registry) tracked separately under `predictions_master_2026_05_07.md`. Each VM
       emitted ENUMERATOR_STARTED + ENUMERATOR_COMPLETED + auto-shut down. Consolidator cycles 18:07-18:14 UTC merged all
       5 per-VM shards into canonical (cefi/sports clean throughout; tradfi/defi/prediction unblocked at PM@341bb285
       after the `ArrowTypeError` on `instrument_count` was patched).
@@ -1924,7 +1923,7 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
       hadn't launched yet"; v2 makes that per-(chain, protocol, instrument_id, day) so we mark individual
       pools/positions correctly.
 - [ ] [SCRIPT] P0. **Prediction v2 enumerator** — depends on UAC `PREDICTION_GROUPS` registry landing per
-      `predictions_master_2026_05_07.plan.md`. Once that ships, cross-product
+      `predictions_master_2026_05_07.md`. Once that ships, cross-product
       `(venue, canonical_question_group, market_id, data_type, day)` filtered by
       `market_created_at ≤ day ≤ settlement_time`. Today's `EXPECTED_PRE_VENUE_LAUNCH` is the floor; v2 adds
       canonical-group lifecycle (HOURLY = 24 markets/day, DAILY = 1, ELECTION = 1 over months/years) so per-day coverage
@@ -1940,11 +1939,11 @@ tradfi Databento) and end with the asset_group whose catalog needs the most work
 per-asset-group umbrella plans. Reference cross-plan banners (CLAUDE.md "Cross-Plan Coordination Banners" rule) — the
 Phase 3.D.5 v2 enumerator must align with:
 
-- `cefi_master_2026_05_07.plan.md` — CeFi instrument catalog scope + lifecycle field schema
-- `predictions_master_2026_05_07.plan.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
-- `sports_master_2026_05_07.plan.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
-- `tradfi_master_2026_05_07.plan.md` — Databento instrument catalog scope + cluster taxonomy
-- `defi_master_2026_05_07.plan.md` — per-pool catalog expansion (currently sparse)
+- `cefi_master_2026_05_07.md` — CeFi instrument catalog scope + lifecycle field schema
+- `predictions_master_2026_05_07.md` — UAC `PREDICTION_GROUPS` SSOT + per-canonical-group lifecycle
+- `sports_master_2026_05_07.md` — fixtures catalog read shape + `KNOWN_COVERAGE_GAPS` integration
+- `tradfi_master_2026_05_07.md` — Databento instrument catalog scope + cluster taxonomy
+- `defi_master_2026_05_07.md` — per-pool catalog expansion (currently sparse)
 
 Each asset_group's v2 enumerator implementation lives under instruments-service/scripts/, but the catalog schema + read
 interface lives in UAC. The v1 enumerator stays in place during the v2 buildout — v2 is a strictly additive layer; v1's
@@ -2092,7 +2091,7 @@ interface on the manifest.
       Today's drilldown lands at `(venue, data_type, instrument_type, instrument_id)` and shows
       `X days captured of Y total` — aggregate. Operator wants to drill **into the days dimension** per instrument to
       see which specific days are captured / empty / failed / unattempted. _ Per-instrument pagination already exists
-      (Phase 6 shipped per `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — 200 instruments per page,
+      (Phase 6 shipped per `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — 200 instruments per page,
       load-more button). Mirror that pattern at the day grain: per-instrument-leaf, render a calendar / list of days
       with status badges (4 colours for the 4 capture*status values), paginate chronologically. * Layout suggestion:
       per-instrument click expands to a year × 12-month grid (visual calendar) where each cell shows the day's status
@@ -2291,7 +2290,7 @@ odds_api, weather) gate their expected universe on this catalog with per-source 
 **2. Prediction markets = same model.**
 
 - Per-market lifecycle (`market_created_at`, `resolution_time`, `settlement_time`) lives in instruments-service catalog
-  (per `predictions_master_2026_05_07.plan.md`).
+  (per `predictions_master_2026_05_07.md`).
 - Pre-`market_created_at` → `EXPECTED_INSTRUMENT_NOT_LISTED` (per-market grain).
 - Post-`settlement_time` → `EXPECTED_INSTRUMENT_DELISTED`.
 - Within active window with no trades that day → `empty_confirmed/SOURCE_RETURNED_ZERO` (legit per msg 6 — sparse
@@ -2343,8 +2342,8 @@ been empty_confirmed" finding adds:
       `(source, league_id, fixture_id, data_type)` filtered by per-source-rules. Yields `expected_unattempted` rows for
       the shards we DO expect; emits `empty_confirmed` with the right EXPECTED\_\* for shards we DON'T expect.
 - [ ] [SCRIPT] P0. Extend the v2 enumerator prediction branch with per-canonical-question-group lifecycle (depends on
-      UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.plan.md`). Yields `expected_unattempted` for active
-      markets, `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
+      UAC `PREDICTION_GROUPS` per `predictions_master_2026_05_07.md`). Yields `expected_unattempted` for active markets,
+      `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-lifecycle dates.
 - [ ] [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
       typed-reason-taxonomy expansion process.
 
@@ -3097,11 +3096,11 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 
 **Wrapped child plans:**
 
-- **[`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)**
+- **[`predictions_canonical_question_group_polymarket_migration_2026_05_06.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.md)**
   — child plan. Predictions Phase 1A populates the `PREDICTION_GROUPS = {}` slot reserved by writegate Phase 1B;
   predictions Phase 2 ships instruments-service MARKET_LIFECYCLE writer + MTDS Polymarket / Kalshi adapter rekey +
   features-cross-instrument reader migration. Sequenced Layer 2 in DAG.
-- **[`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md)**
+- **[`data_status_multi_axis_shard_propagation_2026_05_06.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.md)**
   — child plan. Phase 0 ships UTL `fixture_id` / `job_id` columns + UAC `data_status_axis_matrix.py` SSOT (bundles with
   writegate Phase 1A UTL change); Phase 1A sports fixture_id writers + Phase 1B job_id writers ship alongside writegate
   Phase 2.B/2.C; Phase 2 deployment-api + Phase 3 deployment-ui ship alongside writegate Phase 4. `fixture_id` is
@@ -3110,9 +3109,9 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 
 **Parent plan + companion HANDOVER (architectural):**
 
-- **`shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused)** — superseded by
-  this plan's Phase 2.A. Mark as superseded in companion plan; delete the "AWAITING USER DIRECTION" todo.
-- **`shard_granularity_ssot_propagation_2026_05_06.plan.md` Phase 1 Tier 2 raw-tables (sports available_at, paused)** —
+- **`shard_granularity_ssot_propagation_2026_05_06.md` Phase 1 Tier 1 #1 (MDPS 1440-NaN, paused)** — superseded by this
+  plan's Phase 2.A. Mark as superseded in companion plan; delete the "AWAITING USER DIRECTION" todo.
+- **`shard_granularity_ssot_propagation_2026_05_06.md` Phase 1 Tier 2 raw-tables (sports available_at, paused)** —
   superseded by this plan's Phase 2.C + Phase 2.D. Mark as superseded; delete the "Paused pending user direction on
   hybrid acceptance" todo.
 - **HANDOVER §"Item 1 — Cluster-aware bundle validation"** — superseded by this plan's Phase 1A `record_captured`
@@ -3125,14 +3124,14 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 
 **Other related plans (not wrapped):**
 
-- **`market_tick_data_to_100pct_2026_05_05.plan.md`** — coordination: Phase 2.B partition-key validation + cluster
-  wiring overlap with this plan's MTDS scope. Reconcile ownership in Phase 0 before Phase 2.B starts.
-- **`data_status_ui_fixes_2026_05_06.plan.md`** + **`data_status_offline_rollup_2026_05_06.plan.md`** —
-  predecessor/sibling plans whose incremental fixes ship pre-umbrella; outputs already in production per
-  data_status_multi_axis plan §References ("This session's incremental fixes (already shipped, not part of this plan)").
-- **`manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md`** — Phase 2.A v6 column wiring + Phase 2.B v6 column
-  wiring align. Verify v6 schema state matches what this plan assumes.
-- **`feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`** — referenced by data_status_multi_axis as related;
+- **`market_tick_data_to_100pct_2026_05_05.md`** — coordination: Phase 2.B partition-key validation + cluster wiring
+  overlap with this plan's MTDS scope. Reconcile ownership in Phase 0 before Phase 2.B starts.
+- **`data_status_ui_fixes_2026_05_06.md`** + **`data_status_offline_rollup_2026_05_06.md`** — predecessor/sibling plans
+  whose incremental fixes ship pre-umbrella; outputs already in production per data_status_multi_axis plan §References
+  ("This session's incremental fixes (already shipped, not part of this plan)").
+- **`manifest_schema_v6_quote_margin_combo_2026_04_23.md`** — Phase 2.A v6 column wiring + Phase 2.B v6 column wiring
+  align. Verify v6 schema state matches what this plan assumes.
+- **`feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`** — referenced by data_status_multi_axis as related;
   feature DAG SSOT work is Tracked Open Q #2 here (not in umbrella scope yet — separate follow-up).
 
 ---
@@ -3143,7 +3142,7 @@ These remain open and will be resolved in subsequent plans the user drafts:
 
 1. ~~**UAC `canonical_question_group` SSOT** for Polymarket / Kalshi predictions~~ — **ABSORBED INTO UMBRELLA
    2026-05-06.** Now a child plan under "Wrapped sibling plans" section above:
-   [`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md).
+   [`predictions_canonical_question_group_polymarket_migration_2026_05_06.md`](../archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.md).
    Layered DAG sequences predictions Phase 1A after writegate Phase 1B (PREDICTION_GROUPS slot + classifier wraps
    existing UAC `_prediction_market_taxonomy.py`). Also resolves Tracked Open Question §10 (Polymarket shard-key
    sequencing) and the residual `category=prediction` legacy hive vocab cleanup.
@@ -3168,7 +3167,7 @@ These remain open and will be resolved in subsequent plans the user drafts:
    sports adapter, features-sports input pipeline, deployment-ui sports panel) is fixed in this plan. Manifest
    reconciliation handles the shard-shape migration in Phase 3.A. **Update 2026-05-06 (data_status_multi_axis plan)**:
    `fixture_id` is now correctly framed as a **display-axis-only column** (per
-   [data_status_multi_axis_shard_propagation_2026_05_06.plan.md](../archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md)
+   [data_status_multi_axis_shard_propagation_2026_05_06.md](../archive/data_status_multi_axis_shard_propagation_2026_05_06.md)
    "When to shard vs when to just add a display axis" section), NOT a manifest shard-atom. `(league_id, day)` bounds the
    fixture set; per-fixture detail comes from the parquet at drill-down time. Writers populate `fixture_id` as a column
    on per-fixture rows for filter/group; no bulk manifest row-expansion script.
@@ -3177,7 +3176,7 @@ These remain open and will be resolved in subsequent plans the user drafts:
     umbrella).
 11. **Multi-axis read-side display + manifest column additions** (`fixture_id`, `job_id`, UAC axis matrix SSOT,
     deployment-api `breakdowns`, deployment-ui dropdowns) — **ABSORBED INTO UMBRELLA 2026-05-06.** Child plan:
-    [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md).
+    [`data_status_multi_axis_shard_propagation_2026_05_06.md`](../archive/data_status_multi_axis_shard_propagation_2026_05_06.md).
     Sequenced into Layer 1 (Phase 0 UTL+UAC) / Layer 2 (Phase 1A sports fixture_id writers + Phase 1B job_id writers) /
     Layer 3 (Phase 2 deployment-api + Phase 3 deployment-ui) / Layer 4 (Phase 4 conditional migrations) / Layer 5 (Phase
     5 rollup + Phase 6 e2e). One open follow-up: `client_id` semantics rework — kept as separate Tracked Open Question

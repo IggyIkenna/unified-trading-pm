@@ -7,9 +7,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md (§Deviations)
-  - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
-  - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in)
+  - plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md (§Deviations)
+  - refactor_g2_6_staging_firebase_provisioning_2026_04_20.md
+  - plans/active/ui_unification_v2_sanitisation_2026_04_20.md Phase 6 (user-management-ui fold-in)
 ---
 
 # Firestore security rules for G1.10 questionnaires collection
@@ -35,14 +35,14 @@ This plan fills in the 3 required rules. Rides on G2.6 staging Firebase provisio
 
 ## Cross-references
 
-- **Parent:** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md` §Deviations
-- **Prereq:** `refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` (rule deploy infra)
+- **Parent:** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` §Deviations
+- **Prereq:** `refactor_g2_6_staging_firebase_provisioning_2026_04_20.md` (rule deploy infra)
 - **Codex:** `codex/14-playbooks/authentication/` auth playbook docs
 
 ## Mandatory read-set
 
-1. `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md` — §Deviations
-2. `refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` — Firestore rules phase
+1. `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — §Deviations
+2. `refactor_g2_6_staging_firebase_provisioning_2026_04_20.md` — Firestore rules phase
 3. `unified-trading-system-ui/lib/admin/firebase.ts` — Firestore client pattern
 
 ## Out of scope
@@ -165,7 +165,7 @@ All must exist. STOP if missing.
 
 ### Task
 
-Execute Phases A through D of this plan: `plans/active/firestore_security_rules_for_questionnaires_2026_04_21.plan.md`
+Execute Phases A through D of this plan: `plans/active/firestore_security_rules_for_questionnaires_2026_04_21.md`
 
 ### MCP Playwright clause (verbatim — REQUIRED)
 

@@ -33,7 +33,7 @@ encoded in UAC; **confirm live tier** from API-Football dashboard or from respon
 **Live tier confirmed (2026-04-21 via GET /status):**
 
 - Plan: **Mega** (higher than plan's worst-case Ultra estimate).
-- Daily cap: **150,000 requests/day** (`x-ratelimit-requests-limit: 150000`, response `subscription.plan = "Mega"`,
+- Daily cap: **150,000 requests/day** (`x-ratelimit-requests-limit: 150000`, response `subscription.md = "Mega"`,
   `requests.limit_day = 150000`).
 - Per-minute cap: **900 req/min** (`x-ratelimit-limit: 900`).
 - Subscription active through 2026-05-21 — backfill wave fits inside current billing cycle.

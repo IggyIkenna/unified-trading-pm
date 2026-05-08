@@ -18,8 +18,8 @@ rules.
 - Primary target repo: `strategy-service` (sub-dir, independent git repo)
 - Secondary (tests reference only): `unified-api-contracts`, `unified-trading-library`
 - Branch on every sub-repo: `live-defi-rollout` (already checked out; NEVER switch)
-- Parent plan SSOT: `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` § Phase
-  11 (the full scope is pre-written there — do NOT re-debate, just execute)
+- Parent plan SSOT: `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.md` § Phase 11
+  (the full scope is pre-written there — do NOT re-debate, just execute)
 
 ## State update 2026-04-22 (prior agent killed mid-investigation — re-dispatch)
 
@@ -228,9 +228,8 @@ git push origin live-defi-rollout
 
 ### 7. Plan checkbox flip
 
-Flip all Phase 11 checkboxes in
-`unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` from `- [ ]` to `- [x]`.
-Commit + push PM repo on the same branch.
+Flip all Phase 11 checkboxes in `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.md`
+from `- [ ]` to `- [x]`. Commit + push PM repo on the same branch.
 
 ### 8. Memory update
 

@@ -139,16 +139,16 @@ todos:
       runtime-topology.yaml; no orphan repos (4 API services previously missing from manifest — verify fixed)."
     status: completed
     note: >-
-      RESOLVED 2026-03-09 — Section 9 verified from codebase. INDEX.md references 56 plan entries; 16 active .plan.md
-      files present. All 4 API services confirmed in manifest (execution-results-api, market-data-api,
-      client-reporting-api, deployment-api). 59 total repos in manifest. .cursor/rules/ and
-      unified-trading-pm/cursor-rules/ both have 15 rules (in sync). runtime-topology.yaml present and structured
-      (version, deployment_profiles, clusters, service_flows keys confirmed). PASS. RE-AUDITED 2026-03-10T02:31:37Z —
-      FAIL (now fixed). quality_gates_dry_refactor + ui_auth_oauth_pkce plans were missing from SSOT-INDEX; 2 phantom
-      entries (foundational_repos_remediation, schema_governance_full_audit) removed. SSOT-INDEX now current. PASS after
-      fix. RE-AUDITED 2026-03-11 — WARN. 65 repos in manifest. 35 active .plan.md files; 3 unregistered in SSOT-INDEX:
-      audit_remediation_2026_03_11.plan.md, position_precision_pnl_hardening_2026_03_11.plan.md,
-      uei_pending_event_additions.plan.md. These are new plans from 2026-03-11 session; must be registered.
+      RESOLVED 2026-03-09 — Section 9 verified from codebase. INDEX.md references 56 plan entries; 16 active .md files
+      present. All 4 API services confirmed in manifest (execution-results-api, market-data-api, client-reporting-api,
+      deployment-api). 59 total repos in manifest. .cursor/rules/ and unified-trading-pm/cursor-rules/ both have 15
+      rules (in sync). runtime-topology.yaml present and structured (version, deployment_profiles, clusters,
+      service_flows keys confirmed). PASS. RE-AUDITED 2026-03-10T02:31:37Z — FAIL (now fixed).
+      quality_gates_dry_refactor + ui_auth_oauth_pkce plans were missing from SSOT-INDEX; 2 phantom entries
+      (foundational_repos_remediation, schema_governance_full_audit) removed. SSOT-INDEX now current. PASS after fix.
+      RE-AUDITED 2026-03-11 — WARN. 65 repos in manifest. 35 active .md files; 3 unregistered in SSOT-INDEX:
+      audit_remediation_2026_03_11.md, position_precision_pnl_hardening_2026_03_11.md, uei_pending_event_additions.md.
+      These are new plans from 2026-03-11 session; must be registered.
   - id: audit-output
     content:
       "Produce final audit output: per-criterion PASS/WARN/FAIL/N/A table; overall grade (PASS=0 FAILs, CONDITIONAL=≥1
@@ -167,8 +167,8 @@ todos:
       market-tick-data=73%, features-commodity=99%, execution-results-api=80%, unified-trading-library=81%,
       features-cross-instrument=91%). Logic bugs fixed: LONG/SHORT aliases in instruction_validator.py, int64 threshold
       1e6→1e10 in trade_converter.py. Low-coverage outliers with no plan: batch-live-reconciliation-service=13%,
-      ibkr-gateway-infra=52%, elysium-defi-system=45% (ibkr tracked by ibkr_gateway_rollout.plan.md; others need
-      coverage plans).
+      ibkr-gateway-infra=52%, elysium-defi-system=45% (ibkr tracked by ibkr_gateway_rollout.md; others need coverage
+      plans).
   - id: audit-config-injection
     content:
       "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for
@@ -177,7 +177,7 @@ todos:
     status: completed
     note: >-
       RESOLVED 2026-03-09 — Verified via cross-reference of Sections 13.11-13.15, 14.3.8 in audit report. All YES in
-      audit table. config_dynamic_injection.plan.md archived 2026-03-08 — all todos done.
+      audit table. config_dynamic_injection.md archived 2026-03-08 — all todos done.
   - id: audit-integration-test-coverage
     content: >
       "Audit Section 10 — Integration Test Coverage: Every repo with private deps (L2+) must have tests/integration/
@@ -240,7 +240,7 @@ todos:
       "Cross-reference config injection compliance checks (Sections 13.11-13.15, 14.3.8, 2.13, 3.15-3.16, 12.16-12.20,
       17.x, 22.11) against citadel_audit_remediation stream checks. Verify: GCP_PROJECT_ID banned, DomainConfigReloader
       used for domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists,
-      CONFIG_CHANGED events logged. (Migrated from config_dynamic_injection.plan.md p4-audit-integration.)"
+      CONFIG_CHANGED events logged. (Migrated from config_dynamic_injection.md p4-audit-integration.)"
     status: completed
     note: >-
       RE-AUDITED 2026-03-09 — WARN. GCP_PROJECT_ID re-exported as module-level constant in deployment-api/settings.py:21
@@ -252,9 +252,9 @@ todos:
       node_modules/, *.egg-info/) for: (a) `raise NotImplementedError` in non-abstract concrete classes; (b) `# TODO` /
       `# FIXME` / `# HACK` / `# STUB` / `# placeholder` comments; (c) `pass` as sole body of a non-Protocol class or
       function; (d) `...` (Ellipsis) as function body outside Protocol/ABC definitions. Score PASS if count is zero.
-      Score WARN if count ≤ 10 with each item tracked in stub_completion_interfaces_and_infra.plan.md or another active
-      plan. Score FAIL if any stub exists with no owning plan todo. Use: rg 'raise NotImplementedError|# TODO|# FIXME|#
-      HACK|# STUB|# placeholder' --type py --glob '!.venv*' --glob '!**/tests/**' --glob '!**/archive/**' per repo."
+      Score WARN if count ≤ 10 with each item tracked in stub_completion_interfaces_and_infra.md or another active plan.
+      Score FAIL if any stub exists with no owning plan todo. Use: rg 'raise NotImplementedError|# TODO|# FIXME|# HACK|#
+      STUB|# placeholder' --type py --glob '!.venv*' --glob '!**/tests/**' --glob '!**/archive/**' per repo."
     status: completed
     note: >-
       RESOLVED 2026-03-09 — WARN. 187 raise NotImplementedError (99% tracked by stub_completion_interfaces_and_infra +
@@ -471,7 +471,7 @@ rg 'raise NotImplementedError|# TODO|# FIXME|# HACK|# STUB|# placeholder' \
 - `WARN` — ≤ 10 results total; each item has an open todo in an active plan (cite plan + todo ID)
 - `FAIL` — any result with no owning active plan todo, OR total count > 10
 
-**Reference plan:** `stub_completion_interfaces_and_infra.plan.md` (Plan #32) — covers all currently-known interface and
+**Reference plan:** `stub_completion_interfaces_and_infra.md` (Plan #32) — covers all currently-known interface and
 infrastructure stubs. Any new stub found must be added to that plan or a relevant existing plan before the audit can
 score WARN.
 

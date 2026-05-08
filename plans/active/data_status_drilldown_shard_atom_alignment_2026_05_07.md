@@ -51,8 +51,8 @@ related:
 > (apply-write completion) + PM@341bb285 (consolidator P0 resolution). Consolidator cycles 18:07-18:14 UTC merged all 5
 > per-VM shards. Rollup-vs-drilldown denominator gap closure is now observable on all 5 asset_groups; operator-side
 > spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
-> Phase 3.D.4 banner.
+> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+> 3.D.4 banner.
 
 ## Why
 

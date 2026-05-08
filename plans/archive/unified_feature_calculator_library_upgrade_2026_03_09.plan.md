@@ -222,10 +222,9 @@ todos:
   - id: refactor-features-sports-service
     content: >-
       Refactor features-sports-service to extend BaseFeatureService. Remove duplicate boilerplate. Implement
-      compute_features() with existing sports/arb/vig logic. Confirm no regression with
-      sports_migration_combined.plan.md in-progress todos (b1-scraper-adapters, b5-b6-deployment). Run `bash
-      scripts/quality-gates.sh`; fix failures; update coverage >80%. Commit: `"refactor(features-sports-service): extend
-      BaseFeatureService from library"`.
+      compute_features() with existing sports/arb/vig logic. Confirm no regression with sports_migration_combined.md
+      in-progress todos (b1-scraper-adapters, b5-b6-deployment). Run `bash scripts/quality-gates.sh`; fix failures;
+      update coverage >80%. Commit: `"refactor(features-sports-service): extend BaseFeatureService from library"`.
     status: completed
     completed_at: 2026-03-10
     notes: >-
@@ -357,5 +356,5 @@ UEI schemas) + Tier 1 (UCI, UTL, URDI). No Tier 2→Tier 2 imports. No circular 
 ## Cross-Plan Notes
 
 `features-sports-service` refactor (todo: refactor-features-sports-service) must not regress work tracked in
-`sports_migration_combined.plan.md` (b1-scraper-adapters, b5-b6-deployment — both in_progress). Coordinate: only remove
+`sports_migration_combined.md` (b1-scraper-adapters, b5-b6-deployment — both in_progress). Coordinate: only remove
 boilerplate, do not touch scraper adapter code.

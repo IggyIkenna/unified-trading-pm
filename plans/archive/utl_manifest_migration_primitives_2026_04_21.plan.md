@@ -255,4 +255,4 @@ approach is this UTL refactor first, then the per-entity rescan + purge uses UTL
 - Chunk-safe pattern codex: `codex/02-data/chunk-safe-manifest-migrations.md`.
 - Manifest v5 contract: `codex/02-data/availability-manifest-and-data-status.md`.
 - Existing implementation being refactored: `instruments-service/scripts/rescan_sports_fixtures_canonical.py`.
-- Consumer plan: `sports_manifest_shard_migration_cleanup_2026_04_21.plan.md`.
+- Consumer plan: `sports_manifest_shard_migration_cleanup_2026_04_21.md`.

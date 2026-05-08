@@ -7,9 +7,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.10
-  - refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
-  - refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md
-  - plans/active/user_management_merge_2026_03_23.plan.md
+  - refactor_g1_7_restriction_profile_engine_2026_04_20.md
+  - refactor_g1_11_service_family_scope_rules_2026_04_20.md
+  - plans/active/user_management_merge_2026_03_23.md
   - plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket #12 staging Firebase)
 # Wave E — single item. Downstream (Wave F): refactor_g1_4, refactor_g1_13.
 ---
@@ -32,7 +32,7 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
 
 | Decision                                                                                  | Chosen                                                                                                                               | Source                                                      |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| Public-facing questionnaire at `/questionnaire` (or similar — confirm in Phase 10A audit) | Unauthenticated; anonymous submit allowed (creates a light-auth lead record in user-management)                                      | Kickoff §1.10 + `user_management_merge_2026_03_23.plan.md`  |
+| Public-facing questionnaire at `/questionnaire` (or similar — confirm in Phase 10A audit) | Unauthenticated; anonymous submit allowed (creates a light-auth lead record in user-management)                                      | Kickoff §1.10 + `user_management_merge_2026_03_23.md`       |
 | Admin playback at `user-management-ui/<route>/questionnaires/`                            | Sales operators can replay a prospect's answers pre-demo                                                                             | Kickoff §1.10                                               |
 | Questionnaire axes                                                                        | category × instrument_types × venue scope × strategy-style × service-family picker (IM/DART/Reg/combo) × fund structure (SMA/Pooled) | Kickoff §1.10                                               |
 | Output = RestrictionProfile overlay                                                       | Consumed by G1.7 `resolve_profile(..., questionnaire=QuestionnaireResponse)`                                                         | Kickoff §1.10 + G1.7 handoff                                |
@@ -41,13 +41,12 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
 
 ## Cross-references
 
-- **Upstream (Wave D):** `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` — consumer of questionnaire
-  output; `refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` — service-family picker maps to rule 11
-  families
-- **Downstream (Wave F):** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md` (personas defined by the
-  same axes), `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md` (tempt logic extends questionnaire
-  response handling for vague answers)
-- **Sibling plans:** `plans/active/user_management_merge_2026_03_23.plan.md` (light-auth lead flow),
+- **Upstream (Wave D):** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — consumer of questionnaire output;
+  `refactor_g1_11_service_family_scope_rules_2026_04_20.md` — service-family picker maps to rule 11 families
+- **Downstream (Wave F):** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md` (personas defined by the same
+  axes), `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.md` (tempt logic extends questionnaire response
+  handling for vague answers)
+- **Sibling plans:** `plans/active/user_management_merge_2026_03_23.md` (light-auth lead flow),
   `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` (ticket #12 staging Firebase)
 - **Playbook SSOT:** `codex/14-playbooks/experience/im-decision-journey.md`,
   `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`,
@@ -65,7 +64,7 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
 5. `codex/14-playbooks/experience/im-decision-journey.md`
 6. `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
 7. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
-8. `plans/active/user_management_merge_2026_03_23.plan.md`
+8. `plans/active/user_management_merge_2026_03_23.md`
 9. `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` (ticket #12)
 10. `unified-trading-system-ui/lib/auth/demo-provider.ts`
 11. `unified-trading-system-ui/lib/auth/personas.ts`
@@ -278,7 +277,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 10A through 10E of this plan:
-`plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`
+`plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md`
 
 ### Read-set (mandatory)
 

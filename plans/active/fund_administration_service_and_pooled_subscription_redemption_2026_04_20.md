@@ -64,10 +64,10 @@ depends_on: []
 > [`work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md) defer this plan in their "Defer post-cutover"
 > sections).
 >
-> **Master plan position**: NOT on [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md)
-> critical path. May-23 readiness ladder is Group A-G; fund administration is Group H+ (post-cutover scope).
-> **Re-prioritise post-cutover** when the operator picks up institutional client onboarding work — at that point this
-> plan moves to active-priority status + gets daily-split assignment per CLAUDE.md "Daily Work-Split Process".
+> **Master plan position**: NOT on [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) critical
+> path. May-23 readiness ladder is Group A-G; fund administration is Group H+ (post-cutover scope). **Re-prioritise
+> post-cutover** when the operator picks up institutional client onboarding work — at that point this plan moves to
+> active-priority status + gets daily-split assignment per CLAUDE.md "Daily Work-Split Process".
 >
 > **Successor plan when this plan picks up**: this plan IS its own completion (no further successor needed). Per
 > CLAUDE.md "Citadel-Grade Planning Standards §3 — No Technical Debt", every phase's exit criteria is the final
@@ -471,10 +471,10 @@ Every file / symbol touched — so executing agents don't need to re-scan:
 
 # Related plans
 
-- `autonomous_recovery_and_transfer_architecture_2026_04_16.plan.md` — transfer architecture; this plan reuses its
+- `autonomous_recovery_and_transfer_architecture_2026_04_16.md` — transfer architecture; this plan reuses its
   TransferAdapter extensions.
 - `position_reconciliation_and_cost_preview` — position-tracking foundation this plan relies on.
-- `signal_leasing_broadcast_architecture_2026_04_20.plan.md` — parallel commercial-path work on Odum Signals-Out.
+- `signal_leasing_broadcast_architecture_2026_04_20.md` — parallel commercial-path work on Odum Signals-Out.
 
 # Follow-ups (out of scope)
 

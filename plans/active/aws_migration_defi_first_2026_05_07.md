@@ -121,7 +121,7 @@ state unknown — Phase 4 audits.
 DeFi-relevant subset includes: wallet private keys (Copper / CEFFU custody), 6× perp-venue API keys (Bybit, Deribit,
 Binance, OKX, Hyperliquid, Aster), Pyth Hermes endpoint, Chainlink RPC URLs, Aave-V3 contract addresses, alerting paging
 credentials (Telegram bot, PagerDuty key — see
-[alerting_service_live_rules_2026_05_07.plan.md](alerting_service_live_rules_2026_05_07.plan.md)).
+[alerting_service_live_rules_2026_05_07.plan.md](alerting_service_live_rules_2026_05_07.md)).
 
 ### ECR repos — partial coverage
 

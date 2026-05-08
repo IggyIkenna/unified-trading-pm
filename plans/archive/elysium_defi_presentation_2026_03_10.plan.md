@@ -229,5 +229,5 @@ Add to `unified-trading-pm/presentations/tests/`:
 
 ## Dependencies
 
-- `elysium_defi_system_fork_2026_03_10.plan.md` (content accuracy — fork details)
-- `e2e_smoke_and_portable_backtests.plan.md` (backtest result numbers)
+- `elysium_defi_system_fork_2026_03_10.md` (content accuracy — fork details)
+- `e2e_smoke_and_portable_backtests.md` (backtest result numbers)

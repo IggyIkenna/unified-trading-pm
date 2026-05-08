@@ -240,18 +240,18 @@ isProject: false
 # MDPS streaming + backpressure successor plan (2026-05-07)
 
 > **Fold-into-umbrella banner 2026-05-08**: this plan's Phase 1-3 work overlaps the
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 1-4
-> umbrella. Per the 2026-05-08 audit (Crit 6 GAP — completion-pointer): this plan is the **MDPS-streaming sub-plan** of
-> the live-pipeline umbrella; the umbrella's Phase 4 explicitly cross-references this plan's `open_candle_writer` /
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 1-4 umbrella.
+> Per the 2026-05-08 audit (Crit 6 GAP — completion-pointer): this plan is the **MDPS-streaming sub-plan** of the
+> live-pipeline umbrella; the umbrella's Phase 4 explicitly cross-references this plan's `open_candle_writer` /
 > `close_candle_writer` UTL lifecycle (per § "Cross-plan coordination" in the umbrella). When this plan ships, its todos
 > satisfy the umbrella's Phase 4 corresponding success-gate row. **Successor**: this plan is its own completion; per
 > CLAUDE.md "Citadel-Grade Planning Standards §3 — No Technical Debt", every phase ships final production shape.
 
 > **🟢 DEPENDENCY — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 4 RE-USES
-> the `open_candle_writer` / `close_candle_writer` UTL lifecycle this plan ships in Phase 1.1 (UTL canonical_writer
-> chunked lifecycle) for live-mode candle aggregation. Phase 4.4 of the live-pipeline plan also re-uses the RSS-pause
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4 RE-USES the
+> `open_candle_writer` / `close_candle_writer` UTL lifecycle this plan ships in Phase 1.1 (UTL canonical_writer chunked
+> lifecycle) for live-mode candle aggregation. Phase 4.4 of the live-pipeline plan also re-uses the RSS-pause
 > integration this plan ships in Phase 2 (ResourceProfiler.on_memory_warning wiring). **This plan's Phase 1.2 + Phase 2
 > must reach C5 before live-pipeline Phase 4 starts.** Banner removed when both Phase 1.2 and Phase 2 are flipped done
 > here.

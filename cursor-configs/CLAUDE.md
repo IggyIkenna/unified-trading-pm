@@ -148,8 +148,7 @@ Read these before making ANY code changes:
   supersedes prior `expected_unattempted` rows by row_key. **Coverage % at every drilldown level** =
   `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe
   (catalog × dates × data_types). SSOTs: `codex/02-data/availability-manifest-and-data-status.md` (manifest schema +
-  4-state taxonomy); `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 3.D.5 (full
-  architecture).
+  4-state taxonomy); `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 3.D.5 (full architecture).
 - **Honest absence vs fake placeholders (CRITICAL — applies top-to-bottom across every service)** — when a service runs
   end-to-end, every output row must reflect REAL work OR a clearly-flagged honest gap. Three categories of "missing",
   each with a different action — wrong action = silent data corruption.
@@ -277,10 +276,10 @@ Read these before making ANY code changes:
   compat shims" rules.
 
   **Companion plan + executor handover**: full per-service verify/fix/lift/build checklist with anti-patterns and
-  parallel-stream coordination notes in `unified-trading-pm/plans/epics/infrastructure_master_2026_05_07.md`
-  (umbrella) which folds-in `plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md` + its `.HANDOVER.md`
-  companion (commit `d591416d`). Sub-agents executing this work pick the rules up via this section + the umbrella + the
-  archived handover doc + SUB_AGENT_MANDATORY_RULES.md inheritance.
+  parallel-stream coordination notes in `unified-trading-pm/plans/epics/infrastructure_master_2026_05_07.md` (umbrella)
+  which folds-in `plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md` + its `.HANDOVER.md` companion
+  (commit `d591416d`). Sub-agents executing this work pick the rules up via this section + the umbrella + the archived
+  handover doc + SUB_AGENT_MANDATORY_RULES.md inheritance.
 
 - **Live = batch — same data, same fields, same timing semantics, different sources OK (CRITICAL — applies to every
   asset_group)** — Live and batch are operational modes of the SAME pipeline. They produce identical schemas, identical
@@ -322,8 +321,8 @@ Read these before making ANY code changes:
   trade LTP. NO silent NaN placeholder rows. The `_create_empty_output()`-style placeholder method is **banned** from
   `base_adapter` and any equivalent base class. Reference incidents: 2026-05-05 MDPS 1440 NaN OHLC bars per day per
   (venue, data_type); 2026-05-07 RED ALERT (5 CeFi VMs writing 96-100% empty rows with all blank reasons —
-  bitfinex/bitget/kraken). Plan: `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A + Phase 3.D.5 (Waves
-  1, 2, 2.M shipped 2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
+  bitfinex/bitget/kraken). Plan: `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A + Phase 3.D.5 (Waves 1, 2,
+  2.M shipped 2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
 
   **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
   discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed set
@@ -902,15 +901,17 @@ Markdown checkbox: `- [x]` for done, `- [ ]` for pending. Format: `- [x] [SCRIPT
 
 ## Plan Filename Convention + 3-Layer Model (codified 2026-05-08)
 
-| Directory                    | Extension        | Why                                                                                          |
-| ---------------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
-| `plans/active/`              | `<slug>.md`      | Native markdown preview in Cursor / VS Code / GitHub web UI                                  |
-| `plans/epics/` (masters)     | `<slug>.md`      | Granular asset_group / domain umbrellas                                                      |
-| `plans/epics/` (May-23 epics)| `<slug>.epic.md` | Domain-target wrappers for May-23 cutover                                                    |
-| `plans/archive/`             | `<slug>.plan.md` | Frozen historical state — DO NOT rename, breaks archaeology in commit messages + external refs |
-| `plans/ai/`                  | `<slug>.plan.md` | AI-generated staging dir; promotion to `active/` renames to `.md`                            |
+| Directory                     | Extension        | Why                                                                                            |
+| ----------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `plans/active/`               | `<slug>.md`      | Native markdown preview in Cursor / VS Code / GitHub web UI                                    |
+| `plans/epics/` (masters)      | `<slug>.md`      | Granular asset_group / domain umbrellas                                                        |
+| `plans/epics/` (May-23 epics) | `<slug>.epic.md` | Domain-target wrappers for May-23 cutover                                                      |
+| `plans/archive/`              | `<slug>.plan.md` | Frozen historical state — DO NOT rename, breaks archaeology in commit messages + external refs |
+| `plans/ai/`                   | `<slug>.plan.md` | AI-generated staging dir; promotion to `active/` renames to `.md`                              |
 
-**Rule.** New plans land in `plans/active/<slug>.md` (or `plans/epics/<slug>.md` for granular masters / `<slug>.epic.md` for May-23 epics). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`. The 2026-05-08 sweep (commits `aa72177d` rename + `cca954ff` cross-ref rewrite) is the codifying boundary.
+**Rule.** New plans land in `plans/active/<slug>.md` (or `plans/epics/<slug>.md` for granular masters / `<slug>.epic.md`
+for May-23 epics). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`. The 2026-05-08 sweep
+(commits `aa72177d` rename + `cca954ff` cross-ref rewrite) is the codifying boundary.
 
 **3-Layer plan model:**
 
@@ -930,12 +931,14 @@ master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master
                 └─ each references codex/, code, scripts/
 ```
 
-- **Epics** orchestrate domain targets for May 23; consume granular masters + sub-plans. Read-mostly: writes only to consumed-plans table or end-state criteria.
+- **Epics** orchestrate domain targets for May 23; consume granular masters + sub-plans. Read-mostly: writes only to
+  consumed-plans table or end-state criteria.
 - **Masters** are asset_group / domain umbrellas; consume sub-plans.
 - **Sub-plans** own todos for a single workstream.
 - None of the layers duplicates content — each adds orchestration above the layer below.
 
-See [`plans/epics/README.md`](../plans/epics/README.md) and [`plans/PLAN_FORMAT.md`](../plans/PLAN_FORMAT.md) for the canonical structure.
+See [`plans/epics/README.md`](../plans/epics/README.md) and [`plans/PLAN_FORMAT.md`](../plans/PLAN_FORMAT.md) for the
+canonical structure.
 
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
@@ -1006,7 +1009,7 @@ batched into a single sweep at handoff time. The flip happens in the same logica
 1. Ship the code commit (or commits) that complete the todo. **Push it.**
 2. Edit the plan file: `- [ ] [SCRIPT] P0. Description...` →
    `- [x] [SCRIPT] P0. Description... (commit-sha + brief evidence)`.
-3. Commit the plan flip in the PM repo with a `plan(...)` prefix referencing the work commits. **Push it.**
+3. Commit the plan flip in the PM repo with a `docs(plans):` prefix referencing the work commits. **Push it.**
 4. Only then move to the next todo.
 
 **Don't flip a checkbox unless the work is actually shipped.** Pushed commits count; local commits do NOT. If the work
@@ -1017,7 +1020,7 @@ is half-done (e.g. helper shipped but consumer wiring deferred), flip only the h
 message shape:
 
 ```
-plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary of what shipped>)
+docs(plans): <plan-name> Phase <N>.<Tier> — <one-line summary of what shipped>
 
 * <repo>@<sha> — <one-line>
 * <repo>@<sha> — <one-line>
@@ -1025,6 +1028,13 @@ plan(<plan-name>): flip <Phase>.<Tier> checkboxes (<one-line summary of what shi
 
 Plan: <plan-filename>.
 ```
+
+**Why `docs(plans):` and not `plan(<name>):`** — the conventional-commits pre-commit hook (rolled out 2026-05 across
+every repo) only accepts the standard type set:
+`build / chore / ci / docs / feat / fix / perf / refactor / revert / style / test`. `plan(...)` is rejected and the only
+ways past it are `--no-verify` (banned per workspace rule "Never skip hooks") or `[QG-BYPASS: ...]` tags. `docs(plans):`
+is conventional-commits-clean, semantically accurate (the plan file IS a doc), and matches existing PM precedent
+(PM@e3457a08, PM@0e2eb08e, etc.). Codified 2026-05-08 after the PM@0e2eb08e Wave 4 flip surfaced the SSOT-vs-hook drift.
 
 ### Why both halves are non-negotiable
 
@@ -1485,8 +1495,8 @@ git log --oneline <branch>..origin/<branch>   # incoming commits, if any
   you CAN do; main + operator decide rebase / merge / cherry-pick / drop.
 
 **Plan-of-record + Q&A bus.** Every spawned tab has a single **plan-of-record** (e.g. `cefi_master.md`,
-`writegate_honest_coverage.md`, `defi_master.md`) — that's where its todos live, where it flips checkboxes as
-it ships, and where it writes a `## Open questions` section for blockers. Q&A format:
+`writegate_honest_coverage.md`, `defi_master.md`) — that's where its todos live, where it flips checkboxes as it ships,
+and where it writes a `## Open questions` section for blockers. Q&A format:
 
 ```markdown
 ## Open questions
@@ -1570,9 +1580,9 @@ every code + plan-flip commit sha. Then go quiet — don't pick up new work auto
 1. `git fetch origin live-defi-rollout && git log --oneline -25 origin/live-defi-rollout` — summarise incoming commits
    since yesterday. Don't auto-pull; operator pulls explicitly when ready to sync.
 2. Re-read yesterday's work-split plans (where partial items roll forward) + `_agent_pings.md` for overnight pings.
-3. **Daily ledger sweep**: scan all `plans/active/*.md` for `## Open questions` blocks. Remove ✅ RESOLVED Q&As
-   older than 24h. Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, re-prompt the spawned agent or
-   escalate. Verify `_agent_pings.md` has no orphan lines.
+3. **Daily ledger sweep**: scan all `plans/active/*.md` for `## Open questions` blocks. Remove ✅ RESOLVED Q&As older
+   than 24h. Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, re-prompt the spawned agent or escalate.
+   Verify `_agent_pings.md` has no orphan lines.
 4. **Draft today's two work-split plans** (one Ikenna, one Harsh) using the plan-shape template below. Pull in carryover
    items from yesterday's partials. Add new items that emerged from incoming pings or audit findings. Size to ~25-50
    AI-days per side (5 parallel agents × 5-10 days solo each).
@@ -1656,8 +1666,8 @@ checkboxes + the codex SSOTs + the commit history.
 
 - **Don't** put Q&A into the work-split plan itself — that's main-agent-only writing surface. Q&A goes on the agent's
   plan-of-record (the master / domain plan).
-- **Don't** mix the daily split with the master plan body — `master_to_live_defi_2026_05_23.md` is the durable
-  readiness model; today's split is the daily orchestration surface. Both exist; neither replaces the other.
+- **Don't** mix the daily split with the master plan body — `master_to_live_defi_2026_05_23.md` is the durable readiness
+  model; today's split is the daily orchestration surface. Both exist; neither replaces the other.
 - **Don't** write spawn prompts in chat — they belong in the work-split plan body so the operator can paste them
   verbatim into a fresh Cursor / Claude Code tab without re-typing.
 - **Don't** carry over a 5-tab thematic shape (Model A) when the day's work is genuinely dynamic — switch to Model B (1

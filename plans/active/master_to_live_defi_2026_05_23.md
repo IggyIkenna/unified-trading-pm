@@ -419,8 +419,8 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 >   (`ArrowTypeError` on `instrument_count`) was briefly blocking tradfi / defi / prediction; resolved at PM@341bb285
 >   (script-side root cause + 4 in-place shard fixes). Rollup-vs-drilldown denominator gap closure now observable on all
 >   5 asset_groups; operator spot-check pending. Detail in
->   [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) §
->   Phase 3.D.4.
+>   [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+>   3.D.4.
 
 4. **Smoke test** — representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end
 5. **Manifest hookup + cluster validation** — `ManifestWriter.record_{captured,empty,failed}` with
@@ -459,10 +459,10 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 > **🟢 LIVE-PIPELINE ACTIVATION 2026-05-08** — Three new plans landed 2026-05-08 cover the live-mode portion of Group F
 > items 21 (Reconciliation suite) + 22 (Trading guardrails) for MTDS / MDPS / features-service:
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) (main
-> activation, 10d), [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.plan.md)
-> (pre-req, merges 8 features-\* repos into one features-service, 3-5d), and
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) (bundled
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) (main activation,
+> 10d), [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) (pre-req, merges 8
+> features-\* repos into one features-service, 3-5d), and
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md) (bundled
 > overnight GCS migration: pipeline_mode partition + category=→asset_group= rekey + drift cleanup). Codex entry:
 > [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md).
 > Sequencing: features-repo Phase 7 + gcs-bundle Phase 9 BLOCK live-pipeline Phase 3+5 respectively.
@@ -792,14 +792,14 @@ a Group F item; ownership routes to the named agent/tab.
       taxonomy. Existing rules (`data_freshness_rules.py`, `defi_rules.py`, `margin_rules.py`) need to be wired to the
       closed-set `AlertCode` enum. Gates Group F item 22 ("Trading guardrails — alerting-service rules cover live
       data-freshness + P&L deviation + position breaches"). Owner: Agent 1 (alerting Phase 2). Already part of
-      [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) Phase 2 scope; this
-      todo is the cross-tab visibility marker.
+      [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 2 scope; this todo is
+      the cross-tab visibility marker.
 - [ ] [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
       tuple-typed required_inputs / (c) namespaced names. Currently deferred. Gates features-sports-service consumer
       migration (Phase 2A of ml_and_features_master) which in turn gates the `assert_no_lookahead_for_feature_group`
       helper from silently no-oping on sports calculators. Owner: operator + Agent 2 (writegate / consumer-migration).
-      Already filed in [`ml_and_features_master_2026_05_07`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase
-      1A.3; this todo is the cross-tab visibility marker against May-23 critical path.
+      Already filed in [`ml_and_features_master_2026_05_07`](../epics/ml_and_features_master_2026_05_07.md) Phase 1A.3;
+      this todo is the cross-tab visibility marker against May-23 critical path.
 - [ ] [AGENT] P1. **Validate per-venue testnet endpoints for CeFi connectors** (Binance / Bybit / Deribit / OKX). Gates
       Group F item 20 ("Live testnet replicates prod"). Tenderly fork fixtures shipped on the DeFi side per
       `execution-service/tests/integration/conftest.py`; CeFi side has not been validated end-to-end. Owner: Agent 4
@@ -897,7 +897,7 @@ self-superseded artefacts.
 
 **Successor plans for partial implementations (per CLAUDE.md "Temporary state must have a named successor plan" rule):**
 
-- [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.plan.md) (PM@`c0ccc8ad`) —
+- [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) (PM@`c0ccc8ad`) —
   covers DEFERRED Units 1+3 from this session: incremental flush in `_streaming_write_per_tf` (via UTL
   `canonical_writer` `open_candle_writer` / `close_candle_writer` lifecycle so shard atomicity is preserved across
   N-symbol batches) + MDPS-side ResourceProfiler `on_memory_warning` admission control on the ThreadPoolExecutor.
@@ -905,8 +905,8 @@ self-superseded artefacts.
   replace `_read_tick_data` eager full-load with `pyarrow.parquet.ParquetFile.iter_batches()` row-group streaming
   (consumer audit: `_process_standard_timeframe`, `_extract_instrument_info`, `_validate_*` all need iterator
   adaptation).
-- [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.plan.md) (PM@`c0ccc8ad`) —
-  covers Databento adapter improvements identified during the parallelization audit: pass `path=<tempfile>` to
+- [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md) (PM@`c0ccc8ad`) — covers
+  Databento adapter improvements identified during the parallelization audit: pass `path=<tempfile>` to
   `client.timeseries.get_range(...)` at `databento_adapter.py:509-517` + iterate `to_df(count=N)` chunks (eliminates
   full-DBN BytesIO + full-DataFrame materialisation peak). Phase 2: parallelise outer `(data_type, dataset)` loop via
   `asyncio.gather` (bounded by existing `Semaphore(100)`). Phase 3 (gated on 2nd consumer): UTL `streaming_dbn_writer`
@@ -1002,9 +1002,8 @@ Agent 5):
 - [x] **Open 1 alerting plan + extend 4 existing plans** (revised post-2026-05-06 audit; see work-stream E for details:
       PBMS / R&E / pnl-attribution extend `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30` per
       Stage 7 consolidation); batch-live-recon extends `consolidated_operational_validation_2026_04_15`). **DONE
-      2026-05-07** — [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) opened;
-      Phase 1 UAC AlertCode taxonomy shipped (UAC@`d00326d` per PM@`7624ab21`); 4 plan extensions tracked under
-      work-stream E.
+      2026-05-07** — [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) opened; Phase
+      1 UAC AlertCode taxonomy shipped (UAC@`d00326d` per PM@`7624ab21`); 4 plan extensions tracked under work-stream E.
 - [x] **Plan hygiene sweep (Day 1 quick-win)** — archive 18 self-tagged superseded plans; backfill missing frontmatter
       (`last_updated` / `asset_group` / `locked_by` / 5 plans with no frontmatter at all); re-tag cluster children with
       `parent:` field — work-stream G. **DONE 2026-05-06** — Stage 1 archived 17 self-tagged superseded plans (one

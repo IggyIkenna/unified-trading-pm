@@ -90,9 +90,9 @@ todos:
     content:
       "Deployment UI build selector: BuildSelector.tsx dropdown + GET /builds/{service} AR tag listing endpoint +
       POST /deployments/{service}/deploy endpoint. Display format: '{version} @ {branch}'. Pre-1.0.0 builds allowed
-      for manual deploys. Create deployment_ui_version_selector.plan.md."
+      for manual deploys. Create deployment_ui_version_selector.md."
     status: done
-    note: "DONE — builds.py route, main.py registration, BuildSelector.tsx, DeployForm.tsx extension, deploymentApi.ts, deployment_ui_version_selector.plan.md all created."
+    note: "DONE — builds.py route, main.py registration, BuildSelector.tsx, DeployForm.tsx extension, deploymentApi.ts, deployment_ui_version_selector.md all created."
   - id: phase-8-staging-version-gate
     content:
       "Create staging-version-gate.yml template: blocks PRs to staging if repo version < 1.0.0. PM repo exempt.
@@ -114,7 +114,7 @@ isProject: false
 # Plan: CI/CD Versioning, Multi-Project Cloud Build & Staging Queue
 
 **Status:** DONE **Created:** 2026-03-11 **Completed:** 2026-03-11 **Supersedes:**
-`version_control_ci_cd_overhaul_2026_03_11.plan.md` (absorbed + deleted), `semver_multi_project_env_2026_03_10.plan.md`
+`version_control_ci_cd_overhaul_2026_03_11.md` (absorbed + deleted), `semver_multi_project_env_2026_03_10.md`
 (superseded) **Refs:**
 
 - `docs/repo-management/CI-CD-FLOW.md`
@@ -564,7 +564,7 @@ Add / update the following sections to reflect the new pipeline:
 
 ## Phase 7: Deployment UI Build Selector (In Progress)
 
-**Tracked in:** `deployment_ui_version_selector.plan.md` (to be created)
+**Tracked in:** `deployment_ui_version_selector.md` (to be created)
 
 **Goal:** Dropdown in deployment-ui showing available builds as `{version} @ {branch}` parsed from AR tags. Select any
 build to deploy to any environment. Pre-1.0.0 builds allowed (manual deploy, no version gate here).
@@ -609,7 +609,7 @@ Idempotent: same version + same branch always refers to the same artifact (enfor
 - `deployment-ui/src/components/BuildSelector.tsx` (NEW)
 - `deployment-ui/src/components/DeployForm.tsx` (extend: add BuildSelector above image_tag input)
 - `deployment-ui/src/api/deploymentApi.ts` (add `fetchBuilds`, `deployBuild`)
-- `unified-trading-pm/plans/active/deployment_ui_version_selector.plan.md` (CREATE)
+- `unified-trading-pm/plans/active/deployment_ui_version_selector.md` (CREATE)
 
 ---
 
@@ -810,7 +810,7 @@ Phase 7 (deployment UI build selector) ← independent
   → register in main.py
   → BuildSelector.tsx
   → extend DeployForm.tsx
-  → create deployment_ui_version_selector.plan.md
+  → create deployment_ui_version_selector.md
 ```
 
 ---
@@ -838,9 +838,9 @@ Phase 1 (manifest schema)
 
 ## Potential Conflict to Watch
 
-`full_autonomous_agent_ci.plan.md` also references `semver-agent.yml`. That plan is in planning stage only. No code
-conflict expected, but Phase 2 of this plan (semver trigger change) must land before that plan implements any
-semver-agent changes.
+`full_autonomous_agent_ci.md` also references `semver-agent.yml`. That plan is in planning stage only. No code conflict
+expected, but Phase 2 of this plan (semver trigger change) must land before that plan implements any semver-agent
+changes.
 
 ---
 

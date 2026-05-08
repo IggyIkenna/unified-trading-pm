@@ -35,7 +35,7 @@ related:
 # Deploy-Missing auto-launch (preview -> auto)
 
 > **Fold-into-umbrella banner 2026-05-08**: this plan's Phase 1+2 (tarball-refresh + auto-launch endpoint) is a child of
-> the [`deployment_ui_lifecycle_tabs_2026_05_08`](deployment_ui_lifecycle_tabs_2026_05_08.plan.md) umbrella per the
+> the [`deployment_ui_lifecycle_tabs_2026_05_08`](deployment_ui_lifecycle_tabs_2026_05_08.md) umbrella per the
 > 2026-05-08 audit (Crit 6 GAP — completion-pointer). Per the umbrella's plan body, the Deploy-Missing auto-launch is
 > the runtime-execution surface that the lifecycle-tabs UI exposes via the new LiveDataStatusTab
 >

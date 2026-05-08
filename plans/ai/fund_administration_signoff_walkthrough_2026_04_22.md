@@ -11,7 +11,7 @@ locked_since: 2026-04-22
 
 # Fund administration — sign-off walkthrough
 
-**Plan SSOT:** `plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md` Phase 6.
+**Plan SSOT:** `plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md` Phase 6.
 
 **Preconditions** (all must be green before the walkthrough starts):
 
@@ -122,7 +122,7 @@ Checklist:
 
 - [ ] Confirm with compliance: crypto engagements go through POD as administrator, assets at Copper custodian.
 - [ ] Confirm the TradFi-admin selection is a named follow-up — NOT in today's scope. Walk the follow-up plan
-      (`plans/active/tradfi_fund_administrator_selection_2026_04_22.plan.md`).
+      (`plans/active/tradfi_fund_administrator_selection_2026_04_22.md`).
 - [ ] Confirm public-copy rules are being respected — "POD" never on public surfaces; Copper can be named.
 - [ ] Walk the briefing copy live at `https://odum-research.com/briefings/investment-management` — confirm the Pooled
       section reads correctly (custodian named; administrator described generically).
@@ -157,6 +157,6 @@ Checklist:
 
 ## Reference
 
-- `plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md` — parent plan
+- `plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md` — parent plan
 - `codex/14-playbooks/shared-core/fund-administration-and-custody.md` — custody SSOT
 - `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` — subscription / redemption mechanic

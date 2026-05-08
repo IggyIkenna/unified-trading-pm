@@ -24,10 +24,10 @@ overnight-hardening (this task)
 
 ```bash
 # Check if phase1 of a plan is complete before starting phase2 work
-bash scripts/agents/check-plan-gate.sh plans/active/some-plan.plan.md "phase1-"
+bash scripts/agents/check-plan-gate.sh plans/active/some-plan.md "phase1-"
 
 # Check all items in a plan
-bash scripts/agents/check-plan-gate.sh plans/active/some-plan.plan.md ""
+bash scripts/agents/check-plan-gate.sh plans/active/some-plan.md ""
 ```
 
 ## Adding Dependencies
@@ -41,6 +41,6 @@ Workflows can enforce this by adding a step:
 - name: Check prerequisite plan gate
   run: |
     bash scripts/agents/check-plan-gate.sh \
-      plans/active/prerequisite-plan.plan.md \
+      plans/active/prerequisite-plan.md \
       "phase1-"
 ```
