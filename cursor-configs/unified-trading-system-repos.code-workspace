@@ -64,6 +64,9 @@
       "path": "features-volatility-service"
     },
     {
+      "path": "features-service"
+    },
+    {
       "path": "ibkr-gateway-infra"
     },
     {
