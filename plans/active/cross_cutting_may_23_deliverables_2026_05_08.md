@@ -389,3 +389,52 @@ Deliverable #1 [BUILD] catalogue UI (Harsh T6) — UNBLOCKED in same way: tradin
 + now-fully-populated capability matrix.
 
 Step A3 going quiet.
+
+## DONE-2026-05-08 (Step A1, Tab 6 main) — ArchetypeConfig SSOT + StrategyArchetype docstring fix
+
+Sub-agent A1 (`uac-archetype-config-stepA1`) shipped the operator-greenlit Option A genuine-gap closure (operational
+risk-knob SSOT) per issue doc
+[`cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+§ "Recommended decision" — the one new schema the issue doc identified as a genuine gap (operational risk knobs
+NOT centralised under a single UAC dataclass) is now centralised in `internal/architecture_v2/archetype_config.py`.
+
+- **uac@18bdc6e8** _(parallel-agent attribution due to foot-gun #1 + #4 incident — content is A1's; commit message is
+  sibling A3's `feat(uac): CARRY_STAKED_BASIS hedge perp universe + May-23 archetype coverage tests` bundle that scooped
+  my staged files between my `git add` and `git commit` cycles per the workspace-known concurrent-agent index race)_.
+  The actual A1 deliverables landed inside that commit:
+  - **NEW** `unified_api_contracts/internal/architecture_v2/archetype_config.py` (270 lines) — `ArchetypeConfig` frozen
+    dataclass with bounds-validated `__post_init__` (5 nullable fields: `collateral_currency`, `hedge_ratio`,
+    `position_cap_usd`, `kill_switch_drawdown_pct`, `kill_switch_position_breach_pct`) + `ARCHETYPE_CONFIG_SEED`
+    populated for the 5 May-23 live archetypes (CARRY_STAKED_BASIS / CARRY_BASIS_PERP / CARRY_BASIS_DATED /
+    CARRY_RECURSIVE_STAKED / ML_DIRECTIONAL_CONTINUOUS) + 3 helpers: `get_archetype_config`,
+    `is_archetype_config_declared`, `archetype_kill_switch_thresholds`. Default for unseeded archetypes is `KeyError` —
+    fail-loud forces deliberate operator decision per "Honest absence vs fake placeholders" principle applied to risk
+    parameters. Recursive-staked has tightened thresholds (drawdown 5%, breach 3%) due to liquidation-cascade risk.
+  - **MODIFIED** `unified_api_contracts/internal/architecture_v2/enums.py` — fixed `StrategyArchetype` docstring drift:
+    "46 archetypes" → "53 archetypes"; "VOL family expanded from 1 to 18" → "1 to 19" (counting legacy
+    VOL_TRADING_OPTIONS retained); "MM family expanded from 2 to 9" → "2 to 10" (counting prediction MM); "PORTFOLIO
+    family added (4 cross-category archetypes)" → "PORTFOLIO family added as the 9th orthogonal family"; "Cross-domain
+    event arb + prediction MM added" → "Cross-domain event arb added" (prediction MM is part of the MM expansion above,
+    not separate). Empirical counts via AST-walk: 53 archetypes / 9 families / 19 VOL\_\* / 10 MM\_\* + DEFI_LP\_\*.
+  - **MODIFIED** `unified_api_contracts/strategy.py` — added 5 re-exports (`ARCHETYPE_CONFIG_SEED`, `ArchetypeConfig`,
+    `archetype_kill_switch_thresholds`, `get_archetype_config`, `is_archetype_config_declared`) + extended `__all__`.
+    Surface co-edited with sibling A2 sub-agent (`capital_allocation` re-exports landed in same facade by separate hunk
+    per the issue doc's Option A migration steps 1-2).
+  - **NEW** `tests/unit/test_archetype_config.py` (212 lines, 25 tests) — bounds-validation negative cases (zero /
+    negative position cap; out-of-range drawdown / breach pct; negative hedge ratio), May-23 seed coverage assertion,
+    recursive-tightened thresholds, hashable + frozen invariants, drawdown ≤ 10% sanity bound across all seeded rows,
+    fail-loud `KeyError` with archetype name for unseeded archetypes.
+
+  Quality gates: 25/25 tests pass under repo `.venv`, basedpyright + ruff clean on the 4 files, ruff format check green.
+  Foreign-agent local-uncommitted alerting/internal import bug (in another agent's WIP) blocked direct pytest execution
+  against the dirty working tree — test verification ran against a clean origin baseline via `git stash --keep-index` of
+  the foreign WIP, then stash pop.
+
+  **Foot-gun encountered (logged for next agent):** parallel-agent index hijacking — between my `git add` and `git
+  commit` cycles a sibling sub-agent's `git add` swept my 4 staged files into THEIR commit (`18bdc6e8`) under their
+  commit message. Workspace rule "ship work + accept muddled attribution + document via auto-memory" applied; my work
+  content is correct + on origin. Composes with the foot-gun #1 + #4 reference incidents codified in CLAUDE.md.
+
+- **unified-trading-pm@\<this-flip-commit\>** — this DONE block.
+
+Step A1 going quiet.
