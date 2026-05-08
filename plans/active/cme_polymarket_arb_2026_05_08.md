@@ -157,15 +157,15 @@ corresponding section of the archived RFC.
 
 ## Sibling plan relationships
 
-- `tradfi_master_2026_05_07.plan.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows
+- `tradfi_master_2026_05_07.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows
   before the EVENT_CONTRACT classifier has anything to classify).
-- `predictions_master_2026_05_07.plan.md` — owns canonical_question_group backfill for the 6 new groups
+- `predictions_master_2026_05_07.md` — owns canonical_question_group backfill for the 6 new groups
   (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E); blocks Phase 2 cross-link.
-- `writegate_honest_coverage_endtoend_2026_05_06.plan.md` — Phase 1A bundled-data-type cluster validation; Phase 3 here
+- `writegate_honest_coverage_endtoend_2026_05_06.md` — Phase 1A bundled-data-type cluster validation; Phase 3 here
   registers EVENT_CONTRACT in `BUNDLED_DATA_TYPES`.
 - `tradfi_master_2026_05_07` Q1+Q2 work (`CanonicalFuturesContract.expiry_date` etc.) — Phase 4 per-cluster expiry
   builds on top of the futures schema.
-- `master_to_live_defi_2026_05_23.plan.md` — explicitly OUT of May-23 scope; this plan ships post-cutover.
+- `master_to_live_defi_2026_05_23.md` — explicitly OUT of May-23 scope; this plan ships post-cutover.
 
 ## Out of scope
 

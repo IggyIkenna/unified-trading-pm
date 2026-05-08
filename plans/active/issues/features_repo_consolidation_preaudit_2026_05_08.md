@@ -3,7 +3,7 @@ title: "Pre-audit manifest — features-* repo consolidation 2026-05-08"
 created: 2026-05-08
 author: features-consolidation-tab
 source:
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.plan.md (Phase 0)
+  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (Phase 0)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -1300,7 +1300,7 @@ during Phase 5 (post-merge). Status as of 2026-05-08; lift sequencing is owned b
   `CalendarBatchModeHandler` / `BatchHandler` (commodity) / etc. — with significant code overlap (manifest writer setup,
   config reload, GCS sink wiring, write-gate evaluation, error event emit). Phase 5 sub-todo: extract the 80% common
   shape into UTL `FeatureBatchHandler[FamilyConfig]` generic with `ABC.run()` + per-family override hooks.
-- **Reference**: `ml_and_features_master_2026_05_07.plan.md` Phase 2.UTL-LIFT.
+- **Reference**: `ml_and_features_master_2026_05_07.md` Phase 2.UTL-LIFT.
 
 ### 9.6 `ManifestFreshnessCache` adoption (per `ml_and_features_master` Phase 1A.UTL-CACHE-ADOPT)
 
@@ -1309,7 +1309,7 @@ during Phase 5 (post-merge). Status as of 2026-05-08; lift sequencing is owned b
   `/tmp/fill_missing_ohlcv.py` (canonical reference per CLAUDE.md "Manifest concurrency principle") into UTL as
   `ManifestFreshnessCache(ttl_seconds=60)`, then wire into every features-family writer that runs concurrently across
   multiple VMs.
-- **Reference**: `ml_and_features_master_2026_05_07.plan.md` Phase 1A.UTL-CACHE-ADOPT + CLAUDE.md "Manifest concurrency
+- **Reference**: `ml_and_features_master_2026_05_07.md` Phase 1A.UTL-CACHE-ADOPT + CLAUDE.md "Manifest concurrency
   principle (workspace-wide)".
 
 ### 9.7 `BuilderEntry` (feature-builder registry entry dataclass)

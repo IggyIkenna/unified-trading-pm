@@ -10,8 +10,8 @@ source:
   - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
   - plans/archive/leveraged_leg_controller_2026_05_01.plan.md
   - plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md
-  - plans/active/master_to_live_defi_2026_05_23.plan.md
-  - plans/active/defi_master_2026_05_07.plan.md
+  - plans/active/master_to_live_defi_2026_05_23.md
+  - plans/active/defi_master_2026_05_07.md
 related_archetypes:
   - CARRY_STAKED_BASIS
   - ARBITRAGE_PRICE_DISPERSION
@@ -72,7 +72,7 @@ Stream E  —  Master plan + defi_master alignment sweep    [PM plans/active/]
 > **Cross-ref 2026-05-07: rollup-vs-drilldown denominator-gap closure in flight (writegate Phase 3.D.4) is separate from
 > this stream.** Expected-universe enumerator scan-only sweep across all 5 asset_groups complete
 > (deployment-service@dcc5c87 + instruments-service@8e404c8); Stream A is independently shippable and not blocked by it.
-> Detail in [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
+> Detail in [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
 > § Phase 3.D.4.
 
 **Problem:** UAC `venue_collateral.py` carries a 2026-05-05 comment claiming _"NO production ETH-perp venue accepts an
@@ -150,11 +150,11 @@ already supports LEADER_HEDGE mode.
       "Not in this archetype" section: keep the line "Cross-venue perp spread arbitrage (funding-rate differential
       between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`" but reword it to be authoritative
       rather than circular.
-- [ ] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.md): rename
+- [ ] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md): rename
       `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with config variant
       `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` where useful). Update the "Both archetypes" headline to
       use the canonical name.
-- [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.plan.md`](./defi_master_2026_05_07.md): same rename.
+- [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md): same rename.
 - [ ] [UAC] P1. Verify `StrategyArchetype` enum in UAC: confirm `ARBITRAGE_PRICE_DISPERSION` exists and that
       `LEVERAGED_FUNDING_ARB` is **not** in the enum. If absent, no enum change needed; if mistakenly added, remove.
 - [ ] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under
@@ -249,13 +249,13 @@ the canonical `ARBITRAGE_PRICE_DISPERSION` name, and the `target_leverage` schem
 
 **Tasks**
 
-- [ ] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.md): replace "6
+- [ ] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md): replace "6
       perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster)" with the corrected statement of what's actually
       live: DRIFT (Solana) + Deribit + Bybit + OKX as ETH-LST-margin-capable; Hyperliquid + Binance + Aster remain
       venues for the **`ARBITRAGE_PRICE_DISPERSION`** funding-arb hedge but not for `carry_staked_basis` LST_AS_MARGIN.
       Reword the "Both archetypes hedge on a 6-venue perp universe" claim to be precise about which archetype uses which
       subset.
-- [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.plan.md`](./defi_master_2026_05_07.md): same precision pass — venue
+- [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md): same precision pass — venue
       list is no longer monolithic, archetypes have different venue subsets.
 - [ ] [PM-plan] P1. Both plans get a "2026-05-07 venue-matrix re-verification" sub-section pointing at this plan +
       Stream A's playbook (`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`).

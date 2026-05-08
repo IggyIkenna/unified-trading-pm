@@ -660,7 +660,7 @@ todos:
       - [x] [AGENT] P0. Phase 9 — alerting-service tier-up + circuit breaker wiring to strategy-service.
         SEQUENTIAL after Phase 8.
 
-        Coordinate with `alerting_service_live_rules_2026_05_07.plan.md` — that plan owns the
+        Coordinate with `alerting_service_live_rules_2026_05_07.md` — that plan owns the
         UAC `AlertCode` taxonomy import + per-rule wiring; this phase adds the live-pipeline rules + the
         circuit-breaker bridge.
 
@@ -937,7 +937,7 @@ isProject: false
 
 ## Why this plan exists
 
-Master plan (`master_to_live_defi_2026_05_23.plan.md`) target: two DeFi archetypes (`carry_staked_basis` lead +
+Master plan (`master_to_live_defi_2026_05_23.md`) target: two DeFi archetypes (`carry_staked_basis` lead +
 `leveraged_funding_arb`) live on a real wallet ≥7 continuous days by 2026-05-23. The underlying pipeline is currently
 batch-only — nothing streams. Live-mode is a non-trivial activation that touches MTDS / MDPS / features-service (newly
 consolidated per `features_repo_consolidation_2026_05_08`) plus the deployment-UI / alerting-service / strategy-service
@@ -1114,7 +1114,7 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
 - **`launcher_scripts_consolidation_into_deployment_service_2026_05_07`** — Phase 13 here adds 4 new launchers under
   `deployment-service/scripts/vm/`. No collision; that plan's surface is migration of existing launchers.
 - **`master_to_live_defi_2026_05_23`** — parent. Add a Group F sub-bullet pointing here: "Live pipeline activation per
-  `live_pipeline_mtds_mdps_features_2026_05_08.plan.md` — covers items 21 + 22 for live-mode."
+  `live_pipeline_mtds_mdps_features_2026_05_08.md` — covers items 21 + 22 for live-mode."
 - **`infrastructure_master_2026_05_07`** — umbrella; no direct collision.
 - **`ml_and_features_master_2026_05_07`** — overlaps on features compute path. Phase 5 here defines the live features
   compute; that plan's batch features compute work continues in parallel. Banner mutually.

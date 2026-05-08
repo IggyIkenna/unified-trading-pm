@@ -34,12 +34,12 @@ repo_gates:
     deployment: none
     business: none
 depends_on:
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 related:
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
-  - aws_migration_defi_first_2026_05_07.plan.md
-  - launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md
-  - deploy_missing_auto_launch_2026_05_07.plan.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
+  - aws_migration_defi_first_2026_05_07.md
+  - launcher_scripts_consolidation_into_deployment_service_2026_05_07.md
+  - deploy_missing_auto_launch_2026_05_07.md
 todos: []
 isProject: false
 ---
@@ -278,20 +278,20 @@ related deployment-api PR.
 ## Temporary states + their canonical follow-up plans
 
 - Until Category E ships, the AWS/GCP toggle is "documented-not-tested" — the toggle changes the API URL but the
-  data-status backend doesn't actually swap to S3. Successor: `aws_migration_defi_first_2026_05_07.plan.md` Phase N (the
+  data-status backend doesn't actually swap to S3. Successor: `aws_migration_defi_first_2026_05_07.md` Phase N (the
   storage-facade work).
 - Until the EC2 launchers ship, Category E `test_deploy_missing_aws_launcher_routing` is gated on launcher- existence +
   may skip with an `@pytest.mark.skip("EC2 launchers not yet shipped")` decorator.
 
 ## References
 
-- `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — the drill-down plan whose Phase 6 ship motivates
+- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — the drill-down plan whose Phase 6 ship motivates
   this regression net.
-- `aws_migration_defi_first_2026_05_07.plan.md` — Category E AWS work depends on the unified storage facade shipped
+- `aws_migration_defi_first_2026_05_07.md` — Category E AWS work depends on the unified storage facade shipped
   there.
-- `launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md` — Category D (Deploy-Missing per-service
+- `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` — Category D (Deploy-Missing per-service
   routing) extends as new launchers register.
-- `deploy_missing_auto_launch_2026_05_07.plan.md` — when auto-launch ships, Category D extends with security- boundary
+- `deploy_missing_auto_launch_2026_05_07.md` — when auto-launch ships, Category D extends with security- boundary
   tests (rate-limiter, audit-log, IAM-scope assertions).
 - CLAUDE.md "Per-asset-group shard-key matrix" — golden source for the SSOT alignment tests.
 - CLAUDE.md "VM launcher script SSOT" — golden source for the Deploy-Missing routing tests.

@@ -37,7 +37,7 @@ isProject: false
 related:
   - data_status_multi_axis_shard_propagation_2026_05_06.plan.md
   - shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-  - writegate_honest_coverage_endtoend_2026_05_06.plan.md
+  - writegate_honest_coverage_endtoend_2026_05_06.md
 ---
 
 # Data-status drill-down + MTDS CLI shard-atom alignment
@@ -51,7 +51,7 @@ related:
 > (apply-write completion) + PM@341bb285 (consolidator P0 resolution). Consolidator cycles 18:07-18:14 UTC merged all 5
 > per-VM shards. Rollup-vs-drilldown denominator gap closure is now observable on all 5 asset_groups; operator-side
 > spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
 > 3.D.4 banner.
 
 ## Why
@@ -505,7 +505,7 @@ cannot reach the truncated tail. **Two related shape problems**:
 - [ ] [UTL + UAC + predictions] P1. **`canonical_question_group` referenced as shard axis but not a real manifest
       column.** Same bug class as the protocol_id drift — appears in `SHARD_AXIS_MATRIX` for prediction asset_group
       across instruments-service / MTDS / MDPS / features-cross-instrument, but is NOT in UTL `_ROW_KEY_COLUMNS`.
-      **Named successor**: `predictions_master_2026_05_07.plan.md` (predictions Plan A — adds the column + Polymarket
+      **Named successor**: `predictions_master_2026_05_07.md` (predictions Plan A — adds the column + Polymarket
       lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level for every prediction
       service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
       successor plan" rule.
@@ -527,7 +527,7 @@ cannot reach the truncated tail. **Two related shape problems**:
       `AAVEV3-ARBITRUM dates 31/6072 (0.51%) capture_status_counts={captured: 0,     empty_confirmed: 0, attempted_failed: 0}`).
       The "31" comes from a different source than `capture_status_counts`. Per the codex finding, the rollup worker's
       per-(combined-venue) `dates_found` must derive from the manifest row count, not from the expected denominator.
-      Owner: data-status multi-axis stream per `infrastructure_master_2026_05_07.plan.md`.
+      Owner: data-status multi-axis stream per `infrastructure_master_2026_05_07.md`.
 
 ### Phase 7 — Carried follow-ups from `defi_launcher_audit_2026_05_07` (NEW 2026-05-07)
 

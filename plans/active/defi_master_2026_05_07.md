@@ -81,7 +81,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 ## Agent 4 launch decision (2026-05-07, [archived `work_split_2026_05_07_ikenna_5tab_layout`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md) Item 2)
 
 > Triage from
-> [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+> [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
 > § "Agent 4 triage decision". Carrying the launch-picks slice forward here so the agent reading defi_master in
 > isolation has the picks pinned.
 >
@@ -175,7 +175,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 > pass-through. Consolidator P0 (`ArrowTypeError` on `instrument_count`) that briefly blocked the merge was resolved at
 > PM@341bb285 (script-side root cause + in-place shard fix). The 988-dates-missing rollup-vs-drilldown panel signal
 > closes for DeFi as soon as the rollup blob refreshes; operator spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
 > 3.D.4.
 
 - **2 DeFi archetypes** live spec'd; backtest pipeline working per `consolidated_defi_data_pipeline` Phase 6
@@ -219,7 +219,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       (Chainlink Arb/Base/Optimism/Polygon via \_CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
-      [`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.md) — MUST run
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) — MUST run
       AFTER all Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup +
       Predictions Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across
       services. NO VM pause needed — consolidator handles concurrent writes per CLAUDE.md
@@ -608,7 +608,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.9. Operator inspected DEFI pool
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.9. Operator inspected DEFI pool
 drilldown after the 4-candidate-probe fix shipped (deployment-api@`0384eab`); AAVE_V3-ARBITRUM still surfaces "no schema
 yet" with 0 on-disk parquets across all 4 layout candidates even though the manifest claims `1781/1785 captured`.
 
@@ -974,7 +974,7 @@ Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authori
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Carry tracer pipeline handoff: `plans/ai/carry_tracer_pipeline_handoff_2026_05_06.md` (in-flight Phase 9 catalog).

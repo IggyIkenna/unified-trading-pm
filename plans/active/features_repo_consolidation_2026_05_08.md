@@ -458,7 +458,7 @@ todos:
           Per CLAUDE.md "Shard-level failure isolation": `run_one_shard` NEVER raises — captures exceptions into
           failed `BatchRunResult` so per-day batch loop continues. 8 unit tests in
           `tests/unit/feature_service_base/test_batch_handler.py`. Also closes
-          `ml_and_features_master_2026_05_07.plan.md` Phase 2.UTL-LIFT (Tier 2D). Audit § 9.5.
+          `ml_and_features_master_2026_05_07.md` Phase 2.UTL-LIFT (Tier 2D). Audit § 9.5.
         - **5.8 LookaheadBiasError adoption helper** — UTL@4354276c (pre-existing). `assert_no_lookahead_for_feature_group`
           verified at `unified_trading_library/point_in_time.py:274` — kwargs `feature_group, inputs_df, target_ts,
           available_at_col, label`; reads UAC `FEATURE_REQUIRED_INPUTS[feature_group]` for horizon; raises
@@ -562,7 +562,7 @@ todos:
 
         Per source repo `features-<f>-service`:
         1. Add a `README_ARCHIVED.md` at repo root with a banner: "**ARCHIVED 2026-05-XX** — code merged into
-           `features-service` via `features_repo_consolidation_2026_05_08.plan.md`. New work + bug fixes go to
+           `features-service` via `features_repo_consolidation_2026_05_08.md`. New work + bug fixes go to
            `features-service/features_service/<f>/`."
         2. Replace the existing `README.md` with a 5-line stub pointing to the archive banner.
         3. Final commit: `chore(archive): merged into features-service per features_repo_consolidation_2026_05_08`.
@@ -623,7 +623,7 @@ todos:
         `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet && bash
         deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`.
 
-        **Coordination**: `launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`'s
+        **Coordination**: `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`'s
         features-* migration items become a no-op once Phase 7 archives the source repos. The launcher
         consolidation plan was NOT banner-edited this cycle (parallel-agent surface); the
         cross-reference is captured here for read-back.
@@ -776,7 +776,7 @@ isProject: false
 
 ## Why this plan exists
 
-Pre-requisite for `live_pipeline_mtds_mdps_features_2026_05_08.plan.md` — the live pipeline topology assumes a SINGLE
+Pre-requisite for `live_pipeline_mtds_mdps_features_2026_05_08.md` — the live pipeline topology assumes a SINGLE
 `features-service` Docker image parameterised by `--feature-family` / `--asset-group`, deployed in two flavors
 (asset-scoped colocated with MDPS per asset_group; cross-cutting standalone). Maintaining that topology against 8
 separate image build + deploy pipelines is operationally infeasible against the 2026-05-23 cutover — every per-family
@@ -920,7 +920,7 @@ Estimated days: Phase 0 (0.5d) + Phase 1 (0.5d parallel) + Phase 2 (0.5d) + Phas
   mutually.
 - **`master_to_live_defi_2026_05_23`** — pre-requisite for Group F/G live-only readiness. Add a folded-todo pointer in
   master plan's `### Group F` section: "features-repo consolidation pre-req for live-pipeline (see
-  `features_repo_consolidation_2026_05_08.plan.md`)".
+  `features_repo_consolidation_2026_05_08.md`)".
 - **`infrastructure_master_2026_05_07`** — umbrella; no direct collision.
 - **`mdps_streaming_and_backpressure_2026_05_07`** + **`mtds_databento_path_streaming_2026_05_07`** — independent (these
   are MDPS / MTDS internal refactors); no overlap.

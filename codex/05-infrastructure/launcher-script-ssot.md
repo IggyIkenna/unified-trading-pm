@@ -51,7 +51,7 @@ bash deployment-service/scripts/vm/create-code-tarballs.sh --all
 ```
 
 (or the per-asset_group variant). Stale tarball = stale code on the VM. Operators must remember to refresh when they
-push fixes; the [`deploy_missing_auto_launch_2026_05_07`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md)
+push fixes; the [`deploy_missing_auto_launch_2026_05_07`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md)
 successor plan adds an automatic refresh step.
 
 ### 2. Tarball-from-local (developer path; Deploy-Missing UI mode toggle)
@@ -81,7 +81,7 @@ the tarball.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in
-[`deploy_missing_auto_launch_2026_05_07.plan.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md); out of
+[`deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md); out of
 scope today.
 
 ## Adding a new launcher
@@ -184,7 +184,7 @@ deployment-cluster shape (asset-scoped vs cross-cutting).
   when concurrent VMs run.
 
 Plan:
-[`plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`](../../plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md).
+[`plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md).
 
 Until the plan ships:
 
@@ -199,7 +199,7 @@ Until the plan ships:
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
 - CLAUDE.md "VM Naming Convention" — `VM_PREFIX_TO_BUCKET` registry.
 - [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
-- [`plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md)
+- [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md)
   — preview → auto-launch successor.
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
   — bigger AWS S3 / ECR / EC2-launcher work.

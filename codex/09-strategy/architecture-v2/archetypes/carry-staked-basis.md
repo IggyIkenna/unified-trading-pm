@@ -93,7 +93,7 @@ Adding a venue or LST to `VENUE_COLLATERAL_MATRIX` automatically expands the cat
 regeneration. No engine code changes, no catalog code changes — just a new matrix row.
 
 Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
-[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](../../../../plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)):
+[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
 
 | perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (post-Stream A flip) |
 | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------ |

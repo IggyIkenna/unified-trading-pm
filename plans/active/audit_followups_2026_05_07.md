@@ -34,14 +34,14 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 
 ### #1 — Master plan body references folded plans (audit §6 #2)
 
-[`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.md) body still references
+[`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) body still references
 `defi_e2e_pipeline_2026_04_30`, `leveraged_leg_controller_2026_05_01`, `defi_pipeline_extension_2026_05_01` as live
 plans. All three were folded into `defi_master_2026_05_07` per Stage 7 batch consolidation (see commit `a2ddbea7`).
 
 - [x] [SCRIPT] P2. Grep master plan:
-      `grep -n "defi_e2e_pipeline_2026_04_30\|leveraged_leg_controller_2026_05_01\|defi_pipeline_extension_2026_05_01" plans/active/master_to_live_defi_2026_05_23.plan.md`
+      `grep -n "defi_e2e_pipeline_2026_04_30\|leveraged_leg_controller_2026_05_01\|defi_pipeline_extension_2026_05_01" plans/active/master_to_live_defi_2026_05_23.md`
       to enumerate references. (PM@8286cf4 — enumerated 17 hits; classified per historical-vs-stale)
-- [x] [SCRIPT] P2. Replace each ref with `defi_master_2026_05_07.plan.md:Fork-1` (carry_staked_basis live wiring) or
+- [x] [SCRIPT] P2. Replace each ref with `defi_master_2026_05_07.md:Fork-1` (carry_staked_basis live wiring) or
       `:Fork-2` (leveraged_funding_arb), as appropriate. Work-stream-E EXTEND items + Week-1 critical-path alerting line
       need updating. (PM@8286cf4 — replaced live-context refs at lines 152/170/179/352/964; STALE-marked the [SCRIPT]
       todo at line 827 since target plans are archived; preserved historical "(folds in X)" annotations)
@@ -50,7 +50,7 @@ plans. All three were folded into `defi_master_2026_05_07` per Stage 7 batch con
 
 ### #2 — Service-readiness matrix lists archived plan (audit §6 #3)
 
-`master_to_live_defi_2026_05_23.plan.md` service-readiness matrix at ~lines 453-474 lists
+`master_to_live_defi_2026_05_23.md` service-readiness matrix at ~lines 453-474 lists
 `manual_trade_booking_reconciliation_2026_03_22` as "to archive." Stage 1 already archived it (per master plan line 637
 of the audit pass).
 
@@ -78,13 +78,13 @@ Master plan work-stream-G claims "140/142/31 plans affected" but Stage 7 batch c
 
 ### #4 — manifest_migration_master stale module path (audit §6 #5)
 
-[`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.md) ~line 473 cites
+[`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) ~line 473 cites
 `unified_api_contracts.canonical.crosscutting.empty_confirmed_reasons.EMPTY_CONFIRMED_REASONS`. The actual canonical
 module is `unified_api_contracts.canonical.crosscutting.honest_coverage` (verified 2026-05-07 via UAC@`8867891` —
 `EMPTY_CONFIRMED_REASONS` lives there now).
 
 - [x] [SCRIPT] P2. Find the line:
-      `grep -n "empty_confirmed_reasons" plans/epics/manifest_migration_master_2026_05_07.plan.md`. Replace with
+      `grep -n "empty_confirmed_reasons" plans/epics/manifest_migration_master_2026_05_07.md`. Replace with
       `unified_api_contracts.canonical.crosscutting.honest_coverage.EMPTY_CONFIRMED_REASONS`. (PM@8d33d97 — verified
       already resolved: manifest_migration_master line 96-99 explicitly notes canonical path is `honest_coverage` and
       legacy `empty_confirmed_reasons` path is stale and superseded; no stale module-path import remains, only the
@@ -97,7 +97,7 @@ module is `unified_api_contracts.canonical.crosscutting.honest_coverage` (verifi
 
 ### #5 — infrastructure_master STALE MDPS-1440-NaN reproduction-test (audit §6 #6)
 
-[`infrastructure_master_2026_05_07.plan.md`](../epics/infrastructure_master_2026_05_07.md) includes a "MDPS-1440-NaN
+[`infrastructure_master_2026_05_07.md`](../epics/infrastructure_master_2026_05_07.md) includes a "MDPS-1440-NaN
 reproduction-test" todo that's superseded by the writegate Phase 2.A adapter migrations (MDPS@`5b52d0b`/`b9f9328`/
 `80cf141`/`e9520a0`) + reconciler MDPS@`d3be0ef`. The 1440-NaN placeholder anti-pattern has been ripped out of the
 adapters; a reproduction-test is no longer meaningful.
@@ -122,7 +122,7 @@ just delete the old stuff"_ (captured in audit). `STRATEGY_DISPATCH_MODE` Litera
       `[AUDIT 2026-05-07: STALE — V1-RETIRE bypassed Phase 3 shadow window per operator directive 2026-05-01. STRATEGY_DISPATCH_MODE collapsed to v2_prod only.]`.
       (PM@b9593b2 — RESOLVED BY ARCHIVAL: `strategy_architecture_v2_finalization_2026_04_19.plan.md` archived 2026-05-07
       via PM@b638c37 (consolidation-B: strategy + DART umbrella folds 3 plans). Phase 3 markers moot since the plan no
-      longer exists in plans/active/. Folded successor: `strategy_and_dart_master_2026_05_07.plan.md`.)
+      longer exists in plans/active/. Folded successor: `strategy_and_dart_master_2026_05_07.md`.)
 - [x] [SCRIPT] P2. Recommend: drop Phase 3 from the plan entirely in next housekeeping pass (single-line removal per
       todo). Leave the marker for now so audit history is preserved. (PM@b9593b2 — moot after archival; Phase 3 lives in
       plans/archive/ for audit history preservation.)
@@ -148,7 +148,7 @@ just delete the old stuff"_ (captured in audit). `STRATEGY_DISPATCH_MODE` Litera
 - **Two teammates rule** — these plans are high-traffic. Commit + push each fix immediately per CLAUDE.md `896c9bc5`
   hard rule. If a concurrent agent's edit lands first, rebase and retry; do NOT `git checkout origin -- .` to "resolve."
 - Folding plans for #1 (`defi_master:Fork-1` / `:Fork-2` references) — confirm the fold-target sub-anchors exist in
-  `defi_master_2026_05_07.plan.md` before editing master. If they don't, the fix becomes "create matching anchor in
+  `defi_master_2026_05_07.md` before editing master. If they don't, the fix becomes "create matching anchor in
   defi_master + then update master."
 
 ## Cross-plan blockers

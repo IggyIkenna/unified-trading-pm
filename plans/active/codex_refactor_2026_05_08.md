@@ -371,7 +371,7 @@ drift.
   - [x] `06-coding-standards/service-hardening-checklist.md` — refs updated.
   - [x] `06-coding-standards/pre-sprint-baseline.md` — `phase0_standards_enforcement.plan.md` updated.
   - [x] `06-coding-standards/orphan-audit.md` — `orphan_audit_policy_2026_04_21.plan.md` updated.
-  - [x] `06-coding-standards/error-handling.md` — `writegate_honest_coverage_endtoend_2026_05_06.plan.md` updated.
+  - [x] `06-coding-standards/error-handling.md` — `writegate_honest_coverage_endtoend_2026_05_06.md` updated.
   - [x] `06-coding-standards/terminology-ssot.md` — `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`
         updated.
 

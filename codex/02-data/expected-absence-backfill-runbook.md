@@ -152,8 +152,8 @@ After each VM shutdown:
 - **CeFi v2 fine-grained instrument lifecycle** (Phase 3.D.5) — current enumerator covers `EXPECTED_PRE_VENUE_LAUNCH`
   only; per-instrument `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` requires the
   instruments-service catalog with per-instrument `available_from` / `available_to` / `expiry`. Tracked under
-  `cefi_master_2026_05_07.plan.md`.
+  `cefi_master_2026_05_07.md`.
 - **Prediction v2 per-(canonical_question_group, day)** (Phase 3.D.5) — blocked on UAC `PREDICTION_GROUPS` registry
-  per `predictions_master_2026_05_07.plan.md`.
+  per `predictions_master_2026_05_07.md`.
 - **Sports per-league enumeration** (Phase 3.D.4 deferred) — current covers source-coverage-start; per-league granular
-  enumeration needs sports-leagues catalog read. Tracked under `sports_master_2026_05_07.plan.md`.
+  enumeration needs sports-leagues catalog read. Tracked under `sports_master_2026_05_07.md`.

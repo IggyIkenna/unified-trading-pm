@@ -258,7 +258,7 @@ isProject: false
 
 ## Why this plan exists
 
-The `mtds_per_instrument_download_api_2026_04_24.plan.md` line of work shipped a band-aid fix for an MDPS VM OOM
+The `mtds_per_instrument_download_api_2026_04_24.md` line of work shipped a band-aid fix for an MDPS VM OOM
 regression on 2026-05-07: deployment-service@`02ee6d6` bumps the launcher memory tier so MDPS VMs don't OOM under the
 current eager-read + eager-write code path. That lets the May 23 cutover proceed, but it's strictly a tactical fix — the
 durable solution is a streaming flush + read-side iterator + admission control, none of which were safely deliverable in
@@ -283,9 +283,9 @@ this up can cross-reference the original audit findings without re-deriving them
   - UTL@`50ad40ef` `ParallelPerSymbolRunner`. MDPS uses ThreadPoolExecutor not asyncio so the wiring shape differs
     (described in Phase 2 above), but the contract — register a callback in `ServiceBootstrap`, flip a paused flag, gate
     new submissions — is identical.
-- **Master:** `master_to_live_defi_2026_05_23.plan.md` — Group D (Coverage & shard) item 14, "Operability under load"
+- **Master:** `master_to_live_defi_2026_05_23.md` — Group D (Coverage & shard) item 14, "Operability under load"
   item 16. This plan satisfies item 16 for MDPS specifically.
-- **Umbrella:** `infrastructure_master_2026_05_07.plan.md` — folds in shard-granularity SSOT propagation and related
+- **Umbrella:** `infrastructure_master_2026_05_07.md` — folds in shard-granularity SSOT propagation and related
   cross-cutting plumbing.
 
 ## Execution DAG

@@ -7,7 +7,7 @@ authoritative_for:
   rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so
   concurrent agents don't clobber the migration.
 referenced_by:
-  - plans/epics/manifest_migration_master_2026_05_07.plan.md
+  - plans/epics/manifest_migration_master_2026_05_07.md
 related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
@@ -56,7 +56,7 @@ sequencing that change so we never have a moment where canonical manifest drifts
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`manifest_migration_master`](../../plans/epics/manifest_migration_master_2026_05_07.plan.md).
+  [`manifest_migration_master`](../../plans/epics/manifest_migration_master_2026_05_07.md).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md).
 - **Code:** `unified-trading-library/manifest_writer.py`, consolidator daemon under `manifest-consolidator-*` VM,

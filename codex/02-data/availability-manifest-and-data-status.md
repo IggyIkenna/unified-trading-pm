@@ -721,7 +721,7 @@ reference, OR a default initialisation that was never overwritten when the manif
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
-**Action**: file under `infrastructure_master_2026_05_07.plan.md` § Data-status multi-axis follow-up — the rollup worker
+**Action**: file under `infrastructure_master_2026_05_07.md` § Data-status multi-axis follow-up — the rollup worker
 must derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected
 denominator. Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner:
 data-status multi-axis stream.
@@ -771,7 +771,7 @@ The closure has two halves, both required:
 **Half 1 — Forward-write `record_expected_empty(reason=EXPECTED_*)`** (writegate Phase 2.E.2 — partly shipped
 2026-05-07). Every NEW empty case at adapter / orchestrator level emits a manifest row with structured reason instead of
 skipping write. Adapter migrations done for sports + cefi + defi + tradfi this session
-([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+([`writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
 Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
 
 **Half 2 — Backward-fill the expected universe** (SHIPPED 2026-05-07 — PM@79e47874 + PM@341bb285).

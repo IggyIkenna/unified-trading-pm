@@ -33,7 +33,7 @@ todos: []
 isProject: false
 related:
   - sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived)
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 ---
 
 # api_football minimal-flattening removal

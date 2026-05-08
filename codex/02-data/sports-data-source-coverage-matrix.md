@@ -206,7 +206,7 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
 ## 4. Open questions / follow-ups
 
 - **ODDS duplication — RESOLVED 2026-05-07** (C.2 audit per
-  `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.2). The data-status panel surfaces
+  `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.2). The data-status panel surfaces
   `data_type=ODDS` in instruments-service AND `odds_horizon_bucket` in MTDS as separate panels, which had felt
   redundant. Investigation outcome: they are **not duplicates**, they serve different purposes and SHOULD coexist:
   - **`ODDS` in instruments-service** = pre-match snapshot from FootyStats `get_fixture_odds_snapshot()`
@@ -226,7 +226,7 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
     respective service nodes (ODDS under instruments-service, odds_horizon_bucket under MTDS); operator clarity comes
     from the panel disambiguating the two purposes (pre-match opening snapshot vs intra-day movement). Schema-modal
     descriptions for both data_types should call out the distinction explicitly per C.3 (also folded into
-    `sports_master_2026_05_07.plan.md` § Audit findings).
+    `sports_master_2026_05_07.md` § Audit findings).
 
 - **V2 manifest rows (496 rows, empty league_id).** Pollute per-league drilldown because they sum into totals with blank
   league. Aggregator must filter `schema_version >= 4` for per-league axes. A one-off delete of v2 rows is out of scope
@@ -250,12 +250,12 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   supersedes any implicit per-data_type coverage rules previously scattered in adapters.
 
 - **2026-05-07** — Resolved §4 "ODDS duplication" open question (C.2 audit per
-  `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.2). Investigation: instruments-service
+  `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.2). Investigation: instruments-service
   `data_type=ODDS` writer is footystats `get_fixture_odds_snapshot()` only (no api_football, no odds_api). MTDS
   `odds_api` lives as `odds_horizon_bucket` data_type with 8-horizon intra-day movement buckets. The two are
   different-purpose data (refdata-style pre-match snapshot vs intra-day market movement) and should coexist in their
   current homes — NO migration, NO merge. §2.2 + §4 updated; schema-modal disambiguation tracked under C.3 in
-  `sports_master_2026_05_07.plan.md`.
+  `sports_master_2026_05_07.md`.
 
 - **2026-05-08** — Added "Expected column counts per API-Football data_type" sub-section under §2.1 as a future-audit
   regression guard. Plan `plans/active/api_football_minimal_flattening_removal_2026_05_07.md` shipped flattening for

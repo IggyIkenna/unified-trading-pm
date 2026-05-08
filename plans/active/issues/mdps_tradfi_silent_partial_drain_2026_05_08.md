@@ -5,7 +5,7 @@ author: vm-ops-tab (Tab 4)
 source:
   - plans/active/work_split_2026_05_08_harsh.md § "TAB 4 — Per-asset_group VM ops" (TradFi MDPS post-drain ES.OPT
     validation)
-  - plans/epics/tradfi_master_2026_05_07.plan.md § "Tab 4 finding 2026-05-08" (annotation in plan body)
+  - plans/epics/tradfi_master_2026_05_07.md § "Tab 4 finding 2026-05-08" (annotation in plan body)
   - GCE event stream
     gs://central-element-323112-events/events/market-data-processing-service/2026-05-07/mdps-tradfi-{2021..2024}-20260506-125828/
   - CLAUDE.md § "No fire-and-forget VM launches (CRITICAL — production observability)"
@@ -109,7 +109,7 @@ Batch 1's launch); its eventual exit pattern will further constrain the hypothes
 4. **Re-run cluster validation AFTER relaunch + drain**: the original Tab 4 ES.OPT 11-cluster validation work-split task
    is a downstream check; the precondition (full-window MDPS-tradfi data on disk) must be met first.
 5. **Update tradfi_master plan body**: this finding annotation already lives under "Tab 4 finding 2026-05-08" in
-   `plans/epics/tradfi_master_2026_05_07.plan.md`. After diagnosis, fold the relaunch + validation steps into the plan's
+   `plans/epics/tradfi_master_2026_05_07.md`. After diagnosis, fold the relaunch + validation steps into the plan's
    actionable todo list.
 
 ## Pre-existing relationship to other in-flight work

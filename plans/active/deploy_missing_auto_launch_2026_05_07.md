@@ -25,11 +25,11 @@ repo_gates:
     deployment: none
     business: none
 depends_on:
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 todos: []
 isProject: false
 related:
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 ---
 
 # Deploy-Missing auto-launch (preview -> auto)
@@ -58,7 +58,7 @@ section. My local commit landed at `1f0ad01` on top of `33d56f8` which is now 2 
 clean (origin only moved forward, no diverged history when I started). Per Bootstrap § "Push discipline"
 conditional-push rule I have NOT pushed. Recommended resolution: rebase the single proposal-doc commit onto
 `origin/live-defi-rollout` (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`) — the proposal
-section only touches `plans/active/deploy_missing_auto_launch_2026_05_07.plan.md` + `_agent_pings.md`, neither of which
+section only touches `plans/active/deploy_missing_auto_launch_2026_05_07.md` + `_agent_pings.md`, neither of which
 the 2 incoming commits modified, so the rebase should be trivial. Alternatively cherry-pick if main agent prefers a
 clean linear history with the 2 incoming first.
 
@@ -660,7 +660,7 @@ that already shipped.
 
 ## References
 
-- Parent plan: `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` (Phase 3 ships preview; this
+- Parent plan: `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (Phase 3 ships preview; this
   plan ships the auto-launch successor).
 - Existing infrastructure:
   - `deployment-service/scripts/vm/create-code-tarballs.sh` (tarball refresh).

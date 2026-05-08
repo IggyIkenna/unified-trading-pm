@@ -325,7 +325,7 @@ consolidation target post-cutover.
    per-trade `model_version` tagging are P0 May-23-blockers (was P1 under "running" default). `ml_and_features_master`
    Phase 4D becomes hard-floor live-trading prerequisite, not just sports/predictions enablement.
 
-8. ? **Plan location.** Default: PM `plans/active/master_to_live_defi_2026_05_23.plan.md` (sub-plan) **and**
+8. ? **Plan location.** Default: PM `plans/active/master_to_live_defi_2026_05_23.md` (sub-plan) **and**
    `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md` (audit / SSOT companion), with the audit doc cross-linked
    from `CLAUDE.md` so it's loaded into agent context every session.
 9. ✓ **Pyth oracle ban — REVERSED 2026-05-06 for Solana-only scope.** `carry_staked_basis` LST yields (jitoSOL / mSOL /
@@ -442,7 +442,7 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 >   (`ArrowTypeError` on `instrument_count`) was briefly blocking tradfi / defi / prediction; resolved at PM@341bb285
 >   (script-side root cause + 4 in-place shard fixes). Rollup-vs-drilldown denominator gap closure now observable on all
 >   5 asset_groups; operator spot-check pending. Detail in
->   [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+>   [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
 >   3.D.4.
 
 4. **Smoke test** — representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end
@@ -772,7 +772,7 @@ gap.
 
 - [x] [PLAN] Open `alerting-service-live-rules_2026_05_07.plan.md` — the only genuine NO-PLAN gap. Lock to
       `live-defi-rollout`. References checklist Groups F + G. (verified 2026-05-07:
-      plans/active/alerting_service_live_rules_2026_05_07.plan.md exists)
+      plans/active/alerting_service_live_rules_2026_05_07.md exists)
 - [ ] [EXTEND] `defi_master_2026_05_07` Fork 1 (folds `defi_e2e_pipeline_2026_04_30`) — add explicit todos for
       **position-balance-monitor live-mode wiring** (PBMS Pub/Sub + GCS contract; dual projection + fill attributor +
       child-venue attribution already shipped per plan body).
@@ -1131,7 +1131,7 @@ Agent 5):
 
 ## Tracking surface
 
-- [x] Plan promoted to `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` (this file)
+- [x] Plan promoted to `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` (this file)
 - [x] Audit companion at `unified-trading-pm/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md` (pointer + drift
       table mirror)
 - [x] Referenced from `CLAUDE.md` so every agent session loads it

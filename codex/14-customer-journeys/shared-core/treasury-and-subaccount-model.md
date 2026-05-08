@@ -112,7 +112,7 @@ Client portal ledger updated
 ## Contract surface (shipped 2026-04-20 — Pooled scope only)
 
 Phase 0–4 landed on `live-defi-rollout`; Phase 5 docs + Phase 6 staging deploy pending per
-[fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md).
+[fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md).
 
 - **Domain types** — `from unified_api_contracts.fund_administration import ...` (public facade; also re-exported
   top-level from `unified_api_contracts`). Internal canonical definitions live under
@@ -183,7 +183,7 @@ Phase 0–4 landed on `live-defi-rollout`; Phase 5 docs + Phase 6 staging deploy
 - [ ] Name the specific qualified custodians per asset class with compliance review. Copper (crypto) is the reference;
       TradFi and on-chain custodians to be confirmed.
 - [x] Write the implementation plan — shipped as
-      [fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md).
+      [fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md](../../../plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md).
 - [x] Platform UI: scaffold `app/(platform)/services/im/funds/` with subscription, redemption, and ledger pages using
       mock data until `fund-administration-service` is available.
 - [ ] **Promote `FundTransferContext` to UAC** — currently a local dataclass in

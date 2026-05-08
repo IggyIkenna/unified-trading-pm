@@ -123,7 +123,7 @@ state unknown — Phase 4 audits.
 DeFi-relevant subset includes: wallet private keys (Copper / CEFFU custody), 6× perp-venue API keys (Bybit, Deribit,
 Binance, OKX, Hyperliquid, Aster), Pyth Hermes endpoint, Chainlink RPC URLs, Aave-V3 contract addresses, alerting paging
 credentials (Telegram bot, PagerDuty key — see
-[alerting_service_live_rules_2026_05_07.plan.md](alerting_service_live_rules_2026_05_07.md)).
+[alerting_service_live_rules_2026_05_07.md](alerting_service_live_rules_2026_05_07.md)).
 
 ### ECR repos — partial coverage
 
@@ -442,7 +442,7 @@ Operator verifies parity.
 - [ ] [HUMAN] P0. Live trading: the carry_staked_basis lead + leveraged_funding_arb archetypes go live on AWS-prod for
       the 7-day soak (per master plan).
 - [ ] [SCRIPT] P0. Hourly health check on AWS-DeFi services. Manifest write rate, P&L attribution, position drift,
-      alerting fire rate (per `alerting_service_live_rules_2026_05_07.plan.md` Phase 8 rehearsal).
+      alerting fire rate (per `alerting_service_live_rules_2026_05_07.md` Phase 8 rehearsal).
 - [ ] [HUMAN] P0. After 7 days continuous on AWS, GCP-DeFi shadow can be archived (move to coldline / Glacier).
 
 ### Phase 9 — Full-workspace rollout (post-May-23, deferred)

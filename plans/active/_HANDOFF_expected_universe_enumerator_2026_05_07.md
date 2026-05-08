@@ -44,7 +44,7 @@ Key file shipped:
 - **CeFi**: STUB — yields 0 rows with a WARNING log. Production v2 needs instruments-service catalog with per-
   instrument lifecycle (`available_from` / `available_to` / `expiry`).
 - **Prediction**: STUB — yields 0 rows. Blocked on UAC `PREDICTION_GROUPS` registry which is empty pending the
-  canonical_question_group SSOT (`predictions_master_2026_05_07.plan.md`).
+  canonical_question_group SSOT (`predictions_master_2026_05_07.md`).
 
 The script has been **smoke-tested locally** — TradFi NASDAQ holidays, DeFi AAVEV3-ETHEREUM 2018 pre-launch, sports
 api_football pre-2018-01-01 all yield correct (row, reason) tuples. CLI parses cleanly. **No unit tests written yet** —
@@ -145,20 +145,20 @@ Per CLAUDE.md "No fire-and-forget VM launches" — every launch MUST be paired w
 Per operator request, add a **VM RUNNING** banner to every active plan related to manifest / data-status, so other
 agents seeing the plans know there's a VM in flight on this work.
 
-- [ ] [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
+- [ ] [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
       § Phase 3.D.4 header — add `> **VM RUNNING (2026-05-07 ...): expected-universe-enum-{asset_group}-{ts}**` banner.
       Update as each asset_group's VM completes.
-- [ ] [`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md)
+- [ ] [`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md)
       — add a "VM RUNNING" cross-reference at the top noting the enumerator backfill closes the rollup-drilldown gap.
-- [ ] [`plans/active/master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.md) — note in the
+- [ ] [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) — note in the
       data-correctness section.
-- [ ] [`plans/active/defi_master_2026_05_07.plan.md`](defi_master_2026_05_07.md) — note in DeFi-specific section.
+- [ ] [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) — note in DeFi-specific section.
 - [ ] [`plans/active/issues/defi_launcher_audit_2026_05_07.md`](issues/defi_launcher_audit_2026_05_07.md) —
       cross-reference at top noting the rollup-drilldown denominator gap is being closed.
 - [ ] [`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](issues/defi_archetypes_doc_plan_drift_2026_05_07.md)
       — note that data-status convergence work is in flight (separate from the archetype canonicalisation streams
       already covered in this issue).
-- [ ] [`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+- [ ] [`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       Stream A — note the related VM work.
 
 After each VM completes, **flip the banner from "VM RUNNING" → "VM COMPLETED {sha} written=N"** in the relevant sections
@@ -173,7 +173,7 @@ active PM plan, that's fine."_ The following items are **already in active plans
 
 5 todos in [`plans/active/issues/defi_launcher_audit_2026_05_07.md`](issues/defi_launcher_audit_2026_05_07.md) §
 "Actionable todos — to be added to the existing data-status-drilldown plan". Confirm they're carried into
-[`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md):
+[`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md):
 
 - [deployment-service] P1 — `manifest_reader.py:584` paginated `top_instruments` (replace `df.head(30)`)
 - [deployment-ui] P1 — `VenueDetailPanel.tsx` show-more controls
@@ -184,7 +184,7 @@ active PM plan, that's fine."_ The following items are **already in active plans
 #### B. From the canonicalisation plan (`3321b96c`):
 
 5 streams in
-[`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md).
+[`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md).
 Operator approved all streams + the "deferred halves." Streams A–E remain todos in that plan; promote it to
 `plans/active/` when ready.
 
@@ -193,7 +193,7 @@ Operator approved all streams + the "deferred halves." Streams A–E remain todo
 - CeFi enumerator (instruments-service catalog read) — file as a new active plan item OR in the writegate Phase 3.D.4
   CeFi sub-task. Tracked in writegate plan but no concrete script yet.
 - Sports per-league enumeration (sports leagues catalog read) — file as a new active plan item OR sub-task of
-  sports_master_2026_05_07.plan.md.
+  sports_master_2026_05_07.md.
 - Unit tests for `enumerate_expected_universe.py` — at least one fixture-based test per asset_group (TradFi / DeFi /
   Sports). Track in writegate plan or instruments-service tests directory.
 
@@ -273,5 +273,5 @@ universes) requires the deferred catalog + canonical_question_group SSOT work na
 - **Codex denominator-divergence section**: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
   § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)" — operator-facing explanation
 - **Writegate Phase 3.D.4 todos**:
-  `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § "Phase 3.D.4 —
+  `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § "Phase 3.D.4 —
   Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)"

@@ -480,7 +480,7 @@ todos:
            note" sidebar with a reference to this migration).
         3. **UPDATE** `codex/02-data/asset_group-vocabulary.md` (or wherever the `category=`/`asset_group=`
            dual-vocab is documented) — flip the legacy mention to "RESOLVED 2026-05-15 per
-           `gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`"; reader fallback removal scheduled
+           `gcs_migration_bundle_pipeline_mode_2026_05_08.md`"; reader fallback removal scheduled
            T+30 days.
         4. **UPDATE** `codex/02-data/data-status-drilldown.md` § "Per-asset_group depth table" — add
            `pipeline_mode` as the outermost partition column in the drilldown (above asset_group).
@@ -650,7 +650,7 @@ Per phase — see each todo. Plan-level final gate:
   column wiring) are coordinated; either land in writegate plan + this plan's Phase 0 § (f) confirms the source state,
   or fold any unfinished items into this bundle's Phase 4 sweep.
 - **`master_to_live_defi_2026_05_23`** — parent. Add a Group F sub-bullet pointing here: "GCS migration bundle
-  (pipeline_mode + category→asset_group + drift cleanup) per `gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md` —
+  (pipeline_mode + category→asset_group + drift cleanup) per `gcs_migration_bundle_pipeline_mode_2026_05_08.md` —
   pre-req for live-pipeline activation."
 - **`infrastructure_master_2026_05_07`** — umbrella; Phase 7 codex SSOT updates may overlap with infrastructure master
   codex sweeps. Coordinate via banner.

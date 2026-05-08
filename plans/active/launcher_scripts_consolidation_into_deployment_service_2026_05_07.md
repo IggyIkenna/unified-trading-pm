@@ -37,11 +37,11 @@ repo_gates:
     deployment: none
     business: none
 depends_on:
-  - aws_migration_defi_first_2026_05_07.plan.md
+  - aws_migration_defi_first_2026_05_07.md
 related:
-  - aws_migration_defi_first_2026_05_07.plan.md
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md
-  - deploy_missing_auto_launch_2026_05_07.plan.md
+  - aws_migration_defi_first_2026_05_07.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
+  - deploy_missing_auto_launch_2026_05_07.md
 todos: []
 isProject: false
 ---
@@ -112,7 +112,7 @@ Two related concerns from the user (2026-05-07):
      does have an S3 code path, but the hierarchical builder hard-codes `gs://`.
    - `deployment_api/services/deploy_missing.py` references `deployment-service/scripts/vm/` paths with no AWS-
      equivalent. The bigger AWS bucket parity / S3 client work is already in
-     [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.md); this plan doesn't
+     [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md); this plan doesn't
      duplicate it. Instead this plan (a) documents the deployment-api-specific call sites that need the unified facade;
      (b) enumerates the launcher-script migration; (c) tracks the deployment-UI AWS/GCP toggle hookup verification.
 
@@ -161,7 +161,7 @@ For each script:
    workspace rule (ref CLAUDE.md "VM Naming Convention").
 
 **deployment-api data-status / drilldown / deploy_missing audit** (this plan only documents; remediation rolls into
-`aws_migration_defi_first_2026_05_07.plan.md`):
+`aws_migration_defi_first_2026_05_07.md`):
 
 | File                                                      | GCS-only call site                                                                               | Refactor target                                                                                     |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
@@ -332,7 +332,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
       deployment-api actually runs locally (`CLOUD_PROVIDER=aws` env var) and whether the data-status surface returns
       S3-backed data.
 - [ ] [audit] P1. Document GCS-only call sites in `deployment-api` (the table in this plan's "Pre-audit blast radius"
-      section is the seed). Roll findings into `aws_migration_defi_first_2026_05_07.plan.md` Phase N (the existing plan
+      section is the seed). Roll findings into `aws_migration_defi_first_2026_05_07.md` Phase N (the existing plan
       tracks the bigger S3-client work).
 
 ### Phase 4 — Codex docs + plan close
@@ -362,24 +362,24 @@ and doesn't affect Deploy-Missing UI registry coverage).
   registry; leaves whose service isn't registered fall back to "no launcher registered" error. Operators can still
   copy + run any of the 29 ad-hoc scripts manually.
 - The deployment-api GCS-only call sites are explicitly NOT remediated by this plan — that's
-  `aws_migration_defi_first_2026_05_07.plan.md`'s territory. This plan only **documents** them so the bigger plan has a
+  `aws_migration_defi_first_2026_05_07.md`'s territory. This plan only **documents** them so the bigger plan has a
   complete inventory.
 
 ## Out of scope
 
 - Auto-launch (API directly invokes gcloud / aws ec2 run-instances) — see
-  `deploy_missing_auto_launch_2026_05_07.plan.md`.
-- Bigger S3 bucket parity / ECR / CodeBuild work — see `aws_migration_defi_first_2026_05_07.plan.md`.
+  `deploy_missing_auto_launch_2026_05_07.md`.
+- Bigger S3 bucket parity / ECR / CodeBuild work — see `aws_migration_defi_first_2026_05_07.md`.
 - Tarball-from-local mode for the migrated launchers — already shipped in this session
   (`data_status_drilldown_shard_atom_alignment_2026_05_07` Phase 3 follow-up; the mode is per-launcher-script- agnostic
   so newly-migrated scripts inherit it for free).
 
 ## References
 
-- `aws_migration_defi_first_2026_05_07.plan.md` — bigger S3 / ECR / EC2 launcher work.
-- `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — Deploy-Missing flow that consumes the launcher
+- `aws_migration_defi_first_2026_05_07.md` — bigger S3 / ECR / EC2 launcher work.
+- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — Deploy-Missing flow that consumes the launcher
   registry.
-- `deploy_missing_auto_launch_2026_05_07.plan.md` — preview-mode → auto-launch successor.
+- `deploy_missing_auto_launch_2026_05_07.md` — preview-mode → auto-launch successor.
 - CLAUDE.md "VM Naming Convention" — registers prefixes in `VM_PREFIX_TO_BUCKET`.
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
 

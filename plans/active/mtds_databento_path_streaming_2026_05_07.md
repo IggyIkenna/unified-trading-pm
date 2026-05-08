@@ -228,10 +228,10 @@ successor for that deferred Databento work, distinct from the (already-shipped) 
 - **Related — parallelisation fix already shipped:** UTL@`3a204c03` + MTDS@`452f105`. Distinct fix (per-symbol asyncio
   loop, not Databento path-streaming) — both improvements are complementary, not conflicting; Phase 2 of this plan
   optionally builds on `asyncio.gather` semantics that the parallelisation fix established.
-- **Master:** `master_to_live_defi_2026_05_23.plan.md` — Group D (Coverage & shard) item 14, item 16 (Operability under
+- **Master:** `master_to_live_defi_2026_05_23.md` — Group D (Coverage & shard) item 14, item 16 (Operability under
   load).
-- **Umbrella:** `infrastructure_master_2026_05_07.plan.md` — folds in shard-granularity SSOT propagation.
-- **Sibling successor plan (also created 2026-05-07):** `mdps_streaming_and_backpressure_2026_05_07.plan.md` — same
+- **Umbrella:** `infrastructure_master_2026_05_07.md` — folds in shard-granularity SSOT propagation.
+- **Sibling successor plan (also created 2026-05-07):** `mdps_streaming_and_backpressure_2026_05_07.md` — same
   general theme (streaming flush + admission control) but for MDPS not MTDS, and a different writer (canonical_writer /
   StreamingParquetWriter vs Databento DBNStore). Independent; no shared code.
 

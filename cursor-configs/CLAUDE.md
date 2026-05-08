@@ -511,12 +511,12 @@ Read these before making ANY code changes:
   `LOCAL-ONLY + UNCOMMITTED CHANGES` warning when picked. (3) **Sibling-clone** (local-stack dev) — workstation has
   every service repo cloned as siblings under `${WORKSPACE_ROOT}` per workspace-manifest; CI / Cloud Run does NOT have
   sibling clones. (4) **Image** (future) — bake launchers into a Docker image cached in Artifact Registry / ECR;
-  deployment-api pulls + runs. Tracked in `plans/ai/deploy_missing_auto_launch_2026_05_07.plan.md`. **Adding a new
+  deployment-api pulls + runs. Tracked in `plans/ai/deploy_missing_auto_launch_2026_05_07.md`. **Adding a new
   launcher:** file lives under `deployment-service/scripts/vm/launch-{asset_group}-{flavor}-vm.sh`; register VM-name
   prefix in `VM_PREFIX_TO_BUCKET`; register the script in `_SERVICE_LAUNCHER_SCRIPTS` if it should be reachable from the
   Deploy-Missing UI button. **Migration in flight (2026-05-07):** 30 ad-hoc launchers under `e2e-testing/scripts/`
   - `features-sports-service/scripts/` + the intra-repo `deployment-service/scripts/deploy-dashboard-gce-vm.sh` pending
-    migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`. Until plan
+    migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`. Until plan
     ships, Deploy-Missing UI button degrades to "no launcher registered" for those services; operators run the ad-hoc
     script manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
     `codex/05-infrastructure/vm-tarball-deployment.md`.

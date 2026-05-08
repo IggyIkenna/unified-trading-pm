@@ -312,7 +312,7 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
 ## Plan provenance
 
 Codified by Phase A.3 of
-[`deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md).
+[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md).
 That plan owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases
 ship, this doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read
 the SSOT, not the old service-axis-organised topology.

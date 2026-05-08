@@ -135,7 +135,7 @@ class CanonicalParquetReader:
 >   Currently flagged as "most likely greenfield bit" — UAC SSOT for `market_id → canonical_question_group` mapping may
 >   not exist yet. Prediction reads need this once the UAC SSOT lands.
 >
-> **Coordination**: see `infrastructure_master_2026_05_07.plan.md` (folds in
+> **Coordination**: see `infrastructure_master_2026_05_07.md` (folds in
 > `plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`). Phase 1 follow-up is to extend
 > `read_shard()` signature with optional `chain: str | None = None` (validated against UAC `CHAIN_RPC_TEMPLATES`) and
 > `canonical_question_group: str | None = None` (validated against the prediction SSOT once it lands). The original
