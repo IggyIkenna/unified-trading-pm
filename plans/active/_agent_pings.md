@@ -27,5 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-[2026-05-08 07:41 UTC] ml-features-phase2a-tab — STARTED Tab 12 (ml_and_features_master_2026_05_07.plan.md)
-[2026-05-08 07:43 UTC] defi-fork1-prep-audit-tab — ✅ DONE Tab 14 (PM@c08f7a6 pushed); 13 UAC PROTOCOL_LAUNCH_DATES drifts found, recommend operator spawn 4 sequential fix tabs A/B/C/D — see issues/defi_fork1_prep_audit_2026_05_08.md
+_(empty — Tab 12 STARTED ack'd 07:43 UTC; Tab 14 ✅ DONE 07:44 UTC with case-5 BIG finding (13 UAC PROTOCOL_LAUNCH_DATES drifts) escalated to operator chat + filed in issues/defi_fork1_prep_audit_2026_05_08.md. Tabs 2, 9, 12 IN FLIGHT.)_

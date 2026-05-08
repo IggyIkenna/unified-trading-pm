@@ -1221,7 +1221,12 @@ REPORT-BACK: 10 small commits per CLAUDE.md cadence (1 per launcher migration); 
 conditional rule.
 ````
 
-#### Tab 12 — ml/features Phase 2A consumer wires 🟡 QUEUED (P0 once started, ~4-6h, 8 service touches)
+#### Tab 12 — `ml-features-phase2a-tab` 🟢 IN FLIGHT (P0, ~4-6h, 8 service touches)
+
+- **Started**: 2026-05-08 07:41 UTC (STARTED ping ack'd 07:43 UTC; clean boot, no flags).
+- **Plan-of-record**: [`ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) Phase 2A.
+- **Scope**: wire `assert_no_lookahead_for_feature_group` into 8 services (features-onchain, features-sports, MDPS,
+  strategy-service + 4 others) at compute entry points, strict-mode raise, per-service unit test.
 
 **How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 12 tasks"_.
 
@@ -1363,15 +1368,24 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (proposal section); push per conditional rule.
 ````
 
-#### Tab 14 — `defi-fork1-prep-audit-tab` 🟢 IN FLIGHT (P0 risk mitigation, ~2-3h, diagnostic)
+#### Tab 14 — `defi-fork1-prep-audit-tab` ✅ DONE 2026-05-08 — case-5 BIG finding surfaced
 
-- **Started**: 2026-05-08 07:30 UTC (STARTED ping ack'd 07:36 UTC; clean boot, no flags).
-- **Plan-of-record**: `defi_master_2026_05_07.plan.md` Fork 1 → output is a new
-  `plans/active/issues/defi_fork1_prep_audit_2026_05_08.md` issue doc.
-- **Scope**: 4-bug-class diagnostic audit on defi_master Fork 1 surface — Bug class 1 (silent-zero), Bug
-  class 2 (schema drift), Bug class 3 (launch-date floor handling), and **Bug class 4 (UAC PROTOCOL_LAUNCH_DATES
-  date drift, added per Tab 9's discovery)**. Critical pairs: AAVEV3 / BASE-LINEA-BSC-METIS-GNOSIS;
-  COMPOUNDV3 / all 4 chains; SPARK / ETHEREUM.
+- **Verified by main 2026-05-08 07:44 UTC** — PM@`c08f7a6` exists + pushed to origin. Audit doc filed
+  at `plans/active/issues/defi_fork1_prep_audit_2026_05_08.md` (33,372 bytes — substantial output).
+- **HEADLINE FINDING (case-5 BIG)**: **13 of 17 probed (chain, protocol) pairs in Fork 1 scope have UAC
+  `PROTOCOL_LAUNCH_DATES` SSOT drift** — same shape as Tab 9's AAVEV3-ETHEREUM finding, applied across
+  the broader Fork 1 surface. Includes carry_staked_basis lead-archetype legs (AAVE V3 OPTIMISM 142d data
+  loss; UNISWAP V3 ARBITRUM 91d data loss). Plus: Pyth Hermes archive doesn't cover ~11 months of jitoSOL
+  history (2022-11 → 2023-10) needed for carry_staked_basis Solana leg. bSOL is in Fork 1 brief but NOT
+  in UAC `LST_TOKEN_GENESIS` — coverage gap.
+- **What Tab 14 correctly did NOT do**: ship the UAC fix. Avoiding collision with Ikenna's writegate work
+  + Tab 9's still-stacked PM commits + the parallel-agent rule. **Operator triage required** — Tab 14
+  recommends 4 sequential fix tabs A/B/C/D (mirror Tab 9's AAVEV3-ETHEREUM precedent).
+- **Bug classes 1/2/3 results**: diagnostic-only, no findings flagged for those (silent-zero, schema drift,
+  launch-date floor handling all clean across the audited surface).
+- **Going quiet** per spawn protocol — won't pick up new work.
+
+**Surfaced to operator** in chat at 07:44 UTC (case-5 escalation per Findings Triage Discipline).
 
 **Why now**: Validates Tab 5's + Tab 9's lending-indices fixes end-to-end on the broader Fork 1 surface
 before Ikenna's D4 DeFi launches. Tab 9 already proved the AAVE V3 ETH case + handler short-circuit; Tab 14
