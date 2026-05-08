@@ -2,9 +2,28 @@
 scope: [engineer, admin]
 ---
 
-# Runtime Topology — Architectural Decisions
+# Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, Cluster Shapes, Diagrams
 
-**Legacy node names below:** Split UIs and APIs such as `live-health-monitor-ui`, `logs-dashboard-ui`, `batch-audit-ui`,
+> **Created 2026-05-08** (Phase E.1 of `plans/active/codex_refactor_2026_05_08.md`) by merging four prior docs into one
+> SSOT for the runtime + deployment topology surface:
+>
+> - `RUNTIME_TOPOLOGY_DECISIONS.md` (architectural decisions §1-9 — naming, UI→API→service chain, messaging rules,
+>   co-location, per-service batch/live behavior; plus §10-23 — kill switches, sharding, recovery, replay, deployment
+>   targets, multi-tenant isolation).
+> - `deployment-topology-diagrams.md` (visual reference — batch container topology, live Redis Stream cascade, message
+>   flow sequence diagrams, sports pipeline shape).
+> - `api-services-cluster.md` (L10 API services cluster: ERA / strategy-api / CRA + shared FastAPI patterns).
+> - `pipeline-service-layers.md` (canonical 7-layer execution order: reference → raw → processing → features → ML →
+>   strategy/execution → post-trade).
+>
+> The four docs always read as one — what the runtime shape is, why each transport choice was made, where each service
+> deploys, what each container talks to. Tier + import architecture is in
+> [`tier-and-import-architecture.md`](tier-and-import-architecture.md); commercial / UX shapes are in
+> [`commercial-service-families.md`](commercial-service-families.md).
+
+**Last updated:** 2026-05-08
+
+**Legacy node names:** Split UIs and APIs such as `live-health-monitor-ui`, `logs-dashboard-ui`, `batch-audit-ui`,
 `onboarding-ui`, `batch-audit-api`, and `odum-research-website` are archived or superseded by
 **`unified-trading-system-ui`**, **`deployment-ui`**, **`unified-trading-api`**, and **`auth-api`**. Canonical wiring:
 **`unified-trading-pm/configs/runtime-topology.yaml`** (SSOT).
@@ -14,13 +33,82 @@ owned by PM). **Companion:** `RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (deployment-s
 `runtime-topology.yaml` (`unified-trading-pm/configs/`, machine-readable). **Readers:**
 `unified-trading-pm/codex/04-architecture/` holds symlinks to these files for easy access.
 
-**Last updated:** 2026-02-28
-
 This document captures the WHY behind every topology decision. When agents or humans modify the architecture, they must
 check this document first. If a change conflicts with a principle here, the principle wins — update the code, not the
 principle (unless explicitly overridden by the user).
 
 ---
+
+# Part 1 — Pipeline Service Layers (Canonical 7-Layer Execution Order)
+
+The 7-layer service execution order for the unified trading system. Edit the Mermaid source below to regenerate the
+diagram (`mmdc -i runtime-deployment-topology.md -o pipeline-service-layers.svg`).
+
+```mermaid
+flowchart TD
+    subgraph L1["Layer 1 — Reference Data"]
+        instr[instruments-service]
+        cal[features-calendar-service]
+    end
+
+    subgraph L2["Layer 2 — Raw Market Data"]
+        ticks[market-tick-data-service]
+        corp[features-calendar-service (corporate-actions, earnings, FRED macro)]
+    end
+
+    subgraph L3["Layer 3 — Market Data Processing"]
+        mdp["market-data-processing-service\nticks → OHLCV candles"]
+    end
+
+    subgraph L4["Layer 4 — Feature Engineering"]
+        d1[features-delta-one-service\ntechnical indicators]
+        vol[features-volatility-service\nvolatility surfaces]
+        oc[features-onchain-service\non-chain signals]
+    end
+
+    subgraph L5["Layer 5 — Machine Learning"]
+        train[ml-training-service]
+        infer[ml-inference-service]
+    end
+
+    subgraph L6["Layer 6 — Strategy & Execution"]
+        strat[strategy-service]
+        exec[execution-service]
+    end
+
+    subgraph L7["Layer 7 — Post-Trade"]
+        pbm[position-balance-monitor-service]
+        risk[risk-and-exposure-service]
+        pnl[pnl-attribution-service]
+    end
+
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+    L5 --> L6
+    L6 --> L7
+```
+
+## Layer Summary
+
+| Layer                    | Services                                                                                 | Input                          | Output                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------- |
+| 1 — Reference Data       | instruments-service, features-calendar-service                                           | External APIs, exchange feeds  | Instrument universe, trading calendars        |
+| 2 — Raw Market Data      | market-tick-data-service, features-calendar-service (corporate actions, earnings, macro) | Exchange websockets, REST APIs | Raw ticks, corporate action events            |
+| 3 — Processing           | market-data-processing-service                                                           | Raw ticks                      | OHLCV candles (15s, 1m, 5m, 15m, 1h, 4h, 24h) |
+| 4 — Features             | features-delta-one-service, features-volatility-service, features-onchain-service        | OHLCV candles                  | Feature vectors                               |
+| 5 — ML                   | ml-training-service, ml-inference-service                                                | Feature vectors                | Trained models, predictions                   |
+| 6 — Strategy & Execution | strategy-service, execution-service                                                      | Predictions                    | Orders, fills                                 |
+| 7 — Post-Trade           | position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service     | Fills                          | P&L, risk metrics, position state             |
+
+**Testing implications:** Run tests layer by layer; lower layers depend on upstream artifacts. Do not run Layer 4 tests
+without Layer 3 output. See `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md` for the
+integration test strategy.
+
+---
+
+# Part 2 — Architectural Decisions
 
 ## 1. Naming Conventions
 
@@ -504,7 +592,7 @@ that input (gracefully). Required upstream data = service fails fast with clear 
 - **Visual diagram:** `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`
 - **Machine-readable SSOT:** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Code DAG (tiers + versions):** `unified-trading-pm/workspace-manifest.json`
-- **Tier rules:** `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md`
+- **Tier rules:** [`tier-and-import-architecture.md`](tier-and-import-architecture.md)
 - **Library deps:** `unified-trading-pm/codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
 - **Integration testing:** `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
 - **Event logging:** `unified-trading-pm/codex/03-observability/lifecycle-events.md`
@@ -875,3 +963,644 @@ config_flip, kill_switch_fire, component_failure) with explicit `hook_location` 
 **SSOT:** [client-isolation-sla-and-runtime-profiles.md](./client-isolation-sla-and-runtime-profiles.md). UAC schemas:
 `unified_api_contracts.internal.domain.deployment_service.isolation`. UTL readers:
 `unified_trading_library.topology.topology_reader.{get_isolation_policy, resolve_deployment, get_sla_tier_spec, get_runtime_profile_spec, list_chaos_hooks}`.
+
+---
+
+# Part 3 — Deployment Topology Diagrams
+
+Visual reference for batch vs live deployment models, service aggregation patterns, and messaging structure.
+
+## Batch Deployment: Independent Containers via GCS
+
+In batch mode, every service is a separate container. Communication is exclusively through GCS Parquet files.
+
+```mermaid
+graph TD
+    subgraph Layer1[Layer 1: Data Ingestion]
+        Instruments[instruments-service<br/>Container]
+        Calendar[features-calendar-service<br/>Container]
+    end
+
+    subgraph Layer2[Layer 2: Raw Market Data]
+        CorporateActions[features-calendar-service (corporate-actions, earnings, FRED macro)<br/>Container]
+        TickHandler[market-tick-data-service<br/>Container]
+    end
+
+    subgraph Layer3[Layer 3: Processed Data]
+        MDPS[market-data-processing-service<br/>Container]
+    end
+
+    subgraph Layer4[Layer 4: Features]
+        FeatDelta[features-delta-one-service<br/>Container]
+        FeatVol[features-volatility-service<br/>Container]
+        FeatOnchain[features-onchain-service<br/>Container]
+    end
+
+    subgraph Layer5[Layer 5: ML]
+        MLTrain[ml-training-service<br/>Container]
+        MLInfer[ml-inference-service<br/>Container]
+    end
+
+    subgraph Layer6[Layer 6: Execution]
+        Strategy[strategy-service<br/>Container]
+        Execution[execution-service<br/>Container]
+    end
+
+    GCS[(GCS Parquet<br/>Message Bus)]
+
+    Instruments -->|write| GCS
+    GCS -->|read| CorporateActions
+    GCS -->|read| TickHandler
+
+    TickHandler -->|write| GCS
+    GCS -->|read| MDPS
+
+    MDPS -->|write| GCS
+    Calendar -->|write| GCS
+
+    GCS -->|read| FeatDelta
+    GCS -->|read| FeatVol
+    GCS -->|read| FeatOnchain
+
+    FeatDelta -->|write| GCS
+    FeatVol -->|write| GCS
+    FeatOnchain -->|write| GCS
+
+    GCS -->|read| MLTrain
+    MLTrain -->|write models| GCS
+    GCS -->|read| MLInfer
+    MLInfer -->|write predictions| GCS
+
+    GCS -->|read| Strategy
+    Strategy -->|write signals| GCS
+
+    GCS -->|read| Execution
+    Execution -->|write results| GCS
+```
+
+**Key characteristics:**
+
+- Each box is an independent container (VM or Cloud Run job)
+- Containers start, read input, process, write output, and exit
+- GCS is the only communication mechanism
+- Any service can be restarted without affecting others
+- Sharding: category x venue x date -- each shard is a separate container
+
+---
+
+## Live Deployment: Redis Stream Cascade + Consolidated features-service
+
+> **POST-2026-05-08 SSOT** — the live-pipeline activation (per
+> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) replaces the
+> earlier "embedded package per feature service" topology with a **Redis Stream cascade** between MTDS → MDPS →
+> features-service. The 7-8 standalone-process diagram below is **historical** — keep it for context but read it as the
+> pre-2026-05-08 shape. The current shape is: one **MTDS** cluster (sharded by v5 shard atom), one **MDPS +
+> features-service-asset-scoped** colocated cluster per asset_group, plus one **features-service-cross-cutting** cluster
+> that subscribes to multiple asset_group streams. Same code path as batch (per
+> [`batch-live-architecture.md`](batch-live-architecture.md)); only the trigger source swaps from Cloud Scheduler to Redis
+> Stream events.
+
+### Pre-2026-05-08 historical: package-embedding shape
+
+In the earlier model, services embedded upstream packages to avoid network hops on the hot path. This created a 7-8
+deployment topology.
+
+```mermaid
+graph TB
+    subgraph TARDIS[Deploy 1: TARDIS Persistence]
+        TardisPersist[market-tick-data-service<br/>mode: live<br/>source: TARDIS stream<br/>sink: GCS historical]
+    end
+
+    subgraph InstrumentsDeploy[Deploy 2: Instruments]
+        InstLive[instruments-service<br/>mode: live<br/>venue APIs]
+    end
+
+    subgraph FeaturesCalendar[Deploy 3: Calendar Features]
+        FeatCalLive[features-calendar-service<br/>mode: live<br/>timer: daily]
+    end
+
+    subgraph FeaturesDeltaDeploy[Deploy 4: Delta-One Features]
+        FeatDeltaLive[features-delta-one-service<br/>mode: live]
+        MDPSPackage1[market-data-processing<br/>EMBEDDED PACKAGE]
+        TickPackage1[market-tick-data-service<br/>EMBEDDED in MDPS]
+
+        FeatDeltaLive -.imports.-> MDPSPackage1
+        MDPSPackage1 -.imports.-> TickPackage1
+    end
+
+    subgraph FeaturesVolDeploy[Deploy 5: Volatility Features]
+        FeatVolLive[features-volatility-service<br/>mode: live]
+        MDPSPackage2[market-data-processing<br/>EMBEDDED PACKAGE]
+        TickPackage2[market-tick-data-service<br/>EMBEDDED in MDPS]
+
+        FeatVolLive -.imports.-> MDPSPackage2
+        MDPSPackage2 -.imports.-> TickPackage2
+    end
+
+    subgraph FeaturesOnchainDeploy[Deploy 6: Onchain Features]
+        FeatOnchainLive[features-onchain-service<br/>mode: live]
+        MDPSPackage3[market-data-processing<br/>EMBEDDED PACKAGE]
+        TickPackage3[market-tick-data-service<br/>EMBEDDED in MDPS]
+
+        FeatOnchainLive -.imports.-> MDPSPackage3
+        MDPSPackage3 -.imports.-> TickPackage3
+    end
+
+    subgraph StrategyDeploy[Deploy 7: Strategy]
+        StrategyLive[strategy-service<br/>mode: live]
+        FeatDeltaPkg[features-delta-one<br/>EMBEDDED PACKAGE]
+        MLInferPkg[ml-inference<br/>EMBEDDED PACKAGE]
+
+        StrategyLive -.imports.-> FeatDeltaPkg
+        StrategyLive -.imports.-> MLInferPkg
+    end
+
+    subgraph ExecutionDeploy[Deploy 8: Execution Per Client]
+        ExecLive[execution-service<br/>mode: live<br/>per-client]
+        TickPackage4[market-tick-data-service<br/>EMBEDDED PACKAGE<br/>exchange WebSocket]
+
+        ExecLive -.imports.-> TickPackage4
+    end
+
+    GCSLive[(GCS<br/>Persistence Only)]
+    Exchange[Exchange<br/>WebSocket APIs]
+    TardisLive[TARDIS<br/>Live Client]
+
+    TardisLive -->|stream| TardisPersist
+    TardisPersist -->|write| GCSLive
+
+    Exchange -->|ticks| TickPackage1
+    Exchange -->|ticks| TickPackage2
+    Exchange -->|ticks| TickPackage3
+    Exchange -->|ticks| TickPackage4
+
+    FeatCalLive -->|features<br/>in-process| FeatDeltaLive
+
+    FeatDeltaLive -->|features<br/>in-process| StrategyLive
+
+    StrategyLive -->|signals<br/>in-process| ExecLive
+
+    InstLive -.persist.-> GCSLive
+    FeatCalLive -.persist.-> GCSLive
+    FeatDeltaLive -.persist.-> GCSLive
+    FeatVolLive -.persist.-> GCSLive
+    FeatOnchainLive -.persist.-> GCSLive
+    StrategyLive -.persist.-> GCSLive
+    ExecLive -.persist.-> GCSLive
+```
+
+**Key characteristics (historical, pre-2026-05-08):**
+
+- Solid boxes = separate deployments (containers/VMs)
+- Dotted "imports" arrows = package embedding (in-process, no network)
+- Solid data arrows = data flow (in-process function calls or async persistence)
+- Each feature service embeds market-data-processing, which embeds market-tick-data-service
+- Each deployment only connects to the venues it needs (selective venue initialization)
+- TARDIS persistence is separate from the latency path
+- GCS is for persistence only, not for inter-service communication
+
+> **Post-2026-05-08 update.** The package-embedding shape is replaced by the Redis Stream cascade. Inter-service
+> communication on the hot path is now `XADD streaming.{asset_group}.candle_boundary_crossed` →
+> `XREADGROUP` → `XADD streaming.{asset_group}.candle_computed` → `XADD streaming.{asset_group}.features_computed`.
+> features-service is **one consolidated repo** deployed in two flavors (asset-scoped colocated with MDPS + cross-cutting
+> standalone), per [`features-service-architecture.md`](features-service-architecture.md). GCS remains
+> persistence-only; the inner-loop cascade is Redis Stream. The full design lives in
+> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
+
+---
+
+## Messaging Structure: Batch vs Live
+
+### Batch Messaging (GCS Pull Model)
+
+```mermaid
+sequenceDiagram
+    participant ServiceA as Service A<br/>Container
+    participant GCS as GCS<br/>Parquet Files
+    participant ServiceB as Service B<br/>Container
+
+    Note over ServiceA: Process data for date X
+    ServiceA->>ServiceA: Validate output
+    ServiceA->>GCS: Write instruments.parquet<br/>(day=2024-01-15)
+    ServiceA->>ServiceA: Exit
+
+    Note over ServiceB: Check upstream ready
+    ServiceB->>GCS: Check: instruments.parquet exists?
+    GCS-->>ServiceB: Yes
+    ServiceB->>GCS: Read instruments.parquet
+    GCS-->>ServiceB: DataFrame
+    ServiceB->>ServiceB: Process using instruments
+    ServiceB->>GCS: Write candles.parquet<br/>(day=2024-01-15)
+    ServiceB->>ServiceB: Exit
+```
+
+**Pull-based**: Service B pulls data from GCS when it is ready to process. Service A has already exited. No coordination
+needed.
+
+### Live Messaging (Package Embedding Push Model)
+
+```mermaid
+sequenceDiagram
+    participant Exchange as Exchange<br/>WebSocket
+    participant TickPkg as market-tick-data-service<br/>EMBEDDED PACKAGE
+    participant MDPSEngine as MDPS Engine<br/>Aggregator
+    participant FeatEngine as Features Engine<br/>Calculator
+    participant GCS as GCS<br/>Async Persistence
+
+    Note over Exchange,FeatEngine: All in same process
+
+    Exchange->>TickPkg: Tick stream (continuous)
+    TickPkg->>TickPkg: Buffer ticks
+
+    Note over TickPkg: Timer fires (5m)
+    TickPkg->>MDPSEngine: get_candles(last_5m)
+    MDPSEngine->>MDPSEngine: Aggregate ticks
+    MDPSEngine->>FeatEngine: publish_candles(DataFrame)
+
+    FeatEngine->>FeatEngine: Compute features
+    FeatEngine->>FeatEngine: Return features (in-process)
+
+    par Async Persistence (separate thread)
+        MDPSEngine-->>GCS: Write candles (async, non-blocking)
+        FeatEngine-->>GCS: Write features (async, non-blocking)
+    end
+```
+
+**Push-based**: Upstream components publish data via in-process function calls. Downstream components receive results
+synchronously. Persistence happens asynchronously on a separate thread and never blocks the hot path.
+
+---
+
+## Service Aggregation: Batch vs Live
+
+### Batch: No Aggregation (12 Separate Containers)
+
+```mermaid
+graph LR
+    subgraph Batch[Batch Pipeline - 12 Independent Deployments]
+        direction TB
+        B1[instruments-service]
+        B2[features-calendar-service (corporate-actions, earnings, FRED macro)]
+        B3[market-tick-data-service]
+        B4[market-data-processing]
+        B5[features-calendar]
+        B6[features-delta-one]
+        B7[features-volatility]
+        B8[features-onchain]
+        B9[ml-training]
+        B10[ml-inference]
+        B11[strategy-service]
+        B12[execution-service]
+    end
+
+    GCSBatch[(GCS<br/>All Communication)]
+
+    B1 --> GCSBatch
+    GCSBatch --> B2
+    GCSBatch --> B3
+    GCSBatch --> B4
+    GCSBatch --> B5
+    GCSBatch --> B6
+    GCSBatch --> B7
+    GCSBatch --> B8
+    GCSBatch --> B9
+    GCSBatch --> B10
+    GCSBatch --> B11
+    GCSBatch --> B12
+```
+
+**12 separate deployments**, each reading from and writing to GCS. No shared memory, no process coupling.
+
+### Live: Package Aggregation (7 Deployments via Embedding)
+
+```mermaid
+graph TB
+    subgraph Live[Live Pipeline - 7 Deployments with Package Embedding]
+        direction TB
+
+        subgraph D1[Deploy 1: TARDIS Persistence]
+            L1[market-tick-data-service<br/>standalone<br/>TARDIS stream]
+        end
+
+        subgraph D2[Deploy 2: Instruments]
+            L2[instruments-service<br/>standalone<br/>venue APIs]
+        end
+
+        subgraph D3[Deploy 3: Calendar Features]
+            L3[features-calendar-service<br/>standalone<br/>deterministic]
+        end
+
+        subgraph D4[Deploy 4: Delta-One Features]
+            L4[features-delta-one-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+        end
+
+        subgraph D5[Deploy 5: Volatility Features]
+            L5[features-volatility-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+        end
+
+        subgraph D6[Deploy 6: Onchain Features]
+            L6[features-onchain-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+        end
+
+        subgraph D7[Deploy 7: Strategy]
+            L7[strategy-service<br/>+ features-delta-one pkg<br/>+ ml-inference pkg]
+        end
+
+        subgraph D8[Deploy 8: Execution Per Client]
+            L8[execution-service<br/>+ market-tick-data-service pkg<br/>per-client instance]
+        end
+    end
+
+    Exchange[Exchange APIs]
+    GCSLive[(GCS<br/>Persistence)]
+
+    Exchange -->|WebSocket| L4
+    Exchange -->|WebSocket| L5
+    Exchange -->|WebSocket| L6
+    Exchange -->|WebSocket| L8
+
+    L1 -.persist.-> GCSLive
+    L2 -.persist.-> GCSLive
+    L3 -.persist.-> GCSLive
+    L4 -.persist.-> GCSLive
+    L5 -.persist.-> GCSLive
+    L6 -.persist.-> GCSLive
+    L7 -.persist.-> GCSLive
+    L8 -.persist.-> GCSLive
+
+    L4 -->|in-process| L7
+    L7 -->|in-process| L8
+```
+
+**8 deployments** (7 core + 1 per-client execution). Market-tick-data-handler runs as an embedded package in 4 places.
+Market-data-processing runs as an embedded package in 3 feature services. Each deployment only initializes venues it
+needs.
+
+---
+
+## Persistence vs Live Path
+
+```mermaid
+graph TB
+    subgraph Persistence[Persistence Path - Not Latency Critical]
+        TardisStream[TARDIS<br/>Live Client]
+        TardisHandler[market-tick-data-service<br/>standalone deploy<br/>mode: live]
+        GCSStorage[(GCS<br/>Historical Storage)]
+
+        TardisStream -->|complete tick stream| TardisHandler
+        TardisHandler -->|write all ticks| GCSStorage
+    end
+
+    subgraph LivePath[Live Path - Latency Critical Under 2s]
+        ExchangeWS[Exchange<br/>WebSocket]
+        TickPkg[market-tick-data-service<br/>EMBEDDED in consumer]
+        Consumer[Consumer Service<br/>MDPS or Features or Execution]
+        PersistQueue[Persistence Queue<br/>separate thread]
+
+        ExchangeWS -->|ticks| TickPkg
+        TickPkg -->|buffered data| Consumer
+        Consumer -->|processed results| PersistQueue
+        PersistQueue -.async write.-> GCSStorage
+    end
+
+    style Persistence fill:#f0f0f0
+    style LivePath fill:#ffe0e0
+```
+
+**Two independent paths:**
+
+- **Persistence path** (TARDIS): complete historical-grade data, stored for replay and compliance. Runs continuously but
+  not latency-sensitive.
+- **Live path** (Exchange WebSocket): real-time data for trading, embedded as packages, latency-critical (<2s
+  end-to-end). Async persistence on separate thread.
+
+We store data once (TARDIS persistence) but consume it in two places (embedded packages for speed). GCP doesn't charge
+for data ingestion, so duplicate WebSocket connections are cost-acceptable.
+
+---
+
+## Package Embedding Pattern
+
+```mermaid
+graph LR
+    subgraph FeatureService[features-delta-one-service Deploy]
+        direction TB
+        FeatMain[Main Process]
+
+        subgraph MDPSPkg[market-data-processing-service<br/>PACKAGE]
+            MDPSCode[MDPS Engine<br/>aggregation logic]
+
+            subgraph TickPkg[market-tick-data-service<br/>PACKAGE]
+                TickCode[Tick Handler<br/>venue adapters]
+            end
+
+            MDPSCode -.imports.-> TickCode
+        end
+
+        FeatMain -.imports.-> MDPSPkg
+    end
+
+    Exchange[Exchange WebSocket]
+
+    Exchange -->|ticks| TickCode
+    TickCode -->|buffered ticks| MDPSCode
+    MDPSCode -->|candles| FeatMain
+    FeatMain -->|features| StrategyService
+
+    StrategyService[strategy-service<br/>separate deploy]
+```
+
+**Nested package embedding:**
+
+- `features-delta-one-service` imports `market-data-processing-service` as a package
+- `market-data-processing-service` imports `market-tick-data-service` as a package
+- All three run in the same process
+- Exchange ticks flow: WebSocket -> tick handler package -> MDPS package -> features main process
+- Zero network hops, all in-memory function calls
+
+---
+
+## Selective Venue Initialization
+
+Both batch and live use the same sharding/filtering principle: **only initialize venues you need**.
+
+```mermaid
+graph TB
+    subgraph BatchShard[Batch Shard]
+        BatchCLI[CLI Args:<br/>--venues BINANCE-FUTURES<br/>--asset-group CEFI]
+        BatchInit[Initialize only<br/>BINANCE-FUTURES adapter]
+        BatchProcess[Process only<br/>BINANCE instruments]
+    end
+
+    subgraph LiveDeploy[Live Deploy]
+        LiveConfig[Config:<br/>venues: BINANCE-FUTURES<br/>category: CEFI]
+        LiveInit[Initialize only<br/>BINANCE-FUTURES adapter]
+        LiveStream[Stream only<br/>BINANCE WebSocket]
+    end
+
+    BatchCLI --> BatchInit --> BatchProcess
+    LiveConfig --> LiveInit --> LiveStream
+
+    style BatchShard fill:#e0f0ff
+    style LiveDeploy fill:#ffe0e0
+```
+
+**Same principle, different input:**
+
+- Batch: CLI args specify venues (shard dimension)
+- Live: config specifies venues (deployment parameter)
+- Result: both modes only initialize the venue adapters they need, minimizing resource usage and connection overhead
+
+Already implemented in instruments-service. Being applied to market-tick-data-service. Should be universal across all
+services with venue-specific logic.
+
+---
+
+## Sports Pipeline — Batch Deployment (Consolidated, 2026-03-01)
+
+Sports data flows through the **existing** batch pipeline services, not separate sports-specific services. The 4
+sports-specific pipeline services (`sports-reference-data-service`, `sports-odds-processing-service`,
+`sports-strategy-service`, `sports-execution-service`) are **DEPRECATED/ARCHIVED** as of 2026-03-01. Only
+`features-sports-service` and `execution-service` (USEI) remain as standalone.
+
+```mermaid
+graph TD
+    subgraph BatchA [Batch A: Reference Data]
+        Instruments[instruments-service<br/>asset_group=SPORTS<br/>sports parser + fixture matching]
+    end
+
+    subgraph BatchB [Batch B: Odds + Processing]
+        MDP[market-data-processing-service<br/>asset_group=SPORTS<br/>Odds API + Betfair + API-Football]
+    end
+
+    subgraph BatchC [Batch C: Features]
+        FeatSports[features-sports-service<br/>NEW standalone<br/>19 categories + horizons]
+    end
+
+    subgraph BatchD [Batch D: Strategy]
+        Strategy[strategy-service<br/>asset_group=SPORTS<br/>arbitrage + value betting + Kelly]
+    end
+
+    subgraph BatchE [Batch E: Execution]
+        Execution[execution-service<br/>asset_group=SPORTS<br/>Betfair + Smarkets + Polymarket via USEI]
+    end
+
+    GCS[(GCS + PubSub)]
+
+    Instruments -->|canonical fixtures/teams/leagues| GCS
+    GCS -->|fixture list| MDP
+    MDP -->|snapshots + ProcessedOddsOutput + arb| GCS
+    GCS -->|reference + processed odds| FeatSports
+    FeatSports -->|SportsFeatureVector| GCS
+    GCS -->|features + opportunities| Strategy
+    Strategy -->|BetOrder| GCS
+    GCS -->|orders| Execution
+    Execution -->|BetExecution| GCS
+```
+
+**Ordering:** Batch A D5 -> Batch B D5 -> Batch C D5 -> Batch D D5 -> Batch E D5. See
+`04-architecture/sports-integration-plan.md` Phase 3 (consolidated).
+
+**Key difference from original plan:** No separate sports service containers. Sports is a category/asset_group within
+each existing service, following the same sharding model (category x venue x date).
+
+---
+
+# Part 4 — API Services Cluster (L10 FastAPI Boundary)
+
+**Topological level:** L10 **SSOT:** `unified-trading-pm/workspace-manifest.json` (cluster=api-services)
+
+The API Services Cluster contains 3 FastAPI repos that sit at topological level L10 — between the Python service tier
+(L7/L9) and the React UI tier (L11). They are the HTTP boundary: they proxy service engines, enforce auth, and expose
+typed REST/SSE endpoints to UIs.
+
+| Repo                    | Abbrev | Port (dev) | Proxies                        | Serves UIs                                                                                       | Auth                          |
+| ----------------------- | ------ | ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `execution-results-api` | ERA    | 8002       | execution-service              | trading-analytics-ui, live-health-monitor-ui, strategy-ui, execution-analytics-ui, settlement-ui | None (internal)               |
+| `client-reporting-api`  | CRA    | 8003       | pnl-attribution-service output | client-reporting-ui                                                                              | Per-client JWT (Google OAuth) |
+
+> **Note:** `deployment-api` is **not** in this cluster — it sits at L8 (deployment infrastructure). The L10 API
+> Services cluster is exclusively the 3 repos above.
+
+## Per-Service Reference
+
+### execution-results-api (ERA)
+
+- **GitHub:** https://github.com/IggyIkenna/execution-results-api
+- **Status:** active (in-progress)
+- **Dev port:** 8002
+- **Key routes:**
+  - `GET /executions` — execution records
+  - `GET /backtests` — backtest run results
+  - `GET /analytics` — analytics aggregates
+  - `GET /reports` — report exports
+- **SSE:** SSE endpoints required (outstanding: `p0-ui-sse`)
+- **P0 outstanding:** Replace all `dict[str, Any]` at API boundaries with `TypedDict`/Pydantic models (task:
+  `p0-exec-results-api-types`)
+
+- **Status:** active (in-progress)
+- **Dev port:** 8004
+- **Key routes:**
+  - `GET /stream/orderbook` — SSE orderbook stream
+  - `GET /stream/candles` — SSE candle stream
+- **Auth:** None (internal network only)
+- **Pattern note:** Primary SSE-first API; all primary endpoints are streaming.
+
+### client-reporting-api (CRA)
+
+- **GitHub:** https://github.com/IggyIkenna/client-reporting-api
+- **Status:** active (in-progress)
+- **Dev port:** 8003
+- **Key routes:**
+  - `GET /reports` — client report listing and download
+  - `GET /clients` — client metadata
+  - `GET /portfolio` — portfolio summary
+- **Auth:** Per-client JWT via Google OAuth (`GoogleOAuthMiddleware`)
+- **Pattern note:** Only API service with external-facing auth; all write endpoints require OAuth.
+
+## Shared Pattern
+
+All API services in this cluster conform to the following pattern. Deviations are bugs, not features.
+
+### Architecture
+
+- **Pure FastAPI** — no Python service engine code lives in these repos.
+- API services import from unified libraries (`unified_trading_services`, `unified_config_interface`, etc.) but
+  **never** import from service repos (e.g., `execution-service`, `market-data-processing-service`). Services are
+  proxied over HTTP/internal network.
+- Each repo is independently deployable to Cloud Run with its own `cloudbuild.yaml`.
+
+### Type Safety
+
+- All response models are typed `Pydantic` models or `TypedDict`.
+- `dict[str, Any]` is **forbidden** at API boundaries — this is a blocking quality gate violation.
+- Request bodies: Pydantic models with field validation.
+
+### Auth
+
+- Internal endpoints: no auth (network-level isolation via Cloud Run ingress).
+- External/client-facing endpoints: `GoogleOAuthMiddleware` from `unified_trading_services`.
+
+### SSE Streaming
+
+- Real-time streaming endpoints use `sse-starlette`.
+- SSE endpoints follow the pattern: `GET /stream/<resource>` returning `EventSourceResponse`.
+
+### Quality Gates and CI/CD
+
+- `scripts/quality-gates.sh` present in every repo.
+- `cloudbuild.yaml` follows test-in-image architecture: build Docker image → run quality gates inside image → push only
+  on pass. See `06-coding-standards/quality-gates.md`.
+- No standalone `basedpyright .` — always `timeout 120 basedpyright <source_dir>/`.
+
+## SSOT Cross-References
+
+| Topic                                | Location                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| Repo registry (cluster=api-services) | `unified-trading-pm/workspace-manifest.json`                                       |
+| UI → API wiring                      | `unified-trading-pm/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`                  |
+| Runtime topology diagram             | `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`        |
+| Build order (L6 node)                | `unified-trading-pm/codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg`                 |
+| Quality gates                        | `unified-trading-pm/codex/06-coding-standards/quality-gates.md`                       |
+| Test-in-image CI                     | `unified-trading-pm/codex/06-coding-standards/quality-gates.md` (Cloud Build section) |
+| Auth middleware                      | `unified_trading_services.GoogleOAuthMiddleware`                                   |

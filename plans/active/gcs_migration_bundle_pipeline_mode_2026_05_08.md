@@ -573,7 +573,7 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
   contract); not a long-term coexistence pattern.
 - [`codex/02-data/data-status-drilldown.md`](../../codex/02-data/data-status-drilldown.md) § "Per-asset_group depth
   table" — drilldown order; Phase 7 adds pipeline_mode as outermost.
-- [`codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`](../../codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md) —
+- [`codex/04-architecture/runtime-deployment-topology.md`](../../codex/04-architecture/runtime-deployment-topology.md) —
   how migration VMs fit into the deployment topology.
 
 ## Pre-audit manifest

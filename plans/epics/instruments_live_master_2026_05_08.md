@@ -89,7 +89,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Audit existing codex live-instruments coverage and stitch a single SSOT entry-point. Read
         `codex/04-architecture/batch-live-architecture.md`, `backfill-and-live-startup.md`,
-        `alerting-batch-live.md`, `sports-live-odds-connectivity.md`, `RUNTIME_TOPOLOGY_DECISIONS.md`,
+        `alerting-batch-live.md`, `sports-live-odds-connectivity.md`, `runtime-deployment-topology.md`,
         `codex/05-infrastructure/live-deployment-monitoring.md`, `deployment-clusters-live-vs-batch.md`,
         `runtime-tiers-and-deployment.md`, plus `instruments-service/docs/{ARCHITECTURE,CEFI,DEFI,TRADFI,SPORTS,POLYMARKET}_INSTRUMENTS.md`
         + `instrument-catalogue.md`. Produce a NEW codex doc `codex/04-architecture/instruments-live-architecture.md`
@@ -841,7 +841,7 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 - `codex/04-architecture/backfill-and-live-startup.md` — live startup pattern
 - `codex/04-architecture/alerting-batch-live.md` — alerting rules
 - `codex/04-architecture/sports-live-odds-connectivity.md` — sports live ingest reference
-- `codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — operational modes
+- `codex/04-architecture/runtime-deployment-topology.md` — operational modes
 - `codex/05-infrastructure/runtime-tiers-and-deployment.md` — deployment tiers
 - `codex/05-infrastructure/live-deployment-monitoring.md` — monitoring pattern
 - `codex/05-infrastructure/deployment-clusters-live-vs-batch.md` — cluster topology

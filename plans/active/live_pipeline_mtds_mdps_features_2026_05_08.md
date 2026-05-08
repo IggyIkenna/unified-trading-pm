@@ -988,7 +988,7 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
   gcloud launcher MUST live in `deployment-service/scripts/vm/`. Phase 13 adds 4 new launchers per this rule.
 - [`codex/04-architecture/shard-level-failure-isolation.md`](../../codex/04-architecture/shard-level-failure-isolation.md)
   — shard-level error handling; live-pipeline preserves the rule.
-- [`codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`](../../codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md) —
+- [`codex/04-architecture/runtime-deployment-topology.md`](../../codex/04-architecture/runtime-deployment-topology.md) —
   runtime topology SSOT; Phase 14 adds live-pipeline section.
 
 ## Pre-audit manifest
@@ -1153,7 +1153,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   baseline cell population (operator runs `measure-honest-coverage.py` on same-region GCE VM) + base-service.sh QG STEP
   wiring still open in
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
-- **CeFi ML live-serving wiring**: Design doc shipped at `codex/14-playbooks/ml/cefi-ml-live-serving.md`; the
+- **CeFi ML live-serving wiring**: Design doc shipped at `codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md`; the
   features-service live ML inference compute path + UAC `MODEL_PATH_TEMPLATES` SSOT + UTL `ModelArtefactReloader`
   - per-event `model_version` stamping all open in the
     [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) (line 35-37 success criteria) — Harsh Tab 2

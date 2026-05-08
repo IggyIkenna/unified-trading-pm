@@ -34,5 +34,5 @@ scope: [engineer, admin]
 ## References
 
 - `deployment-service/configs/runtime-topology.yaml` — runtime SSOT
-- `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — design decisions
+- `04-architecture/runtime-deployment-topology.md` — design decisions
 - `04-architecture/tier-and-import-architecture.md` — tier boundaries

@@ -181,7 +181,7 @@ drift.
         Events table aligned to LifecycleEvent. Removed `CIRCUIT_BREAKER_DEGRADED / BACKOFF_ESCALATED / ORDER_THROTTLED`
         rows (none exist in UAC `LifecycleEvent` enum). Added Lifecycle-vs-Alert taxonomy note documenting the dual
         SSOT.
-  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:708` — `publishes CIRCUIT_BREAKER_OPEN` →
+  - [x] `04-architecture/runtime-deployment-topology.md:708` — `publishes CIRCUIT_BREAKER_OPEN` →
         `publishes CIRCUIT_OPEN     (UAC LifecycleEvent)`. (Already shipped in Phase A.5 PM@77e1978a.)
   - [x] `15-runbooks/alerting/alert-code-taxonomy.md:82` — **NO CHANGE**: describes AlertCode pattern.
   - [x] `15-runbooks/alerting/circuit_breaker_open.md:66-68, 81, 86, 89` — JSONL `.event` field references aligned to
@@ -242,14 +242,14 @@ drift.
       codex docs claiming PubSub-only or embedded-only need banners pointing at the new SSOT.
 
   **Files updated**:
-  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules; Core
+  - [x] `04-architecture/runtime-deployment-topology.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules; Core
         Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service) explicitly.
         Cross-links to `05-infrastructure/live-pipeline-architecture.md` + `03-observability/coordination-events.md`.
   - [x] `04-architecture/batch-live-symmetry.md` — TL;DR transport row updated to "Redis Stream (inner-loop) + PubSub
         (cross-service)"; "Live: PubSub as Message Bus" section retitled to "Redis Stream (inner-loop) + PubSub
         (cross-service) as Message Bus" with the per-transport-class breakdown. POST-2026-05-08 SSOT banner cross-links
         the live-pipeline + coordination-events docs.
-  - [x] `04-architecture/deployment-topology-diagrams.md` — "Live Deployment" section retitled to "Redis Stream
+  - [x] `04-architecture/runtime-deployment-topology.md` — "Live Deployment" section retitled to "Redis Stream
         Cascade + Consolidated features-service"; package-embedding diagram explicitly framed as historical
         (pre-2026-05-08); post-2026-05-08 update block at end of "Key characteristics" describes the XADD / XREADGROUP
         cascade contract + cross-links live-pipeline-architecture + features-service-architecture.
@@ -294,7 +294,7 @@ drift.
         consolidated shape: ONE `features-service` repo (8 family sub-packages) deployed in two flavors (asset-scoped
         colocated with MDPS + cross-cutting standalone), plus MTDS / instruments / strategy / execution. Cross-link to
         `features-service-architecture.md` + `live-pipeline-architecture.md`.
-  - [x] `04-architecture/deployment-topology-diagrams.md` — Live Deployment section retitled (per Phase A.5 work); added
+  - [x] `04-architecture/runtime-deployment-topology.md` — Live Deployment section retitled (per Phase A.5 work); added
         explicit "Deploys 4-6 collapse to one consolidated features-service" sub-block in the post-2026-05-08 update
         describing the asset-scoped + cross-cutting flavors with feature_family dispatcher contract.
   - [x] `05-infrastructure/launcher-script-ssot.md` — verified: parallel agent already added § "features-service
@@ -384,7 +384,7 @@ drift.
   - [x] `unified-market-interface` → `market-tick-data-service/market_tick_data_service/market_interface` (UMI archived;
         CLAUDE.md confirms). 64 hits across 36 .md files + 2 .svg files (architectures DAG diagrams).
   - [x] `unified-internal-contracts/` → `unified_api_contracts.internal/` (per UAC Citadel Architecture rule). 4 hits
-        across 1 file (`04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`).
+        across 1 file (`04-architecture/runtime-deployment-topology.md`).
   - [x] `(UTS)` alias → `(UTL)` (unified-trading-services rename completed). 2 hits across 2 files.
   - [x] `unified-feature-calculator-library` → `unified-trading-library` (UFCL archived 2026-05-08; verified Q4
         resolution; `BaseFeatureServiceV2` migrated into UTL). 24 hits across 13 .md files + 1 .svg
@@ -965,7 +965,7 @@ drift.
       Cloud Build YAML patterns. Collapsing would lose the distinct entry-points each doc serves. Renames absorbed into
       PM@4d23b431 (parallel-agent E.3 sweep absorbed my staged `git mv`s) and cross-doc rewrites absorbed into
       PM@c1dcbcdf (parallel-agent E.3 + F.6 flip commit absorbed my 7 staged sed edits) — 7 cross-ref files updated:
-      `TOPOLOGY-DAG.md`, `codex/00-SSOT-INDEX.md`, `codex/04-architecture/api-services-cluster.md`,
+      `TOPOLOGY-DAG.md`, `codex/00-SSOT-INDEX.md`, `codex/04-architecture/runtime-deployment-topology.md`,
       `codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/ui-service-separation.md`, plus
       self-refs in the two renamed docs themselves. Cross-refs in `plans/active/master_to_live_defi_2026_05_23.md` and
       `codex/08-workflows/local-dev.md` were already lowercase from earlier-session work absorbed into HEAD. Foot-gun
@@ -1065,9 +1065,9 @@ DELETED codex docs by this plan:
 - [ ] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6, replaced)
 - [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
-- [ ] Topology 7-doc cluster (Phase E.1, IF approved): `RUNTIME_TOPOLOGY_DECISIONS.md`, `tier-and-import-architecture.md`,
-      `commercial-service-families.md`, `deployment-topology-diagrams.md`, `pipeline-service-layers.md`,
-      `api-services-cluster.md`, `tier-and-import-architecture.md`.
+- [ ] Topology 7-doc cluster (Phase E.1, IF approved): `runtime-deployment-topology.md`, `tier-and-import-architecture.md`,
+      `commercial-service-families.md`, `runtime-deployment-topology.md`, `runtime-deployment-topology.md`,
+      `runtime-deployment-topology.md`, `tier-and-import-architecture.md`.
 
 ---
 

@@ -28,7 +28,7 @@ scope: [engineer, admin]
   (sharded by v5 shard atom), (2) instruments-service, (3) strategy-service, (4) execution-service (per-client).
   Pre-2026-05-08 the features tier was 5-6 separate repos (features-calendar / features-delta-one /
   features-volatility / features-onchain / features-sports / features-multi-timeframe) — all consolidated as part of
-  the live-pipeline pre-requisite. See [deployment-topology-diagrams.md](deployment-topology-diagrams.md) for visuals
+  the live-pipeline pre-requisite. See [runtime-deployment-topology.md](runtime-deployment-topology.md) for visuals
   + [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
   full topology + Redis Stream cascade contract.
 - **Sync**: HTTP/REST only for the deployment API and health checks. Never for data flow.
@@ -46,7 +46,7 @@ scope: [engineer, admin]
 ## Pipeline DAG
 
 The 13 pipeline services (12 original + features-sports-service) form a directed acyclic graph with strict topological
-ordering. **Mermaid source (machine-readable):** `unified-trading-pm/codex/04-architecture/pipeline-service-layers.md`
+ordering. **Mermaid source (machine-readable):** `unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md`
 
 ```
 Layer 1: Data I/O (root services -- no upstream dependencies)
@@ -257,7 +257,7 @@ processing date, not wall-clock time.
 
 | Document                                                           | Description                                                                              |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| [deployment-topology-diagrams.md](deployment-topology-diagrams.md) | Visual diagrams: batch (12 containers) vs live (7-8 deployments with package embedding)  |
+| [runtime-deployment-topology.md](runtime-deployment-topology.md) | Visual diagrams: batch (12 containers) vs live (7-8 deployments with package embedding)  |
 | [scaling.md](scaling.md)                                           | Horizontal sharding model, vertical scaling, client isolation                            |
 | [concurrency.md](concurrency.md)                                   | MAX_WORKERS, adaptive resource management, CPU vs I/O-bound, batch/live parallelism      |
 | [communication-patterns.md](communication-patterns.md)             | GCS batch bus, embedded live streaming, HTTP control plane                               |

@@ -399,6 +399,6 @@ For greenfield consolidation (historical note — largely superseded by `unified
 - **UI Dependency Matrix:** `05-infrastructure/ui-dependency-matrix.md`
 - **Port mapping:** `unified-trading-pm/scripts/dev/ui-api-mapping.json`
 - **Repo registry:** `unified-trading-pm/workspace-manifest.json`
-- **Pipeline layers:** `04-architecture/pipeline-service-layers.md`
+- **Pipeline layers:** `04-architecture/runtime-deployment-topology.md`
 - **Runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml`
 - **SSOT index:** `00-SSOT-INDEX.md`

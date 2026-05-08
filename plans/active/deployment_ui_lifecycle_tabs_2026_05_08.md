@@ -109,7 +109,7 @@ todos:
         auth-always-available contract; the scope split between Data-Status (data + pricing correctness only) and
         Monitor (runtime state of all jobs/clusters/schedules); the streaming-logs surface contract (one component
         powers logs across all four lifecycle classes). NEW doc REFERENCES existing
-        `04-architecture/deployment-topology-diagrams.md`, `05-infrastructure/launcher-script-ssot.md`,
+        `04-architecture/runtime-deployment-topology.md`, `05-infrastructure/launcher-script-ssot.md`,
         `05-infrastructure/runtime-tiers-and-deployment.md`, `05-infrastructure/deployment-clusters-live-vs-batch.md`,
         `05-infrastructure/cloud-agnostic-script-pattern.md`, `05-infrastructure/firebase-split-topology.md`.
         Single source of truth for the UX shape.

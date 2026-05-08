@@ -196,7 +196,7 @@ demands. Strategy-service refuses to start if the materialised deployment does n
 ## 10. See also
 
 - `unified-trading-pm/configs/runtime-topology.yaml` — machine SSOT.
-- `unified-trading-pm/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — paired decisions doc.
+- `unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md` — paired decisions doc.
 - `unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md` — runtime tier (T0-T6) definitions.
 - `unified-trading-pm/codex/09-strategy/architecture-v2/README.md` — strategy family/archetype catalog.
 - `unified-api-contracts/unified_api_contracts/internal/domain/deployment_service/isolation.py` — Pydantic schemas.

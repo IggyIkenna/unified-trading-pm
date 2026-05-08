@@ -8,7 +8,7 @@ sources:
   - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
   - plans/epics/instruments_live_master_2026_05_08.md (Phase G delegates UI scope here)
   - plans/active/master_to_live_defi_2026_05_23.md
-  - codex/04-architecture/deployment-topology-diagrams.md
+  - codex/04-architecture/runtime-deployment-topology.md
   - codex/05-infrastructure/launcher-script-ssot.md
   - codex/05-infrastructure/runtime-tiers-and-deployment.md
   - codex/05-infrastructure/deployment-clusters-live-vs-batch.md
@@ -281,7 +281,7 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
 
 ## Cross-references
 
-- [`codex/04-architecture/deployment-topology-diagrams.md`](../04-architecture/deployment-topology-diagrams.md) —
+- [`codex/04-architecture/runtime-deployment-topology.md`](../04-architecture/runtime-deployment-topology.md) —
   service-axis topology diagrams; this doc adds the lifecycle-class axis on top.
 - [`codex/04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) —
   engineering invariant that batch + live share 99% of the code path. Includes the "UX surface" section explicit on how

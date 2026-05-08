@@ -424,7 +424,7 @@ Detail: [`instruments-live-architecture.md`](instruments-live-architecture.md) +
   [`../06-coding-standards/strategy-identity-versioning.md`](../06-coding-standards/strategy-identity-versioning.md)
 - **Data flow map**: see [`data-flow-map.md`](data-flow-map.md)
 - **Communication patterns**: see [`communication-patterns.md`](communication-patterns.md)
-- **Deployment topology diagrams**: see [`deployment-topology-diagrams.md`](deployment-topology-diagrams.md)
+- **Deployment topology diagrams**: see [`runtime-deployment-topology.md`](runtime-deployment-topology.md)
 - **Benchmark fills cross-cutting**:
   [`../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md`](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
 - **Matching engine**: `execution-service/execution_service/matching_engine/`
