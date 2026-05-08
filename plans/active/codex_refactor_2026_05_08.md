@@ -53,7 +53,7 @@ The 2026-05-08 codex audit (7 sub-agents, one per directory + cross-directory sy
   sports overlap, 7-doc topology cluster, custody triplet, validation/error chapter, batch-live principle merge).
 - **3 structural moves** (14-playbooks split into customer-journeys / runbooks / strategy-playbooks; rename
   `09-strategy/cross-cutting/` to disambiguate from `architecture-v2/cross-cutting/`; rename
-  `02-data/per-category-bucket-layouts.md` to use the `asset_group` vocabulary).
+  `02-data/per-asset-group-bucket-layouts.md` to use the `asset_group` vocabulary; renamed in Phase E.4).
 - **~200 files** carrying the stale `POST_PLAN_BANNER_2026_05_06_FINAL` (workspace-wide sweep candidate; 2 of the 3
   banner-named active plans no longer exist).
 - **~12 stub docs** under 500 bytes in `06-coding-standards/` that fail the workspace S5.4 stub gate.
@@ -105,8 +105,8 @@ drift.
   **Files audited + updated where drift existed**:
   - [x] `02-data/availability-manifest-and-data-status.md` — already correct: § "Schema v7 (current)" line 222,
         `MANIFEST_SCHEMA_VERSION = 7` line 233, v8 in design block line 297-305. No edit needed.
-  - [x] `02-data/per-category-bucket-layouts.md` — only multi-axis correction banner at line ~13, no version conflict.
-        No edit needed.
+  - [x] `02-data/per-asset-group-bucket-layouts.md` (renamed in Phase E.4 from `per-category-bucket-layouts.md`) — only
+        multi-axis correction banner at line ~13, no version conflict. No edit needed.
   - [x] `02-data/partitioning.md` — only multi-axis correction banner, no version conflict. No edit needed.
   - [x] `02-data/prediction-schema-paths.md` — only multi-axis correction banner, no version conflict. No edit needed.
   - [x] `02-data/shard-granularity-cefi.md:15` — Status line said "v6 columns active... manifest schema v6 shipped"
@@ -603,9 +603,9 @@ drift.
   - `02-data/sports-adapter-dependency-order.md` (T0/T1 dependency graph — unchanged).
 
   **Delete**:
-  - [x] `02-data/sports-data-migration.md` — DELETED. Superseded by `per-category-bucket-layouts.md` (sports section) +
-        reality of shipped sports buckets. Post-plan banner (2026-05-06) already disclaimed it; no unique content needed
-        migration.
+  - [x] `02-data/sports-data-migration.md` — DELETED. Superseded by `per-asset-group-bucket-layouts.md` (sports
+        section) + reality of shipped sports buckets. Post-plan banner (2026-05-06) already disclaimed it; no unique
+        content needed migration.
   - [x] `02-data/sports-schema-paths.md` — DELETED. GCS path SSOT lives in UAC `unified_api_contracts.sports.gcs_paths`
         (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`); SOURCE_COVERAGE_START
         table already documented in CLAUDE.md "Sports source coverage windows" workspace rule +
@@ -614,16 +614,16 @@ drift.
 
   **Cross-doc references rewritten** (6 files):
   - [x] `04-architecture/sports-integration-plan.md` — both refs (line 410 `Migration scripts:` + line 495
-        `## References`) repointed to `02-data/per-category-bucket-layouts.md` + UAC `gcs_paths` SSOT.
+        `## References`) repointed to `02-data/per-asset-group-bucket-layouts.md` + UAC `gcs_paths` SSOT.
   - [x] `14-playbooks/backfill-completion-playbook.md:166` — repointed to UAC `gcs_paths` SSOT + phantom-audit recipe in
         `availability-manifest-and-data-status.md`.
   - [x] `05-infrastructure/vm-tarball-deployment.md:402` — manifest consolidator cross-ref repointed to
         `availability-manifest-and-data-status.md`.
   - [x] `02-data/data-lineage-MTDS-features-ml.md:160` — sports paths cross-ref repointed to UAC `gcs_paths` SSOT +
-        `per-category-bucket-layouts.md`.
+        `per-asset-group-bucket-layouts.md`.
   - [x] `02-data/README.md:253-254` — both file entries removed from directory listing.
   - [x] `02-data/sports-data-source-coverage-matrix.md:33` — `sports-data-migration.md` cross-ref replaced with
-        `per-category-bucket-layouts.md`.
+        `per-asset-group-bucket-layouts.md`.
 
   Archived plans (`plans/archive/sports_*`) intentionally NOT modified — frozen historical state per workspace rule.
   Auto-generated `codex/14-playbooks/_generated/scope-manifest.json` will refresh on next codex QG.
@@ -667,9 +667,9 @@ drift.
   - [x] `02-data/availability-manifest-and-data-status.md` (sports paragraph + predictions-migration paragraph) —
         replaced both stale shard-atom claims (sports + prediction) with banner-canonical shapes; cluster-validation
         cross-link via `SPORTS_FIXTURE_CLUSTERS` + `PREDICTION_GROUPS` (commit `c2bc6cd5`).
-  - [x] `02-data/per-category-bucket-layouts.md` (lines 71 + 73 — table sibling rows) — replaced both SPORTS-post-target
-        and PREDICTION-post-target rows with banner-canonical paths (no `fixture=` / no `{market_id}.parquet`) +
-        row-level-column body text (commit `c2bc6cd5`).
+  - [x] `02-data/per-asset-group-bucket-layouts.md` (renamed in Phase E.4; lines 71 + 73 — table sibling rows) —
+        replaced both SPORTS-post-target and PREDICTION-post-target rows with banner-canonical paths (no `fixture=` / no
+        `{market_id}.parquet`) + row-level-column body text (commit `c2bc6cd5`).
   - [x] `02-data/prediction-schema-paths.md` § Target (post-Plan A) — replaced `market_id` shard-axis claim with
         row-level column; per-`canonical_question_group` cluster validation expects N market_ids per cadence (HOURLY=24
         / DAILY=1 / ELECTION=1) INSIDE the file (commit `c2bc6cd5`).
@@ -758,9 +758,9 @@ drift.
 
 - [x] [SCRIPT] P1. Per audit C9, merge `batch-live-pipeline.md` (195L) + `batch-live-symmetry.md` (263L) into
       `batch-live-architecture.md`. Major overlap on principle. **DONE 2026-05-08 (PM@dcd49f24)** —
-      batch-live-architecture.md created at 460L with all 10 sections (Principle / 4 seams / anti-drift guards /
-      service audit matrix / matching engine + book matchers / strategy alpha vs execution alpha / sports-specific notes
-      / anti-patterns fixed / instruments-live exception / references). 23 cross-refs rewritten across codex/02-data/ +
+      batch-live-architecture.md created at 460L with all 10 sections (Principle / 4 seams / anti-drift guards / service
+      audit matrix / matching engine + book matchers / strategy alpha vs execution alpha / sports-specific notes /
+      anti-patterns fixed / instruments-live exception / references). 23 cross-refs rewritten across codex/02-data/ +
       codex/04-architecture/ + codex/05-infrastructure/ + codex/10-audit/ + codex/14-playbooks/ + plans/active/ +
       plans/epics/.
 
@@ -826,12 +826,11 @@ drift.
 
 - [x] [SCRIPT] P1. Per audit C2, sub-tree restructure for path layouts. **SHIPPED 2026-05-08 PM@a1e134c4** — three
       sibling docs collapsed to short SSOT pointers; `per-category-bucket-layouts.md` retained as the canonical
-      path-layout SSOT (filename rename to `per-asset-group-bucket-layouts.md` deferred to Phase E.4 per
-      operator-decision-required gate).
+      path-layout SSOT (filename rename to `per-asset-group-bucket-layouts.md` shipped in Phase E.4).
 
   **Keep as SSOT** — DONE:
-  - [x] `02-data/per-category-bucket-layouts.md` — path-shape divergences SSOT (rename to
-        `per-asset-group-bucket-layouts.md` deferred to Phase E.4).
+  - [x] `02-data/per-asset-group-bucket-layouts.md` (renamed in Phase E.4 from `per-category-bucket-layouts.md`) —
+        path-shape divergences SSOT.
 
   **Collapse to pointers** — DONE (PM@a1e134c4):
   - [x] `02-data/partitioning.md` § Path Templates by Service → 17-row per-service table replaced with 6-line "see SSOT"
@@ -910,11 +909,19 @@ drift.
 - [ ] [DOC] P1 (BLOCKED on operator approval). Per audit S3 + workspace asset_group vocabulary rule. The file body uses
       both `category` and `asset_group` inconsistently. Rename + body-sweep.
 
-### Phase E.5 — Audit-style doc moves out of 06-coding-standards — PARALLEL — P1
+### Phase E.5 — Audit-style doc moves out of 06-coding-standards — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [DOC] P2. Move `cod-deadlock-verification-report.md` (Feb 2026 dated, stale)
-  - `orphan-audit.md` (UI architecture concern) out of `06-coding-standards/`. Either to `codex/15-audits/` (NEW
-    directory) or archive. Operator picks.
+- [x] [DOC] P2. Move `cod-deadlock-verification-report.md` (Feb 2026 dated, stale) + `orphan-audit.md` (UI architecture
+      concern) out of `06-coding-standards/`. **SHIPPED 2026-05-08**:
+  - `cod-deadlock-verification-report.md` → `plans/archive/audits/cod-deadlock-verification-report-2026-02-13.md` —
+    rename absorbed into PM@2677b3ae rename bundle; archive status block + successor-doc pointer
+    (`codex/06-coding-standards/quality-gates.md`) added in PM@25f109e8.
+  - `orphan-audit.md` → `codex/04-architecture/orphan-audit.md` (UI architecture policy belongs in 04-architecture/, not
+    coding-standards canon). Rename + cross-doc rewrites (3 refs in
+    `09-strategy/architecture-v2/strategy-catalogue-3tier.md`
+    - 2 refs in `08-workflows/prospect-questionnaire-flow.md` including a previously-broken sibling-relative link)
+      absorbed into PM@018b4958 (parallel agent's Phase E.3 commit bundle — staged set was hijacked by foreign `git add`
+      seconds before commit fired; content shipped correctly under their commit hash).
 
 ---
 
