@@ -885,6 +885,44 @@ call sites from `writer.add(...)` to `writer.record_captured(...)` with `feature
 consolidated `features-service` repo writes manifest rows with `feature_family=""` and the deployment-UI's Phase 8B
 drilldown column renders empty. Add as Phase 4 sub-todo (4.8).
 
+**🟡 BLOCKED 2026-05-08 — Tab C F6 migration agent surfaced architectural gap.** `record_captured()` requires a
+`df: pd.DataFrame` kwarg (mandatory `assert_available_at_present(df)` + schema validation against UAC contract
+registry; row count derived from `len(df)`). All 18 features-service `writer.add()` callsites — across 8 families,
+precise audit complete — happen at manifest-flush time AFTER the per-shard parquet has been written via helpers
+like `_write_per_league` / `write_sports_table` / `save_features_to_gcs`. **The df is not in scope at the
+callsite**; only `row_count` (from `table_row_counts: dict[str, int]`) is.
+
+Three options for resolution — issue doc with full analysis + recommended-decision matrix:
+[`plans/active/issues/f6_record_captured_requires_df_features_consolidation_2026_05_08.md`](issues/f6_record_captured_requires_df_features_consolidation_2026_05_08.md).
+Summary of options:
+
+- **Option A** (~1 day): extend `ManifestWriter.add()` with `feature_family: str = ""` kwarg + sed-migrate 18
+  callsites. Satisfies F6's user-visible acceptance criterion (deployment-UI Phase 8B drilldown column
+  populated) without the deeper contract migration. Leaves `record_captured()` migration for a future plan.
+- **Option B** (~3-5 days): refactor df-flow per family so the captured df reaches the manifest write site,
+  enabling true `record_captured()` migration with full schema validation. Architectural target but multi-day
+  upstream refactor.
+- **Option C** (hybrid): Option A this cycle (closes F6 user-visible benefit) + Option B as a named follow-up
+  in Phase 5 or a new sub-plan.
+
+**Tab C did NOT ship migrations** — naive substitution would break at runtime on every call (LookaheadBiasError
+from `assert_available_at_present(df)` with no df). Awaiting operator triage A / B / C before re-spawning.
+
+**Precise 18-site audit** (preserved here so future agent doesn't re-grep):
+
+| Family            | File:Line                                                  | feature_group target           |
+| ----------------- | ---------------------------------------------------------- | ------------------------------ |
+| calendar          | calendar/engine/calendar_orchestrator.py:373               | per-`feature_group` arg        |
+| onchain           | onchain/engine/orchestrator.py:182                         | per-`feature_group` arg        |
+| volatility        | volatility/engine/orchestrator.py:192,198                  | options_volatility (per-tf + agg) |
+| volatility        | volatility/engine/orchestrator.py:262,268                  | futures_term_structure (per-tf + agg) |
+| volatility        | volatility/engine/orchestrator.py:635,641                  | per-`feature_group` arg (per-tf + agg) |
+| commodity         | commodity/cli/handlers/batch_handler.py:269                | per-`feature_group` arg        |
+| sports            | sports/cli/handlers/batch_handler.py:797,805               | base_table (with/without league) |
+| delta_one         | delta_one/engine/orchestrator.py:316,322                   | per-`feature_group` arg (per-tf + agg) |
+| cross_instrument  | cross_instrument/cli/handlers/batch_handler.py:472,479     | per-`feature_group` arg        |
+| multi_timeframe   | multi_timeframe/engine/orchestrator.py:254,261             | per-`feature_group` arg        |
+
 ### F8 — PM `coverage-floor-guard` MIN_COVERAGE path bug (workspace-wide, cosmetic)
 
 **Severity**: P3 / cosmetic / out-of-scope for this plan.
