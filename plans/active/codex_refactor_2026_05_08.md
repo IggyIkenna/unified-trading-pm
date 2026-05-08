@@ -95,28 +95,49 @@ anything**.
 All Layer A phases are **PARALLEL** and shippable independently. They do NOT consolidate docs; they only fix factual
 drift.
 
-### Phase A.1 — Manifest schema version unification — PARALLEL — P0
+### Phase A.1 — Manifest schema version unification — PARALLEL — P0 — SHIPPED 2026-05-08 (PM@bcd83823 merge)
 
-- [ ] [SCRIPT] P0. Single-pass sweep: every codex doc claiming a manifest schema version must cite the canonical version
+- [x] [SCRIPT] P0. Single-pass sweep: every codex doc claiming a manifest schema version must cite the canonical version
       per `manifest_v7_schema_migration_design_2026_05_08.md` (current = v7; target = v8). UTL `manifest_writer.py`
-      `MANIFEST_SCHEMA_VERSION` is the runtime SSOT.
+      `MANIFEST_SCHEMA_VERSION` is the runtime SSOT. **Confirmed UTL constant**: `MANIFEST_SCHEMA_VERSION = 7` at
+      `unified-trading-library/unified_trading_library/manifest_writer.py:131`.
 
-  **Files to update** (verified in audit):
-  - [ ] `02-data/availability-manifest-and-data-status.md:228` — replace `MANIFEST_SCHEMA_VERSION = 6` with the actual
-        UTL constant; reconcile the "v7 job_id" + "v8 pipeline_mode" body sections (ll.31, 293-300) with the version
-        constant.
-  - [ ] `02-data/per-category-bucket-layouts.md:27` — drop the v7 job_id banner, point at availability-manifest doc.
-  - [ ] `02-data/partitioning.md:27` — same.
-  - [ ] `02-data/prediction-schema-paths.md:27` — same.
-  - [ ] `02-data/shard-granularity-cefi.md:27` — same.
-  - [ ] `02-data/sports-scheduling-and-sharding.md:27` — same.
-  - [ ] `02-data/pipeline-coverage-matrix.md:80` — replace `v6 — current` with current.
-  - [ ] `02-data/data-lineage-MTDS-features-ml.md:34` — replace `v4` reference with current.
-  - [ ] `02-data/data-status-drilldown.md:65,131-148` — verify schema reference points at correct version.
-  - [ ] `04-architecture/shard-level-failure-isolation.md` — verify any version cites match.
+  **Files audited + updated where drift existed**:
+  - [x] `02-data/availability-manifest-and-data-status.md` — already correct: § "Schema v7 (current)" line 222,
+        `MANIFEST_SCHEMA_VERSION = 7` line 233, v8 in design block line 297-305. No edit needed.
+  - [x] `02-data/per-category-bucket-layouts.md` — only multi-axis correction banner at line ~13, no version conflict.
+        No edit needed.
+  - [x] `02-data/partitioning.md` — only multi-axis correction banner, no version conflict. No edit needed.
+  - [x] `02-data/prediction-schema-paths.md` — only multi-axis correction banner, no version conflict. No edit needed.
+  - [x] `02-data/shard-granularity-cefi.md:15` — Status line said "v6 columns active... manifest schema v6 shipped"
+        without anchoring current overall = v7. **Edited** to add "Current overall schema is **v7**" + v8 design pointer
+        + canonical SSOT reference; preserved v6 column rollout history (this doc owns the v6 column reference).
+  - [x] `02-data/sports-scheduling-and-sharding.md` — only multi-axis correction banner, no version conflict. No edit
+        needed.
+  - [x] `02-data/pipeline-coverage-matrix.md:80-82` — already correct: `### Manifest schema (v7 — current)` +
+        `MANIFEST_SCHEMA_VERSION = 7`. No edit needed.
+  - [x] `02-data/data-lineage-MTDS-features-ml.md:33` — already correct: `**Manifest shard dims (v7 — current)**` with
+        v5 / v6 / v7 history + v8 design pointer. No edit needed.
+  - [x] `02-data/data-status-drilldown.md:76` — JSON enumerates v5 4-state `capture_status` taxonomy (unchanged under
+        v7); no version conflict.
+  - [x] `04-architecture/shard-level-failure-isolation.md:27,80,106` — already correct: cites "v7 manifest column" +
+        "v7 manifest row key" + "full v7 row key per asset_group". No edit needed.
 
-  **Acceptance**: every doc citing a manifest schema version cites the same number (the UTL constant); no doc carries
-  inline "v7 job_id" or "v8 pipeline_mode" banners that contradict its own version line.
+  **Bonus drift caught beyond the audit list (case 1 finding — fixed in same shippable unit)**:
+  - [x] `02-data/venue-availability.md:8` — said "(v4)" inline. **Edited** to "(v7 — current; `MANIFEST_SCHEMA_VERSION = 7`
+        in UTL `manifest_writer.py`)".
+  - [x] `02-data/manifest-migration-coordination.md:19` — said "next manifest-schema bump (v5 → v6) is planned".
+        **Edited** to v7 → v8 design pointer + canonical runtime SSOT line.
+  - [x] `05-infrastructure/vm-tarball-deployment.md:232` — said "Honest-coverage schema v5". **Edited** to
+        "Honest-coverage `capture_status` taxonomy (introduced at schema v5; current schema v7)" so the historical
+        reference doesn't read as the current schema version.
+
+  **Acceptance met**: every doc citing a manifest schema version cites v7 (UTL `MANIFEST_SCHEMA_VERSION = 7`); no doc
+  carries inline "v7 job_id" or "v8 pipeline_mode" banners that contradict its own version line.
+
+  **Shipped via**: PM@bcd83823 merge commit (parallel-agent / prek-shield merge bundled this work alongside foreign
+  edits; my 4 files are byte-identical with the spec drafted in this session — `git show origin/live-defi-rollout:<file>`
+  verified).
 
 ### Phase A.2 — Capture taxonomy 4-state alignment — PARALLEL — P0
 
