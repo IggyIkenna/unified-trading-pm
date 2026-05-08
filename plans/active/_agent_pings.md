@@ -27,4 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-_(empty — Tab 12 STARTED ack'd 07:43 UTC; Tab 14 ✅ DONE 07:44 UTC with case-5 BIG finding (13 UAC PROTOCOL_LAUNCH_DATES drifts) escalated to operator chat + filed in issues/defi_fork1_prep_audit_2026_05_08.md. Tabs 2, 9, 12 IN FLIGHT.)_
+[2026-05-08 07:50 UTC] ml-features-phase2a-tab — Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR 07:55 UTC] scope ambiguity strategic — Tab 12 continuing with inventory map meanwhile; see ml_and_features_master_2026_05_07.plan.md ## Open questions Q1

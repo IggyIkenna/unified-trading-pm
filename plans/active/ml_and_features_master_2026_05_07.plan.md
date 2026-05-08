@@ -156,6 +156,79 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 - **Everything else** (consolidation sidecar, FeatureBatchHandler base, deployment-ui drill-down, multi-task training,
   hierarchical inference, phantom audit extension): post-May-23.
 
+## Open questions
+
+### Q1 — [ml-features-phase2a-tab, 2026-05-08 07:50 UTC] 🟡 BLOCKED — ESCALATED TO OPERATOR
+
+**Main agent escalation note 2026-05-08 07:55 UTC**: This is a strategic-scope call (defer/ship/contract-
+change), not a technical answer main can make autonomously. Surfaced to operator chat as case-5 BIG (work-
+split affecting + UTL contract surface + cross-cutting 8 services). Operator is at lunch, ETA return
+~10:00 UTC. Tab 12 — continue with the per-service compute-boundary inventory doc as you proposed in the
+question body; that's productive regardless of which path (a/b/c) operator picks. Don't ship wires until
+A1 lands. `git fetch && git pull` periodically (or just re-read this section); A1 will appear here.
+
+**Scope ambiguity for Tab 12 (Phase 2A wire-in) — spawn prompt vs plan body.**
+
+The Tab 12 spawn prompt in
+[`work_split_2026_05_07_harsh_5tab_layout.md`](work_split_2026_05_07_harsh_5tab_layout.md) §"Tab 12" says: _"wire the
+8 services that compute features into the UTL `assert_no_lookahead_for_feature_group` helper... so every feature
+compute call validates inputs against the UAC `feature_group → required_inputs` DAG at runtime."_ — implying ship the
+wires now.
+
+The plan body (this doc) Phase 2A marks all three named consumers (`features-onchain-service`,
+`features-sports-service`, `features-delta-one-service`) as **P1** with **`[BLOCKED-ON adapter-side available_at
+stamping prerequisite]`** — and the prerequisite itself is a separate **P0** item ("Adapter-side `available_at`
+write-time stamping prerequisite" at line 236) whose owner is writegate Phase 2.D, not Tab 12. The plan-of-record
+"Critical-path priority for May-23" section explicitly says: _"the `assert_no_lookahead_for_feature_group` helper
+silently no-ops on adapters that haven't been migrated yet, so Phase 2A correctness is contingent on writegate Phase
+2.D progressing."_
+
+Three real factors compound the ambiguity:
+
+1. **Helper is permissive** (`unified_trading_library/point_in_time.py:343-363`) — it silently no-ops when (a)
+   `feature_group` is not in UAC `FEATURE_REQUIRED_INPUTS`, (b) `inputs_df` is empty, OR (c) `available_at_col` is
+   missing from the frame. So shipping wires before stamping lands does NOT cause runtime failures — it just defers
+   correctness pickup until Phase 2.D progresses. The wire IS the landing pad.
+
+2. **API mismatch.** Helper signature requires `pl.DataFrame`; almost every consumer calculator uses `pd.DataFrame`
+   (features-onchain `app/calculators/base.py` `OnChainCalculator.calculate_features(raw_data: pd.DataFrame)`,
+   `BaseFeatureCalculator.calculate(df: pd.DataFrame, **params)` in UTL `feature_calculator/registry.py:19`,
+   features-delta-one + features-sports + MDPS calculators all pandas). Wire-in needs either per-call-site
+   `pl.from_pandas(...)` or a UTL helper variant accepting either. Latter is a UTL contract change worth surfacing.
+
+3. **`target_ts` plumbing.** The helper requires a tz-aware `target_ts` at the call site. In features-onchain
+   `OnChainCalculator.calculate(df, **params)` the as-of is NOT in scope today — it's only known later at the writer
+   layer (`features_onchain_service/app/core/feature_writer.py:307` `as_of_date`). For a clean wire we'd need either
+   (a) plumb `target_ts` through `calculate(df, **params)` via params dict, OR (b) refactor each calculator to accept
+   it explicitly, OR (c) wire the helper at the WRITER layer instead (where `as_of_date` is in scope but inputs have
+   already been consumed — semantically wrong, the helper validates INPUTS not OUTPUTS).
+
+**My read:** the spawn prompt is more aggressive than the plan body warrants. The plan body's BLOCKED annotations are
+correct — the wire-in is contingent on Phase 2.D adapter-side stamping. Shipping wires now lands them as no-ops in
+production until Phase 2.D progresses; that's defensible per the "helper is permissive" semantic, but it's also 8
+services × ~100 calculators × pd→pl conversion + target_ts plumbing = several hours of mechanical edits with non-zero
+collision risk against parallel agents, for zero immediate correctness value.
+
+**Asking main agent / operator to pick:**
+
+- **(a) Ship wires now anyway** at one CENTRAL boundary per service (per-service base class, NOT per-calculator) —
+  ~8-10 small commits, helper degrades gracefully on missing `available_at`, becomes load-bearing as Phase 2.D
+  progresses. **Recommendation if this path:** wire at the per-service base class's `calculate()` method
+  (`OnChainCalculator.calculate` for onchain, equivalent for each other service), thread `target_ts` via the
+  `**params` dict using a new convention `target_ts: datetime` key, no-op the call when params doesn't include it
+  yet. This is the minimum-viable wire.
+- **(b) Defer Tab 12** until writegate Phase 2.D adapter-side stamping ships — flip Tab 12 from QUEUED to BLOCKED in
+  the work-split ledger, free up the implementer for higher-impact May-23 work (e.g. strategy-service Phase 4D
+  calibrated-signal consumption is hard-floor for live trading; Phase 2A wire-in is permissive prep).
+- **(c) Lift the helper to accept either pd or pl** at UTL — a one-line UTL contract update so the wire-in becomes a
+  3-line edit at each consumer site without conversion. Decreases the mechanical effort of (a) by ~50%; surfacing
+  this so the answer can fold-in (a)+(c) if helpful.
+
+Continuing meanwhile with: per-service compute-boundary inventory doc (the 8-service map of where the wire would
+land), so whichever direction the operator picks, the next agent (or this one) can ship it without re-scanning.
+
+---
+
 ## Phase 1 — UAC feature-DAG SSOT + UTL foundations (was: feature_dag_uac_ssot_and_features_coverage)
 
 > Source: `plans/archive/feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`. Phase 1A
