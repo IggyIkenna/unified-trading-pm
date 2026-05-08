@@ -1,92 +1,200 @@
 ---
 scope: [engineer, ml-engineer, admin]
+status: stable
+last_reviewed: 2026-05-08
 ---
 
 # features-service architecture
 
-## What "features-service" is
+## TL;DR
 
-Single workspace repo `features-service` consolidating the previously-separate `features-onchain-service`,
-`features-volatility-service`, `features-cross-instrument-service`, `features-sports-service`,
-`features-prediction-service` and friends. The consolidation collapses 5–6 repos into one with sub-packages, a single
-CLI surface, a single deployment topology, and a single launcher script per asset_group.
+Eight previously-separate `features-*-service` repos consolidated into a single workspace repo
+[`features-service`](../../../features-service/) with one sub-package per family. ONE Docker image, ONE
+[`pyproject.toml`](../../../features-service/pyproject.toml), ONE Health-API aggregator, ONE CLI dispatcher
+parameterised by `--feature-family`. Subtree-merged with full per-repo history preserved per family. The eight
+predecessor repos are archived; new code lands in `features-service` only.
 
-## Sub-package layout
+This consolidation is a pre-requisite for
+[`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) — the
+live-pipeline topology assumes a single Docker image deployed in two flavors (asset-scoped colocated with MDPS;
+cross-cutting standalone). Maintaining that topology against 8 separate image build + deploy pipelines is operationally
+infeasible against the 2026-05-23 cutover.
+
+## The 8 families
+
+The consolidated package layout (every family is a sub-package of `features_service`):
 
 ```
 features-service/
 ├── features_service/
-│   ├── onchain/         (DeFi onchain features)
-│   ├── volatility/      (cross-asset realized + implied vol features)
-│   ├── cross_instrument/(cross-asset / cross-venue features)
-│   ├── sports/          (sports features)
-│   ├── prediction/      (prediction-market features)
-│   └── shared/          (BaseCalculator, ManifestWriter wrappers, lookahead-bias guard)
-├── api/                  (health router, /metrics)
-└── scripts/              (CLI entry-points, smoke matrices)
+│   ├── __init__.py
+│   ├── __main__.py                     # python -m features_service entry-point
+│   ├── cli/main.py                     # dispatcher: parses --feature-family, forwards rest
+│   ├── api/main.py                     # Health-API aggregator (per-family freshness)
+│   ├── common/                         # cross-family lifts (Phase 5 helpers from UTL)
+│   ├── calendar/                       # Family 1 — calendar / time-of-day features
+│   ├── commodity/                      # Family 2 — commodity-specific features
+│   ├── cross_instrument/               # Family 3 — cross-asset / cross-venue features
+│   ├── delta_one/                      # Family 4 — delta-one / linear-exposure features
+│   ├── multi_timeframe/                # Family 5 — multi-timeframe rollups
+│   ├── onchain/                        # Family 6 — DeFi onchain features
+│   ├── sports/                         # Family 7 — sports features (largest by surface)
+│   └── volatility/                     # Family 8 — realized + implied vol features
+├── pyproject.toml                      # ONE flat dependency list (no optional groups)
+├── Dockerfile                          # ONE image
+└── tests/
 ```
 
-Each sub-package owns its calculators. The shared `BaseCalculator` enforces:
+Each family `__init__.py` exports a `run(argv: list[str]) -> int` shim. The top-level dispatcher
+[`features_service/cli/main.py`](../../../features-service/features_service/cli/main.py) parses `--feature-family`
+and forwards the remaining argv to the matching family `run()`. No per-family entry-point script in `scripts/` —
+the `python -m features_service --feature-family <family> ...` form is the single canonical invocation.
 
-- Lookahead-bias guard via UAC `availability_semantics` (every input row consumed must satisfy `input.available_at <=
-  target_ts - horizon`; raises `LookaheadBiasError` strict-mode).
-- 4-pillar write-gate validation per `record_captured` (row count > 0, NaN ratio per column under threshold, schema
-  matches contract, cluster coverage ≥ expected for bundled shards).
-- ServiceBootstrap lifecycle (STARTED / STOPPED / FAILED + per-instrument progress with row counts).
+## CLI dispatch contract
 
-## CLI surface
-
-Single CLI codepath with the workspace-standard axes:
+Every CLI invocation uses the workspace-standard axes plus `--feature-family`:
 
 ```bash
-features-service \
-  --operation compute \
-  --mode batch|live \
-  --asset-group cefi|defi|tradfi|sports|prediction \
-  --feature-family <family> \
-  [--shard-key '...']
+python -m features_service \
+  --feature-family <onchain|volatility|cross_instrument|sports|calendar|commodity|delta_one|multi_timeframe> \
+  --operation <calculate|backfill|...> \
+  --mode <batch|live> \
+  --asset-group <CEFI|DEFI|TRADFI|SPORTS|PREDICTION> \
+  [--shard-key '...'] \
+  [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] \
+  [--feature-group <name>]
 ```
 
-`--feature-family` is a UAC enum. The CLI dispatches to the right sub-package + calculator. Live-mode dispatch follows
-the same pattern as MTDS / MDPS — no separate live-only entry-point.
+`--feature-family` is mandatory and is validated against the UAC `FeatureFamily` enum (8 members). The dispatcher
+enumerates the closed set in its help string; an unknown family raises a CLI-level error before any sub-package
+is imported.
 
-CLI convention: [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md).
+CLI convention SSOT: [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md).
 
-## feature_family axis
+## Health-API aggregator contract
 
-Every feature group declares its `feature_family` (UAC enum). The data-status drilldown surfaces feature_family as a
-first-class shard axis — see
-[`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md). This collapses what
-used to be N per-repo silos into one feature catalog with N families.
+The top-level [`features_service/api/main.py`](../../../features-service/features_service/api/main.py) is the
+single Health-API entry-point. It walks the 8 family sub-packages at import time, resolves each family's
+`_data_freshness` callback via `importlib.util.find_spec`, and aggregates the responses behind a single `/health`
+route.
+
+Aggregate contract:
+
+- Per-family freshness probes run independently. Any single-family raise is caught + recorded with the family
+  name + exception message.
+- Aggregate `healthy` flips False if **any** family raises (fail-loud). Per-family detail is in the response body
+  so operators see which family is degraded without consulting per-family logs.
+- The aggregator inherits the rest of the Health-API contract from
+  [`make_health_router`](../../../unified-trading-library/src/unified_trading_library/health/) (UTL).
+  Reference shape: [`features-svc@726af91d`](../../../features-service/) (Phase 4.4 / 4.5 commit; the aggregator
+  was the Phase 4.5 deliverable).
+
+QG enforcement: workspace base-service.sh STEP 5.62 asserts `make_health_router` appears in `api/main.py`. The
+aggregator pattern satisfies that gate.
+
+## UAC `feature_family` enum + manifest column
+
+Phase 1A landed in
+[`unified-api-contracts`](../../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/feature_family.py):
+
+- `FeatureFamily` — `StrEnum` with 8 members matching the sub-package names.
+- `FEATURE_GROUP_TO_FAMILY` — registry mapping each of the 83 known feature_groups to its family. `feature_group`
+  is the fine axis (e.g. `lst_yields`, `realized_vol_60m`, `lineups_pre_match`); `feature_family` is the coarse
+  axis (`onchain`, `volatility`, `sports`).
+- The v5 availability manifest gains a `feature_family` column (Phase 1B);
+  [`ManifestWriter.record_captured`](../../../unified-trading-library/src/unified_trading_library/manifest/) now
+  accepts the column as a kwarg + populates it automatically when called from a features-service writer.
+
+Drilldown surface: see [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md)
+— `feature_family` is the top-level shard axis above `feature_group` for every features-service shard.
+
+## UTL helpers shared across families (Phase 5 lifts)
+
+Seven cross-family helpers identified by Phase 0 audit as duplicated boilerplate, lifted into UTL so families
+inherit the canonical implementation:
+
+| Helper                          | Purpose                                                                                  | Status (2026-05-08)                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------ |
+| `LookaheadBiasError`            | Strict-mode raise when `input.available_at > target_ts - horizon`                        | Lifted; 6-of-8 family adoption pending in `ml_and_features_master` Phase 2A/2B |
+| `WatermarkAlignmentFanin`       | Multi-source watermark alignment for live fan-in                                         | Greenfield in UTL                    |
+| `BaseFeatureCalculator`         | Per-family abstract calculator base (lifecycle + write-gate + lookahead guard)           | Lifted from per-family duplicates    |
+| `BroadcastSink`                 | Live-mode publish helper (Redis Streams + GCS dual-write)                                | Lifted                               |
+| `LiveDataSource`                | Live-mode input adapter (subscribe + watermark)                                          | Lifted                               |
+| `BuilderEntry`                  | Family registry entry shape (CLI dispatch + Health-API contract surface)                 | Lifted                               |
+| `FeatureBatchHandler` base      | Batch-mode handler base (CLI → calculator → manifest write-gate)                         | Lifted                               |
+
+Some lifts ship in the same logical unit as Phase 5; others ride alongside Phase 6 / Phase 7 (per-family inline
+removal in same commit as the UTL lift, per the workspace "no double SSOT" rule). Phase 5 todo list owns the
+authoritative status table.
 
 ## Deployment topology
 
-| Cluster                   | What runs there                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------ |
-| features-asset-scoped     | One instance per (asset_group, region) — colocated with MDPS for that asset_group (live pipeline)|
-| features-cross-cutting    | Separate instance for cross-asset / cross-venue features that span asset_groups                  |
+ONE Docker image. Per-VM `--feature-family` flag selects which sub-package runs at boot. Two deployment flavors:
+
+| Cluster                       | What runs there                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **features-asset-scoped**     | One VM per `(asset_group, region)` — colocated with MDPS for that asset_group (live pipeline). Boots with `--feature-family <onchain\|volatility\|delta_one\|...>` per the asset_group's families. |
+| **features-cross-cutting**    | Standalone VM(s) for cross-asset / cross-venue families (`cross_instrument`, `calendar`, `multi_timeframe`) that span asset_groups. |
 
 Topology SSOT: [`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md).
 
-## Launcher
-
-Single launcher per cluster shape:
-`deployment-service/scripts/vm/launch-features-{asset_group_or_cross_cutting}-vm.sh`. Replaces the 8 prior
-features-*-service launchers. Registered in `_SERVICE_LAUNCHER_SCRIPTS` and `VM_PREFIX_TO_BUCKET`.
+Launcher SSOT: [`../05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md). The
+prior 8 per-family launchers (`launch-features-onchain-vm.sh`, etc.) collapse to a single
+`launch-features-vm.sh` parameterised by `--feature-family` + `--asset-group`. Phase 8A finalises the launcher
+shape.
 
 ## Live = batch
 
-Same code, same calculator, same CLI, same deployment shape. Only `--mode` differs at the entry point; the calculator
-core does not branch on mode.
+Same code, same calculators, same CLI surface, same Docker image. Only `--mode batch|live` differs at the entry
+point; the calculator core does not branch on mode. The live-mode pipeline (Redis Streams `CANDLE_COMPUTED`
+cascade + watermark fan-in) is wired by the lifted `BroadcastSink` + `LiveDataSource` helpers — not duplicated
+per family.
+
+Reference: [`batch-live-symmetry.md`](batch-live-symmetry.md).
+
+## Migration history
+
+Eight predecessor repos archived (commit history preserved via `git subtree add` per family):
+
+| Predecessor repo                       | Sub-package destination               |
+| -------------------------------------- | ------------------------------------- |
+| `features-onchain-service`             | `features_service/onchain/`           |
+| `features-volatility-service`          | `features_service/volatility/`        |
+| `features-cross-instrument-service`    | `features_service/cross_instrument/`  |
+| `features-sports-service`              | `features_service/sports/`            |
+| `features-calendar-service`            | `features_service/calendar/`          |
+| `features-commodity-service`           | `features_service/commodity/`         |
+| `features-delta-one-service`           | `features_service/delta_one/`         |
+| `features-multi-timeframe-service`     | `features_service/multi_timeframe/`   |
+
+Plan: [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+(see DONE-2026-05-08 table for per-family subtree-merge SHAs + Phase 7 archival status).
+
+## Anti-patterns
+
+| Anti-pattern                                                  | Why banned                                                                                  |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Per-family Docker images                                      | Doubles deploy-flow surface; deprecated 2026-05-08 — ONE image, parameterised by flag.      |
+| Per-family `pyproject.toml`                                   | Doubles dep resolution + version drift; ONE flat list in `features-service/pyproject.toml`. |
+| `from features_<X>_service import ...` in any consumer        | Old per-repo import path; rewrite to `from features_service.<X> import ...`.                |
+| Duplicate `LookaheadBiasError` / `BaseCalculator` per family  | Use UTL lifts (Phase 5). Per-family inlines deleted in same commit as the UTL lift.         |
+| Manual `/health` route in any family                          | Use the top-level aggregator. Family declares `_data_freshness` callback only.              |
+| Family code that branches on `--mode batch|live` for logic    | Live = batch. Mode switching is at the I/O seam (BroadcastSink vs ManifestWriter).          |
+| New family without `feature_family` UAC enum + registry entry | Add to `FeatureFamily` + `FEATURE_GROUP_TO_FAMILY` first; sub-package is downstream of the schema. |
 
 ## Cross-references
 
-- Feature service pattern (calculator standard):
+- Feature-service calculator pattern (`BaseFeatureServiceV2` + `FeatureServiceMetrics` + Health-API):
   [`../06-coding-standards/feature-service-pattern.md`](../06-coding-standards/feature-service-pattern.md)
-- CLI convention: [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md)
+- CLI convention (`--feature-family` flag): [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md)
 - Data-status drilldown (feature_family axis):
   [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md)
-- Manifest write-gate: [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+- Manifest schema + write-gate:
+  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Launcher SSOT: [`../05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md)
+- VM tarball deployment: [`../05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
 - Live = batch: [`batch-live-symmetry.md`](batch-live-symmetry.md)
+- Live pipeline architecture: [`live-pipeline-architecture.md`](live-pipeline-architecture.md)
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
+- Plan-of-record:
+  [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
