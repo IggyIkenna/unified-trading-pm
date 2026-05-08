@@ -126,7 +126,7 @@ todos:
 
   - id: phase-1a-uac-pipeline-mode-enum
     content: |
-      - [ ] [AGENT] P0. Phase 1A — UAC `PipelineMode` StrEnum + manifest schema column. PARALLEL with 1B/1C.
+      - [x] [AGENT] P0. Phase 1A — UAC `PipelineMode` StrEnum + manifest schema column. PARALLEL with 1B/1C. (unified-api-contracts@8bc3f2a — PipelineMode SSOT + closed-set round-trip with SOURCE_PRIORITY)
 
         Site: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py` (NEW).
 
@@ -175,8 +175,8 @@ todos:
 
   - id: phase-1b-utl-manifestwriter-pipeline-mode-param
     content: |
-      - [ ] [AGENT] P0. Phase 1B — UTL `ManifestWriter` accepts `pipeline_mode` kwarg + writes the column.
-        PARALLEL with 1A/1C.
+      - [x] [AGENT] P0. Phase 1B — UTL `ManifestWriter` accepts `pipeline_mode` kwarg + writes the column.
+        PARALLEL with 1A/1C. (unified-trading-library@87134364 — pipeline_mode kwarg on all 5 record_* methods + AvailabilityRecord column + 11 unit tests; default `None` (back-compat) instead of BATCH_DATABENTO since no single batch source dominates workspace-wide; path-template extension deferred to Phase 2 migration script + Phase 4 consumer sweep since ManifestWriter does not compute parquet write paths)
 
         Site: `unified-trading-library/unified_trading_library/manifest_writer.py`.
 
@@ -205,7 +205,7 @@ todos:
 
   - id: phase-1c-uac-source-priority-pipeline-mode-mapping
     content: |
-      - [ ] [AGENT] P0. Phase 1C — UAC `SOURCE_PRIORITY` extension: every entry gets a `pipeline_mode` field.
+      - [x] [AGENT] P0. Phase 1C — UAC `SOURCE_PRIORITY` extension: every entry gets a `pipeline_mode` field. **SHIPPED 2026-05-08 (unified-api-contracts@6a8529f).** Option B chosen: rather than restructuring `SOURCE_PRIORITY`'s value type from `list[str]` to `list[SourcePriorityEntry]`, we keep the existing shape and add a thin `read_with_source_priority(asset_group, data_type) → (str, PipelineMode)` reader that delegates to the existing `pipeline_mode_for_source` helper. The closed-set round-trip is already enforced in `tests/unit/test_pipeline_mode.py`, so the reader's pipeline_mode lookup cannot break silently. Helper exposed via `from unified_api_contracts.canonical.crosscutting import read_with_source_priority`. New `tests/unit/test_source_priority_pipeline_mode.py` (12 tests) covers: every entry has ≥1 source; every source round-trips to a `PipelineMode`; reader returns `(source, mode)` tuple; reader is consistent with `get_primary_source` for every registered pair; reader always returns a batch mode (live is a write-time concern); KeyError on unregistered pair; synthetic live-priority-over-batch row selection; facade export.
         PARALLEL with 1A/1B.
 
         Site: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py`.
@@ -225,8 +225,8 @@ todos:
             pipeline_mode=live_websocket is preferred over pipeline_mode=batch_databento.
 
         QG: UAC quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "Shipped 2026-05-08 unified-api-contracts@6a8529f — Option B reader pattern."
 
   - id: phase-2-migration-script-canonical
     content: |
