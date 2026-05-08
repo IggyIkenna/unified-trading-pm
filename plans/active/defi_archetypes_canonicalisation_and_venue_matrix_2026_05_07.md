@@ -92,7 +92,7 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
 
 - [ ] [SCRIPT] P0. Live-API probe to confirm exact 2026-05-07 collateral value ratios for: Deribit stETH, Bybit
       stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document each in a new file
-      `unified-trading-pm/codex/14-playbooks/defi/venue-collateral-2026-05-07.md` with screenshot/URL evidence per
+      `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with screenshot/URL evidence per
       venue. Bandit-clean, no hardcoded creds; use public endpoints where available, manual UI screenshot otherwise.
       Citadel-grade evidence per row before the matrix flip.
 - [ ] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries:
@@ -258,7 +258,7 @@ the canonical `ARBITRAGE_PRICE_DISPERSION` name, and the `target_leverage` schem
 - [ ] [PM-plan] P0. Edit [`defi_master_2026_05_07.plan.md`](./defi_master_2026_05_07.md): same precision pass — venue
       list is no longer monolithic, archetypes have different venue subsets.
 - [ ] [PM-plan] P1. Both plans get a "2026-05-07 venue-matrix re-verification" sub-section pointing at this plan +
-      Stream A's playbook (`codex/14-playbooks/defi/venue-collateral-2026-05-07.md`).
+      Stream A's playbook (`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`).
 
 **Gate:** Master plan + `defi_master` use precise venue subsets per archetype; no remaining "6 venues"
 overgeneralisation.

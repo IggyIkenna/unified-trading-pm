@@ -125,7 +125,7 @@ wrapper, and Hyperliquid takes neither. Treating "ETH LSTs" as one bucket would 
 matrix is supposed to make. Negative rows (`accepted=False`) are explicit so absences are self-documenting; positive
 rows ship after Stream A's per-venue live-probe with haircut citations from the venue's risk-engine UI or docs URL.
 Stream A's audit playbook lives at
-[`codex/14-playbooks/defi/venue-collateral-2026-05-07.md`](../../../14-playbooks/defi/venue-collateral-2026-05-07.md)
+[`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`](../../../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md)
 (to be created by Stream A). Continuous-audit cadence (monthly?) is deferred to a separate plan named in Stream E
 follow-throughs.
 

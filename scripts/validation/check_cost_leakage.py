@@ -64,7 +64,7 @@ EXTERNAL_SURFACES: list[str] = [
 INTERNAL_DIRS: list[str] = [
     "codex/14-playbooks/commercial-model/",  # the SSOT itself
     "codex/14-playbooks/_ssot-rules/",  # rule files reference internal-cost
-    "codex/14-playbooks/infra-spec/",  # design docs
+    "codex/16-strategy-playbooks/infra-spec/",  # design docs
     "codex/14-playbooks/page-triage/",  # internal triage
     "codex/14-playbooks/shared-core/",  # internal
     "plans/",  # plans are internal

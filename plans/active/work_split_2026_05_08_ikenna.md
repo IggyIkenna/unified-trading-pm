@@ -176,7 +176,7 @@ Item 1, not parallelization blockers between items.
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       Stream A. Live-API probe to confirm exact 2026-05-07 collateral value ratios for Deribit stETH, Bybit
       stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document evidence in
-      `unified-trading-pm/codex/14-playbooks/defi/venue-collateral-2026-05-07.md` (new doc). Update
+      `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` (new doc). Update
       `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries (5+ flipped rows; see
       plan body for full list). Add unit tests covering the flips. Update
       [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) "Today's
@@ -198,7 +198,7 @@ lending_indices_handler.py if Bug fixes overlap; coordinate timing), execution-s
 position-balance-monitor-service (paper-trade smoke), deployment-service `scripts/vm/launch-defi-*`
 
 - `launch-mtds-pyth-hermes-archive-backfill-vm.sh` (new), UAC `chain_env.py:PROTOCOL_LAUNCH_DATES` +
-  `venue_collateral.py` + `LST_TOKEN_GENESIS`, codex (`14-playbooks/defi/venue-collateral-2026-05-07.md`,
+  `venue_collateral.py` + `LST_TOKEN_GENESIS`, codex (`16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`,
   `09-strategy/architecture-v2/archetypes/carry-staked-basis.md`).
 
 **Read-first**:
@@ -240,7 +240,7 @@ position-balance-monitor-service (paper-trade smoke), deployment-service `script
 | sa1.StreamA-usde     | USDe / sUSDe metadata research (Bybit context); output to evidence doc                                                                       | Live-API probes; UAC matrix update                                                                                |
 
 Master sa1 (Tab 1 orchestrator) owns: UAC `registry/venue_collateral.py` matrix flips (after sa1.StreamA-_ probes
-complete) + new codex doc `unified-trading-pm/codex/14-playbooks/defi/venue-collateral-2026-05-07.md` +
+complete) + new codex doc `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` +
 carry-staked-basis codex update + integrated paper-trade smoke round-trip after all sa1.PaperSmoke-_ sub-agents green.
 
 **Collision risk**:
