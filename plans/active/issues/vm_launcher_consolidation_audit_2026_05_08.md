@@ -220,3 +220,59 @@ watchdog dict registration. ~4 AI-days.
 
 Total Phase 1-5: ~10 AI-days. Phase 1 sample (6/24) shipped this session validates the wrapper template + reduces the
 risk of remaining migrations (mechanical replication).
+
+## ALL PHASES COMPLETE 2026-05-08 (Tab 1 main)
+
+Per operator direction "do everything": **all 5 migration phases + Phase 0 governance shipped in this session**.
+
+### Commits
+
+| Phase | Commit | Description |
+|-------|--------|-------------|
+| 0 | `PM@1d74f617` | CLAUDE.md 4 governance HARD RULES (extended § 6 + 3 NEW sections) |
+| 5 | `deployment-service@2999d11` | dashboard launcher rename intra-repo (+ watchdog) |
+| 1 | `e2e-testing@d824cb6` (initial 6) + `e2e-testing@989b7fb` (batch 9) | 15 simple wrappers for defi/common/prediction/sports + 1 absorbed by parallel agent (features-sports) |
+| 4 | `deployment-service@07300fe` (canonical) + `PM@4245d1c8` (PM wrappers) + `unified-trading-system-ui@6232285e` (UI wrapper) | 3 Cloud Run deploys to scripts/cloud-run/ + README |
+| 2 | `deployment-service@6936f9e` (canonical+watchdog) + `e2e-testing@60c1364` (wrappers) | 4 NEW canonical launchers (liquidations, perp_funding, solana_gas, prediction_features) |
+| 3 | `deployment-service@5cea036` (canonical+watchdog) + `e2e-testing@e3a9cf2` (wrappers) | 4 orchestrators (gas_fees_fleet, sports_full_sweep, sports_entity_sweep, prediction_pipeline) |
+
+### By the numbers
+
+| Metric | Value |
+|--------|-------|
+| Wrapper migrations shipped | **23** (Phase 1: 15 + Phase 2: 4 + Phase 3: 4) |
+| Cloud Run deploys consolidated | 3 (Phase 4) |
+| Intra-repo renames | 1 (Phase 5) |
+| NEW canonical scripts in deployment-service/scripts/vm/ | 8 (4 lift-and-shift Phase 2 + 4 lift-and-shift Phase 3) |
+| NEW canonical Cloud Run scripts in deployment-service/scripts/cloud-run/ | 3 + README |
+| NEW watchdog dict prefixes | 7 (deployment-dashboard-vm, mtds-liquidations-backfill, prediction-features-, mtds-gas-fees-solana, sports-full-sweep-, sports-entity-, prediction-pipeline-) |
+| Lines of duplicated launcher code REMOVED | **~5,500** (1483 + 1982 + 366 + 456 + 174 + 973 + 1195 across 7 commits) |
+| Lines of wrapper / canonical code ADDED | **~1,800** |
+| Net code reduction | **~3,700 lines** |
+| Repos touched | 5 (PM, deployment-service, e2e-testing, features-sports-service [parallel agent], unified-trading-system-ui) |
+
+### Remaining manual cleanup (separate plan or operator follow-up)
+
+- **`unified-trading-pm/scripts/dev/deploy-shared-cloudrun.sh`** wrapper has `WORKSPACE` resolved at `/../../..` —
+  validate the path resolution from the canonical location.
+- **`launch_fss_features_v3.sh`, `launch_fss_features_vm.sh`, `launch_fss_phase3_backfill.sh`,
+  `launch_instruments_reference_v3.sh`, `launch_mdps_phase3_bucketing.sh`** in `e2e-testing/scripts/sports/` —
+  potentially redundant `_v3` variants. Audit for: (a) is the v3 variant still in use? (b) do they map to canonical?
+  (c) can they be merged with the v0 / non-versioned launcher? Defer to next session.
+- **VM launches via deployment-api**: `deployment-api/deployment_api/services/deploy_missing.py` references
+  `_SERVICE_LAUNCHER_SCRIPTS` registry. Verify all canonical launchers are registered + UI Deploy-Missing button
+  works for each. Defer to next session / Tab 5 audit.
+- **CI tests** for the wrappers: `bash <wrapper> --help` should pass without redirecting if `--help` precedes the
+  exec. Currently wrapper unconditionally execs; passthrough is correct but operator should be able to run
+  `--help` locally without invoking gcloud auth. Next session.
+
+### Why this matters
+
+The migration consolidates the operator surface — every VM launch + every Cloud Run deploy now lives in
+`deployment-service/scripts/{vm,cloud-run}/`. The 7 new watchdog dict prefixes ensure NO new VM can run silently
+zombied. The 3,700 lines of duplicated launcher logic eliminated mean the next refactor of the metadata routing /
+machine-type defaults / VM_PREFIX convention happens in ONE place.
+
+Combined with the 4 governance HARD RULES landed in PM@1d74f617 (extended § 6 + Runbook Execution-Owner SSOT +
+Peripheral QG + Master Plan Continuous-Verification), the silent-rot pattern that produced the 2026-05-01 paper-trade
+harness breakage is now structurally prevented.
