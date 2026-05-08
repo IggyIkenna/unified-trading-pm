@@ -809,7 +809,8 @@ self-superseded artefacts.
 
 - [ ] [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime (re-derive count at script
       time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the surface is now
-      `~20 active/` + `~73 ai/` + ~437 `archive/` — most missing `last_updated` rows are in `archive/` and `ai/`)
+      `~28 active/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups Tab 8) — most missing
+      `last_updated` rows are in `archive/` and `ai/`)
 - [ ] [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive count at script time;
       original 2026-05-06 audit said 142 plans across active+ai+archive)
 - [ ] [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it (re-derive count at script
