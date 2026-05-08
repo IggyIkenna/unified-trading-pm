@@ -952,6 +952,17 @@ REPORT-BACK:
 
 #### Tab 9 — `lending-indices-relaunch-tab` 🟢 IN FLIGHT — scope extended to bug-fix (operational + code, ~30min + ~2-3h)
 
+> **🟢 UAC `chain_env.py:146` FIX LANDED 2026-05-08 at UAC@`6a64a56`** — Tab 9's diagnosis shipped:
+> `PROTOCOL_LAUNCH_DATES[("ETHEREUM", "AAVEV3")]` `"2022-03-14"` → `"2023-01-27"`. **Coordination mirror in
+> Ikenna's 5-tab layout § Cross-tab handshakes** (the gate is documented as a SHIPPED row there + an Agent 4
+> dependency note on the deferred lending-indices relaunch). **Pattern for future similar UAC SSOT fixes** (any
+> `*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`): any agent in flight
+> on `chain_env.py` (or siblings) when a downstream tab is about to consume `PROTOCOL_LAUNCH_DATES` for VM
+> launches MUST drop a top-of-file `🟡 IN-FLIGHT REFACTOR` banner per CLAUDE.md "Cross-Plan Coordination
+> Banners" rule. Agent 4's deferred lending-indices relaunch + any future Agent 3 expected-universe enumerator
+> re-runs that consume `PROTOCOL_LAUNCH_DATES` are now safe (corrected date is on `origin/live-defi-rollout`);
+> operators MUST `git pull` UAC before relaunching.
+
 - **Started**: 2026-05-08 06:12 UTC (STARTED ping ack'd by main; clean boot, no flags).
 - **BLOCKED Q1 raised 06:43 UTC, RESOLVED 06:55 UTC** — operator approved scope extension.
 - **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) Q1+A1.
