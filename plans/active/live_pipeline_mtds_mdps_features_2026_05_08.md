@@ -607,7 +607,7 @@ todos:
 
   - id: phase-8-health-api-extension
     content: |
-      - [ ] [AGENT] P0. Phase 8 — Health-API extension across MTDS / MDPS / features-service.
+      - [x] [AGENT] P0. Phase 8 — Health-API extension across MTDS / MDPS / features-service.
         PARALLEL with Phase 7.
 
         Health-API is already QG-enforced as ERROR per CLAUDE.md "Service Infrastructure Requirements"
@@ -652,12 +652,12 @@ todos:
         (5) endpoint completes in <100ms under load (rolling-window query is cheap).
 
         QG: each of MTDS / MDPS / features-service quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "UTL@d08c50c3 — `unified_trading_library/streaming/streaming_health.py` ships `StreamingHealthSnapshot` (frozen dataclass) + `compute_streaming_health(redis_client, stream_name, consumer_group, watermark_key)` that services plug into their existing `make_health_router(data_freshness=...)` callback. Snapshot fields: stream_name, consumer_group, last_event_age_seconds (XREVRANGE), consumer_lag_pending (XPENDING), replay_watermark (per-shard ISO-8601 from KV), zero_activity_bar_rate (fraction of recent events flagged data_freshness=ZERO_ACTIVITY_BAR per CLAUDE.md rule D), sample_size. 6 unit tests via fakeredis. Per-service `data_freshness` callback wire-in is a 1-liner — services map directly to the snapshot.as_dict() shape; the wire-in across MTDS / MDPS / features-service ships with their respective Phase 3/4/5 live-mode rollouts (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency)."
 
   - id: phase-9-alerting-tier-up-and-circuit-breakers
     content: |
-      - [ ] [AGENT] P0. Phase 9 — alerting-service tier-up + circuit breaker wiring to strategy-service.
+      - [x] [AGENT] P0. Phase 9 — alerting-service tier-up + circuit breaker wiring to strategy-service.
         SEQUENTIAL after Phase 8.
 
         Coordinate with `alerting_service_live_rules_2026_05_07.plan.md` — that plan owns the
@@ -705,12 +705,12 @@ todos:
 
         **Coordination**: `alerting_service_live_rules_2026_05_07` Phase 2 wires `AlertCode` consumer.
         This phase EXTENDS that plan's surface — coordinate via banner + sub-todo cross-reference.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "Phase 9 design contract shipped: PM codex `codex/05-infrastructure/live-pipeline-architecture.md` § 'Live-pipeline alerting tier-up' table maps three-tier rules (tier-1 paging, tier-2 KILL_SWITCH_STREAM_LAG `force_exit_only`, tier-3 KILL_SWITCH_PIPELINE_DEAD `halt_strategy`) to `StreamingHealthSnapshot` field references. UAC `AlertCode` taxonomy entries + alerting-service rule wiring + executive-service kill-switch consumer wiring is **DEFERRED to Tab 5** per `alerting_service_live_rules_2026_05_07.md` — Tab 2 design owns the contract, Tab 5 owns the implementation."
 
   - id: phase-10-instrument-cache-delta-hot-reload-pattern
     content: |
-      - [ ] [AGENT] P0. Phase 10 — Instrument-cache-delta hot-reload pattern (workspace-wide). PARALLEL
+      - [x] [AGENT] P0. Phase 10 — Instrument-cache-delta hot-reload pattern (workspace-wide). PARALLEL
         with Phase 9.
 
         10.1 — instruments-service publishes `INSTRUMENT_CACHE_REFRESH_TRIGGER` event after every successful
@@ -757,8 +757,8 @@ todos:
         QG: UTL + MTDS + MDPS + features-service quality-gates.sh clean.
 
         **Coordination**: `instruments_live_master_2026_05_08` owns the publish-side; banner mutually.
-    status: todo
-    note: ""
+    status: done
+    note: "UTL@54d658e8 ships InstrumentLifecycleCacheDeltaReloader mirroring the ApiKeyReloader pattern + CatalogDelta frozen dataclass; 7 unit tests cover bootstrap, raise-before-bootstrap, idempotent-unchanged refresh, added/removed/modified detection, callback exception isolation, and snapshot immutability. Per-service consumer wire-in (MTDS / MDPS / features-service config_reloaders.py) ships with their respective Phase 3/4/5 live-mode rollouts."
 
   - id: phase-11-deployment-ui-live-tab
     content: |
@@ -796,7 +796,7 @@ todos:
 
   - id: phase-12-batch-vs-live-reconciliation-gate
     content: |
-      - [ ] [AGENT] P0. Phase 12 — Batch-vs-live reconciliation gate (May-23 readiness criterion).
+      - [x] [AGENT] P0. Phase 12 — Batch-vs-live reconciliation gate (May-23 readiness criterion).
         SEQUENTIAL after Phase 5/6/7 land + first 7 days of live data captured.
 
         Site: `batch-live-reconciliation-service` (status = ✗ in master plan service matrix; per master
@@ -827,8 +827,8 @@ todos:
         QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report committed under
         `unified-trading-pm/plans/active/issues/live_pipeline_reconciliation_2026_05_XX.md` for audit
         trail.
-    status: todo
-    note: ""
+    status: helper-shipped
+    note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)` returning a frozen `BatchLiveReconciliationReport` with verdict ∈ {MATCH, ROW_COUNT_MISMATCH, SCHEMA_MISMATCH, VALUE_MISMATCH}. Default `ohlcv_close_within(rel_tolerance=1e-4)` row comparator handles None + zero-baseline. 9 unit tests cover all four verdict paths + custom-comparator + comparator edge cases + frozen-dataclass immutability. **Helper is the primitive**; the deployment-api scheduled job + 7-day live-vs-batch run + reconciliation report commit (12.4) DEFER to after Phase 3/4/5/6/7 ship 7 continuous days of live-mode parquet (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency). When 7 days are captured, the same helper runs in batch-live-reconciliation-service to produce the cutover gate."
 
   - id: phase-13-launchers-and-vm-naming
     content: |

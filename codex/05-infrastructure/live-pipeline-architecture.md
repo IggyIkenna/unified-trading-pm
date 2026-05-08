@@ -98,10 +98,33 @@ Health-API is QG-enforced as ERROR per workspace STEP 5.62. Live-pipeline extend
 - `degraded_ratio_60s`
 - `cluster_pct_skipped_60s`
 
+The data-freshness snapshot is computed via the UTL primitive
+`unified_trading_library.streaming.compute_streaming_health(redis_client, stream_name=, consumer_group=, watermark_key=)`
+which returns a frozen `StreamingHealthSnapshot` with `last_event_age_seconds` (from `XREVRANGE`),
+`consumer_lag_pending` (from `XPENDING`), `replay_watermark` (from per-shard `replay_watermark.{shard_key}` KV), and
+`zero_activity_bar_rate` (fraction of recent events flagged `data_freshness=ZERO_ACTIVITY_BAR` per the four-category
+empty-output decision rule D). Services consume the snapshot directly in their `make_health_router(data_freshness=...)`
+callback — no per-service re-implementation.
+
 alerting-service polls + subscribes to event streams + applies tiered alerts + drives circuit breakers wired to
 strategy-service via a dedicated `streaming.alerting.circuit_breaker` stream. Three actions: `stop_new_signals` /
 `force_exit_only` / `halt_strategy`. See [`alerting-batch-live.md`](../04-architecture/alerting-batch-live.md) for tier
 table.
+
+### Live-pipeline alerting tier-up — concrete rule wiring
+
+Three tiers of severity, each consuming `StreamingHealthSnapshot` fields. Tier 2 + 3 are wired through Tab 5's
+KillSwitchBus rule structure (alerting-service `triggers_kill_switch=True` flag); tier 1 is page-only.
+
+| Tier | Trigger condition                                                      | Source field                                | Action                                                     |
+| ---- | ---------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| 1    | `last_event_age_seconds > 30` OR `zero_activity_bar_rate > 0.05`       | `StreamingHealthSnapshot`                   | Page on-call (tier 1 alerting-service rule, no kill)        |
+| 2    | `consumer_lag_pending > 1000` for 60s OR `last_event_age_seconds > 60` | `StreamingHealthSnapshot` + duration window | KILL_SWITCH_STREAM_LAG → halts all execution-service trades |
+| 3    | No events on any active shard for > 5min                               | Cross-shard aggregate                       | KILL_SWITCH_PIPELINE_DEAD → halts all strategies + alerts   |
+
+`StreamingHealthSnapshot` is the cross-cutting input to all three rules — alerting-service rule definitions reference
+the field names verbatim so changing the snapshot shape is a deliberate, reviewable delta. Reference rule definitions
+land in alerting-service rule structure (Tab 5 owns); this doc is the design contract.
 
 ## Instrument lifecycle = event-publish + cache-delta hot-reload
 
@@ -126,6 +149,24 @@ Per workspace VM launcher SSOT rule. Launchers under `deployment-service/scripts
 - `launch-replay-cascade.sh`
 
 VM-name prefixes registered in `VM_PREFIX_TO_BUCKET`: `mtds-live-`, `mdps-features-live-`, `features-xc-`, `replay-`.
+
+## UTL primitives shipped 2026-05-08 (Tab 2 live-pipeline activation)
+
+Concrete UTL helpers landed for the May-23 cutover:
+
+| UTL module                                                                                              | Purpose                                                                                                                          | Plan phase                |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `unified_trading_library.streaming.compute_streaming_health` + `StreamingHealthSnapshot`                | Health-API `data_freshness` snapshot — last-event-age, consumer-lag, replay-watermark, zero-activity-bar rate                    | Phase 8 (UTL@d08c50c3)    |
+| `unified_trading_library.streaming.StreamPublisher` / `StreamConsumerGroup`                             | Redis Streams XADD + MAXLEN producer + XREADGROUP + XACK + XAUTOCLAIM consumer (Pydantic-event-agnostic)                         | Phase 2A (UTL@f24e651b)   |
+| `unified_trading_library.streaming.ReplayPublisher` / `ReplayWatermarkKV`                               | Replay-cascade publisher preserving original `period_end` + per-shard watermark KV guarding double-publish                       | Phase 2C (UTL@f24e651b)   |
+| `unified_trading_library.streaming.UTCAlignedScheduler` / `BoundaryTick`                                | UTC-aligned timeframe scheduler firing on closed boundaries with grace window (NTP-tolerant)                                     | Phase 2B (UTL@8c67df5d)   |
+| `unified_trading_library.instrument_lifecycle_cache_delta_reloader.InstrumentLifecycleCacheDeltaReloader` | Hot-reload primitive mirroring `ApiKeyReloader` — diffs catalog snapshots + dispatches `(CatalogDelta, snapshot)` callbacks      | Phase 10 (UTL@54d658e8)   |
+| `unified_trading_library.honest_coverage_ratchet.assert_no_regression` + `compute_coverage_table`       | Workspace QG ratchet — fails CI on per-(asset_group, data_type) coverage regression > 0.5pp OR floor breach (default 99pp)       | Writegate Phase 5 (UTL@59996210) |
+| `unified_trading_library.batch_live_reconciler.reconcile_shard` + `BatchLiveReconciliationReport`       | Master-plan Group F readiness gate — proves batch=live for the cutover; verdicts MATCH / ROW_COUNT / SCHEMA / VALUE mismatch     | Phase 12 (UTL@908b1647)   |
+
+UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_batch` / `is_live` / `source_string_for` /
+`pipeline_mode_for_source` per Citadel Import Rules. UTL streaming package facade extended at UTL@858f3c84 to publish
+`StreamPublisher` / `StreamConsumerGroup` / `ReplayPublisher` / `ReplayWatermarkKV` from a single import surface.
 
 ## Anti-patterns
 
