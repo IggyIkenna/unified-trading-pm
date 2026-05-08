@@ -342,6 +342,66 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
       extends here). [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:deployment-ui-Playwright-walk; SchemaModal
       wired in deployment-ui@`7309b56`/`537d468`; per-leaf coverage pending]
 
+### Manifest cleanup HARD RULE (migrated from `manifest_cleanup_on_entity_add_remove_2026_05_08`)
+
+Source issue archived. Today's manifest reconciliation tool (`reconcile_phantom_manifest_rows_all.py`) runs REACTIVELY
+as periodic audit, not PREVENTIVELY at feature-add time. 2026-04-29 + 2026-05-04 incidents (167k + 130k phantom rows
+discovered weeks/days after the change shipped) show drift goes undetected. No workspace rule mandates manifest cleanup
+as acceptance criterion when entities are added/removed.
+
+**Cross-plan effect (CRITICAL — banner added per plan)**: every active 2026-05-08 issue migration that adds/removes
+entities (sports_master fixtures-split + cross-source-status + per-fixture iteration; defi_master chain-coverage CLOB
+venues + governance-params; tradfi_master futures-expiry + session-type + CME backfill; predictions_master
+canonical-groups backfill) MUST include explicit manifest cleanup acceptance criteria after this rule lands. Reviewers
+reject migration commits that touch `DATA_TYPES_BY_ASSET_GROUP` / `VENUES_BY_ASSET_GROUP` / canonical entity registries
+without the cleanup-script output attached.
+
+**Cross-plan dependency**: Phase 1 below depends on writegate Phase 3.D.5 Wave 3 v2 enumerator existing to re-populate
+`expected_unattempted` rows on `--add` (per archived issue's "Phase coordination required" callout).
+
+- [ ] [HUMAN+AGENT] P1. **CLAUDE.md NEW workspace rule "Manifest cleanup on entity add/remove (HARD RULE)"** — mandatory
+      checkbox section in any commit that touches an entity registry. Symlinks propagate to all repo-mirrors. Body:
+      "When you add or remove a venue / data_type / canonical-group / chain / instrument-type from any UAC
+      `*_BY_ASSET_GROUP` registry or canonical lifecycle SSOT, you MUST: (a) run
+      `instruments-service/scripts/reconcile_manifest_after_entity_change.py --add|--remove --asset-group=X     --entity-type=Y --entity-key=Z`
+      (NEW script — Phase 3 below); (b) attach the script's audit-CSV output to the PR description; (c) the audit must
+      show ZERO orphan rows (rows whose entity is no longer in the registry but the manifest still has captured/empty
+      rows for it). Reviewers reject PRs that don't include this output."
+- [ ] [SCRIPT] P1. **`entity-lifecycle-cleanup.sh` workflow script** under
+      `unified-trading-pm/scripts/lifecycle/entity-lifecycle-cleanup.sh`. Wraps the per-asset-group reconciler runs
+      (instruments-service script Phase 3 below) into a single command. Output goes to a deterministic CSV path under
+      `unified-trading-pm/audits/entity_lifecycle/by_date/day=<YYYY-MM-DD>/...csv`.
+- [ ] [SCRIPT] P1. **`reconcile_manifest_after_entity_change.py`** under `instruments-service/scripts/`. `--add` mode:
+      walks UAC entity registry post-change; for each entity-day-row that's now newly-expected (per writegate Phase
+      3.D.5 v2 enumerator), writes `record_expected_unattempted` rows into the per-VM shard. `--remove` mode: walks the
+      manifest for the removed entity; flips orphan rows to a tombstone status
+      (`record_failed(REMOVED_ENTITY_TOMBSTONE)`) and emits the audit CSV. Idempotent + dry-run-by-default. **DEPENDS ON
+      writegate Phase 3.D.5 Wave 3 v2 enumerator** for the `--add` path.
+- [ ] [HUMAN+AGENT] P1. **Retroactive audit of 90-day commit history.** Walk
+      `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/     unified-api-contracts/.../canonical/domain/`;
+      for every commit that adds/removes an entity, run the Phase 3 script in audit-only mode; collect every orphan row.
+      Output: a single audit report under `unified-trading-pm/audits/entity_lifecycle/retroactive_90d_2026_05_08.csv`.
+- [ ] [HUMAN+AGENT] P1. **Retroactive bulk reconciler run for stragglers** identified by the audit above. Operator
+      decision per orphan: tombstone (most common) vs re-fetch (when the entity was removed by accident and the data is
+      still useful) vs delete (when both removal + manifest were wrong).
+- [ ] [SCRIPT] P1. **PM `quality-gates.sh` STEP 5.65 — entity-registry CI gate.** AST-walk: any commit that touches
+      `DATA_TYPES_BY_ASSET_GROUP` / `VENUES_BY_ASSET_GROUP` / `PROTOCOL_LAUNCH_DATES` / `LST_TOKEN_GENESIS` /
+      `PREDICTION_GROUPS` / `*_LAUNCH_DATES` registries MUST also include a CSV path under
+      `unified-trading-pm/audits/entity_lifecycle/` referenced in the commit body OR an `[entity-skip-cleanup]` tag with
+      operator-explained reason. Fails CI otherwise.
+
+### Hard schema enforcement at write boundary (NEW sub-plan reference)
+
+NEW sub-plan: `hard_schema_enforcement_2026_05_08.plan.md` (sibling to this master) — workspace-wide hard schema
+enforcement at the write boundary. Operator decision 2026-05-08: SEQUENCE rather than bundle with futures-expiry work —
+futures-expiry (tradfi_master Batch D) ships first, then this workspace-wide enforcement second. Detail lives in the
+sub-plan; this section is a pointer.
+
+- [ ] [POINTER] P0. **See `hard_schema_enforcement_2026_05_08.plan.md`** for the full per-asset-group UAC schema audit +
+      per-row record_failed(SCHEMA_VALIDATION_FAILED) gate refactor + sports adapter full-column capture audit +
+      manifest row_key shape validation + QG STEP 5.66 static assertion. Sub-plan referenced from this
+      infrastructure_master umbrella; coordinate completion gates on both.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Shard-granularity SSOT (CRITICAL)** (CLAUDE.md): shard atom MUST match writer / manifest / data-status / pre-flight
