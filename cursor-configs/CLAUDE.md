@@ -1065,6 +1065,72 @@ master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master
 See [`plans/epics/README.md`](../plans/epics/README.md) and [`plans/PLAN_FORMAT.md`](../plans/PLAN_FORMAT.md) for the
 canonical structure.
 
+## Capture Discoveries As Plan Todos Immediately (HARD RULE codified 2026-05-07; EOD-audit clause added 2026-05-08)
+
+Every side-discovery during plan execution — a bug in adjacent code, an edge case the plan missed, a refactor that
+compounds value, a nice-to-have, a deferred follow-up, a doc update, "we should also fix X" — MUST go into a plan todo
+at the moment it surfaces. Same logical unit as the discovery: finding → next 1-2 tool-calls is plan-edit + commit +
+push. Tag P0-P3 + `**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**` body prefix + provenance citation.
+
+Goes in: same plan if scope-aligned, different active plan if more apt, `plans/active/issues/<slug>_<YYYY_MM_DD>.md` if
+no plan owns it yet. **Never just auto-memory. Never just chat summary.** Why: Claude Code sessions crash regularly
+(terminal OOM / sandbox kill / context fill); pre-crash capture survives. The plan should always reflect the ideal
+final solution shape so the operator keeps less in head + future agents inherit the full picture.
+
+### End-of-cycle audit clause (added 2026-05-08 after Tab 5 EOD-summary regression)
+
+The mid-execution rule above is necessary but not sufficient. End-of-cycle / DONE-block summaries are themselves a new
+surface where deferrals leak: the agent writes a "Deferred to next cycle" section in chat or in the DONE block, the
+items sound captured, but they're not `- [ ]` plan todos anywhere — so the next agent never sees them.
+
+**Before declaring a cycle done — the moment you start writing your end-of-cycle chat summary or DONE block — every
+deferral you list MUST already be a `- [ ]` plan todo (or a `**DEFERRED**` annotation on an existing todo) in
+`plans/active/`.** If you catch yourself listing an item in the summary that isn't a plan todo, STOP, add it as a plan
+todo (per the routing above), commit + push the plan-flip, THEN write the summary citing the todo's location.
+
+Audit recipe at end-of-cycle:
+
+1. Draft the "Deferred to next cycle" / "Pending next session" / "Carryover" section of your chat summary or DONE block
+   in scratch first.
+2. For each line item, run: `grep -n "<distinctive phrase>" plans/active/*.md plans/active/issues/*.md`. Match → cite
+   the file:line in the summary. No match → STOP, add the todo, then resume.
+3. If the item lives only in chat (no plan, no issue doc), the rule fired and you violated it — fix BEFORE shipping
+   the summary.
+
+**Reviewers reject summaries with deferrals that grep-miss the active plans.** End-of-cycle is the single most common
+loss-of-work surface (operator reads the summary, trusts the deferrals are captured, next-cycle reset doesn't pick
+them up because they're not plan todos, three weeks later operator asks "what about X" and the answer is
+reconstruction-from-chat).
+
+Reference incident **2026-05-08 Tab 5 (Agent 5)**: end-of-cycle summary listed 4 deferrals — Phase 4/7/8/9, features-
+onchain emission sites, Sub-E codex ML category, Phase 8 rehearsal-script hook. Of the 4, 3 WERE already plan todos
+(I missed them by not grep-checking my own summary), 1 was NOT (Sub-E codex ML category — false-flipped `[x]` on the
+parent todo while Sub-E's actual codex doc was reverted by foot-gun #3 5+ times). Operator caught the gap with "are
+those in the plans" + "so that we know what to pick up." Cost: 15min audit + plan-todo addition. Avoidable cost: 30s
+grep at end-of-cycle.
+
+### Anti-patterns
+
+- **"I'll mention it in chat — operator will catch it."** Chat scrolls. Operator-time-to-recall is expensive. Capture in
+  a plan todo + reference the todo in chat.
+- **"Auto-memory will save it."** Auto-memory is a recall surface for ME, not a planning surface for the next agent
+  + the operator. Auto-memory entries don't become plan todos automatically; a plan-todo entry does become both.
+- **False checkbox flips.** A parent todo flipped `[x]` because "the UAC half shipped" is wrong if the codex half
+  was reverted. Flip the half that landed; leave the deferred half as `- [ ]` with `**DEFERRED**` annotation +
+  reason citation. Reference: line 155 of `alerting_service_live_rules_2026_05_07.md` — corrected 2026-05-08 from
+  false `[x]` (claimed codex update shipped) to split shape (UAC `[x]` + codex `[ ]` with foot-gun #3 citation).
+- **End-of-cycle summary as planning surface.** Summary is a read-only narration of the cycle, not the durable record.
+  Plan todos are the durable record.
+
+### Composes with
+
+- `Commit + Push + Flip Plan Checkboxes` (per-shippable-unit cadence — captures discoveries land WITH the work)
+- `Plan Archival HARD RULE` (extends to archive boundary; this rule extends to EOD boundary)
+- `Findings Triage Discipline` (case 1-5 routing for the discovery itself)
+- `Cross-Plan Coordination Banners` (when a discovery affects an in-flight VM / refactor)
+- `Plans Run To Actual Completion` (the operational-step verification recipe is a sister rule for "looks done but
+  isn't"; this rule is for "documented as deferred but not actually captured")
+
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
 This rule has TWO mutually-reinforcing halves. Both are non-negotiable. Violating either breaks parallel-agent
@@ -2076,7 +2142,13 @@ with other in-flight work, done-definition with verifiable bullet points>.
 
 REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
 Final: append a "DONE-<YYYY-MM-DD>" block at the bottom of <PLAN-OF-RECORD> body listing
-every code + plan-flip commit sha. Then go quiet — don't pick up new work autonomously.
+every code + plan-flip commit sha. EOD-audit (per CLAUDE.md "Capture Discoveries As Plan
+Todos Immediately" § "End-of-cycle audit clause"): every deferral in your final summary
+MUST already be a `- [ ]` plan todo or a `**DEFERRED**` annotation in plans/active/. Run
+`grep -n "<distinctive phrase>" plans/active/*.md plans/active/issues/*.md` per deferral
+line — match → cite file:line in summary; no match → STOP, add the todo, push the flip,
+then resume. Reviewers reject summaries with grep-miss deferrals. Then go quiet —
+don't pick up new work autonomously.
 ```
 
 **Daily reset (each morning).** Main orchestrator (or operator solo if no main) runs:

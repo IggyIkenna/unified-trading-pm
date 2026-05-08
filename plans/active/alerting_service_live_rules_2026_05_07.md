@@ -158,13 +158,18 @@ default-factory.
       `ALERT_THRESHOLDS` keys (`ml_signal_staleness_minutes`=5, `ml_model_drift_psi`=0.20, `ml_pnl_deviation_bps`=200,
       `ml_inference_latency_p99_ms`=500, `ml_model_version_mismatch_minutes`=0); 2 new `ThresholdUnit` members
       (`MILLISECONDS`, `PSI`); 6 explicit `AlertRule` entries in `LIVE_ALERT_RULES`; 7 new sanity tests (38 total, 31 →
-      38). KILL_SWITCH_ML_MODEL_FAILURE rule SHIPPED WITHOUT `kill_switch_scope=` because Sub-A's parallel
-      `kill_switch_scope` field is mid-flight; comment in rules.py marks the dependency. When Sub-A lands,
-      KILL_SWITCH_ML_MODEL_FAILURE MUST be updated to `kill_switch_scope=KillSwitchScope.ARCHETYPE`. Codex doc
-      `codex/14-playbooks/alerting/alert-code-taxonomy.md` updated with new ML category section + KillSwitchScope
-      mapping table extension. Producer-side wiring (ml-inference-service / strategy-service / ml-training-service)
-      DEFERRED to Phase 3 (currently BLOCKED on UAC envelope `code: AlertCode` field gap). DART manual-pause / override
-      / replicate UI for ML trades DEFERRED to `strategy_and_dart_master` Phase 2.2.
+      38). `KILL_SWITCH_ML_MODEL_FAILURE` rule UPDATED 2026-05-08 with `kill_switch_scope=KillSwitchScope.ARCHETYPE`
+      (UAC@3793310 — Sub-A's `kill_switch_scope` field landed via self-ship; ML rule now scope-complete).
+      Producer-side wiring (ml-inference-service / strategy-service / ml-training-service) DEFERRED to Phase 3
+      (envelope `code: AlertCode` field UAC@2636815 unblocks but actual emission sites pending). DART manual-pause /
+      override / replicate UI for ML trades DEFERRED to `strategy_and_dart_master` Phase 2.2.
+- [ ] [AGENT] P1. **Codex `alert-code-taxonomy.md` ML category section + KillSwitchScope mapping table.** Sub-E
+      attempted the edit 5+ times during the 2026-05-08 cycle; foot-gun #3 (parallel-agent `git checkout HEAD -- <file>`
+      auto-revert) wiped each attempt. Pick up on a quieter session. Required content: ML category subsection
+      (severity routing per ML code, threshold sources, archetype-scope mapping) + KillSwitchScope mapping table
+      extension showing all 4 KILL_SWITCH_* codes (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL,
+      VENUE_DISCONNECT=VENUE, ML_MODEL_FAILURE=ARCHETYPE) + scope_key resolution rules per code.
+      **DEFERRED-PER-FOOTGUN-3 2026-05-08**: not lost — explicitly captured here so next cycle picks up.
 
 ### Phase 2 — Service migration to UAC SSOT (1 day, **PARALLEL** with Phase 1 once Phase 1 lands)
 
