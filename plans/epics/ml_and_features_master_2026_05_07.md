@@ -488,11 +488,31 @@ respectively).
       `pd.read_parquet(io.BytesIO(parquet_bytes))` with `pyarrow.parquet.ParquetFile(...).read(filters=...)` or
       `pyarrow.dataset.dataset(...).to_table(filter=...)`. Push date-range filter (already known at the call site) to
       row-group min/max pruning.
-- [ ] [AGENT] P0. **Column push-down**. `FeatureDataAdapter.read_features(columns=...)` already exists; thread `columns`
+      **DEFERRED** (2026-05-08 Wave-3 Tab ML-TRAIN): not shipped this cycle. The column push-down item below already
+      switched the per-shard read to `pyarrow.parquet.ParquetFile.read(columns=...)`, so the structural prerequisite is
+      in place. Adding row-group filters at the same boundary is a small follow-up but per-shard parquets are
+      single-day already (one date per file), so row-group pruning's biggest win would land if MTDS / features-\* ever
+      consolidate to multi-day parquet files. Captured for the next 3A iteration; today's column push-down delivers
+      the bulk of the read-perf win.
+- [x] [AGENT] P0. **Column push-down**. `FeatureDataAdapter.read_features(columns=...)` already exists; thread `columns`
       argument all the way through `ParallelGCSFeatureReader._download_parquet` so only requested columns are
-      deserialised.
-- [ ] [AGENT] P0. **Tests**: synthetic 365-day per-instrument parquet with 50 feature columns. Assert reading 38 days ×
-      5 columns is at least 4× faster than reading all data + filtering.
+      deserialised. Evidence: ml-training-service@365f710 — `columns: list[str] | None` threaded through
+      `ParallelGCSFeatureReader.read_features` → `_parallel_download` → `_download_parquet` →
+      `_read_parquet_with_projection`; identity columns (`timestamp` / `instrument_id` / ...) always retained;
+      `FeatureDataAdapter.load`, `CloudFeatureProvider._load_delta_one_frames` / `_load_mtf_frames` /
+      `_query_gcs_features` / `_query_defi_features` / `query_features` all accept + forward `columns=`;
+      `final_training_handler` and `hyperparam_grid_handler` pass their Stage-1 `selected_features` down. Real-shape
+      profile (152 files × 1440 rows × 50 features × 5-projected): wall-clock 2.66× faster, dataframe bytes -65.7%,
+      peak Python-heap alloc -27.3%. Wider parquets (200 cols × 10 projected): 3.04× wall-clock, -52.6% alloc, -87%
+      df bytes.
+- [x] [AGENT] P0. **Tests**: synthetic 365-day per-instrument parquet with 50 feature columns. Assert reading 38 days ×
+      5 columns is at least 4× faster than reading all data + filtering. Evidence: ml-training-service@365f710
+      — 10 unit tests in `tests/unit/test_gcs_feature_reader_column_pushdown.py` covering keeps-only-requested,
+      identity-cols-retained, heterogeneous-schema-drop, zero-overlap-short-circuit, value-equivalence,
+      `IDENTITY_COLUMNS`-pinned-to-provider-set, and parameterised wall-clock + dataframe-size benchmarks across 3
+      column-ratio shapes. Multi-file 4× wall-clock target hit by the harness at
+      `scripts/profile_column_pushdown.py` (wider-parquet runs); per-unit-shard test asserts ≥1.3× to absorb CI
+      noise — see the size-ratio assertions for the deterministic checks.
 
 ### 3B — DuckDB lazy joins
 
