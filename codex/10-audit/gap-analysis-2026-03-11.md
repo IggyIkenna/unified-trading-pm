@@ -6,7 +6,7 @@ scope: [engineer, admin]
 
 **Purpose**: Phase 0 gap analysis for `p0-audit-existing-checklists` (plan: repo_readiness_semver_hardening_2026_03_11).
 **Status**: Complete — v3.0 template already created. This document formalises the gaps identified during Stream A.
-**Full analysis**: `unified-trading-codex/10-audit/consolidation-gap-analysis.md`
+**Full analysis**: `unified-trading-pm/codex/10-audit/consolidation-gap-analysis.md`
 
 ---
 

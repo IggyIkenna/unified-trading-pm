@@ -26,7 +26,7 @@
 #   - Original checklist: deployment-service/configs/checklist.template.yaml
 #   - Audit findings:     .cursor/audits/MASTER_AUDIT_SUMMARY_2026-02-09.md
 #   - Remediation plan:   .cursor/audits/REMEDIATION_ROADMAP_2026-02-09.md
-#   - Codex principles:   unified-trading-codex/01-domain through 09-analysis
+#   - Codex principles:   unified-trading-pm/codex/01-domain through 09-analysis
 #
 # ==============================================================================
 
@@ -37,7 +37,7 @@ auditor: ""
 # ==============================================================================
 # 01-DOMAIN (DOM): Domain Model and Signal Architecture
 # ==============================================================================
-# Reference: unified-trading-codex/01-domain/
+# Reference: unified-trading-pm/codex/01-domain/
 # ==============================================================================
 
 items:
@@ -150,7 +150,7 @@ items:
   # ===========================================================================
   # 02-DATA (DAT): Data Governance, Schemas, Storage
   # ===========================================================================
-  # Reference: unified-trading-codex/02-data/
+  # Reference: unified-trading-pm/codex/02-data/
   # Carries forward: items 20, 22, 22b, 22c, 25, 25b, 29, 30, 34, 35, 36, 37
   # ===========================================================================
 
@@ -394,7 +394,7 @@ items:
   # ===========================================================================
   # 03-OBSERVABILITY (OBS): Lifecycle Events, Logging, Monitoring
   # ===========================================================================
-  # Reference: unified-trading-codex/03-observability/
+  # Reference: unified-trading-pm/codex/03-observability/
   # Carries forward: items 04, 04c, 04d, 04e, 04g, 04h, 21
   # ===========================================================================
 
@@ -593,7 +593,7 @@ items:
   # ===========================================================================
   # 04-ARCHITECTURE (ARC): Pipeline, Sharding, Compute, Communication
   # ===========================================================================
-  # Reference: unified-trading-codex/04-architecture/
+  # Reference: unified-trading-pm/codex/04-architecture/
   # Carries forward: items 13, 13b, 13c, 14, 15, 16, 27, 28
   # ===========================================================================
 
@@ -726,7 +726,7 @@ items:
   # ===========================================================================
   # 05-INFRASTRUCTURE (INF): Terraform, CI/CD, Docker, Deployment
   # ===========================================================================
-  # Reference: unified-trading-codex/05-infrastructure/
+  # Reference: unified-trading-pm/codex/05-infrastructure/
   # Carries forward: items 01, 02, 03, 06, 06b, 06c, 09, 11, 17, 17b, 18, 23, 24, 26
   # ===========================================================================
 
@@ -921,7 +921,7 @@ items:
   # ===========================================================================
   # 06-CODING-STANDARDS (COD): Config, Error Handling, Tests, Quality
   # ===========================================================================
-  # Reference: unified-trading-codex/06-coding-standards/
+  # Reference: unified-trading-pm/codex/06-coding-standards/
   # Carries forward: items 03b, 03c, 04b, 04f, 07, 08, 08b, 09b, 10, 12, 19,
   #                  31, 32, 33
   # ===========================================================================
@@ -1194,7 +1194,7 @@ items:
   # ===========================================================================
   # 07-SECURITY (SEC): Secrets, Credentials, Dependencies
   # ===========================================================================
-  # Reference: unified-trading-codex/07-security/
+  # Reference: unified-trading-pm/codex/07-security/
   # Carries forward: item 05
   # ===========================================================================
 
@@ -1292,7 +1292,7 @@ items:
   # ===========================================================================
   # 08-WORKFLOWS (WRK): DR, Rollback, Reconciliation, Lifecycle
   # ===========================================================================
-  # Reference: unified-trading-codex/08-workflows/
+  # Reference: unified-trading-pm/codex/08-workflows/
   # ===========================================================================
 
   - id: "WRK-01"
@@ -1376,7 +1376,7 @@ items:
   # ===========================================================================
   # 09-ANALYSIS (ANL): Backtest, Live Performance, Cost
   # ===========================================================================
-  # Reference: unified-trading-codex/09-analysis/
+  # Reference: unified-trading-pm/codex/09-analysis/
   # ===========================================================================
 
   - id: "ANL-01"

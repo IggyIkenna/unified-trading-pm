@@ -54,7 +54,7 @@ UAC enum at startup; no per-family registration is required.
 
 ## Overview
 
-`BaseFeatureServiceV2` (exported from `unified-feature-calculator-library`, Tier 2) is the mandatory abstract base class
+`BaseFeatureServiceV2` (exported from `unified-trading-library`, Tier 2) is the mandatory abstract base class
 for all features sub-packages within `features-service`. It eliminates repeated boilerplate by providing:
 
 - `UnifiedCloudConfig` singleton wiring (via `@lru_cache`)
@@ -203,7 +203,7 @@ async def handle_request(request: Request) -> Response:
 
 ## Tier Architecture Note
 
-`unified-feature-calculator-library` is **Tier 2**. Its allowed upstream dependencies are:
+`unified-trading-library` is **Tier 2**. Its allowed upstream dependencies are:
 
 | Tier | Libraries                                                                                                    |
 | ---- | ------------------------------------------------------------------------------------------------------------ |
@@ -224,9 +224,9 @@ For the full dependency rule set, see `library-tier-architecture.mdc`.
 
 ## References
 
-- Library source: `unified-feature-calculator-library/src/unified_feature_calculator/service_base/`
+- Library source: `unified-trading-library/src/unified_feature_calculator/service_base/`
 - Tier rules: `unified-trading-pm/cursor-rules/library-tier-architecture.mdc`
-- Prometheus metrics standard: `unified-trading-codex/06-coding-standards/prometheus-metrics.md`
-- Correlation ID standard: `unified-trading-codex/06-coding-standards/correlation-id.md`
+- Prometheus metrics standard: `unified-trading-pm/codex/06-coding-standards/prometheus-metrics.md`
+- Correlation ID standard: `unified-trading-pm/codex/06-coding-standards/correlation-id.md`
 - No-os-getenv rule: `.cursor/rules/no-type-any-use-specific.mdc`
 - No-empty-fallbacks rule: `.cursor/rules/no-empty-fallbacks.mdc`

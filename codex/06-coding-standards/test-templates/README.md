@@ -43,6 +43,6 @@ template.
 
 ## Codex Reference
 
-- Event schema: `unified-trading-codex/06-coding-standards/testing.md`
+- Event schema: `unified-trading-pm/codex/06-coding-standards/testing.md`
 - Import rule: `.cursor/rules/no-empty-fallbacks.mdc`
 - Any-type rule: `.cursor/rules/no-type-any-use-specific.mdc`

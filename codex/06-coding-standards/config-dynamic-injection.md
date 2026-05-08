@@ -5,7 +5,7 @@ scope: [engineer]
 # Config Dynamic Injection Standard
 
 **Last Updated:** 2026-03-08 **Status:** Production **Owner:** Platform Engineering **SSOT:**
-`unified-trading-codex/08-workflows/config-injection.md` (architecture detail)
+`unified-trading-pm/codex/08-workflows/config-injection.md` (architecture detail)
 
 ---
 
@@ -84,7 +84,7 @@ reloader.on_reload(lambda cfg: instrument_manager.sync(cfg))
 reloader.start_watching()
 ```
 
-Full wiring guide: `unified-trading-codex/08-workflows/config-injection.md` — Service Wiring Pattern.
+Full wiring guide: `unified-trading-pm/codex/08-workflows/config-injection.md` — Service Wiring Pattern.
 
 ---
 
@@ -146,7 +146,7 @@ Additionally, `os.getenv` is blocked in all non-UCI source files by STEP 5.x os.
 
 ## See Also
 
-- Full architecture: `unified-trading-codex/08-workflows/config-injection.md`
+- Full architecture: `unified-trading-pm/codex/08-workflows/config-injection.md`
 - Cursor rule: `cursor-rules/config/dynamic-config-injection.mdc`
 - Domain schemas: `unified_config_interface.domain_configs` (InstrumentDomainConfig, StrategyDomainConfig, etc.)
 - Audit check: `trading_system_audit_prompt.plan.md` § `audit-config-injection`

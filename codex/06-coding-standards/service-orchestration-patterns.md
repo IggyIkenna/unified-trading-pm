@@ -256,7 +256,7 @@ Programming errors indicate bugs that must be fixed, not silently swallowed.
 
 **Reference:** `instruments-service/instruments_service/adapters/urdi_reference_provider.py:81-98`
 
-See also: `unified-trading-codex/04-architecture/shard-level-failure-isolation.md`
+See also: `unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md`
 
 ---
 
@@ -349,7 +349,7 @@ UAC owns the mapping from external vendor formats to canonical types.
 Import rule: services use `from unified_api_contracts import X` (root facades only). Never import from
 `unified_api_contracts.canonical.*` or `unified_api_contracts.normalize_utils.*`.
 
-### UMI (unified-market-interface) — Market Data Fetching
+### UMI (market-tick-data-service/market_tick_data_service/market_interface) — Market Data Fetching
 
 UMI is for market data only. It provides vendor adapters for downloading price/trade data.
 
@@ -571,7 +571,7 @@ List only repos you directly `from X import` in production code. If a dep comes 
   "dependencies": [
     { "name": "unified-trading-library", "note": "framework: ServiceBootstrap, DataSink, ManifestWriter" },
     { "name": "unified-api-contracts", "note": "domain types: VenueMapping, tardis_to_venue" },
-    { "name": "unified-market-interface", "note": "direct: get_market_adapter() in adapter layer" },
+    { "name": "market-tick-data-service/market_tick_data_service/market_interface", "note": "direct: get_market_adapter() in adapter layer" },
     { "name": "unified-config-interface", "note": "bootstrap: service_config extends UnifiedCloudConfig" }
   ]
 }

@@ -12,7 +12,7 @@ scope: [engineer, admin]
 **SSOT:** `unified-trading-pm/configs/runtime-topology.yaml` (moved from `unified-trading-deployment-v3/configs/` — now
 owned by PM). **Companion:** `RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (deployment-service/configs/) ·
 `runtime-topology.yaml` (`unified-trading-pm/configs/`, machine-readable). **Readers:**
-`unified-trading-codex/04-architecture/` holds symlinks to these files for easy access.
+`unified-trading-pm/codex/04-architecture/` holds symlinks to these files for easy access.
 
 **Last updated:** 2026-02-28
 
@@ -28,7 +28,7 @@ Every repo falls into exactly one category. The name MUST reflect the category:
 
 | Category           | Naming Pattern                                    | Deploys?             | Owns Domain Data?                              | Examples                                             |
 | ------------------ | ------------------------------------------------- | -------------------- | ---------------------------------------------- | ---------------------------------------------------- |
-| **library**        | `*-interface`, `*-library`, `unified-*-interface` | No                   | No — provides protocols, schemas, utilities    | `unified-market-interface`, `execution-algo-library` |
+| **library**        | `*-interface`, `*-library`, `unified-*-interface` | No                   | No — provides protocols, schemas, utilities    | `market-tick-data-service/market_tick_data_service/market_interface`, `execution-algo-library` |
 | **service**        | `*-service`                                       | Yes (Cloud Run / VM) | Yes — produces and persists domain data to GCS | `instruments-service`, `ml-training-service`         |
 | **ui**             | `*-ui`                                            | Yes (static hosting) | No — never reads GCS or PubSub directly        | `trading-analytics-ui`, `deployment-ui`              |
 | **infrastructure** | named by function                                 | Depends              | No                                             | `ibkr-gateway-infra`, `deployment-engine`            |
@@ -453,7 +453,7 @@ Every dataset has exactly ONE authoritative producer. Consumers read from GCS (b
 **API Contract Schemas (SSOT: unified-internal-contracts + unified-api-contracts):** Full field-level types, Correlation
 ID, and Client Order ID are defined in:
 
-- `unified-internal-contracts/schemas/` — internal service-to-service contracts
+- `unified_api_contracts.internal/schemas/` — internal service-to-service contracts
 - `unified-api-contracts/` — external API schemas and VCR mocks
 
 Key cross-cutting fields:
@@ -462,8 +462,8 @@ Key cross-cutting fields:
   client-reporting)
 - **`client_order_id`**: Required on all execution events; client-assigned, idempotency key
 - **`exchange_timestamp`**: Required on all market data events
-- Audit retention: `unified-internal-contracts/schemas/audit.py` — 7yr execution audit, 3yr strategy audit
-- Error recovery: `unified-internal-contracts/schemas/errors.py` — `ErrorCategory`, `ErrorRecoveryStrategy`
+- Audit retention: `unified_api_contracts.internal/schemas/audit.py` — 7yr execution audit, 3yr strategy audit
+- Error recovery: `unified_api_contracts.internal/schemas/errors.py` — `ErrorCategory`, `ErrorRecoveryStrategy`
 
 ---
 
@@ -501,13 +501,13 @@ that input (gracefully). Required upstream data = service fails fast with clear 
 
 ## 10. References
 
-- **Visual diagram:** `unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`
+- **Visual diagram:** `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`
 - **Machine-readable SSOT:** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Code DAG (tiers + versions):** `unified-trading-pm/workspace-manifest.json`
-- **Tier rules:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
-- **Library deps:** `unified-trading-codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
-- **Integration testing:** `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
-- **Event logging:** `unified-trading-codex/03-observability/lifecycle-events.md`
+- **Tier rules:** `unified-trading-pm/codex/04-architecture/TIER-ARCHITECTURE.md`
+- **Library deps:** `unified-trading-pm/codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
+- **Integration testing:** `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
+- **Event logging:** `unified-trading-pm/codex/03-observability/lifecycle-events.md`
 
 ---
 
@@ -717,7 +717,7 @@ publisher be fast, let consumers be correct.
 
 ## 17. Error Retry Policy (SSOT: unified-internal-contracts)
 
-Error categories and recovery strategies are defined in `unified-internal-contracts/schemas/errors.py` (`ErrorCategory`
+Error categories and recovery strategies are defined in `unified_api_contracts.internal/schemas/errors.py` (`ErrorCategory`
 and `ErrorRecoveryStrategy` enums). The topology layer references, not duplicates, those definitions.
 
 | Error Category | Strategy           | Max Retries | Backoff             | After Exhaustion        |

@@ -7,7 +7,7 @@ scope: [engineer, admin]
 ## Rule
 
 **unified-api-contracts (AC)** holds **schemas and static examples** only. **VCR recording and live schema validation**
-are performed by the **active service repos** (unified-market-interface, execution-service, instruments-service,
+are performed by the **active service repos** (market-tick-data-service/market_tick_data_service/market_interface, execution-service, instruments-service,
 position-balance-monitor-service, (NOTE: UTEI/USEI/UDEI→execution-service, URDI→instruments-service,
 UPI→position-balance-monitor-service) unified-cloud-interface) in their integration tests; those interfaces hold API
 keys. Cassettes may be recorded and validated from interface repos. Consumers reference cassettes by path — they do not
@@ -208,7 +208,7 @@ class IBKRMarketAdapter:
 ```
 
 This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, URDI). See
-`unified-trading-codex/06-coding-standards/ibkr-mock-pattern.md` for the full pattern reference.
+`unified-trading-pm/codex/06-coding-standards/ibkr-mock-pattern.md` for the full pattern reference.
 
 ### Why not VCR
 

@@ -40,12 +40,12 @@ graph TB
     end
 
     subgraph T2["🟡 TIER 2 — Domain/Market Interfaces"]
-        UMI["unified-market-interface UMI v1.0<br/>CanonicalTick · venue WS adapters<br/>Binance · OKX · Deribit · Bybit · Coinbase"]
+        UMI["market-tick-data-service/market_tick_data_service/market_interface UMI v1.0<br/>CanonicalTick · venue WS adapters<br/>Binance · OKX · Deribit · Bybit · Coinbase"]
         UTEI["execution-service UTEI v1.0<br/>BaseExecutionAdapter · OrderTracker<br/>SmartOrderRouter · OMS"]
         UDEI["execution-service UDEI v1.0<br/>BaseAMMAdapter · Uniswap · Curve"]
         USEI["execution-service USEI v0.1<br/>BaseSportsAdapter ⟪scaffold⟫"]
         UML["unified-ml-interface UML v1.0<br/>Model protocols · prediction schemas"]
-        UFC["unified-feature-calculator-library UFC v0.1<br/>FeatureCalculatorRegistry · BaseFeatureService"]
+        UFC["unified-trading-library UFC v0.1<br/>FeatureCalculatorRegistry · BaseFeatureService"]
         UPI["position-balance-monitor-service UPI v0.1<br/>CanonicalPosition ⟪scaffold⟫"]
     end
 
@@ -269,7 +269,7 @@ still unresolved):
 | Service                  | Gap                                                                        | Status              |
 | ------------------------ | -------------------------------------------------------------------------- | ------------------- |
 | execution-service        | `execution-algo-library` used but not in pyproject.toml                    | ⚠️ pending          |
-| market-tick-data-service | `unified-market-interface` used but relied on transitive install           | ⚠️ pending          |
+| market-tick-data-service | `market-tick-data-service/market_tick_data_service/market_interface` used but relied on transitive install           | ⚠️ pending          |
 | All services             | UCI, UEI often not explicitly declared — rely on UTS transitive re-exports | ⚠️ accepted pattern |
 
 **Rule:** All direct `from unified_X import ...` calls must have `unified-X` in pyproject.toml `dependencies`.
@@ -281,7 +281,7 @@ Transitive-only is acceptable only for UCLI and UIC_INT (which services never im
 
 | Violation                                                                 | Location                           | Task ID                          | Priority |
 | ------------------------------------------------------------------------- | ---------------------------------- | -------------------------------- | -------- |
-| T2→T3 import: UMI imports UDC                                             | `unified-market-interface/` source | `cohesion-umi-udc-dep-violation` | P1       |
+| T2→T3 import: UMI imports UDC                                             | `market-tick-data-service/market_tick_data_service/market_interface/` source | `cohesion-umi-udc-dep-violation` | P1       |
 | MEL tier mismatch: DAG shows as T2 but T0 behavior                        | DAG SVG visual                     | `dag-mel-tier-mismatch`          | P1       |
 | Non-canonical venue names: "binance" (lowercase) in 100+ production files | multiple services                  | `venue-name-canonicalization`    | P1       |
 

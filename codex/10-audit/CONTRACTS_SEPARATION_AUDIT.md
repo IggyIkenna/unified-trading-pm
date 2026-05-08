@@ -56,7 +56,7 @@ orphaned schemas, import errors, missing functionality.
 
 ### 3.1 Canonical market schemas duplicated (P0)
 
-unified-market-interface defines CanonicalTrade, CanonicalOrderBook, CanonicalTicker, CanonicalLiquidation in own
+market-tick-data-service/market_tick_data_service/market_interface defines CanonicalTrade, CanonicalOrderBook, CanonicalTicker, CanonicalLiquidation in own
 schemas.py; `unified_api_contracts.internal` also has these. Three sources of truth.
 
 **Fix:** UMI imports from `unified_api_contracts.internal`; remove local definitions.

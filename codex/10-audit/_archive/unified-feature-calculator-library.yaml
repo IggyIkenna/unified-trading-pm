@@ -1,9 +1,9 @@
-# Repo Readiness Checklist v3.0 - unified-feature-calculator-library
-# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Repo Readiness Checklist v3.0 - unified-trading-library
+# Schema: unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 # Generated: 2026-03-11
 
 schema_version: "3.0"
-repo: "unified-feature-calculator-library"
+repo: "unified-trading-library"
 repo_type: "library-t2"
 arch_tier: "2"
 deployment_modes: null
@@ -63,7 +63,7 @@ code_readiness:
   cr5_quickmerge:
     status: "not_assessed"
     criteria:
-      "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-feature-calculator-library or main via cascade"
+      "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-trading-library or main via cascade"
     branch: null
     ci_url: null
     merged_to_main: false

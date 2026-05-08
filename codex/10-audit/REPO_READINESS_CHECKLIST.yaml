@@ -347,7 +347,7 @@ asset_group_readiness:
 # ==============================================================================
 # These map to the automated validators in 10-audit/_checklist-template-enhanced.yaml.
 # They are complementary to CR/DR/BR — automation checks feed into CR1/CR4 criteria.
-# Validators live in: unified-trading-codex/scripts/validators/
+# Validators live in: unified-trading-pm/codex/scripts/validators/
 #
 # All items default to not_assessed. Set status as validators run.
 # Full item descriptions: 10-audit/_checklist-template-enhanced.yaml

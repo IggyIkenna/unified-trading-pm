@@ -586,7 +586,7 @@ local QG runs pre-format all file types before any commit. The canonical rule is
 All `scripts/quality-gates.sh` files MUST align to the canonical template at:
 
 ```
-unified-trading-codex/06-coding-standards/quality-gates-template.sh
+unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh
 ```
 
 **Required Features:**
@@ -1742,7 +1742,7 @@ This is equivalent to the GitHub Actions `quality-gates.yml` workflow for librar
 
 ### Adding AWS CodeBuild to a New Repo
 
-1. Copy `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh` as the repo's
+1. Copy `unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh` as the repo's
    `scripts/quality-gates.sh`.
 2. Copy an existing service `buildspec.aws.yaml` (e.g., `execution-service/buildspec.aws.yaml`) and update:
    - `REPO_NAME` will be derived automatically via `basename $(pwd)`.

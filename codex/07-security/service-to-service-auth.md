@@ -269,6 +269,6 @@ bash scripts/quality-gates.sh --quick
 
 - `unified-cloud-interface/unified_cloud_interface/credentials_registry.py` — `SERVICE_ACCOUNT_MAP`
 - `unified-config-interface/unified_config_interface/cloud_config.py` — `service_auth_token` field
-- `unified-trading-codex/07-security/secret-naming-convention.md` — naming patterns
+- `unified-trading-pm/codex/07-security/secret-naming-convention.md` — naming patterns
 - `execution-service/execution_service/auth_s2s.py` — Phase 0 implementation
 - `risk-and-exposure-service/risk_and_exposure_service/auth_s2s.py` — Phase 0 implementation

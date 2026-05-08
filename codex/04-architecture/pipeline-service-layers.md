@@ -73,13 +73,13 @@ flowchart TD
 ## Testing implications
 
 Run tests layer by layer; lower layers depend on upstream artifacts. Do not run Layer 4 tests without Layer 3 output.
-See `unified-trading-codex/06-coding-standards/integration-testing-layers.md` for the integration test strategy.
+See `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md` for the integration test strategy.
 
 ## Cross-references
 
 | Topic                                      | Location                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------- |
-| Tier architecture (T0–T3 dependency rules) | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`              |
-| Integration testing layers (0–3)           | `unified-trading-codex/06-coding-standards/integration-testing-layers.md` |
+| Tier architecture (T0–T3 dependency rules) | `unified-trading-pm/codex/04-architecture/TIER-ARCHITECTURE.md`              |
+| Integration testing layers (0–3)           | `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md` |
 | Deploy-shards CLI reference                | `deployment-service/docs/cli.md`                                          |
 | Workspace topology DAG (all 63 repos)      | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg`                           |

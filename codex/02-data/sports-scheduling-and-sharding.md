@@ -255,7 +255,7 @@ from `unified_trading_library.instruments_write_gate`. The gate scans the `DEFAU
 (`as_of_date`, `valuation_date`, `data_available_at`, `kickoff_utc`, `event_time`, `computed_at`) and emits
 `DATA_ALIGNMENT_VIOLATION` (warn mode) or raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
 `value.date() > D`. See
-[`06-coding-standards/validation-patterns.md` §Timestamp-Alignment-Gate](../06-coding-standards/validation-patterns.md#timestamp-alignment-gate)
+[`06-coding-standards/validation-and-errors.md` §5 InstrumentsWriteGate](../06-coding-standards/validation-and-errors.md#5-instrumentswritegate-raw-data-sink-writes)
 for the full contract + usage.
 
 Pre-2026-04-22 the raw-data layer relied on adapter discipline alone — the Transfermarkt VM data-crime incident (18h

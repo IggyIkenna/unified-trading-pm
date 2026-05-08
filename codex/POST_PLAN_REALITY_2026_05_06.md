@@ -192,8 +192,7 @@ before believing anything specific in the linked doc.
 | `02-data/prediction-schema-paths.md`               | Pre-canonical_question_group; describes per-base_asset Polymarket sharding                                                                                                                            |
 | `04-architecture/sports-integration-plan.md`       | Pre-(per-fixture sharding)                                                                                                                                                                            |
 | `04-architecture/asset-class-ownership.md`         | Sports section pre-(per-fixture sharding)                                                                                                                                                             |
-| `06-coding-standards/error-handling.md`            | Doesn't list the three-category empty-output decision tree                                                                                                                                            |
-| `06-coding-standards/validation-patterns.md`       | Doesn't list cluster validation as mandatory write-gate pillar                                                                                                                                        |
+| `06-coding-standards/validation-and-errors.md`     | Merged 2026-05-08 (D.5) — supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output decision + cluster validation pillar both included.   |
 | `00-SSOT-INDEX.md`                                 | Top-level pointer doc — needs to surface this post-plan doc + the active plans                                                                                                                        |
 
 ---

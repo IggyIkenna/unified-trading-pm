@@ -1,5 +1,5 @@
 # Repo Readiness Checklist v3.0 - execution-service
-# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Schema: unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 # Generated: 2026-03-11
 
 schema_version: "3.0"
@@ -44,7 +44,7 @@ code_readiness:
       # - unified-config-interface
       # - unified-domain-client
       # - unified-trading-library
-      # - unified-market-interface
+      # - market-tick-data-service/market_tick_data_service/market_interface
       # NOTE: unified-trade-execution-interface merged into this repo (2026-03-26)
       # - execution-algo-library
       # NOTE: unified-sports-execution-interface merged into this repo (2026-03-26)
@@ -57,7 +57,7 @@ code_readiness:
       - unified-config-interface
       - unified-domain-client
       - unified-trading-library
-      - unified-market-interface
+      - market-tick-data-service/market_tick_data_service/market_interface
       - execution-algo-library
       - matching-engine-library
       - unified-api-contracts

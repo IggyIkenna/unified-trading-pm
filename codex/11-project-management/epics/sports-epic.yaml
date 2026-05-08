@@ -13,7 +13,7 @@
 #   - BETFAIR (CLOB via unified-sports-execution-interface)
 #   - POLYMARKET (prediction markets)
 #
-# See: unified-trading-codex/11-project-management/mvp-universe.yaml
+# See: unified-trading-pm/codex/11-project-management/mvp-universe.yaml
 # ==============================================================================
 
 epic_id: sports

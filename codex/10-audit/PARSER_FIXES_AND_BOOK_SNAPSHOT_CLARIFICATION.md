@@ -143,7 +143,7 @@ services_with_start_dates = all_keys - metadata_fields
 
 ### MVP Universe Updated
 
-**File**: `unified-trading-codex/11-project-management/mvp-universe.yaml`
+**File**: `unified-trading-pm/codex/11-project-management/mvp-universe.yaml`
 
 **Changes**:
 
@@ -196,7 +196,7 @@ data_types:
 1. **Position Balance Monitor**:
    - **Sharding**: `unified-trading-pm/configs/sharding.position-balance-monitor-service.yaml` (symlinked into
      `deployment-service/configs/`)
-   - **Checklist**: `unified-trading-codex/10-audit/repos/position-balance-monitor-service.yaml` (codex v3.0; old
+   - **Checklist**: `unified-trading-pm/codex/10-audit/repos/position-balance-monitor-service.yaml` (codex v3.0; old
      phase*N*\* file removed 2026-03-11)
    - **Data Catalogue**: `unified-trading-pm/configs/data-catalogue.position-balance-monitor-service.yaml` (symlinked
      into `deployment-service/configs/`)
@@ -204,7 +204,7 @@ data_types:
 2. **Risk and Exposure**:
    - **Sharding**: `unified-trading-pm/configs/sharding.risk-and-exposure-service.yaml` (symlinked into
      `deployment-service/configs/`)
-   - **Checklist**: `unified-trading-codex/10-audit/repos/risk-and-exposure-service.yaml` (codex v3.0; old phase*N*\*
+   - **Checklist**: `unified-trading-pm/codex/10-audit/repos/risk-and-exposure-service.yaml` (codex v3.0; old phase*N*\*
      file removed 2026-03-11)
    - **Data Catalogue**: `unified-trading-pm/configs/data-catalogue.risk-and-exposure-service.yaml` (symlinked into
      `deployment-service/configs/`)
@@ -262,13 +262,13 @@ python scripts/validate-alignment.py --check-drift
 
 ### Parser Script
 
-- `unified-trading-codex/scripts/generate-alignment-report.py`
+- `unified-trading-pm/codex/scripts/generate-alignment-report.py`
   - Fixed venues.yaml parsing (line 283-327)
   - Fixed expected_start_dates metadata filtering (line 316-336)
 
 ### MVP Universe
 
-- `unified-trading-codex/11-project-management/mvp-universe.yaml`
+- `unified-trading-pm/codex/11-project-management/mvp-universe.yaml`
   - Moved book_snapshot_25 to excluded
   - Added data_type_per_category mapping
   - Updated service_code_adjustments.market_tick_data_handler_orderbook_by_category

@@ -120,6 +120,6 @@ sa_secret = CredentialsRegistry.service_account_secret("execution-service")
 
 ## Cross-references
 
-- `unified-trading-codex/07-security/secrets-management.md` — full secret inventory + provisioning status
+- `unified-trading-pm/codex/07-security/secrets-management.md` — full secret inventory + provisioning status
 - `unified-cloud-interface/unified_cloud_interface/credentials_registry.py` — programmatic SSOT
 - `unified-trading-pm/credentials-registry.yaml` — operational credentials registry (cost, required_for, status)

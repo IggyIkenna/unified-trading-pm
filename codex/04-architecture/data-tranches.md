@@ -110,7 +110,7 @@ def resolve_tranche(client_config: ClientConfig) -> str:
 ## Cross-references
 
 - `unified-cloud-interface/unified_cloud_interface/credentials_registry.py` — `exec_secret_for_client()`
-- `unified-trading-codex/07-security/secret-naming-convention.md` — exec key patterns
+- `unified-trading-pm/codex/07-security/secret-naming-convention.md` — exec key patterns
 - `execution-service/execution_service/data/tranche_router.py` — canonical implementation
 - `client-reporting-api/client_reporting_api/core/tranche_router.py` — reporting-side resolver
 - `unified-trading-pm/credentials-registry.yaml` — per-client operational registry

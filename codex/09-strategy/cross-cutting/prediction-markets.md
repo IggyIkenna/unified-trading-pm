@@ -21,8 +21,8 @@ are simultaneously a data source, an execution venue, and an arbitrage surface.
 
 | Component                              | Status      | File                                                                                                     |
 | -------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
-| Polymarket market data adapter         | IMPLEMENTED | `unified-market-interface/adapters/prediction/polymarket_adapter.py`                                     |
-| Kalshi market data adapter             | IMPLEMENTED | `unified-market-interface/adapters/prediction/kalshi_adapter.py`                                         |
+| Polymarket market data adapter         | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`                                     |
+| Kalshi market data adapter             | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`                                         |
 | Polymarket schemas (Pydantic)          | IMPLEMENTED | `unified-api-contracts/external/polymarket/schemas.py`                                                   |
 | Kalshi schemas (Pydantic)              | IMPLEMENTED | `unified-api-contracts/external/kalshi/schemas.py`                                                       |
 | Polymarket arb schemas                 | IMPLEMENTED | `unified-api-contracts/external/polymarket/arb_schemas.py`                                               |
@@ -336,8 +336,8 @@ registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
 
 ## References
 
-- **Polymarket adapters:** `unified-market-interface/adapters/prediction/polymarket_adapter.py`
-- **Kalshi adapters:** `unified-market-interface/adapters/prediction/kalshi_adapter.py`
+- **Polymarket adapters:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`
+- **Kalshi adapters:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`
 - **Execution:** `execution-service/adapters/exchanges/polymarket_clob.py`
 - **Strategy:** `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`
 - **Features:** `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`

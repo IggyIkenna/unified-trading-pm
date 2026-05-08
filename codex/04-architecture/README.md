@@ -46,7 +46,7 @@ scope: [engineer, admin]
 ## Pipeline DAG
 
 The 13 pipeline services (12 original + features-sports-service) form a directed acyclic graph with strict topological
-ordering. **Mermaid source (machine-readable):** `unified-trading-codex/04-architecture/pipeline-service-layers.md`
+ordering. **Mermaid source (machine-readable):** `unified-trading-pm/codex/04-architecture/pipeline-service-layers.md`
 
 ```
 Layer 1: Data I/O (root services -- no upstream dependencies)

@@ -61,7 +61,7 @@ unified-trading-library
 
 ### Tier 2: Depends on Tier 0 Only
 
-**Examples:** unified-market-interface, execution-service (formerly unified-trade-execution-interface),
+**Examples:** market-tick-data-service/market_tick_data_service/market_interface, execution-service (formerly unified-trade-execution-interface),
 unified-domain-client
 
 **Allowed Dependencies:**
@@ -387,7 +387,7 @@ def gcp_auth_info():
         pass
 
     # 3. No credentials → unit tests use mocks
-    return None, "test-project", None
+    return None, "central-element-323112", None
 
 
 @pytest.fixture(scope="session")

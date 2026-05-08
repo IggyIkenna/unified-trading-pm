@@ -160,4 +160,4 @@ depends_on: []
   Any missing required field fails the gate.
 - Existing files are being migrated to conform to this schema as part of `dc-catalogue-format-standard`.
 - Owner: instruments-service team.
-- SSOT: `unified-trading-codex/06-coding-standards/data-catalogue-schema.md` (this file).
+- SSOT: `unified-trading-pm/codex/06-coding-standards/data-catalogue-schema.md` (this file).

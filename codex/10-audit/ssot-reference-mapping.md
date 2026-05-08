@@ -20,9 +20,9 @@ treated as derivative.
 
 1. **`unified-trading-pm/configs/`** - Operational data SSOT (sharding, data availability, venue mappings); symlinked
    into `deployment-service/configs/`
-2. **`unified-trading-codex/` docs** - Architectural standards and patterns
-3. **`unified-trading-codex/11-project-management/epics/`** - Implementation details and requirements
-4. **`unified-trading-codex/11-project-management/service-registry.yaml`** - Service metadata
+2. **`unified-trading-pm/codex/` docs** - Architectural standards and patterns
+3. **`unified-trading-pm/codex/11-project-management/epics/`** - Implementation details and requirements
+4. **`unified-trading-pm/codex/11-project-management/service-registry.yaml`** - Service metadata
 5. **Service code in 32 repos** - Current implementation reality
 
 ---
@@ -64,7 +64,7 @@ treated as derivative.
 
 ### 2. Architectural Standards → Codex Docs
 
-**Authority**: `unified-trading-codex/` documentation is SSOT for cross-cutting standards.
+**Authority**: `unified-trading-pm/codex/` documentation is SSOT for cross-cutting standards.
 
 | Domain                  | SSOT Doc                                                      | What It Defines                                                                                                                 | Checklist Items                   |
 | ----------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
@@ -256,7 +256,7 @@ if [ -n "$SSOT_FILES" ]; then
     python scripts/validate-alignment.py --check-drift
     if [ $? -ne 0 ]; then
         echo "❌ Alignment check failed. Update related sources before committing."
-        echo "See: unified-trading-codex/10-audit/ssot-reference-mapping.md"
+        echo "See: unified-trading-pm/codex/10-audit/ssot-reference-mapping.md"
         exit 1
     fi
 fi
@@ -287,11 +287,11 @@ vim deployment-service/configs/sharding.instruments-service.yaml
 # Add instrument_type to shard_dimensions
 
 # 2. Update codex if pattern changes
-vim unified-trading-codex/04-architecture/batch-live-symmetry.md
+vim unified-trading-pm/codex/04-architecture/batch-live-symmetry.md
 # Add section on instrument_type sharding rationale
 
 # 3. Update epic if it specifies sharding
-vim unified-trading-codex/11-project-management/epics/data-io-production-readiness-epic.md
+vim unified-trading-pm/codex/11-project-management/epics/data-io-production-readiness-epic.md
 # Update Task 5 deployment command examples to include --instrument-type
 
 # 4. Update per-repo cursorrules
@@ -325,11 +325,11 @@ git add .cursorrules
 
 ```bash
 # 1. Update codex standard (SSOT for standards)
-vim unified-trading-codex/06-coding-standards/README.md
+vim unified-trading-pm/codex/06-coding-standards/README.md
 # Add section: "No print() statements (use logger.info() instead)"
 
 # 2. Add checklist item
-vim unified-trading-codex/10-audit/_service-baseline-template.yaml
+vim unified-trading-pm/codex/10-audit/_service-baseline-template.yaml
 # Add: COD-05 "No print() statements"
 
 # 3. Add workspace cursor rule
@@ -337,11 +337,11 @@ vim .cursor/rules/coding-standards.mdc
 # Add enforcement: "NEVER use print() - use logger.info()"
 
 # 4. Add validator
-vim unified-trading-codex/scripts/validators/validate-no-print.py
+vim unified-trading-pm/codex/scripts/validators/validate-no-print.py
 # Scan for print() statements, fail if found
 
 # 5. Update all per-repo cursorrules (automated)
-python unified-trading-codex/scripts/sync-rules-and-docs.py
+python unified-trading-pm/codex/scripts/sync-rules-and-docs.py
 # Propagates to all 32 .cursorrules files
 
 # 6. Validate
@@ -403,7 +403,7 @@ vim deployment-service/configs/sharding.instruments-service.yaml
 # Fix: category_shards: 3 (was incorrectly 4)
 
 # 2. Update derivatives
-vim unified-trading-codex/04-architecture/batch-live-symmetry.md
+vim unified-trading-pm/codex/04-architecture/batch-live-symmetry.md
 # Update text referencing 3 category shards
 
 # 3. Validate

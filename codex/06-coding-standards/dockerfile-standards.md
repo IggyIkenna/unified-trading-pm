@@ -69,7 +69,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ### Heavy Trading Services
 
-Some services (execution, instruments, market-tick-data, unified-market-interface) use the heavier
+Some services (execution, instruments, market-tick-data, market-tick-data-service/market_tick_data_service/market_interface) use the heavier
 `unified-trading-services:latest` base which includes additional C extensions and trading-specific system deps:
 
 ```dockerfile

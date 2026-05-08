@@ -73,7 +73,7 @@ part of its batch run. The feature values exist as files on object storage.
 The strategy process (and execution process) imports the feature calculator library directly as a Python package.
 Feature computation happens in the same process, in memory, with no network call for the calculation itself.
 
-- `unified-feature-calculator-library` is imported as a dependency, not called via HTTP
+- `unified-trading-library` is imported as a dependency, not called via HTTP
 - No RPC to a feature service during the hot path
 - Latency for the calculation is CPU-bound only — no serialization, no network round-trip
 

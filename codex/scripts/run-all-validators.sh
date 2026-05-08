@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run codex/PM validators for production readiness.
 # Invoked by quality-gates.sh [6/6] when present.
-# SSOT: unified-trading-codex/06-coding-standards/quality-gates.md
+# SSOT: unified-trading-pm/codex/06-coding-standards/quality-gates.md
 
 set -e
 

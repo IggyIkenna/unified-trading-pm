@@ -211,6 +211,6 @@ backtests in `batch/` are never read by the reconciliation system.
 
 - `batch-live-reconciliation-service/` — orchestrator implementation
 - `deployment-service/terraform/gcp/` — Cloud Run Job + Cloud Scheduler definitions
-- `unified-trading-codex/04-architecture/pipeline-service-layers.md` — 7-layer pipeline DAG
-- `unified-trading-codex/00-SSOT-INDEX.md` — T+1 reconciliation row
+- `unified-trading-pm/codex/04-architecture/pipeline-service-layers.md` — 7-layer pipeline DAG
+- `unified-trading-pm/codex/00-SSOT-INDEX.md` — T+1 reconciliation row
 - Per-service `docs/GCS_PATHS.md` — service-specific path conventions

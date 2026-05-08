@@ -33,7 +33,7 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 | WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                   |
 | LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                     |
 | QUICK_REFERENCE              | `anti-patterns-quick-reference.mdc`                                                |
-| cloud-orchestration-spec.md  | Moved to `unified-trading-codex/04-architecture/cloud-agent-orchestration-spec.md` |
+| cloud-orchestration-spec.md  | Moved to `unified-trading-pm/codex/04-architecture/cloud-agent-orchestration-spec.md` |
 
 ---
 

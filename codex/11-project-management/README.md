@@ -10,7 +10,7 @@ PM methodology standards, scope specifications (epics), architecture decision re
 `unified-trading-pm/plans/cursor-plans/consolidated_remaining_work.plan.md` **For active plans and roadmaps:**
 `unified-trading-pm/plans/`
 
-Boundary rule: See `unified-trading-codex/13-codex-governance/SSOT-BOUNDARY.md`
+Boundary rule: See `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.md`
 
 ---
 

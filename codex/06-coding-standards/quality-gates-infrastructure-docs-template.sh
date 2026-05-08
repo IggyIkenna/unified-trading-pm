@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Quality Gates Template — Docs-Only / Infrastructure Repos
-# SSOT: unified-trading-codex/06-coding-standards/quality-gates-infrastructure-docs-template.sh
+# SSOT: unified-trading-pm/codex/06-coding-standards/quality-gates-infrastructure-docs-template.sh
 #
 # For repos containing only markdown, YAML, JSON, or config files (no Python source).
 # No pytest, no basedpyright — markdown lint only.

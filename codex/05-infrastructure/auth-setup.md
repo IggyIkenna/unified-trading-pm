@@ -101,7 +101,7 @@ gcloud auth application-default login
 gcloud auth application-default print-access-token
 
 # Set default project
-gcloud config set project test-project
+gcloud config set project central-element-323112
 ```
 
 **ADC search order:**
@@ -121,17 +121,17 @@ gcloud iam service-accounts create batch-processing-sa \
   --description="Service account for batch processing services"
 
 # Grant roles
-gcloud projects add-iam-policy-binding test-project \
-  --member=serviceAccount:batch-processing-sa@test-project.iam.gserviceaccount.com \
+gcloud projects add-iam-policy-binding central-element-323112 \
+  --member=serviceAccount:batch-processing-sa@central-element-323112.iam.gserviceaccount.com \
   --role=roles/storage.objectAdmin
 
-gcloud projects add-iam-policy-binding test-project \
-  --member=serviceAccount:batch-processing-sa@test-project.iam.gserviceaccount.com \
+gcloud projects add-iam-policy-binding central-element-323112 \
+  --member=serviceAccount:batch-processing-sa@central-element-323112.iam.gserviceaccount.com \
   --role=roles/secretmanager.secretAccessor
 
 # Create key file
 gcloud iam service-accounts keys create ~/batch-processing-sa-key.json \
-  --iam-account=batch-processing-sa@test-project.iam.gserviceaccount.com
+  --iam-account=batch-processing-sa@central-element-323112.iam.gserviceaccount.com
 
 # Set environment variable
 export GOOGLE_APPLICATION_CREDENTIALS="$HOME/batch-processing-sa-key.json"
@@ -165,7 +165,7 @@ gcloud iam workload-identity-pools providers create-oidc github-actions-provider
   --attribute-condition="assertion.repository_owner=='IggyIkenna'"
 
 # Grant service account access
-gcloud iam service-accounts add-iam-policy-binding batch-processing-sa@test-project.iam.gserviceaccount.com \
+gcloud iam service-accounts add-iam-policy-binding batch-processing-sa@central-element-323112.iam.gserviceaccount.com \
   --role=roles/iam.workloadIdentityUser \
   --member="principalSet://iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/github-actions/attribute.repository/IggyIkenna/<repo-name>"
 ```
@@ -188,7 +188,7 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: "projects/<project-number>/locations/global/workloadIdentityPools/github-actions/providers/github-actions-provider"
-          service_account: "batch-processing-sa@test-project.iam.gserviceaccount.com"
+          service_account: "batch-processing-sa@central-element-323112.iam.gserviceaccount.com"
 
       - name: Use GCP
         run: gcloud storage ls
@@ -236,7 +236,7 @@ echo -n "key" | bash unified-trading-pm/scripts/setup_secret.sh -p $GCP_PROJECT_
 
 ```bash
 gcloud secrets add-iam-policy-binding tardis-api-key \
-  --member=serviceAccount:batch-processing-sa@test-project.iam.gserviceaccount.com \
+  --member=serviceAccount:batch-processing-sa@central-element-323112.iam.gserviceaccount.com \
   --role=roles/secretmanager.secretAccessor
 ```
 
@@ -246,7 +246,7 @@ gcloud secrets add-iam-policy-binding tardis-api-key \
 from unified_trading_services import get_secret_client
 
 api_key = get_secret_client(
-    project_id="test-project",
+    project_id="central-element-323112",
     secret_name="tardis-api-key",
 )
 ```
@@ -257,7 +257,7 @@ api_key = get_secret_client(
 
 ```bash
 # Add secret
-gh secret set GCP_PROJECT_ID --body "test-project"
+gh secret set GCP_PROJECT_ID --body "central-element-323112"
 gh secret set GCP_PROJECT_ID_DEV --body "dev-project-id"
 
 # Add from file
@@ -307,7 +307,7 @@ See: `unified-trading-pm/scripts/repo-management/verify-gh-pat-secrets.sh`,
 ```bash
 # Create .env file (NOT committed to git)
 cat > .env << 'EOF'
-GCP_PROJECT_ID=test-project
+GCP_PROJECT_ID=central-element-323112
 GCP_PROJECT_ID_DEV=dev-project-id
 ENVIRONMENT=development
 
@@ -343,7 +343,7 @@ config = UnifiedCloudConfig()
 gcloud auth configure-docker asia-northeast1-docker.pkg.dev
 
 # Verify
-docker pull asia-northeast1-docker.pkg.dev/test-project/unified-trading-services/unified-trading-services:latest
+docker pull asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-services/unified-trading-services:latest
 ```
 
 **For CI/CD:**
@@ -539,11 +539,11 @@ gcloud secrets list
 
 ```bash
 # Verify Artifact Registry access
-docker pull asia-northeast1-docker.pkg.dev/test-project/unified-trading-services/unified-trading-services:latest
+docker pull asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-services/unified-trading-services:latest
 
 # Verify push access
-docker tag local-image:latest asia-northeast1-docker.pkg.dev/test-project/test-repo/test-image:latest
-docker push asia-northeast1-docker.pkg.dev/test-project/test-repo/test-image:latest
+docker tag local-image:latest asia-northeast1-docker.pkg.dev/central-element-323112/test-repo/test-image:latest
+docker push asia-northeast1-docker.pkg.dev/central-element-323112/test-repo/test-image:latest
 ```
 
 ---
@@ -585,9 +585,9 @@ gcloud auth list
 gcloud auth application-default login
 
 # Verify service account has correct roles
-gcloud projects get-iam-policy test-project \
+gcloud projects get-iam-policy central-element-323112 \
   --flatten="bindings[].members" \
-  --filter="bindings.members:serviceAccount:batch-processing-sa@test-project.iam.gserviceaccount.com"
+  --filter="bindings.members:serviceAccount:batch-processing-sa@central-element-323112.iam.gserviceaccount.com"
 ```
 
 ### Issue: "Invalid credentials" in GitHub Actions
@@ -619,7 +619,7 @@ gcloud auth configure-docker asia-northeast1-docker.pkg.dev
 # Verify service account has artifactregistry.reader role
 gcloud artifacts repositories add-iam-policy-binding <repo-name> \
   --location=asia-northeast1 \
-  --member=serviceAccount:batch-processing-sa@test-project.iam.gserviceaccount.com \
+  --member=serviceAccount:batch-processing-sa@central-element-323112.iam.gserviceaccount.com \
   --role=roles/artifactregistry.reader
 ```
 

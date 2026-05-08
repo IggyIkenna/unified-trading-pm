@@ -371,7 +371,7 @@ items:
       ❌ Fail: MVP venues missing from config, no MVP testing
     evidence: "Check config venue lists, test data fixtures"
     codex_ref: "11-project-management/mvp-universe.yaml"
-    ssot_reference: "unified-trading-codex/11-project-management/mvp-universe.yaml"
+    ssot_reference: "unified-trading-pm/codex/11-project-management/mvp-universe.yaml"
     validator: "scripts/validators/validate_mvp_coverage.py"
 
   - id: BASE-23
@@ -524,7 +524,7 @@ items:
     description: |
       Service uses appropriate domain libraries:
       - UDI (unified-domain-interface): All services for domain models
-      - UMI (unified-market-interface): market-tick-data-service, market-data-processing-service
+      - UMI (market-tick-data-service/market_tick_data_service/market_interface): market-tick-data-service, market-data-processing-service
       - UOI (unified-order-interface): execution-service
       - execution-algo-library: execution-service, strategy-service
 
@@ -886,7 +886,7 @@ items:
 
       ✅ Pass: DR runbooks exist, escalation contacts documented, communication plan defined
       ❌ Fail: No DR documentation, undefined RTO/RPO, no escalation paths
-    evidence: "DR runbooks in unified-trading-codex/08-workflows/dr/, escalation contact list"
+    evidence: "DR runbooks in unified-trading-pm/codex/08-workflows/dr/, escalation contact list"
     codex_ref: "08-workflows/disaster-recovery.md"
     ssot_reference: "N/A (new DR standard)"
     validator: "Manual review of DR documentation"
@@ -930,7 +930,7 @@ items:
 
       ✅ Pass: Failover test reports exist, last test <90 days old, RTO/RPO validated
       ❌ Fail: No failover testing, last test >90 days old, RTO/RPO not validated
-    evidence: "Failover test reports in unified-trading-codex/08-workflows/dr/test-results/"
+    evidence: "Failover test reports in unified-trading-pm/codex/08-workflows/dr/test-results/"
     codex_ref: "08-workflows/disaster-recovery.md#failover-testing"
     ssot_reference: "N/A (new DR standard)"
     validator: "Manual review of failover test reports"

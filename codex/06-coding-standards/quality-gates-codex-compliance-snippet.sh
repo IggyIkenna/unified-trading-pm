@@ -264,7 +264,7 @@ if [ $CODEX_VIOLATIONS -eq 0 ]; then
     CODEX_STATUS=0
 else
     echo -e "\n${RED}❌ Codex compliance FAILED: $CODEX_VIOLATIONS violations${NC}"
-    echo -e "${YELLOW}See: unified-trading-codex/06-coding-standards/README.md${NC}"
+    echo -e "${YELLOW}See: unified-trading-pm/codex/06-coding-standards/README.md${NC}"
     CODEX_STATUS=1
 fi
 

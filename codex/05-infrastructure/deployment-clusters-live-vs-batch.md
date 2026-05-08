@@ -247,9 +247,10 @@ These are non-negotiable across live and batch clusters and across tarball and C
 4. **Shard-level failure isolation**: a failed shard MUST NOT kill other shards in the same batch (or other services in
    the same live cluster). Per `04-architecture/shard-level-failure-isolation.md`.
 5. **Write-gate quartet at `record_captured`**: row count + NaN ratio + schema + cluster coverage. Failure of any pillar
-   → `record_failed(<typed_reason>)` instead of writing the parquet. Per `06-coding-standards/validation-patterns.md`.
-6. **Three-category empty-output decision** (A/B/C): at every per-shard adapter. Per
-   `06-coding-standards/error-handling.md`.
+   → `record_failed(<typed_reason>)` instead of writing the parquet. Per `06-coding-standards/validation-and-errors.md`
+   §2.
+6. **Four-category empty-output decision** (A/B/C/D): at every per-shard adapter. Per
+   `06-coding-standards/validation-and-errors.md` §1.
 7. **`available_at` per-row write-time** equal to live-pipeline-arrival: every row in every shard's parquet carries
    `available_at`. Per workspace CLAUDE.md `§ available_at`.
 
@@ -282,9 +283,8 @@ cluster state regardless of which mechanism deployed the cluster or which type t
   [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
 - **Shard-level failure isolation**:
   [`04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
-- **Three-category empty-output**: [`06-coding-standards/error-handling.md`](../06-coding-standards/error-handling.md)
-- **Cluster validation + 4-pillar write-gate**:
-  [`06-coding-standards/validation-patterns.md`](../06-coding-standards/validation-patterns.md)
+- **4-category empty-output + cluster validation + 4-pillar write-gate (single SSOT)**:
+  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
 - **Tarball deployment recipe**: [`05-infrastructure/vm-tarball-deployment.md`](./vm-tarball-deployment.md)
 - **Cloud Build CI/CD setup**: [`05-infrastructure/cicd-setup.md`](./cicd-setup.md)
 - **Runtime tiers + deployment**:

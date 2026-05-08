@@ -73,6 +73,6 @@ Services own types that never cross service boundaries:
 
 ## Reference
 
-- UAC layout: `unified-trading-codex/02-data/contracts-scope-and-layout.md`
+- UAC layout: `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md`
 - Import rules: `unified-trading-pm/cursor-rules/imports/uac-import-surface-enforcement.mdc`
-- Interface credential convention: `unified-trading-codex/04-architecture/interface-credential-convention.md`
+- Interface credential convention: `unified-trading-pm/codex/04-architecture/interface-credential-convention.md`

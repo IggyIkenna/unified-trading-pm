@@ -19,7 +19,7 @@
 #   - HYPERLIQUID (start: 2023-05-01)
 #   - ASTER (start: 2021-08-30)
 #
-# See: unified-trading-codex/11-project-management/mvp-universe.yaml
+# See: unified-trading-pm/codex/11-project-management/mvp-universe.yaml
 # ==============================================================================
 
 epic_id: cefi
@@ -78,13 +78,13 @@ required_repos:
     min_br_stage: na
     asset_group: core
 
-  - repo: unified-feature-calculator-library
+  - repo: unified-trading-library
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na
     asset_group: core
 
-  - repo: unified-market-interface
+  - repo: market-tick-data-service/market_tick_data_service/market_interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na

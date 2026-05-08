@@ -654,8 +654,8 @@ cd ../unified-trading-services
 uv lock && bash scripts/quality-gates.sh
 bash scripts/quickmerge.sh "feat: add unified-new-interface dependency"
 
-# 3. Update unified-market-interface (Tier 2)
-cd ../unified-market-interface
+# 3. Update market-tick-data-service/market_tick_data_service/market_interface (Tier 2)
+cd ../market-tick-data-service/market_tick_data_service/market_interface
 # Add to pyproject.toml: unified-new-interface>=1.0.0,<2.0.0
 uv lock && bash scripts/quality-gates.sh
 bash scripts/quickmerge.sh "feat: add unified-new-interface dependency"

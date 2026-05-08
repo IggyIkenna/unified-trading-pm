@@ -61,7 +61,7 @@ Status of VCR cassettes per interface. All interfaces must reach `complete` befo
 
 | Interface                                 | Venues Covered                                    | Cassette Location                          | Status  |
 | ----------------------------------------- | ------------------------------------------------- | ------------------------------------------ | ------- |
-| UMI (unified-market-interface)            | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
+| UMI (market-tick-data-service/market_tick_data_service/market_interface)            | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
 | UTEI (unified-trade-execution-interface)  | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`        | pending |
 | URDI (unified-reference-data-interface)   | databento, polygon                                | `unified-api-contracts/mocks/urdi/`        | pending |
 | UPI (unified-position-interface)          | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`         | pending |

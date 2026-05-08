@@ -2160,7 +2160,6 @@
         "unified-trading-library",
         "unified-domain-client",
         "unified-ml-interface",
-        "unified-feature-calculator-library",
         "ml-training-service",
         "ml-inference-service",
         "strategy-service (sports strategy module)",

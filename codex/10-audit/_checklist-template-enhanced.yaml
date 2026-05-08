@@ -582,7 +582,7 @@ items:
     automation_status: "automated"
     validator_id: "service_classification_validator"
     ssot_ref: "11-project-management/service-registry.yaml"
-    ssot_file: "unified-trading-codex/11-project-management/service-registry.yaml"
+    ssot_file: "unified-trading-pm/codex/11-project-management/service-registry.yaml"
     automated_check: "validators/classification/service_classification_validator.py"
 
   - id: "BASE-22"
@@ -605,7 +605,7 @@ items:
     automation_status: "automated"
     validator_id: "mvp_coverage_validator"
     ssot_ref: "11-project-management/mvp-universe.yaml"
-    ssot_file: "unified-trading-codex/11-project-management/mvp-universe.yaml"
+    ssot_file: "unified-trading-pm/codex/11-project-management/mvp-universe.yaml"
     automated_check: "validators/classification/mvp_coverage_validator.py"
 # ==============================================================================
 # Summary

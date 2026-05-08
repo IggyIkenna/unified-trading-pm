@@ -22,7 +22,7 @@ shard atom + per-market lifecycle. Both shapes documented below: legacy (pre-Pla
 **Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
 [04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
 [05-infrastructure/deployment-clusters-live-vs-batch.md](../05-infrastructure/deployment-clusters-live-vs-batch.md),
-[06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).
+[06-coding-standards/validation-and-errors.md](../06-coding-standards/validation-and-errors.md).
 
 ## Asset group
 

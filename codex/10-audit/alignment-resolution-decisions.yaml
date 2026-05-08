@@ -55,7 +55,7 @@ resolutions:
     title: "instruments-service (corporate-actions domain) has sharding but no checklist"
     decision: "update_utd_configs"
     action:
-      "Create unified-trading-codex/10-audit/repos/corporate-actions.yaml (codex v3.0 schema, supersedes old
+      "Create unified-trading-pm/codex/10-audit/repos/corporate-actions.yaml (codex v3.0 schema, supersedes old
       deployment-service/configs/checklist.*.yaml pattern which was removed 2026-03-11)"
     rationale:
       "corporate-actions domain within instruments-service has sharding config; needs codex v3.0 readiness entry"

@@ -5,7 +5,7 @@
 # Copy to scripts/setup.sh in every repo. Idempotent — safe to re-run.
 #
 # SSOT: unified-trading-pm/scripts/setup.sh
-# Codex: unified-trading-codex/06-coding-standards/setup-standards.md
+# Codex: unified-trading-pm/codex/06-coding-standards/setup-standards.md
 #
 # Usage:
 #   bash scripts/setup.sh              # Full setup (idempotent)

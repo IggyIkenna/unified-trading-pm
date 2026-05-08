@@ -63,7 +63,7 @@ All other `os.environ` / `os.getenv()` access in service code is banned. Use `ge
 | Testing patterns                                                                   | [testing.md](testing.md)                                                                   |
 | Integration testing layers (0–3)                                                   | [integration-testing-layers.md](integration-testing-layers.md)                             |
 | File/function size limits                                                          | [file-splitting-guide.md](file-splitting-guide.md)                                         |
-| Error handling                                                                     | [error-handling.md](error-handling.md)                                                     |
+| Validation + errors (4-category empty, write-gate quartet, schema, available_at)   | [validation-and-errors.md](validation-and-errors.md)                                       |
 | Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning) |
 | Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                             |
 | Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                         |
@@ -311,7 +311,7 @@ Every bootstrap `os.environ` access must have this comment immediately above it:
 ```python
 # Bootstrap phase: direct os.environ access is intentional here.
 # <One sentence explaining why UnifiedCloudConfig cannot be used yet.>
-# See: unified-trading-codex/06-coding-standards/README.md#bootstrap-phase-exception
+# See: unified-trading-pm/codex/06-coding-standards/README.md#bootstrap-phase-exception
 ```
 
 ### How to request a new exception
@@ -533,7 +533,7 @@ fixtures eliminate live cloud calls:
 | BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                    |
 | AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py` |
 | Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                          |
-| WebSocket feeds    | `MockWebSocketFeed`                       | `unified-market-interface/tests/fixtures/mock_ws_server.py`  |
+| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py`  |
 | Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                               |
 | Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                            |
 | Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                   |
@@ -710,7 +710,7 @@ fixtures eliminate live cloud calls:
 | BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                    |
 | AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py` |
 | Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                          |
-| WebSocket feeds    | `MockWebSocketFeed`                       | `unified-market-interface/tests/fixtures/mock_ws_server.py`  |
+| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py`  |
 | Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                               |
 | Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                            |
 | Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                   |

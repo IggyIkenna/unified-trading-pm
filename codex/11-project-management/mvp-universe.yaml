@@ -239,8 +239,8 @@ services:
       date)"
     - "Create sharding.risk-and-exposure-service.yaml (likely category\xD7venue\xD7\
       date)"
-    - Create unified-trading-codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
-    - Create unified-trading-codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
+    - Create unified-trading-pm/codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
+    - Create unified-trading-pm/codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
 conflicts:
   - venue: ASTER
     category: CEFI
@@ -351,9 +351,9 @@ maintenance:
   related_documents:
     - deployment-service/configs/venues.yaml (available data)
     - deployment-service/configs/expected_start_dates.yaml (data availability)
-    - unified-trading-codex/10-audit/ssot-reference-mapping.md (SSOT hierarchy)
-    - unified-trading-codex/11-project-management/service-registry.yaml (service metadata)
-    - unified-trading-codex/10-audit/alignment-resolution-decisions.yaml (conflict resolutions)
+    - unified-trading-pm/codex/10-audit/ssot-reference-mapping.md (SSOT hierarchy)
+    - unified-trading-pm/codex/11-project-management/service-registry.yaml (service metadata)
+    - unified-trading-pm/codex/10-audit/alignment-resolution-decisions.yaml (conflict resolutions)
 architectural_changes:
   expected_start_dates_migration:
     current_location: deployment-service/configs/expected_start_dates.yaml
@@ -380,8 +380,8 @@ architectural_changes:
         venue\xD7date)"
       - "Create sharding.risk-and-exposure-service.yaml (likely category\xD7venue\xD7\
         date)"
-      - Create unified-trading-codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
-      - Create unified-trading-codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
+      - Create unified-trading-pm/codex/10-audit/repos/position-balance-monitor-service.yaml (codex v3.0 schema)
+      - Create unified-trading-pm/codex/10-audit/repos/risk-and-exposure-service.yaml (codex v3.0 schema)
       - Create data-catalogue.position-balance-monitor-service.yaml
       - Create data-catalogue.risk-and-exposure-service.yaml
     rationale:
@@ -433,7 +433,7 @@ service_code_adjustments:
       - market-tick-data-service/adapters/databento_adapter.py
       - market-tick-data-service/adapters/tardis_adapter.py
       - market-data-processing-service/config.py (if it filters data types)
-      - unified-trading-codex/02-data/data-types.md (clarify per-category usage)
+      - unified-trading-pm/codex/02-data/data-types.md (clarify per-category usage)
     priority: P1-high (correct orderbook depth critical for execution quality)
   defi_uniswap_v2:
     service: instruments-service, features-*-service

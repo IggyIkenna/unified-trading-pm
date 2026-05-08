@@ -375,7 +375,7 @@ The template is referenced by this document and by the repo-level `scripts/setup
 
 ```bash
 # SSOT: unified-trading-pm/scripts/setup.sh
-# Codex: unified-trading-codex/06-coding-standards/setup-standards.md
+# Codex: unified-trading-pm/codex/06-coding-standards/setup-standards.md
 ```
 
 ---

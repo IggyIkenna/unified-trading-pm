@@ -164,7 +164,7 @@ def test_tardis_trade_validates():
 
 | Consumer                                                        | unified-api-contracts Dep | SDK Deps (if any)              | check_sdk_version_alignment |
 | --------------------------------------------------------------- | ------------------------- | ------------------------------ | --------------------------- |
-| unified-market-interface                                        | >=1.1.0                   | databento, tardis-client, ccxt | Required                    |
+| market-tick-data-service/market_tick_data_service/market_interface                                        | >=1.1.0                   | databento, tardis-client, ccxt | Required                    |
 | execution-service (formerly unified-trade-execution-interface)  | >=1.0.0,<2.0.0            | ccxt, ib_insync                | Required                    |
 | instruments-service (formerly unified-reference-data-interface) | >=0.1.0                   | ccxt                           | Required                    |
 | unified-cloud-interface                                         | >=1.0.0,<2.0.0            | —                              | Optional                    |
@@ -192,7 +192,7 @@ def test_tardis_trade_validates():
 See `05-infrastructure/unified-libraries/archive/LIBRARY-DEPENDENCY-MATRIX.md` for the archived full list. Key
 consumers:
 
-- **unified-market-interface** — market data adapters (Tardis, Databento, Binance, CCXT)
+- **market-tick-data-service/market_tick_data_service/market_interface** — market data adapters (Tardis, Databento, Binance, CCXT)
 - **execution-service (formerly unified-trade-execution-interface)** — order execution (Binance, OKX, Bybit, IBKR)
 - **instruments-service (formerly unified-reference-data-interface)** — instruments, CCXT
 - **unified-cloud-interface** — GCP/AWS SDK schemas

@@ -18,7 +18,7 @@
 #   - CBOE (start: 2020-01-01)
 #   - NYSE (start: 2020-01-01)
 #
-# See: unified-trading-codex/11-project-management/mvp-universe.yaml
+# See: unified-trading-pm/codex/11-project-management/mvp-universe.yaml
 # ==============================================================================
 
 epic_id: tradfi
@@ -71,7 +71,7 @@ required_repos:
     min_br_stage: na
     asset_group: core
 
-  - repo: unified-market-interface
+  - repo: market-tick-data-service/market_tick_data_service/market_interface
     arch_tier: library-t2
     min_stage: cr5
     min_br_stage: na

@@ -135,7 +135,7 @@ A repo's version reaches `1.0.0` ONLY when ALL of these are verified AND user gi
 ### Automated validators
 
 Validator IDs in `code_audit_items` (COD-01..REGULATORY-04) map to scripts in
-`unified-trading-codex/scripts/validators/`. Run validators to auto-populate audit item statuses.
+`unified-trading-pm/codex/scripts/validators/`. Run validators to auto-populate audit item statuses.
 
 ---
 

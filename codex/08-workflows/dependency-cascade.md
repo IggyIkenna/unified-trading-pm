@@ -126,7 +126,7 @@ Repos can pin to old versions while fixing code:
 
 ```json
 "dependency_caps": {
-  "unified-market-interface": "<0.3.0"
+  "market-tick-data-service/market_tick_data_service/market_interface": "<0.3.0"
 }
 ```
 

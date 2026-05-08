@@ -18,7 +18,7 @@
 #   - pytest, pytest-xdist, pytest-cov
 #   - ruff==0.15.0
 #
-# Codex: unified-trading-codex/06-coding-standards/
+# Codex: unified-trading-pm/codex/06-coding-standards/
 
 set -e
 
@@ -416,7 +416,7 @@ log_section ""
 
 if [[ $CODEX_VIOLATIONS -gt 0 ]]; then
     log_fail "QUALITY GATES FAILED - Fix $CODEX_VIOLATIONS codex violations before pushing"
-    log_warn "See: unified-trading-codex/06-coding-standards/README.md"
+    log_warn "See: unified-trading-pm/codex/06-coding-standards/README.md"
     exit 1
 fi
 

@@ -160,7 +160,7 @@
   <text x="1220" y="502" class="small">- Direct dependency declared in ml-inference pyproject.</text>
 
   <text x="1220" y="551" class="warn">V5: UTS optional extras include Tier-2 libs + stale naming</text>
-  <text x="1220" y="575" class="small">- split-libraries includes unified-market-interface and unified-order-interface.</text>
+  <text x="1220" y="575" class="small">- split-libraries includes market-tick-data-service/market_tick_data_service/market_interface and unified-order-interface.</text>
 
   <text x="1220" y="624" class="warn">Additional drift:</text>
   <text x="1220" y="648" class="small">- market-tick-data-service � instruments-service</text>

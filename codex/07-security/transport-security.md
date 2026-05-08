@@ -5,7 +5,7 @@ scope: [engineer, admin]
 # Transport Security
 
 **SSOT:** This document is the canonical reference for transport security decisions in the unified trading system.
-**Registered in:** `unified-trading-codex/00-SSOT-INDEX.md`
+**Registered in:** `unified-trading-pm/codex/00-SSOT-INDEX.md`
 
 ---
 

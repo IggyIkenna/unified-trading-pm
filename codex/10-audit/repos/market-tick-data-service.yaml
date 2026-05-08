@@ -1,5 +1,5 @@
 # Repo Readiness Checklist v3.0 - market-tick-data-service
-# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Schema: unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 # Generated: 2026-03-11
 
 schema_version: "3.0"
@@ -45,7 +45,7 @@ code_readiness:
       # - unified-config-interface
       # - unified-trading-library
       # - unified-domain-client
-      # - unified-market-interface
+      # - market-tick-data-service/market_tick_data_service/market_interface
       # - unified-api-contracts
       # NOTE: unified-sports-execution-interface eliminated (2026-03-26); now in execution-service
     manifest_deps_missing:
@@ -54,7 +54,7 @@ code_readiness:
       - unified-config-interface
       - unified-trading-library
       - unified-domain-client
-      - unified-market-interface
+      - market-tick-data-service/market_tick_data_service/market_interface
       - unified-api-contracts
     evidence: ""
     notes: ""

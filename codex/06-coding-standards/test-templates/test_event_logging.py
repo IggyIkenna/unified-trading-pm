@@ -99,7 +99,7 @@ def test_required_common_events_exist(all_event_markers: set[str]) -> None:
         pytest.skip("No event markers found in source — check service directory")
     missing = set(REQUIRED_COMMON_EVENTS) - all_event_markers
     assert not missing, (
-        f"Missing required common events: {sorted(missing)}\nSee: unified-trading-codex/06-coding-standards/testing.md"
+        f"Missing required common events: {sorted(missing)}\nSee: unified-trading-pm/codex/06-coding-standards/testing.md"
     )
 
 
@@ -114,7 +114,7 @@ def test_service_specific_events_exist(all_event_markers: set[str]) -> None:
     missing = set(SERVICE_SPECIFIC_EVENTS[name]) - all_event_markers
     assert not missing, (
         f"Missing service-specific events for '{name}': {sorted(missing)}\n"
-        "See: unified-trading-codex/06-coding-standards/testing.md"
+        "See: unified-trading-pm/codex/06-coding-standards/testing.md"
     )
 
 
@@ -186,5 +186,5 @@ def test_error_events_exist(all_event_markers: set[str]) -> None:
     found = error_events & all_event_markers
     assert found, (
         f"No error-path events found. At least one of {sorted(error_events)} must be emitted.\n"
-        "See: unified-trading-codex/06-coding-standards/testing.md"
+        "See: unified-trading-pm/codex/06-coding-standards/testing.md"
     )

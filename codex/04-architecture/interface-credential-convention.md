@@ -20,7 +20,7 @@ NOTE: UTEI (unified-trade-execution-interface), UDEI (unified-defi-execution-int
 (ml/ sub-package). UDC (unified-domain-client) merged into **unified-trading-library** (domain_client/ sub-package).
 USRI (unified-sports-reference-interface) merged into **unified-reference-data-interface** (sports/ sub-package).
 unified-feature-orchestration-library merged into **unified-trading-library** (feature_service_base/ sub-package).
-unified-feature-calculator-library merged into **unified-trading-library** (feature_calculator/ sub-package).
+unified-trading-library merged into **unified-trading-library** (feature_calculator/ sub-package).
 execution-algo-library merged into **execution-service** (algo_library/ sub-package). matching-engine-library merged
 into **execution-service** (matching_engine/ sub-package).
 

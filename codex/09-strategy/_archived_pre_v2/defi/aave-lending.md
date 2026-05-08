@@ -501,7 +501,7 @@ See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_lending.py`
 - **Config schema:** `strategy-service/docs/STRATEGY_MODES.md`
 - **Aave connector:** `execution-service/protocols/aave.py`
-- **Aave positions:** `unified-market-interface/adapters/defi/aave_positions.py`
+- **Aave positions:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py`
 - **Settlement:** `strategy-service/strategy_service/engine/core/settlement_service.py`
 - **PnL calculator:** `strategy-service/strategy_service/engine/core/pnl_calculator.py`
 - **UAC token registry:** `unified-api-contracts/registry/` (lending basket universe)

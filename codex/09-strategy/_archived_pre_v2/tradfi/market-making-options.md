@@ -149,6 +149,6 @@ Options MM is the MOST latency-sensitive strategy due to adverse selection risk 
 ## References
 
 - **Implementation:** TBD — options MM not yet implemented
-- **Deribit adapter:** `unified-market-interface/adapters/deribit_execution.py`
+- **Deribit adapter:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_execution.py`
 - **Greeks schemas:** `unified-api-contracts/canonical/domain/derivatives/`
 - **Hard rules:** [config-architecture.md](../cross-cutting/config-architecture.md)

@@ -1,5 +1,5 @@
 # Repo Readiness Checklist v3.0 - features-sports-service
-# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Schema: unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml
 # Generated: 2026-03-11
 
 schema_version: "3.0"
@@ -45,7 +45,7 @@ code_readiness:
       # - unified-config-interface
       # - unified-trading-library
       # - unified-cloud-interface
-      # - unified-market-interface
+      # - market-tick-data-service/market_tick_data_service/market_interface
       # - unified-feature-calculator
     manifest_deps_missing:
       - unified-trading-library
@@ -53,7 +53,7 @@ code_readiness:
       - unified-config-interface
       - unified-trading-library
       - unified-cloud-interface
-      - unified-market-interface
+      - market-tick-data-service/market_tick_data_service/market_interface
       - unified-feature-calculator
     evidence: ""
     notes: ""

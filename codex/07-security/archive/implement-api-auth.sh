@@ -105,7 +105,7 @@ for service in "${SERVICES[@]}"; do
     echo ""
     echo "🔍 Checking $service..."
 
-    # Resolve workspace root from script location (unified-trading-codex/07-security/)
+    # Resolve workspace root from script location (unified-trading-pm/codex/07-security/)
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
     service_dir="$WORKSPACE_ROOT/$service"

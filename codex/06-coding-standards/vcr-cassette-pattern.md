@@ -32,7 +32,7 @@ python scripts/record_vcr_cassettes.py --venue binance --endpoint spot_klines
 Cassettes are replayed in the owning interface repo, with `unified-api-contracts` as a dependency:
 
 ```python
-# unified-market-interface/tests/integration/test_binance_adapter.py
+# market-tick-data-service/market_tick_data_service/market_interface/tests/integration/test_binance_adapter.py
 import pytest
 import vcr
 
@@ -48,7 +48,7 @@ def test_binance_kline_normalization():
 ## Cassette Ownership
 
 - **Definition + storage:** `unified-api-contracts` (external schemas, venue contracts)
-- **Execution:** owning interface repo (unified-market-interface, unified-cloud-interface, instruments-service (formerly
+- **Execution:** owning interface repo (market-tick-data-service/market_tick_data_service/market_interface, unified-cloud-interface, instruments-service (formerly
   unified-reference-data-interface))
 - **Never:** run VCR tests standalone from `unified-api-contracts` — the interface repo provides the test runner and
   normalization layer under test

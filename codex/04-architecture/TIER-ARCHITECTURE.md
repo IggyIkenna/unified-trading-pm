@@ -44,9 +44,9 @@ TIER 1 — Shared Infrastructure (trading-aware cloud services)
     GracefulShutdownHandler
 
 TIER 2 — Domain/Market Interfaces (protocols + schemas + connectivity, no cloud storage I/O)
-  unified-market-interface (UMI)              market data schemas + venue WS adapters + BaseWebSocketClient + VenueRateLimiter
+  market-tick-data-service/market_tick_data_service/market_interface (UMI)              market data schemas + venue WS adapters + BaseWebSocketClient + VenueRateLimiter
   unified-ml-interface (UML)                  ML model protocols + prediction schemas
-  unified-feature-calculator-library (UFC)    feature schemas + FeatureCalculatorRegistry + BaseFeatureService
+  unified-trading-library (UFC)    feature schemas + FeatureCalculatorRegistry + BaseFeatureService
 
   NOTE: The following T2 interface repos have been merged into their respective services (no longer exist as standalone repos):
   - unified-trade-execution-interface (UTEI) → execution-service (CeFi order/fill adapters, OMS, OrderTracker, SmartOrderRouter)
@@ -171,7 +171,7 @@ String `arch_tier` values (e.g., `"T0"`, `"tier-0"`) are deprecated; all repos s
 
 ## Known Tier Violations
 
-**Known T2→T3 violation:** `unified-market-interface` (UMI, T2) currently imports from `unified-domain-client` (UDC,
+**Known T2→T3 violation:** `market-tick-data-service/market_tick_data_service/market_interface` (UMI, T2) currently imports from `unified-domain-client` (UDC,
 T3). Task: `cohesion-umi-udc-dep-violation` in `phase2_library_tier_hardening.plan.md`. Resolution: move whatever UMI
 imports from UDC into a T1 library or a shared T0 protocol. This violation must be fixed in Phase 2 T2 hardening step
 before Phase 3 begins.

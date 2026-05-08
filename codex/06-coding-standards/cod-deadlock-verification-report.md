@@ -222,7 +222,7 @@ Cannot merge ANY until ALL 50 fixed simultaneously
 
 ```bash
 # Step 1: Generate COD-SIZE issues
-cd unified-trading-codex/11-project-management/github-integration
+cd unified-trading-pm/codex/11-project-management/github-integration
 python scripts/core/05-check-file-size-cods.py --org IggyIkenna --repos instruments-service
 
 # Output: 50 issues created, e.g.:
@@ -337,7 +337,7 @@ git checkout -- <service>_service/config.py
 1. **Generate COD issues**:
 
    ```bash
-   cd unified-trading-codex/11-project-management/github-integration
+   cd unified-trading-pm/codex/11-project-management/github-integration
    python scripts/core/05-check-file-size-cods.py \
        --org IggyIkenna \
        --repos instruments-service execution-service strategy-service \
@@ -374,7 +374,7 @@ If adding a new service without git-aware mode:
 1. Copy snippet from codex:
 
    ```bash
-   cat unified-trading-codex/06-coding-standards/quality-gates-git-aware-snippet.sh
+   cat unified-trading-pm/codex/06-coding-standards/quality-gates-git-aware-snippet.sh
    ```
 
 2. Insert after `SOURCE_DIRS` definition in `scripts/quality-gates.sh`

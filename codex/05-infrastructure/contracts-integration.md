@@ -22,7 +22,7 @@ Complete guide for using `unified-api-contracts` (external API schemas + VCR moc
 One contract repo covers both surfaces. **unified-api-contracts (AC)** holds external and normalised contracts
 (`unified_api_contracts.canonical`, `unified_api_contracts.external`); internal contracts live in the
 `unified_api_contracts.internal` subpackage of the same repo. VCR recording and contract-vs-reality validation are
-performed in the **active service repos** (unified-market-interface, execution-service, instruments-service,
+performed in the **active service repos** (market-tick-data-service/market_tick_data_service/market_interface, execution-service, instruments-service,
 position-balance-monitor-service, unified-cloud-interface) in their integration tests — not in AC. NOTE:
 unified-trade-execution-interface, unified-sports-execution-interface, unified-reference-data-interface,
 unified-position-interface, and unified-defi-execution-interface have been merged into their respective services.

@@ -51,7 +51,7 @@ coverage minimum; quality-gates.sh --unit-only pass
 | pnl-attribution-service            | 37.2%    | -32.8% |
 | client-reporting-api               | 32.6%    | -37.4% |
 | unified-trading-library            | 26.2%    | -43.8% |
-| unified-feature-calculator-library | 0.0%     | -70.0% |
+| unified-trading-library | 0.0%     | -70.0% |
 
 ### Error (pytest fails before coverage)
 
@@ -59,7 +59,7 @@ alerting-service, deployment-api, deployment-service, execution-results-api, exe
 features-delta-one-service, features-multi-timeframe-service, features-volatility-service, instruments-service,
 market-data-processing-service, market-tick-data-service, matching-engine-library, ml-inference-service,
 ml-training-service, position-balance-monitor-service, risk-and-exposure-service, strategy-service,
-unified-api-contracts, unified-config-interface, unified-market-interface, instruments-service, execution-service
+unified-api-contracts, unified-config-interface, market-tick-data-service/market_tick_data_service/market_interface, instruments-service, execution-service
 
 ---
 

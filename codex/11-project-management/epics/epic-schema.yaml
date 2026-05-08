@@ -2,7 +2,7 @@
 # Epic Readiness Schema — Legend & Field Definitions
 # ==============================================================================
 #
-# SSOT: unified-trading-codex/11-project-management/epics/
+# SSOT: unified-trading-pm/codex/11-project-management/epics/
 # Read by: unified-trading-pm/scripts/compute-epic-readiness.py
 # Displayed by: deployment-ui EpicReadinessView via deployment-api /api/epics
 #

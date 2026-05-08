@@ -19,7 +19,7 @@ creating or moving files in either repo.
 | Audience                           | Any developer or agent joining the project | Current active developers and agents         |
 
 **Path rule (both repos):** All file paths in documentation must be workspace-relative from the repo root. Example:
-`unified-trading-codex/scripts/validate-alignment.py`, not `/Users/...` or `$HOME/...`.
+`unified-trading-pm/codex/scripts/validate-alignment.py`, not `/Users/...` or `$HOME/...`.
 
 ---
 
@@ -34,20 +34,20 @@ When placing a document, answer these questions in order:
 **Q2: Is it an Architecture Decision Record — a permanent record of WHY a choice was made (options considered,
 rationale, outcome)?**
 
-- YES → `unified-trading-codex/11-project-management/decisions/`
+- YES → `unified-trading-pm/codex/11-project-management/decisions/`
 
 **Q3: Is it a process standard that ALL repos must follow (e.g., how to define backlog lanes, how to run audits, how to
 do dual-cloud readiness)?**
 
-- YES → `unified-trading-codex/11-project-management/` or `unified-trading-codex/06-coding-standards/`
+- YES → `unified-trading-pm/codex/11-project-management/` or `unified-trading-pm/codex/06-coding-standards/`
 
 **Q4: Is it a scope specification — what is being built, success criteria, ownership (not the execution task list)?**
 
-- YES → `unified-trading-codex/11-project-management/epics/`
+- YES → `unified-trading-pm/codex/11-project-management/epics/`
 
 **Q5: Is it an agent execution procedure (how to task agents, how to recover from failures, how to do human review)?**
 
-- YES → `unified-trading-codex/12-agent-workflow/`
+- YES → `unified-trading-pm/codex/12-agent-workflow/`
 
 **Q6: Is it a copy-paste operational runbook (shell commands, environment-specific steps)?**
 
@@ -100,7 +100,7 @@ See: unified-trading-pm/[path] (PM — operational content)
 **PM → Codex (pointing to the authoritative standard):**
 
 ```
-Standard: unified-trading-codex/[section]/[file]
+Standard: unified-trading-pm/codex/[section]/[file]
 ```
 
 **Cursor rule referencing a codex standard:**

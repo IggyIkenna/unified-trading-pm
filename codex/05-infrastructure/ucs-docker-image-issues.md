@@ -28,7 +28,7 @@ services); all use UCS base image with manual workaround.
 - ❌ No automatic Cloud Build triggered
 - ✅ Manual trigger succeeds: `gcloud builds triggers run unified-trading-services-build --branch=main`
 - ✅ Image pushed to:
-  `asia-northeast1-docker.pkg.dev/test-project/unified-trading-services/unified-trading-services:latest`
+  `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-services/unified-trading-services:latest`
 
 **Root Cause (Under Investigation):**
 
@@ -60,7 +60,7 @@ gcloud builds triggers run unified-trading-services-build \
 ```bash
 # Check trigger config
 gcloud builds triggers describe unified-trading-services-build \
-  --project=test-project \
+  --project=central-element-323112 \
   --region=asia-northeast1
 
 # List recent builds
