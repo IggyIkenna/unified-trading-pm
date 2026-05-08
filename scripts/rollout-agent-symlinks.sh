@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 #
-# rollout-agent-symlinks.sh — Commit CLAUDE.md symlink to ALL repos (AGENTS.md = ephemeral)
+# rollout-agent-symlinks.sh — Commit CLAUDE.md + SUB_AGENT_MANDATORY_RULES.md symlinks to ALL repos
 #
 # For each repo in workspace-manifest.json (including UI repos), creates relative symlinks:
-#   .claude/CLAUDE.md     → ../../unified-trading-pm/cursor-configs/CLAUDE.md
+#   .claude/CLAUDE.md                    → ../../unified-trading-pm/cursor-configs/CLAUDE.md
+#   .claude/SUB_AGENT_MANDATORY_RULES.md → ../../unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 #   AGENTS.md: ephemeral — copied by setup-workspace, NOT symlinked
+#
+# NOTE: SUB_AGENT_MANDATORY_RULES.md in cursor-configs/ is itself a symlink to CLAUDE.md
+# (single SSOT — sub-agents need everything CLAUDE.md has, no content duplication / drift).
+# The per-repo .claude/SUB_AGENT_MANDATORY_RULES.md symlink resolves through both hops to
+# CLAUDE.md content, so existing references like "read SUB_AGENT_MANDATORY_RULES.md" continue
+# to work at the canonical path while delivering the full workspace-rules surface.
 #
 # NOTE: .cursor/rules and .cursorrules are intentionally NOT committed as symlinks.
 # Committing them to every repo causes Cursor IDE to read 60+ rule sets simultaneously.
@@ -127,6 +134,7 @@ while IFS= read -r repo; do
     if $DRY_RUN; then
         echo "DRY-RUN: $repo"
         echo "  .claude/CLAUDE.md -> ../../unified-trading-pm/cursor-configs/CLAUDE.md"
+        echo "  .claude/SUB_AGENT_MANDATORY_RULES.md -> ../../unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md"
         $_is_python_repo && echo "  .cursor/scripts/check-import-patterns.py -> ../../../unified-trading-pm/scripts/validation/check-import-patterns.py"
         echo "  (cursor rules: ephemeral copy at GHA runtime, NOT committed)"
         PASS=$((PASS + 1))
@@ -136,6 +144,12 @@ while IFS= read -r repo; do
     # ── CREATE SYMLINKS ────────────────────────────────────────────────────────
     # .claude/CLAUDE.md  (relative: from .claude/ dir → PM/cursor-configs/CLAUDE.md)
     ensure_symlink "$repo_dir/.claude/CLAUDE.md" "../../unified-trading-pm/cursor-configs/CLAUDE.md" false
+
+    # .claude/SUB_AGENT_MANDATORY_RULES.md  (PM file is itself a symlink to CLAUDE.md;
+    # this per-repo link resolves through both hops to CLAUDE.md content, so sub-agents
+    # reading SUB_AGENT_MANDATORY_RULES.md at the canonical path get the full
+    # workspace-rules surface without content duplication or drift).
+    ensure_symlink "$repo_dir/.claude/SUB_AGENT_MANDATORY_RULES.md" "../../unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md" false
 
     # .cursor/scripts/check-import-patterns.py (Python repos only)
     # relative: from .cursor/scripts/ → ../../../unified-trading-pm/scripts/validation/check-import-patterns.py
@@ -169,7 +183,7 @@ while IFS= read -r repo; do
     (
         cd "$repo_dir"
 
-        git add ".claude/CLAUDE.md" 2>/dev/null || true
+        git add ".claude/CLAUDE.md" ".claude/SUB_AGENT_MANDATORY_RULES.md" 2>/dev/null || true
         # Stage check-import-patterns.py symlink for Python repos
         $_is_python_repo && git add ".cursor/scripts/check-import-patterns.py" 2>/dev/null || true
         # If cursor rule symlinks were removed, stage their deletion
