@@ -174,3 +174,104 @@ All three bugs resolved. Status: ✅ RESOLVED.
 **Re-launch readiness**
 - After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`)
   the lending-indices VM can be re-launched. Operator-owned step.
+
+---
+
+## Open questions
+
+### Q1 — [lending-indices-relaunch-tab, 2026-05-08 06:35 UTC] — Bug 1 NOT validated by Tab 9 relaunch; UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVEV3")]` likely wrong
+**Status**: 🟡 BLOCKED — needs operator decision before flipping Bug 1 / Bug 3 to ✅ VALIDATED
+
+Tab 9 relaunched the VM as `mtds-lending-indices-20260508-114519` (range
+`2022-01-01..2026-05-07`, launched 06:15 UTC, STARTED 06:18 UTC). At T+17min
+(processed dates 2022-01-01 → 2022-04-12, 1326 manifest rows in per-VM shard
+`gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260508-114519.parquet`)
+the per-(venue, chain) outcome is:
+
+| venue / chain         | captured | empty_confirmed | error_reason          | verdict                                |
+| --------------------- | -------- | --------------- | --------------------- | -------------------------------------- |
+| AAVEV3 / ARBITRUM     | 28       | 74              | (mix)                 | ✅ working post-2022-03-16 launch       |
+| AAVEV3 / AVALANCHE    | 29       | 73              | (mix)                 | ✅ working post-2022-03-12              |
+| AAVEV3 / OPTIMISM     | 29       | 73              | (mix)                 | ✅ working post-2022-03-15              |
+| AAVEV3 / POLYGON      | 31       | 71              | (mix)                 | ✅ working post-2022-03-12              |
+| **AAVEV3 / ETHEREUM** | **0**    | **102**         | `SOURCE_RETURNED_ZERO`| ❌ **Bug 1 reproducer still fires**     |
+| AAVEV3 / BASE/LINEA/BSC | 0      | 102 each        | `SOURCE_RETURNED_ZERO`| pre-launch (UAC dates 2023-08-09 / 2024-09-26 / 2023-04-06) |
+| COMPOUNDV3 / all 4    | 0        | 102 each        | `SOURCE_RETURNED_ZERO`| pre-launch (UAC ETH=2022-08-25, ARB=2023-04-13, BASE=2023-08-26, OPT=2024-02-15) |
+| SPARK / ETHEREUM      | 0        | 102             | `SOURCE_RETURNED_ZERO`| pre-launch (Spark mainnet ~2023-05-09)  |
+
+**Root cause traced via run.log** (line `06:28:03,338-3,602`):
+1. `_query_and_parse` cascade for `aave_v3` runs in order `aave_v3_native → messari_lending` per Tab 5's fix.
+2. **`aave_v3_native` schema succeeds (no schema error) but returns 0 rows** for AAVEV3-ETHEREUM 2022-03-14.
+   `non_schema_attempts` increments to 1.
+3. `messari_lending` raises `SubgraphSchemaError` (`Type Query has no field marketDailySnapshots`); caught,
+   `last_schema_error` set.
+4. End of cascade: `non_schema_attempts == 1 (≠ 0)` → does NOT re-raise → returns empty df.
+5. Outer `process()` sees `count=0` → routes to `record_empty(reason="SOURCE_RETURNED_ZERO")`.
+
+So the cascade correctly avoids the silent-zero **only when EVERY variant raises**. When at least one variant
+runs without a schema error AND legitimately returns 0 rows, the cascade falls through to `record_empty` —
+which is the SAME OUTCOME as pre-fix. Bug 1's behaviour for AAVE V3 ETHEREUM is unchanged.
+
+**Why does `aave_v3_native` return 0 rows for AAVEV3-ETHEREUM 2022-03-14 when the same query returns rows for
+ARBITRUM/AVALANCHE/OPTIMISM/POLYGON the same day?** Most likely the UAC entry is wrong:
+
+```python
+# unified_api_contracts/registry/chain_env.py:146
+("ETHEREUM", "AAVEV3"): "2022-03-14",   # ← suspect; AAVE V3 Ethereum
+                                        #   mainnet was 2023-01-27 per
+                                        #   public record (Tab 5 DONE-block
+                                        #   itself notes "from 2023-01-27
+                                        #   (legacy fallback)")
+```
+
+If AAVE V3 was actually deployed on Ethereum 2023-01-27 (not 2022-03-14), then 2022-03-14 → 2023-01-26 IS
+genuinely pre-deployment — the AAVE V3 native subgraph correctly returns 0 rows, and the silent-zero outcome
+is the correct semantic. The "Bug 1 silent zero" diagnostic in the issue body was misframed: the previous
+failed VM's 343 days of `empty_confirmed` for AAVE V3 ETH covered the entire pre-deployment window plus
+~12 days post-deployment, but the per-day breakdown was never inspected so the pre/post boundary was missed.
+
+**Tab 9 cannot resolve this without operator direction**; the implications cross UAC + instruments-service +
+the issue's Bug 1 framing. See "Recommended decision" below.
+
+**Pending validation** (VM still running at ~30 days/min × 13 shards):
+- AAVE V3 ETHEREUM dates from 2023-01-27 onward (~T+45min). If captured rows appear → confirms UAC date is
+  wrong but cascade is otherwise healthy. If still 0 → cascade has a deeper bug for AAVEV3-ETHEREUM specifically.
+- COMPOUND V3 ETHEREUM dates from 2022-08-25 (~T+27min). If captured → Bug 2 routing pending the all-fail case.
+  COMPOUND V3 ARB/BASE/OPT post-launch dates (2023+) — once we reach those the all-fail case can be tested
+  (the issue doc said Compound V3 multi-chain Messari schema fails on all variants).
+
+**Adjacent finding — Bug 3 reason taxonomy mis-routing (writegate Phase 2.E violation, fix-able after Bug 1
+SSOT call):** Per
+[`unified-trading-pm/cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) § "Reason taxonomy (codified
+2026-05-07)": pre-launch / pre-genesis dates should be `record_expected_empty(reason=EXPECTED_PRE_GENESIS_CHAIN)`
+or `EXPECTED_INSTRUMENT_NOT_LISTED`, NOT `SOURCE_RETURNED_ZERO`. Currently every pre-launch (chain, date)
+combination in this VM is being recorded as `SOURCE_RETURNED_ZERO` (because the floor-date check enumerates
+every date and the subgraph genuinely returns 0). The lending-indices handler needs a pre-cascade short-circuit:
+if `target_date < get_protocol_floor_date(chain, protocol)` → `record_expected_empty(reason="EXPECTED_PRE_GENESIS_CHAIN")`
+and skip the subgraph round-trip entirely. This is correct per the writegate-honest-coverage SSOT and would
+also save Graph API calls.
+
+**Verdict per Tab 9 spawn-prompt done-definition**:
+- [ ] AAVE V3 ETH writes captured rows — **NOT YET** (waiting for 2023-01-27+ dates; UAC suspect).
+- [ ] Compound V3 writes captured rows — **NOT YET** (waiting for 2022-08-25+ dates).
+- [ ] Pre-launch-date dates correctly `EXPECTED_PRE_GENESIS_CHAIN` — **NO**, all using `SOURCE_RETURNED_ZERO`
+  (writegate Phase 2.E violation; Bug 3 fix is incomplete on the routing side).
+
+**Tab 9 will NOT mark Bug 1 / Bug 2 / Bug 3 as validated** per spawn-prompt rule:
+> "If ANY reproducer still silent-zeros: write a 🟡 BLOCKED entry in the issue doc's `## Open questions`
+> section + ping main; do NOT mark fixes as validated."
+
+VM is left running (working chains ARB/AVAX/OPT/POLYGON are producing valid captured rows; stopping wastes
+that work). Operator can decide stop-vs-continue.
+
+**Recommended decision** (operator):
+1. **UAC SSOT correction** (P0): probe the AAVE V3 ETH subgraph for any date 2022-03-14 → 2023-01-26 — if
+   `reserveParamsHistoryItems` is empty for the entire range, correct
+   `unified-api-contracts/unified_api_contracts/registry/chain_env.py:146` from `"2022-03-14"` → `"2023-01-27"`.
+2. **Bug 3 routing fix** (P0): add pre-floor-date short-circuit to `lending_indices_handler.process()`
+   that emits `record_expected_empty(reason="EXPECTED_PRE_GENESIS_CHAIN")` instead of running the subgraph.
+3. **Bug 1 verdict**: if (1) confirms UAC was wrong, Bug 1 was a misdiagnosis — there was never silent-zero,
+   just pre-deployment. Update the issue doc's Bug 1 framing accordingly.
+4. **Bug 2 verdict**: defer until VM reaches Compound V3 multi-chain post-launch dates (~T+90min on this run).
+
+Owner suggestion: defi_master Fork 1 (lending-indices handler) + UAC chain_env.py SSOT.
