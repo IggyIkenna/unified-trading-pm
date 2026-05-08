@@ -128,29 +128,28 @@ Read these before making ANY code changes:
 - **Availability manifest v5 (honest-coverage)** — `ManifestWriter` writes proper shard columns (venue, chain,
   data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id,
   client_id, instruction_type) PLUS `capture_status` (4-state closed set: `captured` / `empty_confirmed` /
-  `attempted_failed` / **`expected_unattempted`** added 2026-05-07 evening per writegate Phase 3.D.5),
-  `error_reason`, `attempted_at`. Adapters MUST distinguish:
-  `record_captured(...)` for real-data writes; `record_empty(row_key=..., reason=<typed>)` for legitimately-zero
-  source responses (typed reason from `EMPTY_CONFIRMED_REASONS` REQUIRED — blank rejected loudly via
-  `LegacyBlankErrorReasonError` per UTL@68b3804a after the 2026-05-07 RED ALERT silent-fallback bug);
+  `attempted_failed` / **`expected_unattempted`** added 2026-05-07 evening per writegate Phase 3.D.5), `error_reason`,
+  `attempted_at`. Adapters MUST distinguish: `record_captured(...)` for real-data writes;
+  `record_empty(row_key=..., reason=<typed>)` for legitimately-zero source responses (typed reason from
+  `EMPTY_CONFIRMED_REASONS` REQUIRED — blank rejected loudly via `LegacyBlankErrorReasonError` per UTL@68b3804a after
+  the 2026-05-07 RED ALERT silent-fallback bug);
   `record_failed(row_key=..., error=classify_venue_error(exc), attempted_at=...)` for exceptions;
   `record_expected_unattempted(row_key=, attempted_at=)` for catalog-says-this-should-exist-but-not-fetched-yet
-  (pre-populated by v2 expected-universe enumerator from instruments-service catalog cross-product). **Never
-  overload `venue`** with non-venue data. **Asset-group-specific empty_confirmed legitimacy rule (operator
-  directive 2026-05-07 msg 6)**: sports / prediction CAN have empty_confirmed at instrument-day grain (no
-  fixtures today / no markets active is normal); cefi / defi / tradfi CANNOT — only venue-level rules
-  (HOLIDAY / WEEKEND / PRE_VENUE_LAUNCH / PRE_GENESIS_CHAIN / PARTIAL_HALF_DAY) make empty_confirmed legit.
-  Catalog-says-alive instrument-day with source-zero in cefi/defi/tradfi MUST flip to attempted_failed
-  (caught at write-side by the catalog-aware guard once Wave 3 wires the `instrument_catalog` reference at
-  MTDS adapter construction). **Two SSOTs for the manifest's expected universe**: UAC SSOTs
-  (`*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`) own the coarse
-  "is this `(asset_group, venue, day)` structurally possible" axis; instruments-service catalog owns the fine
-  "given alive, what instruments exist on this day" axis. Both layers write to the manifest; MTDS's
-  `record_captured` cleanly supersedes prior `expected_unattempted` rows by row_key. **Coverage % at every
-  drilldown level** = `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` —
-  denominator is the full universe (catalog × dates × data_types). SSOTs:
-  `codex/02-data/availability-manifest-and-data-status.md` (manifest schema + 4-state taxonomy);
-  `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § Phase 3.D.5 (full architecture).
+  (pre-populated by v2 expected-universe enumerator from instruments-service catalog cross-product). **Never overload
+  `venue`** with non-venue data. **Asset-group-specific empty_confirmed legitimacy rule (operator directive 2026-05-07
+  msg 6)**: sports / prediction CAN have empty_confirmed at instrument-day grain (no fixtures today / no markets active
+  is normal); cefi / defi / tradfi CANNOT — only venue-level rules (HOLIDAY / WEEKEND / PRE_VENUE_LAUNCH /
+  PRE_GENESIS_CHAIN / PARTIAL_HALF_DAY) make empty_confirmed legit. Catalog-says-alive instrument-day with source-zero
+  in cefi/defi/tradfi MUST flip to attempted_failed (caught at write-side by the catalog-aware guard once Wave 3 wires
+  the `instrument_catalog` reference at MTDS adapter construction). **Two SSOTs for the manifest's expected universe**:
+  UAC SSOTs (`*_LAUNCH_DATES` / `*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar`) own the coarse
+  "is this `(asset_group, venue, day)` structurally possible" axis; instruments-service catalog owns the fine "given
+  alive, what instruments exist on this day" axis. Both layers write to the manifest; MTDS's `record_captured` cleanly
+  supersedes prior `expected_unattempted` rows by row_key. **Coverage % at every drilldown level** =
+  `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe
+  (catalog × dates × data_types). SSOTs: `codex/02-data/availability-manifest-and-data-status.md` (manifest schema +
+  4-state taxonomy); `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § Phase 3.D.5 (full
+  architecture).
 - **Honest absence vs fake placeholders (CRITICAL — applies top-to-bottom across every service)** — when a service runs
   end-to-end, every output row must reflect REAL work OR a clearly-flagged honest gap. Three categories of "missing",
   each with a different action — wrong action = silent data corruption.
@@ -304,28 +303,27 @@ Read these before making ANY code changes:
 
 - **Four-category empty-output decision (every per-shard adapter — MDPS / MTDS / features-\* / instruments-service)** —
   Every condition that could produce an empty result resolves to ONE of: **A. Source returned 0 ticks for the requested
-  window** → `record_empty(row_key, reason=<typed>)` (honest absence; reason MUST be from
-  `EMPTY_CONFIRMED_REASONS` — blank rejected via `LegacyBlankErrorReasonError` per UTL@68b3804a); **B. Source returned
-  ticks; ALL fall outside the requested day after `interval_idx` filter** →
+  window** → `record_empty(row_key, reason=<typed>)` (honest absence; reason MUST be from `EMPTY_CONFIRMED_REASONS` —
+  blank rejected via `LegacyBlankErrorReasonError` per UTL@68b3804a); **B. Source returned ticks; ALL fall outside the
+  requested day after `interval_idx` filter** →
   `record_failed(UpstreamTimestampBiasError(observed_dates, expected_day, n_ticks))` (UPSTREAM BUG — partition
   mislabeled at MTDS write-time, source replay covered wrong window, OR clock-skew; paired upstream fix at MTDS
   `raw_tick_hive.py` partitioner-validation); **C. Rows in window but downstream calc dropped all rows due to
   NaN/malformed source fields** → `record_failed(MalformedTickFieldError(field, n_dropped, sample_values))`
   (data-quality bug worth diagnosing); **D. Source returned 0 BUT instruments-service catalog says the instrument was
-  ALIVE on the day AND day falls within venue market hours** (operator directive 2026-05-07 msg 8) →
-  **NEW**: write zero-activity bars (O=H=L=C=prior_LTP, volume=0, trade_count=0 — shape per data_type) and
-  `record_captured` with the real bar count. Captures the "tradeable but illiquid" semantic distinct from "missing"
-  — critical for cross-instrument analyses like volatility smiles where every strike must be visible. The catalog-
-  aware write-gate (writer-side guard, Wave 2 of Phase 3.D.5) drives the (A) vs (D) split: when `instrument_catalog`
-  is wired and reports the instrument alive, blank-zero-source-response gets routed to (D). Until the writer-guard
-  ships, adapters use the manifest classifier helper `classify_blank_reason_row` to apply the same logic at the
-  manifest level. **For sports / prediction the (D) bar shape uses prior bookmaker odds / prior market mid as
-  carry-forward**; for cefi / defi / tradfi it's prior trade LTP. NO silent NaN placeholder rows. The
-  `_create_empty_output()`-style placeholder method is **banned** from `base_adapter` and any equivalent base class.
-  Reference incidents: 2026-05-05 MDPS 1440 NaN OHLC bars per day per (venue, data_type); 2026-05-07 RED ALERT (5
-  CeFi VMs writing 96-100% empty rows with all blank reasons — bitfinex/bitget/kraken). Plan:
-  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A + Phase 3.D.5 (Waves 1, 2, 2.M shipped
-  2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
+  ALIVE on the day AND day falls within venue market hours** (operator directive 2026-05-07 msg 8) → **NEW**: write
+  zero-activity bars (O=H=L=C=prior_LTP, volume=0, trade_count=0 — shape per data_type) and `record_captured` with the
+  real bar count. Captures the "tradeable but illiquid" semantic distinct from "missing" — critical for cross-instrument
+  analyses like volatility smiles where every strike must be visible. The catalog- aware write-gate (writer-side guard,
+  Wave 2 of Phase 3.D.5) drives the (A) vs (D) split: when `instrument_catalog` is wired and reports the instrument
+  alive, blank-zero-source-response gets routed to (D). Until the writer-guard ships, adapters use the manifest
+  classifier helper `classify_blank_reason_row` to apply the same logic at the manifest level. **For sports / prediction
+  the (D) bar shape uses prior bookmaker odds / prior market mid as carry-forward**; for cefi / defi / tradfi it's prior
+  trade LTP. NO silent NaN placeholder rows. The `_create_empty_output()`-style placeholder method is **banned** from
+  `base_adapter` and any equivalent base class. Reference incidents: 2026-05-05 MDPS 1440 NaN OHLC bars per day per
+  (venue, data_type); 2026-05-07 RED ALERT (5 CeFi VMs writing 96-100% empty rows with all blank reasons —
+  bitfinex/bitget/kraken). Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A + Phase 3.D.5 (Waves
+  1, 2, 2.M shipped 2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
 
   **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
   discipline. The EXPRESSION of the categories in the manifest uses a structured `error_reason` taxonomy (closed set
@@ -1008,24 +1006,93 @@ This applies to every plan in `plans/active/` and every working session — tier
 even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
 matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
 
+## CI Verification After Every Push (HARD RULE)
+
+Every `git push` triggers remote CI on the affected repo. The repo's CI bot reports pass/fail to Telegram. **Anytime you
+commit and push, you MUST verify CI passed on the remote** — this is non-negotiable, applies to every repo, every push,
+every session.
+
+### The discipline
+
+1. **Push.** That's the trigger.
+2. **Set up a background CI watcher** — spin up a sub-agent OR set a `ScheduleWakeup` timer for ~3-5 min after push to
+   check `gh run list --branch <branch> --repo <owner>/<repo> --limit 5` (or equivalent) for the latest run's status.
+   While the watcher runs, you proceed with other work — no blocking.
+3. **On CI pass**: nothing more required.
+4. **On CI fail**:
+   - **Diagnose via remote logs first** — `gh run view <run-id> --log-failed --repo <owner>/<repo>`. The failure reason
+     lives on the remote, not in your local working tree.
+   - **Fix the root cause** in your code (or revert if your change is the cause and you can't fix immediately).
+   - **Run quality-gates locally if needed** to verify the fix — but only on the specific files YOU edited (per the
+     "only commit our own work" rule below). Avoid running QG over the whole repo if other agents have dirty files in
+     the working tree, since their dirties will pollute the QG signal.
+   - **Push again.** The CI watcher restarts.
+5. **CI failures are NOT issues to flag** — they're things to fix in real time. No issue doc, no plan annotation, no
+   "I'll get to it later." A red CI on `live-defi-rollout` blocks the workspace; fix immediately.
+6. **The CI bot's own emoji is misleading**: the bot reports `Conclusion: success` when message DELIVERY succeeded, even
+   if the underlying CI run FAILED. Read past the emoji to the body — `deployment-api is FAILING` means CI is failing
+   regardless of the bot's success tick on its own message.
+
+### The pre-requisite: only commit YOUR work
+
+This whole protocol depends on a clean signal — when CI fails, it must be reasonable to assume the failure is from YOUR
+commit, not from another agent's dirty files that got bundled into the staging set. Hence:
+
+- **Stage files explicitly by name** (`git add <file1> <file2>`) — never `git add .` or `git add -A`. Implements the
+  existing pre-commit-check rule but extends it: even if the dirty files would QG-pass, they're not yours and shouldn't
+  ride your commit.
+- **Never delete other agents' work from the local copy.** No `git reset --hard origin/<branch>`, no
+  `git checkout origin/<branch> -- .`, no mass-revert. Their unstaged + uncommitted work is their in-flight session;
+  stomping it loses real work and damages workspace trust.
+- **If you must stash to keep your staged set clean**:
+  `git stash push --keep-index -m "<other-agent>'s WIP staged-only commit"` before commit, `git stash pop` immediately
+  after. Other agents may want to commit their own work seconds after yours; leaving their hunks stashed for hours
+  blocks them.
+- **Local QG isn't the source of truth.** Remote CI on `live-defi-rollout` is. Local QG is a dev-time sanity check;
+  remote is the gate. Don't chase a green local QG by running on dirty trees that include foreign work — chase a green
+  remote CI on a commit that contains only YOUR files.
+
+### Why this matters
+
+- **Live = batch principle for CI**: every commit needs the same remote validation. Local-only verification skips the CI
+  safety net that catches platform-specific failures (Python version drift, missing deps in CI image, network- blocked
+  tests, etc.).
+- **VMs pull from `live-defi-rollout`**: a red CI on the branch can mean VMs that bounce mid-run pull broken code.
+  Catching CI failures in real-time prevents this.
+- **Parallel-agent regression detection**: if your push went green and a parallel agent's push immediately after went
+  red, the failure is theirs. Your CI watcher gives you the timestamp + signal to know it's not yours — no re-debugging
+  your own commit.
+- **Trust + workflow**: workspace runs on the assumption that `live-defi-rollout` passes CI. Repeatedly pushing red
+  commits and "I'll fix later" rots that assumption — every other agent's diagnostics get poisoned by foreign red CI.
+
+### What this is NOT
+
+- **Not a skill** — don't add a `/ci-watch` slash-command. The watcher is a sub-agent invocation OR a `ScheduleWakeup`
+  invocation, set up inline as part of the push step. Skill-ification adds ceremony for a 30-second action.
+- **Not a blocking step** — you don't sit and wait for CI. Push, schedule the check, continue with other work, react
+  asynchronously when the check fires. The whole point is to keep moving.
+- **Not for every micro-commit** — if you push 5 commits in a 10-minute window, one watcher per push is overkill; one
+  watcher set 5 min after the LAST push is sufficient. CI runs the full HEAD; older commits' results don't matter if the
+  latest is green.
+
 ## Findings Triage Discipline (HARD RULE)
 
-When you discover an issue mid-task — a QG failure on someone else's code, a silent bug in a sample data row, a
-doc/code drift, an unexpected manifest shape, a stale codex SSOT, a missing test, anything that wasn't your todo but
-that you observed while doing your todo — the action you take depends on **scope** and **blast radius**. The default
-is wrong-action because most agents either over-fix (touch foreign work) or under-document (let the finding evaporate
-in chat). This rule pins the right action for each case so findings actually land somewhere durable + the right person
+When you discover an issue mid-task — a QG failure on someone else's code, a silent bug in a sample data row, a doc/code
+drift, an unexpected manifest shape, a stale codex SSOT, a missing test, anything that wasn't your todo but that you
+observed while doing your todo — the action you take depends on **scope** and **blast radius**. The default is
+wrong-action because most agents either over-fix (touch foreign work) or under-document (let the finding evaporate in
+chat). This rule pins the right action for each case so findings actually land somewhere durable + the right person
 fixes them.
 
 ### Decision tree
 
-| Where the finding sits                                                                                  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **In-scope** — surfaced while running QG/tests on YOUR code, OR while editing a file you own           | **Fix it yourself.** Don't wait, don't flag, just ship the fix in the same commit (or an adjacent one). Your plan covers it; this is part of the work. Don't bounce a small fix to the issues folder just because it wasn't in the original todo — silent-bug-in-sample-data-row caught while writing tests is exactly what you should be catching.                                                                                    |
-| **Adjacent to your plan** — related to your active plan but not in the immediate todo                   | **Document + fix now or in next phase of YOUR plan.** Append a finding section to your plan body (or extend an existing tier with a new sub-todo); the plan owner is you, so the fix lands inside the same workstream. Don't punt to issues folder — that's for findings nobody owns; this one IS yours.                                                                                                                              |
-| **Outside your plan, fits another active plan**                                                         | **Find the right plan + document there.** Add a finding annotation to the relevant plan body (`cefi_master`, `writegate_*`, `defi_master`, etc.) with explicit owner pointer. The agent on that plan picks it up. **Do not fix yourself** — collision risk + the right plan owner needs to see the finding to make the architectural call. A small annotation in someone else's plan body is fine; a refactor of their code is not.   |
-| **Outside every active plan**                                                                           | **File an issue doc** in [`plans/active/issues/<short-name>_<YYYY_MM_DD>.md`](../plans/active/issues/). These get triaged at audit cadence + either folded into a plan or addressed standalone. Existing precedents: [`defi_archetypes_doc_plan_drift_2026_05_07.md`](../plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md), [`defi_launcher_audit_2026_05_07.md`](../plans/active/issues/defi_launcher_audit_2026_05_07.md). |
-| **Big / cross-cutting finding** (any of the "big" criteria below)                                       | **NOTIFY THE OPERATOR IMMEDIATELY** in the chat — surface it in the next message summary, not buried in a plan annotation. Then **also file an issue doc** per the row above (don't pick one or the other — do both). Operator-time-to-decide on a non-big finding is cheap; operator-time-lost on a big finding hidden in a plan body is expensive.                                                                                  |
+| Where the finding sits                                                                       | Action                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **In-scope** — surfaced while running QG/tests on YOUR code, OR while editing a file you own | **Fix it yourself.** Don't wait, don't flag, just ship the fix in the same commit (or an adjacent one). Your plan covers it; this is part of the work. Don't bounce a small fix to the issues folder just because it wasn't in the original todo — silent-bug-in-sample-data-row caught while writing tests is exactly what you should be catching.                                                                                          |
+| **Adjacent to your plan** — related to your active plan but not in the immediate todo        | **Document + fix now or in next phase of YOUR plan.** Append a finding section to your plan body (or extend an existing tier with a new sub-todo); the plan owner is you, so the fix lands inside the same workstream. Don't punt to issues folder — that's for findings nobody owns; this one IS yours.                                                                                                                                     |
+| **Outside your plan, fits another active plan**                                              | **Find the right plan + document there.** Add a finding annotation to the relevant plan body (`cefi_master`, `writegate_*`, `defi_master`, etc.) with explicit owner pointer. The agent on that plan picks it up. **Do not fix yourself** — collision risk + the right plan owner needs to see the finding to make the architectural call. A small annotation in someone else's plan body is fine; a refactor of their code is not.          |
+| **Outside every active plan**                                                                | **File an issue doc** in [`plans/active/issues/<short-name>_<YYYY_MM_DD>.md`](../plans/active/issues/). These get triaged at audit cadence + either folded into a plan or addressed standalone. Existing precedents: [`defi_archetypes_doc_plan_drift_2026_05_07.md`](../plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md), [`defi_launcher_audit_2026_05_07.md`](../plans/active/issues/defi_launcher_audit_2026_05_07.md). |
+| **Big / cross-cutting finding** (any of the "big" criteria below)                            | **NOTIFY THE OPERATOR IMMEDIATELY** in the chat — surface it in the next message summary, not buried in a plan annotation. Then **also file an issue doc** per the row above (don't pick one or the other — do both). Operator-time-to-decide on a non-big finding is cheap; operator-time-lost on a big finding hidden in a plan body is expensive.                                                                                         |
 
 ### What "big" means (any one of these qualifies)
 
@@ -1034,45 +1101,44 @@ fixes them.
 - Finding on the **2026-05-23 live-DeFi deadline** critical path (anything in the master plan's Group F/G live-only
   prerequisites, anything blocking a paper-trade or testnet smoke).
 - Finding that requires action across **≥2 repos** (UAC + a service consumer; an SSOT + multiple call-sites; a launcher
-  + the watchdog dict).
+  - the watchdog dict).
 - Finding that **contradicts a workspace SSOT** in CLAUDE.md / codex (the SSOT is wrong, OR the code is wrong — either
   way, both can't be true; an agent reading the SSOT and an agent reading the code reach different conclusions).
-- Finding that would **change the work-split** (re-pri P0/P1, swap an item between owners, defer post-May-23, surface
-  a new prerequisite that wasn't in the 5-day cycle).
+- Finding that would **change the work-split** (re-pri P0/P1, swap an item between owners, defer post-May-23, surface a
+  new prerequisite that wasn't in the 5-day cycle).
 - Finding that **contradicts an in-flight VM run** (silent-zero, wrong row-key shape, partial-bundle, missing
   per-instrument progress events) — operators need to decide stop-VM vs let-it-finish-and-rescan within the run window.
 
-If you're not sure whether it's big, surface it. The cost of one extra paragraph in a chat summary is far lower than
-the cost of an operator missing a P0 finding for hours.
+If you're not sure whether it's big, surface it. The cost of one extra paragraph in a chat summary is far lower than the
+cost of an operator missing a P0 finding for hours.
 
 ### Temporary exception — QG-failure findings on someone else's code (2026-05-07 → ~2026-05-09)
 
 **While Ikenna sweeps through workspace QG cleanup (target completion 2026-05-08, latest 2026-05-09), QG-failure
-findings on someone else's code are EXEMPT from the case-3 / case-4 / case-5 documentation requirement.** Don't
-file issue docs or annotate plans for `ruff N811` / `basedpyright reportUnknown` / similar lint or type-check
-failures discovered while running QG against another agent's code. They'll be cleaned up in bulk by the QG sweep
-— individual annotations would just create churn that gets blanket-resolved.
+findings on someone else's code are EXEMPT from the case-3 / case-4 / case-5 documentation requirement.** Don't file
+issue docs or annotate plans for `ruff N811` / `basedpyright reportUnknown` / similar lint or type-check failures
+discovered while running QG against another agent's code. They'll be cleaned up in bulk by the QG sweep — individual
+annotations would just create churn that gets blanket-resolved.
 
 Examples that are EXEMPT during this window:
 
-- `ruff N811 in tests/internal/unit/test_prediction_market_taxonomy.py:605` (ComsicTrader's code, surfaced
-  2026-05-07 while running UAC QG for an unrelated Phase 1 verification).
-- `basedpyright reportAttributeAccessIssue` / `reportUnknownMemberType` in someone else's module that you only
-  read because QG ran across the whole repo.
+- `ruff N811 in tests/internal/unit/test_prediction_market_taxonomy.py:605` (ComsicTrader's code, surfaced 2026-05-07
+  while running UAC QG for an unrelated Phase 1 verification).
+- `basedpyright reportAttributeAccessIssue` / `reportUnknownMemberType` in someone else's module that you only read
+  because QG ran across the whole repo.
 - Any blanket lint / type-check pass failure that's clearly broad enough to be a workspace-wide cleanup pass.
 
 What is **NOT** exempt during this window (still apply cases 3/4/5 normally):
 
 - **Case 1** still applies — your own QG failures on your own code → fix yourself, no exemption.
-- **Non-QG findings** discovered via probes, spot-checks, manifest reads, event-stream inspection, runtime
-  behaviour — these are real findings, not lint noise. Data correctness, in-flight VM bugs, SSOT contradictions,
-  silent-zero captures, partial-bundle shapes — all stay case 1-5 normally regardless of whether QG also
-  surfaces them.
-- **Big findings** that happen to be visible via QG too — if it's case-5-big (e.g. a basedpyright failure that
-  reveals an actual API-shape contradiction across repos), it's still big, still operator-notify, still issue doc.
+- **Non-QG findings** discovered via probes, spot-checks, manifest reads, event-stream inspection, runtime behaviour —
+  these are real findings, not lint noise. Data correctness, in-flight VM bugs, SSOT contradictions, silent-zero
+  captures, partial-bundle shapes — all stay case 1-5 normally regardless of whether QG also surfaces them.
+- **Big findings** that happen to be visible via QG too — if it's case-5-big (e.g. a basedpyright failure that reveals
+  an actual API-shape contradiction across repos), it's still big, still operator-notify, still issue doc.
 
-**Lift this exception** once QG is workspace-clean (operator signal). At that point all QG-failure findings revert
-to standard case-1-to-5 routing.
+**Lift this exception** once QG is workspace-clean (operator signal). At that point all QG-failure findings revert to
+standard case-1-to-5 routing.
 
 ### Issue-doc format
 
@@ -1092,9 +1158,8 @@ locked_since: <YYYY-MM-DD>
 
 # <Title>
 
-> **Severity**: <P0|P1|P2> — <one-line rationale>
-> **Blast radius**: <repos / plans / asset_groups affected>
-> **Suggested owner**: <plan or person if known; else "operator triage">
+> **Severity**: <P0|P1|P2> — <one-line rationale> **Blast radius**: <repos / plans / asset_groups affected> **Suggested
+> owner**: <plan or person if known; else "operator triage">
 
 ## What I found
 
