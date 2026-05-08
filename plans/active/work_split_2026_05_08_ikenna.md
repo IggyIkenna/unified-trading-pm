@@ -271,23 +271,24 @@ carry-staked-basis codex update + integrated paper-trade smoke round-trip after 
 **Full-execution criterion** (per PLAN_FORMAT.md § 8 + "Plans Run To Actual Completion" HARD RULE):
 
 - ✅ **Paper-trade smoke ran end-to-end on real infra (testnet wallet + real adapter codepath)**.
-  - **What ran**: `python -m strategy_service.cli batch --archetype carry_staked_basis --asset-group defi
-    --venue jitoSOL --duration 1h --paper`; matching engine returns simulated fill; downstream events flow.
+  - **What ran**:
+    `python -m strategy_service.cli batch --archetype carry_staked_basis --asset-group defi --venue jitoSOL --duration 1h --paper`;
+    matching engine returns simulated fill; downstream events flow.
   - **Verification**: `gcloud storage ls gs://${PID}-events/events/strategy/$(date +%Y-%m-%d)/paper-smoke-*/` shows
-    STARTED + TRADE_REQUESTED + FILL_RECEIVED + POSITION_UPDATED + PNL_COMPUTED events. Sample one of each event,
-    assert non-empty payload + correct strategy_id + position-balance-monitor row in expected
+    STARTED + TRADE_REQUESTED + FILL_RECEIVED + POSITION_UPDATED + PNL_COMPUTED events. Sample one of each event, assert
+    non-empty payload + correct strategy_id + position-balance-monitor row in expected
     `gs://${PID}-position-balance/...` shard.
 - ✅ **Lending-indices VM ran-to-completion on real infra**.
   - **What ran**: `bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` (or equivalent),
     monitored until STOPPED with `rows_captured > 0`.
-  - **Verification**: post-VM `gcloud storage ls gs://${PID}-events/events/mtds/$(date +%Y-%m-%d)/mtds-lending-*/`
-    shows STARTED + per-instrument INSTRUMENT_PROCESSED events + STOPPED. Sample 3 random instruments' parquets,
-    assert `rows_captured > 0` AND `available_at` column present AND non-NaN.
+  - **Verification**: post-VM `gcloud storage ls gs://${PID}-events/events/mtds/$(date +%Y-%m-%d)/mtds-lending-*/` shows
+    STARTED + per-instrument INSTRUMENT_PROCESSED events + STOPPED. Sample 3 random instruments' parquets, assert
+    `rows_captured > 0` AND `available_at` column present AND non-NaN.
 - ✅ **Pyth Hermes archive backfill VM ran-to-completion on real infra (Solana-only scope)**.
   - **What ran**: `bash deployment-service/scripts/vm/launch-mtds-pyth-hermes-vm.sh`, monitored until STOPPED.
   - **Verification**: pre-2023 jitoSOL parquet exists in `gs://${PID}-mtds/raw_tick_data/...`; sample probe confirms
-    non-empty rows + Pyth-specific schema columns; manifest row at `(asset_group=defi, chain=solana, source=pyth,
-    data_type=*)` shows captured.
+    non-empty rows + Pyth-specific schema columns; manifest row at
+    `(asset_group=defi, chain=solana, source=pyth, data_type=*)` shows captured.
 - ✅ **All 13 UAC drift pairs ran QG green on the actual UAC repo**.
   - **What ran**: per-pair commit + `cd unified-api-contracts && bash scripts/quality-gates.sh`.
   - **Verification**: 13 commits in UAC origin/live-defi-rollout each green; basedpyright + ruff + tests all pass;
@@ -784,13 +785,13 @@ catalogue baseline).
       execution rejects if computed position would breach allocation. **Done**: schema ships, unit tests covering
       allocation respect + tagging propagation shape. ~2 AI-days.
 - [ ] [DESIGN] P0. **DART manual-trade lane scope spec** — write
-      `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (or extend existing `operational-modes-matrix.md`)
-      with per-archetype list of operator-replicable manual surfaces. Required surfaces: (a) DeFi swap / lend / borrow /
-      stake actions per chain × protocol for `carry_staked_basis`; (b) CeFi order placement (limit / market / stop)
-      across Bybit / Deribit / Binance / OKX; (c) ML training trigger (pause / resume / retrain) per ML archetype; (d)
-      sports bet placement for backtest exec validation; (e) prediction-market trade for backtest. Resolve open question
-      "operator-only or external broker-style" — default = operator-only this cycle. **Done**: codex doc ships + Harsh
-      T6 has executable spec. ~2 AI-days.
+      `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (or extend existing
+      `operational-modes-matrix.md`) with per-archetype list of operator-replicable manual surfaces. Required surfaces:
+      (a) DeFi swap / lend / borrow / stake actions per chain × protocol for `carry_staked_basis`; (b) CeFi order
+      placement (limit / market / stop) across Bybit / Deribit / Binance / OKX; (c) ML training trigger (pause / resume
+      / retrain) per ML archetype; (d) sports bet placement for backtest exec validation; (e) prediction-market trade
+      for backtest. Resolve open question "operator-only or external broker-style" — default = operator-only this cycle.
+      **Done**: codex doc ships + Harsh T6 has executable spec. ~2 AI-days.
 - [ ] [DESIGN] P1. **Strategy catalogue UI scope decision** — filter axes (asset_group / archetype / venue /
       live-vs-backtest) confirmed; UI route in deployment-UI declared; Harsh T6 implements UI per spec. **Done**:
       operator-confirmed UI scope + route assignment in `deployment_ui_lifecycle_tabs_2026_05_08`. ~1 AI-day.
@@ -815,14 +816,14 @@ catalogue baseline).
 
 **Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
 
-| Sub-agent ID         | Files owned (only edit these)                                                                                                                                       | Files OFF-LIMITS                                                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests           | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
-| sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                           | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                              |
-| sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                           | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                   |
+| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                       | Files OFF-LIMITS                                                                                                                                                                             |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests                           | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
+| sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                                           | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                              |
+| sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                                           | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                   |
 | sa6.DART-spec        | NEW `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market) | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                      |
-| sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc  | All UAC; codex (read-only)                                                                                                                                                                   |
-| sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)         | All UI source; UAC                                                                                                                                                                           |
+| sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc                  | All UAC; codex (read-only)                                                                                                                                                                   |
+| sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)                         | All UI source; UAC                                                                                                                                                                           |
 
 Master sa6 (Tab 6 orchestrator) owns: orchestration + integration + design judgment + per-deliverable RESOLVED block in
 `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions` so Harsh T6 can consume. UAC editor priority queue
@@ -970,12 +971,12 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
   (post-2026-05-23 P2 per cross-plan position banner)
 - [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.md) (deferred unless last 2 todos
   verifiable today)
-<!-- CORRECTION 2026-05-08 audit: removed cross-side scope contradictions per audit cluster 7.
-     api_football_minimal_flattening_removal + data_status_comprehensive_test_coverage are P0 in-scope
-     for Harsh Tab 5 ("the dragon" mechanical refactor) — not deferred this cycle. Both plans must agree;
-     Harsh's side wins because it has the implementation tab assignment. -->
-<!-- moved: api_football_minimal_flattening_removal_2026_05_07.md → owned by Harsh Tab 5 sa5.APIFootball -->
-<!-- moved: data_status_comprehensive_test_coverage_2026_05_07.md → owned by Harsh Tab 5 (item #2) -->
+  <!-- CORRECTION 2026-05-08 audit: removed cross-side scope contradictions per audit cluster 7.
+       api_football_minimal_flattening_removal + data_status_comprehensive_test_coverage are P0 in-scope
+       for Harsh Tab 5 ("the dragon" mechanical refactor) — not deferred this cycle. Both plans must agree;
+       Harsh's side wins because it has the implementation tab assignment. -->
+  <!-- moved: api_football_minimal_flattening_removal_2026_05_07.md → owned by Harsh Tab 5 sa5.APIFootball -->
+  <!-- moved: data_status_comprehensive_test_coverage_2026_05_07.md → owned by Harsh Tab 5 (item #2) -->
 
 ## Spawn prompts (paste-ready per tab)
 
@@ -1182,6 +1183,256 @@ REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional pus
 Final: append a "DONE-2026-05-08" block at the bottom of
 cross_cutting_may_23_deliverables_2026_05_08.md body listing every UAC + codex commit
 sha. Then go quiet — don't pick up new work autonomously.
+```
+
+## Spawn prompts — fresh fan-out: instruments-service + MTDS (PM 2026-05-08)
+
+> Fresh batch of 4 mechanical/scoped items spawned mid-cycle (Model B sub-agents on top of the existing Model A 6-tab
+> clustering). Each touches instruments-service or MTDS only, file-disjoint from Tabs 1-6 in flight.
+>
+> **Master gate first.** Before spawning F2 or F3, the master agent (you) MUST ship A.9 + A.10 from
+> [`instruments_live_master_2026_05_08.md`](../epics/instruments_live_master_2026_05_08.md) lines 204-221 — preflight
+> DAG SSOT (UAC) + UTL helper. F2 + F3 consume the helper. F1 + F4 + F5 can spawn immediately.
+>
+> **Collision audit (vs Tabs 1-6 already in flight):**
+>
+> - **Item dropped**: MTDS Phase 3 websocket `--mode live` — owned by Tab 2 already, not re-spawned.
+> - F1 (instruments-service `cli/`) vs F4 (instruments-service `triggers/`) — different sub-packages, surgical
+>   `git add -p` per pre-commit check rule.
+> - F2 + F5 in MTDS — file-disjoint: F2 lives in `market_tick_data_service/adapters/{venue}.py` (10 cefi venues), F5 in
+>   `orchestrator/` + `adapters/polymarket.py` + `adapters/kalshi.py`. No overlap.
+> - F2 vs Tab 2 — Tab 2 owns CLI + scheduler, F2 owns per-venue adapter `available_at` stamping. File-disjoint.
+
+### Tab F1 spawn prompt — instruments-service CLI `--trigger` axis (A.7)
+
+```text
+You are Tab F1 — a sub-agent spawned by Ikenna's main orchestrator agent (a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — workspace rules + § "Daily Work-Split Process".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  3. plans/active/work_split_2026_05_08_ikenna.md § "Spawn prompts — fresh fan-out" — collision map + master gate.
+  4. plans/epics/instruments_live_master_2026_05_08.md § "A.7 — CLI `--trigger` axis" lines 182-189
+     (your primary plan-of-record).
+  5. codex/06-coding-standards/cli-convention.md — service CLI axes (`--operation`, `--mode`, `--asset-group`).
+
+Your agent-tag for ping-ledger entries: instruments-cli-trigger-tab. Your tab number: F1.
+
+ORCHESTRATION RULES (per CLAUDE.md § "Daily Work-Split Process"):
+  1. Shared working tree — pre-commit check (git status + git diff --cached --stat NO PATH ARG) before
+     EVERY commit. Use `git add -p` / `git add <specific-file>`. Never `git add -A`.
+  2. Plan-doc Q&A flow — write blockers into instruments_live_master_2026_05_08.md `## Open questions`
+     (status 🟡 BLOCKED), append ping in plans/active/_agent_pings.md.
+  3. Conditional push — per shippable unit: commit locally, `git fetch`, zero incoming → push,
+     any incoming → flag + escalate.
+  4. Plan-flip in same logical unit as code — `- [ ]` → `- [x]` with `<repo>@<sha>` evidence.
+  5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.
+
+YOUR TASK: extend instruments-service CLI with `--mode live --trigger <name>` flag axis. Additive only —
+don't break existing batch CLI. Per CLAUDE.md § "Service CLIs follow standardised axes":
+  - Add `--trigger` argparse arg accepting trigger names (e.g. `cefi.instruments.daily_refresh`,
+    `defi.token_lists.refresh`, `sports.fixtures.daily_repoll`).
+  - Wire trigger-name → handler dispatch via existing pattern in instruments-service CLI.
+  - Add unit tests asserting flag parses + dispatches to handler. Use existing test fixtures.
+  - Do NOT implement the actual triggers — that's downstream phases (B.1 / C / D).
+
+REPOS OWNED: instruments-service only.
+COLLISION BOUNDARY: instruments-service `cli/` only — F4 owns `triggers/`. Don't touch trigger handler files.
+
+DONE DEFINITION:
+  ✅ `instruments-service --mode live --trigger <name>` parses without error for ≥3 trigger names.
+  ✅ Unit tests cover argparse + dispatch (real, not mocked — actual CLI invocation in a subprocess
+     OR direct argparse-call assertion).
+  ✅ `cd instruments-service && bash scripts/quality-gates.sh` Pass 1 GREEN.
+  ✅ Commit + push to live-defi-rollout per shippable-unit cadence.
+  ✅ Plan-flip in plans/epics/instruments_live_master_2026_05_08.md A.7 → `- [x]` with sha.
+
+REPORT-BACK: per shippable unit (commit + plan-flip + push). Final: DONE-2026-05-08 block at the
+bottom of instruments_live_master_2026_05_08.md listing every commit sha. Then go quiet.
+```
+
+### Tab F2 spawn prompt — CeFi adapter `available_at` stamping (10 venues × 5 data_types)
+
+```text
+You are Tab F2 — a sub-agent spawned by Ikenna's main orchestrator agent.
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "`available_at` is per-row, write-time, equal
+     to live-pipeline-arrival" + § "Live = batch — same data, same fields, same timing semantics".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  3. plans/active/work_split_2026_05_08_ikenna.md § "Spawn prompts — fresh fan-out" — master gate +
+     collision map.
+  4. plans/epics/cefi_master_2026_05_07.md § "Per-adapter `available_at` stamping" lines 387-396.
+  5. plans/active/available_at_lookahead_bias_completion_2026_05_08.md (related sweep).
+  6. unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY (top entries are
+     live-emission timing source; SSOT for stamping latency).
+
+Your agent-tag: cefi-available-at-stamping-tab. Your tab number: F2.
+
+ORCHESTRATION RULES: same 5 rules as Tab F1 above.
+
+PRE-REQ GATE: master agent ships A.9 + A.10 (preflight DAG SSOT + UTL helper) FIRST. If you boot
+and `unified_trading_library.preflight_dag` (or equivalent UTL helper from A.10) doesn't exist yet,
+write a 🟡 BLOCKED entry on cefi_master_2026_05_07.md `## Open questions` and wait. Don't fork ahead.
+
+YOUR TASK: stamp per-row `available_at` on every CeFi MTDS adapter before `record_captured`. Mirror
+the existing sports `_enforce_pit_sports` pattern. Per UAC SOURCE_PRIORITY top entry per
+(asset_group, data_type), `available_at = tick_ts + emission_latency_ms`.
+
+VENUES (10 total): bybit, binance, okx, deribit, kraken, bitfinex, bitget, coinbase, gate, kucoin.
+DATA_TYPES per venue: trades, ohlcv_1m, ohlcv_15m, funding, open_interest (cefi-relevant subset only —
+skip data_types the venue doesn't emit; check existing adapter source-of-truth for the venue's actual
+supported data_types list, don't invent).
+
+For each adapter file `market_tick_data_service/adapters/{venue}.py`:
+  - Find `record_captured(...)` callsite + the rows-being-written DataFrame.
+  - Add `df["available_at"] = stamp_available_at_cefi_tick(df["timestamp"], venue, data_type)` (use
+    UTL helper from `unified_trading_library.availability_stamping` — confirm signature first;
+    helper exists per CLAUDE.md § "available_at is per-row, write-time").
+  - Write unit test under `market-tick-data-service/tests/adapters/test_{venue}_available_at.py`
+    asserting stamped column exists + values are in [tick_ts, tick_ts + 60s].
+  - Verify `LookaheadBiasError` doesn't fire in batch + live modes via the existing UTL guard.
+
+REPOS OWNED: market-tick-data-service only.
+COLLISION BOUNDARY: only `market_tick_data_service/adapters/{venue}.py` files. Do NOT touch
+`market_tick_data_service/cli/` (Tab 2 owns), `orchestrator/` (F5 owns), `streaming/` (Tab 2 owns).
+
+DONE DEFINITION:
+  ✅ All 10 cefi venue adapters stamp `available_at` per-row before record_captured.
+  ✅ Per-venue unit tests pass (10 new test files, 1 per venue).
+  ✅ `cd market-tick-data-service && bash scripts/quality-gates.sh` Pass 1 GREEN.
+  ✅ FULL-EXECUTION CRITERION (per CLAUDE.md HARD RULE): pick 1 venue (bybit recommended — already
+     has live data on disk) and read 1 sample parquet via `pandas.read_parquet()` AFTER landing your
+     edits. Assert `available_at` column exists + values match the stamping formula. Cite the
+     parquet path + sample row in the DONE block. Smoke-test alone is insufficient.
+  ✅ Commit + push per shippable-unit (recommend 1 commit per venue = 10 commits, not bundled).
+  ✅ Plan-flip cefi_master_2026_05_07.md per-venue checkbox → `- [x]` with sha.
+
+REPORT-BACK: per-venue commit + per-venue plan-flip. Final: DONE-2026-05-08 block at the bottom
+of cefi_master_2026_05_07.md. Then go quiet.
+```
+
+### Tab F4 spawn prompt — sports daily fixture re-poll (B.1) + UTL `available_at` test (A.8)
+
+```text
+You are Tab F4 — a sub-agent spawned by Ikenna's main orchestrator agent.
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "Sports source coverage windows" +
+     § "available_at is per-row, write-time".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  3. plans/active/work_split_2026_05_08_ikenna.md § "Spawn prompts — fresh fan-out".
+  4. plans/epics/instruments_live_master_2026_05_08.md § "A.8 — UTL ManifestWriter `available_at`
+     confirmation" lines 194-200 + § "B.1 — Sports daily fixture re-poll" lines 285-294.
+  5. instruments-service existing api_football fixtures handler (your reference implementation).
+
+Your agent-tag: sports-fixtures-repoll-tab. Your tab number: F4.
+
+ORCHESTRATION RULES: same 5 rules as Tab F1 above.
+
+YOUR TASK: TWO scoped items, ship in order.
+
+ITEM 1 (A.8 — quickest, ship first): Add unit test confirming UTL `ManifestWriter.record_captured`
+already handles per-row `available_at` correctly. The behaviour is expected to exist already — this
+is a verification test, not new functionality. Test must:
+  - Construct a DataFrame with `available_at` column (UTC timestamps).
+  - Call `ManifestWriter.record_captured(...)` with the DataFrame.
+  - Assert no `LookaheadBiasError` raised + manifest row written with correct shape.
+If the behaviour does NOT exist, write 🟡 BLOCKED on instruments_live_master_2026_05_08.md `## Open
+questions` and STOP — escalate to master agent.
+
+ITEM 2 (B.1 — main work): Implement sports daily fixture re-poll trigger.
+  - Add trigger handler `instruments_service/triggers/sports_fixtures_daily_repoll.py`.
+  - Trigger name: `sports.fixtures.daily_repoll`.
+  - Behaviour: pull fixtures from api_football for window [today, today + 8d]; upsert to the same
+    GCS path as batch fixtures (per UAC `candidate_parquet_paths(SPORTS_FIXTURES, day, league_id)`).
+  - Idempotent — re-running same day + same league = no duplicate rows.
+  - Stamp `available_at = announced_at` (per CLAUDE.md "fixtures → announced_at").
+  - Add integration test asserting trigger writes parquet + manifest row at expected GCS path.
+
+REPOS OWNED: instruments-service only (item 2) + unified-trading-library only (item 1).
+COLLISION BOUNDARY: F1 owns instruments-service `cli/`; you own `triggers/` + UTL test only.
+Don't touch CLI argparse — F1's job. Wire your trigger name into the existing dispatcher F1 builds
+ONCE F1 has shipped — coordinate via plan-of-record Q&A bus if F1 hasn't shipped yet.
+
+DONE DEFINITION:
+  ✅ Item 1: UTL `available_at` test green; commit + plan-flip A.8 → `- [x]`.
+  ✅ Item 2: trigger handler + integration test green; commit + plan-flip B.1 → `- [x]`.
+  ✅ Both repos' `bash scripts/quality-gates.sh` Pass 1 GREEN.
+  ✅ FULL-EXECUTION CRITERION: actually invoke the trigger end-to-end against api_football
+     (real API, real ADC, real GCS write) for 1 league (premier-league recommended — full
+     fixture coverage). Verify `gcloud storage ls gs://...sports-data-prod/by_date/day=<today>/
+     entity=fixtures/league=39/` returns the new parquet. Read sample to confirm
+     `available_at` populated. Cite GCS URI + sample row in DONE block. Mocked test alone
+     insufficient.
+  ✅ Push per shippable unit.
+
+REPORT-BACK: per shippable unit. Final: DONE-2026-05-08 block at the bottom of
+instruments_live_master_2026_05_08.md listing both A.8 + B.1 commit shas. Then go quiet.
+```
+
+### Tab F5 spawn prompt — Polymarket / Kalshi manifest re-bundling Phase 2
+
+```text
+You are Tab F5 — a sub-agent spawned by Ikenna's main orchestrator agent.
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "Prediction market lifecycle timing"
+     + § "Cluster validation MANDATORY at `record_captured` for bundled shards" + § "Shard-
+     granularity SSOT".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  3. plans/active/work_split_2026_05_08_ikenna.md § "Spawn prompts — fresh fan-out".
+  4. plans/epics/predictions_master_2026_05_07.md § "Q1 + A1 — Manifest re-bundling for
+     Polymarket/Kalshi" lines 108-160 (your primary plan-of-record).
+  5. instruments-service@b904785 commit (Phase 1 reference impl: lifecycle timestamps +
+     canonical_question_group on instrument definitions — already shipped).
+  6. instruments-service@98bb167 commit (Phase 1 supporting work).
+  7. UAC `BUNDLED_DATA_TYPES` registry + `prediction_canonical_question_group` data_type
+     (search `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py`).
+
+Your agent-tag: polymarket-rebundling-tab. Your tab number: F5.
+
+ORCHESTRATION RULES: same 5 rules as Tab F1 above.
+
+PRE-REQ GATE: confirm UAC `BUNDLED_DATA_TYPES` includes `prediction_canonical_question_group`
++ helper signature for cluster validation is locked. If unclear, write 🟡 BLOCKED on
+predictions_master_2026_05_07.md `## Open questions` for master agent to resolve.
+
+YOUR TASK: implement MTDS orchestrator-side re-bundling for Polymarket + Kalshi ticks. Per option
+(a) chosen in predictions_master_2026_05_07.md A1: bundle by `canonical_question_group` at the
+manifest layer.
+
+Concrete shape:
+  - Read instrument definitions from instruments-service catalog (UAC contract for prediction
+    instruments — confirm reader path).
+  - For each tick batch, group by `instrument_def.canonical_question_group` (e.g.
+    `BTC_UP_DOWN_HOURLY` aggregates 24 market_ids/day).
+  - Write bundled parquet per `(canonical_question_group, day)`.
+  - Call `ManifestWriter.record_captured(..., expected_root_clusters={...},
+    cluster_extractor=lambda row_key: row_key.market_id)` per CLAUDE.md § "Cluster validation
+    MANDATORY". Cluster count = HOURLY → 24, DAILY → 1, ELECTION → 1.
+  - Respect lifecycle bounds: skip ticks before `market_created_at`, after `settlement_time`.
+
+REPOS OWNED: market-tick-data-service only.
+COLLISION BOUNDARY: `market_tick_data_service/orchestrator/` + `market_tick_data_service/adapters/
+polymarket.py` + `market_tick_data_service/adapters/kalshi.py`. Do NOT touch other adapters
+(F2 owns cefi adapters), do NOT touch `cli/` or `streaming/` (Tab 2 owns).
+
+DONE DEFINITION:
+  ✅ Polymarket adapter writes bundled parquet per `(canonical_question_group, day)`.
+  ✅ Kalshi adapter writes bundled parquet per `(canonical_question_group, day)`.
+  ✅ Cluster validation fires `record_failed(ClusterCoverageError(...))` when expected market_ids
+     are missing — verify with a deliberate failing test (drop 1 market_id, assert error).
+  ✅ `cd market-tick-data-service && bash scripts/quality-gates.sh` Pass 1 GREEN.
+  ✅ FULL-EXECUTION CRITERION: launch a small backfill VM (or local 1-day run with real ADC) for
+     1 canonical group (`BTC_UP_DOWN_HOURLY`, 1 day). Verify manifest has `record_captured` row
+     with cluster_count=24 (or actual count for that day if some markets weren't created yet).
+     Read sample bundled parquet, assert all expected market_ids present. Cite GCS URI in DONE.
+  ✅ Commit + push per shippable unit.
+
+REPORT-BACK: per shippable unit. Final: DONE-2026-05-08 block at the bottom of
+predictions_master_2026_05_07.md Q1/A1 section listing every commit sha. Then go quiet.
 ```
 
 ## Discipline reminders (every tab, every commit)
