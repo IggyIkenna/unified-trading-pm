@@ -5,12 +5,6 @@ created: 2026-05-07
 created_by: Agent-5 deep-audit follow-up to Group F item 19
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 > **STUB — content owners pending.** Created 2026-05-07 as a deep-audit follow-up to
 > [`../../plans/active/master_to_live_defi_2026_05_23.plan.md`](../../plans/active/master_to_live_defi_2026_05_23.plan.md)
 > Group F item 19 (Treasury / custody integration). The Copper-side companion at
