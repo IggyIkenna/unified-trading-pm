@@ -42,7 +42,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   instruments-service catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT
 - [`codex/02-data/defi-data-types-catalog.md`](../../codex/02-data/defi-data-types-catalog.md) — DeFi data_type
   enumeration (lending_rates / lst_yields / oracle_prices / vault_share_prices / perp_funding / ohlcv / dex_swaps)
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
 - [`codex/04-architecture/flash-loan-receiver.md`](../../codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash
   loan deployment + `connect()` validation; required for `carry_staked_basis` recursive-staking unwind path
@@ -969,7 +969,7 @@ Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authori
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
   CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry.
-- **Live = batch**: same code path; matching engine for backtests. See `codex/04-architecture/batch-live-pipeline.md`.
+- **Live = batch**: same code path; matching engine for backtests. See `codex/04-architecture/batch-live-architecture.md` (single SSOT).
 - **`chain` is a first-class shard axis** for DeFi (per CLAUDE.md per-asset-group shard-key matrix).
 
 ## Cross-references

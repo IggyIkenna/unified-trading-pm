@@ -95,7 +95,7 @@ graph TD
 > pre-2026-05-08 shape. The current shape is: one **MTDS** cluster (sharded by v5 shard atom), one **MDPS +
 > features-service-asset-scoped** colocated cluster per asset_group, plus one **features-service-cross-cutting** cluster
 > that subscribes to multiple asset_group streams. Same code path as batch (per
-> [`batch-live-symmetry.md`](batch-live-symmetry.md)); only the trigger source swaps from Cloud Scheduler to Redis
+> [`batch-live-architecture.md`](batch-live-architecture.md)); only the trigger source swaps from Cloud Scheduler to Redis
 > Stream events.
 
 ### Pre-2026-05-08 historical: package-embedding shape

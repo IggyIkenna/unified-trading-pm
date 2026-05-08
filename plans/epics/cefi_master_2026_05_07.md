@@ -44,7 +44,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS
   per-(venue, data_type) source coverage with `SOURCE_COVERAGE_START` per venue (Tardis vs Databento vs venue-native
   REST)
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi forward-poll +
   backfill share one code path
 - [`codex/04-architecture/asset-class-ownership.md`](../../codex/04-architecture/asset-class-ownership.md) — CeFi venue

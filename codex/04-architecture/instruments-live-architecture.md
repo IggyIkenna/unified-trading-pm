@@ -49,7 +49,7 @@ routing table below.
 
 ## Cross-references
 
-- Symmetry: [`batch-live-symmetry.md`](batch-live-symmetry.md) § "Instruments are reference data, not market data"
+- Symmetry: [`batch-live-architecture.md`](batch-live-architecture.md) § 9 Instruments-live exception (single SSOT)
 - Pre-flight chain (live=batch): [`instruments-preflight-chain.md`](instruments-preflight-chain.md)
 - Cloud Scheduler topology + per-trigger cron expressions:
   [`../05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) §

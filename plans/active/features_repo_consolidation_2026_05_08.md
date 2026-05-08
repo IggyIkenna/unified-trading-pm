@@ -811,7 +811,7 @@ Read these BEFORE making code changes — drift between code and these docs is a
 - [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — every
   gcloud / aws ec2 launcher MUST live in `deployment-service/scripts/vm/`. Phase 8A consolidates the 8 per-family
   launchers into one parameterised script.
-- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md) — batch=live
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   code-path symmetry; consolidation must NOT introduce a batch/live divergence in any features family.
 
 ## Pre-audit manifest

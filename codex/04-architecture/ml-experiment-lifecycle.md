@@ -72,6 +72,6 @@ system is concerned.
 - Availability manifest schema:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
-- Live = batch: [`batch-live-symmetry.md`](batch-live-symmetry.md)
+- Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Live config hot-reload (champion swap):
   [`live-strategy-config-hot-reload.md`](live-strategy-config-hot-reload.md)

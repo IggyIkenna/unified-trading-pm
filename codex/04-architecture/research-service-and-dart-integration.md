@@ -61,6 +61,6 @@ Research-service does NOT execute live orders. Live execution always flows throu
 - DART manual-trade spec: [`../09-strategy/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/cross-cutting/dart-manual-trade-spec.md)
 - Operational modes matrix: [`../09-strategy/cross-cutting/operational-modes-matrix.md`](../09-strategy/cross-cutting/operational-modes-matrix.md)
 - Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
-- Live = batch: [`batch-live-symmetry.md`](batch-live-symmetry.md)
+- Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Execution architecture: [`defi-execution-overview.md`](defi-execution-overview.md) +
   [`interface-credential-convention.md`](interface-credential-convention.md)

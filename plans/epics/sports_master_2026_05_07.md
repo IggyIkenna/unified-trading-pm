@@ -42,7 +42,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   per-source folder layout per CLAUDE.md "Sports GCS path SSOT":
   `sports_reference/by_date/day=*/entity={F}/league={L}/{F}.parquet`;
   `candidate_parquet_paths(data_type, day, league_id)` is the canonical probe API
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
   `kickoff − 60min`, fixture_stats / understat at `match_end_time`, weather at forecast-issue-time
 - [`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md)

@@ -131,4 +131,4 @@ Solana-only — other chains continue using Chainlink. SSOT: CLAUDE.md "Pyth —
 ## Related Docs
 
 - `codex/02-data/instrument-pipeline-defi.md` — How instruments flow into MTDS/MDPS/features
-- `codex/04-architecture/batch-live-symmetry.md` — How `as_of_date` works in batch vs live
+- `codex/04-architecture/batch-live-architecture.md` — How `as_of_date` works in batch vs live (single SSOT)

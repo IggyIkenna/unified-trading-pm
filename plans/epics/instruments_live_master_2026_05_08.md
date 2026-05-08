@@ -19,7 +19,7 @@ overview: >-
   player-values + weather cascade leading up to kickoff, predictions 15-min market-discovery poll). Cloud Scheduler is
   the trigger driver; deployment-UI gets a new "Scheduled Jobs" tab listing every Cloud Scheduler / Cloud Run scheduled
   / 60-sec-rollup invocation with last-run + next-fire + recent events + Telegram-alert-on-fail. This plan REFERENCES
-  (does not duplicate) the existing codex SSOTs (batch-live-symmetry, backfill-and-live-startup,
+  (does not duplicate) the existing codex SSOTs (batch-live-architecture, backfill-and-live-startup,
   live-deployment-monitoring, alerting-batch-live, sports-live-odds-connectivity, deployment-clusters-live-vs-batch),
   the locked sports-only `trigger_based_reference_data_2026_04_13` plan (folds in via unlock + extension), and the
   active issues that own data-correctness sub-deltas (fixture lifecycle, manifest cleanup, lookahead bias). Code delta
@@ -88,7 +88,7 @@ todos:
   - id: a1-codex-ssot-audit-and-stitch
     content: |
       - [ ] [AGENT] P0. Audit existing codex live-instruments coverage and stitch a single SSOT entry-point. Read
-        `codex/04-architecture/batch-live-symmetry.md`, `batch-live-pipeline.md`, `backfill-and-live-startup.md`,
+        `codex/04-architecture/batch-live-architecture.md`, `backfill-and-live-startup.md`,
         `alerting-batch-live.md`, `sports-live-odds-connectivity.md`, `RUNTIME_TOPOLOGY_DECISIONS.md`,
         `codex/05-infrastructure/live-deployment-monitoring.md`, `deployment-clusters-live-vs-batch.md`,
         `runtime-tiers-and-deployment.md`, plus `instruments-service/docs/{ARCHITECTURE,CEFI,DEFI,TRADFI,SPORTS,POLYMARKET}_INSTRUMENTS.md`
@@ -103,7 +103,7 @@ todos:
 
   - id: a2-codex-update-batch-live-symmetry-instruments-section
     content: |
-      - [ ] [AGENT] P0. Extend `codex/04-architecture/batch-live-symmetry.md` with an explicit "Instruments are
+      - [ ] [AGENT] P0. Extend `codex/04-architecture/batch-live-architecture.md` with an explicit "Instruments are
         reference data, not market data" section: (a) live-mode writes to identical GCS path as batch; (b) T+1 is a
         retrospective audit/comparison job, NOT a parallel-source backfill; (c) downstream consumers (MTDS catalog
         load, features-* preflight, strategy preflight) must ALWAYS read the same path regardless of whether the row
@@ -588,7 +588,7 @@ todos:
         timestamps, no implausibly old timestamps for live rows). Emits per-(asset_group, entity-type) audit
         report to `gs://{pid}-audit/instruments-live/day=<YYYY-MM-DD>/...` plus
         `INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY` event when tolerance is exceeded. Reference codex
-        `04-architecture/batch-live-symmetry.md` § T+1 Scheduling — this job is the canonical realisation of that
+        `04-architecture/batch-live-architecture.md` § T+1 Scheduling — this job is the canonical realisation of that
         SSOT for instruments-live. Tolerance-by-asset-group table goes into the new
         `instruments-live-architecture.md` codex doc (Phase A.1).
     status: todo
@@ -661,7 +661,7 @@ isProject: false
 ## Why this plan exists
 
 The unified-trading-system already has the **architecture** for live-mode instruments — the codex SSOTs
-(`batch-live-symmetry.md`, `backfill-and-live-startup.md`, `live-deployment-monitoring.md`, `alerting-batch-live.md`,
+(`batch-live-architecture.md`, `backfill-and-live-startup.md`, `live-deployment-monitoring.md`, `alerting-batch-live.md`,
 `sports-live-odds-connectivity.md`, `deployment-clusters-live-vs-batch.md`, `runtime-tiers-and-deployment.md`, the
 per-asset-group instruments-service docs in `instruments-service/docs/`) collectively express the target state already.
 What's MISSING is the **activation surface**: which scheduler fires which trigger, which adapter is the live-source,
@@ -673,7 +673,7 @@ sub-deltas.
 
 1. **Live writes to the SAME GCS path as batch.** No `live=` partition, no `live_` prefix, no parallel hierarchy.
    Downstream consumers (MTDS catalog load, features-\* preflight, strategy preflight) read one path regardless of how
-   the row got there. SSOT: `codex/04-architecture/batch-live-symmetry.md`.
+   the row got there. SSOT: `codex/04-architecture/batch-live-architecture.md`.
 
 2. **T+1 is an audit/comparison job, NOT a backfill.** Live writes are authoritative; batch is the truth-checker.
    Discrepancies are alerted; they do NOT trigger automatic re-write of live rows. SSOT: same doc § T+1 Scheduling.
@@ -762,7 +762,7 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 | Codex doc                                                     | Update                                                                                     | Phase |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----- |
 | `04-architecture/instruments-live-architecture.md` (NEW)      | Single entry-point + routing matrix + cadence/trigger/source per (asset_group, entity)     | A.1   |
-| `04-architecture/batch-live-symmetry.md`                      | Add "Instruments are reference data" section explicit on same-path + T+1-as-audit          | A.2   |
+| `04-architecture/batch-live-architecture.md`                      | Add "Instruments are reference data" section explicit on same-path + T+1-as-audit          | A.2   |
 | `04-architecture/instruments-preflight-chain.md` (NEW)        | Preflight DAG SSOT + live=batch invariant + UTL helper contract                            | A.9   |
 | `05-infrastructure/runtime-tiers-and-deployment.md`           | Add "Instruments-live Cloud Scheduler topology" section listing all scheduled entries      | A.3   |
 | `04-architecture/alerting-batch-live.md`                      | Add "Instruments-live failure rules" section (7 typed failure modes including 2 preflight) | A.4   |
@@ -836,8 +836,8 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 
 ## SSOT references
 
-- `codex/04-architecture/batch-live-symmetry.md` — live=batch, same path, T+1 is audit
-- `codex/04-architecture/batch-live-pipeline.md` — pipeline-level live=batch
+- `codex/04-architecture/batch-live-architecture.md` — live=batch, same path, T+1 is audit (single SSOT — replaces former
+  batch-live-pipeline.md + batch-live-symmetry.md)
 - `codex/04-architecture/backfill-and-live-startup.md` — live startup pattern
 - `codex/04-architecture/alerting-batch-live.md` — alerting rules
 - `codex/04-architecture/sports-live-odds-connectivity.md` — sports live ingest reference

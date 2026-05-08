@@ -116,7 +116,7 @@ todos:
 
   - id: a4-codex-update-batch-live-symmetry-ux-section
     content: |
-      - [x] [AGENT] P1. **DONE 2026-05-08 (PM@eb8a96ca)**. Extend `04-architecture/batch-live-symmetry.md` with a "UX surface" section explicit on how
+      - [x] [AGENT] P1. **DONE 2026-05-08 (PM@eb8a96ca)**. Extend `04-architecture/batch-live-architecture.md` with a "UX surface" section explicit on how
         the symmetry shows up to the operator: same Data-Status tab, same drilldown depth, same parquet schema-view,
         same event-tail; the only operator-visible difference between live and batch is the Data-Status mode-toggle
         position. Reinforces the engineering invariant via the operator-facing UX.
@@ -198,7 +198,7 @@ todos:
         buckets per asset_group (per `instruments_live_master_2026_05_08.plan.md` Phase 1 — same path as batch in
         most cases, but the UI surfaces "freshness" as the metric instead of "coverage"). Toggle invalidates the
         `/api/data-status` query key and refetches. NO new bucket convention — reuses the same paths the rest of
-        the workspace already writes to (per `batch-live-symmetry.md` SSOT).
+        the workspace already writes to (per `batch-live-architecture.md` SSOT).
 
   - id: b6-live-freshness-widget
     content: |
@@ -806,7 +806,7 @@ re-shape; its completion unblocks Phase B-H + Ikenna Tab 5 audit-log integration
     phases (B-H) ship. Frontmatter follows `firebase-split-topology.md` precedent (multi-source SSOT shape).
 
 - `unified-trading-pm@eb8a96ca` — `docs(codex): batch-live-symmetry adds UX-surface section (Phase A.4)`.
-  - +42 lines extending `04-architecture/batch-live-symmetry.md` with a
+  - +42 lines extending `04-architecture/batch-live-architecture.md` with a
     `## UX surface — how the symmetry shows up to the operator` section. Documents identical UX shape (same Data-Status
     tab / drilldown / parquet schema-view / event-tail) + the single operator-visible difference (Data-Status
     mode-toggle position; same SHAPE, different TIME-SLICE). Cross-references the new `deployment-ui-architecture.md`

@@ -54,7 +54,7 @@ in `repos/<service>.yaml` extend their item set to track 4–23 (items 1–3 are
 ### Group C — Runtime parity (always-on)
 
 9. **Hot reload** — `start_domain_config_reloaders` typed; `ApiKeyReloader` for Secret Manager creds
-10. **Batch = live** — same code path; only fill source differs (batch-live-pipeline.md, batch-live-symmetry.md)
+10. **Batch = live** — same code path; only fill source differs (batch-live-architecture.md — single SSOT)
 11. **AWS + GCP parity** — both VM launch paths green; `CLOUD_PROVIDER` toggle works end-to-end
     (cloud-agnostic-migration.md)
 
@@ -73,7 +73,7 @@ in `repos/<service>.yaml` extend their item set to track 4–23 (items 1–3 are
 ### Group F — Trading prerequisites (live-only services)
 
 17. **Backtest fidelity** — real gas, real market impact, realistic matching engine for AMM pools / perpetuals / spots /
-    transfers / atomic transfers / flash loans (backtest-groups.md, batch-live-symmetry.md)
+    transfers / atomic transfers / flash loans (backtest-groups.md, batch-live-architecture.md — single SSOT)
 18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured
 19. **Treasury / custody integration** — Copper for DeFi side; CEFFU for Binance institutional flow. Single SSOT:
     `codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08, replaces former
@@ -104,7 +104,7 @@ of operations: **doc → plan → code**.
 | If you change…                      | Update these SSOTs                                                                                                                                                                                                                                                |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema                     | `02-data/availability-manifest-and-data-status.md` · `02-data/shard-granularity-cefi.md` · `02-data/sports-scheduling-and-sharding.md` · `02-data/prediction-schema-paths.md` · `02-data/per-category-bucket-layouts.md` · UTL `manifest_writer.py` · `CLAUDE.md` |
-| Batch/live equivalence              | `04-architecture/batch-live-pipeline.md` · `batch-live-symmetry.md` · `backtest-groups.md` · `CLAUDE.md`                                                                                                                                                          |
+| Batch/live equivalence              | `04-architecture/batch-live-architecture.md` (single SSOT — replaces former `batch-live-pipeline.md` + `batch-live-symmetry.md`) · `backtest-groups.md` · `CLAUDE.md`                                                                                                                                                                                                                                          |
 | Cloud-agnostic VM/build             | `04-architecture/cloud-agnostic-migration.md` · `05-infrastructure/vm-tarball-deployment.md` · `05-infrastructure/cloud-agnostic-build-lineage.md` (new) · launchers + `_code_builds_aws.py` · `CLAUDE.md`                                                        |
 | Strategy archetype config           | `09-strategy/strategy-summary.md` · `09-strategy/architecture-v2/` · `09-strategy/cross-cutting/onboarding-checklist.md` · the archetype-specific sub-plan                                                                                                        |
 | Custody / treasury                  | `04-architecture/custody-providers.md` (single SSOT — Copper + CEFFU + LocalKey + Mock) · `wallet-hierarchy-and-capital-flow.md` · `unified-config-interface/testnet_contracts.py`                                                                                |

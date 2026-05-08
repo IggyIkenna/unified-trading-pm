@@ -283,9 +283,9 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
 
 - [`codex/04-architecture/deployment-topology-diagrams.md`](../04-architecture/deployment-topology-diagrams.md) —
   service-axis topology diagrams; this doc adds the lifecycle-class axis on top.
-- [`codex/04-architecture/batch-live-symmetry.md`](../04-architecture/batch-live-symmetry.md) — engineering invariant
-  that batch + live share 99% of the code path. Phase A.4 of the activation plan extends that doc with a "UX surface"
-  section explicit on how the symmetry shows up to the operator.
+- [`codex/04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) —
+  engineering invariant that batch + live share 99% of the code path. Includes the "UX surface" section explicit on how
+  the symmetry shows up to the operator (lifted from former batch-live-symmetry.md, folded 2026-05-08).
 - [`codex/05-infrastructure/launcher-script-ssot.md`](launcher-script-ssot.md) — VM-launcher SSOT under
   `deployment-service/scripts/vm/`. The Deploy tab + Monitor → Backfill rows + Monitor → Scheduled deploy-missing button
   all dispatch via this registry.

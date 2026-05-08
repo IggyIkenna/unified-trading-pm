@@ -102,7 +102,7 @@ This is the canonical index of all active plans. Plans are organized by domain.
   (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically by live and batch — typed
   `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to Telegram with the specific
   missing-upstream named in the message. References (does NOT duplicate) the existing codex SSOTs
-  (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
+  (`batch-live-architecture`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
   `sports-live-odds-connectivity`, `runtime-tiers-and-deployment`) and 8 active issues for data-correctness deltas.
   Sibling-of (NOT child-of) `master_to_live_defi_2026_05_23` — only Phase D (cefi 15-min CCXT) + Phase F.3 (AWS
   EventBridge mirror) are on the May-23 critical path; the rest is post-cutover.

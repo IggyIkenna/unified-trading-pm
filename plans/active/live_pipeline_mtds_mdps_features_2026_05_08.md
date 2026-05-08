@@ -888,7 +888,7 @@ todos:
            wired callbacks landed in Phase 10.
         4. **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` — extend the 4-state
            taxonomy section with live-pipeline-specific examples; add `pipeline_mode` column reference.
-        5. **UPDATE** `codex/04-architecture/batch-live-symmetry.md` — add a section on UTC midnight
+        5. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add a section on UTC midnight
            alignment + service-start-order independence + the 4×15s→1m cascade rule.
         6. **UPDATE** `codex/04-architecture/alerting-batch-live.md` — add the live-pipeline alert tier
            table + circuit-breaker action set.
@@ -970,9 +970,9 @@ The architecture honors that rule:
 
 Read these BEFORE making code changes — drift = review-blocking failure per `doc → plan → code`:
 
-- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md) — code-path
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — code-path
   symmetry contract.
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — pipeline
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — pipeline
   trigger + cascade architecture.
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
   — manifest schema + 4-state taxonomy + reason taxonomy (`EXPECTED_*` / `SOURCE_RETURNED_ZERO`).

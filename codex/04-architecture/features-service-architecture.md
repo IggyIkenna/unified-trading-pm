@@ -151,7 +151,7 @@ point; the calculator core does not branch on mode. The live-mode pipeline (Redi
 cascade + watermark fan-in) is wired by the lifted `BroadcastSink` + `LiveDataSource` helpers — not duplicated
 per family.
 
-Reference: [`batch-live-symmetry.md`](batch-live-symmetry.md).
+Reference: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT).
 
 ## Migration history
 
@@ -194,7 +194,7 @@ Plan: [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../pla
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Launcher SSOT: [`../05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md)
 - VM tarball deployment: [`../05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
-- Live = batch: [`batch-live-symmetry.md`](batch-live-symmetry.md)
+- Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Live pipeline architecture: [`live-pipeline-architecture.md`](live-pipeline-architecture.md)
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
 - Plan-of-record:

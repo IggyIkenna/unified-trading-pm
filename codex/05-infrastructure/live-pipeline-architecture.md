@@ -15,7 +15,7 @@ scope: [engineer, admin]
 ## TL;DR
 
 Three-tier live pipeline: **MTDS → MDPS → features-service**. Same code path as batch (per
-[`batch-live-symmetry.md`](../04-architecture/batch-live-symmetry.md) — the live activation does NOT introduce a new
+[`batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) — the live activation does NOT introduce a new
 data path; it only swaps the trigger source from Cloud Scheduler to Redis Stream events). UTC midnight alignment
 end-to-end ensures batch ↔ live reconciliation is a `GROUP BY pipeline_mode` over the same manifest. Service-start
 order doesn't matter — every service syncs at the next aligned candle boundary.
@@ -188,6 +188,6 @@ UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_bat
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
   [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md),
   [`../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
-- Foundation docs: [`../04-architecture/batch-live-symmetry.md`](../04-architecture/batch-live-symmetry.md),
-  [`../04-architecture/batch-live-pipeline.md`](../04-architecture/batch-live-pipeline.md),
+- Foundation docs: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
+  (single SSOT — replaces former batch-live-pipeline.md + batch-live-symmetry.md),
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)

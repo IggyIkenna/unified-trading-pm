@@ -94,9 +94,9 @@ Read these BEFORE making code changes; drift between code and these docs is a re
   calcs); the consolidation join boundary + DuckDB lazy-join must preserve these semantics.
 - [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
   drill-down hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint.
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   symmetry; ml-training (batch) + ml-inference (live) MUST share the same feature-read path + same calibration.
-- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md) — code-path
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — code-path
   symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes.
 - [`codex/06-coding-standards/feature-service-pattern.md`](../../codex/06-coding-standards/feature-service-pattern.md) —
   features-\* service pattern; the UTL `FeatureBatchHandler` base lifts the boilerplate the doc describes.

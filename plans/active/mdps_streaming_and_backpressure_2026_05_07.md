@@ -350,7 +350,7 @@ upstream-detected) as complementary signals.
 - [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
       `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`.
-- [ ] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-symmetry.md` with a "live=batch 4-state
+- [ ] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-architecture.md` with a "live=batch 4-state
       capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
       auto-backfill loop.
 

@@ -44,7 +44,7 @@ treated as derivative.
 
 **Derivative sources that MUST align**:
 
-- Codex `04-architecture/batch-live-symmetry.md` - Documents sharding patterns generically
+- Codex `04-architecture/batch-live-architecture.md` - Documents sharding patterns generically
 - Codex `02-data/` - Documents data availability philosophy
 - Epic task descriptions - Reference specific sharding dimensions when deploying
 - Per-repo `.cursorrules` - Enforce sharding patterns for that service
@@ -54,7 +54,7 @@ treated as derivative.
 ```bash
 # When changing sharding dimensions for a service:
 1. Update sharding.{service}.yaml (SSOT)
-2. Update 04-architecture/batch-live-symmetry.md if pattern changes
+2. Update 04-architecture/batch-live-architecture.md if pattern changes
 3. Update relevant epic tasks if they reference sharding
 4. Update {service}/.cursorrules with new sharding pattern
 5. Run: python scripts/validate-alignment.py --check-drift
@@ -68,7 +68,7 @@ treated as derivative.
 
 | Domain                  | SSOT Doc                                                      | What It Defines                                                                                                                 | Checklist Items                   |
 | ----------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| **Batch-live symmetry** | `04-architecture/batch-live-symmetry.md`                      | 4 seams pattern (data source, data sink, persistence thread, trigger), mode-agnostic engine, 90% code sharing                   | BASE-28, BASE-29, ARC-01          |
+| **Batch-live symmetry** | `04-architecture/batch-live-architecture.md`                      | 4 seams pattern (data source, data sink, persistence thread, trigger), mode-agnostic engine, 90% code sharing                   | BASE-28, BASE-29, ARC-01          |
 | **Config management**   | `06-coding-standards/README.md#configuration`                 | UnifiedCloudConfig inheritance chain, BaseConfig → UnifiedCloudConfig → ServiceConfig, no `os.getenv()`                         | BASE-01, COD-01                   |
 | **Event logging**       | `03-observability/lifecycle-events.md`                        | 11 required lifecycle events (STARTED, VALIDATION, CONFIG_LOADED, etc.), timing metadata, per-service events                    | BASE-02, OBS-01                   |
 | **Hardening standards** | `.cursor/rules/hardening-standards.mdc`                       | No fallback imports, no bare except, fail-loud principles, explicit missing data handling                                       | HARDENING-01 through HARDENING-06 |
@@ -287,7 +287,7 @@ vim deployment-service/configs/sharding.instruments-service.yaml
 # Add instrument_type to shard_dimensions
 
 # 2. Update codex if pattern changes
-vim unified-trading-pm/codex/04-architecture/batch-live-symmetry.md
+vim unified-trading-pm/codex/04-architecture/batch-live-architecture.md
 # Add section on instrument_type sharding rationale
 
 # 3. Update epic if it specifies sharding
@@ -307,7 +307,7 @@ python scripts/validate-alignment.py --check-drift
 cd deployment-service
 git add configs/sharding.instruments-service.yaml
 cd ../unified-trading-codex
-git add 04-architecture/batch-live-symmetry.md
+git add 04-architecture/batch-live-architecture.md
 git add 11-project-management/epics/data-io-production-readiness-epic.md
 cd ../instruments-service
 git add .cursorrules
@@ -362,7 +362,7 @@ python scripts/validate-alignment.py --check-drift
 | BASE-22 (MVP coverage)                | `mvp-universe.yaml` + `venues.yaml`                       | Operational + MVP |
 | BASE-23 (Data catalogue)              | `data-catalogue.{service}.yaml`                           | Operational       |
 | BASE-24 through BASE-27 (CI/CD)       | Codex `06-coding-standards/quality-gates.md`              | Standards         |
-| BASE-28, BASE-29 (Deployment)         | Codex `04-architecture/batch-live-symmetry.md`            | Standards         |
+| BASE-28, BASE-29 (Deployment)         | Codex `04-architecture/batch-live-architecture.md`            | Standards         |
 | BASE-30, BASE-31 (Libraries)          | Codex `05-infrastructure/unified-libraries/`              | Standards         |
 | BASE-32 (Security)                    | Codex `07-security/secrets-management.md`                 | Standards         |
 | HARDENING-01 through HARDENING-06     | Codex + `.cursor/rules/hardening-standards.mdc`           | Standards         |
@@ -403,7 +403,7 @@ vim deployment-service/configs/sharding.instruments-service.yaml
 # Fix: category_shards: 3 (was incorrectly 4)
 
 # 2. Update derivatives
-vim unified-trading-pm/codex/04-architecture/batch-live-symmetry.md
+vim unified-trading-pm/codex/04-architecture/batch-live-architecture.md
 # Update text referencing 3 category shards
 
 # 3. Validate

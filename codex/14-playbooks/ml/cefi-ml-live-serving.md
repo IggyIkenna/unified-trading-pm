@@ -12,7 +12,7 @@ scope: [engineer, admin]
 ## TL;DR
 
 Live ML inference for the May-23 CeFi LIVE archetype runs on the SAME features-service compute path as batch (per
-[`batch-live-symmetry.md`](../../04-architecture/batch-live-symmetry.md) — no parallel ML inference path). Three
+[`batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT) — no parallel ML inference path). Three
 durable artefacts make this work:
 
 1. **Model artefact registry** — UAC SSOT for `gs://uts-models-{cloud}/{asset_group}/{family}/{version}/model.{ext}`
@@ -129,6 +129,6 @@ grouping fills by `model_version` + summing realised P&L.
 - Plan: [`live_pipeline_mtds_mdps_features_2026_05_08`](../../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Sibling: [`ml-alerting-rules.md`](../alerting/ml-alerting-rules.md)
 - Foundation:
-  [`../../04-architecture/batch-live-symmetry.md`](../../04-architecture/batch-live-symmetry.md),
+  [`../../04-architecture/batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT),
   [`../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md),
   [`../../05-infrastructure/live-pipeline-architecture.md`](../../05-infrastructure/live-pipeline-architecture.md)
