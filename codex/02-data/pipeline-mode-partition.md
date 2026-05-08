@@ -6,8 +6,25 @@ scope: [engineer, admin]
 
 > **STATUS** — Documents the `pipeline_mode={batch_*, live_websocket, ...}` hive partition column added across every
 > parquet on disk during the bundled GCS migration on 2026-05-XX. Migration owner:
-> [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md).
+> [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plan, the plan wins.
+
+## Shipped progress (2026-05-08, Tab 3 GCS migration cluster)
+
+| Phase                                                   | Status      | Commit(s)                                                                       |
+| ------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| 0 — pre-audit doc (operator-runnable on same-region VM) | ✅ shipped  | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (plan flip)                   |
+| 1A — UAC `PipelineMode` SSOT + closed-set round-trip    | ✅ shipped  | `unified-api-contracts@8bc3f2a`                                                 |
+| 1B — UTL `ManifestWriter` `pipeline_mode` kwarg + tests | ✅ shipped  | `unified-trading-library@87134364`                                              |
+| 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field        | ✅ shipped  | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5`                 |
+| 2 — Canonical migration script + 23 unit tests          | ✅ shipped  | `unified-trading-pm@5a3c360a` + `@cc6fe4ce` (plan flip)                         |
+| 5.1 — UTL `read_manifest_with_source_priority` reader   | ✅ shipped  | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) |
+| 3 — Operator-gated VM execution                         | ⏳ pending  | Operator runs after pre-audit results (§§(b)(c)(d)(e)(h) of pre-audit doc).     |
+| 4 — Workspace-wide consumer sweep                       | ⏳ pending  | Parallel with Phase 3.                                                          |
+| 5.2 / 5.3 — MTDS/MDPS path probers + Sports/DeFi paths  | ⏳ pending  | Follow-up sub-agents.                                                           |
+| 6 — Residual phantom cleanup (post-Phase-3.6)           | ⏳ pending  | Sequential after Phase 3.6.                                                     |
+| 8 — Reader fallback removal (T+30d, ~2026-06-15)        | ⏸ deferred | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
+| 9 — Final workspace-wide QG sweep                       | ⏳ pending  | Sequential after Phase 6.                                                       |
 
 ## TL;DR
 

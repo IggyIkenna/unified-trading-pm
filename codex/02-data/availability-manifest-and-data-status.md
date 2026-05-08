@@ -288,6 +288,16 @@ class AvailabilityRecord:
     margin_type: str = ""           # "inverse" (coin-margined) | "linear" (stable-margined) | ""
     combo_type: str = ""            # "call_spread", "iron_condor", "butterfly", "" = non-combo
     leg_weights: str = ""           # JSON: [{"instrument_id": "...", "qty": 1|-1|...}]; "" = non-combo
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v8 — pipeline_mode partition (gcs_migration_bundle_pipeline_mode_2026_05_08)
+    # Source-and-mode tag per row — every parquet on disk + every manifest
+    # row knows whether it was produced by batch (one entry per SOURCE_PRIORITY
+    # source) or by live websocket. Closed-set per UAC `PipelineMode` StrEnum;
+    # round-trip with `SOURCE_PRIORITY` enforced via test_pipeline_mode.py.
+    # See codex/02-data/pipeline-mode-partition.md for the full SSOT.
+    # ─────────────────────────────────────────────────────────────────────
+    pipeline_mode: str | None = None  # "batch_databento" | "batch_tardis" | … | "live_websocket" | None (pre-migration)
 ```
 
 ### Column Rules
@@ -722,12 +732,11 @@ Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
 **Half 2 — Backward-fill the expected universe** (SHIPPED 2026-05-07 — PM@79e47874 + PM@341bb285).
 `instruments-service/scripts/enumerate_expected_universe.py` (Phase 3.D.4 — instruments-service@8e404c8 / @d1c9928 /
 @a936a28) walks the per-asset-group cross-product over UAC SSOTs + service catalogs and writes
-`record_expected_empty(reason=EXPECTED_<X>)` rows for every tuple that has no manifest row. **1,455,901 rows
-written + merged into canonical** across all 5 asset_groups (TradFi 35,033 + Sports 13,176 + CeFi 119,152 +
-Prediction 2,280 + DeFi 1,286,260). The reconciler at
-`instruments-service/scripts/reconcile_expected_absence_reasons.py` (shipped 2026-05-07 late3) is the complementary
-pass that stamps reasons on **legacy null-reason rows that already have a manifest entry**; the enumerator covers
-the **rows that have no manifest entry at all**. Per-asset-group cross-product:
+`record_expected_empty(reason=EXPECTED_<X>)` rows for every tuple that has no manifest row. **1,455,901 rows written +
+merged into canonical** across all 5 asset_groups (TradFi 35,033 + Sports 13,176 + CeFi 119,152 + Prediction 2,280 +
+DeFi 1,286,260). The reconciler at `instruments-service/scripts/reconcile_expected_absence_reasons.py` (shipped
+2026-05-07 late3) is the complementary pass that stamps reasons on **legacy null-reason rows that already have a
+manifest entry**; the enumerator covers the **rows that have no manifest entry at all**. Per-asset-group cross-product:
 
 | Asset group | Expected-universe inputs (UAC + service catalogs)                                                                                                                              |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -756,9 +765,9 @@ denominator-divergence closure depends on the row EXISTING, not on the specific 
   the new status. Net: more code change, same outcome.
 
 The **absence-of-row semantic** ("not in expected universe") is preserved either way. With Half 2 shipped (2026-05-07),
-manifest absence now definitively means "outside expected universe" — e.g. a pre-2021-08-31 row for an Arbitrum tuple
-is present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the
-rollup's expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
+manifest absence now definitively means "outside expected universe" — e.g. a pre-2021-08-31 row for an Arbitrum tuple is
+present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the rollup's
+expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
 `gs://market-data-tick-defi-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
 (sample: `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
 `EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` — Saturday).
