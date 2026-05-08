@@ -540,3 +540,48 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 - `cefi_tradfi_tick_data_backfill_2026_04_10.md` — CeFi half lifted above; TradFi half lifted into `tradfi_master`.
 - `market_tick_data_to_100pct_2026_05_05.md` (CeFi slice) — full plan archived after splitting per asset_group; CeFi
   slice is in this umbrella; other slices in their respective asset_group umbrellas.
+
+## DONE-2026-05-08 — Tab F2 cefi-available-at-stamping (BLOCKED, no code shipped)
+
+Tab F2 (`cefi-available-at-stamping-tab`) of
+[`work_split_2026_05_08_ikenna.md`](../active/work_split_2026_05_08_ikenna.md) § "Spawn prompts — fresh fan-out:
+instruments-service + MTDS". Spawn task structurally blocked on probe; flagged per CLAUDE.md "Findings Triage
+Discipline" Case 5 BIG. **No code shipped — only doc landings.**
+
+Commits shipped:
+
+- PM@c3b5e070 — `docs(plans): cefi available_at Tab F2 blocked — file structural mismatch flagged`. 3 files,
+  260 insertions: new § "Open questions" Q1 on this plan + new
+  [`plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
+  + cross-side ping in [`plans/active/_agent_pings.md`](../active/_agent_pings.md).
+- PM@&lt;next sha&gt; — this DONE block append.
+
+What this session did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion"
+HARD RULEs):
+
+- did NOT ship `stamp_available_at_cefi_tick` UTL helper (master-gate A.10; needs UAC SOURCE_PRIORITY shape extension
+  first; Tab 2 LIVE-PIPELINE / writegate Phase 2.D collision boundary).
+- did NOT extend UAC `SOURCE_PRIORITY` shape with per-source `emission_latency_ms` field (cross-cutting design call =
+  Ikenna-side).
+- did NOT modify any MTDS source code (cli/handlers/_*.py / engine/orchestrator.py / market_interface/adapters/cefi/_).
+- did NOT create per-venue adapter files (the spawn prompt's premise is wrong; reshape to per-callsite is the
+  recommended next-agent action per issue-doc § "Recommended decision").
+
+Items still open (deferrals already captured as plan todos before this DONE block — per CLAUDE.md EOD-audit clause):
+
+- **UAC SOURCE_PRIORITY emission_latency field** — captured in
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+  Phase 1 P0 todo line 260-264 ("CeFi adapter stamping" cites the formula but the field doesn't exist yet) + new
+  issue-doc § "Recommended decision (1)".
+- **UTL `stamp_available_at_cefi_tick` helper** — captured in
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+  Phase 1 P0 (TRACKED writegate Phase 2.D adapter stamping helpers shipped — but only sports-shaped helpers exist; this
+  is the unticked half) + new issue-doc § "Recommended decision (2)".
+- **Per-callsite wiring at writer boundary** — captured in
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+  Phase 1 P0 "CeFi adapter stamping" todo + new issue-doc § "Recommended decision (3)" + cefi_master § "Open
+  questions" Q1.
+
+Next agent picks up at: master-gate clear (UAC SOURCE_PRIORITY field + UTL `stamp_available_at_cefi_tick` shipped) →
+re-read issue-doc § "Recommended decision" → mechanically wire ~5-7 callsites at writer boundary in MTDS
+`cli/handlers/*` + `engine/orchestrator.py:1940` + the writegate Phase 2.B refactor's bar-write path.
