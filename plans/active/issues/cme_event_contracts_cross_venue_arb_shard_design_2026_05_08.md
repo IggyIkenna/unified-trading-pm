@@ -75,12 +75,24 @@ ES.OPT / SPX.OPT / etc. Every downstream feature / strategy that filters by `ins
 The comment "Same shape as Polymarket / Kalshi / Opinion binary markets" explicitly acknowledges the cross-venue
 equivalence but doesn't wire the canonical link.
 
-### Q2 — instruments-service captures via standard Databento adapter, no event-contract gating
+### Q2 — instruments-service captures via standard Databento adapter, no event-contract gating — but per-strike CATALOG ROWS DO flow
 
 The TradFi Databento adapter iterates `TRADFI_DATABENTO_INSTRUMENTS` (line 277 of the same file). Event contracts flow
 through implicitly. No explicit "this is a binary contract" branch. Means cluster validation for event contracts uses
 options-style assumptions (per-root expiry tree with strikes) which doesn't match event contracts' actual structure
 (per-root, per-day-of-resolution, per-strike-threshold YES/NO pair).
+
+**Important confirmation (2026-05-08 follow-up audit)**: per-strike catalog rows ARE flowing today.
+[databento.py:719-774](../../../instruments-service/instruments_service/reference_data/adapters/tradfi/databento.py#L719-L774)
+fetches with `stype_in="parent"` for `ECBTC.OPT` etc., which expands to all child symbols. Each child returns its own
+strike + expiry + outcome metadata via
+[`_parse_row_to_record`](../../../instruments-service/instruments_service/reference_data/adapters/tradfi/databento.py#L811)
+(line 811) → unique `instrument_key=f"{venue}:{type}:{raw_symbol}"` (line 1022). For ECBTC daily binary with 4 strikes
+(60K, 65K, 70K, 75K) × 2 outcomes (YES/NO), instruments-service writes 8 InstrumentRecords per resolution date.
+
+So **the catalog backing is in place** — what's missing is the SEMANTIC layer (instrument_type = EVENT_CONTRACT instead
+of OPTION, linked_canonical_question_group cross-link, binary-outcome-shaped cluster validation). The data IS there;
+downstream consumers just can't reason about it correctly because it's labelled as a vanilla option.
 
 ### Q3 — MTDS pulls GLBX.MDP3 for event contracts; standard TradFi shard key
 

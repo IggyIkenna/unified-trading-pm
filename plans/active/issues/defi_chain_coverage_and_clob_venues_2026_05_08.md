@@ -74,32 +74,46 @@ separate L1 (HyperEVM bridges to Arbitrum). Implications:
 - For position-balance-monitor: a balance "on Hyperliquid" has no canonical chain_id, so reconciliation between
   Hyperliquid native balances + Arbitrum-bridged USDC is opaque.
 
-### Q2 — CLOB-on-chain venue instrument definitions: PARTIAL — UAC-registered but instrument-discovery gaps
+### Q2 — CLOB-on-chain venue instrument definitions: GAP CONFIRMED — 3 of 4 venues missing instruments-service adapters entirely
 
 Four CLOB-on-chain venues per
-[dex_perp_onboarding_handover_2026_05_07.HANDOVER.md:137-150](../dex_perp_onboarding_handover_2026_05_07.HANDOVER.md#L137-L150):
+[dex_perp_onboarding_handover_2026_05_07.HANDOVER.md:137-150](../dex_perp_onboarding_handover_2026_05_07.HANDOVER.md#L137-L150).
+Definitive verdict from 2026-05-08 follow-up audit (instruments-service repo + factory.py registry):
 
-| Venue           | Chain                         | UAC `venue_mapping.py` | Live MTDS adapter                         | Instrument-service discovery | Manifest rows |
-| --------------- | ----------------------------- | ---------------------- | ----------------------------------------- | ---------------------------- | ------------- |
-| **Hyperliquid** | HyperEVM L1 + Arbitrum bridge | ✓                      | ✓ (perp + spot)                           | ⚠ check                     | ⚠            |
-| **Lighter**     | zkSync Era                    | ✓ (line 137)           | ✓ ohlcv_1m shipped May 7 (commit 10aa715) | ⚠ check                     | ✓ (1440/day)  |
-| **Pacifica**    | Solana                        | ✓ (line 137)           | ✓ kline shipped May 7 (commit 51fecd5)    | ⚠ check                     | ✓ (~4000/day) |
-| **Extended**    | Starknet                      | ✓ (line 137)           | ✗ MISSING (handover line 144)             | ✗ no historical adapter      | ✗             |
+| Venue           | Chain                         | UAC `venue_mapping.py` | Live MTDS adapter                         | instruments-service discovery adapter                                                                                                                                | Per-perp catalog rows |
+| --------------- | ----------------------------- | ---------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| **Hyperliquid** | HyperEVM L1 + Arbitrum bridge | ✓                      | ✓ (perp + spot)                           | ✓ [`hyperliquid.py:57-136`](../../../instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py#L57-L136) iterates `data.universe` per-perp | ✓ per-perp            |
+| **Lighter**     | zkSync Era                    | ✓ (line 137)           | ✓ ohlcv_1m shipped May 7 (commit 10aa715) | **✗ MISSING**                                                                                                                                                        | **✗ 0**               |
+| **Pacifica**    | Solana                        | ✓ (line 137)           | ✓ kline shipped May 7 (commit 51fecd5)    | **✗ MISSING**                                                                                                                                                        | **✗ 0**               |
+| **Extended**    | Starknet                      | ✓ (line 137)           | ✗ MISSING (handover line 144)             | **✗ MISSING**                                                                                                                                                        | **✗ 0**               |
 
-**Concrete gaps**:
+**Concrete evidence** (from instruments-service repo scan):
 
-- **Extended**: blocked on missing Starknet RPC template in `CHAIN_RPC_TEMPLATES` (handover line 142) AND missing
-  historical OHLCV adapter (line 144). Code-registered in UAC but no production data flowing.
-- **All 4**: it's unclear from this audit whether instruments-service has explicit instrument-discovery adapters for
-  these 4 venues that produce per-instrument rows in the manifest, vs whether MTDS adapters write market data rows
-  without instrument-service catalog rows. The user's observation: "I don't see the management definitions for CeFi or
-  DeFi" — likely correct for instrument-discovery (catalog) layer despite UAC venue_mapping presence.
+- [`factory.py:65-124`](../../../instruments-service/instruments_service/reference_data/factory.py#L65-L124) registry
+  maps `(asset_group, venue)` → adapter key. **Lighter / Pacifica / Extended have NO entries.**
+- [`adapters/cefi/`](../../../instruments-service/instruments_service/reference_data/adapters/cefi/) directory contains:
+  aster.py, ccxt_adapter.py, deribit_combo.py, hyperliquid.py, tardis.py. **No lighter_adapter.py, pacifica_adapter.py,
+  extended_adapter.py.**
+- [`adapters/clob/`](../../../instruments-service/instruments_service/reference_data/adapters/) — directory does not
+  exist.
 
-The catalog-presence question matters because the writegate Phase 3.D.5 v2 expected-universe enumerator (per
-`mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` and writegate plan) derives the manifest's expected
-universe from `instruments-service catalog × dates × data_types`. If Lighter/Pacifica/Hyperliquid/Extended don't have
-instrument-discovery rows, their MTDS captured rows have no canonical "expected universe" to compare against — coverage
-% undefined at fixture grain.
+**MTDS shipped without instruments-service**: per workspace memory, MTDS market-data adapters for Lighter + Pacifica
+shipped May 7 (commits 10aa715 + 51fecd5). instruments-service adapters did NOT ship in the same wave. Result: the
+venues are "discovered" only at MTDS capture time, with zero catalog backing for downstream MDPS / features-\* /
+strategy to JOIN against.
+
+**Why this matters concretely**: writegate Phase 3.D.5 Wave 3 v2 expected-universe enumerator derives the manifest's
+expected universe from `instruments-service catalog × dates × data_types`. With zero catalog rows for Lighter, the
+denominator is venue-grain (1 venue) not instrument-grain (170 perps × 1 day). Coverage % at any drilldown level past
+"venue exists" is undefined. Today's deployment-ui shows Lighter as 100% captured because MTDS wrote 1440 OHLCV rows for
+SOMETHING under the LIGHTER venue tag — but we have no way to know whether that's 170 perps × ~8 bars/perp or 10 perps ×
+144 bars (catalog can't tell us how many perps SHOULD have been captured).
+
+**Cross-reference with CME event contracts (issue 15 Q1 follow-up)**: by contrast, CME event contracts via Databento DO
+emit per-strike-per-expiry catalog rows automatically because the Databento adapter uses `stype_in="parent"` which
+expands child symbols. The Lighter / Pacifica / Extended adapters need to either ship dedicated per-perp enumeration
+(via Lighter SDK `get_markets()`, Pacifica `/markets` endpoint, Extended TBD) OR adopt a parent-symbology equivalent if
+the SDKs support it. Hyperliquid already does this correctly via `data.universe` iteration.
 
 ### Q3 — Asset_group classification: PARTIAL — CLOB-on-chain falls between defi/cefi
 
@@ -196,7 +210,16 @@ Item C (lifted from `consolidated_defi_data_pipeline_2026_04_15.plan.md` archive
 ## Acceptance criteria
 
 - [ ] Hyperliquid L1 + Starknet added to UAC chain enum with `kind` + `native_id` + `bridge_to` graph.
-- [ ] All 4 CLOB-on-chain venues have instruments-service discovery adapters writing per-instrument catalog rows.
+- [ ] **Lighter** instruments-service discovery adapter shipped at `adapters/cefi/lighter.py` (or equivalent path) —
+      uses Lighter SDK `get_markets()` to enumerate ~170 perps + writes per-perp InstrumentRecord with unique
+      `instrument_key=f"LIGHTER:PERP:{symbol}"`. Registered in `factory.py` LIGHTER-ZKSYNC mapping. Hyperliquid's
+      `hyperliquid.py:57-136` is the reference shape.
+- [ ] **Pacifica** instruments-service discovery adapter shipped at `adapters/cefi/pacifica.py` (or equivalent) — uses
+      Pacifica `/markets` endpoint + writes per-perp InstrumentRecord. Registered in `factory.py` PACIFICA-SOLANA.
+- [ ] **Extended** unblocked: Starknet RPC template added to UAC `CHAIN_RPC_TEMPLATES`; instruments-service discovery
+      adapter shipped + registered in factory.py EXTENDED-STARKNET.
+- [ ] **Hyperliquid** verified: existing `hyperliquid.py` adapter writing per-perp catalog rows AND the same coverage
+      extends to spot pairs (currently perp-only per `data.universe`).
 - [ ] Strategy archetype `allowed_chains` constraint enforced at pre-flight; out-of-allowed-chain trade attempts → typed
       error.
 - [ ] Workspace decision on CLOB-on-chain asset_group classification; manifest row_keys aligned to chosen shard-atom.
