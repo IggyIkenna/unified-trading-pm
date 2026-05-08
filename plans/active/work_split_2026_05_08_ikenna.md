@@ -150,15 +150,16 @@ Hermes) +
       [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) still
       pending. Today: **fix both bugs end-to-end + relaunch + 90s STARTED + 10-15min progress + T+30min per-VM manifest
       spot-check**. Per CLAUDE.md "No fire-and-forget VM launches". ~2 AI-days.
-- [ ] [DESIGN+UAC] P0. **4 UAC `PROTOCOL_LAUNCH_DATES` drift fix sub-tabs A/B/C/D** — Tab 14 yesterday found 13 of 17
-      probed `(chain, protocol)` pairs have UAC SSOT drift (same shape as Tab 9's AAVEV3-ETHEREUM finding). Each sub-tab
-      handles a cluster: **A** = Aave V3 multi-chain (BASE / LINEA / BSC / METIS / GNOSIS beyond ETHEREUM); **B** =
-      Compound V3 multi-chain (ETHEREUM / ARBITRUM / BASE / OPTIMISM); **C** = Spark / Maker-spinoff lending; **D** =
-      remaining suspects (any (chain, protocol) where UAC date pre-dates protocol's general-multi-chain rollout). For
-      each: probe-verify the subgraph for earliest `*HistoryItems` event, flip
-      `unified_api_contracts/canonical/crosscutting/chain_env.py:PROTOCOL_LAUNCH_DATES` to the correct value, add unit
-      test, drop a top-of-file `🟡 IN-FLIGHT REFACTOR` banner per CLAUDE.md "Cross-Plan Coordination Banners" rule while
-      landing. **Done**: all 13 pairs corrected + tested + Tab 14 audit doc updated to RESOLVED. ~3 AI-days.
+- [x] [DESIGN+UAC] P0. **4 UAC `PROTOCOL_LAUNCH_DATES` drift fix sub-tabs A/B/C/D** — **SHIPPED** UAC@6c873e4 (Batches
+      A/B/C/D bundled in one commit per single-file no-collision-window opportunity; 13 drift pairs flipped;
+      SPARK/ETHEREUM added at 2023-03-07 + removed from PENDING; POLYGON/COMPOUNDV3 removed and moved to PENDING since
+      `SUBGRAPH_IDS["compound_v3"]` has no POLYGON entry; 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended to
+      permit launch < chain_genesis for UNISWAPV3 ARB/OPT/BASE + COMPOUNDV3 BASE; 19/19 tests pass). Tab 14 yesterday
+      found 13 of 17 pairs drift (same shape as Tab 9's AAVEV3-ETHEREUM finding); audit's bundled drift table was
+      shipped as one atomic commit per Tab 14's audit caveat that batches all touch the same UAC file (sequential
+      merging required). **Manifest re-scan needed** post-this commit per writegate Phase 2.E reason taxonomy — moved
+      dates reclassify EXPECTED_PRE_GENESIS_CHAIN ↔ SOURCE_RETURNED_ZERO rows automatically once VMs re-write per-row
+      keys. ~3 AI-days.
 - [ ] [DESIGN+UAC+CODEX] P0. **Stream A — DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** — per
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       Stream A. Live-API probe to confirm exact 2026-05-07 collateral value ratios for Deribit stETH, Bybit
@@ -174,9 +175,11 @@ Hermes) +
       the backfill (archive paid plan? Pythnet RPC + index-into-historical? alternative source like Birdeye archive?),
       ship the backfill VM under `deployment-service/scripts/vm/launch-mtds-pyth-hermes-archive-backfill-vm.sh` with
       VM_PREFIX_TO_BUCKET registration + watchdog relaunch. ~2 AI-days.
-- [ ] [TRADING] P1. **bSOL coverage gap fix in UAC `LST_TOKEN_GENESIS`** — Tab 14 audit found bSOL is in Fork 1 brief
-      but NOT in UAC `LST_TOKEN_GENESIS`. Add it to the SSOT with verified genesis date (probe via Solana RPC). ~0.5
-      AI-days.
+- [x] [TRADING] P1. **bSOL coverage gap fix in UAC `LST_TOKEN_GENESIS`** — **SHIPPED** UAC@6c873e4 (added bSOL at
+      conservative 2022-11-24 floor in `LST_TOKEN_GENESIS` + `BLAZESTAKE → (bSOL,)` in `LST_VENUE_TO_TOKENS`; bundled
+      with Item 3 Batch D since both edit `_defi_lst.py` and Tab 14 grouped them; exact mint date for bSO13r4...HP3piy1
+      via Solana RPC `getSignaturesForAddress` deferred to follow-up — over-clipping toward 2022-11-24 is the safe
+      direction per CLAUDE.md "Honest absence" rule). ~0.5 AI-days.
 
 **Repos owned (collision boundary)**: MTDS (DeFi adapters + lending-indices handler — collides with Harsh Tab 4 only on
 lending_indices_handler.py if Bug fixes overlap; coordinate timing), execution-service + strategy-service +

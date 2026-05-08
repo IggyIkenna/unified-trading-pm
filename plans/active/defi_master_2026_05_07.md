@@ -759,16 +759,26 @@ MUST merge sequentially in the recommended order (no concurrent PRs) to avoid UA
 dependency**: feeds writegate Phase 2.E EXPECTED_PRE_GENESIS_CHAIN taxonomy + manifest consolidator
 auto-row-reclassification.
 
-- [ ] [SCRIPT] P0. **Batch A — AAVEV3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
+- [x] [SCRIPT] P0. **Batch A — AAVEV3 multi-chain dates.** Fix OPTIMISM (141d), BASE (293d), LINEA, BSC drift. Per-entry
       on-chain verification via Phase 1 script of hardcoded-values audit above; cite block + tx in comment. Single PR,
-      single commit, push to `live-defi-rollout`.
-- [ ] [SCRIPT] P0. **Batch B — COMPOUNDV3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
-      pattern as Batch A. Sequenced AFTER Batch A.
-- [ ] [SCRIPT] P0. **Batch C — UNISWAPV3 multi-chain dates.** Fix ARBITRUM (91d), OPTIMISM (35d). Same pattern,
-      sequenced AFTER Batch B.
-- [ ] [SCRIPT] P0. **Batch D — SPARK + bSOL.** Add SPARK to `PROTOCOL_LAUNCH_DATES` (currently missing despite being in
+      single commit, push to `live-defi-rollout`. **SHIPPED** UAC@6c873e4 (OPTIMISM 2022-08-04→2022-03-15 fixes 142d
+      silent data loss; POLYGON 2022-03-16→2022-03-12; AVALANCHE 2022-03-16→2022-03-12; BASE 2023-08-09→2023-08-22;
+      LINEA 2024-09-26→2025-02-11; BSC 2023-04-06→2024-01-23; all 6 pairs cited inline with subgraph-probe evidence per
+      Tab 14 audit).
+- [x] [SCRIPT] P0. **Batch B — COMPOUNDV3 multi-chain dates.** Fix ETHEREUM (12d silent data loss), BASE (22d). Same
+      pattern as Batch A. Sequenced AFTER Batch A. **SHIPPED** UAC@6c873e4 (ETHEREUM 2022-08-25→2022-08-13; ARBITRUM
+      2023-04-13→2023-05-04; BASE 2023-08-26→2023-08-04; OPTIMISM 2024-02-15→2024-04-06; POLYGON entry removed from
+      `PROTOCOL_LAUNCH_DATES` and moved to `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` since `SUBGRAPH_IDS["compound_v3"]`
+      has no POLYGON entry).
+- [x] [SCRIPT] P0. **Batch C — UNISWAPV3 multi-chain dates.** Fix ARBITRUM (91d), OPTIMISM (35d). Same pattern,
+      sequenced AFTER Batch B. **SHIPPED** UAC@6c873e4 (ARBITRUM 2021-08-31→2021-06-01; OPTIMISM 2021-12-16→2021-11-11;
+      BASE 2023-08-09→2023-07-31; all 3 are subgraph indexing pre-public-launch testnet/devnet blocks; test-side
+      `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended to permit launch < chain_genesis for these pairs).
+- [x] [SCRIPT] P0. **Batch D — SPARK + bSOL.** Add SPARK to `PROTOCOL_LAUNCH_DATES` (currently missing despite being in
       PENDING list); remove from PENDING; add bSOL to `LST_TOKEN_GENESIS` + `LST_VENUE_TO_TOKENS`. Sequenced AFTER Batch
-      C.
+      C. **SHIPPED** UAC@6c873e4 (SPARK/ETHEREUM at 2023-03-07 added; SPARK removed from PENDING; bSOL at 2022-11-24
+      conservative floor added to LST_TOKEN_GENESIS; BLAZESTAKE→(bSOL,) added to LST_VENUE_TO_TOKENS; Solana RPC probe
+      for exact bSOL mint date deferred to follow-up).
 - [ ] [HUMAN+AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** UAC oracle-coverage module
       (NEW) declares Pyth Hermes archive availability per feed: jitoSOL feed has Hermes data starting 2023-10-XX,
       Pythnet RPC data going further back but not archived consistently. Operator go/no-go: do we backtest jitoSOL
