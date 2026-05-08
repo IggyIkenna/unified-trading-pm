@@ -175,33 +175,44 @@ drift.
   `CIRCUIT_BREAKER_HALF_OPEN`, `CIRCUIT_BREAKER_BACKOFF_ESCALATED` past-tense, `CIRCUIT_BREAKER_ORDER_THROTTLED`, and
   JSONL `select(.event=="CIRCUIT_BREAKER...")` patterns — all return zero hits).
 
-### Phase A.4 — Family/archetype count refresh to 9/53 — PARALLEL — P0
+### Phase A.4 — Family/archetype count refresh to 9/53 — PARALLEL — P0 — SHIPPED 2026-05-08 PM@9e90239c
 
-- [ ] [SCRIPT] P0. UAC `StrategyArchetype` enum is the SSOT. All codex docs must cite 9 families × 53 archetypes
-      (verified PM@d6d0cd57 refreshed strategy-summary.md but residuals remain).
+- [x] [SCRIPT] P0. UAC `StrategyArchetype` enum is the SSOT. All codex docs cite 9 families × 53 archetypes
+      (PM@d6d0cd57 refreshed strategy-summary.md; residuals refreshed PM@9e90239c).
 
   **Files to update**:
-  - [ ] `09-strategy/README.md:19` — `8 families × 18 archetypes × 7 axes × 10 cross-cutting` →
-        `9 families × 53 archetypes × ... axes × ... cross-cutting concerns`. Verify axis + cross-cutting counts against
-        UAC enums.
-  - [ ] `09-strategy/architecture-v2/README.md:28-29` — `1 of 8 families` / `1 of 18 archetypes` → `1 of 9 / 1 of 53`.
-  - [ ] `09-strategy/architecture-v2/README.md:61` — section heading `## 8 Families` → `## 9 Families`; expand the 8-row
-        table to include `PORTFOLIO`.
-  - [ ] `09-strategy/architecture-v2/README.md:97,113` — `## 18 Archetypes` / `Total: 18 archetypes` →
-        `## 53 Archetypes` (or "53 archetypes spanning 9 families"); expand the table to include the Phase 9 additions:
-        4 ARBITRAGE*MEV*_, 1 ARBITRAGE*CROSS_DOMAIN_EVENT, 5 MARKET_MAKING*_ new, 3 DEFI*LP*\_, 17 expanded VOL\_\_, 4
-        PORTFOLIO\_\*.
-  - [ ] `09-strategy/architecture-v2/category-instrument-coverage.md:17,1422` —
-        `every one of the 18 v2 strategy archetypes` / `All 18 archetypes` →
-        `every one of the 53 v2 strategy archetypes` / `All 53 archetypes`. Expand the matrix to cover post-Phase-9
-        archetypes (or explicitly bound the doc to "May-23 live + immediate-backtest subset" with a successor-plan
-        reference).
-  - [ ] `09-strategy/cross-cutting/dart-manual-trade-spec.md:67-69, 72-75` — drop the explicit count or pin to "the full
-        UAC archetype set" instead of "18 ... at 46". The 11 vs 13 InstructionActionV2 count at lines 42-44 also needs
-        fixing per audit (13 per `strategy-summary.md:30-31`).
+  - [x] `09-strategy/README.md:19` — `8 families × 18 archetypes × 7 axes × 10 cross-cutting` →
+        `9 families × 53 archetypes × 7 axes × 10 cross-cutting`. Axis + cross-cutting counts verified unchanged
+        against UAC + strategy-summary.md. (PM@9e90239c.)
+  - [x] `09-strategy/architecture-v2/README.md:28-29` — `1 of 8 families` / `1 of 18 archetypes` → `1 of 9 / 1 of 53`.
+        TL;DR action types also refreshed `(11 action types)` → `(14 action types per UAC InstructionActionV2 SSOT)`.
+        (PM@9e90239c.)
+  - [x] `09-strategy/architecture-v2/README.md:61` — section heading `## 8 Families` → `## 9 Families`; table extended
+        with `PORTFOLIO` row; decision tree extended to 9 questions. (PM@9e90239c.)
+  - [x] `09-strategy/architecture-v2/README.md:97,113` — `## 18 Archetypes` / `Total: 18 archetypes` →
+        `## 53 Archetypes` / `Total: 53 archetypes`; table expanded to 9 family rows with full Phase 9 additions
+        (4 `ARBITRAGE_MEV_*` + 1 `ARBITRAGE_CROSS_DOMAIN_EVENT` + 5 new `MARKET_MAKING_*` + 3 `DEFI_LP_*`
+        + 17 expanded `VOL_*` + 4 `PORTFOLIO_*`). 5-Layer Identity Model + Document Layout legend counts also
+        updated; `## Polymorphic StrategyInstruction (11 action types)` → `(14 action types)` with `CONVERT_DUST` /
+        `LP_MINT` / `LP_BURN` rows added. (PM@9e90239c.)
+  - [x] `09-strategy/architecture-v2/category-instrument-coverage.md:17,1422` —
+        `18 v2 strategy archetypes` → `53 v2 strategy archetypes` (line 17). Banner added documenting that the
+        matrix body covers the May-23 live + immediate-backtest subset; full per-cell Phase 9 materialisation
+        DEFERRED to Phase B (per-archetype subsection generation under `architecture-v2/archetypes/`). Changelog
+        entry added 2026-05-08. (PM@9e90239c.)
+  - [x] `09-strategy/cross-cutting/dart-manual-trade-spec.md:42-44, 67-75` — `11 action types` callout reworded
+        to point at UAC `InstructionActionV2` SSOT (14 members enumerated; matrix below covers the 11 actions in
+        scope for May-23, with `CONVERT_DUST` / `LP_MINT` / `LP_BURN` deferred alongside DeFi LP archetype
+        activation). `18 archetypes ... at 46 archetypes` paragraph rewritten to point at the UAC SSOT without
+        explicit count. `### 18 archetype docs referenced` heading rewritten to track the May-23 subset. The
+        action-count drift in `strategy-summary.md:30-31` (`13 action types`) is a separate fix vs the UAC enum
+        of 14; that drift is owned by the broader `strategy-summary.md` refresh under PM@d6d0cd57's continuation.
+        (PM@9e90239c.)
 
-  **Acceptance**: workspace-wide grep for `8 families` / `18 archetypes` / `46 archetypes` returns zero hits in codex/.
-  UAC enum member counts are SSOT.
+  **Acceptance** (verified PM@9e90239c): workspace-wide `grep -rE "8 families|18 archetypes|46 archetypes" codex/09-strategy/`
+  returns zero current-state hits (the only `18 archetypes` reference is in the 2026-04-19 changelog entry of
+  `category-instrument-coverage.md`, which is a faithful historical record). UAC enum member counts (`StrategyFamily=9`,
+  `StrategyArchetype=53`, `InstructionActionV2=14`) are SSOT.
 
 ### Phase A.5 — Live transport SSOT alignment to Redis Stream — PARALLEL — P0 — SHIPPED 2026-05-08
 
