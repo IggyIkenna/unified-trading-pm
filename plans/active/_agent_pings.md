@@ -54,6 +54,11 @@ SOURCE_PRIORITY shape; structural mismatch (per-venue file premise, missing late
 + cefi_master_2026_05_07.md § "Open questions" Q1; recommends Phase 1 reshape per-callsite-not-per-venue; no code
 edits made; awaiting triage.
 
+[2026-05-09 00:02 UTC] polymarket-rebundling-tab (Tab F5) — 🟡 BLOCKED on UTL `record_captured(df)` contract vs MTDS
+streaming-finalize-loop (counts-only); architectural call needed (α CME-OPTIONS precedent / β UTL helper / γ bundle df
+plumb / δ ship α + Wave-2 successor); see predictions_master_2026_05_07.md § "Open questions" Q2 (PM@d1539f37); no code
+shipped; working tree clean on MTDS.
+
 <!--
 Resolved pings (cleared 2026-05-08 ~14:30 UTC by main orchestrator on operator's behalf):
 
