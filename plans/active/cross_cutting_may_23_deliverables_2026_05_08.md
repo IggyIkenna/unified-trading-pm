@@ -40,7 +40,14 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 ### #1 Strategy catalogue (HARD)
 
 - [ ] [DESIGN+UAC] **Catalogue UAC schema declared** — archetype × venue × instrument-type matrix shape; per-archetype
-      config schema (collateral, hedge ratios, position caps, kill-switch thresholds). Owner: Ikenna T6.
+      config schema (collateral, hedge ratios, position caps, kill-switch thresholds). Owner: Ikenna T6. **🟡 BLOCKED
+      2026-05-08 by uac-strategy-catalogue-ids-tab6a** — every plan-body symbol already exists in UAC under
+      `internal/architecture_v2/` + `internal/domain/strategy_service/` in a richer 9-family / 46-archetype shape, and
+      `unified_api_contracts/strategy.py` root facade is already 207 lines. Greenfield `canonical/domain/strategy/`
+      would create parallel SSOTs + collide with the live facade. Operator triage required — see
+      [`issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+      for full mapping table + Option A (extend v2, recommended) / B (deprecate-and-migrate) / C (parallel-SSOT, NOT
+      recommended) recommendation.
 - [ ] [SCRIPT] **Catalogue rows populated** for every archetype family known to be in scope: carry (3 sub-types:
       staked-basis / vanilla-basis / cross-venue), price-arb (3 sub-types: same-day-expiry / ETF↔future / cross-venue),
       ML prediction (per-asset-group: CeFi-ML / S&P-prediction / sports-ML), prediction-markets (4 sub-types: Polymarket
@@ -56,7 +63,12 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 ### #2 Strategy IDs
 
 - [ ] [DESIGN+UAC] **Strategy ID schema in UAC** — canonical naming convention + versioning + (archetype, venue,
-      instrument-type, client) → ID derivation function. Owner: Ikenna T6.
+      instrument-type, client) → ID derivation function. Owner: Ikenna T6. **🟡 BLOCKED 2026-05-08 by
+      uac-strategy-catalogue-ids-tab6a** — `parse_strategy_id` + `format_strategy_id` already shipped (UAC@5083d65
+      "feat(strategy): add parse_strategy_id + format_strategy_id canonical naming helpers") with the canonical 6-axis
+      slot grammar `archetype@venue-asset-instrument-period-quote-env` + FQ form `FAMILY.ARCHETYPE.slot_id`. Plan-body's
+      proposed 4-axis `<archetype>.<venue>.<instrument_type>.v<N>` is a regression (drops period / quote / env axes).
+      Operator triage required — same issue doc as #1 above.
 - [ ] [SCRIPT] **Strategy ID registry populated** for every catalogue row. Owner: Harsh T6.
 - [ ] [SCRIPT] **Strategy ID refactor sweep** — every code-path that creates a trade/fill/signal/model-inference uses
       strategy IDs (not free-form strings). Mechanical sweep across execution-service, strategy-service,

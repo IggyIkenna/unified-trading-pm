@@ -35,3 +35,7 @@ IN FLIGHT. Beef-up sub-agent BLOCKED ping resolved via fast-forward rebase + pus
 field; see alerting_service_live_rules_2026_05_07.md [2026-05-08 12:43 UTC] deploy-missing-phase0-facilitation — 3
 IAM/audit/rate-limit decisions ready for operator review; see deploy_missing_auto_launch_2026_05_07.md § "Operator
 decision summary".
+
+[2026-05-08 ~now UTC] uac-strategy-catalogue-ids-tab6a — cross_cutting #1+#2 already shipped under UAC architecture_v2,
+plan-body design would create parallel SSOTs + collide with live `strategy.py` facade — operator triage needed; see
+issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md + cross_cutting_may_23_deliverables_2026_05_08.md.
