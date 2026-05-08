@@ -7,6 +7,8 @@ parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 depends_on: []
+extends:
+  - live_pipeline_mtds_mdps_features_2026_05_08  # Phase 9 alerting tier-up consumes ServiceEmissionPolicy + StreamingHealthSnapshot from live-pipeline plan; codified per audit 2026-05-08
 gates:
   - master_to_live_defi_2026_05_23:work-stream-E
   - master_to_live_defi_2026_05_23:Group-F
