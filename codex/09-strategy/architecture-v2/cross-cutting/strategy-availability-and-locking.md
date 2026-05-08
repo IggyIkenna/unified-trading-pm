@@ -318,7 +318,7 @@ catalogue defaults; Elysium's entitlement grants them operational access only. D
 ### Canonical source + enforcement
 
 Canonical source-of-truth matrix:
-[`../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md).
+[`../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`](../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md).
 Enforcement points:
 
 - UI mirror — `unified-trading-system-ui/lib/architecture-v2/availability.ts`
@@ -332,5 +332,5 @@ Enforcement points:
 - [`../uac-registry-gaps.md`](../uac-registry-gaps.md) — registry shape for `StrategyAvailabilityRegistry` (gap #12).
 - [`capital-client-isolation.md`](capital-client-isolation.md) — per-client capital isolation (related but distinct).
 - [`portfolio-allocator.md`](portfolio-allocator.md) — where allocation authorisation check lives.
-- [`../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md)
+- [`../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`](../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md)
   — canonical current-state snapshot.

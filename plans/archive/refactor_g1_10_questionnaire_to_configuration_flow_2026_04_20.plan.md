@@ -59,7 +59,7 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
 1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.10
 2. `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — categories + instrument types + venue scope
    enumeration
-3. `codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
+3. `codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
 4. `codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
 5. `codex/14-playbooks/experience/im-decision-journey.md`
 6. `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`

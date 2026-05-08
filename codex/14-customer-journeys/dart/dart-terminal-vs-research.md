@@ -170,7 +170,7 @@ bypass.
 
 - Catalogue UX SSOT (asset_group → family → archetype): see `MEMORY.md` index entry
   `feedback_primary_category_first_class_axis.md`
-- Tier-override design: `codex/14-playbooks/demo-ops/staging-demo-setup.md`
+- Tier-override design: `codex/14-customer-journeys/demo-ops/staging-demo-setup.md`
 - Catalogue artefacts SSOT: `feedback_catalogue_gcs_artefacts.md`
 - Allocator G2.10 split: commit `dfc8c5ba` (operational allocator moved to `/services/investment-management/`);
   research-side allocator is a separate workbench restored under `/services/research/allocate`

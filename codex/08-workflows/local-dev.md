@@ -17,7 +17,7 @@ status: PARTIALLY-STALE (frontend sections obsolete; backend orchestration still
 >   [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md)
 > - Boot command: `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static|0|1|2}`
 > - Firebase emulator setup:
->   [`codex/14-playbooks/authentication/firebase-local.md`](../14-playbooks/authentication/firebase-local.md)
+>   [`codex/14-customer-journeys/authentication/firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md)
 >
 > Frontend axes that are obsolete: `VITE_MOCK_API`, `VITE_SKIP_AUTH`, the 5173-5183 port registry, the per-UI rows in
 > the port table.

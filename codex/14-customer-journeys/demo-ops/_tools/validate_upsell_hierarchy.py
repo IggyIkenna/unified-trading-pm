@@ -15,7 +15,7 @@ Exit 0 on success; non-zero on any violation.
 
 Usage::
 
-    python codex/14-playbooks/demo-ops/_tools/validate_upsell_hierarchy.py
+    python codex/14-customer-journeys/demo-ops/_tools/validate_upsell_hierarchy.py
 """
 
 from __future__ import annotations

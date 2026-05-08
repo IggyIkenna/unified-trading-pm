@@ -162,7 +162,7 @@ that will clear the bar after more runtime. Sales uses this axis in step 6 of on
 ## §4 — Worked example: Desmond
 
 Desmond H-W's pre-seeded questionnaire (see
-[`../../14-playbooks/demo-ops/profiles/desmond-dart-full.yaml`](../../14-playbooks/demo-ops/profiles/desmond-dart-full.yaml)):
+[`../../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)):
 
 ```yaml
 categories: [CeFi, DeFi]

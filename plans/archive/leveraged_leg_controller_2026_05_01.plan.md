@@ -517,7 +517,7 @@ pnl-attribution-service all green), five operator-asked items shipped in a singl
       runtime SA `unified_trading` already has the secretmanager + storage roles. Wrapper command computes
       `--date $(yesterday-utc)` at runtime so the job always picks up the just-closed UTC day.
 - [x] **Phase E** — Production smoke runbook.
-      `unified-trading-pm/codex/14-playbooks/cross-cutting/lst-seasonal-rewards-smoke.md` walks through Secret Manager
+      `unified-trading-pm/codex/14-customer-journeys/playbook-concepts/lst-seasonal-rewards-smoke.md` walks through Secret Manager
       key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet audit, ad-hoc
       `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the credential-free
       SIT, cron enable + 24h first-fire monitoring, and rollback (`gcloud scheduler jobs pause`).

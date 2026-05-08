@@ -10,7 +10,7 @@ scope: [engineer]
 > `GET /api/v1/strategy-instances/{id}/performance`. **Plan:**
 > [`plans/archive/performance_overlay_continuous_timeline_2026_04_21.plan.md`](../../../plans/archive/performance_overlay_continuous_timeline_2026_04_21.plan.md)
 > **Depends on:** [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) ·
-> [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+> [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
 > **Consumers:** [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) (FOMO tearsheets) · DART terminal
 > (Performance tab) · Reports (IM allocator view).
 
@@ -22,7 +22,7 @@ scope: [engineer]
 
 1. **Backtest** — historical simulation result.
 2. **Paper** — `odum-paper` client-zero matching-engine fills (see
-   [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)).
+   [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)).
 3. **Live** — `odum-live` client-zero real-venue fills (only if the instance graduated to `live_early`+).
 
 These three coloured series on one chart is the USP of the allocator experience — backtest promises, paper confirms,
@@ -82,7 +82,7 @@ Four standard queries the UI must support via props, all backed by the same API 
 
 Residual (paper − live) is printed in the stats sidecar. Exceeding per-archetype thresholds surfaces a
 `STRATEGY_PAPER_LIVE_DRIFT` event to Observe · Risk (see
-[`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+[`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
 §6).
 
 ### 3.2 — Live vs backtest on the same window
@@ -245,7 +245,7 @@ live run per instance, and it's Odum's.
 
 - [`strategy-lifecycle-maturity.md`](./strategy-lifecycle-maturity.md) — 9-phase maturity + `odum-paper` seed rows;
   `phase_history` drives transition markers.
-- [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+- [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
   — the series source + drift-monitoring doctrine.
 - [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) — Tier 3 FOMO tearsheets embed this component.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — DART + Reports tiles surface this.

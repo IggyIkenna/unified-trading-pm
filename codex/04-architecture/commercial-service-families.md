@@ -19,7 +19,7 @@ scope: [engineer, admin, sales]
 > `unified-trading-system-ui/app/(public)/briefings/[slug]/page.tsx`. **Plan:**
 > [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:**
-> [`../14-playbooks/_ssot-rules/12-service-family-scope-rules.md`](../14-playbooks/_ssot-rules/12-service-family-scope-rules.md)
+> [`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
 > (rule 12 — machine-readable route allowlist per family),
 > [`../06-coding-standards/strategy-display-conventions.md`](../06-coding-standards/strategy-display-conventions.md)
 > (plan-tier classification),
@@ -41,7 +41,7 @@ different families buy different outcomes, not different permission lists.
 | **DART Full**            | Client uses Odum's full Research + Promote + Trading + Observe + Reports lifecycle | Everything DART Signals-In unlocks, plus Research (ML backtest) + Promote |
 
 Rule 12
-([`../14-playbooks/_ssot-rules/12-service-family-scope-rules.md`](../14-playbooks/_ssot-rules/12-service-family-scope-rules.md))
+([`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
 is the machine-readable route-allowlist table UAC uses to enforce this at access-control time.
 
 ---
@@ -150,7 +150,7 @@ capital statements.
 
 **Reg Umbrella** — reporting + compliance-overlay tiles; no observe / research / promote. Emerging manager operates
 customer-facing activity under Odum's FCA permissions (typically via AR or IM-delegation shape — see
-[`../14-playbooks/experience/regulatory-umbrella-briefing.md`](../14-playbooks/experience/regulatory-umbrella-briefing.md)
+[`../14-customer-journeys/experience/regulatory-umbrella-briefing.md`](../14-customer-journeys/experience/regulatory-umbrella-briefing.md)
 for the four-axis structure × scope × counterparty-facing × activity model).
 
 For both IM and Reg Umbrella, the DART feature matrix (§2) does not apply — they run a different surface set and
@@ -160,12 +160,12 @@ typically don't see the strategy catalogue at all. Rule 12 enforces the route-al
 
 ## §6 — Cross-references
 
-- [`../14-playbooks/_ssot-rules/12-service-family-scope-rules.md`](../14-playbooks/_ssot-rules/12-service-family-scope-rules.md)
+- [`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
   — machine-readable YAML; UAC-enforced at `access_control()`.
-- [`../14-playbooks/demo-ops/staging-demo-setup.md`](../14-playbooks/demo-ops/staging-demo-setup.md) — operator
+- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) — operator
   checklist for provisioning a new demo client pair (Base + Full personas + questionnaire preseed + profile YAML).
-- [`../14-playbooks/demo-ops/profiles/desmond-dart-full.yaml`](../14-playbooks/demo-ops/profiles/desmond-dart-full.yaml)
-  - [`desmond-signals-in.yaml`](../14-playbooks/demo-ops/profiles/desmond-signals-in.yaml) — canonical worked example
+- [`../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)
+  - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — canonical worked example
     (real client).
 - [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step sequence in which this matrix
   is exposed to the prospect (step 4 exploration, step 6 call).

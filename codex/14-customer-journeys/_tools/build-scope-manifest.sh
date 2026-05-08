@@ -2,14 +2,14 @@
 # Build the codex scope manifest (rule 11).
 #
 # Walks every codex/**/*.md under the PM repo, parses YAML frontmatter, and
-# emits codex/14-playbooks/_generated/scope-manifest.json mapping each audience
+# emits codex/14-customer-journeys/_generated/scope-manifest.json mapping each audience
 # (sales | engineer | admin | prospect | investor) to the list of codex paths
 # visible to it.
 #
-# SSOT: codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md
+# SSOT: codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md
 #
 # Usage:
-#   bash codex/14-playbooks/_tools/build-scope-manifest.sh [--verbose]
+#   bash codex/14-customer-journeys/_tools/build-scope-manifest.sh [--verbose]
 #
 # Exit non-zero on malformed YAML, unknown scope values, or non-array scope
 # fields. Does not fail on missing `scope:` — defaults to [engineer, admin]

@@ -880,7 +880,7 @@ flowchart LR
 ```
 
 The tempt-logic is **never** a silent enrichment in prod. The widening only fires in demo environments, driven by a
-boolean env flag. Config lives at `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` as a declarative per-axis
+boolean env flag. Config lives at `codex/14-customer-journeys/demo-ops/upsell-overlay-hierarchy.yaml` as a declarative per-axis
 hierarchy. Engine code: `strategy-service/strategy_service/availability/tempt_logic.py`, chained into G1.7's
 `resolve_profile` between `QuestionnaireResponse` ingestion and `RestrictionProfile` emission.
 

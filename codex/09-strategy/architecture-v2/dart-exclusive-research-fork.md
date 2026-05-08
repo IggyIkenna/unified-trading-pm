@@ -191,7 +191,7 @@ out → VersionGovernanceReloader hot-reloads within 5min. Green on `central-ele
 
 **B3 (first-client loop).** Captures the first non-odum DART Full client completing the full loop end-to-end, with
 screenshots + event-log excerpts appended to
-[`codex/14-playbooks/shared-core/strategy-version-governance.md`](../../14-playbooks/shared-core/strategy-version-governance.md)
+[`codex/14-customer-journeys/shared-core/strategy-version-governance.md`](../../14-customer-journeys/shared-core/strategy-version-governance.md)
 as an appendix. B3 is the commercial sign-off that the feature is usable as sold, not merely functional.
 
 **Rollback posture.** Prior rolled_out versions remain in Firestore after supersession (status `retired`). Admin can
@@ -208,7 +208,7 @@ is sufficient for the incident response use case at the capacity this feature la
 - **Multi-tenant dart_exclusive.** The exclusive is literally one-at-a-time; multiple concurrent exclusives would be a
   different commercial product and a different data model.
 - **Pricing / commercial terms.** The exclusive premium, minimum-subscription-period, and upsell ladder are owned by the
-  commercial-model codex (`codex/14-playbooks/commercial-model/`), not this technical design.
+  commercial-model codex (`codex/14-customer-journeys/commercial-model/`), not this technical design.
 - **Signals-In fork capability.** Signals-in subscribers never fork. The signal feed is the product; the strategy config
   upstream is not theirs to edit.
 - **UI rollback flow.** Admin CLI hot-revert covers the immediate operational need; UI work is a follow-up.

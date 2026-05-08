@@ -3,10 +3,10 @@
 
 Walks every `codex/**/*.md` under the PM repo, parses the YAML frontmatter,
 validates the `scope:` field against the enum, and emits
-`codex/14-playbooks/_generated/scope-manifest.json` mapping each audience to
+`codex/14-customer-journeys/_generated/scope-manifest.json` mapping each audience to
 the list of codex paths visible to it.
 
-Rule 11 SSOT: `codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md`.
+Rule 11 SSOT: `codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md`.
 
 Contract
 --------
@@ -20,10 +20,10 @@ Contract
 
 Usage
 -----
-    python3 codex/14-playbooks/_tools/build_scope_manifest.py
+    python3 codex/14-customer-journeys/_tools/build_scope_manifest.py
         [--check-only]                  # do not write output; exit non-zero on errors
         [--root <repo_root>]            # default: autodetect PM repo root
-        [--output <path>]               # default: codex/14-playbooks/_generated/scope-manifest.json
+        [--output <path>]               # default: codex/14-customer-journeys/_generated/scope-manifest.json
         [--verbose]                     # per-file trace
 
 The shell wrapper `build-scope-manifest.sh` invokes this script with defaults.
@@ -228,14 +228,14 @@ def main(argv: list[str] | None = None) -> int:
         "--output",
         type=Path,
         default=None,
-        help="Manifest output path (default: codex/14-playbooks/_generated/scope-manifest.json).",
+        help="Manifest output path (default: codex/14-customer-journeys/_generated/scope-manifest.json).",
     )
     parser.add_argument("--verbose", action="store_true", help="Per-file trace to stderr.")
     args = parser.parse_args(argv)
 
     here = Path(__file__).resolve().parent
     pm_root = args.root.resolve() if args.root is not None else find_pm_root(here)
-    output = args.output if args.output is not None else pm_root / "codex/14-playbooks/_generated/scope-manifest.json"
+    output = args.output if args.output is not None else pm_root / "codex/14-customer-journeys/_generated/scope-manifest.json"
 
     manifest, uncovered = build_manifest(pm_root, verbose=args.verbose, fail_on_default=args.check_only)
 

@@ -14,8 +14,8 @@
 # are commercial / structural decisions, not discovery signals.
 #
 # SSOT context:
-#   codex/14-playbooks/demo-ops/upsell-overlays.md
-#   codex/14-playbooks/demo-ops/demo-restriction-profiles.md
+#   codex/14-customer-journeys/demo-ops/upsell-overlays.md
+#   codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md
 #   _ssot-rules/06-show-dont-show-discipline.md (LOCKED-VISIBLE surface)
 
 rule_id: 13

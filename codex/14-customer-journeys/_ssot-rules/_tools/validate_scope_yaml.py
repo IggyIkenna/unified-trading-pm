@@ -1,6 +1,6 @@
 """Validate rule 12 service-family scope YAML (G1.11).
 
-Reads ``codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.yaml``
+Reads ``codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.yaml``
 and asserts schema correctness:
 
 * Top-level ``rule_id == 12`` + ``rule_name`` present.
@@ -14,7 +14,7 @@ and asserts schema correctness:
 Exits 0 on success; 1 on schema error; 2 on missing file.
 
 Usage:
-    python codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py
+    python codex/14-customer-journeys/_ssot-rules/_tools/validate_scope_yaml.py
 """
 
 from __future__ import annotations

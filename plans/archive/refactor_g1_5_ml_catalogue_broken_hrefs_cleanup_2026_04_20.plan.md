@@ -45,7 +45,7 @@ refactor direction; undecided links rot and break triage discipline.
 3. `codex/14-playbooks/page-triage/triage-matrix.md`
 4. `unified-trading-system-ui/lib/lifecycle-route-mappings.ts`
 5. `unified-trading-system-ui/app/services/ml/**` (or wherever ML catalogue pages live today — enumerate in Phase 5A)
-6. `codex/14-playbooks/cross-cutting/catalogue-ml-model.md`
+6. `codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md`
 
 ## Out of scope
 
@@ -150,7 +150,7 @@ Wave A; parallelisable with 1.1, 1.3, 1.9, 1.12, 1.14-markdown.
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
 ls codex/14-playbooks/page-triage/broken-links.md
-ls codex/14-playbooks/cross-cutting/catalogue-ml-model.md
+ls codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md
 ls ../unified-trading-system-ui/lib/lifecycle-route-mappings.ts
 ```
 

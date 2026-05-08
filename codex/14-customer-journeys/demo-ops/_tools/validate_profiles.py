@@ -1,6 +1,6 @@
 """Validate G1.7 restriction-profile YAML files.
 
-Reads every `*.yaml` in `codex/14-playbooks/demo-ops/profiles/`, asserts:
+Reads every `*.yaml` in `codex/14-customer-journeys/demo-ops/profiles/`, asserts:
 
 * Required top-level keys present (`persona_id`, `base_audience`, `tiles`,
   `flavour_overrides`).
@@ -15,7 +15,7 @@ Invoked by PM quality-gates; paired with the UAC unit-test suite at
 ``unified-api-contracts/tests/internal/unit/test_restriction_profiles.py``.
 
 Usage:
-    python codex/14-playbooks/demo-ops/_tools/validate_profiles.py
+    python codex/14-customer-journeys/demo-ops/_tools/validate_profiles.py
 """
 
 from __future__ import annotations

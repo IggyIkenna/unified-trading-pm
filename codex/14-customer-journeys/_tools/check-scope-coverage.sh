@@ -2,7 +2,7 @@
 # CI gate: fail if any codex/**/*.md lacks `scope:` frontmatter or declares
 # an invalid scope value.
 #
-# SSOT: codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md
+# SSOT: codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md
 #
 # Invoked from unified-trading-pm/scripts/quality-gates.sh.
 

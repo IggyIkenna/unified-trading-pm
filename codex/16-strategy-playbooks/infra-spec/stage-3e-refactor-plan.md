@@ -223,7 +223,7 @@ Each item below has:
   client-facing doc references codex directly.
 - **Target state.** `codex_scope(audience)` derivation: per-audience allow-list of codex paths. External audiences see
   only doc paths tagged `audience: external` in frontmatter. Internal cost leaks blocked via allow-list enforcement.
-  Each playbook in `codex/14-playbooks/` gets an explicit audience tag.
+  Each playbook in `codex/14-customer-journeys/` gets an explicit audience tag.
 - **Blast radius.** codex doc build pipeline (adds audience-filtering); no runtime service.
 - **Blockers.** None — additive tagging.
 - **Group.** G1
@@ -262,7 +262,7 @@ Each item below has:
 - **Current state.** Service-family constraints (which audiences can observe / report / research / promote /
   admin-catalogue) exist as prose in Stage 2 docs. No rule file, no YAML, no UAC function. `access_control()` pre-check
   does not consult scope rules — scope is implicit in persona-level entitlement arrays.
-- **Target state.** Rule 12 at `codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.{md,yaml}` codifies:
+- **Target state.** Rule 12 at `codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.{md,yaml}` codifies:
   observe ∈ {DART}; reporting ∈ {IM, DART-reporting-only, Reg Umbrella}; research / promote ∈ {full-DART};
   strategy-catalogue-admin ∈ {admin, IM-desk}. New UAC function
   `check_service_family_scope(audience, service_family, activity) -> ScopeDecision` consumed as a pre-check inside
@@ -304,7 +304,7 @@ Each item below has:
 
 - **Current state.** Demo-ops docs reference "upsell overlay" and "tempt logic" in prose, but no runtime transform
   widens the demo universe to tease adjacent-tier content. Sales must manually switch persona to showcase upgrade paths.
-- **Target state.** Per-axis widening rules in `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` +
+- **Target state.** Per-axis widening rules in `codex/14-customer-journeys/demo-ops/upsell-overlay-hierarchy.yaml` +
   `apply_tempt_logic(response, env) -> QuestionnaireResponse` transform in
   `unified-api-contracts/unified_api_contracts/internal/architecture_v2/tempt_logic.py`. Chained into `resolve_profile`
   BEFORE the questionnaire-overlay step. DEMO env only (`env.is_demo=True`); production is a no-op. Never widens
@@ -321,7 +321,7 @@ Each item below has:
 
 ### 1.14 Presentation deck refresh + HTML stretch (2026-04-20 amendment)
 
-- **Current state.** `codex/14-playbooks/presentations/target-experience-post-refactor.md` drafted against the 9-item G1
+- **Current state.** `codex/14-customer-journeys/presentations/target-experience-post-refactor.md` drafted against the 9-item G1
   enumeration; missing slides for items 1.10-1.14 and the 2026-04-20 amendment's cross-cutting lessons (MCP Playwright
   discipline, dev/staging parity). No HTML reveal.js wrapper.
 - **Target state.** Markdown deck refreshed for the 14-item G1 surface + 7 new slides (G1.10 questionnaire, G1.11 scope
@@ -561,7 +561,7 @@ Each item below has:
   the numbers land via finance workflow.
 - **Target state.** Finance populates numbers via a non-codex workflow (finance Google Sheet → export → commit). Update
   frequency: quarterly. Internal-column leakage guard per rule 08 ensures only finance-authorised commits land on
-  `codex/14-playbooks/commercial-model/pricing-building-blocks.md`.
+  `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md`.
 - **Blast radius.** 1 doc populated; no code.
 - **Blockers.** None — organisational.
 - **Group.** G3 (non-codex, depends on finance)
@@ -573,7 +573,7 @@ Each item below has:
 ### 3.3 Briefings-content CMS migration
 
 - **Current state.** pb2 briefing docs (`briefings-hub.md`, `dart-briefing.md`, `regulatory-umbrella-briefing.md`,
-  `im-decision-journey.md`) live as markdown in `codex/14-playbooks/experience/`. Updates require PR + merge + deploy.
+  `im-decision-journey.md`) live as markdown in `codex/14-customer-journeys/experience/`. Updates require PR + merge + deploy.
   Sales cannot iterate briefing content without engineering.
 - **Target state.** Briefing content lives in a headless CMS (Contentful / Sanity / Notion API); UI renders from CMS.
   Markdown in codex becomes the canonical draft + audit source; CMS mirrors it with managed-revision workflow for sales.
@@ -601,17 +601,17 @@ Each item below has:
 
 ### 3.5 Codex-sync + playbook consistency agents
 
-- **Current state.** `codex/14-playbooks/` is hand-maintained. When rules change, 40+ docs may drift. No automated
+- **Current state.** `codex/14-customer-journeys/` is hand-maintained. When rules change, 40+ docs may drift. No automated
   parity checker between `_ssot-rules/` and downstream docs.
 - **Target state.** `playbook-consistency-agent` (part of `plan-health-agent` family) runs on merges to
-  `codex/14-playbooks/` — verifies rule citations still point to live sections, verifies experience playbook grammar (9
+  `codex/14-customer-journeys/` — verifies rule citations still point to live sections, verifies experience playbook grammar (9
   sections per rule 01), verifies demo-restriction-profile references are valid.
 - **Blast radius.** Agents repo (existing infrastructure), GHA workflow.
 - **Blockers.** None — additive.
 - **Group.** G3
 - **Owner.** agents / plan-health team
 - **Proposed follow-up plan.** `playbook_consistency_agent_2026_10.plan.md`
-- **Unlocks playbooks.** Long-term maintenance of the `14-playbooks/` SSOT.
+- **Unlocks playbooks.** Long-term maintenance of the `14-customer-journeys/` SSOT.
 
 ### 3.6 Visibility-slicing — e2e coverage expansion
 

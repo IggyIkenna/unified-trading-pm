@@ -178,7 +178,7 @@ paired personas is fine — it's the same prospect.
 
 ### 5.4 Add profile YAML to codex
 
-Create `codex/14-playbooks/demo-ops/profiles/{persona_id}.yaml` per the canonical shape — see
+Create `codex/14-customer-journeys/demo-ops/profiles/{persona_id}.yaml` per the canonical shape — see
 [`profiles/desmond-dart-full.yaml`](./profiles/desmond-dart-full.yaml) for the reference template. Include:
 
 - Persona-id, display-name, email, role, org, entitlements
@@ -232,7 +232,7 @@ vitest suite. If green, commit alongside the YAML profile on the same branch.
 If a prospect churns or goes dark, archive rather than delete — prior meeting records in
 [`account-intelligence-record.md`](./account-intelligence-record.md) may still reference the persona id.
 
-1. Move the profile YAML to `codex/14-playbooks/demo-ops/profiles/_archived/`.
+1. Move the profile YAML to `codex/14-customer-journeys/demo-ops/profiles/_archived/`.
 2. Leave the persona in `PERSONAS` with a comment `// archived YYYY-MM-DD — {reason}`.
 3. Remove from `TOGGLE_MAP` to clean up the nav toggle.
 4. Drop the `QUESTIONNAIRE_PRESEEDS` entry.

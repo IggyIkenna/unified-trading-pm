@@ -367,7 +367,7 @@ unified-config-interface (env-resolution), Firebase config files. **Hands off** 
   scripts), "Workflow Templates", "Deploy_missing UI" (in DeFi Execution Architecture context)
 - [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md)
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md)
-- [`codex/14-playbooks/authentication/firebase-local.md`](../../codex/14-playbooks/authentication/firebase-local.md)
+- [`codex/14-customer-journeys/authentication/firebase-local.md`](../../codex/14-customer-journeys/authentication/firebase-local.md)
 - [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md)
 
 **Sub-agent fan-out**:

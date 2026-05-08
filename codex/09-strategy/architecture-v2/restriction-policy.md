@@ -20,7 +20,7 @@ scope: [engineer, admin]
 > - Questionnaire axes / enums: `unified-trading-system-ui/lib/questionnaire/types.ts`
 >   - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py`
 >     (`QuestionnaireResponse`).
-> - Commercial SSOT: `unified-trading-pm/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`.
+> - Commercial SSOT: `unified-trading-pm/codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`.
 
 ## 1. Why restrictions exist
 
@@ -258,7 +258,7 @@ available.
 
 - [`block-list.md`](block-list.md) — hard-blocked combos + remediation.
 - [`category-instrument-coverage.md`](category-instrument-coverage.md) — full coverage matrix.
-- [`../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md`](../../14-playbooks/shared-core/strategy-allocation-lock-matrix.md)
+- [`../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`](../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md)
   — commercial SSOT for the lock-state policy.
 - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py` — UAC overlay logic.
 - `unified-trading-system-ui/lib/architecture-v2/initial-lock-state.ts` — runtime seed of the lock-state registry.

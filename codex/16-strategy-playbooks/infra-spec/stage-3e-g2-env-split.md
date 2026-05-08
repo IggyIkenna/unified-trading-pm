@@ -44,7 +44,7 @@ Internal cost column stays codex-private per rule 08.
 
 **Implementation:**
 
-- **SSOT:** `codex/14-playbooks/commercial-model/pricing-building-blocks.md` (locked ranges today; finance-committed
+- **SSOT:** `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (locked ranges today; finance-committed
   point values land inline once signed off).
 - **Loader (new):** `unified-trading-pm/scripts/propagation/sync-pricing-tables-to-uac.{sh,py}` — parses the markdown
   table, emits `unified-api-contracts/unified_api_contracts/internal/architecture_v2/pricing_manifest.json`. Pattern
@@ -104,7 +104,7 @@ interface ClientContract {
 
 - `unified-api-contracts/unified_api_contracts/internal/domain/contract_management/schemas.py` — Pydantic mirror of
   `ClientContract` TypeScript interface
-- `unified-trading-pm/codex/14-playbooks/commercial-model/contract-schema.md` — contract-management SSOT doc
+- `unified-trading-pm/codex/14-customer-journeys/commercial-model/contract-schema.md` — contract-management SSOT doc
 - Firestore security rules update in `unified-trading-system-ui/firestore.rules` (needs creating — see
   [§ Firestore rules, new](#firestore-rules-new) below)
 

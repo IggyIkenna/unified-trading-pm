@@ -151,7 +151,7 @@ rule 02 tone; internal docs can use them directly.
 ### On the layered directory structure
 
 ```
-codex/14-playbooks/
+codex/14-customer-journeys/
 ├── _ssot-rules/       (rules governing every experience doc — this dir)
 ├── experience/        (narrative playbooks, sales-owned)
 ├── shared-core/       (product truths reused across layers)
@@ -605,7 +605,7 @@ research services built on top of underlying data sources, subject to licensing 
 
 ### Recommended document and directory separation
 
-(Note: nested under `codex/14-playbooks/` in Stage 2 decisions, not as parallel top-level dirs.)
+(Note: nested under `codex/14-customer-journeys/` in Stage 2 decisions, not as parallel top-level dirs.)
 
 - **`/experience-playbooks/`** — narrative journey docs for sales, product, leadership, demo owners.
 - **`/shared-product-model/`** — core truths reused across experience, commercial packaging, demo, and production

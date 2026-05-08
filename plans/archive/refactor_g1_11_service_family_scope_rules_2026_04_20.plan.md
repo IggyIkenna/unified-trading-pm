@@ -82,7 +82,7 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 5. `codex/14-playbooks/shared-core/client-reporting-demo-walkthrough.md`
 6. `codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
 7. `codex/14-playbooks/shared-core/shared-reporting-core.md`
-8. `codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
+8. `codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
 9. `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` (full)
 10. `codex/09-strategy/architecture-v2/cross-cutting/` (all files)
 11. `strategy-service/strategy_service/engine/strategies/v2/` (read-only — archetype-by-archetype check of which

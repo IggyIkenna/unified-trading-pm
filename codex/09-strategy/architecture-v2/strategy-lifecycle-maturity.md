@@ -11,7 +11,7 @@ scope: [engineer, admin]
 > [`plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md`](../../../plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md)
 > **Depends on (consumers):** [`strategy-catalogue-3tier.md`](./strategy-catalogue-3tier.md) ·
 > [`performance-overlay.md`](./performance-overlay.md) · [`dashboard-services-grid.md`](./dashboard-services-grid.md) ·
-> [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+> [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
 
 Every downstream allocator, catalogue, admin editor, and client view reads from this model. It answers four questions
 for any single strategy instance at any point in time:
@@ -95,7 +95,7 @@ VenueSetVariant(
 ```
 
 `pricing_tier ∈ {base, premium, top_tier, apex}` maps to commercial pricing (see
-`codex/14-playbooks/commercial-model/`).
+`codex/14-customer-journeys/commercial-model/`).
 
 ### Worked example — Elysium upsell ladder
 
@@ -183,7 +183,7 @@ phase `live_early` onwards). These series are the authoritative source for:
 - Admin universe "run status" badges (Plan B admin-universe viewMode)
 
 Full rationale + lifecycle:
-[`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md).
+[`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md).
 
 ---
 
@@ -297,7 +297,7 @@ This is the denominator for:
 - [`performance-overlay.md`](./performance-overlay.md) — backtest+paper+live overlay using `odum-paper`/`odum-live`
   series.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — §4.5 Strategy Catalogue as cross-cutting primitive.
-- [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+- [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
   — full client-zero doctrine + seeding + retention.
 - [`../../06-coding-standards/config-reloader-pattern.md`](../../06-coding-standards/config-reloader-pattern.md) —
   `LifecycleReloader` implementation pattern.

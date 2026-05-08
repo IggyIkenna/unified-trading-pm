@@ -10,7 +10,7 @@ referenced_by:
 related:
   - codex/15-runbooks/alerting/alert-code-taxonomy.md
   - codex/15-runbooks/alerting/threshold-tuning.md
-  - codex/14-playbooks/dart/
+  - codex/14-customer-journeys/dart/
 ---
 
 # Alerting Operator Playbook

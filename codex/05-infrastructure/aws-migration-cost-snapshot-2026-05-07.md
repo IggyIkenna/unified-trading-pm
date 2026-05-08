@@ -156,7 +156,7 @@ odum-portal) are hot-path interactive.
 ## Firebase (Identity Platform + Firestore + Storage + Auth + Hosting)
 
 Used for the unified-trading-system-ui authentication tier (Tier 0 emulator suite + staging + prod). Documented across
-`codex/14-playbooks/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project. Identity
+`codex/14-customer-journeys/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project. Identity
 Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storage.
 
 ---

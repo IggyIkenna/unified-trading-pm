@@ -51,7 +51,7 @@ surfaces.
 5. `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` — current state
 6. `unified-trading-system-ui/tests/e2e/playbooks/seed-persona.ts`
 7. `unified-trading-system-ui/lib/auth/personas.ts` — 15-20 personas post-G1.4
-8. `codex/14-playbooks/cross-cutting/visibility-slicing.md`
+8. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Out of scope
 

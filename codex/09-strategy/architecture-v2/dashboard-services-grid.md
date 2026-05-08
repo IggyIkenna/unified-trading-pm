@@ -7,8 +7,8 @@ scope: [engineer]
 **Status:** canonical (2026-04-21) **Owner:** UI + Strategy Architecture v2 **SSOT for:**
 `unified-trading-system-ui/lib/config/services.ts`, `lib/auth/persona-dashboard-shape.ts`,
 `app/(platform)/dashboard/page.tsx` **Cross-refs:** [`dart-tab-structure.md`](./dart-tab-structure.md) ·
-[`restriction-policy.md`](./restriction-policy.md) · `codex/14-playbooks/cross-cutting/visibility-slicing.md` ·
-`codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+[`restriction-policy.md`](./restriction-policy.md) · `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` ·
+`codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
 
 ---
 
@@ -167,7 +167,7 @@ and no other org holds the lock. Research `FixtureForkDialog` on subscribed inst
 pending_approval → approved → rolled_out) subject to the `BACKTEST_1YR` floor.
 
 SSOT: [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) +
-[`../../14-playbooks/shared-core/strategy-version-governance.md`](../../14-playbooks/shared-core/strategy-version-governance.md).
+[`../../14-customer-journeys/shared-core/strategy-version-governance.md`](../../14-customer-journeys/shared-core/strategy-version-governance.md).
 Implementation shipping in Plan D phases (Phase 1 UAC schema + Phase 2 UTA endpoints landed 2026-04-22; Phase 3
 strategy-service worker + Phase 4 UI pages tracked on the plan).
 
@@ -217,9 +217,9 @@ counterparty-outbound stays at the top level (it's a commercial product), the la
 - [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) — Plan D. DART exclusive subscription + client
   research fork + joint Odum-client version governance. DART tile gains `subscriptions` + `versions` chips; Admin & Ops
   tile gains `strategy-version-approvals` chip.
-- `codex/14-playbooks/cross-cutting/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked / visible
+- `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked / visible
   three-state enum across the product).
-- `codex/14-playbooks/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect personas.
+- `codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect personas.
 
 ---
 

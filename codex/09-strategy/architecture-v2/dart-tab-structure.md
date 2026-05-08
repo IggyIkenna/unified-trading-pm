@@ -11,7 +11,7 @@ Parent plan: `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` (
 
 Cross-refs:
 
-- `codex/14-playbooks/` — per-audience playbooks. Each playbook declares which DART tabs its persona sees.
+- `codex/14-customer-journeys/` — per-audience playbooks. Each playbook declares which DART tabs its persona sees.
 - `codex/09-strategy/architecture-v2/restriction-policy.md` — default visibility for strategy cells per persona.
 - `codex/09-strategy/architecture-v2/dashboard-services-grid.md` — **sibling** 5-tile product-axis model for
   `/dashboard`. Dashboard tile sub-route chips are the dashboard-side projection of the DART sub-tab catalog below;

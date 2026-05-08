@@ -112,25 +112,25 @@ can override if it genuinely serves a different audience.
 | `11-project-management/`                   | `[engineer, admin]`           | Plan registry, planning standards                                                           |
 | `12-agent-workflow/`                       | `[engineer]`                  | Sub-agent rules                                                                             |
 | `13-codex-governance/`                     | `[engineer, admin]`           | Codex rules                                                                                 |
-| `14-playbooks/README.md`                   | `[engineer, admin, sales]`    | Playbook hub overview                                                                       |
-| `14-playbooks/glossary.md`                 | `[sales, prospect, investor]` | Canonical DART / IM / Reg Umbrella definitions — prospect-safe                              |
-| `14-playbooks/_ssot-rules/`                | `[engineer, admin, sales]`    | Rules govern experience layer — sales reads too                                             |
-| `14-playbooks/experience/`                 | `[sales, prospect]`           | Narrative sales-owned docs                                                                  |
-| `14-playbooks/shared-core/`                | `[engineer, admin, sales]`    | Shared product truths — impl + commercial                                                   |
-| `14-playbooks/commercial-model/`           | `[sales, admin]`              | Pricing structure — internal commercial only (rule 08: internal cost codex-private)         |
-| `14-playbooks/demo-ops/`                   | `[sales, engineer, admin]`    | Demo config + sales ops orchestration                                                       |
-| `14-playbooks/implementation-mapping/`     | `[engineer, admin, sales]`    | Narrative → code bridge                                                                     |
-| `14-playbooks/playbooks/`                  | `[engineer, admin, sales]`    | Impl-layer click paths                                                                      |
-| `14-playbooks/authentication/`             | `[engineer, admin]`           | Auth runbooks                                                                               |
-| `14-playbooks/environments/`               | `[engineer, admin]`           | Per-env config                                                                              |
+| `14-customer-journeys/README.md`                   | `[engineer, admin, sales]`    | Playbook hub overview                                                                       |
+| `14-customer-journeys/glossary.md`                 | `[sales, prospect, investor]` | Canonical DART / IM / Reg Umbrella definitions — prospect-safe                              |
+| `14-customer-journeys/_ssot-rules/`                | `[engineer, admin, sales]`    | Rules govern experience layer — sales reads too                                             |
+| `14-customer-journeys/experience/`                 | `[sales, prospect]`           | Narrative sales-owned docs                                                                  |
+| `14-customer-journeys/shared-core/`                | `[engineer, admin, sales]`    | Shared product truths — impl + commercial                                                   |
+| `14-customer-journeys/commercial-model/`           | `[sales, admin]`              | Pricing structure — internal commercial only (rule 08: internal cost codex-private)         |
+| `14-customer-journeys/demo-ops/`                   | `[sales, engineer, admin]`    | Demo config + sales ops orchestration                                                       |
+| `14-customer-journeys/implementation-mapping/`     | `[engineer, admin, sales]`    | Narrative → code bridge                                                                     |
+| `14-customer-journeys/playbooks/`                  | `[engineer, admin, sales]`    | Impl-layer click paths                                                                      |
+| `14-customer-journeys/authentication/`             | `[engineer, admin]`           | Auth runbooks                                                                               |
+| `14-customer-journeys/environments/`               | `[engineer, admin]`           | Per-env config                                                                              |
 | `14-customer-journeys/playbook-concepts/`              | `[engineer, admin, sales]`    | Concepts used across playbooks; visibility-slicing is the key cross-cutting doc             |
-| `14-playbooks/page-triage/`                | `[engineer, admin]`           | 177-page classification — internal-only                                                     |
-| `14-playbooks/testing/`                    | `[engineer, admin]`           | Playwright coverage                                                                         |
-| `14-playbooks/roadmap/`                    | `[engineer, admin, sales]`    | Follow-up waves — visible to sales for commercial planning                                  |
+| `14-customer-journeys/page-triage/`                | `[engineer, admin]`           | 177-page classification — internal-only                                                     |
+| `14-customer-journeys/testing/`                    | `[engineer, admin]`           | Playwright coverage                                                                         |
+| `14-customer-journeys/roadmap/`                    | `[engineer, admin, sales]`    | Follow-up waves — visible to sales for commercial planning                                  |
 | `16-strategy-playbooks/infra-spec/`                 | `[engineer, admin]`           | Infra audit + refactor plan — engineering-owned                                             |
-| `14-playbooks/presentations/`              | `[engineer, admin, investor]` | Target-state deck — investor-briefing-ready                                                 |
-| `14-playbooks/information-architecture.md` | `[engineer, admin, sales]`    | IA hub — all internal                                                                       |
-| `14-playbooks/audiences-and-journeys.md`   | `[engineer, admin, sales]`    | Matrix of audiences × journeys                                                              |
+| `14-customer-journeys/presentations/`              | `[engineer, admin, investor]` | Target-state deck — investor-briefing-ready                                                 |
+| `14-customer-journeys/information-architecture.md` | `[engineer, admin, sales]`    | IA hub — all internal                                                                       |
+| `14-customer-journeys/audiences-and-journeys.md`   | `[engineer, admin, sales]`    | Matrix of audiences × journeys                                                              |
 | `DEPRECATED_UIS_NOTICE.md`                 | `[engineer, admin]`           | Internal deprecation note                                                                   |
 | `QUALITY_GATE_BYPASS_AUDIT.md`             | `[engineer, admin]`           | Internal audit                                                                              |
 | `GLOSSARY.md`                              | `[engineer, admin]`           | Workspace glossary                                                                          |
@@ -218,20 +218,20 @@ Data, Analytics, Research & Trading — Odum's DIY platform track ...
 
 ## How the registry is consumed
 
-1. **Build step.** `codex/14-playbooks/_tools/build-scope-manifest.sh` walks every `codex/**/*.md`, parses the
-   frontmatter, and emits `codex/14-playbooks/_generated/scope-manifest.json`. Shape:
+1. **Build step.** `codex/14-customer-journeys/_tools/build-scope-manifest.sh` walks every `codex/**/*.md`, parses the
+   frontmatter, and emits `codex/14-customer-journeys/_generated/scope-manifest.json`. Shape:
    ```json
    {
-     "sales":     ["codex/14-playbooks/experience/im-decision-journey.md", ...],
+     "sales":     ["codex/14-customer-journeys/experience/im-decision-journey.md", ...],
      "engineer":  ["codex/00-SSOT-INDEX.md", ...],
      "admin":     ["codex/07-security/secrets-management.md", ...],
-     "prospect":  ["codex/14-playbooks/glossary.md", ...],
-     "investor":  ["codex/14-playbooks/presentations/target-experience.md", ...]
+     "prospect":  ["codex/14-customer-journeys/glossary.md", ...],
+     "investor":  ["codex/14-customer-journeys/presentations/target-experience.md", ...]
    }
    ```
 2. **Downstream consumers.** Sales-collateral generators, help-drawer surfaces in `unified-trading-system-ui`, and
    investor-briefing PDFs read the manifest and filter codex paths by the requested audience before embedding content.
-3. **CI gate.** `codex/14-playbooks/_tools/check-scope-coverage.sh` fails loud if any codex doc is missing `scope:`
+3. **CI gate.** `codex/14-customer-journeys/_tools/check-scope-coverage.sh` fails loud if any codex doc is missing `scope:`
    frontmatter — wired into `unified-trading-pm/scripts/quality-gates.sh`.
 
 ## What this rule does NOT do

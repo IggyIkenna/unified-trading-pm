@@ -125,7 +125,7 @@ to.
 
 **Critical:** the live P&L shown on a FOMO tearsheet is `odum-live`'s run of that instance, **not** any real client's
 run. Never. (See
-[`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+[`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
 §8 FAQ, and `memory/project_fomo_tearsheets_show_live_is_odum_own_run_2026_04_21.md`.)
 
 **Contents.**
@@ -394,7 +394,7 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
 - [`performance-overlay.md`](./performance-overlay.md) — the chart primitive embedded in FOMO tearsheets.
 - [`dashboard-services-grid.md`](./dashboard-services-grid.md) — §4.5 declares Strategy Catalogue is a cross-cutting
   primitive, not a 6th tile.
-- [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
+- [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
   — the series source for FOMO tearsheets.
 - [`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md) — policy this surface
   complies with.

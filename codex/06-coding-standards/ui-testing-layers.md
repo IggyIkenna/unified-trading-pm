@@ -8,8 +8,8 @@ scope: [engineer]
 (`unified-trading-system-ui`, `deployment-ui`). **Cross-refs:**
 
 - Backend testing SSOT: [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)
-- Playbook testing (L3a subset): [`14-playbooks/testing/README.md`](../14-playbooks/testing/README.md),
-  [`14-playbooks/testing/test-matrix.md`](../14-playbooks/testing/test-matrix.md)
+- Playbook testing (L3a subset): [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md),
+  [`14-customer-journeys/testing/test-matrix.md`](../14-customer-journeys/testing/test-matrix.md)
 - VCR cassette policy: [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
 - UI functionality + API wiring:
   [`05-infrastructure/ui-functionality-requirements.md`](../05-infrastructure/ui-functionality-requirements.md)
@@ -336,7 +336,7 @@ added without a manifest entry.
 **Question answered:** Does the canonical click path for each playbook work correctly for each persona, with visibility
 slicing applied?
 
-This layer already has an SSOT at [`14-playbooks/testing/README.md`](../14-playbooks/testing/README.md). This section
+This layer already has an SSOT at [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md). This section
 delegates — do not duplicate. The rule from that SSOT stands:
 
 > When a playbook doc changes, the matching Playwright spec MUST be updated in the same PR.
@@ -623,7 +623,7 @@ blocked until the UI is updated in the same PR (monorepo pattern).
 
 ## Coverage Gates
 
-Extends the rule from [`14-playbooks/testing/README.md`](../14-playbooks/testing/README.md) ("every playbook doc has a
+Extends the rule from [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md) ("every playbook doc has a
 matching spec"):
 
 | Coverage requirement                                                | Where enforced                                                           |
@@ -739,8 +739,8 @@ Phase 5 — staging smoke + release readiness
 ## References
 
 - **Backend SSOT (mirror target):** [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)
-- **Playbook testing (L3a):** [`14-playbooks/testing/README.md`](../14-playbooks/testing/README.md),
-  [`14-playbooks/testing/test-matrix.md`](../14-playbooks/testing/test-matrix.md)
+- **Playbook testing (L3a):** [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md),
+  [`14-customer-journeys/testing/test-matrix.md`](../14-customer-journeys/testing/test-matrix.md)
 - **VCR cassette policy (cassette ownership rule):**
   [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
 - **UI functionality + API wiring:**

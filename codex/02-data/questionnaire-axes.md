@@ -85,7 +85,7 @@ optional axes default to `None` (scalars) / `()` (tuples), so responses authored
 - **Default:** no default — required
 - **Firestore path:** `/questionnaires/{id}/service_family`
 - **Filter dimension:** no; controls **which tiles are visible** via rule 12 service-family scope
-  ([`../14-playbooks/_ssot-rules/12-service-family-scope-rules.md`](../14-playbooks/_ssot-rules/12-service-family-scope-rules.md))
+  ([`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
   - triggers the Reg-Umbrella branch of the form when value is `RegUmbrella` or `combo`.
 
 ### 3.6 `fund_structure: tuple[QuestionnaireFundStructure, ...]`
@@ -176,7 +176,7 @@ Enforced in `QuestionnaireResponse.model_validate`:
   — derivation rules for the Explore tab filter.
 - [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step client sequence in which the
   questionnaire is step 3.
-- [`../14-playbooks/demo-ops/staging-demo-setup.md`](../14-playbooks/demo-ops/staging-demo-setup.md) — demo provider
+- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) — demo provider
   preseeds questionnaire payloads by persona id for email-based login.
 - [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — `service_family` gates
   tile visibility via rule 12.

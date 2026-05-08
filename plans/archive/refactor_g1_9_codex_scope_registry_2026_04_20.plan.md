@@ -47,7 +47,7 @@ customer-facing help surfaces in unified-trading-system-ui).
 2. `codex/00-SSOT-INDEX.md`
 3. All 10 files in `codex/14-playbooks/_ssot-rules/` (01–10 + README)
 4. `codex/14-playbooks/README.md`
-5. `codex/14-playbooks/cross-cutting/visibility-slicing.md`
+5. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Out of scope
 

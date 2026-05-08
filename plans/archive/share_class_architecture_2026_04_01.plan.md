@@ -8,7 +8,7 @@ epic: epic-code-completion
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-# Canonical playbook SSOT: codex/14-playbooks/cross-cutting/sma-vs-pooled.md + fund-org-hierarchy.md
+# Canonical playbook SSOT: codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md + fund-org-hierarchy.md
 
 completion_gates:
   code: C5

@@ -349,7 +349,7 @@ Current state:
   (Vertex Partners). Plaintext passwords, intentionally visible in the client bundle for instant demo login.
 - **3 personas in user-management-ui** (kept separate by user directive — may never deploy publicly).
 - **localhost-only.** No staging Firebase project — tracked as five_space_ia issue #12 per memory entry "Playbook SSOT
-  shipped at codex/14-playbooks/ (2026-04-19)".
+  shipped at codex/14-customer-journeys/ (2026-04-19)".
 - **Mock-auth-only.** `VITE_SKIP_AUTH=true` + `VITE_MOCK_API=true` is the only supported mode for the demo personas
   today. Real Firebase sign-in works in theory but nothing populates the audience claims.
 

@@ -67,7 +67,7 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
   engine), `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.md` (tempt logic extends this)
 - **G1.3 consumer:** restriction profile's per-tile state feeds `use-tile-lock-state.ts`
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md`, `_ssot-rules/04-dart-commercial-axes.md`
-- **Cross-cutting:** `codex/14-playbooks/cross-cutting/visibility-slicing.md`
+- **Cross-cutting:** `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Mandatory read-set
 
@@ -78,7 +78,7 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
 5. `codex/14-playbooks/demo-ops/demo-decision-matrix.md`
 6. `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
 7. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
-8. `codex/14-playbooks/cross-cutting/visibility-slicing.md`
+8. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 9. `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md`
 10. `strategy-service/strategy_service/availability/derivation.py` (landed by G1.6)
 11. `strategy-service/strategy_service/availability/store.py` (existing Phase-10.5)

@@ -186,7 +186,7 @@ Full canonical glossary extracted this session. Primary SSOT docs that Phase 2/3
 - **Product terms** — [glossary.md](../codex/14-playbooks/glossary.md) +
   [\_ssot-rules/04-dart-commercial-axes.md](../codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md)
 - **Environments** — [environments/README.md](../codex/14-playbooks/environments/README.md)
-- **Catalogues** — [cross-cutting/catalogues.md](../codex/14-playbooks/cross-cutting/catalogues.md)
+- **Catalogues** — [cross-cutting/catalogues.md](../codex/14-customer-journeys/playbook-concepts/catalogues.md)
 - **Lock state + maturity** —
   [09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 - **Tone & posture (anti-patterns)** —

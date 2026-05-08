@@ -9,7 +9,7 @@ referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
   - codex/05-infrastructure/live-deployment-monitoring.md
-  - codex/14-playbooks/dart/
+  - codex/14-customer-journeys/dart/
 ---
 
 # Alerting Playbook — Index

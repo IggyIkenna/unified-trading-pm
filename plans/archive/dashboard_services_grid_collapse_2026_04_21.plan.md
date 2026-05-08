@@ -178,7 +178,7 @@ depends_on:
 
 # codex/09-strategy/architecture-v2/dart-tab-structure.md CROSS-REF
 
-# codex/14-playbooks/cross-cutting/visibility-slicing.md UPDATE
+# codex/14-customer-journeys/playbook-concepts/visibility-slicing.md UPDATE
 
 # plans/active/dashboard_services_grid_collapse_2026_04_21.md (this file)
 
@@ -360,7 +360,7 @@ todos:
         — the DART sub-tab list now also surfaces as dashboard tile sub-route chips; persona visibility map is the union
         of DART dropdown + dashboard chip surfaces. **DONE 2026-04-21** (PM `85c43998`). status: done
 - id: p5-visibility-slicing-update content: |
-  - [ ] [AGENT] P1. Update `codex/14-playbooks/cross-cutting/visibility-slicing.md` to note the 5-tile dashboard model +
+  - [ ] [AGENT] P1. Update `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` to note the 5-tile dashboard model +
         per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite. **DONE
         2026-04-22** — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry. status:
         done

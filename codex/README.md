@@ -41,7 +41,7 @@ extends it, per-service captures what is unique.
 | `11-project-management/` | Issue tracking, roadmaps (batch/live production), priority matrix, milestones                                   |
 | `12-agent-workflow/`     | AI agent workflow guides, task templates, sub-agent patterns                                                    |
 | `13-codex-governance/`   | SSOT boundary rules, section registry, governance README                                                        |
-| `14-playbooks/`          | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
+| `14-customer-journeys/`          | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
 
 ### Start Here
 

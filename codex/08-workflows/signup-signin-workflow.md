@@ -13,10 +13,10 @@ current vs target state of what the UI actually implements.
 
 - [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) — the questionnaire form itself (axes,
   submission, envelope).
-- [`../14-playbooks/authentication/firebase-staging.md`](../14-playbooks/authentication/firebase-staging.md) /
-  [`firebase-production.md`](../14-playbooks/authentication/firebase-production.md) — Firebase project setup, roles, and
+- [`../14-customer-journeys/authentication/firebase-staging.md`](../14-customer-journeys/authentication/firebase-staging.md) /
+  [`firebase-production.md`](../14-customer-journeys/authentication/firebase-production.md) — Firebase project setup, roles, and
   Firestore rules.
-- [`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md) —
+- [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md) —
   the briefings access-code gate (separate from the main client sign-in).
 
 ---
@@ -135,7 +135,7 @@ Key properties:
 - **Optional ops nudge:** ops may reach out around this point (post-questionnaire / mid-deep-dive) to ask whether the
   prospect wants to book a call. Whether to reach out is a CRM judgement, not a UI write.
 - **SSOT for the access-code gate:**
-  [`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md).
+  [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md).
 
 ### 2.3 Initial call stage (~30 min)
 

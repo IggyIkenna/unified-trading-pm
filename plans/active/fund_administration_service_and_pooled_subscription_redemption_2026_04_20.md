@@ -93,9 +93,9 @@ venue accounts and do not touch this rail.
 
 SSOTs now reflecting the correction:
 
-- `codex/14-playbooks/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never custodies;
+- `codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never custodies;
   POD is the fund administrator; Copper (and equivalents) named as qualified custodians.
-- `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail; portal
+- `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail; portal
   surface; contract surface sketch (this plan is its implementation).
 
 ## Existing primitives to reuse (not rebuild)
@@ -189,7 +189,7 @@ Phase 0 (UAC + UTL)
         `RedemptionStatus`, `AllocationExecutionStatus`. Re-export from `unified_api_contracts.internal` facade per
         Citadel import rules. Dataclasses with frozen=True; AwareDatetime; Decimal for money. No pydantic BaseModel
         unless the type is externally serialised. Mirror the schema sketch in
-        `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` §"Contract surface". status: pending
+        `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` §"Contract surface". status: pending
 
 - id: uac-wallet-role-enum content: |
   - [x] [AGENT] P0. UAC: add `WalletRole` enum (`TREASURY` / `TRADING` / `RESERVE`) to `internal/domain/account.py`. Add
@@ -341,7 +341,7 @@ Phase 0 (UAC + UTL)
 ## Phase 5 — Codex + briefings + memory cross-link (SEQUENTIAL after Phases 2-4)
 
 - id: codex-treasury-doc-concretise content: |
-  - [ ] [AGENT] P0. PM: update `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` — replace the
+  - [ ] [AGENT] P0. PM: update `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — replace the
         "to-be-built" sketches with concrete UAC type paths, event names, and service endpoints as they landed. Add link
         to this plan in §Related docs. status: pending
 

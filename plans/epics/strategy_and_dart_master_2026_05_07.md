@@ -70,7 +70,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 - [`codex/09-strategy/architecture-v2/`](../../codex/09-strategy/architecture-v2/) — strategy v2 SSOT (README +
   MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting + 2 architecture docs)
-- [`codex/14-playbooks/dart/`](../../codex/14-playbooks/dart/) — DART terminal vs research playbook (paired SSOT for the
+- [`codex/14-customer-journeys/dart/`](../../codex/14-customer-journeys/dart/) — DART terminal vs research playbook (paired SSOT for the
   cockpit refactor)
 - [`codex/04-architecture/shadow-deployment-pattern.md`](../../codex/04-architecture/shadow-deployment-pattern.md) —
   shadow window contract for archetype builds
@@ -296,8 +296,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 - [ ] [HUMAN] P2. **v2 archetype-expansion roadmap** (§4.10, was P1). v1 = 8 presets covering 6 archetype clusters; v2
       names 7 missing archetype presets (Market-Making · Equity LS · Rates · Macro · FX · Energy · Event-Driven) +
       Firm-Risk Aggregate Console for David. Not blocking v1. **DEFERRED post-May-23**.
-- [ ] [HUMAN] P2. **Doc alignment** (§25.A.7, was P0) — propagate vocabulary into PM codex (`14-playbooks/dart`,
-      `14-playbooks/audiences-and-journeys`, `09-strategy/architecture-v2/*`, `08-workflows/*`, `02-data/*`,
+- [ ] [HUMAN] P2. **Doc alignment** (§25.A.7, was P0) — propagate vocabulary into PM codex (`14-customer-journeys/dart`,
+      `14-customer-journeys/audiences-and-journeys`, `09-strategy/architecture-v2/*`, `08-workflows/*`, `02-data/*`,
       `GLOSSARY.md`, `00-SSOT-INDEX.md`) + UI-repo docs (`context/AGENT_UI_STRUCTURE.md`, `context/CONTEXT_GUIDE.md`,
       `context/CONFIG_REFERENCE.md`, `docs/TIER_ZERO.md`). **DEFERRED post-May-23**.
 - [ ] [HUMAN] P2. **IR presentation copy alignment** (§25.A.2, was P1) — board / platform / investment / plan decks +

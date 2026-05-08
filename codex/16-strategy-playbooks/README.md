@@ -70,7 +70,7 @@ Every playbook in this section MUST:
 
 ## History
 
-This section was carved out of the legacy `14-playbooks/` directory in 2026-05-08 per
+This section was carved out of the legacy `14-customer-journeys/` directory in 2026-05-08 per
 [`plans/active/codex_refactor_2026_05_08.md`](../../plans/active/codex_refactor_2026_05_08.md) Phase E.2 step 3. The
 parent dir was renamed to `14-customer-journeys/` and split into three: `14-customer-journeys/` (audience flows),
 `15-runbooks/` (on-call runbooks), `16-strategy-playbooks/` (this dir, domain strategy + infra playbooks).

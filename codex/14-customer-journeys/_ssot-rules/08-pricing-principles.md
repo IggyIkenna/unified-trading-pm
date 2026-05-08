@@ -51,7 +51,7 @@ Every building block has three numbers internally:
 The internal cost number **never** appears in any client-facing document, pricing sheet, commercial proposal, demo
 environment, or public marketing asset. It lives only in:
 
-- `codex/14-playbooks/commercial-model/pricing-building-blocks.md` (Stage 2 output — codex-private by directory
+- `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (Stage 2 output — codex-private by directory
   convention; not rendered in any client-facing UI).
 - Odum finance analysis exports.
 - Board/investor materials clearly marked internal.

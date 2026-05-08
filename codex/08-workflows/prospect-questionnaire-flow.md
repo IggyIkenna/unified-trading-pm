@@ -111,7 +111,7 @@ the fingerprint is the empty string and the envelope still identifies the prospe
 fingerprint will commonly be empty now since most cold-inbound prospects fill the questionnaire BEFORE having a code.
 
 For the canonical mechanism + the secondary "I already have an access code" disclosure path on the gate, see
-[`../14-playbooks/authentication/light-auth-briefings.md`](../14-playbooks/authentication/light-auth-briefings.md).
+[`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md).
 
 ---
 

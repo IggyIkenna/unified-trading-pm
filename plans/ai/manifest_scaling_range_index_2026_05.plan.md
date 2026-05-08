@@ -8,7 +8,7 @@ audience: backend engineers, data platform engineers
 parent_reference:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/data-catalogue-schema.md
-  - codex/14-playbooks/cross-cutting/catalogue-data.md
+  - codex/14-customer-journeys/playbook-concepts/catalogue-data.md
 sibling_plans:
   - plans/active/instrument_catalogue_availability_matrix_2026_04_29.plan.md
   - plans/active/instrument_schema_cohesion_and_market_hours_2026_03_31.plan.md

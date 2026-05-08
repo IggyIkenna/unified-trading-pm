@@ -60,7 +60,7 @@ Stage 3 must read the rules first; the plan's mandatory-read-set enforces this.
 ## Relationship to other layers
 
 ```
-codex/14-playbooks/
+codex/14-customer-journeys/
 ├── _ssot-rules/       (this dir — the rules)
 ├── experience/        (narrative playbooks; every doc obeys rules 01–10)
 ├── playbooks/         (IMPL LAYER — engineering click-paths; cite rules when making commercial decisions)
