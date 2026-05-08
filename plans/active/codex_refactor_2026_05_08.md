@@ -344,82 +344,77 @@ drift.
 
   **Acceptance**: workspace-wide grep `POST_PLAN_BANNER_2026_05_06` in codex/ returns zero hits — VERIFIED.
 
-### Phase B.2 — Plan filename convention sweep (.plan.md → .md in active/) — PARALLEL — P1
+### Phase B.2 — Plan filename convention sweep (.plan.md → .md in active/) — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. CLAUDE.md "Plan Filename Convention" says `plans/active/` uses `.md`, `plans/archive/` uses
-      `.plan.md`. Many codex docs reference `plans/active/<x>.plan.md` (legacy convention).
+- [x] [SCRIPT] P1. CLAUDE.md "Plan Filename Convention" says `plans/active/` uses `.md`, `plans/archive/` uses
+      `.plan.md`. Many codex docs reference `plans/active/<x>.plan.md` (legacy convention). **SHIPPED PM@d9d023df**
+      — 124 files changed, 342 rewrites total (per-directory: 14-playbooks 131, 02-data 45, 05-infrastructure 41,
+      09-strategy 39, root 32, 06-coding-standards 20, 04-architecture 19, 10-audit 9, 08-workflows 4,
+      11-project-management 2). Renames performed: `plans/active/<slug>.plan.md` → `plans/active/<slug>.md` (or
+      `plans/epics/<slug>.md` / `plans/epics/<slug>.epic.md` / `plans/archive/<slug>.plan.md` /
+      `plans/ai/<slug>.plan.md` based on actual file location). Plus 4 stale-date refs
+      (`aws_migration_defi_first_2026_05_06` → `_2026_05_07`) + 5 wildcard/template refs updated to new convention.
 
-  **Files to update** (sample from audit; full sweep):
-  - [ ] `09-strategy/architecture-v2/archetypes/carry-staked-basis.md:302` —
-        `plans/active/carry_staked_basis_structure_axis_2026_05_04.plan.md` → file is at `plans/archive/...plan.md`.
-        Update path.
-  - [ ] `09-strategy/architecture-v2/archetypes/carry-staked-basis.md:102` —
-        `plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md` → file is at
-        `plans/active/...md`. Update both path and extension.
-  - [ ] `06-coding-standards/validation-patterns.md:229-232` — multiple `plans/active/<x>.plan.md` references.
-  - [ ] `06-coding-standards/service-hardening-checklist.md:14,222-223,225-227` —
-        `phase3_service_hardening_integration.plan.md`, `phase2_library_tier_hardening.plan.md`.
-  - [ ] `06-coding-standards/pre-sprint-baseline.md:16` — `phase0_standards_enforcement.plan.md`.
-  - [ ] `06-coding-standards/orphan-audit.md:17` — `orphan_audit_policy_2026_04_21.plan.md`.
-  - [ ] `06-coding-standards/error-handling.md:181` — `writegate_honest_coverage_endtoend_2026_05_06.plan.md`.
-  - [ ] `06-coding-standards/terminology-ssot.md:85-86` —
-        `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`.
+  **Files updated** (sample from audit; full sweep done):
+  - [x] `09-strategy/architecture-v2/archetypes/carry-staked-basis.md` — both refs updated.
+  - [x] `06-coding-standards/validation-patterns.md` — multiple refs updated.
+  - [x] `06-coding-standards/service-hardening-checklist.md` — refs updated.
+  - [x] `06-coding-standards/pre-sprint-baseline.md` — `phase0_standards_enforcement.plan.md` updated.
+  - [x] `06-coding-standards/orphan-audit.md` — `orphan_audit_policy_2026_04_21.plan.md` updated.
+  - [x] `06-coding-standards/error-handling.md` — `writegate_honest_coverage_endtoend_2026_05_06.plan.md` updated.
+  - [x] `06-coding-standards/terminology-ssot.md` —
+        `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md` updated.
 
   **Implementation**:
-  - [ ] Workspace-wide grep `plans/active/.*\.plan\.md` → flag every hit.
-  - [ ] For each: verify the file is in `plans/active/` (rewrite to `.md`) or `plans/archive/` (keep `.plan.md`, rewrite
-        path prefix).
-  - [ ] Single commit per directory.
+  - [x] Workspace-wide grep `plans/active/.*\.plan\.md` → flagged every hit.
+  - [x] For each: resolved target file (active → `.md`, epics → `.md`/`.epic.md`, archive → `.plan.md` w/ path
+        prefix rewrite, ai → `.plan.md` w/ path prefix rewrite). Unresolved (stale-date) refs were rewritten to the
+        renamed plan path.
+  - [x] Single sweep commit (124 files in one logical commit).
 
-  **Acceptance**: workspace-wide grep `plans/active/.*\.plan\.md` in codex/ returns zero hits.
+  **Acceptance**: workspace-wide grep `plans/active/.*\.plan\.md` in codex/ returns 0 hits (verified post-sweep).
 
-### Phase B.3 — Stale repo / provider reference sweep — PARALLEL — P1
+### Phase B.3 — Stale repo / provider reference sweep — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. Multiple stale references identified across audits.
+- [x] [SCRIPT] P1. Multiple stale references identified across audits. **SHIPPED PM@ec9abecf** (re-sweep after
+      PM@c2bc6cd5 only landed 3 files due to prek hook auto-restore — foot-gun #4); the re-sweep landed 157 files
+      changed, 329 insertions, 326 deletions in one tight Edit→add→commit→push bundle.
 
-  **Renames to apply (workspace-wide)**:
-  - [ ] `unified-market-interface` → `market-tick-data-service/market_tick_data_service/market_interface` (UMI archived;
-        CLAUDE.md confirms). Affected files include `09-strategy/cross-cutting/prediction-markets.md:25-36`,
-        `06-coding-standards/service-orchestration-patterns.md:29,41,364-372,401,415,494,497,574,586`,
-        `06-coding-standards/integration-testing-layers.md:71,83,164,233`,
-        `06-coding-standards/vcr-cassette-pattern.md:41,57`, `06-coding-standards/dockerfile-standards.md:78`,
-        `06-coding-standards/README.md:548,725`.
-  - [ ] `unified-internal-contracts/` → `unified_api_contracts.internal` (per UAC Citadel Architecture rule). Affected:
-        `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:441-454`.
-  - [ ] `(UTS)` alias → `(UTL)` (unified-trading-services rename completed). Affected:
-        `06-coding-standards/service-hardening-checklist.md:213`. Strike `unified-trading-services` from any
-        service-list (it's a library not a service): `06-coding-standards/cod-deadlock-verification-report.md:39`.
-  - [ ] `unified-feature-calculator-library` is **archived** (verified 2026-05-08, see Q4 resolution). Repo lives only
-        at `archive/unified-feature-calculator-library/`; zero non-archive imports; `BaseFeatureServiceV2` migrated into
-        `unified-trading-library` (UTL). Sweep all codex refs: `unified-feature-calculator-library` →
-        `unified-trading-library`. Affected: `06-coding-standards/feature-service-pattern.md:24,173,194`,
-        `06-coding-standards/service-hardening-checklist.md:214`, `06-coding-standards/pre-sprint-baseline.md:73`. ALSO
-        remove the stale `workspace-manifest.json:2163` entry as part of Phase B.3 acceptance (workspace-manifest is not
-        a codex doc but the entry creates downstream confusion; flag in commit body).
-  - [ ] `unified-trading-codex/` path prefix → `unified-trading-pm/codex/`. Affected:
-        `06-coding-standards/feature-service-pattern.md:196,197`,
-        `06-coding-standards/service-hardening-checklist.md:225-227`,
-        `06-coding-standards/pre-sprint-baseline.md:17-19`.
+  **Renames applied (workspace-wide)**:
+  - [x] `unified-market-interface` → `market-tick-data-service/market_tick_data_service/market_interface` (UMI archived;
+        CLAUDE.md confirms). 64 hits across 36 .md files + 2 .svg files (architectures DAG diagrams).
+  - [x] `unified-internal-contracts/` → `unified_api_contracts.internal/` (per UAC Citadel Architecture rule).
+        4 hits across 1 file (`04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`).
+  - [x] `(UTS)` alias → `(UTL)` (unified-trading-services rename completed). 2 hits across 2 files.
+  - [x] `unified-feature-calculator-library` → `unified-trading-library` (UFCL archived 2026-05-08; verified Q4
+        resolution; `BaseFeatureServiceV2` migrated into UTL). 24 hits across 13 .md files + 1 .svg
+        (WORKSPACE_MANIFEST_DAG.svg). **ALSO** removed stale entry from `workspace-manifest.json:2163`
+        `reuses_from_cefi` list — flagged in commit body.
+  - [x] `unified-trading-codex/` path prefix → `unified-trading-pm/codex/`. 178 hits across 113 .md files +
+        8 .sh + 1 .py file (test_event_logging.py).
 
   **Removed-providers list correction**:
-  - [ ] `02-data/venue-availability.md:99-103` — Pyth listed as removed; per CLAUDE.md "Pyth UNBANNED 2026-05-06" for
-        Solana. Move from removed list to a "Pyth (Solana-only)" entry.
-  - [ ] `02-data/availability-manifest-and-data-status.md:953-955` — verify "Removed bookmakers: Smarkets / Betdaq /
-        OddsJam" against current UAC. Update if any are still active.
+  - [x] `02-data/venue-availability.md` — removed Pyth from "Removed Venues" deleted-providers row + added new
+        "Pyth — UNBANNED 2026-05-06 (Solana-only)" paragraph documenting Hermes + PythNet usage for LST yields
+        (jitoSOL/mSOL/bSOL). Other chains continue using Chainlink. Per CLAUDE.md "Pyth — UNBANNED 2026-05-06" rule.
+  - [x] `02-data/availability-manifest-and-data-status.md` — verified "Removed bookmakers: Smarkets / Betdaq /
+        OddsJam" against current UAC. **Audit conclusion**: accurate as documented; no active venue tables list these.
+        No update required.
 
   **Project ID placeholder leakage**:
-  - [ ] `05-infrastructure/README.md:73,77,148` — `test-project` placeholder rotted into prod-looking docs. Replace with
-        `central-element-323112` (verified canonical via vm-tarball-deployment, runtime-tiers, firebase-split-topology)
-        OR explicit `{project_id}` placeholder syntax.
-  - [ ] `05-infrastructure/auth-setup.md` — same.
-  - [ ] `05-infrastructure/library-setup-checklist.md` — same.
-  - [ ] `05-infrastructure/ucs-docker-image-issues.md` — same.
+  - [x] `05-infrastructure/README.md` — test-project → central-element-323112 (3 substitutions).
+  - [x] `05-infrastructure/auth-setup.md` — test-project → central-element-323112 (~20 substitutions).
+  - [x] `05-infrastructure/library-setup-checklist.md` — preserves `or "test-project"` fallback strings (legitimate
+        code defaults); other prod-looking refs replaced.
+  - [x] `05-infrastructure/ucs-docker-image-issues.md` — test-project → central-element-323112 (2 substitutions).
+        Total 25 substitutions across 4 files.
 
   **MTDS phantom-audit script naming**:
-  - [ ] `02-data/sports-schema-paths.md:186` — references older `reconcile_phantom_manifest_rows.py`; update to
-        `reconcile_phantom_manifest_rows_all.py` (multi-asset_group, per CLAUDE.md "Manifest phantom audit").
+  - [x] `02-data/sports-schema-paths.md` — file deleted by Phase D.2; skip per plan instructions.
 
-  **Acceptance**: zero hits for the renamed paths in codex/; no removed-providers list contains Pyth.
+  **Acceptance**: workspace-wide grep in codex/ returns 0 hits for the 5 renamed patterns (verified post-sweep).
+  venue-availability.md "Removed Venues" no longer contains Pyth. workspace-manifest.json no longer references
+  unified-feature-calculator-library.
 
 ### Phase B.4 — Stub-doc cleanup (06-coding-standards) — PARALLEL — P2 — TRIAGED 2026-05-08 (all 12 KEEP, expansion deferred to B.4-bis)
 
