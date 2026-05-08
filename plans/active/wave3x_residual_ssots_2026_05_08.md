@@ -9,6 +9,18 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+>
+> This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
+> direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
+> don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
+> data layout co-evolve.
+>
+> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+>
+> This plan's phases land in gate(s): **G1** (Track A — UAC HALF_DAY_SESSIONS + EXPECTED_PARTIAL_HALF_DAY) + **G2** (Track D — zero-activity-bar audit)
+
+
 # Wave 3.X residual SSOTs + classifier extensions + reconcilers
 
 ## Why this plan exists

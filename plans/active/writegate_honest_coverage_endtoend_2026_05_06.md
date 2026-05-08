@@ -17,6 +17,18 @@ manifest_migration_coordinator: manifest_migration_master_2026_05_07.md # Stage 
 status: drafted
 ---
 
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+>
+> This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
+> direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
+> don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
+> data layout co-evolve.
+>
+> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+>
+> This plan's phases land in gate(s): **G1** (reason taxonomy) + **G2** (cluster validation) + **G7** (ServiceEmissionPolicy + workspace audit)
+
+
 # Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 
 ## Audit 2026-05-07

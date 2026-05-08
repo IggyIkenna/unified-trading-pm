@@ -17,6 +17,18 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+> **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
+>
+> This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
+> direction: "manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution;
+> don't allow execution in isolation." Three-axis invariant: schema (UAC) + writer code (UTL + adapter callsites) + GCS
+> data layout co-evolve.
+>
+> Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
+>
+> This plan's phases land in gate(s): **G3** (per-instrument enumerator launch — sequenced AFTER G4 v8 schema)
+
+
 # Expected_universe v2 enumerator — design (2026-05-08, Tab 3 separate scope)
 
 > Item 4 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md). v2 extends the v1 enumerator
