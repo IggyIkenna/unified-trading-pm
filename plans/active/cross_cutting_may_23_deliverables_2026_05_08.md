@@ -155,17 +155,31 @@ without touching them yet) while Ikenna T6 finalizes UAC schema.
 
 ## Open questions
 
-- [ ] **Strategy catalogue completeness — bar for "complete"?** Every (archetype, venue, instrument-type) combination,
-      or archetype-level completeness with venue/instrument lookups deferred? **Default**: full enumeration including
-      not-launching-this-cycle archetypes (per cross_cutting epic deliverable #1 framing — "the universe is visible").
-      Confirm before Ikenna T6 starts populating catalogue rows.
-- [ ] **DART manual-trade lane scope**: is operator-only manual sufficient, or do we need a third-party broker-style
-      DART for external operators? **Default**: operator-only this cycle; external operators post-May-23.
-- [ ] **Strategy ID versioning rule**: hash-based / sequential / semver-style? Used for batch-vs-live reconciliation
-      attribution. **Default**: `<archetype>.<venue>.<instrument_type>.v<N>` semver-style with N incremented when config
-      changes materially.
-- [ ] **DART manual prediction-market trade scope**: backtest-only or include live wiring (even if disabled by default)?
-      **Default**: backtest-only to match the prediction_markets epic scope.
+- [x] **Strategy catalogue completeness — bar for "complete"?** Every (archetype, venue, instrument-type) combination,
+      or archetype-level completeness with venue/instrument lookups deferred? **✅ RESOLVED 2026-05-08 via Option A**:
+      full enumeration is the existing UAC `STRATEGY_REGISTRY` (53 archetypes × per-cell `representative_slot_labels`
+      derived from `ARCHETYPE_CAPABILITY_REGISTRY`). For May-23 cutover, A3's audit (`uac@18bdc6e8`) confirmed coverage
+      across 9 live + stretch archetypes with 1 gap closed (CARRY_STAKED_BASIS hedge perp venues). Harsh T6's [SCRIPT]
+      catalogue rows population continues to extend the registry per per-archetype activation cadence — tracked in this
+      plan-of-record's "Catalogue rows populated" / "Per-archetype venue matrix populated" / "Per-archetype config
+      parameters declared" checkboxes (lines 55-62 above).
+- [x] **DART manual-trade lane scope**: is operator-only manual sufficient, or do we need a third-party broker-style
+      DART for external operators? **✅ RESOLVED 2026-05-08 by 6.C** (`pm@ab595616`): operator-only this cycle;
+      external-broker-style DART post-May-23. Per the
+      [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+      § "Defer post-May-23" sub-section (third-party operator UI + granular RBAC + tamper-evident audit trail all
+      explicitly out of scope this cycle).
+- [x] **Strategy ID versioning rule**: hash-based / sequential / semver-style? Used for batch-vs-live reconciliation
+      attribution. **✅ RESOLVED 2026-05-08 via Option A**: existing `parse_strategy_id` / `format_strategy_id`
+      (`uac@5083d65`) 6-axis slot grammar `archetype@venue-asset-instrument-period-quote-env` carries NO `vN` field —
+      instead, material config changes produce a new `slot_id` with the changed axis value (e.g. quote-asset change from
+      USDT to USDC produces a different slot_id). The existing `STRATEGY_REGISTRY` keys ARE the canonical IDs. Tab 6.A's
+      escalation issue doc remains the durable record of why the plan-body's proposed 4-axis `vN` grammar was a
+      regression that would have dropped period / quote / env axes.
+- [x] **DART manual prediction-market trade scope**: backtest-only or include live wiring (even if disabled by default)?
+      **✅ RESOLVED 2026-05-08 by 6.C** (`pm@ab595616`): backtest-only to match the `prediction_markets` epic scope. Per
+      the DART spec § 4 "Required manual surfaces" — Polymarket / Kalshi / Opinion-Trade / CME-event-arb backtest
+      surface declared; no live wiring this cycle.
 
 ## Sub-plans this plan coordinates
 
@@ -592,3 +606,64 @@ items unblocked).
 `plans/active/issues/` as durable record; can be archived in next daily ledger sweep.
 
 Tab 6 cycle complete. Going quiet.
+
+## What remains + where it's tracked (post-Option A audit)
+
+Per operator question 2026-05-08 EOD: confirm every unresolved item is clearly marked + has a named active-plan home.
+Audit verdict: **all 11 unresolved items are tracked in this plan-of-record under "End-state at May 23" and mirrored in
+Harsh's daily work_split.** No durable-record gaps. Open questions are now all `[x]` with resolution citations.
+
+### The 11 unresolved items + their plan home
+
+| #    | Status                                                                    | Item (line in this plan)                                 | Owner                                                                                                                                                                | Plan home                                                                                                                                                                                                       |
+| ---- | ------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `[ ]` (un-flipped per A2 — parallel-SSOT reverted; canonical SSOT exists) | #3 Client model in UAC stable (line 86)                  | _Done by virtue of NOT shipping the parallel SSOT_ — existing `ClientDefinition` + `TradingAccount` carry the canonical model. Annotation explains. No further work. | This plan-of-record + issue doc Addendum                                                                                                                                                                        |
+| 2    | `[ ]`                                                                     | #1 Catalogue rows populated (line 55)                    | Harsh T6                                                                                                                                                             | This plan + [`work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md) line 109                                                                                                                         |
+| 3    | `[ ]`                                                                     | #1 Per-archetype venue matrix populated (line 60)        | Harsh T6                                                                                                                                                             | Same as #2 — `ARCHETYPE_CAPABILITY_REGISTRY` row extension                                                                                                                                                      |
+| 4    | `[ ]`                                                                     | #1 Per-archetype config parameters declared (line 62)    | Harsh T6                                                                                                                                                             | Same — extends `ARCHETYPE_CONFIG_SEED` (A1's seed covers May-23 5 archetypes; Harsh extends per-archetype activation)                                                                                           |
+| 5    | `[ ]`                                                                     | #1 [BUILD] Strategy catalogue UI (line 64)               | Harsh T6                                                                                                                                                             | This plan § "Strategy catalogue UI route — scope assignment" + `work_split_2026_05_08_harsh.md` line 112                                                                                                        |
+| 6    | `[ ]`                                                                     | #2 Strategy ID registry populated (line 78)              | Harsh T6                                                                                                                                                             | Already populated via existing `STRATEGY_REGISTRY` derivation; remaining work = ensure `representative_slot_labels` cover every Harsh-needed cell. `work_split_2026_05_08_harsh.md` line 108                    |
+| 7    | `[ ]`                                                                     | #2 Strategy ID refactor sweep (line 79)                  | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 108 — mechanical sweep across execution / strategy / ml-inference / pnl-attribution / batch-live-recon / position-balance-monitor / alerting / deployment-api |
+| 8    | `[ ]`                                                                     | #3 Client-account-strategy tagging propagated (line 106) | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 110 — consumes `ClientDefinition` + `TradingAccount` + `CapitalAllocation` from existing `strategy.py` facade                                                 |
+| 9-13 | `[ ]`                                                                     | #4 5 DART manual surfaces (lines 120-127)                | Harsh T6                                                                                                                                                             | Spec at [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md) (314 lines, 8 sections) + `work_split_2026_05_08_harsh.md` line 111      |
+
+### Cross-references (every external touchpoint)
+
+- **Parent epic** [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) — the 5
+  cross-cutting deliverables. Deliverables #1+#2+#3+#4 are now resolved at the [DESIGN+UAC]+[DESIGN] tier in this
+  plan-of-record (epic checkboxes auto-flip when this plan's parent-tier flips); #5 Infrastructure tracked across Ikenna
+  T2/T4/T5 + Harsh T3.
+- **Master plan** [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F + G —
+  every Group F item (PBM / R&E / pnl-attribution / batch-live-recon / alerting) consumes strategy IDs once Harsh T6's
+  refactor sweep ships. Group G item 23 (DART manual-trade gate) gates on Harsh T6's 5 DART builds.
+- **Granular masters** [`strategy_and_dart_master_2026_05_07`](../epics/strategy_and_dart_master_2026_05_07.md) +
+  [`defi_master_2026_05_07`](defi_master_2026_05_07.md) +
+  [`cefi_master_2026_05_07`](../epics/cefi_master_2026_05_07.md) +
+  [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) — each consumes a slice of this
+  plan's outputs (`ArchetypeConfig.archetype_kill_switch_thresholds` per Tab 5 alerting; `CapitalAllocation` per
+  `defi_master` + `cefi_master`; `format_strategy_id` per all).
+- **Issue doc**
+  [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+  — RESOLVED. Recommended Option A executed in full. Eligible for archive at next daily ledger sweep.
+- **Codex SSOT** [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — refreshed
+  `pm@d6d0cd57` to canonical 9-family / 53-archetype shape. Closes the codex SSOT drift root cause that caused this plan
+  to be drafted greenfield in the first place.
+- **DART codex spec**
+  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+  — NEW (`pm@ab595616`, 314 lines). Harsh T6's 5 DART builds consume this spec.
+
+### Process notes still in flight (NOT this-plan deliverables; tracked elsewhere)
+
+- **Foot-gun #1 (concurrent index hijacking)** — recorded in CLAUDE.md "mandatory pre-commit check" + auto-memory.
+  Repeated peak-intensity occurrences this cycle suggest a workspace-rules sweep is warranted post 2026-05-09 QG cleanup
+  window. Not Tab 6 scope.
+- **Foot-gun #4 (prek auto-restore)** — codified earlier today via `pm@779812ed` + `pm@1d74f617`. CLAUDE.md "Never skip
+  hooks" rule and the foot-gun #4 documented `--no-verify` workaround are in tension. Not Tab 6 scope; flag for
+  workspace-rules sweep.
+- **Tab 5 alerting QG break** — `unified_api_contracts/canonical/crosscutting/alerting/rules.py`
+  `AlertRule .kill_switch_scope is REQUIRED for KILL_SWITCH_*` validation breaks UAC `__init__.py` import chain. Tab 5
+  owner cleans up on their commits per workspace QG-failure-on-foreign-code temporary exemption (lifts 2026-05-09).
+
+This audit closes Tab 6's plan-of-record. Operator can now scan the table above to see exactly what's left + where each
+remaining item lives. The plan stays `status: active` (not archived) because the 11 [SCRIPT]+[BUILD] sub-items are still
+in flight under Harsh T6's ownership; archive eligible once Harsh T6's DONE-2026-0X-XX block lands.
