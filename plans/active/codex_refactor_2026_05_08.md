@@ -878,16 +878,22 @@ drift.
       glossary; preserves the operational P0-vs-P1 sub-distinction inside CRITICAL), and
       `14-playbooks/alerting/threshold-tuning.md` (top banner citing glossary from the WARNING-only deploy step).
 
-### Phase F.4 — `aws_migration_cost_analysis_2026_05_07.md` extract + archive — PARALLEL — P2
+### Phase F.4 — `aws_migration_cost_analysis_2026_05_07.md` extract + archive — PARALLEL — P2 — SHIPPED
 
-- [ ] [SCRIPT] P2. 53K research-grade doc, recommendation paragraph explicitly superseded. Extract per-resource cost
+- [x] [SCRIPT] P2. 53K research-grade doc, recommendation paragraph explicitly superseded. Extract per-resource cost
       tables → `aws-migration-cost-snapshot-2026-05-07.md` (~10-15K). Move full original to `plans/archive/` or
-      `codex/15-audits/`.
+      `codex/15-audits/`. **SHIPPED 2026-05-08** (PM@166c7f72 — per-resource cost tables extracted to
+      `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; original git mv'd to
+      `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` with status block linking back to the
+      snapshot + dual-cloud decision plan; 4 incoming refs in active plans rewritten — _AUDIT_dependency_graph,
+      aws_migration_defi_first, master_to_live_defi, work_split_2026_05_08_ikenna).
 
-### Phase F.5 — README.md cleanup (05-infrastructure) — PARALLEL — P2
+### Phase F.5 — README.md cleanup (05-infrastructure) — PARALLEL — P2 — SHIPPED
 
-- [ ] [SCRIPT] P2. `05-infrastructure/README.md:171,176-177,184-185` link to non-existent files (`terraform.md`,
+- [x] [SCRIPT] P2. `05-infrastructure/README.md:171,176-177,184-185` link to non-existent files (`terraform.md`,
       `ci-cd.md`, `docker.md`, `versioning-rollback.md`, `batch/README.md`, `live/README.md`). Either create or remove.
+      **SHIPPED 2026-05-08** (PM@631ee9ea — verified all 6 files non-existent via ls; removed the 6 dead-link rows from
+      the "Related Documents" table in 05-infrastructure/README.md; kept the 9 valid rows).
 
 ### Phase F.6 — 09-strategy READMEs refresh — PARALLEL — P1
 
@@ -930,9 +936,9 @@ NEW codex docs explicitly created by this plan:
 
 DELETED codex docs by this plan:
 
-- [ ] `codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub)
-- [ ] `codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2)
-- [ ] `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3)
+- [x] `codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
+- [x] `codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2 SHIPPED 2026-05-08 PM@2818b6b9)
+- [x] `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3 SHIPPED 2026-05-08 PM@6a6308b3)
 - [ ] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1)
 - [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
 - [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
