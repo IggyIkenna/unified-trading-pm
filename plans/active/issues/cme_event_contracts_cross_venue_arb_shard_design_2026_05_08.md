@@ -125,7 +125,44 @@ The CLAUDE.md shard-key matrix forces a single `asset_group` per row. Three opti
 `linked_canonical_question_group: CanonicalQuestionGroup | None` field on the instrument schema that points to the
 equivalent Polymarket canonical group. Strategy-service archetype pre-flight resolves both legs through the link.
 
-### Q5 — No active plan owns this
+### Q5 — Backfill NEVER RUN — adapter exists but instruments-service catalog is EMPTY for event contracts (CRITICAL)
+
+The 2026-05-08 follow-up audit confirmed: **adapter existence ≠ catalog populated**. Despite UAC declaring coverage
+start `2025-09-28` and Databento parent-stype expansion logic being in place, **no backfill VM has ever been launched
+targeting CME event contracts**.
+
+Evidence:
+
+- **Zero git log references**: workspace search 2026-01-01 → 2026-05-08 finds zero commits mentioning `ECBTC`,
+  `event contract`, `_CME_EVENT_CONTRACTS` in instruments-service backfill / VM-launch context.
+- **No TradFi instruments forward-poll**: unlike CeFi which has
+  [`launch-cefi-instruments-backfill.sh`](../../../deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh)
+  running daily across Hyperliquid + standard exchanges, **TradFi instruments-service has NO equivalent forward-poll
+  launcher**. Each TradFi backfill is ad-hoc; no automation has run for ECBTC etc.
+- **`launch-targeted-options-chain-backfill.sh`**
+  ([commit a52f209 2026-05-05](../../../deployment-service/scripts/vm/launch-targeted-options-chain-backfill.sh))
+  targets `options_chain` market-data — NOT instruments-service reference data. Different layer.
+- **Operator confidence: LOW**. CME event contracts likely have ZERO rows in the instruments-service catalog today. If a
+  strategy looks up `(venue=CME, root=ECBTC, resolution_date=2026-05-09)` for instrument metadata (strikes / expiry /
+  settlement spec), the lookup fails.
+
+### End-to-end chain failure — what data-status / manifest derivations look like today
+
+The backfill chain has 4 layers; all 4 are broken downstream of the missing-backfill root cause:
+
+| Layer                                                                   | Status                | What's broken                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. UAC `SOURCE_COVERAGE_START`/equivalent for tradfi Databento          | ✓ declared 2025-09-28 | (correct)                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2. instruments-service catalog rows per (root, expiry, strike, outcome) | ✗ EMPTY               | Backfill never run; adapter exists but unexercised                                                                                                                                                                                                                                                                                                                                               |
+| 3. Manifest's `expected_universe` for tradfi event contracts            | ✗ missing             | Writegate v2 enumerator (Phase 3.D.5 Wave 3) derives from catalog × dates × data_types — empty catalog → empty expected universe → no `expected_unattempted` rows pre-populated                                                                                                                                                                                                                  |
+| 4. data-status deployment-api derivations                               | ✗ wrong denominator   | [`data_status_service.py`](../../../deployment-api/deployment_api/services/data_status_service.py) computes `coverage % = captured / (captured + empty + failed + expected_unattempted)`. With catalog empty: numerator 0 (no MTDS rows captured for tradfi event contracts either), denominator 0 → either renders "N/A" OR shows phantom "100% captured" of 0 expected → misleading either way |
+
+**The user's framing is correct**: UAC says "this should exist from 2025-09-28" but the rest of the chain (catalog /
+manifest / data-status) shows nothing because backfill never ran. From a deployment-ui drilldown today, CME event
+contracts are silently invisible — not even rendering as "out of scope" because the venue exists in the registry, but no
+per-root drilldown is possible.
+
+### Q6 — No active plan owns this
 
 Plans searched — `tradfi_master`, `predictions_master`, `mtds_databento_path_streaming`,
 `strategy_system_citadel_master` — none have an event-contract-specific todo. Single comment in `vm_zombie_watchdog.py`
@@ -154,6 +191,29 @@ Plans searched — `tradfi_master`, `predictions_master`, `mtds_databento_path_s
   required (small clip per leg).
 
 ## Recommended decision
+
+### Phase 0 (P0 — immediate) — Run the backfill, verify the end-to-end chain
+
+Before any of the structural fixes (InstrumentType, cross-link, cluster validation), the **backfill must actually run**:
+
+1. **Launch instruments-service Databento backfill VM** for `[2025-09-28, today]` window targeting all 9 event-contract
+   roots. New launcher needed under `deployment-service/scripts/vm/launch-tradfi-instruments-backfill.sh` (paralleling
+   `launch-cefi-instruments-backfill.sh` shape). Or extend the existing CeFi launcher to dispatch TradFi via
+   `--asset-group tradfi`.
+2. **Verify catalog rows written**: read
+   `gs://{pid}-instruments/canonical/by_asset_group/asset_group=tradfi/venue=CME/...` after run. Expect ~8 rows per
+   (root, resolution_date) for daily binaries with 4 strikes × YES/NO. Spot-check ECBTC.
+3. **Verify writegate v2 expected-universe enumerator picks up the new catalog rows**: re-run
+   `instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group tradfi --apply-flips` (or the Wave 3
+   v2 enumerator) → verify manifest now has `expected_unattempted` or `captured` rows for ECBTC × dates 2025-09-28 →
+   today.
+4. **Verify data-status deployment-api derivation**: hit the endpoint for tradfi/CME drilldown → should now render ECBTC
+   at the proper grain with correct denominator. NOT "N/A" or "0/0".
+5. **Establish forward-poll cadence**: ship a TradFi instruments forward-poll launcher (daily cron equivalent of CeFi
+   forward-poll) so new ECBTC daily-resolution dates get captured incrementally going forward.
+
+This Phase 0 unblocks downstream phases AND gives us a working baseline to layer the structural fixes on top of. Without
+it, fixing `InstrumentType.EVENT_CONTRACT` operates on an empty catalog — the type-rename has no rows to apply to.
 
 ### Phase 1 — Dedicated `InstrumentType.EVENT_CONTRACT`
 
@@ -252,6 +312,14 @@ Phase 5 follow-up.
 
 ## Acceptance criteria
 
+- [ ] **Phase 0 P0**: TradFi instruments-service backfill VM launched + completed for [2025-09-28, today] across all 9
+      event-contract roots. Catalog rows verified > 0 in canonical GCS path.
+- [ ] **Phase 0 P0**: writegate v2 expected-universe enumerator picks up new catalog rows; manifest renders ECBTC ×
+      dates with `expected_unattempted` or `captured` per shard.
+- [ ] **Phase 0 P0**: data-status deployment-api drilldown for tradfi/CME shows ECBTC with non-zero denominator +
+      correct coverage % derivation. NOT "N/A".
+- [ ] **Phase 0 P0**: TradFi instruments forward-poll launcher shipped (daily cadence, paralleling
+      `launch-cefi-instruments-backfill.sh`).
 - [ ] UAC `InstrumentType.EVENT_CONTRACT` enum value shipped.
 - [ ] `_CME_EVENT_CONTRACTS` registry updated to `EVENT_CONTRACT` instrument_type.
 - [ ] Databento classifier maps `EC*.OPT` parent symbols to `EVENT_CONTRACT`.

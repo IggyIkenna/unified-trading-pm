@@ -225,6 +225,17 @@ Item C (lifted from `consolidated_defi_data_pipeline_2026_04_15.plan.md` archive
 - [ ] Workspace decision on CLOB-on-chain asset_group classification; manifest row_keys aligned to chosen shard-atom.
 - [ ] Extended Starknet RPC template + historical OHLCV adapter shipped.
 - [ ] writegate v2 expected-universe enumerator handles CLOB-on-chain venues correctly (catalog × dates).
+- [ ] **End-to-end chain verified per venue** (Lighter / Pacifica / Hyperliquid / Extended): (1) UAC
+      `instrument_discovery_start` date declared in `venue_mapping.py`; (2) instruments-service catalog populated via
+      adapter run (per-perp rows in `gs://{pid}-instruments/canonical/...`); (3) manifest `expected_universe` enumerator
+      picks up catalog rows; (4) data-status deployment-api drilldown shows correct denominator + coverage % derivation
+      per perp (NOT venue-grain only). Apply per-venue: confirm date-range floor matches the UAC start date AND the
+      catalog's earliest captured date (precedent: Hyperliquid 200-day phantom-gap fix at deployment-service@cb973ae
+      2026-05-06 clipped denominator to `instrument_discovery_start = 2023-11-01`; same pattern needed for Lighter /
+      Pacifica / Extended).
+- [ ] Hyperliquid backfill verification: confirm forward-poll via `launch-cefi-instruments-backfill.sh` is producing
+      daily catalog rows; spot-check 2026-05-08 parquet has BTC / ETH / SOL / etc. perps. (Operator confidence today is
+      MEDIUM — adapter exists, forward-poll exists, but no explicit "ran today" verification.)
 - [ ] Smoke test: smart-order-routing across Aave-Arbitrum collateral → Hyperliquid perp margin succeeds with explicit
       chain hops.
 - [ ] Smoke test: cross-DEX perp dispersion arb (Lighter ↔ Pacifica ↔ Hyperliquid) computes correctly with all 3
