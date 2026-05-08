@@ -332,7 +332,7 @@ todos:
 
   - id: b1-fixture-daily-repoll-trigger
     content: |
-      - [ ] [SCRIPT] P0. Daily fixture re-poll trigger — every fire pulls fixtures for window [today, today+8d] from
+      - [x] [SCRIPT] P0. Daily fixture re-poll trigger — every fire pulls fixtures for window [today, today+8d] from
         api_football (SSOT per `instruments-service/docs/SPORTS_INSTRUMENTS.md`). Treat new fixtures as inserts,
         existing fixtures as upserts, status changes (scheduled → cancelled → postponed → in-play → finished) as
         column updates on the SAME row_key. Re-poll today's fixtures every fire because intra-day cancellation is
@@ -340,8 +340,24 @@ todos:
         batch. References active issue
         `plans/active/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` for the lifecycle column shape;
         does NOT re-derive. Trigger-name: `sports.fixtures.daily_repoll`. Cadence: 1×/day (configurable).
-    status: todo
-    note: ""
+        (instruments-service@c53ec64 — `instruments_service/triggers/sports_fixtures_daily_repoll.py` + 8 unit tests
+        in `tests/unit/triggers/test_sports_fixtures_daily_repoll.py`. Reuses `_flatten_canonical_fixture_for_disk`
+        + `_write_fixtures_per_league` + `create_sports_reference_adapter`; `available_at = announced_at =
+        kickoff_utc - 7d` per UAC FIXTURES rule; shard isolation per CLAUDE.md; empty-source →
+        `record_empty(SOURCE_RETURNED_ZERO)`; idempotent upsert.
+        **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE) — verified end-to-end against
+        api-football live API + real GCS write 2026-05-08 23:22 UTC: ran the trigger for `today=2026-05-09`,
+        `league_filter=["BRASILEIRAO"]`, `lookahead_days=0`, with `MANIFEST_PER_VM_SHARDS=true` +
+        `VM_NAME=tab-f4-laptop-2026-05-09`. Result: `{"2026-05-09/BRAZIL_SERIE_A": 2}`. On-disk parquet verified at
+        `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2026-05-09/entity=fixtures/league=BRAZIL_SERIE_A/fixtures.parquet`
+        — 2 rows, `available_at` populated (Coritiba vs Internacional kickoff 2026-05-09T19:00:00+00:00 →
+        `available_at = 2026-05-02 19:00:00+00:00`, 7-day lead). Manifest row at
+        `_index/per_vm/tab-f4-laptop-2026-05-09.parquet`: `capture_status=captured`, `data_type=FIXTURES`,
+        `league_id=BRAZIL_SERIE_A`, `instrument_count=2`. The 9-day full window will run as a Cloud Scheduler cron
+        VM in Phase F.1; cross-region GCS timeouts from laptop limited live-API run to single-day single-league
+        scope per CLAUDE.md "Always run on a same-region GCE VM".)
+    status: done
+    note: "instruments-service@c53ec64 2026-05-09 sports-fixtures-repoll-tab; full-execution verified live api-football → real GCS write for 1 (day, league) shard with correct available_at semantics."
 
   - id: b2-fixture-end-time-cascade-readiness
     content: |
@@ -1011,4 +1027,26 @@ Pending follow-ups (NOT shipped this session, captured as plan items elsewhere):
 - A.11 upstream-staleness monitor — separate todo (P1); reuses `validate_preflight_for_trigger` + UTLManifestReader.
 - Phase B.1+ trigger handlers wire `run_preflight` as the gating preflight call before source fetch (pre-existing
   todos).
+
+## DONE-2026-05-09 — sports-fixtures-repoll-tab (Tab F4)
+
+Tab F4 of `plans/active/work_split_2026_05_08_ikenna.md` shipped two scope items. Code commits:
+
+- `unified-trading-library@1f115bc6` — A.8 live-mode `available_at` confirmation (4 unit tests, all green).
+- `unified-trading-pm@7496a8a9` — A.8 plan-flip + provenance citation.
+- `instruments-service@c53ec64` — B.1 `sports.fixtures.daily_repoll` trigger handler + 8 unit tests.
+
+Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
+
+- A.8 — 4 unit tests pass under `pytest tests/unit/test_manifest_writer_live_mode_available_at.py`. No new
+  functionality required (existing `assert_available_at_present` gate at
+  `unified_trading_library/manifest_writer.py:2153` already enforces presence under live invocation).
+- B.1 — trigger ran end-to-end against live api-football API + real GCS write 2026-05-08 23:22 UTC for
+  `today=2026-05-09 league=BRASILEIRAO lookahead_days=0 VM_NAME=tab-f4-laptop-2026-05-09 MANIFEST_PER_VM_SHARDS=true`.
+  Result: `{"2026-05-09/BRAZIL_SERIE_A": 2}`. On-disk parquet at
+  `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2026-05-09/entity=fixtures/league=BRAZIL_SERIE_A/fixtures.parquet`
+  contains 2 rows with `available_at` populated and `kickoff_utc - 7d` semantics verified (e.g. Coritiba vs
+  Internacional kickoff `2026-05-09T19:00:00+00:00` → `available_at = 2026-05-02 19:00:00+00:00`). Manifest per-VM
+  shard row at `_index/per_vm/tab-f4-laptop-2026-05-09.parquet`: `capture_status=captured`, `data_type=FIXTURES`,
+  `league_id=BRAZIL_SERIE_A`, `instrument_count=2`.
 
