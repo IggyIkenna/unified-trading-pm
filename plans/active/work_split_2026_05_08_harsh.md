@@ -74,46 +74,54 @@ clarifies — same universal mechanics either way.
 
 ## Coverage guarantee — 5 tabs absorb today's Harsh-side scope
 
-| Source                                                                      | Item                                                                                                                                | Tab |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --- |
-| `instruments_live_master_2026_05_08`                                        | Phase A-E live activation across all 5 asset_groups (Cloud Scheduler + audit jobs + UI tab integration)                             | 1   |
-| `predictions_master_2026_05_07`                                             | Phase 2 lifecycle gating MTDS Polymarket/Kalshi adapter + UMI tick provider data_type rename                                        | 1   |
-| `predictions_master_2026_05_07`                                             | Phase 3 reader / feature / strategy consumer migration to canonical_question_group                                                  | 1   |
-| `instruments_and_market_tick_data_completion_2026_05_01`                    | Per-asset_group instrument lifecycle floor handling + catalog-aware writer-guard                                                    | 1   |
-| `features_repo_consolidation_2026_05_08`                                    | Phase 0-3 (deadline 2026-05-13): pre-audit + scaffold consolidated repo + sub-package extraction + import-rewrite                   | 2   |
-| `features_repo_consolidation_2026_05_08`                                    | Phase 4-7: per-source consumer migration + feature_family UAC column + deprecation banners + delete-source-repos commit             | 2   |
-| `ml_and_features_master_2026_05_07`                                         | Phase 2A + 2B 8-service `assert_no_lookahead_for_feature_group` wires (resolved Tab 12 Q1: absorb into features_repo_consolidation) | 2   |
-| `ml_and_features_master_2026_05_07`                                         | Phase 3 parquet column-pruning quick-win (1-3 day pure-win, self-contained)                                                         | 2   |
-| `deployment_ui_lifecycle_tabs_2026_05_08`                                   | Phase A UAC SSOT for lifecycle column + Phase B UI re-shape (4 tab refactors)                                                       | 3   |
-| `deployment_ui_lifecycle_tabs_2026_05_08`                                   | Phase C cloud-toggle + Phase D auth flow + Phase E env-resolution                                                                   | 3   |
-| `deploy_missing_auto_launch_2026_05_07`                                     | Phase 1 tarball-refresh follow-on + Phase 2 auto-launch endpoint (after Ikenna Tab 5 ships IAM decision)                            | 3   |
-| `cefi_master_2026_05_07`                                                    | Day-3 OPS babysit of remaining cefi VMs + drain reporting; TradFi MDPS post-drain ES.OPT 11-cluster validation                      | 4   |
-| `manifest_migration_master_2026_05_07`                                      | Stage 4 cross-asset manifest rescan post-CeFi drain (mechanical operation; Ikenna Tab 3 designs the schema flip)                    | 4   |
-| `sports_master_2026_05_07`                                                  | Per-source reconciler hook + features_sports_reconcile_available_at hook into per-source backfill VM exit-step                      | 4   |
-| `defi_master_2026_05_07` + `issues/defi_988_missing_dates_audit_2026_05_08` | Targeted backfill of 13,632 actionable rows from Tab 6 audit (top-5 priority list)                                                  | 4   |
-| `launcher_scripts_consolidation_into_deployment_service_2026_05_07`         | Migrate remaining 20 of 30 ad-hoc launchers into deployment-service/scripts/vm/                                                     | 5   |
-| `data_status_comprehensive_test_coverage_2026_05_07`                        | All 30 todos: 5 test categories × 6 repos                                                                                           | 5   |
-| `mtds_databento_path_streaming_2026_05_07`                                  | Phases 2-4 (chunked streaming + memory profiler + smoke fixtures)                                                                   | 5   |
-| `mtds_per_instrument_download_api_2026_04_24`                               | Phase 1.5 chain axis (audit named CRITICAL-PATH)                                                                                    | 5   |
-| `hard_schema_enforcement_2026_05_08`                                        | Phases 1-5 mechanical migration scripts per asset_group                                                                             | 5   |
-| `api_football_minimal_flattening_removal_2026_05_07`                        | All 16 todos (UAC normalize.py:377-381 fix + re-fetch VM + manifest flip)                                                           | 5   |
-| `cme_polymarket_arb_2026_05_08`                                             | All 6 phases (config + CLOB / CME tick wiring + execution route + DART)                                                             | 5   |
+| Source                                                                      | Item                                                                                                                                         | Tab |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `instruments_live_master_2026_05_08`                                        | Phase A-E live activation across all 5 asset_groups (Cloud Scheduler + audit jobs + UI tab integration)                                      | 1   |
+| `predictions_master_2026_05_07`                                             | Phase 2 lifecycle gating MTDS Polymarket/Kalshi adapter + UMI tick provider data_type rename                                                 | 1   |
+| `predictions_master_2026_05_07`                                             | Phase 3 reader / feature / strategy consumer migration to canonical_question_group                                                           | 1   |
+| `instruments_and_market_tick_data_completion_2026_05_01`                    | Per-asset_group instrument lifecycle floor handling + catalog-aware writer-guard                                                             | 1   |
+| `features_repo_consolidation_2026_05_08`                                    | Phase 0-3 (deadline 2026-05-13): pre-audit + scaffold consolidated repo + sub-package extraction + import-rewrite                            | 2   |
+| `features_repo_consolidation_2026_05_08`                                    | Phase 4-7: per-source consumer migration + feature_family UAC column + deprecation banners + delete-source-repos commit                      | 2   |
+| `ml_and_features_master_2026_05_07`                                         | Phase 2A + 2B 8-service `assert_no_lookahead_for_feature_group` wires (resolved Tab 12 Q1: absorb into features_repo_consolidation)          | 2   |
+| `ml_and_features_master_2026_05_07`                                         | Phase 3 parquet column-pruning quick-win (1-3 day pure-win, self-contained)                                                                  | 2   |
+| `deployment_ui_lifecycle_tabs_2026_05_08`                                   | Phase A UAC SSOT for lifecycle column + Phase B UI re-shape (4 tab refactors)                                                                | 3   |
+| `deployment_ui_lifecycle_tabs_2026_05_08`                                   | Phase C cloud-toggle + Phase D auth flow + Phase E env-resolution                                                                            | 3   |
+| `deploy_missing_auto_launch_2026_05_07`                                     | Phase 1 tarball-refresh follow-on + Phase 2 auto-launch endpoint (after Ikenna Tab 5 ships IAM decision)                                     | 3   |
+| `cefi_master_2026_05_07`                                                    | Day-3 OPS babysit of remaining cefi VMs + drain reporting; TradFi MDPS post-drain ES.OPT 11-cluster validation                               | 4   |
+| `manifest_migration_master_2026_05_07`                                      | Stage 4 cross-asset manifest rescan post-CeFi drain (mechanical operation; Ikenna Tab 3 designs the schema flip)                             | 4   |
+| `sports_master_2026_05_07`                                                  | Per-source reconciler hook + features_sports_reconcile_available_at hook into per-source backfill VM exit-step                               | 4   |
+| `defi_master_2026_05_07` + `issues/defi_988_missing_dates_audit_2026_05_08` | Targeted backfill of 13,632 actionable rows from Tab 6 audit (top-5 priority list)                                                           | 4   |
+| `launcher_scripts_consolidation_into_deployment_service_2026_05_07`         | Migrate remaining 20 of 30 ad-hoc launchers into deployment-service/scripts/vm/                                                              | 5   |
+| `data_status_comprehensive_test_coverage_2026_05_07`                        | All 30 todos: 5 test categories × 6 repos                                                                                                    | 5   |
+| `mtds_databento_path_streaming_2026_05_07`                                  | Phases 2-4 (chunked streaming + memory profiler + smoke fixtures)                                                                            | 5   |
+| `mtds_per_instrument_download_api_2026_04_24`                               | Phase 1.5 chain axis (audit named CRITICAL-PATH)                                                                                             | 5   |
+| `hard_schema_enforcement_2026_05_08`                                        | Phases 1-5 mechanical migration scripts per asset_group                                                                                      | 5   |
+| `api_football_minimal_flattening_removal_2026_05_07`                        | All 16 todos (UAC normalize.py:377-381 fix + re-fetch VM + manifest flip)                                                                    | 5   |
+| `cme_polymarket_arb_2026_05_08`                                             | All 6 phases (config + CLOB / CME tick wiring + execution route + DART)                                                                      | 5   |
+| `cross_cutting_may_23_deliverables_2026_05_08`                              | Strategy ID refactor sweep across execution / strategy / ml-inference / pnl-attr / batch-live-recon / PBM / alerting (consume Ikenna T6 UAC) | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`                              | Strategy catalogue rows populated from Ikenna T6 schema (full archetype × venue × instrument-type matrix)                                    | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`                              | Client-account-strategy tagging propagation through every live trade + batch backtest result                                                 | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`                              | DART manual-trade UI implementation (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market)      | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`                              | Strategy catalogue UI (filter by asset_group / archetype / venue / live-vs-backtest)                                                         | 6   |
 
-**22 items / 5 tabs / 0 dropped.**
+**27 items / 6 tabs / 0 dropped.**
 
 ## AI-day estimate (per tab, summed across the cycle)
 
-| Tab                        | Theme                                                    | Items                                                                                                                          | AI-days |
-| -------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| 1                          | Instruments-live + lifecycle ingestion                   | 5 asset_group activations + Predictions Phase 2+3 + instrument-completion catalog work                                         | ~10     |
-| 2                          | Features-repo consolidation + ml/features wiring         | 8 phases features-repo + Phase 2A/B + Phase 3 column-pruning                                                                   | ~10     |
-| 3                          | Deployment-UI lifecycle tabs + deploy_missing            | 5 phases UI + deploy_missing Phase 1 + Phase 2                                                                                 | ~10     |
-| 4                          | Per-asset_group VM ops + reconcilers + targeted backfill | cefi drain + TradFi cluster validation + cross-asset rescan + sports reconciler + defi_988                                     | ~8      |
-| 5                          | Mechanical refactors + audit cluster (the dragon)        | 6 plans: launcher consolidation + data-status tests + databento + per-instrument + hard_schema + api_football + cme_polymarket | ~12     |
-| **Total Harsh-side cycle** |                                                          | **~50**                                                                                                                        |
+| Tab                        | Theme                                                                         | Items                                                                                                                              | AI-days |
+| -------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1                          | Instruments-live + lifecycle ingestion                                        | 5 asset_group activations + Predictions Phase 2+3 + instrument-completion catalog work                                             | ~10     |
+| 2                          | Features-repo consolidation + ml/features wiring                              | 8 phases features-repo + Phase 2A/B + Phase 3 column-pruning                                                                       | ~10     |
+| 3                          | Deployment-UI lifecycle tabs + deploy_missing                                 | 5 phases UI + deploy_missing Phase 1 + Phase 2                                                                                     | ~10     |
+| 4                          | Per-asset_group VM ops + reconcilers + targeted backfill                      | cefi drain + TradFi cluster validation + cross-asset rescan + sports reconciler + defi_988                                         | ~8      |
+| 5                          | Mechanical refactors + audit cluster (the dragon)                             | 6 plans: launcher consolidation + data-status tests + databento + per-instrument + hard_schema + api_football + cme_polymarket     | ~12     |
+| 6                          | Cross-cutting build (catalogue rows + ID refactor + client tagging + DART UI) | Consume Ikenna T6 UAC SSOTs; ID refactor sweep + catalogue row population + client tagging + 5 DART manual surfaces + catalogue UI | ~12     |
+| **Total Harsh-side cycle** |                                                                               | **~62**                                                                                                                            |
 
-5 parallel agents × ~10 days solo = ~50 ai-days. Tab 5 is the heaviest (6 plans) but each plan is independently
-shippable + has well-defined inputs/outputs — perfect for Harsh-side mechanical execution.
+6 parallel agents × ~10 days solo = ~62 ai-days. Above the CLAUDE.md "25-50 AI-days per side" target but within "err on
+beefier scope" guidance — Tab 6 was added 2026-05-08 mid-cycle to close the cross_cutting epic gap (deliverables #1-#4
+not assigned to Tabs 1-5 per the audit). Tab 6 is gated on Ikenna T6 UAC SSOT ships; mechanical scaffolding (refactor
+callsite identification) can run in parallel.
 
 ---
 
@@ -515,6 +523,85 @@ sub-agents + master integration.
 
 ---
 
+## TAB 6 — Cross-cutting build (catalogue rows + ID refactor + client tagging + DART UI)
+
+**Identity**: you own the implementation side of cross_cutting epic deliverables #1-#4. Audit 2026-05-08 found these
+were unassigned across Tabs 1-5; this tab is the operator's mid-cycle add to close the gap before May-23. Pure
+implement-from-spec work — Ikenna T6 ships UAC SSOTs + DART codex spec, you consume + ship the consumer wiring + UI.
+
+**Plan-of-record**: [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md)
+(shared with Ikenna Tab 6) +
+[`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) (parent epic).
+
+**Scope (5 items, P0-P1)**:
+
+- [ ] [SCRIPT] P0. **Strategy ID refactor sweep** — every code-path that creates a trade / fill / signal /
+      model-inference uses strategy IDs (not free-form strings). Mechanical sweep across **execution-service** (order
+      submission + fill ingestion), **strategy-service** (signal generation), **ml-inference-service** (inference
+      output), **pnl-attribution-service** (per-fill attribution), **batch-live-reconciliation-service** (per-trade
+      diff), **position-balance-monitor** (position tag), **alerting-service** (rule-fired strategy ID), and
+      **deployment-api** (deploy_missing strategy filter). Pre-Ikenna-T6 phase: identify every callsite via
+      grep+ast-walk into a checklist; post-Ikenna-T6: apply `derive_strategy_id(catalogue_row)` at each site. ~3
+      AI-days.
+- [ ] [SCRIPT] P0. **Strategy catalogue row population** from Ikenna T6's UAC schema — enumerate every
+      `(archetype, venue, instrument_type)` combination known to be feasible (full universe, including
+      not-launching-this-cycle archetypes). Source: existing
+      [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) 8-family / 18-archetype
+      baseline + new archetypes from May-23 epics (3 carry sub-types, 3 price-arb sub-types, per-asset-group ML, 4
+      prediction-market sub-types). Output: populated catalogue rows in UAC + per-archetype config defaults (collateral,
+      hedge ratio, position cap, kill-switch thresholds). ~3 AI-days.
+- [ ] [SCRIPT] P0. **Client-account-strategy tagging propagation** through every live trade + batch backtest result.
+      Hooks into the strategy ID refactor sweep above — every trade also carries
+      `(client_id, account_id,     strategy_id)` tuple. Capital allocation matrix from Ikenna T6 enforced at
+      execution-service entry (reject if computed position would breach allocation). ~2 AI-days.
+- [ ] [BUILD] P0. **DART manual-trade UI — 5 surfaces** per Ikenna T6's codex spec
+      ([`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
+      or extension): (a) DeFi swap / lend / borrow / stake actions per chain × protocol for `carry_staked_basis`; (b)
+      CeFi order placement (limit / market / stop) across Bybit / Deribit / Binance / OKX; (c) ML training trigger
+      (pause / resume / retrain) per ML archetype; (d) sports bet placement for backtest exec validation; (e)
+      prediction-market trade for backtest. Implementation lands in unified-trading-system-ui or deployment-ui per
+      Ikenna T6's route assignment. ~3 AI-days.
+- [ ] [BUILD] P1. **Strategy catalogue UI** — filter by asset_group / archetype / venue / live-vs-backtest. Reflects the
+      full universe (catalogue rows shipped above). Route per Ikenna T6's scope decision. ~2 AI-days.
+
+**Repos owned (collision boundary)**: execution-service (refactor sweep), strategy-service (signal generation +
+catalogue consumer), ml-inference-service (inference tagging), pnl-attribution-service + batch-live-reconciliation-
+service (attribution wiring), alerting-service (strategy_id in rule output — collides with Ikenna T5 alerting Phase 2-9;
+coordinate via cross-tab "Tab 5 alerting takes precedence on rule structure; Tab 6 lays in strategy_id field"),
+unified-trading-system-ui + deployment-ui (DART surfaces + catalogue UI; collides with Harsh T3 deployment-ui-
+lifecycle-tabs on shared route shell — different page routes, no overlap).
+
+**Read first**:
+
+- [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) — shared
+  plan-of-record (Ikenna T6 writes UAC schema spec into `## Open questions` resolved blocks; you read + consume)
+- [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) — 5-deliverable scope
+- Ikenna T6 ship-block in `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions` (wait for green before
+  consuming)
+- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
+  (your enumeration source)
+
+**Sub-agent fan-out**:
+
+- 1 main agent: orchestration + ID refactor sweep design
+- 4 parallel sub-agents per repo cluster: (a) execution + strategy + ml-inference (signal/fill path); (b) pnl-attr +
+  batch-live-recon + PBM (attribution path); (c) catalogue rows + UI implementation; (d) DART manual-trade UI 5 surfaces
+  (the heaviest sub-task — sub-fan-out further per surface possible).
+
+**Done-definition**:
+
+- [ ] Strategy ID refactor sweep complete: every callsite uses derived ID; QG passes
+- [ ] Catalogue rows populated: every (archetype, venue, instrument_type) combo from cross_cutting epic deliverable #1
+      is a row
+- [ ] Client tagging propagates: live trade + batch backtest result both carry `(client_id, account_id, strategy_id)`
+- [ ] 5 DART manual-trade surfaces ship + Playwright smoke for each (per CLAUDE.md "UI replication" deliverable #4)
+- [ ] Catalogue UI ships at the route Ikenna T6 assigned
+- [ ] DONE block appended to plan-of-record citing every code commit sha
+
+**Collision risk**: Strategy ID refactor touches MANY repos. Use `git add -p` per repo. Coordinate with all other Harsh
+tabs on shared touch points (e.g. Tab 1 instruments-service catalog, Tab 2 features-repo consolidation). Pre-commit
+`git diff --cached --name-only` MUST show only your files per CLAUDE.md mandatory pre-commit check.
+
 ## Cross-tab handshakes (within Harsh side)
 
 Hard sync gates between tabs.
@@ -556,6 +643,11 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
 - [ ] **Harsh Tab 5 (UAC additions) → Ikenna Tab 1 (UAC drift fixes)**: Harsh's `api_football` / `cme_polymarket_arb` /
       `hard_schema_enforcement` add UAC columns/enums; Ikenna flips `PROTOCOL_LAUNCH_DATES`. Different files, different
       lines; surgical `git add -p` mandatory if both edit UAC in the same window.
+- [ ] **Ikenna Tab 6 (UAC strategy SSOTs + DART scope) → Harsh Tab 6 (consumer wiring + DART UI)**: cross_cutting epic
+      deliverables #1-#4. **Hard ordering**: Ikenna T6 ships UAC catalogue + ID + client schemas + DART codex spec
+      first; Harsh T6 consumes after. **Mitigation**: Harsh T6 can scaffold the strategy ID refactor sweep (identify
+      every callsite that needs an ID without modifying yet) in parallel with Ikenna T6 schema design. Ikenna T6
+      announces `## Open questions` resolved per-deliverable; Harsh T6 reads then ships.
 
 ## Collision-risk callouts (file-level)
 

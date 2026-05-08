@@ -96,23 +96,30 @@ done-definition, not a calendar end-of-day — agents finish faster than humans.
 | `master_to_live_defi_2026_05_23`                      | Group F items 17-22 refresh (operational-validation; 2-year batch run; Copper + CEFFU treasury; live testnet replicating prod)      | 5   |
 | `master_to_live_defi_2026_05_23`                      | Group G item 23 (DART manual-trade gate; 6-persona Playwright matrix gate)                                                          | 5   |
 | `deploy_missing_auto_launch_2026_05_07`               | Phase 0 IAM scope + audit-log + rate-limit operator decisions (review draft → sign-off → propagate)                                 | 5   |
+| `cross_cutting_may_23_deliverables_2026_05_08`        | Strategy catalogue UAC schema + archetype × venue × instrument-type matrix design                                                   | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`        | Strategy ID UAC schema + canonical naming + versioning rule                                                                         | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`        | Client model UAC + capital allocation matrix per (client, archetype, venue)                                                         | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`        | DART manual-trade lane scope decision (per-archetype operator-replicable surfaces)                                                  | 6   |
+| `cross_cutting_may_23_deliverables_2026_05_08`        | Strategy catalogue UI scope decision (filter axes for asset_group / archetype / venue / live-vs-backtest)                           | 6   |
 
-**21 items / 5 tabs / 0 dropped.**
+**26 items / 6 tabs / 0 dropped.**
 
 ## AI-day estimate (per tab, summed across the cycle)
 
-| Tab                         | Theme                                  | Items                                                                                                                        | AI-days |
-| --------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------- |
-| 1                           | DeFi launch (Fork 1 + UAC drift fixes) | Paper-trade smoke + lending-indices relaunch + 4 UAC drift sub-tabs + Stream A LST collateral + Pyth Hermes archive backfill | ~12     |
-| 2                           | Live pipeline + writegate Phase 5      | 14-phase live_pipeline plan (cross-cutting MTDS + MDPS + features) + ratchet + Redis Stream cascade                          | ~12     |
-| 3                           | GCS migration + manifest cluster       | Overnight bundle migration + Stage 4 rescan + expected_universe v2 + v6→v7 schema design                                     | ~10     |
-| 4                           | AWS migration + cloud-agnostic         | Phase 2 dual-bucket + Phase 3 parity smoke + UCI SSOT + codex page                                                           | ~6      |
-| 5                           | Alerting + master refresh + governance | Alerting Phase 2-9 + master Group F+G refresh + deploy_missing Phase 0 IAM/audit-log/rate-limit                              | ~10     |
-| **Total Ikenna-side cycle** |                                        | **~50**                                                                                                                      |
+| Tab                         | Theme                                                         | Items                                                                                                                        | AI-days |
+| --------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1                           | DeFi launch (Fork 1 + UAC drift fixes)                        | Paper-trade smoke + lending-indices relaunch + 4 UAC drift sub-tabs + Stream A LST collateral + Pyth Hermes archive backfill | ~12     |
+| 2                           | Live pipeline + writegate Phase 5                             | 14-phase live_pipeline plan (cross-cutting MTDS + MDPS + features) + ratchet + Redis Stream cascade                          | ~12     |
+| 3                           | GCS migration + manifest cluster                              | Overnight bundle migration + Stage 4 rescan + expected_universe v2 + v6→v7 schema design                                     | ~10     |
+| 4                           | AWS migration + cloud-agnostic                                | Phase 2 dual-bucket + Phase 3 parity smoke + UCI SSOT + codex page                                                           | ~6      |
+| 5                           | Alerting + master refresh + governance                        | Alerting Phase 2-9 + master Group F+G refresh + deploy_missing Phase 0 IAM/audit-log/rate-limit                              | ~10     |
+| 6                           | Cross-cutting design (catalogue + IDs + clients + DART scope) | Strategy catalogue UAC + ID schema + client model + capital allocation matrix + DART scope spec                              | ~10     |
+| **Total Ikenna-side cycle** |                                                               | **~60**                                                                                                                      |
 
-5 parallel agents × ~10 days solo = ~50 ai-days, fitting the CLAUDE.md "size to 25-50 AI-days per side per cycle"
-target. **Err on the side of beefier scope**; we can do less of a beefy plan over time, can't add scope retroactively to
-a thin one.
+6 parallel agents × ~10 days solo = ~60 ai-days. Above the CLAUDE.md "25-50 AI-days per side" target but within "err on
+beefier scope" guidance — Tab 6 was added 2026-05-08 mid-cycle to close the cross_cutting epic gap (deliverables #1-#4
+not assigned to Tabs 1-5 per the audit). **Err on the side of beefier scope**; we can do less of a beefy plan over time,
+can't add scope retroactively to a thin one.
 
 ---
 
@@ -587,6 +594,82 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
 
 ---
 
+## TAB 6 — Cross-cutting design (catalogue + IDs + clients + DART scope)
+
+**Identity**: you own the cross_cutting epic's deliverables #1-#4 (strategy catalogue, strategy IDs, clients + accounts,
+DART manual-trade lane scope). Audit 2026-05-08 found these were unassigned across Tabs 1-5; this tab is the operator's
+mid-cycle add to close the gap before May-23. Pure design / UAC SSOT work — Harsh Tab 6 implements once you ship.
+
+**Plan-of-record**: [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md)
+(shared with Harsh Tab 6) +
+[`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) (parent epic) +
+[`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) (existing 8-family / 18-archetype
+catalogue baseline).
+
+**Scope (5 items, P0-P1)**:
+
+- [ ] [DESIGN+UAC] P0. **Strategy catalogue UAC schema** — declare in
+      `unified_api_contracts/canonical/strategy/catalogue.py`: `StrategyArchetype` enum (carry / price-arb /
+      ml-prediction / prediction-markets / others); `CatalogueRow` dataclass with
+      `(archetype, venue, instrument_type,     asset_group, live_vs_backtest, config)`; `ArchetypeConfig` per-family
+      (collateral_currency, hedge_ratio, position_cap_usd, kill_switch_drawdown_pct, kill_switch_position_breach_pct).
+      Resolve open question "bar for complete" — default = full enumeration including not-launching-this-cycle
+      archetypes per cross_cutting epic deliverable #1 framing. **Done**: UAC schema ships, unit tests covering 3+
+      archetype families. ~3 AI-days.
+- [ ] [DESIGN+UAC] P0. **Strategy ID UAC schema** — declare canonical naming + versioning rule in
+      `unified_api_contracts/canonical/strategy/ids.py`. Default proposal: `<archetype>.<venue>.<instrument_type>.v<N>`
+      (e.g. `carry_staked_basis.bybit.perp.v1`); N increments on material config change (collateral / hedge ratio /
+      position cap shifts). Provide `derive_strategy_id(catalogue_row) → StrategyId` function. **Done**: UAC schema
+      ships, unit tests covering ID derivation + versioning. ~2 AI-days.
+- [ ] [DESIGN+UAC] P0. **Client model UAC + capital allocation matrix** — extend
+      `unified_api_contracts/canonical/client/model.py` with `Client` (id, accounts: list[(venue, account_id)]) +
+      `CapitalAllocation` per (client, archetype, venue) declaring
+      `(initial_capital_usd, max_position_pct,     max_drawdown_pct)`. Allocation respected at execution-service entry —
+      execution rejects if computed position would breach allocation. **Done**: schema ships, unit tests covering
+      allocation respect + tagging propagation shape. ~2 AI-days.
+- [ ] [DESIGN] P0. **DART manual-trade lane scope spec** — write
+      `codex/09-strategy/cross-cutting/dart-manual-trade-spec.md` (or extend existing `operational-modes-matrix.md`)
+      with per-archetype list of operator-replicable manual surfaces. Required surfaces: (a) DeFi swap / lend / borrow /
+      stake actions per chain × protocol for `carry_staked_basis`; (b) CeFi order placement (limit / market / stop)
+      across Bybit / Deribit / Binance / OKX; (c) ML training trigger (pause / resume / retrain) per ML archetype; (d)
+      sports bet placement for backtest exec validation; (e) prediction-market trade for backtest. Resolve open question
+      "operator-only or external broker-style" — default = operator-only this cycle. **Done**: codex doc ships + Harsh
+      T6 has executable spec. ~2 AI-days.
+- [ ] [DESIGN] P1. **Strategy catalogue UI scope decision** — filter axes (asset_group / archetype / venue /
+      live-vs-backtest) confirmed; UI route in deployment-UI declared; Harsh T6 implements UI per spec. **Done**:
+      operator-confirmed UI scope + route assignment in `deployment_ui_lifecycle_tabs_2026_05_08`. ~1 AI-day.
+
+**Read first**:
+
+- [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) — 5-deliverable scope
+- [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) — shared
+  plan-of-record (you write to its `## Open questions` for blockers; Harsh T6 reads it)
+- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
+- [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](../../codex/09-strategy/cross-cutting/onboarding-checklist.md)
+  — strategy onboarding flow (your schemas wire into this)
+- [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
+  — DART manual-trade lane SSOT (extend or peer doc)
+
+**Sub-agent fan-out**:
+
+- 1 main agent: design judgment + UAC schema authoring
+- 2 sub-agents (parallel): (a) strategy catalogue row enumeration from existing codex (which archetypes × venues exist,
+  even if not in scope today) — output to Harsh T6 as input; (b) DART scope research across deployment-ui /
+  unified-trading-system-ui to identify existing manual-action surfaces to extend vs add.
+
+**Done-definition**:
+
+- [ ] All 4 UAC schemas merged: catalogue, IDs, client model, capital allocation
+- [ ] DART scope codex doc shipped (operator-confirmed) + Harsh T6 has executable spec
+- [ ] Strategy catalogue UI scope assigned (deployment-UI route declared)
+- [ ] Plan-of-record `## Open questions` resolved or escalated
+- [ ] DONE block appended to plan-of-record citing every UAC + codex commit sha
+
+**Collision risk**: Tab 6 modifies UAC `canonical/strategy/` + `canonical/client/`. Tab 1 modifies UAC
+`canonical/ crosscutting/chain_env.py` (different files). Harsh T5 might add UAC enums for hard_schema (different
+module). Use `git add -p` if you both edit UAC in the same window. PM master plan is read-only for this tab (Tab 5
+owns).
+
 ## Cross-tab handshakes (within Ikenna side)
 
 Hard sync gates between tabs. Operate independently otherwise.
@@ -610,6 +693,10 @@ Hard sync gates between tabs. Operate independently otherwise.
 - [ ] **Tab 5 (operator IAM decision) → Tab 4 (AWS infrastructure provisioning)**: deploy_missing Phase 0 IAM decision
       shapes how Cloud Run services authenticate against AWS for Phase 3 smoke. If operator picks restrictive IAM, Tab 4
       has more work; if blanket, Tab 4 ships faster. Coordinate at Tab 5's first decision-checkpoint.
+- [ ] **Tab 6 (strategy ID UAC schema) → Tab 1 (DeFi paper-trade smoke) + Tab 5 (alerting + master Group F refresh)**:
+      paper-trade smoke fills + alerting rules + Group F items (PBM / R&E / pnl-attribution / batch-live-recon) all gate
+      on strategy ID attribution. **Mitigation**: Tab 6 ships ID schema early (Day 1 of cycle); Tab 1 paper-trade tags
+      fills with derived strategy IDs once schema lands; Tab 5's alerting rules emit strategy ID per fired alert.
 
 ## Cross-side handshakes (Ikenna ↔ Harsh)
 
@@ -637,6 +724,11 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
 - [ ] **Harsh Tab 5 (mechanical refactors) → Ikenna Tab 1 (UAC drift fixes)**: Harsh's mechanical refactors might touch
       UAC `chain_env.py` for unrelated reasons (e.g. hard_schema_enforcement column adds). If yes, surgical `git add -p`
       to keep edits separate; Ikenna's `PROTOCOL_LAUNCH_DATES` flips never overlap with Harsh's mechanical UAC adds.
+- [ ] **Ikenna Tab 6 (UAC strategy SSOTs + DART scope) → Harsh Tab 6 (consumer wiring + DART UI)**: cross_cutting epic
+      deliverables #1-#4. **Hard ordering**: Ikenna T6 ships UAC catalogue + ID + client schemas + DART codex spec
+      first; Harsh T6 consumes after. **Mitigation**: Harsh T6 can scaffold the strategy ID refactor sweep (identify
+      every callsite that needs an ID without modifying yet) in parallel with Ikenna T6 schema design. Ikenna T6
+      announces `## Open questions` resolved per-deliverable; Harsh T6 reads then ships.
 
 ## Collision-risk callouts (file-level)
 
