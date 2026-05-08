@@ -92,9 +92,15 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 
 ### #4 UI replication / DART manual-trade lane
 
-- [ ] [DESIGN] **DART scope decision** — per-archetype list of operator-replicable manual surfaces. Operator-confirmed
+- [x] [DESIGN] **DART scope decision** — per-archetype list of operator-replicable manual surfaces. Operator-confirmed
       bar: every live archetype must have a manual fallback. Sports backtest exec validation manual surface acceptable
-      (not live). Owner: Ikenna T6.
+      (not live). Owner: Ikenna T6. **DONE 2026-05-08 (Tab 6.C)** — `unified-trading-pm@ab595616` shipped
+      [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+      (8 sections: scope decision matrix for all 11 StrategyInstruction action types · per-archetype manual-fallback map
+      covering all 18 codex archetypes · 5 BUILDs Harsh T6 ships · strategy_id attribution discipline · capital
+      allocation respect · post-May-23 deferrals). Cross-link added to peer doc `operational-modes-matrix.md` via
+      `unified-trading-pm@2a0d105d` (parallel-agent commit, content correct). Plan open questions #2 + #4 resolutions
+      captured.
 - [ ] [BUILD] **DART manual DeFi swap / lend / borrow / stake** for the carry-staked-basis archetype across enabled
       chains. Owner: Harsh T6.
 - [ ] [BUILD] **DART manual CeFi order placement** across the 4 live CeFi venues (Bybit / Deribit / Binance / OKX).
@@ -179,3 +185,74 @@ Sub-agent 6.B shipped deliverable #3 [DESIGN+UAC] tier:
 - Pushed to `live-defi-rollout` (verified `0 0` ahead/behind via `git rev-list --left-right --count HEAD...origin/...`).
 
 The [SCRIPT] **Client-account-strategy tagging propagated** sub-todo (Harsh T6) consumes this UAC and remains pending.
+
+## Strategy catalogue UI route — scope assignment (2026-05-08, Tab 6.C)
+
+**Decision** (resolves plan open question #1 default + cross_cutting epic deliverable #1 [BUILD] subitem):
+
+- **Route**: existing `/api/trading/strategies/catalog` endpoint in
+  [`unified-trading-api/unified_trading_api/routes/trading_analytics.py`](../../../unified-trading-api/unified_trading_api/routes/trading_analytics.py)
+  (line 369) returns the full catalogue from UAC `STRATEGY_REGISTRY`. UI consumer surface lives in
+  [`unified-trading-system-ui/lib/architecture-v2/catalogue-filter.ts`](../../../unified-trading-system-ui/lib/architecture-v2/catalogue-filter.ts)
+  - the architecture-v2 page set under `unified-trading-system-ui/app/(platform)/services/`. **Not a new deployment-ui
+    route** — the strategy catalogue is a trading-domain surface, not a deployment-ops surface, so it belongs in the
+    trading UI (where the DART terminal already lives).
+- **Filter axes (4)**: `asset_group` × `archetype` × `venue` × `live_vs_backtest`. Map to UAC v2 enum surface as:
+  - `asset_group`: per `MarketAssetGroup` enum (cefi / defi / tradfi / sports / prediction).
+  - `archetype`: per `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` (currently 46 members
+    after the 2026-04-25 PORTFOLIO + MEV + VOL expansions; codex `strategy-summary.md` 18-archetype baseline is stale
+    per
+    [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
+  - `venue`: per `STRATEGY_REGISTRY` row's venue field (per-venue rows already populated).
+  - `live_vs_backtest`: derived from `archetype_capability.CoverageStatus` (`SUPPORTED` = live; `PARTIAL` / `BLOCKED` =
+    backtest-only this cycle).
+- **Data source**: UAC `STRATEGY_REGISTRY` (already populated via `ARCHETYPE_CAPABILITY_REGISTRY` + per-cell
+  `representative_slot_labels`). For the per-archetype operational risk knobs (collateral / hedge_ratio /
+  position_cap_usd / kill_switch_drawdown_pct / kill_switch_position_breach_pct), the genuine gap (per Tab 6.A issue doc
+  Option A) is `ArchetypeConfig` not yet in UAC — this consumer reads it from the registry once Tab 6.A's triage
+  produces the schema. UAC `client.py` facade + `CAPITAL_ALLOCATION` per Tab 6.B's deliverable #3 is consumed at the
+  per-row drilldown for active client allocations.
+- **Owner**: Harsh Tab 6 (cross_cutting plan deliverable #1 [BUILD] subitem). Implementation = enrichment of existing
+  trading-UI `/services/<archetype>` routes + the `catalogue-filter.ts` filter helpers, NOT greenfield. Per-row click
+  drilldown = `CatalogueRow` config view + derived `strategy_id` (via `format_strategy_id`) + active `CapitalAllocation`
+  cells (per client × archetype × venue) from UAC `client.py`.
+- **Acceptance**: every catalogue row visible in UI; per-row drilldown shows config + strategy_id + allocations; filter
+  axes operate orthogonally; live archetypes for May-23 (carry_staked_basis, carry_basis_perp,
+  ml_directional_continuous, carry_basis_dated) are visually distinct from backtest-only archetypes.
+
+> **Why not deployment-ui**: the cross*cutting plan defaulted to "filter by asset_group / archetype / venue /
+> live-vs-backtest" without specifying \_which* UI. Audit 2026-05-08 found the existing `STRATEGY_REGISTRY` consumer is
+> `unified_trading_api.routes.trading_analytics` + `unified-trading-system-ui/lib/architecture-v2/`; no surface in
+> deployment-ui. Deployment-ui owns operational ops (deploy / monitor / data-status / readiness / config) per
+> [`deployment_ui_lifecycle_tabs_2026_05_08`](deployment_ui_lifecycle_tabs_2026_05_08.md). Strategy catalogue is a
+> trading-domain artifact — putting it in deployment-ui would split the architecture-v2 surface across two UIs and break
+> the OpenAPI / UI generation pipeline (`unified_trading_pm.scripts.openapi.generate_ui_reference_data`).
+
+**Cross-link banner** to Harsh Tab 3's `deployment_ui_lifecycle_tabs_2026_05_08` lands in same logical unit as this
+section (1-line append-only banner).
+
+## DONE-2026-05-08 (Tab 6.C) — DART spec + UI scope
+
+Sub-agent 6.C shipped deliverable #4 [DESIGN] tier + deliverable #1 [DESIGN] (UI scope assignment) tier:
+
+- **unified-trading-pm@ab595616** `docs(codex): add DART manual-trade-spec — per-archetype scope for May-23 cutover` —
+  NEW
+  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+  (314 lines, 8 sections covering all 11 StrategyInstruction action types + 18 codex archetypes + 5 BUILDs Harsh T6
+  ships + strategy_id attribution + capital allocation respect + post-May-23 deferrals).
+- **unified-trading-pm@2a0d105d** (parallel-agent commit, content correct) — cross-link to peer doc
+  `operational-modes-matrix.md` Related-documents section.
+- **unified-trading-pm@<this-flip-commit>** — plan flip + UI scope assignment section + 1-line cross-reference banner
+  appended to `deployment_ui_lifecycle_tabs_2026_05_08.md`.
+
+**Foot-guns encountered**: parallel-agent index hijacking foot-gun #1 incident — `ab595616` accidentally bundled 2
+foreign files (`plans/active/alerting_service_live_rules_2026_05_07.md` + `plans/archive/cefi_ml_may_23_2026.epic.md`)
+because parallel agents were re-staging files into my index between my `git restore --staged` and my `git commit` calls.
+Workspace rule "ship work + accept muddled attribution + document via auto-memory" applied; revert would lose the DART
+codex doc. The 2 foreign-file diffs are still semantically correct (parallel agents' WIP — not destructive edits) and
+pass prettier/QG.
+
+The [BUILD] subitems for deliverables #1 (catalogue UI build) + #4 (5 DART manual surfaces) remain pending — owned by
+Harsh T6 per cross-side handshake. The strategy_id grammar this spec consumes is owned by Tab 6.A (currently 🟡 BLOCKED
+pending operator triage of
+[`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).

@@ -745,3 +745,11 @@ mechanically larger; defer to next session).
 - Q1 routing decision (Ikenna or main): land STEP 5.11 + 5.12 UAC-source exemption before Phase B+ consumers ship.
 - Phase B (UI re-shape: 6-tab shell + Monitor 4-sub-tab structure + Data-Status mode toggle + LiveFreshnessPanel +
   StreamingLogsPanel + LifecyclePrefetchContext) — can start once Q1 lands.
+
+> **Cross-reference banner (2026-05-08, Tab 6.C):** Strategy catalogue UI route — owned by `unified-trading-system-ui`
+> (NOT this deployment-ui plan). Cross_cutting epic deliverable #1 [BUILD] subitem implementation = enrichment of
+> existing `/api/trading/strategies/catalog` route +
+> `unified-trading-system-ui/lib/architecture-v2/catalogue-filter.ts`, per scope decision in
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) § "Strategy
+> catalogue UI route — scope assignment (2026-05-08, Tab 6.C)". This deployment-ui plan does not own that surface —
+> append-only banner for read symmetry across plans.
