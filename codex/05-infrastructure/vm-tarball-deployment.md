@@ -399,8 +399,8 @@ gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast
 
 **SSOT cross-refs:**
 
-- [`02-data/sports-schema-paths.md`](../02-data/sports-schema-paths.md) "Manifest consolidator + per_vm shard merge
-  mechanics"
+- [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) "Manifest
+  consolidator + per_vm shard merge mechanics"
 - UTL CLI: `python -m unified_trading_library.manifest_consolidator --bucket <X> --once`
 
 ---

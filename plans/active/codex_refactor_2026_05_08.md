@@ -563,9 +563,9 @@ drift.
 
   **Acceptance**: only one drill-down doc; no broken links.
 
-### Phase D.2 — Sports 5-doc consolidation → 3 docs — PARALLEL — P1
+### Phase D.2 — Sports 5-doc consolidation → 3 docs — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. Per audit C3, sports docs collapse 5 → 3.
+- [x] [SCRIPT] P1. Per audit C3, sports docs collapse 5 → 3. SHIPPED 2026-05-08 (PM commit forthcoming).
 
   **Keep**:
   - `02-data/sports-data-source-coverage-matrix.md` (coverage SSOT — unchanged).
@@ -574,20 +574,35 @@ drift.
   - `02-data/sports-adapter-dependency-order.md` (T0/T1 dependency graph — unchanged).
 
   **Delete**:
-  - [ ] `02-data/sports-data-migration.md` — superseded by `per-category-bucket-layouts.md` + reality of shipped sports
-        buckets. Migrate any unique content (verify) before deletion.
-  - [ ] `02-data/sports-schema-paths.md` — GCS path SSOT now lives in UAC `gcs_paths.py` +
-        `per-category-bucket-layouts.md`. Migrate the SOURCE_COVERAGE_START table (already done via Phase B.5) before
-        deletion.
+  - [x] `02-data/sports-data-migration.md` — DELETED. Superseded by `per-category-bucket-layouts.md` (sports section) +
+        reality of shipped sports buckets. Post-plan banner (2026-05-06) already disclaimed it; no unique content needed
+        migration.
+  - [x] `02-data/sports-schema-paths.md` — DELETED. GCS path SSOT lives in UAC
+        `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`,
+        `SPORTS_DATA_TYPE_LAYOUT`); SOURCE_COVERAGE_START table already documented in CLAUDE.md "Sports source coverage
+        windows" workspace rule + `availability-manifest-and-data-status.md`; phantom-audit recipe lives in
+        `availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe".
 
-  **Cross-doc references to update**:
-  - [ ] All `14-playbooks/sports/*` if any reference the deleted docs.
-  - [ ] `04-architecture/sports-integration-plan.md` — verify.
-  - [ ] `09-strategy/architecture-v2/archetypes/{ml-directional,market-making,rules-directional,event-driven}-event-settled.md`
-        — verify any reference.
-  - [ ] Any plan in `plans/active/` referencing the deleted docs.
+  **Cross-doc references rewritten** (6 files):
+  - [x] `04-architecture/sports-integration-plan.md` — both refs (line 410 `Migration scripts:` + line 495
+        `## References`) repointed to `02-data/per-category-bucket-layouts.md` + UAC `gcs_paths` SSOT.
+  - [x] `14-playbooks/backfill-completion-playbook.md:166` — repointed to UAC `gcs_paths` SSOT + phantom-audit recipe in
+        `availability-manifest-and-data-status.md`.
+  - [x] `05-infrastructure/vm-tarball-deployment.md:402` — manifest consolidator cross-ref repointed to
+        `availability-manifest-and-data-status.md`.
+  - [x] `02-data/data-lineage-MTDS-features-ml.md:160` — sports paths cross-ref repointed to UAC `gcs_paths` SSOT +
+        `per-category-bucket-layouts.md`.
+  - [x] `02-data/README.md:253-254` — both file entries removed from directory listing.
+  - [x] `02-data/sports-data-source-coverage-matrix.md:33` — `sports-data-migration.md` cross-ref replaced with
+        `per-category-bucket-layouts.md`.
 
-  **Acceptance**: only 3 sports docs in `02-data/`; no broken links.
+  Archived plans (`plans/archive/sports_*`) intentionally NOT modified — frozen historical state per workspace rule.
+  Auto-generated `codex/14-playbooks/_generated/scope-manifest.json` will refresh on next codex QG.
+
+  **Acceptance**: only 3 sports docs in `02-data/` (verified `ls codex/02-data/sports-*.md` returns
+  `sports-adapter-dependency-order.md`, `sports-data-source-coverage-matrix.md`, `sports-scheduling-and-sharding.md`);
+  workspace-wide grep `sports-data-migration\|sports-schema-paths` returns zero hits in `codex/` or `plans/active/`
+  (excluding this plan and the auto-generated scope-manifest).
 
 ### Phase D.3 — Multi-axis correction body-text reconciliation — SEQUENTIAL after A.1, A.2 — P0
 
@@ -908,8 +923,8 @@ DELETED codex docs by this plan:
 - [ ] `codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2)
 - [ ] `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3)
 - [ ] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1)
-- [ ] `codex/02-data/sports-data-migration.md` (Phase D.2)
-- [ ] `codex/02-data/sports-schema-paths.md` (Phase D.2)
+- [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
+- [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
 - [ ] `codex/04-architecture/copper-custody-integration.md` (Phase D.4)
 - [ ] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4)
 - [ ] `codex/06-coding-standards/error-handling.md` (Phase D.5)

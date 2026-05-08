@@ -157,5 +157,5 @@ Lifecycle: `ServiceBootstrap` emits lifecycle events; model hot-reload via `Mode
 - Contracts scope: `contracts-scope-and-layout.md`
 - Bucket naming: `bucket-naming-and-config.md`
 - Partitioning: `partitioning.md`
-- Sports paths: `sports-schema-paths.md`
+- Sports paths SSOT: UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`); bucket layout: `per-category-bucket-layouts.md` (sports section)
 - Prediction paths: `prediction-schema-paths.md`

@@ -250,8 +250,6 @@ if df["price"].min() <= 0 or df["price"].max() > 1_000_000:
 ├── subscription-model.md           # Pub/Sub topics, message formats
 ├── hive-schema-compatibility.md    # BigQuery external table compatibility
 ├── sports-data-sources.md          # Sports API integrations (DraftKings, FanDuel, etc.)
-├── sports-schema-paths.md          # Sports features/odds canonical paths, validation
-├── sports-data-migration.md        # sports-betting-services → unified GCS migration
 ├── sports-api-testing.md           # Sports API testing, mock data
 ├── _common/                        # Common patterns across batch/live
 ├── batch/                          # Batch-specific data patterns

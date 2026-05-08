@@ -163,7 +163,7 @@ What to check before kicking off Phase 1 sports work:
 - **Drilldown UI + endpoints** — [02-data/data-status-drilldown.md](../02-data/data-status-drilldown.md).
 - **Sports data-source coverage matrix + prediction-vs-reference league split** —
   [02-data/sports-data-source-coverage-matrix.md](../02-data/sports-data-source-coverage-matrix.md).
-- **Sports schema paths + phantom audit** — [02-data/sports-schema-paths.md](../02-data/sports-schema-paths.md).
+- **Sports GCS path SSOT + phantom audit** — UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`). Phantom-audit recipe: [02-data/availability-manifest-and-data-status.md](../02-data/availability-manifest-and-data-status.md) § "Phantom audit — re-runnable recipe".
 - **Sports adapter dependency order (api-football T0)** —
   [02-data/sports-adapter-dependency-order.md](../02-data/sports-adapter-dependency-order.md).
 - **DeFi data type catalog** — [02-data/defi-data-types-catalog.md](../02-data/defi-data-types-catalog.md).
