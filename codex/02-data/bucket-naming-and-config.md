@@ -89,5 +89,5 @@ If a full bucket name is configured, use it. Otherwise, derive from prefix + `GC
 ## References
 
 - `06-coding-standards/README.md` — Configuration
-- `05-infrastructure/cloud-agnostic-migration.md` — Cloud abstractions
+- `04-architecture/cloud-agnostic-migration.md` — Cloud abstractions
 - `02-data/schema-governance.md` — Schema and storage patterns

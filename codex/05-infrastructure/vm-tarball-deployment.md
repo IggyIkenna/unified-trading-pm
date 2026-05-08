@@ -229,9 +229,10 @@ bash launch-ml-training-vm.sh \
    python -c "import pandas as pd; df = pd.read_parquet('/tmp/p.parquet'); print(df['capture_status'].value_counts())"
 ```
 
-Honest-coverage schema v5 (see `02-data/availability-manifest-and-data-status.md`) means every attempted shard has a
-manifest row: `captured` (data written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted,
-raised — with `error_reason` populated).
+Honest-coverage `capture_status` taxonomy (introduced at schema v5; current schema v7 — see
+`02-data/availability-manifest-and-data-status.md`) means every attempted shard has a manifest row: `captured` (data
+written), `empty_confirmed` (attempted, zero rows), or `attempted_failed` (attempted, raised — with `error_reason`
+populated).
 
 ### Exit codes
 

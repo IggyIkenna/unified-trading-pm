@@ -7,7 +7,7 @@
 #
 # Environment variable:
 #   CLOUD_PROVIDER — gcp | aws (default: gcp)
-#   Aligned with unified-trading-codex/05-infrastructure/cloud-agnostic-migration.md
+#   Aligned with unified-trading-codex/04-architecture/cloud-agnostic-migration.md
 
 # =============================================================================
 # GCP Configuration

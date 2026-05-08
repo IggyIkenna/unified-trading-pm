@@ -12,6 +12,6 @@ tags:
 # No Hardcoded Project IDs
 RULE: All project IDs from config. Never hardcode central-element-* or any project ID string.
 WHY: Security risk; breaks multi-tenant; tests must use test-project placeholder.
-CODEX: 05-infrastructure/cloud-agnostic-migration.md, .cursor/rules/quality-gates-audit-factors.mdc
+CODEX: 04-architecture/cloud-agnostic-migration.md, .cursor/rules/quality-gates-audit-factors.mdc
 DO: Use config.gcp_project_id; GCP_PROJECT_ID env; test-project in tests
 NEVER: "central-element-*"; os.getenv(..., "central-element-*"); real project ID in .env.example

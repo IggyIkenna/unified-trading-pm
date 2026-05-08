@@ -5,8 +5,9 @@ scope: [engineer, admin]
 # Venue Availability SSOT
 
 > **See also:** `codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema
-> (v4), per-service shard dimensions, data status page hierarchy, availability % calculation, and integrity principles.
-> This document covers venue launch dates and instrument availability specifically.
+> (v7 — current; `MANIFEST_SCHEMA_VERSION = 7` in UTL `manifest_writer.py`), per-service shard dimensions, data status
+> page hierarchy, availability % calculation, and integrity principles. This document covers venue launch dates and
+> instrument availability specifically.
 
 ## What This Is
 

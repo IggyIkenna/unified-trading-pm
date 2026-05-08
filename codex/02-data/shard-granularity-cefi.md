@@ -12,11 +12,17 @@ scope: [engineer]
 > See that doc for the full per-asset-group shard-atom matrix (sports / prediction / cefi options-futures / DeFi chain /
 > ML+strategy+execution job_id / TradFi EVENT_CONTRACT).
 
-**Status:** v6 columns active as of 2026-04-23 (manifest schema v6 shipped). Cluster validation as 4th write-gate pillar
-in progress (writegate Phase 1A + 2.B). **SSOT:**
+**Status:** v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) active as of 2026-04-23 (manifest
+schema v6 shipped). Current overall schema is **v7** (`MANIFEST_SCHEMA_VERSION = 7` in UTL `manifest_writer.py`) — v7
+added `fixture_id` (sports per-fixture) + `job_id` (ML / strategy / execution experiment-keyed services); the v6 CeFi
+columns described in this doc are unchanged under v7. v8 (`pipeline_mode` + `service_emission_state` +
+`last_emission_decision_at` + `expected_window_completeness_pct`) is in design per
+[`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
+Cluster validation as 4th write-gate pillar in progress (writegate Phase 1A + 2.B). **SSOT:**
+[availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) for the canonical schema-version
+constant + full column list; this doc is the CeFi-specific v6 column rollout reference.
 `unified-trading-pm/plans/active/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
 `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`. **Related:**
-[availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
 [partitioning.md](./partitioning.md),
 [04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
 [06-coding-standards/validation-patterns.md](../06-coding-standards/validation-patterns.md).

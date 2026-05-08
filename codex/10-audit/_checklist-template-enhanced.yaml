@@ -123,7 +123,7 @@ items:
     criticality: "high"
     automation_status: "automated"
     validator_id: "cloud_agnostic_validator"
-    ssot_ref: "05-infrastructure/cloud-agnostic-migration.md"
+    ssot_ref: "04-architecture/cloud-agnostic-migration.md"
     automated_check: "validators/security/cloud_agnostic_validator.py"
 
   # ==============================================================================
@@ -489,7 +489,7 @@ items:
     criticality: "high"
     automation_status: "automated"
     validator_id: "cloud_agnostic_validator"
-    ssot_ref: "05-infrastructure/cloud-agnostic-migration.md"
+    ssot_ref: "04-architecture/cloud-agnostic-migration.md"
     automated_check: "validators/security/cloud_agnostic_validator.py"
 
   - id: "INF-08"

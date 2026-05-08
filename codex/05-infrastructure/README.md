@@ -166,20 +166,20 @@ Secrets are injected into containers via:
 
 ## Related Documents
 
-| Document                                                   | Description                                                            |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [cloud-agnostic-migration.md](cloud-agnostic-migration.md) | GCP/AWS abstraction, migration phases, testing strategy                |
-| [terraform.md](terraform.md)                               | Terraform module structure, per-service and shared modules             |
-| [ci-cd.md](ci-cd.md)                                       | Cloud Build + GitHub Actions pipeline                                  |
-| [cicd-setup.md](cicd-setup.md)                             | Complete CI/CD setup guide (Act, Docker, Cloud Build)                  |
-| [docker.md](docker.md)                                     | Multi-stage Docker builds, base images                                 |
-| [versioning-rollback.md](versioning-rollback.md)           | Image tagging, rollback procedures                                     |
-| [new-repo-setup.md](new-repo-setup.md)                     | Complete workflow for creating new repositories                        |
-| [service-setup-checklist.md](service-setup-checklist.md)   | Complete service setup (CLI, config, tests, CI/CD)                     |
-| [ui-setup-checklist.md](ui-setup-checklist.md)             | TypeScript UI setup (React/Vue, smoke tests, ESLint)                   |
-| [workspace-root-variable.md](workspace-root-variable.md)   | User-specific workspace root variable pattern                          |
-| [auth-setup.md](auth-setup.md)                             | Authentication setup (tokens, service accounts, secrets)               |
-| [artifact-registry-setup.md](artifact-registry-setup.md)   | Publishing libraries to Artifact Registry                              |
-| [contracts-integration.md](contracts-integration.md)       | Using unified-api-contracts (canonical/external + internal subpackage) |
-| [batch/README.md](batch/README.md)                         | Batch infrastructure (VMs, schedulers, triggers)                       |
-| [live/README.md](live/README.md)                           | Live infrastructure (long-running VMs, health checks)                  |
+| Document                                                                      | Description                                                                                       |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [cloud-agnostic-migration.md](../04-architecture/cloud-agnostic-migration.md) | GCP/AWS abstraction, migration phases, testing strategy (canonical SSOT lives in 04-architecture) |
+| [terraform.md](terraform.md)                                                  | Terraform module structure, per-service and shared modules                                        |
+| [ci-cd.md](ci-cd.md)                                                          | Cloud Build + GitHub Actions pipeline                                                             |
+| [cicd-setup.md](cicd-setup.md)                                                | Complete CI/CD setup guide (Act, Docker, Cloud Build)                                             |
+| [docker.md](docker.md)                                                        | Multi-stage Docker builds, base images                                                            |
+| [versioning-rollback.md](versioning-rollback.md)                              | Image tagging, rollback procedures                                                                |
+| [new-repo-setup.md](new-repo-setup.md)                                        | Complete workflow for creating new repositories                                                   |
+| [service-setup-checklist.md](service-setup-checklist.md)                      | Complete service setup (CLI, config, tests, CI/CD)                                                |
+| [ui-setup-checklist.md](ui-setup-checklist.md)                                | TypeScript UI setup (React/Vue, smoke tests, ESLint)                                              |
+| [workspace-root-variable.md](workspace-root-variable.md)                      | User-specific workspace root variable pattern                                                     |
+| [auth-setup.md](auth-setup.md)                                                | Authentication setup (tokens, service accounts, secrets)                                          |
+| [artifact-registry-setup.md](artifact-registry-setup.md)                      | Publishing libraries to Artifact Registry                                                         |
+| [contracts-integration.md](contracts-integration.md)                          | Using unified-api-contracts (canonical/external + internal subpackage)                            |
+| [batch/README.md](batch/README.md)                                            | Batch infrastructure (VMs, schedulers, triggers)                                                  |
+| [live/README.md](live/README.md)                                              | Live infrastructure (long-running VMs, health checks)                                             |

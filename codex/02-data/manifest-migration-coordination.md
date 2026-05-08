@@ -16,7 +16,11 @@ related:
 # Manifest Migration Coordination
 
 > **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
-> the next manifest-schema bump (v5 → v6) is planned + executed.
+> the next manifest-schema bump (v7 → v8 — `pipeline_mode` + `service_emission_state` + `last_emission_decision_at` +
+> `expected_window_completeness_pct` per
+> [`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md))
+> is planned + executed. Current runtime SSOT: `MANIFEST_SCHEMA_VERSION = 7` in UTL
+> `unified_trading_library/manifest_writer.py`.
 
 ## Purpose
 
