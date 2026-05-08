@@ -32,7 +32,7 @@ trades, no cursor; on-chain replay infeasible because the sequencers commit aggr
 
 ## What strategy archetypes fit them
 
-Updated [`category-instrument-coverage.md`](../codex/09-strategy/architecture-v2/category-instrument-coverage.md) with
+Updated [`category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md) with
 new rows + slot labels for:
 
 ### 1. `CARRY_BASIS_PERP` — long spot + short DEX perp (or vice versa) for funding-rate carry
@@ -60,7 +60,7 @@ Slot labels added: `multi-dex-btc-funding-usdc-prod`, `multi-dex-eth-funding-usd
 ### 3. `CARRY_STAKED_BASIS` — Pacifica-Solana as a JitoSOL/mSOL hedge venue (currently RESEARCH)
 
 Added a "DeFi (Solana DEX-native)" row. Slot is **rejected at preflight today** because Pacifica's collateral matrix in
-[`VENUE_COLLATERAL_MATRIX`](../../../../unified-api-contracts/unified_api_contracts/registry/venue_collateral.py) is
+[`VENUE_COLLATERAL_MATRIX`](../../../unified-api-contracts/unified_api_contracts/registry/venue_collateral.py) is
 USDC-only (no LST acceptance). When Pacifica adds JitoSOL/mSOL cross-margin (or once we verify they already do), flip
 the matrix to `accepted=True` with a haircut citation and the slot enables automatically — the harness is identical to
 the Drift SOL-perp slots (`Jito JitoSOL + Kamino + Drift SOL-perp`).
@@ -174,7 +174,7 @@ Before writing any code, run these probes on a same-region GCE VM (asia-northeas
 #### C.3 — Phase 1: UAC Starknet RPC template (only if Phase 0 → event-replay path)
 
 Add to
-[`_defi_chain_data.py`](../../../../unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py):
+[`_defi_chain_data.py`](../../../unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py):
 
 ```python
 "starknet-mainnet": ChainData(

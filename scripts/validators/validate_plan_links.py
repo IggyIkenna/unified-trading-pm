@@ -25,7 +25,7 @@ def main() -> int:
     parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parent.parent.parent.parent)
     args = parser.parse_args()
 
-    plans_dir: Path = cast(Path, args.mds_dir).resolve()
+    plans_dir: Path = cast(Path, args.plans_dir).resolve()
     ws_root: Path = cast(Path, args.workspace_root).resolve()
     if not plans_dir.is_dir():
         print(f"Skip: {plans_dir} not found", file=sys.stderr)
@@ -46,17 +46,21 @@ def main() -> int:
             if not link_path:
                 # Pure anchor like #section — already filtered above, defensive guard.
                 continue
-            target: Path
-            if link_path.startswith(".cursor/") or link_path.startswith("deployment-service/"):
-                target = ws_root / link_path
-            elif "/" in link_path and not link_path.startswith("."):
-                target = ws_root / link_path.split("/")[0]
-            else:
-                target = (plans_dir / link_path).resolve()
-                if not target.exists():
-                    archive_dir: Path = plans_dir.parent / "archive"
-                    if archive_dir.is_dir():
-                        target = (archive_dir / link_path).resolve()
+            # Resolution order: plans_dir-relative first, then archive,
+            # then workspace-root (for repo-prefixed paths like
+            # ``unified-trading-pm/codex/...`` or ``../../<repo>/``).
+            # For ``.md`` links also try ``.plan.md`` per workspace plan-
+            # filename convention (active=``.md``, archive=``.plan.md``).
+            candidates: list[Path] = []
+            for base in (plans_dir, plans_dir.parent / "archive", ws_root):
+                if not base.is_dir():
+                    continue
+                primary = (base / link_path).resolve()
+                candidates.append(primary)
+                if link_path.endswith(".md") and not link_path.endswith(".plan.md"):
+                    plan_md_path = link_path[: -len(".md")] + ".plan.md"
+                    candidates.append((base / plan_md_path).resolve())
+            target = next((c for c in candidates if c.exists()), candidates[0])
             if not target.exists():
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

@@ -788,7 +788,7 @@ write-gate, available_at stamping, LookaheadBiasError gate). Per CLAUDE.md "No d
 
 - "Single Source of Truth" rules, that duplication is itself a workspace violation. Consolidation is the canonical fix.
 
-Pattern matches UMI→MTDS (commit history visible in [market-tick-data-service/](../../market-tick-data-service/) —
+Pattern matches UMI→MTDS (commit history visible in [market-tick-data-service/](../../../market-tick-data-service/) —
 `git log --oneline | grep "merge umi"`) and UCI→UTL (commit history visible in unified-trading-library —
 `git log --oneline | grep "merge unified-config-interface"`). Sub-packages within a parent repo, light internal seams,
 ONE Docker image, ONE Health-API, ONE flat pyproject.toml.

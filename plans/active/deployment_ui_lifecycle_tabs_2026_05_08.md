@@ -848,7 +848,7 @@ re-shape; its completion unblocks Phase B-H + Ikenna Tab 5 audit-log integration
       lifecycle helper convention (replacing the pre-A.2 `prefix → bucket` shape).
     - Updated "Adding a new launcher" item 2 with explicit per-helper guidance — when to use `_ephemeral_batch` /
       `_scheduled_recurring` / `_long_lived_live` / `_ephemeral_experiment` — and a cross-reference to
-      [`unified_api_contracts/canonical/crosscutting/lifecycle_class.py`](../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/lifecycle_class.py).
+      [`unified_api_contracts/canonical/crosscutting/lifecycle_class.py`](../../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/lifecycle_class.py).
     - Prettier-clean.
 
 **Other A.2-adjacent codex docs** (no edits required this session):

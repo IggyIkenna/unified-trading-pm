@@ -850,7 +850,7 @@ todos:
               - replay: `replay-{asset_group}-{shard_key_short_hash}-{ts}`
 
         13.3 — Update `VM_PREFIX_TO_BUCKET` in
-              [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
+              [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
               to register the new prefixes (`mtds-live-`, `mdps-features-live-`, `features-xc-`,
               `replay-`). Without this, VMs under these prefixes are invisible to the watchdog → can sit
               RUNNING forever burning money on a network partition (per workspace incident reference

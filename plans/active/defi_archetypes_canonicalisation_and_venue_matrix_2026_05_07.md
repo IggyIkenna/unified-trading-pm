@@ -46,7 +46,7 @@ related_archetypes:
 >    `attempted_failed` (anti-pattern).
 
 This plan ships the doc + plan + code corrections raised by the 2026-05-07 operator review of
-[`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](../active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md).
+[`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](issues/defi_archetypes_doc_plan_drift_2026_05_07.md).
 Each stream below is independently shippable. Streams A–D run in parallel; Stream E is the integration sweep that pulls
 everything together for the master plan.
 

@@ -116,7 +116,7 @@ reference + examples for testing any DeFi strategy
 
 **Detailed Plans:**
 
-- [defi-strategy-ui-verification.md](defi-strategy-ui-verification.md) — Phase 1: Verify UI widgets with mocked data
+- [defi-strategy-ui-verification.md](../ai/defi-strategy-ui-verification.plan.md) — Phase 1: Verify UI widgets with mocked data
 - [defi-strategy-e2e-automation.md](defi-strategy-e2e-automation.md) — Full pipeline: UI verification → test generation
   → execution → regression protection
 
@@ -225,7 +225,7 @@ reference + examples for testing any DeFi strategy
 1. **To find a plan:** Search this file for keywords or domain
 2. **To run a plan:** Click the link and follow the plan's execution steps
 3. **To create a new plan:** Add it to this INDEX with a one-line description, then update
-   `[plan-placement.mdc](../../.cursor/rules/core/plan-placement.md)`
+   `[plan-placement.mdc](../../.cursor/rules/core/plan-placement.mdc)`
 
 ---
 
