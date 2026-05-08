@@ -11,6 +11,11 @@ source:
   - cursor-configs/CLAUDE.md § "DeFi Execution Architecture" + § "Batch = Live: Unified Pipeline Architecture"
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+execution:
+  owner: Tab 1 (DeFi launch) — execution depends on V1-RETIRE blocker fix
+  cadence: daily once V1-RETIRE blocker fixed
+  verifier: all 4 service event streams emit STARTED+progress+STOPPED + paper fills + position events + P&L attribution
+  last_executed: "2026-05-08 (FAILED on colocated_engine.py:306 ImportError)"
 ---
 
 # Paper-trade smoke runbook — `carry_staked_basis` Solana hedge

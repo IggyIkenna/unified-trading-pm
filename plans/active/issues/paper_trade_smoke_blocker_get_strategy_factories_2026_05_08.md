@@ -10,6 +10,11 @@ source:
   - plans/active/defi_master_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+execution:
+  owner: strategy-service maintainer + Tab 1 next session
+  cadence: one-shot ~1-2 AI-days
+  verifier: bash e2e-testing/scripts/defi/run-paper.sh exits 0 + writes fills to GCS
+  last_executed: "NEVER"
 ---
 
 # 🚨 P0 BLOCKER — paper-trade smoke harness stale import

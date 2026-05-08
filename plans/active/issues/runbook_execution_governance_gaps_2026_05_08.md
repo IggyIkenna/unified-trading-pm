@@ -11,6 +11,11 @@ source:
   - master_to_live_defi_2026_05_23.md Group F item 17 (paper-trade smoke gating step)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+execution:
+  owner: Tab 5 (governance) — meta doc
+  cadence: one-shot
+  verifier: session_loose_ends_2026_05_08.md items 3-7 all flip to DONE
+  last_executed: "2026-05-08 (HARD RULES codified PM@1d74f617; retroactive sweeps pending)"
 ---
 
 # 🚨 4 governance gaps — runbook silent-rot
