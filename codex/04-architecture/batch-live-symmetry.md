@@ -196,7 +196,7 @@ Current batch/live symmetry state across all pipeline services. Updated as part 
 | strategy-service               | STR  | `StrategyBatchHandler`  | `StrategyLiveHandler`  | batch / live      | unit: both modes    | `LiveHandler` facade added (p1-todo-13)       |
 | ml-inference-service           | MLIN | `BatchInferenceHandler` | `LiveInferenceHandler` | batch / live      | unit: both modes    | Pre-existing                                  |
 | ml-training-service            | MLTR | `TrainingHandler`       | **EXEMPT**             | batch only        | unit: batch handler | Batch-only by design (see exemption above)    |
-| execution-service              | EXS  | n/a                     | `ExecutionLiveHandler` | live only         | integration         | Execution is always live; no batch mode       |
+| execution-service              | EXS  | `MatchingEngineHandler` | `ExecutionLiveHandler` | batch / live      | unit + integration  | Batch = matching engine fills (UAC `BatchExecutionMode`); live = real venue. Per CLAUDE.md "Batch = Live: Unified Pipeline Architecture" + [`batch-live-pipeline.md`](batch-live-pipeline.md) — execution alpha = live fills P&L − simulated fills P&L. |
 | risk-service                   | RSK  | `RiskBatchHandler`      | `RiskLiveHandler`      | batch / live      | unit: both modes    | Pre-existing                                  |
 | alerting-service               | ALS  | n/a                     | `AlertingHandler`      | live only         | integration         | Event-driven only; no batch mode              |
 

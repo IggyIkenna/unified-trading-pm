@@ -215,22 +215,25 @@ drift.
   **Acceptance**: every doc that names the live transport mechanism agrees with
   `05-infrastructure/live-pipeline-architecture.md` as the SSOT. ✅ verified.
 
-### Phase A.6 — execution-service batch+live mode contradiction — PARALLEL — P0
+### Phase A.6 — execution-service batch+live mode contradiction — PARALLEL — P0 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P0. CLAUDE.md "Batch = Live: Unified Pipeline Architecture" + the
+- [x] [SCRIPT] P0. CLAUDE.md "Batch = Live: Unified Pipeline Architecture" + the
       `04-architecture/batch-live-pipeline.md` matching engine + UAC `BatchExecutionMode` enum confirm execution-service
       runs in BOTH batch (matching engine fills) and live (real venue). The contrary claim must be removed.
 
-  **Files to update**:
-  - [ ] `04-architecture/batch-live-symmetry.md:185` — row says
-        `execution-service: live only, Batch Handler n/a, "Execution is always live; no batch mode"`. Replace with
-        `MatchingEngineHandler / ExecutionLiveHandler` pair (batch matches engine, live = real venue).
-  - [ ] `06-coding-standards/integration-testing-layers.md` — verify execution-service test layer references include
-        batch mode (matching engine).
-  - [ ] `09-strategy/architecture-v2/archetypes/*.md` — verify any archetype that says "execution is live-only" gets
-        corrected.
+  **Files updated**:
+  - [x] `04-architecture/batch-live-symmetry.md` § "Per-Service Implementation Matrix" — execution-service row updated:
+        Batch Handler = `MatchingEngineHandler`, Live Handler = `ExecutionLiveHandler`, mode = `batch / live`, test
+        coverage = `unit + integration`, notes describe matching-engine fills (UAC `BatchExecutionMode`) vs real venue
+        with cross-link to `batch-live-pipeline.md` for execution-alpha = live − simulated.
+  - [x] `06-coding-standards/integration-testing-layers.md` — verified: no contradictory "execution = live only"
+        claim. Doc references execution test layers without asserting live-only.
+  - [x] `09-strategy/architecture-v2/archetypes/*.md` — verified via workspace grep: no archetype doc contains
+        "execution is live-only" or equivalent contradiction. Acceptance met.
+  - [x] `10-audit/repos/execution-service.yaml` — verified: `deployment_modes: ["batch", "live"]` +
+        `business_modes: ["batch", "live"]` already declared correctly. No update needed.
 
-  **Acceptance**: no codex doc claims execution-service is live-only.
+  **Acceptance**: no codex doc claims execution-service is live-only. ✅ verified.
 
 ### Phase A.7 — features-service consolidation alignment — PARALLEL — P0
 
