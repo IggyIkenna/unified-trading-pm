@@ -10,6 +10,120 @@ scope: [engineer]
 
 # Quality Gates
 
+## Table of Contents
+
+1. [TL;DR](#tldr)
+2. [Two-Pass Workflow Model](#two-pass-workflow-model)
+   - [Three-Phase Internal Model (inside quickmerge Stage 3)](#three-phase-internal-model-inside-quickmerge-stage-3)
+3. [Tool Version Pinning and Environment Isolation](#tool-version-pinning-and-environment-isolation)
+   - [Three Environments, Three Purposes](#three-environments-three-purposes)
+   - [Tool Resolution Rules (Enforced in QG Templates)](#tool-resolution-rules-enforced-in-qg-templates)
+   - [Pinned Versions (Canonical)](#pinned-versions-canonical)
+   - [Workspace Venv Sync (Day-to-Day)](#workspace-venv-sync-day-to-day)
+   - [Version Alignment Pipeline — Step 5 (Workspace Venv)](#version-alignment-pipeline--step-5-workspace-venv)
+4. [Canonical Code Limits (BLOCKING)](#canonical-code-limits-blocking--all-enforced-in-quality-gatessh)
+   - [Coverage by repo type](#coverage-by-repo-type)
+   - [Coverage floor exceptions](#coverage-floor-exceptions-approved-repos-only)
+5. [Audit Alignment (Independent Audit 2026-03-01)](#audit-alignment-independent-audit-2026-03-01)
+6. [Quality Gate Bypass Audit Methodology](#quality-gate-bypass-audit-methodology)
+   - [Two-Level Audit System](#two-level-audit-system)
+   - [Per-Repo Audit File (Required)](#per-repo-audit-file-required)
+   - [Suppression Categories](#suppression-categories)
+   - [Enforcement](#enforcement)
+7. [SSOT Alignment Validation (Documentation Quality Gates)](#ssot-alignment-validation-documentation-quality-gates)
+   - [What It Catches](#what-it-catches)
+   - [Pre-Commit Hook (Blocks Bad Commits)](#pre-commit-hook-blocks-bad-commits)
+   - [GitHub Actions (PR Checks)](#github-actions-pr-checks)
+   - [Manual Validation](#manual-validation)
+   - [Troubleshooting](#troubleshooting)
+8. [Canonical Template](#canonical-template-new)
+9. [Repo-Type-Specific Base Scripts](#repo-type-specific-base-scripts)
+10. [Quality Gate Performance](#quality-gate-performance)
+    - [`--skip-typecheck` Flag](#--skip-typecheck-flag)
+    - [Three-Phase Pattern (current)](#three-phase-pattern-current)
+    - [BASEDPYRIGHT_CACHE_DIR](#basedpyright_cache_dir)
+    - [run_timeout Helper](#run_timeout-helper)
+11. [Python Version Consistency](#python-version-consistency)
+    - [Run Quality Gates = Single Command (No Setup First)](#run-quality-gates--single-command-no-setup-first)
+    - [Quickmerge Activates Venv](#quickmerge-activates-venv)
+    - [CI Reads Python from pyproject.toml](#ci-reads-python-from-pyprojecttoml)
+    - [Local Python Detection (when running quality-gates directly)](#local-python-detection-when-running-quality-gates-directly)
+12. [What quality-gates.sh Does](#what-quality-gatessh-does)
+    - [Step 0: Config Validation](#step-0-config-validation)
+    - [Step 1: Auto-Fix (Phase 1)](#step-1-auto-fix-phase-1)
+    - [Step 2: Linting (Phase 2)](#step-2-linting-phase-2)
+    - [Step 3: Tests](#step-3-tests)
+13. [Usage](#usage)
+14. [Two-Phase Workflow](#two-phase-workflow)
+15. [Ruff Version Consistency](#ruff-version-consistency-critical)
+    - [Three-Stage Consistency Model](#three-stage-consistency-model)
+    - [Verifying Consistency](#verifying-consistency)
+    - [Updating Ruff Version](#updating-ruff-version)
+16. [Ruff Configuration](#ruff-configuration)
+17. [Type Checking Standards (pyrightconfig.json)](#type-checking-standards-pyrightconfigjson)
+18. [Library pyproject.toml: basedpyright Config](#library-pyprojecttoml-basedpyright-config)
+19. [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10)
+    - [Policy (effective 2026-03-10)](#policy-effective-2026-03-10)
+    - [How the gate counts suppressions](#how-the-gate-counts-suppressions)
+    - [Remediation steps](#remediation-steps)
+    - [Pre-commit formatter note](#pre-commit-formatter-note)
+    - [SSOT](#ssot)
+20. [CI Parity](#ci-parity-implemented)
+    - [Key Parity Rules](#key-parity-rules)
+    - [Package Manager Standard: UV](#package-manager-standard-uv)
+    - [Cloud Build Architecture: Test-in-Image](#cloud-build-architecture-test-in-image)
+    - [Shared Libraries: Idempotent Package Publishing](#shared-libraries-idempotent-package-publishing)
+21. [When Quality Gates Fail](#when-quality-gates-fail)
+22. [Running All Quality Gates](#running-all-quality-gates)
+23. [Security Gates](#security-gates-implemented--blocking-in-all-repos)
+    - [pip-audit — OSS vulnerability scan (BLOCKING)](#1-pip-audit--oss-vulnerability-scan-blocking)
+    - [Internal advisory check (BLOCKING)](#2-internal-advisory-check-blocking)
+    - [SBOM audit trail (non-blocking)](#3-sbom-audit-trail-non-blocking)
+    - [Bandit B108 — hardcoded temp paths (Python)](#4-bandit-b108--hardcoded-temp-paths-python)
+24. [Dead Code Detection (vulture)](#dead-code-detection-vulture-advisory--warnfail-thresholds)
+    - [Thresholds](#thresholds)
+    - [Installing vulture](#installing-vulture)
+    - [Suppressing false positives with .vulture-whitelist.py](#suppressing-false-positives-with-vulture-whitelistpy)
+    - [Common false-positive patterns](#common-false-positive-patterns)
+    - [pyproject.toml configuration (optional)](#pyprojecttoml-configuration-optional)
+    - [Running vulture manually](#running-vulture-manually)
+25. [AWS CodeBuild Parity](#aws-codebuild-parity)
+    - [Identical Gate Logic](#identical-gate-logic)
+    - [Structural Differences](#structural-differences)
+    - [Environment Variables](#environment-variables)
+    - [Service-Specific Mock Variables (GCP only)](#service-specific-mock-variables-gcp-only)
+    - [GCP Emulator Configuration](#gcp-emulator-configuration)
+    - [AWS Moto Integration Tests](#aws-moto-integration-tests)
+    - [Credential-Free CI Gate](#credential-free-ci-gate-network_block_plugin)
+    - [Cassette Parity Testing (H5.2)](#cassette-parity-testing-h52)
+    - [Cassette Drift Detection (H5.1)](#cassette-drift-detection-h51)
+    - [Parity Rules](#parity-rules)
+    - [Library Repos: Simpler Buildspec](#library-repos-simpler-buildspec)
+    - [Adding AWS CodeBuild to a New Repo](#adding-aws-codebuild-to-a-new-repo)
+26. [Anti-Patterns](#anti-patterns)
+
+## QG STEP cross-reference
+
+CLAUDE.md and `unified-trading-pm/scripts/quality-gates-base/base-service.sh` reference QG steps by `STEP 5.X`
+identifiers. The table below maps each canonical step number to its location in this doc + the canonical enforcement
+file. Steps without a dedicated section here are enforced inline in `base-service.sh` and documented in CLAUDE.md "Key
+Rules (Quick Reference)" / "Service Infrastructure Requirements".
+
+| STEP    | Topic                                  | This doc anchor                                                                                              | Enforcement file (canonical)                                          | CLAUDE.md cross-ref                                                            |
+| ------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 5.10    | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                        | `scripts/quality-gates-base/base-service.sh`                          | "Key Rules — `basedpyright` not `pyright`"                                     |
+| 5.11    | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)   | `scripts/quality-gates-base/base-service.sh`                          | "Key Rules — flat deps + ruff"                                                 |
+| 5.22    | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10) | `scripts/quality-gates-base/base-service.sh` + `base-library.sh`      | "No `# type: ignore` to hide architectural violations"                         |
+| 5.34    | typed config reloaders                 | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)"     |
+| 5.61    | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"           |
+| 5.62    | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — Health API (STEP 5.62)"                 |
+| 5.64    | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Cluster validation MANDATORY at `record_captured` for bundled shards"         |
+| 5.66    | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Per-VM shard isolation for concurrent backfills"                              |
+
+When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
+file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
+deeper context.
+
 ## TL;DR
 
 Every service has `scripts/quality-gates.sh` that runs the exact same checks as GitHub Actions and Cloud Build. It
