@@ -680,8 +680,11 @@ drift.
 
 ### Phase D.4 — Custody triplet → custody-providers.md SSOT — SEQUENTIAL after A.1 — P1
 
-- [ ] [SCRIPT] P1. Per audit C5, fold `copper-custody-integration.md` (245L) and `ceffu-custody-integration.md` (95L
-      stub) into `custody-providers.md` (193L, protocol SSOT) as per-provider §s.
+- [x] [SCRIPT] P1. Per audit C5, fold `copper-custody-integration.md` (245L) and `ceffu-custody-integration.md` (95L
+      stub) into `custody-providers.md` (193L, protocol SSOT) as per-provider §s. **DONE 2026-05-08 (PM@c4330d9d)** —
+      custody-providers.md grew to 486L with §1 protocol + §2.1 Mock / §2.2 LocalKey / §2.3 Copper / §2.4 CEFFU
+      (PLANNED) + §3 coverage matrix + §4 mode matrix. 7 cross-refs rewritten across codex/04-architecture/ +
+      codex/10-audit/ + plans/active/.
 
   **Target shape** (`custody-providers.md`):
   - §1 Overview / pluggable interface
@@ -753,8 +756,13 @@ drift.
 
 ### Phase D.6 — batch-live principle merge → `batch-live-architecture.md` — SEQUENTIAL after A.5, A.6 — P1
 
-- [ ] [SCRIPT] P1. Per audit C9, merge `batch-live-pipeline.md` (195L) + `batch-live-symmetry.md` (263L) into
-      `batch-live-architecture.md`. Major overlap on principle.
+- [x] [SCRIPT] P1. Per audit C9, merge `batch-live-pipeline.md` (195L) + `batch-live-symmetry.md` (263L) into
+      `batch-live-architecture.md`. Major overlap on principle. **DONE 2026-05-08 (PM@dcd49f24)** —
+      batch-live-architecture.md created at 460L with all 10 sections (Principle / 4 seams / anti-drift guards /
+      service audit matrix / matching engine + book matchers / strategy alpha vs execution alpha / sports-specific notes
+      / anti-patterns fixed / instruments-live exception / references). 23 cross-refs rewritten across codex/02-data/ +
+      codex/04-architecture/ + codex/05-infrastructure/ + codex/10-audit/ + codex/14-playbooks/ + plans/active/ +
+      plans/epics/.
 
   **Target shape** (`04-architecture/batch-live-architecture.md`):
   - §1 Principle (from pipeline)
