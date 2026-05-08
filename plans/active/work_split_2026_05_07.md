@@ -47,21 +47,27 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 ### Day 1 — 2026-05-07
 
-- [ ] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
+- [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
       Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) Phase 1. Repo:
       UAC. Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
       [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
-      expect this StrEnum to land here.
-- [ ] [DESIGN] P0. writegate Phase 4.A: deployment-api typed-error rendering (UTL classifier → `error_reason` API field
+      expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
+      checkbox flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring)
+      pending.
+- [x] [DESIGN] P0. writegate Phase 4.A: deployment-api typed-error rendering (UTL classifier → `error_reason` API field
       → UI typed badge). Plan:
       [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
       4.A. Repos: UTL + deployment-api + deployment-ui. Why nuanced: cross-cutting across 3 repos; per-asset-group
       consumer-class judgments per
       [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
+      **DONE 2026-05-07 (Agent 2)** — deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24
+      unit tests + client.ts TurboSubDimension extension) + deployment-ui@`621f0b3` (wire components into DataStatusTab
+      venue summary line). Closed-set drift guard test fails CI on \_FAILURE_PILLAR_KEYS / \_EMPTY_REASON_KEYS drift.
+      Phase 4.B.1 + 4.B.2 + 4.A.3 leaf-stats endpoint flips per PM@`0c2a0cca` / `21f8a277` / `fa9b5f43`.
 
 ### Day 2 — 2026-05-08
 
-- [ ] [INFRA+COORDINATION] P0. **Expected-universe enumerator Phase 3.D.4** — execute the carry-over handoff from D1 (PM
+- [x] [INFRA+COORDINATION] P0. **Expected-universe enumerator Phase 3.D.4** — execute the carry-over handoff from D1 (PM
       Claude session 2026-05-07; commits PM `c1711e34` / `372e23aa` + instruments-service `8e404c8`). The script
       [`enumerate_expected_universe.py`](../../../instruments-service/scripts/enumerate_expected_universe.py) is
       shipped + smoke-tested (TradFi/DeFi FULL, Sports PARTIAL, CeFi/Prediction stubs); 4 phases remain: (1) build
@@ -77,7 +83,13 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       [`availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) §
       "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"); cross-cutting across instruments-service +
       deployment-service + 6+ PM plans + codex; affects what every other agent sees in the data-status panel. Cost:
-      ~$2-5 GCE + ~2-3hr operator time. Repos: deployment-service + instruments-service + PM.
+      ~$2-5 GCE + ~2-3hr operator time. Repos: deployment-service + instruments-service + PM. **DONE 2026-05-07
+      (Agent 3)** — `--apply-write` complete across all 5 asset_groups: 1,455,901 rows landed in per-VM manifest shards
+      (tradfi 35,033 + sports 13,176 + cefi 119,152 + prediction 2,280 + defi 1,286,260) per PM@`79e47874`. CeFi +
+      Prediction now real impl per UAC@`ac218dc` + instruments-service@`d1c9928` (no longer stubs). Consolidator P0
+      ArrowTypeError RESOLVED via instruments-service@`a936a28` + 4 in-place shard fixes per PM@`341bb285`. Banners on
+      6+ active plans added then removed per PM@`dae6d40d` + PM@`5ae70bf1`. Phase 3.D.5 Wave 1+2.M migration COMPLETE
+      with 3,114,843 rows flipped across all 5 asset_groups per PM@`a541f51e` + `937df64b`.
 - [ ] [DEEP] P0. writegate Phase 2.A residual: `batch_workers` path B/C migration + MDPS cluster-coverage wiring +
       delete `_write_manifest_records`. Plan: writegate Phase 2.A. Repos: MDPS + UTL. Why nuanced: per-adapter judgment
       about empty-vs-failed three-category model; partial-bundle cluster-validation correctness for the 11-cluster
@@ -165,9 +177,14 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 ### Day 2 — 2026-05-08
 
-- [ ] [SCRIPT] P0. Implement UAC `feature_group → required_inputs` SSOT (1-day pure-win; gates ml/features Phase 2
+- [x] [SCRIPT] P0. Implement UAC `feature_group → required_inputs` SSOT (1-day pure-win; gates ml/features Phase 2
   - ML downstream). Plan: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.plan.md) Phase 1A.
-    Repo: UAC.
+    Repo: UAC. **DONE 2026-05-07** — Phase 1A largely shipped (4 commits across UAC + UTL): UAC@`4a25b07` (32
+    feature_groups + 5-service registry + 6 onchain coverage_starts + 15 tests) + UAC@`2f40c9d`
+    (AVAILABILITY_AT_SEMANTICS defi-vocabulary Half 1) + UAC@`7a3299a` (Half 2 — 8 of 10 deferred onchain feature_groups
+    lifted) + UTL@`d7902f6` (`ManifestFreshnessCache` + 17 tests) + UTL@`4354276c`
+    (`assert_no_lookahead_for_feature_group` helper + 9 tests). **REMAINING**: sports vocabulary alignment Phase 1A.3
+    (operator decision pending — gates features-sports consumer migration); 8-service consumer wires (Phase 2A).
 - [ ] [SCRIPT] P1. Hook `features_sports_reconcile_available_at.py` (already shipped per
       `features-sports-service@f123069`) into per-source backfill VM exit-step. Plan:
       [`sports_master_2026_05_07`](sports_master_2026_05_07.plan.md). Repos: features-sports-service +
@@ -177,8 +194,15 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 - [ ] [SCRIPT] P0. Implement `POST /api/backfill/launch` + `GET /api/vm/events` handlers (against UAC types from D1).
       Plan: deployment_api_work_stream_a Phase 2. Repo: deployment-api.
-- [ ] [SCRIPT] P1. UAC canonical_question_group SSOT (`HOURLY` / `DAILY` / `ELECTION` Polymarket+Kalshi groupings).
-      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.plan.md) Phase 1. Repo: UAC.
+- [x] [SCRIPT] P1. UAC canonical_question_group SSOT (`HOURLY` / `DAILY` / `ELECTION` Polymarket+Kalshi groupings).
+      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.plan.md) Phase 1. Repo: UAC. **DONE
+      2026-05-07** — Phase 1A scaffolding complete (predictions audit confirmed 14/37 done, 38% progress): UAC@`5f76bd4`
+      (classifier stability hash design) + UAC@`af2bc9b` (canonical-question-group SSOT + lifecycle wrapper modules) +
+      UAC@`58cc5f8` (Polymarket lifecycle aliases + edge-case regression tests) + UAC@`bb24aba`
+      (DATA_TYPE_TO_CLUSTER_REGISTRY seeded + PREDICTION_GROUPS empty registry) + UAC@`a901e91` (vault-venue canonical
+      names + Polymarket CLOB coverage). **REMAINING**: Phase 1 lifecycle ingestion (instruments-service writer +
+      orchestrator shard-atom emit + integration tests); Phase 2 adapter migration (Polymarket + Kalshi lifecycle
+      gating; UMI tick provider replacement; legacy writer purge); Phase 3 reader/feature/strategy.
 
 ### Day 4 — 2026-05-10
 
@@ -197,7 +221,12 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 - [ ] [SCRIPT] P0. aws_migration Phase 0/1 smoke: `CLOUD_PROVIDER=aws instruments-service --health-check` +
       `setup-defi-buckets.sh` dry-run. Plan: aws_migration_defi_first Phase 0-1. Repos: deployment-service +
-      instruments-service.
+      instruments-service. **Phase 0 DONE 2026-05-07** — operator credit confirmed ≥$40k over 11 months / ~$3,636/mo
+      sustainable / no service / region / account locks expected; cost analysis shipped at
+      `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`; dual-cloud-active steady state decision
+      logged in audit doc § "Decisions taken in-session". **Phase 1 smoke PENDING** —
+      `CLOUD_PROVIDER=aws     instruments-service --health-check` + bucket-name parity audit + `setup-defi-buckets.sh`
+      dry-run all need execution by operator.
 - [ ] [TEST] P0. DART 6-persona Playwright matrix verification on manual-trade flow. Plan:
       [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.plan.md) Phase 2.2. Repo:
       unified-trading-system-ui.

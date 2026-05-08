@@ -77,12 +77,15 @@ thresholds).
 
 **Scope (2 items)**:
 
-- [ ] [DESIGN] P0. UAC `AlertCode` StrEnum + threshold dataclass + severity-vs-alert-code separation. Plan:
+- [x] [DESIGN] P0. UAC `AlertCode` StrEnum + threshold dataclass + severity-vs-alert-code separation. Plan:
       [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) Phase 1. Repo: UAC
       (`unified_api_contracts/canonical/crosscutting/alerting.py` or facade equivalent — check current layout first).
+      **DONE 2026-05-07** — UAC@`d00326d` shipped + alerting plan Phase 1 checkbox flips per PM@`7624ab21`.
 - [ ] [ARCHITECTURE] P0. alerting Phase 2 — `KillSwitchBus` rule wiring + `CROSS_CLOUD_EGRESS_DETECTED` rule + AAVE
       utilization-spike threshold value (audit §3 #5 flagged the bps as ambiguous; resolve via either DeFi-team judgment
-      call or threshold-research sub-agent). Plan: alerting Phase 2. Repo: alerting-service.
+      call or threshold-research sub-agent). Plan: alerting Phase 2. Repo: alerting-service. **PENDING** —
+      `grep     AlertCode alerting-service/` returns 0 hits as of 2026-05-07 evening; Phase 2 consumer wiring is the
+      gate.
 
 **Repos owned (collision boundary)**: UAC `alerting.py` (and/or new alerting facade) + alerting-service. Hands off
 deployment-api / UTL / MDPS to other agents.
@@ -109,38 +112,34 @@ same `__init__.py`. Push immediately after each commit so other tabs `git pull -
 
 **Done definition**:
 
-1. ✅ UAC `AlertCode` StrEnum + threshold dataclass merged + tests green via repo
-   `bash scripts/quality-gates.sh`. **Shipped 2026-05-07 at UAC@d00326d** — 39-code closed set,
-   `AlertSeverity` (CRITICAL/HIGH/WARN/INFO), `AlertChannel`, `AlertRule` Pydantic with
-   construction-time validators, `LIVE_ALERT_RULES` (37), `ALERT_THRESHOLDS` (10 with explicit
-   `ThresholdUnit`), 31 unit tests green, all 6/6 QG gates green.
-2. ⚠️ alerting-service Phase 2 rules wired + KillSwitchBus integration test passes.
-   **PARTIAL** — declarative half shipped 2026-05-07 at alerting-service@b025e83
-   (`_default_routing_rules` consumes UAC `LIVE_ALERT_RULES`, AAVE threshold migrated to UAC,
-   37 unit tests green, `triggers_kill_switch=True` flag set on `KILL_SWITCH_*` rules with
-   construction-time validator). **Publish-side hook + integration test DEFERRED** to a future
-   session / Harsh pair-review per
+1. ✅ UAC `AlertCode` StrEnum + threshold dataclass merged + tests green via repo `bash scripts/quality-gates.sh`.
+   **Shipped 2026-05-07 at UAC@d00326d** — 39-code closed set, `AlertSeverity` (CRITICAL/HIGH/WARN/INFO),
+   `AlertChannel`, `AlertRule` Pydantic with construction-time validators, `LIVE_ALERT_RULES` (37), `ALERT_THRESHOLDS`
+   (10 with explicit `ThresholdUnit`), 31 unit tests green, all 6/6 QG gates green.
+2. ⚠️ alerting-service Phase 2 rules wired + KillSwitchBus integration test passes. **PARTIAL** — declarative half
+   shipped 2026-05-07 at alerting-service@b025e83 (`_default_routing_rules` consumes UAC `LIVE_ALERT_RULES`, AAVE
+   threshold migrated to UAC, 37 unit tests green, `triggers_kill_switch=True` flag set on `KILL_SWITCH_*` rules with
+   construction-time validator). **Publish-side hook + integration test DEFERRED** to a future session / Harsh
+   pair-review per
    [`issues/alerting_kill_switch_publish_hook_2026_05_08.md`](issues/alerting_kill_switch_publish_hook_2026_05_08.md):
-   when an alert with `triggers_kill_switch=True` fires through `route_event`, it must publish
-   a `KillSwitchEvent` to the UTL bus so execution-service halt subscribers consume it.
-   Without this hook, paged operators must manually trigger the kill switch via DART —
-   acceptable for the 7-day live-soak with humans watching, NOT acceptable as institutional
-   steady state. Gates `master_to_live_defi_2026_05_23` Group F (kill-switch verification) +
-   alerting plan Phase 8 rehearsal.
-3. ✅ AAVE bps threshold has a documented value with a citation comment pointing at source.
-   **Shipped 2026-05-07 at UAC@d00326d** —
-   `ALERT_THRESHOLDS["defi_aave_utilization_spike_bps"]` carries explicit `ThresholdUnit.BPS_OF_ONE`
-   + citation to Aave V3 InterestRateStrategy `optimalUsageRatio=0.95 RAY` for WETH/USDC/USDT/DAI.
-   Per-archetype override: `leveraged_funding_arb` fires at 9000 bps_of_one (90 %) vs default 9500 (95 %).
+   when an alert with `triggers_kill_switch=True` fires through `route_event`, it must publish a `KillSwitchEvent` to
+   the UTL bus so execution-service halt subscribers consume it. Without this hook, paged operators must manually
+   trigger the kill switch via DART — acceptable for the 7-day live-soak with humans watching, NOT acceptable as
+   institutional steady state. Gates `master_to_live_defi_2026_05_23` Group F (kill-switch verification) + alerting plan
+   Phase 8 rehearsal.
+3. ✅ AAVE bps threshold has a documented value with a citation comment pointing at source. **Shipped 2026-05-07 at
+   UAC@d00326d** — `ALERT_THRESHOLDS["defi_aave_utilization_spike_bps"]` carries explicit `ThresholdUnit.BPS_OF_ONE`
+   - citation to Aave V3 InterestRateStrategy `optimalUsageRatio=0.95 RAY` for WETH/USDC/USDT/DAI. Per-archetype
+     override: `leveraged_funding_arb` fires at 9000 bps_of_one (90 %) vs default 9500 (95 %).
 4. ✅ Plan checkboxes flipped in
-   [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
-   in the same logical unit as each code commit. **Phase 1 flipped at PM@7624ab21; Phase 2 +
-   codex SSOTs (alert-code-taxonomy.md + threshold-tuning.md) activated at PM@48ed2e4f.**
+   [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md) in the same
+   logical unit as each code commit. **Phase 1 flipped at PM@7624ab21; Phase 2 + codex SSOTs (alert-code-taxonomy.md +
+   threshold-tuning.md) activated at PM@48ed2e4f.**
 
-**Status (2026-05-08)**: COMPLETE except item 2 publish-side hook (deferred + tracked in
-`issues/`). Agent 1 stops here; the deferred hook is a small follow-up (~30-45 min) that
-either Harsh picks up via the issue doc OR a future Ikenna session lands once Harsh has
-pair-reviewed the architectural seam between `route_event` and the `KillSwitchBus` publisher.
+**Status (2026-05-08)**: COMPLETE except item 2 publish-side hook (deferred + tracked in `issues/`). Agent 1 stops here;
+the deferred hook is a small follow-up (~30-45 min) that either Harsh picks up via the issue doc OR a future Ikenna
+session lands once Harsh has pair-reviewed the architectural seam between `route_event` and the `KillSwitchBus`
+publisher.
 
 ---
 
@@ -151,11 +150,15 @@ deployment-api + deployment-ui + MDPS + base-service.sh — all ONE plan, builds
 
 **Scope (3 items)**:
 
-- [ ] [DESIGN] P0. writegate Phase 4.A — UTL classifier → deployment-api `error_reason` API field → deployment-ui typed
+- [x] [DESIGN] P0. writegate Phase 4.A — UTL classifier → deployment-api `error_reason` API field → deployment-ui typed
       badge. Plan:
       [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
       4.A. Repos: UTL + deployment-api + deployment-ui. Per-asset-group consumer-class judgment lives in
       [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
+      **DONE 2026-05-07** — deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24 unit tests +
+      client.ts TurboSubDimension extension) + deployment-ui@`621f0b3` (DataStatusTab venue summary line wiring) + Phase
+      4.A.3 leaf-stats endpoint (PM@`fa9b5f43`) + Phase 4.B.1 + 4.B.2 flips (PM@`0c2a0cca` / `21f8a277`). Closed-set
+      drift guard test fails CI on `_FAILURE_PILLAR_KEYS` / `_EMPTY_REASON_KEYS` drift.
 - [ ] [DEEP] P0. writegate Phase 2.A residual — `batch_workers` path-B/C migration + MDPS cluster-coverage wiring
   - delete `_write_manifest_records`. Plan: writegate Phase 2.A. Repos: MDPS + UTL. Three-category empty-vs-failed
     judgment per CLAUDE.md "Three-category empty-output decision" rule; partial-bundle cluster-validation correctness
@@ -226,9 +229,13 @@ workflow; reading the handoff doc saturates the context.
 
 **Scope (1 item, 4 sub-phases + cross-plan banner sweep)**:
 
-- [ ] [INFRA+COORDINATION] P0. Expected-universe enumerator Phase 3.D.4. Plan: documented in
+- [x] [INFRA+COORDINATION] P0. Expected-universe enumerator Phase 3.D.4. Plan: documented in
       [`_HANDOFF_expected_universe_enumerator_2026_05_07.md`](_HANDOFF_expected_universe_enumerator_2026_05_07.md).
-      Repos: deployment-service + instruments-service + PM (banners across 6+ plans). 4 sub-phases:
+      Repos: deployment-service + instruments-service + PM (banners across 6+ plans). **DONE 2026-05-07 (Agent 3)** —
+      `--apply-write` complete across all 5 asset_groups: 1,455,901 rows in per-VM manifest shards (tradfi 35,033 +
+      sports 13,176 + cefi 119,152 + prediction 2,280 + defi 1,286,260) per PM@`79e47874`. Consolidator P0
+      ArrowTypeError RESOLVED via instruments-service@`a936a28` per PM@`341bb285`. Banners on 6+ active plans added then
+      removed per PM@`dae6d40d` + `5ae70bf1`. 4 sub-phases:
   1. Build
      [`deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh`](../../../deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh)
      mirroring
@@ -369,22 +376,33 @@ implementation volume but highest by coordination judgment.
 
 **Scope (3 items + on-call)**:
 
-- [ ] [COORDINATION] P1. Audit the 2 new umbrellas + master Group F+G fold-in: phase ordering reads as one plan, not 4
+- [x] [COORDINATION] P1. Audit the 2 new umbrellas + master Group F+G fold-in: phase ordering reads as one plan, not 4
       stitched-together plans. Plans: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.plan.md) +
       [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.plan.md) +
-      [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.plan.md) Group F. Repo: PM.
-- [ ] [COORDINATION] P2. Triage
+      [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.plan.md) Group F. Repo: PM. **DONE 2026-05-07
+      (Agent 5)** — surface audit + 3-agent deep audit (PM@`21f8a277` + `f3bcbbf8` foot-gun-absorbed). 14 substantive
+      deep-audit findings integrated as targeted edits across the 3 plans.
+- [x] [COORDINATION] P2. Triage
       [`session_2026_05_07_data_status_audit_findings`](session_2026_05_07_data_status_audit_findings.plan.md) — folds
-      into infra_master or stays standalone? Decision-only, ~30 min. Repo: PM.
-- [ ] [COORDINATION] P0. Master plan refresh: reflect all other tabs' progress in critical-path § + flip Group F/G
+      into infra_master or stays standalone? Decision-only, ~30 min. Repo: PM. **DONE 2026-05-07 (Agent 5)** —
+      STANDALONE (PM@`2bd62a90`). Cross-master rollup spans 5 owner plans; lifecycle-bounded.
+- [x] [COORDINATION] P0. Master plan refresh: reflect all other tabs' progress in critical-path § + flip Group F/G
       checkboxes for what shipped this cycle. Plan: master. Repo: PM. **Run last** — needs other tabs' commits landed.
-- [ ] [ON-CALL] P1. Cross-tab unblocker:
+      **DONE 2026-05-07 (Agent 5)** — service-readiness matrix refreshed (PM@`fa9b5f43` foot-gun-absorbed) + 6-agent
+      fan-out for substantive critical-path § Week 1/2/3 refresh + new "Top 3 risks for May-23 cutover" subsection
+      (PM@`df5b9b78`) + CEFFU codex doc stub + 5 P0 follow-up todos in work-stream F (PM@`3fad0d61`).
+- [x] [ON-CALL] P1. Cross-tab unblocker:
   - Sweep stale cross-plan banners (verify VMs no longer RUNNING via gcloud, refactors landed via plan-checkbox check).
   - Audit other tabs' plan-flip hygiene (`git log --oneline live-defi-rollout` then verify each code commit has a
     same-day plan flip).
   - Resolve `live-defi-rollout` push races for other tabs if they ping you (`git pull --rebase` + push).
   - Pre-commit discipline check on accidental bundling — if any tab reports the foot-gun (incidents PM@961980db /
     PM@611b9501 / PM@7de75819), help recover surgically.
+
+  **DONE 2026-05-07 (Agent 5)** — read-only sweep verified zero stale banners, healthy plan-flip hygiene across recent
+  commits, no foot-gun rescue requests received. Foot-gun #1 hit Agent 5's own commits 3× this session (PM@`21f8a277` /
+  `fa9b5f43` / `f3bcbbf8` absorbed by parallel-agent semver-rollout-bot's `git add` cycles); content correct,
+  attribution muddled — documented in auto-memory `handoff_agent5_5tab_layout_2026_05_07.md`.
 
 **Repos owned (collision boundary)**: PM only — but multiple plan files. Mandatory surgical `git add -p` discipline
 
