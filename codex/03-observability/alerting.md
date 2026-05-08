@@ -18,7 +18,7 @@ deprecated.
 ## Alert Severity Tiers
 
 > **Severity vocabulary SSOT** — see
-> [`14-playbooks/alerting/README.md` § Severity glossary](../14-playbooks/alerting/README.md#severity-glossary) for the
+> [`15-runbooks/alerting/README.md` § Severity glossary](../15-runbooks/alerting/README.md#severity-glossary) for the
 > canonical mapping between the UAC `AlertSeverity` codex enum (CRITICAL / HIGH / WARN / INFO), PagerDuty incident
 > priorities (P0 / P1 / P2 / P3), time-to-ack targets, routing channels, and worked examples. The tier labels used in
 > the recovery matrix below (`T1 CRITICAL` / `T2 HIGH` / `T3 WARNING` / `T4 INFO`) are display aliases for the codex

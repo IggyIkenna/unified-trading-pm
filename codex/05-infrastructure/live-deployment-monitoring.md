@@ -7,7 +7,7 @@ referenced_by:
   - plans/active/master_to_live_defi_2026_05_23.md
 related:
   - codex/05-infrastructure/vm-tarball-deployment.md
-  - codex/14-playbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/operator-playbook.md
   - codex/04-architecture/service-infrastructure-requirements.md
 ---
 
@@ -46,7 +46,7 @@ events to the same downstream consumers via the unified-events-interface).
 ## Cross-references
 
 - **Plan(s) implementing this:** [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
-- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md), [`alerting/operator-playbook`](../14-playbooks/alerting/operator-playbook.md).
+- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md), [`alerting/operator-playbook`](../15-runbooks/alerting/operator-playbook.md).
 - **Code:** `unified-trading-library/events/`, `unified-events-interface/`, alerting-service (TBD).
 
 ## Open questions

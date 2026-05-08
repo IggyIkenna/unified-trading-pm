@@ -9,10 +9,10 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/README.md
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/alert-code-taxonomy.md
-  - codex/14-playbooks/alerting/threshold-tuning.md
+  - codex/15-runbooks/alerting/README.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/alert-code-taxonomy.md
+  - codex/15-runbooks/alerting/threshold-tuning.md
 ---
 
 # `<AlertCode>` Runbook

@@ -22,7 +22,7 @@ live trigger or a batch run.
 The next morning a retrospective audit job re-runs each (asset_group, entity-type) for the prior day from the
 historical-batch source and compares against what live wrote. Discrepancies above tolerance escalate via
 `INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY` and the
-[`t1-audit-discrepancy.md`](../14-playbooks/instruments-live/t1-audit-discrepancy.md) playbook. T+1 is **not** a parallel
+[`t1-audit-discrepancy.md`](../15-runbooks/instruments-live/t1-audit-discrepancy.md) playbook. T+1 is **not** a parallel
 backfill — the live row stays in place; the audit job only writes a discrepancy report.
 
 ## Trigger-driven (sports), wall-clock-driven (cefi/tradfi/prediction)
@@ -57,7 +57,7 @@ routing table below.
 - Cluster topology (where these run): [`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
 - Live monitoring + event cadence: [`../05-infrastructure/live-deployment-monitoring.md`](../05-infrastructure/live-deployment-monitoring.md)
 - Alerting taxonomy (typed failure modes): [`alerting-batch-live.md`](alerting-batch-live.md) § "Instruments-live failure rules"
-- T+1 audit discrepancy runbook: [`../14-playbooks/instruments-live/t1-audit-discrepancy.md`](../14-playbooks/instruments-live/t1-audit-discrepancy.md)
+- T+1 audit discrepancy runbook: [`../15-runbooks/instruments-live/t1-audit-discrepancy.md`](../15-runbooks/instruments-live/t1-audit-discrepancy.md)
 - CLI surface: [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md) (`--operation` /
   `--mode batch|live` / `--asset-group` / `--trigger <name>`)
 

@@ -687,8 +687,8 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
 - [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F + G full
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md) Phase 0 + the 3
   STATUS DRAFT proposals
-- [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
-- [`codex/14-playbooks/alerting/threshold-tuning.md`](../../codex/14-playbooks/alerting/threshold-tuning.md)
+- [`codex/15-runbooks/alerting/alert-code-taxonomy.md`](../../codex/15-runbooks/alerting/alert-code-taxonomy.md)
+- [`codex/15-runbooks/alerting/threshold-tuning.md`](../../codex/15-runbooks/alerting/threshold-tuning.md)
 
 **Sub-agent fan-out**:
 
@@ -1072,7 +1072,7 @@ BEFORE doing anything else, read in order:
   3. plans/active/alerting_service_live_rules_2026_05_07.md (primary).
   4. plans/active/master_to_live_defi_2026_05_23.md Group F+G full bodies.
   5. plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 0.
-  6. codex/14-playbooks/alerting/alert-code-taxonomy.md + threshold-tuning.md.
+  6. codex/15-runbooks/alerting/alert-code-taxonomy.md + threshold-tuning.md.
 
 Your agent-tag: alerting-master-governance-tab. Your tab number: 5.
 

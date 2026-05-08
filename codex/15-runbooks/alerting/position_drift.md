@@ -8,8 +8,8 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/balance_drift.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/balance_drift.md
 ---
 
 # `POSITION_DRIFT` Runbook

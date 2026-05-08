@@ -8,9 +8,9 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/preflight_failed.md
-  - codex/14-playbooks/alerting/margin_threshold_breach.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/preflight_failed.md
+  - codex/15-runbooks/alerting/margin_threshold_breach.md
 ---
 
 # `BALANCE_DRIFT` Runbook

@@ -9,9 +9,9 @@ referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/circuit_breaker_open.md
-  - codex/14-playbooks/alerting/kill_switch_portfolio_drawdown.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/circuit_breaker_open.md
+  - codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md
 ---
 
 # `KILL_SWITCH_VENUE_DISCONNECT` Runbook

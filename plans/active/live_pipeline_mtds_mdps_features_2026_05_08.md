@@ -1158,7 +1158,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   - per-event `model_version` stamping all open in the
     [`cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md) (line 35-37 success criteria) — Harsh Tab 2
     wires the implementation per epic.
-- **CeFi ML alerting wiring**: Design doc shipped at `codex/14-playbooks/alerting/ml-alerting-rules.md` with 4 proposed
+- **CeFi ML alerting wiring**: Design doc shipped at `codex/15-runbooks/alerting/ml-alerting-rules.md` with 4 proposed
   AlertCode entries (`ML_SIGNAL_STALE`, `ML_MODEL_DRIFT_DETECTED`, `ML_PNL_DEVIATION`, `ML_INFERENCE_LATENCY_SLO`); Tab
   5 wires the actual alerting-service rule structure + KillSwitchBus rule entries per
   [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md).

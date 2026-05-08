@@ -8,8 +8,8 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/defi_aave_utilization_spike.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/defi_aave_utilization_spike.md
 ---
 
 # `DEFI_FUNDING_RATE_FLIP` Runbook

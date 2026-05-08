@@ -20,16 +20,15 @@ related:
 ## Severity glossary
 
 Three vocabularies describe alert urgency in this workspace. They are aliases for the same underlying ordering, NOT
-independent scales. The UAC `AlertSeverity` StrEnum is the SSOT — code declares severity using the codex enum;
-PagerDuty incident-priority labels and Python `AlertSeverity.<MEMBER>` references both resolve to a single row in the
-table below.
+independent scales. The UAC `AlertSeverity` StrEnum is the SSOT — code declares severity using the codex enum; PagerDuty
+incident-priority labels and Python `AlertSeverity.<MEMBER>` references both resolve to a single row in the table below.
 
-| Codex enum (`AlertSeverity`) | PagerDuty incident priority | Time-to-ack    | Routing                                  | Examples                                                                                                                                                                                                            |
-| ---------------------------- | --------------------------- | -------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CRITICAL`                   | P0 / P1                     | 5–15 min       | Telegram `live-defi` + PagerDuty primary | Kill-switch armed, data-correctness fail blocking live trades, cloud-switch validation failure, Aave HF < 1.2 emergency, T+1 audit discrepancy beyond tolerance, instruments-live preflight repeatedly failing      |
-| `HIGH`                       | P2                          | 1 hour         | Telegram `live-defi` + PagerDuty primary | Aave HF 1.2–1.5 (paused new entries), partial-fill compensation in flight, kill-switch auto-deactivated, circuit-breaker BACKOFF_ESCALATED, CeFi margin within pre-emptive buffer of initial-margin-call line       |
-| `WARN`                       | P3                          | informational  | Telegram `live-defi` only                | Per-shard missing data > threshold, ML model staleness, position drift 2–5%, defi feature stale > SLA, Aave utilization spike above kink, perp funding regime flip, preflight rejected pre-submission              |
-| `INFO`                       | P4                          | log / dashboard | Telegram `data-pipeline` only            | Coverage drop within ratchet tolerance, backfill VM auto-shutdown, individual retry / throttle, reconnection attempt + success, half-open circuit-probe                                                            |
+| Codex enum (`AlertSeverity`) | PagerDuty incident priority | Time-to-ack     | Routing                                  | Examples                                                                                                                                                                                                       |
+| ---------------------------- | --------------------------- | --------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CRITICAL`                   | P0 / P1                     | 5–15 min        | Telegram `live-defi` + PagerDuty primary | Kill-switch armed, data-correctness fail blocking live trades, cloud-switch validation failure, Aave HF < 1.2 emergency, T+1 audit discrepancy beyond tolerance, instruments-live preflight repeatedly failing |
+| `HIGH`                       | P2                          | 1 hour          | Telegram `live-defi` + PagerDuty primary | Aave HF 1.2–1.5 (paused new entries), partial-fill compensation in flight, kill-switch auto-deactivated, circuit-breaker BACKOFF_ESCALATED, CeFi margin within pre-emptive buffer of initial-margin-call line  |
+| `WARN`                       | P3                          | informational   | Telegram `live-defi` only                | Per-shard missing data > threshold, ML model staleness, position drift 2–5%, defi feature stale > SLA, Aave utilization spike above kink, perp funding regime flip, preflight rejected pre-submission          |
+| `INFO`                       | P4                          | log / dashboard | Telegram `data-pipeline` only            | Coverage drop within ratchet tolerance, backfill VM auto-shutdown, individual retry / throttle, reconnection attempt + success, half-open circuit-probe                                                        |
 
 **Notes**
 
@@ -42,18 +41,18 @@ table below.
 - "Time-to-ack" for P0 / P1 / P2 is enforced by the PagerDuty escalation chain
   ([`pagerduty-escalation-policy.md`](pagerduty-escalation-policy.md) § "Escalation chain"). P3 / `INFO` are not paged
   and have no SLA.
-- Quiet hours: there are none. P0 / P1 page 24/7. P2 pages within business-hours-aware windows per the on-call
-  rotation. P3 / informational deliveries respect Telegram quiet-hours per group settings.
+- Quiet hours: there are none. P0 / P1 page 24/7. P2 pages within business-hours-aware windows per the on-call rotation.
+  P3 / informational deliveries respect Telegram quiet-hours per group settings.
 - Adding a new alert: pick the codex enum value from this table; the Python rule body uses
   `severity=AlertSeverity.<MEMBER>`; PagerDuty routing is automatic via the alerting-service rule engine. Do NOT
   hand-roll PagerDuty / Telegram calls in rule bodies.
 
 The downstream docs cite this glossary instead of redefining the mapping:
 
-- [`pagerduty-escalation-policy.md`](pagerduty-escalation-policy.md) — escalation chain, on-call rotation, ack
-  protocol; references this table for the codex-enum / P-tier mapping.
-- [`threshold-tuning.md`](threshold-tuning.md) — Phase-7 quietness-baseline procedure; references this table when a
-  new threshold's `severity=AlertSeverity.<MEMBER>` is being chosen.
+- [`pagerduty-escalation-policy.md`](pagerduty-escalation-policy.md) — escalation chain, on-call rotation, ack protocol;
+  references this table for the codex-enum / P-tier mapping.
+- [`threshold-tuning.md`](threshold-tuning.md) — Phase-7 quietness-baseline procedure; references this table when a new
+  threshold's `severity=AlertSeverity.<MEMBER>` is being chosen.
 - [`../../03-observability/alerting.md`](../../03-observability/alerting.md) — autonomous-recovery alert matrix;
   references this table for severity definitions.
 

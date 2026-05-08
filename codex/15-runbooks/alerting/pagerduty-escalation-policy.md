@@ -5,7 +5,7 @@ scope: [engineer, operator, on-call]
 # PagerDuty escalation policy
 
 > **Severity vocabulary SSOT** — see [`README.md` § Severity glossary](README.md#severity-glossary) for the canonical
-> mapping between the UAC `AlertSeverity` codex enum and PagerDuty incident priorities. This doc owns the *operational*
+> mapping between the UAC `AlertSeverity` codex enum and PagerDuty incident priorities. This doc owns the _operational_
 > escalation chain (timing, on-call rotation, ack protocol, P0 vs P1 sub-distinction within `CRITICAL`); the glossary
 > owns the codex-enum ↔ P-tier ↔ routing mapping.
 
@@ -20,7 +20,7 @@ entirely. This doc names the workspace escalation policy.
 
 The codex-enum / PagerDuty-priority / routing / examples mapping lives in the glossary
 ([`README.md` § Severity glossary](README.md#severity-glossary)). This section captures only the operational
-sub-distinction *inside* the `CRITICAL` row that the escalation chain below depends on:
+sub-distinction _inside_ the `CRITICAL` row that the escalation chain below depends on:
 
 - **P0** (`AlertSeverity.CRITICAL`, kill-switch / data-correctness / cloud-switch family) — 5-min ack target.
 - **P1** (`AlertSeverity.CRITICAL`, T+1 audit / instruments-live preflight / non-kill-switch CRITICAL family) — 15-min

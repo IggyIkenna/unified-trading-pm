@@ -608,7 +608,7 @@ todos:
   - id: i3-t1-audit-operator-playbook
     content: |
       - [ ] [AGENT] P2. Operator playbook for T+1 audit discrepancies — short doc under
-        `codex/14-playbooks/instruments-live/t1-audit-discrepancy.md` covering: (a) how to read the audit report
+        `codex/15-runbooks/instruments-live/t1-audit-discrepancy.md` covering: (a) how to read the audit report
         bucket; (b) decision tree — was live-mode dropped instruments? did batch over-include? was there a
         source-divergence between live and batch (e.g. Polygon vs Databento on a contract roll-day)?; (c) when to
         escalate vs absorb. Single-iteration miss for instruments isn't end-of-world per user direction;
@@ -768,7 +768,7 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 | `04-architecture/alerting-batch-live.md`                      | Add "Instruments-live failure rules" section (7 typed failure modes including 2 preflight) | A.4   |
 | `02-data/pipeline-coverage-matrix.md`                         | Add live-source row per (asset_group, data_type)                                           | C.1   |
 | `00-SSOT-INDEX.md`                                            | Add row pointing to `instruments-live-architecture.md`                                     | A.1   |
-| `14-playbooks/instruments-live/t1-audit-discrepancy.md` (NEW) | Operator playbook for T+1 audit discrepancies                                              | I.3   |
+| `15-runbooks/instruments-live/t1-audit-discrepancy.md` (NEW) | Operator playbook for T+1 audit discrepancies                                              | I.3   |
 | `instruments-service/docs/ARCHITECTURE.md`                    | Add live-mode CLI invocation matrix table                                                  | A.7   |
 
 ## Architectural conflicts found in instruments-service repo

@@ -8,8 +8,8 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/order_rejection_spike.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/order_rejection_spike.md
 ---
 
 # `PREFLIGHT_FAILED` Runbook

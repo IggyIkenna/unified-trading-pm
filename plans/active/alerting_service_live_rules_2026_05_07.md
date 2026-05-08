@@ -87,7 +87,7 @@ Affected files / consumers when shipping:
   `DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers
 - [unified-trading-system-ui/](unified-trading-system-ui/) (DART) — Active Alerts panel, Ack button, Escalate button
   (per e2e plan Frontend API Surface)
-- Codex doc: `unified-trading-pm/codex/14-playbooks/alerting/` — new operator playbook directory
+- Codex doc: `unified-trading-pm/codex/15-runbooks/alerting/` — new operator playbook directory
 - Secret Manager: 4 secret entries for paging credentials (Telegram bot token, Telegram chat IDs, PagerDuty service key,
   Slack webhook URL)
 
@@ -234,7 +234,7 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       `ApiKeyReloader.current()` per call. Survives rotation without restart.
 - [ ] [SCRIPT] P0. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
       1st-tier=Ikenna, 2nd-tier=Harsh, 30-min auto-escalate. Capture policy ID in
-      `unified-trading-pm/codex/14-playbooks/alerting/pagerduty-escalation-policy.md`.
+      `unified-trading-pm/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`.
 - [ ] [HUMAN] P0. Operator action: send synthetic test alert to each channel + confirm delivery. Capture screenshots in
       handover.
 
@@ -253,7 +253,7 @@ Wires existing alerting-service API endpoints (`GET /alerts/active`, `POST /aler
       doc). Ack button + Escalate button + Resolve button (server-side flow already exists per e2e plan). (evidence:
       unified-trading-system-ui@e9559565 — NEW `components/widgets/alerts/alert-detail-modal.tsx`; runbook URL
       dispatched per `AlertType` to
-      `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/14-playbooks/alerting/{file}.md`; mounted from
+      `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/15-runbooks/alerting/{file}.md`; mounted from
       NotificationBell on alert click; reusable from AlertsTable in Phase 6 wiring. Server-side `runbook_doc` payload
       will supersede client-side dispatch when Phase 6 wires `AlertRule.runbook_doc`.)
 - [x] [SCRIPT] P0. Severity breakdown pie-chart widget (per e2e plan). (evidence: unified-trading-system-ui@e9559565 —
@@ -270,7 +270,7 @@ Wires existing alerting-service API endpoints (`GET /alerts/active`, `POST /aler
 For each `AlertCode`, an operator runbook with: symptom, diagnosis recipe, resolution path, rollback, escalation
 criteria.
 
-- [x] [SCRIPT] P0. Create `unified-trading-pm/codex/14-playbooks/alerting/` directory with frontmatter
+- [x] [SCRIPT] P0. Create `unified-trading-pm/codex/15-runbooks/alerting/` directory with frontmatter
       `scope: alerting`. Add `README.md` index of all alert codes. (evidence: PM@ac40983b — README.md updated to list
       all 15 per-AlertCode runbooks grouped by severity tier (CRITICAL kill-switch, CRITICAL DeFi, HIGH, WARN
       Telegram-only) + cross-cutting docs incl. `_template.md`. Note: directory existed pre-Phase-6 from the plan-locked
@@ -296,7 +296,7 @@ criteria.
       `ALERT_THRESHOLDS[<key>]` per the registry.)
 - [x] [SCRIPT] P0. Wire `runbook_doc` field in `AlertRule` to point at the markdown file.
       `unified-trading-system-ui/DART` deep-links to
-      `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/14-playbooks/alerting/{file}.md` from the alert
+      `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/15-runbooks/alerting/{file}.md` from the alert
       detail modal. (evidence: UAC@8e68a2b — re-points the `KILL_SWITCH_*` wildcard rule's runbook*doc from the stub
       `kill_switch.md` to the canonical `kill_switch_defi_liquidation_risk.md` (the runbook itself cross-references the
       sibling kill-switch runbooks). Adds 4 unit tests in `tests/internal/unit/test_alerting_taxonomy.py`:
@@ -304,7 +304,7 @@ criteria.
       test_kill_switch_wildcard_rule_runbook_anchors_at_liquidation_risk,
       test_phase6_required_runbook_slugs_present_in_live_alert_rules. 42 alerting tests pass locally (38 existing + 4
       new). Cross-repo file-existence not verifiable at unit-test time so format-only validation per the regex
-      `^unified-trading-pm/codex/14-playbooks/alerting/[a-z0-9*]+\.md$`. DART deep-link wiring in
+      `^unified-trading-pm/codex/15-runbooks/alerting/[a-z0-9*]+\.md$`. DART deep-link wiring in
       unified-trading-system-ui already shipped in Phase 5 (e9559565).)
 
 ### Phase 7 — Quietness baseline + threshold tuning (3-5 days, GATES Phase 8)
@@ -335,7 +335,7 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
 - [ ] [HUMAN] P0. CRITICAL-severity rehearsal: simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end including
       circuit-breaker propagation to execution-service + strategy-service halt-order subscribers (per e2e plan
       §"Downstream Commands").
-- [ ] [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/14-playbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
+- [ ] [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing all
       15 codes + pass/fail per code + operator name + date.
 
 ### Phase 9 — Production go-live + 7-day soak (during May-23 trading window)
@@ -410,7 +410,7 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
       **DEFERRED**: rehearsal script (`alerting-service/scripts/inject_synthetic_alert.py`) doesn't exist yet —
       Phase 8 rehearsal harness is itself a downstream item. Will land alongside the rehearsal script.
-- [x] [AGENT] P1. **Codex update**: `codex/14-playbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
+- [x] [AGENT] P1. **Codex update**: `codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
 
@@ -480,7 +480,7 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
    `_validate_kill_switch_scope_matches_code_family` + new unit tests in
    `tests/internal/unit/test_alerting_taxonomy.py`.
 2. alerting-service `notifiers/router.py` publisher hook + integration test.
-3. Codex update to `codex/14-playbooks/alerting/alert-code-taxonomy.md` § "Kill-switch publisher hook semantics".
+3. Codex update to `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch publisher hook semantics".
 
 **Item 3 (codex doc) shipped** — design SSOT with full KillSwitchScope mapping, scope_key resolution table, failure-mode
 contract. Independent of UAC field landing.

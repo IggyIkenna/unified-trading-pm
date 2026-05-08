@@ -8,9 +8,9 @@ authoritative_for:
 referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/kill_switch_defi_liquidation_risk.md
-  - codex/14-playbooks/alerting/defi_weeth_depeg.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md
+  - codex/15-runbooks/alerting/defi_weeth_depeg.md
 ---
 
 # `DEFI_HEALTH_FACTOR_CRITICAL` Runbook

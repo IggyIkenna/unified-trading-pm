@@ -10,10 +10,10 @@ referenced_by:
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
 related:
-  - codex/14-playbooks/alerting/operator-playbook.md
-  - codex/14-playbooks/alerting/alert-code-taxonomy.md
-  - codex/14-playbooks/alerting/defi_health_factor_critical.md
-  - codex/14-playbooks/alerting/circuit_breaker_open.md
+  - codex/15-runbooks/alerting/operator-playbook.md
+  - codex/15-runbooks/alerting/alert-code-taxonomy.md
+  - codex/15-runbooks/alerting/defi_health_factor_critical.md
+  - codex/15-runbooks/alerting/circuit_breaker_open.md
   - codex/04-architecture/flash-loan-receiver.md
 ---
 
