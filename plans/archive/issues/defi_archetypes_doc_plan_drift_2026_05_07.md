@@ -17,15 +17,15 @@ locked_since: 2026-05-07
 
 # DeFi archetypes — doc ↔ plan drift
 
-> **Cross-ref 2026-05-07:** Separate from this archetype-canonicalisation drift, the rollup-vs-drilldown
-> data-status denominator gap closure shipped in parallel via writegate Phase 3.D.4 expected-universe
-> `--apply-write` on all 5 asset_groups + consolidator merge landed (PM@79e47874 + PM@341bb285): 1,455,901 rows
-> written + merged into canonical (tradfi 35,033 + sports 13,176 + cefi 119,152 + prediction 2,280 + defi
-> 1,286,260; cefi + prediction now real impl per UAC@ac218dc + instruments-service@d1c9928, no longer stubbed).
-> Consolidator P0 briefly blocked tradfi / defi / prediction merge; resolved at PM@341bb285. Detail in
+> **Cross-ref 2026-05-07:** Separate from this archetype-canonicalisation drift, the rollup-vs-drilldown data-status
+> denominator gap closure shipped in parallel via writegate Phase 3.D.4 expected-universe `--apply-write` on all 5
+> asset_groups + consolidator merge landed (PM@79e47874 + PM@341bb285): 1,455,901 rows written + merged into canonical
+> (tradfi 35,033 + sports 13,176 + cefi 119,152 + prediction 2,280 + defi 1,286,260; cefi + prediction now real impl per
+> UAC@ac218dc + instruments-service@d1c9928, no longer stubbed). Consolidator P0 briefly blocked tradfi / defi /
+> prediction merge; resolved at PM@341bb285. Detail in
 > [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-> § Phase 3.D.4. The archetype-canonicalisation streams below (5 streams) are NOT blocked by the data-status
-> work and proceed in parallel.
+> § Phase 3.D.4. The archetype-canonicalisation streams below (5 streams) are NOT blocked by the data-status work and
+> proceed in parallel.
 
 Cross-checked the May-23 cutover archetypes (`carry_staked_basis` + `leveraged_funding_arb`) between the master/umbrella
 plans and the codex archetype docs. **Concept is aligned, several mechanics are not.** Three contradictions are

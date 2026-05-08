@@ -16,20 +16,19 @@ locked_since: 2026-05-07
 > migration across 20 handlers + unit tests. 3 Agent-4 VMs relaunched with the fix
 > (mtds-{vault-share-price,lst-rates,gas-fees}-20260508-010{050,105,121}).
 >
-> **Severity**: P0 — DeFi data-correctness on May-23 live-deadline critical path. Same bug class as 2026-05-07 RED
-> ALERT (5 CeFi VMs) but on the DefiManifestRecorder side which Wave 2.M migration missed.
-> **Blast radius**: every DeFi backfill that hits a "source returned 0 rows" date — affects MTDS handlers vault-share-
-> price / lst-rates / gas-fees / token-transfers / flash-loan-events / bridge-events / eigenlayer-rewards / position-
-> data (8 handlers, all instantiating `DefiManifestRecorder`). Manifest writes silently fail, parquets land on disk
-> without manifest rows.
+> **Severity**: P0 — DeFi data-correctness on May-23 live-deadline critical path. Same bug class as 2026-05-07 RED ALERT
+> (5 CeFi VMs) but on the DefiManifestRecorder side which Wave 2.M migration missed. **Blast radius**: every DeFi
+> backfill that hits a "source returned 0 rows" date — affects MTDS handlers vault-share- price / lst-rates / gas-fees /
+> token-transfers / flash-loan-events / bridge-events / eigenlayer-rewards / position- data (8 handlers, all
+> instantiating `DefiManifestRecorder`). Manifest writes silently fail, parquets land on disk without manifest rows.
 > **Suggested owner**: Agent 2 (writegate Phase 3.D.5 / 5) — Wave 2.M migration owner; the DeFi-side analogue of the
 > cefi/sports recorder migrations that already shipped per UTL@68b3804a / UTL@7eca2c20.
 
 ## What I found
 
 Agent 4 launched 3 DeFi backfill VMs (`mtds-vault-share-price-20260507-194644`, `mtds-lst-rates-20260507-194702`,
-`mtds-gas-fees-20260507-194720`) per work_split Item 2. Per the no-fire-and-forget protocol, ~12 min after launch I
-ran event-verification + run.log inspection. All three VMs were emitting STARTED + RESOURCE_PROFILER_SAMPLE events
+`mtds-gas-fees-20260507-194720`) per work_split Item 2. Per the no-fire-and-forget protocol, ~12 min after launch I ran
+event-verification + run.log inspection. All three VMs were emitting STARTED + RESOURCE_PROFILER_SAMPLE events
 (heartbeat-only) but their run.logs showed thousands of identical warnings:
 
 ```
@@ -83,19 +82,20 @@ loud raise into a warning.log line — which is why the VM kept running but prod
    bitfinex/bitget/kraken). The CeFi recorder was migrated as part of writegate Phase 3.D.5 Wave 2.M; the DEFI recorder
    was missed.
 3. **Manifest gets the worst of both worlds:** parquets land on disk (under
-   `gs://lst-rates-{pid}/raw_tick_data/by_date/.../lst_rates_<ts>.parquet` etc.) but manifest stays empty — phantom-shaped
-   without being phantoms in the strict CLAUDE.md sense. Phantom audit (`reconcile_phantom_manifest_rows_all.py`) won't
-   find these because the audit checks the OPPOSITE direction (manifest-says-captured but parquet-missing).
+   `gs://lst-rates-{pid}/raw_tick_data/by_date/.../lst_rates_<ts>.parquet` etc.) but manifest stays empty —
+   phantom-shaped without being phantoms in the strict CLAUDE.md sense. Phantom audit
+   (`reconcile_phantom_manifest_rows_all.py`) won't find these because the audit checks the OPPOSITE direction
+   (manifest-says-captured but parquet-missing).
 
 ## Recommended decision
 
-Fold into [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-as a Wave 2.M-extension item (the DEFI-side analogue of the cefi/sports migrations already shipped). The fix has 3
-parts:
+Fold into
+[`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md) as a
+Wave 2.M-extension item (the DEFI-side analogue of the cefi/sports migrations already shipped). The fix has 3 parts:
 
-1. **`DefiManifestRecorder.record_empty(reason: EmptyConfirmedReason)` signature change** — make `reason` a
-   non-optional kwarg; pass it through to `self._writer.record_empty(reason=reason)`. Catch `LegacyBlankErrorReasonError`
-   loud (raise, don't swallow) so silent-fail mode is impossible.
+1. **`DefiManifestRecorder.record_empty(reason: EmptyConfirmedReason)` signature change** — make `reason` a non-optional
+   kwarg; pass it through to `self._writer.record_empty(reason=reason)`. Catch `LegacyBlankErrorReasonError` loud
+   (raise, don't swallow) so silent-fail mode is impossible.
 2. **8 call-site updates in MTDS** — every handler that calls `recorder.record_empty(...)`:
    - `lst_rates_handler.py` — pre-2020-12 dates → `EXPECTED_PRE_VENUE_LAUNCH` (Lido stETH 2020-12, Marinade 2021-04,
      Jito 2022-11); rest → `SOURCE_RETURNED_ZERO`.
@@ -107,8 +107,8 @@ parts:
      `eigenlayer_rewards_handler.py`, `position_data_handler.py` — same per-handler logic.
 3. **Re-launch the 3 VMs** after the fix lands. The previous parquets on disk for those (date, venue, chain, data_type)
    tuples are valid — the orchestrator should NOT re-fetch them once the manifest properly records `empty_confirmed` for
-   them. Per CLAUDE.md `§ Manifest concurrency principle`, the per-VM-shard write + consolidator merge will retroactively
-   pick up these missing rows.
+   them. Per CLAUDE.md `§ Manifest concurrency principle`, the per-VM-shard write + consolidator merge will
+   retroactively pick up these missing rows.
 
 This is the same shape as 2026-05-07 RED ALERT cefi fix; the DEFI side is straightforward to follow the same pattern.
 Effort estimate: ~½ day for the recorder + 8 handler updates + tests; second ½ day for VM re-launches + verification.
@@ -120,5 +120,5 @@ Effort estimate: ~½ day for the recorder + 8 handler updates + tests; second ½
 - CLAUDE.md `§ Four-category empty-output decision` — defines the `record_empty(reason=<typed>)` contract.
 - CLAUDE.md `§ Honest absence vs fake placeholders` — defines the 3-category model that the typed reason taxonomy
   encodes.
-- Agent 4 launches that exposed this: `mtds-vault-share-price-20260507-194644`,
-  `mtds-lst-rates-20260507-194702`, `mtds-gas-fees-20260507-194720` (all stopped 2026-05-07 ~20:00 UTC after diagnosis).
+- Agent 4 launches that exposed this: `mtds-vault-share-price-20260507-194644`, `mtds-lst-rates-20260507-194702`,
+  `mtds-gas-fees-20260507-194720` (all stopped 2026-05-07 ~20:00 UTC after diagnosis).

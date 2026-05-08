@@ -14,13 +14,13 @@ locked_since: 2026-05-07
 # DeFi launcher audit — answers to the 3 operator-blocking Qs
 
 > **Cross-ref 2026-05-07: writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE on all 5 asset_groups +
-> CONSOLIDATOR MERGE LANDED (PM@79e47874 + PM@341bb285).** 1,455,901 rows written + merged into canonical
-> 18:07-18:14 UTC: TradFi 35,033 + Sports 13,176 + CeFi 119,152 (real impl per UAC@ac218dc +
-> instruments-service@d1c9928, no longer a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260 (cap raised
-> 100k → 1M → 5M for this run via deployment-service@38b7a58 launcher pass-through). Consolidator P0
-> (`ArrowTypeError` on `instrument_count`) that briefly blocked tradfi / defi / prediction was resolved at
-> PM@341bb285 (script-side root cause + 4 in-place shard fixes). Q3's denominator divergence + the data-status
-> drilldown plan's "open drifts" stop biasing the rollup as soon as the rollup blob refreshes. Detail in
+> CONSOLIDATOR MERGE LANDED (PM@79e47874 + PM@341bb285).** 1,455,901 rows written + merged into canonical 18:07-18:14
+> UTC: TradFi 35,033 + Sports 13,176 + CeFi 119,152 (real impl per UAC@ac218dc + instruments-service@d1c9928, no longer
+> a stub) + Prediction 2,280 (real impl) + DeFi 1,286,260 (cap raised 100k → 1M → 5M for this run via
+> deployment-service@38b7a58 launcher pass-through). Consolidator P0 (`ArrowTypeError` on `instrument_count`) that
+> briefly blocked tradfi / defi / prediction was resolved at PM@341bb285 (script-side root cause + 4 in-place shard
+> fixes). Q3's denominator divergence + the data-status drilldown plan's "open drifts" stop biasing the rollup as soon
+> as the rollup blob refreshes. Detail in
 > [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
 > § Phase 3.D.4.
 
@@ -280,11 +280,10 @@ operator prefers):
 - [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
       preview but the UI should label it as "sample of 50 / total N missing" rather than "the missing dates". Pure doc /
       UI label fix, not a behaviour change.
-- [x] **[codex]** P1 (shipped PM@372e23aa 2026-05-07). Documented the rollup-vs-drilldown denominator divergence
-      in
+- [x] **[codex]** P1 (shipped PM@372e23aa 2026-05-07). Documented the rollup-vs-drilldown denominator divergence in
       [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)". Closure (Half 2 — backward-fill via
-      Phase 3.D.4 enumerator) tracked in
+      § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)". Closure (Half 2 — backward-fill via Phase
+      3.D.4 enumerator) tracked in
       [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
       § Phase 3.D.4. Scan-only sweep complete 2026-05-07; `--apply-write` per asset_group pending operator gate.
 - [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
