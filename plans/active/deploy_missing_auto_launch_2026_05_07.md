@@ -275,14 +275,13 @@ Operations sign-off on:           →   create-code-tarballs.sh -> Cloud Build t
 
 ### Phase 0 — Security review (sequential, no QG gate)
 
-- [ ] [audit] P0. Security review with operations on the deployment-api -> gcloud IAM scope. Document the IAM role shape
-      (custom role with the minimal set of permissions, not `roles/compute.instanceAdmin.v1` blanket). **DECISION
-      SUMMARY DRAFTED 2026-05-08 — see § "Operator decision summary" → Decision 1; awaiting operator sign-off.**
-- [ ] [audit] P0. Audit-log shape decision: what gets logged on every Deploy-Missing launch (operator email, shard_key,
-      launch timestamp, resulting VM name). **DECISION SUMMARY DRAFTED 2026-05-08 — see § "Operator decision summary" →
-      Decision 2; awaiting operator sign-off.**
-- [ ] [audit] P0. Rate-limit ceiling decision (per-operator, per-hour, project-wide). **DECISION SUMMARY DRAFTED
-      2026-05-08 — see § "Operator decision summary" → Decision 3; awaiting operator sign-off.**
+- [x] [audit] P0. Security review with operations on the deployment-api -> gcloud IAM scope. **✅ APPROVED 2026-05-08
+      — Option B + C combined per § "Operator decision summary" → Decision 1.**
+- [x] [audit] P0. Audit-log shape decision. **✅ APPROVED 2026-05-08 — BigQuery primary + Cloud Logging mirror + GCS
+      cold tier + sync-blocking write + 90d hot / 5y cold retention per § "Operator decision summary" → Decision 2.**
+- [x] [audit] P0. Rate-limit ceiling decision. **✅ APPROVED 2026-05-08 — 30/op/hr + 200/op/day + 100/proj/hr + 1
+      active per shard_key for 6h, Firestore-backed counter state, alerts to `#uts-prod-alerts` per § "Operator
+      decision summary" → Decision 3.**
 
 ### Phase 0 — IAM scope + audit log + rate limit proposal (DRAFT for operator review)
 
