@@ -1062,6 +1062,19 @@ Summary of options:
 **Tab C did NOT ship migrations** — naive substitution would break at runtime on every call (LookaheadBiasError
 from `assert_available_at_present(df)` with no df). Awaiting operator triage A / B / C before re-spawning.
 
+**🟡 BLOCKED 2026-05-08 — Wave 8 F6-DF-Flow agent surfaced deeper blocker.** Pre-flight audit found 7 of 8 features
+families do NOT stamp `available_at` on their output dfs today (only `sports` has LIFT-3 stamping). Migrating any
+of those 7 families to `record_captured(df, ...)` raises `LookaheadBiasError` on every production write — the
+prerequisite work (cross-family `available_at` stamping) is itself the multi-day item the original Option B
+estimate didn't isolate. Three pillars beyond `available_at` are also no-ops for features rows: schema validation
+(no UAC contract registry entries for any features data_type), NaN ratio (writegate plan B Q#4 still open), cluster
+coverage (no features data_type in `BUNDLED_DATA_TYPES`). So pillar 1 (row count) is the only meaningful pillar
+today, which `add()` already captures. **Recommended decision**: keep F6 closed at Option C; the deeper refactor
+parks behind named successor work `features_available_at_stamping_*` (composes with writegate Phase 2.D / Phase 4
+slice (b) Phase 5.x available_at cross-family stamping). Full analysis + decision matrix:
+[`plans/active/issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md`](issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md).
+F6 deferred-work row stays `status: helper-shipped, deferred-after-features-available-at-stamping`.
+
 **Precise 18-site audit** (preserved here so future agent doesn't re-grep):
 
 | Family            | File:Line                                                  | feature_group target           |
