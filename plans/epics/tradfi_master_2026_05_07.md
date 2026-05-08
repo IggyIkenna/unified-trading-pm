@@ -66,6 +66,32 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   expected. ES.OPT 2020-2022 ad-hoc backfill (line 110) needs ground-truth check via
   `gcloud compute instances list --filter='name~tradfi-bf-es-opt'`.
 
+## Tab 4 finding 2026-05-08 — MDPS-tradfi 4-VM silent partial drain (pre-cluster-validation)
+
+**Big finding** filed as full issue doc:
+[`plans/active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](../active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
+
+Summary: probed 2026-05-08 11:25 UTC for Tab 4 ES.OPT 11-cluster validation work-split task. The 5 mdps-tradfi VMs
+split across two launch batches:
+
+- **Batch 1** (`mdps-tradfi-{2021,2022,2023,2024}-20260506-125828`): 4 exited 2026-05-07 ~14:00 UTC after ~25h
+  runtime. **None emitted `STOPPED` or `FAILED` event.** GCE instances fully deleted. Last event per VM was
+  mid-processing (`VALIDATION_STARTED` / `PROCESSING_STARTED` / `PROCESSING_COMPLETED` / `PERSISTENCE_STARTED`) —
+  partial windows: 2021 reached 2021-08-13 (8/12 months), 2024 reached 2024-05-31 (5/12 months). Coordinated 3-min
+  exit window suggests external force-kill (wall-clock cap / watchdog / preemption).
+- **Batch 2** (`mdps-tradfi-2025-20260507-135207`): created 2026-05-07 05:52 UTC, still RUNNING at probe time.
+  Approaching its 25h mark around 2026-05-08 ~07:00 UTC — vulnerable to same fate (likely already happened by
+  current time 11:42 UTC; needs verification).
+
+**Tab 4 ES.OPT 11-cluster validation rerun is gated**: cluster-coverage check against incomplete window can't
+distinguish "missing because not-yet-processed" from "missing because cluster validation missed it". Re-run after
+diagnosis + relaunch + clean drain. **Manifest evidence**: tradfi MDPS service rows = 4082 total (vs MTDS 96088); 28
+ohlcv 2024 rows; on-disk `processed_candles/by_date/day=2024-01-02/timeframe={15s/1m/5m/15m/1h/4h/24h}/` exists but
+manifest under-counts. `options_chain` has 291 rows (~41% coverage 2023-05 → 2026-01), all `underlying=""` empty,
+all CME — single-row-per-day suggests bundle-summary shape (cluster validation NOT visible at manifest grain).
+
+Operator notification + recovery sequencing live in the issue doc.
+
 ## Scope
 
 Single source of truth for **TradFi asset_group** work. Per master plan asset-group readiness ladder, TradFi is

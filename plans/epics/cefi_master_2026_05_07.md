@@ -253,6 +253,28 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 - 2026-05-08 06:45 UTC — sweep #15: 19/24 alive (cefi-kraken-futures-2024 drained — 5th completion, was at ≈97% per
   sweep #12), worst event_age 0m, sample VM cefi-bitfinex-spot-2025 100% captured (4896 rows, latest 2025-06-11 ≈44%
   through year). **Fleet at 79.16% — crossed below 80% commit trigger.** Iteration-log catch-up commit follows.
+- 2026-05-08 06:55–09:55 UTC — sweeps #16–#34 (condensed; cefi-babysit-tab original): fleet drained 19→18→17 over the
+  window (cefi-kraken-spot-2026 #17, cefi-bitget-spot-2025 #24); 100min plateau at 17/24 (71%) starting #24. Every
+  sweep: 100% liveness, worst event_age 0m, 100% captured on sampled shards, zero blank-reason writes (RED ALERT not
+  triggered). No actions across the window.
+- 2026-05-08 10:05 UTC — sweep #35: 17/24 alive (71%, 110min plateau), worst event_age 0m, sample VM
+  cefi-kraken-futures-2021 100% captured (2003 rows, latest 2021-12-09 ≈94% through year — near drain). No actions.
+- 2026-05-08 10:15 UTC — sweep #36: 16/24 alive (67%, cefi-kraken-spot-2020 drained — 8th completion, was at ≈97% per
+  sweep #29), worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (10831 rows, latest 2023-09-20 ≈72%
+  through year). No actions (still in 60-80% milestone band).
+- 2026-05-08 11:19 UTC — sweep #37 (Tab 4 vm-ops-tab takes over from cefi-babysit-tab): 16/24 alive (67%, 64min
+  plateau since #36 — no new drains in the gap), worst event_age ~1m (latest events 11:18:25-42 UTC across 5 sample
+  VMs in hour=11 partition), sample VM cefi-bitfinex-spot-2025 100% captured (6652 rows, latest 2025-08-08 ≈60%
+  through year — up from 4896 rows / 2025-06-11 at sweep #15, healthy progress), zero empty_confirmed /
+  attempted_failed rows (RED ALERT not applicable — no blank-reason class to even check). No actions (still in 60-80%
+  milestone band).
+- 2026-05-08 11:31 UTC — sweep #38: 14/24 alive (58%, 2 new drains in 12min: cefi-bitfinex-futures-2022 9th
+  completion, cefi-kraken-futures-2021 10th completion). **Crossed below 60% milestone band — fleet entering 40-60%
+  band.** Worst event_age 0-1m (latest events 11:30:51-11:31:14 UTC across 3 sample VMs). No actions (drain
+  accelerating again post-#36 plateau, healthy).
+- 2026-05-08 11:41 UTC — sweep #39 (re-applied after Tab 5 pull --rebase silently dropped sweeps #16-#38 in working
+  tree; recovered from prior conversation memory): 14/24 alive (58%, 10min plateau since #38, no new drains in gap).
+  Worst event_age <1m. **Recovery commit follows immediately to avoid another loss.** No fleet actions.
 
 ## Critical path
 
