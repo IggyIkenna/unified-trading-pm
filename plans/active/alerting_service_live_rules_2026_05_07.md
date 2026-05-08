@@ -265,21 +265,42 @@ Wires existing alerting-service API endpoints (`GET /alerts/active`, `POST /aler
 For each `AlertCode`, an operator runbook with: symptom, diagnosis recipe, resolution path, rollback, escalation
 criteria.
 
-- [ ] [SCRIPT] P0. Create `unified-trading-pm/codex/14-playbooks/alerting/` directory with frontmatter
-      `scope: alerting`. Add `README.md` index of all alert codes.
-- [ ] [SCRIPT] P0. One markdown file per alert code: `kill_switch_defi_liquidation_risk.md`,
+- [x] [SCRIPT] P0. Create `unified-trading-pm/codex/14-playbooks/alerting/` directory with frontmatter
+      `scope: alerting`. Add `README.md` index of all alert codes. (evidence: PM@ac40983b — README.md updated to list
+      all 15 per-AlertCode runbooks grouped by severity tier (CRITICAL kill-switch, CRITICAL DeFi, HIGH, WARN
+      Telegram-only) + cross-cutting docs incl. `_template.md`. Note: directory existed pre-Phase-6 from the plan-locked
+      stub creation 2026-05-07; Phase 6 populates the per-AlertCode runbooks + index. Frontmatter uses
+      `authoritative_for` / `referenced_by` / `related` per existing alerting/ doc convention rather than `scope:`.)
+- [x] [SCRIPT] P0. One markdown file per alert code: `kill_switch_defi_liquidation_risk.md`,
       `kill_switch_portfolio_drawdown.md`, `kill_switch_venue_disconnect.md`, `circuit_breaker_open.md`,
       `defi_health_factor_critical.md`, `defi_weeth_depeg.md`, `defi_aave_utilization_spike.md`,
       `defi_funding_rate_flip.md`, `defi_feature_stale.md`, `preflight_failed.md`, `service_degraded.md`,
       `balance_drift.md`, `order_rejection_spike.md`, `margin_threshold_breach.md`, `position_drift.md` (15 docs).
-- [ ] [SCRIPT] P0. Each playbook MUST include: trigger condition, severity, paging channels, diagnosis steps (with
+      (evidence: 4 batches: PM@45b854d5 batch 1 (\_template + 4 CRITICAL kill-switch + circuit_breaker_open) +
+      PM@6fad278e batch 2 (5 DeFi: health_factor_critical / weeth_depeg / aave_utilization_spike / funding_rate_flip /
+      feature_stale) + PM@db99a3ef batch 3 (5 service-level: preflight_failed / service_degraded / balance_drift /
+      order_rejection_spike / margin_threshold_breach) + PM@b40d405a batch 4 (position_drift). All 15 runbooks +
+      \_template.md shipped on `live-defi-rollout`.)
+- [x] [SCRIPT] P0. Each playbook MUST include: trigger condition, severity, paging channels, diagnosis steps (with
       concrete commands like `gcloud compute instances describe ...`), resolution paths (auto-recovery / manual
       intervention / kill-switch), rollback procedure, success criteria, escalation criteria + targets. Template in
-      `_template.md`.
-- [ ] [SCRIPT] P0. Wire `runbook_doc` field in `AlertRule` to point at the markdown file.
+      `_template.md`. (evidence: every runbook follows the canonical \_template.md shape with 9 mandatory sections —
+      TL;DR, Trigger condition, Severity + paging, Diagnosis (5-step with concrete `gcloud` / `cast` / `curl` /
+      `gcloud storage cat ... | jq`), Resolution paths (3 paths per runbook), Rollback, Common false-positives,
+      Escalation criteria + targets, Success criteria, Post-incident. UAC threshold pins reference
+      `ALERT_THRESHOLDS[<key>]` per the registry.)
+- [x] [SCRIPT] P0. Wire `runbook_doc` field in `AlertRule` to point at the markdown file.
       `unified-trading-system-ui/DART` deep-links to
       `https://github.com/IggyIkenna/unified-trading-pm/blob/main/codex/14-playbooks/alerting/{file}.md` from the alert
-      detail modal.
+      detail modal. (evidence: UAC@8e68a2b — re-points the `KILL_SWITCH_*` wildcard rule's runbook*doc from the stub
+      `kill_switch.md` to the canonical `kill_switch_defi_liquidation_risk.md` (the runbook itself cross-references the
+      sibling kill-switch runbooks). Adds 4 unit tests in `tests/internal/unit/test_alerting_taxonomy.py`:
+      test_every_alert_rule_runbook_doc_is_non_empty, test_every_alert_rule_runbook_doc_path_format,
+      test_kill_switch_wildcard_rule_runbook_anchors_at_liquidation_risk,
+      test_phase6_required_runbook_slugs_present_in_live_alert_rules. 42 alerting tests pass locally (38 existing + 4
+      new). Cross-repo file-existence not verifiable at unit-test time so format-only validation per the regex
+      `^unified-trading-pm/codex/14-playbooks/alerting/[a-z0-9*]+\.md$`. DART deep-link wiring in
+      unified-trading-system-ui already shipped in Phase 5 (e9559565).)
 
 ### Phase 7 — Quietness baseline + threshold tuning (3-5 days, GATES Phase 8)
 

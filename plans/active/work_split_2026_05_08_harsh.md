@@ -835,18 +835,97 @@ You are Tab 5 — a sub-agent spawned by Harsh's main orchestrator agent.
 
 BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "VM launcher script SSOT",
-     § "Manifest migration, NOT fallback", § "Per-asset-group shard-key matrix".
-  2. plans/active/work_split_2026_05_08_harsh.md § "TAB 5 — Mechanical refactors + audit cluster".
+     § "VM Naming Convention", § "Manifest migration, NOT fallback",
+     § "Per-asset-group shard-key matrix".
+  2. plans/active/work_split_2026_05_08_harsh.md § "TAB 5 — Mechanical refactors + audit cluster"
+     including the Sub-agent isolation table (paste rows verbatim into each Task prompt).
   3. All 7 plan-of-records in TAB 5 scope (launcher consolidation + data-status tests +
      databento + per-instrument + hard_schema + api_football + cme_polymarket).
 
 Your agent-tag: mechanical-refactor-tab. Your tab number: 5.
 
+CRITICAL HANDSHAKES (do not violate):
+  • VM_PREFIX_TO_BUCKET dict in deployment-service/scripts/vm/vm_zombie_watchdog.py MUST be
+    extended BEFORE Harsh Tab 4 launches a VM with any new prefix you ship — coordinate via
+    plan-of-record `## Open questions` ping when each new prefix is registered.
+  • After EVERY new prefix add (or batch of adds), RELAUNCH the watchdog VM per CLAUDE.md
+    § "VM Naming Convention" — running watchdog only fetches the Python at boot. Skipping
+    relaunch silently zombies the new prefix (precedent: 2026-05-05 5-prefix incident).
+  • UAC edits (api_football_minimal_flattening_removal + cme_polymarket_arb +
+    hard_schema_enforcement) MUST follow the UAC editor priority queue declared in
+    cross-side handshakes — Ikenna T6 ships canonical/strategy/ + canonical/client/ NEW
+    dirs first, then Ikenna T1 finishes drift fixes, THEN Tab 5 mechanical adds. Wait for
+    the green-flag in shared plan-of-record `## Open questions` before staging any UAC hunk.
+  • Watchdog MUST be in VM_PREFIX_TO_BUCKET BEFORE the launcher consolidation commit lands;
+    register-and-relaunch ride together as one shippable unit per launcher.
+
 YOUR TASK: ship 7 plans of mechanical / parallel-safe / scoped refactor work. Fan out
 7 parallel sub-agents (one per plan) at boot via a SINGLE message with 7 Task blocks.
-See work_split_2026_05_08_harsh.md § "TAB 5".
+See work_split_2026_05_08_harsh.md § "TAB 5" + the Sub-agent isolation table for the
+file-ownership boundaries each sub-agent must respect.
 
 REPORT-BACK: per CLAUDE.md HARD RULE cadence. DONE block at bottom of each plan-of-record.
+```
+
+### Tab 6 spawn prompt
+
+```text
+You are Tab 6 — a sub-agent spawned by Harsh's main orchestrator agent (a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — full body (workspace standards). Esp.
+     § "Daily Work-Split Process" + § "Two teammates × multiple parallel agents — don't
+     edit unfamiliar files" + § "Sub-Agents & Autonomous Agents: Full Rules Required".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (symlink to CLAUDE.md;
+     same content — sub-agent framing applies to you).
+  3. plans/active/work_split_2026_05_08_harsh.md § "TAB 6 — Cross-cutting build" including
+     the Sub-agent isolation table (paste rows verbatim into each Task prompt).
+  4. plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (shared plan-of-record
+     with Ikenna Tab 6 — read `## Open questions` for Ikenna T6's UAC SSOT spec ship-blocks
+     before consuming).
+  5. plans/epics/cross_cutting_may_23_2026.epic.md — 5-deliverable scope (parent epic).
+  6. codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
+     baseline (your enumeration source).
+
+Your agent-tag: cross-cutting-build-tab. Your tab number: 6.
+
+ORCHESTRATION RULES (per CLAUDE.md § "Daily Work-Split Process" universal mechanics):
+  1. Shared working tree — no `git pull` needed between tabs; pre-commit check
+     (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
+     Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
+  2. Plan-doc Q&A flow — write blockers into cross_cutting_may_23_deliverables_2026_05_08.md
+     `## Open questions` (status 🟡 BLOCKED), append ping in plans/active/_agent_pings.md,
+     continue with what you CAN do.
+  3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
+     incoming → push, any incoming → flag + escalate.
+  4. Plan-flip in same logical unit as code — checkbox flip + <repo>@<sha> evidence stamped
+     in body, NOT batched at session end.
+  5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.
+
+CRITICAL HANDSHAKES (HARD ORDERING — do not violate):
+  • Ikenna T6 → Harsh T6: Ikenna T6 ships UAC `canonical/strategy/catalogue.py` +
+    `canonical/strategy/ids.py` + `canonical/client/model.py` + DART codex spec FIRST.
+    Wait for the per-deliverable RESOLVED block in
+    cross_cutting_may_23_deliverables_2026_05_08.md `## Open questions` before consuming.
+  • While waiting on Ikenna T6: scaffold the strategy-ID refactor sweep (identify every
+    callsite that needs `derive_strategy_id(catalogue_row)` — grep + AST walk into a
+    checklist). DO NOT modify yet — only audit + capture in the plan body.
+  • alerting-service `strategy_id` field landing: Ikenna T5 owns alerting Phase 2-9 rule
+    structure; Tab 6 lays in `strategy_id` on top after Ikenna T5 ships the rule shell.
+  • UI surfaces: Tab 3 here owns deployment-UI lifecycle re-shape; you own DART manual-trade
+    UI + catalogue UI on different routes. Per-commit `git diff --cached --name-only`
+    MUST show only your route directories.
+
+YOUR TASK: ship the 5 items in TAB 6 (strategy ID refactor sweep + catalogue row population
++ client tagging propagation + 5 DART manual-trade surfaces + catalogue UI). Fan out per
+the Sub-agent isolation table for TAB 6 in the work-split plan. See
+work_split_2026_05_08_harsh.md § "TAB 6" for full done-definition + file-ownership table.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
+Final: append a "DONE-2026-05-08" block at the bottom of
+cross_cutting_may_23_deliverables_2026_05_08.md body listing every code + plan-flip commit
+sha. Then go quiet — don't pick up new work autonomously.
 ```
 
 ## Discipline reminders (every tab, every commit)
