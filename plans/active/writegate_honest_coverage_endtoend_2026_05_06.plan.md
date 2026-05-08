@@ -1752,12 +1752,12 @@ sub-phase ships the enumerator that physically writes those rows.
       `_enumerate_defi` yields `EXPECTED_PRE_GENESIS_CHAIN` (day < `chain_genesis`) and `EXPECTED_INSTRUMENT_NOT_LISTED`
       (day < `protocol_launch`); `_enumerate_sports` yields `EXPECTED_PRE_SOURCE_COVERAGE_START` (per-source);
       `_enumerate_cefi` and `_enumerate_prediction` yield `EXPECTED_PRE_VENUE_LAUNCH` (real impl per UAC@ac218dc +
-      `venue_launch_dates` SSOT, no longer stubs). **Architectural note**: the enumerator computes the reason
-      forward from the UAC SSOTs (`CHAIN_GENESIS_DATES` / `PROTOCOL_LAUNCH_DATES` / `*_VENUE_LAUNCH_DATES` /
-      `SOURCE_COVERAGE_START` / `non_trading_day_reason`) at the moment it generates the row — different paradigm
-      from UTL `classify_legacy_empty_row(asset_group, row_dict)` which classifies an EXISTING manifest row whose
-      attributes are already populated. Both share the closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS`
-      but the enumerator-side dispatch is forward-construction, not row-classification. Sports per-league /
+      `venue_launch_dates` SSOT, no longer stubs). **Architectural note**: the enumerator computes the reason forward
+      from the UAC SSOTs (`CHAIN_GENESIS_DATES` / `PROTOCOL_LAUNCH_DATES` / `*_VENUE_LAUNCH_DATES` /
+      `SOURCE_COVERAGE_START` / `non_trading_day_reason`) at the moment it generates the row — different paradigm from
+      UTL `classify_legacy_empty_row(asset_group, row_dict)` which classifies an EXISTING manifest row whose attributes
+      are already populated. Both share the closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS` but the
+      enumerator-side dispatch is forward-construction, not row-classification. Sports per-league /
       `EXPECTED_PAUSED_LEAGUE` + CeFi/Prediction per-instrument lifecycle (`EXPECTED_INSTRUMENT_NOT_LISTED` /
       `EXPECTED_INSTRUMENT_DELISTED`) are deferred to Phase 3.D.5 v2 enumerator (per-asset-group catalog read).
 - [x] [SCRIPT] P0 (shipped deployment-service@dcc5c87). NEW
@@ -1772,11 +1772,11 @@ sub-phase ships the enumerator that physically writes those rows.
 - [x] [TEST] P0 (shipped 2026-05-07, instruments-service@a2d4f00). Per-asset-group unit test
       `tests/unit/scripts/test_enumerate_expected_universe.py` — 24 tests covering `_enumerate_tradfi` /
       `_enumerate_defi` / `_enumerate_sports` / `_enumerate_cefi` / `_enumerate_prediction` + helpers
-      (`_build_present_set` / `_row_key`) + cross-asset-group invariants (every reason in
-      `EMPTY_CONFIRMED_REASONS`; every row has identifier + date + reason; `_ENUMERATORS` covers all 5).
-      Verifies right rows present (Saturday → `EXPECTED_WEEKEND`; ARBITRUM 2018 → `EXPECTED_PRE_GENESIS_CHAIN`;
-      LIGHTER 2024-01-01 → `EXPECTED_PRE_VENUE_LAUNCH`) AND wrong rows absent (post-launch dates yield zero pre-skip
-      rows). Test results: 24 passed in 1.11s. Hooks (ruff lint + format) green.
+      (`_build_present_set` / `_row_key`) + cross-asset-group invariants (every reason in `EMPTY_CONFIRMED_REASONS`;
+      every row has identifier + date + reason; `_ENUMERATORS` covers all 5). Verifies right rows present (Saturday →
+      `EXPECTED_WEEKEND`; ARBITRUM 2018 → `EXPECTED_PRE_GENESIS_CHAIN`; LIGHTER 2024-01-01 →
+      `EXPECTED_PRE_VENUE_LAUNCH`) AND wrong rows absent (post-launch dates yield zero pre-skip rows). Test results: 24
+      passed in 1.11s. Hooks (ruff lint + format) green.
 - [x] [VM-LAUNCH] P0 (scan-only + `--apply-write` complete — see banner table above; PM@79e47874). DeFi scan-only first
       halted on the default `--max-writes-per-run=100000` cap (`expected-universe-enum-defi-20260507-145714`, rc=5 +
       `ENUMERATOR_FAILED reason=max_writes_exceeded`). Default raised to 1M (instruments-service@d1c9928) and launcher
@@ -1810,8 +1810,8 @@ sub-phase ships the enumerator that physically writes those rows.
       dtype-correct fill-default fix), re-run cadence, open follow-ups.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Marked
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM
-      commit shas (PM@79e47874 + PM@341bb285) + spot-check evidence (DeFi 688,220 EXPECTED_PRE_GENESIS_CHAIN sample
+      § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM commit
+      shas (PM@79e47874 + PM@341bb285) + spot-check evidence (DeFi 688,220 EXPECTED_PRE_GENESIS_CHAIN sample
       `chain=ARBITRUM venue=AAVEV3-ARBITRUM day=2018-01-01`; TradFi 35,050 EXPECTED_WEEKEND sample
       `venue=BARCHART day=2018-01-06`).
 
@@ -1840,13 +1840,14 @@ The all-5-asset_group scan-only sweep surfaced three follow-up items not covered
       default (1M). Used to ship the defi 5M-cap rerun without an ad-hoc launcher.
 - [x] [SCRIPT] P1 (shipped 2026-05-07, instruments-service@aedf316). **CSV report upload to GCS before VM
       auto-shutdown.** Added `--gcs-report-bucket` flag to `enumerate_expected_universe.py`. Default behaviour:
-      auto-upload to `gs://deployment-scripts-{PROJECT_ID}/enumerator-reports/{vm_name_or_run_id}/<asset_group>-<ts>.csv`
-      when `VM_NAME` env var is set (i.e. running on a backfill VM); operator can opt-out with
-      `--gcs-report-bucket=""` for local dev or override with an explicit bucket. Best-effort upload — failure logs a
-      warning + emits `ENUMERATOR_REPORT_UPLOAD_FAILED` event but does not abort the run (manifest write is the
-      primary correctness guarantee; CSV is operator-inspection sugar). The `gcs_report_uri` lands in both
-      `ENUMERATOR_COMPLETED` events (scan-only and apply-write paths). Drive-by lint cleanup (Findings Triage case-1):
-      `try/except/pass` → `contextlib.suppress`; multiplication-sign chars in docstrings normalised.
+      auto-upload to
+      `gs://deployment-scripts-{PROJECT_ID}/enumerator-reports/{vm_name_or_run_id}/<asset_group>-<ts>.csv` when
+      `VM_NAME` env var is set (i.e. running on a backfill VM); operator can opt-out with `--gcs-report-bucket=""` for
+      local dev or override with an explicit bucket. Best-effort upload — failure logs a warning + emits
+      `ENUMERATOR_REPORT_UPLOAD_FAILED` event but does not abort the run (manifest write is the primary correctness
+      guarantee; CSV is operator-inspection sugar). The `gcs_report_uri` lands in both `ENUMERATOR_COMPLETED` events
+      (scan-only and apply-write paths). Drive-by lint cleanup (Findings Triage case-1): `try/except/pass` →
+      `contextlib.suppress`; multiplication-sign chars in docstrings normalised.
 
 #### Phase 3.D.5 — Instruments-service-driven enumeration v2 (NEW 2026-05-07 — operator architectural directive)
 
@@ -2093,10 +2094,10 @@ interface on the manifest.
       see which specific days are captured / empty / failed / unattempted. _ Per-instrument pagination already exists
       (Phase 6 shipped per `data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md` — 200 instruments per page,
       load-more button). Mirror that pattern at the day grain: per-instrument-leaf, render a calendar / list of days
-      with status badges (4 colours for the 4 capture_status values), paginate chronologically. _ Layout suggestion:
+      with status badges (4 colours for the 4 capture*status values), paginate chronologically. * Layout suggestion:
       per-instrument click expands to a year × 12-month grid (visual calendar) where each cell shows the day's status
-      colour. Hover for details (error_reason, attempted_at, file size if captured). Click a day → leaf actions
-      (re-deploy that day's shard, download the parquet, inspect the failure reason). _ Pagination at the day grain may
+      colour. Hover for details (error*reason, attempted_at, file size if captured). Click a day → leaf actions
+      (re-deploy that day's shard, download the parquet, inspect the failure reason). * Pagination at the day grain may
       be unnecessary if rendered as a calendar (8 years × 365 = ~2920 days per instrument fits a single tall page). For
       instrument-types with thousands of expiring contracts (options chains), the per-cluster bundle drilldown already
       collapses; per-day for the bundle root is the relevant grain.
@@ -2207,9 +2208,9 @@ clear instruction for "what's actually there", per-service flexibility for "how 
 - [x] [VM-LAUNCH] P0 (shipped 2026-05-07 evening — 4 parallel VMs). **All 5 asset_groups `--apply-flips` complete.
       Total: 3,114,843 rows flipped across 5,457,181 manifest rows (57.07% of all manifests had blank error_reason).**
       Per-asset-group: _ **cefi** — 1,238,229 flipped (1,238,079 attempted_failed + 150 EXPECTED_PRE_VENUE_LAUNCH) _
-      **sports** — 1,868,285 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse-fixtures legit per msg 6;
-      sports CAN have legit empty days) _ **tradfi** — 7,603 flipped (5,159 attempted_failed + 2,225 EXPECTED_WEEKEND +
-      219 EXPECTED_HOLIDAY) _ **defi** — 685 flipped (100% attempted_failed/LegacyBlankErrorReasonError) \*
+      **sports** — 1,868,285 flipped (100% empty*confirmed/SOURCE_RETURNED_ZERO — sparse-fixtures legit per msg 6;
+      sports CAN have legit empty days) * **tradfi** — 7,603 flipped (5,159 attempted*failed + 2,225 EXPECTED_WEEKEND +
+      219 EXPECTED_HOLIDAY) * **defi** — 685 flipped (100% attempted_failed/LegacyBlankErrorReasonError) \*
       **prediction** — 41 flipped (100% empty_confirmed/SOURCE_RETURNED_ZERO — sparse trading legit) All 5 per-VM shards
       uploaded; consolidator merging into canonical manifests within ~5min. Net effect: ~1.25M cefi/defi/tradfi rows
       flagged for re-attempt by orchestrator (catches the silent-fallback adapter paths via the new UTL@68b3804a
@@ -2219,10 +2220,10 @@ clear instruction for "what's actually there", per-service flexibility for "how 
 **Wave 3 — instruments-service v2 enumerator + downstream cascade. Multi-day, plan-detail.**
 
 - [ ] [SCRIPT] P0. Extend `instruments-service/scripts/enumerate_expected_universe.py` v2 branches with the 4th
-      capture_status. Each asset_group gets: _ Pre-venue/chain-launch dates → continue writing
+      capture*status. Each asset_group gets: * Pre-venue/chain-launch dates → continue writing
       `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (Wave 1 — already shipped today). _
       Per-instrument-alive dates with no manifest row → write `expected_unattempted` (NEW). _ Per-instrument-pre-listing
-      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. _ Per-instrument-post-delisting dates → write
+      dates → write `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`. \_ Per-instrument-post-delisting dates → write
       `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`.
 - [ ] [MTDS] P0. Wire `instrument_catalog` callable through MTDS adapters → ManifestWriter at construction time. Each
       adapter passes a catalog reader for the venue it serves. Writes that hit the catalog-aware guard get classified
@@ -2498,196 +2499,189 @@ volume, or missing odds because there's no odds or something? Have we factored t
 expected range? ... If not, then all of that stuff should be in PM active plans. Check if it's not, then we should add
 it, and then we should get to doing it. migrations, backfills, tests, whatever needs to be done."_
 
-**The audit.** Below maps every dimension of "is this data point supposed to exist" against where the SSOT lives
-today, what status it's in, whether it's wired into the classifier / write-gate / cascade, and what gaps remain.
-Status legend: ✅ shipped + wired · ⚠️ shipped but unwired (needs consumer integration) · 🟡 partial · ❌ missing.
+**The audit.** Below maps every dimension of "is this data point supposed to exist" against where the SSOT lives today,
+what status it's in, whether it's wired into the classifier / write-gate / cascade, and what gaps remain. Status legend:
+✅ shipped + wired · ⚠️ shipped but unwired (needs consumer integration) · 🟡 partial · ❌ missing.
 
 **Sports / Prediction dimensions:**
 
-| # | Dimension                                            | UAC SSOT                                                            | Status | Classifier-aware? | Cascade-wired? | Gap                                                                          |
-| - | ---------------------------------------------------- | ------------------------------------------------------------------- | ------ | ----------------- | -------------- | ---------------------------------------------------------------------------- |
-| 1 | Per-fixture kickoff_time (session start)             | `instruments-store-sports/fixtures/…` catalog (not UAC — instruments-service catalog) | ✅ | ❌ — classifier doesn't read fixtures yet | ❌ | Wave 3.S v2 enumerator must read fixtures + emit per-(league, fixture, day) expected universe |
-| 2 | Per-fixture event windows (events / lineups / stats) | `availability_semantics.AVAILABILITY_AT_SEMANTICS` (per-data-type stamping rules)   | ✅ | ❌ | ⚠️ partial (lineups stamping is `kickoff-60min` already) | Wave 3.S enumerator must derive expected windows from kickoff per data_type |
-| 3 | Source coverage start (api_football, footystats etc.)| `unified_api_contracts.sports.SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`   | ✅ | ✅ (`_classify_sports`) | ✅ (clip in data_status) | None — fully wired                                                          |
-| 4 | Paused-league windows                                | `unified_api_contracts.sports.KNOWN_COVERAGE_GAPS` (currently empty dict)            | ⚠️ | ✅ helper exists | ✅ orchestrator pre-skips | Populate `KNOWN_COVERAGE_GAPS` per known incidents (e.g. EFL paused windows) |
-| 5 | Transfer windows per country                          | `unified_api_contracts.canonical.domain.sports.transfer_windows.TRANSFER_WINDOWS`     | ✅ | ❌ — classifier doesn't gate transfer_records | ⚠️ partial (features-sports uses it; data_status doesn't) | Wire `is_transfer_window_open` into `_classify_sports` → `EXPECTED_OUTSIDE_TRANSFER_WINDOW` (NEW reason) |
-| 6 | Per-league season bounds (footystats league_id changes)| `unified_api_contracts.sports.provider_league_ids.FOOTYSTATS_SEASON_IDS`            | ✅ | ❌ — no bounds check | ⚠️ partial | Add `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` reasons; classifier branch on (league, season) |
-| 7 | Understat per-league coverage list                    | ❌ MISSING                                                                            | ❌ | ❌ | ❌ | NEW UAC SSOT `UNDERSTAT_COVERED_LEAGUES: dict[league_id → list[season_id]]` (top-5 leagues only) |
-| 8 | Prediction canonical_question_group enum              | `unified_api_contracts.canonical.domain.predictions.canonical_groups.CanonicalQuestionGroup` + `CANONICAL_GROUP_METADATA` | ✅ | ❌ — `_classify_prediction` is venue-only today | ❌ | Wave 3.S extension: gate prediction shards on canonical-question-group lifecycle |
-| 9 | Prediction per-market lifecycle (created_at / settlement_time) | `unified_api_contracts.canonical.domain.predictions.lifecycle` module             | ✅ | ❌ | ❌ | Wave 3.S enumerator + MTDS CLOB capture must respect bounds                  |
-|10 | Prediction venue launch (POLYMARKET / KALSHI)         | `unified_api_contracts.registry.venue_launch_dates.PREDICTION_VENUE_LAUNCH_DATES`    | ✅ | ✅ (`_classify_prediction`) | ✅ (Wave 1 enumerator) | None                                                                      |
+| #   | Dimension                                                      | UAC SSOT                                                                                                                  | Status | Classifier-aware?                               | Cascade-wired?                                            | Gap                                                                                                      |
+| --- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | Per-fixture kickoff_time (session start)                       | `instruments-store-sports/fixtures/…` catalog (not UAC — instruments-service catalog)                                     | ✅     | ❌ — classifier doesn't read fixtures yet       | ❌                                                        | Wave 3.S v2 enumerator must read fixtures + emit per-(league, fixture, day) expected universe            |
+| 2   | Per-fixture event windows (events / lineups / stats)           | `availability_semantics.AVAILABILITY_AT_SEMANTICS` (per-data-type stamping rules)                                         | ✅     | ❌                                              | ⚠️ partial (lineups stamping is `kickoff-60min` already)  | Wave 3.S enumerator must derive expected windows from kickoff per data_type                              |
+| 3   | Source coverage start (api_football, footystats etc.)          | `unified_api_contracts.sports.SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`                                         | ✅     | ✅ (`_classify_sports`)                         | ✅ (clip in data_status)                                  | None — fully wired                                                                                       |
+| 4   | Paused-league windows                                          | `unified_api_contracts.sports.KNOWN_COVERAGE_GAPS` (currently empty dict)                                                 | ⚠️     | ✅ helper exists                                | ✅ orchestrator pre-skips                                 | Populate `KNOWN_COVERAGE_GAPS` per known incidents (e.g. EFL paused windows)                             |
+| 5   | Transfer windows per country                                   | `unified_api_contracts.canonical.domain.sports.transfer_windows.TRANSFER_WINDOWS`                                         | ✅     | ❌ — classifier doesn't gate transfer_records   | ⚠️ partial (features-sports uses it; data_status doesn't) | Wire `is_transfer_window_open` into `_classify_sports` → `EXPECTED_OUTSIDE_TRANSFER_WINDOW` (NEW reason) |
+| 6   | Per-league season bounds (footystats league_id changes)        | `unified_api_contracts.sports.provider_league_ids.FOOTYSTATS_SEASON_IDS`                                                  | ✅     | ❌ — no bounds check                            | ⚠️ partial                                                | Add `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` reasons; classifier branch on (league, season)        |
+| 7   | Understat per-league coverage list                             | ❌ MISSING                                                                                                                | ❌     | ❌                                              | ❌                                                        | NEW UAC SSOT `UNDERSTAT_COVERED_LEAGUES: dict[league_id → list[season_id]]` (top-5 leagues only)         |
+| 8   | Prediction canonical_question_group enum                       | `unified_api_contracts.canonical.domain.predictions.canonical_groups.CanonicalQuestionGroup` + `CANONICAL_GROUP_METADATA` | ✅     | ❌ — `_classify_prediction` is venue-only today | ❌                                                        | Wave 3.S extension: gate prediction shards on canonical-question-group lifecycle                         |
+| 9   | Prediction per-market lifecycle (created_at / settlement_time) | `unified_api_contracts.canonical.domain.predictions.lifecycle` module                                                     | ✅     | ❌                                              | ❌                                                        | Wave 3.S enumerator + MTDS CLOB capture must respect bounds                                              |
+| 10  | Prediction venue launch (POLYMARKET / KALSHI)                  | `unified_api_contracts.registry.venue_launch_dates.PREDICTION_VENUE_LAUNCH_DATES`                                         | ✅     | ✅ (`_classify_prediction`)                     | ✅ (Wave 1 enumerator)                                    | None                                                                                                     |
 
 **TradFi dimensions:**
 
-| # | Dimension                                       | UAC SSOT                                                              | Status | Classifier-aware? | Cascade-wired? | Gap                                                                                   |
-| - | ----------------------------------------------- | --------------------------------------------------------------------- | ------ | ----------------- | -------------- | ------------------------------------------------------------------------------------- |
-|11 | Venue trading calendar (weekend / holiday)      | `unified_api_contracts.registry.venue_trading_calendar`               | ✅ | ✅ (`_classify_tradfi`) | ✅ | None — fully wired                                                                    |
-|12 | **Half-day sessions** (Thanksgiving Friday, Christmas Eve, etc.) | ❌ — `EXPECTED_PARTIAL_HALF_DAY` enum exists but no calendar | ❌ | ❌ | ❌ | NEW UAC SSOT `HALF_DAY_SESSIONS: dict[venue, list[(date, close_time)]]` + classifier branch |
-|13 | **Intra-day session hours** (NYSE 9:30-16:00, CME 17:00-16:00 next-day, FX continuous) | ❌ — no session_open / session_close per venue | ❌ | ❌ | ❌ (today: classifier operates at day grain, doesn't gate intra-day windows) | NEW UAC SSOT `VENUE_SESSION_HOURS` + `EXPECTED_OUTSIDE_TRADING_HOURS` reason for ohlcv_15m / book_snapshot during off-hours |
-|14 | Per-instrument lifecycle (ETF listed_at, futures expiry, options last-trade-date) | `instruments-store-tradfi/…` catalog (instruments-service) | ⚠️ partial | ❌ — classifier only does day-level | ❌ | Wave 3 v2 enumerator must read TradFi catalog + emit per-instrument NOT_LISTED / DELISTED / EXPIRED |
+| #   | Dimension                                                                              | UAC SSOT                                                     | Status     | Classifier-aware?                   | Cascade-wired?                                                               | Gap                                                                                                                         |
+| --- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------- | ----------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 11  | Venue trading calendar (weekend / holiday)                                             | `unified_api_contracts.registry.venue_trading_calendar`      | ✅         | ✅ (`_classify_tradfi`)             | ✅                                                                           | None — fully wired                                                                                                          |
+| 12  | **Half-day sessions** (Thanksgiving Friday, Christmas Eve, etc.)                       | ❌ — `EXPECTED_PARTIAL_HALF_DAY` enum exists but no calendar | ❌         | ❌                                  | ❌                                                                           | NEW UAC SSOT `HALF_DAY_SESSIONS: dict[venue, list[(date, close_time)]]` + classifier branch                                 |
+| 13  | **Intra-day session hours** (NYSE 9:30-16:00, CME 17:00-16:00 next-day, FX continuous) | ❌ — no session_open / session_close per venue               | ❌         | ❌                                  | ❌ (today: classifier operates at day grain, doesn't gate intra-day windows) | NEW UAC SSOT `VENUE_SESSION_HOURS` + `EXPECTED_OUTSIDE_TRADING_HOURS` reason for ohlcv_15m / book_snapshot during off-hours |
+| 14  | Per-instrument lifecycle (ETF listed_at, futures expiry, options last-trade-date)      | `instruments-store-tradfi/…` catalog (instruments-service)   | ⚠️ partial | ❌ — classifier only does day-level | ❌                                                                           | Wave 3 v2 enumerator must read TradFi catalog + emit per-instrument NOT_LISTED / DELISTED / EXPIRED                         |
 
 **CeFi dimensions:**
 
-| # | Dimension                          | UAC SSOT                                                                                       | Status | Classifier-aware? | Cascade-wired? | Gap                                                                                |
-| - | ---------------------------------- | ---------------------------------------------------------------------------------------------- | ------ | ----------------- | -------------- | ---------------------------------------------------------------------------------- |
-|15 | Venue launch dates                 | `unified_api_contracts.registry.venue_launch_dates.CEFI_VENUE_LAUNCH_DATES` (20 venues)         | ✅ | ✅ (`_classify_cefi` post UTL@7276cca1) | ✅ | None — Wave 1 shipped                                                              |
-|16 | Per-instrument lifecycle (perp listing, futures expiry, instrument_type changes) | `instruments-store-cefi/by_venue/{venue}/instruments.parquet` (Tardis-derived catalog) | ⚠️ partial | ❌ | ❌ | Wave 3 v2 enumerator + catalog-aware write-gate at MTDS adapters                 |
+| #   | Dimension                                                                        | UAC SSOT                                                                                | Status     | Classifier-aware?                       | Cascade-wired? | Gap                                                              |
+| --- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------- | --------------------------------------- | -------------- | ---------------------------------------------------------------- |
+| 15  | Venue launch dates                                                               | `unified_api_contracts.registry.venue_launch_dates.CEFI_VENUE_LAUNCH_DATES` (20 venues) | ✅         | ✅ (`_classify_cefi` post UTL@7276cca1) | ✅             | None — Wave 1 shipped                                            |
+| 16  | Per-instrument lifecycle (perp listing, futures expiry, instrument_type changes) | `instruments-store-cefi/by_venue/{venue}/instruments.parquet` (Tardis-derived catalog)  | ⚠️ partial | ❌                                      | ❌             | Wave 3 v2 enumerator + catalog-aware write-gate at MTDS adapters |
 
 **DeFi dimensions:**
 
-| # | Dimension                              | UAC SSOT                                                                  | Status | Classifier-aware? | Cascade-wired? | Gap                                                                        |
-| - | -------------------------------------- | ------------------------------------------------------------------------- | ------ | ----------------- | -------------- | -------------------------------------------------------------------------- |
-|17 | Chain genesis dates                    | `unified_api_contracts.registry.chain_env.CHAIN_GENESIS_DATES`            | ✅ | ✅ (`_classify_defi`) | ✅ | None                                                                       |
-|18 | Protocol launch dates per chain        | `unified_api_contracts.registry.chain_env.PROTOCOL_LAUNCH_DATES`          | ✅ | ⚠️ partial (Wave 1 enumerator uses it; classifier doesn't directly) | ✅ via enumerator | Wave 3 — extend `_classify_defi` to use PROTOCOL_LAUNCH_DATES for finer per-(chain, protocol) classification |
-|19 | Per-pool lifecycle (deployed_at, deactivated_at) | `instruments-store-defi/…` catalog (sparse, expansion in scope per `defi_master`) | ❌ | ❌ | ❌ | Wave 3 v2 enumerator + per-pool catalog expansion (defi_master plan)        |
+| #   | Dimension                                        | UAC SSOT                                                                          | Status | Classifier-aware?                                                   | Cascade-wired?    | Gap                                                                                                          |
+| --- | ------------------------------------------------ | --------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| 17  | Chain genesis dates                              | `unified_api_contracts.registry.chain_env.CHAIN_GENESIS_DATES`                    | ✅     | ✅ (`_classify_defi`)                                               | ✅                | None                                                                                                         |
+| 18  | Protocol launch dates per chain                  | `unified_api_contracts.registry.chain_env.PROTOCOL_LAUNCH_DATES`                  | ✅     | ⚠️ partial (Wave 1 enumerator uses it; classifier doesn't directly) | ✅ via enumerator | Wave 3 — extend `_classify_defi` to use PROTOCOL_LAUNCH_DATES for finer per-(chain, protocol) classification |
+| 19  | Per-pool lifecycle (deployed_at, deactivated_at) | `instruments-store-defi/…` catalog (sparse, expansion in scope per `defi_master`) | ❌     | ❌                                                                  | ❌                | Wave 3 v2 enumerator + per-pool catalog expansion (defi_master plan)                                         |
 
 **Cross-cutting dimensions:**
 
-| # | Dimension                                                       | Where it should live                              | Status | Gap                                                                          |
-| - | --------------------------------------------------------------- | ------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
-|20 | Per-data-type zero-activity bar shapes (ohlcv 0-vol, trades 0-qty, book carry-forward, depth quotes carry-forward, derivative_ticker carry-forward, odds_snapshot carry-forward) | UTL `zero_activity_bars` helper (NEW)              | ❌ | Wave 3.M — full per-data-type template SSOT                                  |
-|21 | Catalog-aware write-gate at MTDS / MDPS / features-* adapters    | UTL `ManifestWriter.record_empty(instrument_catalog=…)` callable + adapter wiring | ⚠️ partial | UTL `EmptyFromLiveInstrumentError` shipped; adapters not yet wired to pass `instrument_catalog` reference at construction |
-|22 | Cross-service cascade — MDPS / features-* / ml / strategy / execution propagate `expected_unattempted` + `EXPECTED_*` from upstream manifest | Per-service manifest read + propagation logic | ❌ | Wave 3 cross-service cascade — multi-day                                    |
-|23 | Data-status panel reflects 4-state capture_status (4-bucket coverage) | deployment-api `data_status_service.py` + deployment-ui | ⚠️ partial | Wave 3 — 4-bucket coverage breakdown + per-instrument×per-day calendar viz   |
-|24 | GCS-side past data alignment with manifest semantics            | One-shot migration scripts + per-asset-group rescan | 🟡 in flight | Today's Wave 2.M migration covered the blank-reason rows. Future migrations as new typed reasons land per the taxonomy-expansion process |
-|25 | prior_LTP carry-forward source for zero-activity bars            | UTL `get_prior_ltp` helper + lookback-N-days fallback | ❌ | Wave 3.M task                                                                |
+| #   | Dimension                                                                                                                                                                        | Where it should live                                                              | Status       | Gap                                                                                                                                      |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 20  | Per-data-type zero-activity bar shapes (ohlcv 0-vol, trades 0-qty, book carry-forward, depth quotes carry-forward, derivative_ticker carry-forward, odds_snapshot carry-forward) | UTL `zero_activity_bars` helper (NEW)                                             | ❌           | Wave 3.M — full per-data-type template SSOT                                                                                              |
+| 21  | Catalog-aware write-gate at MTDS / MDPS / features-\* adapters                                                                                                                   | UTL `ManifestWriter.record_empty(instrument_catalog=…)` callable + adapter wiring | ⚠️ partial   | UTL `EmptyFromLiveInstrumentError` shipped; adapters not yet wired to pass `instrument_catalog` reference at construction                |
+| 22  | Cross-service cascade — MDPS / features-\_ / ml / strategy / execution propagate `expected_unattempted` + `EXPECTED\__` from upstream manifest                                   | Per-service manifest read + propagation logic                                     | ❌           | Wave 3 cross-service cascade — multi-day                                                                                                 |
+| 23  | Data-status panel reflects 4-state capture_status (4-bucket coverage)                                                                                                            | deployment-api `data_status_service.py` + deployment-ui                           | ⚠️ partial   | Wave 3 — 4-bucket coverage breakdown + per-instrument×per-day calendar viz                                                               |
+| 24  | GCS-side past data alignment with manifest semantics                                                                                                                             | One-shot migration scripts + per-asset-group rescan                               | 🟡 in flight | Today's Wave 2.M migration covered the blank-reason rows. Future migrations as new typed reasons land per the taxonomy-expansion process |
+| 25  | prior_LTP carry-forward source for zero-activity bars                                                                                                                            | UTL `get_prior_ltp` helper + lookback-N-days fallback                             | ❌           | Wave 3.M task                                                                                                                            |
 
 **Net gap summary** — 11 dimensions need NEW SSOTs, classifier extensions, or UTL helpers; 6 dimensions need
 consumer-side wiring (cascade); 8 dimensions are fully shipped today.
 
 **Tasks added (incremental over existing Wave 3 / 3.S / 3.M):**
 
-- [ ] [UAC] P1. **Half-day sessions calendar.** NEW SSOT
-      `unified_api_contracts/registry/half_day_sessions.py` — `HALF_DAY_SESSIONS: dict[venue, list[(iso_date,
-      close_time_HHMM, reason)]]`. Populate per CME / NYSE / NASDAQ documented half-days (Thanksgiving Friday,
-      Christmas Eve, etc.). Wire `non_trading_day_reason` to also return `EXPECTED_PARTIAL_HALF_DAY` when applicable.
-- [ ] [UAC] P1. **Intra-day session hours.** NEW SSOT
-      `unified_api_contracts/registry/venue_session_hours.py` —
+- [ ] [UAC] P1. **Half-day sessions calendar.** NEW SSOT `unified_api_contracts/registry/half_day_sessions.py` —
+      `HALF_DAY_SESSIONS: dict[venue, list[(iso_date,     close_time_HHMM, reason)]]`. Populate per CME / NYSE / NASDAQ
+      documented half-days (Thanksgiving Friday, Christmas Eve, etc.). Wire `non_trading_day_reason` to also return
+      `EXPECTED_PARTIAL_HALF_DAY` when applicable.
+- [ ] [UAC] P1. **Intra-day session hours.** NEW SSOT `unified_api_contracts/registry/venue_session_hours.py` —
       `VENUE_SESSION_HOURS: dict[venue, dict[weekday, list[(open_HHMM_TZ, close_HHMM_TZ)]]]`. Cover NYSE 9:30-16:00 ET,
-      CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc.
-      NEW `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`.
-      Used by ohlcv_15m / book_snapshot adapters to gate intra-day shards.
+      CME equity-index futures 17:00 ET prev → 16:00 ET, FX continuous (Mon 5pm ET → Fri 5pm ET), CBOE etc. NEW
+      `EXPECTED_OUTSIDE_TRADING_HOURS` reason in `EmptyConfirmedReason`. Used by ohlcv_15m / book_snapshot adapters to
+      gate intra-day shards.
 - [ ] [UAC] P1. **Understat covered leagues + seasons.** NEW SSOT
-      `unified_api_contracts.canonical.domain.sports.understat_coverage.UNDERSTAT_COVERED_LEAGUES:
-      dict[league_id → list[season_id]]` with the 5 covered leagues (EPL / La Liga / Serie A / Bundesliga / Ligue 1)
-      and their season ranges. Classifier extension: pre-fixture-day check returns
-      `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for understat shards outside this set.
-- [ ] [UAC] P1. **Per-league season bounds for footystats.** Extend `FOOTYSTATS_SEASON_IDS` with
-      season_start / season_end tuples (already partly available — needs explicit bounds-check helper
-      `get_footystats_season_window(league, day) -> tuple[start, end] | None`). NEW
-      `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` reasons; classifier branch.
+      `unified_api_contracts.canonical.domain.sports.understat_coverage.UNDERSTAT_COVERED_LEAGUES:     dict[league_id → list[season_id]]`
+      with the 5 covered leagues (EPL / La Liga / Serie A / Bundesliga / Ligue 1) and their season ranges. Classifier
+      extension: pre-fixture-day check returns `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` for understat shards outside this
+      set.
+- [ ] [UAC] P1. **Per-league season bounds for footystats.** Extend `FOOTYSTATS_SEASON_IDS` with season_start /
+      season_end tuples (already partly available — needs explicit bounds-check helper
+      `get_footystats_season_window(league, day) -> tuple[start, end] | None`). NEW `EXPECTED_PRE_SEASON` /
+      `EXPECTED_POST_SEASON` reasons; classifier branch.
 - [ ] [UAC] P1. Two new EmptyConfirmedReason enum values: `EXPECTED_OUTSIDE_TRADING_HOURS` and
       `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and `EXPECTED_PRE_SEASON` and `EXPECTED_POST_SEASON` and
       `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (5 new typed reasons.)
-- [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer_windows,
-      footystats_season_bounds, understat_coverage) returning the appropriate typed `EXPECTED_*` reason. Same
-      discriminated `(capture_status, error_reason)` shape as today.
-- [ ] [UTL] P1. **Classifier extension** — `_classify_tradfi` consumes the half-day calendar +
-      session hours SSOTs returning `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` where applicable.
-- [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle
-      SSOT returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
+- [ ] [UTL] P1. **Classifier extension** — `_classify_sports` consumes the new SSOTs (transfer*windows,
+      footystats_season_bounds, understat_coverage) returning the appropriate typed
+      `EXPECTED*\*`reason. Same     discriminated`(capture_status, error_reason)` shape as today.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_tradfi` consumes the half-day calendar + session hours SSOTs
+      returning `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` where applicable.
+- [ ] [UTL] P1. **Classifier extension** — `_classify_prediction` consumes the canonical-question-group lifecycle SSOT
+      returning `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for outside-active-window
       prediction-shard dates.
-- [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed
-      reasons. Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
+- [ ] [DOCS] P1. CLAUDE.md "Three-category empty-output decision" rule extension to enumerate the new typed reasons.
+      Codex `02-data/honest-absence-downstream-handling.md` per-service consumer-class audit table extension
       (per-reason: ML NaN-fill / execution skip / rolling-window denominator policy).
-- [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows
-      using the extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi +
-      685 defi rows to attempted_failed/LegacyBlankErrorReasonError, those rows that should actually be
-      typed (e.g. rows during understat-not-covered-league fixtures, cefi-perp pre-listing dates per
-      catalog) are recoverable on the next migration pass. New reconciler:
-      `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds attempted_failed/
-      LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
-      empty_confirmed/EXPECTED_* if a typed-reason rule fires (otherwise leaves as attempted_failed for
-      retry).
+- [ ] [SCRIPT] P1. **Migration: re-classify already-flipped attempted_failed/LegacyBlankErrorReasonError rows using the
+      extended classifier.** After the Wave 2.M migration today flipped 1.24M cefi + 5,159 tradfi + 685 defi rows to
+      attempted*failed/LegacyBlankErrorReasonError, those rows that should actually be typed (e.g. rows during
+      understat-not-covered-league fixtures, cefi-perp pre-listing dates per catalog) are recoverable on the next
+      migration pass. New reconciler: `reconcile_legacy_blank_to_typed_reason.py` — walks the manifest, finds
+      attempted_failed/ LegacyBlankErrorReasonError rows, re-classifies via the extended classifier, flips back to
+      empty_confirmed/EXPECTED*\* if a typed-reason rule fires (otherwise leaves as attempted_failed for retry).
 
-**Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the
-reconciler depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and
-Wave 3.T (tradfi) and Wave 3.P (prediction) — distinct asset_group surfaces.
+**Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
+depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
+3.P (prediction) — distinct asset_group surfaces.
 
 #### Phase 3.D.5 Wave 4 — Service-output emission policy + completeness semantics (operator msg 10, 2026-05-08)
 
-**The orthogonal axis to the manifest's 4-state.** The manifest's `capture_status` describes raw-shard
-capture state per `(venue, data_type, instrument_id, day)`. Wave 4 adds **what each service publishes
-for its own derived/aggregated output when upstream is incomplete** — a separate concern that's invisible
-to the manifest but critical for downstream service reasoning.
+**The orthogonal axis to the manifest's 4-state.** The manifest's `capture_status` describes raw-shard capture state per
+`(venue, data_type, instrument_id, day)`. Wave 4 adds **what each service publishes for its own derived/aggregated
+output when upstream is incomplete** — a separate concern that's invisible to the manifest but critical for downstream
+service reasoning.
 
-**Operator framing 2026-05-07 evening (msg 10):** _"missing data unexpected feels more like something
-which should fail to deliver data for the downstream client if it needs constant data ... whereas for
-lets say 24h high low you still want that to probably record if you missing some data which is expected
-because its tradfi and market isnt continuously open ... batch = live symmetry and this happens like
-you would wanna alert/warn downstream that data is stale by not publishing which is same as publishing
-nothing in batch ... heartbeat you are alive just stale data so services know its not a disconnect but
-it is a bad data event."_
+**Operator framing 2026-05-07 evening (msg 10):** _"missing data unexpected feels more like something which should fail
+to deliver data for the downstream client if it needs constant data ... whereas for lets say 24h high low you still want
+that to probably record if you missing some data which is expected because its tradfi and market isnt continuously open
+... batch = live symmetry and this happens like you would wanna alert/warn downstream that data is stale by not
+publishing which is same as publishing nothing in batch ... heartbeat you are alive just stale data so services know its
+not a disconnect but it is a bad data event."_
 
 **Three stacked layers — net architecture:**
 
 | Layer                                        | What it answers                                                                                | Where it lives                                                                | Status                |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------- |
-| Manifest 4-state                             | "What's the raw shard's capture state?" per (venue, data_type, instrument_id, day)             | UAC `EmptyConfirmedReason` + UTL `ManifestWriter`                              | ✅ shipped 2026-05-07 |
-| **Service emission policy** (Wave 4 NEW)     | "What does service X publish for output Y when upstream is incomplete?"                        | NEW UAC `service_emission_policy.py`                                           | ❌                    |
+| Manifest 4-state                             | "What's the raw shard's capture state?" per (venue, data_type, instrument_id, day)             | UAC `EmptyConfirmedReason` + UTL `ManifestWriter`                             | ✅ shipped 2026-05-07 |
+| **Service emission policy** (Wave 4 NEW)     | "What does service X publish for output Y when upstream is incomplete?"                        | NEW UAC `service_emission_policy.py`                                          | ❌                    |
 | **Service output completeness** (Wave 4 NEW) | "What % of the upstream window made it into THIS published row + which inner shards are gaps?" | NEW columns `completeness_fraction` + `incomplete_window` on derived parquets | ❌                    |
 
 **ServiceEmissionPolicy enum (NEW closed set):**
 
-* `STRICT_FAIL` — Current-window upstream gap → DON'T publish the output row. Emit `STALE_DATA`
-  lifecycle event (heartbeat-only, no metric). Downstream sees: service is UP but data is stale.
-  Use for: 1h ohlcv current-bar, real-time tick aggregates, freshness-critical derivative_ticker
-  metrics, any signal/order/fill where partial = wrong.
-* `PARTIAL_OK` — Inner-window upstream gaps → publish output row WITH `completeness_fraction` column.
-  Downstream branches its own policy on that fraction. Use for: 24h high/low (window denominator IS
-  24h regardless of inner-bar gaps), rolling-window features whose denominator is the WINDOW not the
-  inner-bar count.
-* `NAN_FILL` — Inner-window upstream gaps → publish output row with NaN where affected. Downstream
-  (typically ML) NaN-fills per its own training-time rule. Use for: features tree-based models can
-  NaN-fill natively (1-10% missing tolerance per CLAUDE.md "Honest absence vs fake placeholders").
-* `BLOCK_CRITICAL` — Any upstream gap → don't publish + fire P0 alert. No heartbeat-only fallback.
-  Use for: position-balance-monitor portfolio_state, execution fill confirmation, anything where
-  "partial truth" is worse than "no truth + alert".
+- `STRICT_FAIL` — Current-window upstream gap → DON'T publish the output row. Emit `STALE_DATA` lifecycle event
+  (heartbeat-only, no metric). Downstream sees: service is UP but data is stale. Use for: 1h ohlcv current-bar,
+  real-time tick aggregates, freshness-critical derivative_ticker metrics, any signal/order/fill where partial = wrong.
+- `PARTIAL_OK` — Inner-window upstream gaps → publish output row WITH `completeness_fraction` column. Downstream
+  branches its own policy on that fraction. Use for: 24h high/low (window denominator IS 24h regardless of inner-bar
+  gaps), rolling-window features whose denominator is the WINDOW not the inner-bar count.
+- `NAN_FILL` — Inner-window upstream gaps → publish output row with NaN where affected. Downstream (typically ML)
+  NaN-fills per its own training-time rule. Use for: features tree-based models can NaN-fill natively (1-10% missing
+  tolerance per CLAUDE.md "Honest absence vs fake placeholders").
+- `BLOCK_CRITICAL` — Any upstream gap → don't publish + fire P0 alert. No heartbeat-only fallback. Use for:
+  position-balance-monitor portfolio_state, execution fill confirmation, anything where "partial truth" is worse than
+  "no truth + alert".
 
 **Lifecycle events (per emission cycle, every publishing service):**
 
-* `PUBLISHED_OK` — completeness_fraction=1.0
-* `PUBLISHED_DEGRADED` — gaps but published per PARTIAL_OK / NAN_FILL policy (carries fraction +
-  inner-shard list in event metadata)
-* `STALE_DATA` — STRICT_FAIL fired, heartbeat-only, no metric row written
-* `BLOCKED` — BLOCK_CRITICAL fired, P0 alert dispatched, no metric row
+- `PUBLISHED_OK` — completeness_fraction=1.0
+- `PUBLISHED_DEGRADED` — gaps but published per PARTIAL_OK / NAN_FILL policy (carries fraction + inner-shard list in
+  event metadata)
+- `STALE_DATA` — STRICT_FAIL fired, heartbeat-only, no metric row written
+- `BLOCKED` — BLOCK_CRITICAL fired, P0 alert dispatched, no metric row
 
 Downstream consumers branch on these events:
 
-* **Service-down** (no heartbeat at all over N intervals) → service alarm
-* **Data-stale** (heartbeat + STALE_DATA) → upstream-data alarm, service is fine
-* **Degraded-but-running** (PUBLISHED_DEGRADED) → operator watch-list, service decisions tolerated
-* **Broken** (BLOCKED) → P0, manual intervention required
+- **Service-down** (no heartbeat at all over N intervals) → service alarm
+- **Data-stale** (heartbeat + STALE_DATA) → upstream-data alarm, service is fine
+- **Degraded-but-running** (PUBLISHED_DEGRADED) → operator watch-list, service decisions tolerated
+- **Broken** (BLOCKED) → P0, manual intervention required
 
 **Per-(service, output_data_type) policy SSOT (initial seed — extend per service-team review):**
 
-| Service                   | Output data_type      | Policy              | Rationale                                                                       |
-| ------------------------- | --------------------- | ------------------- | ------------------------------------------------------------------------------- |
-| MDPS                      | `ohlcv_1m` current    | STRICT_FAIL         | Real-time current-minute bar — partial = wrong                                  |
-| MDPS                      | `ohlcv_1m` historical | PARTIAL_OK          | Historical re-emission with completeness_fraction; backfilled later             |
-| MDPS                      | `ohlcv_24h`           | PARTIAL_OK          | 24h window denominator stable regardless of inner-bar gaps                      |
-| features-volatility       | `high_low_24h`        | PARTIAL_OK          | Same — operator-flagged example                                                 |
-| features-volatility       | `vol_30d`             | NAN_FILL            | Rolling vol; ML tolerates NaN per training-time rule                            |
-| features-cross-instrument | `paired_spec`         | STRICT_FAIL         | Two-leg pair must have both legs current; partial = leak risk                   |
-| ml-training               | model_version         | BLOCK_CRITICAL      | Don't publish a model trained on incomplete data                                |
-| ml-inference              | per-strategy signal   | STRICT_FAIL         | Don't signal off stale features                                                 |
-| strategy                  | per-archetype signal  | STRICT_FAIL         | Same                                                                            |
-| execution                 | order_intent          | STRICT_FAIL         | Don't fire orders on stale signal                                               |
-| execution                 | fill confirmation     | BLOCK_CRITICAL      | Position-state truth — no partial                                               |
-| position-balance-monitor  | portfolio_state       | BLOCK_CRITICAL      | No partial truth tolerated                                                      |
-| risk-and-exposure         | risk_state            | BLOCK_CRITICAL      | Same                                                                            |
-| MTDS                      | raw `trades`          | n/a (manifest only) | Raw capture — manifest's 4-state covers it; no derived metric                   |
-| instruments-service       | catalog snapshot      | PARTIAL_OK          | Catalog is best-effort union of multiple sources; partial publish is normal     |
+| Service                   | Output data_type      | Policy              | Rationale                                                                   |
+| ------------------------- | --------------------- | ------------------- | --------------------------------------------------------------------------- |
+| MDPS                      | `ohlcv_1m` current    | STRICT_FAIL         | Real-time current-minute bar — partial = wrong                              |
+| MDPS                      | `ohlcv_1m` historical | PARTIAL_OK          | Historical re-emission with completeness_fraction; backfilled later         |
+| MDPS                      | `ohlcv_24h`           | PARTIAL_OK          | 24h window denominator stable regardless of inner-bar gaps                  |
+| features-volatility       | `high_low_24h`        | PARTIAL_OK          | Same — operator-flagged example                                             |
+| features-volatility       | `vol_30d`             | NAN_FILL            | Rolling vol; ML tolerates NaN per training-time rule                        |
+| features-cross-instrument | `paired_spec`         | STRICT_FAIL         | Two-leg pair must have both legs current; partial = leak risk               |
+| ml-training               | model_version         | BLOCK_CRITICAL      | Don't publish a model trained on incomplete data                            |
+| ml-inference              | per-strategy signal   | STRICT_FAIL         | Don't signal off stale features                                             |
+| strategy                  | per-archetype signal  | STRICT_FAIL         | Same                                                                        |
+| execution                 | order_intent          | STRICT_FAIL         | Don't fire orders on stale signal                                           |
+| execution                 | fill confirmation     | BLOCK_CRITICAL      | Position-state truth — no partial                                           |
+| position-balance-monitor  | portfolio_state       | BLOCK_CRITICAL      | No partial truth tolerated                                                  |
+| risk-and-exposure         | risk_state            | BLOCK_CRITICAL      | Same                                                                        |
+| MTDS                      | raw `trades`          | n/a (manifest only) | Raw capture — manifest's 4-state covers it; no derived metric               |
+| instruments-service       | catalog snapshot      | PARTIAL_OK          | Catalog is best-effort union of multiple sources; partial publish is normal |
 
 **Output parquet column conventions (NEW UTL helper):**
 
 Every derived parquet row carries:
 
-* `completeness_fraction` (`Float64`) — `0.0 ≤ x ≤ 1.0`. Writer computes from upstream manifest read.
-  Strict-fail rows aren't written at all (no row → no fraction). NaN-fill rows have `<1.0` for any row
-  whose computation hit a NaN.
-* `incomplete_window` (`string` — JSON-encoded list) — list of upstream `(venue, data_type,
-  instrument_id, iso_window_start, iso_window_end)` tuples that contributed gaps. Empty list when
+- `completeness_fraction` (`Float64`) — `0.0 ≤ x ≤ 1.0`. Writer computes from upstream manifest read. Strict-fail rows
+  aren't written at all (no row → no fraction). NaN-fill rows have `<1.0` for any row whose computation hit a NaN.
+- `incomplete_window` (`string` — JSON-encoded list) — list of upstream
+  `(venue, data_type, instrument_id, iso_window_start, iso_window_end)` tuples that contributed gaps. Empty list when
   fraction=1.0.
 
 Downstream consumers SQL-filter / pandas-filter on these for their own policy:
@@ -2700,93 +2694,106 @@ recoverable = df[df.completeness_fraction >= 0.95]  # accept 5% gap
 
 **Batch = live symmetry guarantee** (per existing CLAUDE.md key rule):
 
-* **Live**: emit event tick + parquet row (or no row for STRICT_FAIL/BLOCKED). Heartbeat ticks at the
-  service's emission cadence.
-* **Batch**: write equivalent parquet row with `completeness_fraction` + emit equivalent event-log
-  entry. No row for STRICT_FAIL/BLOCKED. Backfill VMs walk historical windows the same way live ticks
-  do — the only difference is "now" vs "as-of T".
+- **Live**: emit event tick + parquet row (or no row for STRICT_FAIL/BLOCKED). Heartbeat ticks at the service's emission
+  cadence.
+- **Batch**: write equivalent parquet row with `completeness_fraction` + emit equivalent event-log entry. No row for
+  STRICT_FAIL/BLOCKED. Backfill VMs walk historical windows the same way live ticks do — the only difference is "now" vs
+  "as-of T".
 
 Downstream reads parquet + events identically — no batch-specific or live-specific reasoning.
 
 **Worked examples (per operator's msg 10 framing):**
 
-* **TradFi 1h ohlcv missing for the current bar** — MDPS STRICT_FAIL. Don't write the row. Emit
-  STALE_DATA heartbeat. Strategy sees no current 1h bar → defers entry. After recovery: backfill
-  with `completeness_fraction=0.96` for the historical bar; strategy decides re-entry on the next
-  emission tick.
-* **24h high/low** — features-volatility PARTIAL_OK. Write row with completeness_fraction=0.96;
-  downstream sees the window had 1 inner-minute gap. Vol modeller decides: include or reject.
-* **30d rolling vol** — NAN_FILL. Write row with NaN for the affected day's contribution. ML
-  training tolerates per its own NaN-policy.
-* **Position state during venue-down** — BLOCK_CRITICAL. Don't publish; P0 alert. Execution +
-  strategy hard-stop until human triages.
-* **Service heartbeat** — every publishing service emits one event per emission cycle regardless
-  of metric state. Service-down (no heartbeat at all) is distinguishable from data-stale (heartbeat
-  + STALE_DATA).
+- **TradFi 1h ohlcv missing for the current bar** — MDPS STRICT_FAIL. Don't write the row. Emit STALE_DATA heartbeat.
+  Strategy sees no current 1h bar → defers entry. After recovery: backfill with `completeness_fraction=0.96` for the
+  historical bar; strategy decides re-entry on the next emission tick.
+- **24h high/low** — features-volatility PARTIAL_OK. Write row with completeness_fraction=0.96; downstream sees the
+  window had 1 inner-minute gap. Vol modeller decides: include or reject.
+- **30d rolling vol** — NAN_FILL. Write row with NaN for the affected day's contribution. ML training tolerates per its
+  own NaN-policy.
+- **Position state during venue-down** — BLOCK_CRITICAL. Don't publish; P0 alert. Execution + strategy hard-stop until
+  human triages.
+- **Service heartbeat** — every publishing service emits one event per emission cycle regardless of metric state.
+  Service-down (no heartbeat at all) is distinguishable from data-stale (heartbeat
+  - STALE_DATA).
 
 **Tasks (Wave 4 — multi-day, cross-repo blast radius):**
 
-- [ ] [UAC] P0. NEW `unified_api_contracts/canonical/crosscutting/service_emission_policy.py` —
-      `ServiceEmissionPolicy` enum + initial seed dict
-      `SERVICE_OUTPUT_POLICIES: dict[(service, data_type), ServiceEmissionPolicy]` with the
+- [x] [UAC] P0. NEW `unified_api_contracts/canonical/crosscutting/service_emission_policy.py` — `ServiceEmissionPolicy`
+      enum + initial seed dict `SERVICE_OUTPUT_POLICIES: dict[(service, data_type), ServiceEmissionPolicy]` with the
       ~15-row seed table above. Per-service teams own additions/refinements. Helper:
-      `get_emission_policy(service: str, data_type: str) -> ServiceEmissionPolicy` (default
-      STRICT_FAIL — fail-loud — for unknown pairs to force explicit declaration).
-- [ ] [UTL] P0. NEW `unified_trading_library/emission_publisher.py` — wraps the publish boundary.
-      Resolves the per-(service, data_type) policy + reads upstream manifest to compute
-      `completeness_fraction` + emits the right lifecycle event. Adapter call shape:
-      `publish_with_policy(service=..., data_type=..., row_key=..., row_data=..., upstream_dependencies=[...])`.
-      Helper figures out STRICT_FAIL/PARTIAL_OK/NAN_FILL/BLOCK_CRITICAL from the policy SSOT, computes
-      completeness from upstream manifest reads, writes the row (or doesn't), emits the event.
-- [ ] [UTL] P0. New unified events `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA` / `BLOCKED`.
-      Schema includes `completeness_fraction`, `incomplete_window`, `policy` fields. Reuses existing
-      `unified_trading_library.events.log_event` infrastructure.
-- [ ] [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) +
-      `incomplete_window` (string nullable, JSON-encoded). Backwards-compat via nullable defaults.
-      MTDS raw-capture rows write null (n/a — manifest-layer concern, not service-output-layer);
-      derived-service rows populate them.
-- [ ] [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners:
-      * MDPS: candle adapters per data_type (`ohlcv_1m` / `ohlcv_1h` / `ohlcv_24h` / `book_snapshot_5`)
-      * features-* (8 services): per feature_group
-      * ml-training / ml-inference: per model output
-      * strategy: per archetype signal
-      * execution: per order/fill/position emission
-      * risk-and-exposure: per risk metric
-      * position-balance-monitor: per state field
-      * instruments-service: per catalog data_type
-      Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC + wires
-      `publish_with_policy` at its emission boundary.
+      `get_emission_policy(service: str, data_type: str) -> ServiceEmissionPolicy` (default STRICT_FAIL — fail-loud —
+      for unknown pairs to force explicit declaration). **SHIPPED 2026-05-08 UAC@58c3b61**: 4-member StrEnum
+      (STRICT_FAIL / PARTIAL_OK / NAN_FILL / BLOCK_CRITICAL) + 19-row seed dict (MDPS / features-vol /
+      features-cross-instr / ml-training / ml-inference / strategy / execution / position-balance-monitor /
+      risk-and-exposure / instruments-service) + helper trio `get_emission_policy()` / `is_emission_policy_declared()` /
+      `policy_is_publish_row()` / `policy_is_alert()`. Default STRICT_FAIL for unseeded pairs forces explicit
+      declaration. 30 unit tests cover enum closure, lifecycle frozenset shape, every operator-msg-10 seeded pair,
+      current-vs-historical slice differentiation, branching helpers.
+- [x] [UTL] P0. NEW `unified_trading_library/emission_publisher.py` — wraps the publish boundary. Resolves the
+      per-(service, data_type) policy + reads upstream manifest to compute `completeness_fraction` + emits the right
+      lifecycle event. Adapter call shape:
+      `publish_with_policy(service=..., data_type=..., row_key=..., row_data=..., upstream_dependencies=[...])`. Helper
+      figures out STRICT_FAIL/PARTIAL_OK/NAN_FILL/BLOCK_CRITICAL from the policy SSOT, computes completeness from
+      upstream manifest reads, writes the row (or doesn't), emits the event. **SHIPPED 2026-05-08 UTL@1a7e1d4b**:
+      kwarg-only `publish_with_policy()` returns frozen `EmissionDecision` (policy / event_emitted / should_publish_row
+      / should_alert / completeness_fraction / incomplete_window_count). Caller does the actual parquet write based on
+      the flags — pure helper, no ManifestWriter coupling, minimal import surface. Decision matrix: full window →
+      PUBLISHED_OK regardless of policy (no false alarms); gap+permissive → PUBLISHED_DEGRADED + publish;
+      gap+STRICT_FAIL → STALE_DATA heartbeat-only; gap+BLOCK_CRITICAL → BLOCKED + alert flag.
+      `InvalidCompletenessFractionError` for out-of- range completeness (caller-side bug protection). 18 unit tests
+      cover all matrix cells + slice differentiation + extra_event_details + correlation_id pass-through + frozen
+      dataclass invariants. **DEFERRED to slice (b)/(c)**: the manifest-read piece that computes `completeness_fraction`
+      from upstream `(captured / empty_confirmed /     attempted_failed / expected_unattempted)` rows — caller passes it
+      in for now.
+- [x] [UTL] P0. New unified events `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA` / `BLOCKED`. Schema includes
+      `completeness_fraction`, `incomplete_window`, `policy` fields. Reuses existing
+      `unified_trading_library.events.log_event` infrastructure. **SHIPPED 2026-05-08 UAC@58c3b61 + UTL@1a7e1d4b**:
+      lifecycle event names live in UAC `EmissionLifecycleEvent` StrEnum + `EMISSION_LIFECYCLE_EVENTS` frozenset (single
+      SSOT shared by producers + consumers). `publish_with_policy()` emits via existing `log_event()` infra — event
+      details carry `service` / `output_data_type` / `policy` / `completeness_fraction` / `incomplete_window_count` /
+      `row_key` / `policy_declared` flag + 50-row sample of `incomplete_window` for operator drill-down. Severity
+      routing: BLOCK_CRITICAL+gap → ERROR; gaps with other policies → WARNING; full-window → INFO.
+- [ ] [UAC] P1. Two new manifest schema columns: `completeness_fraction` (Float64 nullable) + `incomplete_window`
+      (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows write null (n/a —
+      manifest-layer concern, not service-output-layer); derived-service rows populate them.
+- [ ] [PER-SERVICE] P0. Audit + declare each service's per-data-type policies. Owners: _ MDPS: candle adapters per
+      data_type (`ohlcv_1m` / `ohlcv_1h` / `ohlcv_24h` / `book_snapshot_5`) _ features-_ (8 services): per feature_group
+      _ ml-training / ml-inference: per model output _ strategy: per archetype signal _ execution: per
+      order/fill/position emission _ risk-and-exposure: per risk metric _ position-balance-monitor: per state field \*
+      instruments-service: per catalog data_type Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC +
+      wires `publish_with_policy` at its emission boundary.
 - [ ] [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
-      `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type
-      policy table + lifecycle event taxonomy.
-- [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event;
-      PARTIAL_OK emits row with correct completeness_fraction; BLOCK_CRITICAL fires alert.
-      End-to-end: a missing-1h-bar test that propagates STRICT_FAIL through MDPS → features-vol →
-      strategy → no execution signal.
+      `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type policy table +
+      lifecycle event taxonomy.
+- [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
+      with correct completeness_fraction; BLOCK_CRITICAL fires alert. End-to-end: a missing-1h-bar test that propagates
+      STRICT_FAIL through MDPS → features-vol → strategy → no execution signal.
 
 **Coordination with prior waves:**
 
-* **Wave 1+2.M (shipped today)** — manifest 4-state. Wave 4 reads the manifest to decide its own
-  emission policy. They compose: manifest is upstream-state SSOT; Wave 4 is downstream-publish-decision
-  SSOT.
-* **Wave 3 cross-service cascade** — Wave 4 IS the formalisation of the cascade. Wave 3's tasks for
-  MDPS / features / ml / strategy / execution propagation are the per-service consumers of Wave 4's
-  policy SSOT.
-* **Wave 3.M zero-activity-bars** — different concern. Wave 3.M is about the WRITE-side (adapter
-  writes zero-vol bars during expected market hours). Wave 4 is about the READ-side (consumer service
-  decides what to publish given upstream completeness). They co-exist: a zero-volume bar IS valid
-  input data (`captured`), so downstream's policy fires PUBLISHED_OK on it.
+- **Wave 1+2.M (shipped today)** — manifest 4-state. Wave 4 reads the manifest to decide its own emission policy. They
+  compose: manifest is upstream-state SSOT; Wave 4 is downstream-publish-decision SSOT.
+- **Wave 3 cross-service cascade** — Wave 4 IS the formalisation of the cascade. Wave 3's tasks for MDPS / features / ml
+  / strategy / execution propagation are the per-service consumers of Wave 4's policy SSOT.
+- **Wave 3.M zero-activity-bars** — different concern. Wave 3.M is about the WRITE-side (adapter writes zero-vol bars
+  during expected market hours). Wave 4 is about the READ-side (consumer service decides what to publish given upstream
+  completeness). They co-exist: a zero-volume bar IS valid input data (`captured`), so downstream's policy fires
+  PUBLISHED_OK on it.
 
 **Suggested first slice (multi-day undertaking — gate on operator approval):**
 
-(a) Ship the schema floor — UAC `ServiceEmissionPolicy` enum + initial seed dict + UTL helper.
-    No consumer wiring. ~1 day. Pure additive — nothing breaks.
-(b) Wire ONE service end-to-end as proof-of-concept (e.g., MDPS `ohlcv_1h` STRICT_FAIL +
-    PARTIAL_OK on the historical re-emission path). ~2 days.
-(c) Per-service rollout: each service-team picks up its row of the policy table + wires
-    `publish_with_policy` at emission boundary. Multi-week.
+(a) **SHIPPED 2026-05-08** — UAC@58c3b61 + UTL@1a7e1d4b. Schema floor in place: UAC `ServiceEmissionPolicy` enum +
+19-row seed dict + 4-name `EmissionLifecycleEvent` enum; UTL `publish_with_policy()` + frozen `EmissionDecision`
+dataclass + 48 unit tests (30 UAC + 18 UTL). No consumer wiring; pure additive. Manifest-read coupling intentionally
+deferred to slice (b) — caller passes `completeness_fraction` for now. (b) Wire ONE service end-to-end as
+proof-of-concept (e.g., MDPS `ohlcv_1h` STRICT_FAIL + PARTIAL_OK on the historical re-emission path). ~2 days. Includes
+the manifest-read helper that computes `completeness_fraction` from upstream
+`(captured / empty_confirmed / attempted_failed / expected_unattempted)` row counts over a given upstream-window
+enumeration. (c) Per-service rollout: each service-team picks up its row of the policy table + wires
+`publish_with_policy` at emission boundary. Multi-week.
 
-Operator-decision queue: ship (a) now? Defer entire Wave 4 to a separate plan / next quarter? Mix?
+Operator-decision queue: slice (a) shipped; ready for (b) on operator green-light.
 
 ---
 
@@ -2866,22 +2873,21 @@ Operator-decision queue: ship (a) now? Defer entire Wave 4 to a separate plan / 
       emission via `data-failure-total`, click-through mode, prefix namespacing, and closed-set ignore.
 - [x] [SCRIPT] P0. Schema-view modal (per-leaf parquet) — call new `/leaf-stats` endpoint; render columns + types +
       row_count + NaN ratio + `available_at` envelope. **SHIPPED 2026-05-07 deployment-ui@8f630a6**: new
-      `LeafSchemaModal` component renders three blocks: (1) header with gs:// URI + row count + column count +
-      file size + truncated hint when applicable; (2) `available_at` envelope (present/missing badge + min/max +
-      null count; missing renders as a writegate contract violation per CLAUDE.md "available_at is per-row,
-      write-time, equal to live-pipeline-arrival"); (3) per-column table with NaN-ratio color coding (muted at 0%,
-      yellow > 0%, amber ≥ 10%, red ≥ 50%). Companion `fetchLeafParquetStats()` API client + typed response shape
-      (`LeafParquetStatsResponse` / `LeafParquetColumnStat` / `LeafAvailableAtEnvelope`) added to `client.ts`.
-      15 unit tests cover loading state, fetch error, unavailable response with error_reason, missing-available_at
-      contract violation, successful payload with per-column NaN ratio rendering + boundary inclusivity for the
-      color thresholds, oversize-parquet truncated hint, plus pure-helper tests for `nanRatioColor` +
-      `formatNanRatio`. **CLICK-MOUNT SHIPPED 2026-05-08 deployment-ui@9837dd1**: `TypedReasonBadges`
-      `onBadgeClick` is now wired in `DataStatusTab.tsx` to set a `leafSchemaCoord` state slot; clicking any
-      typed-reason pill on a venue summary line opens the `LeafSchemaModal` for that venue's representative
-      leaf parquet (most-recent captured day from `foundList`, first `data_type` from `subData.data_types`,
-      AUTO `instrument_type` — deployment-api's `/leaf-stats` route resolves the leaf parquet via
-      `_gcs_path_for_shard` + the AUTO sentinel resolution path). The full UTL → API → UI typed-error → leaf-
-      parquet drill-down loop is now operator-visible end-to-end without any pre-flight intervention.
+      `LeafSchemaModal` component renders three blocks: (1) header with gs:// URI + row count + column count + file
+      size + truncated hint when applicable; (2) `available_at` envelope (present/missing badge + min/max + null count;
+      missing renders as a writegate contract violation per CLAUDE.md "available_at is per-row, write-time, equal to
+      live-pipeline-arrival"); (3) per-column table with NaN-ratio color coding (muted at 0%, yellow > 0%, amber ≥ 10%,
+      red ≥ 50%). Companion `fetchLeafParquetStats()` API client + typed response shape (`LeafParquetStatsResponse` /
+      `LeafParquetColumnStat` / `LeafAvailableAtEnvelope`) added to `client.ts`. 15 unit tests cover loading state,
+      fetch error, unavailable response with error_reason, missing-available_at contract violation, successful payload
+      with per-column NaN ratio rendering + boundary inclusivity for the color thresholds, oversize-parquet truncated
+      hint, plus pure-helper tests for `nanRatioColor` + `formatNanRatio`. **CLICK-MOUNT SHIPPED 2026-05-08
+      deployment-ui@9837dd1**: `TypedReasonBadges` `onBadgeClick` is now wired in `DataStatusTab.tsx` to set a
+      `leafSchemaCoord` state slot; clicking any typed-reason pill on a venue summary line opens the `LeafSchemaModal`
+      for that venue's representative leaf parquet (most-recent captured day from `foundList`, first `data_type` from
+      `subData.data_types`, AUTO `instrument_type` — deployment-api's `/leaf-stats` route resolves the leaf parquet via
+      `_gcs_path_for_shard` + the AUTO sentinel resolution path). The full UTL → API → UI typed-error → leaf- parquet
+      drill-down loop is now operator-visible end-to-end without any pre-flight intervention.
 - [ ] [SCRIPT] P0. Live-vs-historical envelope alert badge in the asset-group panel header.
 
 QG between Phase 4 and Phase 5: UI smoke-test (Tier 0 + Tier 1) — every new color/badge/drill-down renders correctly
@@ -2899,20 +2905,19 @@ against seeded fixtures.
       `count(capture_status == "attempted_failed")` per error_reason (NOT in numerator)
 - [x] [SCRIPT] P0. Document the post-merge baseline at
       `unified-trading-pm/codex/02-data/honest_coverage_baseline_2026_05.md`: Per-(service, asset_group, data_type)
-      baseline %, per-error_reason failure breakdown, set as the ratchet floor — future merges that drop coverage
-      below this % fail QG (per parent plan §"coverage_ratchet_policy"). **SHIPPED 2026-05-07 PM@5c876f9d** (bundled
-      due to workspace prek-race; baseline doc edits authored same session): doc promoted from `status=planned` to
-      `status=draft` with the full methodology + ratchet design + table schema. Sections covered: exact formulas
-      for the 4-state capture taxonomy (`captured` / `empty_confirmed_with_reason` / `empty_unclassified` /
-      `attempted_failed` / `expected_unattempted`) + 3 derived percentages (`honest_coverage_pct` /
-      `attempt_coverage_pct` / `unclassified_drag_pct`) + the sanity invariant; baseline-table column schema (one
-      seed row per asset_group, per-data_type rows TBD via measurement script); ratchet schedule (±0.5pp default
-      tolerance, monthly cadence, 99% long-term floor); QG ratchet implementation outline; override procedure with
-      explicit override-log section. **DEFERRED**: per-data_type rows + numeric cells — populated by an operator-run
-      measurement script on a same-region GCE VM. Reference impl: TBD
-      `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (writegate Phase 5 follow-up — needs same-region VM
-      + cross-asset-group manifest read). Once cells are filled, the QG ratchet at
-      `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` reads this doc as the frozen baseline.
+      baseline %, per-error_reason failure breakdown, set as the ratchet floor — future merges that drop coverage below
+      this % fail QG (per parent plan §"coverage_ratchet_policy"). **SHIPPED 2026-05-07 PM@5c876f9d** (bundled due to
+      workspace prek-race; baseline doc edits authored same session): doc promoted from `status=planned` to
+      `status=draft` with the full methodology + ratchet design + table schema. Sections covered: exact formulas for the
+      4-state capture taxonomy (`captured` / `empty_confirmed_with_reason` / `empty_unclassified` / `attempted_failed` /
+      `expected_unattempted`) + 3 derived percentages (`honest_coverage_pct` / `attempt_coverage_pct` /
+      `unclassified_drag_pct`) + the sanity invariant; baseline-table column schema (one seed row per asset_group,
+      per-data_type rows TBD via measurement script); ratchet schedule (±0.5pp default tolerance, monthly cadence, 99%
+      long-term floor); QG ratchet implementation outline; override procedure with explicit override-log section.
+      **DEFERRED**: per-data_type rows + numeric cells — populated by an operator-run measurement script on a
+      same-region GCE VM. Reference impl: TBD `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (writegate
+      Phase 5 follow-up — needs same-region VM + cross-asset-group manifest read). Once cells are filled, the QG ratchet
+      at `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` reads this doc as the frozen baseline.
 - [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
 - [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
@@ -2934,100 +2939,94 @@ Phase 2.A residual, Phase 5 honest-coverage baseline.
 **Shipped this session (8 commits across 3 repos):**
 
 - deployment-ui@a7384a0 — `TypedReasonBadges` + `FailurePillarStack` components + 24 unit tests + `client.ts`
-  `TurboSubDimension` extension covering `failure_pillars` / `empty_reasons` / `capture_status_counts` /
-  derived percentages. Closed-set drift guard test fails CI if deployment-api `_FAILURE_PILLAR_KEYS` /
-  `_EMPTY_REASON_KEYS` adds a new key without the UI mirror updating.
-- deployment-ui@621f0b3 — wired both components into `DataStatusTab.tsx` venue summary line between the
-  existing "blocked on raw" badge and `BucketCountsBadge`. Operator-visible immediately for every venue with
-  any non-zero typed-failure or typed-empty.
+  `TurboSubDimension` extension covering `failure_pillars` / `empty_reasons` / `capture_status_counts` / derived
+  percentages. Closed-set drift guard test fails CI if deployment-api `_FAILURE_PILLAR_KEYS` / `_EMPTY_REASON_KEYS` adds
+  a new key without the UI mirror updating.
+- deployment-ui@621f0b3 — wired both components into `DataStatusTab.tsx` venue summary line between the existing
+  "blocked on raw" badge and `BucketCountsBadge`. Operator-visible immediately for every venue with any non-zero
+  typed-failure or typed-empty.
 - deployment-api@3b0477a — new `GET /api/data-status/leaf-stats` endpoint + `get_leaf_parquet_stats()` helper +
   `LeafParquetStats` / `LeafParquetColumnStat` / `LeafAvailableAtEnvelope` Pydantic models + 7 unit tests. Live
-  per-leaf-parquet stats: row count, per-column non-null + NaN ratio, `available_at` envelope, file size.
-  Distinct from existing `/schema` (declared `SchemaContract`) and `/shard-detail` (full unified drilldown).
-- deployment-ui@8f630a6 — `LeafSchemaModal` component + 15 unit tests + `fetchLeafParquetStats()` API client +
-  matching response types. Renders the `/leaf-stats` payload as three blocks (header, `available_at` envelope
-  with contract-violation badge for missing column, per-column NaN-ratio table with color thresholds at 0% /
-  >0% / ≥10% / ≥50%).
-- PM@21f8a277 + PM@fa9b5f43 + PM@5c876f9d (bundled) — Phase 4.B.1 + 4.B.2 + 4.A.3 + 4.B.3 + Phase 5 baseline-doc
-  flips. The baseline doc itself promoted from `status=planned` to `status=draft` with full methodology +
-  ratchet design + table schema (per-data_type numeric cells TBD pending operator-run measurement script on a
-  same-region GCE VM).
+  per-leaf-parquet stats: row count, per-column non-null + NaN ratio, `available_at` envelope, file size. Distinct from
+  existing `/schema` (declared `SchemaContract`) and `/shard-detail` (full unified drilldown).
+- deployment-ui@8f630a6 — `LeafSchemaModal` component + 15 unit tests + `fetchLeafParquetStats()` API client + matching
+  response types. Renders the `/leaf-stats` payload as three blocks (header, `available_at` envelope with
+  contract-violation badge for missing column, per-column NaN-ratio table with color thresholds at 0% /
+  > 0% / ≥10% / ≥50%).
+- PM@21f8a277 + PM@fa9b5f43 + PM@5c876f9d (bundled) — Phase 4.B.1 + 4.B.2 + 4.A.3 + 4.B.3 + Phase 5 baseline-doc flips.
+  The baseline doc itself promoted from `status=planned` to `status=draft` with full methodology + ratchet design +
+  table schema (per-data_type numeric cells TBD pending operator-run measurement script on a same-region GCE VM).
 
 **Phase 2.A residual — re-audit found mostly already shipped, NOT re-touched this session:**
 
-- `_create_empty_output()` deletion across MDPS Tier 2A/2C/2D/2E shipped earlier (MDPS@5b52d0b, b9f9328,
-  80cf141, e9520a0).
+- `_create_empty_output()` deletion across MDPS Tier 2A/2C/2D/2E shipped earlier (MDPS@5b52d0b, b9f9328, 80cf141,
+  e9520a0).
 - `_write_manifest_records` v3-shape delete shipped MDPS@e56d0e4 (per the existing plan checkbox).
-- `batch_workers` path-B/C migration verified consistent via the orchestration mixin chain audit (MDPS@f2f5428
-  ships the regression tests). The "NOT yet wired in batch_workers" worry from the earlier audit was based on
-  inspecting the file in isolation and missing the explicit MRO override; the chain at
-  `BatchOrchestrationMixin._process_files_parallel` → `CandleOrchestrationService._process_instrument_file` →
-  `LiveOrchestrationMixin._process_instrument_file` → `_process_all_timeframes` → typed-error catch is correct
-  by design and tested.
-- **Genuinely unshipped + remaining (not picked up this session):** v6 column wiring into
-  `canonical_writer.add()` (3-5 day item per audit estimate); MDPS chain-bundle `expected_root_clusters` +
-  `cluster_extractor` wiring; per-adapter integration tests; end-to-end smoke harness; MDPS QG green.
+- `batch_workers` path-B/C migration verified consistent via the orchestration mixin chain audit (MDPS@f2f5428 ships the
+  regression tests). The "NOT yet wired in batch_workers" worry from the earlier audit was based on inspecting the file
+  in isolation and missing the explicit MRO override; the chain at `BatchOrchestrationMixin._process_files_parallel` →
+  `CandleOrchestrationService._process_instrument_file` → `LiveOrchestrationMixin._process_instrument_file` →
+  `_process_all_timeframes` → typed-error catch is correct by design and tested.
+- **Genuinely unshipped + remaining (not picked up this session):** v6 column wiring into `canonical_writer.add()` (3-5
+  day item per audit estimate); MDPS chain-bundle `expected_root_clusters` + `cluster_extractor` wiring; per-adapter
+  integration tests; end-to-end smoke harness; MDPS QG green.
 
 **Phase 4.A residual — NOT picked up this session:**
 
-- Phase 4.A item 4: live-vs-historical envelope alert. Multi-repo (UAC + UTL + 3 services) — bigger
-  coordination than Items 1/2/3. Plan flags this as a follow-up paired with the Phase 1A.future error-class
-  additions. Leaving for the next writegate-tab session.
+- Phase 4.A item 4: live-vs-historical envelope alert. Multi-repo (UAC + UTL + 3 services) — bigger coordination than
+  Items 1/2/3. Plan flags this as a follow-up paired with the Phase 1A.future error-class additions. Leaving for the
+  next writegate-tab session.
 
 **Phase 4.B residual — partial:**
 
 - Phase 4.B item 4: live-vs-historical envelope badge (waits on Phase 4.A item 4). Still NOT shipped.
-- ~~Drill-down click-through from the `TypedReasonBadges` `onBadgeClick` callback into the new
-  `LeafSchemaModal`~~ — **SHIPPED 2026-05-08 deployment-ui@9837dd1.** Single layout edit in
-  `DataStatusTab.tsx`: adds `leafSchemaCoord` state alongside the existing `shardDetailCoord` pattern, an
-  `onBadgeClick` handler that builds the representative leaf coord (most-recent captured day + first
-  data_type + AUTO instrument_type) from `foundList` + `subData.data_types`, and a conditional
-  `<LeafSchemaModal />` render next to the existing `ShardDetailModal` mount. Build green; no new tests on
-  this edit (the modal + badge components carry 39 unit tests between them). Full UTL → API → UI typed-error
-  → leaf-parquet drill-down loop now operator-visible end-to-end.
+- ~~Drill-down click-through from the `TypedReasonBadges` `onBadgeClick` callback into the new `LeafSchemaModal`~~ —
+  **SHIPPED 2026-05-08 deployment-ui@9837dd1.** Single layout edit in `DataStatusTab.tsx`: adds `leafSchemaCoord` state
+  alongside the existing `shardDetailCoord` pattern, an `onBadgeClick` handler that builds the representative leaf coord
+  (most-recent captured day + first data_type + AUTO instrument_type) from `foundList` + `subData.data_types`, and a
+  conditional `<LeafSchemaModal />` render next to the existing `ShardDetailModal` mount. Build green; no new tests on
+  this edit (the modal + badge components carry 39 unit tests between them). Full UTL → API → UI typed-error →
+  leaf-parquet drill-down loop now operator-visible end-to-end.
 
 **Phase 5 residual — table population script:**
 
-- `unified-trading-pm/scripts/qg/measure-honest-coverage.py` — operator-driven baseline measurement script that
-  reads each asset_group's `_index/availability_index.parquet` from a same-region GCE VM, applies the formulas
-  documented in `codex/02-data/honest_coverage_baseline_2026_05.md` § "Methodology", and writes per-data_type
-  rows back into the doc's table. Cross-region listing is 18× slower per the manifest phantom-audit recipe so
-  this MUST run on a same-region VM. Reference impl shape: mirror
-  `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (HTTP pool tuned to `2*workers`,
-  same-region zone, per-asset-group bucket loop).
+- `unified-trading-pm/scripts/qg/measure-honest-coverage.py` — operator-driven baseline measurement script that reads
+  each asset_group's `_index/availability_index.parquet` from a same-region GCE VM, applies the formulas documented in
+  `codex/02-data/honest_coverage_baseline_2026_05.md` § "Methodology", and writes per-data_type rows back into the doc's
+  table. Cross-region listing is 18× slower per the manifest phantom-audit recipe so this MUST run on a same-region VM.
+  Reference impl shape: mirror `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (HTTP pool tuned to
+  `2*workers`, same-region zone, per-asset-group bucket loop).
 - `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` — CI gate that reads the doc's table at PR-time and
-  hard-fails when any cell regresses beyond the ±0.5pp tolerance band. Spec'd in the doc § "QG ratchet
-  implementation"; needs a JSON delta report per PR for operator visibility.
-- LookaheadBiasError end-to-end smoke + write-gate quartet integration test — both still unshipped. The
-  quartet needs Phase 1A.future `NanRatioExceededError` + `SchemaMismatchError` to land before it can be
-  fully wired (currently 2 of 4 typed-error classes exist).
+  hard-fails when any cell regresses beyond the ±0.5pp tolerance band. Spec'd in the doc § "QG ratchet implementation";
+  needs a JSON delta report per PR for operator visibility.
+- LookaheadBiasError end-to-end smoke + write-gate quartet integration test — both still unshipped. The quartet needs
+  Phase 1A.future `NanRatioExceededError` + `SchemaMismatchError` to land before it can be fully wired (currently 2 of 4
+  typed-error classes exist).
 
 **Workspace prek-race observed twice this session (PM@0c2a0cca + PM@5c876f9d):** both commits had author
-`semver-rollout[bot]` + bundled cross-agent file sets despite my surgical `git add` of one file. The
-`5c876f9d` commit message even acknowledges the pattern with a `[QG-BYPASS: prek-race with parallel agent]`
-suffix — workspace-known issue. My commit messages remained accurate to the work I shipped; the bundling is
-collateral and didn't lose any of my edits.
+`semver-rollout[bot]` + bundled cross-agent file sets despite my surgical `git add` of one file. The `5c876f9d` commit
+message even acknowledges the pattern with a `[QG-BYPASS: prek-race with parallel agent]` suffix — workspace-known
+issue. My commit messages remained accurate to the work I shipped; the bundling is collateral and didn't lose any of my
+edits.
 
-**For the next writegate-tab agent:** with the click-mount shipped 2026-05-08 (deployment-ui@9837dd1), the
-remaining priorities are: (1) **Phase 2.B Option α — partial scope check needed before refactor**. Amendment F
-resolved 2026-05-06 in favour of Option α (orchestrator-boundary cluster wiring, NOT per-adapter), but the
-existing callsite has drifted from `:1940` (plan-time line) to `engine/orchestrator.py:2220` and **already
-has a manual cluster check inline** at `:2186-2218` calling
-`ManifestWriter.check_cluster_coverage_from_counts` — for ES.OPT only. The remaining work is two sub-items
-(a) generalise the manual check to every entry in UAC `BUNDLED_DATA_TYPES` (currently ES.OPT-only via
-`get_active_es_options_clusters_for_date_from_snapshot`) by looking up the registry per `data_type`; (b)
-migrate from `writer_manifest.add()` to `record_captured()` with `expected_root_clusters` + `cluster_extractor`
-kwargs so the static QG STEP 5.64 guard catches drift. Sub-item (b) requires a `df` argument — the orchestrator
-emits one summary manifest row per `(venue, dt, instrument_type, underlying)` shard while the per-instrument
-parquets are written elsewhere; the refactor needs either a representative shard `df` reference threaded
-through, or a ManifestWriter contract extension that lets `record_captured` accept a `row_count + cluster_counts`
-short-form for orchestrator-boundary use. Recommend a focused next-session that scopes the contract decision
-first, then ships the migration. Don't ship a half-refactor; (2) Phase 5 `measure-honest-coverage.py` operator
-script to populate the baseline doc's table cells (must run on a same-region GCE VM — cross-region listing
-18× slower); (3) Phase 4.A item 4 + Phase 4.B item 4 live-vs-historical envelope alert (multi-repo: UAC +
-UTL + 3 services); (4) Phase 5 follow-ups — `honest-coverage-ratchet.sh` CI gate, LookaheadBiasError end-to-
-end smoke, write-gate quartet integration test (waits on Phase 1A.future `NanRatioExceededError` +
-`SchemaMismatchError` typed-error classes).
+**For the next writegate-tab agent:** with the click-mount shipped 2026-05-08 (deployment-ui@9837dd1), the remaining
+priorities are: (1) **Phase 2.B Option α — partial scope check needed before refactor**. Amendment F resolved 2026-05-06
+in favour of Option α (orchestrator-boundary cluster wiring, NOT per-adapter), but the existing callsite has drifted
+from `:1940` (plan-time line) to `engine/orchestrator.py:2220` and **already has a manual cluster check inline** at
+`:2186-2218` calling `ManifestWriter.check_cluster_coverage_from_counts` — for ES.OPT only. The remaining work is two
+sub-items (a) generalise the manual check to every entry in UAC `BUNDLED_DATA_TYPES` (currently ES.OPT-only via
+`get_active_es_options_clusters_for_date_from_snapshot`) by looking up the registry per `data_type`; (b) migrate from
+`writer_manifest.add()` to `record_captured()` with `expected_root_clusters` + `cluster_extractor` kwargs so the static
+QG STEP 5.64 guard catches drift. Sub-item (b) requires a `df` argument — the orchestrator emits one summary manifest
+row per `(venue, dt, instrument_type, underlying)` shard while the per-instrument parquets are written elsewhere; the
+refactor needs either a representative shard `df` reference threaded through, or a ManifestWriter contract extension
+that lets `record_captured` accept a `row_count + cluster_counts` short-form for orchestrator-boundary use. Recommend a
+focused next-session that scopes the contract decision first, then ships the migration. Don't ship a half-refactor; (2)
+Phase 5 `measure-honest-coverage.py` operator script to populate the baseline doc's table cells (must run on a
+same-region GCE VM — cross-region listing 18× slower); (3) Phase 4.A item 4 + Phase 4.B item 4 live-vs-historical
+envelope alert (multi-repo: UAC + UTL + 3 services); (4) Phase 5 follow-ups — `honest-coverage-ratchet.sh` CI gate,
+LookaheadBiasError end-to- end smoke, write-gate quartet integration test (waits on Phase 1A.future
+`NanRatioExceededError` + `SchemaMismatchError` typed-error classes).
 
 ---
 
