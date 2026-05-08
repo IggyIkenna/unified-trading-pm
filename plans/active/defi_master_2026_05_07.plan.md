@@ -454,6 +454,19 @@ launch dates — `instruments-store-defi-{pid}/instrument_availability/by_date/d
 AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-service` DeFi instrument-discovery script +
 its launch-date floor handling.
 
+**RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
+[`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) carries
+the canonical RESOLVED block. Code commits:
+- `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT
+  first; AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy) to 2022-03-14 (UAC mainnet deploy).
+- `market-tick-data-service@d2f365e` — Bugs 1+2: `_query_and_parse` cascade extended to AAVE V3 (native →
+  Messari fallback); new `SubgraphSchemaError` distinguishes schema-drift from transient errors so cascade
+  re-raises through `record_failed` (writegate Phase 2.A) instead of swallowing as `record_empty`.
+- `market-tick-data-service@de9d5cf` — ruff format spacing follow-up.
+
+After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`) the
+lending-indices VM is ready to re-launch. Operator-owned step.
+
 **Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
 
 ```bash

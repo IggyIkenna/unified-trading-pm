@@ -133,3 +133,44 @@ Owner: defi_master Fork 1 (lending-indices handler) + instruments-service DeFi i
 Detailed bug descriptions + per-(venue, chain) evidence + verification recipe live in
 [`defi_master_2026_05_07.plan.md`](../defi_master_2026_05_07.plan.md) § "Lending-indices VM run-quality bugs"
 (authoritative source — this issue doc is a triage-pointer, not the canonical detail).
+
+---
+
+## DONE-2026-05-08 — Tab 5 (lending-indices-bugfix-tab)
+
+All three bugs resolved. Status: ✅ RESOLVED.
+
+**Bug 3 — instruments-service launch-date floor handling**
+- `instruments-service@1a90185` — `get_protocol_floor_date()` now consults UAC `PROTOCOL_LAUNCH_DATES` via
+  `get_protocol_launch_date(chain, venue_prefix)` as the canonical SSOT first, then falls back to local
+  `LENDING_PROTOCOL_DEPLOY_DATES` for protocols UAC does not yet track (spark, morpho, fluid, euler_v2, radiant,
+  venus, benqi). AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy fallback) to 2022-03-14 (mainnet
+  deploy per UAC). Tests assert UAC-derived floors AND local-fallback path for non-UAC protocols.
+
+**Bug 1 — AAVE V3 ETHEREUM silent zero**
+- `market-tick-data-service@d2f365e` (Bugs 1+2 combined) — `_query_and_parse` cascade for `aave_v3` extended to
+  native (`reserveParamsHistoryItems`) → Messari (`marketDailySnapshots`) so a Messari-shaped Aave V3 deployment
+  still yields rows. AAVE V3 + Spark + Compound V3 now share the same cascade pattern.
+
+**Bug 2 — Compound V3 multi-chain Messari schema error + record_empty mis-routing**
+- `market-tick-data-service@d2f365e` — new `SubgraphSchemaError` exception raised by `_execute_subgraph_query`
+  when the GraphQL response carries the schema-drift fingerprint (`has no field` / `Cannot query field`).
+  `_query_and_parse` cascade catches the error per-variant and tries the next schema; if EVERY variant raises
+  (no schema applied), the last error is re-raised. `_collect_protocol_chain` re-raises `SubgraphSchemaError`
+  so `process()` routes to `record_failed` (writegate Phase 2.A: `attempted_failed` not `empty_confirmed`).
+  Pre-fix the broad `except Exception: return 0` masked schema errors as legitimate empty.
+- `market-tick-data-service@de9d5cf` — ruff format spacing follow-up.
+
+**Verification**
+- 7 instruments-service tests pass: `tests/unit/test_evm_creation_resolver.py::TestGetProtocolFloorDate` —
+  asserts UAC SSOT precedence, fallback to local dict, generic 2020-01-01 floor.
+- 13 MTDS tests pass: `tests/unit/test_lending_indices_handler.py` — original 3 + 10 new covering
+  schema-drift detection (6 cases), AAVE V3 native→Messari cascade fallthrough, all-schemas-drift re-raises,
+  all-schemas-empty returns empty df, schema-error propagation through `_collect_protocol_chain`.
+- Per-file basedpyright + ruff clean on all my edited files. Workspace QG fails at IMPORT_PATTERNS gate (5
+  scripts authored by `semver-rollout[bot]`) and at LINT on `tests/unit/test_databento_path_streaming.py`
+  (Tab 7's untracked WIP) — both exempt under CLAUDE.md QG-failure exception 2026-05-07 → ~2026-05-09.
+
+**Re-launch readiness**
+- After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`)
+  the lending-indices VM can be re-launched. Operator-owned step.

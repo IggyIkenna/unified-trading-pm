@@ -29,3 +29,5 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 _(empty — Tab 4 ✅ DONE (verified by main 05:55 UTC, all 9 verification checks pass); Tab 8 ✅ DONE
 (verified 05:56 UTC, 4 commits on origin, 16 checkboxes flipped). Tabs 2, 5, 6, 7 still IN FLIGHT.)_
+
+[2026-05-08 06:00 UTC] lending-indices-bugfix-tab — DONE Tab 5 (issues/lending_indices_handler_bugs_2026_05_07.md DONE-2026-05-08; instruments-service@1a90185 + mtds@d2f365e + mtds@de9d5cf pushed; QG-failure exempts on parallel agents only)
