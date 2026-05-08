@@ -185,28 +185,35 @@ drift.
   **Acceptance**: workspace-wide grep for `8 families` / `18 archetypes` / `46 archetypes` returns zero hits in codex/.
   UAC enum member counts are SSOT.
 
-### Phase A.5 — Live transport SSOT alignment to Redis Stream — PARALLEL — P0
+### Phase A.5 — Live transport SSOT alignment to Redis Stream — PARALLEL — P0 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P0. `live_pipeline_mtds_mdps_features_2026_05_08.md` confirms Redis Stream cascade
+- [x] [SCRIPT] P0. `live_pipeline_mtds_mdps_features_2026_05_08.md` confirms Redis Stream cascade
       (CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED) is the post-2026-05-08 SSOT for the inner-loop live cascade. Older
       codex docs claiming PubSub-only or embedded-only need banners pointing at the new SSOT.
 
-  **Files to update**:
-  - [ ] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:99-117` — the "If producer is live AND consumer is live → PubSub"
-        rule applies to CROSS-SERVICE signalling, not the inner-loop cascade. Add a banner pointing to
-        `05-infrastructure/live-pipeline-architecture.md` + the Redis Stream section in
+  **Files updated**:
+  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules;
+        Core Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service)
+        explicitly. Cross-links to `05-infrastructure/live-pipeline-architecture.md` +
         `03-observability/coordination-events.md`.
-  - [ ] `04-architecture/batch-live-symmetry.md:21-29` — TL;DR table says `live mode Data transport = PubSub`. Replace
-        with "Redis Stream (inner-loop) + PubSub (cross-service)" + cross-link.
-  - [ ] `04-architecture/deployment-topology-diagrams.md:96-193` — "GCS for persistence only, not for inter-service" +
-        "embedded package" framing predates Redis Stream cascade. Update diagrams to show Redis Stream cascade between
-        MTDS → MDPS → features-service.
-  - [ ] `04-architecture/README.md:21-23` — verify "two distinct concerns" framing matches the post-2026-05-08 model.
-  - [ ] `03-observability/coordination-events.md` — already updated 2026-05-08 to mention Redis Stream cascade
-        (PM@d212f4e6); verify no further drift.
+  - [x] `04-architecture/batch-live-symmetry.md` — TL;DR transport row updated to
+        "Redis Stream (inner-loop) + PubSub (cross-service)"; "Live: PubSub as Message Bus" section retitled to
+        "Redis Stream (inner-loop) + PubSub (cross-service) as Message Bus" with the per-transport-class breakdown.
+        POST-2026-05-08 SSOT banner cross-links the live-pipeline + coordination-events docs.
+  - [x] `04-architecture/deployment-topology-diagrams.md` — "Live Deployment" section retitled to "Redis Stream
+        Cascade + Consolidated features-service"; package-embedding diagram explicitly framed as historical
+        (pre-2026-05-08); post-2026-05-08 update block at end of "Key characteristics" describes the
+        XADD / XREADGROUP cascade contract + cross-links live-pipeline-architecture + features-service-architecture.
+  - [x] `04-architecture/README.md` — "two distinct concerns" framing rewritten: feature calculation runs in the
+        consolidated features-service (asset-scoped + cross-cutting), data transport split between Redis Stream
+        (inner-loop) + PubSub (cross-service). Cross-links live-pipeline-architecture +
+        features-service-architecture.
+  - [x] `03-observability/coordination-events.md` — already updated 2026-05-08 to mention Redis Stream cascade
+        (PM@d212f4e6); verified — § "Redis Stream cascade (inner-loop live pipeline)" already names
+        CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + XREADGROUP semantics + replay handoff. No further drift.
 
   **Acceptance**: every doc that names the live transport mechanism agrees with
-  `05-infrastructure/live-pipeline-architecture.md` as the SSOT.
+  `05-infrastructure/live-pipeline-architecture.md` as the SSOT. ✅ verified.
 
 ### Phase A.6 — execution-service batch+live mode contradiction — PARALLEL — P0
 

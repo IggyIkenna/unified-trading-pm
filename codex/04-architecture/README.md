@@ -17,10 +17,15 @@ scope: [engineer, admin]
   strategy -> execution.
 - **Batch**: GCS is the message bus. Service A writes Parquet to a bucket; Service B reads it. No inter-service RPCs. No
   PubSub.
-- **Live**: two distinct concerns — **feature calculation** uses the embedded package model (strategy/execution import
-  the feature calculator library in-process; no RPC, no network for the calculation itself); **data transport** uses
-  PubSub topics for async inter-service streaming (replacing BigQuery polling). PubSub is a message queue, not REST/RPC
-  — the "no network hops" rule applies to synchronous HTTP/REST calls between services, not async messaging.
+- **Live**: two distinct concerns — **feature calculation** runs in the consolidated `features-service` (per
+  [`features-service-architecture.md`](features-service-architecture.md)), deployed asset-scoped colocated with MDPS +
+  cross-cutting standalone. The same code path as batch — only the trigger swaps from Cloud Scheduler to Redis Stream
+  events. **Data transport** uses **Redis Stream** for the inner-loop cascade (MTDS → MDPS → features-service via
+  CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + FEATURES_COMPUTED, see
+  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) and
+  **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
+  alerting). Both are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
+  calls between services, not async messaging.
 - **Live deployments**: 7-8 standalone processes: (1) TARDIS persistence, (2) instruments-service, (3)
   features-calendar-service, (4) features-delta-one-service, (5) features-volatility-service, (6)
   features-onchain-service, (7) strategy-service, (8) execution-service (per-client). See

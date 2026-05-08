@@ -18,14 +18,22 @@ use different data transport and computation patterns appropriate to their laten
 
 ## TL;DR
 
-|                     | Batch Mode                        | Live Mode                                         |
-| ------------------- | --------------------------------- | ------------------------------------------------- |
-| Data transport      | GCS Parquet files                 | PubSub topics                                     |
-| Feature calculation | Loaded from GCS                   | Embedded package (in-process)                     |
-| ML inference        | Batch prediction via GCS          | PubSub subscription → prediction → PubSub publish |
-| Latency target      | Minutes/hours                     | Sub-second                                        |
-| Network pattern     | GCS read/write                    | PubSub subscribe/publish (async)                  |
-| Forbidden pattern   | Synchronous REST between services | Synchronous REST between services                 |
+|                     | Batch Mode                        | Live Mode                                                                |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| Data transport      | GCS Parquet files                 | **Redis Stream (inner-loop) + PubSub (cross-service)**                   |
+| Feature calculation | Loaded from GCS                   | Same code path as batch; trigger swapped from scheduler to Redis Stream  |
+| ML inference        | Batch prediction via GCS          | Redis Stream subscription → prediction → Redis Stream / PubSub publish   |
+| Latency target      | Minutes/hours                     | Sub-second                                                               |
+| Network pattern     | GCS read/write                    | Redis Stream `XADD` / `XREADGROUP` (inner-loop) + PubSub (cross-service) |
+| Forbidden pattern   | Synchronous REST between services | Synchronous REST between services                                        |
+
+> **POST-2026-05-08 SSOT** — the inner-loop live cascade between MTDS → MDPS → features-service is **Redis Stream**
+> (CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + FEATURES_COMPUTED), per
+> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Trigger
+> cascade" + [`03-observability/coordination-events.md`](../03-observability/coordination-events.md). PubSub remains
+> the right transport for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution,
+> alerting). Where this doc says "PubSub" below, read it as "the live transport family — Redis Stream for the
+> inner-loop cascade, PubSub for cross-service fan-out."
 
 ---
 
@@ -41,12 +49,18 @@ Service B reads from that path on its next scheduled run.
 - Outputs are immutable: re-runs overwrite the entire shard, never append
 - Self-describing, schema-validated, BigQuery/Athena compatible
 
-### Live: PubSub as Message Bus
+### Live: Redis Stream (inner-loop) + PubSub (cross-service) as Message Bus
 
-Inter-service data flow in live mode uses PubSub topics (replacing BigQuery polling). Upstream services publish computed
-data to a topic; downstream services subscribe and consume asynchronously.
+Inter-service data flow in live mode uses two complementary async transports:
 
-- Coupling is through async message contracts: Protobuf/Avro schema + topic name convention
+- **Redis Stream** — the inner-loop cascade between MTDS → MDPS → features-service. Consumer-group semantics
+  (`XADD` / `XREADGROUP`) provide ordered per-shard delivery + replay-from-checkpoint when a consumer restarts. See
+  [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the full
+  CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED cascade contract.
+- **PubSub** — cross-service async broadcast (instruments-service catalogue refresh, strategy → execution signals,
+  alerting fan-out to multiple subscribers). Fire-and-forget; downstream consumers are independent.
+
+- Coupling is through async message contracts: Protobuf/Avro schema + topic/stream name convention
 - No inter-service synchronous HTTP/REST calls for data
 - PubSub is a message queue, not REST/RPC — see "No Network Hops Clarification" below
 - Publishers and subscribers are independently deployable and restartable

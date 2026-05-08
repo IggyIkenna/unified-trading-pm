@@ -94,11 +94,21 @@ via local execution-service dev setup.
 
 ## 3. Messaging Rules: Live vs Batch
 
+> **POST-2026-05-08 SSOT** — the rule below applies to **CROSS-SERVICE signalling** (e.g. instruments-service →
+> downstream consumers; strategy → execution; alerting fan-out). The **inner-loop live cascade** between MTDS → MDPS →
+> features-service uses **Redis Stream** (consumer groups + `XREADGROUP`), NOT PubSub. See
+> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Trigger
+> cascade" + [`03-observability/coordination-events.md`](../03-observability/coordination-events.md) for the full
+> CANDLE_BOUNDARY_CROSSED / CANDLE_COMPUTED / FEATURES_COMPUTED cascade contract. PubSub remains the right transport for
+> async fan-out to multiple unrelated consumers; Redis Stream is the right transport for the per-shard ordered cascade
+> with replay semantics.
+
 ### The Core Rule
 
-> **If the producer is live AND the consumer is live → use messaging (PubSub / in_memory / Redis).** **If the producer
-> is batch/infrequent AND the consumer needs data → consumer reads from persistence (GCS).** **Nothing should ever read
-> from persistence "live" when the data source is also live.**
+> **If the producer is live AND the consumer is live → use messaging (Redis Stream for the inner-loop cascade; PubSub
+> for cross-service fan-out; in_memory if co-located).** **If the producer is batch/infrequent AND the consumer needs
+> data → consumer reads from persistence (GCS).** **Nothing should ever read from persistence "live" when the data
+> source is also live.**
 
 ### Why This Matters
 
@@ -108,12 +118,20 @@ the transport channel in live mode.
 
 ### Transport Decision Matrix
 
-| Producer Mode    | Consumer Mode | Transport                               | Example                            |
-| ---------------- | ------------- | --------------------------------------- | ---------------------------------- |
-| Live             | Live          | PubSub (or in_memory if co-located)     | MTDH → MDPS live tick data         |
-| Batch            | Batch         | GCS (read/write)                        | MTDH → MDPS historical tick replay |
-| Batch/infrequent | Live          | GCS read (persistence)                  | ML training models → ML inference  |
-| Live             | Batch         | N/A (consumer waits for next batch run) | —                                  |
+| Producer Mode    | Consumer Mode | Transport                                                                                              | Example                                                                  |
+| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Live             | Live          | **Redis Stream** for inner-loop cascade; **PubSub** for cross-service fan-out; in_memory if co-located | MTDS → MDPS → features-service candle cascade (Redis Stream — see below) |
+| Batch            | Batch         | GCS (read/write)                                                                                       | MTDS → MDPS historical tick replay                                       |
+| Batch/infrequent | Live          | GCS read (persistence)                                                                                 | ML training models → ML inference                                        |
+| Live             | Batch         | N/A (consumer waits for next batch run)                                                                | —                                                                        |
+
+**Redis Stream vs PubSub — when to pick which.** The inner-loop live cascade (MTDS → MDPS → features-service) uses
+**Redis Stream** because it requires (a) ordered per-shard delivery, (b) consumer-group semantics for parallel
+consumers, (c) replay from a checkpoint when a consumer restarts. PubSub is fire-and-forget and would lose the ordering
++ replay guarantees the cascade depends on. Cross-service fan-out (instruments-service catalogue refresh signals,
+strategy → execution signals, alerting fan-out to multiple subscribers) uses **PubSub** because the workload is async
+broadcast to N unrelated consumers — Redis Stream's consumer-group model would over-engineer that case. Full cascade
+contract: [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
 
 ### Exceptions
 
@@ -687,7 +705,7 @@ publisher be fast, let consumers be correct.
 
 ### Automated Circuit Breaker (alerting-initiated)
 
-- alerting-service publishes `CIRCUIT_BREAKER_OPEN` to `circuit-breaker-commands` PubSub topic
+- alerting-service publishes `CIRCUIT_OPEN` (UAC `LifecycleEvent`) to `circuit-breaker-commands` PubSub topic
 - Triggers: risk breach, order rejection spike, balance discrepancy, connectivity loss
 - Target services: execution-service (halt orders), strategy-service (halt signals)
 - Escalation: PubSub command -> Slack -> PagerDuty (if not acknowledged in N minutes)
