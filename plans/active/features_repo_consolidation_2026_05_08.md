@@ -215,7 +215,7 @@ todos:
       - [ ] [HUMAN+AGENT] P0. Phase 2 — Create the `features-service` repo with skeleton + ONE flat `pyproject.toml`
         + ONE Dockerfile + ONE quality-gates.sh + ONE buildspec.aws.yaml + ONE cloudbuild.yaml.
 
-        `git init` + `git remote add origin git@github.com:IggyIkenna/features-service.git`. Workspace rules
+        `git init` + `git remote add origin git@github.com:CosmicTrader/features-service.git`. Workspace rules
         (`unified-trading-pm/.cursorrules` + `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`) symlinked from PM exactly
         like every other repo. Sibling-clone path under `${WORKSPACE_ROOT}/features-service` matches the existing
         `workspace-manifest.json` convention.
@@ -264,19 +264,28 @@ todos:
         Smoke green: `python -m features_service --version` → `features-service 0.0.1` exit 0. Tests: 2/2 pass
         (`tests/unit/test_smoke.py`). basedpyright: 0 errors, 0 warnings, 0 notes on full `features_service/`.
         Pass 1 QG: green for ENVIRONMENT/AUTO-FIX/LINT/TESTS; only blocker is the expected operator-gate
-        `test_repo_in_manifest` (PM `workspace-manifest.json` registration). **Local-only commit; no GitHub
-        remote yet; no push yet — operator must create empty `git@github.com:IggyIkenna/features-service.git` +
-        register in PM workspace-manifest.json before Tab 2 can `git push -u origin live-defi-rollout` and proceed
-        to Phase 3.**
+        `test_repo_in_manifest` (PM `workspace-manifest.json` registration).
 
-        **Phase 2 unblocking checklist for operator**:
-        1. `gh repo create IggyIkenna/features-service --private --confirm` (or via GitHub UI — empty repo, no init).
-        2. Add `features-service` entry to `unified-trading-pm/workspace-manifest.json` (clone in PM commit).
-        3. Telegram-ack to Tab 2 → Tab 2 runs `git remote add origin git@github.com:IggyIkenna/features-service.git`
-           + `git push -u origin live-defi-rollout` + flips this checkbox to `- [x]` + proceeds to Phase 3.
+        **Remote status update (later 2026-05-08 by operator)**: empty GitHub remote created at
+        `git@github.com:CosmicTrader/features-service.git` and configured as `origin` on the local repo. **Note**:
+        deviates from the IggyIkenna org convention used by every other workspace repo per
+        `unified-trading-pm/workspace-manifest.json` — captured as finding F9 below; operator decision.
+
+        **Phase 2 unblocking checklist for operator** (status 2026-05-08 EOD):
+        1. ✅ `gh repo create CosmicTrader/features-service --private --confirm` — DONE; remote configured as
+           `origin` on the local skeleton.
+        2. ⏸ Add `features-service` entry to `unified-trading-pm/workspace-manifest.json` — PENDING. Use
+           `https://github.com/CosmicTrader/features-service` (NOT IggyIkenna) until the org-convention deviation
+           (F9) is resolved by the operator.
+        3. ⏸ `git push -u origin live-defi-rollout` from `${WORKSPACE_ROOT}/features-service` — PENDING. Pushes
+           local commit `1f2bc16` (the skeleton) to the empty remote. After push, flip this checkbox to `- [x]`
+           and proceed to Phase 3 subtree merges.
+
+        Items 2 + 3 are operator-driven (main agent will handle the push timing per the workspace conditional-push
+        protocol). Tab 2 sub-agent stops after this evidence committed; resumes on operator ack to start Phase 3.
 
     status: blocked
-    note: "PARTIAL: local features-service@1f2bc16; gated on operator creating empty GitHub remote + workspace-manifest registration."
+    note: "PARTIAL: local features-service@1f2bc16 with origin set to CosmicTrader/features-service; pending workspace-manifest entry + push."
 
   - id: phase-3-migrate-source-repos-with-history
     content: |
@@ -286,9 +295,22 @@ todos:
         family `<f>` ∈ {calendar, commodity, cross_instrument, delta_one, multi_timeframe, onchain, sports,
         volatility}:
 
-        1. `git subtree add --prefix=features_service/<f> ../features-<f>-service main --squash=false`. The
-           `--squash=false` preserves per-commit history; we want to keep author + timestamp + message attribution
-           for `git blame` to work post-migration.
+        **Branch correction (2026-05-08)**: pull from `live-defi-rollout` (the workspace `active_feature_branch`),
+        NOT `main`. Verified during Phase 3 pre-flight — `main` is severely stale vs `live-defi-rollout` for every
+        features-\* repo (onchain 67 commits behind, sports 85, delta-one 36). Subtree-merging from `main` would
+        import stale source code that fails Phase 6 parity. The original plan-body said `main`; correction lands
+        in this same edit.
+
+        **`--squash=false` syntax correction (2026-05-08, F10)**: `git subtree add` only accepts `--squash` as a
+        boolean flag (presence = squash, absence = no squash). `--squash=false` is invalid syntax and errors out.
+        The correct command is just `git subtree add --prefix=... <repo> <branch>` (no `--squash`). Phase 3
+        sub-agent caught this on first invocation and recovered by omitting the flag.
+
+        1. `git subtree add --prefix=features_service/<f> ../features-<f>-service live-defi-rollout`.
+           Even without `--squash`, the subtree-add produces a single squash-style commit referencing the source
+           SHA in its message ("Add 'features_service/<f>/' from commit '<sha>'"). Source per-commit history is
+           PRESERVED but `git log --follow` does NOT traverse the boundary — to see source-side history use
+           `git log <source-sha> -- <path-in-source>`. This is canonical git-subtree behavior (F11).
         2. Move source files: `git mv features_service/<f>/features_<f>_service/* features_service/<f>/` then
            remove the now-empty `features_<f>_service/` directory.
         3. Strip duplicated top-level config: `pyproject.toml`, `Dockerfile`, `cloudbuild.yaml`, `buildspec.aws.yaml`,
@@ -310,8 +332,38 @@ todos:
 
         Tests: skeleton smoke (`python -m features_service --version`) still green. Per-family unit tests
         (lifted as-is from source repos) RUN but may fail at this stage — Phase 4 fixes the import paths systematically.
-    status: todo
-    note: ""
+
+        **PARTIAL 2026-05-08 — 25 commits added on top of `1f2bc16` (working tree clean, NOT pushed).**
+        Per-family commit shape was 3 commits (not 2): stub-removal (Phase 2 `__init__.py` placeholder blocked
+        `git subtree add --prefix=...` on existing prefix) + subtree-add merge + restructure. Final `git log`
+        ladder: `b144552d` (sports restructure) → `1f2bc164` (Phase 2 skeleton baseline). Order processed
+        smallest-to-largest per F5 (sports last for partial-failure recovery): commodity (80 files moved) →
+        multi_timeframe (87) → calendar (108) → cross_instrument (124) → volatility (142) → onchain (169) →
+        delta_one (216) → sports (207).
+
+        **Phase 4 import-rewrite scope (well-defined per Phase 3 grep)**:
+        - `features_service/`: 752 same-family `from features_<f>_service` occurrences (commodity=31,
+          multi_timeframe=51, calendar=63, cross_instrument=100, volatility=77, onchain=114, delta_one=154,
+          sports=154).
+        - `tests/`: 1607 same-family + 1 cross-family (delta_one tests/ imports features_calendar_service —
+          matches F4 audit exactly).
+        - Total: 2360 occurrences. Mass sed pattern: `s/from features_<f>_service\b/from features_service.<f>/g`
+          per family, plus 1 cross-family rewrite.
+
+        **Special-case handling captured in Phase 3 (forwarded to Phase 4 if redo needed)**:
+        - Sports had TWO scripts/ directories — top-level `scripts/` (16 files) AND intra-package
+          `features_sports_service/scripts/` (3 files). Resolved by renaming intra-package to `_intra_scripts/`
+          first to break the destination-already-exists collision on `git mv features_sports_service/* .`, then
+          merging both into `scripts/sports/` (19 files combined).
+        - Per-family doc retention was inconsistent (kept README/docs/CHANGELOG/CONTRIBUTING/LICENSE for some
+          families, not others). Captured as F11 — Phase 4 should make a deliberate uniform per-family-doc
+          decision (retain README only? retain none? retain all?).
+
+        **Push pending (Phase 3 local-only)**: 25 local commits sit at HEAD on `live-defi-rollout`. Main agent
+        owns push timing — same workspace-conditional-push protocol as Phase 2 push (also pending).
+
+    status: blocked
+    note: "PARTIAL: 25 local commits in features-service on top of 1f2bc16; push pending main agent (along with Phase 2 push); Phase 4 import-rewrite scope mapped + ready."
 
   - id: phase-4-fix-internal-imports-cli-and-config
     content: |
@@ -859,50 +911,128 @@ via `$PWD` or a passed-in env var, not via `BASH_SOURCE` math.
   test callers exercise it; broken anyway today (calls `record_empty` with no reason → `LegacyBlankErrorReasonError`).
   Phase 5 sub-todo (lift or delete).
 
+### F10 — Plan-body `git subtree add --squash=false` syntax invalid; corrected in-place
+
+**Severity**: P3 / plan-body bug / corrected.
+
+`git subtree` only accepts `--squash` as a boolean flag (presence = squash, absence = no squash). The original
+plan-body Phase 3 step 1 specified `--squash=false`, which errors out. Phase 3 sub-agent caught the failure on
+first invocation and recovered by omitting the flag entirely. Plan body has been updated in-place.
+
+**Action**: none required — corrected. Future agents reading the plan see the right syntax.
+
+### F11 — `git subtree add` produces squash-style merge commit even without `--squash` (canonical behavior)
+
+**Severity**: P2 / expectation calibration / no fix needed.
+
+Plan body claimed the absence of `--squash` would preserve per-commit history queryable via
+`git log --follow`. **Reality**: even without `--squash`, when the prefix is brand-new, `git subtree add` produces
+a single squash-style commit ("Add 'features_service/<f>/' from commit '<sha>'") rather than a true non-squashed
+merge with all source commits replayed. Source SHAs ARE preserved (in commit messages); to see source-side
+history use `git log <source-sha> -- <path-in-source>`. `git log --follow` does NOT traverse the squash boundary.
+
+**Action**: accept this — it's the documented git-subtree behavior. Phase 6 parity test isn't impacted (test
+operates on parquet outputs, not git history). Decision recorded for future agents who go looking for per-file
+history and find a single import commit.
+
+### F12 — Stray `=0.3.0` file in `features-cross-instrument-service` source repo
+
+**Severity**: P3 / out-of-plan finding / file as separate issue.
+
+Phase 3 sub-agent discovered a literal file named `=0.3.0` (140 bytes, contents = stdout of an `uv pip install`
+run that got redirected via shell-glob bug `>= 0.3.0`) in the `features-cross-instrument-service` source repo.
+Stripped during Phase 3 restructure. **Out-of-scope for this plan** — but worth filing as an issue against the
+source repo before Phase 7 archives it (otherwise the bug history is preserved in the consolidation merge but
+the source-repo commit is not addressable as a regression).
+
+**Action**: file separately under `unified-trading-pm/plans/active/issues/features_cross_instrument_stray_file_2026_05_08.md`
+when the operator has cycles. NOT this plan's responsibility. Captured here so the finding doesn't evaporate.
+
+### F9 — `features-service` GitHub remote deviates from workspace IggyIkenna org convention ⚠️ org-naming
+
+**Severity**: P2 / org-convention drift / requires operator decision.
+
+The empty GitHub remote for the new `features-service` repo was created at
+`git@github.com:CosmicTrader/features-service.git` (operator action, late 2026-05-08). Every other repo in
+`unified-trading-pm/workspace-manifest.json` uses `https://github.com/IggyIkenna/<repo>` (verified workspace-wide;
+all sibling features-\* / unified-\* / market-\* / instruments-\* / deployment-\* / etc. live under `IggyIkenna`).
+
+**Possible explanations**: (a) deliberate operator choice to start the consolidated repo under a different
+organisation (e.g. for billing / IP / collaboration reasons); (b) the workspace is in the middle of an
+`IggyIkenna → CosmicTrader` org migration we don't yet know about; (c) typo / transient choice that the operator
+intends to correct.
+
+**Action required**: operator confirms which org should own the long-term `features-service` repo. If
+`CosmicTrader` is correct, the workspace-manifest entry must use the matching URL + the workspace-wide convention
+note in `unified-trading-pm/codex/` should document the new pattern (otherwise subsequent agents will assume
+`IggyIkenna` per the current manifest pattern and clone the wrong remote). If the intended org is `IggyIkenna`,
+the operator can `gh repo rename` or recreate. Tab 2 honours whichever decision lands but until then defaults
+plan-body references to the actually-configured `CosmicTrader/features-service` (the local repo's `origin`).
+
+This finding is **out-of-scope for the consolidation plan itself** but inside scope for the Phase 2 hand-off —
+flagged here so subsequent agents reading this plan body don't trip on the convention mismatch.
+
 ---
 
 ## DONE-2026-05-08
 
 Phase 0 + Phase 1A + Phase 1B shipped today by the `features-consolidation-tab` (Tab 2 of
-[`plans/active/work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md)). Stopping at the **Phase 2 HUMAN+AGENT
-gate** — operator must `git init` + create the empty `git@github.com:IggyIkenna/features-service.git` GitHub remote
-before the agent can scaffold the consolidated repo.
+[`plans/active/work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md)). Phase 2 LOCAL skeleton committed
+locally. Empty GitHub remote at `git@github.com:CosmicTrader/features-service.git` created by operator + configured
+as `origin` on the local skeleton (later 2026-05-08). **Phase 2 push pending** — main agent handles the push timing
+per the workspace conditional-push protocol; workspace-manifest.json entry registration also pending.
 
-| Phase                                                                    | Repo                    | Commit                                            | Push        | Notes                                                                                                                  |
-| ------------------------------------------------------------------------ | ----------------------- | ------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0 — pre-audit manifest                                                   | unified-trading-pm      | PM@`1de574b4`                                     | ✅ pushed   | 1286 lines, 152 KB; 503 py source files; 11 ext imports + 51 string refs                                               |
-| 1A — UAC FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry           | unified-api-contracts   | `7f63ca3`                                         | ✅ pushed   | 83 feature_groups mapped, no cross-family collisions, 9 unit tests                                                     |
-| 1B — UTL ManifestWriter feature_family kwarg + MissingFeatureFamilyError | unified-trading-library | `c16cef3`                                         | ✅ pushed   | gate: feature*group ⇒ feature_family required; 4 record*\* methods; 10 unit tests; production-safe (`add()` unchanged) |
-| 2 — features-service LOCAL skeleton (PARTIAL — push gated)               | features-service (NEW)  | `1f2bc16`                                         | ⏸ BLOCKED  | 31 files / 5425 lines; 46 deps unioned; smoke + 2/2 tests + basedpyright clean; Pass 1 QG green except expected operator-gate (workspace-manifest registration). Awaiting operator to create empty GitHub remote + add manifest entry. |
+| Phase                                                                    | Repo                    | Commit                | Push                   | Notes                                                                                                                                                                                        |
+| ------------------------------------------------------------------------ | ----------------------- | --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — pre-audit manifest                                                   | unified-trading-pm      | PM@`1de574b4`         | ✅ pushed              | 1286 lines, 152 KB; 503 py source files; 11 ext imports + 51 string refs                                                                                                                     |
+| 1A — UAC FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry           | unified-api-contracts   | UAC@`7f63ca3`         | ✅ pushed              | 83 feature_groups mapped, no cross-family collisions, 9 unit tests                                                                                                                           |
+| 1B — UTL ManifestWriter feature_family kwarg + MissingFeatureFamilyError | unified-trading-library | UTL@`c16cef3`         | ✅ pushed              | gate: feature*group ⇒ feature_family required; 4 record*\* methods; 10 unit tests; production-safe (`add()` unchanged)                                                                       |
+| 2A — Phase 2 PARTIAL evidence + F8 audit finding (PM)                    | unified-trading-pm      | PM@`0c8800b8`         | ✅ pushed              | Captured Phase 2 PARTIAL state; `0c8800b8` is the rebased equivalent of original local commit `6eba7e4a` after operator integrated parallel-agent commits.                                   |
+| 2B — features-service LOCAL skeleton (push pending)                      | features-service (NEW)  | features-svc@`1f2bc16` | ⏸ remote ready, push pending | 31 files / 5425 lines; 46 deps unioned; smoke + 2/2 tests + basedpyright clean; Pass 1 QG green except expected operator-gate (workspace-manifest registration). Origin set to `CosmicTrader/features-service`; awaiting workspace-manifest entry + operator-driven push. |
+| 3 — 8 subtree merges + per-family restructure                            | features-service        | features-svc@`b144552d` (25 commits stacked over `1f2bc16`)                          | ✅ pushed (with Phase 2)              | 8 families subtree-merged in size order (commodity → sports). Per-family commit shape = 3 (stub-removal + subtree-add + restructure). Stripped duplicated top-level config per family; moved tests + scripts to consolidated tree. Working tree clean.                                                  |
+| 2+3 PUSH — features-service initial push                                 | features-service        | HEAD `b144552d` to remote                                                            | ✅ pushed                             | `git push -u origin live-defi-rollout` to `git@github.com:CosmicTrader/features-service.git`; 26 commits landed (Phase 2 skeleton + 25 Phase 3 subtree/restructure); divergence `0 0` post-push.                                                                                                          |
+| 4.1+4.3+4.5 — mass import rewrites + root-config verify + QG             | features-service        | features-svc@`d8136d72` (9 commits stacked over `b144552d`)                          | ✅ pushed                             | 754 files rewritten across 8 families: per-family `from features_<f>_service` → `features_service.<f>` + 1 cross-family fix (tests/delta_one → calendar). Zero surviving import refs. Phase 2 root config (pyproject/Dockerfile/etc) verified intact. Smoke + tests green; QG inherits 410 foreign lints. |
+| 4.2 — CLI lift (dispatching cli/main.py + per-family run() exports)      | features-service        | NOT COMMITTED — stashed                                                              | 🛑 killed mid-flight (operator)       | Background sub-agent `a7d05a76167a9bae3` was dispatched, completed all editing (rewrote top-level `cli/main.py` + added `run(argv)` to 9 family `__init__.py` + created `tests/unit/test_cli_dispatch.py`), reported "All 15 tests pass" — then was operator-killed before running QG / committing / pushing. **WIP preserved as `stash@{0}` in features-service local repo** (message: `Phase 4.2 mid-flight kill 2026-05-08 — CLI lift WIP: 9 family __init__.py + cli/main.py rewrite + tests/unit/test_cli_dispatch.py (sub-agent reported 15/15 tests pass, QG not run, no commit)`). **Recovery**: `cd ${WORKSPACE_ROOT}/features-service && git stash pop` to resume — next session can run QG + commit + push, or amend if operator wants different shape. features-service local HEAD = `d8136d72`, divergence vs origin `0 0`. |
 
-**Audit findings folded into plan**: F1-F8 above (LookaheadBiasError underprotection, UnifiedCloudConfig violation, 4
+**Audit findings folded into plan**: F1-F12 above (LookaheadBiasError underprotection, UnifiedCloudConfig violation, 4
 additional lift candidates, Phase 4.1 scope-shrink, sports-as-largest, `add()` migration dependency, validate_df +
-NormalisingManifestWriter follow-ups, PM coverage-floor-guard MIN_COVERAGE path bug).
+NormalisingManifestWriter follow-ups, PM coverage-floor-guard MIN_COVERAGE path bug, **CosmicTrader vs IggyIkenna
+GitHub-org convention deviation**, plan-body `--squash=false` syntax bug corrected in-place,
+git-subtree squash-style behavior calibration, stray `=0.3.0` file in features-cross-instrument-service source).
 
-## Phase 2 hand-off — operator action items
+## Phase 2 hand-off — operator action items (status late 2026-05-08)
 
-The local `features-service` skeleton at `${WORKSPACE_ROOT}/features-service` is ready to push. **Three operator
-steps unblock the rest of Phase 2-3 in this session or a fresh Tab 2 spawn**:
+The local `features-service` skeleton at `${WORKSPACE_ROOT}/features-service` is ready to push. **Three steps
+unblock the rest of Phase 2-3**; current state below.
 
-1. **Create the empty GitHub remote** (shared-state action):
-   ```bash
-   gh repo create IggyIkenna/features-service --private --confirm --description "Consolidated features-* service"
-   ```
-   Or via GitHub UI — empty repo, **no `--init`**, no README initialiser, no .gitignore preset (the local repo
-   already has all of these; an init would create a divergent base commit and force a merge).
+1. ✅ **Create the empty GitHub remote** (shared-state action, **DONE by operator late 2026-05-08**) — created at
+   `git@github.com:CosmicTrader/features-service.git` and configured as `origin` on the local repo.
+   Note: operator picked the `CosmicTrader` org rather than the `IggyIkenna` convention used by every other
+   workspace repo — captured as F9 above; awaits operator confirmation that `CosmicTrader` is the long-term
+   intended home (vs. typo / migration / etc.).
 
-2. **Register `features-service` in PM `workspace-manifest.json`** so PM's `test_repo_in_manifest` integration
-   test passes for the new repo. The existing 8 features-* entries are templates; copy one and adjust the name +
-   git URL. Tier-classify as a service (not a library). Commit + push to PM.
+2. ⏸ **Register `features-service` in PM `workspace-manifest.json`** — PENDING. Use the
+   `https://github.com/CosmicTrader/features-service` URL until F9 is resolved (or `IggyIkenna` if F9 resolves
+   that direction). The existing 8 features-* entries are templates; copy one and adjust the name + git URL.
+   Tier-classify as a service (not a library). Commit + push to PM via the main agent's normal flow.
 
-3. **Telegram-ack to Tab 2** ("remote ready") — Tab 2 will then run:
+3. ⏸ **Push the local skeleton** — PENDING (main-agent driven). Mechanics:
    ```bash
    cd ${WORKSPACE_ROOT}/features-service
-   git remote add origin git@github.com:IggyIkenna/features-service.git
-   git fetch origin live-defi-rollout 2>/dev/null  # may 404 if branch doesn't exist remotely yet — fine
+   # origin is already set; verify with: git remote -v
    git push -u origin live-defi-rollout
    ```
-   then flip Phase 2 checkbox to `[x]` + start Phase 3 subtree merges (8 families × `git subtree merge --squash=false`).
+   This pushes commit `1f2bc16` (the local skeleton) to the empty remote. After push lands cleanly:
+   - Flip the `phase-2-create-features-service-repo` checkbox in this plan from `[ ]` to `[x]`.
+   - Update the todo's `status` field from `blocked` to `completed`.
+   - Update the DONE-2026-05-08 table's row 2B Push column from `⏸ remote ready, push pending` to `✅ pushed`.
+   - Tab 2 (or fresh spawn) starts Phase 3 — 8 × `git subtree merge --squash=false ../features-<family>-service main`.
+
+**Why steps 2 + 3 are not Tab 2's to do autonomously**: per CLAUDE.md "Conditional push (multi-agent safety
+valve)", the main agent owns push timing during high-churn windows like today (Tab 2 + Tab 3 + Tab 4 + Tab 5 +
+Ikenna's side all pushing concurrently). Tab 2 commits locally per shippable unit but defers the actual `git push`
+to main agent so the workspace stays linear. The local commit is durable; it survives via the shared `.git/`
+working tree across agent sessions until the main agent integrates + pushes.
 
 **Cross-side handshake status (per work-split § "Cross-side handshakes")**:
 
@@ -912,6 +1042,38 @@ steps unblock the rest of Phase 2-3 in this session or a fresh Tab 2 spawn**:
 - Harsh Tab 2 (ml-features-phase2a wires) → Ikenna Tab 2 (live-pipeline Phase 11 ServiceEmissionPolicy slice b): not yet
   — wires happen in Phase 4 (Tab 12 Q1 absorption) which is after Phase 2 gate.
 
-**Hard gate hit**: Phase 2 (`phase-2-create-features-service-repo`) is `[HUMAN+AGENT]` — agent prepares local
-`git init` + skeleton + asks operator to create the empty remote on GitHub. Standing by for operator direction. Once the
-GitHub remote exists, Tab 2 picks Phase 2-3 back up.
+**Hard gate state (end of 2026-05-08 session, Tab 2 stopping)**:
+
+- ✅ Phase 2 — local skeleton (`1f2bc16`) + remote at `git@github.com:CosmicTrader/features-service.git` (F9
+  CosmicTrader-vs-IggyIkenna convention deviation still pending operator confirmation).
+- ✅ Phase 3 — 25 local commits subtree-merging + restructuring 8 families; HEAD at `b144552d`.
+- ✅ Phase 2+3 PUSHED to `origin/live-defi-rollout` (operator-authorised mid-session, divergence `0 0` post-push).
+- ✅ Phase 4.1+4.3+4.5 — mass import rewrites (754 files / 8 families + 1 cross-family fix) + Phase 2 root-config
+  verify + smoke + tests + QG. 9 commits stacked, HEAD at `d8136d72`, pushed (divergence `0 0`).
+- 🛑 Phase 4.2 — CLI lift was sub-agent-shipped through "all tests pass" stage but **operator-killed before
+  commit/push**. WIP saved as `stash@{0}` in features-service local repo. Resume: `git stash pop` in next session.
+- ⏸ Workspace-manifest entry registration in PM `workspace-manifest.json` for `features-service` — still pending.
+
+**Remaining-in-this-plan but DEFERRED out of session scope (operator end-of-shift)**:
+
+- Phase 4.2 final (commit/push the stashed CLI lift, or amend if shape needs adjustment).
+- Phase 4.4 (Health-API per-family freshness wires).
+- F2 (`features-onchain` `UnifiedCloudConfig` fix in `features_service/onchain/config.py`).
+- F6 (`add()` → `record_captured` migration in 8 families' code).
+- Phase 5 (helper lifts to UTL — F1 LookaheadBiasError extension + 4 plan-listed helpers + F7
+  NormalisingManifestWriter + BuilderEntry/BroadcastSink/LiveDataSource/BaseFeatureCalculator dups).
+- Phase 6 (parity test, gated by Phase 5).
+- Phase 7 (HUMAN+AGENT — archive 8 source repos via `gh repo archive`).
+- Phase 8A/8B/9 (multi-repo: launcher migration + deployment-api/ui wiring + codex SSOT updates).
+- Phase 10 (workspace-wide QG sweep).
+- ml_and_features_master Phase 3 (parquet column-pruning quick-win) — independent, ml-training-service.
+
+**Resume protocol for next Tab 2 session**:
+
+1. Read this plan body's DONE-2026-05-08 block (states what's shipped + what's stashed).
+2. `cd ${WORKSPACE_ROOT}/features-service && git status` — should show clean working tree at `d8136d72`.
+3. `git stash list` — should show `stash@{0}: On live-defi-rollout: Phase 4.2 mid-flight kill 2026-05-08 ...`.
+4. `git stash pop` — restores 9 family `__init__.py` + `cli/main.py` rewrite + new `tests/unit/test_cli_dispatch.py`.
+5. Sub-agent's last reported state was "All 15 tests pass" before the QG step. Verify smoke + tests still green
+   (`python -m features_service --version` + `pytest tests/unit/test_cli_dispatch.py`), run QG, commit + push.
+6. Continue with Phase 4.4 / F2 / F6 per plan + work-split scope.
