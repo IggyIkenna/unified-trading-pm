@@ -18,6 +18,42 @@ This is the canonical index of all active plans. Plans are organized by domain.
   data-status drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC
   (sports already SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
 
+- [deployment_ui_lifecycle_tabs_2026_05_08.plan.md](deployment_ui_lifecycle_tabs_2026_05_08.plan.md) — **Cross-cutting
+  6-tab restructure** of deployment-UI organised around four orthogonal axes: lifecycle class (EPHEMERAL_BATCH /
+  EPHEMERAL_EXPERIMENT / SCHEDULED_RECURRING / LONG_LIVED_LIVE), cloud target (GCP / AWS), environment tier (DEV /
+  STAGING / PROD — resolved by domain, never an in-UI toggle), service / asset_group. Tabs: Deploy (fresh deployments
+  only) / Monitor (renamed from History; sub-tabs Backfill / Experiments / Live / Scheduled — runtime state of every
+  job, cluster, scheduler with re-deploy / stop / start / pause / drain / stream-logs / attach-events actions on each
+  row using the SAME row-template) / Data Status (scoped to data + pricing only — instruments / MTDS / MDPS /
+  features-\*; with Batch / Scheduled-Today / Live mode toggle) / Builds / Readiness / Config. Header carries
+  cloud-toggle (slow refresh) + env badge (read-only). Cross-Monitor-sub-tab navigation is INSTANT (prefetch context);
+  cloud-toggle pays network round-trip; env switch happens by changing domain. Auth always-available (UnifiedCloudConfig
+  loads both clouds at api-boot). NEW UAC SSOTs: `LifecycleClass` enum (4 members), `EnvironmentTier` enum +
+  domain-resolver, scheduler registry (env-scoped), live-cluster registry (env-scoped), experiment registry. NEW UTL
+  helper `experiment_tracker.py` (run_id / metric / step / artifact emission for ML / strategy / execution research
+  jobs). NEW codex docs: `deployment-ui-architecture.md` (UX SSOT) + `deployment-ui-environment-tiers.md`
+  (dev/staging/prod hosting, mirrors trading-system-UI pattern + firebase-split-topology). NEW deployment-api routes:
+  `/api/monitor/{backfill,experiments,live,scheduled}`, `/api/logs/stream/{target_ref}`. Most infrastructure already
+  exists (SSE event-stream, CloudProviderContext, deploy-missing, data-status drilldown, vm-launcher registry); plan is
+  mostly re-shape + wire-in with one greenfield slice (Experiments tracker) and one infra slice (env-tier hosting of
+  deployment-UI/API itself). Sibling-of `instruments_live_master_2026_05_08`; Phase G of that plan delegates UI scope
+  here.
+
+- [instruments_live_master_2026_05_08.plan.md](instruments_live_master_2026_05_08.plan.md) — **Activation surface for
+  instruments-live across all 5 asset_groups** (cefi 15-min CCXT replacing Tardis-T+1; tradfi 15-min Polygon/Yahoo
+  replacing Databento for live; sports trigger-driven — daily fixture re-poll + per-league season-roll → teams /
+  mappings + annual transfer-window → players + weather cascade pre-kickoff; predictions 15-min market-discovery). Live
+  writes to SAME GCS path as batch (no separate live path); T+1 is retrospective audit / comparison job, NOT a backfill.
+  Cloud Scheduler activation per-trigger + new deployment-UI "Scheduled Jobs" tab listing every cron invocation with
+  last-run / next-fire / recent events / Telegram-alert-on-fail. Critical Phase A.9–A.11 codifies the preflight DAG
+  (downstream-needs-upstream-first) as a UAC SSOT + UTL helper invoked identically by live and batch — typed
+  `INSTRUMENTS_LIVE_PREFLIGHT_FAILED` + `INSTRUMENTS_LIVE_UPSTREAM_STALE` events route to Telegram with the specific
+  missing-upstream named in the message. References (does NOT duplicate) the existing codex SSOTs
+  (`batch-live-symmetry`, `backfill-and-live-startup`, `live-deployment-monitoring`, `alerting-batch-live`,
+  `sports-live-odds-connectivity`, `runtime-tiers-and-deployment`) and 8 active issues for data-correctness deltas.
+  Sibling-of (NOT child-of) `master_to_live_defi_2026_05_23` — only Phase D (cefi 15-min CCXT) + Phase F.3 (AWS
+  EventBridge mirror) are on the May-23 critical path; the rest is post-cutover.
+
 ---
 
 ## DeFi Strategy Testing & Automation (NEW)
