@@ -256,8 +256,27 @@ todos:
         **Repo creation gate**: human approval required to create the GitHub repo (per CLAUDE.md "Executing actions
         with care" — repo creation is a shared-state action). Agent prepares the local git init + skeleton + asks
         the operator to create the empty remote on GitHub.
-    status: todo
-    note: ""
+
+        **PARTIAL 2026-05-08 — local skeleton ready at `${WORKSPACE_ROOT}/features-service` (commit `1f2bc16`).**
+        31 files / 5,425 insertions. 46 unique deps unioned across 8 source repos (pin-conflict resolutions:
+        `unified-trading-library>=0.3.0,<1.0.0` upward-intersected; `fastapi>=0.115.0,<1.0.0` added explicitly per
+        "no fallback imports / direct usage = direct dep" rule — was transitive in source repos via UTL).
+        Smoke green: `python -m features_service --version` → `features-service 0.0.1` exit 0. Tests: 2/2 pass
+        (`tests/unit/test_smoke.py`). basedpyright: 0 errors, 0 warnings, 0 notes on full `features_service/`.
+        Pass 1 QG: green for ENVIRONMENT/AUTO-FIX/LINT/TESTS; only blocker is the expected operator-gate
+        `test_repo_in_manifest` (PM `workspace-manifest.json` registration). **Local-only commit; no GitHub
+        remote yet; no push yet — operator must create empty `git@github.com:IggyIkenna/features-service.git` +
+        register in PM workspace-manifest.json before Tab 2 can `git push -u origin live-defi-rollout` and proceed
+        to Phase 3.**
+
+        **Phase 2 unblocking checklist for operator**:
+        1. `gh repo create IggyIkenna/features-service --private --confirm` (or via GitHub UI — empty repo, no init).
+        2. Add `features-service` entry to `unified-trading-pm/workspace-manifest.json` (clone in PM commit).
+        3. Telegram-ack to Tab 2 → Tab 2 runs `git remote add origin git@github.com:IggyIkenna/features-service.git`
+           + `git push -u origin live-defi-rollout` + flips this checkbox to `- [x]` + proceeds to Phase 3.
+
+    status: blocked
+    note: "PARTIAL: local features-service@1f2bc16; gated on operator creating empty GitHub remote + workspace-manifest registration."
 
   - id: phase-3-migrate-source-repos-with-history
     content: |
@@ -725,13 +744,14 @@ completing before Phase 7 archives the repos.
 
 Discovered during Phase 0 read-only audit (artifact at
 [`plans/active/issues/features_repo_consolidation_preaudit_2026_05_08.md`](issues/features_repo_consolidation_preaudit_2026_05_08.md))
-+ Phase 1B implementation surprises. All findings adjacent-to-this-plan per Findings Triage Discipline; folded
-in here rather than punted to issues folder. Plan-body Phase 4/5 todos reference these sub-todos.
+
+- Phase 1B implementation surprises. All findings adjacent-to-this-plan per Findings Triage Discipline; folded in here
+  rather than punted to issues folder. Plan-body Phase 4/5 todos reference these sub-todos.
 
 ### F1 — LookaheadBiasError silently underprotected in 6 of 8 families ⚠️ data-correctness
 
-**Severity**: P0 / data-correctness / contradicts CLAUDE.md "Shard-granularity SSOT" rule
-("`LookaheadBiasError` raised loud at every features-\* + MDPS compute, not warn-mode").
+**Severity**: P0 / data-correctness / contradicts CLAUDE.md "Shard-granularity SSOT" rule ("`LookaheadBiasError` raised
+loud at every features-\* + MDPS compute, not warn-mode").
 
 **Status today** (per Phase 0 audit § 9.3):
 
@@ -765,19 +785,19 @@ stale input. Lands as part of the same logical unit as the helper lift to UTL (a
 Per Phase 0 audit § 9, the following NOT-LIFTED dups were discovered in addition to the plan-body's 4 helpers:
 
 - **`BuilderEntry`** — 7-way duplicate (7 of 8 repos copy-paste same dataclass). UTL already has `feature_calculator/`
-  + `feature_service_base/` modules — natural home. Single highest-leverage lift.
+  - `feature_service_base/` modules — natural home. Single highest-leverage lift.
 - **`BroadcastSink` / `LiveDataSource`** — 4-way duplicate (calendar / delta_one / onchain / volatility).
 - **`BaseFeatureCalculator`** — 3-way duplicate (cross_instrument / delta_one / multi_timeframe).
 - **`FeatureBatchHandler`** — NOT IMPLEMENTED anywhere; every family has copy-paste batch_handler. Coordinate with
-  `ml_and_features_master_2026_05_07` Phase 2.UTL-LIFT (which lifts FeatureBatchHandler for the 4 features-\* repos
-  that have it) — that work overlaps; banner mutually.
-- **`ManifestFreshnessCache`** — NOT IMPLEMENTED in UTL or any features-\* repo (per `ml_and_features_master`
-  Phase 1A.UTL-CACHE-ADOPT).
+  `ml_and_features_master_2026_05_07` Phase 2.UTL-LIFT (which lifts FeatureBatchHandler for the 4 features-\* repos that
+  have it) — that work overlaps; banner mutually.
+- **`ManifestFreshnessCache`** — NOT IMPLEMENTED in UTL or any features-\* repo (per `ml_and_features_master` Phase
+  1A.UTL-CACHE-ADOPT).
 - **`WatermarkAlignmentFanin`** — NOT IMPLEMENTED anywhere — greenfield in UTL (already in plan-body Phase 5 list).
 
-**Action — extend Phase 5 todo** to cover these (BuilderEntry + BroadcastSink/LiveDataSource + BaseFeatureCalculator
-in addition to plan-body's 4). Total Phase 5 scope: 7 lifts + the LookaheadBiasError extension to 6 families + the
-optional FeatureBatchHandler / ManifestFreshnessCache greenfields if not landed by `ml_and_features_master` first.
+**Action — extend Phase 5 todo** to cover these (BuilderEntry + BroadcastSink/LiveDataSource + BaseFeatureCalculator in
+addition to plan-body's 4). Total Phase 5 scope: 7 lifts + the LookaheadBiasError extension to 6 families + the optional
+FeatureBatchHandler / ManifestFreshnessCache greenfields if not landed by `ml_and_features_master` first.
 
 ### F4 — Phase 4.1 cross-family import rewrite footprint is much smaller than assumed
 
@@ -789,8 +809,8 @@ cross-family Python dep exists workspace-wide: `features-delta-one-service/tests
 `features_calendar_service`. Phase 4.1's grep+sed pass is essentially trivial — one test-file rewrite + the 11 external
 import lines documented in Phase 0 § (b).
 
-**Action — none required.** Phase 4.1 is shorter than scoped; no plan change. Documented for future agent so they
-don't expect to find dozens of cross-family imports.
+**Action — none required.** Phase 4.1 is shorter than scoped; no plan change. Documented for future agent so they don't
+expect to find dozens of cross-family imports.
 
 ### F5 — `features-sports-service` is the largest family by every dimension
 
@@ -813,6 +833,22 @@ call sites from `writer.add(...)` to `writer.record_captured(...)` with `feature
 consolidated `features-service` repo writes manifest rows with `feature_family=""` and the deployment-UI's Phase 8B
 drilldown column renders empty. Add as Phase 4 sub-todo (4.8).
 
+### F8 — PM `coverage-floor-guard` MIN_COVERAGE path bug (workspace-wide, cosmetic)
+
+**Severity**: P3 / cosmetic / out-of-scope for this plan.
+
+`unified-trading-pm/scripts/qg-helpers/base-service.sh:194` computes
+`_REPO_QG_SCRIPT="$(dirname ${BASH_SOURCE[0]})/../../scripts/quality-gates.sh"` which resolves to PM's own QG
+(since `BASH_SOURCE[0]` is the PM-hosted base-service.sh), not the calling repo's QG. So `MIN_COVERAGE` is read
+from PM's `MIN_COVERAGE=70` regardless of the consumer setting. Surfaces as spurious
+`MISMATCH: MIN_COVERAGE=70 but pyproject.toml fail_under=0` warning during every consumer-repo QG run.
+
+**Action**: not in scope for `features_repo_consolidation_2026_05_08`. Discovered during Phase 2 features-service
+QG run. Affects every Python consumer repo running `bash scripts/quality-gates.sh`. Tag: out-of-plan finding;
+suggested owner: whoever maintains PM's `qg-helpers/base-service.sh` (Ikenna's side per work-split rule on
+"Governance / ratchet thinking"). If the cosmetic warning is annoying, fix should compute the consumer-repo path
+via `$PWD` or a passed-in env var, not via `BASH_SOURCE` math.
+
 ### F7 — Phase 1B follow-ups: `validate_df` + `NormalisingManifestWriter` need Phase 4/5 attention
 
 **Severity**: P2 / Phase 4-5 scope.
@@ -832,24 +868,50 @@ Phase 0 + Phase 1A + Phase 1B shipped today by the `features-consolidation-tab` 
 gate** — operator must `git init` + create the empty `git@github.com:IggyIkenna/features-service.git` GitHub remote
 before the agent can scaffold the consolidated repo.
 
-| Phase | Repo | Commit | Push | Notes |
-|---|---|---|---|---|
-| 0 — pre-audit manifest | unified-trading-pm | (uncommitted artifact, ships with this PM commit) | this commit | 1286 lines, 152 KB; 503 py source files; 11 ext imports + 51 string refs |
-| 1A — UAC FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry | unified-api-contracts | `7f63ca3` | ✅ pushed | 83 feature_groups mapped, no cross-family collisions, 9 unit tests |
-| 1B — UTL ManifestWriter feature_family kwarg + MissingFeatureFamilyError | unified-trading-library | `c16cef3` | ✅ pushed | gate: feature_group ⇒ feature_family required; 4 record_* methods; 10 unit tests; production-safe (`add()` unchanged) |
+| Phase                                                                    | Repo                    | Commit                                            | Push        | Notes                                                                                                                  |
+| ------------------------------------------------------------------------ | ----------------------- | ------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0 — pre-audit manifest                                                   | unified-trading-pm      | PM@`1de574b4`                                     | ✅ pushed   | 1286 lines, 152 KB; 503 py source files; 11 ext imports + 51 string refs                                               |
+| 1A — UAC FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry           | unified-api-contracts   | `7f63ca3`                                         | ✅ pushed   | 83 feature_groups mapped, no cross-family collisions, 9 unit tests                                                     |
+| 1B — UTL ManifestWriter feature_family kwarg + MissingFeatureFamilyError | unified-trading-library | `c16cef3`                                         | ✅ pushed   | gate: feature*group ⇒ feature_family required; 4 record*\* methods; 10 unit tests; production-safe (`add()` unchanged) |
+| 2 — features-service LOCAL skeleton (PARTIAL — push gated)               | features-service (NEW)  | `1f2bc16`                                         | ⏸ BLOCKED  | 31 files / 5425 lines; 46 deps unioned; smoke + 2/2 tests + basedpyright clean; Pass 1 QG green except expected operator-gate (workspace-manifest registration). Awaiting operator to create empty GitHub remote + add manifest entry. |
 
-**Audit findings folded into plan**: F1-F7 above (LookaheadBiasError underprotection, UnifiedCloudConfig violation,
-4 additional lift candidates, Phase 4.1 scope-shrink, sports-as-largest, `add()` migration dependency, validate_df +
-NormalisingManifestWriter follow-ups).
+**Audit findings folded into plan**: F1-F8 above (LookaheadBiasError underprotection, UnifiedCloudConfig violation, 4
+additional lift candidates, Phase 4.1 scope-shrink, sports-as-largest, `add()` migration dependency, validate_df +
+NormalisingManifestWriter follow-ups, PM coverage-floor-guard MIN_COVERAGE path bug).
+
+## Phase 2 hand-off — operator action items
+
+The local `features-service` skeleton at `${WORKSPACE_ROOT}/features-service` is ready to push. **Three operator
+steps unblock the rest of Phase 2-3 in this session or a fresh Tab 2 spawn**:
+
+1. **Create the empty GitHub remote** (shared-state action):
+   ```bash
+   gh repo create IggyIkenna/features-service --private --confirm --description "Consolidated features-* service"
+   ```
+   Or via GitHub UI — empty repo, **no `--init`**, no README initialiser, no .gitignore preset (the local repo
+   already has all of these; an init would create a divergent base commit and force a merge).
+
+2. **Register `features-service` in PM `workspace-manifest.json`** so PM's `test_repo_in_manifest` integration
+   test passes for the new repo. The existing 8 features-* entries are templates; copy one and adjust the name +
+   git URL. Tier-classify as a service (not a library). Commit + push to PM.
+
+3. **Telegram-ack to Tab 2** ("remote ready") — Tab 2 will then run:
+   ```bash
+   cd ${WORKSPACE_ROOT}/features-service
+   git remote add origin git@github.com:IggyIkenna/features-service.git
+   git fetch origin live-defi-rollout 2>/dev/null  # may 404 if branch doesn't exist remotely yet — fine
+   git push -u origin live-defi-rollout
+   ```
+   then flip Phase 2 checkbox to `[x]` + start Phase 3 subtree merges (8 families × `git subtree merge --squash=false`).
 
 **Cross-side handshake status (per work-split § "Cross-side handshakes")**:
 
-- Harsh Tab 2 (features_repo_consolidation Phase 1-4) → Ikenna Tab 2 (live-pipeline Phase 4-7): **Phase 1 land
-  announced here**; Ikenna Tab 2 unblocked from continuing past their Phase-1-dependent work.
+- Harsh Tab 2 (features_repo_consolidation Phase 1-4) → Ikenna Tab 2 (live-pipeline Phase 4-7): **Phase 1 land announced
+  here**; Ikenna Tab 2 unblocked from continuing past their Phase-1-dependent work.
 
-- Harsh Tab 2 (ml-features-phase2a wires) → Ikenna Tab 2 (live-pipeline Phase 11 ServiceEmissionPolicy slice b):
-  not yet — wires happen in Phase 4 (Tab 12 Q1 absorption) which is after Phase 2 gate.
+- Harsh Tab 2 (ml-features-phase2a wires) → Ikenna Tab 2 (live-pipeline Phase 11 ServiceEmissionPolicy slice b): not yet
+  — wires happen in Phase 4 (Tab 12 Q1 absorption) which is after Phase 2 gate.
 
 **Hard gate hit**: Phase 2 (`phase-2-create-features-service-repo`) is `[HUMAN+AGENT]` — agent prepares local
-`git init` + skeleton + asks operator to create the empty remote on GitHub. Standing by for operator direction. Once
-the GitHub remote exists, Tab 2 picks Phase 2-3 back up.
+`git init` + skeleton + asks operator to create the empty remote on GitHub. Standing by for operator direction. Once the
+GitHub remote exists, Tab 2 picks Phase 2-3 back up.
