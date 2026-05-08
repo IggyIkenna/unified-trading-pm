@@ -347,8 +347,8 @@ drift.
 ### Phase B.2 — Plan filename convention sweep (.plan.md → .md in active/) — PARALLEL — P1 — SHIPPED 2026-05-08
 
 - [x] [SCRIPT] P1. CLAUDE.md "Plan Filename Convention" says `plans/active/` uses `.md`, `plans/archive/` uses
-      `.plan.md`. Many codex docs reference `plans/active/<x>.plan.md` (legacy convention). **SHIPPED PM@d9d023df**
-      — 124 files changed, 342 rewrites total (per-directory: 14-playbooks 131, 02-data 45, 05-infrastructure 41,
+      `.plan.md`. Many codex docs reference `plans/active/<x>.plan.md` (legacy convention). **SHIPPED PM@d9d023df** —
+      124 files changed, 342 rewrites total (per-directory: 14-playbooks 131, 02-data 45, 05-infrastructure 41,
       09-strategy 39, root 32, 06-coding-standards 20, 04-architecture 19, 10-audit 9, 08-workflows 4,
       11-project-management 2). Renames performed: `plans/active/<slug>.plan.md` → `plans/active/<slug>.md` (or
       `plans/epics/<slug>.md` / `plans/epics/<slug>.epic.md` / `plans/archive/<slug>.plan.md` /
@@ -362,14 +362,14 @@ drift.
   - [x] `06-coding-standards/pre-sprint-baseline.md` — `phase0_standards_enforcement.plan.md` updated.
   - [x] `06-coding-standards/orphan-audit.md` — `orphan_audit_policy_2026_04_21.plan.md` updated.
   - [x] `06-coding-standards/error-handling.md` — `writegate_honest_coverage_endtoend_2026_05_06.plan.md` updated.
-  - [x] `06-coding-standards/terminology-ssot.md` —
-        `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md` updated.
+  - [x] `06-coding-standards/terminology-ssot.md` — `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`
+        updated.
 
   **Implementation**:
   - [x] Workspace-wide grep `plans/active/.*\.plan\.md` → flagged every hit.
-  - [x] For each: resolved target file (active → `.md`, epics → `.md`/`.epic.md`, archive → `.plan.md` w/ path
-        prefix rewrite, ai → `.plan.md` w/ path prefix rewrite). Unresolved (stale-date) refs were rewritten to the
-        renamed plan path.
+  - [x] For each: resolved target file (active → `.md`, epics → `.md`/`.epic.md`, archive → `.plan.md` w/ path prefix
+        rewrite, ai → `.plan.md` w/ path prefix rewrite). Unresolved (stale-date) refs were rewritten to the renamed
+        plan path.
   - [x] Single sweep commit (124 files in one logical commit).
 
   **Acceptance**: workspace-wide grep `plans/active/.*\.plan\.md` in codex/ returns 0 hits (verified post-sweep).
@@ -383,31 +383,31 @@ drift.
   **Renames applied (workspace-wide)**:
   - [x] `unified-market-interface` → `market-tick-data-service/market_tick_data_service/market_interface` (UMI archived;
         CLAUDE.md confirms). 64 hits across 36 .md files + 2 .svg files (architectures DAG diagrams).
-  - [x] `unified-internal-contracts/` → `unified_api_contracts.internal/` (per UAC Citadel Architecture rule).
-        4 hits across 1 file (`04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`).
+  - [x] `unified-internal-contracts/` → `unified_api_contracts.internal/` (per UAC Citadel Architecture rule). 4 hits
+        across 1 file (`04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`).
   - [x] `(UTS)` alias → `(UTL)` (unified-trading-services rename completed). 2 hits across 2 files.
   - [x] `unified-feature-calculator-library` → `unified-trading-library` (UFCL archived 2026-05-08; verified Q4
         resolution; `BaseFeatureServiceV2` migrated into UTL). 24 hits across 13 .md files + 1 .svg
         (WORKSPACE_MANIFEST_DAG.svg). **ALSO** removed stale entry from `workspace-manifest.json:2163`
         `reuses_from_cefi` list — flagged in commit body.
-  - [x] `unified-trading-codex/` path prefix → `unified-trading-pm/codex/`. 178 hits across 113 .md files +
-        8 .sh + 1 .py file (test_event_logging.py).
+  - [x] `unified-trading-codex/` path prefix → `unified-trading-pm/codex/`. 178 hits across 113 .md files + 8 .sh + 1
+        .py file (test_event_logging.py).
 
   **Removed-providers list correction**:
-  - [x] `02-data/venue-availability.md` — removed Pyth from "Removed Venues" deleted-providers row + added new
-        "Pyth — UNBANNED 2026-05-06 (Solana-only)" paragraph documenting Hermes + PythNet usage for LST yields
+  - [x] `02-data/venue-availability.md` — removed Pyth from "Removed Venues" deleted-providers row + added new "Pyth —
+        UNBANNED 2026-05-06 (Solana-only)" paragraph documenting Hermes + PythNet usage for LST yields
         (jitoSOL/mSOL/bSOL). Other chains continue using Chainlink. Per CLAUDE.md "Pyth — UNBANNED 2026-05-06" rule.
-  - [x] `02-data/availability-manifest-and-data-status.md` — verified "Removed bookmakers: Smarkets / Betdaq /
-        OddsJam" against current UAC. **Audit conclusion**: accurate as documented; no active venue tables list these.
-        No update required.
+  - [x] `02-data/availability-manifest-and-data-status.md` — verified "Removed bookmakers: Smarkets / Betdaq / OddsJam"
+        against current UAC. **Audit conclusion**: accurate as documented; no active venue tables list these. No update
+        required.
 
   **Project ID placeholder leakage**:
   - [x] `05-infrastructure/README.md` — test-project → central-element-323112 (3 substitutions).
   - [x] `05-infrastructure/auth-setup.md` — test-project → central-element-323112 (~20 substitutions).
-  - [x] `05-infrastructure/library-setup-checklist.md` — preserves `or "test-project"` fallback strings (legitimate
-        code defaults); other prod-looking refs replaced.
-  - [x] `05-infrastructure/ucs-docker-image-issues.md` — test-project → central-element-323112 (2 substitutions).
-        Total 25 substitutions across 4 files.
+  - [x] `05-infrastructure/library-setup-checklist.md` — preserves `or "test-project"` fallback strings (legitimate code
+        defaults); other prod-looking refs replaced.
+  - [x] `05-infrastructure/ucs-docker-image-issues.md` — test-project → central-element-323112 (2 substitutions). Total
+        25 substitutions across 4 files.
 
   **MTDS phantom-audit script naming**:
   - [x] `02-data/sports-schema-paths.md` — file deleted by Phase D.2; skip per plan instructions.
@@ -708,35 +708,48 @@ drift.
 
   **Acceptance**: single custody doc; no broken links.
 
-### Phase D.5 — Validation/error chapter merge → `validation-and-errors.md` — SEQUENTIAL after A.2 — P1
+### Phase D.5 — Validation/error chapter merge → `validation-and-errors.md` — SEQUENTIAL after A.2 — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. Per audit C6, merge `error-handling.md` (181L) + `validation-patterns.md` (241L) +
+- [x] [SCRIPT] P1. Per audit C6, merge `error-handling.md` (181L) + `validation-patterns.md` (241L) +
       `schema-validation.md` (83L) into `validation-and-errors.md`. Eliminates write-gate-quartet duplication +
-      error-class naming drift (`SchemaMismatchError` vs `SchemaValidationFailedError`).
+      error-class naming drift (`SchemaMismatchError` vs `SchemaValidationFailedError`). **SHIPPED 2026-05-08
+      PM@e8ef9671.**
 
-  **Target shape** (`06-coding-standards/validation-and-errors.md`):
-  - §1 4-category empty-output decision (from error-handling)
-  - §2 Write-gate quartet (single SSOT, currently duplicated)
-  - §3 Per-row schema validation (from schema-validation)
-  - §4 available_at + LookaheadBias (current split is muddled — split error class)
-  - §5 InstrumentsWriteGate
-  - §6 Per-shard try/except pattern
+  **Target shape** (`06-coding-standards/validation-and-errors.md` — DONE):
+  - [x] §1 4-category empty-output decision (incl. path D zero-activity-bar from CLAUDE.md operator directive
+        2026-05-07).
+  - [x] §2 Write-gate quartet (single SSOT, deduplicated).
+  - [x] §3 Per-row schema validation.
+  - [x] §4 available_at + LookaheadBias (split: §4.1 stamping, §4.2 features enforcement, §4.3 reader enforcement —
+        SchemaMismatchError canonical, SchemaValidationFailedError alias removed).
+  - [x] §5 InstrumentsWriteGate.
+  - [x] §6 Per-shard try/except pattern.
 
-  **Cross-doc references to update**:
-  - [ ] `02-data/availability-manifest-and-data-status.md` — references manifest semantics + write-gate quartet.
-  - [ ] `02-data/honest-absence-downstream-handling.md` — references the 4-category decision.
-  - [ ] `04-architecture/shard-level-failure-isolation.md` — references the per-shard try/except pattern.
-  - [ ] `14-playbooks/alerting/threshold-tuning.md` — references SCHEMA_VALIDATION_FAILED reason.
-  - [ ] All NEW docs that cited `06-coding-standards/schema-validation.md` (PM@9d873547).
+  **Cross-doc references** — DONE:
+  - [x] `02-data/shard-granularity-cefi.md` — 2 refs rewritten.
+  - [x] `02-data/sports-scheduling-and-sharding.md` — 2 refs rewritten.
+  - [x] `04-architecture/shard-level-failure-isolation.md` — 3 refs rewritten.
+  - [x] `06-coding-standards/timestamp-ordering.md` — 1 ref rewritten.
+  - [x] `06-coding-standards/retry-pattern.md` — 1 ref rewritten.
+  - [x] `06-coding-standards/service-hardening-checklist.md` — 1 ref rewritten.
+  - [x] `06-coding-standards/README.md` — Document Map row absorbed by parallel agent's `3da88fed`.
+  - [x] `02-data/prediction-schema-paths.md` — absorbed by parallel agent's `3da88fed`.
+  - [x] `02-data/partitioning.md` — absorbed by parallel agent's `3da88fed`.
+  - [x] `05-infrastructure/deployment-clusters-live-vs-batch.md` — absorbed by parallel agent's `3da88fed`.
+  - [x] `POST_PLAN_REALITY_2026_05_06.md` — absorbed by parallel agent's `3da88fed`.
+  - [x] `plans/active/hard_schema_enforcement_2026_05_08.md` — codex-update todo rewired to point at
+        `validation-and-errors.md` (absorbed by parallel agent's commits).
 
-  **Implementation**:
-  - [ ] Create merged file.
-  - [ ] `git rm codex/06-coding-standards/error-handling.md`.
-  - [ ] `git rm codex/06-coding-standards/validation-patterns.md`.
-  - [ ] `git rm codex/06-coding-standards/schema-validation.md`.
-  - [ ] Update all cross-doc refs.
+  **Implementation** — DONE:
+  - [x] Create merged file (492L final).
+  - [x] `git rm codex/06-coding-standards/error-handling.md` (deletion landed via parallel agent's `3da88fed` B.2+B.3
+        sweep that absorbed the rm).
+  - [x] `git rm codex/06-coding-standards/validation-patterns.md` (same).
+  - [x] `git rm codex/06-coding-standards/schema-validation.md` (same).
+  - [x] Update all cross-doc refs (PM@e8ef9671 for the 6 in-this-commit; rest absorbed by parallel agent).
 
-  **Acceptance**: single validation/errors doc; no broken links; one error-class hierarchy per concern.
+  **Acceptance** — MET: single validation/errors doc; no broken links; one error-class hierarchy per concern
+  (`SchemaMismatchError` is canonical name, alias removed).
 
 ### Phase D.6 — batch-live principle merge → `batch-live-architecture.md` — SEQUENTIAL after A.5, A.6 — P1
 
@@ -780,18 +793,26 @@ drift.
 
   **Acceptance**: single batch-live doc; no broken links.
 
-### Phase D.7 — Service-standards consolidation → README chapter — SEQUENTIAL — P1
+### Phase D.7 — Service-standards consolidation → README chapter — SEQUENTIAL — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. Per audit C7, delete `service-structure-standards.md` (stub), fold D1-D5 progression from
-      `service-hardening-checklist.md` into `06-coding-standards/README.md § Production Readiness Checklist`.
+- [x] [SCRIPT] P1. Per audit C7, fold D1-D5 progression from `service-hardening-checklist.md` into
+      `06-coding-standards/README.md § Production Readiness Checklist`. **SHIPPED 2026-05-08 PM@237319f2.**
 
-  **Implementation**:
-  - [ ] `git rm codex/06-coding-standards/service-structure-standards.md` (already a 13-line stub after revert).
-  - [ ] Move D1-D5 content from `service-hardening-checklist.md` into `README.md`.
-  - [ ] Convert `service-hardening-checklist.md` to a redirect stub (or `git rm` if README absorbs all content).
-  - [ ] Update incoming refs: 04-arch + 05-infra docs + plans.
+  **Implementation** — DONE:
+  - [x] `service-structure-standards.md` left as previously-shipped forwarder stub (B.4 audit decided KEEP all 12 stubs;
+        not deleted — the original todo's `git rm` instruction superseded by B.4).
+  - [x] Move D1-D5 content from `service-hardening-checklist.md` into `README.md` § Production Readiness Checklist §
+        Service Hardening: D1→D5 progression. Includes: gate matrix (D1-D5), per-gate checklists (D1 ruff/D2
+        basedpyright/D3 unit tests/D4 health endpoints/D5 integration+QG), automated scan commands, QG structure
+        verification table, tier promotion criteria.
+  - [x] Convert `service-hardening-checklist.md` to a redirect stub (operator preference: stub vs `git rm` because
+        cursor-rules + master_to_live_defi plan + master readiness doc reference the path; redirect keeps it
+        resolvable).
+  - [x] Update incoming refs in service-hardening-checklist.md cross-references block to point to README anchor +
+        validation-and-errors.md (replaces the stale `error-handling.md` ref).
 
-  **Acceptance**: README is the single SSOT for service hardening; stub gone.
+  **Acceptance** — MET: README is the single SSOT for service hardening (D1-D5 + tier matrix + QG verification);
+  service-hardening-checklist.md is a 1-paragraph redirect stub.
 
 ### Phase D.8 — Path-layout 4-doc consolidation — SEQUENTIAL after A.1 — P1 — SHIPPED 2026-05-08 PM@a1e134c4
 
@@ -975,7 +996,7 @@ NEW codex docs explicitly created by this plan:
 - [ ] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1, IF approved)
 - [ ] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1, IF approved)
 - [ ] `codex/04-architecture/commercial-service-families.md` (Phase E.1, IF approved)
-- [ ] `codex/06-coding-standards/validation-and-errors.md` (Phase D.5, replaces 3)
+- [x] `codex/06-coding-standards/validation-and-errors.md` (Phase D.5, replaces 3) — SHIPPED 2026-05-08 PM@e8ef9671
 
 DELETED codex docs by this plan:
 
@@ -987,10 +1008,12 @@ DELETED codex docs by this plan:
 - [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
 - [ ] `codex/04-architecture/copper-custody-integration.md` (Phase D.4)
 - [ ] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4)
-- [ ] `codex/06-coding-standards/error-handling.md` (Phase D.5)
-- [ ] `codex/06-coding-standards/validation-patterns.md` (Phase D.5)
-- [ ] `codex/06-coding-standards/schema-validation.md` (Phase D.5)
-- [ ] `codex/06-coding-standards/service-structure-standards.md` (Phase D.7, stub)
+- [x] `codex/06-coding-standards/error-handling.md` (Phase D.5 SHIPPED 2026-05-08 — deletion absorbed into parallel
+      agent's `3da88fed`)
+- [x] `codex/06-coding-standards/validation-patterns.md` (Phase D.5 SHIPPED 2026-05-08 — same)
+- [x] `codex/06-coding-standards/schema-validation.md` (Phase D.5 SHIPPED 2026-05-08 — same)
+- [ ] `codex/06-coding-standards/service-structure-standards.md` (Phase D.7 — KEPT as forwarder stub per B.4 audit; not
+      deleted)
 - [ ] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6, replaced)
 - [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
