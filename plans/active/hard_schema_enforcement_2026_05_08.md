@@ -176,13 +176,13 @@ partial commit would mass-fail every existing futures row mid-migration.
 
 ## Sibling plan relationships
 
-- `tradfi_master_2026_05_07.plan.md` Q1+Q2 (futures expiry hard-required + options expiration flip) — sequenced BEFORE
+- `tradfi_master_2026_05_07.md` Q1+Q2 (futures expiry hard-required + options expiration flip) — sequenced BEFORE
   Phase 1 here.
-- `sports_master_2026_05_07.plan.md` Phase 3 C.7 — overlaps with Phase 3 here on STANDINGS / XG / MATCHES flatten work;
+- `sports_master_2026_05_07.md` Phase 3 C.7 — overlaps with Phase 3 here on STANDINGS / XG / MATCHES flatten work;
   coordinate to avoid duplicating cassette parity tests.
-- `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A — Phase 4 row_key shape validation extends the
+- `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A — Phase 4 row_key shape validation extends the
   writegate per-row failure routing.
-- `infrastructure_master_2026_05_07.plan.md` — parent umbrella; this plan is referenced from the "Hard schema
+- `infrastructure_master_2026_05_07.md` — parent umbrella; this plan is referenced from the "Hard schema
   enforcement at write boundary" pointer section.
 
 ## Plan-format compliance

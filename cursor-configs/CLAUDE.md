@@ -26,7 +26,7 @@ a real wallet ≥7 continuous days by 2026-05-23, with hedge legs across 6 perp 
 Hyperliquid, Aster) and full AWS↔GCP cloud parity.
 
 - **Working plan (current state, todos, Q&A, risk register):**
-  `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md`
+  `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md`
 - **Codex SSOT companion (durable readiness model + doc-touchpoint map):**
   `unified-trading-pm/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`
 
@@ -63,7 +63,7 @@ Read these before making ANY code changes:
    canonical first then fall back to legacy (`reader.py` does this; the data-status reconciler regex must match both:
    `(?:category|asset_group)=`). Manifest pre-flight is hive-key-agnostic — it indexes by `(venue, data_type, date)`
    only, so legacy `category=` data on disk is correctly skipped iff the manifest has a captured row for it. Plan:
-   `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (Waves A/B/E shipped; C/D =
+   `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md` (Waves A/B/E shipped; C/D =
    features-\* + execution-service consumer keys).
 
 ## Key Rules (Quick Reference)
@@ -148,7 +148,7 @@ Read these before making ANY code changes:
   supersedes prior `expected_unattempted` rows by row_key. **Coverage % at every drilldown level** =
   `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — denominator is the full universe
   (catalog × dates × data_types). SSOTs: `codex/02-data/availability-manifest-and-data-status.md` (manifest schema +
-  4-state taxonomy); `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § Phase 3.D.5 (full
+  4-state taxonomy); `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 3.D.5 (full
   architecture).
 - **Honest absence vs fake placeholders (CRITICAL — applies top-to-bottom across every service)** — when a service runs
   end-to-end, every output row must reflect REAL work OR a clearly-flagged honest gap. Three categories of "missing",
@@ -277,7 +277,7 @@ Read these before making ANY code changes:
   compat shims" rules.
 
   **Companion plan + executor handover**: full per-service verify/fix/lift/build checklist with anti-patterns and
-  parallel-stream coordination notes in `unified-trading-pm/plans/epics/infrastructure_master_2026_05_07.plan.md`
+  parallel-stream coordination notes in `unified-trading-pm/plans/epics/infrastructure_master_2026_05_07.md`
   (umbrella) which folds-in `plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md` + its `.HANDOVER.md`
   companion (commit `d591416d`). Sub-agents executing this work pick the rules up via this section + the umbrella + the
   archived handover doc + SUB_AGENT_MANDATORY_RULES.md inheritance.
@@ -291,7 +291,7 @@ Read these before making ANY code changes:
   canonical historical source's slower archive time). Banned anti-patterns: separate live-only data_types like
   `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH`; distinct field sets between live + batch parquets; deriving
   `available_at` at read-time from the live-batch mode flag. Reference: 2026-05-06 user direction during
-  writegate-honest-coverage planning. Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md`.
+  writegate-honest-coverage planning. Plan: `writegate_honest_coverage_endtoend_2026_05_06.md`.
 
 - **No double SSOT in data-saving methodology (CRITICAL — applies top-to-bottom)** — Where two paths produce the same
   outcome, one is deleted. Banned coexistence: `_create_empty_output()` AND `_handle_empty_tick_data()` (writegate plan
@@ -322,7 +322,7 @@ Read these before making ANY code changes:
   trade LTP. NO silent NaN placeholder rows. The `_create_empty_output()`-style placeholder method is **banned** from
   `base_adapter` and any equivalent base class. Reference incidents: 2026-05-05 MDPS 1440 NaN OHLC bars per day per
   (venue, data_type); 2026-05-07 RED ALERT (5 CeFi VMs writing 96-100% empty rows with all blank reasons —
-  bitfinex/bitget/kraken). Plan: `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A + Phase 3.D.5 (Waves
+  bitfinex/bitget/kraken). Plan: `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A + Phase 3.D.5 (Waves
   1, 2, 2.M shipped 2026-05-07; Wave 3.M zero-activity-bar adapter audit pending).
 
   **Reason taxonomy (codified 2026-05-07 — operator direction).** The 3-category model above is the WRITE-side
@@ -350,7 +350,7 @@ Read these before making ANY code changes:
   bundled data_type means adding it to UAC `BUNDLED_DATA_TYPES` AND seeding its registry — no half-measures, no
   helper-call-pattern. The standalone `check_cluster_coverage` helper is private to UTL after the contract change;
   callers that try to use it directly outside `record_captured` get a deprecation error. Plan:
-  `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 1A.
+  `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 1A.
 
 - **`available_at` is per-row, write-time, equal to live-pipeline-arrival (workspace-wide)** — Every shard's parquet
   contains an `available_at` column. Each row's value = when the live pipeline would have actually had that row's
@@ -375,7 +375,7 @@ Read these before making ANY code changes:
   informative for prediction). Cluster validation per `(canonical_question_group, day)` checks that all expected
   market_ids with active windows in that day are represented (HOURLY → 24 clusters expected, DAILY → 1, etc.).
   LookaheadBiasError respects per-market lifecycle: a feature compute at time T can only consume ticks where
-  `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`. Plan: `predictions_master_2026_05_07.plan.md`
+  `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`. Plan: `predictions_master_2026_05_07.md`
   (asset_group umbrella; folds-in
   `plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`).
 
@@ -397,7 +397,7 @@ Read these before making ANY code changes:
   multi-process detection fires AND per-VM shard isolation isn't set → raise `MultiWorkerWithoutShardIsolationError`.
   New base-service.sh QG STEP 5.66 AST-walks launcher scripts that fork multi-process; asserts envvar setting. Reference
   incident: 2026-05-04 instruments-service `00f6352` + `619a32e` chunk workers without isolation clobbered each other's
-  manifest entries. Plan: `pre_flight_concurrency_hardening_2026*<TBD>.plan.md` (Plan C in writegate follow-ups).
+  manifest entries. Plan: `pre_flight_concurrency_hardening_2026*<TBD>.md` (Plan C in writegate follow-ups).
 
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
@@ -634,8 +634,8 @@ memory.
 need on-chain Solana prices; Chainlink covers EVM only (Arb / Base / Polygon), not Solana; no viable Switchboard wiring
 exists in workspace. Re-add Pyth via Hermes (HTTPS pull) for batch and PythNet (Solana RPC) for live. Scope: Solana-only
 price reads. Other chains continue using Chainlink. Decision recorded in
-`unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` Q&A section +
-`unified-trading-pm/plans/active/defi_master_2026_05_07.plan.md` (`mtds-s3-5-pyth-oracle` todo lifted from
+`unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` Q&A section +
+`unified-trading-pm/plans/active/defi_master_2026_05_07.md` (`mtds-s3-5-pyth-oracle` todo lifted from
 `plans/archive/consolidated_defi_data_pipeline_2026_04_15.plan.md`).
 
 ## Version Graduation (1.0.0 Process)
@@ -900,6 +900,43 @@ Markdown checkbox: `- [x]` for done, `- [ ]` for pending. Format: `- [x] [SCRIPT
 `- [ ] [AGENT] P0. Fix...`. This ensures Cursor Plan Mode renders filled vs hollow circles correctly. See
 `plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
 
+## Plan Filename Convention + 3-Layer Model (codified 2026-05-08)
+
+| Directory                    | Extension        | Why                                                                                          |
+| ---------------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
+| `plans/active/`              | `<slug>.md`      | Native markdown preview in Cursor / VS Code / GitHub web UI                                  |
+| `plans/epics/` (masters)     | `<slug>.md`      | Granular asset_group / domain umbrellas                                                      |
+| `plans/epics/` (May-23 epics)| `<slug>.epic.md` | Domain-target wrappers for May-23 cutover                                                    |
+| `plans/archive/`             | `<slug>.plan.md` | Frozen historical state — DO NOT rename, breaks archaeology in commit messages + external refs |
+| `plans/ai/`                  | `<slug>.plan.md` | AI-generated staging dir; promotion to `active/` renames to `.md`                            |
+
+**Rule.** New plans land in `plans/active/<slug>.md` (or `plans/epics/<slug>.md` for granular masters / `<slug>.epic.md` for May-23 epics). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`. The 2026-05-08 sweep (commits `aa72177d` rename + `cca954ff` cross-ref rewrite) is the codifying boundary.
+
+**3-Layer plan model:**
+
+```
+master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master, lives in active/)
+        │
+        ├── plans/epics/*.epic.md   ← May-23 deadline epics (domain-target wrappers)
+        │       │
+        │       └─ each references ↓
+        │
+        └── plans/epics/*.md        ← granular masters (asset_group umbrellas: cefi/tradfi/sports/predictions/etc.)
+                │
+                └─ each references ↓
+        │
+        └── plans/active/*.md       ← granular sub-plans (one workstream each)
+                │
+                └─ each references codex/, code, scripts/
+```
+
+- **Epics** orchestrate domain targets for May 23; consume granular masters + sub-plans. Read-mostly: writes only to consumed-plans table or end-state criteria.
+- **Masters** are asset_group / domain umbrellas; consume sub-plans.
+- **Sub-plans** own todos for a single workstream.
+- None of the layers duplicates content — each adds orchestration above the layer below.
+
+See [`plans/epics/README.md`](../plans/epics/README.md) and [`plans/PLAN_FORMAT.md`](../plans/PLAN_FORMAT.md) for the canonical structure.
+
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
 This rule has TWO mutually-reinforcing halves. Both are non-negotiable. Violating either breaks parallel-agent
@@ -1058,9 +1095,9 @@ audit-at-every-phase-boundary discipline keeps the doc layer ahead of (or at par
 
 The live-pipeline activation (3 plans + 4 codex docs landed 2026-05-08) follows this pattern:
 
-- `live_pipeline_mtds_mdps_features_2026_05_08.plan.md` Phase 14 lists 8 codex docs (3 NEW + 5 UPDATE).
-- `gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md` Phase 7 lists 6 codex docs (1 NEW + 5 UPDATE).
-- `features_repo_consolidation_2026_05_08.plan.md` Phase 9 lists 6 codex docs (1 NEW + 5 UPDATE).
+- `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 14 lists 8 codex docs (3 NEW + 5 UPDATE).
+- `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 7 lists 6 codex docs (1 NEW + 5 UPDATE).
+- `features_repo_consolidation_2026_05_08.md` Phase 9 lists 6 codex docs (1 NEW + 5 UPDATE).
 - All 4 NEW docs were stubbed at plan-creation time (codex/05-infrastructure/live-pipeline-architecture.md +
   replay-subsystem.md + codex/02-data/pipeline-mode-partition.md +
   codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md) so the design is captured upfront.
@@ -1447,8 +1484,8 @@ git log --oneline <branch>..origin/<branch>   # incoming commits, if any
   listing your local commits + the incoming ones. Append a one-liner ping in `_agent_pings.md`. Continue with anything
   you CAN do; main + operator decide rebase / merge / cherry-pick / drop.
 
-**Plan-of-record + Q&A bus.** Every spawned tab has a single **plan-of-record** (e.g. `cefi_master.plan.md`,
-`writegate_honest_coverage.plan.md`, `defi_master.plan.md`) — that's where its todos live, where it flips checkboxes as
+**Plan-of-record + Q&A bus.** Every spawned tab has a single **plan-of-record** (e.g. `cefi_master.md`,
+`writegate_honest_coverage.md`, `defi_master.md`) — that's where its todos live, where it flips checkboxes as
 it ships, and where it writes a `## Open questions` section for blockers. Q&A format:
 
 ```markdown
@@ -1474,7 +1511,7 @@ flips.
 **Ping ledger (`_agent_pings.md`).** Ephemeral doorbell — always ≤10 lines (active pings only). Format:
 
 ```text
-[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10 word summary>; see <plan-of-record>.plan.md
+[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10 word summary>; see <plan-of-record>.md
 ```
 
 Spawned agent appends a one-liner when it has a Q on its plan-of-record; main agent removes the line when the Q is
@@ -1533,7 +1570,7 @@ every code + plan-flip commit sha. Then go quiet — don't pick up new work auto
 1. `git fetch origin live-defi-rollout && git log --oneline -25 origin/live-defi-rollout` — summarise incoming commits
    since yesterday. Don't auto-pull; operator pulls explicitly when ready to sync.
 2. Re-read yesterday's work-split plans (where partial items roll forward) + `_agent_pings.md` for overnight pings.
-3. **Daily ledger sweep**: scan all `plans/active/*.plan.md` for `## Open questions` blocks. Remove ✅ RESOLVED Q&As
+3. **Daily ledger sweep**: scan all `plans/active/*.md` for `## Open questions` blocks. Remove ✅ RESOLVED Q&As
    older than 24h. Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, re-prompt the spawned agent or
    escalate. Verify `_agent_pings.md` has no orphan lines.
 4. **Draft today's two work-split plans** (one Ikenna, one Harsh) using the plan-shape template below. Pull in carryover
@@ -1619,7 +1656,7 @@ checkboxes + the codex SSOTs + the commit history.
 
 - **Don't** put Q&A into the work-split plan itself — that's main-agent-only writing surface. Q&A goes on the agent's
   plan-of-record (the master / domain plan).
-- **Don't** mix the daily split with the master plan body — `master_to_live_defi_2026_05_23.plan.md` is the durable
+- **Don't** mix the daily split with the master plan body — `master_to_live_defi_2026_05_23.md` is the durable
   readiness model; today's split is the daily orchestration surface. Both exist; neither replaces the other.
 - **Don't** write spawn prompts in chat — they belong in the work-split plan body so the operator can paste them
   verbatim into a fresh Cursor / Claude Code tab without re-typing.
