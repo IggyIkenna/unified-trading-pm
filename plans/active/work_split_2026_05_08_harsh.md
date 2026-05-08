@@ -640,7 +640,7 @@ implement-from-spec work — Ikenna T6 ships UAC SSOTs + DART codex spec, you co
       `(client_id, account_id,     strategy_id)` tuple. Capital allocation matrix from Ikenna T6 enforced at
       execution-service entry (reject if computed position would breach allocation). ~2 AI-days.
 - [ ] [BUILD] P0. **DART manual-trade UI — 5 surfaces** per Ikenna T6's codex spec
-      ([`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
+      ([`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
       or extension): (a) DeFi swap / lend / borrow / stake actions per chain × protocol for `carry_staked_basis`; (b)
       CeFi order placement (limit / market / stop) across Bybit / Deribit / Binance / OKX; (c) ML training trigger
       (pause / resume / retrain) per ML archetype; (d) sports bet placement for backtest exec validation; (e)

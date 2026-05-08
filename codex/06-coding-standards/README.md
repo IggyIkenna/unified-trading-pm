@@ -67,7 +67,7 @@ All other `os.environ` / `os.getenv()` access in service code is banned. Use `ge
 | Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning) |
 | Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                             |
 | Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                         |
-| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](../09-strategy/cross-cutting/operational-modes-matrix.md)    |
+| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)    |
 | Service orchestration patterns (import contract, handler-orchestrator split, etc.) | [service-orchestration-patterns.md](service-orchestration-patterns.md)                     |
 
 ---

@@ -5,10 +5,10 @@ scope: [engineer, admin]
 # DART Manual-Trade Lane — Per-Archetype Scope Specification
 
 > **Plan-of-record**:
-> [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
+> [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
 > deliverable #4. **Parent epic**:
-> [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../plans/epics/cross_cutting_may_23_2026.epic.md). **Live-only
-> success criterion**: [`master_to_live_defi_2026_05_23.md`](../../../plans/active/master_to_live_defi_2026_05_23.md)
+> [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../../plans/epics/cross_cutting_may_23_2026.epic.md). **Live-only
+> success criterion**: [`master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md)
 > Group G item 23 (DART manual-trade gate).
 
 ## 1. Why this doc exists
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 The cross-cutting epic frames deliverable #4 as: _"the UI needs to be able to replicate everything that we're doing"_ —
 every automated archetype on the May-23 critical path must have a DART manual-fallback surface that exercises the SAME
 code path as the automated lane. The operator-confirmed bar from
-[`master_to_live_defi_2026_05_23.md`](../../../plans/active/master_to_live_defi_2026_05_23.md) Group G item 23 is:
+[`master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G item 23 is:
 
 > _"DART terminal in UTS-UI visualizes the strategy archetype end-to-end; operator first puts trades on manually →
 > backend executes through the same path as automation → monitor for the gate window → flip switch to automation."_
@@ -33,7 +33,7 @@ that resolution.
 the prediction_markets epic scope; live wiring is post-May-23 work.
 
 This doc is a **peer** to [`operational-modes-matrix.md`](operational-modes-matrix.md) (the orthogonal-axes mode SSOT)
-and **builds on** [`../../04-architecture/manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md) (the
+and **builds on** [`../../04-architecture/manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) (the
 existing ManualInstruction / ManualExecutionMode / `/manual/instruction` API SSOT). The surfaces this doc requires for
 May-23 are **enrichments of those existing surfaces**, not greenfield UI.
 
@@ -45,7 +45,7 @@ The strategy layer emits a polymorphic `StrategyInstruction` whose actions are e
 `LP_BURN`). DART must replicate each action that a May-23 critical-path archetype emits in manual mode. The matrix
 below covers the 11 actions in scope for the May-23 cycle; `CONVERT_DUST` + `LP_MINT` + `LP_BURN` ride alongside the
 DeFi LP archetype activation per
-[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
+[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
 
 **Legend**: ✅ = required for May-23 cutover (live archetypes that emit this action). ◐ = backtest exec validation only
 (archetype emits this action but archetype is backtest-only this cycle). ✗ = post-May-23 (no live or backtest archetype
@@ -63,7 +63,7 @@ emits this action this cycle, OR the action lives in a deferred archetype family
 | `TRANSFER`  | ✅             | **CARRY_STAKED_BASIS** (operator funds DeFi wallet from CEX), **CARRY_BASIS_PERP** (cross-venue rebalance)                                                                                    | New DART panel: per-(source, dest) account transfer. CEX → DeFi wallet (Binance/OKX/Bybit → on-chain wallet). Sub-account moves within CeFi venue. Wires through `execution-service` `INTERNAL_SUBACCOUNT` + `CEX_WITHDRAWAL_DEPOSIT` + `ON_CHAIN_TRANSFER` primitives per `strategy-summary.md` § Transfer primitives. | ✅                                |
 | `BRIDGE`    | ✅             | **CARRY_STAKED_BASIS** (cross-chain rebalance), `YIELD_ROTATION_LENDING` (post-May-23)                                                                                                        | Same DART panel as `TRANSFER`; mode toggle for cross-chain. Across / Stargate / LayerZero per `strategy-summary.md`. Required cross-chain pairs: Ethereum ↔ Arbitrum, Ethereum ↔ Base, Solana ↔ Ethereum (via Wormhole / Allbridge if Across not yet supported on Solana — confirm at impl time).                    | ✅                                |
 | `ATOMIC`    | ✅             | **CARRY_STAKED_BASIS** (flash-loan-backed open: Aave flash loan → swap → stake → deposit → borrow → repay, all in one tx)                                                                     | New DART panel: bundled action submission. Wires through `execution-service` flash-loan receiver (`FlashLoanReceiver.sol` deployed per chain). Operator submits the bundle shape via UI, backend executes atomically.                                                                                                   | ✅                                |
-| `CANCEL`    | ✅             | All archetypes that emit live orders (`TRADE`, pending DEX swaps, pending bridges)                                                                                                            | Already covered by `/manual/cancel` endpoint per [`manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md). DART surface = "cancel my last in-flight" button per archetype context.                                                                                                                    | ✅                                |
+| `CANCEL`    | ✅             | All archetypes that emit live orders (`TRADE`, pending DEX swaps, pending bridges)                                                                                                            | Already covered by `/manual/cancel` endpoint per [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md). DART surface = "cancel my last in-flight" button per archetype context.                                                                                                                    | ✅                                |
 
 ## 3. Per-archetype manual-fallback map
 
@@ -74,7 +74,7 @@ the manual surfaces those archetypes emit. Each archetype's manual-fallback requ
 
 > **Scope note.** Post-May-23 archetypes (full Phase 9 expansions: MEV, DeFi LP, market-making sub-variants, full vol
 > surface, prediction MM, cross-domain event arb, portfolio sleeves) extend this spec under
-> [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md)
+> [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md)
 > § post-May-23 archetypes. The UAC enum is the always-authoritative count; this doc cites the live + backtest subset
 > by name.
 
@@ -108,7 +108,7 @@ the manual surfaces those archetypes emit. Each archetype's manual-fallback requ
 
 The following archetypes are NOT in scope for May-23 manual surfaces. They will land their manual surfaces alongside
 their archetype activation in the post-May-23 roadmap (see
-[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md) §
+[`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md) §
 post-May-23 archetypes).
 
 - **MARKET_MAKING_CONTINUOUS** + **MARKET_MAKING_EVENT_SETTLED** — `QUOTE` action surfaces deferred.
@@ -145,7 +145,7 @@ of existing surfaces** (not greenfield UI). Each row references the existing sur
 
 2. **DART manual CeFi order placement** across the 4 live CeFi venues + Hyperliquid + Aster.
    - **Existing surface**: `manual-trading-panel.tsx` already supports CeFi limit / market / stop. The
-     [`manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md) doc shows venue list resolves
+     [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) doc shows venue list resolves
      dynamically from UAC `CAPABILITY_DECLARATIONS` registry.
    - **Enrichment**: verify Hyperliquid + Aster are in `CAPABILITY_DECLARATIONS` for the manual-instruction venue list;
      if not, add them. Verify TWAP / VWAP / ICEBERG / SOR / BEST_PRICE algos are exposed for each.
@@ -168,7 +168,7 @@ of existing surfaces** (not greenfield UI). Each row references the existing sur
      home / away / draw), matching engine returns simulated fill. Wires to `execution-service` matching-engine path with
      `OperationalMode.BACKTEST`.
    - **Backtest-only**. Live wiring is deferred per
-     [`sports_master_2026_05_07.md`](../../../plans/epics/sports_master_2026_05_07.md) post-May-23 scope.
+     [`sports_master_2026_05_07.md`](../../../../plans/epics/sports_master_2026_05_07.md) post-May-23 scope.
 
 5. **DART manual prediction-market trade** — Polymarket / Kalshi / Opinion-Trade / CME-event-arb (backtest-only).
    - **Existing surface**: `manual-trading-panel.tsx` may already support prediction category. Verify.
@@ -187,14 +187,14 @@ boundary. The schema is:
 
 > **Open dependency**: the canonical strategy_id grammar is owned by Tab 6.A (cross-cutting deliverable #2) and
 > currently 🟡 BLOCKED pending operator triage of
-> [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md).
+> [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md).
 > The existing UAC v2 grammar is 6-axis (`FAMILY.ARCHETYPE.slot_id` where
 > `slot_id = venue-asset-instrument-period-quote-env`). Once the operator picks a grammar, this section's example string
 > is updated accordingly. The DART manual surface MUST consume the grammar that lands; it does NOT define a parallel
 > one.
 
 The `/manual/instruction` API already has a `strategy_id: str` field per
-[`manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md). DART UI populates this field from the
+[`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md). DART UI populates this field from the
 selected archetype + venue + instrument_type combination using `unified_api_contracts.strategy.format_strategy_id` (or
 the equivalent helper that lands post-Tab-6.A-triage).
 
@@ -238,7 +238,7 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 - **Granular role-based access (RBAC)** for non-Ikenna operators on cluster — deferred. Audit-log of every manual click
   via the existing `unified-events-interface` event stream is sufficient for May-23 (every manual instruction emits a
   `MANUAL_INSTRUCTION_SUBMITTED` event with `submitted_by` operator identity per
-  [`manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md)).
+  [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md)).
 - **Tamper-evident audit trail** (cryptographic chaining of MANUAL_INSTRUCTION events) — deferred. Light audit-log via
   the event stream is acceptable for a 3-day manual gate window.
 - **Live wiring for prediction-market and sports manual trades** — backtest-only this cycle per plan open questions #2
@@ -248,7 +248,7 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
   activation in the post-May-23 roadmap.
 - **`QUOTE` action manual surface** — deferred (no live archetype emits `QUOTE` this cycle).
 - **DART v2 archetype roadmap** (full 46-archetype + 9-family rollout per UAC v2 enum) — tracked in
-  [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
+  [`plans/epics/strategy_and_dart_master_2026_05_07.md`](../../../../plans/epics/strategy_and_dart_master_2026_05_07.md).
 
 ## 8. Cross-references
 
@@ -261,35 +261,35 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 - [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
   — Tab 6.A finding that strategy_id grammar is already shipped (this spec consumes whichever grammar lands
   post-triage).
-- [`codex/04-architecture/manual-trade-booking.md`](../../04-architecture/manual-trade-booking.md) — existing
+- [`codex/04-architecture/manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) — existing
   ManualInstruction / `/manual/instruction` API SSOT (this doc enriches, not replaces).
 - [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](operational-modes-matrix.md) — peer doc
   (orthogonal-axes mode SSOT).
-- [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](onboarding-checklist.md) — strategy onboarding flow that
+- [`codex/09-strategy/operational/onboarding-checklist.md`](../../operational/onboarding-checklist.md) — strategy onboarding flow that
   the manual lane integrates with (every onboarded strategy gets a manual fallback automatically).
-- [`codex/09-strategy/cross-cutting/client-onboarding.md`](client-onboarding.md) — per-client manual lane setup flow.
-- [`codex/09-strategy/strategy-summary.md`](../strategy-summary.md) — 8-family / 18-archetype baseline (codex SSOT;
+- [`codex/09-strategy/operational/client-onboarding.md`](../../operational/client-onboarding.md) — per-client manual lane setup flow.
+- [`codex/09-strategy/strategy-summary.md`](../../strategy-summary.md) — 8-family / 18-archetype baseline (codex SSOT;
   stale relative to UAC v2 enum's 9-family / 46-archetype shape — see issue doc above).
-- [`codex/09-strategy/architecture-v2/README.md`](../architecture-v2/README.md) — architecture-v2 SSOT entry point.
+- [`codex/09-strategy/architecture-v2/README.md`](../README.md) — architecture-v2 SSOT entry point.
 
 ### Archetype docs referenced by this spec (May-23 live + backtest subset)
 
-- [`carry-staked-basis.md`](../architecture-v2/archetypes/carry-staked-basis.md) — **live May-23 lead**.
-- [`carry-basis-perp.md`](../architecture-v2/archetypes/carry-basis-perp.md) — **live May-23**.
-- [`carry-basis-dated.md`](../architecture-v2/archetypes/carry-basis-dated.md) — live May-23 (crypto), TradFi roadmap.
-- [`carry-recursive-staked.md`](../architecture-v2/archetypes/carry-recursive-staked.md) — post-May-23.
-- [`ml-directional-continuous.md`](../architecture-v2/archetypes/ml-directional-continuous.md) — **live May-23 (CeFi)**.
-- [`ml-directional-event-settled.md`](../architecture-v2/archetypes/ml-directional-event-settled.md) — backtest May-23.
-- [`rules-directional-continuous.md`](../architecture-v2/archetypes/rules-directional-continuous.md) — backtest May-23.
-- [`rules-directional-event-settled.md`](../architecture-v2/archetypes/rules-directional-event-settled.md) — backtest
+- [`carry-staked-basis.md`](../archetypes/carry-staked-basis.md) — **live May-23 lead**.
+- [`carry-basis-perp.md`](../archetypes/carry-basis-perp.md) — **live May-23**.
+- [`carry-basis-dated.md`](../archetypes/carry-basis-dated.md) — live May-23 (crypto), TradFi roadmap.
+- [`carry-recursive-staked.md`](../archetypes/carry-recursive-staked.md) — post-May-23.
+- [`ml-directional-continuous.md`](../archetypes/ml-directional-continuous.md) — **live May-23 (CeFi)**.
+- [`ml-directional-event-settled.md`](../archetypes/ml-directional-event-settled.md) — backtest May-23.
+- [`rules-directional-continuous.md`](../archetypes/rules-directional-continuous.md) — backtest May-23.
+- [`rules-directional-event-settled.md`](../archetypes/rules-directional-event-settled.md) — backtest
   May-23.
-- [`yield-staking-simple.md`](../architecture-v2/archetypes/yield-staking-simple.md) — post-May-23 (piggybacks).
-- [`yield-rotation-lending.md`](../architecture-v2/archetypes/yield-rotation-lending.md) — post-May-23 (piggybacks).
-- [`market-making-continuous.md`](../architecture-v2/archetypes/market-making-continuous.md) — post-May-23.
-- [`market-making-event-settled.md`](../architecture-v2/archetypes/market-making-event-settled.md) — post-May-23.
-- [`event-driven.md`](../architecture-v2/archetypes/event-driven.md) — post-May-23.
-- [`vol-trading-options.md`](../architecture-v2/archetypes/vol-trading-options.md) — post-May-23.
-- [`stat-arb-pairs-fixed.md`](../architecture-v2/archetypes/stat-arb-pairs-fixed.md) — post-May-23.
-- [`stat-arb-cross-sectional.md`](../architecture-v2/archetypes/stat-arb-cross-sectional.md) — post-May-23.
-- [`arbitrage-price-dispersion.md`](../architecture-v2/archetypes/arbitrage-price-dispersion.md) — post-May-23.
-- [`liquidation-capture.md`](../architecture-v2/archetypes/liquidation-capture.md) — post-May-23.
+- [`yield-staking-simple.md`](../archetypes/yield-staking-simple.md) — post-May-23 (piggybacks).
+- [`yield-rotation-lending.md`](../archetypes/yield-rotation-lending.md) — post-May-23 (piggybacks).
+- [`market-making-continuous.md`](../archetypes/market-making-continuous.md) — post-May-23.
+- [`market-making-event-settled.md`](../archetypes/market-making-event-settled.md) — post-May-23.
+- [`event-driven.md`](../archetypes/event-driven.md) — post-May-23.
+- [`vol-trading-options.md`](../archetypes/vol-trading-options.md) — post-May-23.
+- [`stat-arb-pairs-fixed.md`](../archetypes/stat-arb-pairs-fixed.md) — post-May-23.
+- [`stat-arb-cross-sectional.md`](../archetypes/stat-arb-cross-sectional.md) — post-May-23.
+- [`arbitrage-price-dispersion.md`](../archetypes/arbitrage-price-dispersion.md) — post-May-23.
+- [`liquidation-capture.md`](../archetypes/liquidation-capture.md) — post-May-23.

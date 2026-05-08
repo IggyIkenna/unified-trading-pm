@@ -125,7 +125,7 @@ Any `unified-config-interface` module that calls `get_secret` or uses `Credentia
 
 When `UnifiedCloudConfig.is_mock_mode()` is true (`DATA_MODE=mock` / legacy `CLOUD_MOCK_MODE`), services must **not**
 require resolution of external provider secrets (for example Tardis) for startup. See
-`09-strategy/cross-cutting/operational-modes-matrix.md` for the full mode axis SSOT.
+`09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` for the full mode axis SSOT.
 
 ### Dev-only CLI dependencies
 

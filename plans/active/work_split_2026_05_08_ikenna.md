@@ -754,7 +754,7 @@ catalogue baseline).
       execution rejects if computed position would breach allocation. **Done**: schema ships, unit tests covering
       allocation respect + tagging propagation shape. ~2 AI-days.
 - [ ] [DESIGN] P0. **DART manual-trade lane scope spec** — write
-      `codex/09-strategy/cross-cutting/dart-manual-trade-spec.md` (or extend existing `operational-modes-matrix.md`)
+      `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (or extend existing `operational-modes-matrix.md`)
       with per-archetype list of operator-replicable manual surfaces. Required surfaces: (a) DeFi swap / lend / borrow /
       stake actions per chain × protocol for `carry_staked_basis`; (b) CeFi order placement (limit / market / stop)
       across Bybit / Deribit / Binance / OKX; (c) ML training trigger (pause / resume / retrain) per ML archetype; (d)
@@ -773,7 +773,7 @@ catalogue baseline).
 - [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
 - [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](../../codex/09-strategy/cross-cutting/onboarding-checklist.md)
   — strategy onboarding flow (your schemas wire into this)
-- [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
+- [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT (extend or peer doc)
 
 **Sub-agent fan-out**:
@@ -790,7 +790,7 @@ catalogue baseline).
 | sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests           | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
 | sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                           | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                              |
 | sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                           | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                   |
-| sa6.DART-spec        | NEW `codex/09-strategy/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market) | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                      |
+| sa6.DART-spec        | NEW `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market) | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                      |
 | sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc  | All UAC; codex (read-only)                                                                                                                                                                   |
 | sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)         | All UI source; UAC                                                                                                                                                                           |
 
@@ -1105,7 +1105,7 @@ BEFORE doing anything else, read in order:
   5. plans/epics/cross_cutting_may_23_2026.epic.md — 5-deliverable scope (parent epic).
   6. codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
      baseline (your enumeration source).
-  7. codex/09-strategy/cross-cutting/operational-modes-matrix.md — DART manual-trade lane
+  7. codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md — DART manual-trade lane
      existing SSOT (extend or peer with new dart-manual-trade-spec.md).
 
 Your agent-tag: cross-cutting-design-tab. Your tab number: 6.

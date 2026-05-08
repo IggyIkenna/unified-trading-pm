@@ -41,7 +41,7 @@ mock/real semantics, hot reload, zombie process prevention.
 
 **Cross-repo operational modes:** For the canonical env-axis matrix (including `DATA_MODE`, `TESTNET_MODE`, migration
 from `CLOUD_MOCK_MODE`, and Layer 3 SIT expectations), see
-[operational-modes-matrix.md](../09-strategy/cross-cutting/operational-modes-matrix.md). This guide focuses on
+[operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md). This guide focuses on
 `dev-start.sh` presets and UI-specific toggles.
 
 ---
@@ -501,7 +501,7 @@ cd ../unified-trading-system-ui && npm run generate:types
 
 - Testing infrastructure (emulators, mocks, cassettes): `06-coding-standards/README.md` (Test Infrastructure)
 - UI branding and shared components: `06-coding-standards/ui-branding.md`
-- UI dependency matrix and API wiring: `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+- UI dependency matrix and API wiring: `05-infrastructure/ui-dependency-matrix.md`
 - Quality gates: `06-coding-standards/quality-gates.md`
 - Workspace bootstrap (fresh machine): `unified-trading-pm/scripts/workspace/workspace-bootstrap.sh`
 - Per-repo dev setup: `scripts/setup.sh` in each repo (template: `06-coding-standards/setup-standards.md`)

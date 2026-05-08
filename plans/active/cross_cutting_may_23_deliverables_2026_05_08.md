@@ -111,7 +111,7 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 - [x] [DESIGN] **DART scope decision** — per-archetype list of operator-replicable manual surfaces. Operator-confirmed
       bar: every live archetype must have a manual fallback. Sports backtest exec validation manual surface acceptable
       (not live). Owner: Ikenna T6. **DONE 2026-05-08 (Tab 6.C)** — `unified-trading-pm@ab595616` shipped
-      [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+      [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
       (8 sections: scope decision matrix for all 11 StrategyInstruction action types · per-archetype manual-fallback map
       covering all 18 codex archetypes · 5 BUILDs Harsh T6 ships · strategy_id attribution discipline · capital
       allocation respect · post-May-23 deferrals). Cross-link added to peer doc `operational-modes-matrix.md` via
@@ -166,7 +166,7 @@ without touching them yet) while Ikenna T6 finalizes UAC schema.
 - [x] **DART manual-trade lane scope**: is operator-only manual sufficient, or do we need a third-party broker-style
       DART for external operators? **✅ RESOLVED 2026-05-08 by 6.C** (`pm@ab595616`): operator-only this cycle;
       external-broker-style DART post-May-23. Per the
-      [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+      [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
       § "Defer post-May-23" sub-section (third-party operator UI + granular RBAC + tamper-evident audit trail all
       explicitly out of scope this cycle).
 - [x] **Strategy ID versioning rule**: hash-based / sequential / semver-style? Used for batch-vs-live reconciliation
@@ -202,7 +202,7 @@ This plan owns the 4 cross-cutting deliverables; downstream consumers reference 
   catalogue baseline (existing SSOT this plan extends)
 - [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](../../codex/09-strategy/cross-cutting/onboarding-checklist.md)
   — strategy onboarding flow that needs ID-attribution wiring
-- [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/cross-cutting/operational-modes-matrix.md)
+- [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT
 
 ## DONE-2026-05-08 (Tab 6.B) — Client model + capital allocation
@@ -267,7 +267,7 @@ Sub-agent 6.C shipped deliverable #4 [DESIGN] tier + deliverable #1 [DESIGN] (UI
 
 - **unified-trading-pm@ab595616** `docs(codex): add DART manual-trade-spec — per-archetype scope for May-23 cutover` —
   NEW
-  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
   (314 lines, 8 sections covering all 11 StrategyInstruction action types + 18 codex archetypes + 5 BUILDs Harsh T6
   ships + strategy_id attribution + capital allocation respect + post-May-23 deferrals).
 - **unified-trading-pm@2a0d105d** (parallel-agent commit, content correct) — cross-link to peer doc
@@ -329,7 +329,7 @@ Tab 6 main agent dispatched 3 parallel sub-agents per work-split plan
   consumes existing `ClientDefinition` + `TradingAccount` (per Option A migration), and `CapitalAllocation` once
   re-exported from `strategy.py` facade. Pending Option A migration per issue doc addendum.
 - Deliverable #4 [BUILD] 5 DART manual surfaces (Harsh T6) — UNBLOCKED. Spec lives at
-  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md).
+  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
   Strategy ID attribution per spec § 5 defers to whichever grammar Option A produces (existing 6-axis grammar expected).
 - Deliverable #1 [BUILD] strategy catalogue UI (Harsh T6) — UNBLOCKED in scope (route + filter axes + acceptance
   criteria declared above § "Strategy catalogue UI route — scope assignment"); the consumer-side data shape depends on
@@ -578,7 +578,7 @@ items unblocked).
   "Strategy catalogue UI route — scope assignment (2026-05-08, Tab 6.C)" above. Lives in `unified-trading-system-ui`
   trading-UI surface, not deployment-UI.
 - **#4 [BUILD] 5 DART manual surfaces** — consume the spec at
-  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md).
+  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
   Strategy ID attribution per spec § 5 uses the existing 6-axis grammar.
 
 ### Process notes for the operator (worth a glance)
@@ -625,7 +625,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 | 6    | `[ ]`                                                                     | #2 Strategy ID registry populated (line 78)              | Harsh T6                                                                                                                                                             | Already populated via existing `STRATEGY_REGISTRY` derivation; remaining work = ensure `representative_slot_labels` cover every Harsh-needed cell. `work_split_2026_05_08_harsh.md` line 108                    |
 | 7    | `[ ]`                                                                     | #2 Strategy ID refactor sweep (line 79)                  | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 108 — mechanical sweep across execution / strategy / ml-inference / pnl-attribution / batch-live-recon / position-balance-monitor / alerting / deployment-api |
 | 8    | `[ ]`                                                                     | #3 Client-account-strategy tagging propagated (line 106) | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 110 — consumes `ClientDefinition` + `TradingAccount` + `CapitalAllocation` from existing `strategy.py` facade                                                 |
-| 9-13 | `[ ]`                                                                     | #4 5 DART manual surfaces (lines 120-127)                | Harsh T6                                                                                                                                                             | Spec at [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md) (314 lines, 8 sections) + `work_split_2026_05_08_harsh.md` line 111      |
+| 9-13 | `[ ]`                                                                     | #4 5 DART manual surfaces (lines 120-127)                | Harsh T6                                                                                                                                                             | Spec at [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md) (314 lines, 8 sections) + `work_split_2026_05_08_harsh.md` line 111      |
 
 ### Cross-references (every external touchpoint)
 
@@ -649,7 +649,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
   `pm@d6d0cd57` to canonical 9-family / 53-archetype shape. Closes the codex SSOT drift root cause that caused this plan
   to be drafted greenfield in the first place.
 - **DART codex spec**
-  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md)
+  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
   — NEW (`pm@ab595616`, 314 lines). Harsh T6's 5 DART builds consume this spec.
 
 ### Process notes still in flight (NOT this-plan deliverables; tracked elsewhere)

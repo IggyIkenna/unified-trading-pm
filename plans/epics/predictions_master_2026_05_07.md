@@ -37,7 +37,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
 - [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
   pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
-- [`codex/09-strategy/cross-cutting/prediction-markets.md`](../../codex/09-strategy/cross-cutting/prediction-markets.md)
+- [`codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](../../codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
   — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group
   SSOT
 

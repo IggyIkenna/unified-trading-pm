@@ -32,7 +32,7 @@ Each lane:
   auth.
 - Routes through the **same** execution-service code path as automated mode — only the approval gate differs.
 
-Full lane spec: [`../09-strategy/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/cross-cutting/dart-manual-trade-spec.md).
+Full lane spec: [`../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
 
 ## Research-service surface
 
@@ -58,8 +58,8 @@ Research-service does NOT execute live orders. Live execution always flows throu
 
 ## Cross-references
 
-- DART manual-trade spec: [`../09-strategy/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/cross-cutting/dart-manual-trade-spec.md)
-- Operational modes matrix: [`../09-strategy/cross-cutting/operational-modes-matrix.md`](../09-strategy/cross-cutting/operational-modes-matrix.md)
+- DART manual-trade spec: [`../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+- Operational modes matrix: [`../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
 - Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Execution architecture: [`defi-execution-overview.md`](defi-execution-overview.md) +

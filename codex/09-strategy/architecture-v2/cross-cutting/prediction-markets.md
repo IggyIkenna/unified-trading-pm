@@ -95,14 +95,14 @@ where `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`.
 
 For BUNDLED prediction data_types, `ManifestWriter.record_captured` requires `expected_root_clusters` +
 `cluster_extractor` per the workspace cluster-validation rule
-([`../../02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md) §
+([`../../../02-data/availability-manifest-and-data-status.md`](../../../02-data/availability-manifest-and-data-status.md) §
 "Cluster validation MANDATORY at record_captured"). Per `(canonical_question_group, day)`: HOURLY → 24 expected
 market_ids, DAILY → 1, ELECTION → 1 spanning weeks/months. Under-coverage triggers `record_failed(ClusterCoverageError)`
 instead of `record_captured`.
 
 Lifecycle + canonical-group detail:
-[`../../02-data/prediction-schema-paths.md`](../../02-data/prediction-schema-paths.md) +
-[`../../04-architecture/instruments-live-architecture.md`](../../04-architecture/instruments-live-architecture.md).
+[`../../../02-data/prediction-schema-paths.md`](../../../02-data/prediction-schema-paths.md) +
+[`../../../04-architecture/instruments-live-architecture.md`](../../../04-architecture/instruments-live-architecture.md).
 
 ### Proposed: Three-Tier Classification
 
