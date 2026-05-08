@@ -27,4 +27,11 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT. Beef-up sub-agent BLOCKED ping resolved via fast-forward rebase + push of sports_master beef-up.)_
+_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08
+absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still
+IN FLIGHT. Beef-up sub-agent BLOCKED ping resolved via fast-forward rebase + push of sports_master beef-up.)_
+
+[2026-05-08 14:00 UTC] alerting-phase2-publisher-hook — UAC rules.py parallel-edit collision blocking kill_switch_scope
+field; see alerting_service_live_rules_2026_05_07.md [2026-05-08 12:43 UTC] deploy-missing-phase0-facilitation — 3
+IAM/audit/rate-limit decisions ready for operator review; see deploy_missing_auto_launch_2026_05_07.md § "Operator
+decision summary".
