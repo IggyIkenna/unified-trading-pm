@@ -2,12 +2,6 @@
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # Strategy Architecture v2 — Family / Archetype / Axes / Cross-Cutting
 
 > **Status:** Canonical architecture as of 2026-04-17. Supersedes the category-based organization in
@@ -61,21 +55,21 @@ v2 fixes this by:
 
 ## 9 Families
 
-A strategy belongs to exactly one family, determined by its **primary alpha source**. The 9th family
-(`PORTFOLIO`) was added 2026-04-25 in Phase 9 for cross-category sleeves; SSOT is UAC
+A strategy belongs to exactly one family, determined by its **primary alpha source**. The 9th family (`PORTFOLIO`) was
+added 2026-04-25 in Phase 9 for cross-category sleeves; SSOT is UAC
 `unified_api_contracts.internal.architecture_v2.enums.StrategyFamily`.
 
-| #   | Family                          | Alpha source                                                                 | Doc                                                                  |
-| --- | ------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1   | **ML Directional**              | Model-predicted outcome probability vs implied                               | [families/ml-directional.md](families/ml-directional.md)             |
-| 2   | **Rules Directional**           | Hard-coded feature-threshold rules producing fire/no-fire signals            | [families/rules-directional.md](families/rules-directional.md)       |
-| 3   | **Carry & Yield**               | Rate / yield differential capture (funding, lending, staking, basis)         | [families/carry-and-yield.md](families/carry-and-yield.md)           |
-| 4   | **Arbitrage / Structural Edge** | Price dispersion or protocol mechanics (risk-free or near-risk-free payment) | [families/arbitrage-structural.md](families/arbitrage-structural.md) |
-| 5   | **Market Making**               | Bid-ask spread capture via two-sided quoting                                 | [families/market-making.md](families/market-making.md)               |
-| 6   | **Event-Driven**                | Scheduled external events with measurable surprise                           | [families/event-driven.md](families/event-driven.md)                 |
-| 7   | **Vol Trading**                 | Vol-metric dislocation (IV/RV, skew, term, cross-asset vol)                  | [families/vol-trading.md](families/vol-trading.md)                   |
-| 8   | **Stat Arb / Pairs**            | Spread mean-reversion or momentum on paired underlyings                      | [families/stat-arb-pairs.md](families/stat-arb-pairs.md)             |
-| 9   | **Portfolio**                   | Cross-category sleeve allocation (multi-strategy / risk parity / factor / tactical overlay) | [families/portfolio.md](families/portfolio.md)         |
+| #   | Family                          | Alpha source                                                                                | Doc                                                                  |
+| --- | ------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1   | **ML Directional**              | Model-predicted outcome probability vs implied                                              | [families/ml-directional.md](families/ml-directional.md)             |
+| 2   | **Rules Directional**           | Hard-coded feature-threshold rules producing fire/no-fire signals                           | [families/rules-directional.md](families/rules-directional.md)       |
+| 3   | **Carry & Yield**               | Rate / yield differential capture (funding, lending, staking, basis)                        | [families/carry-and-yield.md](families/carry-and-yield.md)           |
+| 4   | **Arbitrage / Structural Edge** | Price dispersion or protocol mechanics (risk-free or near-risk-free payment)                | [families/arbitrage-structural.md](families/arbitrage-structural.md) |
+| 5   | **Market Making**               | Bid-ask spread capture via two-sided quoting                                                | [families/market-making.md](families/market-making.md)               |
+| 6   | **Event-Driven**                | Scheduled external events with measurable surprise                                          | [families/event-driven.md](families/event-driven.md)                 |
+| 7   | **Vol Trading**                 | Vol-metric dislocation (IV/RV, skew, term, cross-asset vol)                                 | [families/vol-trading.md](families/vol-trading.md)                   |
+| 8   | **Stat Arb / Pairs**            | Spread mean-reversion or momentum on paired underlyings                                     | [families/stat-arb-pairs.md](families/stat-arb-pairs.md)             |
+| 9   | **Portfolio**                   | Cross-category sleeve allocation (multi-strategy / risk parity / factor / tactical overlay) | [families/portfolio.md](families/portfolio.md)                       |
 
 ### Family assignment decision tree
 
@@ -90,8 +84,8 @@ A strategy belongs to exactly one family, determined by its **primary alpha sour
 8. Is the alpha from **explicit if-else rules on features**? → **Rules Directional**
 9. Is the alpha from **cross-category sleeve allocation** (sub-strategies are themselves the underlyings)? →
    **Portfolio**
-9. Is the alpha from **cross-category sleeve allocation** (sub-strategies are themselves the underlyings)? →
-   **Portfolio**
+10. Is the alpha from **cross-category sleeve allocation** (sub-strategies are themselves the underlyings)? →
+    **Portfolio**
 
 If it seems to straddle, identify the _primary_ alpha. "With vol overlay" where directional is primary is ML Directional
 with vol hedge as risk management, not a composite.
@@ -108,29 +102,29 @@ Archetypes distinguish different _code paths_ within a family. Distinguishing ax
 (continuous vs event-settled), **signal logic shape** (fixed basket vs cross-sectional ranking), or **structural
 sub-variant** (e.g. MM passive-spread vs inventory-skew vs ML-lean; VOL spread-structures vs term-structure-arb).
 
-The 2026-04-17 baseline shipped 18 archetypes; the Phase 9 expansion (2026-04-25) added 35 more for full coverage of
-MEV (4), DeFi LP (3), Market Making sub-variants (5), VOL surface (17 variants from 1), prediction MM (1),
-cross-domain event arb (1), and Portfolio sleeves (4). SSOT: UAC
+The 2026-04-17 baseline shipped 18 archetypes; the Phase 9 expansion (2026-04-25) added 35 more for full coverage of MEV
+(4), DeFi LP (3), Market Making sub-variants (5), VOL surface (17 variants from 1), prediction MM (1), cross-domain
+event arb (1), and Portfolio sleeves (4). SSOT: UAC
 `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype`.
 
-| Family                 | Archetypes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Docs                     |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ML Directional         | `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 2 docs under archetypes/ |
-| Rules Directional      | `RULES_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 2 docs                   |
-| Carry & Yield          | `CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`, `CARRY_RECURSIVE_STAKED`, `YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | 6 docs                   |
-| Arbitrage / Structural | `ARBITRAGE_PRICE_DISPERSION`, `LIQUIDATION_CAPTURE`, `ARBITRAGE_MEV_SANDWICH`, `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN`, `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_CROSS_DOMAIN_EVENT`                                                                                                                                                                                                                                                                                                                                                                                                                                            | 7 docs                   |
-| Market Making          | `MARKET_MAKING_CONTINUOUS` (legacy), `MARKET_MAKING_EVENT_SETTLED` (legacy), `MARKET_MAKING_PASSIVE_SPREAD`, `MARKET_MAKING_INVENTORY_SKEW`, `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`, `MARKET_MAKING_PREDICTION`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT`                                                                                                                                                                                                                                                                                                                                                       | 10 docs                  |
-| Event-Driven           | `EVENT_DRIVEN`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | 1 doc                    |
-| Vol Trading            | `VOL_TRADING_OPTIONS` (legacy), `VOL_ARB_RV_IV`, `VOL_SPREAD_STRUCTURES`, `VOL_CARRY`, `VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`, `VOL_STRADDLE`, `VOL_SYNTHETIC_DELTA`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`, `VOL_0DTE_GAMMA_SCALPING`, `VOL_0DTE_PIN_RISK`, `VOL_TERM_STRUCTURE_ARB`, `VOL_TERM_STRUCTURE_SLOPE`, `VOL_DISPERSION`, `VOL_VARIANCE_SWAP`, `VOL_LEAPS_CONVEXITY`, `VOL_CROSS_ASSET_SPREAD`, `VOL_RATIO_SPREAD`                                                                                                                                                                                                          | 19 docs                  |
-| Stat Arb / Pairs       | `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 2 docs                   |
-| Portfolio              | `PORTFOLIO_MULTI_STRATEGY`, `PORTFOLIO_RISK_PARITY`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_TACTICAL_OVERLAY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 4 docs                   |
+| Family                 | Archetypes                                                                                                                                                                                                                                                                                                                                                                                                                                    | Docs                     |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| ML Directional         | `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                                   | 2 docs under archetypes/ |
+| Rules Directional      | `RULES_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                             | 2 docs                   |
+| Carry & Yield          | `CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`, `CARRY_RECURSIVE_STAKED`, `YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`                                                                                                                                                                                                                                                                                                     | 6 docs                   |
+| Arbitrage / Structural | `ARBITRAGE_PRICE_DISPERSION`, `LIQUIDATION_CAPTURE`, `ARBITRAGE_MEV_SANDWICH`, `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN`, `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_CROSS_DOMAIN_EVENT`                                                                                                                                                                                                                                     | 7 docs                   |
+| Market Making          | `MARKET_MAKING_CONTINUOUS` (legacy), `MARKET_MAKING_EVENT_SETTLED` (legacy), `MARKET_MAKING_PASSIVE_SPREAD`, `MARKET_MAKING_INVENTORY_SKEW`, `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`, `MARKET_MAKING_PREDICTION`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT`                                                                                                                                               | 10 docs                  |
+| Event-Driven           | `EVENT_DRIVEN`                                                                                                                                                                                                                                                                                                                                                                                                                                | 1 doc                    |
+| Vol Trading            | `VOL_TRADING_OPTIONS` (legacy), `VOL_ARB_RV_IV`, `VOL_SPREAD_STRUCTURES`, `VOL_CARRY`, `VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`, `VOL_STRADDLE`, `VOL_SYNTHETIC_DELTA`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`, `VOL_0DTE_GAMMA_SCALPING`, `VOL_0DTE_PIN_RISK`, `VOL_TERM_STRUCTURE_ARB`, `VOL_TERM_STRUCTURE_SLOPE`, `VOL_DISPERSION`, `VOL_VARIANCE_SWAP`, `VOL_LEAPS_CONVEXITY`, `VOL_CROSS_ASSET_SPREAD`, `VOL_RATIO_SPREAD` | 19 docs                  |
+| Stat Arb / Pairs       | `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`                                                                                                                                                                                                                                                                                                                                                                                            | 2 docs                   |
+| Portfolio              | `PORTFOLIO_MULTI_STRATEGY`, `PORTFOLIO_RISK_PARITY`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_TACTICAL_OVERLAY`                                                                                                                                                                                                                                                                                                                              | 4 docs                   |
 
 **Total: 53 archetypes.** Every strategy maps to exactly one. Per-archetype docs under `archetypes/` cover the May-23
 live + immediate-backtest subset; the Phase 9 expansions are catalogued in the UAC enum + cross-referenced from
 [`category-instrument-coverage.md`](category-instrument-coverage.md).
 
-**Rule:** archetype IDs use structural descriptors (continuous vs event_settled, fixed vs cross_sectional, sub-variant
-qualifiers like `_PASSIVE_SPREAD` / `_RV_IV` / `_MEV_*`), never category prefixes.
+**Rule:** archetype IDs use structural descriptors (continuous vs event*settled, fixed vs cross_sectional, sub-variant
+qualifiers like `_PASSIVE_SPREAD` / `_RV_IV` / `\_MEV*\*`), never category prefixes.
 
 ## 7 Axes of Composition
 
@@ -552,22 +546,22 @@ Full naming convention:
 SSOT: UAC `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`. Phase 9 added the last 3
 (`CONVERT_DUST` / `LP_MINT` / `LP_BURN`) for the DeFi LP archetypes.
 
-| #   | Action          | Target semantics                                      |
-| --- | --------------- | ----------------------------------------------------- |
-| 1   | `TRADE`         | position_units on instrument                          |
-| 2   | `SWAP`          | one-shot fungible exchange                            |
-| 3   | `LEND`          | supplied_amount on lending protocol                   |
-| 4   | `BORROW`        | debt_amount on lending protocol                       |
-| 5   | `STAKE`         | staked_amount on staking protocol                     |
-| 6   | `UNSTAKE`       | unstake amount                                        |
-| 7   | `QUOTE`         | continuous two-sided quote with spread + inventory    |
-| 8   | `TRANSFER`      | target balance at same-chain destination              |
-| 9   | `BRIDGE`        | cross-chain move                                      |
-| 10  | `ATOMIC`        | multi-leg bundle (all-or-nothing)                     |
-| 11  | `CANCEL`        | abort prior instruction by ID                         |
-| 12  | `CONVERT_DUST`  | sweep small leftover balances back to share-class     |
-| 13  | `LP_MINT`       | open LP position (Uniswap V3 NPM mint / pool deposit) |
-| 14  | `LP_BURN`       | close LP position (NPM burn / pool withdraw)          |
+| #   | Action         | Target semantics                                      |
+| --- | -------------- | ----------------------------------------------------- |
+| 1   | `TRADE`        | position_units on instrument                          |
+| 2   | `SWAP`         | one-shot fungible exchange                            |
+| 3   | `LEND`         | supplied_amount on lending protocol                   |
+| 4   | `BORROW`       | debt_amount on lending protocol                       |
+| 5   | `STAKE`        | staked_amount on staking protocol                     |
+| 6   | `UNSTAKE`      | unstake amount                                        |
+| 7   | `QUOTE`        | continuous two-sided quote with spread + inventory    |
+| 8   | `TRANSFER`     | target balance at same-chain destination              |
+| 9   | `BRIDGE`       | cross-chain move                                      |
+| 10  | `ATOMIC`       | multi-leg bundle (all-or-nothing)                     |
+| 11  | `CANCEL`       | abort prior instruction by ID                         |
+| 12  | `CONVERT_DUST` | sweep small leftover balances back to share-class     |
+| 13  | `LP_MINT`      | open LP position (Uniswap V3 NPM mint / pool deposit) |
+| 14  | `LP_BURN`      | close LP position (NPM burn / pool withdraw)          |
 
 Plus parallel **`AccountInstruction`** (operator-driven) for CLOSE_ALL, SET_MARGIN_MODE, EMERGENCY_LIQUIDATE,
 TRANSFER_SUBACCOUNT.
