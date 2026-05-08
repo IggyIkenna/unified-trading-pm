@@ -476,7 +476,7 @@ todos:
         **Coordination**: `ml_and_features_master` Phase 2.UTL-LIFT closed by 5.7 above (FeatureBatchHandler).
         Cross-Plan-Coordination-Banners rule satisfied — both plans cite the same `UTL@7aba113c`.
 
-        **Wave 3b consumer migration progress (2026-05-08 PM)** — 4 of 8 families migrated to UTL primitives + F6:
+        **Wave 3b consumer migration progress (2026-05-08 PM)** — 8 of 8 families migrated to UTL primitives + F6:
         - **multi_timeframe** — features-service@92119b77 — F6 only (no UTL primitive duplicates).
         - **onchain** — features-service@912cab65 — local `broadcast_sink.py` + `live_data_source.py` deleted, replaced
           with UTL canonicals (`unified_trading_library.feature_service_base.{broadcast,live_source}`); adapter facade
@@ -487,10 +487,39 @@ todos:
         - **volatility** — features-service@81e6cbb2 — local `broadcast_sink.py` + `live_data_source.py` deleted,
           replaced with UTL canonicals; `cli/handlers/live_handler.py` imports UTL directly; F6 migrated at all 6
           callsites in `engine/orchestrator.py`.
+        - **calendar** — features-service@a39b96db — `broadcast_sink.py` + `live_data_source.py` re-export UTL
+          canonicals (`unified_trading_library.feature_service_base.{broadcast,live_source}`); `BuilderEntry` +
+          `resolve_build_order` imported from `feature_service_base.builder_registry` (UTL@0bfad836); F6 callsite
+          at `engine/calendar_orchestrator.py:373` passes `feature_family="calendar"`. Tests
+          `tests/calendar/unit/test_orchestration.py` updated to patch UTL module path
+          (`unified_trading_library.feature_service_base.{broadcast,live_source}.get_queue_client`) instead of the
+          per-family re-export module.
+        - **commodity** — features-service@d5c0d012 — F6 only at 1 callsite in `cli/handlers/batch_handler.py:269`
+          (`feature_family="commodity"`); no UTL primitive duplicates locally. **Finding (Case 1 in-scope fix
+          shipped same commit):** pre-F6 the `add()` raised `MissingFeatureFamilyError` (a `ValueError`) which
+          the narrow except `(ValueError, OSError, RuntimeError, KeyError, TypeError)` swallowed silently; with
+          F6's gate-passing `feature_family="commodity"` the downstream `writer.write()` exposes a latent
+          `google.api_core.exceptions.NotFound` path (test bucket doesn't exist). Per the method's "non-fatal"
+          contract, broadened catch to `Exception`. Found via
+          `tests/commodity/unit/test_mode_handlers.py::TestBatchHandlerRun::test_run_dry_run_returns_true`.
+        - **cross_instrument** — features-service@015139ee — `BuilderEntry` + `resolve_build_order` imported
+          from UTL (UTL@0bfad836); F6 migrated at both callsites in `cli/handlers/batch_handler.py:472,479`
+          (`feature_family="cross_instrument"`). Local `BaseFeatureCalculator` (polars-based) NOT migrated —
+          UTL canonical is pandas-based; cross-paradigm refactor of ~30 calculators is beyond mechanical
+          Wave 3b scope.
+        - **delta_one** — features-service@83f5c2e1 — `broadcast_sink.py` + `live_data_source.py` re-export
+          UTL canonicals; `BuilderEntry` + `resolve_build_order` imported from UTL (UTL@0bfad836); F6
+          migrated at both callsites in `engine/orchestrator.py:316,322` (`feature_family="delta_one"`).
+          Local `BaseFeatureCalculator` (polars-based) NOT migrated for same cross-paradigm reason as
+          cross_instrument.
 
-        Sibling Wave 3b agent owns the remaining 4 families (calendar / commodity / cross_instrument / delta_one).
+        **Deferrals from Wave 3b (out of scope for mechanical migration; require follow-up plan):**
+        - cross_instrument + delta_one local `BaseFeatureCalculator` (polars-based, pandas mismatch with UTL).
+        - cross_instrument + delta_one + commodity local `BatchHandler` (extends `ModeHandler`, fundamentally
+          different shape from `FeatureBatchHandler[FamilyConfigT]` ABC).
+        - `WatermarkAlignmentFanin` consumer wiring (no callsites yet — greenfield in UTL).
     status: done
-    note: "All 7 Phase 5 UTL primitives shipped 2026-05-08 (5.1=77aa1586, 5.2=3611112b, 5.3=d85e62e8, 5.4-5.5=85948c87, 5.6=0bfad836, 5.7=7aba113c, 5.8=4354276c-pre-existing). Wave 3b consumer migration: 4 of 8 families landed 2026-05-08 PM (multi_timeframe=92119b77, onchain=912cab65, sports=f01eff1b, volatility=81e6cbb2); calendar/commodity/cross_instrument/delta_one in flight on sibling agent. Remaining consumer wiring (3 base_calculators + 7 BuilderEntry + cross-instrument/multi-timeframe watermark fanin) is Wave 6+ scope (Phase 6 of this plan)."
+    note: "All 7 Phase 5 UTL primitives shipped 2026-05-08 (5.1=77aa1586, 5.2=3611112b, 5.3=d85e62e8, 5.4-5.5=85948c87, 5.6=0bfad836, 5.7=7aba113c, 5.8=4354276c-pre-existing). Wave 3b consumer migration: 8 of 8 families landed 2026-05-08 PM (multi_timeframe=92119b77, onchain=912cab65, sports=f01eff1b, volatility=81e6cbb2, calendar=a39b96db, commodity=d5c0d012, cross_instrument=015139ee, delta_one=83f5c2e1). Polars-based BaseFeatureCalculator + ModeHandler-based BatchHandler subclasses NOT migrated — cross-paradigm refactor beyond mechanical scope. Remaining consumer wiring (3 base_calculators + cross-instrument/multi-timeframe watermark fanin) is Wave 6+ scope (Phase 6 of this plan)."
 
   - id: phase-6-regression-parity-test
     content: |
