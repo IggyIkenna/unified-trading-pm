@@ -5,8 +5,8 @@ scope: [engineer, admin]
 # Master Readiness — Live DeFi Trading by 2026-05-23
 
 **Status:** Active companion SSOT for the master plan. **Working plan (authoritative for current state + todos):**
-[`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
-**Created:** 2026-05-06 **Locked to:** `live-defi-rollout`
+[`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) **Created:**
+2026-05-06 **Locked to:** `live-defi-rollout`
 
 This file is the **codex SSOT companion** to the master plan. It owns the durable bits (readiness model, doc-touchpoint
 map, drift audit pattern). The plan owns the working bits (current state, Q&A, risk register, week-by-week DAG, todos).
@@ -75,8 +75,9 @@ in `repos/<service>.yaml` extend their item set to track 4–23 (items 1–3 are
 17. **Backtest fidelity** — real gas, real market impact, realistic matching engine for AMM pools / perpetuals / spots /
     transfers / atomic transfers / flash loans (backtest-groups.md, batch-live-symmetry.md)
 18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured
-19. **Treasury / custody integration** — Copper for DeFi side (copper-custody-integration.md); CEFFU for Binance
-    institutional flow
+19. **Treasury / custody integration** — Copper for DeFi side; CEFFU for Binance institutional flow. Single SSOT:
+    `codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08, replaces former
+    per-provider docs)
 20. **Live testnet replicates prod** — Tenderly fork / forked-mainnet for DeFi; Binance testnet / Bybit testnet for CeFi
 21. **Reconciliation suite** — batch-vs-live reconciliation, P&L attribution decomposed per source, per-trade
     reconciliation (pnl-attribution.md, batch-live-reconciliation-service)
@@ -106,7 +107,7 @@ of operations: **doc → plan → code**.
 | Batch/live equivalence              | `04-architecture/batch-live-pipeline.md` · `batch-live-symmetry.md` · `backtest-groups.md` · `CLAUDE.md`                                                                                                                                                          |
 | Cloud-agnostic VM/build             | `04-architecture/cloud-agnostic-migration.md` · `05-infrastructure/vm-tarball-deployment.md` · `05-infrastructure/cloud-agnostic-build-lineage.md` (new) · launchers + `_code_builds_aws.py` · `CLAUDE.md`                                                        |
 | Strategy archetype config           | `09-strategy/strategy-summary.md` · `09-strategy/architecture-v2/` · `09-strategy/cross-cutting/onboarding-checklist.md` · the archetype-specific sub-plan                                                                                                        |
-| Custody / treasury                  | `04-architecture/copper-custody-integration.md` · `custody-providers.md` · `wallet-hierarchy-and-capital-flow.md` · CEFFU doc (new) · `unified-config-interface/testnet_contracts.py`                                                                             |
+| Custody / treasury                  | `04-architecture/custody-providers.md` (single SSOT — Copper + CEFFU + LocalKey + Mock) · `wallet-hierarchy-and-capital-flow.md` · `unified-config-interface/testnet_contracts.py`                                                                                |
 | Live observability                  | `03-observability/lifecycle-events.md` · `coordination-events.md` · `04-architecture/alerting-batch-live.md` · `autonomous-recovery-matrix.md` · `05-infrastructure/live-deployment-monitoring.md` (new) · UAC `internal/events.py` · `CLAUDE.md`                 |
 | P&L attribution / B-vs-L recon      | `09-strategy/cross-cutting/pnl-attribution.md` · `batch-live-reconciliation-service` plan · pnl-attribution-service plan                                                                                                                                          |
 | Service readiness                   | `codex/10-audit/repos/<service>.yaml` · `REPO_READINESS_CHECKLIST.yaml` · the master plan's matrix                                                                                                                                                                |
@@ -131,8 +132,8 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit (mirror)
 
 The full table with current `⚠` flags and resolution paths lives in
-[the working plan](../../plans/active/master_to_live_defi_2026_05_23.md#plan--doc--code-drift-audit). Update both
-when a row resolves.
+[the working plan](../../plans/active/master_to_live_defi_2026_05_23.md#plan--doc--code-drift-audit). Update both when a
+row resolves.
 
 **Audit guideline going forward.** Whenever an agent touches a row in this table, the PR includes a one-line "drift
 status: resolved / unchanged / new-drift" note in the description. New drift = a new row added to the table.
@@ -172,8 +173,7 @@ features-delta-one-service · features-commodity-service.
 
 ## Cross-references
 
-- Working plan:
-  [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
+- Working plan: [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 - Repo readiness SSOT: [`REPO_READINESS_CHECKLIST.yaml`](./REPO_READINESS_CHECKLIST.yaml)
 - Per-service yamls: [`repos/`](./repos/)
 - Cross-cutting principles: [`POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)

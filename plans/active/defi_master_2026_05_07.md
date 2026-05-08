@@ -158,7 +158,8 @@ Covers:
 - **MTDS DeFi slice to 100%**: per-(asset_group=defi, chain, venue/protocol, data_type, instrument_id, day). Chain is a
   first-class shard axis.
 - **Multi-chain oracle prices**: Pyth (Solana, unbanned 2026-05-06) + Chainlink (EVM Arb/Base/Polygon).
-- **Custody integration**: Copper wired DeFi-side per `codex/04-architecture/copper-custody-integration.md`.
+- **Custody integration**: Copper wired DeFi-side per `codex/04-architecture/custody-providers.md` § 2.3 (single SSOT —
+  Copper / CEFFU / LocalKey / Mock).
 
 **Current data-status** (from deployment-ui 2026-05-07): 49138/295744 shards = **73.5%**, 988 dates missing. Tail chains
 (Aurora / Celo / Fantom / Mantle / Metis / Moonbeam) stuck at 25% (1/4 protocols). Mid-tier EVMs (Arbitrum / Avalanche /
@@ -602,8 +603,8 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 ### Custody (Copper)
 
 - [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
-      `codex/04-architecture/copper-custody-integration.md`. [AUDIT 2026-05-07: FRESH — actionable, P0-relevant for May
-      23 Group F]
+      `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
+      P0-relevant for May 23 Group F]
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -918,24 +919,24 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 ### Open questions
 
-- [x] ✓ **Manual-trade gating duration — RESOLVED 2026-05-08 (master Q&A 5).** **3 days manual → 7 days automated**
-      with kill-switch monitoring throughout. Stagger ≥1 day across archetypes (`carry_staked_basis` first,
-      `leveraged_funding_arb` second). Acceptance gate = `strategy_and_dart_master:Phase 2.2` Playwright matrix.
-      See `plans/active/operator_decisions_2026_05_08.md`.
-- [x] ✓ **research-service repo decision — RESOLVED 2026-05-08 (master Q&A 6).** **Fold into deployment-api** for
-      May 23 scope.
+- [x] ✓ **Manual-trade gating duration — RESOLVED 2026-05-08 (master Q&A 5).** **3 days manual → 7 days automated** with
+      kill-switch monitoring throughout. Stagger ≥1 day across archetypes (`carry_staked_basis` first,
+      `leveraged_funding_arb` second). Acceptance gate = `strategy_and_dart_master:Phase 2.2` Playwright matrix. See
+      `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **research-service repo decision — RESOLVED 2026-05-08 (master Q&A 6).** **Fold into deployment-api** for May 23
+      scope.
 - [x] ✓ **`leveraged_funding_arb` strict P0 — RESOLVED 2026-05-08.** **Strict P0 — both archetypes required.** If
-      `leveraged_funding_arb` slips at the live-cutover gate, fall back to carry-only for the 7-day live window AND
-      ship `leveraged_funding_arb` live in the immediate post-cutover week — but build, smoke, and paper-trade
-      verification for both must complete by May 23.
+      `leveraged_funding_arb` slips at the live-cutover gate, fall back to carry-only for the 7-day live window AND ship
+      `leveraged_funding_arb` live in the immediate post-cutover week — but build, smoke, and paper-trade verification
+      for both must complete by May 23.
 
 ## Open questions
 
 ### Q1 — [vm-ops-tab (Tab 4 Harsh-side), 2026-05-08 ~13:00 UTC] — defi_988 priorities #3 + #4 + #5 — operator/Ikenna direction needed
 
-**Status**: 🟡 BLOCKED — operator (Harsh) routed to **Ikenna** for decision per cross-side handshake; defi `chain`-axis +
-`PROTOCOL_LAUNCH_DATES` UAC SSOT changes are governance / cross-cutting work. Tab 4 holds VM launches pending Ikenna's
-resolution.
+**Status**: 🟡 BLOCKED — operator (Harsh) routed to **Ikenna** for decision per cross-side handshake; defi
+`chain`-axis + `PROTOCOL_LAUNCH_DATES` UAC SSOT changes are governance / cross-cutting work. Tab 4 holds VM launches
+pending Ikenna's resolution.
 
 **Source audit**:
 [`plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md)
@@ -946,18 +947,19 @@ scope.
 
 **Three priorities awaiting Ikenna direction**:
 
-| Priority | Rows | Issue surface | Owner of fix | Decision needed |
-| --- | ---: | --- | --- | --- |
-| **#3** | ~6,912 | UAC `PROTOCOL_LAUNCH_DATES` tightening — some protocols' declared launch dates are too early; rows pre-actual-launch are flagged missing in manifest (would correctly become `legit_pre_protocol_launch` after tightening rather than `actually_failed`) | UAC SSOT change (Ikenna-side governance) | Authorize tightening (per-protocol date list TBD)? Coordinate with Tab 14's Day-1 audit findings (13 UAC `PROTOCOL_LAUNCH_DATES` drift pairs) for a single consolidated UAC commit. |
-| **#4** | ~759 | ASTER chain genesis date — `perp-funding` bucket has zero captured ASTER rows for 2022-11-01 → 2026-04-14 (759 dates); no `CHAIN_GENESIS_DATES` entry for ASTER OR genesis date is wrong | UAC SSOT change (Ikenna-side governance) + per-chain backfill VM | Provide ASTER chain genesis date (operator can specify), OR direct Tab 4 to source from ASTER on-chain RPC query (`eth_getBlockByNumber(1)` for chain-genesis timestamp). After date locked, Tab 4 launches backfill VM. |
-| **#5** | ~576 | `lending-indices-handler` LINEA + BSC routing config — 2 chains' lending-protocol routing not wired in handler | per-service config (Tab 4 / Tab 5 lending-indices-handler) | Authorize Tab 4 to launch backfill VMs for LINEA + BSC after routing config lands? Smallest scope, biggest win/effort ratio. |
+| Priority |   Rows | Issue surface                                                                                                                                                                                                                                            | Owner of fix                                                     | Decision needed                                                                                                                                                                                                          |
+| -------- | -----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **#3**   | ~6,912 | UAC `PROTOCOL_LAUNCH_DATES` tightening — some protocols' declared launch dates are too early; rows pre-actual-launch are flagged missing in manifest (would correctly become `legit_pre_protocol_launch` after tightening rather than `actually_failed`) | UAC SSOT change (Ikenna-side governance)                         | Authorize tightening (per-protocol date list TBD)? Coordinate with Tab 14's Day-1 audit findings (13 UAC `PROTOCOL_LAUNCH_DATES` drift pairs) for a single consolidated UAC commit.                                      |
+| **#4**   |   ~759 | ASTER chain genesis date — `perp-funding` bucket has zero captured ASTER rows for 2022-11-01 → 2026-04-14 (759 dates); no `CHAIN_GENESIS_DATES` entry for ASTER OR genesis date is wrong                                                                 | UAC SSOT change (Ikenna-side governance) + per-chain backfill VM | Provide ASTER chain genesis date (operator can specify), OR direct Tab 4 to source from ASTER on-chain RPC query (`eth_getBlockByNumber(1)` for chain-genesis timestamp). After date locked, Tab 4 launches backfill VM. |
+| **#5**   |   ~576 | `lending-indices-handler` LINEA + BSC routing config — 2 chains' lending-protocol routing not wired in handler                                                                                                                                           | per-service config (Tab 4 / Tab 5 lending-indices-handler)       | Authorize Tab 4 to launch backfill VMs for LINEA + BSC after routing config lands? Smallest scope, biggest win/effort ratio.                                                                                             |
 
 **Tab 4 recommendation**: ship #5 immediately (smallest scope, biggest win/effort ratio); defer #3 to Ikenna handshake
-+ Tab 14 audit consolidation; defer #4 until ASTER chain genesis is sourced.
+
+- Tab 14 audit consolidation; defer #4 until ASTER chain genesis is sourced.
 
 **Cross-side handshake**: per Daily Work-Split Process split principle, UAC SSOT changes (#3 + #4) are Ikenna-side
-governance work. Tab 4 (Harsh-side) operates the backfill VMs once SSOT decisions land. Operator (Harsh) flagged this
-to Ikenna 2026-05-08 ~13:00 UTC; awaiting Ikenna's resolution either inline as A1 below or via cross-side handshake on
+governance work. Tab 4 (Harsh-side) operates the backfill VMs once SSOT decisions land. Operator (Harsh) flagged this to
+Ikenna 2026-05-08 ~13:00 UTC; awaiting Ikenna's resolution either inline as A1 below or via cross-side handshake on
 Ikenna's work-split.
 
 **Tab 4 status while waiting**: continues cefi drain monitoring + mdps-tradfi audit-log query (P0 separate workstream).
@@ -1114,19 +1116,19 @@ does not run on `live-defi-rollout` per workspace policy — feature-branch dire
 
 ### Finding: oracle_prices_handler missing per-instrument progress events (P1 follow-up)
 
-**Discovered 2026-05-08 14:18 UTC** during Tab 1 main agent's verification of `mtds-pyth-archive-20260508-141204` —
-the launched VM emits `STARTED` + `RESOURCE_PROFILER_SAMPLE` (every 30s) but NO per-fetch / per-instrument events.
-Run.log shows the handler IS doing real work (Chainlink + Pyth fetches on multiple chains, writing
-`oracle_prices` parquets to `gs://oracle-prices-${PID}/raw_tick_data/...`, ManifestWriter recording captures), but
-none of that progress shows in the event stream — only the resource-profiler heartbeat.
+**Discovered 2026-05-08 14:18 UTC** during Tab 1 main agent's verification of `mtds-pyth-archive-20260508-141204` — the
+launched VM emits `STARTED` + `RESOURCE_PROFILER_SAMPLE` (every 30s) but NO per-fetch / per-instrument events. Run.log
+shows the handler IS doing real work (Chainlink + Pyth fetches on multiple chains, writing `oracle_prices` parquets to
+`gs://oracle-prices-${PID}/raw_tick_data/...`, ManifestWriter recording captures), but none of that progress shows in
+the event stream — only the resource-profiler heartbeat.
 
-Per CLAUDE.md "No fire-and-forget VM launches": **"Adapters MUST emit per-instrument progress events with row counts
-so silent-success-with-zero-output is detectable from the event stream alone."** The current oracle_prices_handler
-does NOT meet this contract.
+Per CLAUDE.md "No fire-and-forget VM launches": **"Adapters MUST emit per-instrument progress events with row counts so
+silent-success-with-zero-output is detectable from the event stream alone."** The current oracle_prices_handler does NOT
+meet this contract.
 
 **Impact**: silent-success-with-zero-output (e.g. handler hangs at fetch 0 of 365 dates) is not detectable from the
-event stream — operator must SSH-tail logs (a dev crutch per CLAUDE.md). Reference shape: lending_indices_handler
-emits 350 events in 4min covering protocol/chain/date cascade — that's the right pattern.
+event stream — operator must SSH-tail logs (a dev crutch per CLAUDE.md). Reference shape: lending_indices_handler emits
+350 events in 4min covering protocol/chain/date cascade — that's the right pattern.
 
 **Suggested fix** (P1 follow-up, not blocking May-23 cutover):
 
@@ -1143,17 +1145,17 @@ emits 350 events in 4min covering protocol/chain/date cascade — that's the rig
 
 User flagged "runbooks shipped → nobody runs them → silent rot" gap. Closing it with explicit owners:
 
-| Runbook | Owner | Cadence | Status |
-|---------|-------|---------|--------|
-| Paper-trade smoke (PM@b1bd92e6) | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md`. |
-| Lending-indices VM relaunch (this doc) | Tab 1 main agent | One-shot | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING) |
-| Lending-indices T+90min spot-check | Tab 1 ScheduleWakeup | At 15:24 UTC | ⏳ Scheduled |
-| Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent | One-shot | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices) |
-| Pyth-archive T+90min spot-check | Tab 1 ScheduleWakeup | At 15:24 UTC | ⏳ Scheduled |
-| Birdeye paid-tier launcher (Item 5) | Operator decision pending (P1) | One-shot when needed | DEFERRED — Pythnet/CoinGecko cascade in current launcher sufficient |
-| Custody adapter health (Copper sandbox) | Live-only prerequisite | One-shot | DEFERRED per master plan Group F (live-only) |
+| Runbook                                             | Owner                                                 | Cadence              | Status                                                                                                                                                                                 |
+| --------------------------------------------------- | ----------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paper-trade smoke (PM@b1bd92e6)                     | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md`. |
+| Lending-indices VM relaunch (this doc)              | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING)                                                                                                                   |
+| Lending-indices T+90min spot-check                  | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                           |
+| Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices)                                                                                              |
+| Pyth-archive T+90min spot-check                     | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                           |
+| Birdeye paid-tier launcher (Item 5)                 | Operator decision pending (P1)                        | One-shot when needed | DEFERRED — Pythnet/CoinGecko cascade in current launcher sufficient                                                                                                                    |
+| Custody adapter health (Copper sandbox)             | Live-only prerequisite                                | One-shot             | DEFERRED per master plan Group F (live-only)                                                                                                                                           |
 
 **Periodic-execution gap closure**: Paper-trade smoke MUST be wired to a periodic executor (cron / daily Tab) once the
 V1-RETIRE blocker is fixed. Without periodic execution, harness rot like the 2026-05-01 → 2026-05-08 silent breakage
-recurs. Recommend: daily Tab 5 (governance) item OR cron-launched smoke VM. Both options covered in master plan
-Group F item 17 success criterion.
+recurs. Recommend: daily Tab 5 (governance) item OR cron-launched smoke VM. Both options covered in master plan Group F
+item 17 success criterion.

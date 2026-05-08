@@ -225,6 +225,6 @@ bash unified-trading-pm/scripts/demo-mode.sh --seed
 
 - `codex/04-architecture/tenderly-execution-provider.md` — Tenderly deep-dive
 - `codex/04-architecture/flash-loan-receiver.md` — Flash loan contract deployment
-- `codex/04-architecture/copper-custody-integration.md` — Copper MPC custody
+- `codex/04-architecture/custody-providers.md` — Copper / CEFFU / LocalKey / Mock custody providers (single SSOT)
 - `codex/04-architecture/chain-environment-resolution.md` — CHAIN_ENV resolution
 - `codex/04-architecture/wallet-hierarchy-and-capital-flow.md` — Treasury wallet structure

@@ -398,6 +398,6 @@ the execution provider is pluggable.
 ## References
 
 - [Wallet Hierarchy](wallet-hierarchy-and-capital-flow.md) — treasury/trading wallet model
-- [Copper Custody](copper-custody-integration.md) — MPC signing integration
+- [Custody Providers](custody-providers.md) — MPC signing integration (Copper + CEFFU + LocalKey + Mock)
 - [Pipeline Layers](pipeline-service-layers.md) — L1-L7 service architecture
 - [DeFi Execution](../../.claude/CLAUDE.md) — DeFi pipeline flow section
