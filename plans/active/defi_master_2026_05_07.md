@@ -949,3 +949,61 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 - `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (1 absorbed item) — `poolGetSnapshots` historical-TVL DeFi-pool
   query item lifted into "Tail-chain / mid-tier protocol coverage" above; remaining 2 absorbed items
   (`venue_start_dates` deletion + dashboard SSOT verify) folded into `infrastructure_master_2026_05_07`.
+
+## DONE-2026-05-08-tab1 (defi-fork1-completion-tab — Ikenna split)
+
+Tab 1 of `work_split_2026_05_08_ikenna.md`. **3 of 6 scope items SHIPPED** end-to-end (commits + tests + codex doc +
+pushed). 3 items deferred per blockers below.
+
+### Shipped
+
+1. **Item 1 — 4 UAC PROTOCOL_LAUNCH_DATES drift fix sub-tabs A/B/C/D** ✅
+   - `unified-api-contracts@6c873e4` — 13 (chain, protocol) drift pairs corrected per Tab 14 audit + SPARK/ETHEREUM
+     added + POLYGON/COMPOUNDV3 removed (no subgraph) + `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended for 4
+     UNISWAPV3/COMPOUNDV3 BASE indexing-pre-mainnet pairs. 19 unit tests pass; basedpyright + ruff clean.
+2. **Item 2 — bSOL coverage gap fix in UAC LST_TOKEN_GENESIS** ✅
+   - Bundled into `unified-api-contracts@6c873e4` with Item 1 since both touch `_defi_lst.py` adjacent ranges.
+     `bSOL: "2022-11-24"` (conservative floor) + `LST_VENUE_TO_TOKENS["BLAZESTAKE"] = ("bSOL",)`. Solana RPC mint-date
+     probe deferred to follow-up.
+3. **Item 3 — Stream A DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** ✅
+   - `unified-api-contracts@92eab58` — 6 venue_collateral.py rows flipped (DERIBIT stETH 7.5%; BYBIT
+     stETH/wstETH/USDe/sUSDe; OKX wstETH 10%; OKX stETH unchanged-False asymmetric). 28 unit tests pass.
+   - NEW codex doc `codex/14-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row + caveats +
+     pending-live-API-probe follow-up.
+   - `unified-trading-pm@15e9b1a3` — plan-flip + codex doc commit.
+
+### Deferred per blockers
+
+4. **Item 4 — Lending-indices VM relaunch (Bug 2 + Bug 3)** **DEFERRED**
+   - Bug 1 + Bug 3 already ✅ RESOLVED via UAC@6a64a56 + MTDS@c6bdf96 + IS@6ae50de (Tab 9 2026-05-08 morning, per
+     `plans/archive/issues/lending_indices_handler_bugs_2026_05_07.md`). Bug 2 (Compound V3 multi-chain post-launch
+     verification) waits on a fresh VM run reaching 2023+ dates with the refreshed tarball. **Blocker**: this Tab 1
+     sub-agent context lacks gcloud auth + same-region VM execution. Operator-owned: launch `mtds-lending-indices-{ts}`
+     VM via `bash deployment-service/scripts/vm/launch-mtds-lending-indices-vm.sh` after verifying
+     `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI` ran post-2026-05-08 07:00 UTC.
+5. **Item 5 — Paper-trade smoke completion (carry_staked_basis Solana hedge)** **DEFERRED**
+   - Multi-service end-to-end coordination + needs Tab 6 strategy ID UAC schema landing first (cross-side handshake per
+     work_split). Plus MTDS VMs `mtds-{vault-share-price,lst-rates,gas-fees}-20260508-010050` drain-status check
+     requires gcloud auth. Operator-owned next-step.
+6. **Item 6 — Pyth Hermes archive backfill (jitoSOL 2022-11 → 2023-10 11-month gap)** **DEFERRED**
+   - Research-heavy (~2 AI-days): probe Hermes archive endpoint, evaluate alternatives (Pythnet RPC + index, Birdeye
+     archive paid plan), design backfill VM + script under `deployment-service/scripts/vm/`, register
+     VM_PREFIX_TO_BUCKET, relaunch watchdog. Self-contained but new-launcher work; pickup-able by the next Tab 1 spawn
+     or Item 6-scoped sub-agent.
+
+### Findings raised this session
+
+**FOOT-GUN INCIDENT 2026-05-08 13:31 UTC (UAC repo)** — Tab 2 (live-pipeline) committed
+`4d090e6 feat(uac): add PipelineMode SSOT…` but the commit's diff bundled Tab 1's Items 1+2 staged work (chain_env.py +
+\_defi_lst.py + test_protocol_launch_dates.py) instead of Tab 2's intended pipeline_mode files (which remained
+untracked). Tab 2 then ran `git reset HEAD~1` and re-committed cleanly as `8bc3f2a` with only their own files — silently
+wiping Tab 1's staged set. Tab 1 had to re-stage from disk (work was preserved as unstaged modifications, recovered
+cleanly). Reference: foot-guns #1 + #3 from CLAUDE.md "Half 1 — pre-commit check". **Lesson confirmed**: shared `.git/`
+index = shared staged set; one tab's `git commit` (no-path-arg `git diff --cached --stat` check insufficient as
+detection) will hoover up another tab's surgical staging if timed close enough. The reset-recovery pattern from foot-gun
+#3 worked — staged work survived in working tree as unstaged.
+
+**STREAM A LIVE-API PROBE PENDING** — venue_collateral.py haircut placeholders (DERIBIT 7.5%; BYBIT 10%/5%/7%; OKX 10%)
+are conservative web-doc citations. Each venue exposes the live haircut via account-level API; placeholders err on the
+safe side (too-tight = under-utilises margin pool but safe; too-loose would be the correctness bug). Filed as follow-up
+in the new codex doc + this DONE block.
