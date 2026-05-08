@@ -684,9 +684,9 @@ commit message. This prevents premature removal of plans that are actively being
 A plan archives when its primary scope is shipped. **The archive boundary is an audit boundary, not a deletion event.**
 Any item the plan deferred — `**DEFERRED**`, `**NICE-TO-HAVE**`, `**DEFERRED-PER-USER**`, "future work", "out of scope",
 "post-cutover", "stretch goal", a half-shipped item, a banned configuration that's still in code, OR a planned-but-
-unrun operation (deploy / backfill / migration / VM launch / data refresh / index rebuild) — MUST land in an active
-home before the archive commit ships. Otherwise the deferred work falls off the workspace radar; the operator asks
-again three weeks later; we burn an hour reconstructing what was deferred and why; the cycle repeats.
+unrun operation (deploy / backfill / migration / VM launch / data refresh / index rebuild) — MUST land in an active home
+before the archive commit ships. Otherwise the deferred work falls off the workspace radar; the operator asks again
+three weeks later; we burn an hour reconstructing what was deferred and why; the cycle repeats.
 
 ### What counts as "deferred"
 
@@ -714,8 +714,8 @@ Three categories — all three are in scope. Mixing them or losing the boundary 
 When you propose archiving a plan (status: complete, `locked_by` removal, move to `plans/archive/`), you MUST do all
 five steps as part of the same logical unit:
 
-1. **Audit the archiving plan**: scan the body for every `**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**`
-   / "post-cutover" / "out of scope" / "future work" / "stretch" / "follow-up" annotation. Count them. List them.
+1. **Audit the archiving plan**: scan the body for every `**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**` /
+   "post-cutover" / "out of scope" / "future work" / "stretch" / "follow-up" annotation. Count them. List them.
 2. **Audit operational completeness**: for every shipped item that touches operational state (VM launch / backfill /
    migration / deploy / reindex / data refresh), verify the operation actually ran in production — not just that the
    code shipped. Check event streams (`gs://{pid}-events/...`) / VM history / manifest state / deploy logs / migration
@@ -733,17 +733,17 @@ five steps as part of the same logical unit:
 4. **Banner the archived plan** with a `## Deferred work — migrated to:` section enumerating every migrated item with
    its destination (plan filename + section anchor). The archive-side banner is read-only after archival but it's the
    forward index for anyone reading the archived plan: "this looked deferred, here's where it lives now."
-5. **Update CLAUDE.md or codex SSOTs** if any of the deferred items affected a workspace contract / pattern / SSOT.
-   Same shape as the `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in the same logical unit as the
-   archive commit, not "later."
+5. **Update CLAUDE.md or codex SSOTs** if any of the deferred items affected a workspace contract / pattern / SSOT. Same
+   shape as the `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in the same logical unit as the archive
+   commit, not "later."
 
 ### Operational-step verification recipe
 
 Operational gaps are the easiest deferral to miss because the plan body looks complete. Quick verification probes:
 
-- **VM-launched-and-finished**: `gcloud compute instances list --filter="name~<prefix>" --format="value(status)"`
-  (look for absence) AND `gcloud storage ls gs://${PID}-events/events/<service>/<YYYY-MM-DD>/<vm-name>/` (look for
-  STARTED + STOPPED events with non-empty progress between them).
+- **VM-launched-and-finished**: `gcloud compute instances list --filter="name~<prefix>" --format="value(status)"` (look
+  for absence) AND `gcloud storage ls gs://${PID}-events/events/<service>/<YYYY-MM-DD>/<vm-name>/` (look for STARTED +
+  STOPPED events with non-empty progress between them).
 - **Backfill ran to completion**: read the manifest at the expected coverage horizon — `captured` rows per
   `(asset_group, venue, data_type, day)` matching the planned scope. Counting rows is not validation; populating rows
   is. Probe a sample parquet to confirm it's not 1440-NaN placeholders (per `Honest absence vs fake placeholders`).
@@ -760,33 +760,33 @@ per step 3.
 
 ### Why this matters
 
-- **Operator-time-to-recall is expensive.** When the operator asks "what about X — I thought we had X scoped
-  somewhere," reconstructing the answer from grep + git log + chat history takes 30+ minutes per incident.
-  Pre-archival migration is a 5-minute discipline that saves the 30-minute recall every time.
+- **Operator-time-to-recall is expensive.** When the operator asks "what about X — I thought we had X scoped somewhere,"
+  reconstructing the answer from grep + git log + chat history takes 30+ minutes per incident. Pre-archival migration is
+  a 5-minute discipline that saves the 30-minute recall every time.
 - **Code-shipped vs operationally-shipped is the silent failure mode.** Plans that say "done" without verifying the
   actual operation ran erode workspace trust in plan checkboxes. Once a few plans are caught with code-shipped-but-not-
   operationally-shipped state, every subsequent plan checkbox becomes suspect to the next reader.
-- **Archive is forever.** Once a plan moves to `plans/archive/<slug>.plan.md` and `locked_by` clears, the deferred
-  work is invisible to active scanning (`grep DEFERRED plans/active/*.md` won't find it). The archive is the
-  archaeology layer; active is the search layer. Migrate deferred items BEFORE the archive boundary so they stay in
-  the search layer.
+- **Archive is forever.** Once a plan moves to `plans/archive/<slug>.plan.md` and `locked_by` clears, the deferred work
+  is invisible to active scanning (`grep DEFERRED plans/active/*.md` won't find it). The archive is the archaeology
+  layer; active is the search layer. Migrate deferred items BEFORE the archive boundary so they stay in the search
+  layer.
 - **Citadel-grade discipline.** Per `Citadel-Grade Planning Standards § 3 No Technical Debt` — every plan must close
-  cleanly without leaving phantom work. Half-archived plans with surviving deferrals are technical debt in the
-  planning layer.
+  cleanly without leaving phantom work. Half-archived plans with surviving deferrals are technical debt in the planning
+  layer.
 
 ### Anti-patterns
 
-- **Archive-and-hope.** Plan archives, deferrals get dropped because "we'll remember." We won't. Operator asks 3
-  weeks later, time is wasted.
+- **Archive-and-hope.** Plan archives, deferrals get dropped because "we'll remember." We won't. Operator asks 3 weeks
+  later, time is wasted.
 - **Defer-without-naming.** A plan body says "post-cutover" without a specific successor plan filename. The
-  `Temporary state must have a named successor plan` rule already prohibits this for temporary states; this rule
-  extends it to every deferral type at archive time.
+  `Temporary state must have a named successor plan` rule already prohibits this for temporary states; this rule extends
+  it to every deferral type at archive time.
 - **Operational-rubber-stamp.** Marking an operation done because the code shipped, without checking the operation
   actually ran. Especially common for "ran the migration" / "kicked off the backfill" / "deployed to prod" — the
   verification probe takes <30s and catches multi-day silent failures.
 - **Issue-doc graveyard.** Writing every deferral as an `issues/` doc instead of folding into a real plan. Issue docs
-  are for unowned-yet items needing triage; they MUST resolve to a plan within 7 days. >7 days = the issue doc itself
-  is a deferred item that should have been migrated.
+  are for unowned-yet items needing triage; they MUST resolve to a plan within 7 days. >7 days = the issue doc itself is
+  a deferred item that should have been migrated.
 - **Bulk-migrate-to-one-plan.** Dumping 15 unrelated deferrals into the same convenient destination plan because it's
   easy. Each deferral goes to the plan whose scope owns it; no convenience-bucket plans.
 
@@ -797,10 +797,10 @@ per step 3.
 - `Commit + Push + Flip Plan Checkboxes As You Ship Each Item` — half-shipped items get `**DEFERRED**:` annotations
   during the plan's lifetime; this rule ensures those annotations migrate to an active home at archival.
 - `Findings Triage Discipline` — issue-doc disposition (case 5 of the matrix) is the same shape as case (c) here.
-- `Capture discoveries as plan todos immediately` — discoveries during a plan's lifetime get captured in real-time;
-  this rule ensures none are lost when the plan closes.
-- `Post-Plan-Phase Codex Audit` — codex updates at every phase boundary; this rule extends to the archive boundary
-  for any deferred items affecting a workspace contract.
+- `Capture discoveries as plan todos immediately` — discoveries during a plan's lifetime get captured in real-time; this
+  rule ensures none are lost when the plan closes.
+- `Post-Plan-Phase Codex Audit` — codex updates at every phase boundary; this rule extends to the archive boundary for
+  any deferred items affecting a workspace contract.
 - `Citadel-Grade Planning Standards § 3 No Technical Debt` + `§ 7 Single Source of Truth` — archived plans with
   surviving deferrals are debt; the migration discipline closes the loop.
 
@@ -1538,20 +1538,35 @@ locked_since: <YYYY-MM-DD>
 
 ## Plans Run To Actual Completion, Not Smoke-Test Green (HARD RULE codified 2026-05-08)
 
-**The pattern bug**: split-plan close-outs ship _code + schemas + smoke-tests_ then mark "operator-actionable" / "deferred" / "needs operator credentials". Next-cycle plans assume the data / migration / state exists — they build on empty space. By 2026-05-23 the cumulative gap becomes "the carry archetype is wired but no actual DeFi data lives on AWS, no actual migration ran, no actual backfill completed". Each plan looks GREEN in isolation; the system as a whole is RED.
+**The pattern bug**: split-plan close-outs ship _code + schemas + smoke-tests_ then mark "operator-actionable" /
+"deferred" / "needs operator credentials". Next-cycle plans assume the data / migration / state exists — they build on
+empty space. By 2026-05-23 the cumulative gap becomes "the carry archetype is wired but no actual DeFi data lives on
+AWS, no actual migration ran, no actual backfill completed". Each plan looks GREEN in isolation; the system as a whole
+is RED.
 
 **The rule**: every plan + every Tab in a split plan runs to **actual completion on real infrastructure**:
 
-- **Backfills** run to natural shutdown with manifest-verified rows + sample-inspected parquets — not "launcher script shipped + 1 VM verified for 90s".
-- **Migrations** transfer the actual data with destination size/object-count parity — not "migration script shipped + tested on a sample shard".
-- **Cloud migrations** kick off the Storage Transfer Service / DataSync job + verify ≤0.01% drift + sample read returns expected rows — not "buckets provisioned".
+- **Backfills** run to natural shutdown with manifest-verified rows + sample-inspected parquets — not "launcher script
+  shipped + 1 VM verified for 90s".
+- **Migrations** transfer the actual data with destination size/object-count parity — not "migration script shipped +
+  tested on a sample shard".
+- **Cloud migrations** kick off the Storage Transfer Service / DataSync job + verify ≤0.01% drift + sample read returns
+  expected rows — not "buckets provisioned".
 - **Smoke tests** run against real AWS S3 / real GCS via real ADC — not mocked CI smoke.
 - **Refactors** propagate to every consumer in the same plan — not "Wave 2 sweep deferred".
 - **Reconcilers** run with `--apply-flips` against the full manifest — not dry-run on 100 rows.
 
-**The single allowed exception**: a downstream plan EXPLICITLY takes over with a full-run handoff. Handoff must (1) name the downstream plan by file path in the current plan's done-definition; (2) the downstream plan must have a phase that explicitly consumes the smoke-tested artefact + runs it to completion; (3) both sides must be in `plans/active/` or `plans/epics/` (no "we'll write that plan later").
+**The single allowed exception**: a downstream plan EXPLICITLY takes over with a full-run handoff. Handoff must (1) name
+the downstream plan by file path in the current plan's done-definition; (2) the downstream plan must have a phase that
+explicitly consumes the smoke-tested artefact + runs it to completion; (3) both sides must be in `plans/active/` or
+`plans/epics/` (no "we'll write that plan later").
 
-**Operator authority + ADC**: the agent has ADC admin permissions on both GCP (`central-element-323112`) and AWS (`427895769566`). Provisioning buckets, launching backfill VMs, kicking off transfers, making SSOT triage calls when 3 sources have drifted — these are all in scope. Do NOT pause for operator approval on these. The hard-stop list (genuine human-only): wallet private keys + custody endpoint approvals, live-trading kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree (bucket deletion, table drops, prod VM force-stops). Everything else: run it.
+**Operator authority + ADC**: the agent has ADC admin permissions on both GCP (`central-element-323112`) and AWS
+(`427895769566`). Provisioning buckets, launching backfill VMs, kicking off transfers, making SSOT triage calls when 3
+sources have drifted — these are all in scope. Do NOT pause for operator approval on these. The hard-stop list (genuine
+human-only): wallet private keys + custody endpoint approvals, live-trading kill-switch arming, force-push to main,
+version 1.0.0 graduation, destructive ops beyond local working tree (bucket deletion, table drops, prod VM force-stops).
+Everything else: run it.
 
 **Anti-patterns** (banned):
 
@@ -1582,7 +1597,9 @@ Reviewers reject "handoff exceptions" that don't name a real plan in `plans/acti
 
 ### Composes with
 
-- "Commit + Push + Flip Plan Checkboxes" (per-shippable-unit) + "Post-Plan-Phase Codex Audit" (codex reflects actual state) + "Findings Triage Discipline" (case 1-5 routing during runs) + "Capture Discoveries As Plan Todos" (mid-run findings → plan todos).
+- "Commit + Push + Flip Plan Checkboxes" (per-shippable-unit) + "Post-Plan-Phase Codex Audit" (codex reflects actual
+  state) + "Findings Triage Discipline" (case 1-5 routing during runs) + "Capture Discoveries As Plan Todos" (mid-run
+  findings → plan todos).
 
 ## Citadel-Grade Planning Standards
 
@@ -1663,10 +1680,10 @@ broke silently for 7 days because it was outside any QG. Reference:
 
 ## Runbook Execution-Owner SSOT (HARD RULE codified 2026-05-08)
 
-Every operator-runnable runbook, smoke harness, manifest-rescan script, alerting drill, demo run, or rehearsal
-procedure MUST declare an explicit periodic-execution path. Without one, the runbook silently rots — its imports
-break against an evolving codebase + nobody notices until the operator panics at cutover. Reference incident:
-2026-05-01 → 2026-05-08 silent rot of `e2e-testing/scripts/defi/colocated_engine.py` paper-trade harness (7 days).
+Every operator-runnable runbook, smoke harness, manifest-rescan script, alerting drill, demo run, or rehearsal procedure
+MUST declare an explicit periodic-execution path. Without one, the runbook silently rots — its imports break against an
+evolving codebase + nobody notices until the operator panics at cutover. Reference incident: 2026-05-01 → 2026-05-08
+silent rot of `e2e-testing/scripts/defi/colocated_engine.py` paper-trade harness (7 days).
 
 ### What every runbook MUST declare
 
@@ -1681,16 +1698,16 @@ execution:
   last_executed: <YYYY-MM-DD or "NEVER" — required field>
 ```
 
-**No exceptions** — runbooks without all 4 fields are review-blocking. If the runbook is genuinely one-shot
-(e.g. "run this once after the migration ships"), declare `cadence: one-shot` + `last_executed: NEVER` and remove
-the runbook to `plans/archive/` after the one-shot fires.
+**No exceptions** — runbooks without all 4 fields are review-blocking. If the runbook is genuinely one-shot (e.g. "run
+this once after the migration ships"), declare `cadence: one-shot` + `last_executed: NEVER` and remove the runbook to
+`plans/archive/` after the one-shot fires.
 
 ### Where execution actually happens (closed set)
 
 Every runbook's `owner` resolves to ONE of these execution paths — no others:
 
-1. **Cron VM** in `deployment-service/scripts/vm/` with a singleton-locked launcher + watchdog dict registration
-   (e.g. forward-poll VMs, manifest-consolidator, vm-zombie-watchdog itself).
+1. **Cron VM** in `deployment-service/scripts/vm/` with a singleton-locked launcher + watchdog dict registration (e.g.
+   forward-poll VMs, manifest-consolidator, vm-zombie-watchdog itself).
 2. **Daily Tab assignment** in tomorrow's `work_split_<YYYY_MM_DD>_*.md` — explicit todo with the runbook path
    referenced + a verifiable done-definition.
 3. **QG-wired smoke** — runbook's smoke runs as part of `bash scripts/quality-gates.sh` for the consumer service.
@@ -1700,8 +1717,8 @@ Every runbook's `owner` resolves to ONE of these execution paths — no others:
 
 ### Reviewer enforcement
 
-PRs that ship a new runbook without an `execution:` block are blocked. PRs that change a runbook's `last_executed`
-date without showing actual run evidence (event-stream link, commit sha of verification, etc.) are blocked. The
+PRs that ship a new runbook without an `execution:` block are blocked. PRs that change a runbook's `last_executed` date
+without showing actual run evidence (event-stream link, commit sha of verification, etc.) are blocked. The
 `runbook_execution_governance_gaps_2026_05_08.md` issue doc is the canonical reference for why this rule exists.
 
 ### Composes with
@@ -1716,19 +1733,19 @@ date without showing actual run evidence (event-stream link, commit sha of verif
 ## Peripheral Script Directories Under Primary-Consumer QG (HARD RULE codified 2026-05-08)
 
 Every peripheral script directory that imports from a service's Python package MUST be wired into THAT service's
-`scripts/quality-gates.sh` so basedpyright + ruff + import-resolution catch breakage at PR time, not at runtime
-7 days later.
+`scripts/quality-gates.sh` so basedpyright + ruff + import-resolution catch breakage at PR time, not at runtime 7 days
+later.
 
 ### Concrete mapping
 
-| Peripheral script dir | Primary consumer service | QG path |
-|----------------------|--------------------------|---------|
-| `e2e-testing/scripts/defi/` (`colocated_engine.py`, etc.) | strategy-service (imports `strategy_service.cli.handlers.*`) | `strategy-service/scripts/quality-gates.sh` runs basedpyright on this dir |
-| `e2e-testing/scripts/sports/` | features-sports-service / mtds (imports `features_sports_service.*` / `market_tick_data_service.*`) | features-sports-service QG |
-| `e2e-testing/scripts/prediction/` | mtds + features-onchain (imports `market_tick_data_service.*` / `features_onchain_service.*`) | mtds QG (primary) |
-| `*_service/scripts/migration_*.py` | own service | own service QG (already covered) |
-| `deployment-service/scripts/vm/*.sh` | bash; no Python imports | bash-syntax check in deployment-service QG |
-| `unified-trading-pm/scripts/*.py` | PM library + various services | PM QG |
+| Peripheral script dir                                     | Primary consumer service                                                                            | QG path                                                                   |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `e2e-testing/scripts/defi/` (`colocated_engine.py`, etc.) | strategy-service (imports `strategy_service.cli.handlers.*`)                                        | `strategy-service/scripts/quality-gates.sh` runs basedpyright on this dir |
+| `e2e-testing/scripts/sports/`                             | features-sports-service / mtds (imports `features_sports_service.*` / `market_tick_data_service.*`) | features-sports-service QG                                                |
+| `e2e-testing/scripts/prediction/`                         | mtds + features-onchain (imports `market_tick_data_service.*` / `features_onchain_service.*`)       | mtds QG (primary)                                                         |
+| `*_service/scripts/migration_*.py`                        | own service                                                                                         | own service QG (already covered)                                          |
+| `deployment-service/scripts/vm/*.sh`                      | bash; no Python imports                                                                             | bash-syntax check in deployment-service QG                                |
+| `unified-trading-pm/scripts/*.py`                         | PM library + various services                                                                       | PM QG                                                                     |
 
 ### What "wired into QG" means concretely
 
@@ -1745,10 +1762,10 @@ the operator runs the harness.
 
 ### Why this rule exists
 
-`colocated_engine.py:306` imports `from strategy_service.cli.handlers.batch_utils import get_strategy_factories`.
-That symbol was removed by strategy-service's V1-RETIRE Phase 2 refactor (2026-05-01). basedpyright would have caught
-the ImportError instantly if it had run on `colocated_engine.py` — but `e2e-testing/scripts/` was outside any service's
-QG. 7 days passed with the harness silently broken. Reference:
+`colocated_engine.py:306` imports `from strategy_service.cli.handlers.batch_utils import get_strategy_factories`. That
+symbol was removed by strategy-service's V1-RETIRE Phase 2 refactor (2026-05-01). basedpyright would have caught the
+ImportError instantly if it had run on `colocated_engine.py` — but `e2e-testing/scripts/` was outside any service's QG.
+7 days passed with the harness silently broken. Reference:
 `plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md`.
 
 ### Composes with
@@ -1773,26 +1790,26 @@ column makes silent rot detectable on day 1 instead of day 22.
 
 The master plan readiness table MUST have this shape (one row per item):
 
-| Group | Item | Cutover Success Criterion | **Continuous Verification** | Last verified |
-|-------|------|---------------------------|-----------------------------|----------------|
-| F | 17 | paper-trade smoke green at May-23 | Daily cron VM `mtds-paper-smoke-` + Tab 5 sweep | 2026-05-08 |
-| F | 18 | batch-vs-live recon green at May-23 | Daily cron + alerting rule for delta > 5bps | 2026-05-07 |
-| F | 19 | Copper + CEFFU treasury wired | Live-only — no continuous; manual sign-off | n/a |
+| Group | Item | Cutover Success Criterion           | **Continuous Verification**                     | Last verified |
+| ----- | ---- | ----------------------------------- | ----------------------------------------------- | ------------- |
+| F     | 17   | paper-trade smoke green at May-23   | Daily cron VM `mtds-paper-smoke-` + Tab 5 sweep | 2026-05-08    |
+| F     | 18   | batch-vs-live recon green at May-23 | Daily cron + alerting rule for delta > 5bps     | 2026-05-07    |
+| F     | 19   | Copper + CEFFU treasury wired       | Live-only — no continuous; manual sign-off      | n/a           |
 
 If an item's continuous verification is genuinely "manual sign-off only" (live-only operator-judgment items), declare
 `Continuous Verification: manual` + `Last verified: <YYYY-MM-DD or NEVER>`.
 
 ### Reviewer enforcement
 
-Master plan refresh PRs that don't update the `Last verified` column for changed items are review-blocked. Items
-where `Last verified` is older than the declared cadence trigger a P0 alerting rule (Tab 5 governance owns the alert).
+Master plan refresh PRs that don't update the `Last verified` column for changed items are review-blocked. Items where
+`Last verified` is older than the declared cadence trigger a P0 alerting rule (Tab 5 governance owns the alert).
 
 ### Composes with
 
 - `Runbook Execution-Owner SSOT` above — the master plan's continuous-verification column points at the runbook's
   `execution.owner` field. They MUST agree.
-- `Findings Triage Discipline` — when a continuous verifier surfaces a regression, it's a Case 5 big finding by
-  default (since master plan items are by definition on the May-23 critical path).
+- `Findings Triage Discipline` — when a continuous verifier surfaces a regression, it's a Case 5 big finding by default
+  (since master plan items are by definition on the May-23 critical path).
 
 ## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
 
@@ -1811,8 +1828,8 @@ checklist runs `git status` + `git fetch` summary + ledger read in ~3-5 min, the
 "State: N tabs in flight, M intra-side pings, K cross-side pings, J local commits queued. Today's plan = X. Standing
 by." Skip this and you start blind to the operator's in-flight context.
 
-Spawned tab agents (Tab 2+) follow the same pattern but read AGENT_ONBOARDING first — see "Spawn prompt template
-(Model B)" subsection below for the canonical paste-ready prompt.
+Spawned tab agents (Tab 2+) follow the same pattern but read AGENT_ONBOARDING first — see "Spawn prompt template (Model
+B)" subsection below for the canonical paste-ready prompt.
 
 **Why this exists.** Two human operators (Ikenna + Harsh) each run multiple parallel Claude Code / Cursor agents. A
 single human-day with 5 parallel agents at full saturation is closer to **~50 AI-days of work**; both sides combined

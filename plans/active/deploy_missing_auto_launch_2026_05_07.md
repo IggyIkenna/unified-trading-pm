@@ -64,12 +64,16 @@ clean linear history with the 2 incoming first.
 
 ## Operator decision summary
 
-> **STATUS: AWAITING OPERATOR SIGN-OFF — drafted 2026-05-08 by Tab 5 sub-agent F
-> (`deploy-missing-phase0-facilitation`).** Each decision below distills the full DRAFT proposals (lines ~163-466 of
-> this plan) into a 1-page sign-off form. Approving the recommendation as drafted = green-light; objections / amendments
-> → reply inline + Tab 5 redrafts. Phase 1 (`deployment-api@faac20a` `tarball_staleness.py`) already shipped standalone
-> — it consumes whatever Phase 0 decides without rework. Phase 2 wiring (lines 487-496) is gated on these three
-> decisions landing.
+> **✅ STATUS: APPROVED 2026-05-08 — all 3 recommendations greenlit.** Decision 1 = **B + C combined** (custom role
+> `roles/customDeployMissingLauncher` IAM-scoped to zone `asia-northeast1-c` + subnet `default` + image family
+> `unified-trading-debian-12` + dedicated runtime SA, AND API-layer `_SERVICE_LAUNCHER_SCRIPTS` allow-listing).
+> Decision 2 = **BigQuery primary + Cloud Logging mirror + GCS cold tier + sync-blocking write + 90d hot / 5y cold
+> retention**. Decision 3 = **30/op/hr + 200/op/day + 100/proj/hr + 1 active per shard_key for 6h** rate ceilings,
+> Firestore counters, alerts to `#uts-prod-alerts`. On-call: Ikenna primary / Harsh backup until cefi_ml live ≥7d.
+> Phase 2 wiring is **UNBLOCKED**. See `plans/active/operator_decisions_2026_05_08.md` for the full pickup record.
+
+> **Earlier status (preserved for archaeology)**: AWAITING OPERATOR SIGN-OFF — drafted 2026-05-08 by Tab 5 sub-agent F
+> (`deploy-missing-phase0-facilitation`).
 
 ### Decision 1 — IAM scope
 
