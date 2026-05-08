@@ -25,7 +25,7 @@ related_plans:
 
 # DeFi Master — asset_group umbrella
 
-## Agent 4 launch decision (2026-05-07, work_split_2026_05_07_ikenna_5tab_layout.md Item 2)
+## Agent 4 launch decision (2026-05-07, [archived `work_split_2026_05_07_ikenna_5tab_layout`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md) Item 2)
 
 > Triage from
 > [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)

@@ -34,14 +34,15 @@ Single-pane-of-glass for the data-status panel issues surfaced during the 2026-0
 the master plan that owns the actual fix; this tracker closes when every referenced master-plan todo is done. **No new
 plan work belongs here** — folded into existing masters per user direction.
 
-> **Triage decision 2026-05-07 (Agent 5, Item 2 of `work_split_2026_05_07_ikenna_5tab_layout`).** **STANDALONE — do NOT
-> fold into `infrastructure_master_2026_05_07`.** Three reasons: (1) cross-master rollup spans 5 owner plans
-> (`sports_master`, `predictions_master`, `defi_master`, `manifest_migration_master`, `infrastructure_master`); folding
-> into one of them mis-attributes most findings — only B.2 + C.13 belong to `infrastructure_master`. (2) tracker is
-> lifecycle-bounded — self-archives when all referenced master-plan todos go green, no need to bake into a permanent
-> umbrella. (3) `## What this tracker is NOT` § explicitly forbids it being a plan or a duplicate of master plan work —
-> folding would conflate it with master plans that DO define work. The tracker stays here as the operator's single
-> deployment-UI surface to check progress against.
+> **Triage decision 2026-05-07 (Agent 5, Item 2 of
+> [archived `work_split_2026_05_07_ikenna_5tab_layout`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md)).**
+> **STANDALONE — do NOT fold into `infrastructure_master_2026_05_07`.** Three reasons: (1) cross-master rollup spans 5
+> owner plans (`sports_master`, `predictions_master`, `defi_master`, `manifest_migration_master`,
+> `infrastructure_master`); folding into one of them mis-attributes most findings — only B.2 + C.13 belong to
+> `infrastructure_master`. (2) tracker is lifecycle-bounded — self-archives when all referenced master-plan todos go
+> green, no need to bake into a permanent umbrella. (3) `## What this tracker is NOT` § explicitly forbids it being a
+> plan or a duplicate of master plan work — folding would conflate it with master plans that DO define work. The tracker
+> stays here as the operator's single deployment-UI surface to check progress against.
 
 ## A. Shipped this session (closed)
 

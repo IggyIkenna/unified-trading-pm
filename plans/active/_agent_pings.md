@@ -22,9 +22,11 @@ When this ledger consistently has 15-20+ active pings, signal Harsh to spawn a
 SECOND main agent in another tab; two main agents can divide the ledger using a
 [CLAIMED-BY: main-1] / [CLAIMED-BY: main-2] marker on each ping.
 
-Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layout.md
+Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Process" — Plan-of-record + Q&A bus / Ping ledger / Polling cadence subsections.
 -->
 
 # Active pings
 
-[2026-05-08 07:50 UTC] ml-features-phase2a-tab — Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR 07:55 UTC] scope ambiguity strategic — Tab 12 continuing with inventory map meanwhile; see ml_and_features_master_2026_05_07.plan.md ## Open questions Q1
+[2026-05-08 07:50 UTC] ml-features-phase2a-tab — Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR 07:55 UTC] scope ambiguity
+strategic — Tab 12 continuing with inventory map meanwhile; see ml_and_features_master_2026_05_07.plan.md ## Open
+questions Q1

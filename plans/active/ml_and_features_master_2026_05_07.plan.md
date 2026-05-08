@@ -182,10 +182,11 @@ section); A1 will appear here.
 
 **Scope ambiguity for Tab 12 (Phase 2A wire-in) — spawn prompt vs plan body.**
 
-The Tab 12 spawn prompt in [`work_split_2026_05_07_harsh_5tab_layout.md`](work_split_2026_05_07_harsh_5tab_layout.md)
-§"Tab 12" says: _"wire the 8 services that compute features into the UTL `assert_no_lookahead_for_feature_group`
-helper... so every feature compute call validates inputs against the UAC `feature_group → required_inputs` DAG at
-runtime."_ — implying ship the wires now.
+The Tab 12 spawn prompt in
+[archived `work_split_2026_05_07_harsh_5tab_layout`](../archive/work_split_2026_05_07_harsh_5tab_layout.md) §"Tab 12"
+said: _"wire the 8 services that compute features into the UTL `assert_no_lookahead_for_feature_group` helper... so
+every feature compute call validates inputs against the UAC `feature_group → required_inputs` DAG at runtime."_ —
+implying ship the wires now.
 
 The plan body (this doc) Phase 2A marks all three named consumers (`features-onchain-service`,
 `features-sports-service`, `features-delta-one-service`) as **P1** with
