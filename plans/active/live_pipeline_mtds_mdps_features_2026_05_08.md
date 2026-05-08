@@ -95,7 +95,7 @@ depends_on:
 todos:
   - id: phase-0-pre-audit-live-pipeline
     content: |
-      - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest for the live pipeline. Produce
+      - [x] [AGENT] P0. Phase 0 — Pre-audit manifest for the live pipeline. Produce
         `unified-trading-pm/plans/active/issues/live_pipeline_preaudit_2026_05_08.md` enumerating:
         (a) every existing MTDS adapter that already has a websocket / streaming code path (not all venues do —
             CCXT REST-only venues need a poll fallback), and per-venue connection-pool / rate-limit / IP-redundancy
@@ -127,7 +127,7 @@ todos:
 
   - id: phase-1-uac-streaming-events
     content: |
-      - [ ] [AGENT] P0. Phase 1 — UAC streaming event types. PARALLEL with Phase 2A.
+      - [x] [AGENT] P0. Phase 1 — UAC streaming event types. PARALLEL with Phase 2A.
 
         Site: `unified-api-contracts/unified_api_contracts/events/streaming.py` (NEW module).
 
@@ -197,7 +197,7 @@ todos:
 
   - id: phase-2a-utl-redis-streams-client
     content: |
-      - [ ] [AGENT] P0. Phase 2A — UTL Redis Streams client wrapper. PARALLEL with Phase 1.
+      - [x] [AGENT] P0. Phase 2A — UTL Redis Streams client wrapper. PARALLEL with Phase 1.
 
         Site: `unified-trading-library/unified_trading_library/streaming/redis_stream.py` (NEW).
 
@@ -244,7 +244,7 @@ todos:
 
   - id: phase-2b-utl-utc-aligned-scheduler
     content: |
-      - [ ] [AGENT] P0. Phase 2B — UTL UTC-aligned timeframe scheduler. SEQUENTIAL after Phase 2A.
+      - [x] [AGENT] P0. Phase 2B — UTL UTC-aligned timeframe scheduler. SEQUENTIAL after Phase 2A.
 
         Site: `unified-trading-library/unified_trading_library/streaming/utc_aligned_scheduler.py` (NEW).
 
@@ -285,7 +285,7 @@ todos:
 
   - id: phase-2c-utl-replay-cascade-helpers
     content: |
-      - [ ] [AGENT] P1. Phase 2C — UTL replay-cascade helpers. PARALLEL with Phase 2B.
+      - [x] [AGENT] P1. Phase 2C — UTL replay-cascade helpers. PARALLEL with Phase 2B.
 
         Site: `unified-trading-library/unified_trading_library/streaming/replay.py` (NEW).
 

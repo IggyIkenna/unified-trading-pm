@@ -120,3 +120,5 @@ New services: add a row to the service readiness YAML under data availability re
 - `06-coding-standards/strategy-identity-versioning.md` — strategy config vs execution boundaries
 - `06-coding-standards/integration-testing-layers.md` — Layer 3 scope
 - `04-architecture/manual-trade-booking.md` — `OperationalMode` usage
+- `09-strategy/cross-cutting/dart-manual-trade-spec.md` — peer doc: per-archetype DART manual-fallback scope (May-23
+  cutover surfaces + post-May-23 deferrals)

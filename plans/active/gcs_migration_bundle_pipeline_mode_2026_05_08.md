@@ -376,6 +376,16 @@ todos:
     content: |
       - [ ] [AGENT] P0. Phase 5 — Reader fallback paths during the migration window. PARALLEL with Phase 3.
 
+        **5.1 SHIPPED 2026-05-08 (unified-trading-library@52f123d6); 5.2 + 5.3 deferred to follow-up sub-agents.**
+        UTL `read_manifest_with_source_priority(...)` reader landed in
+        `unified_trading_library/manifest_reader_fallback.py` (NEW module, 356 lines) + 11 unit tests in
+        `tests/unit/test_reader_fallback_chain.py` (469 lines). Public API: `read_manifest_with_source_priority`,
+        `build_candidate_uris`, `ReaderMetadata` (frozen dataclass), `FALLBACK_LEVEL_NAMES` (canonical level
+        names tuple). All four plan contracts (lines 403-409) test-covered: canonical-hit-no-events,
+        miss-then-strip-emits-one-event, full-chain-five-levels-with-distinct-events, metadata-records-resolved-level.
+        Plus edge cases: pipeline_mode=None back-compat skips canonical level; all-miss returns empty pa.Table +
+        hit_level=None; ReaderMetadata is immutable.
+
         Three readers need fallback paths during migration:
 
         5.1 — UTL `read_manifest_with_source_priority(...)` reader: try canonical path
