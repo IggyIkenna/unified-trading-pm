@@ -946,11 +946,24 @@ drift.
         (`scripts/quality-gates-base/base-service.sh` or `base-library.sh`), CLAUDE.md cross-ref. Steps without a
         dedicated section here (5.34/5.61/5.62/5.64/5.66) point at the enforcement file directly. (PM@28ca221b)
 
-### Phase F.2 — UI infra rename + collapse — PARALLEL — P2
+### Phase F.2 — UI infra rename + collapse — PARALLEL — P2 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P2. `UI-FUNCTIONALITY-REQUIREMENTS.md` (32K) + `UI-DEPENDENCY-MATRIX.md` (15K) — all-caps filenames are
+- [x] [SCRIPT] P2. `UI-FUNCTIONALITY-REQUIREMENTS.md` (32K) + `UI-DEPENDENCY-MATRIX.md` (15K) — all-caps filenames are
       unique to this dir. Rename to lowercase-kebab. Bulk of content is "ARCHIVED — reference only" notes; consider
-      collapsing to one `ui-archive-reference.md`.
+      collapsing to one `ui-archive-reference.md`. **SHIPPED 2026-05-08** — Option B chosen (rename without collapse).
+      Both docs hold substantive distinct active-state content: `ui-functionality-requirements.md` owns screen-level
+      functionality + role/auth matrix + pipeline-layer mapping + v0 consolidation guidance (§§ 2.1, 4-8);
+      `ui-dependency-matrix.md` owns the OAuth deployment-trigger flow + port assignments + `.env.local` templates +
+      Cloud Build YAML patterns. Collapsing would lose the distinct entry-points each doc serves. Renames absorbed into
+      PM@4d23b431 (parallel-agent E.3 sweep absorbed my staged `git mv`s) and cross-doc rewrites absorbed into
+      PM@c1dcbcdf (parallel-agent E.3 + F.6 flip commit absorbed my 7 staged sed edits) — 7 cross-ref files updated:
+      `TOPOLOGY-DAG.md`, `codex/00-SSOT-INDEX.md`, `codex/04-architecture/api-services-cluster.md`,
+      `codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/ui-service-separation.md`, plus
+      self-refs in the two renamed docs themselves. Cross-refs in `plans/active/master_to_live_defi_2026_05_23.md` and
+      `codex/08-workflows/local-dev.md` were already lowercase from earlier-session work absorbed into HEAD. Foot-gun
+      #1/#3 attribution: parallel-agent commits hijacked the staged set during repeated HEAD resets through the session
+      (~5 reset events observed in reflog); content landed correctly, attribution muddled per the workspace
+      "Two teammates × multiple parallel agents" footnote.
 
 ### Phase F.3 — Severity tier glossary — PARALLEL — P1
 
