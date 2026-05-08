@@ -85,7 +85,7 @@ If the venue's status page returns to green AND direct ping returns 200:
 2. Verify by tailing events:
    ```bash
    gcloud storage cat gs://${PROJECT_ID}-events/events/execution-service/$(date -u +%Y-%m-%d)/*/hour=*/*.jsonl \
-     | jq -c 'select(.event=="CIRCUIT_BREAKER_CLOSED" and .metadata.details.venue=="<venue>")' | tail -3
+     | jq -c 'select(.event=="CIRCUIT_CLOSED" and .metadata.details.venue=="<venue>")' | tail -3
    ```
 3. Operator publishes `KillSwitchEvent(scope=VENUE_DISCONNECT, venue=<name>, action=RESUME)` via DART.
 4. strategy-service ack's resume; archetype emits signals again. Watch first hedge order land successfully:

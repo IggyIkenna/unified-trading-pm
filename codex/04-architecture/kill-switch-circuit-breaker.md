@@ -113,7 +113,7 @@ Kill Switch Activated (manual or automatic)
 
 - **Per-venue state machine**: `execution-service/engine/circuit_breaker.py`
 - **Cross-service propagation**: `alerting-service` subscribes to execution-service events and publishes
-  `CIRCUIT_BREAKER_OPEN` to `circuit-breaker-commands` topic.
+  `CIRCUIT_OPEN` (UAC `LifecycleEvent`) to `circuit-breaker-commands` topic.
 
 ### States
 
@@ -155,7 +155,9 @@ Each consecutive OPEN cycle doubles the cooldown: `base * 2^(cycles-1)`, capped 
 - Cycle 3: 1200s
 - Cycle 4+: 3600s (cap)
 
-Emits `CIRCUIT_BREAKER_BACKOFF_ESCALATED` when cycle > 1.
+Triggers `CIRCUIT_BREAKER_BACKOFF_ESCALATING` alert (UAC `AlertCode`) when cycle > 1. The underlying lifecycle event
+remains `CIRCUIT_OPEN` (re-emitted on each cycle); the alerting-service applies the BACKOFF_ESCALATING AlertCode based
+on the cycle counter in the event metadata.
 
 ### What Counts as a Failure
 
@@ -277,13 +279,18 @@ before any action."
 | `KILL_SWITCH_DEACTIVATED`           | execution-service | INFO     | All services, alerting         |
 | `KILL_SWITCH_AUTO_DEACTIVATED`      | execution-service | WARNING  | All services, alerting         |
 | `KILL_SWITCH_BLOCKED_STARTUP`       | execution-service | CRITICAL | Alerting                       |
-| `CIRCUIT_BREAKER_DEGRADED`          | execution-service | WARNING  | Alerting                       |
-| `CIRCUIT_BREAKER_OPEN`              | alerting-service  | CRITICAL | All services                   |
-| `CIRCUIT_BREAKER_BACKOFF_ESCALATED` | execution-service | WARNING  | Alerting                       |
-| `CIRCUIT_BREAKER_ORDER_THROTTLED`   | execution-service | INFO     | Alerting (suppressed at >10/s) |
+| `CIRCUIT_OPEN`                      | execution-service | ERROR    | Alerting, all services         |
+| `CIRCUIT_HALF_OPEN`                 | execution-service | WARNING  | Alerting                       |
+| `CIRCUIT_CLOSED`                    | execution-service | INFO     | Alerting, all services         |
 | `POSITION_DRIFT_DETECTED`           | PBMS              | HIGH     | Alerting, UI                   |
 | `UNHEDGED_POSITION_ALERT`           | execution-service | CRITICAL | Alerting                       |
 | `MULTI_LEG_COMPENSATION_FAILED`     | execution-service | CRITICAL | Alerting                       |
+
+> **Lifecycle vs Alert taxonomy.** The events above are UAC `LifecycleEvent` enum members emitted via `log_event()`. The
+> alerting-service derives UAC `AlertCode` taxonomy from these (`CIRCUIT_BREAKER_OPEN`, `CIRCUIT_BREAKER_DEGRADED`,
+> `CIRCUIT_BREAKER_CLOSED`, `CIRCUIT_BREAKER_BACKOFF_ESCALATING`) for routing rules — see `03-observability/alerting.md`.
+> The two enums have different naming on purpose: lifecycle events are short-form (`CIRCUIT_OPEN`); AlertCodes prefix
+> with the subsystem (`CIRCUIT_BREAKER_*`) for pattern-routing in `alerting-service/notifiers/router.py`.
 
 ---
 

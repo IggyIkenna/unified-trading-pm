@@ -242,7 +242,7 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 | G2  | Reconciliation as pre-close gate                               | PLANNED | execution-service: check PBMS recon health before exit playbook             |
 | G3  | Dual failure event (recon + exec both down)                    | PLANNED | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED               |
 | G4  | Position drift → auto STOP_NEW_ONLY                            | PLANNED | PBMS: on CRITICAL drift, call execution-service kill switch API             |
-| G5  | Connectivity loss → mark recon as stale                        | PLANNED | PBMS: subscribe to CIRCUIT_BREAKER_OPEN, mark venue recon as unreliable     |
+| G5  | Connectivity loss → mark recon as stale                        | PLANNED | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable             |
 | G6  | Playbook-to-scenario mapping                                   | PLANNED | UAC: map EmergencyExitType to trigger scenarios in config                   |
 
 ---

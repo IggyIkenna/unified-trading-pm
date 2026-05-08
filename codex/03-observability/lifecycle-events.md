@@ -325,8 +325,9 @@ security anomalies, and infrastructure boundary conditions.
 | `AUTHENTICATION_FAILED`    | Service-to-service auth check failed                      | ERROR    |
 | `AUTHORISATION_DENIED`     | Principal lacks required permissions                      | ERROR    |
 | `RATE_LIMIT_EXCEEDED`      | Inbound or outbound rate limit hit                        | WARNING  |
-| `CIRCUIT_BREAKER_OPENED`   | Circuit breaker tripped after repeated failures           | ERROR    |
-| `CIRCUIT_BREAKER_CLOSED`   | Circuit breaker recovered                                 | INFO     |
+| `CIRCUIT_OPEN`             | Circuit breaker tripped after repeated failures           | ERROR    |
+| `CIRCUIT_HALF_OPEN`        | Circuit breaker entering probe phase after cooldown       | WARNING  |
+| `CIRCUIT_CLOSED`           | Circuit breaker recovered                                 | INFO     |
 | `DEPENDENCY_UNAVAILABLE`   | Required upstream service/resource unreachable            | ERROR    |
 | `SECURITY_ALERT`           | Generic security anomaly detected                         | CRITICAL |
 

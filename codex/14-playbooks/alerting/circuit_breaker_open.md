@@ -63,8 +63,9 @@ if the venue recovers within ~60s. Operator only acts if (a) the breaker stays O
    gcloud storage cat gs://${PROJECT_ID}-events/events/<service>/$(date -u +%Y-%m-%d)/*/hour=*/*.jsonl \
      | jq -c "select(.metadata.details.venue==\"<venue>\")" | tail -10
    ```
-   Look for `CIRCUIT_BREAKER_HALF_OPEN` followed by `CIRCUIT_BREAKER_CLOSED` (recovery) or
-   `CIRCUIT_BREAKER_BACKOFF_ESCALATING` (failed retry).
+   Look for `CIRCUIT_HALF_OPEN` followed by `CIRCUIT_CLOSED` (recovery, UAC `LifecycleEvent` names) or a re-emitted
+   `CIRCUIT_OPEN` with an incremented backoff cycle counter (failed retry — alerting-service then routes the
+   `CIRCUIT_BREAKER_BACKOFF_ESCALATING` AlertCode based on the counter).
 4. **Identify root cause via last_error_message** in the payload. Common patterns:
    - `429 Too Many Requests` → rate-limit hit; auto-recovery via backoff usually works.
    - `502 Bad Gateway` / `503 Service Unavailable` → venue-side outage; wait for half-open success.
@@ -78,15 +79,15 @@ if the venue recovers within ~60s. Operator only acts if (a) the breaker stays O
 
 ### Path 1 — Auto-recovery (half-open retry succeeds)
 
-If diagnosis step 3 shows `CIRCUIT_BREAKER_HALF_OPEN` then `CIRCUIT_BREAKER_CLOSED` within 60-120s, no operator action
-required. Watch:
+If diagnosis step 3 shows `CIRCUIT_HALF_OPEN` then `CIRCUIT_CLOSED` (UAC `LifecycleEvent` names) within 60-120s, no
+operator action required. Watch:
 
 ```bash
 watch -n 30 'gcloud storage cat gs://${PROJECT_ID}-events/events/<service>/$(date -u +%Y-%m-%d)/*/hour=*/*.jsonl \
-  | jq -c "select(.event==\"CIRCUIT_BREAKER_CLOSED\" and .metadata.details.venue==\"<venue>\")" | tail -1'
+  | jq -c "select(.event==\"CIRCUIT_CLOSED\" and .metadata.details.venue==\"<venue>\")" | tail -1'
 ```
 
-**Success:** `CIRCUIT_BREAKER_CLOSED` event for the venue + a successful order/fetch within 60s thereafter.
+**Success:** `CIRCUIT_CLOSED` event for the venue + a successful order/fetch within 60s thereafter.
 
 ### Path 2 — API key / cert / DNS fix
 
