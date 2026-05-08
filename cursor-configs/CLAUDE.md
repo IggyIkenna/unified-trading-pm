@@ -116,8 +116,8 @@ Read these before making ANY code changes:
 - **Signal Leasing / strategy-service signal broadcast** — External-counterparty signal emission MUST use shard-level
   failure isolation (D10) + `classify_venue_error()` + `ADAPTER_FETCH_FAILED` event. Counterparty credentials via
   `ApiKeyReloader` + HMAC signing; never raises to signal generator. SSOT:
-  `codex/14-playbooks/shared-core/signal-broadcast-architecture.md`; architecture plan (archived 2026-05-06, 8 phases
-  shipped): `plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`.
+  `codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`; architecture plan (archived 2026-05-06, 8
+  phases shipped): `plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md`.
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)` — the message is not a format string
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
 - **Bandit B108 / temp paths** — Never hardcode `"/tmp"` in Python. Use `tempfile.gettempdir()` (POSIX `TMPDIR`, macOS
@@ -923,7 +923,7 @@ Dev server on `http://localhost:3000`. Emulator UI on `http://localhost:4000` (A
 re-seed manually with `npm run emulators:seed`.
 
 Runtime tiers documented in `unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md` and
-`unified-trading-pm/codex/14-playbooks/authentication/firebase-local.md`.
+`unified-trading-pm/codex/14-customer-journeys/authentication/firebase-local.md`.
 
 ### 5 Mode Axes
 
