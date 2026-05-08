@@ -28,6 +28,16 @@ depends_on:
   - alerting-service-live-rules-2026-05-07
   - master-to-live-defi-2026-05-23
 
+# ─────────────────────────────────────────────────────────────────────────────
+# ✅ ALL 35 PHASES SHIPPED 2026-05-08 — see `codex_refactor_g1_audit_2026_05_08.md` for verification report.
+#
+# Headline: 34 prior phases verify clean structurally (all deletions on disk, all renames done, all SSOT consolidations
+# landed). Layer A acceptance gates ✅ except documented historical/changelog references. P0 follow-up needed before
+# archival: 116 cross-doc links to deleted `14-playbooks/` paths still live in 43 codex files (E.2 directory move
+# shipped without the incoming-link-rewrite half) + 2 stale CLAUDE.md refs. Recommend Phase H sweep OR migrate the
+# residual link-debt to a successor plan before this plan archives.
+# ─────────────────────────────────────────────────────────────────────────────
+
 repo_gates:
   - repo: unified-trading-pm
     code: C0
@@ -1049,17 +1059,25 @@ drift.
 
 ## LAYER G — Final cross-directory consistency check
 
-### Phase G.1 — Final cross-directory audit — SEQUENTIAL after every other phase — P0
+### Phase G.1 — Final cross-directory audit — SEQUENTIAL after every other phase — P0 — SHIPPED 2026-05-08
 
-- [ ] [AGENT] P0. After all phases land, spawn one cross-directory audit agent (same shape as the Wave 2 synthesis but
+- [x] [AGENT] P0. After all phases land, spawn one cross-directory audit agent (same shape as the Wave 2 synthesis but
       post-execution) to verify:
   1. Every claim made in Layer A P0 fixes is now consistent across the workspace.
   2. Every consolidated doc has no broken incoming refs (workspace-wide grep for deleted filenames).
   3. Every banner-removed doc is internally consistent (no dangling references to archived plans).
   4. Every cross-directory dependency from the Wave 2 report has been resolved or explicitly deferred.
 
-  **Output**: a final consistency report. Any unresolved findings become new plan todos here per the workspace "Capture
-  discoveries as plan todos immediately" rule.
+  **Output**: full audit report at [`codex_refactor_g1_audit_2026_05_08.md`](codex_refactor_g1_audit_2026_05_08.md).
+  **Verdict**: 34 prior phases verify clean structurally — all deletions on disk, all renames + creations landed, all
+  SSOT consolidations are physical reality. Layer A acceptance gates pass except documented historical/changelog
+  references. **P0 follow-up surfaced**: 116 cross-doc links to deleted `14-playbooks/` paths still live in 43 codex
+  files (E.2 was a directory move without an incoming-link sweep) + 2 stale `14-playbooks/` refs in CLAUDE.md
+  (high-impact, every session boot reads CLAUDE.md). **P1 follow-ups**: D.3 multi-axis text residuals in 5+ docs, B.3
+  stale-repo refs in ~6 doc bodies, 5 stale `[ ]` checkboxes in this plan's "Codex SSOT updates" sub-list (lines 1076,
+  1091, 1092, 1099, 1100 — work shipped, tracking checkboxes overlooked). Per "Plan Archival HARD RULE" + "Capture
+  Discoveries As Plan Todos Immediately": these become new plan todos in a Phase H sweep OR migrate to a successor
+  plan before this plan archives.
 
 ---
 
@@ -1073,7 +1091,7 @@ NEW docs created mid-execution (if any phase generates them): add to this sectio
 
 NEW codex docs explicitly created by this plan:
 
-- [ ] `codex/04-architecture/batch-live-architecture.md` (Phase D.6, replaces 2)
+- [x] `codex/04-architecture/batch-live-architecture.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified extant in G.1 audit)
 - [x] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1 SHIPPED 2026-05-08 PM@14a3ab5f)
 - [x] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1 SHIPPED 2026-05-08 PM@11fe6a37 — content created
       by prior agent; deletions + ref-rewrites in this commit)
@@ -1088,16 +1106,16 @@ DELETED codex docs by this plan:
 - [x] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)
 - [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
 - [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
-- [ ] `codex/04-architecture/copper-custody-integration.md` (Phase D.4)
-- [ ] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4)
+- [x] `codex/04-architecture/copper-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted in G.1 audit)
+- [x] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted in G.1 audit)
 - [x] `codex/06-coding-standards/error-handling.md` (Phase D.5 SHIPPED 2026-05-08 — deletion absorbed into parallel
       agent's `3da88fed`)
 - [x] `codex/06-coding-standards/validation-patterns.md` (Phase D.5 SHIPPED 2026-05-08 — same)
 - [x] `codex/06-coding-standards/schema-validation.md` (Phase D.5 SHIPPED 2026-05-08 — same)
 - [ ] `codex/06-coding-standards/service-structure-standards.md` (Phase D.7 — KEPT as forwarder stub per B.4 audit; not
       deleted)
-- [ ] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6, replaced)
-- [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
+- [x] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1 audit)
+- [x] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1 audit)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
 - [x] Topology 7-doc cluster (Phase E.1 SHIPPED 2026-05-08): RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE,
       service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster,
