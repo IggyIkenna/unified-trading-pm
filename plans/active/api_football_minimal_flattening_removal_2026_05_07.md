@@ -178,53 +178,64 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 
 ### Phase 1 — UAC normalizer flattening
 
-- [ ] [UAC] P0. `normalize_api_football_fixture_stats(raw, fixture_id) -> list[dict]`. Unpack the `team` +
+- [x] [UAC] P0. `normalize_api_football_fixture_stats(raw, fixture_id) -> list[dict]`. Unpack the `team` +
       `statistics: [{type, value}, ...]` payload into 2 rows (one per team) with explicit columns: `team_id`,
       `team_name`, `is_home` (bool, derived from raw `team.id == fixture.teams.home.id`), then one column per stat-type
       from the closed enum (`shots_total`, `shots_on_target`, `shots_off_target`, `shots_inside_box`,
       `shots_outside_box`, `corners`, `offsides`, `ball_possession_pct`, `yellow_cards`, `red_cards`,
       `goalkeeper_saves`, `passes_total`, `passes_accurate`, `passes_pct`, `expected_goals`, `goals_prevented`). Use
       `_safe_int` for integer-typed stats and `_safe_pct`/`_safe_float` helper for percentage / float types.
-- [ ] [UAC] P0. `normalize_api_football_fixture_event(raw, fixture_id) -> list[dict]`. Unpack each event in the
+      (UAC@c76e6d0 — closed-set `_FIXTURE_STAT_TYPE_MAP` drives the column population; `is_home` left None for the
+      orchestrator to stamp via fixture cross-reference.)
+- [x] [UAC] P0. `normalize_api_football_fixture_event(raw, fixture_id) -> list[dict]`. Unpack each event in the
       `events: [...]` array into one row with: `time_elapsed`, `time_extra` (nullable int), `team_id`, `team_name`,
       `player_id`, `player_name`, `assist_id`, `assist_name` (nullable), `event_type` (Goal/Card/subst/Var),
-      `event_detail`, `comments` (nullable string).
-- [ ] [UAC] P0. `normalize_api_football_lineup(raw, fixture_id) -> list[dict]`. Today returns one row per team with
+      `event_detail`, `comments` (nullable string). (UAC@c76e6d0)
+- [x] [UAC] P0. `normalize_api_football_lineup(raw, fixture_id) -> list[dict]`. Today returns one row per team with
       `formation` only. Extend to: one row per (team, player) — flatten
       `startXI: [{player.id, .name,     .number, .pos, .grid}]` AND `substitutes: [...]` AND coach. Columns: `team_id`,
       `team_name`, `formation`, `coach_id`, `coach_name`, `player_id`, `player_name`, `player_number`, `player_pos`
-      (G/D/M/F), `player_grid` (e.g. "4:1"), `is_starter` (bool).
-- [ ] [UAC] P0. `normalize_api_football_injury(raw) -> dict`. Flatten the 4 nested struct columns (`player`, `team`,
+      (G/D/M/F), `player_grid` (e.g. "4:1"), `is_starter` (bool). (UAC@c76e6d0 — coach NOT emitted as own row;
+      stamped on every (team, player) row to preserve grain.)
+- [x] [UAC] P0. `normalize_api_football_injury(raw) -> dict`. Flatten the 4 nested struct columns (`player`, `team`,
       `fixture`, `league`) into top-level: `player_id`, `player_name`, `player_photo`, `player_type`, `player_reason`,
       `team_id`, `team_name`, `fixture_id`, `league_id`, `league_season`. Returns single dict (one injury report = one
-      row), but with all useful fields surfaced.
-- [ ] [UAC] P0. Tests at `tests/unit/test_normalize_api_football.py` extend the existing fixture-statistics / events /
+      row), but with all useful fields surfaced. (UAC@c76e6d0)
+- [x] [UAC] P0. Tests at `tests/unit/test_normalize_api_football.py` extend the existing fixture-statistics / events /
       lineups / injuries test cases with full payload fixtures + per-column assertions. Verify shape (list-of-dict
-      count) + per-column dtype + null handling.
+      count) + per-column dtype + null handling. (UAC@c76e6d0 — 13 new tests, all green.)
 
 ### Phase 2 — UAC contracts
 
-- [ ] [UAC] P0. `_sports_match_contracts.py` SPORTS_FIXTURE_STATS extension. Replace the current 2-column ColumnSpec
+- [x] [UAC] P0. `_sports_match_contracts.py` SPORTS_FIXTURE_STATS extension. Replace the current 2-column ColumnSpec
       list with the full ~18-column spec, each entry naming dtype, nullable, description. Remove the "Adapter currently
       writes only fixture_id + data_available_at" comment block. `symbol_column` stays `fixture_id`. Note:
       `required_row_count_min=0` stays — legitimately-empty fixtures (e.g. abandoned matches) still allowed.
-- [ ] [UAC] P0. SPORTS_FIXTURE_EVENTS analogous extension. ~10 columns.
-- [ ] [UAC] P0. SPORTS_FIXTURE_LINEUPS analogous extension. ~12 columns.
-- [ ] [UAC] P0. SPORTS_INJURIES analogous extension. ~10 columns.
-- [ ] [UAC] P0. Update module docstring to remove the "minimal flattening is a known limitation" disclaimer and replace
-      with a forward-looking note pointing at this plan's commits.
+      (UAC@c76e6d0 — 23 columns including `data_available_at`.)
+- [x] [UAC] P0. SPORTS_FIXTURE_EVENTS analogous extension. ~10 columns. (UAC@c76e6d0 — 13 columns.)
+- [x] [UAC] P0. SPORTS_FIXTURE_LINEUPS analogous extension. ~12 columns. (UAC@c76e6d0 — 13 columns.)
+- [x] [UAC] P0. SPORTS_INJURIES analogous extension. ~10 columns. (UAC@c76e6d0 — 11 columns; `symbol_column` migrated
+      from the legacy `player` struct to the flat `player_id` field.)
+- [x] [UAC] P0. Update module docstring to remove the "minimal flattening is a known limitation" disclaimer and replace
+      with a forward-looking note pointing at this plan's commits. (UAC@c76e6d0)
 
 ### Phase 3 — instruments-service adapter handler
 
-- [ ] [instruments-service] P0. `api_football.py` — handler list-comprehensions become
+- [x] [instruments-service] P0. `api_football.py` — handler list-comprehensions become
       `list(itertools.chain.from_iterable(normalize_*(row, fixture_id) for row in raw_rows))` for the 3 list-returning
-      normalizers (stats, events, lineups). INJURIES stays single-dict per row.
-- [ ] [instruments-service] P0. Smoke test: pick one recently-played fixture (af_fixture_id from a captured FIXTURES
-      row), call each handler against the live API-Football endpoint with a single-fixture `--recovery-fixture-ids`
-      invocation, verify the resulting parquet has the expected per-row shape.
-- [ ] [instruments-service] P0. Run a one-day forward-poll for one league (e.g. EPL) to ingest the new shape end-to-end.
-      Verify the data-status panel renders the full column count for FIXTURE_STATS / EVENTS / LINEUPS / INJURIES via the
-      schema modal.
+      normalizers (stats, events, lineups). INJURIES stays single-dict per row. (instruments-service@539130f — also
+      tightens return-type annotations from `list[CanonicalX]` to `list[dict[str, object]]` to match the actual runtime
+      shape + base-class signature, drops unused Canonical* imports.)
+- [ ] [instruments-service] P0. **DEFERRED** — operator-driven smoke test: pick one recently-played fixture
+      (af_fixture_id from a captured FIXTURES row), call each handler against the live API-Football endpoint with a
+      single-fixture `--recovery-fixture-ids` invocation, verify the resulting parquet has the expected per-row shape.
+      Local agent integration smoke (no live API key) verified the chain.from_iterable + normalizer composition shape
+      end-to-end (2 stat rows / 3 event rows / 29 lineup rows / 1 injury row produced for synthetic 2-team fixture);
+      live-API smoke needs operator credentials + recovery invocation post-deploy.
+- [ ] [instruments-service] P0. **DEFERRED** — operator-driven one-day EPL forward-poll: ingest the new shape
+      end-to-end, verify the data-status panel renders the full column count for FIXTURE_STATS / EVENTS / LINEUPS /
+      INJURIES via the schema modal. Requires VM tarball refresh + EPL forward-poll launch + UI render verification —
+      handed back to the operator for the next sports forward-poll cycle.
 
 ### Phase 4 — Optional historical reprocessor
 

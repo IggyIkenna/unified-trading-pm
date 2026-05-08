@@ -82,6 +82,27 @@ dates resolved per league via `get_league_fixture_calendar(league_id, start, end
 | `STANDINGS`       | per-league × periodic (weekly cadence) | 95 leagues × cadence dates inside active season                | Yes — off-season = empty_confirmed                                                               |
 | `VENUES`          | global × season                        | 1 shard per season                                             | N/A                                                                                              |
 
+#### Expected column counts per API-Football data_type (regression guard, codified 2026-05-08)
+
+After the api_football minimal-flattening removal (plan:
+`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`,
+UAC@c76e6d0 + instruments-service@539130f), every API-Football per-fixture parquet on disk must carry the expanded
+column shape declared in `unified_api_contracts/internal/schemas/_sports_match_contracts.py`. A future regression to
+the prior "minimal flattening" shape (only `fixture_id + data_available_at`) is caught by this row-count gate:
+
+| data_type         | Expected column count\* | UAC SchemaContract       | Symbol column | Row grain                       |
+| ----------------- | ----------------------: | ------------------------ | ------------- | ------------------------------- |
+| `FIXTURE_STATS`   |                      23 | `SPORTS_FIXTURE_STATS`   | `fixture_id`  | one per (fixture, team)         |
+| `FIXTURE_EVENTS`  |                      13 | `SPORTS_FIXTURE_EVENTS`  | `fixture_id`  | one per event                   |
+| `FIXTURE_LINEUPS` |                      13 | `SPORTS_FIXTURE_LINEUPS` | `fixture_id`  | one per (fixture, team, player) |
+| `INJURIES`        |                      11 | `SPORTS_INJURIES`        | `player_id`   | one per (player, team, fixture) |
+| `PLAYER_STATS`    |                      38 | `SPORTS_PLAYER_STATS`    | `player_id`   | one per (fixture, team, player) |
+
+\* Includes `data_available_at`. Authoritative column lists live in the SchemaContract definitions; this table is a
+fast-glance regression catch — if a future audit shows fewer columns than listed here for any of these data_types, a
+normalizer or adapter regression has dropped fields. Legitimate additions to the column count (new stat type, new
+event field) require updating both the SchemaContract and this table in lockstep.
+
 ### 2.2 FootyStats-sourced entities (source key = `footystats`)
 
 Expected leagues: `[l for l in LEAGUE_REGISTRY.values() if "footystats" in l.data_sources]` = 46 (PREDICTION 28 +
@@ -247,3 +268,11 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   different-purpose data (refdata-style pre-match snapshot vs intra-day market movement) and should coexist in their
   current homes — NO migration, NO merge. §2.2 + §4 updated; schema-modal disambiguation tracked under C.3 in
   `sports_master_2026_05_07.plan.md`.
+
+- **2026-05-08** — Added "Expected column counts per API-Football data_type" sub-section under §2.1 as a future-audit
+  regression guard. Plan `plans/active/api_football_minimal_flattening_removal_2026_05_07.md` shipped flattening for
+  FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES (UAC@c76e6d0 + instruments-service@539130f). Prior
+  parquets carried only `fixture_id + data_available_at` (the "minimal flattening" known limitation called out in the
+  `_sports_match_contracts.py` module docstring); the new normalizers expand to 11–23 columns per data_type matching
+  the extended SchemaContract shapes. A future audit that finds the column count below the table values means a
+  normalizer / adapter regression has dropped fields.
