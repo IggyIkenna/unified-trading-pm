@@ -598,6 +598,57 @@ pattern bug. New CLAUDE.md HARD RULE "Plans Run To Actual Completion, Not Smoke-
 - **Long-running**: rsyncs continue in background (`nohup`) after this session. Final completion verifiable via
   `aws s3 ls --recursive` row counts.
 
+#### Phase 5 status update — 2026-05-08 21:30 BST (post-cluster-7-probe audit)
+
+Per-bucket state of all 12 DeFi destination buckets after Cluster 7 follow-up audit (probe found 7 of 12 buckets
+empty; root cause investigated + corrective rsync jobs launched):
+
+| AWS bucket                                              | GCS source                                        | Source has data | Rsync state                                                                  | AWS objects (21:30) |
+| ------------------------------------------------------- | ------------------------------------------------- | --------------- | ---------------------------------------------------------------------------- | ------------------- |
+| `unified-trading-evm-defi-prod-427895769566`            | `gs://evm-defi-central-element-323112`            | yes             | Running (PID 39418, started 14:20)                                           | 30,114              |
+| `unified-trading-dex-pools-prod-427895769566`           | `gs://dex-pools-central-element-323112`           | yes             | Running (PID 39417, started 14:20)                                           | 117,427             |
+| `unified-trading-instruments-defi-427895769566`         | `gs://instruments-store-defi-central-element-323112` | yes          | Running (PID 39416, started 14:20)                                           | TBD (counting)      |
+| `unified-trading-market-data-defi-427895769566`         | `gs://market-data-tick-defi-central-element-323112` | yes         | Running (PID 39419, started 14:20)                                           | TBD (counting)      |
+| `unified-trading-events-prod-427895769566`              | `gs://central-element-323112-events`              | yes (4.8M+)     | **DIED** (PID 39415 hit DNS resolve fail at 17:23; 0 objects copied)         | 0                   |
+| `unified-trading-solana-defi-prod-427895769566`         | `gs://solana-defi-central-element-323112`         | yes             | Running (PID 61591, started 21:29 BST as corrective rsync)                   | 0 → climbing        |
+| `unified-trading-dex-swaps-prod-427895769566`           | `gs://dex-swaps-central-element-323112`           | yes             | Running (PID 61592, started 21:29 BST as corrective rsync, in listing phase) | 0 → climbing        |
+| `unified-trading-config-store-prod-427895769566`        | `gs://config-store-central-element-323112`        | yes             | Running (PID 61593, started 21:29 BST as corrective rsync)                   | 0 → climbing        |
+| `unified-trading-eigenlayer-rewards-prod-427895769566`  | `gs://eigenlayer-rewards-central-element-323112`  | NO (empty bucket) | Skipped — source legitimately empty (no rsync needed)                       | 0 (correct)         |
+| `unified-trading-pnl-store-defi-prod-427895769566`      | `gs://pnl-store-central-element-323112-defi`      | NO (empty bucket) | Skipped — source legitimately empty (pre-trade, no PnL events yet)          | 0 (correct)         |
+| `unified-trading-positions-store-defi-prod-427895769566` | `gs://positions-store-central-element-323112-defi` | NO (empty bucket) | Skipped — source legitimately empty (pre-trade, no positions events yet)  | 0 (correct)         |
+| `unified-trading-risk-store-defi-prod-427895769566`     | `gs://risk-store-central-element-323112-defi`     | NO (empty bucket) | Skipped — source legitimately empty (pre-trade, no risk events yet)         | 0 (correct)         |
+
+**Root cause analysis of 7-empty Cluster 7 finding**:
+
+- 4 of 7 "empty" buckets had legitimately-empty GCS sources (eigenlayer / pnl / positions / risk) — pre-trade
+  state, nothing to copy. These will populate once DeFi paper-trade flows start emitting events. NOT a migration
+  bug.
+- 3 of 7 "empty" buckets had GCS source data but no rsync had been launched (solana / dex-swaps / config-store —
+  not in the original 5-job batch). Corrective rsync launched 21:29 BST.
+- 1 of 7 "empty" buckets (`events`) had its rsync DIE at the listing phase with a DNS resolution failure on
+  `storage.googleapis.com` (likely network blip). The events source has 4.8M+ objects per the listing log; PID
+  39415 spent 3+ hours listing before dying with zero copy ops. **NOT corrective-restarted automatically** because
+  re-listing 4.8M objects from scratch is a 3+ hour blocking operation; operator should consider running this from
+  a same-region GCE VM (Tokyo→Tokyo) instead of laptop to avoid DNS instability + cut listing time. See Open
+  questions for operator below.
+
+**Corrective rsync jobs launched 2026-05-08 21:29 BST** (3 PIDs):
+
+- `gs://solana-defi-central-element-323112/` → `s3://unified-trading-solana-defi-prod-427895769566/` (PID 61591) —
+  copying actively (kamino entries flowing).
+- `gs://dex-swaps-central-element-323112/` → `s3://unified-trading-dex-swaps-prod-427895769566/` (PID 61592) — in
+  listing phase as of 21:30.
+- `gs://config-store-central-element-323112/` → `s3://unified-trading-config-store-prod-427895769566/` (PID 61593)
+  — copying actively (instruments-service config entries).
+
+All 3 use the same shape as the original 5: `nohup gcloud storage rsync gs://X s3://Y --recursive`, logs in
+`/tmp/tab4-rsync-logs/`, PIDs registered in `_pids.txt`.
+
+**Open question for operator (events bucket)**: Re-launch events rsync from same-region GCE VM in `asia-northeast1`
+(faster + DNS-stable), or accept that events bucket only gets populated by go-forward live emissions per Live=Batch
+(no historical events backfill needed)? Filed conceptually here; if operator picks "go-forward only," events bucket
+0-objects-today is correct and the table above flips events-row to "Skipped — go-forward only per operator".
+
 ### Phase 5b — Hive-compatible AWS Glue + Athena (per operator clarification)
 
 Operator clarified: GCS→S3 migration must be "AWS equivalent of Hive-compatible so that we can use SQL-style queries on
