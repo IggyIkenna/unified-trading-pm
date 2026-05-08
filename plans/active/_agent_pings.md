@@ -31,3 +31,4 @@ _(empty — Tab 4 ✅ DONE (verified by main 05:55 UTC, all 9 verification check
 (verified 05:56 UTC, 4 commits on origin, 16 checkboxes flipped). Tabs 2, 5, 6, 7 still IN FLIGHT.)_
 
 [2026-05-08 06:00 UTC] lending-indices-bugfix-tab — DONE Tab 5 (issues/lending_indices_handler_bugs_2026_05_07.md DONE-2026-05-08; instruments-service@1a90185 + mtds@d2f365e + mtds@de9d5cf pushed; QG-failure exempts on parallel agents only)
+[2026-05-08 06:02 UTC] defi-988-audit-tab — DONE Tab 6 (issues/defi_988_missing_dates_audit_2026_05_08.md filed + defi_master annotated; PM@fc52188 pushed; diagnostic-only, 13,632 actionable rows of 1.3M non-captured; top-5 priorities for D4 backfill listed)
