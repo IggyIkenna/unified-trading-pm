@@ -69,8 +69,11 @@ Either form is sufficient authorization. Until you see one, your local commits s
 
 You are **Tab N**, a scoped implementer spawned by Harsh's main orchestrator agent (Tab 1, a separate Claude
 Code session on the SAME PC, sharing the SAME `.git/` + working tree as you). You execute one task end-to-end
-against your assigned plan-of-record, ship it, and go quiet. You do NOT take on adjacent work, spawn sub-agents
-of your own, push speculatively, or message Harsh directly — Tab 1 is your conversational dispatcher.
+against your assigned plan-of-record, ship it, and go quiet. You do NOT take on adjacent work, push
+speculatively, or message Harsh directly — Tab 1 is your conversational dispatcher. You CAN spawn `Task`
+sub-agents per your LEDGER tab entry's "Sub-agent fan-out hint" — see § "Sub-agent fan-out — discipline"
+below for constraints (mechanical / audit work only; NEVER cross-cutting design; sub-agents do NOT inherit
+CLAUDE.md and MUST be given the full ruleset at the top of every Task prompt).
 
 ## Reading order (do this first, in sequence)
 
@@ -84,8 +87,11 @@ of your own, push speculatively, or message Harsh directly — Tab 1 is your con
 4. **`cursor-configs/CLAUDE.md`** (the rest) — workspace coding standards: uv not pip, basedpyright not pyright,
    no `os.getenv()`, "Findings Triage Discipline (HARD RULE)", "Commit + Push + Flip Plan Checkboxes (HARD RULE)",
    "Two teammates × multiple parallel agents", per-asset-group shard-key matrix.
-5. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules (only relevant if YOU spawn
-   `Task` sub-agents from inside your tab; for most tabs this is informational).
+5. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — symlinked to `CLAUDE.md` since 2026-05-08 PM, so it
+   contains the full CLAUDE.md ruleset. **You MUST paste its contents at the top of every `Task` sub-agent
+   prompt you spawn** (sub-agents do NOT inherit CLAUDE.md; they start with fresh context). See § "Sub-agent
+   fan-out — discipline" below for the full pattern (when to use sub-agents, when not to, and the canonical
+   Task-prompt shape).
 6. **Your plan-of-record** — the specific plan named in your tab entry (e.g.
    `cefi_master_2026_05_07.md` for `cefi-babysit-tab`). This is where your todos live + where you flip
    checkboxes + where you write `## Open questions` for blockers.
@@ -324,6 +330,99 @@ As you ship work:
 Main agent will see it on next 1-min poll, ack with a short note in your plan doc's `## Open questions` if
 anything to flag, otherwise stays silent. Your STARTED ping is removed automatically once main confirms
 clean boot.
+
+## Sub-agent fan-out — discipline (codified 2026-05-08 PM by operator direction)
+
+When YOUR tab spawns `Task` sub-agents (e.g. per the "Sub-agent fan-out hint" in your LEDGER tab entry —
+"7 parallel sub-agents, one per plan", "5 parallel per asset_group", etc.), the sub-agents you spawn do
+**NOT** inherit CLAUDE.md. They start with fresh context and only see what you paste into the Task prompt.
+Per CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required (MANDATORY)", you MUST inject the full
+rules into every Task prompt. The mitigation Ikenna shipped 2026-05-08 PM:
+
+- **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` is now a symlink to `CLAUDE.md`**. So pasting "the
+  contents of `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`" gives sub-agents the FULL CLAUDE.md ruleset
+  (closes the ~70% gap that previously existed between the two files).
+
+### What sub-agents are FOR
+
+Per operator direction (Harsh told Ikenna 2026-05-08 PM): _"sub-agents should not be doing something that
+violates any claude rules; they should be used to audit and parallelise mechanical stuff only; and provide
+relevant rule to them so they dont go rogue."_
+
+Use `Task` sub-agents for:
+
+1. **Audit / read-only investigation** — "find every callsite of X across the codebase; report file:line +
+   surrounding 5 lines"; "compare schema-A vs schema-B and list divergences"; "verify N invariants hold
+   across N modules."
+2. **Parallel application of a known-shape mechanical transformation** — "for each of these 30 files, run
+   `rg X` and replace with Y, then run `quality-gates.sh` to verify"; "for each of these 8 source repos,
+   apply the same import-rewrite recipe."
+3. **Batch operations where each unit is fully spec'd** — "launch these 5 backfill VMs (one per asset_group)
+   with these exact env vars + post-launch event-stream verification."
+
+Do NOT use `Task` sub-agents for:
+
+1. ❌ **Cross-cutting design** — UAC schema design, UTL helper signature decisions, multi-repo architecture
+   choices. These are main-agent / operator territory; sub-agents lack workspace context to make these
+   calls correctly.
+2. ❌ **Anything ambiguous** — if the task description requires the sub-agent to make architectural
+   decisions ("implement Phase X", "fix the imports"), it's too vague. Spec it tighter or do it yourself.
+3. ❌ **Cross-file invariant changes** — if changing one file requires changing 3 others in coordinated
+   fashion, sub-agents can't see across their isolated context windows. Master agent integrates.
+4. ❌ **Decisions that require consulting plan-of-record `## Open questions` or pinging operator** — those
+   decisions go through your tab's main flow, not through sub-agent fan-out.
+
+### How to spawn a Task sub-agent (the canonical pattern)
+
+```
+Task(
+  subagent_type="general-purpose",
+  description="Short task description for telemetry (3-5 words)",
+  prompt="""[PASTE THE FULL CONTENTS OF cursor-configs/SUB_AGENT_MANDATORY_RULES.md HERE]
+
+==========================================================
+YOUR TASK
+==========================================================
+
+[Tight, fully-spec'd task — what to do, what to verify, what to return]
+
+CONSTRAINTS:
+- [Specific files / repos in scope]
+- [What NOT to touch]
+- [What format to return findings in]
+
+DONE-DEFINITION:
+- [Verifiable bullets — "X is true", "Y file exists with property Z"]
+
+REPORT BACK: [structured shape of the response — table / sha list / file:line list / etc.]
+"""
+)
+```
+
+### Sub-agents do NOT push, commit, or flip plan checkboxes
+
+Per the new git HARD RULE at the top of this doc, no agent — main, tab, or sub-agent — runs `git push` /
+`git pull` / `git rebase` without operator authorization. Sub-agents return findings; the spawning tab
+integrates findings into its own working tree + commits per shippable unit. Sub-agents never write directly
+to the ledger, plan-of-records, or `_agent_pings.md` either — only their spawning tab does, after
+integrating their findings.
+
+### Anti-patterns (sub-agent foot-guns operator has already seen)
+
+- 🚫 **Forgetting to paste SUB_AGENT_MANDATORY_RULES.md at top of Task prompt** → sub-agent has no rules,
+  goes rogue, may use `pip install` / `os.getenv()` / `git push` / etc.
+- 🚫 **Spawning a sub-agent on architecturally-vague work** → sub-agent makes decisions outside their
+  context; result needs to be re-done by main.
+- 🚫 **Spawning sub-agents in series instead of one parallel batch** → wasted parallelism. Send all N Task
+  blocks in ONE message so they run concurrently.
+- 🚫 **Letting sub-agent decide commit messages / push timing** → not their authority.
+- 🚫 **Spawning a sub-agent to spawn its own sub-agents recursively** → context explosion; main agent loses
+  thread.
+
+### Cross-reference
+
+CLAUDE.md § "Sub-Agents & Autonomous Agents: Full Rules Required (MANDATORY)" is the workspace SSOT for
+this rule. This onboarding section is the spawned-tab-agent-friendly summary + sub-agent-fan-out playbook.
 
 ## Differences from CLAUDE.md HARD RULE you should be aware of
 
