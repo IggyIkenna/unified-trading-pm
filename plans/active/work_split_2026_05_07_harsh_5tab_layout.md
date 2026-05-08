@@ -17,6 +17,123 @@ locked_since: 2026-05-07
 >
 > **Filename retained** for cross-doc references, but the body is now a daily-evolving orchestration ledger.
 
+## Bootstrap — read first if you're a fresh main-agent chat
+
+If this conversation just started — Harsh's previous main-agent chat died, ran out of context, or was reset —
+and you're being asked to be the main orchestrator, **this doc is your boot context**. Read it end-to-end before
+answering Harsh's first message of the new chat.
+
+**Your role**: you are the **main orchestrator (Tab 1)**. You do NOT write service code or implement plan items
+yourself. Your job is direction-setting, Q&A dispatch between Harsh + spawned tabs, plan-of-record curation,
+and ping-ledger triage. Information gathering (reading plans, grepping, gcloud probes, git state inspection) is
+fine. Implementation of plan items is NOT fine — that's spawned tabs' work.
+
+**Boot checklist** (run after reading this doc once):
+
+1. From `unified-trading-pm/`: `git status` + `git log --oneline origin/live-defi-rollout..HEAD` — see local
+   commits ahead of origin (work spawned tabs have committed but not pushed) + any of your own uncommitted edits.
+2. `cat plans/active/_agent_pings.md` — see active pings waiting for you.
+3. Skim "Today's status" below for the tab registry, in-flight work, and queued spawns.
+4. Ack to Harsh: _"Main agent online. State: N tabs in flight, M pings open, K local commits queued for push.
+   Today's plan = X, Y, Z. Standing by."_
+
+**Polling cadence**: check `_agent_pings.md` every **~1 minute** while Harsh is active. When tabs go quiet (no
+pings for 30+ min), stretch to 5 min. Spawned tabs work mostly autonomously; pings are the rare interrupt.
+
+## Bootstrap — read first if you're a spawned tab (Tab 2+)
+
+If Harsh just told you _"work on Tab N tasks"_ in a fresh Claude Code tab, you're a spawned tab. **This section
+is your boot context.** Read it once before doing anything else, then read everything else in this order:
+
+1. **THIS section** — confirm your role.
+2. Find your **tab entry** in this doc's "Today's status → Tab registry" by tab number. The spawn prompt block
+   under your tab entry is your full task brief — repos owned, behavioural contract, collision boundaries,
+   done-definition. Read it carefully.
+3. Sections **"How agents talk to each other"**, **"Shared working tree model"**, **"Push discipline"** —
+   non-negotiable workflow rules. The Q&A flow + commit/push discipline differ from the workspace defaults
+   while we're in figure-out-workflow phase; don't apply CLAUDE.md verbatim without reading these first.
+4. **`unified-trading-pm/cursor-configs/CLAUDE.md`** — workspace rules (uv not pip, basedpyright, no os.getenv,
+   shard-granularity SSOT, "Findings Triage Discipline (HARD RULE)", "Commit + Push + Flip Plan Checkboxes
+   (HARD RULE)" — note the push half is deferred to main per "Push discipline" above).
+5. **`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules.
+6. Your **plan-of-record** (the plan doc named in your tab entry — e.g. `cefi_master_2026_05_07.plan.md` for
+   `cefi-babysit-tab`, `deployment_api_work_stream_a_2026_05_07.plan.md` for `deployment-api-phase2-tab`).
+   This is where your todos live, where you flip checkboxes as you ship, where you write `## Open questions`,
+   and where you append your final `DONE-<YYYY-MM-DD>` block.
+
+**Your role**: you are Tab N, a SCOPED IMPLEMENTER. You execute a specific task end-to-end, ship it, and stop.
+You do NOT take on adjacent work, spawn sub-agents of your own, or push to origin. The main agent (Tab 1)
+handles direction-setting + Q&A dispatch + push approval.
+
+**How to ask a question** (when you hit ambiguity / blocker / decision):
+
+1. Write the full question in your **plan-of-record's `## Open questions` section** (NOT this orchestration
+   ledger, NOT the work_split). Status `🟡 BLOCKED`. Format per "Plan doc Q&A format" below.
+2. Append a one-liner to [`_agent_pings.md`](_agent_pings.md): `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10
+   word summary>; see <plan-of-record>.plan.md`.
+3. Optionally commit both LOCALLY (don't stress; if commits happen great, if not also fine — Q&A clutter is
+   more costly than Q&A loss).
+4. Continue with anything you CAN do — don't block waiting. Main agent polls `_agent_pings.md` every ~1 min;
+   answer typically lands within 1-5 min as `#### A1 — [main, ...]` block beneath your Q in the plan doc.
+5. Re-read your plan-of-record periodically (shared working tree → no `git pull` needed); when you see the
+   answer, continue.
+6. **Do NOT message Harsh directly** in chat. Main agent is your conversational dispatcher. Exception:
+   case-5 big finding per Findings Triage Discipline (data correctness, deadline-critical, cross-repo, SSOT
+   contradiction, work-split changing, in-flight-VM contradicting) — those go to Harsh AND get an issue doc.
+
+**How to update your plan-of-record as you ship work** (mandatory):
+
+1. **Flip checkboxes per shippable unit.** As soon as a todo ships (committed locally + tests green), edit the
+   plan doc: `- [ ] [SCRIPT] P0. Description...` → `- [x] [SCRIPT] P0. Description... (<repo>@<sha> — <evidence>)`.
+   Per CLAUDE.md HARD RULE: do this in the same logical unit as the code commit, not at end of session.
+2. **Append progress notes** to the relevant plan body section if you found something worth recording (e.g.
+   "Day 2 monitoring sweep" subsection in `cefi_master.plan.md` is a good model — appended findings with a
+   timestamp + observations).
+3. **Document findings per Findings Triage Discipline** (CLAUDE.md). Case 1 (in-scope) → fix in the same
+   commit; case 2 (adjacent to your plan) → annotate your plan body; case 3-4 (someone else's plan) → annotate
+   their plan body with owner pointer; case 5 (big) → notify Harsh in chat AND file an issue doc in
+   `plans/active/issues/`.
+4. **Final**: when your done-definition is met, append a `## DONE-<YYYY-MM-DD>` block at the bottom of the
+   plan body listing every code + plan-flip commit sha. Then push per the conditional rule (fetch + zero
+   incoming → push freely; any incoming → flag in `## Open questions` for main + operator). Then go quiet —
+   don't pick up new work autonomously. Wait for main to spawn you for the next task or Harsh to explicitly
+   close you out.
+
+**Commit + push cadence rule** (per CLAUDE.md HARD RULE, with the multi-agent safety valve):
+
+- Per shippable unit (helper + tests, one adapter migration, one wire-in, one plan-flip): **commit locally**.
+- 5-6 small commits per session, NOT one mega-commit at end. Reviewable units, easy to revert.
+- Before each push: `git fetch origin <branch>` + check for incoming. If zero incoming → push freely.
+  If any incoming → DON'T push, write a `🟡 BLOCKED` entry in your plan-of-record's `## Open questions`,
+  ping the ledger, continue with what you can do. Main + operator resolve the conflict path.
+- Pre-commit check is mandatory before EVERY commit (catches accidental bundling of teammates' WIP from the
+  shared working tree):
+  ```bash
+  git status                 # full picture
+  git diff --cached --stat   # NO PATH ARGUMENT
+  ```
+  If anything in the staged set or working tree isn't yours, surgically un-stage (`git restore --staged
+  <file>`) or stash (`git stash --keep-index`) before committing. Use `git add -p` for your hunks if any
+  shared file has foreign edits.
+
+**One-line ack to main agent on boot** (write this after you've read everything above):
+
+Append to [`_agent_pings.md`](_agent_pings.md): `[<UTC>] <agent-tag> — STARTED Tab N (<plan-doc>)` — main
+agent will see it on next 1-min poll, ack with a short note in your plan doc's `## Open questions` if there's
+anything to flag, otherwise stays silent. Your STARTED ping gets removed automatically once main confirms
+your boot is clean.
+
+## Tab numbering convention (codified 2026-05-08)
+
+Tabs are addressed by integer slot. **Tab 1 = main orchestrator** (this session, always). Tab 2, 3, 4, … =
+spawned tabs in spawn order. When the main agent queues a new spawn, it picks the next free tab number and
+files the entry under "Today's status → Tabs queued" with that tab number as the heading. Harsh opens a fresh
+Claude Code tab and tells that agent _"work on Tab N tasks"_ — the agent finds the matching entry in this doc
+and starts.
+
+A tab's identity is the **integer slot**, not the agent-tag (e.g. `cefi-babysit-tab`). Agent-tag is descriptive;
+tab number is addressable. Both go in the registry entry for clarity.
+
 ## Orchestration model — read once at session start
 
 Harsh interacts with ONE main agent. That agent decides per-task:
@@ -36,36 +153,131 @@ available for direction-setting.
 ## How agents talk to each other (the bus)
 
 **Plan docs are the message bus + a lightweight ping ledger is the doorbell.** No real-time messaging between
-agents — async via PM commits + git pull, but the main agent polls the ping ledger autonomously so Harsh
-doesn't have to be the relay.
+agents — async via the **shared working tree** (all tabs run on the same PC, same `.git/`, same files; see
+"Shared working tree model" below). Main agent polls the ping ledger autonomously so Harsh doesn't have to be
+the relay.
 
 ### Two-tier design
 
 - **[`_agent_pings.md`](_agent_pings.md) = ephemeral doorbell.** Always 5-10 lines (active pings only). Sub-agents
   append a one-liner when they need attention; main agent removes the line when handled. Zero history kept here.
-- **Plan doc `## Open questions` = durable Q&A record.** Full question + answer + status marker. Never deleted —
-  the audit trail of "what did we ask + decide" lives here forever.
+- **Plan doc `## Open questions` = durable Q&A record, ON THE AGENT'S PLAN-OF-RECORD** (e.g. `cefi-babysit-tab`
+  → [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md); `deployment-api-phase2-tab` →
+  [`deployment_api_work_stream_a_2026_05_07.plan.md`](deployment_api_work_stream_a_2026_05_07.plan.md)). Full
+  question + answer + status marker. Never deleted — audit trail of "what did we ask + decide" lives here forever.
+  **Do NOT write Qs into this orchestration ledger** ([`work_split_2026_05_07_harsh_5tab_layout.md`](work_split_2026_05_07_harsh_5tab_layout.md))
+  — that's main-agent-only writing surface. (Codified 2026-05-08 after `cefi-babysit-tab` initially put their Qs
+  in the wrong doc.)
 
 ### Lifecycle
 
 ```
-[T+0]   Spawned agent hits ambiguity
-        ↓ writes Q1 in <relevant-plan>.plan.md `## Open questions` (status 🟡 BLOCKED)
-        ↓ appends one-liner to _agent_pings.md
-        ↓ commits + pushes both
+[T+0]    Spawned agent hits ambiguity
+         ↓ writes Q1 in <agent's-plan-of-record>.plan.md `## Open questions` (status 🟡 BLOCKED)
+         ↓ appends one-liner to _agent_pings.md (with plan-doc pointer)
+         ↓ optionally commits both LOCALLY — Q&A commits are not stressed; if they
+           land in commits great, if not also fine. (Push follows the conditional
+           rule in "Push discipline" below — fetch + check incoming + push iff zero.)
+         ↓ continues with anything they CAN do (don't block waiting)
 
-[T+10m] Main agent's /loop wakes
-        ↓ git pull --ff-only origin live-defi-rollout
-        ↓ reads _agent_pings.md for new entries
-        ↓ for each ping → opens the referenced plan doc, reads Q1
-        ↓ EITHER answers autonomously (technical Q's I can resolve from context)
-        ↓ OR surfaces to Harsh in chat (strategic decisions Harsh must make)
-        ↓ when answered: writes A1 in plan doc, flips Q1 status to ✅ RESOLVED
-        ↓ removes the line from _agent_pings.md
-        ↓ commits + pushes
+[T+ ~1m] Main agent's poll wakes (1-min cadence while Harsh is active)
+         ↓ shared working tree → no `git pull` needed between tabs; HEAD + working tree
+           already reflect the spawned agent's local edits/commits
+         ↓ reads _agent_pings.md for new entries
+         ↓ for each ping → opens the referenced plan doc, reads Q1
+         ↓ EITHER answers autonomously (technical Qs I can resolve from context)
+         ↓ OR surfaces to Harsh in chat (strategic decisions Harsh must make,
+           or anything that contradicts a workspace SSOT)
+         ↓ when answered: writes A1 block in plan doc beneath Q1, flips status 🟡 → ✅ RESOLVED
+         ↓ removes the ping line from _agent_pings.md
 
-[T+12m] Spawned agent pulls, reads A1 in plan doc, continues work.
+[T+ later, when work is fully resolved] Either main or operator removes the Q1+A1 block
+         entirely from the plan doc to keep it uncluttered. The audit trail of
+         "what was asked + what was decided" can survive in commits if commits
+         happened, OR in chat history, OR not at all — Q&A clutter is more costly
+         than Q&A loss.
+
+[T+ next-poll-cycle by spawned agent] Spawned agent re-reads its plan doc
+         (file already updated in shared working tree), sees A1, continues work.
 ```
+
+### Shared working tree model (codified 2026-05-08)
+
+All agents on this team — main + every spawned tab — run as separate Claude Code sessions on the **same physical
+PC**, against **the same VS Code workspace**, **the same `.git/` directory**, and **the same working tree**. There
+is no inter-machine sync; coordination is local-first.
+
+What this means in practice:
+
+- **HEAD and refs are global.** A local commit by any tab moves HEAD for everyone immediately. There is no `git
+  pull` step needed between tabs — they all see the same `.git/`.
+- **Working-tree edits are visible immediately.** When a spawned agent writes a question into a plan doc and
+  saves, the main agent sees it on the next file read — no commit, no push, no pull required.
+- **Index (staged changes) is shared too.** If agent A runs `git add foo.py` and agent B runs `git status`
+  one second later, agent B sees `foo.py` staged. This is a foot-gun: pre-commit check is mandatory (see below).
+- **Pre-commit check is non-negotiable** before EVERY commit, in ANY repo:
+
+  ```bash
+  git status                 # full picture: modified, staged, untracked
+  git diff --cached --stat   # NO PATH ARGUMENT — see the entire index
+  ```
+
+  If anything in the staged set or working tree isn't yours, surgically un-stage (`git restore --staged <file>`)
+  or `git stash --keep-index` the foreign hunks before committing. **Never `git add <whole-file>` if anyone else
+  has touched it** — use `git add -p` and stage only your hunks. Reference incidents:
+  PM@`961980db` / `611b9501` / `34075d84` (all from concurrent-agent overlap).
+- **Untracked files are someone else's WIP** by default. Don't sweep them in to clear a QG gate; ask main agent
+  or operator first. Reference: PM@2026-05-06 `pipeline-coverage-matrix.md` clobber.
+
+### Push discipline (revised 2026-05-08 — conditional push)
+
+Workspace `CLAUDE.md` HARD RULE = "commit + push at every shippable unit." We **keep both halves** with one
+safety valve for the multi-agent shared-`.git/` setup: push only when origin has no incoming commits; if
+incoming exists, escalate to main + operator for collaborative resolution.
+
+**Rule** (applies to every agent — main + spawned tabs alike):
+
+1. Per shippable unit: **commit locally** (per CLAUDE.md HARD RULE cadence — small reviewable units, NOT
+   end-of-session mega-commits). Pre-commit check is mandatory before EVERY commit:
+
+   ```bash
+   git status                 # full picture
+   git diff --cached --stat   # NO PATH ARGUMENT
+   ```
+
+   If anything in the staged set or working tree isn't yours, surgically un-stage (`git restore --staged
+   <file>`) or stash before committing. Use `git add -p` for your hunks if any shared file has foreign
+   edits. Reference incidents: PM@`961980db` / `611b9501` / `34075d84`.
+
+2. Before pushing, fetch + check for incoming on the target branch (every repo, every push):
+
+   ```bash
+   git fetch origin <branch>
+   git log --oneline <branch>..origin/<branch>   # incoming commits, if any
+   ```
+
+3. **If zero incoming → push.** This is the workspace default; operator approval not needed.
+
+4. **If any incoming → STOP. Do NOT push.** Flag to main agent + operator:
+   - Write a one-line entry in your plan-of-record's `## Open questions` block:
+     _"Push blocked on `<repo>`: N incoming commits on `origin/<branch>` (`<sha>`, `<sha>`...). My M local
+     commits ready to push (`<sha>`...). Need rebase / merge / cherry-pick / drop decision."_ Status `🟡 BLOCKED`.
+   - Append a one-liner ping in [`_agent_pings.md`](_agent_pings.md) per the standard format pointing at
+     the plan doc.
+   - Continue with anything you CAN do — don't block on the resolution.
+   - Main agent + operator review the incoming together → decide rebase / merge / cherry-pick / drop →
+     either main agent does the push, or instructs you to push after applying the resolution. Plan-doc
+     `## Open questions` block flips 🟡 → ✅ when resolved.
+
+5. **Main agent has the same rule** — push only when no incoming, escalate to operator when conflict arises.
+
+**Why the safety valve**: with multiple agents committing concurrently to the same `.git/` and pushing to the
+same origin branch, "incoming on origin" almost always means another agent (or a teammate on a different PC)
+beat you to push. Blind push by every agent forces a force-push race; routing the conflict path through main
++ operator serialises it cleanly. The 99% common case (no incoming) needs no coordination — push freely.
+
+**Mid-conflict during work** (incoming arrives while you're working): you'll discover this on your pre-push
+fetch. Same path: don't push, flag, continue with what you can do, wait for resolution.
 
 ### Ping ledger format
 
@@ -110,17 +322,19 @@ asked.
 
 ### When the ping ledger overflows
 
-- **5-10 active pings**: normal busy day, single main agent (this one) keeps up via /loop.
-- **15-20+ pings persistently**: signal Harsh to spawn a SECOND main agent (another tab with this orchestration
-  doc). Two main agents divide the ledger — typically by repo or first-claim. Add a `[CLAIMED-BY: main-1]` marker
-  to a ping when starting work on it so the other main doesn't double-handle.
+- **5-10 active pings**: normal busy day, single main agent (this one) keeps up via 1-min polling.
+- **15-20+ pings persistently**: signal Harsh to spawn a SECOND main agent (another Tab 1-equivalent — by
+  convention call it Tab 1b). Two main agents divide the ledger — typically by repo or first-claim. Add a
+  `[CLAIMED-BY: main-a]` / `[CLAIMED-BY: main-b]` marker to a ping when starting work on it so the other main
+  doesn't double-handle.
 
 ### Daily ledger sweep
 
 Each morning during boot, main agent:
 
-1. Sweep all `plans/active/*.plan.md` for `## Open questions` containing ✅ RESOLVED Q&As older than 24h —
-   collapse them into a `### Q&A history (resolved)` subsection at the bottom of the same plan to declutter.
+1. Sweep all `plans/active/*.plan.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely**
+   (don't archive — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived
+   at all).
 2. Verify [`_agent_pings.md`](_agent_pings.md) has no stale entries (>24h without resolution = either re-prompt
    the sub-agent or escalate to Harsh as a stuck task).
 
@@ -130,31 +344,59 @@ When main agent recommends a fresh tab, the prompt **must** include the orchestr
 agent knows it's a delegate, not a peer. Copy this preamble into every spawn:
 
 ```text
-You are a sub-agent spawned by Harsh's main orchestrator agent (a separate Claude Code session).
-Your task is documented in [PLAN-DOC-PATH] — read it first.
+You are Tab N — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1, a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  4. [PLAN-DOC-PATH] — your plan-of-record with todos + done-definition.
+
+Your agent-tag for ping-ledger entries: [agent-tag-suggested-by-main].
+Your tab number: N (matches the entry header in the orchestration ledger).
+
+The boot section in the orchestration ledger covers everything you need on workflow:
+shared working tree, push discipline (conditional — push iff zero incoming on origin;
+flag for main + operator review otherwise), Q&A flow via plan-of-record + ping ledger,
+plan-doc curation (checkbox flips per shippable unit, DONE block on completion),
+findings triage. Read it once and follow.
 
 ORCHESTRATION RULES:
-1. `git fetch origin live-defi-rollout && git pull --ff-only origin live-defi-rollout` before
-   the first edit. Re-pull before every commit (other agents are pushing in parallel).
+1. **Shared working tree** — main agent's HEAD and your HEAD are identical (same .git/). No
+   `git pull` needed between tabs; another agent's local commit is visible to you the moment
+   it lands. BUT: pre-commit check is critical — before EVERY commit, run:
+       git status                 # full picture
+       git diff --cached --stat   # NO PATH ARG — see entire index
+   If anything in the staged set or working tree isn't yours, surgically un-stage
+   (`git restore --staged <file>`) or stash (`git stash --keep-index`) before committing.
+   Never `git add <whole-file>` if anyone else touched it — use `git add -p` for your hunks.
 2. If you hit ambiguity / a blocker / a decision that needs Harsh's strategic input:
    a. Write the full question in [PLAN-DOC-PATH]'s `## Open questions` section using the
-      format in `plans/active/work_split_2026_05_07_harsh_5tab_layout.md` (status 🟡 BLOCKED).
-   b. Append a one-liner to `plans/active/_agent_pings.md` with timestamp + your agent-tag
+      format in plans/active/work_split_2026_05_07_harsh_5tab_layout.md (status 🟡 BLOCKED).
+      [PLAN-DOC-PATH] is YOUR plan-of-record (e.g. cefi_master, deployment_api_work_stream_a)
+      — NOT work_split or this orchestration ledger. Main agent reads Qs on the plan-of-record.
+   b. Append a one-liner to plans/active/_agent_pings.md with timestamp + your agent-tag
       + a 5-10 word summary + plan-doc pointer.
-   c. Commit + push both.
-   d. Continue with anything you CAN do — don't block waiting. The main agent's /loop polls
-      the ping ledger every ~10 min, will answer in the plan doc + remove the ping line. You
-      pick up the answer on your next git pull.
+   c. Optionally commit both LOCALLY (don't stress; Q&A commits are nice-to-have, not required).
+   d. Continue with anything you CAN do — don't block waiting. Main polls the ping ledger every
+      ~1 min, will write A1 into the plan doc + flip 🟡 → ✅ + remove the ping line. You pick
+      up the answer on your next read of the plan doc (shared working tree → no `git pull` needed).
    e. **Do not message Harsh directly** unless your finding is case-5 (big) per Findings
       Triage Discipline. The main agent is your conversational dispatcher.
-3. Read `unified-trading-pm/cursor-configs/CLAUDE.md` for workspace rules — especially
+3. Read unified-trading-pm/cursor-configs/CLAUDE.md for workspace rules — especially
    "Findings Triage Discipline", "Commit + Push + Flip Plan Checkboxes (HARD RULE)",
    "Two teammates × multiple parallel agents", and the per-asset-group shard-key matrix.
-4. Per shippable unit: commit + push + flip the matching plan checkbox in the same logical
-   unit. Don't batch.
+4. **Per shippable unit: commit (LOCALLY) + flip the matching plan checkbox in the same
+   logical unit.** Push follows the conditional rule (see "Push discipline" in the
+   orchestration ledger): before pushing, `git fetch origin <branch>` + check for incoming;
+   if zero incoming → push freely; if any incoming → DON'T push, write a `🟡 BLOCKED` entry
+   in your plan-of-record's `## Open questions` for collaborative resolution by main + operator.
+   Commit cadence is unchanged (per CLAUDE.md HARD RULE — 5-6 small commits, NOT one mega-commit).
 5. **Findings Triage Discipline (HARD RULE)** — any side-discovery during execution: classify
    case-1-to-5 per CLAUDE.md and route appropriately. Big findings (case 5) → write in chat
-   summary IF you're conversing with Harsh, AND file an issue doc in `plans/active/issues/`.
+   summary IF you're conversing with Harsh, AND file an issue doc in plans/active/issues/.
    Small QG-failure findings on someone else's code are EXEMPT until ~2026-05-09 per the
    temporary exception in CLAUDE.md.
 
@@ -163,45 +405,239 @@ YOUR TASK:
 in-flight work, done-definition with verifiable bullet points>
 
 REPORT-BACK:
-- Per shippable unit: code commit + plan-flip commit + push.
-- Final: comment in [PLAN-DOC-PATH] body marking the done-definition met.
-- Main agent will sweep your status on demand via `git log --oneline live-defi-rollout`.
+- Per shippable unit: code commit + plan-flip commit. Push per the conditional rule
+  (`git fetch` + zero-incoming → push; any incoming → flag in plan-of-record + ping main).
+- Final: append a "DONE-<YYYY-MM-DD>" comment block at the bottom of [PLAN-DOC-PATH] body
+  listing every code + plan-flip commit sha. Main agent sees your commits immediately via
+  shared .git/ + `git log --oneline live-defi-rollout`.
 ```
 
 ---
 
-## Today's status (2026-05-07 D1)
+## Today's status (2026-05-08 D2)
 
-### 🟢 Spawned tabs in flight
-- _(none yet today)_
+### Tab registry
 
-### 🟡 Ready to spawn (open a fresh tab + paste the prompt)
-- _(none queued — main agent is awaiting Harsh's direction on Phase 2 routes; see "Main agent doing now" below)_
+#### Tab 1 — main orchestrator
+- This session. Polling [`_agent_pings.md`](_agent_pings.md) every ~1 min while Harsh is active.
+
+#### Tab 2 — `cefi-babysit-tab` 🟢 IN FLIGHT
+- **Task**: Day-2 OPS babysit of the 24 RUNNING cefi VMs (bitfinex/bitget/kraken ×futures+spot, all
+  `e2-highmem-8`, post-`UTL@68b3804a` blank-reason fix relaunch).
+- **Plan-of-record**: [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md).
+- **Q&A**: Q1 raised 03:54 UTC, ✅ RESOLVED 04:05 UTC (4 clarifications + bonus answered in plan doc).
+  Q&A removed on resolve once Tab 2 confirms the answer was sufficient.
+- **Recent local commits** (queued for next operator-authorised push):
+  - `17a21a0` (PM) — Day 2 monitoring sweep findings + sweep #1 baseline (zero blank-reason writes,
+    asymmetric-shape resolved on relaunch fleet).
+- **Cadence**: 10-min monitoring sweeps; appending findings into the plan body's "Day 2 monitoring sweep"
+  subsection.
+
+#### Tab 3 — deployment-api Phase 2 endpoints ✅ DONE 2026-05-08 (P0, single repo)
+
+**Status**: Spawned + completed in one session. Six checkboxes flipped + DONE-2026-05-08 block in plan body.
+- **Code commits** (deployment-api, pushed to origin by operator):
+  - `cade1e1` — POST /api/backfill/launch + 11 unit tests + main.py wire (work-stream-A 2.A)
+  - `bae88fb` — GET /api/vm/events + 13 unit tests + main.py wire (work-stream-A 2.B)
+  - `7f60c5c` — refactor: QG lint clean + workspace os.environ rule
+  - `782cce5` — test: move work-stream-A tests to tests/unit/ + collection-order workarounds
+- **Plan-flip commit** (PM, local-only): `d53fb09` — flips Phase 2 + Phase 3 checkboxes.
+- **QG status**: lint clean, basedpyright clean, coverage 70.84% (gate 70%). 1 pre-existing failure on
+  another agent's `data_status_service.py:1689` (UAC EMPTY_CONFIRMED_REASONS drift) — exempt per CLAUDE.md
+  temporary 2026-05-07 → 2026-05-09 QG-failure exception.
+
+(Spawn prompt below preserved for the template / future re-spawn reference; Tab 3 itself is closed out.)
+
+**Why this first today**: Harsh-D3 P0 pulled forward to D2 — UAC types (Phase 1 prerequisite) shipped
+early at `UAC@a70b3f6`, so the path is unblocked. Lands the two new endpoints (`POST /api/backfill/launch`
++ `GET /api/vm/events`) which (a) unblock Ikenna's D4 DeFi launches via the new API and (b) unblock
+Harsh's own D5 DART Playwright matrix verification. Critical-path multiplier.
+
+**Agent-tag suggestion**: `deployment-api-phase2-tab` (use this in any `_agent_pings.md` entries).
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 3 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1, a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  4. plans/active/deployment_api_work_stream_a_2026_05_07.plan.md Phase 2 — your plan-of-record.
+
+Your agent-tag for ping-ledger entries: `deployment-api-phase2-tab`.
+Your tab number: 3.
+
+The boot section in the orchestration ledger covers everything on workflow: shared working tree,
+push discipline (conditional — push iff zero incoming on origin; flag for main + operator
+review otherwise), Q&A flow via plan-of-record + ping ledger, plan-doc curation (checkbox
+flips per shippable unit, DONE block on completion), findings triage. Read it once and follow.
+
+ORCHESTRATION RULES:
+1. **Shared working tree** — main agent's HEAD and your HEAD are identical (same .git/). No
+   `git pull` needed between tabs; another agent's local commit is visible to you the moment
+   it lands. BUT: pre-commit check is critical — before EVERY commit, run:
+       git status                 # full picture
+       git diff --cached --stat   # NO PATH ARG — see entire index
+   If anything in the staged set or working tree isn't yours, surgically un-stage
+   (`git restore --staged <file>`) or stash (`git stash --keep-index`) before committing.
+   Never `git add <whole-file>` if anyone else touched it — use `git add -p` for your hunks.
+2. If you hit ambiguity / a blocker / a decision that needs Harsh's strategic input:
+   a. Write the full question in plans/active/deployment_api_work_stream_a_2026_05_07.plan.md's
+      `## Open questions` section (status 🟡 BLOCKED). That plan doc is YOUR plan-of-record —
+      NOT work_split or the orchestration ledger.
+   b. Append a one-liner to plans/active/_agent_pings.md with timestamp + your agent-tag
+      (deployment-api-phase2-tab) + a 5-10 word summary + plan-doc pointer.
+   c. Optionally commit both LOCALLY (don't stress; Q&A commits are nice-to-have, not required).
+   d. Continue with anything you CAN do — don't block waiting. Main polls the ping ledger every
+      ~1 min, will write A1 into the plan doc + flip 🟡 → ✅ + remove the ping line. You pick up
+      the answer on your next read of the plan doc (shared working tree → no `git pull` needed).
+   e. Do NOT message Harsh directly unless your finding is case-5 (big) per Findings Triage
+      Discipline. The main agent is your conversational dispatcher.
+3. Read unified-trading-pm/cursor-configs/CLAUDE.md for workspace rules — especially
+   "Findings Triage Discipline", "Commit + Push + Flip Plan Checkboxes (HARD RULE)",
+   "Two teammates × multiple parallel agents", and the per-asset-group shard-key matrix.
+4. **Per shippable unit: commit (LOCALLY) + flip the matching plan checkbox in the same
+   logical unit.** Push follows the conditional rule: before pushing, `git fetch origin
+   <branch>` + check for incoming. Zero incoming → push freely. Any incoming → DON'T push,
+   write a `🟡 BLOCKED` entry in your plan-of-record's `## Open questions` for collaborative
+   resolution (rebase / merge / cherry-pick) by main + operator. Commit cadence is unchanged
+   (per CLAUDE.md HARD RULE — 5-6 small commits, NOT one mega-commit).
+5. Findings Triage Discipline (HARD RULE) — any side-discovery during execution: classify
+   case-1-to-5 per CLAUDE.md and route appropriately. Big findings (case 5) → file an issue
+   doc in plans/active/issues/. Small QG-failure findings on someone else's code are EXEMPT
+   until ~2026-05-09 per the temporary exception in CLAUDE.md.
+
+YOUR TASK:
+
+Implement Phase 2 of plans/active/deployment_api_work_stream_a_2026_05_07.plan.md (lines 154+) —
+two new deployment-api endpoints. Phase 1 (UAC types) shipped at UAC@a70b3f6 — verified
+importable via:
+  from unified_api_contracts.internal import (
+      BackfillLaunchRequest, BackfillLaunchResult,
+      VMLifecycleEvent, VMEventListResult, BackfillLaunchTaskKind,
+  )
+
+Read the plan body Phase 2 section in full before coding — it has the complete behavioural
+contract for both routes. Summary below for orientation only:
+
+1. POST /api/backfill/launch — deployment-api/deployment_api/routes/backfill_launch.py
+   - Auth: verify_api_key (X-API-Key) via _authenticated_router in main.py.
+   - Validate body via BackfillLaunchRequest (UAC).
+   - Resolve task → launcher script via inline closed-set _TASK_TO_LAUNCHER dict. Unknown → 400.
+   - vm_name = f"{prefix}-{run_ts}" (run_ts = UTC YYYYMMDD-HHMMSS). Validate prefix against
+     VM_PREFIX_TO_BUCKET from deployment-service/scripts/vm/vm_zombie_watchdog.py:113 —
+     unknown prefix → 400 with the registration instructions from CLAUDE.md
+     "VM Naming Convention".
+   - Build env / metadata: VM_NAME, MANIFEST_PER_VM_SHARDS=true (always — concurrency rule),
+     VM_FORCE, SKIP_DEPENDENCY_CHECK, RUN_TS, VM_FORCE_WINDOW, plus task-specific (VM_VENUE,
+     VM_START_DATE, VM_END_DATE, VM_DATA_TYPES, VM_INSTRUMENT_IDS, VM_ASSET_GROUP).
+   - subprocess.run(argv, env=..., shell=False, capture_output=True, text=True, timeout=600).
+     timeout → 504 with LAUNCH_TIMEOUT event.
+   - Emit VM_LAUNCH_REQUESTED before shelling; VM_LAUNCHED / VM_LAUNCH_FAILED after.
+   - Shard-level failure isolation: no raise inside the launcher loop. Errors classified via
+     classify_venue_error (UAC) where applicable; non-classified subprocess errors →
+     VM_LAUNCH_FAILED event + 5xx response.
+   - Production guard: if _cfg.is_mock_mode() OR request.dry_run → return BackfillLaunchResult
+     with dry_run=True and resolved argv reflected back, never calling subprocess.
+
+2. GET /api/vm/events — deployment-api/deployment_api/routes/vm_events.py
+   - Read events from gs://{gcp_project_id}-events/events/{service}/{YYYY-MM-DD}/{vm-name}/hour={H}/*.jsonl.
+     SSOT for the bucket-name pattern: unified-trading-library/unified_trading_library/feature_service_base/base_service.py:159.
+   - Query params: vm_name (required), service (required), date (default today UTC), from_hour
+     / to_hour (default 0..23), severity_floor (INFO|WARNING|ERROR|CRITICAL — default INFO),
+     page_size (default 1000, max 5000), next_page_token.
+   - Return VMEventListResult with events: list[VMLifecycleEvent]. Honour truncated +
+     next_page_token for pagination.
+   - Use unified_cloud_interface.get_storage_client() — NEVER `from google.cloud import storage`.
+   - In mock mode: read fixture JSONL from deployment-api/tests/fixtures/vm_events_sample.jsonl
+     (sample taken verbatim from gs://central-element-323112-events/instruments-service/2026-05-07/
+     af-backfill-20260507-002914/hour=00/*.jsonl per the plan's pre-audit footnote).
+
+3. Wire both routes in deployment-api/deployment_api/main.py (lines 127-165 _authenticated_router):
+     from .routes import backfill_launch, vm_events
+     _authenticated_router.include_router(backfill_launch.router, prefix="/api/backfill", tags=["Backfill"])
+     _authenticated_router.include_router(vm_events.router, prefix="/api/vm", tags=["VM"])
+
+4. Integration tests:
+   deployment-api/tests/integration/test_backfill_launch.py:
+     - POST without X-API-Key → 401.
+     - Bad task (enum mismatch OR unmapped) → 400.
+     - Unknown vm-name prefix → 400 with helpful message.
+     - Valid request dry-run → BackfillLaunchResult{dry_run=True, vm_name=prefix-run_ts, argv
+       reflects all flags + env}.
+     - subprocess.run monkeypatched in every test — gcloud is NEVER actually called.
+   deployment-api/tests/integration/test_vm_events.py:
+     - Missing vm_name → 400.
+     - Valid query against fixture JSONL → VMEventListResult with all events parsed.
+     - Pagination round-trip (page 1 → next_page_token → page 2) works.
+     - Severity floor filters correctly.
+
+REPOS OWNED (edit rights):
+- deployment-api — all new files + main.py wire-in.
+
+READ-ONLY DEPS (do NOT edit):
+- unified-api-contracts — UAC types already shipped at a70b3f6; just import them.
+- deployment-service — read scripts/vm/launch-*.sh and scripts/vm/vm_zombie_watchdog.py for
+  VM_PREFIX_TO_BUCKET + launcher names. Do NOT modify any launcher.
+- unified-trading-library — read feature_service_base/base_service.py:159 for events bucket
+  name pattern. Do NOT modify.
+
+COLLISION BOUNDARIES:
+- Ikenna's parallel work today (per work_split): writegate Phase 2.A residual on MDPS +
+  alerting Phase 2 on alerting-service. ZERO overlap with deployment-api source.
+- main.py:127-165 _authenticated_router is shared — your include_router calls go after the
+  existing block. If you spot a teammate's WIP added since you pulled, re-pull before pushing.
+- Per CLAUDE.md mandatory pre-commit check: `git status` + `git diff --cached --stat` (no
+  path arg) before EVERY commit — catches bundling teammates' staged work.
+
+DONE-DEFINITION (verifiable bullets):
+- [ ] backfill_launch.py + vm_events.py shipped behind verify_api_key; both routers wired.
+- [ ] Integration tests green: auth, validation, dry-run, mock subprocess, fixture-based
+      events, pagination round-trip.
+- [ ] `cd deployment-api && bash scripts/quality-gates.sh` Pass 1 green (excluding pre-existing
+      dirty-file failures from teammates — verify via git blame; YOUR new code must be green).
+- [ ] Plan flips: plans/active/deployment_api_work_stream_a_2026_05_07.plan.md Phase 2 todos
+      `- [ ]` → `- [x]` with `<repo>@<sha>` evidence appended.
+- [ ] Plan-flip commit in PM (LOCAL ONLY) with message
+      `plan(deployment-api-work-stream-a): flip Phase 2 checkboxes (...)` referencing every
+      code commit cited in the flips.
+- [ ] 5-6 small commits per CLAUDE.md HARD RULE cadence (route 1 helpers, route 1
+      + tests, route 2 helpers, route 2 + tests, main.py wire, plan flip), NOT one
+      mega-commit. Push per the conditional rule (fetch + zero incoming → push;
+      any incoming → flag in `## Open questions` for main + operator).
+
+REPORT-BACK:
+- Per shippable unit: code commit + plan-flip commit. Push per the conditional rule.
+- Final: append a "DONE-2026-05-08" comment block at the bottom of
+  plans/active/deployment_api_work_stream_a_2026_05_07.plan.md body, listing every code +
+  plan-flip commit sha. Main agent sees your commits immediately (shared .git/) via
+  `git log --oneline live-defi-rollout`.
+````
 
 ### ⚪ Main agent (this session) doing now
-- Pivoting this doc from fixed-5-tab to orchestration-ledger model (in progress, ~5 min remaining)
-- Awaiting Harsh's direction on whether to:
-  - **(a)** Pull D3 deployment-api Phase 2 routes forward — write a self-contained prompt + queue under
-    "Ready to spawn", Harsh opens a fresh tab to execute it (~4-6 hours independent work)
-  - **(b)** Do D2 P0 verify+flip feature_dag SSOT here in this session (~5 min) + then queue Phase 2 for spawn
-  - **(c)** Stop here for the day — D1 already done, pick up D2 fresh tomorrow
+- Daily reset complete: incoming commits summarised, ledger reset to D2, Spawn 1 queued.
+- Awaiting Harsh to open a fresh tab + paste Spawn 1 prompt.
+- Reconcile-hook (D2 P1 sports-master) deferred pending writegate Phase 2.C landing on Ikenna's
+  side AND operator decision on hook-target scope (chat thread 2026-05-08 morning).
+- Standing by to: (a) answer technical questions from spawned tabs via ping ledger,
+  (b) field new direction from Harsh, (c) sweep VM monitoring status if needed.
 
 ### ✅ Done today
-- D1 cefi VM monitor — offloaded to parallel monitoring agent (37 cefi VMs in flight from bitfinex/bitget/kraken
-  ×futures+spot ×2020-2026; events flowing per main-agent spot-check at T+30min) ✓
-- D1 UAC backfill-launch types Phase 1 — Ikenna shipped early `UAC@a70b3f6` (5 Pydantic models + 23-value
-  StrEnum + 15 unit tests pass) ✓
-- Plan flips for D1 — `PM@fb7aefa` (work-split + work-stream-A Phase 1 checkboxes) ✓
-- Findings Triage Discipline (HARD RULE) added to CLAUDE.md — `PM@c8e0e0f` ✓
-- 3 issue docs filed retroactively per the new rule — `PM@becfe4a` (cefi tardis writegate findings + lending-indices
-  handler bugs + audit_followups #7) ✓
-- Temporary exemption added to Findings Triage Discipline for QG-failure findings on others' code —
-  `PM@a86de35` ✓
-- Pivoted layout doc from 5-tab to orchestration ledger — _(this commit)_ ✓
+- Daily reset: incoming-commit summary across PM (45) + 12 sibling repos (~95 commits) reported
+  to Harsh ✓
+- Spawn 1 queued — deployment-api Phase 2 endpoints prompt drafted with full behavioural
+  contract, repo ownership, collision boundaries, and done-definition ✓
 
 ### ❓ Open questions across active plans
-_(synced by main agent on demand — none flagged today; the main agent has been the only Harsh-side agent in flight
-this session, so no inter-agent Q&A yet)_
+- _(none flagged from spawned tabs yet — Spawn 1 not started)_
+- **Open with operator (chat thread)**: sports-master D2 P1 reconcile-hook scope — whether to
+  hook into features-sports backfill VM (architecturally clean) vs all 7 per-source raw
+  backfill VMs (matches plan wording literally) vs both-chained. Deferred until writegate
+  Phase 2.C lands on Ikenna's side anyway.
 
 ---
 
@@ -210,28 +646,41 @@ this session, so no inter-agent Q&A yet)_
 Main agent boots and:
 
 1. `git fetch origin live-defi-rollout && git log --oneline -25 origin/live-defi-rollout` — summarize incoming
-   commits for Harsh (so both have shared context).
-2. `git pull --ff-only origin live-defi-rollout` (if no local commits ahead) or `git rebase` if there are.
-3. Re-read [`work_split_2026_05_07.md`](work_split_2026_05_07.md) (the parent D1-D5 plan) + this ledger's
+   commits for Harsh (so both have shared context). Do NOT auto-pull — operator does the pull explicitly when
+   they want to sync local to remote (this avoids surprise rebases of in-flight local commits from spawned tabs).
+2. Re-read [`work_split_2026_05_07.md`](work_split_2026_05_07.md) (the parent D1-D5 plan) + this ledger's
    "Today's status" + [`_agent_pings.md`](_agent_pings.md) for any overnight pings.
-4. **Daily ledger sweep** — for every plan with `## Open questions`:
+3. **Daily ledger sweep** — for every plan with `## Open questions`:
    - Identify ✅ RESOLVED Q&As older than 24h → collapse into a `### Q&A history (resolved)` subsection at the
      bottom of the same plan to declutter the top.
    - Verify no stale 🟡 BLOCKED Q&As (>24h without answer) — if any, either re-prompt the sub-agent or
      escalate to Harsh as a stuck task.
    - Verify `_agent_pings.md` has no orphan lines (lines whose plan-doc Q&A was already resolved but the ledger
      line wasn't removed).
-5. Move yesterday's "Done today" entries into the "Historical log" section at the bottom of this doc.
-6. Reset "Today's status" with the new date header + identify today's actionable items.
-7. Re-arm the /loop polling the ping ledger (`/loop 10m check ping ledger and answer technical Qs`).
-8. Report to Harsh: "Today's plan = X, Y, Z. I recommend doing X here, queuing Y for fresh tab, Z idle on
-   prereq. Ping ledger has K entries open."
-9. Wait for Harsh's direction.
+4. Move yesterday's "Done today" entries into the "Historical log" section at the bottom of this doc.
+5. Reset "Today's status" with the new date header + identify today's actionable items.
+6. Re-arm the /loop polling the ping ledger (`/loop 10m check ping ledger and answer technical Qs`).
+7. Report to Harsh: "Today's plan = X, Y, Z. I recommend doing X here, queuing Y for fresh tab, Z idle on
+   prereq. Ping ledger has K entries open. Local commits ready to push: N (or zero)."
+8. Wait for Harsh's direction. Push the daily-reset commit per the conditional rule (fetch + zero incoming
+   → push; if PM has incoming, flag for review before pushing).
 
 ## Historical log
 
 ### 2026-05-07 (D1)
-_(populated at EOD)_
+
+- D1 cefi VM monitor — offloaded to parallel monitoring agent (37 cefi VMs in flight from
+  bitfinex/bitget/kraken ×futures+spot ×2020-2026; events flowing per main-agent spot-check
+  at T+30min) ✓
+- D1 UAC backfill-launch types Phase 1 — Ikenna shipped early `UAC@a70b3f6` (5 Pydantic
+  models + 23-value StrEnum + 15 unit tests pass) ✓
+- Plan flips for D1 — `PM@fb7aefa` (work-split + work-stream-A Phase 1 checkboxes) ✓
+- Findings Triage Discipline (HARD RULE) added to CLAUDE.md — `PM@c8e0e0f` ✓
+- 3 issue docs filed retroactively per the new rule — `PM@becfe4a` (cefi tardis writegate
+  findings + lending-indices handler bugs + audit_followups #7) ✓
+- Temporary exemption added to Findings Triage Discipline for QG-failure findings on
+  others' code — `PM@a86de35` ✓
+- Pivoted layout doc from 5-tab to orchestration ledger — `PM@fc6b281` (and earlier) ✓
 
 ---
 
