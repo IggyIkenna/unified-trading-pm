@@ -36,7 +36,7 @@ depends_on: []
 todos:
   - id: phase-1-path-streaming
     content: |
-      - [ ] [AGENT] P1. Phase 1 — Stream Databento `get_range` to a tempfile and iterate `to_df(count=N)` chunks.
+      - [x] [AGENT] P1. Phase 1 — Stream Databento `get_range` to a tempfile and iterate `to_df(count=N)` chunks. (market-tick-data-service@d8358f9 — `_fetch_and_stream_chunks` helper + chunk_rows config + 5 unit tests in `tests/unit/test_databento_path_streaming.py` all green; QG Pass 1 lint+tests clean, codex violations all on pre-existing files per workspace QG-failure-attribution rule.)
 
       Site (the prior agent's audit narrowed the exact lines):
       `market-tick-data-service/.../adapters/databento_adapter.py:509-517` calls
@@ -265,3 +265,54 @@ Phase 1 (path-streaming + chunked to_df — P1, MUST land before May 23)
 
 This plan introduces no further temporary state. Phases 1+4 are the durable shape; Phases 2+3 are optional and
 gate-conditional.
+
+## DONE-2026-05-08
+
+Phase 1 (path-streaming + chunked `to_df`) shipped by Tab 7 (`mtds-databento-streaming-tab`) on 2026-05-08.
+
+Code commits:
+
+- `market-tick-data-service@d8358f9` — `feat(mtds): databento path-streaming + chunked to_df (Phase 1)`
+  - New private helper `DatabentoAdapter._fetch_and_stream_chunks` owns the tempfile lifecycle, chunked
+    `DBNStore.to_df(count=N)` iteration, per-chunk enrichment + `writer.write_chunk(...)` routing,
+    classified-error handling, and unconditional `try/finally` tempfile cleanup on every exit path.
+  - `_fetch_timeseries_range` now accepts `path=<tempfile>` kwarg threaded through to
+    `client.timeseries.get_range(...)`. Backward-compatible — existing callers (the legacy `download_batch`
+    + the `_fetch_timeseries_range` mocks in `tests/market_interface/unit/test_databento_adapter_logic.py`)
+    ignore the new kwarg.
+  - `download_batch_df` inner per-`(data_type, dataset)` body collapses from ~95 lines to ~25; the helper
+    absorbs the chunk-iteration contract while preserving the original silent-drop / `failed_per_dt`
+    side-channel semantics.
+  - Chunk size config-driven: new `MarketTickDataServiceConfig.databento_chunk_rows` field
+    (env `MTDS_DATABENTO_CHUNK_ROWS`, default 50_000).
+  - 5 new unit tests in `tests/unit/test_databento_path_streaming.py`:
+    1. Chunked iteration emits `ceil(rows / chunk_rows)` `writer.write_chunk` calls incrementally.
+    2. `tracemalloc` current-allocation bounded across chunks (uses non-recording writer + plain enrich
+       passthrough so `MagicMock.call_args_list` doesn't masquerade as a leak).
+    3. Tempfile unconditionally unlinked on success AND on mid-iteration exception.
+    4. Writer exception classified via `_classify_databento_exception` and surfaced via `failed_per_dt`.
+    5. Bundled-shard regression guard — `instrument_type='options_chain'` survives the chunked enrich
+       pipeline so writegate Phase 1A cluster-validation in `ManifestWriter.record_captured` keeps working.
+  - One existing test `test_partial_success_preserves_rows_and_records_failed_dt` updated:
+    `ok_store.to_df.return_value=DataFrame` → `ok_store.to_df.side_effect=lambda count=None: iter([...])`
+    to match the new chunked-iteration contract.
+
+Plan-flip commit (PM):
+
+- (this commit — to be pushed conditionally per the orchestration ledger's push rule)
+
+QG Pass 1 status (`cd market-tick-data-service && bash scripts/quality-gates.sh`):
+
+- LINT clean.
+- TYPE CHECK clean (basedpyright zombie auto-killed).
+- TESTS green for the targeted databento test surface (53 passed when run as
+  `tests/unit/test_databento_path_streaming.py tests/market_interface/unit/test_databento_adapter_logic.py`).
+- CODEX COMPLIANCE: 8 violations — all on pre-existing files I did NOT touch
+  (`migrate_mtds_defi_legacy_venue_underscore.py`, `engine/orchestrator.py`, `vault_share_price_handler.py`,
+  `engine/shard_memory_profile.py`, `cli/handlers/solana_lst_archival.py`, `umi_tick_provider.py`,
+  `cli/main.py`). Per workspace QG-failure-attribution rule + the temporary 2026-05-07 → 2026-05-09
+  QG-failure-on-others'-code exception in CLAUDE.md, these don't block this commit.
+
+Phase 2 (P2 — `asyncio.gather` outer loop), Phase 3 (P2 — UTL helper lift), and Phase 4 (P1 — real-VM
+validation) remain unshipped per the plan body's gate conditions. Phase 4 is the deployment gate (D3) for
+the master plan.
