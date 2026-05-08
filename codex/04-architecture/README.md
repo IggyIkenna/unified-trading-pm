@@ -26,10 +26,17 @@ scope: [engineer, admin]
   **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
   alerting). Both are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
   calls between services, not async messaging.
-- **Live deployments**: 7-8 standalone processes: (1) TARDIS persistence, (2) instruments-service, (3)
-  features-calendar-service, (4) features-delta-one-service, (5) features-volatility-service, (6)
-  features-onchain-service, (7) strategy-service, (8) execution-service (per-client). See
-  [deployment-topology-diagrams.md](deployment-topology-diagrams.md) for visuals.
+- **Live deployments** (post-2026-05-08, per
+  [`features-service-architecture.md`](features-service-architecture.md) + the live-pipeline activation): one
+  consolidated **`features-service`** repo (8 family sub-packages: calendar, commodity, cross_instrument, delta_one,
+  multi_timeframe, onchain, sports, volatility) deployed in two flavors — **asset-scoped** colocated with MDPS per
+  asset_group cluster + **cross-cutting** standalone for cross-asset / cross-venue features. Plus: (1) MTDS cluster
+  (sharded by v5 shard atom), (2) instruments-service, (3) strategy-service, (4) execution-service (per-client).
+  Pre-2026-05-08 the features tier was 5-6 separate repos (features-calendar / features-delta-one /
+  features-volatility / features-onchain / features-sports / features-multi-timeframe) — all consolidated as part of
+  the live-pipeline pre-requisite. See [deployment-topology-diagrams.md](deployment-topology-diagrams.md) for visuals
+  + [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
+  full topology + Redis Stream cascade contract.
 - **Sync**: HTTP/REST only for the deployment API and health checks. Never for data flow.
 - **Scaling**: horizontal via sharding (category x venue x date = one container); vertical via VM sizing. Each shard is
   a fully independent unit of work.
