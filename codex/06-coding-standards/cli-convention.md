@@ -2,12 +2,6 @@
 scope: [engineer]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # Service CLI Convention
 
 ## Standardised CLI Axes
@@ -51,19 +45,19 @@ Every service CLI MUST use these orthogonal axes. Each axis controls one concern
 
 ### Optional Axes (service-specific)
 
-| Axis                          | When to use                 | Examples                                                                                  |
-| ----------------------------- | --------------------------- | ----------------------------------------------------------------------------------------- |
-| `--stage`                     | ML training pipeline phases | `feature-selection`, `hyperparameter-tuning`, `walk-forward`, `ensemble`, `meta-learning` |
-| `--start-date` / `--end-date` | Batch time range            | `2024-07-01`                                                                              |
-| `--venues`                    | Venue filtering             | `BINANCE DERIBIT HYPERLIQUID`                                                             |
-| `--instruments`               | Instrument filtering        | Ticker symbols or IDs                                                                     |
+| Axis                          | When to use                                                                                | Examples                                                                                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--stage`                     | ML training pipeline phases                                                                | `feature-selection`, `hyperparameter-tuning`, `walk-forward`, `ensemble`, `meta-learning`                                                 |
+| `--start-date` / `--end-date` | Batch time range                                                                           | `2024-07-01`                                                                                                                              |
+| `--venues`                    | Venue filtering                                                                            | `BINANCE DERIBIT HYPERLIQUID`                                                                                                             |
+| `--instruments`               | Instrument filtering                                                                       | Ticker symbols or IDs                                                                                                                     |
 | `--feature-family`            | features-service dispatch (consolidated repo, 2026-05-08) — selects which sub-package runs | `onchain`, `volatility`, `cross_instrument`, `sports`, `calendar`, `commodity`, `delta_one`, `multi_timeframe` (UAC `FeatureFamily` enum) |
-| `--feature-group`             | Feature service grouping    | `lending_rates`, `lst_yields`, `ALL`                                                      |
-| `--dry-run`                   | No writes, local output     | Boolean flag                                                                              |
-| `--force`                     | Skip existence checks       | Boolean flag                                                                              |
-| `--max-results`               | Limit output count          | Integer                                                                                   |
-| `--scenario`                  | Mock data variant           | `default`, `stress`, `empty`                                                              |
-| `--config`                    | Config file override        | Path to YAML                                                                              |
+| `--feature-group`             | Feature service grouping                                                                   | `lending_rates`, `lst_yields`, `ALL`                                                                                                      |
+| `--dry-run`                   | No writes, local output                                                                    | Boolean flag                                                                                                                              |
+| `--force`                     | Skip existence checks                                                                      | Boolean flag                                                                                                                              |
+| `--max-results`               | Limit output count                                                                         | Integer                                                                                                                                   |
+| `--scenario`                  | Mock data variant                                                                          | `default`, `stress`, `empty`                                                                                                              |
+| `--config`                    | Config file override                                                                       | Path to YAML                                                                                                                              |
 
 ### ServiceCLI (UTL shared abstraction)
 
@@ -129,16 +123,15 @@ python -m features_service \
 
 Contract:
 
-- `--feature-family` is **mandatory**. Validated against the UAC `FeatureFamily` StrEnum (8 members); unknown
-  family raises a CLI-level error before any sub-package is imported.
-- The dispatcher in
-  [`features_service/cli/main.py`](../../../features-service/features_service/cli/main.py) consumes
+- `--feature-family` is **mandatory**. Validated against the UAC `FeatureFamily` StrEnum (8 members); unknown family
+  raises a CLI-level error before any sub-package is imported.
+- The dispatcher in [`features_service/cli/main.py`](../../../features-service/features_service/cli/main.py) consumes
   `--feature-family` + forwards the remaining argv to the matching sub-package's `run(argv)` shim.
-- All four standard axes (`--operation`, `--mode`, `--asset-group`, `--log-level`) apply uniformly across
-  families. Family-specific flags (e.g. `--feature-group`, `--start-date`) are interpreted by the family's
-  `run()` after dispatch.
+- All four standard axes (`--operation`, `--mode`, `--asset-group`, `--log-level`) apply uniformly across families.
+  Family-specific flags (e.g. `--feature-group`, `--start-date`) are interpreted by the family's `run()` after dispatch.
 
-Architecture SSOT: [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+Architecture SSOT:
+[`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
 
 ### `--shard-key` for surgical per-shard recovery (2026-05-07)
 
@@ -169,11 +162,11 @@ mtds collect-lending-indices --shard-key="defi|AAVEV3-ARBITRUM|lending_indices||
 
 Per-service implementations call `market_tick_data_service.cli.shard_key.decompose_shard_key(args)` once on entry to
 flatten the shard key into the individual filter flags (`--asset-group` / `--venues` / `--data-types` /
-`--instrument-type` / `--instrument-ids` / `--root` / `--day`). Existing handlers don't need to know about
-`--shard-key` — they consume the unpacked flags.
+`--instrument-type` / `--instrument-ids` / `--root` / `--day`). Existing handlers don't need to know about `--shard-key`
+— they consume the unpacked flags.
 
 Other services that backfill per-shard (instruments-service, features-\* services, MDPS) should adopt the same
 convention. SSOT for the format + parser:
 [`market_tick_data_service/cli/shard_key.py`](../../market-tick-data-service/market_tick_data_service/cli/shard_key.py).
 SSOT for the drill-down hierarchy that emits this form:
-[`codex/02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md).
+[`codex/02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group depth table".

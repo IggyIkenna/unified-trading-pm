@@ -2,12 +2,6 @@
 scope: [engineer]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # Quality Gates
 
 ## Table of Contents
@@ -109,16 +103,16 @@ identifiers. The table below maps each canonical step number to its location in 
 file. Steps without a dedicated section here are enforced inline in `base-service.sh` and documented in CLAUDE.md "Key
 Rules (Quick Reference)" / "Service Infrastructure Requirements".
 
-| STEP    | Topic                                  | This doc anchor                                                                                              | Enforcement file (canonical)                                          | CLAUDE.md cross-ref                                                            |
-| ------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 5.10    | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                        | `scripts/quality-gates-base/base-service.sh`                          | "Key Rules — `basedpyright` not `pyright`"                                     |
-| 5.11    | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)   | `scripts/quality-gates-base/base-service.sh`                          | "Key Rules — flat deps + ruff"                                                 |
-| 5.22    | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10) | `scripts/quality-gates-base/base-service.sh` + `base-library.sh`      | "No `# type: ignore` to hide architectural violations"                         |
-| 5.34    | typed config reloaders                 | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)"     |
-| 5.61    | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"           |
-| 5.62    | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Service Infrastructure Requirements — Health API (STEP 5.62)"                 |
-| 5.64    | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Cluster validation MANDATORY at `record_captured` for bundled shards"         |
-| 5.66    | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                     | `scripts/quality-gates-base/base-service.sh`                          | "Per-VM shard isolation for concurrent backfills"                              |
+| STEP | Topic                                  | This doc anchor                                                                                                                | Enforcement file (canonical)                                     | CLAUDE.md cross-ref                                                        |
+| ---- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 5.10 | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                                          | `scripts/quality-gates-base/base-service.sh`                     | "Key Rules — `basedpyright` not `pyright`"                                 |
+| 5.11 | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)                     | `scripts/quality-gates-base/base-service.sh`                     | "Key Rules — flat deps + ruff"                                             |
+| 5.22 | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10) | `scripts/quality-gates-base/base-service.sh` + `base-library.sh` | "No `# type: ignore` to hide architectural violations"                     |
+| 5.34 | typed config reloaders                 | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)" |
+| 5.61 | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"       |
+| 5.62 | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — Health API (STEP 5.62)"             |
+| 5.64 | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Cluster validation MANDATORY at `record_captured` for bundled shards"     |
+| 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Per-VM shard isolation for concurrent backfills"                          |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
 file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
