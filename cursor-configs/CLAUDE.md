@@ -1411,6 +1411,54 @@ locked_since: <YYYY-MM-DD>
   behind "scope discipline" to skip obvious bug-fixes in their own code. If you ran tests and saw a failure on YOUR
   code, fix it; don't punt to the next agent. The discipline cuts both ways.
 
+## Plans Run To Actual Completion, Not Smoke-Test Green (HARD RULE codified 2026-05-08)
+
+**The pattern bug**: split-plan close-outs ship _code + schemas + smoke-tests_ then mark "operator-actionable" / "deferred" / "needs operator credentials". Next-cycle plans assume the data / migration / state exists — they build on empty space. By 2026-05-23 the cumulative gap becomes "the carry archetype is wired but no actual DeFi data lives on AWS, no actual migration ran, no actual backfill completed". Each plan looks GREEN in isolation; the system as a whole is RED.
+
+**The rule**: every plan + every Tab in a split plan runs to **actual completion on real infrastructure**:
+
+- **Backfills** run to natural shutdown with manifest-verified rows + sample-inspected parquets — not "launcher script shipped + 1 VM verified for 90s".
+- **Migrations** transfer the actual data with destination size/object-count parity — not "migration script shipped + tested on a sample shard".
+- **Cloud migrations** kick off the Storage Transfer Service / DataSync job + verify ≤0.01% drift + sample read returns expected rows — not "buckets provisioned".
+- **Smoke tests** run against real AWS S3 / real GCS via real ADC — not mocked CI smoke.
+- **Refactors** propagate to every consumer in the same plan — not "Wave 2 sweep deferred".
+- **Reconcilers** run with `--apply-flips` against the full manifest — not dry-run on 100 rows.
+
+**The single allowed exception**: a downstream plan EXPLICITLY takes over with a full-run handoff. Handoff must (1) name the downstream plan by file path in the current plan's done-definition; (2) the downstream plan must have a phase that explicitly consumes the smoke-tested artefact + runs it to completion; (3) both sides must be in `plans/active/` or `plans/epics/` (no "we'll write that plan later").
+
+**Operator authority + ADC**: the agent has ADC admin permissions on both GCP (`central-element-323112`) and AWS (`427895769566`). Provisioning buckets, launching backfill VMs, kicking off transfers, making SSOT triage calls when 3 sources have drifted — these are all in scope. Do NOT pause for operator approval on these. The hard-stop list (genuine human-only): wallet private keys + custody endpoint approvals, live-trading kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree (bucket deletion, table drops, prod VM force-stops). Everything else: run it.
+
+**Anti-patterns** (banned):
+
+- "Operator-actionable" close-outs (unless the operator-only boundary is one of the hard-stops above).
+- "Sub-plan to be filed" (current plan ships full scope OR explicitly hands off to a NAMED existing plan).
+- "Phase N ready to run" with no actual run (✅ means ran-to-completion).
+- Smoke-only QG without real-infra verification for plans involving real infrastructure.
+
+### Split Plan Format — Full-Execution Criterion
+
+Every Tab in a daily work-split plan MUST extend its **Done definition** with:
+
+```markdown
+**Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ <full-run criterion 1 — exact data/state on real infra>.
+  - **What ran**: <command + machine/VM-name + duration>.
+  - **Verification**: <gcloud/aws CLI command + expected output + actual observed>.
+
+**Handoff exception(s)** (if any):
+
+- <criterion N> deferred to <downstream-plan-path>:<phase-id>. Justification: <why downstream is right runner>.
+```
+
+Reviewers reject Tabs whose done-definition has only code/test deliverables without the full-execution subsection.
+Reviewers reject "handoff exceptions" that don't name a real plan in `plans/active/` or `plans/epics/`. Mirrored at
+`plans/PLAN_FORMAT.md` § 8 "Full-Execution Criterion (codified 2026-05-08)".
+
+### Composes with
+
+- "Commit + Push + Flip Plan Checkboxes" (per-shippable-unit) + "Post-Plan-Phase Codex Audit" (codex reflects actual state) + "Findings Triage Discipline" (case 1-5 routing during runs) + "Capture Discoveries As Plan Todos" (mid-run findings → plan todos).
+
 ## Citadel-Grade Planning Standards
 
 Every plan MUST follow these standards. Agents creating plans that don't meet these standards MUST be corrected.

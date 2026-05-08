@@ -200,6 +200,33 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
 - No re-definition of enums, dataclasses, or Pydantic models that already exist upstream
 - Pre-audit should catch self-declared duplicates and include them in the fix manifest
 
+### 8. Full-Execution Criterion (codified 2026-05-08)
+
+Per CLAUDE.md HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green":
+
+Every Tab in a daily work-split plan + every plan in `plans/active/` whose scope involves real infrastructure (cloud
+provisioning, data movement, VM operations, migrations, backfills, reconcilers) MUST list per-phase **full-run**
+completion criteria, not just code/test deliverables. Format:
+
+```markdown
+**Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ <full-run criterion — exact data/state on real infra>.
+  - **What ran**: <command + machine/VM-name + duration>.
+  - **Verification**: <gcloud/aws CLI command + expected output + actual observed>.
+
+**Handoff exception(s)** (if any):
+
+- <criterion> deferred to <downstream-plan-path>:<phase-id>. Justification: <why downstream is right runner>.
+```
+
+**Reviewer rejection**: a Done definition with only code/test deliverables but no Full-execution subsection IS REJECTED.
+A "Handoff exception" that doesn't name a real plan in `plans/active/` or `plans/epics/` IS REJECTED.
+
+**Hard-stops** (the only legitimate operator-pauses): wallet private keys + custody endpoint approvals, live-trading
+kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree. Everything
+else: agent has ADC admin on GCP `central-element-323112` + AWS `427895769566` and runs to completion.
+
 ---
 
 ## Filename convention (codified 2026-05-08)
